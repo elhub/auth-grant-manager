@@ -6,10 +6,10 @@ import no.elhub.devxp.build.configuration.pipeline.jobs.gitOps
 import no.elhub.devxp.build.configuration.pipeline.jobs.gradleJib
 import no.elhub.devxp.build.configuration.pipeline.jobs.gradleVerify
 
-val imageRepo = "devxp/deploy-logger-v2" // TODO: Change this in terraform
-val gitOpsRepo = "https://github.com/elhub/devxp"
+val imageRepo = "auth/auth-consent-manager" // TODO: Change this in terraform
+val gitOpsRepo = "https://github.com/elhub/auth"
 
-elhubProject(group = Group.DEVXP, name = "deploy-orchestrator") {
+elhubProject(group = Group.AUTH, name = "auth-consent-manager") {
     pipeline {
         sequential {
             gradleVerify()
@@ -18,20 +18,6 @@ elhubProject(group = Group.DEVXP, name = "deploy-orchestrator") {
                 registrySettings = {
                     repository = imageRepo
                 }
-            }
-
-            // These can be parallel as they are not the actual deploy,
-            // just the PR setup to deploy into the given environment
-            parallel {
-                gitOps {
-                    cluster = KubeCluster.CIRRUS_TEST
-                    gitOpsRepository = gitOpsRepo
-                }.triggerOnVcsChange()
-
-                gitOps {
-                    cluster = KubeCluster.CIRRUS_PROD
-                    gitOpsRepository = gitOpsRepo
-                }.triggerOnVcsChange()
             }
         }
     }
