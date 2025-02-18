@@ -1,14 +1,21 @@
-# devxp-ktor-service-template
+# auth-consent-manager
 
 ## About
+The auth-consent-manager is designed to manage and track user consent preferences across Elhub applications,
+services, and data processing activities. The goal is to provide a centralized platform for collecting, storing,
+and processing user consent data. The main objectives of the consent manager are to:
 
-One to two paragraph statement about the project and what it does.
+* Facilitate the collection of explicit consent from users for a variety of business and data processing activities.
+* Provide a centralized repository for storing and managing user consent preferences.
+* Enable granular control over consent settings, allowing users to specify their preferences for different types of
+  data processing activities.
+* Ensure compliance with regulatory requirements and standards related to data privacy and consent management.
 
 ## Getting Started
 
 ### Prerequisites
 
-List any external prerequisites, dependencies, etc., that are expected on the client side.
+* Java 17
 
 ### Installation
 
