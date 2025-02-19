@@ -1,5 +1,5 @@
 plugins {
-    id("no.elhub.devxp.kotlin-service") version "0.2.5"
+    id("no.elhub.devxp.kotlin-service") version "0.2.7"
     alias(libs.plugins.google.cloud.tools.jib)
     alias(libs.plugins.ktor.plugin)
     alias(libs.plugins.kotlin.plugin.serialization)
