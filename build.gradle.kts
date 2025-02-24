@@ -39,14 +39,8 @@ application {
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
 }
 
-//liquibase {
-
-//}
-
 dockerCompose {
-
     createNested("database").apply {
         useComposeFiles.set(listOf("db/docker-compose.yml"))
     }
-
 }
