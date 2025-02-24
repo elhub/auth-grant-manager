@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.ktor.plugin)
     alias(libs.plugins.kotlin.plugin.serialization)
     alias(libs.plugins.ksp.plugin)
+    id("com.avast.gradle.docker-compose") version "0.17.12"
 }
 
 dependencies {
@@ -36,4 +37,16 @@ application {
 
     val isDevelopment: Boolean = project.ext.has("development")
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
+}
+
+//liquibase {
+
+//}
+
+dockerCompose {
+
+    createNested("database").apply {
+        useComposeFiles.set(listOf("db/docker-compose.yml"))
+    }
+
 }
