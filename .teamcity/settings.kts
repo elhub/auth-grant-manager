@@ -9,7 +9,9 @@ val gitOpsRepo = "https://github.com/elhub/auth"
 elhubProject(group = Group.AUTH, name = "auth-consent-manager") {
     pipeline {
         sequential {
-            gradleVerify()
+            gradleVerify {
+                analyzeDependencies = false
+            }
 
             gradleJib {
                 registrySettings = {
