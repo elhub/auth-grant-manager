@@ -17,6 +17,7 @@ and processing user consent data. The main objectives of the consent manager are
 ### Prerequisites
 
 * Java 17
+* Docker
 
 ### Building & Running
 
@@ -29,6 +30,20 @@ You can build and run the application using gradle.
 | `./gradlew test`              | Run the tests                                                        |
 | `./gradlew buildFatJar`       | Build an executable JAR of the server with all dependencies included |
 | `./gradlew buildImage`        | Build the docker image to use with the fat JAR                       |
+
+If you run this locally, you will need to have a PostgreSQL database running. The following commands allow you
+to set up and tear down the database using Docker:
+
+| Command                         | Description                                                          |
+|---------------------------------|----------------------------------------------------------------------|
+| `./gradlew databaseComposeUp`   | Starts the Postgres container                                        |
+| `./gradlew databaseComposeDown` | Stops and removes the Postgres container                             |
+
+Database operations are carried out using Liquibase. To apply changes to the database, run:
+
+| Command                     | Description                                              |
+|-----------------------------|----------------------------------------------------------|
+| `./gradlew liquibaseUpdate` | Deploy any changes in the changelog file to the database |
 
 ### Configuration
 
