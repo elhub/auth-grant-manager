@@ -1,4 +1,4 @@
-rootProject.name = "devxp-ktor-service-template"
+rootProject.name = "auth-consent-manager"
 
 pluginManagement {
     repositories {
