@@ -34,7 +34,7 @@ dependencies {
 
     // Liquibase
     liquibaseRuntime("org.liquibase:liquibase-core:4.28.0")
-    liquibaseRuntime("org.liquibase:liquibase-groovy-dsl:2.1.1")
+    liquibaseRuntime("org.liquibase:liquibase-yaml:4.28.0")
     liquibaseRuntime("info.picocli:picocli:4.7.5")
     liquibaseRuntime("org.yaml:snakeyaml:1.28")
     liquibaseRuntime("org.postgresql:postgresql:42.7.2")
