@@ -1,44 +1,34 @@
 plugins {
-    id("no.elhub.devxp.kotlin-service") version "0.2.7"
+    alias(libs.plugins.elhub.gradle.plugin)
     alias(libs.plugins.google.cloud.tools.jib)
     alias(libs.plugins.ktor.plugin)
     alias(libs.plugins.kotlin.plugin.serialization)
     alias(libs.plugins.ksp.plugin)
-    id("org.liquibase.gradle") version "3.0.1"
-    id("com.avast.gradle.docker-compose") version "0.17.12"
+    alias(libs.plugins.liquibase.plugin)
+    alias(libs.plugins.gradle.docker)
 }
 
 buildscript {
-    repositories {
-        maven(url = "https://jfrog.elhub.cloud:443/artifactory/elhub-mvn")
-    }
     dependencies {
-        classpath("org.liquibase:liquibase-core:4.28.0")
+        classpath(libs.database.liquibase.core)
     }
 }
 
 dependencies {
-    // implementation("org.liquibase:liquibase-core:4.28.0")
     // Ktor
     implementation(libs.bundles.ktor.server)
-
     // Koin
     implementation(libs.bundles.ktor.koin)
     ksp(libs.di.koin.ksp.compiler)
-
     // Logging
     implementation(libs.logging.logback.classic)
-
     // Monitoring
     implementation(libs.bundles.ktor.monitoring)
-
     // Liquibase
-    liquibaseRuntime("org.liquibase:liquibase-core:4.28.0")
-    liquibaseRuntime("org.liquibase:liquibase-yaml:4.28.0")
-    liquibaseRuntime("info.picocli:picocli:4.7.5")
-    liquibaseRuntime("org.yaml:snakeyaml:1.28")
-    liquibaseRuntime("org.postgresql:postgresql:42.7.2")
-
+    liquibaseRuntime(libs.database.liquibase.core)
+    liquibaseRuntime(libs.cli.picocli)
+    liquibaseRuntime(libs.serialization.yaml.snakeyaml)
+    liquibaseRuntime(libs.database.postgresql)
     // Testing
     testImplementation(libs.test.ktor.server.test.host)
     testImplementation(libs.test.kotest.runner.junit5)
@@ -52,7 +42,6 @@ ksp {
 
 application {
     mainClass.set("io.ktor.server.netty.EngineMain")
-
     val isDevelopment: Boolean = project.ext.has("development")
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
 }
