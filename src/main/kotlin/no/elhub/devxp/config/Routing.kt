@@ -11,6 +11,7 @@ import org.koin.ktor.ext.inject
 const val TEMPLATE_API = ""
 const val PING = "$TEMPLATE_API/ping"
 const val HEALTH = "$TEMPLATE_API/health"
+const val CONSENT_REQUEST = "$TEMPLATE_API/consent-request"
 
 fun Application.configureRouting() {
     val pingService by inject<PingService>()
@@ -21,6 +22,9 @@ fun Application.configureRouting() {
         }
         get(HEALTH) {
             call.respondText("OK", status = HttpStatusCode.OK)
+        }
+        get(CONSENT_REQUEST) {
+
         }
     }
 }

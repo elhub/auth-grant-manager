@@ -62,3 +62,33 @@ dockerCompose {
         useComposeFiles.set(listOf("db/db-compose.yaml"))
     }
 }
+
+tasks.named("run").configure {
+    dependsOn(tasks.named("databaseComposeUp"))
+    dependsOn(tasks.named("liquibaseUpdate"))
+}
+
+sourceSets {
+    create("integrationTest") {
+        compileClasspath += sourceSets.main.get().output
+        runtimeClasspath += sourceSets.main.get().output
+    }
+}
+
+val intTestImplementation: Configuration by configurations.getting {
+    extendsFrom(configurations.implementation.get())
+}
+
+val intTestRuntimeOnly: Configuration by configurations.getting {
+    extendsFrom(configurations.runtimeOnly.get())
+}
+
+val integrationTest = task<Test>("integrationTest") {
+    description = "Runs integration tests"
+    group = "verification"
+
+    testClassesDirs = sourceSets["integrationTest"].output.classesDirs
+    classpath = sourceSets["integrationTest"].runtimeClasspath
+    shouldRunAfter("test")
+}
+gt stat
