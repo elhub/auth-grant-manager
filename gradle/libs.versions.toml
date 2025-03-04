@@ -19,7 +19,7 @@ micrometer = "1.14.4"
 picocli = "4.7.6"
 postgresql = "42.7.5"
 slf4j = "2.0.17"
-snakeyaml = "1.33"
+snakeyaml = "2.4"
 
 [plugins]
 elhub-gradle-plugin = { id = "no.elhub.devxp.kotlin-service", version.ref = "elhub-gradle" }
