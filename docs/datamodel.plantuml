@@ -1,0 +1,92 @@
+@startuml datamodel
+
+' The PartyId is a type that is used to identify a party
+' It can be an elhub user Id or a GLN. It is a string because it can be a UUID or a GLN-number
+' type PartyId = String
+
+abstract Party {
+  + id: PartyId
+  --
+  + name: String
+  + type: Enum (person, organization)
+}
+
+entity Person {
+  + id: PartyId
+  --
+  + firstName: String
+  + lastName: String
+  + dateOfBirth: Date
+}
+
+entity Organization {
+  + id: PartyId
+  --
+  + name: String
+}
+
+entity Consent {
+  + id: UUID
+  --
+  + status: Enum (active, revoked)
+  + offeredBy: PartyId, FK→Party
+  + signedBy: PartyId, FK→Person
+  + coveredBy: PartyId, FK→Party
+  + createdAt: DateTime
+  + validTo: DateTime
+}
+
+entity ConsentPermission {
+  consentId: UUID, FK→Consent
+  permissionId: UUID, FK→Permission
+  --
+}
+
+entity Permission {
+  + permissionId: UUID
+  --
+  + description: String
+}
+
+entity ConsentRequest {
+  + id: UUID
+  --
+  + status: Enum (pending, accepted, rejected)
+  + requestedBy: PartyId, FK→Party
+  + requestedTo: PartyId, FK→Party
+  + permissionId: UUID, FK→Permission
+  + createdAt: DateTime
+  + validTo: DateTime
+}
+
+entity ConsentRequestPermission {
+  consentRequestId: UUID, FK→ConsentRequest
+  permissionId: UUID, FK→Permission
+  --
+}
+
+entity Document {
+  + id: UUID
+  --
+  + title: String
+  + file: Blob
+  + status: Enum (pending, signed, rejected, expired)
+  + createdAt: DateTime
+  + updatedAt: DateTime
+}
+
+
+
+
+' Relationships
+Party <|-- Person
+Party <|-- Organization
+Consent *-- ConsentPermission
+Permission <-- ConsentPermission
+ConsentRequest *-- ConsentRequestPermission
+Permission <-- ConsentRequestPermission
+Party <-- Consent
+Person <-- Consent
+Party <-- ConsentRequest
+
+@enduml
