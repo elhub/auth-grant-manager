@@ -33,7 +33,16 @@ entity Consent {
   + signedBy: PartyId, FK→Person
   + coveredBy: PartyId, FK→Party
   + createdAt: DateTime
+  + validFrom: DateTime
   + validTo: DateTime
+}
+
+' Used to store metadata related to the Consent
+entity ConsentProperty {
+  consentId: UUID, FK→Consent
+  key: String
+  --
+  value: String
 }
 
 entity ConsentPermission {
@@ -51,6 +60,7 @@ entity Permission {
 entity ConsentRequest {
   + id: UUID
   --
+  + type: Enum (ChangeOfSupplier, AccessToData,...)
   + status: Enum (pending, accepted, rejected)
   + requestedBy: PartyId, FK→Party
   + requestedTo: PartyId, FK→Party
@@ -59,32 +69,60 @@ entity ConsentRequest {
   + validTo: DateTime
 }
 
+entity ConsentRequestProperty {
+  consentRequestId: UUID, FK→ConsentRequest
+  key: String
+  --
+  value: String
+}
+
 entity ConsentRequestPermission {
   consentRequestId: UUID, FK→ConsentRequest
   permissionId: UUID, FK→Permission
   --
 }
 
+' PDF's can contain metadata. Should we store properties in the PDF?
 entity Document {
   + id: UUID
   --
   + title: String
+  + type: Enum (ChangeOfSupplier)
   + file: Blob
   + status: Enum (pending, signed, rejected, expired)
+  + requestedBy: PartyId, FK→Party
   + createdAt: DateTime
   + updatedAt: DateTime
 }
 
+entity DocumentPermission {
+  documentId: UUID, FK→Document
+  permissionId: UUID, FK→Permission
+  --
+}
 
-
+entity DocumentSignatories {
+  documentId: UUID, FK→Document
+  requestedTo: PartyId, FK→Party
+  --
+  signedBy: PartyId, FK→Person
+  signedAt: DateTime
+} 
 
 ' Relationships
 Party <|-- Person
 Party <|-- Organization
 Consent *-- ConsentPermission
+Consent *-- ConsentProperty
 Permission <-- ConsentPermission
 ConsentRequest *-- ConsentRequestPermission
+ConsentRequest *-- ConsentRequestProperty
 Permission <-- ConsentRequestPermission
+Document *-- DocumentPermission
+Permission <-- DocumentPermission
+Document *-- DocumentSignatories
+DocumentSignatories <-- Party
+DocumentSignatories <-- Person
 Party <-- Consent
 Person <-- Consent
 Party <-- ConsentRequest
