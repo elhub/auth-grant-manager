@@ -107,7 +107,7 @@ entity DocumentSignatories {
   --
   signedBy: PartyId, FK→Person
   signedAt: DateTime
-} 
+}
 
 ' Relationships
 Party <|-- Person
