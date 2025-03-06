@@ -1,0 +1,82 @@
+@startuml permission-scheme
+
+class AuthorizationGrant {
+  + id: UUID
+  --
+  + status: AuthorizationStatusType
+  + grantedFor: PartyId
+  + grantedBy: PartyId
+  + grantedTo: PartyId
+  + grantedAt: DateTime
+  + validFrom: DateTime
+  + validTo: DateTime
+}
+
+enum AuthorizationStatusType {
+  Active
+  Revoked
+  Expired
+  Exhausted
+}
+
+class AuthorizationScope {
+  + id: UUID
+  --
+  + authorizationGrantId: UUID
+  + authorizedResourceType: AuthorizationResourceType
+  + authorizedResourceId: String 
+  + permissionType: PermissionType
+  + createdAt: DateTime
+}
+note left of AuthorizationScope::authorizedResourceId
+  The authorizedResourceId is a reference to an ID in
+  Elhub system, e.g. ElhubUserId, GLN, or MeteringPointId
+end note
+
+enum AuthorizationResourceType {
+  MeteringPoint
+  Organization
+  Person
+}
+
+enum PermissionType {
+  ChangeOfSupplier
+  FullDelegation
+  ReadAccess
+}
+
+class AuthorizationGrantProperty {
+  authorizationGrantId: UUID
+  key: String
+  --
+  value: String
+}
+note right
+  Used to store metadata related to the AuthorizationGrant,
+  but not part of the grant itself. E.g., ChangeOfSupplier
+  can have SupplierContractName.
+end note
+
+class AuthorizationAuditLog {
+  + authorizationGrantId: UUID
+  + changedAt: DateTime
+  --
+  + changedBy: PartyId
+  + statusBefore: AuthorizationStatusType
+  + statusAfter: AuthorizationStatusType
+  + comment: String?
+}
+note left of AuthorizationAuditLog
+  Not strictly necessary (we could add some extra fields to
+  AuthorizationGrant), but splitting it out ensures we can
+  expand with more complex authorization flows later.
+end note
+
+AuthorizationGrant "1" *-- "0..*" AuthorizationScope
+AuthorizationGrant "1" *-- "0..*" AuthorizationGrantProperty
+AuthorizationGrant "1" *-- "0..*" AuthorizationAuditLog
+AuthorizationGrant -- AuthorizationStatusType
+AuthorizationScope -- AuthorizationResourceType
+AuthorizationScope -- PermissionType
+
+@enduml
