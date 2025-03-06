@@ -24,7 +24,7 @@ fun Application.configureRouting() {
             call.respondText("OK", status = HttpStatusCode.OK)
         }
         get(CONSENT_REQUEST) {
-
+            call.respondText(pingService.ping())
         }
     }
 }

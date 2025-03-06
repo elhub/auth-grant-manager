@@ -6,8 +6,9 @@ import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.testing.testApplication
+import org.koin.ksp.generated.defaultModule
 
-class PingServiceIntegrationTest : DescribeSpec({
+class ApplicationTest : DescribeSpec({
     describe("Ping service") {
         it("should respond with 'pong'") {
             testApplication {

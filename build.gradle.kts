@@ -14,6 +14,46 @@ buildscript {
     }
 }
 
+sourceSets {
+    val integrationTest by creating {
+        compileClasspath += sourceSets["main"].output
+        runtimeClasspath += sourceSets["main"].output
+        java.srcDir("src/integrationTest/kotlin")
+        resources.srcDir("src/integrationTest/resources")
+    }
+}
+
+configurations {
+    val integrationTestImplementation by getting {
+        extendsFrom(configurations["testImplementation"])
+    }
+    val integrationTestRuntimeOnly by getting {
+        extendsFrom(configurations["testRuntimeOnly"])
+    }
+}
+
+/*sourceSets {
+    create("integrationTest") {
+        compileClasspath += sourceSets["main"].output + configurations["testImplementation"]
+        runtimeClasspath += output + compileClasspath
+    }
+    /*
+    create("integrationTest") {
+        compileClasspath += sourceSets.main.get().output + configurations["integrationTestImplementation"]
+        runtimeClasspath += sourceSets.main.get().output + configurations["integrationTestRuntimeOnly"]
+    }
+    */
+}
+
+configurations {
+    create("integrationTestImplementation") {
+        extendsFrom(configurations["testImplementation"])
+    }
+    create("integrationTestRuntimeOnly") {
+        extendsFrom(configurations["testRuntimeOnly"])
+    }
+}*/
+
 dependencies {
     // Ktor
     implementation(libs.bundles.ktor.server)
@@ -34,9 +74,10 @@ dependencies {
     testImplementation(libs.test.kotest.runner.junit5)
     testImplementation(libs.test.kotest.assertions.core)
     // Integration Testing
-    integrationTestImplementation(libs.test.ktor.server.test.host)
-    integrationTestImplementation(libs.test.kotest.runner.junit5)
-    integrationTestImplementation(libs.test.kotest.assertions.core)}
+    "integrationTestImplementation"(libs.test.ktor.server.test.host)
+    "integrationTestImplementation"(libs.test.kotest.runner.junit5)
+    "integrationTestImplementation"(libs.test.kotest.assertions.core)
+}
 
 ksp {
     arg("KOIN_CONFIG_CHECK", "true")
@@ -71,21 +112,6 @@ tasks.named("run").configure {
     dependsOn(tasks.named("liquibaseUpdate"))
 }
 
-sourceSets {
-    create("integrationTest") {
-        compileClasspath += sourceSets.main.get().output
-        runtimeClasspath += sourceSets.main.get().output
-    }
-}
-
-val integrationTestImplementation: Configuration by configurations.getting {
-    extendsFrom(configurations.implementation.get())
-}
-
-val integrationTestRuntimeOnly: Configuration by configurations.getting {
-    extendsFrom(configurations.runtimeOnly.get())
-}
-
 val integrationTest = task<Test>("integrationTest") {
     description = "Runs integration tests"
     group = "verification"
@@ -100,4 +126,3 @@ tasks.named("integrationTest").configure {
     dependsOn(tasks.named("liquibaseUpdate"))
     finalizedBy(tasks.named("databaseComposeDown"))
 }
-

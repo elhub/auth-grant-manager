@@ -4,4 +4,4 @@ CREATE TABLE consent.consent_request  (
   end_user_id VARCHAR(36),
   requested_by VARCHAR(36),
   created_at TIMESTAMP
-)
+);
