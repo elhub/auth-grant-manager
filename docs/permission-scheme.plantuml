@@ -24,7 +24,7 @@ class AuthorizationScope {
   --
   + authorizationGrantId: UUID
   + authorizedResourceType: AuthorizationResourceType
-  + authorizedResourceId: String 
+  + authorizedResourceId: String
   + permissionType: PermissionType
   + createdAt: DateTime
 }
