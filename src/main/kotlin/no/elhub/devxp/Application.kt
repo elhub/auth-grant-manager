@@ -2,6 +2,7 @@ package no.elhub.devxp
 
 import io.ktor.server.application.Application
 import io.ktor.server.netty.EngineMain
+import no.elhub.devxp.config.configureDatabase
 import no.elhub.devxp.config.configureKoin
 import no.elhub.devxp.config.configureLogging
 import no.elhub.devxp.config.configureMonitoring
@@ -14,6 +15,7 @@ fun main(args: Array<String>) {
 }
 
 fun Application.module() {
+    configureDatabase()
     configureKoin()
     configureLogging()
     configureMonitoring()

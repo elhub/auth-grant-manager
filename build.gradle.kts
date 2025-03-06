@@ -17,7 +17,7 @@ buildscript {
 sourceSets {
     val integrationTest by creating {
         compileClasspath += sourceSets["main"].output
-        runtimeClasspath += sourceSets["main"].output
+        runtimeClasspath += output + compileClasspath
         java.srcDir("src/integrationTest/kotlin")
         resources.srcDir("src/integrationTest/resources")
     }
@@ -32,28 +32,6 @@ configurations {
     }
 }
 
-/*sourceSets {
-    create("integrationTest") {
-        compileClasspath += sourceSets["main"].output + configurations["testImplementation"]
-        runtimeClasspath += output + compileClasspath
-    }
-    /*
-    create("integrationTest") {
-        compileClasspath += sourceSets.main.get().output + configurations["integrationTestImplementation"]
-        runtimeClasspath += sourceSets.main.get().output + configurations["integrationTestRuntimeOnly"]
-    }
-    */
-}
-
-configurations {
-    create("integrationTestImplementation") {
-        extendsFrom(configurations["testImplementation"])
-    }
-    create("integrationTestRuntimeOnly") {
-        extendsFrom(configurations["testRuntimeOnly"])
-    }
-}*/
-
 dependencies {
     // Ktor
     implementation(libs.bundles.ktor.server)
@@ -64,12 +42,20 @@ dependencies {
     implementation(libs.logging.logback.classic)
     // Monitoring
     implementation(libs.bundles.ktor.monitoring)
+    // Database
+    implementation(libs.database.postgresql)
+    implementation(libs.database.hikari)
+    implementation(libs.database.exposed.core)
+    implementation(libs.database.exposed.dao)
+    implementation(libs.database.exposed.java.time)
+    implementation(libs.database.exposed.jdbc)
     // Liquibase
     liquibaseRuntime(libs.database.liquibase.core)
     liquibaseRuntime(libs.cli.picocli)
     liquibaseRuntime(libs.serialization.yaml.snakeyaml)
     liquibaseRuntime(libs.database.postgresql)
     // Unit Testing
+    testImplementation(libs.test.mockk)
     testImplementation(libs.test.ktor.server.test.host)
     testImplementation(libs.test.kotest.runner.junit5)
     testImplementation(libs.test.kotest.assertions.core)
@@ -118,11 +104,16 @@ val integrationTest = task<Test>("integrationTest") {
 
     testClassesDirs = sourceSets["integrationTest"].output.classesDirs
     classpath = sourceSets["integrationTest"].runtimeClasspath
-    shouldRunAfter("test")
+    mustRunAfter("test")
+    outputs.upToDateWhen { false }
 }
 
 tasks.named("integrationTest").configure {
     dependsOn(tasks.named("databaseComposeUp"))
     dependsOn(tasks.named("liquibaseUpdate"))
     finalizedBy(tasks.named("databaseComposeDown"))
+}
+
+tasks.named("check") {
+    dependsOn(tasks.named("integrationTest"))
 }
