@@ -29,11 +29,14 @@ dependencies {
     liquibaseRuntime(libs.cli.picocli)
     liquibaseRuntime(libs.serialization.yaml.snakeyaml)
     liquibaseRuntime(libs.database.postgresql)
-    // Testing
+    // Unit Testing
     testImplementation(libs.test.ktor.server.test.host)
     testImplementation(libs.test.kotest.runner.junit5)
     testImplementation(libs.test.kotest.assertions.core)
-}
+    // Integration Testing
+    integrationTestImplementation(libs.test.ktor.server.test.host)
+    integrationTestImplementation(libs.test.kotest.runner.junit5)
+    integrationTestImplementation(libs.test.kotest.assertions.core)}
 
 ksp {
     arg("KOIN_CONFIG_CHECK", "true")
@@ -75,11 +78,11 @@ sourceSets {
     }
 }
 
-val intTestImplementation: Configuration by configurations.getting {
+val integrationTestImplementation: Configuration by configurations.getting {
     extendsFrom(configurations.implementation.get())
 }
 
-val intTestRuntimeOnly: Configuration by configurations.getting {
+val integrationTestRuntimeOnly: Configuration by configurations.getting {
     extendsFrom(configurations.runtimeOnly.get())
 }
 
@@ -91,4 +94,10 @@ val integrationTest = task<Test>("integrationTest") {
     classpath = sourceSets["integrationTest"].runtimeClasspath
     shouldRunAfter("test")
 }
-gt stat
+
+tasks.named("integrationTest").configure {
+    dependsOn(tasks.named("databaseComposeUp"))
+    dependsOn(tasks.named("liquibaseUpdate"))
+    finalizedBy(tasks.named("databaseComposeDown"))
+}
+
