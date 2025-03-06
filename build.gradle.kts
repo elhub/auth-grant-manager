@@ -62,3 +62,8 @@ dockerCompose {
         useComposeFiles.set(listOf("db/db-compose.yaml"))
     }
 }
+
+tasks.named("run").configure {
+    dependsOn(tasks.named("databaseComposeUp"))
+    dependsOn(tasks.named("liquibaseUpdate"))
+}
