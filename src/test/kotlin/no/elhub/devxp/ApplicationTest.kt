@@ -2,11 +2,15 @@ package no.elhub.devxp
 
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.shouldBe
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import io.ktor.http.*
-import io.ktor.server.testing.*
-import no.elhub.devxp.config.*
+import io.ktor.client.request.get
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.testing.testApplication
+import no.elhub.devxp.config.configureKoin
+import no.elhub.devxp.config.configureLogging
+import no.elhub.devxp.config.configureRouting
+import no.elhub.devxp.config.configureSecurity
+import no.elhub.devxp.config.configureSerialization
 
 class ApplicationTest : DescribeSpec({
 
@@ -28,5 +32,4 @@ class ApplicationTest : DescribeSpec({
             }
         }
     }
-
 })

@@ -6,9 +6,15 @@ import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.testing.testApplication
-import no.elhub.devxp.config.*
+import no.elhub.devxp.config.configureDatabase
+import no.elhub.devxp.config.configureKoin
+import no.elhub.devxp.config.configureLogging
+import no.elhub.devxp.config.configureMonitoring
+import no.elhub.devxp.config.configureRouting
+import no.elhub.devxp.config.configureSecurity
+import no.elhub.devxp.config.configureSerialization
 
-class ApplicationIntegrationTest  : DescribeSpec({
+class ApplicationIntegrationTest : DescribeSpec({
 
     describe("Ping service") {
         it("should respond with 'pong'") {
@@ -29,7 +35,7 @@ class ApplicationIntegrationTest  : DescribeSpec({
         }
     }
 
-    describe ("Authorization Grant service") {
+    describe("Authorization Grant service") {
         it("should respond with a grant") {
             testApplication {
                 application {

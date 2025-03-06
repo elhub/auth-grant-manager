@@ -3,7 +3,8 @@ package no.elhub.devxp.config
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.response.respondText
-import io.ktor.server.routing.*
+import io.ktor.server.routing.get
+import io.ktor.server.routing.routing
 import no.elhub.devxp.services.grants.AuthorizationGrantService
 import no.elhub.devxp.services.ping.PingService
 import org.koin.ktor.ext.inject
@@ -24,7 +25,8 @@ fun Application.configureRouting() {
         get(HEALTH) {
             call.respondText("OK", status = HttpStatusCode.OK)
         }
-        get(CONSENT_REQUEST) { // This is a dummy endpoint. It should be replaced with the actual service.
+        // This is a dummy endpoint. It should be replaced with the actual service.
+        get(CONSENT_REQUEST) {
             call.respondText(grantService.createGrant())
         }
     }

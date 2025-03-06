@@ -1,9 +1,9 @@
 package no.elhub.devxp.config
 
-import io.ktor.server.application.Application
-import org.jetbrains.exposed.sql.Database
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
+import io.ktor.server.application.Application
+import org.jetbrains.exposed.sql.Database
 
 fun Application.configureDatabase() {
     val config = HikariConfig().apply {
