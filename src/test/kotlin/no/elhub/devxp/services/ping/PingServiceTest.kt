@@ -1,7 +1,8 @@
-package no.elhub.devxp.ping
+package no.elhub.devxp.services.ping
 
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.shouldBe
+import no.elhub.devxp.services.ping.PingService
 
 class PingServiceTest : DescribeSpec({
     describe("PingService") {

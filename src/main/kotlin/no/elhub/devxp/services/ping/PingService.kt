@@ -1,4 +1,4 @@
-package no.elhub.devxp.ping
+package no.elhub.devxp.services.ping
 
 import org.koin.core.annotation.Single
 

@@ -6,21 +6,29 @@ import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.testing.testApplication
-import no.elhub.devxp.config.configureMonitoring
+import no.elhub.devxp.config.configureKoin
+import no.elhub.devxp.config.configureLogging
+import no.elhub.devxp.config.configureRouting
+import no.elhub.devxp.config.configureSecurity
+import no.elhub.devxp.config.configureSerialization
 
 class ApplicationTest : DescribeSpec({
-    describe("The testApplication") {
 
-        it("should return OK status for /metrics endpoint when configured for monitoring") {
+    describe("Ping service") {
+        it("should respond with 'pong'") {
             testApplication {
                 application {
-                    configureMonitoring()
+                    // Ignore the database
+                    configureKoin()
+                    configureLogging()
+                    configureSerialization()
+                    configureSecurity()
+                    configureRouting()
                 }
 
-                client.get("/metrics").apply {
-                    status shouldBe HttpStatusCode.OK
-                    bodyAsText().contains("# TYPE") shouldBe true
-                }
+                val response = client.get("/ping")
+                response.status shouldBe HttpStatusCode.OK
+                response.bodyAsText() shouldBe "pong"
             }
         }
     }
