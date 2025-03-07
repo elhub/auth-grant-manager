@@ -97,6 +97,7 @@ tasks.named("run").configure {
     dependsOn(tasks.named("databaseComposeUp"))
     dependsOn(tasks.named("liquibaseUpdate"))
 }
+<<<<<<< HEAD
 
 val integrationTest = task<Test>("integrationTest") {
     description = "Runs integration tests"
