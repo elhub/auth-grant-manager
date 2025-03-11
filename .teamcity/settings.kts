@@ -10,7 +10,6 @@ elhubProject(group = Group.AUTH, name = "auth-consent-manager") {
     pipeline {
         sequential {
             gradleVerify {
-                analyzeDependencies = false
             }
 
             gradleJib {
