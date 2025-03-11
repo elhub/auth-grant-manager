@@ -8,6 +8,27 @@ info:
 servers:
   - url: https://api-mt1.elhub.no/consent-handler/v0
 paths:
+  "/authorization-grants/{id}":
+    get:
+      summary: Retrieve a specific authorization grant.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The id of the authorization grant to retrieve.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: The authorization grant.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthorizationGrantJsonApi'
+        "401":
+          description: Unauthorized.
+        "404":
+          description: Authorization grant not found.
   "/consent-requests":
     get:
       summary: Retrieve a list of consent requests.
@@ -191,6 +212,51 @@ components:
             read: Read access
             write: Write access
   schemas:
+    AuthorizationGrant:
+      type: object
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+        grantSource:
+          type: string
+        grantedFor:
+          type: string
+        grantedBy:
+          type: string
+        grantedTo:
+          type: string
+        grantedAt:
+          type: string
+        validFrom:
+          type: datetime
+        validTo:
+          type: datetime
+    AuthorizationGrantJsonApi:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuthorizationGrant'
+        errors:
+          description: This lists the error(s) if a request fails. The errors and data members never exist in the same document.
+          type: array
+          items:
+            $ref: '#/components/schemas/Error'
+        links:
+          type: object
+          properties:
+            self:
+              type: string
+              example: "https://api.elhub.no/consent-handler/v0/authorization-grand/{id}"
+        meta:
+          type: object
+          properties:
+            createdAt:
+              type: string
+              example: "2025-03-11T12:34:56+01:00"
     ConsentRequests:
       type: array
       items:
@@ -210,6 +276,13 @@ components:
           type: string
           format: datetime
           example: '2023-01-01T18.00.00.000Z'
+    Error:
+      type: array
+      properties:
+        code:
+          type: string
+        detail:
+          type: string
     ElhubSignedDocuments:
       type: array
       items:

@@ -1,9 +1,11 @@
-@startuml permission-scheme
+@startuml authorization-grant
 
 class AuthorizationGrant {
   + id: UUID
   --
   + status: AuthorizationStatusType
+  + grantSourceType: AuthorizationSourceType
+  + grantSourceId: UUID
   + grantedFor: PartyId
   + grantedBy: PartyId
   + grantedTo: PartyId
@@ -17,6 +19,11 @@ enum AuthorizationStatusType {
   Revoked
   Expired
   Exhausted
+}
+
+enum AuthorizationSourceType {
+  + ConsentRequest
+  + SignedDocument
 }
 
 class AuthorizationScope {
@@ -62,8 +69,9 @@ class AuthorizationAuditLog {
   + changedAt: DateTime
   --
   + changedBy: PartyId
-  + statusBefore: AuthorizationStatusType
-  + statusAfter: AuthorizationStatusType
+  + valueChanged: String
+  + valueBefore: String?
+  + valueAfter: String?
   + comment: String?
 }
 note left of AuthorizationAuditLog
@@ -76,6 +84,7 @@ AuthorizationGrant "1" *-- "0..*" AuthorizationScope
 AuthorizationGrant "1" *-- "0..*" AuthorizationGrantProperty
 AuthorizationGrant "1" *-- "0..*" AuthorizationAuditLog
 AuthorizationGrant -- AuthorizationStatusType
+AuthorizationGrant -- AuthorizationSourceType
 AuthorizationScope -- AuthorizationResourceType
 AuthorizationScope -- PermissionType
 
