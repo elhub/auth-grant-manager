@@ -217,22 +217,38 @@ components:
       properties:
         id:
           type: string
-        status:
-          type: string
-        grantSource:
-          type: string
-        grantedFor:
-          type: string
-        grantedBy:
-          type: string
-        grantedTo:
-          type: string
-        grantedAt:
-          type: string
-        validFrom:
-          type: datetime
-        validTo:
-          type: datetime
+        type:
+           type: string
+        attributes:
+          type: object
+          properties:
+            status:
+              type: string
+            grantedFor:
+              type: string
+            grantedBy:
+              type: string
+            grantedTo:
+              type: string
+            grantedAt:
+              type: string
+            validFrom:
+              type: datetime
+            validTo:
+              type: datetime
+        relationships:
+          type: object
+          properties:
+            grantSource:
+              type: object
+              properties:
+                data:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    type:
+                      type: string
     AuthorizationGrantJsonApi:
       type: object
       properties:
@@ -279,9 +295,11 @@ components:
     Error:
       type: array
       properties:
-        code:
-          type: string
         detail:
+          type: string
+        title:
+          type: string
+        status:
           type: string
     ElhubSignedDocuments:
       type: array
