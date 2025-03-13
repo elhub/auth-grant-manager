@@ -46,14 +46,10 @@
         "$comment": "This is what the specification requires, but it seems bad. https://github.com/json-api/json-api/issues/1553",
         "anyOf": [
           {
-            "required": [
-              "type"
-            ]
+            "required": ["type"]
           },
           {
-            "required": [
-              "id"
-            ]
+            "required": ["id"]
           }
         ]
       },
@@ -234,9 +230,7 @@
       "dependencies": {
         "data": {
           "not": {
-            "required": [
-              "errors"
-            ]
+            "required": ["errors"]
           }
         }
       }
@@ -326,9 +320,7 @@
           "$ref": "#/definitions/meta"
         }
       },
-      "required": [
-        "data"
-      ],
+      "required": ["data"],
       "additionalProperties": false
     },
     "relationshipLinks": {
@@ -417,15 +409,11 @@
         "anyOf": [
           {
             "type": "object",
-            "required": [
-              "type"
-            ]
+            "required": ["type"]
           },
           {
             "type": "object",
-            "required": [
-              "id"
-            ]
+            "required": ["id"]
           }
         ]
       }
@@ -434,21 +422,15 @@
       "anyOf": [
         {
           "type": "object",
-          "required": [
-            "meta"
-          ]
+          "required": ["meta"]
         },
         {
           "type": "object",
-          "required": [
-            "data"
-          ]
+          "required": ["data"]
         },
         {
           "type": "object",
-          "required": [
-            "errors"
-          ]
+          "required": ["errors"]
         }
       ]
     },
@@ -494,18 +476,13 @@
         },
         {
           "type": "object",
-          "required": [
-            "type",
-            "id"
-          ]
+          "required": ["type", "id"]
         }
       ]
     },
     "resourceIdentificationNew": {
       "type": "object",
-      "required": [
-        "type"
-      ],
+      "required": ["type"],
       "properties": {
         "type": {
           "type": "string",

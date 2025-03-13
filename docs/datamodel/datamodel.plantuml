@@ -25,36 +25,47 @@ entity Organization {
   + name: String
 }
 
-entity Consent {
+entity AuthorizationGrant {
   + id: UUID
   --
-  + status: Enum (active, revoked)
-  + offeredBy: PartyId, FK→Party
-  + signedBy: PartyId, FK→Person
-  + coveredBy: PartyId, FK→Party
-  + createdAt: DateTime
+  + status: Enum (active, revoked, expired, exhausted)
+  + grantSourceType: Enum (consentRequest, signedDocument)
+  + grantSourceId: UUID
+  + grantedFor: PartyId, FK→Party
+  + grantedBy: PartyId, FK→Person
+  + grantedTo: PartyId, FK→Party
   + validFrom: DateTime
   + validTo: DateTime
+  + createdAt: DateTime
 }
 
-' Used to store metadata related to the Consent
-entity ConsentProperty {
-  consentId: UUID, FK→Consent
+' Used to store metadata related to the AuthorizationGrant
+entity AuthorizationGrantProperty {
+  authorizationGrantId: UUID, FK→AuthorizationGrant
   key: String
   --
   value: String
 }
 
-entity ConsentPermission {
-  consentId: UUID, FK→Consent
-  permissionId: UUID, FK→Permission
+entity AuthorizationScope {
+  id: UUID
   --
+  authorizationGrantId: UUID, FK→AuthorizationGrant
+  authorizedResourceType: Enum (MeteringPoint, Organization, Person)
+  authorizedResourceId: String
+  permissionType: Enum (ChangeOfSupplier,ReadAccess,FullDelegation)
+  createdAt: DateTime
 }
 
-entity Permission {
-  + permissionId: UUID
+entity AuthorizationAuditLog {
+  authorizationGrantId: UUID, FK->AuthorizationGrant
+  changedAt: DateTime
   --
-  + description: String
+  changedBy: PartyId, FK->Party
+  valueChanged: String
+  valueBefore: String
+  valueAfter: String
+  comment: String
 }
 
 entity ConsentRequest {
@@ -112,8 +123,9 @@ entity DocumentSignatories {
 ' Relationships
 Party <|-- Person
 Party <|-- Organization
-Consent *-- ConsentPermission
-Consent *-- ConsentProperty
+AuthorizationGrant *-- AuthorizationGrantProperty
+AuthorizationGrant *-- AuthorizationScope
+AuthorizationGrant *-- AuthorizationAuditLog
 Permission <-- ConsentPermission
 ConsentRequest *-- ConsentRequestPermission
 ConsentRequest *-- ConsentRequestProperty

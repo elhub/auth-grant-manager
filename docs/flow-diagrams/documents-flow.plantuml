@@ -22,8 +22,8 @@ end note
 MarketParty -> ConsentHandler: PUT /documents/{documentId} (document.pdf)
 ConsentHandler -> MarketParty: 200 OK (consentId)
 note right
-ConsentHandler validates the document
-and returns the consentId
+ConsentHandler validates the document, creates an
+auhtorizationGrant and returns the authentificationGrantId.
 end note
 MarketParty -> EMIF: Send BRS with consentId
 note right
