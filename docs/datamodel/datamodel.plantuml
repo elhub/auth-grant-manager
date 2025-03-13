@@ -1,0 +1,142 @@
+@startuml datamodel
+
+' The PartyId is a type that is used to identify a party
+' It can be an elhub user Id or a GLN. It is a string because it can be a UUID or a GLN-number
+' type PartyId = String
+
+abstract Party {
+  + id: PartyId
+  --
+  + name: String
+  + type: Enum (person, organization)
+}
+
+entity Person {
+  + id: PartyId
+  --
+  + firstName: String
+  + lastName: String
+  + dateOfBirth: Date
+}
+
+entity Organization {
+  + id: PartyId
+  --
+  + name: String
+}
+
+entity AuthorizationGrant {
+  + id: UUID
+  --
+  + status: Enum (active, revoked, expired, exhausted)
+  + grantSourceType: Enum (consentRequest, signedDocument)
+  + grantSourceId: UUID
+  + grantedFor: PartyId, FK→Party
+  + grantedBy: PartyId, FK→Person
+  + grantedTo: PartyId, FK→Party
+  + validFrom: DateTime
+  + validTo: DateTime
+  + createdAt: DateTime
+}
+
+' Used to store metadata related to the AuthorizationGrant
+entity AuthorizationGrantProperty {
+  authorizationGrantId: UUID, FK→AuthorizationGrant
+  key: String
+  --
+  value: String
+}
+
+entity AuthorizationScope {
+  id: UUID
+  --
+  authorizationGrantId: UUID, FK→AuthorizationGrant
+  authorizedResourceType: Enum (MeteringPoint, Organization, Person)
+  authorizedResourceId: String
+  permissionType: Enum (ChangeOfSupplier,ReadAccess,FullDelegation)
+  createdAt: DateTime
+}
+
+entity AuthorizationAuditLog {
+  authorizationGrantId: UUID, FK->AuthorizationGrant
+  changedAt: DateTime
+  --
+  changedBy: PartyId, FK->Party
+  valueChanged: String
+  valueBefore: String
+  valueAfter: String
+  comment: String
+}
+
+entity ConsentRequest {
+  + id: UUID
+  --
+  + type: Enum (ChangeOfSupplier, AccessToData,...)
+  + status: Enum (pending, accepted, rejected)
+  + requestedBy: PartyId, FK→Party
+  + requestedTo: PartyId, FK→Party
+  + permissionId: UUID, FK→Permission
+  + createdAt: DateTime
+  + validTo: DateTime
+}
+
+entity ConsentRequestProperty {
+  consentRequestId: UUID, FK→ConsentRequest
+  key: String
+  --
+  value: String
+}
+
+entity ConsentRequestPermission {
+  consentRequestId: UUID, FK→ConsentRequest
+  permissionId: UUID, FK→Permission
+  --
+}
+
+' PDF's can contain metadata. Should we store properties in the PDF?
+entity Document {
+  + id: UUID
+  --
+  + title: String
+  + type: Enum (ChangeOfSupplier)
+  + file: Blob
+  + status: Enum (pending, signed, rejected, expired)
+  + requestedBy: PartyId, FK→Party
+  + createdAt: DateTime
+  + updatedAt: DateTime
+}
+
+entity DocumentPermission {
+  documentId: UUID, FK→Document
+  permissionId: UUID, FK→Permission
+  --
+}
+
+entity DocumentSignatories {
+  documentId: UUID, FK→Document
+  requestedTo: PartyId, FK→Party
+  --
+  signedBy: PartyId, FK→Person
+  signedAt: DateTime
+}
+
+' Relationships
+Party <|-- Person
+Party <|-- Organization
+AuthorizationGrant *-- AuthorizationGrantProperty
+AuthorizationGrant *-- AuthorizationScope
+AuthorizationGrant *-- AuthorizationAuditLog
+Permission <-- ConsentPermission
+ConsentRequest *-- ConsentRequestPermission
+ConsentRequest *-- ConsentRequestProperty
+Permission <-- ConsentRequestPermission
+Document *-- DocumentPermission
+Permission <-- DocumentPermission
+Document *-- DocumentSignatories
+DocumentSignatories <-- Party
+DocumentSignatories <-- Person
+Party <-- Consent
+Person <-- Consent
+Party <-- ConsentRequest
+
+@enduml
