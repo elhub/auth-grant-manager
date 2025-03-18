@@ -399,15 +399,14 @@
       "description": "An authorization grant registers an authorization granted from a person to a person or organization.",
       "type": "object",
       "properties": {
-        "id": true,
+        "id": {
+          "type": "string",
+          "description": "The unique identifier of the authorization grant."
+        },
         "type": true,
         "attributes": {
           "type": "object",
           "properties": {
-            "id": {
-              "type": "string",
-              "description": "The unique identifier of the authorization grant."
-            },
             "status": {
               "type": "string",
               "description": "The status of the authorization grant.",
