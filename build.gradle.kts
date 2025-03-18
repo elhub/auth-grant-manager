@@ -39,7 +39,7 @@ dependencies {
     implementation(libs.bundles.ktor.koin)
     ksp(libs.di.koin.ksp.compiler)
     // Logging
-    implementation(libs.logging.logback.classic)
+    implementation(libs.bundles.logging)
     // Monitoring
     implementation(libs.bundles.ktor.monitoring)
     // Database

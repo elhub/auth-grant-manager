@@ -12,6 +12,7 @@ kotlinx-serialization-plugin = "2.1.10"
 koin = "4.0.2"
 koin-annotations = "2.0.0"
 kotest = "5.9.1"
+kotlin-logging = "7.0.3"
 ksp = "2.1.10-1.0.31"
 ktor = "3.1.1"
 liquibase = "4.31.1"
@@ -58,6 +59,7 @@ ktor-server-core = { group = "io.ktor", name = "ktor-server-core", version.ref =
 ktor-server-metrics-micrometer = { group = "io.ktor", name = "ktor-server-metrics-micrometer", version.ref = "ktor" }
 ktor-server-netty = { group = "io.ktor", name = "ktor-server-netty", version.ref = "ktor" }
 logging-logback-classic = { group = "ch.qos.logback", name = "logback-classic", version.ref = "logback" }
+logging-oshai-kotlin-logging = { group = "io.github.oshai", name = "kotlin-logging-jvm", version.ref = "kotlin-logging" }
 logging-slf4j-api = { group = "org.slf4j", name = "slf4j-api", version.ref = "slf4j" }
 logging-slf4j-simple = { group = "org.slf4j", name = "slf4j-simple", version.ref = "slf4j" }
 monitoring-cohort-ktor = { group = "com.sksamuel.cohort", name = "cohort-ktor", version.ref = "cohort-ktor" }
@@ -73,5 +75,6 @@ test-mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
 [bundles]
 ktor-monitoring = ["ktor-server-metrics-micrometer", "monitoring-micrometer-registry-prometheus", "monitoring-cohort-ktor"]
 ktor-koin = ["di-koin-ktor", "di-koin-logger-slf4j", "di-koin-annotations"]
-ktor-server = ["ktor-server-core", "ktor-server-netty", "ktor-server-call-logging", "ktor-server-content-negotiation",
+ktor-server = ["ktor-server-core", "ktor-server-netty", "ktor-server-content-negotiation",
   "ktor-server-config-yaml", "ktor-serialization-kotlinx-json"]
+logging = ["ktor-server-call-logging", "logging-oshai-kotlin-logging"]
