@@ -13,12 +13,6 @@ import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import org.slf4j.event.Level
 
 fun Application.configureMonitoring() {
-    // TODO: Health Checks. Cohort, KHealth?
-    install(CallLogging) {
-        level = Level.INFO
-        filter { call -> call.request.path().startsWith("/") }
-    }
-
     val appMicrometerRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
     install(MicrometerMetrics) {
         registry = appMicrometerRegistry
