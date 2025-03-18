@@ -410,12 +410,10 @@
               "type": "array",
               "description": "The scope of the authorization grant.",
               "items": {
-                "type": "string"
+                "type": "string",
+                "enum": ["ChangeOfSupplier"]
               },
-              "uniqueItems": true,
-              "minItems": 1,
-              "maxItems": 10,
-              "enum": ["ChangeOfSupplier"]
+              "uniqueItems": true
             },
             "validFrom": {
               "type": "string",
