@@ -8,7 +8,8 @@ exposed = "0.60.0"
 google-jib = "3.4.4"
 gradle-docker = "0.17.12"
 hikari = "6.2.1"
-kotlinx-serialization-plugin = "2.1.10"
+kotlinx-datetime = "0.6.2"
+kotlinx-serialization = "1.8.0"
 koin = "4.0.2"
 koin-annotations = "2.0.0"
 kotest = "5.9.1"
@@ -30,7 +31,7 @@ google-cloud-tools-jib = { id = "com.google.cloud.tools.jib", version.ref = "goo
 gradle-docker = { id = "com.avast.gradle.docker-compose", version.ref = "gradle-docker" }
 ksp-plugin = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 ktor-plugin = { id = "io.ktor.plugin", version.ref = "ktor" }
-kotlin-plugin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlinx-serialization-plugin" }
+kotlin-plugin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlinx-serialization" }
 liquibase-plugin = { id = "org.liquibase.gradle", version.ref = "liquibase-plugin" }
 
 [libraries]
@@ -50,6 +51,8 @@ di-koin-logger-slf4j = { group = "io.insert-koin", name = "koin-logger-slf4j", v
 kotlin-bom = { group = "org.jetbrains.kotlin", name = "kotlin-bom", version = "" }
 kotlin-reflect = { group = "org.jetbrains.kotlin", name = "kotlin-reflect", version = "" }
 kotlin-stdlib-jdk8 = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib-jdk8", version = "" }
+kotlinx-datetime = { group = "org.jetbrains.kotlinx", name = "kotlinx-datetime", version.ref = "kotlinx-datetime" }
+kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 ktor-serialization-kotlinx-json = { group = "io.ktor", name = "ktor-serialization-kotlinx-json", version.ref = "ktor" }
 ktor-server-call-logging = { group = "io.ktor", name = "ktor-server-call-logging", version.ref = "ktor" }
 ktor-server-config-yaml = { group="io.ktor", name="ktor-server-config-yaml", version.ref="ktor"}
@@ -74,4 +77,5 @@ test-mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
 ktor-monitoring = ["ktor-server-metrics-micrometer", "monitoring-micrometer-registry-prometheus", "monitoring-cohort-ktor"]
 ktor-koin = ["di-koin-ktor", "di-koin-logger-slf4j", "di-koin-annotations"]
 ktor-server = ["ktor-server-core", "ktor-server-netty", "ktor-server-call-logging", "ktor-server-content-negotiation",
-  "ktor-server-config-yaml", "ktor-serialization-kotlinx-json"]
+  "ktor-server-config-yaml"]
+serialization = ["kotlinx-datetime", "kotlinx-serialization-json", "ktor-serialization-kotlinx-json", "serialization-yaml-snakeyaml"]
