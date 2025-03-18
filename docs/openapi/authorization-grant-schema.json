@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://api.elhub.no/schemas/authorization-grant-schema.json",
-  "title": "Authorization Grant in JSON:API",
-  "description": "Schema for authorization grants.",
+  "title": "Authorization Grant",
+  "description": "Schema for authorization grants in the Elhub authorization manager.",
   "type": "object",
   "allOf": [
     {
@@ -391,7 +391,7 @@
         },
         "type": {
           "type": "string",
-          "description": "The type of the resource object.",
+          "description": "The type of the resource object."
         },
         "attributes": {
           "type": "object",
