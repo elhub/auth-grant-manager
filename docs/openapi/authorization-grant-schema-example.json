@@ -1,33 +1,41 @@
 {
-  "data": {
+  "data": [{
     "id": "xxxx-xxxx-xxxx-xxxx",
     "type": "AuthorizationGrant",
     "attributes": {
       "status": "Active",
-      "grantScope": "ChangeOfSupplier",
+      "grantScope": ["ChangeOfSupplier"],
       "grantedAt": "2025-03-01T12:34:56Z",
       "validFrom": "2025-03-01T12:34:56Z",
       "validTo": "2025-03-29T00:00:00Z"
     },
     "relationships": {
       "grantSourceId": {
-        "type": "AuthorizationDocument",
-        "id": "xxxx-xxxx-xxxx-xxxx"
+        "data": {
+          "type": "AuthorizationDocument",
+          "id": "xxxx-xxxx-xxxx-xxxx"
+        }
       },
       "grantedFor": {
-        "type": "Person",
-        "id": "elhub-id-xxx"
+        "data": {
+          "type": "Person",
+          "id": "elhub-id-xxx"
+        }
       },
       "grantedBy": {
-        "type": "Person",
-        "id": "elhub-id-xxx"
+        "data": {
+          "type": "Person",
+          "id": "elhub-id-xxx"
+        }
       },
       "grantedTo": {
-        "type": "Organization",
-        "id": "balance-supplier-gln"
+        "data": {
+          "type": "Organization",
+          "id": "balance-supplier-gln"
+        }
       }
     }
-  },
+  }],
   "meta": {
     "requestedAt": "2025-03-25T12:34:56Z"
   }
