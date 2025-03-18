@@ -3,7 +3,5 @@
   "$id": "https://api.elhub.no/schemas/authorization-grant.json",
   "title": "Authorization Grant",
   "additionalProperties": false,
-  "definitions": {
-  }
+  "definitions": {}
 }
-

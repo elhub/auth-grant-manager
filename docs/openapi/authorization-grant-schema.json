@@ -89,7 +89,7 @@
           "type": "string"
         },
         "title": {
-          "description": "A short, human-readable summary of the problem. It **SHOULD NOT** change from occurrence to occurrence of the problem, except for purposes of localization.",
+          "description": "A short, human-readable summary of the problem. It **SHOULD NOT** change from occurrence to occurrence of the problem.",
           "type": "string"
         },
         "detail": {
@@ -177,9 +177,7 @@
       "dependencies": {
         "data": {
           "not": {
-            "required": [
-              "errors"
-            ]
+            "required": ["errors"]
           }
         }
       }
@@ -269,9 +267,7 @@
           "$ref": "#/definitions/meta"
         }
       },
-      "required": [
-        "data"
-      ],
+      "required": ["data"],
       "additionalProperties": false
     },
     "relationshipLinks": {
@@ -360,15 +356,11 @@
         "anyOf": [
           {
             "type": "object",
-            "required": [
-              "type"
-            ]
+            "required": ["type"]
           },
           {
             "type": "object",
-            "required": [
-              "id"
-            ]
+            "required": ["id"]
           }
         ]
       }
@@ -377,33 +369,30 @@
       "anyOf": [
         {
           "type": "object",
-          "required": [
-            "meta"
-          ]
+          "required": ["meta"]
         },
         {
           "type": "object",
-          "required": [
-            "data"
-          ]
+          "required": ["data"]
         },
         {
           "type": "object",
-          "required": [
-            "errors"
-          ]
+          "required": ["errors"]
         }
       ]
     },
     "resource": {
-      "description": "An authorization grant registers an authorization granted from a person to a person or organization.",
+      "description": "The resource of this schema is an authorization grant. It registers an authorization granted from a person to a person or organization.",
       "type": "object",
       "properties": {
         "id": {
           "type": "string",
           "description": "The unique identifier of the authorization grant."
         },
-        "type": true,
+        "type": {
+          "type": "string",
+          "description": "The type of the resource object.",
+        },
         "attributes": {
           "type": "object",
           "properties": {
@@ -426,11 +415,7 @@
               "uniqueItems": true,
               "minItems": 1,
               "maxItems": 10,
-              "enum": [
-                "read",
-                "write",
-                "readwrite"
-              ]
+              "enum": ["ChangeOfSupplier"]
             },
             "validFrom": {
               "type": "string",
@@ -454,7 +439,7 @@
           "type": "object",
           "properties": {
             "grantSourceId": {
-              "$ref": "#/definitions/dataLink",
+              "$ref": "#/definitions/dataLink"
             },
             "grantedFor": {
               "$ref": "#/definitions/dataLink"
@@ -488,18 +473,13 @@
         },
         {
           "type": "object",
-          "required": [
-            "type",
-            "id"
-          ]
+          "required": ["type", "id"]
         }
       ]
     },
     "resourceIdentificationNew": {
       "type": "object",
-      "required": [
-        "type"
-      ],
+      "required": ["type"],
       "properties": {
         "type": {
           "type": "string",
