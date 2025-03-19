@@ -2,7 +2,7 @@
 
 class AuthorizationGrant {
   + id: UUID
-  --
+  - -
   + status: AuthorizationStatusType
   + grantSourceType: AuthorizationSourceType
   + grantSourceId: UUID
