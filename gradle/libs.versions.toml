@@ -8,6 +8,8 @@ exposed = "0.60.0"
 google-jib = "3.4.5"
 gradle-docker = "0.17.12"
 hikari = "6.2.1"
+kotlinx-datetime = "0.6.2"
+kotlinx-serialization = "1.8.0"
 kotlinx-serialization-plugin = "2.1.10"
 koin = "4.0.2"
 koin-annotations = "2.0.0"
@@ -51,6 +53,8 @@ di-koin-logger-slf4j = { group = "io.insert-koin", name = "koin-logger-slf4j", v
 kotlin-bom = { group = "org.jetbrains.kotlin", name = "kotlin-bom", version = "" }
 kotlin-reflect = { group = "org.jetbrains.kotlin", name = "kotlin-reflect", version = "" }
 kotlin-stdlib-jdk8 = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib-jdk8", version = "" }
+kotlinx-datetime = { group = "org.jetbrains.kotlinx", name = "kotlinx-datetime", version.ref = "kotlinx-datetime" }
+kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 ktor-serialization-kotlinx-json = { group = "io.ktor", name = "ktor-serialization-kotlinx-json", version.ref = "ktor" }
 ktor-server-call-logging = { group = "io.ktor", name = "ktor-server-call-logging", version.ref = "ktor" }
 ktor-server-config-yaml = { group="io.ktor", name="ktor-server-config-yaml", version.ref="ktor"}
@@ -69,12 +73,14 @@ test-kotest-assertions-core = { group = "io.kotest", name = "kotest-assertions-c
 test-kotest-runner-junit5 = { group = "io.kotest", name = "kotest-runner-junit5", version.ref = "kotest" }
 test-ktor-server-test-host = { group = "io.ktor", name = "ktor-server-test-host", version.ref = "ktor" }
 test-mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
+test-testcontainers = { group = "org.testcontainers", name = "testcontainers", version.ref = "testcontainers" }
+test-testcontainers-postgres = { group = "org.testcontainers", name = "postgresql", version.ref = "testcontainers" }
 
 # Bundles should be used to group dependencies that are frequently used together.
 # The *-all bundles are used to generate the BOM files and should include all dependencies within that area.
 [bundles]
 ktor-monitoring = ["ktor-server-metrics-micrometer", "monitoring-micrometer-registry-prometheus", "monitoring-cohort-ktor"]
 ktor-koin = ["di-koin-ktor", "di-koin-logger-slf4j", "di-koin-annotations"]
-ktor-server = ["ktor-server-core", "ktor-server-netty", "ktor-server-content-negotiation",
-  "ktor-server-config-yaml", "ktor-serialization-kotlinx-json"]
+ktor-server = ["ktor-server-core", "ktor-server-netty", "ktor-server-content-negotiation", "ktor-server-config-yaml"]
 logging = ["ktor-server-call-logging", "logging-oshai-kotlin-logging"]
+serialization = ["kotlinx-datetime", "kotlinx-serialization-json", "ktor-serialization-kotlinx-json", "serialization-yaml-snakeyaml"]

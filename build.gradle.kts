@@ -14,24 +14,6 @@ buildscript {
     }
 }
 
-sourceSets {
-    val integrationTest by creating {
-        compileClasspath += sourceSets["main"].output
-        runtimeClasspath += output + compileClasspath
-        java.srcDir("src/integrationTest/kotlin")
-        resources.srcDir("src/integrationTest/resources")
-    }
-}
-
-configurations {
-    val integrationTestImplementation by getting {
-        extendsFrom(configurations["testImplementation"])
-    }
-    val integrationTestRuntimeOnly by getting {
-        extendsFrom(configurations["testRuntimeOnly"])
-    }
-}
-
 dependencies {
     // Ktor
     implementation(libs.bundles.ktor.server)
@@ -42,6 +24,8 @@ dependencies {
     implementation(libs.bundles.logging)
     // Monitoring
     implementation(libs.bundles.ktor.monitoring)
+    // Serialization
+    implementation(libs.bundles.serialization)
     // Database
     implementation(libs.database.postgresql)
     implementation(libs.database.hikari)
@@ -50,19 +34,19 @@ dependencies {
     implementation(libs.database.exposed.java.time)
     implementation(libs.database.exposed.jdbc)
     // Liquibase
+    implementation(libs.database.liquibase.core)
     liquibaseRuntime(libs.database.liquibase.core)
     liquibaseRuntime(libs.cli.picocli)
     liquibaseRuntime(libs.serialization.yaml.snakeyaml)
     liquibaseRuntime(libs.database.postgresql)
     // Unit Testing
+    testImplementation(libs.database.postgresql)
     testImplementation(libs.test.mockk)
     testImplementation(libs.test.ktor.server.test.host)
     testImplementation(libs.test.kotest.runner.junit5)
     testImplementation(libs.test.kotest.assertions.core)
-    // Integration Testing
-    "integrationTestImplementation"(libs.test.ktor.server.test.host)
-    "integrationTestImplementation"(libs.test.kotest.runner.junit5)
-    "integrationTestImplementation"(libs.test.kotest.assertions.core)
+    testImplementation(libs.test.testcontainers)
+    testImplementation(libs.test.testcontainers.postgres)
 }
 
 ksp {
@@ -96,24 +80,4 @@ dockerCompose {
 tasks.named("run").configure {
     dependsOn(tasks.named("databaseComposeUp"))
     dependsOn(tasks.named("liquibaseUpdate"))
-}
-
-val integrationTest = task<Test>("integrationTest") {
-    description = "Runs integration tests"
-    group = "verification"
-
-    testClassesDirs = sourceSets["integrationTest"].output.classesDirs
-    classpath = sourceSets["integrationTest"].runtimeClasspath
-    mustRunAfter("test")
-    outputs.upToDateWhen { false }
-}
-
-tasks.named("integrationTest").configure {
-    dependsOn(tasks.named("databaseComposeUp"))
-    dependsOn(tasks.named("liquibaseUpdate"))
-    finalizedBy(tasks.named("databaseComposeDown"))
-}
-
-tasks.named("check") {
-    dependsOn(tasks.named("integrationTest"))
 }
