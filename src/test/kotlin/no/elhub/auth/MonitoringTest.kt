@@ -17,13 +17,13 @@ class MonitoringTest : DescribeSpec({
 
     describe("Application monitoring") {
 
-        it("should generate metrics") {
+        it("should return ok when /metrics is called") {
             testApplication {
                 application {
-                    configureDatabase()
+                    val dataSource = configureDatabase()
                     configureKoin()
                     configureLogging()
-                    configureMonitoring()
+                    configureMonitoring(dataSource)
                     configureSerialization()
                     configureSecurity()
                     configureRouting()
