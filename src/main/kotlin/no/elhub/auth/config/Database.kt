@@ -5,7 +5,7 @@ import com.zaxxer.hikari.HikariDataSource
 import io.ktor.server.application.Application
 import org.jetbrains.exposed.sql.Database
 
-fun Application.configureDatabase() {
+fun Application.configureDatabase(): HikariDataSource {
     val config = HikariConfig().apply {
         jdbcUrl = "jdbc:postgresql://localhost:5432/postgres"
         driverClassName = "org.postgresql.Driver"
@@ -15,4 +15,5 @@ fun Application.configureDatabase() {
     }
     val dataSource = HikariDataSource(config)
     Database.connect(dataSource)
+    return dataSource
 }

@@ -15,10 +15,10 @@ fun main(args: Array<String>) {
 }
 
 fun Application.module() {
-    configureDatabase()
+    val dataSource = configureDatabase()
     configureKoin()
     configureLogging()
-    configureMonitoring()
+    configureMonitoring(dataSource)
     configureSerialization()
     configureSecurity()
     configureRouting()

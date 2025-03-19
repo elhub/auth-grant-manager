@@ -2,7 +2,7 @@
 format.version = "1.1"
 
 [versions]
-cohort-ktor = "2.6.1"
+cohort = "2.6.1"
 elhub-gradle = "0.3.1"
 exposed = "0.60.0"
 google-jib = "3.4.5"
@@ -26,6 +26,7 @@ picocli = "4.7.6"
 postgresql = "42.7.5"
 slf4j = "2.0.17"
 snakeyaml = "2.4"
+testcontainers = "1.20.0"
 
 [plugins]
 elhub-gradle-plugin = { id = "no.elhub.devxp.kotlin-service", version.ref = "elhub-gradle" }
@@ -66,7 +67,9 @@ logging-logback-classic = { group = "ch.qos.logback", name = "logback-classic", 
 logging-oshai-kotlin-logging = { group = "io.github.oshai", name = "kotlin-logging-jvm", version.ref = "kotlin-logging" }
 logging-slf4j-api = { group = "org.slf4j", name = "slf4j-api", version.ref = "slf4j" }
 logging-slf4j-simple = { group = "org.slf4j", name = "slf4j-simple", version.ref = "slf4j" }
-monitoring-cohort-ktor = { group = "com.sksamuel.cohort", name = "cohort-ktor", version.ref = "cohort-ktor" }
+monitoring-cohort-hikari = { group = "com.sksamuel.cohort", name = "cohort-hikari", version.ref = "cohort" }
+monitoring-cohort-ktor = { group = "com.sksamuel.cohort", name = "cohort-ktor", version.ref = "cohort" }
+monitoring-cohort-micrometer = { group = "com.sksamuel.cohort", name = "cohort-micrometer", version.ref = "cohort" }
 monitoring-micrometer-registry-prometheus = { group = "io.micrometer", name = "micrometer-registry-prometheus", version.ref = "micrometer" }
 serialization-yaml-snakeyaml = { group = "org.yaml", name = "snakeyaml", version.ref = "snakeyaml" }
 test-kotest-assertions-core = { group = "io.kotest", name = "kotest-assertions-core", version.ref = "kotest" }
@@ -79,8 +82,9 @@ test-testcontainers-postgres = { group = "org.testcontainers", name = "postgresq
 # Bundles should be used to group dependencies that are frequently used together.
 # The *-all bundles are used to generate the BOM files and should include all dependencies within that area.
 [bundles]
-ktor-monitoring = ["ktor-server-metrics-micrometer", "monitoring-micrometer-registry-prometheus", "monitoring-cohort-ktor"]
 ktor-koin = ["di-koin-ktor", "di-koin-logger-slf4j", "di-koin-annotations"]
 ktor-server = ["ktor-server-core", "ktor-server-netty", "ktor-server-content-negotiation", "ktor-server-config-yaml"]
 logging = ["ktor-server-call-logging", "logging-oshai-kotlin-logging"]
+monitoring = ["ktor-server-metrics-micrometer", "monitoring-micrometer-registry-prometheus", "monitoring-cohort-hikari", "monitoring-cohort-ktor",
+  "monitoring-cohort-micrometer"]
 serialization = ["kotlinx-datetime", "kotlinx-serialization-json", "ktor-serialization-kotlinx-json", "serialization-yaml-snakeyaml"]

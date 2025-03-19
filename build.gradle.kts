@@ -20,10 +20,6 @@ dependencies {
     // Koin
     implementation(libs.bundles.ktor.koin)
     ksp(libs.di.koin.ksp.compiler)
-    // Logging
-    implementation(libs.bundles.logging)
-    // Monitoring
-    implementation(libs.bundles.ktor.monitoring)
     // Serialization
     implementation(libs.bundles.serialization)
     // Database
@@ -39,6 +35,9 @@ dependencies {
     liquibaseRuntime(libs.cli.picocli)
     liquibaseRuntime(libs.serialization.yaml.snakeyaml)
     liquibaseRuntime(libs.database.postgresql)
+    // Observability
+    implementation(libs.bundles.logging)
+    implementation(libs.bundles.monitoring)
     // Unit Testing
     testImplementation(libs.database.postgresql)
     testImplementation(libs.test.mockk)
