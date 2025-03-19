@@ -6,13 +6,10 @@ import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
 import no.elhub.auth.services.documents.AuthorizationDocumentService
-import no.elhub.auth.services.documents.documentById
 import no.elhub.auth.services.documents.documents
 import no.elhub.auth.services.grants.AuthorizationGrantService
-import no.elhub.auth.services.grants.grantById
 import no.elhub.auth.services.grants.grants
 import no.elhub.auth.services.requests.AuthorizationRequestService
-import no.elhub.auth.services.requests.requestById
 import no.elhub.auth.services.requests.requests
 import org.koin.ktor.ext.inject
 
@@ -30,11 +27,8 @@ fun Application.configureRouting() {
 
     routing {
         grants(AUTHORIZATION_GRANT, grantService)
-        grantById("$AUTHORIZATION_GRANT/$ID", grantService)
         documents(AUTHORIZATION_DOCUMENT, documentService)
-        documentById("$AUTHORIZATION_DOCUMENT/$ID", documentService)
         requests(AUTHORIZATION_REQUEST, requestService)
-        requestById("$AUTHORIZATION_REQUEST/$ID", requestService)
         get(HEALTH) {
             call.respondText("OK", status = HttpStatusCode.OK)
         }

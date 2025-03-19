@@ -4,6 +4,7 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
+import no.elhub.auth.config.ID
 
 fun Route.requests(routePath: String, requestService: AuthorizationRequestService) {
     route(routePath) {
@@ -14,10 +15,7 @@ fun Route.requests(routePath: String, requestService: AuthorizationRequestServic
             requestService.postRequest(call)
         }
     }
-}
-
-fun Route.requestById(routePath: String, requestService: AuthorizationRequestService) {
-    route(routePath) {
+    route("$routePath/$ID") {
         get {
             requestService.getRequestById(call)
         }
