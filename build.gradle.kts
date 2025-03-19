@@ -34,15 +34,19 @@ dependencies {
     implementation(libs.database.exposed.java.time)
     implementation(libs.database.exposed.jdbc)
     // Liquibase
+    implementation(libs.database.liquibase.core)
     liquibaseRuntime(libs.database.liquibase.core)
     liquibaseRuntime(libs.cli.picocli)
     liquibaseRuntime(libs.serialization.yaml.snakeyaml)
     liquibaseRuntime(libs.database.postgresql)
     // Unit Testing
+    testImplementation(libs.database.postgresql)
     testImplementation(libs.test.mockk)
     testImplementation(libs.test.ktor.server.test.host)
     testImplementation(libs.test.kotest.runner.junit5)
     testImplementation(libs.test.kotest.assertions.core)
+    testImplementation(libs.test.testcontainers)
+    testImplementation(libs.test.testcontainers.postgres)
 }
 
 ksp {
