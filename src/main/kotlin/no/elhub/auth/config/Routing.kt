@@ -4,6 +4,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.http.content.resources
 import io.ktor.server.http.content.static
+import io.ktor.server.plugins.swagger.swaggerUI
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
@@ -34,7 +35,7 @@ fun Application.configureRouting() {
         get(HEALTH) {
             call.respondText("OK", status = HttpStatusCode.OK)
         }
-        // openAPI(path = "openapi", swaggerFile = "openapi.yaml")
+        swaggerUI(path = "openapi", swaggerFile = "openapi.yaml")
         static("/schemas") {
             resources("schemas")
         }
