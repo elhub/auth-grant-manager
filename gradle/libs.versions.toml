@@ -13,8 +13,9 @@ kotlinx-serialization = "1.8.0"
 kotlinx-serialization-plugin = "2.1.10"
 koin = "4.0.2"
 koin-annotations = "2.0.0"
+kompendium = "4.0.3"
 kotest = "5.9.1"
-kotlin-logging = "7.0.3"
+kotlin-logging = "7.0.5"
 ksp = "2.1.10-1.0.31"
 ktor = "3.1.1"
 liquibase = "4.31.1"
@@ -26,7 +27,7 @@ picocli = "4.7.6"
 postgresql = "42.7.5"
 slf4j = "2.0.17"
 snakeyaml = "2.4"
-testcontainers = "1.20.0"
+testcontainers = "1.20.6"
 
 [plugins]
 elhub-gradle-plugin = { id = "no.elhub.devxp.kotlin-service", version.ref = "elhub-gradle" }
@@ -47,6 +48,7 @@ database-hikari = { group = "com.zaxxer", name = "HikariCP", version.ref = "hika
 database-liquibase-core = { group = "org.liquibase", name = "liquibase-core", version.ref = "liquibase" }
 database-liquibase-yaml = { group = "org.liquibase", name = "liquibase-yaml", version.ref = "liquibase" }
 database-postgresql = { group = "org.postgresql", name = "postgresql", version.ref = "postgresql" }
+documentation-kompendium = { group = "io.bkbn", name = "kompendium-core", version.ref = "kompendium" }
 di-koin-annotations = { group = "io.insert-koin", name = "koin-annotations", version.ref = "koin-annotations" }
 di-koin-ksp-compiler = { group = "io.insert-koin", name = "koin-ksp-compiler", version.ref = "koin-annotations" }
 di-koin-ktor = { group = "io.insert-koin", name = "koin-ktor", version.ref = "koin" }
@@ -63,6 +65,7 @@ ktor-server-content-negotiation = { group = "io.ktor", name = "ktor-server-conte
 ktor-server-core = { group = "io.ktor", name = "ktor-server-core", version.ref = "ktor" }
 ktor-server-metrics-micrometer = { group = "io.ktor", name = "ktor-server-metrics-micrometer", version.ref = "ktor" }
 ktor-server-netty = { group = "io.ktor", name = "ktor-server-netty", version.ref = "ktor" }
+ktor-server-openapi = { group = "io.ktor", name = "ktor-server-openapi", version.ref = "ktor" }
 logging-logback-classic = { group = "ch.qos.logback", name = "logback-classic", version.ref = "logback" }
 logging-oshai-kotlin-logging = { group = "io.github.oshai", name = "kotlin-logging-jvm", version.ref = "kotlin-logging" }
 logging-slf4j-api = { group = "org.slf4j", name = "slf4j-api", version.ref = "slf4j" }
@@ -84,6 +87,7 @@ test-testcontainers-postgres = { group = "org.testcontainers", name = "postgresq
 [bundles]
 ktor-koin = ["di-koin-ktor", "di-koin-logger-slf4j", "di-koin-annotations"]
 ktor-server = ["ktor-server-core", "ktor-server-netty", "ktor-server-content-negotiation", "ktor-server-config-yaml"]
+documentation = ["documentation-kompendium", "ktor-server-openapi"]
 logging = ["ktor-server-call-logging", "logging-oshai-kotlin-logging"]
 monitoring = ["ktor-server-metrics-micrometer", "monitoring-micrometer-registry-prometheus", "monitoring-cohort-hikari", "monitoring-cohort-ktor",
   "monitoring-cohort-micrometer"]

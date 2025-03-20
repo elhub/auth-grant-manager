@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     alias(libs.plugins.elhub.gradle.plugin)
     alias(libs.plugins.google.cloud.tools.jib)
@@ -35,6 +37,8 @@ dependencies {
     liquibaseRuntime(libs.cli.picocli)
     liquibaseRuntime(libs.serialization.yaml.snakeyaml)
     liquibaseRuntime(libs.database.postgresql)
+    // Documentation
+    implementation(libs.bundles.documentation)
     // Observability
     implementation(libs.bundles.logging)
     implementation(libs.bundles.monitoring)
@@ -46,6 +50,18 @@ dependencies {
     testImplementation(libs.test.kotest.assertions.core)
     testImplementation(libs.test.testcontainers)
     testImplementation(libs.test.testcontainers.postgres)
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_21)
+        javaParameters.set(true)
+    }
 }
 
 ksp {
