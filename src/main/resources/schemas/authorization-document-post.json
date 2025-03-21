@@ -9,7 +9,9 @@
       "$ref": "#/definitions/data"
     }
   },
-  "allOf": ["data"],
+  "allOf": [
+    "data"
+  ],
   "additionalProperties": false,
   "definitions": {
     "data": {
@@ -44,7 +46,9 @@
       },
       "allOf": [
         {
-          "required": ["data"]
+          "required": [
+            "data"
+          ]
         }
       ],
       "additionalProperties": false
@@ -55,7 +59,10 @@
         "type": {
           "type": "string",
           "description": "The type of the linked resource.",
-          "enum": ["Organization", "Person"]
+          "enum": [
+            "Organization",
+            "Person"
+          ]
         },
         "id": {
           "type": "string",
@@ -77,7 +84,9 @@
             "type": {
               "type": "string",
               "description": "The type of the authorization document.",
-              "enum": ["SupplierChangeConsentRequest"]
+              "enum": [
+                "SupplierChangeConsentRequest"
+              ]
             }
           }
         },
@@ -96,7 +105,10 @@
               "$ref": "#/definitions/relationship"
             }
           },
-          "allOf": ["requestedBy", "requestedFrom"]
+          "allOf": [
+            "requestedBy",
+            "requestedFrom"
+          ]
         }
       }
     }
