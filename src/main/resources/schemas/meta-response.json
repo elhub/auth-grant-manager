@@ -13,9 +13,7 @@
       "$ref": "#/definitions/meta"
     }
   },
-  "required": [
-    "meta"
-  ],
+  "required": ["meta"],
   "additionalProperties": false,
   "definitions": {
     "linkUrl": {

@@ -4,7 +4,7 @@
   "title": "Authorization Request (Post)",
   "description": "Schema for posting authorization requests in the Elhub authorization manager.",
   "type": "object",
-  "allOf": [ "data" ],
+  "allOf": ["data"],
   "properties": {
     "data": {
       "$ref": "#/definitions/data"
@@ -26,10 +26,7 @@
         "type": {
           "type": "string",
           "description": "The type of the linked resource.",
-          "enum": [
-            "Organization",
-            "Person"
-          ]
+          "enum": ["Organization", "Person"]
         },
         "id": {
           "type": "string",
@@ -52,12 +49,10 @@
             "type": {
               "type": "string",
               "description": "The type of the authorization request.",
-              "enum": [
-                "SupplierChangeConsentRequest"
-              ]
+              "enum": ["SupplierChangeConsentRequest"]
             }
           },
-          "allOf": [ "type" ]
+          "allOf": ["type"]
         },
         "meta": {
           "$ref": "#/definitions/resourceMeta"
@@ -67,17 +62,31 @@
           "properties": {
             "requestedBy": {
               "$ref": "#/definitions/relationship",
-              "examples": [ { "data": { "type": "Organization", "id": "AS12345678" } } ]
+              "examples": [
+                {
+                  "data": {
+                    "type": "Organization",
+                    "id": "AS12345678"
+                  }
+                }
+              ]
             },
             "requestedFrom": {
               "type": "array",
               "items": {
                 "$ref": "#/definitions/relationship",
-                "examples": [ { "data": { "type": "Person", "id": "12345678901" } } ]
+                "examples": [
+                  {
+                    "data": {
+                      "type": "Person",
+                      "id": "12345678901"
+                    }
+                  }
+                ]
               }
             }
           },
-          "allOf": [ "requestedBy", "requestedFrom" ]
+          "allOf": ["requestedBy", "requestedFrom"]
         }
       }
     },

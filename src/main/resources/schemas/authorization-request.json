@@ -27,15 +27,11 @@
       "anyOf": [
         {
           "type": "object",
-          "required": [
-            "meta"
-          ]
+          "required": ["meta"]
         },
         {
           "type": "object",
-          "required": [
-            "data"
-          ]
+          "required": ["data"]
         }
       ]
     },
@@ -87,10 +83,7 @@
         "type": {
           "type": "string",
           "description": "The type of the linked resource.",
-          "enum": [
-            "Organization",
-            "Person"
-          ]
+          "enum": ["Organization", "Person"]
         },
         "id": {
           "type": "string",
@@ -117,9 +110,7 @@
             "type": {
               "type": "string",
               "description": "The type of the authorization request.",
-              "enum": [
-                "SupplierChangeConsentRequest"
-              ]
+              "enum": ["SupplierChangeConsentRequest"]
             },
             "status": {
               "type": "string",
@@ -151,13 +142,27 @@
           "properties": {
             "requestedBy": {
               "$ref": "#/definitions/relationship",
-              "examples": [ { "data": { "type": "Organization", "id": "AS12345678" } } ]
+              "examples": [
+                {
+                  "data": {
+                    "type": "Organization",
+                    "id": "AS12345678"
+                  }
+                }
+              ]
             },
             "requestedFrom": {
               "type": "array",
               "items": {
                 "$ref": "#/definitions/relationship",
-                "examples": [ { "data": { "type": "Person", "id": "12345678901" } } ]
+                "examples": [
+                  {
+                    "data": {
+                      "type": "Person",
+                      "id": "12345678901"
+                    }
+                  }
+                ]
               }
             }
           }
@@ -189,7 +194,9 @@
         "self": {
           "description": "The link that generated the current JSON request.",
           "$ref": "#/definitions/linkUrl",
-          "examples": [ "https://api.elhub.no/authorization-requests/" ]
+          "examples": [
+            "https://api.elhub.no/authorization-requests/"
+          ]
         }
       },
       "additionalProperties": false

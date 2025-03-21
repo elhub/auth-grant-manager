@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-
 plugins {
     alias(libs.plugins.elhub.gradle.plugin)
     alias(libs.plugins.google.cloud.tools.jib)

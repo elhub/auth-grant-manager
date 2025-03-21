@@ -27,15 +27,11 @@
       "anyOf": [
         {
           "type": "object",
-          "required": [
-            "meta"
-          ]
+          "required": ["meta"]
         },
         {
           "type": "object",
-          "required": [
-            "data"
-          ]
+          "required": ["data"]
         }
       ]
     },
@@ -160,19 +156,47 @@
           "properties": {
             "grantSourceId": {
               "$ref": "#/definitions/relationship",
-              "examples": [ { "data": { "type":  "AuthorizationDocument", "id":  "abcd-efgh-ijkl-mnop" } } ]
+              "examples": [
+                {
+                  "data": {
+                    "type": "AuthorizationDocument",
+                    "id": "abcd-efgh-ijkl-mnop"
+                  }
+                }
+              ]
             },
             "grantedFor": {
               "$ref": "#/definitions/relationship",
-              "examples": [ { "data": { "type": "Person", "id": "12345678901" } } ]
+              "examples": [
+                {
+                  "data": {
+                    "type": "Person",
+                    "id": "12345678901"
+                  }
+                }
+              ]
             },
             "grantedBy": {
               "$ref": "#/definitions/relationship",
-              "examples": [ { "data": { "type": "Person", "id": "12345678901" } } ]
+              "examples": [
+                {
+                  "data": {
+                    "type": "Person",
+                    "id": "12345678901"
+                  }
+                }
+              ]
             },
             "grantedTo": {
               "$ref": "#/definitions/relationship",
-              "examples": [ { "data": { "type": "Organization", "id": "AS12345678" } } ]
+              "examples": [
+                {
+                  "data": {
+                    "type": "Organization",
+                    "id": "AS12345678"
+                  }
+                }
+              ]
             }
           }
         }
@@ -203,7 +227,9 @@
         "self": {
           "description": "The link that generated the current JSON grant.",
           "$ref": "#/definitions/linkUrl",
-          "examples": [ "https://api.elhub.no/authorization-grants/" ]
+          "examples": [
+            "https://api.elhub.no/authorization-grants/"
+          ]
         }
       },
       "additionalProperties": false
