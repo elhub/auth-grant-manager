@@ -52,18 +52,6 @@ dependencies {
     testImplementation(libs.test.testcontainers.postgres)
 }
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
-}
-
-kotlin {
-    compilerOptions {
-        jvmTarget.set(JvmTarget.JVM_21)
-        javaParameters.set(true)
-    }
-}
-
 ksp {
     arg("KOIN_CONFIG_CHECK", "true")
     arg("KOIN_DEFAULT_MODULE", "true")
