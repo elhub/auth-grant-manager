@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://api.elhub.no/schemas/authorization-request.json",
+  "title": "Authorization Request (Post)",
+  "description": "Schema for posting authorization requests in the Elhub authorization manager.",
+  "type": "object",
+  "allOf": ["data"],
+  "properties": {
+    "data": {
+      "$ref": "#/definitions/data"
+    }
+  },
+  "additionalProperties": false,
+  "definitions": {
+    "data": {
+      "description": "The request's \"primary data\" is a representation of the resource or collection of resources targeted by a request.",
+      "oneOf": [
+        {
+          "$ref": "#/definitions/resource"
+        }
+      ]
+    },
+    "relationship": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "The type of the linked resource.",
+          "enum": ["Organization", "Person"]
+        },
+        "id": {
+          "type": "string",
+          "description": "The unique identifier of the linked resource."
+        }
+      }
+    },
+    "resource": {
+      "description": "The resource of this schema is an authorization request.",
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "The type of the resource object.",
+          "const": "AuthorizationRequest"
+        },
+        "attributes": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "description": "The type of the authorization request.",
+              "enum": ["SupplierChangeConsentRequest"]
+            }
+          },
+          "allOf": ["type"]
+        },
+        "meta": {
+          "$ref": "#/definitions/resourceMeta"
+        },
+        "relationships": {
+          "type": "object",
+          "properties": {
+            "requestedBy": {
+              "$ref": "#/definitions/relationship",
+              "examples": [
+                {
+                  "data": {
+                    "type": "Organization",
+                    "id": "AS12345678"
+                  }
+                }
+              ]
+            },
+            "requestedFrom": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/relationship",
+                "examples": [
+                  {
+                    "data": {
+                      "type": "Person",
+                      "id": "12345678901"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "allOf": ["requestedBy", "requestedFrom"]
+        }
+      }
+    },
+    "resourceMeta": {
+      "description": "Any additional meta-information related to the resource.",
+      "type": "object",
+      "properties": {
+        "supplierContract": {
+          "type": "string",
+          "description": "The unique identifier of a supplier contract associated with the authorization request."
+        }
+      }
+    }
+  }
+}

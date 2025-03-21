@@ -35,6 +35,8 @@ dependencies {
     liquibaseRuntime(libs.cli.picocli)
     liquibaseRuntime(libs.serialization.yaml.snakeyaml)
     liquibaseRuntime(libs.database.postgresql)
+    // Documentation
+    implementation(libs.bundles.documentation)
     // Observability
     implementation(libs.bundles.logging)
     implementation(libs.bundles.monitoring)

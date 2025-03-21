@@ -2,6 +2,9 @@ package no.elhub.auth.config
 
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
+import io.ktor.server.http.content.resources
+import io.ktor.server.http.content.static
+import io.ktor.server.plugins.swagger.swaggerUI
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
@@ -31,6 +34,10 @@ fun Application.configureRouting() {
         requests(AUTHORIZATION_REQUEST, requestService)
         get(HEALTH) {
             call.respondText("OK", status = HttpStatusCode.OK)
+        }
+        swaggerUI(path = "openapi", swaggerFile = "openapi.yaml")
+        static("/schemas") {
+            resources("schemas")
         }
     }
 }

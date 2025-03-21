@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://api.elhub.no/schemas/authorization-grant-schema.json",
+  "title": "Authorization Grant",
+  "description": "Schema for authorization grants in the Elhub authorization manager.",
+  "type": "object",
+  "properties": {
+    "data": {
+      "$ref": "#/definitions/data"
+    }
+  },
+  "allOf": ["data"],
+  "additionalProperties": false,
+  "definitions": {
+    "data": {
+      "oneOf": [
+        {
+          "$ref": "#/definitions/resource"
+        }
+      ]
+    },
+    "memberName": {
+      "description": "Member name may contain any valid JSON value.",
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9]{1}(?:[-\\w]*[a-zA-Z0-9])?$"
+    },
+    "meta": {
+      "description": "Meta defines non-standard meta information that may vary for different AuthorizationDocuments. See the specific documentation for more information.",
+      "type": "object",
+      "propertyNames": {
+        "$ref": "#/definitions/memberName"
+      },
+      "patternProperties": {
+        "": true
+      },
+      "additionalProperties": false
+    },
+    "relationship": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/relationshipData"
+        }
+      },
+      "allOf": [
+        {
+          "required": ["data"]
+        }
+      ],
+      "additionalProperties": false
+    },
+    "relationshipData": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "The type of the linked resource.",
+          "enum": ["Organization", "Person"]
+        },
+        "id": {
+          "type": "string",
+          "description": "The unique identifier of the linked resource."
+        }
+      }
+    },
+    "resource": {
+      "description": "The resource of this schema is an authorization grant. It registers an authorization granted from a person to a person or organization.",
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "AuthorizationDocument",
+          "description": "The type of the resource object."
+        },
+        "attributes": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "description": "The type of the authorization document.",
+              "enum": ["SupplierChangeConsentRequest"]
+            }
+          }
+        },
+        "meta": {
+          "$ref": "#/definitions/meta"
+        },
+        "relationships": {
+          "type": "object",
+          "properties": {
+            "requestedBy": {
+              "description": "Who is the requesting party on the document. The GLN for a company.",
+              "$ref": "#/definitions/relationship"
+            },
+            "requestedFrom": {
+              "description": "Who is the authorization requested from. Usually a GLN or Personal Identity number",
+              "$ref": "#/definitions/relationship"
+            }
+          },
+          "allOf": ["requestedBy", "requestedFrom"]
+        }
+      }
+    }
+  }
+}

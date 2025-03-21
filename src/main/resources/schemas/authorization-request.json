@@ -1,0 +1,198 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://api.elhub.no/schemas/authorization-request.json",
+  "title": "Authorization Request",
+  "description": "Schema for authorization requests in the Elhub authorization manager.",
+  "type": "object",
+  "allOf": [
+    {
+      "$ref": "#/definitions/constraintRequiredTopLevelMembers"
+    }
+  ],
+  "properties": {
+    "data": {
+      "$ref": "#/definitions/data"
+    },
+    "links": {
+      "description": "Link members related to the primary data.",
+      "$ref": "#/definitions/topLevelLinks"
+    },
+    "meta": {
+      "$ref": "#/definitions/meta"
+    }
+  },
+  "additionalProperties": false,
+  "definitions": {
+    "constraintRequiredTopLevelMembers": {
+      "anyOf": [
+        {
+          "type": "object",
+          "required": ["meta"]
+        },
+        {
+          "type": "object",
+          "required": ["data"]
+        }
+      ]
+    },
+    "data": {
+      "description": "The request's \"primary data\" is a representation of the resource or collection of resources targeted by a request.",
+      "oneOf": [
+        {
+          "$ref": "#/definitions/resource"
+        },
+        {
+          "description": "An array of resource objects, an array of resource identifier objects, or an empty array ([]), for requests that target resource collections.",
+          "$ref": "#/definitions/resourceCollection"
+        },
+        {
+          "description": "null if the request is one that might correspond to a single resource, but doesn't currently.",
+          "type": "null"
+        }
+      ]
+    },
+    "linkObject": {
+      "type": "object",
+      "properties": {
+        "href": {
+          "$ref": "#/definitions/linkUrl"
+        }
+      }
+    },
+    "linkUrl": {
+      "description": "A string containing the link's URL.",
+      "type": "string",
+      "format": "uri",
+      "$comment": "URI regex as per https://tools.ietf.org/html/rfc3986#appendix-B",
+      "pattern": "^(([^:/?#]+):)?(//([^/?#]*))?([^?#]*)(\\?([^#]*))?(#(.*))?"
+    },
+    "meta": {
+      "description": "Non-standard meta-information that can not be represented as an attribute or relationship.",
+      "type": "object",
+      "properties": {
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The date and time when the JSON document was created."
+        }
+      }
+    },
+    "relationship": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "The type of the linked resource.",
+          "enum": ["Organization", "Person"]
+        },
+        "id": {
+          "type": "string",
+          "description": "The unique identifier of the linked resource."
+        }
+      }
+    },
+    "resource": {
+      "description": "The resource of this schema is an authorization request.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "The unique identifier of the authorization request."
+        },
+        "type": {
+          "type": "string",
+          "description": "The type of the resource object.",
+          "const": "AuthorizationRequest"
+        },
+        "attributes": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "description": "The type of the authorization request.",
+              "enum": ["SupplierChangeConsentRequest"]
+            },
+            "status": {
+              "type": "string",
+              "description": "The status of the authorization request.",
+              "enum": ["accepted", "expired", "pending", "rejected"]
+            },
+            "createdAt": {
+              "type": "string",
+              "format": "date-time",
+              "description": "The date and time when the authorization request was created."
+            },
+            "validTo": {
+              "type": "string",
+              "format": "date-time",
+              "description": "The date and time when the authorization request is valid to."
+            }
+          }
+        },
+        "meta": {
+          "$ref": "#/definitions/resourceMeta"
+        },
+        "relationships": {
+          "type": "object",
+          "properties": {
+            "requestedBy": {
+              "$ref": "#/definitions/relationship",
+              "examples": [
+                {
+                  "data": {
+                    "type": "Organization",
+                    "id": "AS12345678"
+                  }
+                }
+              ]
+            },
+            "requestedFrom": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/relationship",
+                "examples": [
+                  {
+                    "data": {
+                      "type": "Person",
+                      "id": "12345678901"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "resourceCollection": {
+      "description": "An array of resource objects.",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/resource"
+      },
+      "uniqueItems": true
+    },
+    "resourceMeta": {
+      "description": "Any additional meta-information related to the resource.",
+      "type": "object",
+      "properties": {
+        "supplierContract": {
+          "type": "string",
+          "description": "The unique identifier of a supplier contract associated with the authorization request."
+        }
+      }
+    },
+    "topLevelLinks": {
+      "description": "The top-level links object **MAY** contain the following members: self, related, pagination links.",
+      "type": "object",
+      "properties": {
+        "self": {
+          "description": "The link that generated the current JSON request.",
+          "$ref": "#/definitions/linkUrl",
+          "examples": ["https://api.elhub.no/authorization-requests/"]
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}
