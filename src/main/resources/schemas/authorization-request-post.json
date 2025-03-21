@@ -1,61 +1,35 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://api.elhub.no/schemas/authorization-grant-schema.json",
-  "title": "Authorization Grant",
-  "description": "Schema for authorization grants in the Elhub authorization manager.",
+  "$id": "https://api.elhub.no/schemas/authorization-request.json",
+  "title": "Authorization Request (Post)",
+  "description": "Schema for posting authorization requests in the Elhub authorization manager.",
   "type": "object",
+  "allOf": [ "data" ],
   "properties": {
     "data": {
       "$ref": "#/definitions/data"
     }
   },
-  "allOf": ["data"],
   "additionalProperties": false,
   "definitions": {
     "data": {
+      "description": "The request's \"primary data\" is a representation of the resource or collection of resources targeted by a request.",
       "oneOf": [
         {
           "$ref": "#/definitions/resource"
         }
       ]
     },
-    "memberName": {
-      "description": "Member name may contain any valid JSON value.",
-      "type": "string",
-      "pattern": "^[a-zA-Z0-9]{1}(?:[-\\w]*[a-zA-Z0-9])?$"
-    },
-    "meta": {
-      "description": "Meta defines non-standard meta information that may vary for different AuthorizationDocuments. See the specific documentation for more information.",
-      "type": "object",
-      "propertyNames": {
-        "$ref": "#/definitions/memberName"
-      },
-      "patternProperties": {
-        "": true
-      },
-      "additionalProperties": false
-    },
     "relationship": {
-      "type": "object",
-      "properties": {
-        "data": {
-          "$ref": "#/definitions/relationshipData"
-        }
-      },
-      "allOf": [
-        {
-          "required": ["data"]
-        }
-      ],
-      "additionalProperties": false
-    },
-    "relationshipData": {
       "type": "object",
       "properties": {
         "type": {
           "type": "string",
           "description": "The type of the linked resource.",
-          "enum": ["Organization", "Person"]
+          "enum": [
+            "Organization",
+            "Person"
+          ]
         },
         "id": {
           "type": "string",
@@ -64,41 +38,78 @@
       }
     },
     "resource": {
-      "description": "The resource of this schema is an authorization grant. It registers an authorization granted from a person to a person or organization.",
+      "description": "The resource of this schema is an authorization request.",
       "type": "object",
       "properties": {
         "type": {
-          "const": "AuthorizationDocument",
-          "description": "The type of the resource object."
+          "type": "string",
+          "description": "The type of the resource object.",
+          "const": "AuthorizationRequest"
         },
         "attributes": {
           "type": "object",
           "properties": {
             "type": {
               "type": "string",
-              "description": "The type of the authorization document.",
-              "enum": ["SupplierChangeConsentRequest"]
+              "description": "The type of the authorization request.",
+              "enum": [
+                "SupplierChangeConsentRequest"
+              ]
             }
-          }
+          },
+          "allOf": [ "type" ]
         },
         "meta": {
-          "$ref": "#/definitions/meta"
+          "$ref": "#/definitions/resourceMeta"
         },
         "relationships": {
           "type": "object",
           "properties": {
             "requestedBy": {
-              "description": "Who is the requesting party on the document. The GLN for a company.",
-              "$ref": "#/definitions/relationship"
+              "$ref": "#/definitions/relationship",
+              "examples": [ { "data": { "type": "Organization", "id": "AS12345678" } } ]
             },
             "requestedFrom": {
-              "description": "Who is the authorization requested from. Usually a GLN or Personal Identity number",
-              "$ref": "#/definitions/relationship"
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/relationship",
+                "examples": [ { "data": { "type": "Person", "id": "12345678901" } } ]
+              }
             }
           },
-          "allOf": ["requestedBy", "requestedFrom"]
+          "allOf": [ "requestedBy", "requestedFrom" ]
         }
       }
+    },
+    "resourceCollection": {
+      "description": "An array of resource objects.",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/resource"
+      },
+      "uniqueItems": true
+    },
+    "resourceMeta": {
+      "description": "Any additional meta-information related to the resource.",
+      "type": "object",
+      "properties": {
+        "supplierContract": {
+          "type": "string",
+          "description": "The unique identifier of a supplier contract associated with the authorization request."
+        }
+      }
+    },
+    "topLevelLinks": {
+      "description": "The top-level links object **MAY** contain the following members: self, related, pagination links.",
+      "type": "object",
+      "properties": {
+        "self": {
+          "description": "The link that generated the current JSON request.",
+          "$ref": "#/definitions/linkUrl",
+          "examples": [ "https://api.elhub.no/authorization-requests/" ]
+        }
+      },
+      "additionalProperties": false
     }
   }
 }
