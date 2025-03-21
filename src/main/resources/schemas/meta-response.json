@@ -46,9 +46,7 @@
         "self": {
           "description": "The link that generated the current JSON document.",
           "$ref": "#/definitions/linkUrl",
-          "examples": [
-            "https://api.elhub.no/authorization-documents/"
-          ]
+          "examples": ["https://api.elhub.no/authorization-documents/"]
         }
       },
       "additionalProperties": false

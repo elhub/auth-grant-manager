@@ -115,12 +115,7 @@
             "status": {
               "type": "string",
               "description": "The status of the authorization request.",
-              "enum": [
-                "accepted",
-                "expired",
-                "pending",
-                "rejected"
-              ]
+              "enum": ["accepted", "expired", "pending", "rejected"]
             },
             "createdAt": {
               "type": "string",
@@ -194,9 +189,7 @@
         "self": {
           "description": "The link that generated the current JSON request.",
           "$ref": "#/definitions/linkUrl",
-          "examples": [
-            "https://api.elhub.no/authorization-requests/"
-          ]
+          "examples": ["https://api.elhub.no/authorization-requests/"]
         }
       },
       "additionalProperties": false

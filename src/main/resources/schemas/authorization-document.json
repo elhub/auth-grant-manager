@@ -128,12 +128,7 @@
             "status": {
               "type": "string",
               "description": "The status of the authorization document.",
-              "enum": [
-                "expired",
-                "pending",
-                "rejected",
-                "signed"
-              ]
+              "enum": ["expired", "pending", "rejected", "signed"]
             },
             "createdAt": {
               "type": "string",
@@ -221,9 +216,7 @@
         "self": {
           "description": "The link that generated the current JSON document.",
           "$ref": "#/definitions/linkUrl",
-          "examples": [
-            "https://api.elhub.no/authorization-documents/"
-          ]
+          "examples": ["https://api.elhub.no/authorization-documents/"]
         }
       },
       "additionalProperties": false

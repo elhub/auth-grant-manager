@@ -115,12 +115,7 @@
             "status": {
               "type": "string",
               "description": "The status of the authorization grant.",
-              "enum": [
-                "active",
-                "exhausted",
-                "expired",
-                "revoked"
-              ]
+              "enum": ["active", "exhausted", "expired", "revoked"]
             },
             "grantedAt": {
               "type": "string",
@@ -227,9 +222,7 @@
         "self": {
           "description": "The link that generated the current JSON grant.",
           "$ref": "#/definitions/linkUrl",
-          "examples": [
-            "https://api.elhub.no/authorization-grants/"
-          ]
+          "examples": ["https://api.elhub.no/authorization-grants/"]
         }
       },
       "additionalProperties": false
