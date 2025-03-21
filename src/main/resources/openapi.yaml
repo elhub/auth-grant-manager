@@ -26,7 +26,7 @@ paths:
           $ref: '#/components/responses/500InternalServerError'
     post:
       summary: Initiate a new authorization document flow.
-      description: Initiate a new authorization document flow. This creates a authorization document for signing and returns the document to be signed + id.
+      description: Initiate a new authorization document flow. This creates a authorization document for signing.
       requestBody:
         content:
           application/json:
