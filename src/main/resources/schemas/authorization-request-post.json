@@ -81,14 +81,6 @@
         }
       }
     },
-    "resourceCollection": {
-      "description": "An array of resource objects.",
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/resource"
-      },
-      "uniqueItems": true
-    },
     "resourceMeta": {
       "description": "Any additional meta-information related to the resource.",
       "type": "object",
@@ -98,18 +90,6 @@
           "description": "The unique identifier of a supplier contract associated with the authorization request."
         }
       }
-    },
-    "topLevelLinks": {
-      "description": "The top-level links object **MAY** contain the following members: self, related, pagination links.",
-      "type": "object",
-      "properties": {
-        "self": {
-          "description": "The link that generated the current JSON request.",
-          "$ref": "#/definitions/linkUrl",
-          "examples": [ "https://api.elhub.no/authorization-requests/" ]
-        }
-      },
-      "additionalProperties": false
     }
   }
 }
