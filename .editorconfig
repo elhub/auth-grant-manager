@@ -60,6 +60,11 @@ max_line_length = 160
 [*.md]
 max_line_length = 160
 
+# PlantUML
+[*.{puml,plantuml}]
+indent_size = 2
+max_line_length = 160
+
 # Python
 [{*.py, *.pyi}]
 max_line_length = 160
@@ -68,6 +73,10 @@ max_line_length = 160
 [*.sh]
 indent_size = 2
 max_line_length = 160
+
+# SQL
+[*.{sql}]
+indent_size = 2
 
 # TOML
 [*.toml]
