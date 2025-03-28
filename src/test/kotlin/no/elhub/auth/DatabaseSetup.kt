@@ -22,7 +22,7 @@ object DatabaseSetup : BeforeProjectListener, AfterProjectListener {
 
     override suspend fun beforeProject() {
         postgres = PostgreSQLContainer(DockerImageName.parse("postgres:15-alpine"))
-            .withDatabaseName("postgres")
+            .withDatabaseName("auth")
             .withUsername("postgres")
             .withPassword("postgres")
             .withExposedPorts(POSTGRES_PORT)
@@ -30,7 +30,7 @@ object DatabaseSetup : BeforeProjectListener, AfterProjectListener {
                 cmd.withHostConfig(HostConfig().withPortBindings(PortBinding(Ports.Binding.bindPort(POSTGRES_PORT), ExposedPort(POSTGRES_PORT))))
             }
         postgres?.start()
-        val url = "jdbc:postgresql://localhost:$POSTGRES_PORT/postgres"
+        val url = "jdbc:postgresql://localhost:$POSTGRES_PORT/auth"
         val user = "postgres"
         val password = "postgres"
         val changeLogFile = "db/db-changelog.yaml"

@@ -55,6 +55,9 @@ ksp {
     arg("KOIN_DEFAULT_MODULE", "true")
 }
 
+val dbUsername = System.getenv("DB_USERNAME") ?: ""
+val dbPassword = System.getenv("DB_PASSWORD") ?: ""
+
 application {
     mainClass.set("io.ktor.server.netty.EngineMain")
     val isDevelopment: Boolean = project.ext.has("development")
@@ -63,9 +66,9 @@ application {
 
 liquibase {
     jvmArgs = arrayOf(
-        "-Dliquibase.command.url=jdbc:postgresql://localhost:5432/postgres",
-        "-Dliquibase.command.username=postgres",
-        "-Dliquibase.command.password=postgres",
+        "-Dliquibase.command.url=jdbc:postgresql://localhost:5432/auth",
+        "-Dliquibase.command.username=$dbUsername",
+        "-Dliquibase.command.password=$dbPassword",
         "-Dliquibase.command.driver=org.postgresql.Driver",
         "-Dliquibase.command.changeLogFile=db/db-changelog.yaml"
     )
@@ -75,6 +78,12 @@ liquibase {
 dockerCompose {
     createNested("database").apply {
         useComposeFiles.set(listOf("db/db-compose.yaml"))
+        environment.putAll(
+            mapOf(
+                "DB_USERNAME" to dbUsername,
+                "DB_PASSWORD" to dbPassword
+            )
+        )
     }
 }
 
