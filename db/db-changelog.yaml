@@ -1,6 +1,8 @@
 ---
 databaseChangeLog:
-  - include:
-      file: db/schemas/consent.sql
-  - include:
-      file: db/tables/consent_request.sql
+  - includeAll:
+      path: db/schemas/
+  - includeAll:
+      path: db/types/
+  - includeAll:
+      path: db/tables/
