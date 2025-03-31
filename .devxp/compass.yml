@@ -9,7 +9,7 @@ fields:
 links:
   - name: null
     type: REPOSITORY
-    url: 'https://github.com/elhub/auth-consent-manager'
+    url: 'https://github.com/elhub/auth-grant-manager'
 relationships: {}
 labels:
   - 'language:kotlin'

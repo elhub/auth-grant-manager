@@ -6,7 +6,7 @@ info:
   description: The authorization grant manager handles the authorization grants for Elhub's APIs.
   license:
     name: MIT
-    url: https://github.com/elhub/auth-consent-manager?tab=MIT-1-ov-file
+    url: https://github.com/elhub/auth-grant-manager?tab=MIT-1-ov-file
 servers:
   - url: https://api-mt1.elhub.no/authorization-manager/v0
 paths:
