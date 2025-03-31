@@ -1,8 +1,8 @@
-# auth-consent-manager
+# auth-grant-manager
 
 ## About
 
-The auth-consent-manager is designed to manage and track user consent preferences across Elhub applications,
+The auth-grant-manager is designed to manage and track user consent preferences across Elhub applications,
 services, and data processing activities. The goal is to provide a centralized platform for collecting, storing,
 and processing user consent data. The main objectives of the consent manager are to:
 
@@ -69,14 +69,14 @@ The following endpoints are available:
 ## Contributing
 
 Contributing, issues and feature requests are welcome. See the
-[Contributing](https://github.com/elhub/auth-consent-manager/blob/main/.github/CONTRIBUTING.md) file.
+[Contributing](https://github.com/elhub/auth-grant-manager/blob/main/.github/CONTRIBUTING.md) file.
 
 ## Owners
 
 This project is developed by [Elhub](https://www.elhub.no). For the specific development group responsible for this
-code, see the [Codeowners](https://github.com/elhub/auth-consent-manager/blob/main/.github/CODEOWNERS) file.
+code, see the [Codeowners](https://github.com/elhub/auth-grant-manager/blob/main/.github/CODEOWNERS) file.
 
 ## License
 
 This project is licensed under the MIT License - see the
-[LICENSE](https://github.com/elhub/auth-consent-manager/blob/main/LICENSE) file for details.
+[LICENSE](https://github.com/elhub/auth-grant-manager/blob/main/LICENSE) file for details.
