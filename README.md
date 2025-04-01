@@ -9,7 +9,7 @@ and processing user consent data. The main objectives of the consent manager are
 * Facilitate the collection of explicit consent from users for a variety of business and data processing activities.
 * Provide a centralized repository for storing and managing user consent preferences.
 * Enable granular control over consent settings, allowing users to specify their preferences for different types of
-  data processing activities.
+    data processing activities.
 * Ensure compliance with regulatory requirements and standards related to data privacy and consent management.
 
 ## Getting Started

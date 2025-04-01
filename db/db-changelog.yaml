@@ -1,4 +1,7 @@
 ---
+# Important: Since this application is still in experimental phase, the database is not yet fully implemented.
+# Once the database schema has been reviewed and the code nears production state, we will baseline the
+# liquibase specs.
 databaseChangeLog:
   - includeAll:
       path: db/schemas/
