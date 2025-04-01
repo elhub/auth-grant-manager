@@ -2,3 +2,4 @@
 CREATE TYPE request_type AS ENUM (
     'ChangeOfSupplierConfirmation'
 )
+

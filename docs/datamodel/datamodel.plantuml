@@ -37,22 +37,52 @@ enum AuthorizationSource {
   AuthorizationRequest
 }
 
+enum AuthorizationResource {
+  MeteringPoint
+  Organization
+  Person
+}
 
+enum PermissionType {
+  ChangeOfSupplier
+  FullDelegation
+  ReadAccess
+}
 
+enum AuthorizationDocumentStatus {
+  expired
+  pending
+  rejected
+  signed
+}
 
+enum AuthorizationRequestStatus {
+  accepted
+  expired
+  pending
+  rejected
+}
+
+enum DocumentType {
+  ChangeOfSupplierConfirmation
+}
+
+enum RequestType {
+  ChangeOfSupplierConfirmation
+}
 
 entity AuthorizationGrant {
   + id: UUID
   --
-  + status: Enum (active, revoked, expired, exhausted)
-  + grantSourceType: Enum (consentRequest, signedDocument)
+  + status: AuthorizationGrantStatus
+  + grantSourceType: AuthorizationSource
   + grantSourceId: UUID
   + grantedFor: PartyId, FK→Party
   + grantedBy: PartyId, FK→Person
   + grantedTo: PartyId, FK→Party
+  + granted_at: DateTime
   + validFrom: DateTime
   + validTo: DateTime
-  + createdAt: DateTime
 }
 
 ' Used to store metadata related to the AuthorizationGrant
@@ -64,7 +94,6 @@ entity AuthorizationGrantProperty {
 }
 
 entity AuthorizationScope {
-  id: UUID
   --
   authorizationGrantId: UUID, FK→AuthorizationGrant
   authorizedResourceType: Enum (MeteringPoint, Organization, Person)
