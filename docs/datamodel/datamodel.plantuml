@@ -25,6 +25,22 @@ entity Organization {
   + name: String
 }
 
+enum AuthorizationGrantStatus {
+  active
+  revoked
+  expired
+  exhausted
+}
+
+enum AuthorizationSource {
+  AuthorizationDocument
+  AuthorizationRequest
+}
+
+
+
+
+
 entity AuthorizationGrant {
   + id: UUID
   --
