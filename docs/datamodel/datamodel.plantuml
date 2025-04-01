@@ -94,11 +94,11 @@ entity AuthorizationGrantProperty {
 }
 
 entity AuthorizationScope {
-  --
   authorizationGrantId: UUID, FK→AuthorizationGrant
   authorizedResourceType: Enum (MeteringPoint, Organization, Person)
   authorizedResourceId: String
   permissionType: Enum (ChangeOfSupplier,ReadAccess,FullDelegation)
+  --
   createdAt: DateTime
 }
 
@@ -110,59 +110,64 @@ entity AuthorizationAuditLog {
   valueChanged: String
   valueBefore: String
   valueAfter: String
-  comment: String
+  message: String
 }
 
-entity ConsentRequest {
-  + id: UUID
+entity AuthorizationRequest {
+  id: UUID
   --
-  + type: Enum (ChangeOfSupplier, AccessToData,...)
-  + status: Enum (pending, accepted, rejected)
-  + requestedBy: PartyId, FK→Party
-  + requestedTo: PartyId, FK→Party
-  + permissionId: UUID, FK→Permission
-  + createdAt: DateTime
-  + validTo: DateTime
+  type: RequestType
+  status: AuthorizationRequestStatus
+  requestedBy: PartyId, FK→Party
+  requestedTo: PartyId, FK→Party
+  createdAt: DateTime
+  validTo: DateTime
 }
 
-entity ConsentRequestProperty {
-  consentRequestId: UUID, FK→ConsentRequest
+entity AuthorizationRequestProperty {
+  authorizationRequestId: UUID, FK→AuthorizationRequest
   key: String
   --
   value: String
 }
 
-entity ConsentRequestPermission {
-  consentRequestId: UUID, FK→ConsentRequest
-  permissionId: UUID, FK→Permission
+entity AuthorizationRequestScope {
+  auhtorizationRequestId: UUID, FK→AuthorizationRequest
+  authorizedResourceType: AuthorizationResource
+  authorizedResourceId: String
+  permissionType: PermissionType
   --
+  createdAt: DateTime
 }
 
-' PDF's can contain metadata. Should we store properties in the PDF?
-entity Document {
-  + id: UUID
+' In this model it is assumed that the metadata is stored in the document.
+entity AuthorizationDocument {
+  id: UUID
   --
-  + title: String
-  + type: Enum (ChangeOfSupplier)
-  + file: Blob
-  + status: Enum (pending, signed, rejected, expired)
-  + requestedBy: PartyId, FK→Party
-  + createdAt: DateTime
-  + updatedAt: DateTime
+  title: String
+  type: DocumentType
+  file: Blob
+  status: AuthorizationDocumentStatus
+  requestedBy: PartyId, FK→Party
+  createdAt: DateTime
+  updatedAt: DateTime
 }
 
-entity DocumentPermission {
-  documentId: UUID, FK→Document
-  permissionId: UUID, FK→Permission
-  --
-}
-
-entity DocumentSignatories {
-  documentId: UUID, FK→Document
+entity AuthorizationDocumentSignatories {
+  authorizationDocumentId: UUID, FK→Document
   requestedTo: PartyId, FK→Party
   --
   signedBy: PartyId, FK→Person
   signedAt: DateTime
+}
+
+entity AuthorizationDocumentScope {
+  auhtorizationDocumentId: UUID, FK→AuthorizationRequest
+  authorizedResourceType: AuthorizationResource
+  authorizedResourceId: String
+  permissionType: PermissionType
+  --
+  createdAt: DateTime
 }
 
 ' Relationships
@@ -171,17 +176,26 @@ Party <|-- Organization
 AuthorizationGrant *-- AuthorizationGrantProperty
 AuthorizationGrant *-- AuthorizationScope
 AuthorizationGrant *-- AuthorizationAuditLog
-Permission <-- ConsentPermission
-ConsentRequest *-- ConsentRequestPermission
-ConsentRequest *-- ConsentRequestProperty
-Permission <-- ConsentRequestPermission
-Document *-- DocumentPermission
-Permission <-- DocumentPermission
-Document *-- DocumentSignatories
-DocumentSignatories <-- Party
-DocumentSignatories <-- Person
-Party <-- Consent
-Person <-- Consent
-Party <-- ConsentRequest
+AuthorizationGrant -- AuthorizationSource
+AuthorizationGrant -- AuthorizationGrantStatus
+AuthorizationGrant --> Party
+AuthorizationGrant --> Person
+AuthorizationScope -- AuthorizationResource
+AuthorizationScope -- PermissionType
+AuthorizationDocument *-- AuthorizationDocumentSignatories
+AuthorizationDocument *-- AuthorizationDocumentScope
+AuthorizationDocument -- DocumentType
+AuthorizationDocument -- AuthorizationDocumentStatus
+AuthorizationDocument --> Party
+AuthorizationDocumentSignatories -> Party
+AuthorizationDocumentSignatories --> Person
+AuthorizationDocumentScope -- AuthorizationResource
+AuthorizationDocumentScope -- PermissionType
+AuthorizationRequest *-- AuthorizationRequestProperty
+AuthorizationRequest *-- AuthorizationRequestScope
+AuthorizationRequest -- RequestType
+AuthorizationRequest -- AuthorizationRequestStatus
+AuthorizationRequestScope -- AuthorizationResource
+AuthorizationRequestScope -- PermissionType
 
 @enduml
