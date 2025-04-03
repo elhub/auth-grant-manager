@@ -177,18 +177,18 @@ AuthorizationGrant -- AuthorizationGrantStatus
 AuthorizationGrant --> Party
 AuthorizationScope -- AuthorizationResource
 AuthorizationScope -- PermissionType
-AuthorizationScope -- AuthorizationGrantScope
+AuthorizationScope "many" --* "1" AuthorizationGrantScope
 AuthorizationScope -- AuthorizationRequestScope
 AuthorizationScope -- AuthorizationDocumentScope
 AuthorizationDocument *-- AuthorizationDocumentSignatories
-AuthorizationDocument *-- AuthorizationDocumentScope
+AuthorizationDocument "1" *-- "many" AuthorizationDocumentScope
 AuthorizationDocument -- DocumentType
 AuthorizationDocument -- AuthorizationDocumentStatus
 AuthorizationDocument --> Party
 AuthorizationDocumentSignatories -> Party
 AuthorizationDocumentSignatories --> Person
 AuthorizationRequest *-- AuthorizationRequestProperty
-AuthorizationRequest *-- AuthorizationRequestScope
+AuthorizationRequest "1" *-- "many" AuthorizationRequestScope
 AuthorizationRequest -- RequestType
 AuthorizationRequest -- AuthorizationRequestStatus
 
