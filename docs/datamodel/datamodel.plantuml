@@ -26,15 +26,10 @@ entity Organization {
 }
 
 enum AuthorizationGrantStatus {
-  active
-  revoked
-  expired
-  exhausted
-}
-
-enum AuthorizationSource {
-  AuthorizationDocument
-  AuthorizationRequest
+  Active
+  Exhausted
+  Expired
+  Revoked
 }
 
 enum AuthorizationResource {
@@ -50,17 +45,17 @@ enum PermissionType {
 }
 
 enum AuthorizationDocumentStatus {
-  expired
-  pending
-  rejected
-  signed
+  Expired
+  Pending
+  Rejected
+  Signed
 }
 
 enum AuthorizationRequestStatus {
-  accepted
-  expired
-  pending
-  rejected
+  Accepted
+  Expired
+  Pending
+  Rejected
 }
 
 enum DocumentType {
@@ -72,17 +67,15 @@ enum RequestType {
 }
 
 entity AuthorizationGrant {
-  + id: UUID
+  id: UUID
   --
-  + status: AuthorizationGrantStatus
-  + grantSourceType: AuthorizationSource
-  + grantSourceId: UUID
-  + grantedFor: PartyId, FK→Party
-  + grantedBy: PartyId, FK→Person
-  + grantedTo: PartyId, FK→Party
-  + granted_at: DateTime
-  + validFrom: DateTime
-  + validTo: DateTime
+  status: AuthorizationGrantStatus
+  grantedFor: PartyId, FK→Party
+  grantedBy: PartyId, FK→Party
+  grantedTo: PartyId, FK→Party
+  grantedAt: DateTime
+  validFrom: DateTime
+  validTo: DateTime
 }
 
 ' Used to store metadata related to the AuthorizationGrant
@@ -91,15 +84,6 @@ entity AuthorizationGrantProperty {
   key: String
   --
   value: String
-}
-
-entity AuthorizationScope {
-  authorizationGrantId: UUID, FK→AuthorizationGrant
-  authorizedResourceType: Enum (MeteringPoint, Organization, Person)
-  authorizedResourceId: String
-  permissionType: Enum (ChangeOfSupplier,ReadAccess,FullDelegation)
-  --
-  createdAt: DateTime
 }
 
 entity AuthorizationAuditLog {
@@ -131,15 +115,6 @@ entity AuthorizationRequestProperty {
   value: String
 }
 
-entity AuthorizationRequestScope {
-  auhtorizationRequestId: UUID, FK→AuthorizationRequest
-  authorizedResourceType: AuthorizationResource
-  authorizedResourceId: String
-  permissionType: PermissionType
-  --
-  createdAt: DateTime
-}
-
 ' In this model it is assumed that the metadata is stored in the document.
 entity AuthorizationDocument {
   id: UUID
@@ -161,8 +136,29 @@ entity AuthorizationDocumentSignatories {
   signedAt: DateTime
 }
 
+entity AuthorizationGrantScope {
+  authorizationGrantId: UUID, FK→AuthorizationGrant
+  authorizationScopeId: BigInt, FK→AuthorizationScope
+  --
+  createdAt: DateTime
+}
+
 entity AuthorizationDocumentScope {
-  auhtorizationDocumentId: UUID, FK→AuthorizationRequest
+  authorizationDocumentId: UUID, FK→AuthorizationDocument
+  authorizationScopeId: BigInt, FK→AuthorizationScope
+  --
+  createdAt: DateTime
+}
+
+entity AuthorizationRequestScope {
+  authorizationRequestId: UUID, FK→AuthorizationRequest
+  authorizationScopeId: BigInt, FK→AuthorizationScope
+  --
+  createdAt: DateTime
+}
+
+entity AuthorizationScope {
+  id: BigSerial
   authorizedResourceType: AuthorizationResource
   authorizedResourceId: String
   permissionType: PermissionType
@@ -174,14 +170,16 @@ entity AuthorizationDocumentScope {
 Party <|-- Person
 Party <|-- Organization
 AuthorizationGrant *-- AuthorizationGrantProperty
-AuthorizationGrant *-- AuthorizationScope
+AuthorizationGrant *-- AuthorizationGrantScope
 AuthorizationGrant *-- AuthorizationAuditLog
 AuthorizationGrant -- AuthorizationSource
 AuthorizationGrant -- AuthorizationGrantStatus
 AuthorizationGrant --> Party
-AuthorizationGrant --> Person
 AuthorizationScope -- AuthorizationResource
 AuthorizationScope -- PermissionType
+AuthorizationScope -- AuthorizationGrantScope
+AuthorizationScope -- AuthorizationRequestScope
+AuthorizationScope -- AuthorizationDocumentScope
 AuthorizationDocument *-- AuthorizationDocumentSignatories
 AuthorizationDocument *-- AuthorizationDocumentScope
 AuthorizationDocument -- DocumentType
@@ -189,13 +187,9 @@ AuthorizationDocument -- AuthorizationDocumentStatus
 AuthorizationDocument --> Party
 AuthorizationDocumentSignatories -> Party
 AuthorizationDocumentSignatories --> Person
-AuthorizationDocumentScope -- AuthorizationResource
-AuthorizationDocumentScope -- PermissionType
 AuthorizationRequest *-- AuthorizationRequestProperty
 AuthorizationRequest *-- AuthorizationRequestScope
 AuthorizationRequest -- RequestType
 AuthorizationRequest -- AuthorizationRequestStatus
-AuthorizationRequestScope -- AuthorizationResource
-AuthorizationRequestScope -- PermissionType
 
 @enduml
