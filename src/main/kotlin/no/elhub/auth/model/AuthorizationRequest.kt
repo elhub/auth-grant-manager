@@ -5,7 +5,8 @@ import kotlinx.serialization.Serializable
 
 data class AuthorizationRequest(
     val id: String,
-    val status: String,
+    val type: RequestType,
+    val status: RequestStatus,
     val requestedBy: String,
     val requestedTo: String,
     val grantedFor: String,
