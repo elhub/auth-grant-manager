@@ -6,24 +6,11 @@
 
 abstract Party {
   + id: PartyId
-  --
-  + name: String
-  + type: Enum (person, organization)
 }
 
-entity Person {
-  + id: PartyId
-  --
-  + firstName: String
-  + lastName: String
-  + dateOfBirth: Date
-}
+entity Person
 
-entity Organization {
-  + id: PartyId
-  --
-  + name: String
-}
+entity Organization
 
 enum AuthorizationGrantStatus {
   Active
