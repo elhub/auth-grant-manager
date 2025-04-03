@@ -6,10 +6,6 @@ left to right direction
 ' It can be an elhub user Id or a GLN. It is a string because it can be a UUID or a GLN-number
 ' type PartyId = String
 
-abstract Party {
-  + id: PartyId
-}
-
 enum AuthorizationGrantStatus {
   Active
   Exhausted
@@ -43,6 +39,16 @@ enum AuthorizationRequestStatus {
   Rejected
 }
 
+' ElhubPersonId is our individual user Id
+' An ElhubSystem might be responsible for a change (audit log)
+' GLN and OrgNumber can both be used for organizations
+enum AuthorizationPartyType {
+  ElhubPersonId
+  ElhubSystem
+  GlobalLocationNumber
+  OrganizationNumber
+}
+
 enum DocumentType {
   ChangeOfSupplierConfirmation
 }
@@ -55,9 +61,9 @@ entity AuthorizationGrant {
   id: UUID
   --
   status: AuthorizationGrantStatus
-  grantedFor: PartyId, FK→Party
-  grantedBy: PartyId, FK→Party
-  grantedTo: PartyId, FK→Party
+  grantedFor: BigInt, FK→AuthorizationParty
+  grantedBy: BigInt, FK→AuthorizationParty
+  grantedTo: BigInt, FK→AuthorizationParty
   grantedAt: DateTime
   validFrom: DateTime
   validTo: DateTime
@@ -76,7 +82,7 @@ entity AuthorizationAuditLog {
   authorizationGrantId: UUID, FK->AuthorizationGrant
   changedAt: DateTime
   --
-  changedBy: PartyId, FK->Party
+  changedBy: BigInt, FK→AuthorizationParty
   valueChanged: String
   valueBefore: String
   valueAfter: String
@@ -88,8 +94,8 @@ entity AuthorizationRequest {
   --
   type: RequestType
   status: AuthorizationRequestStatus
-  requestedBy: PartyId, FK→Party
-  requestedTo: PartyId, FK→Party
+  requestedBy: BigInt, FK→AuthorizationParty
+  requestedTo: BigInt, FK→AuthorizationParty
   createdAt: DateTime
   updatedAt: DateTime
   validTo: DateTime
@@ -111,8 +117,8 @@ entity AuthorizationDocument {
   type: DocumentType
   file: Blob
   status: AuthorizationDocumentStatus
-  requestedBy: PartyId, FK→Party
-  requestedTo: PartyId, FK→Party
+  requestedBy: BigInt, FK→AuthorizationParty
+  requestedTo: BigInt, FK→AuthorizationParty
   createdAt: DateTime
   updatedAt: DateTime
 }
@@ -125,12 +131,11 @@ entity AuthorizationDocumentProperty {
   createdAt: DateTime
 }
 
-
 entity AuthorizationDocumentSignatories {
   authorizationDocumentId: UUID, FK→Document
-  requestedTo: PartyId, FK→Party
+  requestedTo: BigInt, FK→AuthorizationParty
   --
-  signedBy: PartyId, FK→Party
+  signedBy: BigInt, FK→AuthorizationParty
   signedAt: DateTime
 }
 
@@ -164,12 +169,21 @@ entity AuthorizationScope {
   createdAt: DateTime
 }
 
+entity AuthorizationParty {
+  id: BigSerial
+  --
+  type: AuthorizationPartyType
+  descriptor: String
+  name: String?
+  createdAt: DateTime
+}
+
 ' Relationships
 AuthorizationGrant "1" *-- "0..*" AuthorizationGrantProperty
 AuthorizationGrant "0..1" *-- "1..*" AuthorizationGrantScope
 AuthorizationGrant "1" *-- "0..*" AuthorizationAuditLog
 AuthorizationGrant --> AuthorizationGrantStatus
-AuthorizationGrant --> Party
+AuthorizationGrant --> AuthorizationParty
 AuthorizationScope --> AuthorizationResource
 AuthorizationScope --> PermissionType
 AuthorizationScope "1" *-- "0..*" AuthorizationGrantScope
@@ -180,11 +194,12 @@ AuthorizationDocument "1" *-- AuthorizationDocumentSignatories
 AuthorizationDocument "1..*" *-- "*" AuthorizationDocumentScope
 AuthorizationDocument --> DocumentType
 AuthorizationDocument --> AuthorizationDocumentStatus
-AuthorizationDocument --> Party
-AuthorizationDocumentSignatories -> Party
+AuthorizationDocument --> AuthorizationParty
+AuthorizationDocumentSignatories -> AuthorizationParty
 AuthorizationRequest "1" *-- "0..*" AuthorizationRequestProperty
 AuthorizationRequest "1" *-- "1..*" AuthorizationRequestScope
 AuthorizationRequest --> RequestType
 AuthorizationRequest --> AuthorizationRequestStatus
+AuthorizationParty --> AuthorizationPartyType
 
 @enduml
