@@ -1,42 +1,72 @@
 @startuml datamodel
+left to right direction
+'top to bottom direction
 
 ' The PartyId is a type that is used to identify a party
 ' It can be an elhub user Id or a GLN. It is a string because it can be a UUID or a GLN-number
 ' type PartyId = String
 
-abstract Party {
-  + id: PartyId
-  --
-  + name: String
-  + type: Enum (person, organization)
+enum AuthorizationGrantStatus {
+  Active
+  Exhausted
+  Expired
+  Revoked
 }
 
-entity Person {
-  + id: PartyId
-  --
-  + firstName: String
-  + lastName: String
-  + dateOfBirth: Date
+enum AuthorizationResource {
+  MeteringPoint
+  Organization
+  Person
 }
 
-entity Organization {
-  + id: PartyId
-  --
-  + name: String
+enum PermissionType {
+  ChangeOfSupplier
+  FullDelegation
+  ReadAccess
+}
+
+enum AuthorizationDocumentStatus {
+  Expired
+  Pending
+  Rejected
+  Signed
+}
+
+enum AuthorizationRequestStatus {
+  Accepted
+  Expired
+  Pending
+  Rejected
+}
+
+' ElhubPersonId is our individual user Id
+' An ElhubSystem might be responsible for a change (audit log)
+' GLN and OrgNumber can both be used for organizations
+enum AuthorizationPartyType {
+  ElhubPersonId
+  ElhubSystem
+  GlobalLocationNumber
+  OrganizationNumber
+}
+
+enum DocumentType {
+  ChangeOfSupplierConfirmation
+}
+
+enum RequestType {
+  ChangeOfSupplierConfirmation
 }
 
 entity AuthorizationGrant {
-  + id: UUID
+  id: UUID
   --
-  + status: Enum (active, revoked, expired, exhausted)
-  + grantSourceType: Enum (consentRequest, signedDocument)
-  + grantSourceId: UUID
-  + grantedFor: PartyId, FK→Party
-  + grantedBy: PartyId, FK→Person
-  + grantedTo: PartyId, FK→Party
-  + validFrom: DateTime
-  + validTo: DateTime
-  + createdAt: DateTime
+  status: AuthorizationGrantStatus
+  grantedFor: BigInt, FK→AuthorizationParty
+  grantedBy: BigInt, FK→AuthorizationParty
+  grantedTo: BigInt, FK→AuthorizationParty
+  grantedAt: DateTime
+  validFrom: DateTime
+  validTo: DateTime
 }
 
 ' Used to store metadata related to the AuthorizationGrant
@@ -45,15 +75,6 @@ entity AuthorizationGrantProperty {
   key: String
   --
   value: String
-}
-
-entity AuthorizationScope {
-  id: UUID
-  --
-  authorizationGrantId: UUID, FK→AuthorizationGrant
-  authorizedResourceType: Enum (MeteringPoint, Organization, Person)
-  authorizedResourceId: String
-  permissionType: Enum (ChangeOfSupplier,ReadAccess,FullDelegation)
   createdAt: DateTime
 }
 
@@ -61,82 +82,124 @@ entity AuthorizationAuditLog {
   authorizationGrantId: UUID, FK->AuthorizationGrant
   changedAt: DateTime
   --
-  changedBy: PartyId, FK->Party
+  changedBy: BigInt, FK→AuthorizationParty
   valueChanged: String
   valueBefore: String
   valueAfter: String
-  comment: String
+  message: String
 }
 
-entity ConsentRequest {
-  + id: UUID
+entity AuthorizationRequest {
+  id: UUID
   --
-  + type: Enum (ChangeOfSupplier, AccessToData,...)
-  + status: Enum (pending, accepted, rejected)
-  + requestedBy: PartyId, FK→Party
-  + requestedTo: PartyId, FK→Party
-  + permissionId: UUID, FK→Permission
-  + createdAt: DateTime
-  + validTo: DateTime
+  type: RequestType
+  status: AuthorizationRequestStatus
+  requestedBy: BigInt, FK→AuthorizationParty
+  requestedTo: BigInt, FK→AuthorizationParty
+  createdAt: DateTime
+  updatedAt: DateTime
+  validTo: DateTime
 }
 
-entity ConsentRequestProperty {
-  consentRequestId: UUID, FK→ConsentRequest
+entity AuthorizationRequestProperty {
+  authorizationRequestId: UUID, FK→AuthorizationRequest
   key: String
   --
   value: String
+  createdAt: DateTime
 }
 
-entity ConsentRequestPermission {
-  consentRequestId: UUID, FK→ConsentRequest
-  permissionId: UUID, FK→Permission
+' In this model it is assumed that the metadata is stored in the document.
+entity AuthorizationDocument {
+  id: UUID
   --
+  title: String
+  type: DocumentType
+  file: Blob
+  status: AuthorizationDocumentStatus
+  requestedBy: BigInt, FK→AuthorizationParty
+  requestedTo: BigInt, FK→AuthorizationParty
+  createdAt: DateTime
+  updatedAt: DateTime
 }
 
-' PDF's can contain metadata. Should we store properties in the PDF?
-entity Document {
-  + id: UUID
+entity AuthorizationDocumentProperty {
+  authorizationDocumentId: UUID, FK→AuthorizationDocument
+  key: String
   --
-  + title: String
-  + type: Enum (ChangeOfSupplier)
-  + file: Blob
-  + status: Enum (pending, signed, rejected, expired)
-  + requestedBy: PartyId, FK→Party
-  + createdAt: DateTime
-  + updatedAt: DateTime
+  value: String
+  createdAt: DateTime
 }
 
-entity DocumentPermission {
-  documentId: UUID, FK→Document
-  permissionId: UUID, FK→Permission
+entity AuthorizationDocumentSignatories {
+  authorizationDocumentId: UUID, FK→Document
+  requestedTo: BigInt, FK→AuthorizationParty
   --
-}
-
-entity DocumentSignatories {
-  documentId: UUID, FK→Document
-  requestedTo: PartyId, FK→Party
-  --
-  signedBy: PartyId, FK→Person
+  signedBy: BigInt, FK→AuthorizationParty
   signedAt: DateTime
 }
 
+entity AuthorizationGrantScope {
+  authorizationGrantId: UUID, FK→AuthorizationGrant
+  authorizationScopeId: BigInt, FK→AuthorizationScope
+  --
+  createdAt: DateTime
+}
+
+entity AuthorizationDocumentScope {
+  authorizationDocumentId: UUID, FK→AuthorizationDocument
+  authorizationScopeId: BigInt, FK→AuthorizationScope
+  --
+  createdAt: DateTime
+}
+
+entity AuthorizationRequestScope {
+  authorizationRequestId: UUID, FK→AuthorizationRequest
+  authorizationScopeId: BigInt, FK→AuthorizationScope
+  --
+  createdAt: DateTime
+}
+
+entity AuthorizationScope {
+  id: BigSerial
+  authorizedResourceType: AuthorizationResource
+  authorizedResourceId: String
+  permissionType: PermissionType
+  --
+  createdAt: DateTime
+}
+
+entity AuthorizationParty {
+  id: BigSerial
+  --
+  type: AuthorizationPartyType
+  descriptor: String
+  name: String?
+  createdAt: DateTime
+}
+
 ' Relationships
-Party <|-- Person
-Party <|-- Organization
-AuthorizationGrant *-- AuthorizationGrantProperty
-AuthorizationGrant *-- AuthorizationScope
-AuthorizationGrant *-- AuthorizationAuditLog
-Permission <-- ConsentPermission
-ConsentRequest *-- ConsentRequestPermission
-ConsentRequest *-- ConsentRequestProperty
-Permission <-- ConsentRequestPermission
-Document *-- DocumentPermission
-Permission <-- DocumentPermission
-Document *-- DocumentSignatories
-DocumentSignatories <-- Party
-DocumentSignatories <-- Person
-Party <-- Consent
-Person <-- Consent
-Party <-- ConsentRequest
+AuthorizationGrant "1" *-- "0..*" AuthorizationGrantProperty
+AuthorizationGrant "0..1" *-- "1..*" AuthorizationGrantScope
+AuthorizationGrant "1" *-- "0..*" AuthorizationAuditLog
+AuthorizationGrant --> AuthorizationGrantStatus
+AuthorizationGrant --> AuthorizationParty
+AuthorizationScope --> AuthorizationResource
+AuthorizationScope --> PermissionType
+AuthorizationScope "1" *-- "0..*" AuthorizationGrantScope
+AuthorizationScope "1" *-- "0..*" AuthorizationRequestScope
+AuthorizationScope "1" *-- "0..*" AuthorizationDocumentScope
+AuthorizationDocument "1" *-- "0..*" AuthorizationDocumentProperty
+AuthorizationDocument "1" *-- AuthorizationDocumentSignatories
+AuthorizationDocument "1..*" *-- "*" AuthorizationDocumentScope
+AuthorizationDocument --> DocumentType
+AuthorizationDocument --> AuthorizationDocumentStatus
+AuthorizationDocument --> AuthorizationParty
+AuthorizationDocumentSignatories -> AuthorizationParty
+AuthorizationRequest "1" *-- "0..*" AuthorizationRequestProperty
+AuthorizationRequest "1" *-- "1..*" AuthorizationRequestScope
+AuthorizationRequest --> RequestType
+AuthorizationRequest --> AuthorizationRequestStatus
+AuthorizationParty --> AuthorizationPartyType
 
 @enduml
