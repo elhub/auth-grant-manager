@@ -1,4 +1,6 @@
 @startuml datamodel
+left to right direction
+'top to bottom direction
 
 ' The PartyId is a type that is used to identify a party
 ' It can be an elhub user Id or a GLN. It is a string because it can be a UUID or a GLN-number
@@ -7,10 +9,6 @@
 abstract Party {
   + id: PartyId
 }
-
-entity Person
-
-entity Organization
 
 enum AuthorizationGrantStatus {
   Active
@@ -71,6 +69,7 @@ entity AuthorizationGrantProperty {
   key: String
   --
   value: String
+  createdAt: DateTime
 }
 
 entity AuthorizationAuditLog {
@@ -92,6 +91,7 @@ entity AuthorizationRequest {
   requestedBy: PartyId, FK→Party
   requestedTo: PartyId, FK→Party
   createdAt: DateTime
+  updatedAt: DateTime
   validTo: DateTime
 }
 
@@ -100,6 +100,7 @@ entity AuthorizationRequestProperty {
   key: String
   --
   value: String
+  createdAt: DateTime
 }
 
 ' In this model it is assumed that the metadata is stored in the document.
@@ -111,15 +112,25 @@ entity AuthorizationDocument {
   file: Blob
   status: AuthorizationDocumentStatus
   requestedBy: PartyId, FK→Party
+  requestedTo: PartyId, FK→Party
   createdAt: DateTime
   updatedAt: DateTime
 }
+
+entity AuthorizationDocumentProperty {
+  authorizationDocumentId: UUID, FK→AuthorizationDocument
+  key: String
+  --
+  value: String
+  createdAt: DateTime
+}
+
 
 entity AuthorizationDocumentSignatories {
   authorizationDocumentId: UUID, FK→Document
   requestedTo: PartyId, FK→Party
   --
-  signedBy: PartyId, FK→Person
+  signedBy: PartyId, FK→Party
   signedAt: DateTime
 }
 
@@ -154,29 +165,26 @@ entity AuthorizationScope {
 }
 
 ' Relationships
-Party <|-- Person
-Party <|-- Organization
-AuthorizationGrant *-- AuthorizationGrantProperty
-AuthorizationGrant *-- AuthorizationGrantScope
-AuthorizationGrant *-- AuthorizationAuditLog
-AuthorizationGrant -- AuthorizationSource
-AuthorizationGrant -- AuthorizationGrantStatus
+AuthorizationGrant "1" *-- "0..*" AuthorizationGrantProperty
+AuthorizationGrant "0..1" *-- "1..*" AuthorizationGrantScope
+AuthorizationGrant "1" *-- "0..*" AuthorizationAuditLog
+AuthorizationGrant --> AuthorizationGrantStatus
 AuthorizationGrant --> Party
-AuthorizationScope -- AuthorizationResource
-AuthorizationScope -- PermissionType
-AuthorizationScope "many" --* "1" AuthorizationGrantScope
-AuthorizationScope -- AuthorizationRequestScope
-AuthorizationScope -- AuthorizationDocumentScope
-AuthorizationDocument *-- AuthorizationDocumentSignatories
-AuthorizationDocument "1" *-- "many" AuthorizationDocumentScope
-AuthorizationDocument -- DocumentType
-AuthorizationDocument -- AuthorizationDocumentStatus
+AuthorizationScope --> AuthorizationResource
+AuthorizationScope --> PermissionType
+AuthorizationScope "1" *-- "0..*" AuthorizationGrantScope
+AuthorizationScope "1" *-- "0..*" AuthorizationRequestScope
+AuthorizationScope "1" *-- "0..*" AuthorizationDocumentScope
+AuthorizationDocument "1" *-- "0..*" AuthorizationDocumentProperty
+AuthorizationDocument "1" *-- AuthorizationDocumentSignatories
+AuthorizationDocument "1..*" *-- "*" AuthorizationDocumentScope
+AuthorizationDocument --> DocumentType
+AuthorizationDocument --> AuthorizationDocumentStatus
 AuthorizationDocument --> Party
 AuthorizationDocumentSignatories -> Party
-AuthorizationDocumentSignatories --> Person
-AuthorizationRequest *-- AuthorizationRequestProperty
-AuthorizationRequest "1" *-- "many" AuthorizationRequestScope
-AuthorizationRequest -- RequestType
-AuthorizationRequest -- AuthorizationRequestStatus
+AuthorizationRequest "1" *-- "0..*" AuthorizationRequestProperty
+AuthorizationRequest "1" *-- "1..*" AuthorizationRequestScope
+AuthorizationRequest --> RequestType
+AuthorizationRequest --> AuthorizationRequestStatus
 
 @enduml

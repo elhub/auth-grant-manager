@@ -1,4 +1,4 @@
--- changeset elhub:20
+-- changeset elhub:11
 CREATE TABLE auth.authorization_grant_scope
 (
     authorization_grant_id UUID                     NOT NULL REFERENCES auth.authorization_grant (id) ON DELETE CASCADE,

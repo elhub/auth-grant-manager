@@ -7,6 +7,7 @@ CREATE TABLE auth.authorization_request
     requested_by VARCHAR(16)                  NOT NULL,
     requested_to VARCHAR(16)                  NOT NULL,
     created_at   TIMESTAMP WITH TIME ZONE     NOT NULL,
+    updated_at   TIMESTAMP WITH TIME ZONE     NOT NULL,
     valid_to     TIMESTAMP WITH TIME ZONE     NOT NULL,
     PRIMARY KEY (id)
 );

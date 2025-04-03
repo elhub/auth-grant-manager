@@ -1,4 +1,4 @@
---changeset elhub:4
+--changeset elhub:3
 CREATE TYPE authorization_resource AS ENUM (
     'MeteringPoint',
     'Organization',

@@ -1,8 +1,9 @@
 -- changeset elhub:18
 CREATE TABLE auth.authorization_request_property
 (
-    authorization_request_id UUID        NOT NULL REFERENCES auth.authorization_request (id) ON DELETE CASCADE,
-    key                      VARCHAR(64) NOT NULL,
-    value                    TEXT        NOT NULL,
+    authorization_request_id UUID                     NOT NULL REFERENCES auth.authorization_request (id) ON DELETE CASCADE,
+    key                      VARCHAR(64)              NOT NULL,
+    value                    TEXT                     NOT NULL,
+    created_at               TIMESTAMP WITH TIME ZONE NOT NULL,
     PRIMARY KEY (authorization_request_id, key)
 );
