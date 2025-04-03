@@ -1,4 +1,4 @@
-rootProject.name = "auth-consent-manager"
+rootProject.name = "auth-grant-manager"
 
 pluginManagement {
     repositories {
