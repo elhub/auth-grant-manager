@@ -2,19 +2,20 @@ package no.elhub.auth.config
 
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
-import io.ktor.server.http.content.resources
-import io.ktor.server.http.content.static
+import io.ktor.server.http.content.staticFiles
 import io.ktor.server.plugins.swagger.swaggerUI
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
+import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import no.elhub.auth.services.documents.AuthorizationDocumentService
 import no.elhub.auth.services.documents.documents
 import no.elhub.auth.services.grants.AuthorizationGrantService
 import no.elhub.auth.services.grants.grants
 import no.elhub.auth.services.requests.AuthorizationRequestService
-import no.elhub.auth.services.requests.requests
+import no.elhub.auth.services.requests.requestRoutes
 import org.koin.ktor.ext.inject
+import java.io.File
 
 const val AUTHORIZATION_API = ""
 const val HEALTH = "$AUTHORIZATION_API/health"
@@ -31,13 +32,13 @@ fun Application.configureRouting() {
     routing {
         grants(AUTHORIZATION_GRANT, grantService)
         documents(AUTHORIZATION_DOCUMENT, documentService)
-        requests(AUTHORIZATION_REQUEST, requestService)
+        route(AUTHORIZATION_REQUEST) {
+            requestRoutes(requestService)
+        }
         get(HEALTH) {
             call.respondText("OK", status = HttpStatusCode.OK)
         }
         swaggerUI(path = "openapi", swaggerFile = "openapi.yaml")
-        static("/schemas") {
-            resources("schemas")
-        }
+        staticFiles("/schemas", File("schemas"))
     }
 }

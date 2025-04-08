@@ -1,5 +1,5 @@
 -- changeset elhub:22
-CREATE TABLE authorization_party
+CREATE TABLE auth.authorization_party
 (
     id         BIGSERIAL                              NOT NULL,
     type       authorization_party_type               NOT NULL,

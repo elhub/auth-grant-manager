@@ -15,8 +15,8 @@ fun main(args: Array<String>) {
 }
 
 fun Application.module() {
-    val dataSource = configureDatabase()
     configureKoin()
+    val dataSource = configureDatabase()
     configureLogging()
     configureMonitoring(dataSource)
     configureSerialization()

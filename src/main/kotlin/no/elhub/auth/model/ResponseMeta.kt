@@ -5,6 +5,6 @@ import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class MetaResponse(
+data class ResponseMeta(
     val createdAt: Instant = Clock.System.now(),
 )

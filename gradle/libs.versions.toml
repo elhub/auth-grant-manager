@@ -3,7 +3,7 @@ format.version = "1.1"
 
 [versions]
 cohort = "2.6.2"
-elhub-gradle = "0.4.0"
+elhub-gradle = "0.5.0"
 exposed = "0.60.0"
 google-jib = "3.4.5"
 gradle-docker = "0.17.12"
@@ -74,11 +74,12 @@ test-testcontainers = { group = "org.testcontainers", name = "testcontainers", v
 test-testcontainers-postgres = { group = "org.testcontainers", name = "postgresql", version.ref = "testcontainers" }
 
 # Bundles should be used to group dependencies that are frequently used together.
-# The *-all bundles are used to generate the BOM files and should include all dependencies within that area.
 [bundles]
-ktor-koin = ["di-koin-ktor", "di-koin-logger-slf4j", "di-koin-annotations"]
-ktor-server = ["ktor-server-core", "ktor-server-netty", "ktor-server-content-negotiation", "ktor-server-config-yaml"]
+database = ["database-exposed-core", "database-exposed-dao", "database-exposed-java-time", "database-exposed-jdbc", "database-hikari",
+  "database-liquibase-core", "database-postgresql"]
+dependency-injection = ["di-koin-ktor", "di-koin-logger-slf4j", "di-koin-annotations"]
 documentation = ["ktor-server-swagger"]
+ktor = ["ktor-server-core", "ktor-server-netty", "ktor-server-content-negotiation", "ktor-server-config-yaml"]
 logging = ["ktor-server-call-logging", "logging-slf4j-simple", "logging-oshai-kotlin-logging"]
 monitoring = ["ktor-server-metrics-micrometer", "monitoring-micrometer-registry-prometheus", "monitoring-cohort-hikari", "monitoring-cohort-ktor",
   "monitoring-cohort-micrometer"]

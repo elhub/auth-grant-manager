@@ -12,6 +12,7 @@ fun Application.configureDatabase(): HikariDataSource {
         username = environment.config.propertyOrNull("ktor.database.username")?.getString()
         password = environment.config.propertyOrNull("ktor.database.password")?.getString()
         maximumPoolSize = environment.config.propertyOrNull("ktor.database.hikari.maximumPoolSize")?.getString()?.toInt() ?: 3
+        schema = "auth"
     }
     val dataSource = HikariDataSource(config)
     Database.connect(dataSource)

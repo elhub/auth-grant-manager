@@ -26,6 +26,6 @@ data class AuthorizationGrant(
 
     @Serializable
     data class Response(
-        val meta: MetaResponse
+        val meta: ResponseMeta
     )
 }

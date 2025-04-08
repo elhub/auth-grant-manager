@@ -60,10 +60,9 @@ export DATABASE_URL=jdbc:postgresql://localhost:5432/jdbc
 
 The following endpoints are available:
 
-| Method | Path                | Description                        |
-|--------|---------------------|------------------------------------|
-| GET    | /consents           | Get all consents                   |
-| GET    | /consents/{id}      | Get a consent by ID                |
+| Method | Path                   | Description                        |
+|--------|------------------------|------------------------------------|
+| POST   | /authorization-request | Set up a new authorization request |
 
 
 ## Contributing
