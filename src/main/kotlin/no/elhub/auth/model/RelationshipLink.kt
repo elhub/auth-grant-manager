@@ -12,5 +12,4 @@ data class RelationshipLink(
         val id: String,
         val type: String,
     )
-
 }

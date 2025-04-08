@@ -7,13 +7,13 @@ import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.javatime.CurrentDateTime
 import org.jetbrains.exposed.sql.javatime.datetime
 
-data class AuthorizationRequestProperty (
+data class AuthorizationRequestProperty(
     val authorizationRequestId: String,
     val key: String,
     val value: String,
     val createdAt: LocalDateTime
 
-){
+) {
     /**
      * Entity class for the AuthorizationRequest table.
      */
@@ -30,5 +30,4 @@ data class AuthorizationRequestProperty (
         row[Entity.value],
         row[Entity.createdAt].toKotlinLocalDateTime()
     )
-
 }

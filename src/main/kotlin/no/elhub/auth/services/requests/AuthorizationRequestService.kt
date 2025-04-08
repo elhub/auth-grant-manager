@@ -68,5 +68,4 @@ class AuthorizationRequestService {
         request.properties.addAll(properties)
         return request
     }
-
 }

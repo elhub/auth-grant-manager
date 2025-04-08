@@ -1,4 +1,5 @@
 @file:OptIn(ExperimentalSerializationApi::class)
+
 package no.elhub.auth.model
 
 import kotlinx.datetime.LocalDateTime
@@ -30,15 +31,15 @@ data class AuthorizationRequest(
      */
     @OptIn(ExperimentalUuidApi::class)
     object Entity : UUIDTable("authorization_request") {
-        //val id = uuid("id").defaultExpression(CustomFunction("gen_random_uuid()", UUIDColumnType()))
+        // val id = uuid("id").defaultExpression(CustomFunction("gen_random_uuid()", UUIDColumnType()))
         val requestType = customEnumeration(
             name = "request_type",
-            fromDb = { value -> RequestType.valueOf(value as String ) },
+            fromDb = { value -> RequestType.valueOf(value as String) },
             toDb = { PGEnum("authorization_request_type", it) }
         )
         val requestStatus = customEnumeration(
             name = "request_status",
-            fromDb = { value -> RequestStatus.valueOf(value as String ) },
+            fromDb = { value -> RequestStatus.valueOf(value as String) },
             toDb = { PGEnum("authorization_request_status", it) }
         )
         val requestedBy = varchar("requested_by", 16)
@@ -91,7 +92,6 @@ data class AuthorizationRequest(
         data class Meta(
             val contract: String,
         )
-
     }
 
     /**
@@ -162,7 +162,5 @@ data class AuthorizationRequest(
         data class Meta(
             val contract: String?
         )
-
     }
-
 }

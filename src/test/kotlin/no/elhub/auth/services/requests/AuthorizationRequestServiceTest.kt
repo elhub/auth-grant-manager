@@ -161,6 +161,5 @@ class AuthorizationRequestServiceTest : DescribeSpec({
             val links = responseBody["links"]?.jsonObject
             links shouldNotBe null
         }
-
     }
 })
