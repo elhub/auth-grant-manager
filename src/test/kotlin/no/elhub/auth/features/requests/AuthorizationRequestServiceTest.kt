@@ -1,4 +1,4 @@
-package no.elhub.auth.services.requests
+package no.elhub.auth.features.requests
 
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.shouldBe
@@ -46,43 +46,36 @@ class AuthorizationRequestServiceTest : DescribeSpec({
             val responseBody = Json.parseToJsonElement(response.bodyAsText()).jsonObject
 
             // Assert the "data" object exists
-            val data = responseBody["data"]?.jsonObject
-            data shouldNotBe null
+            val data = responseBody["data"]?.jsonObject.shouldNotBe(null)
 
             // Assert the "id" and "type" fields
             data!!["id"]?.jsonPrimitive?.content shouldBe id
             data["type"]?.jsonPrimitive?.content shouldBe "AuthorizationRequest"
 
             // Assert the "attributes" object
-            val attributes = data["attributes"]?.jsonObject
-            attributes shouldNotBe null
+            val attributes = data["attributes"]?.jsonObject.shouldNotBe(null)
             attributes!!["status"]?.jsonPrimitive?.content shouldBe "Pending"
             attributes["createdAt"]?.jsonPrimitive?.content shouldNotBe null
             attributes["updatedAt"]?.jsonPrimitive?.content shouldNotBe null
             attributes["validTo"]?.jsonPrimitive?.content shouldBe "2025-04-04T02:00"
 
             // Assert the "relationships" object
-            val relationships = data["relationships"]?.jsonObject
-            relationships shouldNotBe null
+            val relationships = data["relationships"]?.jsonObject.shouldNotBe(null)
 
-            val requestedBy = relationships!!["requestedBy"]?.jsonObject?.get("data")?.jsonObject
-            requestedBy shouldNotBe null
+            val requestedBy = relationships!!["requestedBy"]?.jsonObject?.get("data")?.jsonObject.shouldNotBe(null)
             requestedBy!!["id"]?.jsonPrimitive?.content shouldBe "0847976000005"
             requestedBy["type"]?.jsonPrimitive?.content shouldBe "User"
 
-            val requestedTo = relationships["requestedTo"]?.jsonObject?.get("data")?.jsonObject
-            requestedTo shouldNotBe null
+            val requestedTo = relationships["requestedTo"]?.jsonObject?.get("data")?.jsonObject.shouldNotBe(null)
             requestedTo!!["id"]?.jsonPrimitive?.content shouldBe "80102512345"
             requestedTo["type"]?.jsonPrimitive?.content shouldBe "User"
 
             // Assert the "meta" object
-            val meta = responseBody["meta"]?.jsonObject
-            meta shouldNotBe null
+            val meta = responseBody["meta"]?.jsonObject.shouldNotBe(null)
             meta!!["createdAt"]?.jsonPrimitive?.content shouldNotBe null
 
             // Assert the "links" object
-            val links = responseBody["links"]?.jsonObject
-            links shouldNotBe null
+            val links = responseBody["links"]?.jsonObject.shouldNotBe(null)
             links!!["self"]?.jsonPrimitive?.content shouldBe "http://localhost/authorization-requests/$id"
         }
 
@@ -123,43 +116,36 @@ class AuthorizationRequestServiceTest : DescribeSpec({
             val responseBody = Json.parseToJsonElement(response.bodyAsText()).jsonObject
 
             // Assert the "data" object exists
-            val data = responseBody["data"]?.jsonObject
-            data shouldNotBe null
+            val data = responseBody["data"]?.jsonObject.shouldNotBe(null)
 
             // Assert the "id" and "type" fields
             data!!["id"]?.jsonPrimitive?.content shouldNotBe null
             data["type"]?.jsonPrimitive?.content shouldBe "AuthorizationRequest"
 
             // Assert the "attributes" object
-            val attributes = data["attributes"]?.jsonObject
-            attributes shouldNotBe null
+            val attributes = data["attributes"]?.jsonObject.shouldNotBe(null)
             attributes!!["status"]?.jsonPrimitive?.content shouldBe "Pending"
             attributes["createdAt"]?.jsonPrimitive?.content shouldNotBe null
             attributes["updatedAt"]?.jsonPrimitive?.content shouldNotBe null
             attributes["validTo"]?.jsonPrimitive?.content shouldNotBe null
 
             // Assert the "relationships" object
-            val relationships = data["relationships"]?.jsonObject
-            relationships shouldNotBe null
+            val relationships = data["relationships"]?.jsonObject.shouldNotBe(null)
 
-            val requestedBy = relationships!!["requestedBy"]?.jsonObject?.get("data")?.jsonObject
-            requestedBy shouldNotBe null
+            val requestedBy = relationships!!["requestedBy"]?.jsonObject?.get("data")?.jsonObject.shouldNotBe(null)
             requestedBy!!["id"]?.jsonPrimitive?.content shouldBe "0847976000005"
             requestedBy["type"]?.jsonPrimitive?.content shouldBe "User"
 
-            val requestedTo = relationships["requestedTo"]?.jsonObject?.get("data")?.jsonObject
-            requestedTo shouldNotBe null
+            val requestedTo = relationships["requestedTo"]?.jsonObject?.get("data")?.jsonObject.shouldNotBe(null)
             requestedTo!!["id"]?.jsonPrimitive?.content shouldBe "80102512345"
             requestedTo["type"]?.jsonPrimitive?.content shouldBe "User"
 
             // Assert the "meta" object
-            val meta = responseBody["meta"]?.jsonObject
-            meta shouldNotBe null
+            val meta = responseBody["meta"]?.jsonObject.shouldNotBe(null)
             meta!!["createdAt"]?.jsonPrimitive?.content shouldNotBe null
 
             // Assert the "links" object
-            val links = responseBody["links"]?.jsonObject
-            links shouldNotBe null
+            val links = responseBody["links"]?.jsonObject.shouldNotBe(null)
         }
     }
 })

@@ -1,4 +1,4 @@
-package no.elhub.auth.services.documents
+package no.elhub.auth.features.documents
 
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.shouldBe

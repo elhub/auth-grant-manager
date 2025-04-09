@@ -1,4 +1,4 @@
-package no.elhub.auth.services.requests
+package no.elhub.auth.features.requests
 
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit

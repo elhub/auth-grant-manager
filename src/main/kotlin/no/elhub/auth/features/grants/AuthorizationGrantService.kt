@@ -1,4 +1,4 @@
-package no.elhub.auth.services.grants
+package no.elhub.auth.features.grants
 
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall

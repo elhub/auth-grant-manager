@@ -1,4 +1,4 @@
-package no.elhub.auth.services.grants
+package no.elhub.auth.features.grants
 
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.shouldBe

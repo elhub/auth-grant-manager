@@ -1,4 +1,4 @@
-package no.elhub.auth.services.requests
+package no.elhub.auth.features.requests
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.http.HttpStatusCode

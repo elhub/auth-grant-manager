@@ -1,4 +1,4 @@
-package no.elhub.auth.services.documents
+package no.elhub.auth.features.documents
 
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall

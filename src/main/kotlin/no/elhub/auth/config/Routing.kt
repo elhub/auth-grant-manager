@@ -8,12 +8,12 @@ import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
-import no.elhub.auth.services.documents.AuthorizationDocumentService
-import no.elhub.auth.services.documents.documents
-import no.elhub.auth.services.grants.AuthorizationGrantService
-import no.elhub.auth.services.grants.grants
-import no.elhub.auth.services.requests.AuthorizationRequestService
-import no.elhub.auth.services.requests.requestRoutes
+import no.elhub.auth.features.documents.AuthorizationDocumentService
+import no.elhub.auth.features.documents.documents
+import no.elhub.auth.features.grants.AuthorizationGrantService
+import no.elhub.auth.features.grants.grants
+import no.elhub.auth.features.requests.AuthorizationRequestService
+import no.elhub.auth.features.requests.requestRoutes
 import org.koin.ktor.ext.inject
 import java.io.File
 
