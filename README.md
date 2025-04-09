@@ -19,7 +19,7 @@ and processing user consent data. The main objectives of the consent manager are
 * Java 17
 * Docker
 * Environment variables for the database connection: `DB_USERNAME` and `DB_PASSWORD`
-    * Run `DB_USERNAME=postgres DB_PASSWORD=postgres ./gradlew ...` to pass the variables to the gradle tasks
+  * Run `DB_USERNAME=postgres DB_PASSWORD=postgres ./gradlew ...` to pass the variables to the gradle tasks
 
 ### Building & Running
 
@@ -60,10 +60,9 @@ export DATABASE_URL=jdbc:postgresql://localhost:5432/jdbc
 
 The following endpoints are available:
 
-| Method | Path                | Description                        |
-|--------|---------------------|------------------------------------|
-| GET    | /consents           | Get all consents                   |
-| GET    | /consents/{id}      | Get a consent by ID                |
+| Method | Path                   | Description                        |
+|--------|------------------------|------------------------------------|
+| POST   | /authorization-request | Set up a new authorization request |
 
 
 ## Contributing

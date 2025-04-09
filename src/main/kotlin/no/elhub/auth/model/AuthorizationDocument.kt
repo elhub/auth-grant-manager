@@ -16,6 +16,6 @@ data class AuthorizationDocument(
 ) {
     @Serializable
     data class Response(
-        val meta: MetaResponse
+        val meta: ResponseMeta
     )
 }

@@ -16,21 +16,15 @@ buildscript {
 
 dependencies {
     // Ktor
-    implementation(libs.bundles.ktor.server)
+    implementation(libs.bundles.ktor)
     // Koin
-    implementation(libs.bundles.ktor.koin)
+    implementation(libs.bundles.dependency.injection)
     ksp(libs.di.koin.ksp.compiler)
     // Serialization
     implementation(libs.bundles.serialization)
     // Database
-    implementation(libs.database.postgresql)
-    implementation(libs.database.hikari)
-    implementation(libs.database.exposed.core)
-    implementation(libs.database.exposed.dao)
-    implementation(libs.database.exposed.java.time)
-    implementation(libs.database.exposed.jdbc)
+    implementation(libs.bundles.database)
     // Liquibase
-    implementation(libs.database.liquibase.core)
     liquibaseRuntime(libs.database.liquibase.core)
     liquibaseRuntime(libs.cli.picocli)
     liquibaseRuntime(libs.serialization.yaml.snakeyaml)
@@ -70,7 +64,7 @@ liquibase {
         "-Dliquibase.command.username=$dbUsername",
         "-Dliquibase.command.password=$dbPassword",
         "-Dliquibase.command.driver=org.postgresql.Driver",
-        "-Dliquibase.command.changeLogFile=db/db-changelog.yaml"
+        "-Dliquibase.command.changeLogFile=db/db-changelog.yaml",
     )
     activities.register("main")
 }

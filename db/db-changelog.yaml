@@ -9,3 +9,5 @@ databaseChangeLog:
       path: db/types/
   - includeAll:
       path: db/tables/
+  - includeAll:
+      path: db/data/

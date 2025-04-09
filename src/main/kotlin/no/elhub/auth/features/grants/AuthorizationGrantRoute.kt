@@ -1,4 +1,4 @@
-package no.elhub.auth.services.grants
+package no.elhub.auth.features.grants
 
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get

@@ -1,4 +1,4 @@
-package no.elhub.auth.services.documents
+package no.elhub.auth.features.documents
 
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get

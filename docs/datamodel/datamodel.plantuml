@@ -32,7 +32,7 @@ enum AuthorizationDocumentStatus {
   Signed
 }
 
-enum AuthorizationRequestStatus {
+enum RequestStatus {
   Accepted
   Expired
   Pending
@@ -199,7 +199,7 @@ AuthorizationDocumentSignatories -> AuthorizationParty
 AuthorizationRequest "1" *-- "0..*" AuthorizationRequestProperty
 AuthorizationRequest "1" *-- "1..*" AuthorizationRequestScope
 AuthorizationRequest --> RequestType
-AuthorizationRequest --> AuthorizationRequestStatus
+AuthorizationRequest --> RequestStatus
 AuthorizationParty --> AuthorizationPartyType
 
 @enduml
