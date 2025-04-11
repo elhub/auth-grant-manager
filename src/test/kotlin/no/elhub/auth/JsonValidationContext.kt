@@ -2,9 +2,8 @@ package no.elhub.auth
 
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import io.kotest.matchers.shouldBe as kotestShouldBe
 import io.kotest.matchers.nulls.shouldNotBeNull as kotestShouldNotBeNull
-
+import io.kotest.matchers.shouldBe as kotestShouldBe
 
 @DslMarker
 annotation class JsonDsl
