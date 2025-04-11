@@ -30,9 +30,11 @@ fun Application.configureRouting() {
     val requestService by inject<AuthorizationRequestHandler>()
 
     routing {
-        grants(AUTHORIZATION_GRANT, grantService)
         route(AUTHORIZATION_DOCUMENT) {
             documentRoutes(documentService)
+        }
+        route(AUTHORIZATION_GRANT) {
+            grants(grantService)
         }
         route(AUTHORIZATION_REQUEST) {
             requestRoutes(requestService)
