@@ -11,10 +11,18 @@ annotation class JsonDsl
 @JsonDsl
 class JsonValidationContext(private val json: JsonObject) {
 
-    // Track keys that have been validated
-    val validatedKeys = mutableSetOf<String>()
+    companion object {
+        fun validate(json: JsonObject, block: JsonValidationContext.() -> Unit) {
+            JsonValidationContext(json).apply {
+                block()
+                assertAllKeysValidated()
+            }
+        }
+    }
 
-    fun assertAllKeysValidated() {
+    private val validatedKeys = mutableSetOf<String>()
+
+    private fun assertAllKeysValidated() {
         val unvalidated = json.keys - validatedKeys
         if (unvalidated.isNotEmpty()) {
             error("Unvalidated keys in JSON: $unvalidated")
@@ -22,34 +30,31 @@ class JsonValidationContext(private val json: JsonObject) {
     }
 
     operator fun String.invoke(block: JsonValidationContext.() -> Unit) {
-        validatedKeys += this
         val child = json[this] ?: error("Key '$this' not found in JSON: $json")
         if (child !is JsonObject) {
             error("Expected key '$this' to be a JsonObject, but found: $child")
         }
-        JsonValidationContext(child).apply {
+        validatedKeys += this
+        validate(child) {
             block()
-            assertAllKeysValidated()
         }
     }
 
     infix fun String.shouldBe(expected: Any?) {
-        validatedKeys += this
         val actual = json[this] ?: error("Key '$this' not found in JSON: $json")
         actual.jsonPrimitive.content kotestShouldBe expected
+        validatedKeys += this
     }
 
     fun String.shouldNotBeNull() {
-        validatedKeys += this
         val actual = json[this] ?: error("Key '$this' not found in JSON: $json")
         actual.jsonPrimitive.content.kotestShouldNotBeNull()
+        validatedKeys += this
     }
 }
 
 fun JsonObject.validate(block: JsonValidationContext.() -> Unit) {
-    JsonValidationContext(this).apply {
+    JsonValidationContext.validate(this) {
         block()
-        print(this.validatedKeys)
-        assertAllKeysValidated()
     }
 }
