@@ -16,7 +16,7 @@ import kotlinx.serialization.json.jsonPrimitive
 import no.elhub.auth.config.AUTHORIZATION_REQUEST
 import no.elhub.auth.utils.defaultTestApplication
 
-class AuthorizationRequestServiceTest : DescribeSpec({
+class AuthorizationRequestHandlerTest : DescribeSpec({
 
     lateinit var testApp: TestApplication
 

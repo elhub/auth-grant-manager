@@ -1,6 +1,7 @@
 package no.elhub.auth.features.requests
 
-import io.github.oshai.kotlinlogging.KotlinLogging
+import arrow.core.Either.Left
+import arrow.core.Either.Right
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
@@ -11,30 +12,30 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import io.ktor.server.util.url
 import no.elhub.auth.config.ID
-import no.elhub.auth.model.AuthorizationRequest
-import no.elhub.auth.model.ResponseMeta
+import no.elhub.auth.features.errors.ApiError
+import no.elhub.auth.features.errors.ApiErrorJson
 
-private val logger = KotlinLogging.logger {}
-
-fun Route.requestRoutes(requestService: AuthorizationRequestService) {
+fun Route.requestRoutes(requestService: AuthorizationRequestHandler) {
     get {
-        call.respond(status = HttpStatusCode.OK, message = ResponseMeta())
+        val result = requestService.getRequests()
+        call.respond(status = HttpStatusCode.OK, message = AuthorizationRequestResponseCollection.from(result, call.url()))
     }
     post {
+        val authRequest: AuthorizationRequestRequest
         try {
-            val authRequest = call.receive<AuthorizationRequest.Request>()
+            authRequest = call.receive<AuthorizationRequestRequest>()
             if (authRequest.data.attributes.requestType.isBlank()) {
-                call.respondText("Missing or malformed request type", status = HttpStatusCode.BadRequest)
+                call.respond(status = HttpStatusCode.BadRequest, message = ApiErrorJson.from(ApiError.BadRequest(detail = "Missing request type"), call.url()))
                 return@post
             }
-            logger.info { "Call service" }
-            val newRequest = requestService.createRequest(authRequest)
-            val response = AuthorizationRequest.Json(newRequest, selfLink = "${call.url()}/${newRequest.id}")
-            call.respond(status = HttpStatusCode.Created, message = response)
         } catch (e: Exception) {
-            logger.error(e) { "Failed to parse request" }
-            call.respondText("Malformed request", status = HttpStatusCode.BadRequest)
+            call.respond(status = HttpStatusCode.BadRequest, message = ApiErrorJson.from(ApiError.BadRequest(detail = e.message ?: ""), call.url()))
             return@post
+        }
+        val result = requestService.createRequest(authRequest)
+        when (result) {
+            is Left -> call.respond(HttpStatusCode.fromValue(result.value.status), ApiErrorJson.from(result.value, call.url()))
+            is Right -> call.respond(status = HttpStatusCode.Created, message = AuthorizationRequestResponse.from(result.value, selfLink = call.url()))
         }
     }
     route("/$ID") {
@@ -44,9 +45,11 @@ fun Route.requestRoutes(requestService: AuthorizationRequestService) {
                 call.respondText("Missing or malformed id", status = HttpStatusCode.BadRequest)
                 return@get
             }
-            val request = requestService.getRequest(id)
-            val response = AuthorizationRequest.Json(request, selfLink = call.url())
-            call.respond(status = HttpStatusCode.OK, message = response)
+            val result = requestService.getRequest(id)
+            when (result) {
+                is Left -> call.respond(HttpStatusCode.fromValue(result.value.status), ApiErrorJson.from(result.value, call.url()))
+                is Right -> call.respond(status = HttpStatusCode.OK, message = AuthorizationRequestResponse.from(result.value, selfLink = call.url()))
+            }
         }
     }
 }

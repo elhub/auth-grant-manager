@@ -1,5 +1,7 @@
 package no.elhub.auth.features.requests
 
+import arrow.core.Either
+import arrow.core.raise.either
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDateTime
@@ -9,6 +11,7 @@ import kotlinx.datetime.plus
 import kotlinx.datetime.toJavaLocalDateTime
 import kotlinx.datetime.toLocalDateTime
 import no.elhub.auth.DEFAULT_REQUEST_DEADLINE
+import no.elhub.auth.features.errors.ApiError
 import no.elhub.auth.model.AuthorizationRequest
 import no.elhub.auth.model.AuthorizationRequestProperty
 import no.elhub.auth.model.RequestStatus
@@ -21,12 +24,12 @@ import org.koin.core.annotation.Single
 import java.util.*
 
 @Single
-class AuthorizationRequestService {
+class AuthorizationRequestHandler {
 
-    fun createRequest(request: AuthorizationRequest.Request): AuthorizationRequest {
+    fun createRequest(request: AuthorizationRequestRequest): Either<ApiError, AuthorizationRequest> = either {
         val now = Clock.System.now()
         val tz = TimeZone.currentSystemDefault()
-        val today = now.toLocalDateTime(tz).date // Must use date to avoid timezone issues
+        val today = now.toLocalDateTime(tz).date // Must calculate using date to avoid timezone issues
         val validTimeTo = today.plus(DEFAULT_REQUEST_DEADLINE, DateTimeUnit.DAY)
         val requestUuid = transaction {
             AuthorizationRequest.Entity.insertAndGetId {
@@ -45,10 +48,10 @@ class AuthorizationRequestService {
                 it[value] = request.data.meta.contract
             }
         }
-        return getRequest(requestId)
+        getRequest(requestId).bind()
     }
 
-    fun getRequest(id: String): AuthorizationRequest {
+    fun getRequest(id: String): Either<ApiError, AuthorizationRequest> = either {
         val result = transaction {
             AuthorizationRequest.Entity
                 .selectAll()
@@ -56,7 +59,7 @@ class AuthorizationRequestService {
                 .singleOrNull()
         }
         if (result == null) {
-            throw Exception("Request not found") // TODO: Replace with custom exception
+            raise(ApiError.NotFound(detail = "Could not find AuthorizationRequest with id $id."))
         }
         val request = AuthorizationRequest(result)
         val properties = transaction {
@@ -66,6 +69,26 @@ class AuthorizationRequestService {
                 .toList().map { AuthorizationRequestProperty(it) }
         }
         request.properties.addAll(properties)
-        return request
+        request
+    }
+
+    fun getRequests(): List<AuthorizationRequest> {
+        transaction {
+            val results = (AuthorizationRequest.Entity leftJoin AuthorizationRequestProperty.Entity)
+                .selectAll()
+                .toList().associate {
+                    it[AuthorizationRequest.Entity.id].toString() to AuthorizationRequest(it)
+                }
+            val ids = results.keys.map { UUID.fromString(it) }
+            AuthorizationRequestProperty.Entity
+                .selectAll()
+                .where { AuthorizationRequestProperty.Entity.authorizationRequestId inList ids }
+                .forEach {
+                    val id = it[AuthorizationRequestProperty.Entity.authorizationRequestId].toString()
+                    results[id]?.properties?.add(AuthorizationRequestProperty(it))
+                }
+            return@transaction results.map { it.value }.toList()
+        }
+        return emptyList<AuthorizationRequest>()
     }
 }
