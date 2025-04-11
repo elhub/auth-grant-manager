@@ -2,6 +2,7 @@
 format.version = "1.1"
 
 [versions]
+arrow = "2.0.1"
 cohort = "2.6.2"
 elhub-gradle = "0.5.0"
 exposed = "0.60.0"
@@ -49,6 +50,8 @@ di-koin-annotations = { group = "io.insert-koin", name = "koin-annotations", ver
 di-koin-ksp-compiler = { group = "io.insert-koin", name = "koin-ksp-compiler", version.ref = "koin-annotations" }
 di-koin-ktor = { group = "io.insert-koin", name = "koin-ktor", version.ref = "koin" }
 di-koin-logger-slf4j = { group = "io.insert-koin", name = "koin-logger-slf4j", version.ref = "koin" }
+fp-arrow-core = { group = "io.arrow-kt", name = "arrow-core", version.ref = "arrow" }
+fp-arrow-fx-coroutines = { group = "io.arrow-kt", name = "arrow-fx-coroutines", version.ref = "arrow" }
 kotlinx-datetime = { group = "org.jetbrains.kotlinx", name = "kotlinx-datetime", version.ref = "kotlinx-datetime" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 ktor-serialization-kotlinx-json = { group = "io.ktor", name = "ktor-serialization-kotlinx-json", version.ref = "ktor" }
@@ -79,6 +82,7 @@ database = ["database-exposed-core", "database-exposed-dao", "database-exposed-j
   "database-liquibase-core", "database-postgresql"]
 dependency-injection = ["di-koin-ktor", "di-koin-logger-slf4j", "di-koin-annotations"]
 documentation = ["ktor-server-swagger"]
+functional-programming = ["fp-arrow-core", "fp-arrow-fx-coroutines"]
 ktor = ["ktor-server-core", "ktor-server-netty", "ktor-server-content-negotiation", "ktor-server-config-yaml"]
 logging = ["ktor-server-call-logging", "logging-slf4j-simple", "logging-oshai-kotlin-logging"]
 monitoring = ["ktor-server-metrics-micrometer", "monitoring-micrometer-registry-prometheus", "monitoring-cohort-hikari", "monitoring-cohort-ktor",

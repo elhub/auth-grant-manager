@@ -17,6 +17,7 @@ buildscript {
 dependencies {
     // Ktor
     implementation(libs.bundles.ktor)
+    implementation(libs.bundles.functional.programming)
     // Koin
     implementation(libs.bundles.dependency.injection)
     ksp(libs.di.koin.ksp.compiler)

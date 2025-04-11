@@ -12,7 +12,7 @@ import no.elhub.auth.features.documents.AuthorizationDocumentService
 import no.elhub.auth.features.documents.documents
 import no.elhub.auth.features.grants.AuthorizationGrantService
 import no.elhub.auth.features.grants.grants
-import no.elhub.auth.features.requests.AuthorizationRequestService
+import no.elhub.auth.features.requests.AuthorizationRequestHandler
 import no.elhub.auth.features.requests.requestRoutes
 import org.koin.ktor.ext.inject
 import java.io.File
@@ -27,10 +27,12 @@ const val ID = "{id}"
 fun Application.configureRouting() {
     val documentService by inject<AuthorizationDocumentService>()
     val grantService by inject<AuthorizationGrantService>()
-    val requestService by inject<AuthorizationRequestService>()
+    val requestService by inject<AuthorizationRequestHandler>()
 
     routing {
-        grants(AUTHORIZATION_GRANT, grantService)
+        route(AUTHORIZATION_GRANT) {
+            grants(grantService)
+        }
         documents(AUTHORIZATION_DOCUMENT, documentService)
         route(AUTHORIZATION_REQUEST) {
             requestRoutes(requestService)
