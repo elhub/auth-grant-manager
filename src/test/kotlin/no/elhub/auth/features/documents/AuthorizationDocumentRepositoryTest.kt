@@ -1,0 +1,67 @@
+package no.elhub.auth.features.documents
+
+import io.kotest.core.spec.style.DescribeSpec
+import io.kotest.matchers.shouldNotBe
+import no.elhub.auth.features.documents.jsonApiSpec.PostAuthorizationDocument
+import no.elhub.auth.features.documents.tables.AuthorizationDocumentScopes
+import no.elhub.auth.model.AuthorizationDocument
+import no.elhub.auth.services.common.tables.AuthorizationScopes
+import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.transactions.transaction
+
+class AuthorizationDocumentRepositoryTest : DescribeSpec({
+
+    val repository = AuthorizationDocumentRepository
+
+    beforeTest {
+        Database.connect(
+            url = "jdbc:postgresql://localhost:5432/auth",
+            driver = "org.postgresql.Driver",
+            user = "postgres",
+            password = "postgres"
+        )
+    }
+
+    describe("Insert Document") {
+        it("should insert a document and its scopes with correct references") {
+            // Given
+            val document = AuthorizationDocument.of(
+                PostAuthorizationDocument.Request(
+                    data = PostAuthorizationDocument.Request.Data(
+                        type = "authorization_document",
+                        attributes = PostAuthorizationDocument.Request.Data.Attributes(
+                            requestedBy = "Balance Supplier",
+                            requestedTo = "98765432109"
+                        )
+                    )
+                ),
+                byteArrayOf()
+            )
+
+            // When
+            repository.insertDocument(document)
+
+            // Then
+            val documentExists = repository.getDocumentFile(document.id)
+            documentExists shouldNotBe null
+
+            val authorizationDocumentScopeRow = transaction {
+                AuthorizationDocumentScopes
+                    .selectAll()
+                    .where { AuthorizationDocumentScopes.authorizationDocumentId eq document.id }
+                    .map { it }
+                    .singleOrNull()
+            }
+            authorizationDocumentScopeRow shouldNotBe null
+
+            val authorizationScopeRow = transaction {
+                AuthorizationScopes
+                    .selectAll()
+                    .where { AuthorizationScopes.id eq (authorizationDocumentScopeRow!![AuthorizationDocumentScopes.authorizationScopeId]) }
+                    .singleOrNull()
+            }
+            authorizationScopeRow shouldNotBe null
+        }
+    }
+})

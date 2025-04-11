@@ -9,7 +9,7 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import no.elhub.auth.features.documents.AuthorizationDocumentService
-import no.elhub.auth.features.documents.documents
+import no.elhub.auth.features.documents.documentRoutes
 import no.elhub.auth.features.grants.AuthorizationGrantService
 import no.elhub.auth.features.grants.grants
 import no.elhub.auth.features.requests.AuthorizationRequestService
@@ -31,7 +31,9 @@ fun Application.configureRouting() {
 
     routing {
         grants(AUTHORIZATION_GRANT, grantService)
-        documents(AUTHORIZATION_DOCUMENT, documentService)
+        route(AUTHORIZATION_DOCUMENT) {
+            documentRoutes(documentService)
+        }
         route(AUTHORIZATION_REQUEST) {
             requestRoutes(requestService)
         }

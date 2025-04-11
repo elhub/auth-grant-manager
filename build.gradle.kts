@@ -31,6 +31,7 @@ dependencies {
     liquibaseRuntime(libs.database.postgresql)
     // Documentation
     implementation(libs.bundles.documentation)
+    implementation("com.github.librepdf:openpdf:2.0.3")
     // Observability
     implementation(libs.bundles.logging)
     implementation(libs.bundles.monitoring)
