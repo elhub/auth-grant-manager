@@ -18,10 +18,10 @@ import no.elhub.auth.features.errors.ApiErrorJson
 import no.elhub.auth.features.utils.validateAuthorizationRequest
 import no.elhub.auth.features.utils.validateId
 
-fun Route.requestRoutes(requestService: AuthorizationRequestHandler) {
+fun Route.requestRoutes(requestHandler: AuthorizationRequestHandler) {
 
     get {
-        val result = requestService.getRequests()
+        val result = requestHandler.getRequests()
         call.respond(status = HttpStatusCode.OK, message = AuthorizationRequestResponseCollection.from(result, call.url()))
     }
 
@@ -40,7 +40,7 @@ fun Route.requestRoutes(requestService: AuthorizationRequestHandler) {
             }
             is Right -> Unit // continue
         }
-        val result = requestService.createRequest(authRequestResult.value)
+        val result = requestHandler.createRequest(authRequestResult.value)
         when (result) {
             is Left -> call.respond(HttpStatusCode.fromValue(result.value.status), ApiErrorJson.from(result.value, call.url()))
             is Right -> call.respond(status = HttpStatusCode.Created, message = AuthorizationRequestResponse.from(result.value, selfLink = call.url()))
@@ -57,7 +57,7 @@ fun Route.requestRoutes(requestService: AuthorizationRequestHandler) {
                 }
                 is Right -> Unit // continue
             }
-            val result = requestService.getRequest(idResult.value)
+            val result = requestHandler.getRequest(idResult.value)
             when (result) {
                 is Left -> {
                     call.respond(HttpStatusCode.fromValue(result.value.status), ApiErrorJson.from(result.value, call.url()))
