@@ -42,7 +42,7 @@ sealed class ApiError {
 
     @Serializable
     data class InternalServerError(
-        override val status: Int = HttpStatusCode.Companion.BadRequest.value,
+        override val status: Int = HttpStatusCode.Companion.InternalServerError.value,
         val title: String = "Internal Server Error",
         val detail: String,
     ) : ApiError()
