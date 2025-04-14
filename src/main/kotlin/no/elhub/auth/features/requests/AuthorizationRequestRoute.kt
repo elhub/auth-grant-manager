@@ -19,7 +19,6 @@ import no.elhub.auth.features.utils.validateAuthorizationRequest
 import no.elhub.auth.features.utils.validateId
 
 fun Route.requestRoutes(requestHandler: AuthorizationRequestHandler) {
-
     get {
         val result = requestHandler.getRequests()
         call.respond(status = HttpStatusCode.OK, message = AuthorizationRequestResponseCollection.from(result, call.url()))
@@ -66,6 +65,4 @@ fun Route.requestRoutes(requestHandler: AuthorizationRequestHandler) {
             }
         }
     }
-
 }
-

@@ -46,7 +46,6 @@ sealed class ApiError {
         val title: String = "Internal Server Error",
         val detail: String,
     ) : ApiError()
-
 }
 
 /** Custom serializer for [ApiError] to handle polymorphic serialization

@@ -186,7 +186,6 @@ class AuthorizationRequestRouteTest : DescribeSpec({
             """.trimIndent()
             responseString shouldEqualSpecifiedJson expectedJson
         }
-
     }
 
     // POST /authorization-requests
@@ -414,7 +413,5 @@ class AuthorizationRequestRouteTest : DescribeSpec({
             """.trimIndent()
             responseString shouldEqualSpecifiedJson expectedJson
         }
-
     }
-
 })

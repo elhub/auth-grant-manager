@@ -71,5 +71,4 @@ class ValidatorsTest : DescribeSpec({
             result.swap().getOrNull() shouldNotBe null
         }
     }
-
 })
