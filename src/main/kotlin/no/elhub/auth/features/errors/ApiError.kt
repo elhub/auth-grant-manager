@@ -20,7 +20,7 @@ sealed class ApiError {
     ) : ApiError()
 
     @Serializable
-    data class Unauhthorized(
+    data class Unauthorized(
         override val status: Int = HttpStatusCode.Companion.Unauthorized.value,
         val title: String = "Unauthorized",
         val detail: String,
@@ -63,7 +63,7 @@ object ApiErrorSerializer : JsonContentPolymorphicSerializer<ApiError>(
         val type = json.getValue("type").jsonPrimitive.content
         return when (type) {
             "no.elhub.auth.features.errors.ApiError.BadRequest" -> ApiError.BadRequest.serializer()
-            "no.elhub.auth.features.errors.ApiError.Unauthorized" -> ApiError.Unauhthorized.serializer()
+            "no.elhub.auth.features.errors.ApiError.Unauthorized" -> ApiError.Unauthorized.serializer()
             "no.elhub.auth.features.errors.ApiError.Forbidden" -> ApiError.Forbidden.serializer()
             "no.elhub.auth.features.errors.ApiError.NotFound" -> ApiError.NotFound.serializer()
             "no.elhub.auth.features.errors.ApiError.InternalServerError" -> ApiError.InternalServerError.serializer()
