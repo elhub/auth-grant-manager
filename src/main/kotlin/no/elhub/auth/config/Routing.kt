@@ -27,7 +27,7 @@ const val ID = "id"
 fun Application.configureRouting() {
     val documentService by inject<AuthorizationDocumentService>()
     val grantService by inject<AuthorizationGrantService>()
-    val requestService by inject<AuthorizationRequestHandler>()
+    val requestHandler by inject<AuthorizationRequestHandler>()
 
     routing {
         route(AUTHORIZATION_DOCUMENT) {
@@ -37,7 +37,7 @@ fun Application.configureRouting() {
             grants(grantService)
         }
         route(AUTHORIZATION_REQUEST) {
-            requestRoutes(requestService)
+            requestRoutes(requestHandler)
         }
         get(HEALTH) {
             call.respondText("OK", status = HttpStatusCode.OK)
