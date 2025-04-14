@@ -12,6 +12,7 @@ import kotlinx.datetime.toJavaLocalDateTime
 import kotlinx.datetime.toLocalDateTime
 import no.elhub.auth.DEFAULT_REQUEST_DEADLINE
 import no.elhub.auth.features.errors.ApiError
+import no.elhub.auth.features.errors.ApiError.NotFound
 import no.elhub.auth.model.AuthorizationRequest
 import no.elhub.auth.model.AuthorizationRequestProperty
 import no.elhub.auth.model.RequestStatus
@@ -40,32 +41,31 @@ class AuthorizationRequestHandler {
                 it[validTo] = LocalDateTime(validTimeTo, LocalTime(0, 0)).toJavaLocalDateTime()
             }
         }
-        val requestId = requestUuid.toString()
         transaction {
             AuthorizationRequestProperty.Entity.insert {
-                it[authorizationRequestId] = UUID.fromString(requestId)
+                it[authorizationRequestId] = requestUuid.value
                 it[key] = "contract"
                 it[value] = request.data.meta.contract
             }
         }
-        getRequest(requestId).bind()
+        getRequest(requestUuid.value).bind()
     }
 
-    fun getRequest(id: String): Either<ApiError, AuthorizationRequest> = either {
+    fun getRequest(id: UUID): Either<ApiError, AuthorizationRequest> = either {
         val result = transaction {
             AuthorizationRequest.Entity
                 .selectAll()
-                .where { AuthorizationRequest.Entity.id eq UUID.fromString(id) }
+                .where { AuthorizationRequest.Entity.id eq id }
                 .singleOrNull()
         }
         if (result == null) {
-            raise(ApiError.NotFound(detail = "Could not find AuthorizationRequest with id $id."))
+            raise(NotFound(detail = "Could not find AuthorizationRequest with id $id."))
         }
         val request = AuthorizationRequest(result)
         val properties = transaction {
             AuthorizationRequestProperty.Entity
                 .selectAll()
-                .where { AuthorizationRequestProperty.Entity.authorizationRequestId eq UUID.fromString(id) }
+                .where { AuthorizationRequestProperty.Entity.authorizationRequestId eq id }
                 .toList().map { AuthorizationRequestProperty(it) }
         }
         request.properties.addAll(properties)
@@ -73,22 +73,19 @@ class AuthorizationRequestHandler {
     }
 
     fun getRequests(): List<AuthorizationRequest> {
-        transaction {
-            val results = (AuthorizationRequest.Entity leftJoin AuthorizationRequestProperty.Entity)
-                .selectAll()
-                .toList().associate {
-                    it[AuthorizationRequest.Entity.id].toString() to AuthorizationRequest(it)
-                }
-            val ids = results.keys.map { UUID.fromString(it) }
+        val results = transaction {
+            val requests = AuthorizationRequest.Entity
+                .selectAll().associate { it[AuthorizationRequest.Entity.id].toString() to AuthorizationRequest(it) }
+            val ids = requests.keys.map { UUID.fromString(it) }
             AuthorizationRequestProperty.Entity
                 .selectAll()
                 .where { AuthorizationRequestProperty.Entity.authorizationRequestId inList ids }
                 .forEach {
                     val id = it[AuthorizationRequestProperty.Entity.authorizationRequestId].toString()
-                    results[id]?.properties?.add(AuthorizationRequestProperty(it))
+                    requests[id]?.properties?.add(AuthorizationRequestProperty(it))
                 }
-            return@transaction results.map { it.value }.toList()
+            requests.map { it.value }.toList()
         }
-        return emptyList<AuthorizationRequest>()
+        return results
     }
 }

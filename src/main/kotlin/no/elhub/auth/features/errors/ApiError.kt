@@ -1,55 +1,73 @@
 package no.elhub.auth.features.errors
 
 import io.ktor.http.HttpStatusCode
-import kotlinx.serialization.EncodeDefault
-import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonContentPolymorphicSerializer
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 
-@OptIn(ExperimentalSerializationApi::class)
-@Serializable
+@Serializable(ApiErrorSerializer::class)
 sealed class ApiError {
     abstract val status: Int
-    abstract val title: String
-    abstract val detail: String
 
     @Serializable
     data class BadRequest(
-        @EncodeDefault
         override val status: Int = HttpStatusCode.Companion.BadRequest.value,
-        @EncodeDefault
-        override val title: String = "Bad Request",
-        override val detail: String,
+        val title: String = "Bad Request",
+        val detail: String,
     ) : ApiError()
 
+    @Serializable
     data class Unauhthorized(
-        @EncodeDefault
         override val status: Int = HttpStatusCode.Companion.Unauthorized.value,
-        @EncodeDefault
-        override val title: String = "Unauthorized",
-        override val detail: String,
+        val title: String = "Unauthorized",
+        val detail: String,
     ) : ApiError()
 
+    @Serializable
     data class Forbidden(
-        @EncodeDefault
         override val status: Int = HttpStatusCode.Companion.Forbidden.value,
-        @EncodeDefault
-        override val title: String = "Forbidden",
-        override val detail: String,
+        val title: String = "Forbidden",
+        val detail: String,
     ) : ApiError()
 
+    @Serializable
     data class NotFound(
-        @EncodeDefault
         override val status: Int = HttpStatusCode.Companion.NotFound.value,
-        @EncodeDefault
-        override val title: String = "Not Found",
-        override val detail: String,
+        val title: String = "Not Found",
+        val detail: String,
     ) : ApiError()
 
+    @Serializable
     data class InternalServerError(
-        @EncodeDefault
         override val status: Int = HttpStatusCode.Companion.BadRequest.value,
-        @EncodeDefault
-        override val title: String = "Internal Server Error",
-        override val detail: String,
+        val title: String = "Internal Server Error",
+        val detail: String,
     ) : ApiError()
+
+}
+
+/** Custom serializer for [ApiError] to handle polymorphic serialization
+ * of its subclasses. This is required, as kotlinx serialization does not
+ * support polymorphic serialization out of the box.
+ */
+object ApiErrorSerializer : JsonContentPolymorphicSerializer<ApiError>(
+    ApiError::class,
+) {
+    override fun selectDeserializer(
+        element: JsonElement,
+    ): DeserializationStrategy<ApiError> {
+        val json = element.jsonObject
+        val type = json.getValue("type").jsonPrimitive.content
+        return when (type) {
+            "no.elhub.auth.features.errors.ApiError.BadRequest" -> ApiError.BadRequest.serializer()
+            "no.elhub.auth.features.errors.ApiError.Unauthorized" -> ApiError.Unauhthorized.serializer()
+            "no.elhub.auth.features.errors.ApiError.Forbidden" -> ApiError.Forbidden.serializer()
+            "no.elhub.auth.features.errors.ApiError.NotFound" -> ApiError.NotFound.serializer()
+            "no.elhub.auth.features.errors.ApiError.InternalServerError" -> ApiError.InternalServerError.serializer()
+            else -> throw IllegalArgumentException("$type is not a supported ApiError type.")
+        }
+    }
 }

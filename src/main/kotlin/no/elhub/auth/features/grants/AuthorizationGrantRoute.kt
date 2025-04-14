@@ -9,7 +9,7 @@ fun Route.grants(grantService: AuthorizationGrantService) {
     get {
         grantService.getGrants(call)
     }
-    route("/$ID") {
+    route("/{$ID}") {
         get {
             grantService.getGrantById(call)
         }

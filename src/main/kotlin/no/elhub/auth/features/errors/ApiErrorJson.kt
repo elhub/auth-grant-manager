@@ -1,7 +1,6 @@
 package no.elhub.auth.features.errors
 
 import kotlinx.serialization.Serializable
-import no.elhub.auth.features.errors.ApiError
 import no.elhub.auth.model.ResponseLink
 import no.elhub.auth.model.ResponseMeta
 
@@ -19,3 +18,4 @@ class ApiErrorJson(
         )
     }
 }
+

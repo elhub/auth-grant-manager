@@ -42,6 +42,7 @@ dependencies {
     testImplementation(libs.test.ktor.server.test.host)
     testImplementation(libs.test.kotest.runner.junit5)
     testImplementation(libs.test.kotest.assertions.core)
+    testImplementation(libs.test.kotest.assertions.json)
     testImplementation(libs.test.testcontainers)
     testImplementation(libs.test.testcontainers.postgres)
 }
