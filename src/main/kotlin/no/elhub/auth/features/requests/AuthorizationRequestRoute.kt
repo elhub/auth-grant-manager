@@ -1,52 +1,68 @@
 package no.elhub.auth.features.requests
 
-import io.github.oshai.kotlinlogging.KotlinLogging
+import arrow.core.Either
+import arrow.core.Either.Left
+import arrow.core.Either.Right
+import arrow.core.flatMap
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
-import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import io.ktor.server.util.url
 import no.elhub.auth.config.ID
-import no.elhub.auth.model.AuthorizationRequest
-import no.elhub.auth.model.ResponseMeta
+import no.elhub.auth.features.errors.ApiError
+import no.elhub.auth.features.errors.ApiErrorJson
+import no.elhub.auth.features.utils.validateAuthorizationRequest
+import no.elhub.auth.features.utils.validateId
 
-private val logger = KotlinLogging.logger {}
-
-fun Route.requestRoutes(requestService: AuthorizationRequestService) {
+fun Route.requestRoutes(requestHandler: AuthorizationRequestHandler) {
     get {
-        call.respond(status = HttpStatusCode.OK, message = ResponseMeta())
+        val result = requestHandler.getRequests()
+        call.respond(status = HttpStatusCode.OK, message = AuthorizationRequestResponseCollection.from(result, call.url()))
     }
+
     post {
-        try {
-            val authRequest = call.receive<AuthorizationRequest.Request>()
-            if (authRequest.data.attributes.requestType.isBlank()) {
-                call.respondText("Missing or malformed request type", status = HttpStatusCode.BadRequest)
+        val authRequestResult = Either.catch {
+            call.receive<AuthorizationRequestRequest>()
+        }.mapLeft {
+            ApiError.BadRequest(detail = "Missing or malformed requestBody in POST call.")
+        }.flatMap {
+            validateAuthorizationRequest(it)
+        }
+        when (authRequestResult) {
+            is Left -> {
+                call.respond(HttpStatusCode.fromValue(authRequestResult.value.status), ApiErrorJson.from(authRequestResult.value, call.url()))
                 return@post
             }
-            logger.info { "Call service" }
-            val newRequest = requestService.createRequest(authRequest)
-            val response = AuthorizationRequest.Json(newRequest, selfLink = "${call.url()}/${newRequest.id}")
-            call.respond(status = HttpStatusCode.Created, message = response)
-        } catch (e: Exception) {
-            logger.error(e) { "Failed to parse request" }
-            call.respondText("Malformed request", status = HttpStatusCode.BadRequest)
-            return@post
+            is Right -> Unit // continue
+        }
+        val result = requestHandler.createRequest(authRequestResult.value)
+        when (result) {
+            is Left -> call.respond(HttpStatusCode.fromValue(result.value.status), ApiErrorJson.from(result.value, call.url()))
+            is Right -> call.respond(status = HttpStatusCode.Created, message = AuthorizationRequestResponse.from(result.value, selfLink = call.url()))
         }
     }
-    route("/$ID") {
+
+    route("/{$ID}") {
         get {
-            val id = call.parameters["id"]
-            if (id == null) {
-                call.respondText("Missing or malformed id", status = HttpStatusCode.BadRequest)
-                return@get
+            val idResult = validateId(call.parameters[ID])
+            when (idResult) {
+                is Left -> {
+                    call.respond(HttpStatusCode.fromValue(idResult.value.status), ApiErrorJson.from(idResult.value, call.url()))
+                    return@get
+                }
+                is Right -> Unit // continue
             }
-            val request = requestService.getRequest(id)
-            val response = AuthorizationRequest.Json(request, selfLink = call.url())
-            call.respond(status = HttpStatusCode.OK, message = response)
+            val result = requestHandler.getRequest(idResult.value)
+            when (result) {
+                is Left -> {
+                    call.respond(HttpStatusCode.fromValue(result.value.status), ApiErrorJson.from(result.value, call.url()))
+                }
+                is Right -> call.respond(status = HttpStatusCode.OK, message = AuthorizationRequestResponse.from(result.value, selfLink = call.url()))
+            }
         }
     }
 }

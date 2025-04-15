@@ -5,13 +5,11 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.route
 import no.elhub.auth.config.ID
 
-fun Route.grants(routePath: String, grantService: AuthorizationGrantService) {
-    route(routePath) {
-        get {
-            grantService.getGrants(call)
-        }
+fun Route.grants(grantService: AuthorizationGrantService) {
+    get {
+        grantService.getGrants(call)
     }
-    route("$routePath/$ID") {
+    route("/{$ID}") {
         get {
             grantService.getGrantById(call)
         }

@@ -17,6 +17,7 @@ buildscript {
 dependencies {
     // Ktor
     implementation(libs.bundles.ktor)
+    implementation(libs.bundles.functional.programming)
     // Koin
     implementation(libs.bundles.dependency.injection)
     ksp(libs.di.koin.ksp.compiler)
@@ -41,6 +42,7 @@ dependencies {
     testImplementation(libs.test.ktor.server.test.host)
     testImplementation(libs.test.kotest.runner.junit5)
     testImplementation(libs.test.kotest.assertions.core)
+    testImplementation(libs.test.kotest.assertions.json)
     testImplementation(libs.test.testcontainers)
     testImplementation(libs.test.testcontainers.postgres)
 }

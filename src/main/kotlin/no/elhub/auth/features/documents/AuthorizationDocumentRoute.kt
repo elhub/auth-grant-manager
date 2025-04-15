@@ -34,7 +34,7 @@ fun Route.documentRoutes(documentService: AuthorizationDocumentService) {
         call.respond(status = HttpStatusCode.OK, message = response)
     }
 
-    route("/$ID") {
+    route("/{$ID}") {
         get {
             documentService.getDocumentById(call)
         }

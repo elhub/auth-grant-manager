@@ -12,7 +12,7 @@ import no.elhub.auth.features.documents.AuthorizationDocumentService
 import no.elhub.auth.features.documents.documentRoutes
 import no.elhub.auth.features.grants.AuthorizationGrantService
 import no.elhub.auth.features.grants.grants
-import no.elhub.auth.features.requests.AuthorizationRequestService
+import no.elhub.auth.features.requests.AuthorizationRequestHandler
 import no.elhub.auth.features.requests.requestRoutes
 import org.koin.ktor.ext.inject
 import java.io.File
@@ -22,20 +22,22 @@ const val HEALTH = "$AUTHORIZATION_API/health"
 const val AUTHORIZATION_DOCUMENT = "$AUTHORIZATION_API/authorization-documents"
 const val AUTHORIZATION_GRANT = "$AUTHORIZATION_API/authorization-grants"
 const val AUTHORIZATION_REQUEST = "$AUTHORIZATION_API/authorization-requests"
-const val ID = "{id}"
+const val ID = "id"
 
 fun Application.configureRouting() {
     val documentService by inject<AuthorizationDocumentService>()
     val grantService by inject<AuthorizationGrantService>()
-    val requestService by inject<AuthorizationRequestService>()
+    val requestHandler by inject<AuthorizationRequestHandler>()
 
     routing {
-        grants(AUTHORIZATION_GRANT, grantService)
         route(AUTHORIZATION_DOCUMENT) {
             documentRoutes(documentService)
         }
+        route(AUTHORIZATION_GRANT) {
+            grants(grantService)
+        }
         route(AUTHORIZATION_REQUEST) {
-            requestRoutes(requestService)
+            requestRoutes(requestHandler)
         }
         get(HEALTH) {
             call.respondText("OK", status = HttpStatusCode.OK)
