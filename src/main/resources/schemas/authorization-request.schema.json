@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Authorization Request",
+  "description": "Schema for authorization request data object.",
+  "type": "object",
+  "properties": {
+    "id": {
+      "$ref": "base-definitions.schema.json#/definitions/resourceId"
+    },
+    "type": {
+      "type": "string",
+      "description": "The type of the resource object.",
+      "const": "AuthorizationRequest"
+    },
+    "attributes": {
+      "type": "object",
+      "description": "The attributes of the authorization request.",
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "The type of the authorization request.",
+          "enum": ["SupplierChangeConsentRequest"]
+        },
+        "status": {
+          "type": "string",
+          "description": "The status of the authorization request.",
+          "enum": ["accepted", "expired", "pending", "rejected"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The date and time when the authorization request was created."
+        },
+        "validTo": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The date and time when the authorization request is valid to."
+        }
+      }
+    },
+    "meta": {
+      "$ref": "#/definitions/resourceMeta"
+    },
+    "relationships": {
+      "$ref": "#/definitions/resourceRelationship"
+    }
+  },
+  "additionalProperties": false,
+  "definitions": {
+    "resourceMeta": {
+      "description": "Any additional meta-information related to the resource.",
+      "type": "object",
+      "properties": {
+        "supplierContract": {
+          "type": "string",
+          "description": "The unique identifier of a supplier contract associated with the authorization request.",
+          "examples": ["ExampleSupplierContract"]
+        }
+      }
+    },
+    "resourceRelationship": {
+      "type": "object",
+      "description": "The related entities of the authorization request (presons and organizations).",
+      "properties": {
+        "requestedBy": {
+          "$ref": "base-definitions.schema.json#/definitions/relationshipParty"
+        },
+        "requestedFrom": {
+          "$ref": "base-definitions.schema.json#/definitions/relationshipParty"
+        }
+      }
+    }
+  }
+}

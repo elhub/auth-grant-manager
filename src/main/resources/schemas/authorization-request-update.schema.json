@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://api.elhub.no/schemas/authorization-request.json",
+  "title": "Authorization Request Request",
+  "description": "Schema for creating authorization requests to the Elhub authorization manager.",
+  "type": "object",
+  "properties": {
+    "data": {
+      "$ref": "#/definitions/resource"
+    }
+  },
+  "required": ["data"],
+  "additionalProperties": false,
+  "definitions": {
+    "resource": {
+      "description": "The authorization request to be created.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "base-definitions.schema.json#/definitions/resourceId"
+        },
+        "type": {
+          "type": "string",
+          "description": "The type of the resource object.",
+          "const": "AuthorizationRequest"
+        },
+        "attributes": {
+          "type": "object",
+          "description": "The attributes of the authorization request.",
+          "properties": {
+            "type": {
+              "type": "string",
+              "description": "The type of the authorization request.",
+              "enum": ["SupplierChangeConsentRequest"]
+            }
+          }
+        },
+        "meta": {
+          "$ref": "authorization-request.schema.json#/definitions/resourceMeta"
+        },
+        "relationships": {
+          "$ref": "authorization-request.schema.json#/definitions/resourceRelationship"
+        }
+      }
+    }
+  }
+}
