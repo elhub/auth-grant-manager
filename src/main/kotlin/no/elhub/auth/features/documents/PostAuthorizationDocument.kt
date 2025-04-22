@@ -1,4 +1,4 @@
-package no.elhub.auth.features.documents.jsonApiSpec
+package no.elhub.auth.features.documents
 
 import kotlinx.serialization.Serializable
 
