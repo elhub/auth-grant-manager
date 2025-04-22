@@ -2,10 +2,9 @@ package no.elhub.auth.features.documents
 
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.shouldNotBe
-import no.elhub.auth.features.documents.jsonApiSpec.PostAuthorizationDocument
-import no.elhub.auth.features.documents.tables.AuthorizationDocumentScopes
 import no.elhub.auth.model.AuthorizationDocument
-import no.elhub.auth.services.common.tables.AuthorizationScopes
+import no.elhub.auth.model.AuthorizationDocumentScopes
+import no.elhub.auth.model.AuthorizationScopes
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction

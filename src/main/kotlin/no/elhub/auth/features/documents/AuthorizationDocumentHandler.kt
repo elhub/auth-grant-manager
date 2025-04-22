@@ -3,7 +3,6 @@ package no.elhub.auth.features.documents
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.response.respond
-import no.elhub.auth.features.documents.jsonApiSpec.PostAuthorizationDocument
 import no.elhub.auth.model.AuthorizationDocument
 import no.elhub.auth.model.ResponseMeta
 import no.elhub.auth.utils.PdfGenerator
@@ -11,7 +10,7 @@ import org.koin.core.annotation.Single
 import java.util.*
 
 @Single
-class AuthorizationDocumentService {
+class AuthorizationDocumentHandler {
 
     suspend fun getDocuments(call: ApplicationCall) {
         call.respond(status = HttpStatusCode.OK, message = ResponseMeta())

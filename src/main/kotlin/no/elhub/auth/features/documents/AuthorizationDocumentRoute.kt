@@ -11,9 +11,8 @@ import io.ktor.server.routing.patch
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import no.elhub.auth.config.ID
-import no.elhub.auth.features.documents.jsonApiSpec.PostAuthorizationDocument
 import java.util.*
-fun Route.documentRoutes(documentService: AuthorizationDocumentService) {
+fun Route.documentRoutes(documentService: AuthorizationDocumentHandler) {
     post {
         val requestBody = call.receive<PostAuthorizationDocument.Request>()
         val authorizationDocument = documentService.postDocument(requestBody)
