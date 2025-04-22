@@ -25,7 +25,6 @@ object AuthorizationScopes : LongIdTable(name = "auth.authorization_scope") {
     val createdAt = timestamp("created_at").clientDefault { java.time.Instant.now() }
 }
 
-
 object AuthorizationDocumentScopes : Table("auth.authorization_document_scope") {
     val authorizationDocumentId = uuid("authorization_document_id")
         .references(AuthorizationDocuments.id, onDelete = ReferenceOption.CASCADE)
@@ -46,4 +45,3 @@ enum class PermissionType {
     FullDelegation,
     ReadAccess
 }
-
