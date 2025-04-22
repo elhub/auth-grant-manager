@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://api.elhub.no/schemas/authorization-grant-schema.json",
-  "title": "Errors",
-  "description": "Schema for Elhub API erros.",
+  "title": "JSON Api Error Response",
+  "description": "Schema for Elhub API Errors.",
   "type": "object",
   "properties": {
     "errors": {
@@ -10,10 +10,10 @@
     },
     "links": {
       "description": "Link members related to the primary data.",
-      "$ref": "#/definitions/topLevelLinks"
+      "$ref": "base-definitions.schema.json#/definitions/topLevelLinks"
     },
     "meta": {
-      "$ref": "#/definitions/meta"
+      "$ref": "base-definitions.schema.json#/definitions/topLevelMeta"
     }
   },
   "required": ["errors"],
@@ -45,6 +45,7 @@
           ]
         }
       },
+      "required": ["title", "detail"],
       "additionalProperties": false
     },
     "errors": {
@@ -53,36 +54,6 @@
         "$ref": "#/definitions/error"
       },
       "uniqueItems": true
-    },
-    "linkUrl": {
-      "description": "A string containing the link's URL.",
-      "type": "string",
-      "format": "uri",
-      "$comment": "URI regex as per https://tools.ietf.org/html/rfc3986#appendix-B",
-      "pattern": "^(([^:/?#]+):)?(//([^/?#]*))?([^?#]*)(\\?([^#]*))?(#(.*))?"
-    },
-    "meta": {
-      "description": "Non-standard meta-information that can not be represented as an attribute or relationship.",
-      "type": "object",
-      "properties": {
-        "createdAt": {
-          "type": "string",
-          "format": "date-time",
-          "description": "The date and time when the JSON document was created."
-        }
-      }
-    },
-    "topLevelLinks": {
-      "description": "The top-level links object **MAY** contain the following members: self, related, pagination links.",
-      "type": "object",
-      "properties": {
-        "self": {
-          "description": "The link that generated the current JSON document.",
-          "$ref": "#/definitions/linkUrl",
-          "examples": ["https://api.elhub.no/authorization-documents/"]
-        }
-      },
-      "additionalProperties": false
     }
   }
 }

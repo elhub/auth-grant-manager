@@ -131,7 +131,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "/schemas/meta-response.json"
+                $ref: "/schemas/json-api-meta.schema.json"
         "400":
           $ref: "#/components/responses/400BadRequestError"
         "401":
@@ -147,11 +147,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "schemas/authorization-grant.json"
+                $ref: "/schemas/authorization-grant.json"
         "401":
           description: Unauthorized.
         "500":
           $ref: "#/components/responses/500InternalServerError"
+      tags:
+        - TODO
   "/authorization-grants/{id}":
     get:
       summary: Retrieve a specific authorization grant.
@@ -175,6 +177,8 @@ paths:
           $ref: "#/components/responses/404NotFoundError"
         "500":
           $ref: "#/components/responses/500InternalServerError"
+      tags:
+        - TODO
   "/authorization-requests":
     get:
       summary: Retrieve a list of authorization requests.
@@ -184,9 +188,30 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "schemas/authorization-request.json"
+                $ref: "/schemas/authorization-request-list.schema.json"
         "401":
-          description: Unauthorized.
+          $ref: "#/components/responses/401UnauthorizedError"
+        "500":
+          $ref: "#/components/responses/500InternalServerError"
+    patch:
+      summary: Update an authorization request.
+      description: Update an authorization request. This is an internal API for MinSide.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "/schemas/authorization-request-update.schema.json"
+      responses:
+        "201":
+          description: The authorization request was updated.
+          content:
+            application/json:
+              schema:
+                $ref: "/schemas/authorization-request-read.schema.json"
+        "400":
+          $ref: "#/components/responses/400BadRequestError"
+        "401":
+          $ref: "#/components/responses/401UnauthorizedError"
         "500":
           $ref: "#/components/responses/500InternalServerError"
     post:
@@ -196,15 +221,15 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "/schemas/authorization-request-post.json"
+              $ref: "/schemas/authorization-request-create.schema.json"
       responses:
-        "200":
+        "201":
           description: |
             This creates a new authorization request and returns the details of the request initiated (including the link to the request flow on MinSide).
           content:
             application/json:
               schema:
-                $ref: "/schemas/authorization-request.json"
+                $ref: "/schemas/authorization-request-read.schema.json"
         "400":
           $ref: "#/components/responses/400BadRequestError"
         "401":
@@ -228,7 +253,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "/schemas/authorization-request.json"
+                $ref: "/schemas/authorization-request-read.schema.json"
         "401":
           $ref: "#/components/responses/401UnauthorizedError"
         "404":
@@ -256,29 +281,6 @@ paths:
           $ref: "#/components/responses/404NotFoundError"
         "500":
           $ref: "#/components/responses/500InternalServerError"
-    patch:
-      summary: Update an authorization request.
-      description: Update an authorization request. This is an internal API for MinSide.
-      parameters:
-        - name: id
-          in: path
-          required: true
-          description: The id of the authorization request to change.
-          schema:
-            type: string
-      responses:
-        "200":
-          description: The authorization request was updated.
-          content:
-            application/json:
-              schema:
-                $ref: "/schemas/authorization-request.json"
-        "400":
-          $ref: "#/components/responses/400BadRequestError"
-        "401":
-          $ref: "#/components/responses/401UnauthorizedError"
-        "500":
-          $ref: "#/components/responses/500InternalServerError"
 components:
   responses:
     400BadRequestError:
@@ -286,37 +288,37 @@ components:
       content:
         application/json:
           schema:
-            $ref: "/schemas/error-response.json"
+            $ref: "/schemas/json-api-error.schema.json"
     401UnauthorizedError:
       description: Unauthorized.
       content:
         application/json:
           schema:
-            $ref: "/schemas/error-response.json"
+            $ref: "/schemas/json-api-error.schema.json"
     403ForbiddenError:
       description: Forbidden.
       content:
         application/json:
           schema:
-            $ref: "/schemas/error-response.json"
+            $ref: "/schemas/json-api-error.schema.json"
     404NotFoundError:
       description: Not found.
       content:
         application/json:
           schema:
-            $ref: "/schemas/error-response.json"
+            $ref: "/schemas/json-api-error.schema.json"
     500InternalServerError:
       description: Internal server error.
       content:
         application/json:
           schema:
-            $ref: "/schemas/error-response.json"
+            $ref: "/schemas/json-api-error.schema.json"
     MetaResponse:
       description: Metadata response for informational purposes.
       content:
         application/json:
           schema:
-            $ref: "/schemas/meta-response.json"
+            $ref: "/schemas/json-api-meta.schema.json"
   securitySchemes:
     idPorten:
       type: openIdConnect

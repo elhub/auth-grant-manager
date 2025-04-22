@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://api.elhub.no/schemas/authorization-grant-schema.json",
+  "title": "JSON API Meta Response",
+  "description": "Schema for generic meta response from Elhub APIs.",
+  "type": "object",
+  "properties": {
+    "links": {
+      "$ref": "base-definitions.schema.json#/definitions/topLevelLinks"
+    },
+    "meta": {
+      "$ref": "#/definitions/meta"
+    }
+  },
+  "required": ["meta"],
+  "additionalProperties": false,
+  "definitions": {
+    "memberName": {
+      "description": "Member name may contain any valid JSON value.",
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9]{1}(?:[-\\w]*[a-zA-Z0-9])?$"
+    },
+    "meta": {
+      "description": "Non-standard meta-information that can not be represented as an attribute or relationship.",
+      "type": "object",
+      "propertyNames": {
+        "$ref": "#/definitions/memberName"
+      },
+      "patternProperties": {
+        "": true
+      },
+      "additionalProperties": false
+    }
+  }
+}

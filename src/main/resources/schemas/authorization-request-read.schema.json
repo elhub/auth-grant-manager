@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Authorization Request",
+  "description": "Schema for returning a single authorization request in the Elhub authorization manager.",
+  "type": "object",
+  "properties": {
+    "data": {
+      "$ref": "#/definitions/resource"
+    },
+    "links": {
+      "description": "Link members related to the primary data.",
+      "$ref": "base-definitions.schema.json#/definitions/topLevelLinks"
+    },
+    "meta": {
+      "$ref": "base-definitions.schema.json#/definitions/topLevelMeta"
+    }
+  },
+  "allOf": [
+    {
+      "$ref": "base-definitions.schema.json#/definitions/topLevelPropertyConstraint"
+    }
+  ],
+  "additionalProperties": false,
+  "definitions": {
+    "resource": {
+      "$ref": "authorization-request.schema.json"
+    }
+  }
+}

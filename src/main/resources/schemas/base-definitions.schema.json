@@ -1,0 +1,75 @@
+{
+  "definitions": {
+    "linkUrl": {
+      "description": "A string containing the link's URL.",
+      "type": "string",
+      "format": "uri",
+      "$comment": "URI regex as per https://tools.ietf.org/html/rfc3986#appendix-B",
+      "pattern": "^(([^:/?#]+):)?(//([^/?#]*))?([^?#]*)(\\?([^#]*))?(#(.*))?"
+    },
+    "relationshipParty": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "A relationship to a party (person or organization).",
+          "enum": ["Organization", "Person"]
+        },
+        "id": {
+          "type": "string",
+          "description": "The unique identifier of the linked resource."
+        },
+        "examples": [
+          {
+            "data": {
+              "type": "Person",
+              "id": "12345678901"
+            }
+          }
+        ]
+      }
+    },
+    "resourceId": {
+      "type": "string",
+      "format": "UUID",
+      "description": "The unique identifier of the resource.",
+      "examples": ["123e4567-e89b-12d3-a456-426614174000"]
+    },
+    "topLevelLinks": {
+      "description": "The top-level links object **may** contain the following members: self, related, pagination links. Currently, only self is defined.",
+      "type": "object",
+      "properties": {
+        "self": {
+          "description": "The link that generated the current JSON document.",
+          "$ref": "#/definitions/linkUrl",
+          "examples": ["https://api.elhub.no/example-endpoint/"]
+        }
+      },
+      "additionalProperties": false
+    },
+    "topLevelMeta": {
+      "description": "Meta-information for the JSON document.",
+      "type": "object",
+      "properties": {
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The date and time when the document was created.",
+          "examples": ["2023-10-01T12:00:00Z"]
+        }
+      }
+    },
+    "topLevelPropertyConstraint": {
+      "anyOf": [
+        {
+          "type": "object",
+          "required": ["meta"]
+        },
+        {
+          "type": "object",
+          "required": ["data"]
+        }
+      ]
+    }
+  }
+}
