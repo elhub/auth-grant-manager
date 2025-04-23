@@ -12,14 +12,7 @@ import org.jetbrains.exposed.sql.javatime.CurrentDateTime
 import org.jetbrains.exposed.sql.javatime.datetime
 import kotlin.uuid.ExperimentalUuidApi
 
-data class AuthorizationRequest(
-    val id: String,
-    val requestType: RequestType,
-    val requestStatus: RequestStatus,
-    val requestedBy: String,
-    val requestedTo: String,
-    val createdAt: LocalDateTime,
-    val updatedAt: LocalDateTime,
+data class AuthorizationRequest(val id: String, val requestType: RequestType, val requestStatus: RequestStatus, val requestedBy: String, val requestedT: String, val createdAt: LocalDateTime, val updatedAt: LocalDateTime,
     val validTo: LocalDateTime,
     val properties: ArrayList<AuthorizationRequestProperty> = ArrayList<AuthorizationRequestProperty>()
 ) {
