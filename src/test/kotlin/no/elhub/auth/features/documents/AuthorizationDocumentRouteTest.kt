@@ -15,7 +15,7 @@ import no.elhub.auth.config.AUTHORIZATION_DOCUMENT
 import no.elhub.auth.utils.defaultTestApplication
 import no.elhub.auth.validate
 
-class AuthorizationDocumentServiceTest : DescribeSpec({
+class AuthorizationDocumentRouteTest : DescribeSpec({
 
     lateinit var testApp: TestApplication
 
@@ -28,7 +28,7 @@ class AuthorizationDocumentServiceTest : DescribeSpec({
     }
 
     describe("POST /authorization-documents") {
-        it("should return 200 OK with correct response when request is valid") {
+        it("should return 201 OK with correct response when request is valid") {
 
             val response = testApp.client
                 .post(AUTHORIZATION_DOCUMENT) {
@@ -39,16 +39,30 @@ class AuthorizationDocumentServiceTest : DescribeSpec({
                             "data": {
                                 "type": "AuthorizationDocument",
                                 "attributes": {
-                                    "requestedBy": "Balance Supplier",
-                                    "requestedTo": "98765432109"
+                                    "meteringPoint": "1234"
+                                },
+                                "relationships": {
+                                    "requestedBy": {
+                                        "data": {
+                                            "id": "12345678901",
+                                            "type": "User"
+                                        }
+                                    },
+                                    "requestedTo": {
+                                        "data": {
+                                            "id": "98765432109",
+                                            "type": "User"
+                                        }
+                                    }
                                 }
+
                             }
                         }
                         """.trimIndent()
                     )
                 }
 
-            response.status shouldBe HttpStatusCode.OK
+            response.status shouldBe HttpStatusCode.Created
 
             val responseBody = Json.parseToJsonElement(response.bodyAsText()).jsonObject
             responseBody.validate {
@@ -56,11 +70,23 @@ class AuthorizationDocumentServiceTest : DescribeSpec({
                     "type" shouldBe "AuthorizationDocument"
                     "id".shouldNotBeNull()
                     "attributes" {
-                        "requestedBy" shouldBe "Balance Supplier"
-                        "requestedTo" shouldBe "98765432109"
                         "createdAt".shouldNotBeNull()
                         "updatedAt".shouldNotBeNull()
                         "status" shouldBe "Pending"
+                    }
+                    "relationships" {
+                        "requestedBy" {
+                            "data" {
+                                "id" shouldBe "12345678901"
+                                "type" shouldBe "User"
+                            }
+                        }
+                        "requestedTo" {
+                            "data" {
+                                "id" shouldBe "98765432109"
+                                "type" shouldBe "User"
+                            }
+                        }
                     }
                 }
             }
