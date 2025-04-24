@@ -60,7 +60,7 @@
     },
     "resourceRelationship": {
       "type": "object",
-      "description": "The related entities of the authorization request (presons and organizations).",
+      "description": "The related entities of the authorization request (persons and organizations).",
       "properties": {
         "requestedBy": {
           "$ref": "base-definitions.schema.json#/definitions/relationshipParty"
