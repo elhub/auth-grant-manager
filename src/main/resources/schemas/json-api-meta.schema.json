@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://api.elhub.no/schemas/authorization-grant-schema.json",
+  "$id": "https://docs.elhub.cloud/json/json-api-meta.schema.json",
   "title": "JSON API Meta Response",
   "description": "Schema for generic meta response from Elhub APIs.",
   "type": "object",
