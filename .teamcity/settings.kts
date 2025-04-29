@@ -24,6 +24,7 @@ elhubProject(group = Group.AUTH, name = "auth-grant-manager") {
                 gitOps {
                     cluster = KubeCluster.TEST9
                     gitOpsRepository = gitOpsRepo
+                    autoMerge = true
                 }.triggerOnVcsChange()
 
                 gitOps {
