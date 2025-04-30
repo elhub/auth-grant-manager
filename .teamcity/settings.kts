@@ -7,7 +7,7 @@ import no.elhub.devxp.build.configuration.pipeline.jobs.gradleJib
 import no.elhub.devxp.build.configuration.pipeline.jobs.gradleVerify
 
 val imageRepo = "auth/auth-grant-manager"
-val dbDirectory = "/db"
+val dbDirectory = "./db"
 val liquiEntryPoint = "db-changelog.yaml"
 val gitOpsRepo = "https://github.com/elhub/auth"
 
