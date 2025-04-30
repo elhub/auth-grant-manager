@@ -5,6 +5,7 @@ import no.elhub.devxp.build.configuration.pipeline.extensions.triggerOnVcsChange
 import no.elhub.devxp.build.configuration.pipeline.jobs.gitOps
 import no.elhub.devxp.build.configuration.pipeline.jobs.gradleJib
 import no.elhub.devxp.build.configuration.pipeline.jobs.gradleVerify
+import no.elhub.devxp.build.configuration.pipeline.jobs.liquiBuild
 
 val imageRepo = "auth/auth-grant-manager"
 val dbDirectory = "./db"
