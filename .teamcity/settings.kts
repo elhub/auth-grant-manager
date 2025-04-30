@@ -7,6 +7,8 @@ import no.elhub.devxp.build.configuration.pipeline.jobs.gradleJib
 import no.elhub.devxp.build.configuration.pipeline.jobs.gradleVerify
 
 val imageRepo = "auth/auth-grant-manager"
+val dbDirectory = "/db"
+val liquiEntryPoint = "db-changelog.yaml"
 val gitOpsRepo = "https://github.com/elhub/auth"
 
 elhubProject(group = Group.AUTH, name = "auth-grant-manager") {
@@ -18,6 +20,14 @@ elhubProject(group = Group.AUTH, name = "auth-grant-manager") {
                 registrySettings = {
                     repository = imageRepo
                 }
+            }
+
+            liquiBuild {
+                registrySettings = {
+                    repository = imageRepo
+                }
+                changelogDirectory = dbDirectory
+                liquibaseEntrypoint = liquiEntryPoint
             }
 
             parallel {
