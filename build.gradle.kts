@@ -36,6 +36,8 @@ dependencies {
     // Observability
     implementation(libs.bundles.logging)
     implementation(libs.bundles.monitoring)
+    // JSON validation
+    implementation("com.github.erosb:json-sKema:0.22.0")
     // Unit Testing
     testImplementation(libs.database.postgresql)
     testImplementation(libs.test.mockk)

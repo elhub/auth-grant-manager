@@ -1,0 +1,26 @@
+{
+  "data": {
+    "id": "123e4567-e89b-12d3-a456-426614174000",
+    "type": "AuthorizationRequest",
+    "attributes": {
+      "requestType": "ChangeOfSupplierConfirmation"
+    },
+    "relationships": {
+      "requestedBy": {
+        "data": {
+          "id": "0847976000005",
+          "type": "Organization"
+        }
+      },
+      "requestedTo": {
+        "data": {
+          "id": "80102512345",
+          "type": "Person"
+        }
+      }
+    },
+    "meta": {
+      "contract": "SampleContract"
+    }
+  }
+}

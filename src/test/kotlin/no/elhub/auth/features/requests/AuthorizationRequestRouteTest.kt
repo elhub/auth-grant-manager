@@ -13,6 +13,8 @@ import io.ktor.http.contentType
 import io.ktor.server.testing.TestApplication
 import no.elhub.auth.config.AUTHORIZATION_REQUEST
 import no.elhub.auth.utils.defaultTestApplication
+import java.nio.file.Files
+import java.nio.file.Paths
 
 class AuthorizationRequestRouteTest : DescribeSpec({
 
@@ -36,63 +38,8 @@ class AuthorizationRequestRouteTest : DescribeSpec({
             val responseString = response.bodyAsText()
             responseString.shouldBeValidJson()
 
-            val expectedJson = """
-                {
-                    "data":[
-                        {
-                            "id": "d81e5bf2-8a0c-4348-a788-2a3fab4e77d6",
-                            "type": "AuthorizationRequest",
-                            "attributes": {
-                                "status": "Pending",
-                                "validTo": "2025-04-04T02:00"
-                            },
-                            "relationships": {
-                                "requestedBy": {
-                                    "data": {
-                                        "id": "0847976000005",
-                                        "type": "User"
-                                    }
-                                },
-                                "requestedTo": {
-                                    "data": {
-                                        "id": "80102512345",
-                                        "type": "User"
-                                    }
-                                }
-                            },
-                            "meta": {
-                                "contract": "value1"
-                            }
-                        },
-                        {
-                            "id": "4f71d596-99e4-415e-946d-7252c1a40c5b",
-                            "type": "AuthorizationRequest",
-                            "attributes": {
-                                "status": "Accepted",
-                                "validTo": "2025-04-04T02:00"
-                            },
-                            "relationships": {
-                                "requestedBy": {
-                                    "data": {
-                                        "id": "0847976000005",
-                                        "type": "User"
-                                    }
-                                },
-                                "requestedTo": {
-                                    "data": {
-                                        "id": "80102512345",
-                                        "type": "User"
-                                    }
-                                }
-                            },
-                            "meta": {
-                                "contract": "value2"
-                            }
-                        }
-                    ],
-                    "links":{"self":"http://localhost/authorization-requests"}
-                }
-            """.trimIndent()
+            val expectedJson = Files.readString(Paths.get("src/test/resources/requests/get-authorization-request-valid.json"))
+
             responseString shouldEqualSpecifiedJson expectedJson
         }
     }
@@ -106,36 +53,8 @@ class AuthorizationRequestRouteTest : DescribeSpec({
             val responseString = response.bodyAsText()
             responseString.shouldBeValidJson()
 
-            val expectedJson = """
-                {
-                    "data": {
-                        "id": "d81e5bf2-8a0c-4348-a788-2a3fab4e77d6",
-                        "type": "AuthorizationRequest",
-                        "attributes": {
-                            "status": "Pending",
-                            "validTo": "2025-04-04T02:00"
-                        },
-                        "relationships": {
-                            "requestedBy": {
-                                "data": {
-                                    "id": "0847976000005",
-                                    "type": "User"
-                                }
-                            },
-                            "requestedTo": {
-                                "data": {
-                                    "id": "80102512345",
-                                    "type": "User"
-                                }
-                            }
-                        },
-                        "meta": {
-                            "contract": "value1"
-                        }
-                    },
-                    "links":{"self":"http://localhost/authorization-requests/d81e5bf2-8a0c-4348-a788-2a3fab4e77d6"}
-                }
-            """.trimIndent()
+            val expectedJson = Files.readString(Paths.get("src/test/resources/requests/get-authorization-request-id-valid.json"))
+
             responseString shouldEqualSpecifiedJson expectedJson
         }
 
