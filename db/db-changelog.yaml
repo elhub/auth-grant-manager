@@ -4,10 +4,14 @@
 # liquibase specs.
 databaseChangeLog:
   - includeAll:
-      path: db/schemas/
+      path: schemas/
+      relativeToChangelogFile: true
   - includeAll:
-      path: db/types/
+      path: types/
+      relativeToChangelogFile: true
   - includeAll:
-      path: db/tables/
+      path: tables/
+      relativeToChangelogFile: true
   - includeAll:
-      path: db/data/
+      path: data/
+      relativeToChangelogFile: true
