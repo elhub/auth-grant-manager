@@ -9,7 +9,7 @@ import java.io.File
 import java.nio.file.Files
 import java.nio.file.Paths
 
-class SchemaValidationTest : FunSpec ({
+class SchemaValidationTest : FunSpec({
 
     /**
      * This test validates that all JSON data files conforms to the JSON:API v1.1 specification.
@@ -46,5 +46,4 @@ class SchemaValidationTest : FunSpec ({
                 res.shouldBeNull()
             }
         }
-
 })

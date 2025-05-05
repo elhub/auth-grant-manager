@@ -39,9 +39,7 @@
     }
   },
   "dependencies": {
-    "included": [
-      "data"
-    ]
+    "included": ["data"]
   },
   "unevaluatedProperties": false,
   "definitions": {
@@ -74,14 +72,10 @@
         "$comment": "This is what the specification requires, but it seems bad. https://github.com/json-api/json-api/issues/1553",
         "anyOf": [
           {
-            "required": [
-              "type"
-            ]
+            "required": ["type"]
           },
           {
-            "required": [
-              "id"
-            ]
+            "required": ["id"]
           }
         ]
       },
@@ -111,44 +105,28 @@
       "type": "object",
       "anyOf": [
         {
-          "required": [
-            "id"
-          ]
+          "required": ["id"]
         },
         {
-          "required": [
-            "links"
-          ]
+          "required": ["links"]
         },
         {
-          "required": [
-            "status"
-          ]
+          "required": ["status"]
         },
         {
-          "required": [
-            "code"
-          ]
+          "required": ["code"]
         },
         {
-          "required": [
-            "title"
-          ]
+          "required": ["title"]
         },
         {
-          "required": [
-            "detail"
-          ]
+          "required": ["detail"]
         },
         {
-          "required": [
-            "source"
-          ]
+          "required": ["source"]
         },
         {
-          "required": [
-            "meta"
-          ]
+          "required": ["meta"]
         }
       ],
       "properties": {
@@ -276,9 +254,7 @@
     },
     "linkObject": {
       "type": "object",
-      "required": [
-        "href"
-      ],
+      "required": ["href"],
       "properties": {
         "href": {
           "$ref": "#/definitions/linkUrl"
@@ -353,9 +329,7 @@
       "dependentSchemas": {
         "data": {
           "not": {
-            "required": [
-              "errors"
-            ]
+            "required": ["errors"]
           }
         }
       }
@@ -426,19 +400,13 @@
         {
           "anyOf": [
             {
-              "required": [
-                "data"
-              ]
+              "required": ["data"]
             },
             {
-              "required": [
-                "meta"
-              ]
+              "required": ["meta"]
             },
             {
-              "required": [
-                "links"
-              ]
+              "required": ["links"]
             }
           ]
         }
@@ -460,9 +428,7 @@
           "$ref": "#/definitions/meta"
         }
       },
-      "required": [
-        "data"
-      ],
+      "required": ["data"],
       "anyOf": [
         {
           "$ref": "#/definitions/atMemberName"
@@ -561,15 +527,11 @@
         "anyOf": [
           {
             "type": "object",
-            "required": [
-              "type"
-            ]
+            "required": ["type"]
           },
           {
             "type": "object",
-            "required": [
-              "id"
-            ]
+            "required": ["id"]
           }
         ]
       }
@@ -578,21 +540,15 @@
       "anyOf": [
         {
           "type": "object",
-          "required": [
-            "meta"
-          ]
+          "required": ["meta"]
         },
         {
           "type": "object",
-          "required": [
-            "data"
-          ]
+          "required": ["data"]
         },
         {
           "type": "object",
-          "required": [
-            "errors"
-          ]
+          "required": ["errors"]
         }
       ]
     },
@@ -636,17 +592,12 @@
         },
         {
           "type": "object",
-          "required": [
-            "type",
-            "id"
-          ]
+          "required": ["type", "id"]
         },
         {
           "not": {
             "type": "object",
-            "required": [
-              "lid"
-            ]
+            "required": ["lid"]
           }
         }
       ]
@@ -654,9 +605,7 @@
     "resourceIdentificationNew": {
       "$comment": "The id member is not required when the resource object originates at the client and represents a new resource to be created on the server.",
       "type": "object",
-      "required": [
-        "type"
-      ],
+      "required": ["type"],
       "properties": {
         "type": {
           "type": "string",
@@ -683,21 +632,15 @@
           "$ref": "#/definitions/resourceIdentificationNew"
         },
         {
-          "required": [
-            "type"
-          ]
+          "required": ["type"]
         },
         {
           "oneOf": [
             {
-              "required": [
-                "id"
-              ]
+              "required": ["id"]
             },
             {
-              "required": [
-                "lid"
-              ]
+              "required": ["lid"]
             }
           ]
         }
