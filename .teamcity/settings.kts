@@ -1,6 +1,6 @@
-import no.elhub.devxp.build.configuration.pipeline.ElhubProject.Companion.elhubProject
 import no.elhub.devxp.build.configuration.pipeline.constants.Group
 import no.elhub.devxp.build.configuration.pipeline.constants.KubeCluster
+import no.elhub.devxp.build.configuration.pipeline.dsl.elhubProject
 import no.elhub.devxp.build.configuration.pipeline.extensions.triggerOnVcsChange
 import no.elhub.devxp.build.configuration.pipeline.jobs.gitOps
 import no.elhub.devxp.build.configuration.pipeline.jobs.gradleJib
@@ -33,23 +33,23 @@ elhubProject(group = Group.AUTH, name = "auth-grant-manager") {
 
             parallel {
                 gitOps {
-                    cluster = KubeCluster.TEST9
+                    clusters = setOf(KubeCluster.TEST9)
                     gitOpsRepository = gitOpsRepo
                     autoMerge = true
                 }.triggerOnVcsChange()
 
                 gitOps {
-                    cluster = KubeCluster.TEST11
+                    clusters = setOf(KubeCluster.TEST11)
                     gitOpsRepository = gitOpsRepo
                 }.triggerOnVcsChange()
 
                 gitOps {
-                    cluster = KubeCluster.TEST13
+                    clusters = setOf(KubeCluster.TEST13)
                     gitOpsRepository = gitOpsRepo
                 }.triggerOnVcsChange()
 
                 gitOps {
-                    cluster = KubeCluster.TEST14
+                    clusters = setOf(KubeCluster.TEST14)
                     gitOpsRepository = gitOpsRepo
                 }.triggerOnVcsChange()
             }
