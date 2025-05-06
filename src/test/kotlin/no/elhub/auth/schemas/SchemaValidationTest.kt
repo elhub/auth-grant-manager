@@ -28,7 +28,7 @@ class SchemaValidationTest : FunSpec({
     val schema1 = SchemaLoader.forURL(jsonApiSchemaPath.toUri().toString()).load()
     val validator = Validator.forSchema(schema1)
 
-    val schemaDirUrl = object {}.javaClass.getResource("/requests/valid")
+    val schemaDirUrl = object {}.javaClass.getResource("/requests")
         ?: throw IllegalStateException("The folder /requests does not exist in the classpath.")
 
     val schemaDir = File(schemaDirUrl.toURI())

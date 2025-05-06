@@ -1,14 +1,13 @@
 {
   "data": {
-    "id": "d81e5bf2-8a0c-4348-a788-2a3fab4e77d6",
     "type": "AuthorizationRequest",
     "attributes": {
-      "status": "pending",
-      "validTo": "2025-04-04T02:00"
+      "status": "Pending"
     },
     "relationships": {
       "requestedBy": {
         "data": {
+          "id": "0847976000005",
           "type": "User"
         }
       },
@@ -20,10 +19,7 @@
       }
     },
     "meta": {
-      "contract": "value1"
+      "contract": "SampleContract"
     }
-  },
-  "links": {
-    "self": "http://localhost/authorization-requests/d81e5bf2-8a0c-4348-a788-2a3fab4e77d6"
   }
 }

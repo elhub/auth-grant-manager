@@ -1,0 +1,25 @@
+{
+  "data": {
+    "type": "AuthorizationRequest",
+    "attributes": {
+      "status": "Pending"
+    },
+    "relationships": {
+      "requestedBy": {
+        "data": {
+          "id": "0847976000005",
+          "type": "User"
+        }
+      },
+      "requestedTo": {
+        "data": {
+          "id": "80102512345",
+          "type": "User"
+        }
+      }
+    },
+    "meta": {
+      "contract": "SampleContract"
+    }
+  }
+}
