@@ -17,7 +17,7 @@ class SchemaValidationTest : FunSpec({
      *      - Issue tracker: https://github.com/json-api/json-api/issues/1788
      *      - Schema repository: https://github.com/VGirol/json-api/blob/schema-1.1/_schemas/1.1/schema.json
      *      - Raw schema URL: https://raw.githubusercontent.com/VGirol/json-api/schema-1.1/_schemas/1.1/schema.json
-     *  The schema is stored locally in src/test/resources/json-api-1.1-schema to avoid dependency on external resources during testing.
+     *  The schema is stored locally in json-api-1.1-schema.json to avoid network latency and ensure reliable testing.
      */
 
     val jsonApiSchemaPath = Paths.get("src/test/resources/json-api-1.1-schema.json")
@@ -42,7 +42,8 @@ class SchemaValidationTest : FunSpec({
             test("`${schemaFile.name}` conforms to JSON:API v1.1") {
                 val instance = JsonParser(schemaFile.readText()).parse()
                 val res = validator.validate(instance)
-                // validate will return null when there are no errors to the json data
+
+                // validate will return null if the json data comp
                 res.shouldBeNull()
             }
         }
