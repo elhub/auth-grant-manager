@@ -1,4 +1,4 @@
--- changeset elhub:17
+--changeset elhub:18
 CREATE TABLE auth.authorization_request
 (
     id             UUID                                   NOT NULL,

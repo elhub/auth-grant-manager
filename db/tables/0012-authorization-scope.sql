@@ -1,4 +1,4 @@
--- changeset elhub:11
+--changeset elhub:12
 CREATE TABLE auth.authorization_scope
 (
     id                       BIGSERIAL                              NOT NULL,

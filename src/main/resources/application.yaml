@@ -7,7 +7,7 @@ ktor:
   database:
     url: "$JDBC_URL"
     driverClass: "org.postgresql.Driver"
-    username: "$DB_USERNAME"
-    password: "$DB_PASSWORD"
+    username: "$APP_USERNAME"
+    password: "$APP_PASSWORD"
     hikari:
       maximumPoolSize: 3

@@ -22,8 +22,10 @@ fun defaultTestApplication(): TestApplication = TestApplication {
     }
     environment {
         config = MapApplicationConfig(
-            "ktor.database.username" to "postgres",
-            "ktor.database.password" to "postgres"
+            "ktor.database.username" to "app",
+            "ktor.database.password" to "app",
+            "ktor.database.url" to "jdbc:postgresql://localhost:5432/auth",
+            "ktor.database.driverClass" to "org.postgresql.Driver",
         )
     }
 }

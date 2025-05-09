@@ -1,4 +1,4 @@
---changeset elhub:4
+--changeset elhub:5
 CREATE TYPE permission_type AS ENUM (
     'ChangeOfSupplier',
     'FullDelegation',

@@ -36,7 +36,13 @@ object DatabaseSetup : BeforeProjectListener, AfterProjectListener {
         val changeLogFile = "db/db-changelog.yaml"
         DriverManager.getConnection(url, user, password).use { connection ->
             val database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(JdbcConnection(connection))
-            val liquibase = Liquibase(changeLogFile, DirectoryResourceAccessor(Paths.get(System.getProperty("user.dir"))), database)
+            val liquibase = Liquibase(
+                changeLogFile,
+                DirectoryResourceAccessor(Paths.get(System.getProperty("user.dir"))),
+                database
+            )
+            liquibase.setChangeLogParameter("APP_USERNAME", "app")
+            liquibase.setChangeLogParameter("APP_PASSWORD", "app")
             liquibase.update("")
         }
     }

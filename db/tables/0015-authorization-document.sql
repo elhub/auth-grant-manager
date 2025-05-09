@@ -1,4 +1,4 @@
--- changeset elhub:14
+--changeset elhub:15
 CREATE TABLE auth.authorization_document
 (
     id           UUID                                   NOT NULL,

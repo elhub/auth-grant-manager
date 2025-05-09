@@ -7,8 +7,8 @@ import org.jetbrains.exposed.sql.Database
 
 fun Application.configureDatabase(): HikariDataSource {
     val config = HikariConfig().apply {
-        jdbcUrl = environment.config.propertyOrNull("ktor.database.url")?.getString() ?: "jdbc:postgresql://localhost:5432/auth"
-        driverClassName = environment.config.propertyOrNull("ktor.database.driverClass")?.getString() ?: "org.postgresql.Driver"
+        jdbcUrl = environment.config.propertyOrNull("ktor.database.url")?.getString()
+        driverClassName = environment.config.propertyOrNull("ktor.database.driverClass")?.getString()
         username = environment.config.propertyOrNull("ktor.database.username")?.getString()
         password = environment.config.propertyOrNull("ktor.database.password")?.getString()
         maximumPoolSize = environment.config.propertyOrNull("ktor.database.hikari.maximumPoolSize")?.getString()?.toInt() ?: 3
