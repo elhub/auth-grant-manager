@@ -3,7 +3,9 @@ openapi: 3.1.1
 info:
   version: 0.1.0
   title: Authorization Grant Manager
-  description: The authorization grant manager handles the authorization grants for Elhub's APIs.
+  description: >
+    The authorization grant manager handles the authorization grants for Elhub's APIs. Note that we are still iterating
+    over the authorization-grant APIs.
   license:
     name: MIT
     url: https://github.com/elhub/auth-grant-manager?tab=MIT-1-ov-file
@@ -153,7 +155,7 @@ paths:
         "500":
           $ref: "#/components/responses/500InternalServerError"
       tags:
-        - name:
+        - TODO
   "/authorization-grants/{id}":
     get:
       summary: Retrieve a specific authorization grant.

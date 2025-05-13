@@ -1,0 +1,27 @@
+@startuml context-diagram
+!include  https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+Person_Ext(EndUser, "End User", "A person in the public power market.")
+System_Ext(MarketParty, "Market Party", "The initiating system controlled by an organization participating in the power market.")
+System_Boundary(elhub, "Elhub") {
+  System(EMIF, "Elhub Machine Interface", "EMIF is the legacy interface for sending/receiving business processes to Elhub.")
+  System(GrantManager, "auth-grant-manager", "The grant manager handles registration and storage of authorization grants in Elhub.")
+  System(MyPage, "MinSide", "Minside provides the user interface for End Users that need to interact with Elhub.")
+}
+System_Ext(OCSP, "OCSP Service", "External OCSP service (NKOM-approved) that is queried to retrieve signature identity information.")
+System_Ext(SignatureService, "Signature Service", "External NKON-approved signature service.")
+
+' Relationships
+Rel(MarketParty, GrantManager, "Request Authorization Documents/Requests", "HTTPS/JSON")
+Rel(MarketParty, EMIF, "Sends market processes with valid authorization grant", "HTTPS/SOAP")
+Rel(MarketParty, MyPage, "Web/App redirects to MyPage for Authorization Requests", "HTTPS/HTML")
+Rel(EMIF, GrantManager, "Validates Authorization Grant from", "HTTPS/JSON")
+Rel(MyPage, GrantManager, "Reads/Writes authorization details", "HTTPS/JSON")
+Rel(EndUser, MarketParty, "Interacts with market party")
+Rel(EndUser, MyPage, "Consents to/Administrates authorization grants", "HTTPS/HTML")
+Rel(GrantManager, OCSP, "Queries", "HTTPS/REST")
+Rel(MarketParty, SignatureService, "Web/App redirects for signatures of Authorization Documents", "")
+Rel(EndUser, SignatureService, "Signs authorization documents", "")
+
+SHOW_LEGEND()
+@enduml

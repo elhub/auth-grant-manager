@@ -4,11 +4,11 @@
 
 The auth-grant-manager is designed to manage and track user consent preferences across Elhub applications,
 services, and data processing activities. The goal is to provide a centralized platform for collecting, storing,
-and processing user consent data. The main objectives of the consent manager are to:
+and processing user consent data. The main objectives are to:
 
-* Facilitate the collection of explicit consent from users for a variety of business and data processing activities.
-* Provide a centralized repository for storing and managing user consent preferences.
-* Enable granular control over consent settings, allowing users to specify their preferences for different types of
+* Facilitate the collection of explicit consent/grants from users for a variety of business and data processing activities.
+* Provide a centralized repository for storing and managing user grant preferences.
+* Enable granular control over grant settings, allowing users to specify their preferences for different types of
     data processing activities.
 * Ensure compliance with regulatory requirements and standards related to data privacy and consent management.
 
@@ -27,14 +27,14 @@ You can build and run the application using gradle.
 
 | Command                       | Description                                                          |
 |-------------------------------|----------------------------------------------------------------------|
-| `./gradlew run`               | Run the application                                                  |
+| `./gradlew run`               | Run the application (pass DB variables as mentioned above)           |
 | `./gradlew build`             | Build everything                                                     |
 | `./gradlew test`              | Run the tests                                                        |
 | `./gradlew buildFatJar`       | Build an executable JAR of the server with all dependencies included |
 | `./gradlew buildImage`        | Build the docker image to use with the fat JAR                       |
 
 If you run this locally, you will need to have a PostgreSQL database running. The following commands allow you
-to set up and tear down the database using Docker:
+to set up and tear down the database using Docker (./gradlew automatically tries to set up the database):
 
 | Command                         | Description                                                          |
 |---------------------------------|----------------------------------------------------------------------|
@@ -58,12 +58,8 @@ export DATABASE_URL=jdbc:postgresql://localhost:5432/jdbc
 
 ## API Endpoints
 
-The following endpoints are available:
-
-| Method | Path                   | Description                        |
-|--------|------------------------|------------------------------------|
-| POST   | /authorization-request | Set up a new authorization request |
-
+Review the [OpenAPI spec](https://github.com/elhub/auth-grant-manager/blob/main/src/main/resources/openapi.yaml) to
+view the available endpoints.
 
 ## Contributing
 
