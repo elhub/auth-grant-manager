@@ -1,0 +1,31 @@
+@startuml request-flow
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Sequence.puml
+
+actor Person_Ext(EndUser, "End User", "")
+participant System_Ext(MarketParty, "Market Party", "")
+box "Elhub" #LightBlue
+  participant System(GrantManager, "auth-grant-manager", "")
+  participant System(MyPage, "Elhub MyPage", "")
+  participant System(EMIF, "EMIF", "")
+end box
+
+EndUser -> MarketParty: Initiates transaction
+MarketParty -> GrantManager: POST /authorization-requests
+GrantManager -> MarketParty: 201 Created (authorizationRequestId)
+MarketParty -> MyPage: Redirect to https://mypage.elhub.no/authorization-request/{authorizationRequestId}
+MyPage -> MarketParty: Redirect to chosen MarketParty URI
+note right
+User accepts or rejects the request.
+end note
+MarketParty -> GrantManager: GET /authorization-request/{authorizationRequestId}
+GrantManager -> MarketParty: 200 OK (consentId)
+note right
+Retrieves authorization request status and the authorizationGrantId
+end note
+MarketParty -> EMIF: Send BRS with authorizationGrantId
+note right
+EMIF validates the authorizationGrantId.
+end note
+
+SHOW_LEGEND()
+@enduml
