@@ -70,7 +70,7 @@ class AuthorizationRequestSchemaValidationTest : DescribeSpec({
     }
 })
 
-fun loadSchemaFromFile(schemaPath: String, hasConfig: Boolean? = null): Schema {
+fun loadSchemaFromFile(schemaPath: String, hasConfig: Boolean? = false): Schema {
     val schemaUrl = object {}.javaClass.getResource(schemaPath)
         ?: throw IllegalStateException("Schema file not found: $schemaPath")
 
