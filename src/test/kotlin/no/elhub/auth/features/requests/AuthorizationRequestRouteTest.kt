@@ -39,7 +39,7 @@ class AuthorizationRequestRouteTest : DescribeSpec({
             val responseString = response.bodyAsText()
             responseString.shouldBeValidJson()
 
-            val expectedJson = Files.readString(Paths.get("src/test/resources/requests/get-authorization-request.json"))
+            val expectedJson = Files.readString(Paths.get("src/test/resources/requests/get-authorization-response.json"))
 
             responseString shouldEqualSpecifiedJson expectedJson
         }
