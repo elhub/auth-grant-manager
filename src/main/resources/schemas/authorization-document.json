@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://docs.elhub.cloud/json/authorization-document.json",
+  "$id": "https://api.elhub.no/schemas/authorization-document.json",
   "title": "Authorization Document",
   "description": "Schema for authorization documents in the Elhub authorization manager.",
   "type": "object",
