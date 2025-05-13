@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://docs.elhub.cloud/json/authorization-request-update.schema.json",
+  "$id": "https://api.elhub.no/schemas/authorization-request-update.schema.json",
   "title": "Authorization Request Request",
   "description": "Schema for creating authorization requests to the Elhub authorization manager.",
   "type": "object",

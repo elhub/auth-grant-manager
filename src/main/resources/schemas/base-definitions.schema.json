@@ -1,5 +1,5 @@
 {
-  "$id": "https://docs.elhub.cloud/json/base-definitions.schema.json",
+  "$id": "https://api.elhub.no/schemas/base-definitions.schema.json",
   "definitions": {
     "linkUrl": {
       "description": "A string containing the link's URL.",
