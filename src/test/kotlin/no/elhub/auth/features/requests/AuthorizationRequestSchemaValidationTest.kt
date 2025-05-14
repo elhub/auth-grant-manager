@@ -70,6 +70,11 @@ class AuthorizationRequestSchemaValidationTest : DescribeSpec({
     }
 })
 
+/**
+ * Some of our JSON schemas reference other schemas, and this method handles resolving those references by using the json-sKema library
+ * This library does not automatically resolve external reference. More information here:
+ * https://github.com/erosb/json-sKema/blob/master/README.md#pre-registering-schemas-by-uri-before-schema-loading
+ */
 fun loadSchemaFromFile(schemaPath: String, hasReference: Boolean? = false): Schema {
     val schemaUrl = object {}.javaClass.getResource(schemaPath)
         ?: throw IllegalStateException("Schema file not found: $schemaPath")
@@ -80,6 +85,7 @@ fun loadSchemaFromFile(schemaPath: String, hasReference: Boolean? = false): Sche
 
         val schemaLoaderConfig = SchemaLoaderConfig.createDefaultConfig(
             mapOf(
+                // pre-register these references with local file paths to ensure proper resolution during schema validation
                 URI("authorization-request.schema.json") to authorizationRequestSchema,
                 URI("base-definitions.schema.json") to baseDefinitionSchema
             )
