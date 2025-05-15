@@ -1,6 +1,5 @@
 plugins {
     alias(libs.plugins.elhub.gradle.plugin)
-    alias(libs.plugins.google.cloud.tools.jib)
     alias(libs.plugins.ktor.plugin)
     alias(libs.plugins.kotlin.plugin.serialization)
     alias(libs.plugins.ksp.plugin)

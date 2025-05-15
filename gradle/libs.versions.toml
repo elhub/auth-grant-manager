@@ -4,9 +4,8 @@ format.version = "1.1"
 [versions]
 arrow = "2.0.1"
 cohort = "2.6.2"
-elhub-gradle = "0.6.0"
+elhub-gradle = "0.7.0"
 exposed = "0.60.0"
-google-jib = "3.4.5"
 gradle-docker = "0.17.12"
 hikari = "6.3.0"
 kotlinx-datetime = "0.6.2"
@@ -30,7 +29,6 @@ testcontainers = "1.20.6"
 
 [plugins]
 elhub-gradle-plugin = { id = "no.elhub.devxp.kotlin-service", version.ref = "elhub-gradle" }
-google-cloud-tools-jib = { id = "com.google.cloud.tools.jib", version.ref = "google-jib" }
 gradle-docker = { id = "com.avast.gradle.docker-compose", version.ref = "gradle-docker" }
 ksp-plugin = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 ktor-plugin = { id = "io.ktor.plugin", version.ref = "ktor" }
