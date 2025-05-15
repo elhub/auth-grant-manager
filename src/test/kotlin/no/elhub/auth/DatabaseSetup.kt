@@ -5,7 +5,6 @@ import com.github.dockerjava.api.model.HostConfig
 import com.github.dockerjava.api.model.PortBinding
 import com.github.dockerjava.api.model.Ports
 import io.kotest.core.listeners.AfterProjectListener
-import io.kotest.core.listeners.BeforeProjectListener
 import io.kotest.core.listeners.BeforeSpecListener
 import io.kotest.core.spec.Spec
 import liquibase.Liquibase
@@ -40,16 +39,17 @@ object DatabaseSetup : BeforeSpecListener, AfterProjectListener {
                 .withPassword("postgres")
                 .withExposedPorts(POSTGRES_PORT)
                 .withCreateContainerCmdModifier { cmd ->
-                    cmd.withHostConfig(HostConfig().withPortBindings(
-                        PortBinding(Ports.Binding.bindPort(POSTGRES_PORT), ExposedPort(POSTGRES_PORT))
-                    ))
+                    cmd.withHostConfig(
+                        HostConfig().withPortBindings(
+                            PortBinding(Ports.Binding.bindPort(POSTGRES_PORT), ExposedPort(POSTGRES_PORT))
+                        )
+                    )
                 }.also {
                     it.start()
                     migrate(it)
                 }
         }
     }
-
 
     override suspend fun afterProject() {
         if (::postgres.isInitialized) {
@@ -58,8 +58,8 @@ object DatabaseSetup : BeforeSpecListener, AfterProjectListener {
     }
 
     private fun migrate(pg: PostgreSQLContainer<*>) {
-        val url      = pg.jdbcUrl
-        val user     = pg.username
+        val url = pg.jdbcUrl
+        val user = pg.username
         val password = pg.password
         DriverManager.getConnection(url, user, password).use { conn ->
             val db = DatabaseFactory
