@@ -188,7 +188,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "/schemas/authorization-request-list.schema.json"
+                $ref: "/schemas/authorization-requests-get-response.schema.json"
         "401":
           $ref: "#/components/responses/401UnauthorizedError"
         "500":
@@ -200,14 +200,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "/schemas/authorization-request-update.schema.json"
+              $ref: "/schemas/authorization-request-patch-request.json"
       responses:
         "201":
           description: The authorization request was updated.
           content:
             application/json:
               schema:
-                $ref: "/schemas/authorization-request-read.schema.json"
+                $ref: "/schemas/authorization-request-response.schema.json"
         "400":
           $ref: "#/components/responses/400BadRequestError"
         "401":
@@ -221,7 +221,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "/schemas/authorization-request-create.schema.json"
+              $ref: "/schemas/authorization-request-post-request.schema.json"
       responses:
         "201":
           description: |
@@ -229,7 +229,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "/schemas/authorization-request-read.schema.json"
+                $ref: "/schemas/authorization-request-response.schema.json"
         "400":
           $ref: "#/components/responses/400BadRequestError"
         "401":
@@ -253,7 +253,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "/schemas/authorization-request-read.schema.json"
+                $ref: "/schemas/authorization-request-response.schema.json"
         "401":
           $ref: "#/components/responses/401UnauthorizedError"
         "404":
