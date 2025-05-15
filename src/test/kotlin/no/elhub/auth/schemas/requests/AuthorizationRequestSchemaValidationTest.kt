@@ -18,7 +18,7 @@ class AuthorizationRequestSchemaValidationTest : DescribeSpec({
         val authReqListSchema = loadSchemaFromFile("/schemas/authorization-requests-get-response.schema.json")
 
         it("should validate that response complies with the custom JSON schema") {
-            val jsonDataPath = "src/test/resources/requests/get-authorization-response.json"
+            val jsonDataPath = "/requests/get-authorization-response.json"
             val result = validateJsonData(authReqListSchema, jsonDataPath)
             checkValidateResult(result)
         }
@@ -29,13 +29,13 @@ class AuthorizationRequestSchemaValidationTest : DescribeSpec({
         val authReqReadSchema = loadSchemaFromFile("/schemas/authorization-request-response.schema.json", true)
 
         it("should validate that request complies with the custom JSON schema") {
-            val jsonDataPath = "src/test/resources/requests/patch-authorization-request-request-body.json"
+            val jsonDataPath = "/requests/patch-authorization-request-request-body.json"
             val result = validateJsonData(authReqUpdateSchema, jsonDataPath)
             checkValidateResult(result)
         }
 
         it("should validate that response complies with the custom JSON schema") {
-            val jsonDataPath = "src/test/resources/requests/patch-authorization-request-response-body.json"
+            val jsonDataPath = "/requests/patch-authorization-request-response-body.json"
             val result = validateJsonData(authReqReadSchema, jsonDataPath)
             checkValidateResult(result)
         }
@@ -46,13 +46,13 @@ class AuthorizationRequestSchemaValidationTest : DescribeSpec({
         val authReqReadSchema = loadSchemaFromFile("/schemas/authorization-request-response.schema.json", true)
 
         it("should validate that request complies with the custom JSON schema") {
-            val jsonDataPath = "src/test/resources/requests/post-authorization-request-request-body.json"
+            val jsonDataPath = "/requests/post-authorization-request-request-body.json"
             val result = validateJsonData(authReqCreateSchema, jsonDataPath)
             checkValidateResult(result)
         }
 
         it("should validate that response complies with the custom JSON schema") {
-            val jsonDataPath = "src/test/resources/requests/post-authorization-request-response-body.json"
+            val jsonDataPath = "/requests/post-authorization-request-response-body.json"
             val result = validateJsonData(authReqReadSchema, jsonDataPath)
             checkValidateResult(result)
         }
@@ -62,7 +62,7 @@ class AuthorizationRequestSchemaValidationTest : DescribeSpec({
         val authReqReadSchema = loadSchemaFromFile("/schemas/authorization-request-response.schema.json")
 
         it("should validate that response complies with the custom JSON schema") {
-            val jsonDataPath = "src/test/resources/requests/get-authorization-request-id.json"
+            val jsonDataPath = "/requests/get-authorization-request-id.json"
             val result = validateJsonData(authReqReadSchema, jsonDataPath)
             checkValidateResult(result)
         }
@@ -103,7 +103,7 @@ fun loadSchemaFromFile(schemaPath: String, hasReference: Boolean? = false): Sche
 
 fun validateJsonData(schema: Schema, jsonDataFilePath: String): ValidationFailure? {
     val validator = Validator.forSchema(schema)
-    val valid = Files.readString(Paths.get(jsonDataFilePath))
+    val valid = Files.readString(Paths.get("src/test/resources$jsonDataFilePath"))
 
     val instance = JsonParser(valid).parse()
     return validator.validate(instance)
