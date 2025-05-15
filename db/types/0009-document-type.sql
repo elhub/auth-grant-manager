@@ -1,4 +1,4 @@
--- changeset elhub:8
+--changeset elhub:9
 CREATE TYPE document_type AS ENUM (
     'ChangeOfSupplierConfirmation'
 );
