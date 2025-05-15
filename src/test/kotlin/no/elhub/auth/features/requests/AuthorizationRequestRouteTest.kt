@@ -11,9 +11,11 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.server.testing.TestApplication
+import no.elhub.auth.RequireTestContainer
 import no.elhub.auth.config.AUTHORIZATION_REQUEST
 import no.elhub.auth.utils.defaultTestApplication
 
+@RequireTestContainer
 class AuthorizationRequestRouteTest : DescribeSpec({
 
     lateinit var testApp: TestApplication
