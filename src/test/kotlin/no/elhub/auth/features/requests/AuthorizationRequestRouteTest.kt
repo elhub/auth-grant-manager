@@ -39,7 +39,7 @@ class AuthorizationRequestRouteTest : DescribeSpec({
             val responseString = response.bodyAsText()
             responseString.shouldBeValidJson()
 
-            val expectedJson = Files.readString(Paths.get("src/test/resources/requests/get-authorization-response.json"))
+            val expectedJson = Files.readString(Paths.get("src/test/resources/requests/authorization-request-get-response-data.json"))
 
             responseString shouldEqualSpecifiedJson expectedJson
         }
@@ -54,7 +54,7 @@ class AuthorizationRequestRouteTest : DescribeSpec({
             val responseString = response.bodyAsText()
             responseString.shouldBeValidJson()
 
-            val expectedJson = Files.readString(Paths.get("src/test/resources/requests/get-authorization-request-id.json"))
+            val expectedJson = Files.readString(Paths.get("src/test/resources/requests/authorization-request-get-id-response-data.json"))
 
             responseString shouldEqualSpecifiedJson expectedJson
         }
@@ -113,7 +113,7 @@ class AuthorizationRequestRouteTest : DescribeSpec({
 
         it("should return 201 Created") {
 
-            val requestBody = Files.readString(Paths.get("src/test/resources/requests/post-authorization-request-request-body.json"))
+            val requestBody = Files.readString(Paths.get("src/test/resources/requests/authorization-request-post-request-data.json"))
 
             val response = testApp.client.post(AUTHORIZATION_REQUEST) {
                 contentType(io.ktor.http.ContentType.Application.Json)
@@ -130,7 +130,7 @@ class AuthorizationRequestRouteTest : DescribeSpec({
             val responseJson = ObjectMapper().readTree(responseString)
             val generatedId = responseJson["data"]["id"].asText()
 
-            val expectedJson = Files.readString(Paths.get("src/test/resources/requests/post-authorization-request-response-body.json"))
+            val expectedJson = Files.readString(Paths.get("src/test/resources/requests/authorization-request-post-response-data.json"))
             val expectedJsonWithDynamicId = expectedJson.replace("\"id\": \"123e4567-e89b-12d3-a456-426614174000\"", "\"id\": \"$generatedId\"")
 
             responseString shouldEqualSpecifiedJson expectedJsonWithDynamicId
