@@ -1,4 +1,4 @@
-package no.elhub.auth.features.requests
+package no.elhub.auth.schemas.requests
 
 import com.github.erosb.jsonsKema.JsonParser
 import com.github.erosb.jsonsKema.Schema
@@ -8,7 +8,6 @@ import com.github.erosb.jsonsKema.ValidationFailure
 import com.github.erosb.jsonsKema.Validator
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.nulls.shouldBeNull
-import no.elhub.auth.config.AUTHORIZATION_REQUEST
 import java.net.URI
 import java.nio.file.Files
 import java.nio.file.Paths
