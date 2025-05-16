@@ -8,6 +8,7 @@ elhub-gradle = "0.7.0"
 exposed = "0.60.0"
 gradle-docker = "0.17.12"
 hikari = "6.3.0"
+json-skema = "0.22.0"
 kotlinx-datetime = "0.6.2"
 kotlinx-serialization = "1.8.1"
 kotlinx-serialization-plugin = "2.1.21"
@@ -21,6 +22,7 @@ liquibase = "4.31.1"
 liquibase-plugin = "3.0.2"
 micrometer = "1.14.5"
 mockk = "1.13.17"
+openpdf = "2.0.3"
 picocli = "4.7.6"
 postgresql = "42.7.5"
 slf4j = "2.0.17"
@@ -50,6 +52,7 @@ di-koin-ktor = { group = "io.insert-koin", name = "koin-ktor", version.ref = "ko
 di-koin-logger-slf4j = { group = "io.insert-koin", name = "koin-logger-slf4j", version.ref = "koin" }
 fp-arrow-core = { group = "io.arrow-kt", name = "arrow-core", version.ref = "arrow" }
 fp-arrow-fx-coroutines = { group = "io.arrow-kt", name = "arrow-fx-coroutines", version.ref = "arrow" }
+json-skema = { group = "com.github.erosb", name = "json-sKema", version.ref = "json-skema" }
 kotlinx-datetime = { group = "org.jetbrains.kotlinx", name = "kotlinx-datetime", version.ref = "kotlinx-datetime" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 ktor-serialization-kotlinx-json = { group = "io.ktor", name = "ktor-serialization-kotlinx-json", version.ref = "ktor" }
@@ -66,6 +69,7 @@ monitoring-cohort-hikari = { group = "com.sksamuel.cohort", name = "cohort-hikar
 monitoring-cohort-ktor = { group = "com.sksamuel.cohort", name = "cohort-ktor", version.ref = "cohort" }
 monitoring-cohort-micrometer = { group = "com.sksamuel.cohort", name = "cohort-micrometer", version.ref = "cohort" }
 monitoring-micrometer-registry-prometheus = { group = "io.micrometer", name = "micrometer-registry-prometheus", version.ref = "micrometer" }
+openpdf = { group = "com.github.librepdf", name = "openpdf", version.ref = "openpdf" }
 serialization-yaml-snakeyaml = { group = "org.yaml", name = "snakeyaml", version.ref = "snakeyaml" }
 test-kotest-assertions-core = { group = "io.kotest", name = "kotest-assertions-core", version.ref = "kotest" }
 test-kotest-assertions-json = { group = "io.kotest", name = "kotest-assertions-json", version.ref = "kotest" }

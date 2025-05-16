@@ -31,10 +31,12 @@ dependencies {
     liquibaseRuntime(libs.database.postgresql)
     // Documentation
     implementation(libs.bundles.documentation)
-    implementation("com.github.librepdf:openpdf:2.0.3")
+    implementation(libs.openpdf)
     // Observability
     implementation(libs.bundles.logging)
     implementation(libs.bundles.monitoring)
+    // JSON validation
+    implementation(libs.json.skema)
     // Unit Testing
     testImplementation(libs.database.postgresql)
     testImplementation(libs.test.mockk)

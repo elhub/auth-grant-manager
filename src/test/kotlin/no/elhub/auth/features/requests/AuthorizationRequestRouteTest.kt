@@ -13,6 +13,9 @@ import io.ktor.http.contentType
 import io.ktor.server.testing.TestApplication
 import no.elhub.auth.config.AUTHORIZATION_REQUEST
 import no.elhub.auth.utils.defaultTestApplication
+import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper
+import java.nio.file.Files
+import java.nio.file.Paths
 
 class AuthorizationRequestRouteTest : DescribeSpec({
 
@@ -36,63 +39,8 @@ class AuthorizationRequestRouteTest : DescribeSpec({
             val responseString = response.bodyAsText()
             responseString.shouldBeValidJson()
 
-            val expectedJson = """
-                {
-                    "data":[
-                        {
-                            "id": "d81e5bf2-8a0c-4348-a788-2a3fab4e77d6",
-                            "type": "AuthorizationRequest",
-                            "attributes": {
-                                "status": "Pending",
-                                "validTo": "2025-04-04T02:00"
-                            },
-                            "relationships": {
-                                "requestedBy": {
-                                    "data": {
-                                        "id": "0847976000005",
-                                        "type": "User"
-                                    }
-                                },
-                                "requestedTo": {
-                                    "data": {
-                                        "id": "80102512345",
-                                        "type": "User"
-                                    }
-                                }
-                            },
-                            "meta": {
-                                "contract": "value1"
-                            }
-                        },
-                        {
-                            "id": "4f71d596-99e4-415e-946d-7252c1a40c5b",
-                            "type": "AuthorizationRequest",
-                            "attributes": {
-                                "status": "Accepted",
-                                "validTo": "2025-04-04T02:00"
-                            },
-                            "relationships": {
-                                "requestedBy": {
-                                    "data": {
-                                        "id": "0847976000005",
-                                        "type": "User"
-                                    }
-                                },
-                                "requestedTo": {
-                                    "data": {
-                                        "id": "80102512345",
-                                        "type": "User"
-                                    }
-                                }
-                            },
-                            "meta": {
-                                "contract": "value2"
-                            }
-                        }
-                    ],
-                    "links":{"self":"http://localhost/authorization-requests"}
-                }
-            """.trimIndent()
+            val expectedJson = Files.readString(Paths.get("src/test/resources/requests/authorization-request-get-response-data.json"))
+
             responseString shouldEqualSpecifiedJson expectedJson
         }
     }
@@ -106,36 +54,8 @@ class AuthorizationRequestRouteTest : DescribeSpec({
             val responseString = response.bodyAsText()
             responseString.shouldBeValidJson()
 
-            val expectedJson = """
-                {
-                    "data": {
-                        "id": "d81e5bf2-8a0c-4348-a788-2a3fab4e77d6",
-                        "type": "AuthorizationRequest",
-                        "attributes": {
-                            "status": "Pending",
-                            "validTo": "2025-04-04T02:00"
-                        },
-                        "relationships": {
-                            "requestedBy": {
-                                "data": {
-                                    "id": "0847976000005",
-                                    "type": "User"
-                                }
-                            },
-                            "requestedTo": {
-                                "data": {
-                                    "id": "80102512345",
-                                    "type": "User"
-                                }
-                            }
-                        },
-                        "meta": {
-                            "contract": "value1"
-                        }
-                    },
-                    "links":{"self":"http://localhost/authorization-requests/d81e5bf2-8a0c-4348-a788-2a3fab4e77d6"}
-                }
-            """.trimIndent()
+            val expectedJson = Files.readString(Paths.get("src/test/resources/requests/authorization-request-get-id-response-data.json"))
+
             responseString shouldEqualSpecifiedJson expectedJson
         }
 
@@ -192,68 +112,28 @@ class AuthorizationRequestRouteTest : DescribeSpec({
     describe("POST $AUTHORIZATION_REQUEST") {
 
         it("should return 201 Created") {
-            val requestBody = """
-                {
-                    "data": {
-                        "type": "AuthorizationRequest",
-                        "attributes": {
-                            "requestType": "ChangeOfSupplierConfirmation"
-                        },
-                        "relationships": {
-                            "requestedBy": {
-                                "data": {
-                                    "id": "0847976000005",
-                                    "type": "Organization"
-                                }
-                            },
-                            "requestedTo": {
-                                "data": {
-                                    "id": "80102512345",
-                                    "type": "Person"
-                                }
-                            }
-                        },
-                        "meta": {
-                            "contract": "SampleContract"
-                        }
-                    }
-                }
-            """.trimIndent()
+
+            val requestBody = Files.readString(Paths.get("src/test/resources/requests/authorization-request-post-request-data.json"))
+
             val response = testApp.client.post(AUTHORIZATION_REQUEST) {
                 contentType(io.ktor.http.ContentType.Application.Json)
                 setBody(requestBody)
             }
+
             response.status shouldBe HttpStatusCode.Created
 
             val responseString = response.bodyAsText()
-            val expectedJson = """
-                {
-                    "data": {
-                        "type": "AuthorizationRequest",
-                        "attributes": {
-                            "status": "Pending"
-                        },
-                        "relationships": {
-                            "requestedBy": {
-                                "data": {
-                                    "id": "0847976000005",
-                                    "type": "User"
-                                }
-                            },
-                            "requestedTo": {
-                                "data": {
-                                    "id": "80102512345",
-                                    "type": "User"
-                                }
-                            }
-                        },
-                        "meta": {
-                            "contract": "SampleContract"
-                        }
-                    }
-                }
-            """.trimIndent()
-            responseString shouldEqualSpecifiedJson expectedJson
+
+            // The "id" field in the response is dynamically generated by the server. Since the value of "id" cannot be predicted, we extract it from the
+            // actual response and replace the placeholder "id" in the expected JSON with the dynamically generated value.
+            // This ensures that the test can validate the rest of the response while accommodating the dynamic "id"
+            val responseJson = ObjectMapper().readTree(responseString)
+            val generatedId = responseJson["data"]["id"].asText()
+
+            val expectedJson = Files.readString(Paths.get("src/test/resources/requests/authorization-request-post-response-data.json"))
+            val expectedJsonWithDynamicId = expectedJson.replace("\"id\": \"123e4567-e89b-12d3-a456-426614174000\"", "\"id\": \"$generatedId\"")
+
+            responseString shouldEqualSpecifiedJson expectedJsonWithDynamicId
         }
 
         // This passes because the JSON serializer is lenient and allows for extra fields.
