@@ -2,6 +2,7 @@ package no.elhub.auth.features.documents
 
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.shouldNotBe
+import no.elhub.auth.DatabaseExtension
 import no.elhub.auth.model.AuthorizationDocument
 import no.elhub.auth.model.AuthorizationDocumentScopes
 import no.elhub.auth.model.AuthorizationScopes
@@ -11,7 +12,7 @@ import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 
 class AuthorizationDocumentRepositoryTest : DescribeSpec({
-
+    extensions(DatabaseExtension)
     val repository = AuthorizationDocumentRepository
 
     beforeTest {

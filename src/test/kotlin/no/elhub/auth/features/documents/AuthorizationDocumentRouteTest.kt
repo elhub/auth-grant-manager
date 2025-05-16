@@ -11,11 +11,13 @@ import io.ktor.http.contentType
 import io.ktor.server.testing.TestApplication
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
+import no.elhub.auth.DatabaseExtension
 import no.elhub.auth.config.AUTHORIZATION_DOCUMENT
 import no.elhub.auth.utils.defaultTestApplication
 import no.elhub.auth.validate
 
 class AuthorizationDocumentRouteTest : DescribeSpec({
+    extensions(DatabaseExtension)
 
     lateinit var testApp: TestApplication
 
