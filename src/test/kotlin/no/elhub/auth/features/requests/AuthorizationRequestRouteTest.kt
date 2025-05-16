@@ -11,6 +11,7 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.server.testing.TestApplication
+import no.elhub.auth.DatabaseExtension
 import no.elhub.auth.config.AUTHORIZATION_REQUEST
 import no.elhub.auth.utils.defaultTestApplication
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper
@@ -18,6 +19,7 @@ import java.nio.file.Files
 import java.nio.file.Paths
 
 class AuthorizationRequestRouteTest : DescribeSpec({
+    extensions(DatabaseExtension)
 
     lateinit var testApp: TestApplication
 
