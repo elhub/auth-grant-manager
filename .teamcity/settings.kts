@@ -16,7 +16,7 @@ elhubProject(group = Group.AUTH, name = "auth-grant-manager") {
                 registrySettings = {
                     repository = imageRepo
                 }
-            }.triggerOnVcsChange()
+            }
         }
     }
 }

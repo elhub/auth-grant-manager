@@ -34,7 +34,8 @@ You can build and run the application using gradle.
 | `./gradlew buildImage`        | Build the docker image to use with the fat JAR                       |
 
 If you run this locally, you will need to have a PostgreSQL database running. The following commands allow you
-to set up and tear down the database using Docker (./gradlew automatically tries to set up the database):
+to set up and tear down the database using Docker (Note that both run and test automatically do this under
+normal circumstances):
 
 | Command                         | Description                                                          |
 |---------------------------------|----------------------------------------------------------------------|
@@ -47,6 +48,15 @@ Database operations are carried out using Liquibase. To apply changes to the dat
 |-----------------------------|----------------------------------------------------------|
 | `./gradlew liquibaseUpdate` | Deploy any changes in the changelog file to the database |
 
+### Elhub Dependencies
+
+Note that this project is set up to depend on Elhub's internal package manager (settings.gradle.kts). If you wish to
+build this externally, you will need to substitute this with Maven Central or an alternative with the relevant
+packages.
+
+You will also need access to Elhub's gradle plugins which are not on Maven Central. The projects are open source,
+though, so you can either build them yourself or access them through [Jitpack](https://jitpack.io/).
+
 ### Configuration
 
 Modify the application.yaml to adjust server settings or override values using environment variables.
@@ -55,6 +65,9 @@ Modify the application.yaml to adjust server settings or override values using e
 export PORT=9090
 export DATABASE_URL=jdbc:postgresql://localhost:5432/jdbc
 ```
+## Usage
+
+See [the documentation  ](docs/usage.md) for information on how to use the API.
 
 ## API Endpoints
 
