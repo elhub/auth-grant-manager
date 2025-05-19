@@ -26,8 +26,8 @@ data class AuthorizationDocument(
             pdfBytes = pdf,
             type = DocumentType.ChangeOfSupplierConfirmation,
             status = AuthorizationDocumentStatus.Pending,
-            requestedBy = postAuthorizationDocumentRequest.data.attributes.requestedBy,
-            requestedTo = postAuthorizationDocumentRequest.data.attributes.requestedTo,
+            requestedBy = postAuthorizationDocumentRequest.data.relationships.requestedBy.data.id,
+            requestedTo = postAuthorizationDocumentRequest.data.relationships.requestedTo.data.id,
             createdAt = LocalDateTime.now(),
             updatedAt = LocalDateTime.now()
         )

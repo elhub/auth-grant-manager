@@ -1,6 +1,7 @@
 package no.elhub.auth.features.documents
 
 import kotlinx.serialization.Serializable
+import no.elhub.auth.model.RelationshipLink
 
 class PostAuthorizationDocument {
     @Serializable
@@ -10,12 +11,19 @@ class PostAuthorizationDocument {
         @Serializable
         data class Data(
             val type: String,
-            val attributes: Attributes
+            val attributes: Attributes,
+            val relationships: Relationships,
+
         ) {
             @Serializable
             data class Attributes(
-                val requestedBy: String,
-                val requestedTo: String
+                val meteringPoint: String,
+            )
+
+            @Serializable
+            data class Relationships(
+                val requestedBy: RelationshipLink,
+                val requestedTo: RelationshipLink,
             )
         }
     }
@@ -28,15 +36,20 @@ class PostAuthorizationDocument {
         data class Data(
             val type: String,
             val id: String,
-            val attributes: Attributes
+            val attributes: Attributes,
+            val relationships: Relationships
         ) {
             @Serializable
             data class Attributes(
                 val status: String,
-                val requestedBy: String,
-                val requestedTo: String,
                 val createdAt: String,
                 val updatedAt: String
+            )
+
+            @Serializable
+            data class Relationships(
+                val requestedBy: RelationshipLink,
+                val requestedTo: RelationshipLink,
             )
         }
     }
