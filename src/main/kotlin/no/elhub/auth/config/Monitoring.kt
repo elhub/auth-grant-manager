@@ -30,8 +30,8 @@ fun Application.configureMonitoring(dataSource: HikariDataSource) {
         sysprops = true
 
         val checks = HealthCheckRegistry(Dispatchers.Default) {
-            register("Thread Deadlocks", ThreadDeadlockHealthCheck(), 1.minutes, 1.minutes)
-            register("Database Connection", HikariConnectionsHealthCheck(dataSource, 1), 15.seconds, 5.seconds)
+            register("Thread Deadlocks", ThreadDeadlockHealthCheck(), 10.seconds, 1.minutes)
+            register("Database Connection", HikariConnectionsHealthCheck(dataSource, 1), 10.seconds, 5.seconds)
         }
         healthcheck("/health", checks)
         CohortMetrics(checks).bindTo(appMicrometerRegistry)
