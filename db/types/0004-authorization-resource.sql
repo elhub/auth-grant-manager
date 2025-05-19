@@ -1,5 +1,5 @@
 --changeset elhub:4
-CREATE TYPE authorization_resource AS ENUM (
+CREATE TYPE auth.authorization_resource AS ENUM (
     'MeteringPoint',
     'Organization',
     'Person'
