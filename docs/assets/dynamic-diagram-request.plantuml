@@ -1,4 +1,4 @@
-@startuml context-diagram
+@startuml dynamic-diagram-request
 !include  https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/refs/heads/master/C4_Dynamic.puml
 
 Person_Ext(EndUser, "End User", "A person in the power market.")

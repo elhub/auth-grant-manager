@@ -16,7 +16,15 @@ sender of the API request must be registered in the Elhub actor registry as a Ma
 The Authorization Grant Manager API provides two primary interaction flows for retrieving consents:
 AuthorizationRequest and AuthorizationDocument. Both flows can be used to request consent from end users.
 
-The AuthorizationRequest flow is used
+The AuthorizationRequest flow is used to initiate and manage a request for authorization/consent through the Elhub
+MyPage. This flow has the user being redirected to the Authorization approval page in Elhub MyPage (requiring a login
+through IDPorten) where the user can approve or deny the request. Upon doing so, the user is redirected back to the
+client application.
+
+![Dynamic Consent Flow](./assets/dynamic-diagram-request.png)
+
+THe AuthorizationDocument flow is used to request consent from end users without the need for a redirect to Elhub.
+
 
 
 
