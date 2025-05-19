@@ -2,7 +2,7 @@ package no.elhub.auth.config
 
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
-import io.ktor.server.http.content.staticFiles
+import io.ktor.server.http.content.staticResources
 import io.ktor.server.plugins.swagger.swaggerUI
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
@@ -15,7 +15,6 @@ import no.elhub.auth.features.grants.grants
 import no.elhub.auth.features.requests.AuthorizationRequestHandler
 import no.elhub.auth.features.requests.requestRoutes
 import org.koin.ktor.ext.inject
-import java.io.File
 
 const val AUTHORIZATION_API = ""
 const val HEALTH = "$AUTHORIZATION_API/health"
@@ -43,6 +42,6 @@ fun Application.configureRouting() {
             call.respondText("OK", status = HttpStatusCode.OK)
         }
         swaggerUI(path = "openapi", swaggerFile = "openapi.yaml")
-        staticFiles("/schemas", File("schemas"))
+        staticResources("schemas/", "schemas")
     }
 }

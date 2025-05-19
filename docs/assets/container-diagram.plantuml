@@ -1,0 +1,32 @@
+@startuml container-diagram
+!include  https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+Person_Ext(EndUser, "End User", "A person in the public power market.")
+System_Ext(MarketParty, "Market Party", "The initiating system controlled by an organization participating in the power market.")
+System_Ext(OCSP, "OCSP Service", "External OCSP service (NKOM-approved) that is queried to retrieve signature identity information.")
+System_Boundary(Elhub,"Elhub") {
+  System(EMIF, "Elhub Machine Interface", "EMIF is the legacy interface for sending/receiving business processes to Elhub.")
+  System(MyPage, "MinSide", "Minside provides the user interface for End Users that need to interact with Elhub.")
+  System_Boundary(auth, "Auth") {
+    Container(GrantManagerApi, "auth-grant-manager-api", "Kotlin, Ktor", "The grant manager handles registration and storage of authorization grants in Elhub.")
+    ContainerDb(GrantManagerDb, "auth-grant-manager-db", "PostgreSQL", "Database for storing authorization grants.")
+  }
+  Container(PDP, "Policy Decision Point", "Open Policy Agent", "PDP is a component that makes authorization decisions based on policies and attributes.")
+  Container(Persons, "Persons", "Kotlin, Ktor", "Persons is a component that manages the identities of users and their attributes.")
+}
+
+' Relationships
+Rel(MarketParty, GrantManagerApi, "Request Authorization Documents/Requests", "HTTPS/JSON")
+Rel(MarketParty, EMIF, "Sends market processes with valid authorization grant", "HTTPS/SOAP")
+Rel(MarketParty, MyPage, "Web/App redirects to MyPage for Authorization Requests", "HTTPS/HTML")
+Rel(EMIF, GrantManagerApi, "Validates Authorization Grant from", "HTTPS/JSON")
+Rel(MyPage, GrantManagerApi, "Reads/Writes authorization details", "HTTPS/JSON")
+Rel(EndUser, MarketParty, "Interacts with market party")
+Rel(EndUser, MyPage, "Consents to/Administrates authorization grants", "HTTPS/HTML")
+Rel(GrantManagerApi, OCSP, "Queries identity information", "HTTPS/JSON")
+Rel(GrantManagerApi, GrantManagerDb, "Reads/Writes data to", "JDBC")
+Rel(GrantManagerApi, PDP, "Queries authorization decisions", "HTTPS/JSON")
+Rel(GrantManagerApi, Persons, "Queries End User information", "HTTPS/JSON")
+
+SHOW_LEGEND()
+@enduml
