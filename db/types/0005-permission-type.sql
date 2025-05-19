@@ -1,5 +1,5 @@
 --changeset elhub:5
-CREATE TYPE permission_type AS ENUM (
+CREATE TYPE auth.permission_type AS ENUM (
     'ChangeOfSupplier',
     'FullDelegation',
     'ReadAccess'

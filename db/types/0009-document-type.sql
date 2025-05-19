@@ -1,4 +1,4 @@
 --changeset elhub:9
-CREATE TYPE document_type AS ENUM (
+CREATE TYPE auth.document_type AS ENUM (
     'ChangeOfSupplierConfirmation'
 );
