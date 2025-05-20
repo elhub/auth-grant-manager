@@ -4,24 +4,25 @@ format.version = "1.1"
 [versions]
 arrow = "2.0.1"
 cohort = "2.6.2"
-elhub-gradle = "0.5.0"
+elhub-gradle = "0.7.2"
 exposed = "0.60.0"
-google-jib = "3.4.5"
 gradle-docker = "0.17.12"
 hikari = "6.3.0"
+json-skema = "0.22.0"
 kotlinx-datetime = "0.6.2"
 kotlinx-serialization = "1.8.1"
-kotlinx-serialization-plugin = "2.1.20"
+kotlinx-serialization-plugin = "2.1.21"
 koin = "4.0.4"
 koin-annotations = "2.0.0"
 kotest = "5.9.1"
 kotlin-logging = "7.0.6"
-ksp = "2.1.20-1.0.32"
-ktor = "3.1.2"
+ksp = "2.1.21-2.0.1"
+ktor = "3.1.3"
 liquibase = "4.31.1"
 liquibase-plugin = "3.0.2"
 micrometer = "1.14.5"
 mockk = "1.13.17"
+openpdf = "2.0.3"
 picocli = "4.7.6"
 postgresql = "42.7.5"
 slf4j = "2.0.17"
@@ -30,7 +31,6 @@ testcontainers = "1.20.6"
 
 [plugins]
 elhub-gradle-plugin = { id = "no.elhub.devxp.kotlin-service", version.ref = "elhub-gradle" }
-google-cloud-tools-jib = { id = "com.google.cloud.tools.jib", version.ref = "google-jib" }
 gradle-docker = { id = "com.avast.gradle.docker-compose", version.ref = "gradle-docker" }
 ksp-plugin = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 ktor-plugin = { id = "io.ktor.plugin", version.ref = "ktor" }
@@ -52,6 +52,7 @@ di-koin-ktor = { group = "io.insert-koin", name = "koin-ktor", version.ref = "ko
 di-koin-logger-slf4j = { group = "io.insert-koin", name = "koin-logger-slf4j", version.ref = "koin" }
 fp-arrow-core = { group = "io.arrow-kt", name = "arrow-core", version.ref = "arrow" }
 fp-arrow-fx-coroutines = { group = "io.arrow-kt", name = "arrow-fx-coroutines", version.ref = "arrow" }
+json-skema = { group = "com.github.erosb", name = "json-sKema", version.ref = "json-skema" }
 kotlinx-datetime = { group = "org.jetbrains.kotlinx", name = "kotlinx-datetime", version.ref = "kotlinx-datetime" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 ktor-serialization-kotlinx-json = { group = "io.ktor", name = "ktor-serialization-kotlinx-json", version.ref = "ktor" }
@@ -68,6 +69,7 @@ monitoring-cohort-hikari = { group = "com.sksamuel.cohort", name = "cohort-hikar
 monitoring-cohort-ktor = { group = "com.sksamuel.cohort", name = "cohort-ktor", version.ref = "cohort" }
 monitoring-cohort-micrometer = { group = "com.sksamuel.cohort", name = "cohort-micrometer", version.ref = "cohort" }
 monitoring-micrometer-registry-prometheus = { group = "io.micrometer", name = "micrometer-registry-prometheus", version.ref = "micrometer" }
+openpdf = { group = "com.github.librepdf", name = "openpdf", version.ref = "openpdf" }
 serialization-yaml-snakeyaml = { group = "org.yaml", name = "snakeyaml", version.ref = "snakeyaml" }
 test-kotest-assertions-core = { group = "io.kotest", name = "kotest-assertions-core", version.ref = "kotest" }
 test-kotest-assertions-json = { group = "io.kotest", name = "kotest-assertions-json", version.ref = "kotest" }

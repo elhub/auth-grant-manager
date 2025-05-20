@@ -5,9 +5,9 @@ ktor:
   deployment:
     port: 8080
   database:
-    url: "jdbc:postgresql://localhost:5432/auth"
+    url: "$JDBC_URL"
     driverClass: "org.postgresql.Driver"
-    username: "$DB_USERNAME"
-    password: "$DB_PASSWORD"
+    username: "$APP_USERNAME"
+    password: "$APP_PASSWORD"
     hikari:
       maximumPoolSize: 3

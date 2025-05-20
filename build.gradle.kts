@@ -1,6 +1,5 @@
 plugins {
     alias(libs.plugins.elhub.gradle.plugin)
-    alias(libs.plugins.google.cloud.tools.jib)
     alias(libs.plugins.ktor.plugin)
     alias(libs.plugins.kotlin.plugin.serialization)
     alias(libs.plugins.ksp.plugin)
@@ -32,10 +31,12 @@ dependencies {
     liquibaseRuntime(libs.database.postgresql)
     // Documentation
     implementation(libs.bundles.documentation)
-    implementation("com.github.librepdf:openpdf:2.0.3")
+    implementation(libs.openpdf)
     // Observability
     implementation(libs.bundles.logging)
     implementation(libs.bundles.monitoring)
+    // JSON validation
+    implementation(libs.json.skema)
     // Unit Testing
     testImplementation(libs.database.postgresql)
     testImplementation(libs.test.mockk)
@@ -52,20 +53,22 @@ ksp {
     arg("KOIN_DEFAULT_MODULE", "true")
 }
 
-val dbUsername = System.getenv("DB_USERNAME") ?: ""
-val dbPassword = System.getenv("DB_PASSWORD") ?: ""
-
 application {
     mainClass.set("io.ktor.server.netty.EngineMain")
     val isDevelopment: Boolean = project.ext.has("development")
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
 }
 
+val dbUsername = System.getenv("DB_USERNAME") ?: ""
+val dbPassword = System.getenv("DB_PASSWORD") ?: ""
+
 liquibase {
     jvmArgs = arrayOf(
         "-Dliquibase.command.url=jdbc:postgresql://localhost:5432/auth",
         "-Dliquibase.command.username=$dbUsername",
         "-Dliquibase.command.password=$dbPassword",
+        "-DAPP_USERNAME=app",
+        "-DAPP_PASSWORD=app",
         "-Dliquibase.command.driver=org.postgresql.Driver",
         "-Dliquibase.command.changeLogFile=db/db-changelog.yaml",
     )
@@ -84,7 +87,11 @@ dockerCompose {
     }
 }
 
-tasks.named("run").configure {
+tasks.named<JavaExec>("run").configure {
     dependsOn(tasks.named("databaseComposeUp"))
     dependsOn(tasks.named("liquibaseUpdate"))
+
+    environment("JDBC_URL", "jdbc:postgresql://localhost:5432/auth")
+    environment("APP_USERNAME", "app")
+    environment("APP_PASSWORD", "app")
 }

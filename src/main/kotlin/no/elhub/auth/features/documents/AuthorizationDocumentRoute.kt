@@ -11,9 +11,10 @@ import io.ktor.server.routing.patch
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import no.elhub.auth.config.ID
-import no.elhub.auth.features.documents.jsonApiSpec.PostAuthorizationDocument
+import no.elhub.auth.model.RelationshipLink
 import java.util.*
-fun Route.documentRoutes(documentService: AuthorizationDocumentService) {
+
+fun Route.documentRoutes(documentService: AuthorizationDocumentHandler) {
     post {
         val requestBody = call.receive<PostAuthorizationDocument.Request>()
         val authorizationDocument = documentService.postDocument(requestBody)
@@ -23,15 +24,28 @@ fun Route.documentRoutes(documentService: AuthorizationDocumentService) {
                 id = authorizationDocument.id.toString(),
                 type = "AuthorizationDocument",
                 attributes = PostAuthorizationDocument.Response.Data.Attributes(
-                    requestedBy = authorizationDocument.requestedBy,
-                    requestedTo = authorizationDocument.requestedTo,
                     createdAt = authorizationDocument.createdAt.toString(),
                     updatedAt = authorizationDocument.updatedAt.toString(),
                     status = authorizationDocument.status.toString()
+                ),
+                relationships = PostAuthorizationDocument.Response.Data.Relationships(
+                    requestedBy = RelationshipLink(
+                        data = RelationshipLink.DataLink(
+                            id = authorizationDocument.requestedBy,
+                            type = "User"
+                        )
+                    ),
+                    requestedTo = RelationshipLink(
+                        data = RelationshipLink.DataLink(
+                            id = authorizationDocument.requestedTo,
+                            type = "User"
+                        )
+                    ),
                 )
+
             ),
         )
-        call.respond(status = HttpStatusCode.OK, message = response)
+        call.respond(status = HttpStatusCode.Created, message = response)
     }
 
     route("/{$ID}") {

@@ -25,7 +25,7 @@
         "status": {
           "type": "string",
           "description": "The status of the authorization request.",
-          "enum": ["accepted", "expired", "pending", "rejected"]
+          "enum": ["Accepted", "Expired", "Pending", "Rejected"]
         },
         "createdAt": {
           "type": "string",
@@ -61,7 +61,7 @@
     },
     "resourceRelationship": {
       "type": "object",
-      "description": "The related entities of the authorization request (presons and organizations).",
+      "description": "The related entities of the authorization request (persons and organizations).",
       "properties": {
         "requestedBy": {
           "$ref": "base-definitions.schema.json#/definitions/relationshipParty"

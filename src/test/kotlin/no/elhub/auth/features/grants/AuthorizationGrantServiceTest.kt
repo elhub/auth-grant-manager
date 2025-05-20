@@ -8,11 +8,13 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.testing.TestApplication
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
+import no.elhub.auth.DatabaseExtension
 import no.elhub.auth.config.AUTHORIZATION_GRANT
 import no.elhub.auth.utils.defaultTestApplication
 import java.util.*
 
 class AuthorizationGrantServiceTest : DescribeSpec({
+    extensions(DatabaseExtension)
 
     lateinit var testApp: TestApplication
 

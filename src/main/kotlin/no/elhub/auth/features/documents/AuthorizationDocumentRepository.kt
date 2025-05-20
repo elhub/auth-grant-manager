@@ -1,11 +1,11 @@
 package no.elhub.auth.features.documents
 
-import no.elhub.auth.features.documents.domain.AuthorizationResourceType
-import no.elhub.auth.features.documents.domain.PermissionType
-import no.elhub.auth.features.documents.tables.AuthorizationDocumentScopes
 import no.elhub.auth.model.AuthorizationDocument
-import no.elhub.auth.services.common.tables.AuthorizationScopes
-import no.elhub.auth.services.documents.tables.AuthorizationDocuments
+import no.elhub.auth.model.AuthorizationDocument.AuthorizationDocuments
+import no.elhub.auth.model.AuthorizationDocumentScopes
+import no.elhub.auth.model.AuthorizationResourceType
+import no.elhub.auth.model.AuthorizationScopes
+import no.elhub.auth.model.PermissionType
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.insertAndGetId
 import org.jetbrains.exposed.sql.transactions.transaction

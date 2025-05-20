@@ -2,16 +2,17 @@ package no.elhub.auth.features.documents
 
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.shouldNotBe
-import no.elhub.auth.features.documents.jsonApiSpec.PostAuthorizationDocument
-import no.elhub.auth.features.documents.tables.AuthorizationDocumentScopes
+import no.elhub.auth.DatabaseExtension
 import no.elhub.auth.model.AuthorizationDocument
-import no.elhub.auth.services.common.tables.AuthorizationScopes
+import no.elhub.auth.model.AuthorizationDocumentScopes
+import no.elhub.auth.model.AuthorizationScopes
+import no.elhub.auth.model.RelationshipLink
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 
 class AuthorizationDocumentRepositoryTest : DescribeSpec({
-
+    extensions(DatabaseExtension)
     val repository = AuthorizationDocumentRepository
 
     beforeTest {
@@ -31,8 +32,11 @@ class AuthorizationDocumentRepositoryTest : DescribeSpec({
                     data = PostAuthorizationDocument.Request.Data(
                         type = "authorization_document",
                         attributes = PostAuthorizationDocument.Request.Data.Attributes(
-                            requestedBy = "Balance Supplier",
-                            requestedTo = "98765432109"
+                            meteringPoint = "1234"
+                        ),
+                        relationships = PostAuthorizationDocument.Request.Data.Relationships(
+                            requestedBy = RelationshipLink(RelationshipLink.DataLink("12345678901", "User")),
+                            requestedTo = RelationshipLink(RelationshipLink.DataLink("98765432109", "User"))
                         )
                     )
                 ),

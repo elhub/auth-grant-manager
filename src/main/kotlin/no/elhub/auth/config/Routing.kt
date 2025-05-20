@@ -8,7 +8,7 @@ import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
-import no.elhub.auth.features.documents.AuthorizationDocumentService
+import no.elhub.auth.features.documents.AuthorizationDocumentHandler
 import no.elhub.auth.features.documents.documentRoutes
 import no.elhub.auth.features.grants.AuthorizationGrantService
 import no.elhub.auth.features.grants.grants
@@ -24,7 +24,7 @@ const val AUTHORIZATION_REQUEST = "$AUTHORIZATION_API/authorization-requests"
 const val ID = "id"
 
 fun Application.configureRouting() {
-    val documentService by inject<AuthorizationDocumentService>()
+    val documentService by inject<AuthorizationDocumentHandler>()
     val grantService by inject<AuthorizationGrantService>()
     val requestHandler by inject<AuthorizationRequestHandler>()
 
