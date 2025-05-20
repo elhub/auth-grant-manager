@@ -38,7 +38,7 @@ document and update the authorization status accordingly.
 
 ## Authorization Request Flow
 
-> ![NOTE]
+> [!NOTE]
 > The flow is largely implemented in the API already, but MyPage does not yet have the required pages implemented.
 > Documentation is WIP.
 
