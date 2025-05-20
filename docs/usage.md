@@ -70,7 +70,7 @@ PDF document that meets legal and regulatory standards.
 ### Acting On Behalf Of Another Party
 
 * If a Service Provider performs the operation on behalf of another party, the party the operation is performed
-    on behalf of must be identified using the party’s GLN. The GLN is attached to the call to the Elhub API in the
+    on behalf of MUST be identified using the party’s GLN. The GLN is attached to the call to the Elhub API in the
     Authorization header:
     ```
     On-Behalf-Of: {GLN}
@@ -96,7 +96,7 @@ PDF document that meets legal and regulatory standards.
     * The enduser initiates a process with the Market Party
 2. **Request document**<br>
     * The Market Party requests initiation of a authorization document flow with the .
-3. Document Generation by Elhub<br>
+3. **Document Generation by Elhub**<br>
     * Elhub generates a consent document (PDF) and returns a document ID.
         * The document includes metadata specifying who must sign.
         * Elhub signs the document with its own business certificate, using the **PAdES B-B** standard.
