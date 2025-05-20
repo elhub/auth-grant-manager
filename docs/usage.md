@@ -36,6 +36,25 @@ document and update the authorization status accordingly.
 
 ![Dynamic Consent Flow](./assets/dynamic-diagram-document.png)
 
+### Specifications
+
+The API is defined using the OpenAPI 3.x specification. The OpenAPI specification is available in this repository as
+[src/main/resources/openapi.yaml](https://github.com/elhub/auth-grant-manager/blob/main/src/main/resources/openapi.yaml).
+
+The OpenAPI specification provides a machine-readable description of the API, including endpoints, request/response
+formats, authentication methods, and other relevant details. You can use this specification with any OpenAPI-compatible
+tools to generate client libraries, server stubs, and view the API documentation using tools like Swagger UI.
+
+Request and response payloads are defined using JSON Schema. The JSON Schemas are available in this repository in
+[src/main/resources/schemas](https://github.com/elhub/auth-grant-manager/tree/main/src/main/resources/schemas).
+
+> [!WARNING]
+> The OpenAPI specification and JSON Schemas are still under development and **are not** complete. While we do not
+> intend to make breaking changes to APIs already implemented, we may add new endpoints and modify existing ones as we
+> iterate on the API design (also based on your feedback).
+>
+> Please check the repository regularly for updates.
+
 ## Authorization Request Flow
 
 > [!NOTE]
