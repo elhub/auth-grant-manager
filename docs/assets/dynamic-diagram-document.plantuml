@@ -7,7 +7,7 @@ System_Boundary(elhub, "Elhub") {
   System(GrantManager, "auth-grant-manager", "The grant manager handles registration and storage of authorization grants in Elhub.")
   System(EMIF, "Elhub Machine Interface", "EMIF is the legacy interface for sending/receiving business processes to Elhub.")
 }
-System_Ext(SignatureService, "Signature Service", "External NKON-approved signature service.")
+System_Ext(SignatureService, "Signature Service", "External Nkom-approved signature service.")
 
 ' Relationships
 Rel(EndUser, MarketParty, "Interacts with market party app")
