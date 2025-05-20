@@ -1,6 +1,6 @@
 # User Guide
 
-The Authorization Grant Manager handles the process for requesting and maintaining authorizations in the ELhub system.
+The Authorization Grant Manager handles the process for requesting and maintaining authorizations in the Elhub system.
 between individuals and organizations. This service offers a REST API that is used when a client application needs to
 request authorization/consent from a user to carry out an operation in Elhub on their behalf.
 
@@ -79,7 +79,7 @@ PDF document that meets legal and regulatory standards.
 
 * The Market Party MUST be registered in Maskinporten with assigned scoped for access to Elhub.
   * See [Elhub API Portal](https://api.elhub.no/maskinporten/getting-started)
-* The Market Party MUST use a Maskinporten approved business certificate (“virksomhetssertifikat“) for
+* The Market Party MUST use a Maskinporten approved business certificate ("virksomhetssertifikat") for
   identification with Maskinporten.
 * All API requests to Elhub MUST include the Maskinporten access token in the Authorization header:
     ```
@@ -96,9 +96,9 @@ PDF document that meets legal and regulatory standards.
     ```
 * The Service Provider MUST be registered in Ediel as a Service Provider for the Market Party.
 
-### Consent Signing Requirements
+### Authorization Document Signing Requirements
 
-* The Market Party MUST use a trusted document signigng service for the end user to sign the document.
+* The Market Party MUST use a trusted document signing service for the end user to sign the document.
   * The signing service MUST be on the [Nkom's Trusted list](https://www.nkom.no/tjenester/tillitsliste)
 * The signing process MUST meet:
   * **High level of assurance**: Security Level 4 (sikkerhetsnivå 4)
@@ -112,16 +112,16 @@ PDF document that meets legal and regulatory standards.
 ![Authorization Document Flow](./assets/document-flow.png)
 
 1. **Initiation**<br>
-    * The enduser initiates a process with the Market Party
+    * The End User initiates a process with the Market Party
 2. **Request document**<br>
-    * The Market Party requests initiation of a authorization document flow with the .
+    * The Market Party requests initiation of an authorization document flow with the .
 3. **Document Generation by Elhub**<br>
     * Elhub generates a consent document (PDF) and returns a document ID.
         * The document includes metadata specifying who must sign.
         * Elhub signs the document with its own business certificate, using the **PAdES B-B** standard.
 4. **Signature Collection**<br>
     * The Market Party retrieves the document using the document ID.
-        * The document is forwarded to an **Nkom-approved signing service**.
+        * The document is forwarded to a **Nkom-approved signing service**.
         * The End User signs the document using their individual certificate.
         * The signature uses the **PAdES B-B** standard.
 5. **Return to Elhub**<br>
