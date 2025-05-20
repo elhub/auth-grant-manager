@@ -67,7 +67,7 @@ export DATABASE_URL=jdbc:postgresql://localhost:5432/jdbc
 ```
 ## Usage
 
-See [the documentation  ](docs/usage.md) for information on how to use the API.
+See [the documentation](docs/usage.md) for information on how to use the API.
 
 ## API Endpoints
 
