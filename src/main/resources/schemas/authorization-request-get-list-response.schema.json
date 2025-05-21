@@ -23,7 +23,7 @@
   "additionalProperties": false,
   "definitions": {
     "resource": {
-      "$ref": "authorization-request.schema.json"
+      "$ref": "authorization-request-resource.schema.json"
     },
     "resourceCollection": {
       "description": "An array of resource objects.",

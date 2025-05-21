@@ -95,7 +95,7 @@ entity AuthorizationRequest {
   type: RequestType
   status: AuthorizationRequestStatus
   requestedBy: BigInt, FK→AuthorizationParty
-  requestedTo: BigInt, FK→AuthorizationParty
+  requestedFrom: BigInt, FK→AuthorizationParty
   createdAt: DateTime
   updatedAt: DateTime
   validTo: DateTime
@@ -118,7 +118,7 @@ entity AuthorizationDocument {
   file: Blob
   status: AuthorizationDocumentStatus
   requestedBy: BigInt, FK→AuthorizationParty
-  requestedTo: BigInt, FK→AuthorizationParty
+  requestedFrom: BigInt, FK→AuthorizationParty
   createdAt: DateTime
   updatedAt: DateTime
 }
