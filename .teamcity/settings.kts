@@ -16,7 +16,7 @@ elhubProject(group = Group.AUTH, name = "auth-grant-manager") {
     pipeline {
         sequential {
             gradleVerify {
-                lintImage = "docker.jfrog.elhub.cloud/frzq0sxltynr/oxsecurity/megalinter"
+                lintImage = "docker.jfrog.elhub.cloud/frzq0sxltynr/oxsecurity/megalinter:v8"
             }
 
             gradleJib {
