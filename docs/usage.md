@@ -1,6 +1,6 @@
 # User Guide
 
-The Authorization Grant Manager handles the process for requesting and maintaining authorizations in the Elhub system.
+The Authorization Grant Manager handles the process for requesting and maintaining authorizations in the Elhub system
 between individuals and organizations. This service offers a REST API that is used when a client application needs to
 request authorization/consent from a user to carry out an operation in Elhub on their behalf.
 

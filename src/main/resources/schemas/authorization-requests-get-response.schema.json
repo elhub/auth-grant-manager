@@ -1,6 +1,5 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://api.elhub.no/schemas/authorization-request-list.schema.json",
   "title": "Authorization Request Response Collection",
   "description": "Schema for returning a collection of authorization requests in the Elhub authorization manager.",
   "type": "object",
