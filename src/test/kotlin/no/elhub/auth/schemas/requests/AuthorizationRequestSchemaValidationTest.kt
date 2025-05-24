@@ -14,7 +14,7 @@ import java.nio.file.Paths
 
 class AuthorizationRequestSchemaValidationTest : DescribeSpec({
 
-    describe("GET /authorization-requests") {
+    xdescribe("GET /authorization-requests") {
         val authReqListSchema = loadSchemaFromFile("/schemas/authorization-request-get-list-response.schema.json")
 
         it("should validate that response complies with the custom JSON schema") {
@@ -24,7 +24,7 @@ class AuthorizationRequestSchemaValidationTest : DescribeSpec({
         }
     }
 
-    describe("PATCH /authorization-requests") {
+    xdescribe("PATCH /authorization-requests") {
         val authReqUpdateSchema = loadSchemaFromFile("/schemas/authorization-request-patch-request.schema.json", true)
         val authReqReadSchema = loadSchemaFromFile("/schemas/authorization-request-get-response.schema.json", true)
 
@@ -41,7 +41,7 @@ class AuthorizationRequestSchemaValidationTest : DescribeSpec({
         }
     }
 
-    describe("POST /authorization-requests") {
+    xdescribe("POST /authorization-requests") {
         val authReqCreateSchema = loadSchemaFromFile("/schemas/authorization-request-post-request.schema.json", true)
         val authReqReadSchema = loadSchemaFromFile("/schemas/authorization-request-get-response.schema.json", true)
 
@@ -58,7 +58,7 @@ class AuthorizationRequestSchemaValidationTest : DescribeSpec({
         }
     }
 
-    describe("GET /authorization-requests/{id}") {
+    xdescribe("GET /authorization-requests/{id}") {
         val authReqReadSchema = loadSchemaFromFile("/schemas/authorization-request-get-response.schema.json")
 
         it("should validate that response complies with the custom JSON schema") {

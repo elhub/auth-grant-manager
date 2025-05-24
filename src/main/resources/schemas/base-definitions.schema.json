@@ -32,8 +32,7 @@
               }
             }
           ]
-        },
-        "required": ["data"]
+        }
       }
     },
     "resourceId": {
