@@ -9,7 +9,7 @@ System_Boundary(elhub, "Elhub") {
   System(MyPage, "MinSide", "Minside provides the user interface for End Users that need to interact with Elhub.")
 }
 System_Ext(OCSP, "OCSP Service", "External OCSP service (NKOM-approved) that is queried to retrieve signature identity information.")
-System_Ext(SignatureService, "Signature Service", "External NKON-approved signature service.")
+System_Ext(SignatureService, "Signature Service", "External Nkom-approved signature service.")
 
 ' Relationships
 Rel(MarketParty, GrantManager, "Request Authorization Documents/Requests", "HTTPS/JSON")

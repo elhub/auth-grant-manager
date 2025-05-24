@@ -1,16 +1,17 @@
 ---
 openapi: 3.1.1
 info:
-  version: 0.1.0
   title: Authorization Grant Manager
+  version: 0.1.0
   description: >
     The authorization grant manager handles the authorization grants for Elhub's APIs. Note that we are still iterating
     over the authorization-grant APIs.
+  x-status: Development
+  contact:
+    name: team-devxp
   license:
     name: MIT
     url: https://github.com/elhub/auth-grant-manager?tab=MIT-1-ov-file
-servers:
-  - url: https://api-mt1.elhub.no/authorization-manager/v0
 paths:
   "/authorization-documents":
     get:
@@ -21,7 +22,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "/schemas/authorization-document-response.schema.json"
+                $ref: "/schemas/authorization-document-get-list-response.schema.json"
         "401":
           $ref: "#/components/responses/401UnauthorizedError"
         "500":
@@ -33,14 +34,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "/schemas/authorization-document-post-request.json"
+              $ref: "/schemas/authorization-document-post-request.schema.json"
       responses:
         "200":
           description: This creates a new authorization document and returns the details of the request initiated (including the link to the actual document).
           content:
             application/json:
               schema:
-                $ref: "/schemas/authorization-document-response.schema.json"
+                $ref: "/schemas/authorization-document-post-response.schema.json"
         "400":
           $ref: "#/components/responses/400BadRequestError"
         "401":
@@ -65,7 +66,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "/schemas/authorization-document-response.schema.json"
+                $ref: "/schemas/authorization-document-get-response.schema.json"
         "401":
           $ref: "#/components/responses/401UnauthorizedError"
         "404":
@@ -149,7 +150,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "/schemas/authorization-grant-get-response.schema.json"
+                $ref: "/schemas/authorization-grant-get-list-response.schema.json"
         "401":
           description: Unauthorized.
         "500":
@@ -172,7 +173,32 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "/schemas/authorization-grant-read.schema.json"
+                $ref: "/schemas/authorization-grant-get-response.schema.json"
+        "401":
+          $ref: "#/components/responses/401UnauthorizedError"
+        "404":
+          $ref: "#/components/responses/404NotFoundError"
+        "500":
+          $ref: "#/components/responses/500InternalServerError"
+      tags:
+        - TODO
+  "/authorization-grants/{id}/scopes":
+    get:
+      summary: Retrieve all of the scopes for the identified authorization grant.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The id of the authorization grant to retrieve.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Returns a list of authorization scopes.
+          content:
+            application/json:
+              schema:
+                $ref: "/schemas/authorization-scope-get-list-response.schema.json"
         "401":
           $ref: "#/components/responses/401UnauthorizedError"
         "404":
@@ -190,7 +216,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "/schemas/authorization-requests-list.schema.json"
+                $ref: "/schemas/authorization-request-get-list-response.schema.json"
         "401":
           $ref: "#/components/responses/401UnauthorizedError"
         "500":
@@ -202,14 +228,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "/schemas/authorization-request-patch-request.json"
+              $ref: "/schemas/authorization-request-patch-request.schema.json"
       responses:
         "201":
           description: The authorization request was updated.
           content:
             application/json:
               schema:
-                $ref: "/schemas/authorization-request-response.schema.json"
+                $ref: "/schemas/authorization-request-get-response.schema.json"
         "400":
           $ref: "#/components/responses/400BadRequestError"
         "401":
@@ -231,7 +257,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "/schemas/authorization-request-response.schema.json"
+                $ref: "/schemas/authorization-request-post-response.schema.json"
         "400":
           $ref: "#/components/responses/400BadRequestError"
         "401":
@@ -255,7 +281,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "/schemas/authorization-request-response.schema.json"
+                $ref: "/schemas/authorization-request-get-response.schema.json"
         "401":
           $ref: "#/components/responses/401UnauthorizedError"
         "404":
@@ -322,14 +348,7 @@ components:
           schema:
             $ref: "/schemas/json-api-meta.schema.json"
   securitySchemes:
-    idPorten:
-      type: openIdConnect
-      openIdConnectUrl: https://example.com/.well-known/openid-configuration
-    maskinPorten:
-      type: oauth2
-      flows:
-        clientCredentials:
-          tokenUrl: https://maskinporten.no/token
-          scopes:
-            read: Read access
-            write: Write access
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
