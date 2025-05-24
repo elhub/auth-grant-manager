@@ -16,6 +16,15 @@ we refer to the communicating party as the Market Party in this documentation.
 
 This documentation is intended for developers and architects who are responsible for integrating with the Elhub system.
 
+> [!NOTE]
+> This documentation is a work in progress and will be updated as the API evolves. We welcome feedback and
+> contributions. Please use the [Issues](https://github.com/elhub/auth-grant-manager/issues) here on GitHub.
+>
+> If you have questions or require assistance that you consider development related, and which is not suited for
+> GitHub or other public channels, you may contact us using:
+>
+> ![Dev Email](/docs/assets/mail-samtykke.png)
+
 ### Consent Flows
 
 The Authorization Grant Manager API provides two primary interaction flows for retrieving consents:
@@ -26,15 +35,15 @@ MyPage. This flow has the user being redirected to the Authorization approval pa
 through IDPorten) where the user can approve or deny the request. Upon doing so, the user is redirected back to the
 client application.
 
-![Dynamic Consent Flow](./assets/dynamic-diagram-request.png)
+![Dynamic Authorization Request Flow](./assets/dynamic-diagram-request.png)
 
-THe AuthorizationDocument flow is used to request consent from end users without the need for a redirect to Elhub.
+The AuthorizationDocument flow is used to request consent from end users without the need for a redirect to Elhub.
 This flow has the market party application send a request to the Authorization Grant Manager API, which
 then generates a document that can be sent to the end user for signing. The end user must sign the document and
 the signed document must be sent back to the Authorization Grant Manager API. The API will then process the signed
 document and update the authorization status accordingly.
 
-![Dynamic Consent Flow](./assets/dynamic-diagram-document.png)
+![Dynamic Authorization Document Flow](./assets/dynamic-diagram-document.png)
 
 ### Specifications
 

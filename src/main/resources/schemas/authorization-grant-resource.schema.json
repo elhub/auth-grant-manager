@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Authorization Grant Resource",
+  "description": "Schema for the authorization grant data object.",
+  "type": "object",
+  "properties": {
+    "id": {
+      "$ref": "base-definitions.schema.json#/definitions/resourceId"
+    },
+    "type": {
+      "type": "string",
+      "description": "The type of the resource object.",
+      "const": "AuthorizationGrant"
+    },
+    "attributes": {
+      "type": "object",
+      "description": "The attributes of the authorization grant.",
+      "properties": {
+        "validFrom": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The date and time when the authorization grant is valid from."
+        },
+        "validTo": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The date and time when the authorization grant is valid to."
+        }
+      }
+    },
+    "meta": {
+      "$ref": "#/definitions/resourceMeta"
+    },
+    "relationships": {
+      "type": "object",
+      "description": "The related entities of the authorization grant.",
+      "properties": {
+        "grantedFor": {
+          "$ref": "base-definitions.schema.json#/definitions/relationshipParty"
+        },
+        "grantedBy": {
+          "$ref": "base-definitions.schema.json#/definitions/relationshipParty"
+        },
+        "grantedTo": {
+          "$ref": "base-definitions.schema.json#/definitions/relationshipParty"
+        },
+        "scopes": {
+          "type": "array",
+          "description": "The scopes that the grant authorizes.",
+          "items": {
+            "$ref": "#definitions/scopeReference"
+          }
+        }
+      }
+    }
+  },
+  "additionalProperties": false,
+  "definitions": {
+    "resourceMeta": {
+      "description": "Additional meta-information related to the resource. Most of this information is used for informational purposes.",
+      "type": "object",
+      "properties": {
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The date and time when the authorization document was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The date and time when the authorization document was updated last."
+        }
+      }
+    },
+    "scopeReference": {
+      "type": "object",
+      "description": "An object representing a scope in the authorization grant.",
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "The type of the object.",
+          "enum": [
+            "AuthorizationScope"
+          ]
+        },
+        "id": {
+          "type": "string",
+          "format": "UUID",
+          "description": "ID of the scope object."
+        }
+      },
+      "required": [
+        "type",
+        "id"
+      ]
+    }
+  }
+}

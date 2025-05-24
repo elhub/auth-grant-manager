@@ -150,7 +150,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "/schemas/json-api-meta.schema.json"
+                $ref: "/schemas/authorization-grant-get-list-response.schema.json"
         "401":
           description: Unauthorized.
         "500":
@@ -173,7 +173,32 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "/schemas/json-api-meta.schema.json"
+                $ref: "/schemas/authorization-grant-get-response.schema.json"
+        "401":
+          $ref: "#/components/responses/401UnauthorizedError"
+        "404":
+          $ref: "#/components/responses/404NotFoundError"
+        "500":
+          $ref: "#/components/responses/500InternalServerError"
+      tags:
+        - TODO
+  "/authorization-grants/{id}/scopes":
+    get:
+      summary: Retrieve all of the scopes for the identified authorization grant.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The id of the authorization grant to retrieve.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Returns a list of authorization scopes.
+          content:
+            application/json:
+              schema:
+                $ref: "/schemas/authorization-scope-get-list-response.schema.json"
         "401":
           $ref: "#/components/responses/401UnauthorizedError"
         "404":

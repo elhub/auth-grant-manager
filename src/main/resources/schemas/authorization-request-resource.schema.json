@@ -88,7 +88,7 @@
             "Example Street 1, 1234 Oslo"
           ]
         },
-        "supplierContractName": {
+        "balanceSupplierContractName": {
           "type": "string",
           "description": "The unique name of a supplier contract associated with the authorization document.",
           "examples": [
