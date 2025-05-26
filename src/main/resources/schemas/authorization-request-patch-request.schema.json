@@ -1,6 +1,5 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://api.elhub.no/schemas/authorization-request-update.schema.json",
   "title": "Authorization Request Request",
   "description": "Schema for creating authorization requests to the Elhub authorization manager.",
   "type": "object",
@@ -36,10 +35,10 @@
           }
         },
         "meta": {
-          "$ref": "authorization-request.schema.json#/definitions/resourceMeta"
+          "$ref": "authorization-request-resource.schema.json#/definitions/resourceMeta"
         },
         "relationships": {
-          "$ref": "authorization-request.schema.json#/definitions/resourceRelationship"
+          "$ref": "authorization-request-resource.schema.json#/definitions/resourceRelationship"
         }
       }
     }

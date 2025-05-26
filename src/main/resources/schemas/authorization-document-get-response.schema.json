@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Authorization Request",
-  "description": "Schema for returning a single authorization request in the Elhub authorization manager.",
+  "description": "Schema for returning a single authorization document object in the Elhub authorization manager.",
   "type": "object",
   "properties": {
     "data": {
@@ -23,7 +23,7 @@
   "additionalProperties": false,
   "definitions": {
     "resource": {
-      "$ref": "authorization-request.schema.json"
+      "$ref": "authorization-document-resource.schema.json"
     }
   }
 }

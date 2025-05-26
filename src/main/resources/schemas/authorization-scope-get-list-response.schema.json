@@ -1,11 +1,11 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Authorization Grant",
-  "description": "Schema for returning a single authorization grant object in the Elhub authorization manager.",
+  "title": "Authorization Scope Response Collection",
+  "description": "Schema for returning a collection of authorization scope objects in the Elhub authorization manager.",
   "type": "object",
   "properties": {
     "data": {
-      "$ref": "#/definitions/resource"
+      "$ref": "#/definitions/resourceCollection"
     },
     "links": {
       "description": "Link members related to the primary data.",
@@ -23,7 +23,15 @@
   "additionalProperties": false,
   "definitions": {
     "resource": {
-      "$ref": "authorization-grant-resource.schema.json"
+      "$ref": "authorization-scope-resource.schema.json"
+    },
+    "resourceCollection": {
+      "description": "An array of resource objects.",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/resource"
+      },
+      "uniqueItems": true
     }
   }
 }

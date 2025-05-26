@@ -11,24 +11,29 @@
     "relationshipParty": {
       "type": "object",
       "properties": {
-        "type": {
-          "type": "string",
-          "description": "A relationship to a party (person or organization).",
-          "enum": ["Organization", "Person"]
-        },
-        "id": {
-          "type": "string",
-          "description": "The unique identifier of the linked resource."
+        "data": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "description": "A relationship to a party (person or organization).",
+              "enum": ["Organization", "Person"]
+            },
+            "id": {
+              "type": "string",
+              "description": "The unique identifier of the linked resource."
+            }
+          },
+          "examples": [
+            {
+              "data": {
+                "type": "Person",
+                "id": "12345678901"
+              }
+            }
+          ]
         }
-      },
-      "examples": [
-        {
-          "data": {
-            "type": "Person",
-            "id": "12345678901"
-          }
-        }
-      ]
+      }
     },
     "resourceId": {
       "type": "string",

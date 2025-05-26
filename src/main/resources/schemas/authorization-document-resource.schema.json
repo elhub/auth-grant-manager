@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Authorization Document Resource",
+  "description": "Schema for the authorization document data object.",
+  "type": "object",
+  "properties": {
+    "id": {
+      "$ref": "base-definitions.schema.json#/definitions/resourceId"
+    },
+    "type": {
+      "type": "string",
+      "description": "The type of the resource object.",
+      "const": "AuthorizationDocument"
+    },
+    "attributes": {
+      "type": "object",
+      "description": "The attributes of the authorization document.",
+      "properties": {
+        "documentType": {
+          "type": "string",
+          "description": "The type of the authorization document.",
+          "enum": [
+            "SupplierChangeConsentRequest"
+          ]
+        },
+        "status": {
+          "type": "string",
+          "description": "The status of the authorization document.",
+          "enum": [
+            "Expired",
+            "Pending",
+            "Rejected",
+            "Signed"
+          ]
+        },
+        "file": {
+          "description": "URI of the authorization document.",
+          "$ref": "#/definitions/linkObject",
+          "examples": [
+            {
+              "href": "https://api.elhub.no/authorization-documents/1234-5678-abcd.pdf"
+            }
+          ]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The date and time when the authorization document was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The date and time when the authorization document was updated last."
+        }
+      }
+    },
+    "meta": {
+      "$ref": "#/definitions/resourceMeta"
+    },
+    "relationships": {
+      "type": "object",
+      "description": "The related entities of the authorization document (persons and organizations).",
+      "properties": {
+        "requestedBy": {
+          "$ref": "base-definitions.schema.json#/definitions/relationshipParty"
+        },
+        "requestedFrom": {
+          "$ref": "base-definitions.schema.json#/definitions/relationshipParty"
+        },
+        "signedBy": {
+          "$ref": "base-definitions.schema.json#/definitions/relationshipParty"
+        }
+      }
+    }
+  },
+  "additionalProperties": false,
+  "definitions": {
+    "resourceMeta": {
+      "description": "Additional meta-information related to the resource. Most of this information is used for informational purposes.",
+      "type": "object",
+      "properties": {
+        "requestedFromName": {
+          "type": "string",
+          "description": "The name of the organization or person who the authorization document is requested from.",
+          "examples": [
+            "Ola Normann"
+          ]
+        },
+        "requestedForMeteringPointId": {
+          "type": "string",
+          "description": "The unique identifier of the metering point associated with the authorization document.",
+          "examples": [
+            "1234567890123"
+          ]
+        },
+        "requestedForMeteringPointAddress": {
+          "type": "string",
+          "description": "The address of the metering point associated with the authorization document.",
+          "examples": [
+            "Example Street 1, 1234 Oslo"
+          ]
+        },
+        "balanceSupplierContractName": {
+          "type": "string",
+          "description": "The unique name of a supplier contract associated with the authorization document.",
+          "examples": [
+            "ExampleSupplierContract"
+          ]
+        }
+      }
+    }
+  }
+}

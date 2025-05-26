@@ -1,0 +1,23 @@
+@startuml dynamic-diagram-document
+!include  https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/refs/heads/master/C4_Dynamic.puml
+
+Person_Ext(EndUser, "End User", "A person in the power market.")
+System_Ext(MarketParty, "Market Party App", "An app or page controlled by an organization participating in the power market.")
+System_Boundary(elhub, "Elhub") {
+  System(GrantManager, "auth-grant-manager", "The grant manager handles registration and storage of authorization grants in Elhub.")
+  System(EMIF, "Elhub Machine Interface", "EMIF is the legacy interface for sending/receiving business processes to Elhub.")
+}
+System_Ext(SignatureService, "Signature Service", "External Nkom-approved signature service.")
+
+' Relationships
+Rel(EndUser, MarketParty, "Interacts with market party app")
+Rel(MarketParty, GrantManager, "Initiates Authorization Document Flow")
+Rel(GrantManager, MarketParty, "Returns document to be signed")
+Rel(MarketParty, SignatureService, "Web/App redirects user to Signature Service")
+Rel(EndUser, SignatureService, "Signs authorization document")
+Rel(MarketParty, GrantManager, "Sends signed document")
+Rel(GrantManager, MarketParty, "Returns authorization grant ID if document is valid")
+Rel(MarketParty, EMIF, "Sends market processes with valid authorization grant")
+
+SHOW_LEGEND()
+@enduml

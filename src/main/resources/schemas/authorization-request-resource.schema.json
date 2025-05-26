@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Authorization Request Resource",
+  "description": "Schema for authorization request data object.",
+  "type": "object",
+  "properties": {
+    "id": {
+      "$ref": "base-definitions.schema.json#/definitions/resourceId"
+    },
+    "type": {
+      "type": "string",
+      "description": "The type of the resource object.",
+      "const": "AuthorizationRequest"
+    },
+    "attributes": {
+      "type": "object",
+      "description": "The attributes of the authorization request.",
+      "properties": {
+        "requestType": {
+          "type": "string",
+          "description": "The type of the authorization request.",
+          "enum": [
+            "ChangeOfSupplierConfirmation"
+          ]
+        },
+        "status": {
+          "type": "string",
+          "description": "The status of the authorization request.",
+          "enum": [
+            "Accepted",
+            "Expired",
+            "Pending",
+            "Rejected"
+          ]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The date and time when the authorization request was created."
+        },
+        "validTo": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The date and time when the authorization request is valid to."
+        }
+      }
+    },
+    "meta": {
+      "$ref": "#/definitions/resourceMeta"
+    },
+    "relationships": {
+      "type": "object",
+      "description": "The related entities of the authorization request (persons and organizations).",
+      "properties": {
+        "requestedBy": {
+          "$ref": "base-definitions.schema.json#/definitions/relationshipParty"
+        },
+        "requestedFrom": {
+          "$ref": "base-definitions.schema.json#/definitions/relationshipParty"
+        }
+      }
+    }
+  },
+  "additionalProperties": false,
+  "definitions": {
+    "resourceMeta": {
+      "description": "Additional meta-information related to the resource. Most of this information is used for informational purposes.",
+      "type": "object",
+      "properties": {
+        "requestedFromName": {
+          "type": "string",
+          "description": "The name of the organization or person who the authorization document is requested from.",
+          "examples": [
+            "Ola Normann"
+          ]
+        },
+        "requestedForMeteringPointId": {
+          "type": "string",
+          "description": "The unique identifier of the metering point associated with the authorization document.",
+          "examples": [
+            "1234567890123"
+          ]
+        },
+        "requestedForMeteringPointAddress": {
+          "type": "string",
+          "description": "The address of the metering point associated with the authorization document.",
+          "examples": [
+            "Example Street 1, 1234 Oslo"
+          ]
+        },
+        "balanceSupplierContractName": {
+          "type": "string",
+          "description": "The unique name of a supplier contract associated with the authorization document.",
+          "examples": [
+            "ExampleSupplierContract"
+          ]
+        }
+      }
+    }
+  }
+}
