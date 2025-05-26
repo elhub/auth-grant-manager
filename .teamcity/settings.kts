@@ -15,7 +15,9 @@ val gitOpsRepo = "https://github.com/elhub/auth"
 elhubProject(group = Group.AUTH, name = "auth-grant-manager") {
     pipeline {
         sequential {
-            gradleVerify()
+            gradleVerify {
+                lintImage = "docker.jfrog.elhub.cloud/oxsecurity/megalinter:v8"
+            }
 
             gradleJib {
                 registrySettings = {
