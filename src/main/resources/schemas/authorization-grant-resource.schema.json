@@ -21,12 +21,7 @@
         "status": {
           "type": "string",
           "description": "The status of the authorization grant.",
-          "enum": [
-            "Active",
-            "Exhausted",
-            "Expired",
-            "Revoked"
-          ]
+          "enum": ["Active", "Exhausted", "Expired", "Revoked"]
         },
         "grantedAt": {
           "type": "string",
