@@ -12,17 +12,20 @@
       "relationships": {
         "grantedFor": {
           "data": {
-            "id": "1111111111111111"
+            "id": "1111111111111111",
+            "type": "Person"
           }
         },
         "grantedBy": {
           "data": {
-            "id": "1111111111111111"
+            "id": "1111111111111111",
+            "type": "Person"
           }
         },
         "grantedTo": {
           "data": {
-            "id": "2222222222222222"
+            "id": "2222222222222222",
+            "type": "Organization"
           }
         }
       }
@@ -39,17 +42,20 @@
       "relationships": {
         "grantedFor": {
           "data": {
-            "id": "3333333333333333"
+            "id": "3333333333333333",
+            "type": "Person"
           }
         },
         "grantedBy": {
           "data": {
-            "id": "3333333333333333"
+            "id": "3333333333333333",
+            "type": "Person"
           }
         },
         "grantedTo": {
           "data": {
-            "id": "2222222222222222"
+            "id": "2222222222222222",
+            "type": "Organization"
           }
         }
       }
