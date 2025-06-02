@@ -10,11 +10,12 @@ import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
 import org.koin.ktor.plugin.Koin
 
-val appModule = module {
-    singleOf(::AuthorizationGrantHandler) { bind<AuthorizationGrantHandler>() }
-    singleOf(::AuthorizationDocumentHandler) { bind<AuthorizationDocumentHandler>() }
-    singleOf(::AuthorizationRequestHandler) { bind<AuthorizationRequestHandler>() }
-}
+val appModule =
+    module {
+        singleOf(::AuthorizationGrantHandler) { bind<AuthorizationGrantHandler>() }
+        singleOf(::AuthorizationDocumentHandler) { bind<AuthorizationDocumentHandler>() }
+        singleOf(::AuthorizationRequestHandler) { bind<AuthorizationRequestHandler>() }
+    }
 
 fun Application.configureKoin() {
     install(Koin) {

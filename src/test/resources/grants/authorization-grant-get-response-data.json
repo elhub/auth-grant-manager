@@ -61,5 +61,8 @@
       }
     }
   ],
-  "links": { "self": "http://localhost/authorization-grants" }
+  "links": { "self": "http://localhost/authorization-grants" },
+  "meta": {
+    "createdAt": "2025-06-02T13:17:25.882470774Z"
+  }
 }

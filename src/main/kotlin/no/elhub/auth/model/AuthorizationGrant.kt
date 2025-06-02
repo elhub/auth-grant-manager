@@ -17,15 +17,15 @@ data class AuthorizationGrant(
     val grantedTo: String,
     val grantedAt: LocalDateTime,
     val validFrom: LocalDateTime,
-    val validTo: LocalDateTime
+    val validTo: LocalDateTime,
 ) {
-
     object Entity : UUIDTable("authorization_grant") {
-        val grantStatus = customEnumeration(
-            name = "status",
-            fromDb = { value -> GrantStatus.valueOf(value as String) },
-            toDb = { PGEnum("authorization_grant_status", it) }
-        )
+        val grantStatus =
+            customEnumeration(
+                name = "status",
+                fromDb = { value -> GrantStatus.valueOf(value as String) },
+                toDb = { PGEnum("authorization_grant_status", it) },
+            )
         val grantedFor = varchar("granted_for", 16)
         val grantedBy = varchar("granted_by", 16)
         val grantedTo = varchar("granted_to", 16)
@@ -36,7 +36,7 @@ data class AuthorizationGrant(
 
     @Serializable
     data class Response(
-        val meta: ResponseMeta
+        val meta: ResponseMeta,
     )
 
     constructor(row: ResultRow) : this(
@@ -47,6 +47,6 @@ data class AuthorizationGrant(
         grantedTo = row[Entity.grantedTo],
         grantedAt = row[Entity.grantedAt].toKotlinLocalDateTime(),
         validFrom = row[Entity.validFrom].toKotlinLocalDateTime(),
-        validTo = row[Entity.validTo].toKotlinLocalDateTime()
+        validTo = row[Entity.validTo].toKotlinLocalDateTime(),
     )
 }

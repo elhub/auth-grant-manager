@@ -12,10 +12,14 @@ data class AuthorizationGrantResponseCollection(
     val meta: ResponseMeta,
 ) {
     companion object {
-        fun from(grants: List<AuthorizationGrant>, selfLink: String): AuthorizationGrantResponseCollection = AuthorizationGrantResponseCollection(
-            data = grants.map { AuthorizationGrantData.from(it) },
-            links = ResponseLink(selfLink),
-            meta = ResponseMeta()
-        )
+        fun from(
+            grants: List<AuthorizationGrant>,
+            selfLink: String,
+        ): AuthorizationGrantResponseCollection =
+            AuthorizationGrantResponseCollection(
+                data = grants.map { AuthorizationGrantData.from(it) },
+                links = ResponseLink(selfLink),
+                meta = ResponseMeta(),
+            )
     }
 }

@@ -4,5 +4,5 @@ enum class GrantStatus {
     Active,
     Exhausted,
     Expired,
-    Revoked
+    Revoked,
 }
