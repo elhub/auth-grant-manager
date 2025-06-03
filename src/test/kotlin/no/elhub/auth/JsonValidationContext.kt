@@ -34,7 +34,7 @@ class JsonValidationContext(
         }
     }
 
-    fun String.invokeArray(block: (JsonObject, Any?) -> Unit) {
+    fun String.validateArray(block: (JsonObject, Any?) -> Unit) {
         val arr = json[this] ?: error("Key '$this' not found in JSON: $json")
         if (arr !is JsonArray) error("Expected key '$this' to be a JsonArray, but found $arr")
         validatedKeys += this

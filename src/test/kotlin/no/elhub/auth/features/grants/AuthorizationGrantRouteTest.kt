@@ -34,7 +34,7 @@ class AuthorizationGrantRouteTest :
 
                 val responseJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
                 responseJson.validate {
-                    "data".invokeArray { obj, index ->
+                    "data".validateArray { obj, index ->
                         when (index) {
                             0 ->
                                 obj validate {
