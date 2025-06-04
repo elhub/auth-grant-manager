@@ -34,8 +34,10 @@ class JsonValidationContext(
         }
     }
 
-
-     fun String.shouldBeList(size: Int? = null, block: JsonArrayValidationContext.() -> Unit) {
+    fun String.shouldBeList(
+        size: Int? = null,
+        block: JsonArrayValidationContext.() -> Unit,
+    ) {
         val maybeArray = json[this] ?: error("Key '$this' not found in JSON: $json")
         if (maybeArray !is JsonArray) {
             error("Expected key '$this' to be a JsonArray, but found: $maybeArray")
@@ -79,12 +81,17 @@ infix fun JsonObject.validate(block: JsonValidationContext.() -> Unit) {
     }
 }
 
-class JsonArrayValidationContext(private val array: JsonArray) {
+class JsonArrayValidationContext(
+    private val array: JsonArray,
+) {
     /**
      * For each element in the array, assert that it's a JsonObject, then
      * run the given block inside a fresh JsonValidationContext.
      */
-    fun item(index: Int, block: JsonValidationContext.() -> Unit) {
+    fun item(
+        index: Int,
+        block: JsonValidationContext.() -> Unit,
+    ) {
         val element = array[index]
         if (element !is JsonObject) {
             error("Expected element at index $index to be a JSON object, but found: $element")

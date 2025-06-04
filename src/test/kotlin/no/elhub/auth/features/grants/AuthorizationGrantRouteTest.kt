@@ -34,11 +34,11 @@ class AuthorizationGrantRouteTest :
 
                 val responseJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
                 responseJson.validate {
-                    "data".shouldBeList(size=2) {
+                    "data".shouldBeList(size = 2) {
                         item(0) {
                             "id".shouldNotBeNull()
                             "type" shouldBe "AuthorizationGrant"
-                            "attributes"  {
+                            "attributes" {
                                 "status" shouldBe "Active"
                                 "grantedAt" shouldBe "2025-04-04T04:00"
                                 "validFrom" shouldBe "2025-04-04T04:00"
@@ -57,8 +57,8 @@ class AuthorizationGrantRouteTest :
                                         "type" shouldBe "Person"
                                     }
                                 }
-                                "grantedTo"  {
-                                    "data"  {
+                                "grantedTo" {
+                                    "data" {
                                         "id" shouldBe "2222222222222222"
                                         "type" shouldBe "Organization"
                                     }
@@ -68,7 +68,7 @@ class AuthorizationGrantRouteTest :
                         item(1) {
                             "id".shouldNotBeNull()
                             "type" shouldBe "AuthorizationGrant"
-                            "attributes"  {
+                            "attributes" {
                                 "status" shouldBe "Expired"
                                 "grantedAt" shouldBe "2023-04-04T04:00"
                                 "validFrom" shouldBe "2023-04-04T04:00"
