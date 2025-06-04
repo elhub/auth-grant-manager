@@ -34,77 +34,73 @@ class AuthorizationGrantRouteTest :
 
                 val responseJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
                 responseJson.validate {
-                    "data".validateArray { obj, index ->
-                        when (index) {
-                            0 ->
-                                obj validate {
-                                    "id".shouldNotBeNull()
-                                    "type" shouldBe "AuthorizationGrant"
-                                    "attributes" validate {
-                                        "status" shouldBe "Active"
-                                        "grantedAt" shouldBe "2025-04-04T04:00"
-                                        "validFrom" shouldBe "2025-04-04T04:00"
-                                        "validTo" shouldBe "2026-04-04T04:00"
-                                    }
-                                    "relationships" validate {
-                                        "grantedFor" validate {
-                                            "data" validate {
-                                                "id" shouldBe "1111111111111111"
-                                                "type" shouldBe "Person"
-                                            }
-                                        }
-                                        "grantedBy" validate {
-                                            "data" validate {
-                                                "id" shouldBe "1111111111111111"
-                                                "type" shouldBe "Person"
-                                            }
-                                        }
-                                        "grantedTo" validate {
-                                            "data" validate {
-                                                "id" shouldBe "2222222222222222"
-                                                "type" shouldBe "Organization"
-                                            }
-                                        }
+                    "data".shouldBeList(size=2) {
+                        item(0) {
+                            "id".shouldNotBeNull()
+                            "type" shouldBe "AuthorizationGrant"
+                            "attributes"  {
+                                "status" shouldBe "Active"
+                                "grantedAt" shouldBe "2025-04-04T04:00"
+                                "validFrom" shouldBe "2025-04-04T04:00"
+                                "validTo" shouldBe "2026-04-04T04:00"
+                            }
+                            "relationships" {
+                                "grantedFor" {
+                                    "data" {
+                                        "id" shouldBe "1111111111111111"
+                                        "type" shouldBe "Person"
                                     }
                                 }
-                            1 ->
-                                obj.validate {
-                                    "id".shouldNotBeNull()
-                                    "type" shouldBe "AuthorizationGrant"
-                                    "attributes" validate {
-                                        "status" shouldBe "Expired"
-                                        "grantedAt" shouldBe "2023-04-04T04:00"
-                                        "validFrom" shouldBe "2023-04-04T04:00"
-                                        "validTo" shouldBe "2024-04-04T04:00"
-                                    }
-                                    "relationships" validate {
-                                        "grantedFor" validate {
-                                            "data" validate {
-                                                "id" shouldBe "3333333333333333"
-                                                "type" shouldBe "Person"
-                                            }
-                                        }
-                                        "grantedBy" validate {
-                                            "data" validate {
-                                                "id" shouldBe "3333333333333333"
-                                                "type" shouldBe "Person"
-                                            }
-                                        }
-                                        "grantedTo" validate {
-                                            "data" validate {
-                                                "id" shouldBe "2222222222222222"
-                                                "type" shouldBe "Organization"
-                                            }
-                                        }
+                                "grantedBy" {
+                                    "data" {
+                                        "id" shouldBe "1111111111111111"
+                                        "type" shouldBe "Person"
                                     }
                                 }
+                                "grantedTo"  {
+                                    "data"  {
+                                        "id" shouldBe "2222222222222222"
+                                        "type" shouldBe "Organization"
+                                    }
+                                }
+                            }
                         }
-                        "links".validate {
-                            "self" shouldBe "http://localhost/authorization-grants"
+                        item(1) {
+                            "id".shouldNotBeNull()
+                            "type" shouldBe "AuthorizationGrant"
+                            "attributes"  {
+                                "status" shouldBe "Expired"
+                                "grantedAt" shouldBe "2023-04-04T04:00"
+                                "validFrom" shouldBe "2023-04-04T04:00"
+                                "validTo" shouldBe "2024-04-04T04:00"
+                            }
+                            "relationships" {
+                                "grantedFor" {
+                                    "data" {
+                                        "id" shouldBe "3333333333333333"
+                                        "type" shouldBe "Person"
+                                    }
+                                }
+                                "grantedBy" {
+                                    "data" {
+                                        "id" shouldBe "3333333333333333"
+                                        "type" shouldBe "Person"
+                                    }
+                                }
+                                "grantedTo" {
+                                    "data" {
+                                        "id" shouldBe "2222222222222222"
+                                        "type" shouldBe "Organization"
+                                    }
+                                }
+                            }
                         }
-                        "meta".validate {
-                            "createdAt".shouldNotBeNull()
-                        }
+                    }
+                    "links" {
+                        "self" shouldBe "http://localhost/authorization-grants"
+                    }
+                    "meta" {
+                        "createdAt".shouldNotBeNull()
                     }
                 }
             }
