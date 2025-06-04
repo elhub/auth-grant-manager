@@ -27,6 +27,58 @@ class AuthorizationGrantRouteTest :
             testApp.stop()
         }
 
+        describe("GET /authorization-grants/{id}") {
+            it("should return 200 OK on a valid ID") {
+                val response = testApp.client.get("$AUTHORIZATION_GRANT/123e4567-e89b-12d3-a456-426614174000")
+                response.status shouldBe HttpStatusCode.OK
+
+                val responseJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+                responseJson.validate {
+                    "data" {
+                        "id".shouldNotBeNull()
+                        "type" shouldBe "AuthorizationGrant"
+                        "attributes" {
+                            "status" shouldBe "Active"
+                            "grantedAt" shouldBe "2025-04-04T04:00"
+                            "validFrom" shouldBe "2025-04-04T04:00"
+                            "validTo" shouldBe "2026-04-04T04:00"
+                        }
+                        "relationships" {
+                            "grantedFor" {
+                                "data" {
+                                    "id" shouldBe "1111111111111111"
+                                    "type" shouldBe "Person"
+                                }
+                            }
+                            "grantedBy" {
+                                "data" {
+                                    "id" shouldBe "1111111111111111"
+                                    "type" shouldBe "Person"
+                                }
+                            }
+                            "grantedTo" {
+                                "data" {
+                                    "id" shouldBe "2222222222222222"
+                                    "type" shouldBe "Organization"
+                                }
+                            }
+                        }
+                    }
+                    "links" {
+                        "self" shouldBe "http://localhost/authorization-grants/123e4567-e89b-12d3-a456-426614174000"
+                    }
+                    "meta" {
+                        "createdAt".shouldNotBeNull()
+                    }
+                }
+            }
+
+            it("should return 404 on a invalid ID") {
+                val response = testApp.client.get("$AUTHORIZATION_GRANT/123e4567-e89b-12d3-a456-426614174001")
+                response.status shouldBe HttpStatusCode.NotFound
+            }
+        }
+
         describe("GET /authorization-grants") {
             it("should return 200 OK") {
                 val response = testApp.client.get(AUTHORIZATION_GRANT)
