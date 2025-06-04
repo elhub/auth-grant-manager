@@ -1,0 +1,68 @@
+{
+  "data": [
+    {
+      "id": "123e4567-e89b-12d3-a456-426614174000",
+      "type": "AuthorizationGrant",
+      "attributes": {
+        "status": "Active",
+        "grantedAt": "2025-04-04T04:00",
+        "validFrom": "2025-04-04T04:00",
+        "validTo": "2026-04-04T04:00"
+      },
+      "relationships": {
+        "grantedFor": {
+          "data": {
+            "id": "1111111111111111",
+            "type": "Person"
+          }
+        },
+        "grantedBy": {
+          "data": {
+            "id": "1111111111111111",
+            "type": "Person"
+          }
+        },
+        "grantedTo": {
+          "data": {
+            "id": "2222222222222222",
+            "type": "Organization"
+          }
+        }
+      }
+    },
+    {
+      "id": "b7f9c2e4-5a3d-4e2b-9c1a-8f6e2d3c4b5a",
+      "type": "AuthorizationGrant",
+      "attributes": {
+        "status": "Expired",
+        "grantedAt": "2023-04-04T04:00",
+        "validFrom": "2023-04-04T04:00",
+        "validTo": "2024-04-04T04:00"
+      },
+      "relationships": {
+        "grantedFor": {
+          "data": {
+            "id": "3333333333333333",
+            "type": "Person"
+          }
+        },
+        "grantedBy": {
+          "data": {
+            "id": "3333333333333333",
+            "type": "Person"
+          }
+        },
+        "grantedTo": {
+          "data": {
+            "id": "2222222222222222",
+            "type": "Organization"
+          }
+        }
+      }
+    }
+  ],
+  "links": { "self": "http://localhost/authorization-grants" },
+  "meta": {
+    "createdAt": "2025-06-02T13:17:25.882470774Z"
+  }
+}
