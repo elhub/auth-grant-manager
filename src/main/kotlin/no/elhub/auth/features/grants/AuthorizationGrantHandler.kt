@@ -1,13 +1,14 @@
 package no.elhub.auth.features.grants
 
-import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.ApplicationCall
-import io.ktor.server.response.respond
+import arrow.core.Either
+import arrow.core.raise.either
+import no.elhub.auth.features.errors.ApiError
+import no.elhub.auth.features.errors.ApiError.NotFound
 import no.elhub.auth.model.AuthorizationGrant
-import no.elhub.auth.model.ResponseMeta
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.koin.core.annotation.Single
+import java.util.UUID
 
 @Single
 class AuthorizationGrantHandler {
@@ -20,11 +21,20 @@ class AuthorizationGrantHandler {
                 .toList()
         }
 
-    suspend fun getGrantById(call: ApplicationCall) {
-        val response =
-            AuthorizationGrant.Response(
-                meta = ResponseMeta(),
-            )
-        call.respond(status = HttpStatusCode.OK, message = response)
-    }
+    fun getGrant(id: UUID): Either<ApiError, AuthorizationGrant> =
+        either {
+            val result =
+                transaction {
+                    AuthorizationGrant.Entity
+                        .selectAll()
+                        .where { AuthorizationGrant.Entity.id eq id }
+                        .singleOrNull()
+                }
+
+            if (result == null) {
+                raise(NotFound(detail = "Could not find AuthorizationGrant with id $id."))
+            }
+
+            AuthorizationGrant(result)
+        }
 }

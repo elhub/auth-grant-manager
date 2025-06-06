@@ -11,7 +11,6 @@ import kotlinx.serialization.json.jsonObject
 import no.elhub.auth.DatabaseExtension
 import no.elhub.auth.config.AUTHORIZATION_GRANT
 import no.elhub.auth.utils.defaultTestApplication
-import java.util.UUID
 
 class AuthorizationGrantHandlerTest :
     DescribeSpec({
@@ -38,8 +37,7 @@ class AuthorizationGrantHandlerTest :
             }
 
             it("should return grant by id with status OK") {
-                val id = UUID.randomUUID().toString()
-                val response = testApp.client.get("$AUTHORIZATION_GRANT/$id")
+                val response = testApp.client.get("$AUTHORIZATION_GRANT/123e4567-e89b-12d3-a456-426614174000")
                 response.status shouldBe HttpStatusCode.OK
 
                 val responseBody = Json.parseToJsonElement(response.bodyAsText()).jsonObject

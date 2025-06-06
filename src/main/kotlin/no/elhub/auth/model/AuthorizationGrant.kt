@@ -2,7 +2,6 @@ package no.elhub.auth.model
 
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.toKotlinLocalDateTime
-import kotlinx.serialization.Serializable
 import no.elhub.auth.utils.PGEnum
 import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.ResultRow
@@ -33,11 +32,6 @@ data class AuthorizationGrant(
         val validFrom = datetime("valid_from").defaultExpression(CurrentDateTime)
         val validTo = datetime("valid_to").defaultExpression(CurrentDateTime)
     }
-
-    @Serializable
-    data class Response(
-        val meta: ResponseMeta,
-    )
 
     constructor(row: ResultRow) : this(
         id = row[Entity.id].toString(),
