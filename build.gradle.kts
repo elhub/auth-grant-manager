@@ -46,6 +46,7 @@ dependencies {
     testImplementation(libs.test.kotest.assertions.json)
     testImplementation(libs.test.testcontainers)
     testImplementation(libs.test.testcontainers.postgres)
+    testImplementation(libs.test.mybatis)
 }
 
 ksp {

@@ -28,6 +28,7 @@ postgresql = "42.7.5"
 slf4j = "2.0.17"
 snakeyaml = "2.4"
 testcontainers = "1.20.6"
+mybatis = "3.5.19"
 
 [plugins]
 elhub-gradle-plugin = { id = "no.elhub.devxp.kotlin-service", version.ref = "elhub-gradle" }
@@ -78,7 +79,7 @@ test-ktor-server-test-host = { group = "io.ktor", name = "ktor-server-test-host"
 test-mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
 test-testcontainers = { group = "org.testcontainers", name = "testcontainers", version.ref = "testcontainers" }
 test-testcontainers-postgres = { group = "org.testcontainers", name = "postgresql", version.ref = "testcontainers" }
-
+test-mybatis = { group = "org.mybatis", name = "mybatis", version.ref = "mybatis" }
 # Bundles should be used to group dependencies that are frequently used together.
 [bundles]
 database = ["database-exposed-core", "database-exposed-dao", "database-exposed-java-time", "database-exposed-jdbc", "database-hikari",

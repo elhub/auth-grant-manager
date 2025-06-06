@@ -1,10 +1,11 @@
-package no.elhub.auth
+package no.elhub.auth.extensions
 
 import com.github.dockerjava.api.model.ExposedPort
 import com.github.dockerjava.api.model.HostConfig
 import com.github.dockerjava.api.model.PortBinding
 import com.github.dockerjava.api.model.Ports
 import io.kotest.core.listeners.AfterProjectListener
+import io.kotest.core.spec.Order
 import liquibase.Liquibase
 import liquibase.database.DatabaseFactory
 import liquibase.database.jvm.JdbcConnection
@@ -15,7 +16,8 @@ import java.nio.file.Paths
 import java.sql.DriverManager
 import kotlin.use
 
-object DatabaseExtension : AfterProjectListener {
+@Order(1)
+object PostgresTestContainerExtension : AfterProjectListener {
     private const val POSTGRES_PORT = 5432
 
     private val postgres = PostgreSQLContainer(DockerImageName.parse("postgres:15-alpine"))
