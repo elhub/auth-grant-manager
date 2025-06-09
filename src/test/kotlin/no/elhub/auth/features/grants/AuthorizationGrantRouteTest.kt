@@ -73,7 +73,7 @@ class AuthorizationGrantRouteTest :
                 }
             }
 
-            it("should return 404 on a invalid ID") {
+            it("should return 404 on a nonexistent ID") {
                 val response = testApp.client.get("$AUTHORIZATION_GRANT/123e4567-e89b-12d3-a456-426614174001")
                 response.status shouldBe HttpStatusCode.NotFound
             }

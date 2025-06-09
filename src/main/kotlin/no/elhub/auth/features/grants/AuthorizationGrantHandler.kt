@@ -1,40 +1,62 @@
 package no.elhub.auth.features.grants
 
-import arrow.core.Either
-import arrow.core.raise.either
-import no.elhub.auth.features.errors.ApiError
-import no.elhub.auth.features.errors.ApiError.NotFound
-import no.elhub.auth.model.AuthorizationGrant
-import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.transactions.transaction
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.application.ApplicationCall
+import io.ktor.server.response.respond
+import io.ktor.server.util.url
+import no.elhub.auth.features.errors.httpStatus
 import org.koin.core.annotation.Single
 import java.util.UUID
 
 @Single
 class AuthorizationGrantHandler {
-    fun getGrants(): List<AuthorizationGrant> =
-        transaction {
-            AuthorizationGrant.Entity
-                .selectAll()
-                .associate { it[AuthorizationGrant.Entity.id].toString() to AuthorizationGrant(it) }
-                .values
-                .toList()
-        }
+    suspend fun getAllGrants(call: ApplicationCall) {
+        AuthorizationGrantRepository.findAll().fold(
+            ifLeft = { err ->
+                call.respond(
+                    status = err.httpStatus(),
+                    message = err,
+                )
+            },
+            ifRight = { grants ->
+                call.respond(
+                    status = HttpStatusCode.OK,
+                    message = AuthorizationGrantResponseCollection.from(grants, call.url()),
+                )
+            },
+        )
+    }
 
-    fun getGrant(id: UUID): Either<ApiError, AuthorizationGrant> =
-        either {
-            val result =
-                transaction {
-                    AuthorizationGrant.Entity
-                        .selectAll()
-                        .where { AuthorizationGrant.Entity.id eq id }
-                        .singleOrNull()
-                }
+    suspend fun getGrantById(call: ApplicationCall) {
+        val id = call.extractUuidParameter("ID") ?: return
 
-            if (result == null) {
-                raise(NotFound(detail = "Could not find AuthorizationGrant with id $id."))
+        AuthorizationGrantRepository.findById(id).fold(
+            ifLeft = { err ->
+                call.respond(
+                    status = err.httpStatus(),
+                    message = err,
+                )
+            },
+            ifRight = { result ->
+                call.respond(
+                    status = HttpStatusCode.OK,
+                    message = AuthorizationGrantResponse.from(result, selfLink = call.url()),
+                )
+            },
+        )
+    }
+
+    private suspend fun ApplicationCall.extractUuidParameter(paramName: String = "ID"): UUID? {
+        val rawId =
+            parameters[paramName] ?: run {
+                respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing or malformed id"))
+                return null
             }
-
-            AuthorizationGrant(result)
+        return try {
+            UUID.fromString(rawId)
+        } catch (e: IllegalArgumentException) {
+            respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid UUID"))
+            null
         }
+    }
 }

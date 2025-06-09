@@ -48,6 +48,12 @@ sealed class ApiError {
     ) : ApiError()
 }
 
+/** Maps the status code from an ApiError to the corresponding Ktor HttpStatusCode.
+ * This allows for consistent HTTP response handling based on the error type,
+ * and also to avoid boilerplate.
+ */
+fun ApiError.httpStatus(): HttpStatusCode = HttpStatusCode.fromValue(this.status)
+
 /** Custom serializer for [ApiError] to handle polymorphic serialization
  * of its subclasses. This is required, as kotlinx serialization does not
  * support polymorphic serialization out of the box.
@@ -55,9 +61,7 @@ sealed class ApiError {
 object ApiErrorSerializer : JsonContentPolymorphicSerializer<ApiError>(
     ApiError::class,
 ) {
-    override fun selectDeserializer(
-        element: JsonElement,
-    ): DeserializationStrategy<ApiError> {
+    override fun selectDeserializer(element: JsonElement): DeserializationStrategy<ApiError> {
         val json = element.jsonObject
         val type = json.getValue("type").jsonPrimitive.content
         return when (type) {
