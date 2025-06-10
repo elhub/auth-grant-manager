@@ -3,7 +3,6 @@ package no.elhub.auth.features.grants
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
-import no.elhub.auth.features.errors.ApiError
 import no.elhub.auth.model.AuthorizationGrant
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -11,7 +10,7 @@ import java.sql.SQLException
 import java.util.UUID
 
 object AuthorizationGrantRepository {
-    fun findAll(): Either<ApiError, List<AuthorizationGrant>> =
+    fun findAll(): Either<AuthorizationGrantError, List<AuthorizationGrant>> =
         try {
             transaction {
                 AuthorizationGrant.Entity
@@ -20,11 +19,13 @@ object AuthorizationGrantRepository {
                     .values
                     .toList()
             }.right()
-        } catch (sqlEx: Exception) {
-            ApiError.InternalServerError(detail = "error in database").left()
+        } catch (sqlEx: SQLException) {
+            AuthorizationGrantError.DataBaseError.left()
+        } catch (exp: Exception) {
+            AuthorizationGrantError.InternalServerError.left()
         }
 
-    fun findById(id: UUID): Either<ApiError, AuthorizationGrant> =
+    fun findById(id: UUID): Either<AuthorizationGrantError, AuthorizationGrant> =
         try {
             transaction {
                 AuthorizationGrant.Entity
@@ -33,8 +34,10 @@ object AuthorizationGrantRepository {
                     .singleOrNull()
                     ?.let { AuthorizationGrant(it) }
             }?.right()
-                ?: ApiError.NotFound(detail = id.toString()).left()
+                ?: AuthorizationGrantError.NotFoundError.left()
         } catch (sqlEx: SQLException) {
-            ApiError.InternalServerError(detail = "error in database").left()
+            AuthorizationGrantError.DataBaseError.left()
+        } catch (exp: Exception) {
+            AuthorizationGrantError.InternalServerError.left()
         }
 }

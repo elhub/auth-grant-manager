@@ -28,6 +28,12 @@ class AuthorizationGrantRouteTest :
         }
 
         describe("GET /authorization-grants/{id}") {
+
+            it("should return 400 on an invalid ID") {
+                val response = testApp.client.get("$AUTHORIZATION_GRANT/test")
+                response.status shouldBe HttpStatusCode.BadRequest
+            }
+
             it("should return 200 OK on a valid ID") {
                 val response = testApp.client.get("$AUTHORIZATION_GRANT/123e4567-e89b-12d3-a456-426614174000")
                 response.status shouldBe HttpStatusCode.OK
@@ -80,6 +86,12 @@ class AuthorizationGrantRouteTest :
         }
 
         describe("GET /authorization-grants") {
+
+            it("should return 400 on an invalid ID") {
+                val response = testApp.client.get("$AUTHORIZATION_GRANT/all")
+                response.status shouldBe HttpStatusCode.BadRequest
+            }
+
             it("should return 200 OK") {
                 val response = testApp.client.get(AUTHORIZATION_GRANT)
                 response.status shouldBe HttpStatusCode.OK

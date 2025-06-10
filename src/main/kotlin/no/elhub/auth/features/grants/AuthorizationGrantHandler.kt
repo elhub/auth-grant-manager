@@ -1,62 +1,22 @@
 package no.elhub.auth.features.grants
 
-import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.ApplicationCall
-import io.ktor.server.response.respond
-import io.ktor.server.util.url
-import no.elhub.auth.features.errors.httpStatus
-import org.koin.core.annotation.Single
+import arrow.core.Either
+import arrow.core.left
+import no.elhub.auth.model.AuthorizationGrant
 import java.util.UUID
 
-@Single
 class AuthorizationGrantHandler {
-    suspend fun getAllGrants(call: ApplicationCall) {
-        AuthorizationGrantRepository.findAll().fold(
-            ifLeft = { err ->
-                call.respond(
-                    status = err.httpStatus(),
-                    message = err,
-                )
-            },
-            ifRight = { grants ->
-                call.respond(
-                    status = HttpStatusCode.OK,
-                    message = AuthorizationGrantResponseCollection.from(grants, call.url()),
-                )
-            },
-        )
-    }
+    fun getAllGrantsNew(): Either<AuthorizationGrantError, List<AuthorizationGrant>> = AuthorizationGrantRepository.findAll()
 
-    suspend fun getGrantById(call: ApplicationCall) {
-        val id = call.extractUuidParameter("ID") ?: return
-
-        AuthorizationGrantRepository.findById(id).fold(
-            ifLeft = { err ->
-                call.respond(
-                    status = err.httpStatus(),
-                    message = err,
-                )
-            },
-            ifRight = { result ->
-                call.respond(
-                    status = HttpStatusCode.OK,
-                    message = AuthorizationGrantResponse.from(result, selfLink = call.url()),
-                )
-            },
-        )
-    }
-
-    private suspend fun ApplicationCall.extractUuidParameter(paramName: String = "ID"): UUID? {
-        val rawId =
-            parameters[paramName] ?: run {
-                respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing or malformed id"))
-                return null
+    fun getGrantByIdNew(idParam: String?): Either<AuthorizationGrantError, AuthorizationGrant> {
+        // handle if the id is invalid or malformed. Should be UUID formatted
+        val id =
+            try {
+                UUID.fromString(idParam)
+            } catch (e: IllegalArgumentException) {
+                return AuthorizationGrantError.IllegalArgumentError.left()
             }
-        return try {
-            UUID.fromString(rawId)
-        } catch (e: IllegalArgumentException) {
-            respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid UUID"))
-            null
-        }
+
+        return AuthorizationGrantRepository.findById(id)
     }
 }
