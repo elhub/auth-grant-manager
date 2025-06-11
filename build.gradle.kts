@@ -64,15 +64,16 @@ val dbUsername = System.getenv("DB_USERNAME") ?: ""
 val dbPassword = System.getenv("DB_PASSWORD") ?: ""
 
 liquibase {
-    jvmArgs = arrayOf(
-        "-Dliquibase.command.url=jdbc:postgresql://localhost:5432/auth",
-        "-Dliquibase.command.username=$dbUsername",
-        "-Dliquibase.command.password=$dbPassword",
-        "-DAPP_USERNAME=app",
-        "-DAPP_PASSWORD=app",
-        "-Dliquibase.command.driver=org.postgresql.Driver",
-        "-Dliquibase.command.changeLogFile=db/db-changelog.yaml",
-    )
+    jvmArgs =
+        arrayOf(
+            "-Dliquibase.command.url=jdbc:postgresql://localhost:5432/auth",
+            "-Dliquibase.command.username=$dbUsername",
+            "-Dliquibase.command.password=$dbPassword",
+            "-DAPP_USERNAME=app",
+            "-DAPP_PASSWORD=app",
+            "-Dliquibase.command.driver=org.postgresql.Driver",
+            "-Dliquibase.command.changeLogFile=db/db-changelog.yaml",
+        )
     activities.register("main")
 }
 
@@ -82,8 +83,8 @@ dockerCompose {
         environment.putAll(
             mapOf(
                 "DB_USERNAME" to dbUsername,
-                "DB_PASSWORD" to dbPassword
-            )
+                "DB_PASSWORD" to dbPassword,
+            ),
         )
     }
 }

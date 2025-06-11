@@ -20,34 +20,36 @@ import kotlin.use
 object PostgresTestContainerExtension : AfterProjectListener {
     private const val POSTGRES_PORT = 5432
 
-    private val postgres = PostgreSQLContainer(DockerImageName.parse("postgres:15-alpine"))
-        .withDatabaseName("auth")
-        .withUsername("postgres")
-        .withPassword("postgres")
-        .withExposedPorts(POSTGRES_PORT)
-        .withCreateContainerCmdModifier { cmd ->
-            cmd.withHostConfig(
-                HostConfig().withPortBindings(
-                    PortBinding(Ports.Binding.bindPort(POSTGRES_PORT), ExposedPort(POSTGRES_PORT))
+    private val postgres =
+        PostgreSQLContainer(DockerImageName.parse("postgres:15-alpine"))
+            .withDatabaseName("auth")
+            .withUsername("postgres")
+            .withPassword("postgres")
+            .withExposedPorts(POSTGRES_PORT)
+            .withCreateContainerCmdModifier { cmd ->
+                cmd.withHostConfig(
+                    HostConfig().withPortBindings(
+                        PortBinding(Ports.Binding.bindPort(POSTGRES_PORT), ExposedPort(POSTGRES_PORT)),
+                    ),
                 )
-            )
-        }.also {
-            it.start()
-            migrate(it)
-        }
+            }.also {
+                it.start()
+                migrate(it)
+            }
 
     private fun migrate(pg: PostgreSQLContainer<*>) {
         val url = pg.jdbcUrl
         val user = pg.username
         val password = pg.password
         DriverManager.getConnection(url, user, password).use { conn ->
-            val db = DatabaseFactory
-                .getInstance()
-                .findCorrectDatabaseImplementation(JdbcConnection(conn))
+            val db =
+                DatabaseFactory
+                    .getInstance()
+                    .findCorrectDatabaseImplementation(JdbcConnection(conn))
             Liquibase(
                 "db/db-changelog.yaml",
                 DirectoryResourceAccessor(Paths.get(System.getProperty("user.dir"))),
-                db
+                db,
             ).apply {
                 setChangeLogParameter("APP_USERNAME", "app")
                 setChangeLogParameter("APP_PASSWORD", "app")
