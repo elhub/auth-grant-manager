@@ -5,7 +5,7 @@ import no.elhub.auth.model.AuthorizationGrant
 import java.util.UUID
 
 class AuthorizationGrantHandler {
-    fun getAllGrants(): Either<AuthorizationGrantError, List<AuthorizationGrant>> = AuthorizationGrantRepository.findAll()
+    fun getAllGrants(): Either<AuthorizationGrantProblem, List<AuthorizationGrant>> = AuthorizationGrantRepository.findAll()
 
-    fun getGrantById(id: UUID): Either<AuthorizationGrantError, AuthorizationGrant> = AuthorizationGrantRepository.findById(id)
+    fun getGrantById(id: UUID): Either<AuthorizationGrantProblem, AuthorizationGrant> = AuthorizationGrantRepository.findById(id)
 }

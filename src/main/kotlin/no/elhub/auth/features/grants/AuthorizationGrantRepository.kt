@@ -10,7 +10,7 @@ import java.sql.SQLException
 import java.util.UUID
 
 object AuthorizationGrantRepository {
-    fun findAll(): Either<AuthorizationGrantError, List<AuthorizationGrant>> =
+    fun findAll(): Either<AuthorizationGrantProblem, List<AuthorizationGrant>> =
         try {
             transaction {
                 AuthorizationGrant.Entity
@@ -20,12 +20,12 @@ object AuthorizationGrantRepository {
                     .toList()
             }.right()
         } catch (sqlEx: SQLException) {
-            AuthorizationGrantError.DataBase.left()
+            AuthorizationGrantProblem.DataBaseError.left()
         } catch (exp: Exception) {
-            AuthorizationGrantError.InternalServer.left()
+            AuthorizationGrantProblem.InternalServerError.left()
         }
 
-    fun findById(id: UUID): Either<AuthorizationGrantError, AuthorizationGrant> =
+    fun findById(id: UUID): Either<AuthorizationGrantProblem, AuthorizationGrant> =
         try {
             transaction {
                 AuthorizationGrant.Entity
@@ -34,10 +34,10 @@ object AuthorizationGrantRepository {
                     .singleOrNull()
                     ?.let { AuthorizationGrant(it) }
             }?.right()
-                ?: AuthorizationGrantError.NotFound.left()
+                ?: AuthorizationGrantProblem.NotFoundError.left()
         } catch (sqlEx: SQLException) {
-            AuthorizationGrantError.DataBase.left()
+            AuthorizationGrantProblem.DataBaseError.left()
         } catch (exp: Exception) {
-            AuthorizationGrantError.InternalServer.left()
+            AuthorizationGrantProblem.InternalServerError.left()
         }
 }

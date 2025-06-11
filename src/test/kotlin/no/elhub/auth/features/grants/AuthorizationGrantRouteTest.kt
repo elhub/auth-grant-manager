@@ -32,6 +32,22 @@ class AuthorizationGrantRouteTest :
             it("should return 400 on an invalid ID") {
                 val response = testApp.client.get("$AUTHORIZATION_GRANT/test")
                 response.status shouldBe HttpStatusCode.BadRequest
+                val responseJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+                responseJson.validate {
+                    "errors".shouldBeList(size = 1) {
+                        item(0) {
+                            "status" shouldBe "400"
+                            "title" shouldBe "Bad Request"
+                            "detail" shouldBe "Missing or malformed id."
+                        }
+                    }
+                    "links" {
+                        "self" shouldBe "http://localhost/authorization-grants/test"
+                    }
+                    "meta" {
+                        "createdAt".shouldNotBeNull()
+                    }
+                }
             }
 
             it("should return 200 OK on a valid ID") {
@@ -82,15 +98,26 @@ class AuthorizationGrantRouteTest :
             it("should return 404 on a nonexistent ID") {
                 val response = testApp.client.get("$AUTHORIZATION_GRANT/123e4567-e89b-12d3-a456-426614174001")
                 response.status shouldBe HttpStatusCode.NotFound
+                val responseJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+                responseJson.validate {
+                    "errors".shouldBeList(size = 1) {
+                        item(0) {
+                            "status" shouldBe "404"
+                            "title" shouldBe "Not Found"
+                            "detail" shouldBe "Authorization grant with id=123e4567-e89b-12d3-a456-426614174001 not found"
+                        }
+                    }
+                    "links" {
+                        "self" shouldBe "http://localhost/authorization-grants/123e4567-e89b-12d3-a456-426614174001"
+                    }
+                    "meta" {
+                        "createdAt".shouldNotBeNull()
+                    }
+                }
             }
         }
 
         describe("GET /authorization-grants") {
-
-            it("should return 400 on an invalid ID") {
-                val response = testApp.client.get("$AUTHORIZATION_GRANT/all")
-                response.status shouldBe HttpStatusCode.BadRequest
-            }
 
             it("should return 200 OK") {
                 val response = testApp.client.get(AUTHORIZATION_GRANT)
