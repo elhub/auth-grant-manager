@@ -11,87 +11,89 @@ import io.ktor.http.contentType
 import io.ktor.server.testing.TestApplication
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
-import no.elhub.auth.DatabaseExtension
 import no.elhub.auth.config.AUTHORIZATION_DOCUMENT
+import no.elhub.auth.extensions.PostgresTestContainerExtension
 import no.elhub.auth.utils.defaultTestApplication
 import no.elhub.auth.validate
 
-class AuthorizationDocumentRouteTest : DescribeSpec({
-    extensions(DatabaseExtension)
+class AuthorizationDocumentRouteTest :
+    DescribeSpec({
+        extensions(PostgresTestContainerExtension)
 
-    lateinit var testApp: TestApplication
+        lateinit var testApp: TestApplication
 
-    beforeTest {
-        testApp = defaultTestApplication()
-    }
+        beforeTest {
+            testApp = defaultTestApplication()
+        }
 
-    afterTest {
-        testApp.stop()
-    }
+        afterTest {
+            testApp.stop()
+        }
 
-    describe("POST /authorization-documents") {
-        it("should return 201 OK with correct response when request is valid") {
+        describe("POST /authorization-documents") {
+            it("should return 201 OK with correct response when request is valid") {
 
-            val response = testApp.client
-                .post(AUTHORIZATION_DOCUMENT) {
-                    contentType(ContentType.Application.Json)
-                    setBody(
-                        """
-                        {
-                            "data": {
-                                "type": "AuthorizationDocument",
-                                "attributes": {
-                                    "meteringPoint": "1234"
-                                },
-                                "relationships": {
-                                    "requestedBy": {
-                                        "data": {
-                                            "id": "12345678901",
-                                            "type": "User"
+                val response =
+                    testApp.client
+                        .post(AUTHORIZATION_DOCUMENT) {
+                            contentType(ContentType.Application.Json)
+                            setBody(
+                                """
+                                {
+                                    "data": {
+                                        "type": "AuthorizationDocument",
+                                        "attributes": {
+                                            "meteringPoint": "1234"
+                                        },
+                                        "relationships": {
+                                            "requestedBy": {
+                                                "data": {
+                                                    "id": "12345678901",
+                                                    "type": "User"
+                                                }
+                                            },
+                                            "requestedTo": {
+                                                "data": {
+                                                    "id": "98765432109",
+                                                    "type": "User"
+                                                }
+                                            }
                                         }
-                                    },
-                                    "requestedTo": {
-                                        "data": {
-                                            "id": "98765432109",
-                                            "type": "User"
-                                        }
+
                                     }
                                 }
-
-                            }
+                                """.trimIndent(),
+                            )
                         }
-                        """.trimIndent()
-                    )
-                }
 
-            response.status shouldBe HttpStatusCode.Created
+                response.status shouldBe HttpStatusCode.Created
 
-            val responseBody = Json.parseToJsonElement(response.bodyAsText()).jsonObject
-            responseBody.validate {
-                "data" {
-                    "type" shouldBe "AuthorizationDocument"
-                    "id".shouldNotBeNull()
-                    "attributes" {
-                        "createdAt".shouldNotBeNull()
-                        "updatedAt".shouldNotBeNull()
-                        "status" shouldBe "Pending"
-                    }
-                    "relationships" {
-                        "requestedBy" {
-                            "data" {
-                                "id" shouldBe "12345678901"
-                                "type" shouldBe "User"
-                            }
+                val responseBody = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+                responseBody.validate {
+                    "data" {
+                        "type" shouldBe "AuthorizationDocument"
+                        "id".shouldNotBeNull()
+                        "attributes" {
+                            "createdAt".shouldNotBeNull()
+                            "updatedAt".shouldNotBeNull()
+                            "status" shouldBe "Pending"
                         }
-                        "requestedTo" {
-                            "data" {
-                                "id" shouldBe "98765432109"
-                                "type" shouldBe "User"
+                        "relationships" {
+                            "requestedBy" {
+                                "data" {
+                                    "id" shouldBe "12345678901"
+                                    "type" shouldBe "User"
+                                }
+                            }
+                            "requestedTo" {
+                                "data" {
+                                    "id" shouldBe "98765432109"
+                                    "type" shouldBe "User"
+                                }
                             }
                         }
                     }
                 }
             }
         }
-    }
-})
+    })
