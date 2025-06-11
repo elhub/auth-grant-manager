@@ -6,9 +6,9 @@ import no.elhub.auth.model.AuthorizationGrant
 import java.util.UUID
 
 class AuthorizationGrantHandler {
-    fun getAllGrantsNew(): Either<AuthorizationGrantError, List<AuthorizationGrant>> = AuthorizationGrantRepository.findAll()
+    fun getAllGrants(): Either<AuthorizationGrantError, List<AuthorizationGrant>> = AuthorizationGrantRepository.findAll()
 
-    fun getGrantByIdNew(idParam: String?): Either<AuthorizationGrantError, AuthorizationGrant> {
+    fun getGrantById(idParam: String?): Either<AuthorizationGrantError, AuthorizationGrant> {
         // handle if the id is invalid or malformed. Should be UUID formatted
         val id =
             try {

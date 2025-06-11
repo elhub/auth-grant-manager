@@ -11,7 +11,7 @@ import no.elhub.auth.config.ID
 fun Route.grants(grantHandler: AuthorizationGrantHandler) {
     route("") {
         get {
-            grantHandler.getAllGrantsNew().fold(
+            grantHandler.getAllGrants().fold(
                 ifLeft = { error ->
                     call.respond(
                         when (error) {
@@ -41,7 +41,7 @@ fun Route.grants(grantHandler: AuthorizationGrantHandler) {
         get("/{$ID}") {
             val id = call.parameters[ID]
 
-            grantHandler.getGrantByIdNew(id).fold(
+            grantHandler.getGrantById(id).fold(
                 ifLeft = { error ->
                     call.respond(
                         when (error) {
