@@ -7,6 +7,7 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.route
 import io.ktor.server.util.url
 import no.elhub.auth.config.ID
+import java.util.UUID
 
 fun Route.grants(grantHandler: AuthorizationGrantHandler) {
     route("") {
@@ -39,7 +40,12 @@ fun Route.grants(grantHandler: AuthorizationGrantHandler) {
         }
 
         get("/{$ID}") {
-            val id = call.parameters[ID]
+            val id =
+                try {
+                    UUID.fromString(call.parameters[ID])
+                } catch (e: IllegalArgumentException) {
+                    return@get call.respond(HttpStatusCode.BadRequest, "Invalid or missing authorization grant ID format")
+                }
 
             grantHandler.getGrantById(id).fold(
                 ifLeft = { error ->
