@@ -1,11 +1,11 @@
 package no.elhub.auth.features.grants
 
 sealed class AuthorizationGrantError {
-    data object NotFoundError : AuthorizationGrantError()
+    data object NotFound : AuthorizationGrantError()
 
-    data object DataBaseError : AuthorizationGrantError()
+    data object DataBase : AuthorizationGrantError()
 
-    data object InternalServerError : AuthorizationGrantError()
+    data object InternalServer : AuthorizationGrantError()
 
-    data object IllegalArgumentError : AuthorizationGrantError()
+    data object IllegalArgument : AuthorizationGrantError()
 }

@@ -16,12 +16,12 @@ fun Route.grants(grantHandler: AuthorizationGrantHandler) {
                 ifLeft = { error ->
                     call.respond(
                         when (error) {
-                            AuthorizationGrantError.DataBaseError ->
+                            AuthorizationGrantError.DataBase ->
                                 HttpStatusCode.ServiceUnavailable.description(
                                     "Data base error " +
                                         "during fetch all grant: $error",
                                 )
-                            AuthorizationGrantError.InternalServerError ->
+                            AuthorizationGrantError.InternalServer ->
                                 HttpStatusCode.InternalServerError.description(
                                     "Internal server error " +
                                         "during fetch all grant: $error",
@@ -51,19 +51,19 @@ fun Route.grants(grantHandler: AuthorizationGrantHandler) {
                 ifLeft = { error ->
                     call.respond(
                         when (error) {
-                            is AuthorizationGrantError.NotFoundError ->
+                            is AuthorizationGrantError.NotFound ->
                                 HttpStatusCode.NotFound.description("Authorization grant with ID $id grant not found: $error ")
-                            is AuthorizationGrantError.DataBaseError ->
+                            is AuthorizationGrantError.DataBase ->
                                 HttpStatusCode.ServiceUnavailable.description(
                                     "Database error during authorization grant " +
                                         "with ID $id: $error ",
                                 )
-                            is AuthorizationGrantError.InternalServerError ->
+                            is AuthorizationGrantError.InternalServer ->
                                 HttpStatusCode.InternalServerError.description(
                                     "Internal server error during authorization grant " +
                                         "retrieval with ID $id: $error ",
                                 )
-                            is AuthorizationGrantError.IllegalArgumentError ->
+                            is AuthorizationGrantError.IllegalArgument ->
                                 HttpStatusCode.BadRequest.description("Invalid or missing grant ID format: $error")
                         },
                     )

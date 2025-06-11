@@ -20,9 +20,9 @@ object AuthorizationGrantRepository {
                     .toList()
             }.right()
         } catch (sqlEx: SQLException) {
-            AuthorizationGrantError.DataBaseError.left()
+            AuthorizationGrantError.DataBase.left()
         } catch (exp: Exception) {
-            AuthorizationGrantError.InternalServerError.left()
+            AuthorizationGrantError.InternalServer.left()
         }
 
     fun findById(id: UUID): Either<AuthorizationGrantError, AuthorizationGrant> =
@@ -34,10 +34,10 @@ object AuthorizationGrantRepository {
                     .singleOrNull()
                     ?.let { AuthorizationGrant(it) }
             }?.right()
-                ?: AuthorizationGrantError.NotFoundError.left()
+                ?: AuthorizationGrantError.NotFound.left()
         } catch (sqlEx: SQLException) {
-            AuthorizationGrantError.DataBaseError.left()
+            AuthorizationGrantError.DataBase.left()
         } catch (exp: Exception) {
-            AuthorizationGrantError.InternalServerError.left()
+            AuthorizationGrantError.InternalServer.left()
         }
 }
