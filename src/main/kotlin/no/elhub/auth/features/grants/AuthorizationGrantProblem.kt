@@ -5,11 +5,5 @@ sealed class AuthorizationGrantProblem {
 
     data object DataBaseError : AuthorizationGrantProblem()
 
-    data object InternalServerError : AuthorizationGrantProblem()
-
-    data object NullPointerError : AuthorizationGrantProblem()
-
-    data object IllegalArgumentError : AuthorizationGrantProblem()
-
-    data object UnknownError : AuthorizationGrantProblem()
+    data object UnexpectedError : AuthorizationGrantProblem()
 }

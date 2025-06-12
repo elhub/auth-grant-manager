@@ -22,7 +22,7 @@ object AuthorizationGrantRepository {
         } catch (sqlEx: SQLException) {
             AuthorizationGrantProblem.DataBaseError.left()
         } catch (exp: Exception) {
-            AuthorizationGrantProblem.InternalServerError.left()
+            AuthorizationGrantProblem.UnexpectedError.left()
         }
 
     fun findById(id: UUID): Either<AuthorizationGrantProblem, AuthorizationGrant> =
@@ -38,6 +38,6 @@ object AuthorizationGrantRepository {
         } catch (sqlEx: SQLException) {
             AuthorizationGrantProblem.DataBaseError.left()
         } catch (exp: Exception) {
-            AuthorizationGrantProblem.InternalServerError.left()
+            AuthorizationGrantProblem.UnexpectedError.left()
         }
 }

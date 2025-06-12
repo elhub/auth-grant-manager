@@ -19,26 +19,15 @@ fun Route.grants(grantHandler: AuthorizationGrantHandler) {
             grantHandler.getAllGrants().fold(
                 ifLeft = { authGrantProblem ->
                     when (authGrantProblem) {
-                        is AuthorizationGrantProblem.DataBaseError, AuthorizationGrantProblem.InternalServerError,
-                        AuthorizationGrantProblem.NullPointerError, AuthorizationGrantProblem.UnknownError,
+                        is AuthorizationGrantProblem.DataBaseError, AuthorizationGrantProblem.UnexpectedError,
                         ->
                             call.respond(
                                 HttpStatusCode.InternalServerError,
                                 ApiErrorJson.from(
-                                    ApiError.InternalServerError(detail = "Internal error during fetching authorization grant"),
+                                    ApiError.InternalServerError(detail = "Unknown error occurred during fetch authorization grants"),
                                     call.url(),
                                 ),
                             )
-
-                        is AuthorizationGrantProblem.IllegalArgumentError ->
-                            call.respond(
-                                HttpStatusCode.BadRequest,
-                                ApiErrorJson.from(
-                                    ApiError.InternalServerError(detail = "Bad request during fetching authorization grant"),
-                                    call.url(),
-                                ),
-                            )
-
                         is AuthorizationGrantProblem.NotFoundError ->
                             call.respond(
                                 HttpStatusCode.NotFound,
@@ -81,20 +70,11 @@ fun Route.grants(grantHandler: AuthorizationGrantHandler) {
                                 ),
                             )
 
-                        is AuthorizationGrantProblem.DataBaseError, AuthorizationGrantProblem.InternalServerError ->
+                        is AuthorizationGrantProblem.DataBaseError, AuthorizationGrantProblem.UnexpectedError ->
                             call.respond(
                                 HttpStatusCode.InternalServerError,
                                 ApiErrorJson.from(
-                                    ApiError.InternalServerError(detail = "Internal error during fetching authorization grant"),
-                                    call.url(),
-                                ),
-                            )
-
-                        is AuthorizationGrantProblem.IllegalArgumentError, AuthorizationGrantProblem.NullPointerError, AuthorizationGrantProblem.UnknownError ->
-                            call.respond(
-                                HttpStatusCode.InternalServerError,
-                                ApiErrorJson.from(
-                                    ApiError.InternalServerError(detail = "Internal error during fetching authorization grant"),
+                                    ApiError.InternalServerError(detail = "Unknown error occurred during fetch authorization grant with id=$id"),
                                     call.url(),
                                 ),
                             )
