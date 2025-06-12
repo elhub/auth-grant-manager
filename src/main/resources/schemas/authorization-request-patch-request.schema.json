@@ -38,7 +38,16 @@
           "$ref": "authorization-request-resource.schema.json#/definitions/resourceMeta"
         },
         "relationships": {
-          "$ref": "authorization-request-resource.schema.json#/definitions/resourceRelationship"
+          "type": "object",
+          "description": "The related entities of the authorization request (persons and organizations)",
+          "properties": {
+            "requestedBy": {
+              "$ref": "base-definitions.schema.json#/definitions/relationshipParty"
+            },
+            "requestedTo": {
+              "$ref": "base-definitions.schema.json#/definitions/relationshipParty"
+            }
+          }
         }
       }
     }
