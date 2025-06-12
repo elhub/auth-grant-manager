@@ -24,7 +24,7 @@ fun Route.grants(grantHandler: AuthorizationGrantHandler) {
                             call.respond(
                                 HttpStatusCode.InternalServerError,
                                 ApiErrorJson.from(
-                                    ApiError.InternalServerError(detail = "Unknown error occurred during fetch authorization grants"),
+                                    ApiError.InternalServerError(detail = "Unexpected error occurred during fetch authorization grants"),
                                     call.url(),
                                 ),
                             )
@@ -70,7 +70,7 @@ fun Route.grants(grantHandler: AuthorizationGrantHandler) {
                             call.respond(
                                 HttpStatusCode.InternalServerError,
                                 ApiErrorJson.from(
-                                    ApiError.InternalServerError(detail = "Unknown error occurred during fetch authorization grant with id=$id"),
+                                    ApiError.InternalServerError(detail = "Unexpected error occurred during fetch authorization grant with id=$id"),
                                     call.url(),
                                 ),
                             )
