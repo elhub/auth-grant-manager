@@ -55,9 +55,7 @@ sealed class ApiError {
 object ApiErrorSerializer : JsonContentPolymorphicSerializer<ApiError>(
     ApiError::class,
 ) {
-    override fun selectDeserializer(
-        element: JsonElement,
-    ): DeserializationStrategy<ApiError> {
+    override fun selectDeserializer(element: JsonElement): DeserializationStrategy<ApiError> {
         val json = element.jsonObject
         val type = json.getValue("type").jsonPrimitive.content
         return when (type) {
