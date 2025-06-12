@@ -1,7 +1,6 @@
 package no.elhub.auth.features.grants
 
-import arrow.core.Either.Left
-import arrow.core.Either.Right
+import arrow.core.getOrElse
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
@@ -12,6 +11,7 @@ import no.elhub.auth.config.ID
 import no.elhub.auth.features.errors.ApiError
 import no.elhub.auth.features.errors.ApiErrorJson
 import no.elhub.auth.features.utils.validateId
+import java.util.UUID
 
 fun Route.grants(grantHandler: AuthorizationGrantHandler) {
     route("") {
@@ -48,16 +48,12 @@ fun Route.grants(grantHandler: AuthorizationGrantHandler) {
         }
 
         get("/{$ID}") {
-            val idResult = validateId(call.parameters[ID])
-            when (idResult) {
-                is Left -> {
-                    call.respond(HttpStatusCode.fromValue(idResult.value.status), ApiErrorJson.from(idResult.value, call.url()))
+            val id: UUID =
+                validateId(call.parameters[ID]).getOrElse { error ->
+                    call.respond(HttpStatusCode.fromValue(error.status), ApiErrorJson.from(error, call.url()))
                     return@get
                 }
-                is Right -> Unit // continue
-            }
 
-            val id = idResult.value
             grantHandler.getGrantById(id).fold(
                 ifLeft = { authGrantProblem ->
                     when (authGrantProblem) {
