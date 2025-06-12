@@ -1,6 +1,6 @@
 package no.elhub.auth.model
 
-import no.elhub.auth.features.documents.PostAuthorizationDocument
+import no.elhub.auth.features.documents.PostAuthorizationDocumentRequest
 import no.elhub.auth.utils.PGEnum
 import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.javatime.datetime
@@ -20,7 +20,7 @@ data class AuthorizationDocument(
 ) {
 
     companion object {
-        fun of(postAuthorizationDocumentRequest: PostAuthorizationDocument.Request, pdf: ByteArray): AuthorizationDocument = AuthorizationDocument(
+        fun of(postAuthorizationDocumentRequest: PostAuthorizationDocumentRequest, pdf: ByteArray): AuthorizationDocument = AuthorizationDocument(
             id = UUID.randomUUID(),
             title = "Title",
             pdfBytes = pdf,

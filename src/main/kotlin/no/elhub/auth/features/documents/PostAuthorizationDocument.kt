@@ -1,56 +1,64 @@
 package no.elhub.auth.features.documents
 
 import kotlinx.serialization.Serializable
-import no.elhub.auth.model.RelationshipLink
+import no.elhub.auth.model.AuthorizationDocument
+import no.elhub.devxp.jsonapi.model.JsonApiAttributes
+import no.elhub.devxp.jsonapi.model.JsonApiRelationshipData
+import no.elhub.devxp.jsonapi.model.JsonApiRelationshipToOne
+import no.elhub.devxp.jsonapi.model.JsonApiRelationships
+import no.elhub.devxp.jsonapi.request.JsonApiRequest
+import no.elhub.devxp.jsonapi.response.JsonApiResponse
+import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObjectWithRelationships
 
-class PostAuthorizationDocument {
-    @Serializable
-    data class Request(
-        val data: Data
-    ) {
-        @Serializable
-        data class Data(
-            val type: String,
-            val attributes: Attributes,
-            val relationships: Relationships,
+@Serializable
+data class DocumentRequestAttributes(
+    val meteringPoint: String
+) : JsonApiAttributes
 
-        ) {
-            @Serializable
-            data class Attributes(
-                val meteringPoint: String,
+@Serializable
+data class DocumentResponseAttributes(
+    val status: String,
+    val createdAt: String,
+    val updatedAt: String
+) : JsonApiAttributes
+
+@Serializable
+data class DocumentRelationships(
+    val requestedBy: JsonApiRelationshipToOne,
+    val requestedTo: JsonApiRelationshipToOne
+) : JsonApiRelationships
+
+typealias PostAuthorizationDocumentRequest = JsonApiRequest.SingleDocumentWithRelationships<DocumentRequestAttributes, DocumentRelationships>
+typealias PostAuthorizationDocumentResponse = JsonApiResponse.SingleDocumentWithRelationships<DocumentResponseAttributes, DocumentRelationships>
+
+fun AuthorizationDocument.toPostAuthorizationDocumentResponse(): PostAuthorizationDocumentResponse {
+    val attributes = DocumentResponseAttributes(
+        status = this.status.toString(),
+        createdAt = this.createdAt.toString(),
+        updatedAt = this.updatedAt.toString()
+    )
+
+    val relationships = DocumentRelationships(
+        requestedBy = JsonApiRelationshipToOne(
+            data = JsonApiRelationshipData(
+                id = this.requestedBy,
+                type = "User"
             )
-
-            @Serializable
-            data class Relationships(
-                val requestedBy: RelationshipLink,
-                val requestedTo: RelationshipLink,
+        ),
+        requestedTo = JsonApiRelationshipToOne(
+            data = JsonApiRelationshipData(
+                id = this.requestedTo,
+                type = "User"
             )
-        }
-    }
+        )
+    )
 
-    @Serializable
-    data class Response(
-        val data: Data
-    ) {
-        @Serializable
-        data class Data(
-            val type: String,
-            val id: String,
-            val attributes: Attributes,
-            val relationships: Relationships
-        ) {
-            @Serializable
-            data class Attributes(
-                val status: String,
-                val createdAt: String,
-                val updatedAt: String
-            )
-
-            @Serializable
-            data class Relationships(
-                val requestedBy: RelationshipLink,
-                val requestedTo: RelationshipLink,
-            )
-        }
-    }
+    return PostAuthorizationDocumentResponse(
+        data = JsonApiResponseResourceObjectWithRelationships(
+            type = "AuthorizationDocument",
+            id = this.id.toString(),
+            attributes = attributes,
+            relationships = relationships
+        )
+    )
 }

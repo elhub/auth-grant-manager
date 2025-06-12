@@ -6,7 +6,9 @@ import no.elhub.auth.extensions.PostgresTestContainerExtension
 import no.elhub.auth.model.AuthorizationDocument
 import no.elhub.auth.model.AuthorizationDocumentScopes
 import no.elhub.auth.model.AuthorizationScopes
-import no.elhub.auth.model.RelationshipLink
+import no.elhub.devxp.jsonapi.model.JsonApiRelationshipData
+import no.elhub.devxp.jsonapi.model.JsonApiRelationshipToOne
+import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObjectWithRelationships
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -30,20 +32,19 @@ class AuthorizationDocumentRepositoryTest :
                 // Given
                 val document =
                     AuthorizationDocument.of(
-                        PostAuthorizationDocument.Request(
-                            data =
-                                PostAuthorizationDocument.Request.Data(
-                                    type = "authorization_document",
-                                    attributes =
-                                        PostAuthorizationDocument.Request.Data.Attributes(
-                                            meteringPoint = "1234",
-                                        ),
-                                    relationships =
-                                        PostAuthorizationDocument.Request.Data.Relationships(
-                                            requestedBy = RelationshipLink(RelationshipLink.DataLink("12345678901", "User")),
-                                            requestedTo = RelationshipLink(RelationshipLink.DataLink("98765432109", "User")),
-                                        ),
-                                ),
+                        PostAuthorizationDocumentRequest(
+                            data = JsonApiRequestResourceObjectWithRelationships(
+                                type = "authorization_document",
+                                attributes = DocumentRequestAttributes(meteringPoint = "1234"),
+                                relationships = DocumentRelationships(
+                                    requestedBy = JsonApiRelationshipToOne(
+                                        data = JsonApiRelationshipData(type = "User", id = "12345678901")
+                                    ),
+                                    requestedTo = JsonApiRelationshipToOne(
+                                        data = JsonApiRelationshipData(type = "User", id = "12345678901")
+                                    )
+                                )
+                            )
                         ),
                         byteArrayOf(),
                     )

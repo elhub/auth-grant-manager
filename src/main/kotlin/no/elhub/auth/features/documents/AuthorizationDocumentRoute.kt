@@ -11,41 +11,16 @@ import io.ktor.server.routing.patch
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import no.elhub.auth.config.ID
-import no.elhub.auth.model.RelationshipLink
 import java.util.*
 
 fun Route.documentRoutes(documentService: AuthorizationDocumentHandler) {
     post {
-        val requestBody = call.receive<PostAuthorizationDocument.Request>()
+        val requestBody = call.receive<PostAuthorizationDocumentRequest>()
         val authorizationDocument = documentService.postDocument(requestBody)
 
-        val response = PostAuthorizationDocument.Response(
-            data = PostAuthorizationDocument.Response.Data(
-                id = authorizationDocument.id.toString(),
-                type = "AuthorizationDocument",
-                attributes = PostAuthorizationDocument.Response.Data.Attributes(
-                    createdAt = authorizationDocument.createdAt.toString(),
-                    updatedAt = authorizationDocument.updatedAt.toString(),
-                    status = authorizationDocument.status.toString()
-                ),
-                relationships = PostAuthorizationDocument.Response.Data.Relationships(
-                    requestedBy = RelationshipLink(
-                        data = RelationshipLink.DataLink(
-                            id = authorizationDocument.requestedBy,
-                            type = "User"
-                        )
-                    ),
-                    requestedTo = RelationshipLink(
-                        data = RelationshipLink.DataLink(
-                            id = authorizationDocument.requestedTo,
-                            type = "User"
-                        )
-                    ),
-                )
+        val responseBody = authorizationDocument.toPostAuthorizationDocumentResponse()
 
-            ),
-        )
-        call.respond(status = HttpStatusCode.Created, message = response)
+        call.respond(status = HttpStatusCode.Created, message = responseBody)
     }
 
     route("/{$ID}") {
