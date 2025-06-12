@@ -37,6 +37,8 @@ dependencies {
     implementation(libs.bundles.monitoring)
     // JSON validation
     implementation(libs.json.skema)
+
+    implementation(libs.elhub.json.wrapper)
     // Unit Testing
     testImplementation(libs.database.postgresql)
     testImplementation(libs.test.mockk)

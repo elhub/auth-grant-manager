@@ -16,10 +16,10 @@ class AuthorizationDocumentHandler {
         call.respond(status = HttpStatusCode.OK, message = ResponseMeta())
     }
 
-    fun postDocument(authorizationDocumentRequest: PostAuthorizationDocument.Request): AuthorizationDocument {
+    fun postDocument(authorizationDocumentRequest: PostAuthorizationDocumentRequest): AuthorizationDocument {
         val pdfBytes = PdfGenerator.createChangeOfSupplierConfirmationPdf(
-            authorizationDocumentRequest.data.relationships.requestedTo.data.id,
-            authorizationDocumentRequest.data.relationships.requestedBy.data.id
+            snn = authorizationDocumentRequest.data.relationships.requestedTo.data.id,
+            supplier = authorizationDocumentRequest.data.relationships.requestedBy.data.id
         )
         val authorizationDocument = AuthorizationDocument.of(authorizationDocumentRequest, pdfBytes)
         AuthorizationDocumentRepository.insertDocument(authorizationDocument)
