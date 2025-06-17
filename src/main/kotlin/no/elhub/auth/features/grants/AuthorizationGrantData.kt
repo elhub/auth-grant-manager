@@ -1,71 +1,106 @@
 package no.elhub.auth.features.grants
 
-import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable
 import no.elhub.auth.model.AuthorizationGrant
-import no.elhub.auth.model.GrantStatus
-import no.elhub.auth.model.RelationshipLink
+import no.elhub.devxp.jsonapi.model.JsonApiAttributes
+import no.elhub.devxp.jsonapi.model.JsonApiRelationshipData
+import no.elhub.devxp.jsonapi.model.JsonApiRelationshipToOne
+import no.elhub.devxp.jsonapi.model.JsonApiRelationships
+import no.elhub.devxp.jsonapi.response.JsonApiResponse
+import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObjectWithRelationships
 
 @Serializable
-data class AuthorizationGrantData(
-    val id: String,
-    val type: String = "AuthorizationGrant",
-    val attributes: Attributes,
-    val relationships: Relationships,
-) {
-    @Serializable
-    data class Attributes(
-        val status: GrantStatus,
-        val grantedAt: LocalDateTime,
-        val validFrom: LocalDateTime,
-        val validTo: LocalDateTime,
+data class GrantResponseAttributes(
+    val status: String,
+    val grantedAt: String,
+    val validFrom: String,
+    val validTo: String,
+) : JsonApiAttributes
+
+@Serializable
+data class GrantRelationships(
+    val grantedFor: JsonApiRelationshipToOne,
+    val grantedBy: JsonApiRelationshipToOne,
+    val grantedTo: JsonApiRelationshipToOne,
+) : JsonApiRelationships
+
+typealias AuthorizationGrantResponse = JsonApiResponse.SingleDocumentWithRelationships<GrantResponseAttributes, GrantRelationships>
+typealias AuthorizationGrantsResponse = JsonApiResponse.CollectionDocumentWithRelationships<GrantResponseAttributes, GrantRelationships>
+
+fun AuthorizationGrant.toGetAuthorizationGrantResponse(): AuthorizationGrantResponse {
+    val attributes = GrantResponseAttributes(
+        status = this.grantStatus.toString(),
+        grantedAt = this.grantedAt.toString(),
+        validFrom = this.validFrom.toString(),
+        validTo = this.validTo.toString()
     )
 
-    @Serializable
-    data class Relationships(
-        val grantedFor: RelationshipLink,
-        val grantedBy: RelationshipLink,
-        val grantedTo: RelationshipLink,
-    )
-
-    companion object {
-        fun from(grant: AuthorizationGrant): AuthorizationGrantData =
-            AuthorizationGrantData(
-                id = grant.id,
-                attributes =
-                    Attributes(
-                        status = grant.grantStatus,
-                        grantedAt = grant.grantedAt,
-                        validFrom = grant.validFrom,
-                        validTo = grant.validTo,
-                    ),
-                relationships =
-                    Relationships(
-                        grantedFor =
-                            RelationshipLink(
-                                data =
-                                    RelationshipLink.DataLink(
-                                        id = grant.grantedFor,
-                                        type = "Person",
-                                    ),
-                            ),
-                        grantedBy =
-                            RelationshipLink(
-                                data =
-                                    RelationshipLink.DataLink(
-                                        id = grant.grantedBy,
-                                        type = "Person",
-                                    ),
-                            ),
-                        grantedTo =
-                            RelationshipLink(
-                                data =
-                                    RelationshipLink.DataLink(
-                                        id = grant.grantedTo,
-                                        type = "Organization",
-                                    ),
-                            ),
-                    ),
+    val relationships = GrantRelationships(
+        grantedFor = JsonApiRelationshipToOne(
+            data = JsonApiRelationshipData(
+                id = this.grantedFor,
+                type = "Person"
             )
-    }
+        ),
+        grantedBy = JsonApiRelationshipToOne(
+            data = JsonApiRelationshipData(
+                id = this.grantedBy,
+                type = "Person"
+            )
+        ),
+        grantedTo = JsonApiRelationshipToOne(
+            data = JsonApiRelationshipData(
+                id = this.grantedTo,
+                type = "Organization"
+            )
+        )
+    )
+
+    return AuthorizationGrantResponse(
+        data = JsonApiResponseResourceObjectWithRelationships(
+            type = "AuthorizationGrant",
+            id = this.id,
+            attributes = attributes,
+            relationships = relationships,
+        )
+    )
 }
+
+fun List<AuthorizationGrant>.toGetAuthorizationGrantsResponse(): AuthorizationGrantsResponse = AuthorizationGrantsResponse(
+    data = this.map { authorizationGrant ->
+        val attributes = GrantResponseAttributes(
+            status = authorizationGrant.grantStatus.toString(),
+            grantedAt = authorizationGrant.grantedAt.toString(),
+            validFrom = authorizationGrant.validFrom.toString(),
+            validTo = authorizationGrant.validTo.toString()
+        )
+
+        val relationships = GrantRelationships(
+            grantedFor = JsonApiRelationshipToOne(
+                data = JsonApiRelationshipData(
+                    id = authorizationGrant.grantedFor,
+                    type = "Person"
+                )
+            ),
+            grantedBy = JsonApiRelationshipToOne(
+                data = JsonApiRelationshipData(
+                    id = authorizationGrant.grantedBy,
+                    type = "Person"
+                )
+            ),
+            grantedTo = JsonApiRelationshipToOne(
+                data = JsonApiRelationshipData(
+                    id = authorizationGrant.grantedTo,
+                    type = "Organization"
+                )
+            )
+        )
+
+        JsonApiResponseResourceObjectWithRelationships(
+            type = "AuthorizationGrant",
+            id = authorizationGrant.id,
+            attributes = attributes,
+            relationships = relationships
+        )
+    }
+)
