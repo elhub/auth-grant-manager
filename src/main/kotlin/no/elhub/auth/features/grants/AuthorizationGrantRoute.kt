@@ -41,9 +41,9 @@ fun Route.grants(grantHandler: AuthorizationGrantHandler) {
                 ifRight = { grants ->
                     call.respond(
                         status = HttpStatusCode.OK,
-                        message = AuthorizationGrantResponseCollection.from(grants, call.url()),
+                        message = grants.toGetAuthorizationGrantsResponse()
                     )
-                },
+                }
             )
         }
 
@@ -79,7 +79,7 @@ fun Route.grants(grantHandler: AuthorizationGrantHandler) {
                 ifRight = { result ->
                     call.respond(
                         status = HttpStatusCode.OK,
-                        message = AuthorizationGrantResponse.from(result, selfLink = call.url()),
+                        message = result.toGetAuthorizationGrantResponse()
                     )
                 },
             )

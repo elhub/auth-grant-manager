@@ -55,7 +55,7 @@ class AuthorizationGrantRouteTest :
             it("should return 200 OK on a valid ID") {
                 val response = testApp.client.get("$AUTHORIZATION_GRANT/123e4567-e89b-12d3-a456-426614174000")
                 response.status shouldBe HttpStatusCode.OK
-
+                println("NISSE: ${response.bodyAsText()}")
                 val responseJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
                 responseJson.validate {
                     "data" {
@@ -87,12 +87,6 @@ class AuthorizationGrantRouteTest :
                                 }
                             }
                         }
-                    }
-                    "links" {
-                        "self" shouldBe "http://localhost/authorization-grants/123e4567-e89b-12d3-a456-426614174000"
-                    }
-                    "meta" {
-                        "createdAt".shouldNotBeNull()
                     }
                 }
             }
@@ -188,12 +182,6 @@ class AuthorizationGrantRouteTest :
                                 }
                             }
                         }
-                    }
-                    "links" {
-                        "self" shouldBe "http://localhost/authorization-grants"
-                    }
-                    "meta" {
-                        "createdAt".shouldNotBeNull()
                     }
                 }
             }
