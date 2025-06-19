@@ -18,7 +18,7 @@ class AuthorizationDocumentRepositoryTest :
         extensions(PostgresTestContainerExtension)
         val repository = AuthorizationDocumentRepository
 
-        beforeTest {
+        beforeSpec {
             Database.connect(
                 url = "jdbc:postgresql://localhost:5432/auth",
                 driver = "org.postgresql.Driver",

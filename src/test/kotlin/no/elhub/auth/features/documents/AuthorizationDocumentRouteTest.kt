@@ -22,7 +22,7 @@ class AuthorizationDocumentRouteTest :
 
         lateinit var testApp: TestApplication
 
-        beforeTest {
+        beforeSpec {
             testApp = defaultTestApplication()
         }
 
