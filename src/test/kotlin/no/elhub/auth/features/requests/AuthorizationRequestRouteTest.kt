@@ -26,11 +26,11 @@ class AuthorizationRequestRouteTest :
 
         lateinit var testApp: TestApplication
 
-        beforeTest {
+        beforeSpec {
             testApp = defaultTestApplication()
         }
 
-        afterTest {
+        afterSpec {
             testApp.stop()
         }
 
