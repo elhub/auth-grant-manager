@@ -11,3 +11,13 @@ ktor:
     password: "$APP_PASSWORD"
     hikari:
       maximumPoolSize: 3
+
+pdfSigner:
+  # HashiCorp Vault settings
+  vault:
+    url: ${VAULT_URL}
+    key: ${VAULT_KEY}
+    token: ${VAULT_TOKEN}
+  certificate:
+    signing: ${PATH_TO_SIGNING_CERTIFICATE}
+    chain: ${PATH_TO_SIGNING_CERTIFICATE_CHAIN}

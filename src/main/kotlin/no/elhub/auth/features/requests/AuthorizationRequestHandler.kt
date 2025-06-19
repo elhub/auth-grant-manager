@@ -21,10 +21,8 @@ import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.insertAndGetId
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
-import org.koin.core.annotation.Single
-import java.util.*
+import java.util.UUID
 
-@Single
 class AuthorizationRequestHandler {
 
     fun createRequest(request: AuthorizationRequestRequest): Either<ApiError, AuthorizationRequest> = either {
