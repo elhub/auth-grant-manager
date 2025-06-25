@@ -11,6 +11,7 @@ import no.elhub.auth.config.ID
 import no.elhub.auth.features.errors.ApiError
 import no.elhub.auth.features.errors.ApiErrorJson
 import no.elhub.auth.features.utils.validateId
+import toGetAuthorizationScopesResponse
 import java.util.UUID
 
 fun Route.grants(grantHandler: AuthorizationGrantHandler) {
@@ -80,6 +81,47 @@ fun Route.grants(grantHandler: AuthorizationGrantHandler) {
                     call.respond(
                         status = HttpStatusCode.OK,
                         message = result.toGetAuthorizationGrantResponse()
+                    )
+                },
+            )
+        }
+
+        get("/{$ID}/scopes") {
+            val id: UUID =
+                validateId(call.parameters[ID]).getOrElse { error ->
+                    call.respond(HttpStatusCode.fromValue(error.status), ApiErrorJson.from(error, call.url()))
+                    return@get
+                }
+
+            grantHandler.getGrantScopesById(id).fold(
+                ifLeft = { authGrantProblem ->
+                    when (authGrantProblem) {
+                        is AuthorizationGrantProblem.NotFoundError ->
+                            call.respond(
+                                HttpStatusCode.NotFound,
+                                ApiErrorJson.from(
+                                    ApiError.NotFound(detail = "Authorization scope for grant with id=$id not found"),
+                                    call.url(),
+                                ),
+                            )
+
+                        is AuthorizationGrantProblem.DataBaseError, AuthorizationGrantProblem.UnexpectedError ->
+                            call.respond(
+                                HttpStatusCode.InternalServerError,
+                                ApiErrorJson.from(
+                                    ApiError.InternalServerError(
+                                        detail = "Unexpected error occurred during fetch authorization scopes " +
+                                            "for authorization grant with id=$id"
+                                    ),
+                                    call.url(),
+                                ),
+                            )
+                    }
+                },
+                ifRight = { result ->
+                    call.respond(
+                        status = HttpStatusCode.OK,
+                        message = result.toGetAuthorizationScopesResponse()
                     )
                 },
             )
