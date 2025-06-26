@@ -52,7 +52,6 @@ object AuthorizationGrantRepository {
             AuthorizationGrantProblem.UnexpectedError.left()
         }
 
-
     fun findScopesById(grantId: UUID): Either<AuthorizationGrantProblem, List<AuthorizationScope>> = try {
         transaction {
             AuthorizationGrant.Entity
@@ -81,5 +80,4 @@ object AuthorizationGrantRepository {
         logger.error("Unknown error occurred during fetch scope by id: ${exp.message}")
         AuthorizationGrantProblem.UnexpectedError.left()
     }
-
 }
