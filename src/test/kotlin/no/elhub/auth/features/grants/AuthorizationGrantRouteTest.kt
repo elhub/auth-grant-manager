@@ -16,10 +16,11 @@ import no.elhub.auth.validate
 
 class AuthorizationGrantRouteTest :
     DescribeSpec({
-        extensions(PostgresTestContainerExtension)
-        extensions(RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-grants.sql"))
-        extensions(RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-scopes.sql"))
-        extensions(RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-grant-scopes.sql"))
+        extensions(
+            PostgresTestContainerExtension,
+            RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-grants.sql"),
+            RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-scopes.sql"),
+            RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-grant-scopes.sql"))
 
         lateinit var testApp: TestApplication
 
