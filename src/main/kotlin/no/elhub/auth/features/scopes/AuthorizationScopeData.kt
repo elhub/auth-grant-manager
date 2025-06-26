@@ -1,19 +1,17 @@
+import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
-import no.elhub.auth.features.utils.Serializers
 import no.elhub.auth.model.AuthorizationResourceType
 import no.elhub.auth.model.AuthorizationScope
 import no.elhub.auth.model.PermissionType
 import no.elhub.devxp.jsonapi.model.JsonApiAttributes
 import no.elhub.devxp.jsonapi.response.JsonApiResponse
 import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObject
-import java.time.Instant
 
 @Serializable
 data class ScopeResponseAttributes(
     val authorizedResourceType: AuthorizationResourceType,
     val authorizedResourceId: String,
     val permissionType: PermissionType,
-    @Serializable(with = Serializers.InstantSerializer::class)
     val createdAt: Instant
 ) : JsonApiAttributes
 

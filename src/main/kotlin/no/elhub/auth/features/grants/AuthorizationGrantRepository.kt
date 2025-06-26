@@ -12,6 +12,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.slf4j.LoggerFactory
 import java.sql.SQLException
 import java.util.UUID
+import kotlinx.datetime.Instant as KxInstant
 
 object AuthorizationGrantRepository {
 
@@ -68,7 +69,7 @@ object AuthorizationGrantRepository {
                                 authorizedResourceId = row[AuthorizationScopes.authorizedResourceId],
                                 authorizedResourceType = row[AuthorizationScopes.authorizedResourceType],
                                 permissionType = row[AuthorizationScopes.permissionType],
-                                createdAt = row[AuthorizationScopes.createdAt]
+                                createdAt = KxInstant.parse(row[AuthorizationScopes.createdAt].toString())
                             )
                         }
                 }
