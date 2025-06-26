@@ -3,6 +3,7 @@ package no.elhub.auth.features.grants
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
+import kotlinx.datetime.Instant
 import no.elhub.auth.model.AuthorizationGrant
 import no.elhub.auth.model.AuthorizationGrantScopes
 import no.elhub.auth.model.AuthorizationScope
@@ -12,7 +13,6 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.slf4j.LoggerFactory
 import java.sql.SQLException
 import java.util.UUID
-import kotlinx.datetime.Instant as KxInstant
 
 object AuthorizationGrantRepository {
 
@@ -69,7 +69,7 @@ object AuthorizationGrantRepository {
                                 authorizedResourceId = row[AuthorizationScopes.authorizedResourceId],
                                 authorizedResourceType = row[AuthorizationScopes.authorizedResourceType],
                                 permissionType = row[AuthorizationScopes.permissionType],
-                                createdAt = KxInstant.parse(row[AuthorizationScopes.createdAt].toString())
+                                createdAt = Instant.parse(row[AuthorizationScopes.createdAt].toString())
                             )
                         }
                 }
