@@ -52,31 +52,34 @@ object AuthorizationGrantRepository {
             AuthorizationGrantProblem.UnexpectedError.left()
         }
 
-    fun findScopesById(grantId: UUID): Either<AuthorizationGrantProblem, List<AuthorizationScope>> {
-        return try {
-            val scopes = transaction {
-                // if no rows are found, the grant does not exist (since every grant must have at least one scope)
-                (AuthorizationGrantScopes innerJoin AuthorizationScopes)
-                    .selectAll()
-                    .where { AuthorizationGrantScopes.authorizationGrantId eq grantId }
-                    .map { row ->
-                        AuthorizationScope(
-                            id = row[AuthorizationScopes.id].value,
-                            authorizedResourceId = row[AuthorizationScopes.authorizedResourceId],
-                            authorizedResourceType = row[AuthorizationScopes.authorizedResourceType],
-                            permissionType = row[AuthorizationScopes.permissionType],
-                            createdAt = row[AuthorizationScopes.createdAt]
-                        )
-                    }
-            }
 
-            scopes.ifEmpty { return AuthorizationGrantProblem.NotFoundError.left() }.right()
-        } catch (sqlEx: SQLException) {
-            logger.error("SQL error occurred during fetch scope by id': ${sqlEx.message}")
-            return AuthorizationGrantProblem.DataBaseError.left()
-        } catch (exp: Exception) {
-            logger.error("Unknown error occurred during fetch scope by id: ${exp.message}")
-            return AuthorizationGrantProblem.UnexpectedError.left()
-        }
+    fun findScopesById(grantId: UUID): Either<AuthorizationGrantProblem, List<AuthorizationScope>> = try {
+        transaction {
+            AuthorizationGrant.Entity
+                .selectAll()
+                .where { AuthorizationGrant.Entity.id eq grantId }
+                .singleOrNull()
+                ?.let {
+                    (AuthorizationGrantScopes innerJoin AuthorizationScopes)
+                        .selectAll()
+                        .where { AuthorizationGrantScopes.authorizationGrantId eq grantId }
+                        .map { row ->
+                            AuthorizationScope(
+                                id = row[AuthorizationScopes.id].value,
+                                authorizedResourceId = row[AuthorizationScopes.authorizedResourceId],
+                                authorizedResourceType = row[AuthorizationScopes.authorizedResourceType],
+                                permissionType = row[AuthorizationScopes.permissionType],
+                                createdAt = row[AuthorizationScopes.createdAt]
+                            )
+                        }
+                }
+        }?.right() ?: AuthorizationGrantProblem.NotFoundError.left()
+    } catch (sqlEx: SQLException) {
+        logger.error("SQL error occurred during fetch scope by id': ${sqlEx.message}")
+        AuthorizationGrantProblem.DataBaseError.left()
+    } catch (exp: Exception) {
+        logger.error("Unknown error occurred during fetch scope by id: ${exp.message}")
+        AuthorizationGrantProblem.UnexpectedError.left()
     }
+
 }

@@ -137,6 +137,17 @@ class AuthorizationGrantRouteTest :
                 }
             }
 
+            it("should return 200 OK and an empty list for a grant with no authorization scopes") {
+                val response = testApp.client.get("$AUTHORIZATION_GRANT/a8f9c2e4-5a3d-4e2b-9c1a-8f6e2d3c4b5a/scopes")
+                response.status shouldBe HttpStatusCode.OK
+
+                val responseJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+
+                responseJson.validate {
+                    "data".shouldBeList(size = 0) {}
+                }
+            }
+
             it("should return 200 OK on a valid ID and multiple authorization scope") {
                 val response = testApp.client.get("$AUTHORIZATION_GRANT/b7f9c2e4-5a3d-4e2b-9c1a-8f6e2d3c4b5a/scopes")
                 response.status shouldBe HttpStatusCode.OK
@@ -229,7 +240,7 @@ class AuthorizationGrantRouteTest :
 
                 val responseJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
                 responseJson.validate {
-                    "data".shouldBeList(size = 2) {
+                    "data".shouldBeList(size = 3) {
                         item(0) {
                             "id".shouldNotBeNull()
                             "type" shouldBe "AuthorizationGrant"
@@ -285,6 +296,36 @@ class AuthorizationGrantRouteTest :
                                 "grantedTo" {
                                     "data" {
                                         "id" shouldBe "2222222222222222"
+                                        "type" shouldBe "Organization"
+                                    }
+                                }
+                            }
+                        }
+                        item(2) {
+                            "id".shouldNotBeNull()
+                            "type" shouldBe "AuthorizationGrant"
+                            "attributes" {
+                                "status" shouldBe "Revoked"
+                                "grantedAt" shouldBe "2025-01-04T03:00"
+                                "validFrom" shouldBe "2025-02-03T17:07"
+                                "validTo" shouldBe "2025-05-16T04:00"
+                            }
+                            "relationships" {
+                                "grantedFor" {
+                                    "data" {
+                                        "id" shouldBe "4444444444444444"
+                                        "type" shouldBe "Person"
+                                    }
+                                }
+                                "grantedBy" {
+                                    "data" {
+                                        "id" shouldBe "3333333333333333"
+                                        "type" shouldBe "Person"
+                                    }
+                                }
+                                "grantedTo" {
+                                    "data" {
+                                        "id" shouldBe "5555555555555555"
                                         "type" shouldBe "Organization"
                                     }
                                 }
