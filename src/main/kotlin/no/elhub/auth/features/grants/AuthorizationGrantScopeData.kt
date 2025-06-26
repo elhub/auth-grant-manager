@@ -8,18 +8,18 @@ import no.elhub.devxp.jsonapi.response.JsonApiResponse
 import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObject
 
 @Serializable
-data class ScopeResponseAttributes(
+data class AuthorizationGrantScopeAttributes(
     val authorizedResourceType: AuthorizationResourceType,
     val authorizedResourceId: String,
     val permissionType: PermissionType,
     val createdAt: Instant
 ) : JsonApiAttributes
 
-typealias AuthorizationScopesResponse = JsonApiResponse.CollectionDocument<ScopeResponseAttributes>
+typealias AuthorizationScopesResponse = JsonApiResponse.CollectionDocument<AuthorizationGrantScopeAttributes>
 
-fun List<AuthorizationScope>.toGetAuthorizationScopesResponse(): AuthorizationScopesResponse = AuthorizationScopesResponse(
+fun List<AuthorizationScope>.toGetAuthorizationGrantScopeResponse(): AuthorizationScopesResponse = AuthorizationScopesResponse(
     data = this.map { authorizationScope ->
-        val attributes = ScopeResponseAttributes(
+        val attributes = AuthorizationGrantScopeAttributes(
             authorizedResourceType = authorizationScope.authorizedResourceType,
             authorizedResourceId = authorizationScope.authorizedResourceId,
             permissionType = authorizationScope.permissionType,

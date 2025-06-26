@@ -11,7 +11,7 @@ import no.elhub.auth.config.ID
 import no.elhub.auth.features.errors.ApiError
 import no.elhub.auth.features.errors.ApiErrorJson
 import no.elhub.auth.features.utils.validateId
-import toGetAuthorizationScopesResponse
+import toGetAuthorizationGrantScopeResponse
 import java.util.UUID
 
 fun Route.grants(grantHandler: AuthorizationGrantHandler) {
@@ -121,7 +121,7 @@ fun Route.grants(grantHandler: AuthorizationGrantHandler) {
                 ifRight = { result ->
                     call.respond(
                         status = HttpStatusCode.OK,
-                        message = result.toGetAuthorizationScopesResponse()
+                        message = result.toGetAuthorizationGrantScopeResponse()
                     )
                 },
             )
