@@ -201,6 +201,8 @@ paths:
             application/json:
               schema:
                 $ref: "/schemas/authorization-scope-get-list-response.schema.json"
+        "400":
+          $ref: "#/components/responses/400BadRequestError"
         "401":
           $ref: "#/components/responses/401UnauthorizedError"
         "404":

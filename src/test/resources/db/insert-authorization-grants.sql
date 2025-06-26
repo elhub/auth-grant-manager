@@ -17,4 +17,12 @@ VALUES('b7f9c2e4-5a3d-4e2b-9c1a-8f6e2d3c4b5a',
     'Expired',
     '2023-04-04 02:00:00+00',
     '2024-04-04 02:00:00+00');
-
+INSERT INTO auth.authorization_grant (id, granted_for, granted_by, granted_to, granted_at, status, valid_from, valid_to)
+VALUES('a8f9c2e4-5a3d-4e2b-9c1a-8f6e2d3c4b5a',
+       '4444444444444444',
+       '3333333333333333',
+       '5555555555555555',
+       '2025-01-04 02:00:00+00',
+       'Revoked',
+       '2025-02-03 16:07:00+00',
+       '2025-05-16 02:00:00+00');
