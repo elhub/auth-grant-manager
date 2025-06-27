@@ -20,7 +20,8 @@ class AuthorizationGrantRouteTest :
             PostgresTestContainerExtension,
             RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-grants.sql"),
             RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-scopes.sql"),
-            RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-grant-scopes.sql")
+            RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-grant-scopes.sql"),
+            RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-party.sql")
         )
 
         lateinit var testApp: TestApplication
@@ -74,20 +75,40 @@ class AuthorizationGrantRouteTest :
                             "grantedFor" {
                                 "data" {
                                     "id" shouldBe "1111111111111111"
-                                    "type" shouldBe "Person"
+                                    "type" shouldBe "authorizationParty"
                                 }
                             }
                             "grantedBy" {
                                 "data" {
                                     "id" shouldBe "1111111111111111"
-                                    "type" shouldBe "Person"
+                                    "type" shouldBe "authorizationParty"
                                 }
                             }
                             "grantedTo" {
                                 "data" {
                                     "id" shouldBe "2222222222222222"
-                                    "type" shouldBe "Organization"
+                                    "type" shouldBe "authorizationParty"
                                 }
+                            }
+                        }
+                    }
+                    "included".shouldBeList(size = 2) {
+                        item(0) {
+                            "type" shouldBe "authorizationParty"
+                            "id" shouldBe "1111111111111111"
+                            "attributes" {
+                                "partyType" shouldBe "ElhubPersonId"
+                                "descriptor" shouldBe "12345678901"
+                                "createdAt" shouldBe "2024-06-27T13:00:00Z"
+                            }
+                        }
+                        item(1) {
+                            "type" shouldBe "authorizationParty"
+                            "id" shouldBe "2222222222222222"
+                            "attributes" {
+                                "partyType" shouldBe "OrganizationNumber"
+                                "descriptor" shouldBe "987654321"
+                                "createdAt" shouldBe "2024-06-27T11:05:00Z"
                             }
                         }
                     }
@@ -239,7 +260,6 @@ class AuthorizationGrantRouteTest :
             it("should return 200 OK") {
                 val response = testApp.client.get(AUTHORIZATION_GRANT)
                 response.status shouldBe HttpStatusCode.OK
-
                 val responseJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
                 responseJson.validate {
                     "data".shouldBeList(size = 3) {
@@ -256,19 +276,19 @@ class AuthorizationGrantRouteTest :
                                 "grantedFor" {
                                     "data" {
                                         "id" shouldBe "1111111111111111"
-                                        "type" shouldBe "Person"
+                                        "type" shouldBe "authorizationParty"
                                     }
                                 }
                                 "grantedBy" {
                                     "data" {
                                         "id" shouldBe "1111111111111111"
-                                        "type" shouldBe "Person"
+                                        "type" shouldBe "authorizationParty"
                                     }
                                 }
                                 "grantedTo" {
                                     "data" {
                                         "id" shouldBe "2222222222222222"
-                                        "type" shouldBe "Organization"
+                                        "type" shouldBe "authorizationParty"
                                     }
                                 }
                             }
@@ -286,19 +306,19 @@ class AuthorizationGrantRouteTest :
                                 "grantedFor" {
                                     "data" {
                                         "id" shouldBe "3333333333333333"
-                                        "type" shouldBe "Person"
+                                        "type" shouldBe "authorizationParty"
                                     }
                                 }
                                 "grantedBy" {
                                     "data" {
                                         "id" shouldBe "3333333333333333"
-                                        "type" shouldBe "Person"
+                                        "type" shouldBe "authorizationParty"
                                     }
                                 }
                                 "grantedTo" {
                                     "data" {
                                         "id" shouldBe "2222222222222222"
-                                        "type" shouldBe "Organization"
+                                        "type" shouldBe "authorizationParty"
                                     }
                                 }
                             }
@@ -316,21 +336,68 @@ class AuthorizationGrantRouteTest :
                                 "grantedFor" {
                                     "data" {
                                         "id" shouldBe "4444444444444444"
-                                        "type" shouldBe "Person"
+                                        "type" shouldBe "authorizationParty"
                                     }
                                 }
                                 "grantedBy" {
                                     "data" {
                                         "id" shouldBe "3333333333333333"
-                                        "type" shouldBe "Person"
+                                        "type" shouldBe "authorizationParty"
                                     }
                                 }
                                 "grantedTo" {
                                     "data" {
                                         "id" shouldBe "5555555555555555"
-                                        "type" shouldBe "Organization"
+                                        "type" shouldBe "authorizationParty"
                                     }
                                 }
+                            }
+                        }
+                    }
+                    "included".shouldBeList(size = 5) {
+                        item(0) {
+                            "type" shouldBe "authorizationParty"
+                            "id" shouldBe "1111111111111111"
+                            "attributes" {
+                                "partyType" shouldBe "ElhubPersonId"
+                                "descriptor" shouldBe "12345678901"
+                                "createdAt" shouldBe "2024-06-27T13:00:00Z"
+                            }
+                        }
+                        item(1) {
+                            "type" shouldBe "authorizationParty"
+                            "id" shouldBe "2222222222222222"
+                            "attributes" {
+                                "partyType" shouldBe "OrganizationNumber"
+                                "descriptor" shouldBe "987654321"
+                                "createdAt" shouldBe "2024-06-27T11:05:00Z"
+                            }
+                        }
+                        item(2) {
+                            "type" shouldBe "authorizationParty"
+                            "id" shouldBe "3333333333333333"
+                            "attributes" {
+                                "partyType" shouldBe "ElhubPersonId"
+                                "descriptor" shouldBe "23456789012"
+                                "createdAt" shouldBe "2024-06-27T11:10:00Z"
+                            }
+                        }
+                        item(3) {
+                            "type" shouldBe "authorizationParty"
+                            "id" shouldBe "4444444444444444"
+                            "attributes" {
+                                "partyType" shouldBe "OrganizationNumber"
+                                "descriptor" shouldBe "123123123"
+                                "createdAt" shouldBe "2024-06-27T11:15:00Z"
+                            }
+                        }
+                        item(4) {
+                            "type" shouldBe "authorizationParty"
+                            "id" shouldBe "5555555555555555"
+                            "attributes" {
+                                "partyType" shouldBe "ElhubPersonId"
+                                "descriptor" shouldBe "34567890123"
+                                "createdAt" shouldBe "2024-06-27T11:20:00Z"
                             }
                         }
                     }

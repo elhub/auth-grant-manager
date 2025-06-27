@@ -11,9 +11,9 @@ import org.jetbrains.exposed.sql.javatime.datetime
 data class AuthorizationGrant(
     val id: String,
     val grantStatus: GrantStatus,
-    val grantedFor: String,
-    val grantedBy: String,
-    val grantedTo: String,
+    val grantedFor: Long,
+    val grantedBy: Long,
+    val grantedTo: Long,
     val grantedAt: LocalDateTime,
     val validFrom: LocalDateTime,
     val validTo: LocalDateTime,
@@ -25,9 +25,9 @@ data class AuthorizationGrant(
                 fromDb = { value -> GrantStatus.valueOf(value as String) },
                 toDb = { PGEnum("authorization_grant_status", it) },
             )
-        val grantedFor = varchar("granted_for", 16)
-        val grantedBy = varchar("granted_by", 16)
-        val grantedTo = varchar("granted_to", 16)
+        val grantedFor = long("granted_for").references(AuthorizationParty.Entity.id)
+        val grantedBy = long("granted_by").references(AuthorizationParty.Entity.id)
+        val grantedTo = long("granted_to").references(AuthorizationParty.Entity.id)
         val grantedAt = datetime("granted_at").defaultExpression(CurrentDateTime)
         val validFrom = datetime("valid_from").defaultExpression(CurrentDateTime)
         val validTo = datetime("valid_to").defaultExpression(CurrentDateTime)
