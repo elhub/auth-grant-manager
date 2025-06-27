@@ -47,7 +47,10 @@ data class PartyAttributes(
 
 const val AUTHORIZATION_PARTY = "authorizationParty" // resource type -> refer to json:api spec v1.1
 
-fun buildIncludedPartiesForGrants(grants: List<AuthorizationGrant>, partyLookup: (Long) -> AuthorizationParty?): List<JsonApiResponseResourceObject<PartyAttributes>> {
+fun buildIncludedPartiesForGrants(
+    grants: List<AuthorizationGrant>,
+    partyLookup: (Long) -> AuthorizationParty?
+): List<JsonApiResponseResourceObject<PartyAttributes>> {
     val partyIds = grants.flatMap { listOf(it.grantedFor, it.grantedBy, it.grantedTo) }.toSet()
     return partyIds.mapNotNull { id ->
         partyLookup(id)?.let { party ->
