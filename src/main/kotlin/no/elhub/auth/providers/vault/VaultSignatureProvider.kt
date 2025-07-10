@@ -7,9 +7,9 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
-import java.util.Base64
 import kotlinx.serialization.Serializable
 import no.elhub.auth.config.VaultConfig
+import java.util.Base64
 
 class VaultSignatureProvider(
     private val client: HttpClient,

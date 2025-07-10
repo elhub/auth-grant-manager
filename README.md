@@ -20,7 +20,7 @@ processing user authorization data. The main objectives are to:
 * Java 17
 * Docker
 * Environment variables for the database connection: `DB_USERNAME` and `DB_PASSWORD`
-    * Run `DB_USERNAME=postgres DB_PASSWORD=postgres ./gradlew ...` to pass the variables to the gradle tasks.
+  * Run `DB_USERNAME=postgres DB_PASSWORD=postgres ./gradlew ...` to pass the variables to the gradle tasks.
 
 ### Building & Running
 
