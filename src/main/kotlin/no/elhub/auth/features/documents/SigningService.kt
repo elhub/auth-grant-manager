@@ -2,7 +2,6 @@ package no.elhub.auth.features.documents
 
 import eu.europa.esig.dss.enumerations.CertificationPermission
 import eu.europa.esig.dss.enumerations.DigestAlgorithm
-import eu.europa.esig.dss.enumerations.SignatureAlgorithm
 import eu.europa.esig.dss.enumerations.SignatureLevel
 import eu.europa.esig.dss.model.DSSDocument
 import eu.europa.esig.dss.model.InMemoryDocument
@@ -39,7 +38,7 @@ class SigningService(
 
         val rawSignature = runBlocking { vaultProvider.sign(toBeSigned.bytes) }
 
-        val signatureValue = SignatureValue(SignatureAlgorithm.RSA_SHA256, rawSignature)
+        val signatureValue = SignatureValue(params.signatureAlgorithm, rawSignature)
 
         val signedDoc = padesService.signDocument(toSignDoc, params, signatureValue)
 

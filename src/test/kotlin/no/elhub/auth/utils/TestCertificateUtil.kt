@@ -15,11 +15,11 @@ object TestCertificateUtil {
         val keyFile = File(Constants.PRIVATE_KEY_LOCATION)
 
         require(certFile.exists()) {
-            "Certificate file is missing: ${certFile.absolutePath}"
+            "Certificate file is missing: ${certFile.absolutePath}, run generateTestCerts task to create it."
         }
 
         require(keyFile.exists()) {
-            "Private key file is missing: ${keyFile.absolutePath}"
+            "Private key file is missing: ${keyFile.absolutePath}, run generateTestCerts task to create it."
         }
     }
 }

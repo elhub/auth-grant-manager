@@ -2,6 +2,7 @@ package no.elhub.auth.features.documents
 
 import eu.europa.esig.dss.enumerations.CertificationPermission
 import eu.europa.esig.dss.enumerations.DigestAlgorithm
+import eu.europa.esig.dss.enumerations.SignatureAlgorithm
 import eu.europa.esig.dss.enumerations.SignatureLevel
 import eu.europa.esig.dss.model.InMemoryDocument
 import eu.europa.esig.dss.pades.validation.PDFDocumentValidator
@@ -58,6 +59,7 @@ class SigningServiceTest : StringSpec({
 
         // Validate signature parameters
         signature.digestAlgorithm shouldBe DigestAlgorithm.SHA256
+        signature.signatureAlgorithm shouldBe SignatureAlgorithm.RSA_SHA256
         signature.signatureFormat shouldBe SignatureLevel.PAdES_BASELINE_B
         signature.pdfRevision.docMDPPermissions shouldBe CertificationPermission.MINIMAL_CHANGES_PERMITTED
         signature.isBLevelTechnicallyValid shouldBe true
