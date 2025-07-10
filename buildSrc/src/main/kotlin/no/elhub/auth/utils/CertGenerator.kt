@@ -48,8 +48,7 @@ fun generateSelfSignedCertificate(baseDirLocation: String) {
 }
 
 fun generateKeyPair(): KeyPair =
-    KeyPairGenerator.getInstance("RSA").apply { initialize(2048) }.genKeyPair()
-
+    KeyPairGenerator.getInstance("Ed25519").genKeyPair()
 fun generateSelfSignedCert(
     subjectDn: String,
     keyPair: KeyPair,
@@ -92,7 +91,7 @@ fun generateSelfSignedCert(
         builder
     }
 
-    val signer = JcaContentSignerBuilder("SHA256WithRSA").build(keyPair.private)
+    val signer = JcaContentSignerBuilder("Ed25519").build(keyPair.private)
     return JcaX509CertificateConverter().getCertificate(withCrl.build(signer))
 }
 
