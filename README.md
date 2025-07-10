@@ -20,7 +20,7 @@ processing user authorization data. The main objectives are to:
 * Java 17
 * Docker
 * Environment variables for the database connection: `DB_USERNAME` and `DB_PASSWORD`
-    * Run `DB_USERNAME=postgres DB_PASSWORD=postgres ./gradlew ...` to pass the variables to the gradle tasks.
+  * Run `DB_USERNAME=postgres DB_PASSWORD=postgres ./gradlew ...` to pass the variables to the gradle tasks.
 
 ### Building & Running
 
@@ -38,10 +38,10 @@ If you run this locally, you will need to have a PostgreSQL database running. Th
 to set up and tear down the database using Docker (Note that both run and test automatically do this under
 normal circumstances):
 
-| Command                         | Description                                                          |
-|---------------------------------|----------------------------------------------------------------------|
-| `./gradlew databaseComposeUp`   | Starts the Postgres container                                        |
-| `./gradlew databaseComposeDown` | Stops and removes the Postgres container                             |
+| Command                         | Description                                                      |
+|---------------------------------|------------------------------------------------------------------|
+| `./gradlew servicesComposeUp`   | Starts the Postgres and Vault Transit mock containers            |
+| `./gradlew servicesComposeDown` | Stops and removes the Postgres and Vault Transit mock containers |
 
 Database operations are carried out using Liquibase. To apply changes to the database, run:
 

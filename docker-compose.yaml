@@ -1,0 +1,16 @@
+services:
+  db:
+    image: postgres:15
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: auth
+      POSTGRES_USER: $DB_USERNAME
+      POSTGRES_PASSWORD: $DB_PASSWORD
+
+  vault-transit-mock:
+    image: docker.jfrog.elhub.cloud/frzq0sxltynr/auth/vault-transit-secrets-engine-mock:0.1.0-2
+    ports:
+      - "8200:8200"
+    volumes:
+      - "${PRIVATE_KEY_PATH}:/key/private.pem:ro"

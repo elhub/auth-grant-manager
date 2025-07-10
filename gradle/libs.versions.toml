@@ -22,7 +22,6 @@ liquibase = "4.33.0"
 liquibase-plugin = "3.0.2"
 micrometer = "1.15.1"
 mockk = "1.14.4"
-openpdf = "2.2.4"
 picocli = "4.7.7"
 postgresql = "42.7.7"
 slf4j = "2.0.17"
@@ -30,6 +29,11 @@ snakeyaml = "2.4"
 testcontainers = "1.21.3"
 mybatis = "3.5.19"
 jsonapi = "0.2.0"
+mustache = "0.9.14"
+openhtmltopdf = "1.1.28"
+pdfbox = "3.0.5"
+dss = "6.2"
+
 
 [plugins]
 elhub-gradle-plugin = { id = "no.elhub.devxp.kotlin-service", version.ref = "elhub-gradle" }
@@ -40,7 +44,7 @@ kotlin-plugin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization"
 liquibase-plugin = { id = "org.liquibase.gradle", version.ref = "liquibase-plugin" }
 
 [libraries]
-elhub-json-wrapper = {group="no.elhub.devxp", name="devxp-json-api-wrapper",  version.ref = "jsonapi" }
+elhub-json-wrapper = { group = "no.elhub.devxp", name = "devxp-json-api-wrapper", version.ref = "jsonapi" }
 cli-picocli = { group = "info.picocli", name = "picocli", version.ref = "picocli" }
 database-exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed" }
 database-exposed-dao = { module = "org.jetbrains.exposed:exposed-dao", version.ref = "exposed" }
@@ -60,10 +64,13 @@ kotlinx-datetime = { group = "org.jetbrains.kotlinx", name = "kotlinx-datetime",
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 ktor-serialization-kotlinx-json = { group = "io.ktor", name = "ktor-serialization-kotlinx-json", version.ref = "ktor" }
 ktor-server-call-logging = { group = "io.ktor", name = "ktor-server-call-logging", version.ref = "ktor" }
-ktor-server-config-yaml = { group="io.ktor", name="ktor-server-config-yaml", version.ref="ktor"}
+ktor-server-config-yaml = { group = "io.ktor", name = "ktor-server-config-yaml", version.ref = "ktor" }
 ktor-server-content-negotiation = { group = "io.ktor", name = "ktor-server-content-negotiation", version.ref = "ktor" }
 ktor-server-core = { group = "io.ktor", name = "ktor-server-core", version.ref = "ktor" }
+ktor-client-cio = { group = "io.ktor", name = "ktor-client-cio", version.ref = "ktor" }
+ktor-client-core = { group = "io.ktor", name = "ktor-client-core", version.ref = "ktor" }
 ktor-server-metrics-micrometer = { group = "io.ktor", name = "ktor-server-metrics-micrometer", version.ref = "ktor" }
+ktor-client-content-negotiation = { group = "io.ktor", name = "ktor-client-content-negotiation", version.ref = "ktor" }
 ktor-server-netty = { group = "io.ktor", name = "ktor-server-netty", version.ref = "ktor" }
 ktor-server-swagger = { group = "io.ktor", name = "ktor-server-swagger", version.ref = "ktor" }
 logging-slf4j-simple = { group = "org.slf4j", name = "slf4j-simple", version.ref = "slf4j" }
@@ -72,7 +79,6 @@ monitoring-cohort-hikari = { group = "com.sksamuel.cohort", name = "cohort-hikar
 monitoring-cohort-ktor = { group = "com.sksamuel.cohort", name = "cohort-ktor", version.ref = "cohort" }
 monitoring-cohort-micrometer = { group = "com.sksamuel.cohort", name = "cohort-micrometer", version.ref = "cohort" }
 monitoring-micrometer-registry-prometheus = { group = "io.micrometer", name = "micrometer-registry-prometheus", version.ref = "micrometer" }
-openpdf = { group = "com.github.librepdf", name = "openpdf", version.ref = "openpdf" }
 serialization-yaml-snakeyaml = { group = "org.yaml", name = "snakeyaml", version.ref = "snakeyaml" }
 test-kotest-assertions-core = { group = "io.kotest", name = "kotest-assertions-core", version.ref = "kotest" }
 test-kotest-assertions-json = { group = "io.kotest", name = "kotest-assertions-json", version.ref = "kotest" }
@@ -82,6 +88,15 @@ test-mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
 test-testcontainers = { group = "org.testcontainers", name = "testcontainers", version.ref = "testcontainers" }
 test-testcontainers-postgres = { group = "org.testcontainers", name = "postgresql", version.ref = "testcontainers" }
 test-mybatis = { group = "org.mybatis", name = "mybatis", version.ref = "mybatis" }
+templating-mustache = { group = "com.github.spullara.mustache.java", name = "compiler", version.ref = "mustache" }
+pdf-openhtmltopdf-pdfbox = { group = "io.github.openhtmltopdf", name = "openhtmltopdf-pdfbox", version.ref = "openhtmltopdf" }
+pdf-pdfbox = { group = "org.apache.pdfbox", name = "pdfbox", version.ref = "pdfbox" }
+dss-pades-pdfbox = { group = "eu.europa.ec.joinup.sd-dss", name = "dss-pades-pdfbox", version.ref = "dss" }
+dss-token = { group = "eu.europa.ec.joinup.sd-dss", name = "dss-token", version.ref = "dss" }
+dss-validation = { group = "eu.europa.ec.joinup.sd-dss", name = "dss-validation", version.ref = "dss" }
+dss-utils-apache-commons = { group = "eu.europa.ec.joinup.sd-dss", name = "dss-utils-apache-commons", version.ref = "dss" }
+dss-crl-parser-stream = { group = "eu.europa.ec.joinup.sd-dss", name = "dss-crl-parser-stream", version.ref = "dss" }
+
 # Bundles should be used to group dependencies that are frequently used together.
 [bundles]
 database = ["database-exposed-core", "database-exposed-dao", "database-exposed-java-time", "database-exposed-jdbc", "database-hikari",
@@ -89,8 +104,11 @@ database = ["database-exposed-core", "database-exposed-dao", "database-exposed-j
 dependency-injection = ["di-koin-ktor", "di-koin-logger-slf4j", "di-koin-annotations"]
 documentation = ["ktor-server-swagger"]
 functional-programming = ["fp-arrow-core", "fp-arrow-fx-coroutines"]
-ktor = ["ktor-server-core", "ktor-server-netty", "ktor-server-content-negotiation", "ktor-server-config-yaml"]
+ktor = ["ktor-server-core", "ktor-server-netty", "ktor-server-content-negotiation", "ktor-server-config-yaml", "ktor-client-core", "ktor-client-cio",
+  "ktor-client-content-negotiation"]
 logging = ["ktor-server-call-logging", "logging-slf4j-simple", "logging-oshai-kotlin-logging"]
 monitoring = ["ktor-server-metrics-micrometer", "monitoring-micrometer-registry-prometheus", "monitoring-cohort-hikari", "monitoring-cohort-ktor",
   "monitoring-cohort-micrometer"]
 serialization = ["kotlinx-datetime", "kotlinx-serialization-json", "ktor-serialization-kotlinx-json", "serialization-yaml-snakeyaml"]
+pdf-generation = ["templating-mustache", "pdf-openhtmltopdf-pdfbox", "pdf-pdfbox"]
+dss = ["dss-pades-pdfbox", "dss-token", "dss-validation", "dss-utils-apache-commons", "dss-crl-parser-stream"]

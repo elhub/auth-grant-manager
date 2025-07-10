@@ -1,3 +1,5 @@
+import no.elhub.auth.utils.generateSelfSignedCertificate
+
 plugins {
     alias(libs.plugins.elhub.gradle.plugin)
     alias(libs.plugins.ktor.plugin)
@@ -31,13 +33,14 @@ dependencies {
     liquibaseRuntime(libs.database.postgresql)
     // Documentation
     implementation(libs.bundles.documentation)
-    implementation(libs.openpdf)
+    // PDF generation and signing
+    implementation(libs.bundles.pdf.generation)
+    implementation(libs.bundles.dss)
     // Observability
     implementation(libs.bundles.logging)
     implementation(libs.bundles.monitoring)
     // JSON validation
     implementation(libs.json.skema)
-
     implementation(libs.elhub.json.wrapper)
     // Unit Testing
     testImplementation(libs.database.postgresql)
@@ -79,23 +82,51 @@ liquibase {
     activities.register("main")
 }
 
+val certDir = layout.buildDirectory.dir("tmp/test-certs")
+val testCertPath = certDir.map { it.file("self-signed-cert.pem").asFile.path }
+val testKeyPath = certDir.map { it.file("self-signed-key.pem").asFile.path }
+
 dockerCompose {
-    createNested("database").apply {
-        useComposeFiles.set(listOf("db/db-compose.yaml"))
+    createNested("services").apply {
+        useComposeFiles.set(listOf("docker-compose.yaml"))
         environment.putAll(
             mapOf(
                 "DB_USERNAME" to dbUsername,
                 "DB_PASSWORD" to dbPassword,
+                "PRIVATE_KEY_PATH" to testKeyPath.get()
             ),
         )
     }
 }
 
-tasks.named<JavaExec>("run").configure {
-    dependsOn(tasks.named("databaseComposeUp"))
-    dependsOn(tasks.named("liquibaseUpdate"))
+tasks.register("generateTestCerts") {
+    group = "build setup"
+    description = "Generates self-signed certificates for local development to be used in document signing and verification."
+    doLast {
+        generateSelfSignedCertificate(certDir.get().asFile.path)
+    }
+}
 
-    environment("JDBC_URL", "jdbc:postgresql://localhost:5432/auth")
-    environment("APP_USERNAME", "app")
-    environment("APP_PASSWORD", "app")
+tasks.named("test").configure {
+    dependsOn(tasks.named("generateTestCerts"))
+}
+
+tasks.named("liquibaseUpdate").configure {
+    dependsOn(tasks.named("servicesComposeUp"))
+}
+
+val localEnvVars = mapOf(
+    "JDBC_URL" to "jdbc:postgresql://localhost:5432/auth",
+    "APP_USERNAME" to "app",
+    "APP_PASSWORD" to "app",
+    "VAULT_URL" to "http://localhost:8200",
+    "VAULT_KEY" to "test-key",
+    "VAULT_TOKEN" to "test-key",
+    "PATH_TO_SIGNING_CERTIFICATE" to testCertPath.get(),
+    "PATH_TO_SIGNING_CERTIFICATE_CHAIN" to testCertPath.get(),
+)
+
+tasks.named<JavaExec>("run").configure {
+    dependsOn("generateTestCerts", "servicesComposeUp", "liquibaseUpdate")
+    localEnvVars.forEach { (key, value) -> environment(key, value) }
 }

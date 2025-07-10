@@ -5,12 +5,11 @@ import io.ktor.server.application.ApplicationCall
 import io.ktor.server.response.respond
 import no.elhub.auth.model.AuthorizationDocument
 import no.elhub.auth.model.ResponseMeta
-import no.elhub.auth.utils.PdfGenerator
-import org.koin.core.annotation.Single
-import java.util.*
+import java.util.UUID
 
-@Single
-class AuthorizationDocumentHandler {
+class AuthorizationDocumentHandler(
+    private val signingService: SigningService
+) {
 
     suspend fun getDocuments(call: ApplicationCall) {
         call.respond(status = HttpStatusCode.OK, message = ResponseMeta())
@@ -18,10 +17,14 @@ class AuthorizationDocumentHandler {
 
     fun postDocument(authorizationDocumentRequest: PostAuthorizationDocumentRequest): AuthorizationDocument {
         val pdfBytes = PdfGenerator.createChangeOfSupplierConfirmationPdf(
-            snn = authorizationDocumentRequest.data.relationships.requestedTo.data.id,
-            supplier = authorizationDocumentRequest.data.relationships.requestedBy.data.id
+            ssn = authorizationDocumentRequest.data.relationships.requestedTo.data.id,
+            supplier = authorizationDocumentRequest.data.relationships.requestedBy.data.id,
+            meteringPointId = authorizationDocumentRequest.data.attributes.meteringPoint
         )
-        val authorizationDocument = AuthorizationDocument.of(authorizationDocumentRequest, pdfBytes)
+
+        val signedPdf = signingService.addPadesSignature(pdfBytes)
+
+        val authorizationDocument = AuthorizationDocument.of(authorizationDocumentRequest, signedPdf)
         AuthorizationDocumentRepository.insertDocument(authorizationDocument)
         return authorizationDocument
     }
