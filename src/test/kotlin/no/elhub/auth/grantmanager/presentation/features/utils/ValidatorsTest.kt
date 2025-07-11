@@ -4,10 +4,10 @@ import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import no.elhub.auth.grantmanager.presentation.features.requests.AuthorizationRequestRequest
-import no.elhub.auth.grantmanager.presentation.model.RelationshipLink
-import no.elhub.auth.grantmanager.presentation.model.RelationshipLink.DataLink
 import no.elhub.auth.grantmanager.presentation.features.utils.validateAuthorizationRequest
 import no.elhub.auth.grantmanager.presentation.features.utils.validateId
+import no.elhub.auth.grantmanager.presentation.model.RelationshipLink
+import no.elhub.auth.grantmanager.presentation.model.RelationshipLink.DataLink
 
 class ValidatorsTest : DescribeSpec({
 

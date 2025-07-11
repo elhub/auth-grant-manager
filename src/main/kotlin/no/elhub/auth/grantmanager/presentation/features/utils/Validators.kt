@@ -14,12 +14,12 @@ import java.util.UUID
  */
 fun validateId(id: String?): Either<ApiError.BadRequest, UUID> = either {
     if (id.isNullOrBlank()) {
-        raise(ApiError.BadRequest(detail = "Missing or malformed id."))
+        raise(ApiError.BadRequest(detail = "Missing or malformed ID"))
     } else {
         try {
             UUID.fromString(id)
         } catch (_: IllegalArgumentException) {
-            raise(ApiError.BadRequest(detail = "Missing or malformed id."))
+            raise(ApiError.BadRequest(detail = "Missing or malformed ID"))
         }
     }
 }

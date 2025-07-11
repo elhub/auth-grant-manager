@@ -46,7 +46,7 @@ fun Route.requestRoutes(requestHandler: AuthorizationRequestHandler) {
         }
     }
 
-    route("/{${ID}}") {
+    route("/{$ID}") {
         get {
             val idResult = validateId(call.parameters[ID])
             when (idResult) {

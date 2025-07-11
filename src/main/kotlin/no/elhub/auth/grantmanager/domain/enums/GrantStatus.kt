@@ -1,4 +1,4 @@
-package no.elhub.auth.grantmanager.presentation.model
+package no.elhub.auth.grantmanager.domain.enums
 
 enum class GrantStatus {
     Active,

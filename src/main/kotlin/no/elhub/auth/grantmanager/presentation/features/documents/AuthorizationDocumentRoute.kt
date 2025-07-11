@@ -23,7 +23,7 @@ fun Route.documentRoutes(documentService: AuthorizationDocumentHandler) {
         call.respond(status = HttpStatusCode.Created, message = responseBody)
     }
 
-    route("/{${ID}}") {
+    route("/{$ID}") {
         get {
             documentService.getDocumentById(call)
         }
@@ -34,7 +34,7 @@ fun Route.documentRoutes(documentService: AuthorizationDocumentHandler) {
     get {
         documentService.getDocuments(call)
     }
-    get("/{${ID}}.pdf") {
+    get("/{$ID}.pdf") {
         val documentId = call.parameters[ID]
             ?.toValidUuidOrNull()
             ?: return@get call.respond(HttpStatusCode.BadRequest, "Invalid or missing document ID format")

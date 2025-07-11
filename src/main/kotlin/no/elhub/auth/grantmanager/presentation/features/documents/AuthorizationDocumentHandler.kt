@@ -5,6 +5,7 @@ import io.ktor.server.application.ApplicationCall
 import io.ktor.server.response.respond
 import no.elhub.auth.grantmanager.presentation.model.AuthorizationDocument
 import no.elhub.auth.grantmanager.presentation.model.ResponseMeta
+import java.util.*
 import java.util.UUID
 
 class AuthorizationDocumentHandler(

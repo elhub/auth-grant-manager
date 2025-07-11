@@ -7,14 +7,17 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.route
 import io.ktor.server.util.url
+import no.elhub.auth.grantmanager.application.grants.getGrant.GrantRetrievalError
+import no.elhub.auth.grantmanager.application.grants.getGrant.Query
 import no.elhub.auth.grantmanager.presentation.config.ID
 import no.elhub.auth.grantmanager.presentation.features.errors.ApiError
 import no.elhub.auth.grantmanager.presentation.features.errors.ApiErrorJson
 import no.elhub.auth.grantmanager.presentation.features.utils.validateId
 import toGetAuthorizationGrantScopeResponse
 import java.util.UUID
+import no.elhub.auth.grantmanager.application.grants.getGrant.Handler as getGrantHandler
 
-fun Route.grants(grantHandler: AuthorizationGrantHandler) {
+fun Route.grants(grantHandler: AuthorizationGrantHandler, getGrantHandler: getGrantHandler) {
     route("") {
         get {
             grantHandler.getAllGrants().fold(
@@ -29,6 +32,7 @@ fun Route.grants(grantHandler: AuthorizationGrantHandler) {
                                     call.url(),
                                 ),
                             )
+
                         is AuthorizationGrantProblem.NotFoundError ->
                             call.respond(
                                 HttpStatusCode.NotFound,
@@ -48,7 +52,42 @@ fun Route.grants(grantHandler: AuthorizationGrantHandler) {
             )
         }
 
-        get("/{${ID}}") {
+        get("/new/{$ID}") {
+            val id: UUID =
+                validateId(call.parameters[ID]).getOrElse { error ->
+                    call.respond(HttpStatusCode.fromValue(error.status), ApiErrorJson.from(error, call.url()))
+                    return@get
+                }
+            getGrantHandler.handle(Query(id)).fold(
+                ifLeft = { grantRetrievalError ->
+                    when (grantRetrievalError) {
+                        GrantRetrievalError.NotFound -> call.respond(
+                            HttpStatusCode.NotFound,
+                            ApiErrorJson.from(
+                                ApiError.NotFound(detail = "Authorization grant with id=$id not found"),
+                                call.url()
+                            )
+                        )
+
+                        else -> call.respond(
+                            HttpStatusCode.InternalServerError,
+                            ApiErrorJson.from(
+                                ApiError.InternalServerError(detail = "  An unexpected error occurred when attempting to retrieve the grant"),
+                                call.url()
+                            )
+                        )
+                    }
+                },
+                ifRight = { grant ->
+                    call.respond(
+                        status = HttpStatusCode.OK,
+                        message = grant.toApiResponse()
+                    )
+                },
+            )
+        }
+
+        get("/{$ID}") {
             val id: UUID =
                 validateId(call.parameters[ID]).getOrElse { error ->
                     call.respond(HttpStatusCode.fromValue(error.status), ApiErrorJson.Companion.from(error, call.url()))
@@ -86,7 +125,7 @@ fun Route.grants(grantHandler: AuthorizationGrantHandler) {
             )
         }
 
-        get("/{${ID}}/scopes") {
+        get("/{$ID}/scopes") {
             val id: UUID =
                 validateId(call.parameters[ID]).getOrElse { error ->
                     call.respond(HttpStatusCode.fromValue(error.status), ApiErrorJson.Companion.from(error, call.url()))

@@ -10,7 +10,6 @@ import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.javatime.CurrentDateTime
 import org.jetbrains.exposed.sql.javatime.datetime
-import kotlin.uuid.ExperimentalUuidApi
 
 data class AuthorizationRequest(
     val id: String,
@@ -27,7 +26,6 @@ data class AuthorizationRequest(
     /**
      * Entity class for the AuthorizationRequest table.
      */
-    @OptIn(ExperimentalUuidApi::class)
     object Entity : UUIDTable("authorization_request") {
         // val id = uuid("id").defaultExpression(CustomFunction("gen_random_uuid()", UUIDColumnType()))
         val requestType = customEnumeration(

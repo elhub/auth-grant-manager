@@ -50,7 +50,7 @@ object AuthorizationScopes : LongIdTable(name = "auth.authorization_scope") {
 
 object AuthorizationGrantScopes : Table("auth.authorization_grant_scope") {
     val authorizationGrantId = uuid("authorization_grant_id")
-        .references(AuthorizationGrant.Entity.id, onDelete = ReferenceOption.CASCADE)
+        .references(AuthorizationGrantDbEntity.Entity.id, onDelete = ReferenceOption.CASCADE)
     private val authorizationScopeId = long("authorization_scope_id")
         .references(AuthorizationScopes.id, onDelete = ReferenceOption.CASCADE)
     val createdAt = timestamp("created_at").clientDefault { java.time.Instant.now() }

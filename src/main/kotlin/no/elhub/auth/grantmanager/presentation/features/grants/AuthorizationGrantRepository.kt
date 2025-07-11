@@ -4,7 +4,7 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import kotlinx.datetime.Instant
-import no.elhub.auth.grantmanager.presentation.model.AuthorizationGrant
+import no.elhub.auth.grantmanager.presentation.model.AuthorizationGrantDbEntity
 import no.elhub.auth.grantmanager.presentation.model.AuthorizationGrantScopes
 import no.elhub.auth.grantmanager.presentation.model.AuthorizationScope
 import no.elhub.auth.grantmanager.presentation.model.AuthorizationScopes
@@ -18,12 +18,12 @@ object AuthorizationGrantRepository {
 
     private val logger = LoggerFactory.getLogger(AuthorizationGrantRepository::class.java)
 
-    fun findAll(): Either<AuthorizationGrantProblem, List<AuthorizationGrant>> =
+    fun findAll(): Either<AuthorizationGrantProblem, List<AuthorizationGrantDbEntity>> =
         try {
             transaction {
-                AuthorizationGrant.Entity
+                AuthorizationGrantDbEntity.Entity
                     .selectAll()
-                    .associate { it[AuthorizationGrant.Entity.id].toString() to AuthorizationGrant(it) }
+                    .associate { it[AuthorizationGrantDbEntity.Entity.id].toString() to AuthorizationGrantDbEntity(it) }
                     .values
                     .toList()
             }.right()
@@ -35,14 +35,14 @@ object AuthorizationGrantRepository {
             AuthorizationGrantProblem.UnexpectedError.left()
         }
 
-    fun findById(grantId: UUID): Either<AuthorizationGrantProblem, AuthorizationGrant> =
+    fun findById(grantId: UUID): Either<AuthorizationGrantProblem, AuthorizationGrantDbEntity> =
         try {
             transaction {
-                AuthorizationGrant.Entity
+                AuthorizationGrantDbEntity.Entity
                     .selectAll()
-                    .where { AuthorizationGrant.Entity.id eq grantId }
+                    .where { AuthorizationGrantDbEntity.Entity.id eq grantId }
                     .singleOrNull()
-                    ?.let { AuthorizationGrant(it) }
+                    ?.let { AuthorizationGrantDbEntity(it) }
             }?.right()
                 ?: AuthorizationGrantProblem.NotFoundError.left()
         } catch (sqlEx: SQLException) {
@@ -55,9 +55,9 @@ object AuthorizationGrantRepository {
 
     fun findScopesById(grantId: UUID): Either<AuthorizationGrantProblem, List<AuthorizationScope>> = try {
         transaction {
-            AuthorizationGrant.Entity
+            AuthorizationGrantDbEntity.Entity
                 .selectAll()
-                .where { AuthorizationGrant.Entity.id eq grantId }
+                .where { AuthorizationGrantDbEntity.Entity.id eq grantId }
                 .singleOrNull()
                 ?.let {
                     (AuthorizationGrantScopes innerJoin AuthorizationScopes)

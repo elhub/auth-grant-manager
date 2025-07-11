@@ -1,13 +1,16 @@
 package no.elhub.auth.grantmanager.presentation.features.grants
 
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.Serializable
-import no.elhub.auth.grantmanager.presentation.model.AuthorizationGrant
+import no.elhub.auth.grantmanager.presentation.model.AuthorizationGrantDbEntity
 import no.elhub.devxp.jsonapi.model.JsonApiAttributes
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipData
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipToOne
 import no.elhub.devxp.jsonapi.model.JsonApiRelationships
 import no.elhub.devxp.jsonapi.response.JsonApiResponse
 import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObjectWithRelationships
+import kotlin.time.ExperimentalTime
 
 @Serializable
 data class GrantResponseAttributes(
@@ -27,7 +30,41 @@ data class GrantRelationships(
 typealias AuthorizationGrantResponse = JsonApiResponse.SingleDocumentWithRelationships<GrantResponseAttributes, GrantRelationships>
 typealias AuthorizationGrantsResponse = JsonApiResponse.CollectionDocumentWithRelationships<GrantResponseAttributes, GrantRelationships>
 
-fun AuthorizationGrant.toGetAuthorizationGrantResponse(): AuthorizationGrantResponse {
+@OptIn(ExperimentalTime::class)
+fun no.elhub.auth.grantmanager.domain.models.AuthorizationGrant.toApiResponse(): AuthorizationGrantResponse = AuthorizationGrantResponse(
+    data = JsonApiResponseResourceObjectWithRelationships(
+        type = "AuthorizationGrant",
+        id = this.id.toString(),
+        attributes = GrantResponseAttributes(
+            status = "Active", // TODO("Look closer at statuses")
+            grantedAt = this.grantedAt.toLocalDateTime(TimeZone.of("Europe/Oslo")).toString(),
+            validFrom = this.validFrom.toLocalDateTime(TimeZone.of("Europe/Oslo")).toString(),
+            validTo = this.validTo.toLocalDateTime(TimeZone.of("Europe/Oslo")).toString(),
+        ),
+        relationships = GrantRelationships(
+            grantedFor = JsonApiRelationshipToOne(
+                data = JsonApiRelationshipData(
+                    id = this.grantedFor,
+                    type = "Person"
+                )
+            ),
+            grantedBy = JsonApiRelationshipToOne(
+                data = JsonApiRelationshipData(
+                    id = this.grantedBy,
+                    type = "Person"
+                )
+            ),
+            grantedTo = JsonApiRelationshipToOne(
+                data = JsonApiRelationshipData(
+                    id = this.grantedTo,
+                    type = "Organization"
+                )
+            )
+        ),
+    )
+)
+
+fun AuthorizationGrantDbEntity.toGetAuthorizationGrantResponse(): AuthorizationGrantResponse {
     val attributes = GrantResponseAttributes(
         status = this.grantStatus.toString(),
         grantedAt = this.grantedAt.toString(),
@@ -66,7 +103,7 @@ fun AuthorizationGrant.toGetAuthorizationGrantResponse(): AuthorizationGrantResp
     )
 }
 
-fun List<AuthorizationGrant>.toGetAuthorizationGrantsResponse(): AuthorizationGrantsResponse = AuthorizationGrantsResponse(
+fun List<AuthorizationGrantDbEntity>.toGetAuthorizationGrantsResponse(): AuthorizationGrantsResponse = AuthorizationGrantsResponse(
     data = this.map { authorizationGrant ->
         val attributes = GrantResponseAttributes(
             status = authorizationGrant.grantStatus.toString(),

@@ -79,7 +79,7 @@ class AuthorizationRequestRouteTest :
                             {
                                 "status": 400,
                                 "title": "Bad Request",
-                                "detail": "Missing or malformed id."
+                                "detail": "Missing or malformed ID"
                             }
                         ],
                         "links":{

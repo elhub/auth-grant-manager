@@ -8,6 +8,9 @@ import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.config.ApplicationConfig
+import no.elhub.auth.grantmanager.application.common.interfaces.IGrantRepository
+import no.elhub.auth.grantmanager.application.grants.getGrant.Handler
+import no.elhub.auth.grantmanager.infrastructure.services.ExposedGrantRepository
 import no.elhub.auth.grantmanager.presentation.features.documents.AuthorizationDocumentHandler
 import no.elhub.auth.grantmanager.presentation.features.documents.SigningService
 import no.elhub.auth.grantmanager.presentation.features.grants.AuthorizationGrantHandler
@@ -62,6 +65,8 @@ val appModule =
         single { AuthorizationGrantHandler() }
         single { AuthorizationDocumentHandler(get()) }
         single { AuthorizationRequestHandler() }
+        single { ExposedGrantRepository() as IGrantRepository }
+        single { Handler(get()) }
     }
 
 val httpClientModule = module {

@@ -8,6 +8,7 @@ import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
+import no.elhub.auth.grantmanager.application.grants.getGrant.Handler
 import no.elhub.auth.grantmanager.presentation.features.documents.AuthorizationDocumentHandler
 import no.elhub.auth.grantmanager.presentation.features.documents.documentRoutes
 import no.elhub.auth.grantmanager.presentation.features.grants.AuthorizationGrantHandler
@@ -26,6 +27,7 @@ const val ID = "id"
 fun Application.configureRouting() {
     val documentHandler by inject<AuthorizationDocumentHandler>()
     val grantHandler by inject<AuthorizationGrantHandler>()
+    val newGrantHandler by inject<Handler>()
     val requestHandler by inject<AuthorizationRequestHandler>()
 
     routing {
@@ -33,7 +35,7 @@ fun Application.configureRouting() {
             documentRoutes(documentHandler)
         }
         route(AUTHORIZATION_GRANT) {
-            grants(grantHandler)
+            grants(grantHandler, newGrantHandler)
         }
         route(AUTHORIZATION_REQUEST) {
             requestRoutes(requestHandler)

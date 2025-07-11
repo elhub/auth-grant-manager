@@ -3,12 +3,12 @@ package no.elhub.auth.grantmanager.presentation.features.documents
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.shouldNotBe
 import no.elhub.auth.grantmanager.presentation.extensions.PostgresTestContainerExtension
-import no.elhub.auth.grantmanager.presentation.model.AuthorizationDocument
-import no.elhub.auth.grantmanager.presentation.model.AuthorizationDocumentScopes
-import no.elhub.auth.grantmanager.presentation.model.AuthorizationScopes
 import no.elhub.auth.grantmanager.presentation.features.documents.AuthorizationDocumentRepository
 import no.elhub.auth.grantmanager.presentation.features.documents.DocumentRelationships
 import no.elhub.auth.grantmanager.presentation.features.documents.DocumentRequestAttributes
+import no.elhub.auth.grantmanager.presentation.model.AuthorizationDocument
+import no.elhub.auth.grantmanager.presentation.model.AuthorizationDocumentScopes
+import no.elhub.auth.grantmanager.presentation.model.AuthorizationScopes
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipData
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipToOne
 import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObjectWithRelationships

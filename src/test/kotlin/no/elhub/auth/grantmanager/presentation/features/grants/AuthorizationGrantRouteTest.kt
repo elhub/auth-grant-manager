@@ -44,7 +44,7 @@ class AuthorizationGrantRouteTest :
                         item(0) {
                             "status" shouldBe "400"
                             "title" shouldBe "Bad Request"
-                            "detail" shouldBe "Missing or malformed id."
+                            "detail" shouldBe "Missing or malformed ID"
                         }
                     }
                     "links" {
@@ -108,6 +108,89 @@ class AuthorizationGrantRouteTest :
                     }
                     "links" {
                         "self" shouldBe "http://localhost/authorization-grants/123e4567-e89b-12d3-a456-426614174001"
+                    }
+                    "meta" {
+                        "createdAt".shouldNotBeNull()
+                    }
+                }
+            }
+        }
+
+        describe("GET /authorization-grants/new/{id}") {
+
+            it("should return 400 on an invalid ID") {
+                val response = testApp.client.get("$AUTHORIZATION_GRANT/new/test")
+                response.status shouldBe HttpStatusCode.BadRequest
+                val responseJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+                responseJson.validate {
+                    "errors".shouldBeList(size = 1) {
+                        item(0) {
+                            "status" shouldBe "400"
+                            "title" shouldBe "Bad Request"
+                            "detail" shouldBe "Missing or malformed ID"
+                        }
+                    }
+                    "links" {
+                        "self" shouldBe "http://localhost/authorization-grants/new/test"
+                    }
+                    "meta" {
+                        "createdAt".shouldNotBeNull()
+                    }
+                }
+            }
+
+            it("should return 200 OK on a valid ID") {
+                val response = testApp.client.get("$AUTHORIZATION_GRANT/new/123e4567-e89b-12d3-a456-426614174000")
+                response.status shouldBe HttpStatusCode.OK
+                val responseJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+                responseJson.validate {
+                    "data" {
+                        "id".shouldNotBeNull()
+                        "type" shouldBe "AuthorizationGrant"
+                        "attributes" {
+                            "status" shouldBe "Active"
+                            "grantedAt" shouldBe "2025-04-04T06:00"
+                            "validFrom" shouldBe "2025-04-04T06:00"
+                            "validTo" shouldBe "2026-04-04T06:00"
+                        }
+                        "relationships" {
+                            "grantedFor" {
+                                "data" {
+                                    "id" shouldBe "1111111111111111"
+                                    "type" shouldBe "Person"
+                                }
+                            }
+                            "grantedBy" {
+                                "data" {
+                                    "id" shouldBe "1111111111111111"
+                                    "type" shouldBe "Person"
+                                }
+                            }
+                            "grantedTo" {
+                                "data" {
+                                    "id" shouldBe "2222222222222222"
+                                    "type" shouldBe "Organization"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            it("should return 404 on a nonexistent ID") {
+                val response = testApp.client.get("$AUTHORIZATION_GRANT/new/123e4567-e89b-12d3-a456-426614174001")
+                response.status shouldBe HttpStatusCode.NotFound
+                val responseJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+                responseJson.validate {
+                    "errors".shouldBeList(size = 1) {
+                        item(0) {
+                            "status" shouldBe "404"
+                            "title" shouldBe "Not Found"
+                            "detail" shouldBe "Authorization grant with id=123e4567-e89b-12d3-a456-426614174001 not found"
+                        }
+                    }
+                    "links" {
+                        "self" shouldBe "http://localhost/authorization-grants/new/123e4567-e89b-12d3-a456-426614174001"
                     }
                     "meta" {
                         "createdAt".shouldNotBeNull()
@@ -200,7 +283,7 @@ class AuthorizationGrantRouteTest :
                         item(0) {
                             "status" shouldBe "400"
                             "title" shouldBe "Bad Request"
-                            "detail" shouldBe "Missing or malformed id."
+                            "detail" shouldBe "Missing or malformed ID"
                         }
                     }
                     "links" {

@@ -39,7 +39,9 @@ object AuthorizationDocumentRepository {
     }
 
     fun getDocumentFile(id: UUID): ByteArray? = transaction {
-        AuthorizationDocument.AuthorizationDocuments.select(listOf(AuthorizationDocument.AuthorizationDocuments.file)).where { AuthorizationDocument.AuthorizationDocuments.id eq id }
+        AuthorizationDocument.AuthorizationDocuments.select(listOf(AuthorizationDocument.AuthorizationDocuments.file)).where {
+            AuthorizationDocument.AuthorizationDocuments.id eq id
+        }
             .map { it[AuthorizationDocument.AuthorizationDocuments.file] }.singleOrNull()
     }
 }

@@ -2,13 +2,14 @@ package no.elhub.auth.grantmanager.presentation.model
 
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.toKotlinLocalDateTime
+import no.elhub.auth.grantmanager.domain.enums.GrantStatus
 import no.elhub.auth.grantmanager.presentation.utils.PGEnum
 import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.javatime.CurrentDateTime
 import org.jetbrains.exposed.sql.javatime.datetime
 
-data class AuthorizationGrant(
+data class AuthorizationGrantDbEntity(
     val id: String,
     val grantStatus: GrantStatus,
     val grantedFor: String,
