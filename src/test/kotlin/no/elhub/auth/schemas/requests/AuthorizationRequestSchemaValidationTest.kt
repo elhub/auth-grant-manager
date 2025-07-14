@@ -6,62 +6,62 @@ import com.github.erosb.jsonsKema.SchemaLoader
 import com.github.erosb.jsonsKema.SchemaLoaderConfig
 import com.github.erosb.jsonsKema.ValidationFailure
 import com.github.erosb.jsonsKema.Validator
-import io.kotest.core.spec.style.DescribeSpec
+import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.nulls.shouldBeNull
 import java.net.URI
 import java.nio.file.Files
 import java.nio.file.Paths
 
-class AuthorizationRequestSchemaValidationTest : DescribeSpec({
+class AuthorizationRequestSchemaValidationTest : FunSpec({
 
-    xdescribe("GET /authorization-requests") {
+    xcontext("GET /authorization-requests") {
         val authReqListSchema = loadSchemaFromFile("/schemas/authorization-request-get-list-response.schema.json")
 
-        it("should validate that response complies with the custom JSON schema") {
+        test("Should validate that response complies with the custom JSON schema") {
             val jsonDataPath = "/requests/authorization-request-get-response-data.json"
             val result = validateJsonData(authReqListSchema, jsonDataPath)
             checkValidateResult(result)
         }
     }
 
-    xdescribe("PATCH /authorization-requests") {
+    xcontext("PATCH /authorization-requests") {
         val authReqUpdateSchema = loadSchemaFromFile("/schemas/authorization-request-patch-request.schema.json", true)
         val authReqReadSchema = loadSchemaFromFile("/schemas/authorization-request-get-response.schema.json", true)
 
-        it("should validate that request complies with the custom JSON schema") {
+        test("Should validate that request complies with the custom JSON schema") {
             val jsonDataPath = "/requests/authorization-request-patch-request-data.json"
             val result = validateJsonData(authReqUpdateSchema, jsonDataPath)
             checkValidateResult(result)
         }
 
-        it("should validate that response complies with the custom JSON schema") {
+        test("Should validate that response complies with the custom JSON schema") {
             val jsonDataPath = "/requests/authorization-request-patch-response-data.json"
             val result = validateJsonData(authReqReadSchema, jsonDataPath)
             checkValidateResult(result)
         }
     }
 
-    xdescribe("POST /authorization-requests") {
+    xcontext("POST /authorization-requests") {
         val authReqCreateSchema = loadSchemaFromFile("/schemas/authorization-request-post-request.schema.json", true)
         val authReqReadSchema = loadSchemaFromFile("/schemas/authorization-request-get-response.schema.json", true)
 
-        it("should validate that request complies with the custom JSON schema") {
+        test("Should validate that request complies with the custom JSON schema") {
             val jsonDataPath = "/requests/authorization-request-post-request-data.json"
             val result = validateJsonData(authReqCreateSchema, jsonDataPath)
             checkValidateResult(result)
         }
 
-        it("should validate that response complies with the custom JSON schema") {
+        test("Should validate that response complies with the custom JSON schema") {
             val jsonDataPath = "/requests/authorization-request-post-response-data.json"
             val result = validateJsonData(authReqReadSchema, jsonDataPath)
             checkValidateResult(result)
         }
     }
 
-    xdescribe("GET /authorization-requests/{id}") {
+    xcontext("GET /authorization-requests/{id}") {
         val authReqReadSchema = loadSchemaFromFile("/schemas/authorization-request-get-response.schema.json")
 
-        it("should validate that response complies with the custom JSON schema") {
+        test("Should validate that response complies with the custom JSON schema") {
             val jsonDataPath = "/requests/authorization-request-get-id-response-data.json"
             val result = validateJsonData(authReqReadSchema, jsonDataPath)
             checkValidateResult(result)

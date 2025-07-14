@@ -5,7 +5,7 @@ import no.elhub.auth.utils.PGEnum
 import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.javatime.datetime
 import java.time.LocalDateTime
-import java.util.*
+import java.util.UUID
 
 data class AuthorizationDocument(
     val id: UUID,
@@ -49,14 +49,14 @@ data class AuthorizationDocument(
         val type = customEnumeration(
             name = "type",
             sql = "document_type",
-            fromDb = { AuthorizationDocument.DocumentType.valueOf(it as String) },
+            fromDb = { DocumentType.valueOf(it as String) },
             toDb = { PGEnum("document_type", it) },
         )
         val file = binary("file")
         val status = customEnumeration(
             name = "status",
             sql = "authorization_document_status",
-            fromDb = { AuthorizationDocument.AuthorizationDocumentStatus.valueOf(it as String) },
+            fromDb = { AuthorizationDocumentStatus.valueOf(it as String) },
             toDb = { PGEnum("authorization_document_status", it) },
         )
         val requestedBy = varchar("requested_by", 16)

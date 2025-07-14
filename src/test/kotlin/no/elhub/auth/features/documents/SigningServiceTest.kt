@@ -7,7 +7,7 @@ import eu.europa.esig.dss.enumerations.SignatureLevel
 import eu.europa.esig.dss.model.InMemoryDocument
 import eu.europa.esig.dss.pades.validation.PDFDocumentValidator
 import eu.europa.esig.dss.spi.validation.CommonCertificateVerifier
-import io.kotest.core.spec.style.StringSpec
+import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import no.elhub.auth.config.SigningCertificate
@@ -24,7 +24,7 @@ import java.math.BigInteger
 import java.security.MessageDigest
 import java.util.Base64
 
-class SigningServiceTest : StringSpec({
+class SigningServiceTest : FunSpec({
     extensions(VaultTransitTestContainerExtension)
 
     val vaultSignatureProvider = VaultSignatureProvider(
@@ -41,7 +41,7 @@ class SigningServiceTest : StringSpec({
     val signingService = SigningService(vaultSignatureProvider, signingCertificate, signingCertificateChain)
     val unsignedPdfBytes = Resources.getInputStream("unsigned.pdf").readAllBytes()
 
-    "should add one signature with proper parameters" {
+    test("Should add one signature with proper parameters") {
         val signedPdfBytes = signingService.addPadesSignature(unsignedPdfBytes)
         val signedPdf = InMemoryDocument(signedPdfBytes)
 
@@ -71,7 +71,7 @@ class SigningServiceTest : StringSpec({
         certUsed.certificateDN shouldBe signingCertificate.issuerX500Principal.name
     }
 
-    "should invalidate signature when PDF is tampered with" {
+    test("Should invalidate signature when PDF is tampered with") {
         val signedPdfBytes = signingService.addPadesSignature(unsignedPdfBytes)
         val signedPdf = InMemoryDocument(signedPdfBytes)
 

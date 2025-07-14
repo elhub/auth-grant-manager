@@ -1,6 +1,6 @@
 package no.elhub.auth.features.grants
 
-import io.kotest.core.spec.style.DescribeSpec
+import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
@@ -15,7 +15,7 @@ import no.elhub.auth.utils.defaultTestApplication
 import no.elhub.auth.validate
 
 class AuthorizationGrantRouteTest :
-    DescribeSpec({
+    FunSpec({
         extensions(
             PostgresTestContainerExtension,
             RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-grants.sql"),
@@ -33,9 +33,9 @@ class AuthorizationGrantRouteTest :
             testApp.stop()
         }
 
-        describe("GET /authorization-grants/{id}") {
+        context("GET /authorization-grants/{id}") {
 
-            it("should return 400 on an invalid ID") {
+            test("Should return 400 on an invalid ID") {
                 val response = testApp.client.get("$AUTHORIZATION_GRANT/test")
                 response.status shouldBe HttpStatusCode.BadRequest
                 val responseJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
@@ -56,7 +56,7 @@ class AuthorizationGrantRouteTest :
                 }
             }
 
-            it("should return 200 OK on a valid ID") {
+            test("Should return 200 OK on a valid ID") {
                 val response = testApp.client.get("$AUTHORIZATION_GRANT/123e4567-e89b-12d3-a456-426614174000")
                 response.status shouldBe HttpStatusCode.OK
                 val responseJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
@@ -94,7 +94,7 @@ class AuthorizationGrantRouteTest :
                 }
             }
 
-            it("should return 404 on a nonexistent ID") {
+            test("Should return 404 on a nonexistent ID") {
                 val response = testApp.client.get("$AUTHORIZATION_GRANT/123e4567-e89b-12d3-a456-426614174001")
                 response.status shouldBe HttpStatusCode.NotFound
                 val responseJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
@@ -116,9 +116,9 @@ class AuthorizationGrantRouteTest :
             }
         }
 
-        describe("GET /authorization-grants/{id}/scopes") {
+        context("GET /authorization-grants/{id}/scopes") {
 
-            it("should return 200 OK on a valid ID and a single authorization scope") {
+            test("Should return 200 OK on a valid ID and a single authorization scope") {
                 val response = testApp.client.get("$AUTHORIZATION_GRANT/123e4567-e89b-12d3-a456-426614174000/scopes")
                 response.status shouldBe HttpStatusCode.OK
 
@@ -139,7 +139,7 @@ class AuthorizationGrantRouteTest :
                 }
             }
 
-            it("should return 200 OK and an empty list for a grant with no authorization scopes") {
+            test("Should return 200 OK and an empty list for a grant with no authorization scopes") {
                 val response = testApp.client.get("$AUTHORIZATION_GRANT/a8f9c2e4-5a3d-4e2b-9c1a-8f6e2d3c4b5a/scopes")
                 response.status shouldBe HttpStatusCode.OK
 
@@ -150,7 +150,7 @@ class AuthorizationGrantRouteTest :
                 }
             }
 
-            it("should return 200 OK on a valid ID and multiple authorization scope") {
+            test("Should return 200 OK on a valid ID and multiple authorization scope") {
                 val response = testApp.client.get("$AUTHORIZATION_GRANT/b7f9c2e4-5a3d-4e2b-9c1a-8f6e2d3c4b5a/scopes")
                 response.status shouldBe HttpStatusCode.OK
 
@@ -191,7 +191,7 @@ class AuthorizationGrantRouteTest :
                 }
             }
 
-            it("should return 400 on an invalid ID") {
+            test("Should return 400 on an invalid ID") {
                 val response = testApp.client.get("$AUTHORIZATION_GRANT/test/scopes")
                 response.status shouldBe HttpStatusCode.BadRequest
                 val responseJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
@@ -212,7 +212,7 @@ class AuthorizationGrantRouteTest :
                 }
             }
 
-            it("should return 404 on a nonexistent ID") {
+            test("Should return 404 on a nonexistent ID") {
                 val response = testApp.client.get("$AUTHORIZATION_GRANT/123e4567-e89b-12d3-a456-426614174005/scopes")
                 response.status shouldBe HttpStatusCode.NotFound
                 val responseJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
@@ -234,9 +234,9 @@ class AuthorizationGrantRouteTest :
             }
         }
 
-        describe("GET /authorization-grants") {
+        context("GET /authorization-grants") {
 
-            it("should return 200 OK") {
+            test("Should return 200 OK") {
                 val response = testApp.client.get(AUTHORIZATION_GRANT)
                 response.status shouldBe HttpStatusCode.OK
 

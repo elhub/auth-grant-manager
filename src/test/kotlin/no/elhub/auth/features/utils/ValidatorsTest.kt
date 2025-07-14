@@ -1,30 +1,30 @@
 package no.elhub.auth.features.utils
 
-import io.kotest.core.spec.style.DescribeSpec
+import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import no.elhub.auth.features.requests.AuthorizationRequestRequest
 import no.elhub.auth.model.RelationshipLink
 import no.elhub.auth.model.RelationshipLink.DataLink
 
-class ValidatorsTest : DescribeSpec({
+class ValidatorsTest : FunSpec({
 
-    describe("validateId") {
-        it("should return a valid UUID when given a valid UUID string") {
+    context("validateId") {
+        test("Should return a valid UUID when given a valid UUID string") {
             val id = "d81e5bf2-8a0c-4348-a788-2a3fab4e77d6"
             val result = validateId(id)
             result.isRight() shouldBe true
             result.getOrNull() shouldNotBe null
         }
 
-        it("should return an ApiError.BadRequest when given an invalid UUID string") {
+        test("Should return an ApiError.BadRequest when given an invalid UUID string") {
             val id = "invalid-uuid"
             val result = validateId(id)
             result.isLeft() shouldBe true
             result.swap().getOrNull() shouldNotBe null
         }
 
-        it("should return an ApiError.BadRequest when given a null or blank string") {
+        test("Should return an ApiError.BadRequest when given a null or blank string") {
             val id = null
             val result = validateId(id)
             result.isLeft() shouldBe true
@@ -32,8 +32,8 @@ class ValidatorsTest : DescribeSpec({
         }
     }
 
-    describe("validateAuthorizationRequest") {
-        it("should return the request when given a valid request") {
+    context("validateAuthorizationRequest") {
+        test("Should return the request when given a valid request") {
             val request = AuthorizationRequestRequest(
                 data = AuthorizationRequestRequest.Data(
                     type = "AuthorizationRequest",
@@ -52,7 +52,7 @@ class ValidatorsTest : DescribeSpec({
             result.getOrNull() shouldNotBe null
         }
 
-        it("should return an ApiError.BadRequest when given an invalid requestType") {
+        test("Should return an ApiError.BadRequest when given an invalid requestType") {
             val request = AuthorizationRequestRequest(
                 data = AuthorizationRequestRequest.Data(
                     type = "AuthorizationRequest",
