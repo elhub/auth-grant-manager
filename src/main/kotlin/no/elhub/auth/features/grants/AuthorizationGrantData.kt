@@ -7,7 +7,6 @@ import no.elhub.devxp.jsonapi.model.JsonApiAttributes
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipData
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipToOne
 import no.elhub.devxp.jsonapi.model.JsonApiRelationships
-import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObject
 import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObjectWithRelationships
 
 @Serializable
@@ -26,67 +25,16 @@ data class GrantRelationships(
 ) : JsonApiRelationships
 
 @Serializable
-data class AuthorizationGrantsResponseNew(
+data class AuthorizationGrantsResponse(
     val data: List<JsonApiResponseResourceObjectWithRelationships<GrantResponseAttributes, GrantRelationships>>,
-    val included: List<JsonApiResponseResourceObject<PartyAttributes>>
 )
 
 @Serializable
-data class AuthorizationGrantResponseNew(
+data class AuthorizationGrantResponse(
     val data: JsonApiResponseResourceObjectWithRelationships<GrantResponseAttributes, GrantRelationships>,
-    val included: List<JsonApiResponseResourceObject<PartyAttributes>>
 )
 
-@Serializable
-data class PartyAttributes(
-    val partyType: String,
-    val descriptor: String,
-    val name: String?,
-    val createdAt: String
-) : JsonApiAttributes
-
-const val AUTHORIZATION_PARTY = "authorizationParty" // resource type -> refer to json:api spec v1.1
-
-fun buildIncludedPartiesForGrants(
-    grants: List<AuthorizationGrant>,
-    partyLookup: (Long) -> AuthorizationParty?
-): List<JsonApiResponseResourceObject<PartyAttributes>> {
-    val partyIds = grants.flatMap { listOf(it.grantedFor, it.grantedBy, it.grantedTo) }.toSet()
-    return partyIds.mapNotNull { id ->
-        partyLookup(id)?.let { party ->
-            JsonApiResponseResourceObject(
-                id = id.toString(),
-                type = AUTHORIZATION_PARTY,
-                attributes = PartyAttributes(
-                    partyType = party.type.name,
-                    descriptor = party.descriptor,
-                    name = party.name,
-                    createdAt = party.createdAt.toString()
-                )
-            )
-        }
-    }
-}
-
-fun buildIncludedPartiesForGrant(grant: AuthorizationGrant, partyLookup: (Long) -> AuthorizationParty?): List<JsonApiResponseResourceObject<PartyAttributes>> {
-    val partyIds = listOf(grant.grantedFor, grant.grantedBy, grant.grantedTo).toSet()
-    return partyIds.mapNotNull { id ->
-        partyLookup(id)?.let { party ->
-            JsonApiResponseResourceObject(
-                id = id.toString(),
-                type = AUTHORIZATION_PARTY,
-                attributes = PartyAttributes(
-                    partyType = party.type.name,
-                    descriptor = party.descriptor,
-                    name = party.name,
-                    createdAt = party.createdAt.toString()
-                )
-            )
-        }
-    }
-}
-
-fun AuthorizationGrant.toGetAuthorizationGrantResponse(partyLookup: (Long) -> AuthorizationParty): AuthorizationGrantResponseNew {
+fun AuthorizationGrant.toGetAuthorizationGrantResponse(partyLookup: (Long) -> AuthorizationParty): AuthorizationGrantResponse {
     val attributes = GrantResponseAttributes(
         status = this.grantStatus.toString(),
         grantedAt = this.grantedAt.toString(),
@@ -98,36 +46,35 @@ fun AuthorizationGrant.toGetAuthorizationGrantResponse(partyLookup: (Long) -> Au
         grantedFor = JsonApiRelationshipToOne(
             data = JsonApiRelationshipData(
                 id = this.grantedFor.toString(),
-                type = AUTHORIZATION_PARTY
+                type = partyLookup(this.grantedFor).type.name
             )
         ),
         grantedBy = JsonApiRelationshipToOne(
             data = JsonApiRelationshipData(
                 id = this.grantedBy.toString(),
-                type = AUTHORIZATION_PARTY
+                type = partyLookup(this.grantedBy).type.name
             )
         ),
         grantedTo = JsonApiRelationshipToOne(
             data = JsonApiRelationshipData(
                 id = this.grantedTo.toString(),
-                type = AUTHORIZATION_PARTY
+                type = partyLookup(this.grantedTo).type.name
             )
         )
     )
 
-    return AuthorizationGrantResponseNew(
+    return AuthorizationGrantResponse(
         data = JsonApiResponseResourceObjectWithRelationships(
             type = "AuthorizationGrant",
             id = this.id,
             attributes = attributes,
             relationships = relationships,
-        ),
-        included = buildIncludedPartiesForGrant(this, partyLookup)
+        )
     )
 }
 
-fun List<AuthorizationGrant>.toGetAuthorizationGrantsResponse(partyLookup: (Long) -> AuthorizationParty): AuthorizationGrantsResponseNew =
-    AuthorizationGrantsResponseNew(
+fun List<AuthorizationGrant>.toGetAuthorizationGrantsResponse(partyLookup: (Long) -> AuthorizationParty): AuthorizationGrantsResponse =
+    AuthorizationGrantsResponse(
         data = this.map { authorizationGrant ->
             val attributes = GrantResponseAttributes(
                 status = authorizationGrant.grantStatus.toString(),
@@ -140,19 +87,19 @@ fun List<AuthorizationGrant>.toGetAuthorizationGrantsResponse(partyLookup: (Long
                 grantedFor = JsonApiRelationshipToOne(
                     data = JsonApiRelationshipData(
                         id = authorizationGrant.grantedFor.toString(),
-                        type = AUTHORIZATION_PARTY,
+                        type = partyLookup(authorizationGrant.grantedFor).type.name
                     )
                 ),
                 grantedBy = JsonApiRelationshipToOne(
                     data = JsonApiRelationshipData(
                         id = authorizationGrant.grantedBy.toString(),
-                        type = AUTHORIZATION_PARTY
+                        type = partyLookup(authorizationGrant.grantedBy).type.name
                     )
                 ),
                 grantedTo = JsonApiRelationshipToOne(
                     data = JsonApiRelationshipData(
                         id = authorizationGrant.grantedTo.toString(),
-                        type = AUTHORIZATION_PARTY
+                        type = partyLookup(authorizationGrant.grantedTo).type.name
                     )
                 )
             )
@@ -163,6 +110,5 @@ fun List<AuthorizationGrant>.toGetAuthorizationGrantsResponse(partyLookup: (Long
                 attributes = attributes,
                 relationships = relationships
             )
-        },
-        included = buildIncludedPartiesForGrants(this, partyLookup)
+        }
     )

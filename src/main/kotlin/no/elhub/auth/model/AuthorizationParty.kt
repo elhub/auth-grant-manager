@@ -20,7 +20,6 @@ data class AuthorizationParty(
                 toDb = { PGEnum("authorization_party_type", it) }
             )
         val descriptor = varchar("descriptor", length = 256)
-        val name = varchar("name", length = 256)
         val createdAt = timestamp("created_at").clientDefault { java.time.Instant.now() }
     }
 }
