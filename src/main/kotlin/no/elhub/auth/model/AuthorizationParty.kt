@@ -9,7 +9,6 @@ data class AuthorizationParty(
     val id: Long,
     val type: AuthorizationPartyType,
     val descriptor: String,
-    val name: String? = null,
     val createdAt: Instant
 ) {
     object Entity : LongIdTable("authorization_party") {
