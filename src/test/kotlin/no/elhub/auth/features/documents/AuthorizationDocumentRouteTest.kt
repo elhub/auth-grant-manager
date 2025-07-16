@@ -1,6 +1,6 @@
 package no.elhub.auth.features.documents
 
-import io.kotest.core.spec.style.DescribeSpec
+import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.ktor.client.request.get
 import io.ktor.client.request.post
@@ -22,7 +22,7 @@ import no.elhub.auth.utils.defaultTestApplication
 import no.elhub.auth.validate
 
 class AuthorizationDocumentRouteTest :
-    DescribeSpec({
+    FunSpec({
         extensions(
             PostgresTestContainerExtension,
             VaultTransitTestContainerExtension
@@ -34,8 +34,8 @@ class AuthorizationDocumentRouteTest :
             testApp.stop()
         }
 
-        describe("Create document") {
-            it("Should create a document with a valid signature") {
+        context("Create document") {
+            test("Should create a document with a valid signature") {
 
                 val response =
                     testApp.client

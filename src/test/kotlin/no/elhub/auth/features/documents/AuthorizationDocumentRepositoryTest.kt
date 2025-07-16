@@ -1,6 +1,6 @@
 package no.elhub.auth.features.documents
 
-import io.kotest.core.spec.style.DescribeSpec
+import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldNotBe
 import no.elhub.auth.extensions.PostgresTestContainerExtension
 import no.elhub.auth.model.AuthorizationDocument
@@ -14,7 +14,7 @@ import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 
 class AuthorizationDocumentRepositoryTest :
-    DescribeSpec({
+    FunSpec({
         extensions(PostgresTestContainerExtension)
         val repository = AuthorizationDocumentRepository
 
@@ -27,8 +27,8 @@ class AuthorizationDocumentRepositoryTest :
             )
         }
 
-        describe("Insert Document") {
-            it("should insert a document and its scopes with correct references") {
+        context("Insert Document") {
+            test("Should insert a document and its scopes with correct references") {
                 // Given
                 val document =
                     AuthorizationDocument.of(
