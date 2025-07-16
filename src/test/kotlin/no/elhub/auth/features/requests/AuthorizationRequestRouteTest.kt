@@ -2,7 +2,7 @@ package no.elhub.auth.features.requests
 
 import io.kotest.assertions.json.shouldBeValidJson
 import io.kotest.assertions.json.shouldEqualSpecifiedJson
-import io.kotest.core.spec.style.DescribeSpec
+import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.ktor.client.request.get
 import io.ktor.client.request.post
@@ -20,7 +20,7 @@ import java.nio.file.Files
 import java.nio.file.Paths
 
 class AuthorizationRequestRouteTest :
-    DescribeSpec({
+    FunSpec({
         extensions(PostgresTestContainerExtension)
         extensions(RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-requests.sql"))
 
@@ -35,9 +35,9 @@ class AuthorizationRequestRouteTest :
         }
 
         // GET /authorization-requests
-        describe("GET $AUTHORIZATION_REQUEST") {
+        context("GET $AUTHORIZATION_REQUEST") {
 
-            it("should return 200 OK") {
+            test("Should return 200 OK") {
                 val response = testApp.client.get(AUTHORIZATION_REQUEST)
                 response.status shouldBe HttpStatusCode.OK
 
@@ -50,9 +50,9 @@ class AuthorizationRequestRouteTest :
             }
         }
 
-        describe("GET $AUTHORIZATION_REQUEST/{id}") {
+        context("GET $AUTHORIZATION_REQUEST/{id}") {
 
-            it("should return 200 OK on a valid ID") {
+            test("Should return 200 OK on a valid ID") {
                 val response = testApp.client.get("$AUTHORIZATION_REQUEST/d81e5bf2-8a0c-4348-a788-2a3fab4e77d6")
                 response.status shouldBe HttpStatusCode.OK
 
@@ -64,7 +64,7 @@ class AuthorizationRequestRouteTest :
                 responseString shouldEqualSpecifiedJson expectedJson
             }
 
-            it("should return 400 Bad Request on an invalid ID format") {
+            test("Should return 400 Bad Request on an invalid ID format") {
                 val response = testApp.client.get("$AUTHORIZATION_REQUEST/invalid-id")
                 response.status shouldBe HttpStatusCode.BadRequest
 
@@ -89,7 +89,7 @@ class AuthorizationRequestRouteTest :
                 responseString shouldEqualSpecifiedJson expectedJson
             }
 
-            it("should return 404 Not Found on an invalid ID that is a UUID") {
+            test("Should return 404 Not Found on an invalid ID that is a UUID") {
                 val response = testApp.client.get("$AUTHORIZATION_REQUEST/167b1be9-f563-4b31-af1a-50439d567ee5")
                 response.status shouldBe HttpStatusCode.NotFound
 
@@ -116,9 +116,9 @@ class AuthorizationRequestRouteTest :
         }
 
         // POST /authorization-requests
-        describe("POST $AUTHORIZATION_REQUEST") {
+        context("POST $AUTHORIZATION_REQUEST") {
 
-            it("should return 201 Created") {
+            test("Should return 201 Created") {
 
                 val requestBody = Files.readString(Paths.get("src/test/resources/requests/authorization-request-post-request-data.json"))
 
@@ -146,7 +146,7 @@ class AuthorizationRequestRouteTest :
 
             // This passes because the JSON serializer is lenient and allows for extra fields.
             // Switch on when stricter validation is added (e.g., schema validation).
-            xit("should return 400 Bad Request if the requestBody is invalid (added attribute)") {
+            xtest("Should return 400 Bad Request if the requestBody is invalid (added attribute)") {
                 val requestBody =
                     """
                     {
@@ -202,7 +202,7 @@ class AuthorizationRequestRouteTest :
                 responseString shouldEqualSpecifiedJson expectedJson
             }
 
-            it("should return 400 Bad Request if the requestBody is invalid (missing attribute)") {
+            test("Should return 400 Bad Request if the requestBody is invalid (missing attribute)") {
                 val requestBody =
                     """
                     {
@@ -256,7 +256,7 @@ class AuthorizationRequestRouteTest :
                 responseString shouldEqualSpecifiedJson expectedJson
             }
 
-            it("should return 400 Bad Request if the requestType is invalid") {
+            test("Should return 400 Bad Request if the requestType is invalid") {
                 val requestBody =
                     """
                     {

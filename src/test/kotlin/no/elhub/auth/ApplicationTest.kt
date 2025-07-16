@@ -1,6 +1,6 @@
 package no.elhub.auth
 
-import io.kotest.core.spec.style.DescribeSpec
+import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
@@ -8,7 +8,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.testing.TestApplication
 import no.elhub.auth.utils.defaultTestApplication
 
-class ApplicationTest : DescribeSpec({
+class ApplicationTest : FunSpec({
 
     lateinit var testApp: TestApplication
 
@@ -20,8 +20,8 @@ class ApplicationTest : DescribeSpec({
         testApp.stop()
     }
 
-    describe("Application") {
-        xit("should return /health OK") {
+    context("Application") {
+        xtest("Should return /health OK") {
             val response = testApp.client.get("/health")
             response.status shouldBe HttpStatusCode.OK
             response.bodyAsText() shouldBe "OK"
