@@ -75,19 +75,19 @@ class AuthorizationGrantRouteTest :
                             "grantedFor" {
                                 "data" {
                                     "id" shouldBe "1111111111111111"
-                                    "type" shouldBe "ElhubPersonId"
+                                    "type" shouldBe "Person"
                                 }
                             }
                             "grantedBy" {
                                 "data" {
                                     "id" shouldBe "1111111111111111"
-                                    "type" shouldBe "ElhubPersonId"
+                                    "type" shouldBe "Person"
                                 }
                             }
                             "grantedTo" {
                                 "data" {
                                     "id" shouldBe "2222222222222222"
-                                    "type" shouldBe "OrganizationNumber"
+                                    "type" shouldBe "Organization"
                                 }
                             }
                         }
@@ -256,19 +256,19 @@ class AuthorizationGrantRouteTest :
                                 "grantedFor" {
                                     "data" {
                                         "id" shouldBe "1111111111111111"
-                                        "type" shouldBe "ElhubPersonId"
+                                        "type" shouldBe "Person"
                                     }
                                 }
                                 "grantedBy" {
                                     "data" {
                                         "id" shouldBe "1111111111111111"
-                                        "type" shouldBe "ElhubPersonId"
+                                        "type" shouldBe "Person"
                                     }
                                 }
                                 "grantedTo" {
                                     "data" {
                                         "id" shouldBe "2222222222222222"
-                                        "type" shouldBe "OrganizationNumber"
+                                        "type" shouldBe "Organization"
                                     }
                                 }
                             }
@@ -286,19 +286,19 @@ class AuthorizationGrantRouteTest :
                                 "grantedFor" {
                                     "data" {
                                         "id" shouldBe "3333333333333333"
-                                        "type" shouldBe "ElhubPersonId"
+                                        "type" shouldBe "Person"
                                     }
                                 }
                                 "grantedBy" {
                                     "data" {
                                         "id" shouldBe "3333333333333333"
-                                        "type" shouldBe "ElhubPersonId"
+                                        "type" shouldBe "Person"
                                     }
                                 }
                                 "grantedTo" {
                                     "data" {
                                         "id" shouldBe "2222222222222222"
-                                        "type" shouldBe "OrganizationNumber"
+                                        "type" shouldBe "Organization"
                                     }
                                 }
                             }
@@ -316,19 +316,19 @@ class AuthorizationGrantRouteTest :
                                 "grantedFor" {
                                     "data" {
                                         "id" shouldBe "4444444444444444"
-                                        "type" shouldBe "OrganizationNumber"
+                                        "type" shouldBe "OrganizationEntity"
                                     }
                                 }
                                 "grantedBy" {
                                     "data" {
                                         "id" shouldBe "3333333333333333"
-                                        "type" shouldBe "ElhubPersonId"
+                                        "type" shouldBe "Person"
                                     }
                                 }
                                 "grantedTo" {
                                     "data" {
                                         "id" shouldBe "5555555555555555"
-                                        "type" shouldBe "ElhubPersonId"
+                                        "type" shouldBe "MeteringPoint"
                                     }
                                 }
                             }

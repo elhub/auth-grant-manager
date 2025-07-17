@@ -7,7 +7,7 @@ import org.jetbrains.exposed.sql.javatime.timestamp
 
 data class AuthorizationParty(
     val id: Long,
-    val type: AuthorizationPartyType,
+    val type: ElhubResource,
     val descriptor: String,
     val createdAt: Instant
 ) {
@@ -15,8 +15,8 @@ data class AuthorizationParty(
         val type =
             customEnumeration(
                 name = "type",
-                fromDb = { value -> AuthorizationPartyType.valueOf(value as String) },
-                toDb = { PGEnum("authorization_party_type", it) }
+                fromDb = { value -> ElhubResource.valueOf(value as String) },
+                toDb = { PGEnum("elhub_resource", it) }
             )
         val descriptor = varchar("descriptor", length = 256)
         val createdAt = timestamp("created_at").clientDefault { java.time.Instant.now() }

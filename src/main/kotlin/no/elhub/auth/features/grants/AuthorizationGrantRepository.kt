@@ -7,7 +7,7 @@ import kotlinx.datetime.Instant
 import no.elhub.auth.model.AuthorizationGrant
 import no.elhub.auth.model.AuthorizationGrantScopes
 import no.elhub.auth.model.AuthorizationParty
-import no.elhub.auth.model.AuthorizationPartyType
+import no.elhub.auth.model.ElhubResource
 import no.elhub.auth.model.AuthorizationScope
 import no.elhub.auth.model.AuthorizationScopes
 import org.jetbrains.exposed.sql.ResultRow
@@ -34,7 +34,7 @@ object AuthorizationGrantRepository {
     private fun mapRowToParty(row: ResultRow): AuthorizationParty =
         AuthorizationParty(
             id = row[AuthorizationParty.Entity.id].value,
-            type = AuthorizationPartyType.valueOf(row[AuthorizationParty.Entity.type].toString()),
+            type = ElhubResource.valueOf(row[AuthorizationParty.Entity.type].toString()),
             descriptor = row[AuthorizationParty.Entity.descriptor],
             createdAt = Instant.parse(row[AuthorizationParty.Entity.createdAt].toString())
         )
