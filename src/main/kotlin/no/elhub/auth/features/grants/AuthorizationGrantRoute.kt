@@ -39,10 +39,12 @@ fun Route.grants(grantHandler: AuthorizationGrantHandler) {
                             )
                     }
                 },
-                ifRight = { grants ->
+                ifRight = { (grants, parties) ->
                     call.respond(
                         status = HttpStatusCode.OK,
-                        message = grants.toGetAuthorizationGrantsResponse()
+                        message = grants.toGetAuthorizationGrantsResponse { id ->
+                            parties[id] ?: throw RuntimeException("Party not found for id=$id") // respond w/ internalServerError if thrown
+                        }
                     )
                 }
             )
@@ -77,11 +79,16 @@ fun Route.grants(grantHandler: AuthorizationGrantHandler) {
                             )
                     }
                 },
-                ifRight = { result ->
-                    call.respond(
-                        status = HttpStatusCode.OK,
-                        message = result.toGetAuthorizationGrantResponse()
-                    )
+                ifRight = { (grant, parties) ->
+                    if (grant != null) {
+                        call.respond(
+                            status = HttpStatusCode.OK,
+                            message = grant.toGetAuthorizationGrantResponse { id ->
+                                parties[id]
+                                    ?: throw RuntimeException("Party not found for id=$id")
+                            }
+                        )
+                    }
                 },
             )
         }

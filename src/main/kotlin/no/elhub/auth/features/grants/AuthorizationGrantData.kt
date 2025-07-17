@@ -2,11 +2,11 @@ package no.elhub.auth.features.grants
 
 import kotlinx.serialization.Serializable
 import no.elhub.auth.model.AuthorizationGrant
+import no.elhub.auth.model.AuthorizationParty
 import no.elhub.devxp.jsonapi.model.JsonApiAttributes
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipData
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipToOne
 import no.elhub.devxp.jsonapi.model.JsonApiRelationships
-import no.elhub.devxp.jsonapi.response.JsonApiResponse
 import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObjectWithRelationships
 
 @Serializable
@@ -24,10 +24,17 @@ data class GrantRelationships(
     val grantedTo: JsonApiRelationshipToOne,
 ) : JsonApiRelationships
 
-typealias AuthorizationGrantResponse = JsonApiResponse.SingleDocumentWithRelationships<GrantResponseAttributes, GrantRelationships>
-typealias AuthorizationGrantsResponse = JsonApiResponse.CollectionDocumentWithRelationships<GrantResponseAttributes, GrantRelationships>
+@Serializable
+data class AuthorizationGrantsResponse(
+    val data: List<JsonApiResponseResourceObjectWithRelationships<GrantResponseAttributes, GrantRelationships>>,
+)
 
-fun AuthorizationGrant.toGetAuthorizationGrantResponse(): AuthorizationGrantResponse {
+@Serializable
+data class AuthorizationGrantResponse(
+    val data: JsonApiResponseResourceObjectWithRelationships<GrantResponseAttributes, GrantRelationships>,
+)
+
+fun AuthorizationGrant.toGetAuthorizationGrantResponse(partyLookup: (Long) -> AuthorizationParty): AuthorizationGrantResponse {
     val attributes = GrantResponseAttributes(
         status = this.grantStatus.toString(),
         grantedAt = this.grantedAt.toString(),
@@ -38,20 +45,20 @@ fun AuthorizationGrant.toGetAuthorizationGrantResponse(): AuthorizationGrantResp
     val relationships = GrantRelationships(
         grantedFor = JsonApiRelationshipToOne(
             data = JsonApiRelationshipData(
-                id = this.grantedFor,
-                type = "Person"
+                id = this.grantedFor.toString(),
+                type = partyLookup(this.grantedFor).type.name
             )
         ),
         grantedBy = JsonApiRelationshipToOne(
             data = JsonApiRelationshipData(
-                id = this.grantedBy,
-                type = "Person"
+                id = this.grantedBy.toString(),
+                type = partyLookup(this.grantedBy).type.name
             )
         ),
         grantedTo = JsonApiRelationshipToOne(
             data = JsonApiRelationshipData(
-                id = this.grantedTo,
-                type = "Organization"
+                id = this.grantedTo.toString(),
+                type = partyLookup(this.grantedTo).type.name
             )
         )
     )
@@ -66,41 +73,42 @@ fun AuthorizationGrant.toGetAuthorizationGrantResponse(): AuthorizationGrantResp
     )
 }
 
-fun List<AuthorizationGrant>.toGetAuthorizationGrantsResponse(): AuthorizationGrantsResponse = AuthorizationGrantsResponse(
-    data = this.map { authorizationGrant ->
-        val attributes = GrantResponseAttributes(
-            status = authorizationGrant.grantStatus.toString(),
-            grantedAt = authorizationGrant.grantedAt.toString(),
-            validFrom = authorizationGrant.validFrom.toString(),
-            validTo = authorizationGrant.validTo.toString()
-        )
+fun List<AuthorizationGrant>.toGetAuthorizationGrantsResponse(partyLookup: (Long) -> AuthorizationParty): AuthorizationGrantsResponse =
+    AuthorizationGrantsResponse(
+        data = this.map { authorizationGrant ->
+            val attributes = GrantResponseAttributes(
+                status = authorizationGrant.grantStatus.toString(),
+                grantedAt = authorizationGrant.grantedAt.toString(),
+                validFrom = authorizationGrant.validFrom.toString(),
+                validTo = authorizationGrant.validTo.toString()
+            )
 
-        val relationships = GrantRelationships(
-            grantedFor = JsonApiRelationshipToOne(
-                data = JsonApiRelationshipData(
-                    id = authorizationGrant.grantedFor,
-                    type = "Person"
-                )
-            ),
-            grantedBy = JsonApiRelationshipToOne(
-                data = JsonApiRelationshipData(
-                    id = authorizationGrant.grantedBy,
-                    type = "Person"
-                )
-            ),
-            grantedTo = JsonApiRelationshipToOne(
-                data = JsonApiRelationshipData(
-                    id = authorizationGrant.grantedTo,
-                    type = "Organization"
+            val relationships = GrantRelationships(
+                grantedFor = JsonApiRelationshipToOne(
+                    data = JsonApiRelationshipData(
+                        id = authorizationGrant.grantedFor.toString(),
+                        type = partyLookup(authorizationGrant.grantedFor).type.name
+                    )
+                ),
+                grantedBy = JsonApiRelationshipToOne(
+                    data = JsonApiRelationshipData(
+                        id = authorizationGrant.grantedBy.toString(),
+                        type = partyLookup(authorizationGrant.grantedBy).type.name
+                    )
+                ),
+                grantedTo = JsonApiRelationshipToOne(
+                    data = JsonApiRelationshipData(
+                        id = authorizationGrant.grantedTo.toString(),
+                        type = partyLookup(authorizationGrant.grantedTo).type.name
+                    )
                 )
             )
-        )
 
-        JsonApiResponseResourceObjectWithRelationships(
-            type = "AuthorizationGrant",
-            id = authorizationGrant.id,
-            attributes = attributes,
-            relationships = relationships
-        )
-    }
-)
+            JsonApiResponseResourceObjectWithRelationships(
+                type = "AuthorizationGrant",
+                id = authorizationGrant.id,
+                attributes = attributes,
+                relationships = relationships
+            )
+        }
+    )

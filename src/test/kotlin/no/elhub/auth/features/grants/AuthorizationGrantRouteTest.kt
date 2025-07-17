@@ -20,7 +20,8 @@ class AuthorizationGrantRouteTest :
             PostgresTestContainerExtension,
             RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-grants.sql"),
             RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-scopes.sql"),
-            RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-grant-scopes.sql")
+            RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-grant-scopes.sql"),
+            RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-party.sql")
         )
 
         lateinit var testApp: TestApplication
@@ -239,7 +240,6 @@ class AuthorizationGrantRouteTest :
             test("Should return 200 OK") {
                 val response = testApp.client.get(AUTHORIZATION_GRANT)
                 response.status shouldBe HttpStatusCode.OK
-
                 val responseJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
                 responseJson.validate {
                     "data".shouldBeList(size = 3) {
@@ -316,7 +316,7 @@ class AuthorizationGrantRouteTest :
                                 "grantedFor" {
                                     "data" {
                                         "id" shouldBe "4444444444444444"
-                                        "type" shouldBe "Person"
+                                        "type" shouldBe "OrganizationEntity"
                                     }
                                 }
                                 "grantedBy" {
@@ -328,7 +328,7 @@ class AuthorizationGrantRouteTest :
                                 "grantedTo" {
                                     "data" {
                                         "id" shouldBe "5555555555555555"
-                                        "type" shouldBe "Organization"
+                                        "type" shouldBe "MeteringPoint"
                                     }
                                 }
                             }
