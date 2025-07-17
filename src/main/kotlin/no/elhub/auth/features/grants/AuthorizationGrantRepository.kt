@@ -7,9 +7,9 @@ import kotlinx.datetime.Instant
 import no.elhub.auth.model.AuthorizationGrant
 import no.elhub.auth.model.AuthorizationGrantScopes
 import no.elhub.auth.model.AuthorizationParty
-import no.elhub.auth.model.ElhubResource
 import no.elhub.auth.model.AuthorizationScope
 import no.elhub.auth.model.AuthorizationScopes
+import no.elhub.auth.model.ElhubResource
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
