@@ -13,12 +13,6 @@ enum AuthorizationGrantStatus {
   Revoked
 }
 
-enum AuthorizationResource {
-  MeteringPoint
-  Organization
-  Person
-}
-
 enum PermissionType {
   ChangeOfSupplier
   FullDelegation
@@ -39,14 +33,12 @@ enum RequestStatus {
   Rejected
 }
 
-' ElhubPersonId is our individual user Id
-' An ElhubSystem might be responsible for a change (audit log)
-' GLN and OrgNumber can both be used for organizations
-enum AuthorizationPartyType {
-  ElhubPersonId
-  ElhubSystem
-  GlobalLocationNumber
-  OrganizationNumber
+enum ElhubResource {
+  MeteringPoint
+  Organization
+  OrganizationEntity
+  Person
+  System
 }
 
 enum DocumentType {
@@ -162,7 +154,7 @@ entity AuthorizationRequestScope {
 
 entity AuthorizationScope {
   id: BigSerial
-  authorizedResourceType: AuthorizationResource
+  authorizedResourceType: ElhubResource
   authorizedResourceId: String
   permissionType: PermissionType
   --
@@ -172,9 +164,8 @@ entity AuthorizationScope {
 entity AuthorizationParty {
   id: BigSerial
   --
-  type: AuthorizationPartyType
+  type: ElhubResource
   descriptor: String
-  name: String?
   createdAt: DateTime
 }
 
@@ -184,7 +175,7 @@ AuthorizationGrant "0..1" *-- "1..*" AuthorizationGrantScope
 AuthorizationGrant "1" *-- "0..*" AuthorizationAuditLog
 AuthorizationGrant --> AuthorizationGrantStatus
 AuthorizationGrant --> AuthorizationParty
-AuthorizationScope --> AuthorizationResource
+AuthorizationScope --> ElhubResource
 AuthorizationScope --> PermissionType
 AuthorizationScope "1" *-- "0..*" AuthorizationGrantScope
 AuthorizationScope "1" *-- "0..*" AuthorizationRequestScope
@@ -200,6 +191,6 @@ AuthorizationRequest "1" *-- "0..*" AuthorizationRequestProperty
 AuthorizationRequest "1" *-- "1..*" AuthorizationRequestScope
 AuthorizationRequest --> RequestType
 AuthorizationRequest --> RequestStatus
-AuthorizationParty --> AuthorizationPartyType
+AuthorizationParty --> ElhubResource
 
 @enduml
