@@ -151,12 +151,12 @@ paths:
             application/json:
               schema:
                 $ref: "/schemas/authorization-grant-get-list-response.schema.json"
+        "400":
+          $ref: "#/components/responses/400BadRequestError"
         "401":
-          description: Unauthorized.
+          $ref: "#/components/responses/401UnauthorizedError"
         "500":
           $ref: "#/components/responses/500InternalServerError"
-      tags:
-        - TODO
   "/authorization-grants/{id}":
     get:
       summary: Retrieve a specific authorization grant.
@@ -182,8 +182,6 @@ paths:
           $ref: "#/components/responses/400BadRequestError"
         "500":
           $ref: "#/components/responses/500InternalServerError"
-      tags:
-        - TODO
   "/authorization-grants/{id}/scopes":
     get:
       summary: Retrieve all of the scopes for the identified authorization grant.

@@ -16,7 +16,7 @@
             "type": {
               "type": "string",
               "description": "A relationship to a party (person or organization).",
-              "enum": ["Organization", "Person"]
+              "enum": ["MeteringPoint", "Organization", "OrganizationEntity", "Person", "System"]
             },
             "id": {
               "type": "string",
@@ -25,10 +25,8 @@
           },
           "examples": [
             {
-              "data": {
-                "type": "Person",
-                "id": "12345678901"
-              }
+              "type": "Person",
+              "id": "12345678901"
             }
           ]
         }
