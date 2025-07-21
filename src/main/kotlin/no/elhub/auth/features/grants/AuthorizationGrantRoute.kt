@@ -1,8 +1,8 @@
 package no.elhub.auth.features.grants
 
 import arrow.core.getOrElse
-import io.ktor.http.HttpStatusCode
-import io.ktor.server.response.respond
+import io.ktor.http.*
+import io.ktor.server.response.*
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.route
@@ -16,6 +16,11 @@ import java.util.UUID
 
 fun Route.grants(grantHandler: AuthorizationGrantHandler) {
     route("") {
+
+        get("/openapi.yaml") {
+            call.respondText(generateOpenApiSpec(), ContentType.parse("application/x-yaml"))
+        }
+
         get {
             grantHandler.getAllGrants().fold(
                 ifLeft = { authGrantProblem ->
