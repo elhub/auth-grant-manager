@@ -17,10 +17,6 @@ import java.util.UUID
 fun Route.grants(grantHandler: AuthorizationGrantHandler) {
     route("") {
 
-        get("/openapi.yaml") {
-            call.respondText(generateOpenApiSpec(), ContentType.parse("application/x-yaml"))
-        }
-
         get {
             grantHandler.getAllGrants().fold(
                 ifLeft = { authGrantProblem ->

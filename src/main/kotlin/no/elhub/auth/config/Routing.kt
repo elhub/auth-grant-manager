@@ -1,6 +1,6 @@
 package no.elhub.auth.config
 
-import io.ktor.http.HttpStatusCode
+import io.ktor.http.*
 import io.ktor.server.application.Application
 import io.ktor.server.http.content.staticResources
 import io.ktor.server.plugins.swagger.swaggerUI
@@ -14,6 +14,8 @@ import no.elhub.auth.features.grants.AuthorizationGrantHandler
 import no.elhub.auth.features.grants.grants
 import no.elhub.auth.features.requests.AuthorizationRequestHandler
 import no.elhub.auth.features.requests.requestRoutes
+import no.elhub.auth.openapi.generateOpenApiSpec
+import no.elhub.auth.openapi.writeOpenApiSpecToFile
 import org.koin.ktor.ext.inject
 
 const val AUTHORIZATION_API = ""
@@ -28,6 +30,9 @@ fun Application.configureRouting() {
     val grantHandler by inject<AuthorizationGrantHandler>()
     val requestHandler by inject<AuthorizationRequestHandler>()
 
+    val openApiYamlPath = "/tmp/openapi.yaml"
+    writeOpenApiSpecToFile(openApiYamlPath) // generate openapi.yaml before swaggerUI
+
     routing {
         route(AUTHORIZATION_DOCUMENT) {
             documentRoutes(documentHandler)
@@ -41,7 +46,11 @@ fun Application.configureRouting() {
         get(HEALTH) {
             call.respondText("OK", status = HttpStatusCode.OK)
         }
-        swaggerUI(path = "openapi", swaggerFile = "openapi.yaml")
+        get("/openapi.yaml") {
+            call.respondText(generateOpenApiSpec(), ContentType.parse("application/x-yaml"))
+        }
+
+        swaggerUI(path = "openapi", swaggerFile = "/tmp/openapi.yaml")
         staticResources("schemas/", "schemas")
     }
 }
