@@ -33,7 +33,7 @@ mustache = "0.9.14"
 openhtmltopdf = "1.1.28"
 pdfbox = "3.0.5"
 dss = "6.2"
-swagger = "2.2.21"
+swagger = "2.2.34"
 javax = "2.1.1"
 
 
