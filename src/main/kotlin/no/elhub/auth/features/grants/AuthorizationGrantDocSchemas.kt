@@ -11,12 +11,12 @@ import no.elhub.auth.openapi.TopLevelPropertyConstraint
     description = "Schema for returning a single authorization grant object in the Elhub authorization manager.",
     type = "object",
     additionalProperties = Schema.AdditionalPropertiesValue.FALSE,
-    allOf = [TopLevelPropertyConstraint::class],
+    allOf = [TopLevelPropertyConstraint::class]
 )
 data class AuthorizationGrantResponse(
     @field:Schema(
         description = "Schema for authorization grant data object.",
-        type = "object",
+        type = "object"
     )
     val data: AuthorizationGrantObject,
     @field:Schema
@@ -29,7 +29,7 @@ data class AuthorizationGrantResponse(
     description = "Schema for returning a collection of authorization grants objects in the Elhub authorization manager.",
     type = "object",
     additionalProperties = Schema.AdditionalPropertiesValue.FALSE,
-    allOf = [TopLevelPropertyConstraint::class],
+    allOf = [TopLevelPropertyConstraint::class]
 )
 data class AuthorizationGrantListResponse(
     @field:ArraySchema(
@@ -51,7 +51,8 @@ data class AuthorizationGrantObject(
     @field:Schema(
         type = "string",
         description = "The type of the resource object.",
-        _const = "AuthorizationGrant")
+        _const = "AuthorizationGrant"
+    )
     val type: String,
 
     @field:Schema(
@@ -77,27 +78,30 @@ data class AuthorizationGrantAttributes(
         type = "string",
         format = "date-time",
         description = "The date and time when the authorization is granted at.",
-        example = "2025-07-22T08:26:13.420Z")
+        example = "2025-07-22T08:26:13.420Z"
+    )
     val grantedAt: String,
 
     @field:Schema(
         type = "string",
         format = "date-time",
         description = "The date and time when the authorization grant is valid from.",
-        example = "2025-07-22T08:26:13.420Z")
+        example = "2025-07-22T08:26:13.420Z"
+    )
     val validFrom: String,
 
     @field:Schema(
         type = "string",
         format = "date-time",
         description = "The date and time when the authorization grant is valid to.",
-        example = "2025-07-22T08:26:13.420Z")
+        example = "2025-07-22T08:26:13.420Z"
+    )
     val validTo: String
 )
 
 @Schema(
     type = "object",
-    description = "The related entities of the authorization grant (person and organizations).",
+    description = "The related entities of the authorization grant (person and organizations)."
 )
 data class AuthorizationGrantRelationships(
     @field:Schema

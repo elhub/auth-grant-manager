@@ -132,9 +132,3 @@ tasks.named<JavaExec>("run").configure {
     dependsOn("generateTestCerts", "servicesComposeUp", "liquibaseUpdate")
     localEnvVars.forEach { (key, value) -> environment(key, value) }
 }
-
-//tasks.register("generateOpenApiSpecs") {
-//    doLast {
-//        generateOpenApiSpec()
-//    }
-//}

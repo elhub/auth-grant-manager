@@ -51,14 +51,16 @@ data class RelationshipData(
 data class RelationshipInnerData(
     @field:Schema(
         type = "string",
-        description =  "A relationship to a party (person or organization). ",
+        description = "A relationship to a party (person or organization). ",
         allowableValues = ["MeteringPoint", "Organization", "OrganizationEntity", "Person", "System"],
-        example = "Person")
+        example = "Person"
+    )
     val type: String,
 
     @field:Schema(
         type = "string",
-        description =  "The unique identifier of the linked resource. ",
-        example = "12345678901")
+        description = "The unique identifier of the linked resource. ",
+        example = "12345678901"
+    )
     val id: String
 )

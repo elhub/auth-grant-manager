@@ -3,8 +3,8 @@ package no.elhub.auth.openapi
 import io.swagger.v3.core.util.Yaml
 import io.swagger.v3.jaxrs2.Reader
 import io.swagger.v3.oas.annotations.OpenAPIDefinition
-import io.swagger.v3.oas.annotations.info.Info
 import io.swagger.v3.oas.annotations.info.Contact
+import io.swagger.v3.oas.annotations.info.Info
 import io.swagger.v3.oas.annotations.info.License
 import io.swagger.v3.oas.models.OpenAPI
 import no.elhub.auth.features.grants.AuthorizationGrantDocGenerator

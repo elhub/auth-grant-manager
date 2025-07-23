@@ -1,6 +1,7 @@
 package no.elhub.auth.config
 
-import io.ktor.http.*
+import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.http.content.staticResources
 import io.ktor.server.plugins.swagger.swaggerUI

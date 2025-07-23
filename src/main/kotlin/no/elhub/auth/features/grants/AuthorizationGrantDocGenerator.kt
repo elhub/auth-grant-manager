@@ -9,11 +9,11 @@ import jakarta.ws.rs.Path
 import jakarta.ws.rs.Produces
 import jakarta.ws.rs.core.MediaType
 import no.elhub.auth.config.AUTHORIZATION_GRANT
+import no.elhub.auth.openapi.ErrorResponse
 import no.elhub.auth.openapi.RelationshipData
 import no.elhub.auth.openapi.RelationshipInnerData
 import no.elhub.auth.openapi.TopLevelLinks
 import no.elhub.auth.openapi.TopLevelMeta
-import no.elhub.auth.openapi.ApiErrorResponse
 
 class AuthorizationGrantDocGenerator {
 
@@ -38,17 +38,17 @@ class AuthorizationGrantDocGenerator {
             ApiResponse(
                 responseCode = "400",
                 description = "Bad request. ",
-                content = [Content(schema = Schema(implementation = ApiErrorResponse::class))]
+                content = [Content(schema = Schema(implementation = ErrorResponse::class))]
             ),
             ApiResponse(
                 responseCode = "401",
                 description = "Unauthorized. ",
-                content = [Content(schema = Schema(implementation = ApiErrorResponse::class))]
+                content = [Content(schema = Schema(implementation = ErrorResponse::class))]
             ),
             ApiResponse(
                 responseCode = "500",
                 description = "Internal server error. ",
-                content = [Content(schema = Schema(implementation = ApiErrorResponse::class))]
+                content = [Content(schema = Schema(implementation = ErrorResponse::class))]
             )
         ]
     )
@@ -73,22 +73,22 @@ class AuthorizationGrantDocGenerator {
             ApiResponse(
                 responseCode = "400",
                 description = "Bad request. Invalid request body. ",
-                content = [Content(schema = Schema(implementation = ApiErrorResponse::class))]
+                content = [Content(schema = Schema(implementation = ErrorResponse::class))]
             ),
             ApiResponse(
                 responseCode = "401",
                 description = "Unauthorized. ",
-                content = [Content(schema = Schema(implementation = ApiErrorResponse::class))]
+                content = [Content(schema = Schema(implementation = ErrorResponse::class))]
             ),
             ApiResponse(
                 responseCode = "404",
                 description = "Not found. ",
-                content = [Content(schema = Schema(implementation = ApiErrorResponse::class))]
+                content = [Content(schema = Schema(implementation = ErrorResponse::class))]
             ),
             ApiResponse(
                 responseCode = "500",
                 description = "Internal server error. ",
-                content = [Content(schema = Schema(implementation = ApiErrorResponse::class))]
+                content = [Content(schema = Schema(implementation = ErrorResponse::class))]
             )
         ]
     )
@@ -99,22 +99,19 @@ class AuthorizationGrantDocGenerator {
             meta = TopLevelMeta(createdAt = "")
         )
 
-    private fun createAuthorizationGrantObject(): AuthorizationGrantObject {
-        return AuthorizationGrantObject(
-            id = "",
-            type = "",
-            attributes = AuthorizationGrantAttributes(
-                status = "",
-                grantedAt = "",
-                validFrom = "",
-                validTo = ""
-            ),
-            relationships = AuthorizationGrantRelationships(
-                grantedFor = RelationshipData(data = RelationshipInnerData(type = "", id = "")),
-                grantedBy = RelationshipData(data = RelationshipInnerData(type = "", id = "")),
-                grantedTo = RelationshipData(data = RelationshipInnerData(type = "", id = ""))
-            )
+    private fun createAuthorizationGrantObject(): AuthorizationGrantObject = AuthorizationGrantObject(
+        id = "",
+        type = "",
+        attributes = AuthorizationGrantAttributes(
+            status = "",
+            grantedAt = "",
+            validFrom = "",
+            validTo = ""
+        ),
+        relationships = AuthorizationGrantRelationships(
+            grantedFor = RelationshipData(data = RelationshipInnerData(type = "", id = "")),
+            grantedBy = RelationshipData(data = RelationshipInnerData(type = "", id = "")),
+            grantedTo = RelationshipData(data = RelationshipInnerData(type = "", id = ""))
         )
-    }
-
+    )
 }

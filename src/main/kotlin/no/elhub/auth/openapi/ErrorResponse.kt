@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.media.ArraySchema
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(description = "Error Response")
-data class ApiErrorResponse(
+data class ErrorResponse(
     @field:ArraySchema(
         schema = Schema(implementation = ErrorObject::class),
         arraySchema = Schema(description = "Array of error objects")
@@ -17,8 +17,7 @@ data class ApiErrorResponse(
 ) {
     @Schema
     data class ErrorObject(
-        @field:Schema(
-            description = "The HTTP status code applicable to this problem, expressed as a string value", example = "400")
+        @field:Schema(description = "The HTTP status code applicable to this problem, expressed as a string value", example = "400")
         val status: String,
         @field:Schema(description = "An application-specific error code, expressed as a string value", example = "invalid_input")
         val code: String? = null,
