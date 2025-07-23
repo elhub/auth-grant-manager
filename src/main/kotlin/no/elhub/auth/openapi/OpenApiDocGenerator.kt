@@ -30,9 +30,7 @@ fun generateOpenApiSpec(): String {
     val openApi: OpenAPI = Reader().read(
         setOf(
             OpenApiDocConfig::class.java,
-            AuthorizationGrantDocGenerator::class.java,
-//            AuthorizationRequestDocGenerator::class.java, TODO
-//            AuthorizationDocumentDocGenerator::class.java TODO
+            AuthorizationGrantDocGenerator::class.java
         )
     )
 
