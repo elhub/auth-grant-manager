@@ -3,20 +3,20 @@ package no.elhub.auth.openapi
 import io.swagger.v3.oas.annotations.media.ArraySchema
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "JSON Bad Request Error Response")
+@Schema(description = "Error Response")
 data class ApiErrorResponse(
     @field:ArraySchema(
-        schema = Schema(implementation = Error::class),
+        schema = Schema(implementation = ErrorObject::class),
         arraySchema = Schema(description = "Array of error objects")
     )
-    val errors: List<Error>,
+    val errors: List<ErrorObject>,
     @field:Schema(description = "Link members related to the primary data")
     val links: TopLevelLinks? = null,
     @field:Schema(description = "Meta information about the response")
     val meta: TopLevelMeta? = null
 ) {
-    @Schema(description = "Error object")
-    data class Error(
+    @Schema
+    data class ErrorObject(
         @field:Schema(
             description = "The HTTP status code applicable to this problem, expressed as a string value", example = "400")
         val status: String,
