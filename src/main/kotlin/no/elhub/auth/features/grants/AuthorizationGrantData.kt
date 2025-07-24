@@ -25,16 +25,16 @@ data class GrantRelationships(
 ) : JsonApiRelationships
 
 @Serializable
-data class AuthorizationGrantsResponse(
+data class GrantsResponse(
     val data: List<JsonApiResponseResourceObjectWithRelationships<GrantResponseAttributes, GrantRelationships>>,
 )
 
 @Serializable
-data class AuthorizationGrantResponse(
+data class GrantResponse(
     val data: JsonApiResponseResourceObjectWithRelationships<GrantResponseAttributes, GrantRelationships>,
 )
 
-fun AuthorizationGrant.toGetAuthorizationGrantResponse(partyLookup: (Long) -> AuthorizationParty): AuthorizationGrantResponse {
+fun AuthorizationGrant.toGetAuthorizationGrantResponse(partyLookup: (Long) -> AuthorizationParty): GrantResponse {
     val attributes = GrantResponseAttributes(
         status = this.grantStatus.toString(),
         grantedAt = this.grantedAt.toString(),
@@ -63,7 +63,7 @@ fun AuthorizationGrant.toGetAuthorizationGrantResponse(partyLookup: (Long) -> Au
         )
     )
 
-    return AuthorizationGrantResponse(
+    return GrantResponse(
         data = JsonApiResponseResourceObjectWithRelationships(
             type = "AuthorizationGrant",
             id = this.id,
@@ -73,8 +73,8 @@ fun AuthorizationGrant.toGetAuthorizationGrantResponse(partyLookup: (Long) -> Au
     )
 }
 
-fun List<AuthorizationGrant>.toGetAuthorizationGrantsResponse(partyLookup: (Long) -> AuthorizationParty): AuthorizationGrantsResponse =
-    AuthorizationGrantsResponse(
+fun List<AuthorizationGrant>.toGetAuthorizationGrantsResponse(partyLookup: (Long) -> AuthorizationParty): GrantsResponse =
+    GrantsResponse(
         data = this.map { authorizationGrant ->
             val attributes = GrantResponseAttributes(
                 status = authorizationGrant.grantStatus.toString(),
