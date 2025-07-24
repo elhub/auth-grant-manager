@@ -1,0 +1,68 @@
+---
+# Insert data for dev/test environments
+databaseChangeLog:
+  - changeSet:
+      id: 1
+      author: devXP
+      context: "@test"
+      changes:
+        - insert:
+            schemaName: auth
+            tableName: authorization_grant
+            columns:
+              - column:
+                  name: id
+                  value: "123e4567-e89b-12d3-a456-426614174000"
+              - column:
+                  name: granted_for
+                  value: "1111111111111111"
+              - column:
+                  name: granted_by
+                  value: "1111111111111111"
+              - column:
+                  name: granted_to
+                  value: "2222222222222222"
+              - column:
+                  name: granted_at
+                  value: "2025-04-04T04:00:00+00:00"
+              - column:
+                  name: status
+                  value: "Active"
+              - column:
+                  name: valid_from
+                  value: "2025-04-04T04:00:00+00:00"
+              - column:
+                  name: valid_to
+                  value: "2026-04-04T04:00:00+00:00"
+        - insert:
+            schemaName: auth
+            tableName: authorization_party
+            columns:
+              - column:
+                  name: id
+                  value: "1111111111111111"
+              - column:
+                  name: type
+                  value: "Person"
+              - column:
+                  name: descriptor
+                  value: "Ola Normann"
+              - column:
+                  name: created_at
+                  value: "2025-04-04T04:00:00+00:00"
+        - insert:
+            schemaName: auth
+            tableName: authorization_party
+            columns:
+              - column:
+                  name: id
+                  value: "2222222222222222"
+              - column:
+                  name: type
+                  value: "Organization"
+              - column:
+                  name: descriptor
+                  value: "TestOrganization"
+              - column:
+                  name: created_at
+                  value: "2025-04-04T04:00:00+00:00"

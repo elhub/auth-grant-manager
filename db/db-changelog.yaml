@@ -15,3 +15,6 @@ databaseChangeLog:
   - includeAll:
       path: tables/
       relativeToChangelogFile: true
+  - include:
+      file: db-changelog-test-data.yaml
+      relativeToChangelogFile: true

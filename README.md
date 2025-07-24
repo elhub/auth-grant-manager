@@ -49,6 +49,12 @@ Database operations are carried out using Liquibase. To apply changes to the dat
 |-----------------------------|----------------------------------------------------------|
 | `./gradlew liquibaseUpdate` | Deploy any changes in the changelog file to the database |
 
+To add test data to dev or test environments, you have to update with `liquibase` with `contextFilter`:
+
+| Command                                                  | Description                           |
+|----------------------------------------------------------|---------------------------------------|
+| `./gradlew liquibaseUpdate  -PliquibaseContexts="@test"` | Add test data to dev/test environment |
+
 ### Elhub Dependencies
 
 Note that this project is set up to depend on Elhub's internal package manager (see settings.gradle.kts). If you wish
