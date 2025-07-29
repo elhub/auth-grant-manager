@@ -26,7 +26,7 @@ enum AuthorizationDocumentStatus {
   Signed
 }
 
-enum RequestStatus {
+enum AuthorizationRequestStatus {
   Accepted
   Expired
   Pending
@@ -190,7 +190,7 @@ AuthorizationDocumentSignatories -> AuthorizationParty
 AuthorizationRequest "1" *-- "0..*" AuthorizationRequestProperty
 AuthorizationRequest "1" *-- "1..*" AuthorizationRequestScope
 AuthorizationRequest --> RequestType
-AuthorizationRequest --> RequestStatus
+AuthorizationRequest --> AuthorizationRequestStatus
 AuthorizationParty --> ElhubResource
 
 @enduml

@@ -1,6 +1,6 @@
 package no.elhub.auth.model
 
-enum class RequestStatus {
+enum class AuthorizationRequestStatus {
     Accepted,
     Expired,
     Pending,
