@@ -11,14 +11,15 @@ import org.jetbrains.exposed.sql.javatime.datetime
 data class AuthorizationRequest(
     val id: String,
     val requestType: RequestType,
-    val status: AuthorizationRequestStatus,
+    val status: RequestStatus,
     val requestedBy: Long,
     val requestedFrom: Long,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime,
-    val validTo: LocalDateTime
+    val validTo: LocalDateTime,
+    val properties: ArrayList<AuthorizationRequestProperty> = ArrayList()
 ) {
-    object Entity: UUIDTable("authorization_request") {
+    object Entity : UUIDTable("authorization_request") {
         val requestType = customEnumeration(
             name = "request_type",
             fromDb = { value -> RequestType.valueOf(value as String) },
@@ -26,7 +27,7 @@ data class AuthorizationRequest(
         )
         val status = customEnumeration(
             name = "request_status",
-            fromDb = { value -> AuthorizationRequestStatus.valueOf(value as String) },
+            fromDb = { value -> RequestStatus.valueOf(value as String) },
             toDb = { PGEnum("authorization_request_status", it) }
         )
         val requestedBy = long("requested_by")

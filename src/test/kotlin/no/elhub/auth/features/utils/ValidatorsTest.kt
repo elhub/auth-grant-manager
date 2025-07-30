@@ -3,9 +3,12 @@ package no.elhub.auth.features.utils
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import no.elhub.auth.features.requests.AuthorizationRequestRequest
-import no.elhub.auth.model.RelationshipLink
-import no.elhub.auth.model.RelationshipLink.DataLink
+import no.elhub.auth.features.requests.PostAuthorizationRequestPayload
+import no.elhub.auth.features.requests.PostRequestPayloadAttributes
+import no.elhub.auth.features.requests.PostRequestPayloadRelationships
+import no.elhub.devxp.jsonapi.model.JsonApiRelationshipData
+import no.elhub.devxp.jsonapi.model.JsonApiRelationshipToOne
+import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObjectWithRelationships
 
 class ValidatorsTest : FunSpec({
 
@@ -34,39 +37,48 @@ class ValidatorsTest : FunSpec({
 
     context("validateAuthorizationRequest") {
         test("Should return the request when given a valid request") {
-            val request = AuthorizationRequestRequest(
-                data = AuthorizationRequestRequest.Data(
+            val payload = PostAuthorizationRequestPayload(
+                data = JsonApiRequestResourceObjectWithRelationships(
                     type = "AuthorizationRequest",
-                    attributes = AuthorizationRequestRequest.Attributes(
+                    attributes =  PostRequestPayloadAttributes(
                         requestType = "ChangeOfSupplierConfirmation"
                     ),
-                    relationships = AuthorizationRequestRequest.Relations(
-                        requestedBy = RelationshipLink(DataLink(id = "d81e5bf2", type = "User")),
-                        requestedTo = RelationshipLink(DataLink(id = "d81e5bf3", type = "User"))
-                    ),
-                    meta = AuthorizationRequestRequest.Meta(contract = "Sample123")
+                    relationships = PostRequestPayloadRelationships(
+                        requestedBy = JsonApiRelationshipToOne(
+                            data = JsonApiRelationshipData(type = "Organization", id = "84797600005")
+                        ),
+                        requestedFrom = JsonApiRelationshipToOne(
+                            data = JsonApiRelationshipData(type = "Person", id = "80102512345")
+                        )
+                    )
                 )
             )
-            val result = validateAuthorizationRequest(request)
+
+            val result = validateAuthorizationRequest(payload)
             result.isRight() shouldBe true
             result.getOrNull() shouldNotBe null
         }
 
         test("Should return an ApiError.BadRequest when given an invalid requestType") {
-            val request = AuthorizationRequestRequest(
-                data = AuthorizationRequestRequest.Data(
+
+            val payload = PostAuthorizationRequestPayload(
+                data = JsonApiRequestResourceObjectWithRelationships(
                     type = "AuthorizationRequest",
-                    attributes = AuthorizationRequestRequest.Attributes(
+                    attributes =  PostRequestPayloadAttributes(
                         requestType = "DummySupplier"
                     ),
-                    relationships = AuthorizationRequestRequest.Relations(
-                        requestedBy = RelationshipLink(DataLink(id = "d81e5bf2", type = "User")),
-                        requestedTo = RelationshipLink(DataLink(id = "d81e5bf3", type = "User"))
-                    ),
-                    meta = AuthorizationRequestRequest.Meta(contract = "Sample123")
+                    relationships = PostRequestPayloadRelationships(
+                        requestedBy = JsonApiRelationshipToOne(
+                            data = JsonApiRelationshipData(type = "Organization", id = "84797600005")
+                        ),
+                        requestedFrom = JsonApiRelationshipToOne(
+                            data = JsonApiRelationshipData(type = "Person", id = "80102512345")
+                        )
+                    )
                 )
             )
-            val result = validateAuthorizationRequest(request)
+
+            val result = validateAuthorizationRequest(payload)
             result.isLeft() shouldBe true
             result.swap().getOrNull() shouldNotBe null
         }
