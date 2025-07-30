@@ -40,7 +40,7 @@ class ValidatorsTest : FunSpec({
             val payload = PostAuthorizationRequestPayload(
                 data = JsonApiRequestResourceObjectWithRelationships(
                     type = "AuthorizationRequest",
-                    attributes =  PostRequestPayloadAttributes(
+                    attributes = PostRequestPayloadAttributes(
                         requestType = "ChangeOfSupplierConfirmation"
                     ),
                     relationships = PostRequestPayloadRelationships(
@@ -64,7 +64,7 @@ class ValidatorsTest : FunSpec({
             val payload = PostAuthorizationRequestPayload(
                 data = JsonApiRequestResourceObjectWithRelationships(
                     type = "AuthorizationRequest",
-                    attributes =  PostRequestPayloadAttributes(
+                    attributes = PostRequestPayloadAttributes(
                         requestType = "DummySupplier"
                     ),
                     relationships = PostRequestPayloadRelationships(
