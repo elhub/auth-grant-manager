@@ -12,8 +12,8 @@ data class AuthorizationRequest(
     val id: String,
     val requestType: RequestType,
     val status: RequestStatus,
-    val requestedBy: Long,
-    val requestedFrom: Long,
+    val requestedBy: String,
+    val requestedFrom: String,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime,
     val validTo: LocalDateTime,
@@ -30,8 +30,8 @@ data class AuthorizationRequest(
             fromDb = { value -> RequestStatus.valueOf(value as String) },
             toDb = { PGEnum("authorization_request_status", it) }
         )
-        val requestedBy = long("requested_by")
-        val requestedFrom = long("requested_from")
+        val requestedBy = varchar("requested_by", 16)
+        val requestedFrom = varchar("requested_from", 16)
         val createdAt = datetime("created_at").defaultExpression(CurrentDateTime)
         val updatedAt = datetime("updated_at").defaultExpression(CurrentDateTime)
         val validTo = datetime("valid_to")

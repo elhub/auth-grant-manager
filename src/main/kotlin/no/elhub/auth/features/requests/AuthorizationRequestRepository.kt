@@ -89,8 +89,8 @@ object AuthorizationRequestRepository {
                 it[id] = UUID.randomUUID()
                 it[requestType] = RequestType.valueOf(request.data.attributes.requestType)
                 it[status] = RequestStatus.Pending
-                it[requestedBy] = request.data.relationships.requestedBy.data.id.toLong()
-                it[requestedFrom] = request.data.relationships.requestedFrom.data.id.toLong()
+                it[requestedBy] = request.data.relationships.requestedBy.data.id
+                it[requestedFrom] = request.data.relationships.requestedFrom.data.id
                 it[validTo] = LocalDateTime.now().plusDays(30)
             }
             findById(authorizationRequestId.value)
