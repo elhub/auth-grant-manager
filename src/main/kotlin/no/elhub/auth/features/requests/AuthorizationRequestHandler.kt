@@ -6,10 +6,10 @@ import java.util.UUID
 
 class AuthorizationRequestHandler {
 
-    fun getAllRequests(): Either<AuthorizationRequestProblem, List<AuthorizationRequest>> = AuthorizationRequestRepository.findAll()
+    fun getAllRequests(): Either<AuthorizationRequestProblemList, List<AuthorizationRequest>> = AuthorizationRequestRepository.findAll()
 
-    fun getRequestById(id: UUID): Either<AuthorizationRequestProblem, AuthorizationRequest> = AuthorizationRequestRepository.findById(id)
+    fun getRequestById(id: UUID): Either<AuthorizationRequestProblemById, AuthorizationRequest> = AuthorizationRequestRepository.findById(id)
 
-    fun postRequest(request: PostAuthorizationRequestPayload): Either<AuthorizationRequestProblem, AuthorizationRequest> =
+    fun postRequest(request: PostAuthorizationRequestPayload): Either<AuthorizationRequestProblemCreate, AuthorizationRequest> =
         AuthorizationRequestRepository.create(request)
 }

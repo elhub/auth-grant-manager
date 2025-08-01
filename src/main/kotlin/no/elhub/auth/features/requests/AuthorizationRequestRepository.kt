@@ -23,7 +23,7 @@ object AuthorizationRequestRepository {
         val request: AuthorizationRequest?
     )
 
-    fun findAll(): Either<AuthorizationRequestProblem, List<AuthorizationRequest>> = try {
+    fun findAll(): Either<AuthorizationRequestProblemList, List<AuthorizationRequest>> = try {
         transaction {
             val requests = AuthorizationRequest.Entity
                 .selectAll()
@@ -48,13 +48,13 @@ object AuthorizationRequestRepository {
         }
     } catch (sqlEx: SQLException) {
         logger.error("SQL error occurred during fetch all requests: ${sqlEx.message}")
-        AuthorizationRequestProblem.DataBaseError.left()
+        AuthorizationRequestProblemList.DataBaseError.left()
     } catch (exp: Exception) {
         logger.error("Unknown error occurred during fetch all requests: ${exp.message}")
-        AuthorizationRequestProblem.UnexpectedError.left()
+        AuthorizationRequestProblemList.UnexpectedError.left()
     }
 
-    fun findById(requestId: UUID): Either<AuthorizationRequestProblem, AuthorizationRequest> = try {
+    fun findById(requestId: UUID): Either<AuthorizationRequestProblemById, AuthorizationRequest> = try {
         val request = transaction {
             AuthorizationRequest.Entity
                 .selectAll()
@@ -65,7 +65,7 @@ object AuthorizationRequestRepository {
 
         if (request == null) {
             logger.error("Error occurred during find request for $requestId")
-            AuthorizationRequestProblem.NotFoundError.left()
+            AuthorizationRequestProblemById.NotFoundError.left()
         } else {
             val properties = transaction {
                 AuthorizationRequestProperty.Entity
@@ -78,13 +78,13 @@ object AuthorizationRequestRepository {
         }
     } catch (sqlEx: SQLException) {
         logger.error("SQL error occurred during fetch request by id with id $requestId: ${sqlEx.message}")
-        AuthorizationRequestProblem.DataBaseError.left()
+        AuthorizationRequestProblemById.DataBaseError.left()
     } catch (exp: Exception) {
         logger.error("Unknown error occurred during fetch request by id with id $requestId: ${exp.message}")
-        AuthorizationRequestProblem.UnexpectedError.left()
+        AuthorizationRequestProblemById.UnexpectedError.left()
     }
 
-    fun create(request: PostAuthorizationRequestPayload): Either<AuthorizationRequestProblem, AuthorizationRequest> = try {
+    fun create(request: PostAuthorizationRequestPayload): Either<AuthorizationRequestProblemCreate, AuthorizationRequest> = try {
         transaction {
             val authorizationRequestId = AuthorizationRequest.Entity.insertAndGetId {
                 it[id] = UUID.randomUUID()
@@ -94,13 +94,19 @@ object AuthorizationRequestRepository {
                 it[requestedFrom] = request.data.relationships.requestedFrom.data.id
                 it[validTo] = LocalDateTime.now().plusDays(30)
             }
-            findById(authorizationRequestId.value)
+            findById(authorizationRequestId.value).mapLeft { byIdProblem ->
+                when (byIdProblem) {
+                    is AuthorizationRequestProblemById.DataBaseError -> AuthorizationRequestProblemCreate.DataBaseError
+                    is AuthorizationRequestProblemById.UnexpectedError, AuthorizationRequestProblemById.NotFoundError
+                    -> AuthorizationRequestProblemCreate.UnexpectedError
+                }
+            }
         }
     } catch (sqlEx: SQLException) {
         logger.error("SQL error occurred during create request: ${sqlEx.message}")
-        AuthorizationRequestProblem.DataBaseError.left()
+        AuthorizationRequestProblemCreate.DataBaseError.left()
     } catch (exp: Exception) {
         logger.error("Unknown error occurred during create request: ${exp.message}")
-        AuthorizationRequestProblem.UnexpectedError.left()
+        AuthorizationRequestProblemCreate.UnexpectedError.left()
     }
 }

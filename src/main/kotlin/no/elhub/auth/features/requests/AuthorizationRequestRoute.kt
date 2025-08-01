@@ -21,9 +21,8 @@ fun Route.requests(requestHandler: AuthorizationRequestHandler) {
         requestHandler.getAllRequests().fold(
             ifLeft = { authRequestProblem ->
                 when (authRequestProblem) {
-                    is AuthorizationRequestProblem.NotFoundError,
-                    is AuthorizationRequestProblem.DataBaseError,
-                    is AuthorizationRequestProblem.UnexpectedError ->
+                    is AuthorizationRequestProblemList.DataBaseError,
+                    is AuthorizationRequestProblemList.UnexpectedError ->
                         call.respond(
                             HttpStatusCode.InternalServerError,
                             ApiErrorJson.from(
@@ -52,7 +51,7 @@ fun Route.requests(requestHandler: AuthorizationRequestHandler) {
         requestHandler.getRequestById(id).fold(
             ifLeft = { authRequestProblem ->
                 when (authRequestProblem) {
-                    is AuthorizationRequestProblem.NotFoundError ->
+                    is AuthorizationRequestProblemById.NotFoundError ->
                         call.respond(
                             HttpStatusCode.NotFound,
                             ApiErrorJson.from(
@@ -61,7 +60,7 @@ fun Route.requests(requestHandler: AuthorizationRequestHandler) {
                             ),
                         )
 
-                    is AuthorizationRequestProblem.DataBaseError, AuthorizationRequestProblem.UnexpectedError ->
+                    is AuthorizationRequestProblemById.DataBaseError, AuthorizationRequestProblemById.UnexpectedError ->
                         call.respond(
                             HttpStatusCode.InternalServerError,
                             ApiErrorJson.from(
@@ -102,9 +101,8 @@ fun Route.requests(requestHandler: AuthorizationRequestHandler) {
         requestHandler.postRequest(payload).fold(
             ifLeft = { authRequestProblem ->
                 when (authRequestProblem) {
-                    is AuthorizationRequestProblem.NotFoundError,
-                    is AuthorizationRequestProblem.DataBaseError,
-                    is AuthorizationRequestProblem.UnexpectedError ->
+                    is AuthorizationRequestProblemCreate.DataBaseError,
+                    is AuthorizationRequestProblemCreate.UnexpectedError ->
                         call.respond(
                             HttpStatusCode.InternalServerError,
                             ApiErrorJson.from(
