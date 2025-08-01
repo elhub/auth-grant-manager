@@ -302,7 +302,7 @@ class AuthorizationRequestRouteTest :
                         item(0) {
                             "status" shouldBe "400"
                             "title" shouldBe "Bad Request"
-                            "detail" shouldBe "Authorization request contains extra, unknown, or missing fields."
+                            "detail" shouldBe "Authorization request contains extra, unknown, or missing fields. "
                         }
                     }
                     "links" {
@@ -350,7 +350,7 @@ class AuthorizationRequestRouteTest :
                         item(0) {
                             "status" shouldBe "400"
                             "title" shouldBe "Bad Request"
-                            "detail" shouldBe "Authorization request contains extra, unknown, or missing fields."
+                            "detail" shouldBe "Authorization request contains extra, unknown, or missing fields. "
                         }
                     }
                     "links" {
