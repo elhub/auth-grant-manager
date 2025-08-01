@@ -74,4 +74,4 @@ object StopVaultTransitTestContainer : AfterProjectListener {
     }
 }
 
-val localVaultConfig = VaultConfig(url = "http://localhost:$VAULT_PORT", key = "test-key", tokenPath = "something")
+val localVaultConfig = VaultConfig(url = "http://localhost:$VAULT_PORT", key = "test-key", tokenPath = "src/test/resources/vault_token_mock.txt")
