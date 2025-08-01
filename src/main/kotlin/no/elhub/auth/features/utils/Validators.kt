@@ -3,7 +3,8 @@ package no.elhub.auth.features.utils
 import arrow.core.Either
 import arrow.core.raise.either
 import no.elhub.auth.features.errors.ApiError
-import no.elhub.auth.features.requests.AuthorizationRequestRequest
+import no.elhub.auth.features.requests.PostAuthorizationRequestPayload
+import no.elhub.auth.model.AuthorizationRequest
 import java.util.UUID
 
 /**
@@ -24,7 +25,15 @@ fun validateId(id: String?): Either<ApiError.BadRequest, UUID> = either {
     }
 }
 
-fun validateAuthorizationRequest(authRequest: AuthorizationRequestRequest): Either<ApiError.BadRequest, AuthorizationRequestRequest> = either {
+fun validateAuthorizationRequest(authRequest: AuthorizationRequest): Either<ApiError.BadRequest, AuthorizationRequest> = either {
+    val requestType = authRequest.requestType
+    if (requestType.name != "ChangeOfSupplierConfirmation") {
+        raise(ApiError.BadRequest(detail = "Invalid requestType: $requestType."))
+    }
+    authRequest
+}
+
+fun validateAuthorizationRequest(authRequest: PostAuthorizationRequestPayload): Either<ApiError.BadRequest, PostAuthorizationRequestPayload> = either {
     val requestType = authRequest.data.attributes.requestType
     if (requestType != "ChangeOfSupplierConfirmation") {
         raise(ApiError.BadRequest(detail = "Invalid requestType: $requestType."))

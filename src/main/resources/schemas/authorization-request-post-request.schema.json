@@ -20,23 +20,24 @@
             "requestType": {
               "type": "string",
               "description": "The type of the authorization request.",
-              "enum": [
-                "ChangeOfSupplierConfirmation"
-              ]
+              "enum": ["ChangeOfSupplierConfirmation"]
+            },
+            "status": {
+              "type": "string",
+              "description": "The status of the authorization request.",
+              "enum": ["Accepted", "Expired", "Pending", "Rejected"]
             }
+          },
+          "meta": {
+            "$ref": "authorization-request-resource.schema.json#/definitions/resourceMeta"
+          },
+          "relationships": {
+            "$ref": "authorization-request-resource.schema.json#/properties/relationships"
           }
-        },
-        "meta": {
-          "$ref": "authorization-request-resource.schema.json#/definitions/resourceMeta"
-        },
-        "relationships": {
-          "$ref": "authorization-request-resource.schema.json#/properties/relationships"
         }
       }
-    }
-  },
-  "required": [
-    "data"
-  ],
-  "additionalProperties": false
+    },
+    "required": ["data"],
+    "additionalProperties": false
+  }
 }

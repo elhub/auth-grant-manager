@@ -19,24 +19,22 @@
         "requestType": {
           "type": "string",
           "description": "The type of the authorization request.",
-          "enum": [
-            "ChangeOfSupplierConfirmation"
-          ]
+          "enum": ["ChangeOfSupplierConfirmation"]
         },
         "status": {
           "type": "string",
           "description": "The status of the authorization request.",
-          "enum": [
-            "Accepted",
-            "Expired",
-            "Pending",
-            "Rejected"
-          ]
+          "enum": ["Accepted", "Expired", "Pending", "Rejected"]
         },
         "createdAt": {
           "type": "string",
           "format": "date-time",
           "description": "The date and time when the authorization request was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The date and time when the authorization request was updated."
         },
         "validTo": {
           "type": "string",
@@ -70,30 +68,22 @@
         "requestedFromName": {
           "type": "string",
           "description": "The name of the organization or person who the authorization document is requested from.",
-          "examples": [
-            "Ola Normann"
-          ]
+          "examples": ["Ola Normann"]
         },
         "requestedForMeteringPointId": {
           "type": "string",
           "description": "The unique identifier of the metering point associated with the authorization document.",
-          "examples": [
-            "1234567890123"
-          ]
+          "examples": ["1234567890123"]
         },
         "requestedForMeteringPointAddress": {
           "type": "string",
           "description": "The address of the metering point associated with the authorization document.",
-          "examples": [
-            "Example Street 1, 1234 Oslo"
-          ]
+          "examples": ["Example Street 1, 1234 Oslo"]
         },
         "balanceSupplierContractName": {
           "type": "string",
           "description": "The unique name of a supplier contract associated with the authorization document.",
-          "examples": [
-            "ExampleSupplierContract"
-          ]
+          "examples": ["ExampleSupplierContract"]
         }
       }
     }

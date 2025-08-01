@@ -13,7 +13,7 @@ import no.elhub.auth.features.documents.documentRoutes
 import no.elhub.auth.features.grants.AuthorizationGrantHandler
 import no.elhub.auth.features.grants.grants
 import no.elhub.auth.features.requests.AuthorizationRequestHandler
-import no.elhub.auth.features.requests.requestRoutes
+import no.elhub.auth.features.requests.requests
 import org.koin.ktor.ext.inject
 
 const val AUTHORIZATION_API = ""
@@ -36,7 +36,7 @@ fun Application.configureRouting() {
             grants(grantHandler)
         }
         route(AUTHORIZATION_REQUEST) {
-            requestRoutes(requestHandler)
+            requests(requestHandler)
         }
         get(HEALTH) {
             call.respondText("OK", status = HttpStatusCode.OK)
