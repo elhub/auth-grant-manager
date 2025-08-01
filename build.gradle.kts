@@ -121,7 +121,7 @@ val localEnvVars = mapOf(
     "APP_PASSWORD" to "app",
     "VAULT_URL" to "http://localhost:8200",
     "VAULT_KEY" to "test-key",
-    "VAULT_TOKEN" to "test-key",
+    "VAULT_TOKEN_PATH" to "somepath",
     "PATH_TO_SIGNING_CERTIFICATE" to testCertPath.get(),
     "PATH_TO_SIGNING_CERTIFICATE_CHAIN" to testCertPath.get(),
 )

@@ -9,6 +9,8 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import kotlinx.serialization.Serializable
 import no.elhub.auth.config.VaultConfig
+import java.nio.file.Files
+import java.nio.file.Paths
 import java.util.Base64
 
 class VaultSignatureProvider(
@@ -26,12 +28,17 @@ class VaultSignatureProvider(
         @Serializable data class Data(val signature: String)
     }
 
+    private fun readVaultToken(): String {
+        val tokenPath = cfg.tokenPath
+        return Files.readString(Paths.get(tokenPath)).trim()
+    }
+
     suspend fun sign(digest: ByteArray): ByteArray {
         val b64 = Base64.getEncoder().encodeToString(digest)
 
         val resp = client.post("${cfg.url}/v1/transit/sign/${cfg.key}") {
             contentType(ContentType.Application.Json)
-            header("X-Vault-Token", cfg.token)
+            header("X-Vault-Token", readVaultToken())
             setBody(SignRequest(b64))
         }.body<SignResponse>()
 
