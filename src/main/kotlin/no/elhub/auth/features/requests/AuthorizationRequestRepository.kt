@@ -64,6 +64,7 @@ object AuthorizationRequestRepository {
         }
 
         if (request == null) {
+            logger.error("Error occurred during find request for $requestId")
             AuthorizationRequestProblem.NotFoundError.left()
         } else {
             val properties = transaction {

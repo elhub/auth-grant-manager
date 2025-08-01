@@ -102,16 +102,9 @@ fun Route.requests(requestHandler: AuthorizationRequestHandler) {
         requestHandler.postRequest(payload).fold(
             ifLeft = { authRequestProblem ->
                 when (authRequestProblem) {
-                    is AuthorizationRequestProblem.NotFoundError ->
-                        call.respond(
-                            HttpStatusCode.NotFound,
-                            ApiErrorJson.from(
-                                ApiError.NotFound(detail = "Unexpected error occurred during processing the request. "),
-                                call.url(),
-                            ),
-                        )
-
-                    is AuthorizationRequestProblem.DataBaseError, AuthorizationRequestProblem.UnexpectedError ->
+                    is AuthorizationRequestProblem.NotFoundError,
+                    is AuthorizationRequestProblem.DataBaseError,
+                    is AuthorizationRequestProblem.UnexpectedError ->
                         call.respond(
                             HttpStatusCode.InternalServerError,
                             ApiErrorJson.from(
