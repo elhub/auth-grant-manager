@@ -115,7 +115,7 @@ fun Route.requests(requestHandler: AuthorizationRequestHandler) {
                         call.respond(
                             HttpStatusCode.InternalServerError,
                             ApiErrorJson.from(
-                                ApiError.InternalServerError(detail = "Unexpected error occurred during insert authorization request. "),
+                                ApiError.InternalServerError(detail = "Unexpected error occurred during creating authorization request. "),
                                 call.url(),
                             ),
                         )
