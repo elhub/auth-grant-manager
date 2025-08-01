@@ -58,14 +58,7 @@ fun List<AuthorizationRequest>.toGetAuthorizationRequestsResponse(): Authorizati
         data = this.map { authorizationRequest ->
             val attributes = mapAttributes(authorizationRequest)
             val relationships = mapRelationships(authorizationRequest)
-            val metaProperties = buildJsonObject {
-                put("createdAt", JsonPrimitive(authorizationRequest.createdAt.toString()))
-                authorizationRequest.properties.forEach { prop ->
-                    when (prop.key) {
-                        "contract" -> put(prop.key, JsonPrimitive(prop.value))
-                    }
-                }
-            }
+            val metaProperties = mapMetaProperties(authorizationRequest)
 
             JsonApiResponseResourceObjectWithRelationships(
                 type = "AuthorizationRequest",
@@ -103,8 +96,8 @@ private fun mapRelationships(authorizationRequest: AuthorizationRequest): GetReq
 private fun mapMetaProperties(authorizationRequest: AuthorizationRequest): JsonApiMeta = buildJsonObject {
     put("createdAt", JsonPrimitive(authorizationRequest.createdAt.toString()))
     authorizationRequest.properties.forEach { prop ->
-        when (prop.key) {
-            "contract" -> put(prop.key, JsonPrimitive(prop.value))
-        }
+//        when (prop.key) {
+        put(prop.key, JsonPrimitive(prop.value))
+//        }
     }
 }
