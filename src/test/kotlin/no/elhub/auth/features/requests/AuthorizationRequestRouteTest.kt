@@ -70,10 +70,10 @@ class AuthorizationRequestRouteTest :
                             }
                             "meta" {
                                 "createdAt".shouldNotBeNull()
-                                "requestedFromName" shouldBe  "Ola Normann"
-                                "requestedForMeteringPointId" shouldBe  "1234567890123"
-                                "requestedForMeteringPointAddress" shouldBe  "Example Street 1, 1234 Oslo"
-                                "balanceSupplierContractName" shouldBe  "ExampleSupplierContract"
+                                "requestedFromName" shouldBe "Ola Normann"
+                                "requestedForMeteringPointId" shouldBe "1234567890123"
+                                "requestedForMeteringPointAddress" shouldBe "Example Street 1, 1234 Oslo"
+                                "balanceSupplierContractName" shouldBe "ExampleSupplierContract"
                             }
                         }
                         item(1) {
@@ -102,10 +102,10 @@ class AuthorizationRequestRouteTest :
                             }
                             "meta" {
                                 "createdAt".shouldNotBeNull()
-                                "requestedFromName" shouldBe  "Kari Normann"
-                                "requestedForMeteringPointId" shouldBe  "1234567890123"
-                                "requestedForMeteringPointAddress" shouldBe  "Example Street 1, 1234 Oslo"
-                                "balanceSupplierContractName" shouldBe  "ExampleSupplierContract"
+                                "requestedFromName" shouldBe "Kari Normann"
+                                "requestedForMeteringPointId" shouldBe "1234567890123"
+                                "requestedForMeteringPointAddress" shouldBe "Example Street 1, 1234 Oslo"
+                                "balanceSupplierContractName" shouldBe "ExampleSupplierContract"
                             }
                         }
                     }
@@ -148,10 +148,10 @@ class AuthorizationRequestRouteTest :
                     }
                     "meta" {
                         "createdAt".shouldNotBeNull()
-                        "requestedFromName" shouldBe  "Ola Normann"
-                        "requestedForMeteringPointId" shouldBe  "1234567890123"
-                        "requestedForMeteringPointAddress" shouldBe  "Example Street 1, 1234 Oslo"
-                        "balanceSupplierContractName" shouldBe  "ExampleSupplierContract"
+                        "requestedFromName" shouldBe "Ola Normann"
+                        "requestedForMeteringPointId" shouldBe "1234567890123"
+                        "requestedForMeteringPointAddress" shouldBe "Example Street 1, 1234 Oslo"
+                        "balanceSupplierContractName" shouldBe "ExampleSupplierContract"
                     }
                 }
             }
