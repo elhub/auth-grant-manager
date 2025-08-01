@@ -76,10 +76,10 @@ object AuthorizationRequestRepository {
             request.right()
         }
     } catch (sqlEx: SQLException) {
-        logger.error("SQL error occurred during fetch request by id with id ${requestId}: ${sqlEx.message}")
+        logger.error("SQL error occurred during fetch request by id with id $requestId: ${sqlEx.message}")
         AuthorizationRequestProblem.DataBaseError.left()
     } catch (exp: Exception) {
-        logger.error("Unknown error occurred during fetch request by id with id ${requestId}: ${exp.message}")
+        logger.error("Unknown error occurred during fetch request by id with id $requestId: ${exp.message}")
         AuthorizationRequestProblem.UnexpectedError.left()
     }
 
