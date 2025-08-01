@@ -10,11 +10,14 @@ import no.elhub.auth.model.RequestType
 import org.jetbrains.exposed.sql.insertAndGetId
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.slf4j.LoggerFactory
 import java.sql.SQLException
 import java.time.LocalDateTime
 import java.util.UUID
 
 object AuthorizationRequestRepository {
+
+    private val logger = LoggerFactory.getLogger(AuthorizationRequestRepository::class.java)
 
     data class Request(
         val request: AuthorizationRequest?
@@ -44,8 +47,10 @@ object AuthorizationRequestRepository {
             requests.right()
         }
     } catch (sqlEx: SQLException) {
+        logger.error("SQL error occurred during fetch all requests: ${sqlEx.message}")
         AuthorizationRequestProblem.DataBaseError.left()
     } catch (exp: Exception) {
+        logger.error("Unknown error occurred during fetch all requests: ${exp.message}")
         AuthorizationRequestProblem.UnexpectedError.left()
     }
 
@@ -71,8 +76,10 @@ object AuthorizationRequestRepository {
             request.right()
         }
     } catch (sqlEx: SQLException) {
+        logger.error("SQL error occurred during fetch request by id with id ${requestId}: ${sqlEx.message}")
         AuthorizationRequestProblem.DataBaseError.left()
     } catch (exp: Exception) {
+        logger.error("Unknown error occurred during fetch request by id with id ${requestId}: ${exp.message}")
         AuthorizationRequestProblem.UnexpectedError.left()
     }
 
@@ -89,8 +96,10 @@ object AuthorizationRequestRepository {
             findById(authorizationRequestId.value)
         }
     } catch (sqlEx: SQLException) {
+        logger.error("SQL error occurred during create request: ${sqlEx.message}")
         AuthorizationRequestProblem.DataBaseError.left()
     } catch (exp: Exception) {
+        logger.error("Unknown error occurred during create request: ${exp.message}")
         AuthorizationRequestProblem.UnexpectedError.left()
     }
 }
