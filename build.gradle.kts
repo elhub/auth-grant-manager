@@ -42,6 +42,8 @@ dependencies {
     // JSON validation
     implementation(libs.json.skema)
     implementation(libs.elhub.json.wrapper)
+    // Swagger core
+    implementation(libs.bundles.swagger.core)
     // Unit Testing
     testImplementation(libs.database.postgresql)
     testImplementation(libs.test.mockk)

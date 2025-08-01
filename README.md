@@ -75,6 +75,13 @@ See [the documentation](docs/usage.md) for information on how to use the API.
 Review the [OpenAPI spec](https://github.com/elhub/auth-grant-manager/blob/main/src/main/resources/openapi.yaml) to
 view the available endpoints.
 
+When running locally, you can also access:
+
+- **Swagger UI:** [http://localhost:8080/openapi](http://localhost:8080/openapi)
+- **OpenAPI Spec (YAML):** [http://localhost:8080/openapi.yaml](http://localhost:8080/openapi.yaml)
+
+The `openapi.yaml` file is generated automatically at startup and can be downloaded directly from the above URL.
+
 ## Contributing
 
 Contributing, issues and feature requests are welcome. See the
