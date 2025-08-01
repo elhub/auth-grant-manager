@@ -22,7 +22,7 @@ import java.security.cert.X509Certificate
 data class VaultConfig(
     val url: String,
     val key: String,
-    val token: String
+    val tokenPath: String
 )
 
 data class CertificateConfig(
@@ -38,7 +38,7 @@ val signerModule = module {
         VaultConfig(
             url = cfg.property("url").getString(),
             key = cfg.property("key").getString(),
-            token = cfg.property("token").getString(),
+            tokenPath = cfg.property("tokenPath").getString(),
         )
     }
 
