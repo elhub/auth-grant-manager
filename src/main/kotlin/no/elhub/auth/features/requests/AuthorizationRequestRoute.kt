@@ -21,6 +21,7 @@ fun Route.requests(requestHandler: AuthorizationRequestHandler) {
         requestHandler.getAllRequests().fold(
             ifLeft = { authRequestProblem ->
                 when (authRequestProblem) {
+                    is AuthorizationRequestProblem.NotFoundError,
                     is AuthorizationRequestProblem.DataBaseError,
                     is AuthorizationRequestProblem.UnexpectedError ->
                         call.respond(
@@ -30,7 +31,6 @@ fun Route.requests(requestHandler: AuthorizationRequestHandler) {
                                 call.url(),
                             ),
                         )
-                    AuthorizationRequestProblem.NotFoundError -> error("NotFoundError should never be returned for findAll()")
                 }
             },
             ifRight = { requests ->
