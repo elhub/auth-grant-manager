@@ -90,7 +90,7 @@ fun Route.requests(requestHandler: AuthorizationRequestHandler) {
                     call.respond(
                         HttpStatusCode.BadRequest,
                         ApiErrorJson.from(
-                            ApiError.BadRequest(detail = "Authorization request contains extra, unknown, or missing fields."),
+                            ApiError.BadRequest(detail = "Authorization request contains extra, unknown, or missing fields. "),
                             call.url(),
                         )
                     )
@@ -106,7 +106,7 @@ fun Route.requests(requestHandler: AuthorizationRequestHandler) {
                         call.respond(
                             HttpStatusCode.NotFound,
                             ApiErrorJson.from(
-                                ApiError.NotFound(detail = "Authorization request was not inserted correctly into the database. "),
+                                ApiError.NotFound(detail = "Unexpected error occurred during processing the request. "),
                                 call.url(),
                             ),
                         )
