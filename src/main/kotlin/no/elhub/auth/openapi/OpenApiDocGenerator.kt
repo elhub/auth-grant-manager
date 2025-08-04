@@ -37,3 +37,8 @@ fun generateOpenApiSpec(): String {
     openApi.openapi = "3.1.1"
     return Yaml.mapper().writeValueAsString(openApi)
 }
+
+fun configureOpenApiYaml() {
+    val openApiYamlPath = "/tmp/openapi.yaml"
+    writeOpenApiSpecToFile(openApiYamlPath)
+}
