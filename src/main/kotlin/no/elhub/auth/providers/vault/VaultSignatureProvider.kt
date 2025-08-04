@@ -36,7 +36,7 @@ class VaultSignatureProvider(
     suspend fun sign(digest: ByteArray): ByteArray {
         val b64 = Base64.getEncoder().encodeToString(digest)
 
-        val resp = client.post("${cfg.url}/v1/transit/sign/${cfg.key}") {
+        val resp = client.post("${cfg.url}/sign/${cfg.key}") {
             contentType(ContentType.Application.Json)
             header("X-Vault-Token", readVaultToken())
             setBody(SignRequest(b64))
