@@ -27,7 +27,7 @@
           "type": "object",
           "description": "The attributes of the authorization request.",
           "properties": {
-            "type": {
+            "requestType": {
               "type": "string",
               "description": "The type of the authorization request.",
               "enum": ["SupplierChangeConsentRequest"]
@@ -44,7 +44,7 @@
             "requestedBy": {
               "$ref": "base-definitions.schema.json#/definitions/relationshipParty"
             },
-            "requestedTo": {
+            "requestedFrom": {
               "$ref": "base-definitions.schema.json#/definitions/relationshipParty"
             }
           }
