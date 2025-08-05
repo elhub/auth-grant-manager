@@ -21,6 +21,8 @@ dependencies {
     implementation(libs.bundles.functional.programming)
     // Koin
     implementation(libs.bundles.dependency.injection)
+    implementation("io.ktor:ktor-server-host-common:3.2.3")
+    implementation("io.ktor:ktor-server-status-pages:3.2.3")
     ksp(libs.di.koin.ksp.compiler)
     // Serialization
     implementation(libs.bundles.serialization)

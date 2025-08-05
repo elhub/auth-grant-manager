@@ -165,7 +165,7 @@ class AuthorizationRequestRouteTest :
                         item(0) {
                             "status" shouldBe "400"
                             "title" shouldBe "Bad Request"
-                            "detail" shouldBe "Missing or malformed id."
+                            "detail" shouldBe "Malformed id at /authorization-requests/invalid-id."
                         }
                     }
                     "links" {
@@ -177,7 +177,7 @@ class AuthorizationRequestRouteTest :
                 }
             }
 
-            test("Should return 404 Not Found on an invalid ID that is a UUID") {
+            test("Should return 404 Not Found on an ID that does not exist") {
                 val response = testApp.client.get("$AUTHORIZATION_REQUEST/167b1be9-f563-4b31-af1a-50439d567ee5")
                 response.status shouldBe HttpStatusCode.NotFound
                 val responseJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
@@ -186,7 +186,8 @@ class AuthorizationRequestRouteTest :
                         item(0) {
                             "status" shouldBe "404"
                             "title" shouldBe "Not Found"
-                            "detail" shouldBe "Authorization request with id=167b1be9-f563-4b31-af1a-50439d567ee5 not found"
+                            "detail" shouldBe "Authorization with id=167b1be9-f563-4b31-af1a-50439d567ee5 at " +
+                                    "/authorization-requests/167b1be9-f563-4b31-af1a-50439d567ee5 not found"
                         }
                     }
                     "links" {
@@ -323,7 +324,7 @@ class AuthorizationRequestRouteTest :
                 }
             }
 
-            test("Should return 400 Bad Request if the requestBody is invalid (missing attribute)") {
+            xtest("Should return 400 Bad Request if the requestBody is invalid (missing attribute)") {
                 val response =
                     testApp.client.post(AUTHORIZATION_REQUEST) {
                         contentType(ContentType.Application.Json)

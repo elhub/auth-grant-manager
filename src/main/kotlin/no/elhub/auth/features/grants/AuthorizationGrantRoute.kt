@@ -51,11 +51,7 @@ fun Route.grants(grantHandler: AuthorizationGrantHandler) {
         }
 
         get("/{$ID}") {
-            val id: UUID =
-                validateId(call.parameters[ID]).getOrElse { error ->
-                    call.respond(HttpStatusCode.fromValue(error.status), ApiErrorJson.from(error, call.url()))
-                    return@get
-                }
+            val id: UUID = validateId(call.parameters[ID])
 
             grantHandler.getGrantById(id).fold(
                 ifLeft = { authGrantProblem ->
@@ -94,11 +90,7 @@ fun Route.grants(grantHandler: AuthorizationGrantHandler) {
         }
 
         get("/{$ID}/scopes") {
-            val id: UUID =
-                validateId(call.parameters[ID]).getOrElse { error ->
-                    call.respond(HttpStatusCode.fromValue(error.status), ApiErrorJson.from(error, call.url()))
-                    return@get
-                }
+            val id: UUID = validateId(call.parameters[ID])
 
             grantHandler.getGrantScopesById(id).fold(
                 ifLeft = { authGrantProblem ->
