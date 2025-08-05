@@ -20,8 +20,7 @@ class VaultSignatureProvider(
 
     @Serializable
     private data class SignRequest(
-        val input: String,
-        val prehashed: Boolean = true
+        val input: String
     )
 
     @Serializable private data class SignResponse(val data: Data) {
