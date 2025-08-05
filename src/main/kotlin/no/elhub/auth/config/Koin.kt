@@ -10,6 +10,7 @@ import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.config.ApplicationConfig
+import kotlinx.serialization.json.Json
 import no.elhub.auth.features.documents.AuthorizationDocumentHandler
 import no.elhub.auth.features.documents.SigningService
 import no.elhub.auth.features.grants.AuthorizationGrantHandler
@@ -75,7 +76,11 @@ val httpClientModule = module {
                 socketTimeoutMillis = 10_000
             }
             install(ContentNegotiation) {
-                json()
+                json(
+                    Json {
+                        ignoreUnknownKeys = true
+                    }
+                )
             }
             install(Logging) {
                 level = LogLevel.ALL
