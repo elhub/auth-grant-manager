@@ -11,11 +11,14 @@ import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.config.ApplicationConfig
 import kotlinx.serialization.json.Json
+import no.elhub.auth.data.persist.repositories.ExposedDocumentRepository
+import no.elhub.auth.data.signing.DssSigningService
+import no.elhub.auth.data.signing.VaultSignatureProvider
 import no.elhub.auth.domain.document.AuthorizationDocumentHandler
+import no.elhub.auth.domain.document.DocumentRepository
 import no.elhub.auth.domain.document.SigningService
 import no.elhub.auth.domain.grant.AuthorizationGrantHandler
 import no.elhub.auth.domain.request.AuthorizationRequestHandler
-import no.elhub.auth.domain.document.VaultSignatureProvider
 import org.koin.dsl.module
 import org.koin.ktor.plugin.Koin
 import java.io.File
@@ -61,10 +64,11 @@ val signerModule = module {
 val appModule =
     module {
         single { VaultSignatureProvider(get(), get()) }
-        single { SigningService(get(), get(), get()) }
+        single<SigningService> { DssSigningService(get(), get(), get()) }
         single { AuthorizationGrantHandler() }
-        single { AuthorizationDocumentHandler(get()) }
+        single { AuthorizationDocumentHandler(get(), get()) }
         single { AuthorizationRequestHandler() }
+        single<DocumentRepository> { ExposedDocumentRepository() }
     }
 
 val httpClientModule = module {

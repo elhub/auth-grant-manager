@@ -9,10 +9,10 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import no.elhub.auth.domain.document.AuthorizationDocumentHandler
-import no.elhub.auth.presentation.documentRoutes
 import no.elhub.auth.domain.grant.AuthorizationGrantHandler
-import no.elhub.auth.presentation.grants
 import no.elhub.auth.domain.request.AuthorizationRequestHandler
+import no.elhub.auth.presentation.documentRoutes
+import no.elhub.auth.presentation.grants
 import no.elhub.auth.presentation.requests
 import org.koin.ktor.ext.inject
 

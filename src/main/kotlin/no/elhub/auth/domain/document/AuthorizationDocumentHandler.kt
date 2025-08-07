@@ -1,19 +1,11 @@
 package no.elhub.auth.domain.document
 
-import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.ApplicationCall
-import io.ktor.server.response.respond
-import no.elhub.auth.presentation.model.ResponseMeta
 import java.util.UUID
-import no.elhub.auth.data.exposed.repositories.AuthorizationDocumentRepository
 
 class AuthorizationDocumentHandler(
-    private val signingService: SigningService
+    private val signingService: SigningService,
+    private val documentRepository: DocumentRepository
 ) {
-
-    suspend fun getDocuments(call: ApplicationCall) {
-        call.respond(status = HttpStatusCode.OK, message = ResponseMeta())
-    }
 
     fun createDocument(command: CreateAuthorizationDocumentCommand): AuthorizationDocument {
         val pdfBytes = PdfGenerator.createChangeOfSupplierConfirmationPdf(
@@ -25,17 +17,9 @@ class AuthorizationDocumentHandler(
         val signedPdf = signingService.addPadesSignature(pdfBytes)
 
         val authorizationDocument = AuthorizationDocument.of(command, signedPdf)
-        AuthorizationDocumentRepository.insertDocument(authorizationDocument)
+        documentRepository.insertDocument(authorizationDocument)
         return authorizationDocument
     }
 
-    suspend fun getDocumentById(call: ApplicationCall) {
-        call.respond(status = HttpStatusCode.OK, message = ResponseMeta())
-    }
-
-    fun getDocumentFile(documentId: UUID): ByteArray? = AuthorizationDocumentRepository.getDocumentFile(documentId)
-
-    suspend fun patchDocumentById(call: ApplicationCall) {
-        call.respond(status = HttpStatusCode.OK, message = ResponseMeta())
-    }
+    fun getDocumentFile(documentId: UUID): ByteArray? = documentRepository.getDocumentFile(documentId)
 }

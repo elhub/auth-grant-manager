@@ -1,6 +1,3 @@
 package no.elhub.auth.domain.document
 
-interface SigningProvider {
-
-
-}
+interface SigningProvider

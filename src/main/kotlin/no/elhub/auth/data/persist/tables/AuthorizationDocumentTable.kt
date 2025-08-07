@@ -1,4 +1,4 @@
-package no.elhub.auth.data.exposed.tables
+package no.elhub.auth.data.persist.tables
 
 import no.elhub.auth.domain.document.AuthorizationDocument
 import org.jetbrains.exposed.dao.id.UUIDTable

@@ -10,13 +10,14 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.patch
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
-import no.elhub.auth.presentation.config.ID
-import java.util.*
 import no.elhub.auth.domain.document.AuthorizationDocument
 import no.elhub.auth.domain.document.AuthorizationDocumentHandler
 import no.elhub.auth.domain.document.CreateAuthorizationDocumentCommand
+import no.elhub.auth.presentation.config.ID
 import no.elhub.auth.presentation.model.PostAuthorizationDocumentRequest
+import no.elhub.auth.presentation.model.ResponseMeta
 import no.elhub.auth.presentation.model.toPostAuthorizationDocumentResponse
+import java.util.*
 
 fun Route.documentRoutes(documentService: AuthorizationDocumentHandler) {
     post {
@@ -37,14 +38,14 @@ fun Route.documentRoutes(documentService: AuthorizationDocumentHandler) {
 
     route("/{$ID}") {
         get {
-            documentService.getDocumentById(call)
+            call.respond(status = HttpStatusCode.OK, message = ResponseMeta())
         }
         patch {
-            documentService.patchDocumentById(call)
+            call.respond(status = HttpStatusCode.OK, message = ResponseMeta())
         }
     }
     get {
-        documentService.getDocuments(call)
+        call.respond(status = HttpStatusCode.OK, message = ResponseMeta())
     }
     get("/{$ID}.pdf") {
         val documentId = call.parameters[ID]

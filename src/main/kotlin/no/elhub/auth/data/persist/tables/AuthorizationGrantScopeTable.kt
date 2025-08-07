@@ -1,4 +1,4 @@
-package no.elhub.auth.data.exposed.tables
+package no.elhub.auth.data.persist.tables
 
 import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.Table
