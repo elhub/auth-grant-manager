@@ -33,6 +33,8 @@ mustache = "0.9.14"
 openhtmltopdf = "1.1.29"
 pdfbox = "3.0.5"
 dss = "6.2"
+swagger = "2.2.34"
+jakarta = "4.0.0"
 
 
 [plugins]
@@ -97,6 +99,10 @@ dss-token = { group = "eu.europa.ec.joinup.sd-dss", name = "dss-token", version.
 dss-validation = { group = "eu.europa.ec.joinup.sd-dss", name = "dss-validation", version.ref = "dss" }
 dss-utils-apache-commons = { group = "eu.europa.ec.joinup.sd-dss", name = "dss-utils-apache-commons", version.ref = "dss" }
 dss-crl-parser-stream = { group = "eu.europa.ec.joinup.sd-dss", name = "dss-crl-parser-stream", version.ref = "dss" }
+swagger-annotations = { group = "io.swagger.core.v3", name = "swagger-annotations", version.ref = "swagger" }
+swagger-integration = { group = "io.swagger.core.v3", name = "swagger-integration", version.ref = "swagger" }
+swagger-jaxrs2-jakarta = { group = "io.swagger.core.v3", name = "swagger-jaxrs2-jakarta", version.ref = "swagger" }
+jakarta = { group = "jakarta.ws.rs", name = "jakarta.ws.rs-api", version.ref = "jakarta" }
 
 # Bundles should be used to group dependencies that are frequently used together.
 [bundles]
@@ -113,3 +119,4 @@ monitoring = ["ktor-server-metrics-micrometer", "monitoring-micrometer-registry-
 serialization = ["kotlinx-datetime", "kotlinx-serialization-json", "ktor-serialization-kotlinx-json", "serialization-yaml-snakeyaml"]
 pdf-generation = ["templating-mustache", "pdf-openhtmltopdf-pdfbox", "pdf-pdfbox"]
 dss = ["dss-pades-pdfbox", "dss-token", "dss-validation", "dss-utils-apache-commons", "dss-crl-parser-stream"]
+swagger-core = ["swagger-annotations", "swagger-integration", "swagger-jaxrs2-jakarta", "jakarta"]

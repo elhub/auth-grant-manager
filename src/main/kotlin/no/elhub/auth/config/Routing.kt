@@ -41,7 +41,8 @@ fun Application.configureRouting() {
         get(HEALTH) {
             call.respondText("OK", status = HttpStatusCode.OK)
         }
-        swaggerUI(path = "openapi", swaggerFile = "openapi.yaml")
+
+        swaggerUI(path = "openapi", swaggerFile = "/tmp/openapi.yaml")
         staticResources("schemas/", "schemas")
     }
 }
