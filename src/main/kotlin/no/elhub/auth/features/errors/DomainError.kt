@@ -13,5 +13,4 @@ sealed class DomainError {
         data object AuthorizationNotFound : DomainError()
         data class Unexpected(val exception: Exception) : DomainError()
     }
-
 }
