@@ -5,10 +5,10 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import no.elhub.auth.model.AuthorizationRequest
 import no.elhub.devxp.jsonapi.model.JsonApiAttributes
+import no.elhub.devxp.jsonapi.model.JsonApiMeta
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipData
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipToOne
 import no.elhub.devxp.jsonapi.model.JsonApiRelationships
-import no.elhub.devxp.jsonapi.response.JsonApiMeta
 import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObjectWithRelationships
 
 @Serializable
