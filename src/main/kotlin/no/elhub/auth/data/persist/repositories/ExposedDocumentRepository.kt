@@ -1,18 +1,19 @@
-package no.elhub.auth.data.exposed.repositories
+package no.elhub.auth.data.persist.repositories
 
-import java.util.*
-import no.elhub.auth.data.exposed.tables.AuthorizationDocumentScopeTable
-import no.elhub.auth.data.exposed.tables.AuthorizationDocumentTable
-import no.elhub.auth.data.exposed.tables.AuthorizationScopeTable
+import no.elhub.auth.data.persist.tables.AuthorizationDocumentScopeTable
+import no.elhub.auth.data.persist.tables.AuthorizationDocumentTable
+import no.elhub.auth.data.persist.tables.AuthorizationScopeTable
 import no.elhub.auth.domain.document.AuthorizationDocument
+import no.elhub.auth.domain.document.DocumentRepository
 import no.elhub.auth.domain.shared.AuthorizationResourceType
 import no.elhub.auth.domain.shared.PermissionType
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.insertAndGetId
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.util.*
 
-object AuthorizationDocumentRepository {
-    fun insertDocument(doc: AuthorizationDocument) {
+class ExposedDocumentRepository : DocumentRepository {
+    override fun insertDocument(doc: AuthorizationDocument) {
         transaction {
             val documentId = AuthorizationDocumentTable.insertAndGetId {
                 it[id] = doc.id
@@ -39,7 +40,7 @@ object AuthorizationDocumentRepository {
         }
     }
 
-    fun getDocumentFile(id: UUID): ByteArray? = transaction {
+    override fun getDocumentFile(id: UUID): ByteArray? = transaction {
         AuthorizationDocumentTable.select(listOf(AuthorizationDocumentTable.file))
             .where { AuthorizationDocumentTable.id eq id }
             .map { it[AuthorizationDocumentTable.file] }.singleOrNull()

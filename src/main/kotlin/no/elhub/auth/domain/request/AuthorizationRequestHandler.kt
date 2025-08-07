@@ -1,9 +1,9 @@
 package no.elhub.auth.domain.request
 
 import arrow.core.Either
-import java.util.UUID
-import no.elhub.auth.data.exposed.repositories.AuthorizationRequestRepository
+import no.elhub.auth.data.persist.repositories.AuthorizationRequestRepository
 import no.elhub.auth.presentation.model.PostAuthorizationRequestPayload
+import java.util.UUID
 
 class AuthorizationRequestHandler {
 

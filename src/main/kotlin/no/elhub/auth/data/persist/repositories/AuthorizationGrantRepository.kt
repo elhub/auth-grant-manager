@@ -1,15 +1,13 @@
-package no.elhub.auth.data.exposed.repositories
+package no.elhub.auth.data.persist.repositories
 
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
-import java.sql.SQLException
-import java.util.*
 import kotlinx.datetime.Instant
-import no.elhub.auth.data.exposed.tables.AuthorizationGrantTable
-import no.elhub.auth.data.exposed.tables.AuthorizationPartyTable
-import no.elhub.auth.data.exposed.tables.AuthorizationScopeTable
-import no.elhub.auth.data.exposed.tables.toAuthorizationGrant
+import no.elhub.auth.data.persist.tables.AuthorizationGrantTable
+import no.elhub.auth.data.persist.tables.AuthorizationPartyTable
+import no.elhub.auth.data.persist.tables.AuthorizationScopeTable
+import no.elhub.auth.data.persist.tables.toAuthorizationGrant
 import no.elhub.auth.domain.grant.AuthorizationGrant
 import no.elhub.auth.domain.grant.AuthorizationGrantProblem
 import no.elhub.auth.domain.shared.AuthorizationGrantScopeTable
@@ -20,6 +18,8 @@ import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.slf4j.LoggerFactory
+import java.sql.SQLException
+import java.util.*
 
 object AuthorizationGrantRepository {
 

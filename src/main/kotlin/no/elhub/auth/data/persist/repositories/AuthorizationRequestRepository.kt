@@ -1,15 +1,12 @@
-package no.elhub.auth.data.exposed.repositories
+package no.elhub.auth.data.persist.repositories
 
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
-import java.sql.SQLException
-import java.time.LocalDateTime
-import java.util.*
-import no.elhub.auth.data.exposed.tables.AuthorizationRequestPropertyTable
-import no.elhub.auth.data.exposed.tables.AuthorizationRequestTable
-import no.elhub.auth.data.exposed.tables.toAuthorizationProperty
-import no.elhub.auth.data.exposed.tables.toAuthorizationRequest
+import no.elhub.auth.data.persist.tables.AuthorizationRequestPropertyTable
+import no.elhub.auth.data.persist.tables.AuthorizationRequestTable
+import no.elhub.auth.data.persist.tables.toAuthorizationProperty
+import no.elhub.auth.data.persist.tables.toAuthorizationRequest
 import no.elhub.auth.domain.request.AuthorizationRequest
 import no.elhub.auth.domain.request.AuthorizationRequestProblemById
 import no.elhub.auth.domain.request.AuthorizationRequestProblemCreate
@@ -21,6 +18,9 @@ import org.jetbrains.exposed.sql.insertAndGetId
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.slf4j.LoggerFactory
+import java.sql.SQLException
+import java.time.LocalDateTime
+import java.util.*
 
 object AuthorizationRequestRepository {
 
@@ -106,7 +106,7 @@ object AuthorizationRequestRepository {
                     when (byIdProblem) {
                         is AuthorizationRequestProblemById.DataBaseError -> AuthorizationRequestProblemCreate.DataBaseError
                         is AuthorizationRequestProblemById.UnexpectedError, AuthorizationRequestProblemById.NotFoundError
-                            -> AuthorizationRequestProblemCreate.UnexpectedError
+                        -> AuthorizationRequestProblemCreate.UnexpectedError
                     }
                 }
             }

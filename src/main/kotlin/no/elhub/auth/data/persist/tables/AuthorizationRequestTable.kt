@@ -1,4 +1,4 @@
-package no.elhub.auth.data.exposed.tables
+package no.elhub.auth.data.persist.tables
 
 import kotlinx.datetime.toKotlinLocalDateTime
 import no.elhub.auth.domain.request.AuthorizationRequest
@@ -9,7 +9,7 @@ import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.javatime.CurrentDateTime
 import org.jetbrains.exposed.sql.javatime.datetime
 
-object AuthorizationRequestTable  : UUIDTable("authorization_request") {
+object AuthorizationRequestTable : UUIDTable("authorization_request") {
     val requestType = customEnumeration(
         name = "request_type",
         fromDb = { value -> RequestType.valueOf(value as String) },
@@ -27,14 +27,13 @@ object AuthorizationRequestTable  : UUIDTable("authorization_request") {
     val validTo = datetime("valid_to")
 }
 
-
 fun ResultRow.toAuthorizationRequest() = AuthorizationRequest(
-        id = this[AuthorizationRequestTable.id].toString(),
-        requestType = this[AuthorizationRequestTable.requestType],
-        status = this[AuthorizationRequestTable.status],
-        requestedBy = this[AuthorizationRequestTable.requestedBy],
-        requestedFrom = this[AuthorizationRequestTable.requestedFrom],
-        createdAt = this[AuthorizationRequestTable.createdAt].toKotlinLocalDateTime(),
-        updatedAt = this[AuthorizationRequestTable.updatedAt].toKotlinLocalDateTime(),
-        validTo = this[AuthorizationRequestTable.validTo].toKotlinLocalDateTime()
+    id = this[AuthorizationRequestTable.id].toString(),
+    requestType = this[AuthorizationRequestTable.requestType],
+    status = this[AuthorizationRequestTable.status],
+    requestedBy = this[AuthorizationRequestTable.requestedBy],
+    requestedFrom = this[AuthorizationRequestTable.requestedFrom],
+    createdAt = this[AuthorizationRequestTable.createdAt].toKotlinLocalDateTime(),
+    updatedAt = this[AuthorizationRequestTable.updatedAt].toKotlinLocalDateTime(),
+    validTo = this[AuthorizationRequestTable.validTo].toKotlinLocalDateTime()
 )

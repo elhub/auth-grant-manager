@@ -10,20 +10,20 @@ import eu.europa.esig.dss.spi.validation.CommonCertificateVerifier
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import no.elhub.auth.presentation.config.SigningCertificate
-import no.elhub.auth.presentation.config.SigningCertificateChain
-import no.elhub.auth.presentation.config.loadCerts
+import no.elhub.auth.data.signing.DssSigningService
+import no.elhub.auth.data.signing.VaultSignatureProvider
 import no.elhub.auth.extensions.VaultTransitTestContainerExtension
 import no.elhub.auth.extensions.httpTestClient
 import no.elhub.auth.extensions.localVaultConfig
-import no.elhub.auth.domain.document.VaultSignatureProvider
+import no.elhub.auth.presentation.config.SigningCertificate
+import no.elhub.auth.presentation.config.SigningCertificateChain
+import no.elhub.auth.presentation.config.loadCerts
 import no.elhub.auth.utils.TestCertificateUtil
 import org.apache.commons.codec.Resources
 import java.io.File
 import java.math.BigInteger
 import java.security.MessageDigest
 import java.util.Base64
-import no.elhub.auth.domain.document.SigningService
 
 class SigningServiceTest : FunSpec({
     extensions(VaultTransitTestContainerExtension)
@@ -39,7 +39,7 @@ class SigningServiceTest : FunSpec({
     val signingCertificateChain: SigningCertificateChain =
         loadCerts(File(TestCertificateUtil.Constants.CERTIFICATE_LOCATION))
 
-    val signingService = SigningService(vaultSignatureProvider, signingCertificate, signingCertificateChain)
+    val signingService = DssSigningService(vaultSignatureProvider, signingCertificate, signingCertificateChain)
     val unsignedPdfBytes = Resources.getInputStream("unsigned.pdf").readAllBytes()
 
     test("Should add one signature with proper parameters") {

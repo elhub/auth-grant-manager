@@ -1,5 +1,4 @@
-package no.elhub.auth.data.exposed.tables
-
+package no.elhub.auth.data.persist.tables
 
 import kotlinx.datetime.toKotlinLocalDateTime
 import no.elhub.auth.domain.grant.AuthorizationGrant

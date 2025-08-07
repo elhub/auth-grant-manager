@@ -1,10 +1,10 @@
-package no.elhub.auth.data.exposed.tables
+package no.elhub.auth.data.persist.tables
 
 import no.elhub.auth.domain.shared.ElhubResource
 import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.sql.javatime.timestamp
 
-object AuthorizationPartyTable: LongIdTable("authorization_party") {
+object AuthorizationPartyTable : LongIdTable("authorization_party") {
     val type =
         customEnumeration(
             name = "type",

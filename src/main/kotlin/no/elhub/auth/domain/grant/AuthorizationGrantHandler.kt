@@ -1,9 +1,9 @@
 package no.elhub.auth.domain.grant
 
 import arrow.core.Either
-import java.util.UUID
-import no.elhub.auth.data.exposed.repositories.AuthorizationGrantRepository
+import no.elhub.auth.data.persist.repositories.AuthorizationGrantRepository
 import no.elhub.auth.domain.shared.AuthorizationScope
+import java.util.UUID
 
 class AuthorizationGrantHandler {
     fun getAllGrants(): Either<AuthorizationGrantProblem, AuthorizationGrantRepository.GrantsWithParties> = AuthorizationGrantRepository.findAll()
