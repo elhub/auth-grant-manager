@@ -13,5 +13,4 @@ sealed class DomainError {
         data object AuthorizationNotFound : RepositoryError()
         data class Unexpected(val exception: Exception) : RepositoryError()
     }
-
 }
