@@ -10,7 +10,6 @@ import no.elhub.auth.data.persist.tables.AuthorizationScopeTable
 import no.elhub.auth.data.persist.tables.toAuthorizationGrant
 import no.elhub.auth.domain.grant.AuthorizationGrant
 import no.elhub.auth.domain.grant.AuthorizationGrantProblem
-import no.elhub.auth.domain.shared.AuthorizationGrantScopeTable
 import no.elhub.auth.domain.shared.AuthorizationParty
 import no.elhub.auth.domain.shared.AuthorizationScope
 import no.elhub.auth.domain.shared.ElhubResource
@@ -20,6 +19,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.slf4j.LoggerFactory
 import java.sql.SQLException
 import java.util.*
+import no.elhub.auth.data.persist.tables.AuthorizationGrantScopeTable
 
 object AuthorizationGrantRepository {
 
