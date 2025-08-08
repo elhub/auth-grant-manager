@@ -1,4 +1,4 @@
-package no.elhub.auth.presentation.config
+package no.elhub.auth.bootstrap
 
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO

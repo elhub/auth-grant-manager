@@ -8,7 +8,7 @@ import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import kotlinx.serialization.Serializable
-import no.elhub.auth.presentation.config.VaultConfig
+import no.elhub.auth.bootstrap.VaultConfig
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.*

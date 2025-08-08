@@ -1,8 +1,8 @@
-package no.elhub.auth.presentation.model.errors
+package no.elhub.auth.presentation.jsonapi.errors
 
 import kotlinx.serialization.Serializable
-import no.elhub.auth.presentation.model.ResponseLink
-import no.elhub.auth.presentation.model.ResponseMeta
+import no.elhub.auth.presentation.jsonapi.ResponseLink
+import no.elhub.auth.presentation.jsonapi.ResponseMeta
 
 @Serializable
 class ApiErrorJson(

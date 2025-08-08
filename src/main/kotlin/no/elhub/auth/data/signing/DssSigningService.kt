@@ -12,8 +12,8 @@ import eu.europa.esig.dss.pades.signature.PAdESService
 import eu.europa.esig.dss.spi.validation.CommonCertificateVerifier
 import kotlinx.coroutines.runBlocking
 import no.elhub.auth.domain.document.SigningService
-import no.elhub.auth.presentation.config.SigningCertificate
-import no.elhub.auth.presentation.config.SigningCertificateChain
+import no.elhub.auth.bootstrap.SigningCertificate
+import no.elhub.auth.bootstrap.SigningCertificateChain
 
 class DssSigningService(
     private val vaultProvider: VaultSignatureProvider,

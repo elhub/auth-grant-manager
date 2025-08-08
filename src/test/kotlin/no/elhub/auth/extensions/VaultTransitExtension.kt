@@ -8,7 +8,7 @@ import io.kotest.core.annotation.AutoScan
 import io.kotest.core.listeners.AfterProjectListener
 import io.kotest.core.listeners.BeforeSpecListener
 import io.kotest.core.spec.Spec
-import no.elhub.auth.presentation.config.VaultConfig
+import no.elhub.auth.bootstrap.VaultConfig
 import no.elhub.auth.utils.TestCertificateUtil
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.wait.strategy.Wait

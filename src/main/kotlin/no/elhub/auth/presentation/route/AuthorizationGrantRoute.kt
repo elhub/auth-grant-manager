@@ -1,4 +1,4 @@
-package no.elhub.auth.presentation
+package no.elhub.auth.presentation.route
 
 import arrow.core.getOrElse
 import io.ktor.http.HttpStatusCode
@@ -9,13 +9,13 @@ import io.ktor.server.routing.route
 import io.ktor.server.util.url
 import no.elhub.auth.domain.grant.AuthorizationGrantHandler
 import no.elhub.auth.domain.grant.AuthorizationGrantProblem
-import no.elhub.auth.presentation.config.ID
-import no.elhub.auth.presentation.model.errors.ApiError
-import no.elhub.auth.presentation.model.errors.ApiErrorJson
-import no.elhub.auth.presentation.model.toGetAuthorizationGrantResponse
-import no.elhub.auth.presentation.model.toGetAuthorizationGrantScopeResponse
-import no.elhub.auth.presentation.model.toGetAuthorizationGrantsResponse
+import no.elhub.auth.presentation.jsonapi.errors.ApiError
+import no.elhub.auth.presentation.jsonapi.errors.ApiErrorJson
+import no.elhub.auth.presentation.jsonapi.toGetAuthorizationGrantResponse
+import no.elhub.auth.presentation.jsonapi.toGetAuthorizationGrantScopeResponse
+import no.elhub.auth.presentation.jsonapi.toGetAuthorizationGrantsResponse
 import java.util.UUID
+import no.elhub.auth.presentation.validation.validateId
 
 fun Route.grants(grantHandler: AuthorizationGrantHandler) {
     route("") {

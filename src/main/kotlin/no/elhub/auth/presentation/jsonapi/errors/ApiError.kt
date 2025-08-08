@@ -1,4 +1,4 @@
-package no.elhub.auth.presentation.model.errors
+package no.elhub.auth.presentation.jsonapi.errors
 
 import io.ktor.http.HttpStatusCode
 import kotlinx.serialization.DeserializationStrategy

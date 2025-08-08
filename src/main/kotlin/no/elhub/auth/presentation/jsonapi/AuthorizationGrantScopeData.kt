@@ -1,4 +1,4 @@
-package no.elhub.auth.presentation.model
+package no.elhub.auth.presentation.jsonapi
 
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable

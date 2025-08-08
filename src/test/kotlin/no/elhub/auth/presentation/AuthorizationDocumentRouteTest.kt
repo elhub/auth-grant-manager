@@ -16,7 +16,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import no.elhub.auth.extensions.PostgresTestContainerExtension
 import no.elhub.auth.extensions.VaultTransitTestContainerExtension
-import no.elhub.auth.presentation.config.AUTHORIZATION_DOCUMENT
+import no.elhub.auth.presentation.route.AUTHORIZATION_DOCUMENT
 import no.elhub.auth.utils.DocumentValidationHelper
 import no.elhub.auth.utils.defaultTestApplication
 import no.elhub.auth.utils.validate

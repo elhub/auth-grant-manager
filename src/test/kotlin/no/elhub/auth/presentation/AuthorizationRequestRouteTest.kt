@@ -14,7 +14,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import no.elhub.auth.extensions.PostgresTestContainerExtension
 import no.elhub.auth.extensions.RunPostgresScriptExtension
-import no.elhub.auth.presentation.config.AUTHORIZATION_REQUEST
+import no.elhub.auth.presentation.route.AUTHORIZATION_REQUEST
 import no.elhub.auth.utils.defaultTestApplication
 import no.elhub.auth.utils.validate
 

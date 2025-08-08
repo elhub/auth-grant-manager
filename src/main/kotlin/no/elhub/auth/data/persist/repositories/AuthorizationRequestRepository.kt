@@ -13,7 +13,7 @@ import no.elhub.auth.domain.request.AuthorizationRequestProblemCreate
 import no.elhub.auth.domain.request.AuthorizationRequestProblemList
 import no.elhub.auth.domain.request.RequestStatus
 import no.elhub.auth.domain.request.RequestType
-import no.elhub.auth.presentation.model.PostAuthorizationRequestPayload
+import no.elhub.auth.presentation.jsonapi.PostAuthorizationRequestPayload
 import org.jetbrains.exposed.sql.insertAndGetId
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction

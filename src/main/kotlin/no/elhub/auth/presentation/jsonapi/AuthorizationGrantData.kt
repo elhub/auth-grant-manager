@@ -1,4 +1,4 @@
-package no.elhub.auth.presentation.model
+package no.elhub.auth.presentation.jsonapi
 
 import kotlinx.serialization.Serializable
 import no.elhub.auth.domain.grant.AuthorizationGrant

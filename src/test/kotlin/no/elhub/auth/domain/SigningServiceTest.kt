@@ -15,9 +15,9 @@ import no.elhub.auth.data.signing.VaultSignatureProvider
 import no.elhub.auth.extensions.VaultTransitTestContainerExtension
 import no.elhub.auth.extensions.httpTestClient
 import no.elhub.auth.extensions.localVaultConfig
-import no.elhub.auth.presentation.config.SigningCertificate
-import no.elhub.auth.presentation.config.SigningCertificateChain
-import no.elhub.auth.presentation.config.loadCerts
+import no.elhub.auth.bootstrap.SigningCertificate
+import no.elhub.auth.bootstrap.SigningCertificateChain
+import no.elhub.auth.bootstrap.loadCerts
 import no.elhub.auth.utils.TestCertificateUtil
 import org.apache.commons.codec.Resources
 import java.io.File

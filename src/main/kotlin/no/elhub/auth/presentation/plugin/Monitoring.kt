@@ -1,4 +1,4 @@
-package no.elhub.auth.presentation.config
+package no.elhub.auth.presentation.plugin
 
 import com.sksamuel.cohort.Cohort
 import com.sksamuel.cohort.HealthCheckRegistry

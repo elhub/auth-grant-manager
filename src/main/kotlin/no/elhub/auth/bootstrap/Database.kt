@@ -1,4 +1,4 @@
-package no.elhub.auth.presentation.config
+package no.elhub.auth.bootstrap
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource

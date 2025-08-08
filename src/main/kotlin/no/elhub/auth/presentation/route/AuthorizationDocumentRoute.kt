@@ -1,4 +1,4 @@
-package no.elhub.auth.presentation
+package no.elhub.auth.presentation.route
 
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
@@ -13,10 +13,9 @@ import io.ktor.server.routing.route
 import no.elhub.auth.domain.document.AuthorizationDocument
 import no.elhub.auth.domain.document.AuthorizationDocumentHandler
 import no.elhub.auth.domain.document.CreateAuthorizationDocumentCommand
-import no.elhub.auth.presentation.config.ID
-import no.elhub.auth.presentation.model.PostAuthorizationDocumentRequest
-import no.elhub.auth.presentation.model.ResponseMeta
-import no.elhub.auth.presentation.model.toPostAuthorizationDocumentResponse
+import no.elhub.auth.presentation.jsonapi.PostAuthorizationDocumentRequest
+import no.elhub.auth.presentation.jsonapi.ResponseMeta
+import no.elhub.auth.presentation.jsonapi.toPostAuthorizationDocumentResponse
 import java.util.*
 
 fun Route.documentRoutes(documentService: AuthorizationDocumentHandler) {

@@ -1,4 +1,4 @@
-package no.elhub.auth.presentation.config
+package no.elhub.auth.presentation.route
 
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
@@ -11,9 +11,6 @@ import io.ktor.server.routing.routing
 import no.elhub.auth.domain.document.AuthorizationDocumentHandler
 import no.elhub.auth.domain.grant.AuthorizationGrantHandler
 import no.elhub.auth.domain.request.AuthorizationRequestHandler
-import no.elhub.auth.presentation.documentRoutes
-import no.elhub.auth.presentation.grants
-import no.elhub.auth.presentation.requests
 import org.koin.ktor.ext.inject
 
 const val AUTHORIZATION_API = ""

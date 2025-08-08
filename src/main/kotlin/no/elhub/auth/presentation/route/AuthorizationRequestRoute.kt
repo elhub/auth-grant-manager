@@ -1,4 +1,4 @@
-package no.elhub.auth.presentation
+package no.elhub.auth.presentation.route
 
 import arrow.core.getOrElse
 import io.ktor.http.HttpStatusCode
@@ -14,13 +14,13 @@ import no.elhub.auth.domain.request.AuthorizationRequestHandler
 import no.elhub.auth.domain.request.AuthorizationRequestProblemById
 import no.elhub.auth.domain.request.AuthorizationRequestProblemCreate
 import no.elhub.auth.domain.request.AuthorizationRequestProblemList
-import no.elhub.auth.presentation.config.ID
-import no.elhub.auth.presentation.model.PostAuthorizationRequestPayload
-import no.elhub.auth.presentation.model.errors.ApiError
-import no.elhub.auth.presentation.model.errors.ApiErrorJson
-import no.elhub.auth.presentation.model.toGetAuthorizationRequestResponse
-import no.elhub.auth.presentation.model.toGetAuthorizationRequestsResponse
+import no.elhub.auth.presentation.jsonapi.PostAuthorizationRequestPayload
+import no.elhub.auth.presentation.jsonapi.errors.ApiError
+import no.elhub.auth.presentation.jsonapi.errors.ApiErrorJson
+import no.elhub.auth.presentation.jsonapi.toGetAuthorizationRequestResponse
+import no.elhub.auth.presentation.jsonapi.toGetAuthorizationRequestsResponse
 import java.util.UUID
+import no.elhub.auth.presentation.validation.validateId
 
 fun Route.requests(requestHandler: AuthorizationRequestHandler) {
     get {

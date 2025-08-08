@@ -1,4 +1,4 @@
-package no.elhub.auth.presentation.config
+package no.elhub.auth.presentation.plugin
 
 import io.ktor.server.application.Application
 import io.ktor.server.application.install

@@ -2,7 +2,7 @@ package no.elhub.auth.domain.request
 
 import arrow.core.Either
 import no.elhub.auth.data.persist.repositories.AuthorizationRequestRepository
-import no.elhub.auth.presentation.model.PostAuthorizationRequestPayload
+import no.elhub.auth.presentation.jsonapi.PostAuthorizationRequestPayload
 import java.util.UUID
 
 class AuthorizationRequestHandler {

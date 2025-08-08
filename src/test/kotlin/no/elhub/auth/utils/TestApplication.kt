@@ -2,7 +2,7 @@ package no.elhub.auth.utils
 
 import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.testing.TestApplication
-import no.elhub.auth.presentation.module
+import no.elhub.auth.bootstrap.module
 
 fun defaultTestApplication(): TestApplication = TestApplication {
     application {

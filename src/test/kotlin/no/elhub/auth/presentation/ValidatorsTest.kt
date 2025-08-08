@@ -3,9 +3,11 @@ package no.elhub.auth.presentation
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import no.elhub.auth.presentation.model.PostAuthorizationRequestPayload
-import no.elhub.auth.presentation.model.PostRequestPayloadAttributes
-import no.elhub.auth.presentation.model.PostRequestPayloadRelationships
+import no.elhub.auth.presentation.jsonapi.PostAuthorizationRequestPayload
+import no.elhub.auth.presentation.jsonapi.PostRequestPayloadAttributes
+import no.elhub.auth.presentation.jsonapi.PostRequestPayloadRelationships
+import no.elhub.auth.presentation.validation.validateAuthorizationRequest
+import no.elhub.auth.presentation.validation.validateId
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipData
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipToOne
 import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObjectWithRelationships

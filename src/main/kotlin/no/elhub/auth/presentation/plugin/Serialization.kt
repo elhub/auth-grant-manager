@@ -1,4 +1,4 @@
-package no.elhub.auth.presentation.config
+package no.elhub.auth.presentation.plugin
 
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
