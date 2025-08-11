@@ -4,7 +4,7 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import kotlinx.datetime.Instant
-import no.elhub.auth.grantmanager.presentation.model.AuthorizationGrantDbEntity
+import no.elhub.auth.grantmanager.data.models.AuthorizationGrantDbEntity
 import no.elhub.auth.grantmanager.presentation.model.AuthorizationGrantScopes
 import no.elhub.auth.grantmanager.presentation.model.AuthorizationScope
 import no.elhub.auth.grantmanager.presentation.model.AuthorizationScopes

@@ -2,6 +2,8 @@ package no.elhub.auth.grantmanager.presentation.model
 
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
+import no.elhub.auth.grantmanager.data.models.AuthorizationDocumentDbEntity
+import no.elhub.auth.grantmanager.data.models.AuthorizationGrantDbEntity
 import no.elhub.auth.grantmanager.presentation.utils.PGEnum
 import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.sql.ReferenceOption
@@ -58,10 +60,10 @@ object AuthorizationGrantScopes : Table("auth.authorization_grant_scope") {
 }
 
 object AuthorizationDocumentScopes : Table("auth.authorization_document_scope") {
-    val authorizationDocumentId = uuid("authorization_document_id")
-        .references(AuthorizationDocument.AuthorizationDocuments.id, onDelete = ReferenceOption.CASCADE)
+    val authorizationDocumentDbEntityId = uuid("authorization_document_id")
+        .references(AuthorizationDocumentDbEntity.AuthorizationDocuments.id, onDelete = ReferenceOption.CASCADE)
     val authorizationScopeId = long("authorization_scope_id")
         .references(AuthorizationScopes.id, onDelete = ReferenceOption.CASCADE)
     val createdAt = timestamp("created_at").clientDefault { java.time.Instant.now() }
-    override val primaryKey = PrimaryKey(authorizationDocumentId, authorizationScopeId)
+    override val primaryKey = PrimaryKey(authorizationDocumentDbEntityId, authorizationScopeId)
 }

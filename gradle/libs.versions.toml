@@ -33,7 +33,7 @@ mustache = "0.9.14"
 openhtmltopdf = "1.1.28"
 pdfbox = "3.0.5"
 dss = "6.2"
-
+kault = "1.5.2"
 
 [plugins]
 elhub-gradle-plugin = { id = "no.elhub.devxp.kotlin-service", version.ref = "elhub-gradle" }
@@ -96,6 +96,7 @@ dss-token = { group = "eu.europa.ec.joinup.sd-dss", name = "dss-token", version.
 dss-validation = { group = "eu.europa.ec.joinup.sd-dss", name = "dss-validation", version.ref = "dss" }
 dss-utils-apache-commons = { group = "eu.europa.ec.joinup.sd-dss", name = "dss-utils-apache-commons", version.ref = "dss" }
 dss-crl-parser-stream = { group = "eu.europa.ec.joinup.sd-dss", name = "dss-crl-parser-stream", version.ref = "dss" }
+hashicorp-vault-kault = { group = "io.github.hansanto", name = "kault", version.ref = "kault" }
 
 # Bundles should be used to group dependencies that are frequently used together.
 [bundles]
@@ -112,3 +113,4 @@ monitoring = ["ktor-server-metrics-micrometer", "monitoring-micrometer-registry-
 serialization = ["kotlinx-datetime", "kotlinx-serialization-json", "ktor-serialization-kotlinx-json", "serialization-yaml-snakeyaml"]
 pdf-generation = ["templating-mustache", "pdf-openhtmltopdf-pdfbox", "pdf-pdfbox"]
 dss = ["dss-pades-pdfbox", "dss-token", "dss-validation", "dss-utils-apache-commons", "dss-crl-parser-stream"]
+signing = ["hashicorp-vault-kault"]

@@ -36,6 +36,8 @@ dependencies {
     // PDF generation and signing
     implementation(libs.bundles.pdf.generation)
     implementation(libs.bundles.dss)
+    // Hashicorp Vault signing
+    implementation(libs.bundles.signing)
     // Observability
     implementation(libs.bundles.logging)
     implementation(libs.bundles.monitoring)

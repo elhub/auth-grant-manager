@@ -1,7 +1,7 @@
 package no.elhub.auth.grantmanager.presentation.features.grants
 
 import arrow.core.Either
-import no.elhub.auth.grantmanager.presentation.model.AuthorizationGrantDbEntity
+import no.elhub.auth.grantmanager.data.models.AuthorizationGrantDbEntity
 import no.elhub.auth.grantmanager.presentation.model.AuthorizationScope
 import java.util.UUID
 
