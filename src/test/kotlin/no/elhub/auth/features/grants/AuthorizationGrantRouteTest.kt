@@ -36,27 +36,6 @@ class AuthorizationGrantRouteTest :
 
         context("GET /authorization-grants/{id}") {
 
-            test("Should return 400 on an invalid ID") {
-                val response = testApp.client.get("$AUTHORIZATION_GRANT/test")
-                response.status shouldBe HttpStatusCode.BadRequest
-                val responseJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
-                responseJson.validate {
-                    "errors".shouldBeList(size = 1) {
-                        item(0) {
-                            "status" shouldBe "400"
-                            "title" shouldBe "Bad Request"
-                            "detail" shouldBe "Missing or malformed id."
-                        }
-                    }
-                    "links" {
-                        "self" shouldBe "http://localhost/authorization-grants/test"
-                    }
-                    "meta" {
-                        "createdAt".shouldNotBeNull()
-                    }
-                }
-            }
-
             test("Should return 200 OK on a valid ID") {
                 val response = testApp.client.get("$AUTHORIZATION_GRANT/123e4567-e89b-12d3-a456-426614174000")
                 response.status shouldBe HttpStatusCode.OK
@@ -95,6 +74,22 @@ class AuthorizationGrantRouteTest :
                 }
             }
 
+            test("Should return 400 on an invalid ID") {
+                val response = testApp.client.get("$AUTHORIZATION_GRANT/test")
+                response.status shouldBe HttpStatusCode.BadRequest
+                val responseJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+                responseJson.validate {
+                    "errors".shouldBeList(size = 1) {
+                        item(0) {
+                            "status" shouldBe "400"
+                            "code" shouldBe "INVALID_RESOURCE_ID"
+                            "title" shouldBe "Malformed ID"
+                            "detail" shouldBe "The provided ID is not valid"
+                        }
+                    }
+                }
+            }
+
             test("Should return 404 on a nonexistent ID") {
                 val response = testApp.client.get("$AUTHORIZATION_GRANT/123e4567-e89b-12d3-a456-426614174001")
                 response.status shouldBe HttpStatusCode.NotFound
@@ -103,15 +98,10 @@ class AuthorizationGrantRouteTest :
                     "errors".shouldBeList(size = 1) {
                         item(0) {
                             "status" shouldBe "404"
-                            "title" shouldBe "Not Found"
-                            "detail" shouldBe "Authorization grant with id=123e4567-e89b-12d3-a456-426614174001 not found"
+                            "code" shouldBe "NOT_FOUND"
+                            "title" shouldBe "Authorization not found"
+                            "detail" shouldBe "The authorization was not found"
                         }
-                    }
-                    "links" {
-                        "self" shouldBe "http://localhost/authorization-grants/123e4567-e89b-12d3-a456-426614174001"
-                    }
-                    "meta" {
-                        "createdAt".shouldNotBeNull()
                     }
                 }
             }
@@ -200,15 +190,10 @@ class AuthorizationGrantRouteTest :
                     "errors".shouldBeList(size = 1) {
                         item(0) {
                             "status" shouldBe "400"
-                            "title" shouldBe "Bad Request"
-                            "detail" shouldBe "Missing or malformed id."
+                            "code" shouldBe "INVALID_RESOURCE_ID"
+                            "title" shouldBe "Malformed ID"
+                            "detail" shouldBe "The provided ID is not valid"
                         }
-                    }
-                    "links" {
-                        "self" shouldBe "http://localhost/authorization-grants/test/scopes"
-                    }
-                    "meta" {
-                        "createdAt".shouldNotBeNull()
                     }
                 }
             }
@@ -221,15 +206,9 @@ class AuthorizationGrantRouteTest :
                     "errors".shouldBeList(size = 1) {
                         item(0) {
                             "status" shouldBe "404"
-                            "title" shouldBe "Not Found"
-                            "detail" shouldBe "Authorization scope for grant with id=123e4567-e89b-12d3-a456-426614174005 not found"
+                            "title" shouldBe "Authorization not found"
+                            "detail" shouldBe "The authorization was not found"
                         }
-                    }
-                    "links" {
-                        "self" shouldBe "http://localhost/authorization-grants/123e4567-e89b-12d3-a456-426614174005/scopes"
-                    }
-                    "meta" {
-                        "createdAt".shouldNotBeNull()
                     }
                 }
             }

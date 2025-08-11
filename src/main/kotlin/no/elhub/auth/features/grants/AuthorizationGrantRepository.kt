@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import kotlinx.datetime.Instant
+import no.elhub.auth.features.errors.DomainError
 import no.elhub.auth.model.AuthorizationGrant
 import no.elhub.auth.model.AuthorizationGrantScopes
 import no.elhub.auth.model.AuthorizationParty
@@ -14,7 +15,6 @@ import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.slf4j.LoggerFactory
-import java.sql.SQLException
 import java.util.UUID
 
 object AuthorizationGrantRepository {
@@ -39,7 +39,7 @@ object AuthorizationGrantRepository {
             createdAt = Instant.parse(row[AuthorizationParty.Entity.createdAt].toString())
         )
 
-    fun findAll(): Either<AuthorizationGrantProblem, GrantsWithParties> = try {
+    fun findAll(): Either<DomainError, GrantsWithParties> = try {
         transaction {
             // fetch all grants
             val grants = AuthorizationGrant.Entity
@@ -60,15 +60,12 @@ object AuthorizationGrantRepository {
 
             GrantsWithParties(grants, parties)
         }.right()
-    } catch (sqlEx: SQLException) {
-        logger.error("SQL error occurred during fetch all grants and parties: ${sqlEx.message}")
-        AuthorizationGrantProblem.DataBaseError.left()
     } catch (exp: Exception) {
         logger.error("Unknown error occurred during fetch all grants and parties: ${exp.message}")
-        AuthorizationGrantProblem.UnexpectedError.left()
+        DomainError.RepositoryError.Unexpected(exp).left()
     }
 
-    fun findById(grantId: UUID): Either<AuthorizationGrantProblem, GrantWithParties> =
+    fun findById(grantId: UUID): Either<DomainError, GrantWithParties> =
         try {
             val result = transaction {
                 // fetch grant
@@ -94,16 +91,13 @@ object AuthorizationGrantRepository {
                     GrantWithParties(grant, parties)
                 }
             }
-            result?.right() ?: AuthorizationGrantProblem.NotFoundError.left()
-        } catch (sqlEx: SQLException) {
-            logger.error("SQL error occurred during fetch grant by id': ${sqlEx.message}")
-            AuthorizationGrantProblem.DataBaseError.left()
+            result?.right() ?: DomainError.RepositoryError.AuthorizationNotFound.left()
         } catch (exp: Exception) {
             logger.error("Unknown error occurred during fetch grant by id: ${exp.message}")
-            AuthorizationGrantProblem.UnexpectedError.left()
+            DomainError.RepositoryError.Unexpected(exp).left()
         }
 
-    fun findScopesById(grantId: UUID): Either<AuthorizationGrantProblem, List<AuthorizationScope>> = try {
+    fun findScopesById(grantId: UUID): Either<DomainError, List<AuthorizationScope>> = try {
         transaction {
             // check if grant exist
             AuthorizationGrant.Entity
@@ -125,12 +119,9 @@ object AuthorizationGrantRepository {
                             )
                         }
                 }
-        }?.right() ?: AuthorizationGrantProblem.NotFoundError.left()
-    } catch (sqlEx: SQLException) {
-        logger.error("SQL error occurred during fetch scope by id': ${sqlEx.message}")
-        AuthorizationGrantProblem.DataBaseError.left()
+        }?.right() ?: DomainError.RepositoryError.AuthorizationNotFound.left()
     } catch (exp: Exception) {
         logger.error("Unknown error occurred during fetch scope by id: ${exp.message}")
-        AuthorizationGrantProblem.UnexpectedError.left()
+        DomainError.RepositoryError.Unexpected(exp).left()
     }
 }

@@ -3,6 +3,7 @@ package no.elhub.auth.features.requests
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
+import no.elhub.auth.features.errors.DomainError
 import no.elhub.auth.model.AuthorizationRequest
 import no.elhub.auth.model.AuthorizationRequestProperty
 import no.elhub.auth.model.RequestStatus
@@ -11,7 +12,6 @@ import org.jetbrains.exposed.sql.insertAndGetId
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.slf4j.LoggerFactory
-import java.sql.SQLException
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -23,7 +23,7 @@ object AuthorizationRequestRepository {
         val request: AuthorizationRequest?
     )
 
-    fun findAll(): Either<AuthorizationRequestProblemList, List<AuthorizationRequest>> = try {
+    fun findAll(): Either<DomainError, List<AuthorizationRequest>> = try {
         transaction {
             val requests = AuthorizationRequest.Entity
                 .selectAll()
@@ -46,15 +46,12 @@ object AuthorizationRequestRepository {
 
             requests.right()
         }
-    } catch (sqlEx: SQLException) {
-        logger.error("SQL error occurred during fetch all requests: ${sqlEx.message}")
-        AuthorizationRequestProblemList.DataBaseError.left()
     } catch (exp: Exception) {
         logger.error("Unknown error occurred during fetch all requests: ${exp.message}")
-        AuthorizationRequestProblemList.UnexpectedError.left()
+        DomainError.RepositoryError.Unexpected(exp).left()
     }
 
-    fun findById(requestId: UUID): Either<AuthorizationRequestProblemById, AuthorizationRequest> = try {
+    fun findById(requestId: UUID): Either<DomainError, AuthorizationRequest> = try {
         val request = transaction {
             AuthorizationRequest.Entity
                 .selectAll()
@@ -65,7 +62,7 @@ object AuthorizationRequestRepository {
 
         if (request == null) {
             logger.error("Error occurred during find request for $requestId")
-            AuthorizationRequestProblemById.NotFoundError.left()
+            DomainError.RepositoryError.AuthorizationNotFound.left()
         } else {
             val properties = transaction {
                 AuthorizationRequestProperty.Entity
@@ -76,15 +73,12 @@ object AuthorizationRequestRepository {
             request.properties.addAll(properties)
             request.right()
         }
-    } catch (sqlEx: SQLException) {
-        logger.error("SQL error occurred during fetch request by id with id $requestId: ${sqlEx.message}")
-        AuthorizationRequestProblemById.DataBaseError.left()
     } catch (exp: Exception) {
         logger.error("Unknown error occurred during fetch request by id with id $requestId: ${exp.message}")
-        AuthorizationRequestProblemById.UnexpectedError.left()
+        DomainError.RepositoryError.Unexpected(exp).left()
     }
 
-    fun create(request: PostAuthorizationRequestPayload): Either<AuthorizationRequestProblemCreate, AuthorizationRequest> = try {
+    fun create(request: PostAuthorizationRequestPayload): Either<DomainError, AuthorizationRequest> = try {
         transaction {
             val authorizationRequestId = AuthorizationRequest.Entity.insertAndGetId {
                 it[id] = UUID.randomUUID()
@@ -96,17 +90,14 @@ object AuthorizationRequestRepository {
             }
             findById(authorizationRequestId.value).mapLeft { byIdProblem ->
                 when (byIdProblem) {
-                    is AuthorizationRequestProblemById.DataBaseError -> AuthorizationRequestProblemCreate.DataBaseError
-                    is AuthorizationRequestProblemById.UnexpectedError, AuthorizationRequestProblemById.NotFoundError
-                    -> AuthorizationRequestProblemCreate.UnexpectedError
+                    is DomainError.RepositoryError.AuthorizationNotFound ->
+                        DomainError.RepositoryError.AuthorizationNotCreated
+                    else -> byIdProblem
                 }
             }
         }
-    } catch (sqlEx: SQLException) {
-        logger.error("SQL error occurred during create request: ${sqlEx.message}")
-        AuthorizationRequestProblemCreate.DataBaseError.left()
     } catch (exp: Exception) {
         logger.error("Unknown error occurred during create request: ${exp.message}")
-        AuthorizationRequestProblemCreate.UnexpectedError.left()
+        DomainError.RepositoryError.Unexpected(exp).left()
     }
 }
