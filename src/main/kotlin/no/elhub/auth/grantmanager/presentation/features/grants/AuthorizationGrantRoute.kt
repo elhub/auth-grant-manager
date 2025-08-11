@@ -7,17 +7,17 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.route
 import io.ktor.server.util.url
-import no.elhub.auth.grantmanager.application.grants.getGrant.GrantRetrievalError
-import no.elhub.auth.grantmanager.application.grants.getGrant.Query
+import no.elhub.auth.grantmanager.domain.usecases.changeSupplier.getRequest.GetRequestError
+import no.elhub.auth.grantmanager.domain.usecases.changeSupplier.getRequest.GetRequestQuery
+import no.elhub.auth.grantmanager.domain.usecases.changeSupplier.getRequest.GetRequestUseCase
 import no.elhub.auth.grantmanager.presentation.config.ID
 import no.elhub.auth.grantmanager.presentation.features.errors.ApiError
 import no.elhub.auth.grantmanager.presentation.features.errors.ApiErrorJson
 import no.elhub.auth.grantmanager.presentation.features.utils.validateId
 import toGetAuthorizationGrantScopeResponse
 import java.util.UUID
-import no.elhub.auth.grantmanager.application.grants.getGrant.Handler as getGrantHandler
 
-fun Route.grants(grantHandler: AuthorizationGrantHandler, getGrantHandler: getGrantHandler) {
+fun Route.grants(grantHandler: AuthorizationGrantHandler, getRequestUseCase: GetRequestUseCase) {
     route("") {
         get {
             grantHandler.getAllGrants().fold(
@@ -58,10 +58,10 @@ fun Route.grants(grantHandler: AuthorizationGrantHandler, getGrantHandler: getGr
                     call.respond(HttpStatusCode.fromValue(error.status), ApiErrorJson.from(error, call.url()))
                     return@get
                 }
-            getGrantHandler.handle(Query(id)).fold(
+            getRequestUseCase(GetRequestQuery(id)).fold(
                 ifLeft = { grantRetrievalError ->
                     when (grantRetrievalError) {
-                        GrantRetrievalError.NotFound -> call.respond(
+                        GetRequestError.NotFound -> call.respond(
                             HttpStatusCode.NotFound,
                             ApiErrorJson.from(
                                 ApiError.NotFound(detail = "Authorization grant with id=$id not found"),

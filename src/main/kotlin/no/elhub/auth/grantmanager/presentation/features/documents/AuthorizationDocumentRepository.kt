@@ -1,6 +1,6 @@
 package no.elhub.auth.grantmanager.presentation.features.documents
 
-import no.elhub.auth.grantmanager.presentation.model.AuthorizationDocument
+import no.elhub.auth.grantmanager.data.models.AuthorizationDocumentDbEntity
 import no.elhub.auth.grantmanager.presentation.model.AuthorizationDocumentScopes
 import no.elhub.auth.grantmanager.presentation.model.AuthorizationResourceType
 import no.elhub.auth.grantmanager.presentation.model.AuthorizationScopes
@@ -10,10 +10,10 @@ import org.jetbrains.exposed.sql.insertAndGetId
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
 
-object AuthorizationDocumentRepository {
-    fun insertDocument(doc: AuthorizationDocument) {
+object ExposedAuthorizationDocumentRepository : AuthorizationDocumentRepository {
+    fun insertDocument(doc: AuthorizationDocumentDbEntity) {
         transaction {
-            val documentId = AuthorizationDocument.AuthorizationDocuments.insertAndGetId {
+            val documentId = AuthorizationDocumentDbEntity.AuthorizationDocuments.insertAndGetId {
                 it[id] = doc.id
                 it[title] = doc.title
                 it[type] = doc.type
@@ -32,16 +32,16 @@ object AuthorizationDocumentRepository {
             }
 
             AuthorizationDocumentScopes.insert {
-                it[authorizationDocumentId] = documentId.value
+                it[authorizationDocumentDbEntityId] = documentId.value
                 it[authorizationScopeId] = scopeId.value
             }
         }
     }
 
     fun getDocumentFile(id: UUID): ByteArray? = transaction {
-        AuthorizationDocument.AuthorizationDocuments.select(listOf(AuthorizationDocument.AuthorizationDocuments.file)).where {
-            AuthorizationDocument.AuthorizationDocuments.id eq id
+        AuthorizationDocumentDbEntity.AuthorizationDocuments.select(listOf(AuthorizationDocumentDbEntity.AuthorizationDocuments.file)).where {
+            AuthorizationDocumentDbEntity.AuthorizationDocuments.id eq id
         }
-            .map { it[AuthorizationDocument.AuthorizationDocuments.file] }.singleOrNull()
+            .map { it[AuthorizationDocumentDbEntity.AuthorizationDocuments.file] }.singleOrNull()
     }
 }

@@ -8,37 +8,33 @@ import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.config.ApplicationConfig
-import no.elhub.auth.grantmanager.application.common.interfaces.IGrantRepository
-import no.elhub.auth.grantmanager.application.grants.getGrant.Handler
-import no.elhub.auth.grantmanager.infrastructure.services.ExposedGrantRepository
+import no.elhub.auth.grantmanager.data.config.HashicorpVaultConfig
+import no.elhub.auth.grantmanager.domain.repositories.GrantRepository
+import no.elhub.auth.grantmanager.domain.usecases.changeSupplier.getRequest.GetRequestUseCase
+import no.elhub.auth.grantmanager.data.repositories.ExposedGrantRepository
+import no.elhub.auth.grantmanager.data.services.HashicorpVaultSigningService
 import no.elhub.auth.grantmanager.presentation.features.documents.AuthorizationDocumentHandler
-import no.elhub.auth.grantmanager.presentation.features.documents.SigningService
+import no.elhub.auth.grantmanager.presentation.features.documents.DocumentSigningService
+import no.elhub.auth.grantmanager.data.services.SigningCertificate
+import no.elhub.auth.grantmanager.data.services.SigningCertificateChain
 import no.elhub.auth.grantmanager.presentation.features.grants.AuthorizationGrantHandler
 import no.elhub.auth.grantmanager.presentation.features.requests.AuthorizationRequestHandler
-import no.elhub.auth.grantmanager.presentation.providers.vault.VaultSignatureProvider
+import org.koin.core.module.dsl.singleOf
+import org.koin.dsl.bind
 import org.koin.dsl.module
 import org.koin.ktor.plugin.Koin
 import java.io.File
 import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
 
-data class VaultConfig(
-    val url: String,
-    val key: String,
-    val token: String
-)
-
 data class CertificateConfig(
     val file: String
 )
 
-typealias SigningCertificate = X509Certificate
-typealias SigningCertificateChain = List<X509Certificate>
-
 val signerModule = module {
     single {
         val cfg = get<ApplicationConfig>().config("pdfSigner.vault")
-        VaultConfig(
+        HashicorpVaultConfig(
             url = cfg.property("url").getString(),
             key = cfg.property("key").getString(),
             token = cfg.property("token").getString(),
@@ -60,13 +56,13 @@ val signerModule = module {
 
 val appModule =
     module {
-        single { VaultSignatureProvider(get(), get()) }
-        single { SigningService(get(), get(), get()) }
-        single { AuthorizationGrantHandler() }
-        single { AuthorizationDocumentHandler(get()) }
-        single { AuthorizationRequestHandler() }
-        single { ExposedGrantRepository() as IGrantRepository }
-        single { Handler(get()) }
+        singleOf(::HashicorpVaultSigningService)
+        singleOf(::DocumentSigningService)
+        singleOf(::AuthorizationGrantHandler)
+        singleOf(::AuthorizationDocumentHandler)
+        singleOf(::AuthorizationRequestHandler)
+        singleOf(::ExposedGrantRepository) bind GrantRepository::class
+        singleOf(::GetRequestUseCase)
     }
 
 val httpClientModule = module {

@@ -1,7 +1,7 @@
 package no.elhub.auth.grantmanager.presentation.features.documents
 
 import kotlinx.serialization.Serializable
-import no.elhub.auth.grantmanager.presentation.model.AuthorizationDocument
+import no.elhub.auth.grantmanager.data.models.AuthorizationDocumentDbEntity
 import no.elhub.devxp.jsonapi.model.JsonApiAttributes
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipData
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipToOne
@@ -31,7 +31,7 @@ data class DocumentRelationships(
 typealias PostAuthorizationDocumentRequest = JsonApiRequest.SingleDocumentWithRelationships<DocumentRequestAttributes, DocumentRelationships>
 typealias PostAuthorizationDocumentResponse = JsonApiResponse.SingleDocumentWithRelationships<DocumentResponseAttributes, DocumentRelationships>
 
-fun AuthorizationDocument.toPostAuthorizationDocumentResponse(): PostAuthorizationDocumentResponse {
+fun AuthorizationDocumentDbEntity.toPostAuthorizationDocumentResponse(): PostAuthorizationDocumentResponse {
     val attributes = DocumentResponseAttributes(
         status = this.status.toString(),
         createdAt = this.createdAt.toString(),

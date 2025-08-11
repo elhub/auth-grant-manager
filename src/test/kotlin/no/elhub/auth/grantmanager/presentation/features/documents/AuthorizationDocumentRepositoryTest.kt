@@ -3,10 +3,7 @@ package no.elhub.auth.grantmanager.presentation.features.documents
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.shouldNotBe
 import no.elhub.auth.grantmanager.presentation.extensions.PostgresTestContainerExtension
-import no.elhub.auth.grantmanager.presentation.features.documents.AuthorizationDocumentRepository
-import no.elhub.auth.grantmanager.presentation.features.documents.DocumentRelationships
-import no.elhub.auth.grantmanager.presentation.features.documents.DocumentRequestAttributes
-import no.elhub.auth.grantmanager.presentation.model.AuthorizationDocument
+import no.elhub.auth.grantmanager.data.models.AuthorizationDocumentDbEntity
 import no.elhub.auth.grantmanager.presentation.model.AuthorizationDocumentScopes
 import no.elhub.auth.grantmanager.presentation.model.AuthorizationScopes
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipData
@@ -34,7 +31,7 @@ class AuthorizationDocumentRepositoryTest :
             it("should insert a document and its scopes with correct references") {
                 // Given
                 val document =
-                    AuthorizationDocument.of(
+                    AuthorizationDocumentDbEntity.of(
                         PostAuthorizationDocumentRequest(
                             data = JsonApiRequestResourceObjectWithRelationships(
                                 type = "authorization_document",
@@ -63,7 +60,7 @@ class AuthorizationDocumentRepositoryTest :
                     transaction {
                         AuthorizationDocumentScopes
                             .selectAll()
-                            .where { AuthorizationDocumentScopes.authorizationDocumentId eq document.id }
+                            .where { AuthorizationDocumentScopes.authorizationDocumentDbEntityId eq document.id }
                             .map { it }
                             .singleOrNull()
                     }

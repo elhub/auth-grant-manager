@@ -10,8 +10,8 @@ import eu.europa.esig.dss.spi.validation.CommonCertificateVerifier
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import no.elhub.auth.grantmanager.presentation.config.SigningCertificate
-import no.elhub.auth.grantmanager.presentation.config.SigningCertificateChain
+import no.elhub.auth.grantmanager.data.services.SigningCertificate
+import no.elhub.auth.grantmanager.data.services.SigningCertificateChain
 import no.elhub.auth.grantmanager.presentation.config.loadCerts
 import no.elhub.auth.grantmanager.presentation.extensions.VaultTransitTestContainerExtension
 import no.elhub.auth.grantmanager.presentation.extensions.httpTestClient
@@ -38,11 +38,11 @@ class SigningServiceTest : StringSpec({
     val signingCertificateChain: SigningCertificateChain =
         loadCerts(File(TestCertificateUtil.Constants.CERTIFICATE_LOCATION))
 
-    val signingService = SigningService(vaultSignatureProvider, signingCertificate, signingCertificateChain)
+    val documentSigningService = DocumentSigningService(vaultSignatureProvider, signingCertificate, signingCertificateChain)
     val unsignedPdfBytes = Resources.getInputStream("unsigned.pdf").readAllBytes()
 
     "should add one signature with proper parameters" {
-        val signedPdfBytes = signingService.addPadesSignature(unsignedPdfBytes)
+        val signedPdfBytes = documentSigningService.signDocument(unsignedPdfBytes)
         val signedPdf = InMemoryDocument(signedPdfBytes)
 
         val reports = PDFDocumentValidator(signedPdf).apply {
@@ -72,7 +72,7 @@ class SigningServiceTest : StringSpec({
     }
 
     "should invalidate signature when PDF is tampered with" {
-        val signedPdfBytes = signingService.addPadesSignature(unsignedPdfBytes)
+        val signedPdfBytes = documentSigningService.signDocument(unsignedPdfBytes)
         val signedPdf = InMemoryDocument(signedPdfBytes)
 
         val preTamperReport = PDFDocumentValidator(signedPdf).apply {
