@@ -46,9 +46,9 @@ object AuthorizationRequestRepository {
 
             requests.right()
         }
-    } catch (exp: Exception) {
-        logger.error("Unknown error occurred during fetch all requests: ${exp.message}")
-        DomainError.RepositoryError.Unexpected(exp).left()
+    } catch (e: Exception) {
+        logger.error("Unknown error occurred during fetch all requests: ${e.message}")
+        DomainError.RepositoryError.Unexpected(e).left()
     }
 
     fun findById(requestId: UUID): Either<DomainError, AuthorizationRequest> = try {
@@ -73,9 +73,9 @@ object AuthorizationRequestRepository {
             request.properties.addAll(properties)
             request.right()
         }
-    } catch (exp: Exception) {
-        logger.error("Unknown error occurred during fetch request by id with id $requestId: ${exp.message}")
-        DomainError.RepositoryError.Unexpected(exp).left()
+    } catch (e: Exception) {
+        logger.error("Unknown error occurred during fetch request by id with id $requestId: ${e.message}")
+        DomainError.RepositoryError.Unexpected(e).left()
     }
 
     fun create(request: PostAuthorizationRequestPayload): Either<DomainError, AuthorizationRequest> = try {
@@ -96,8 +96,8 @@ object AuthorizationRequestRepository {
                 }
             }
         }
-    } catch (exp: Exception) {
-        logger.error("Unknown error occurred during create request: ${exp.message}")
-        DomainError.RepositoryError.Unexpected(exp).left()
+    } catch (e: Exception) {
+        logger.error("Unknown error occurred during create request: ${e.message}")
+        DomainError.RepositoryError.Unexpected(e).left()
     }
 }

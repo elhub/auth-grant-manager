@@ -60,9 +60,9 @@ object AuthorizationGrantRepository {
 
             GrantsWithParties(grants, parties)
         }.right()
-    } catch (exp: Exception) {
-        logger.error("Unknown error occurred during fetch all grants and parties: ${exp.message}")
-        DomainError.RepositoryError.Unexpected(exp).left()
+    } catch (e: Exception) {
+        logger.error("Unknown error occurred during fetch all grants and parties: ${e.message}")
+        DomainError.RepositoryError.Unexpected(e).left()
     }
 
     fun findById(grantId: UUID): Either<DomainError, GrantWithParties> =
@@ -92,9 +92,9 @@ object AuthorizationGrantRepository {
                 }
             }
             result?.right() ?: DomainError.RepositoryError.AuthorizationNotFound.left()
-        } catch (exp: Exception) {
-            logger.error("Unknown error occurred during fetch grant by id: ${exp.message}")
-            DomainError.RepositoryError.Unexpected(exp).left()
+        } catch (e: Exception) {
+            logger.error("Unknown error occurred during fetch grant by id: ${e.message}")
+            DomainError.RepositoryError.Unexpected(e).left()
         }
 
     fun findScopesById(grantId: UUID): Either<DomainError, List<AuthorizationScope>> = try {
@@ -120,8 +120,8 @@ object AuthorizationGrantRepository {
                         }
                 }
         }?.right() ?: DomainError.RepositoryError.AuthorizationNotFound.left()
-    } catch (exp: Exception) {
-        logger.error("Unknown error occurred during fetch scope by id: ${exp.message}")
-        DomainError.RepositoryError.Unexpected(exp).left()
+    } catch (e: Exception) {
+        logger.error("Unknown error occurred during fetch scope by id: ${e.message}")
+        DomainError.RepositoryError.Unexpected(e).left()
     }
 }
