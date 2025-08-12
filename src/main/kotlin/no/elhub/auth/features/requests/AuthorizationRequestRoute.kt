@@ -7,7 +7,7 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import no.elhub.auth.config.ID
-import no.elhub.auth.features.errors.DomainError
+import no.elhub.auth.features.errors.ApiError
 import no.elhub.auth.features.errors.mapErrorToResponse
 import no.elhub.auth.features.grants.withValidatedId
 import no.elhub.auth.features.utils.validateId
@@ -57,7 +57,7 @@ fun Route.requests(requestHandler: AuthorizationRequestHandler) {
 
     post {
         val payload = runCatching { call.receive<PostAuthorizationRequestPayload>() }.getOrElse { exception ->
-            val response = mapErrorToResponse(DomainError.ApiError.AuthorizationPayloadInvalid(exception))
+            val response = mapErrorToResponse(ApiError.AuthorizationPayloadInvalid(exception))
             call.respond(
                 status = HttpStatusCode.fromValue(response.status.toInt()),
                 message = JsonApiErrorCollection(listOf(response))

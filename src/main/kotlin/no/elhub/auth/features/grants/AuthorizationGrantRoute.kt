@@ -89,6 +89,7 @@ fun Route.grants(grantHandler: AuthorizationGrantHandler) {
     }
 }
 
+// TODO -> this function is also used by AuthorizationRequestRoute
 suspend fun <T> ApplicationCall.withValidatedId(
     idParam: String?,
     validate: (String?) -> Either<DomainError, T>,

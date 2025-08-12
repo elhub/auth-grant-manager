@@ -3,7 +3,7 @@ package no.elhub.auth.features.requests
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
-import no.elhub.auth.features.errors.DomainError
+import no.elhub.auth.features.errors.RepositoryError
 import no.elhub.auth.model.AuthorizationRequest
 import no.elhub.auth.model.AuthorizationRequestProperty
 import no.elhub.auth.model.RequestStatus
@@ -23,7 +23,7 @@ object AuthorizationRequestRepository {
         val request: AuthorizationRequest?
     )
 
-    fun findAll(): Either<DomainError, List<AuthorizationRequest>> = try {
+    fun findAll(): Either<RepositoryError, List<AuthorizationRequest>> = try {
         transaction {
             val requests = AuthorizationRequest.Entity
                 .selectAll()
@@ -48,10 +48,10 @@ object AuthorizationRequestRepository {
         }
     } catch (e: Exception) {
         logger.error("Unknown error occurred during fetch all requests: ${e.message}")
-        DomainError.RepositoryError.Unexpected(e).left()
+        RepositoryError.Unexpected(e).left()
     }
 
-    fun findById(requestId: UUID): Either<DomainError, AuthorizationRequest> = try {
+    fun findById(requestId: UUID): Either<RepositoryError, AuthorizationRequest> = try {
         val request = transaction {
             AuthorizationRequest.Entity
                 .selectAll()
@@ -62,7 +62,7 @@ object AuthorizationRequestRepository {
 
         if (request == null) {
             logger.error("Error occurred during find request for $requestId")
-            DomainError.RepositoryError.AuthorizationNotFound.left()
+            RepositoryError.AuthorizationNotFound.left()
         } else {
             val properties = transaction {
                 AuthorizationRequestProperty.Entity
@@ -75,10 +75,10 @@ object AuthorizationRequestRepository {
         }
     } catch (e: Exception) {
         logger.error("Unknown error occurred during fetch request by id with id $requestId: ${e.message}")
-        DomainError.RepositoryError.Unexpected(e).left()
+        RepositoryError.Unexpected(e).left()
     }
 
-    fun create(request: PostAuthorizationRequestPayload): Either<DomainError, AuthorizationRequest> = try {
+    fun create(request: PostAuthorizationRequestPayload): Either<RepositoryError, AuthorizationRequest> = try {
         transaction {
             val authorizationRequestId = AuthorizationRequest.Entity.insertAndGetId {
                 it[id] = UUID.randomUUID()
@@ -90,14 +90,14 @@ object AuthorizationRequestRepository {
             }
             findById(authorizationRequestId.value).mapLeft { byIdProblem ->
                 when (byIdProblem) {
-                    is DomainError.RepositoryError.AuthorizationNotFound ->
-                        DomainError.RepositoryError.AuthorizationNotCreated
+                    is RepositoryError.AuthorizationNotFound ->
+                        RepositoryError.AuthorizationNotCreated
                     else -> byIdProblem
                 }
             }
         }
     } catch (e: Exception) {
         logger.error("Unknown error occurred during create request: ${e.message}")
-        DomainError.RepositoryError.Unexpected(e).left()
+        RepositoryError.Unexpected(e).left()
     }
 }

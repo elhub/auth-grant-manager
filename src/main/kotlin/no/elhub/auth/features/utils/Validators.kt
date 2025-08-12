@@ -4,20 +4,20 @@ import arrow.core.Either
 import arrow.core.raise.catch
 import arrow.core.raise.either
 import arrow.core.raise.ensure
-import no.elhub.auth.features.errors.DomainError
+import no.elhub.auth.features.errors.ApiError
 import no.elhub.auth.features.requests.PostAuthorizationRequestPayload
 import java.util.UUID
 
-fun validateId(id: String?): Either<DomainError, UUID> = either {
+fun validateId(id: String?): Either<ApiError, UUID> = either {
     catch(
         { UUID.fromString(id) },
-        { raise(DomainError.ApiError.AuthorizationIdIsMalformed) }
+        { raise(ApiError.AuthorizationIdIsMalformed) }
     )
 }
 
-fun validateAuthorizationRequest(authRequest: PostAuthorizationRequestPayload): Either<DomainError, PostAuthorizationRequestPayload> = either {
+fun validateAuthorizationRequest(authRequest: PostAuthorizationRequestPayload): Either<ApiError, PostAuthorizationRequestPayload> = either {
     ensure(authRequest.data.attributes.requestType == "ChangeOfSupplierConfirmation") {
-        raise(DomainError.ApiError.AuthorizationRequestTypeIsInvalid)
+        raise(ApiError.AuthorizationRequestTypeIsInvalid)
     }
     authRequest
 }

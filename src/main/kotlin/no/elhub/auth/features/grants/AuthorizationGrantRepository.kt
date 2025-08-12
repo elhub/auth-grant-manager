@@ -4,7 +4,7 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import kotlinx.datetime.Instant
-import no.elhub.auth.features.errors.DomainError
+import no.elhub.auth.features.errors.RepositoryError
 import no.elhub.auth.model.AuthorizationGrant
 import no.elhub.auth.model.AuthorizationGrantScopes
 import no.elhub.auth.model.AuthorizationParty
@@ -39,7 +39,7 @@ object AuthorizationGrantRepository {
             createdAt = Instant.parse(row[AuthorizationParty.Entity.createdAt].toString())
         )
 
-    fun findAll(): Either<DomainError, GrantsWithParties> = try {
+    fun findAll(): Either<RepositoryError, GrantsWithParties> = try {
         transaction {
             // fetch all grants
             val grants = AuthorizationGrant.Entity
@@ -62,10 +62,10 @@ object AuthorizationGrantRepository {
         }.right()
     } catch (e: Exception) {
         logger.error("Unknown error occurred during fetch all grants and parties: ${e.message}")
-        DomainError.RepositoryError.Unexpected(e).left()
+        RepositoryError.Unexpected(e).left()
     }
 
-    fun findById(grantId: UUID): Either<DomainError, GrantWithParties> =
+    fun findById(grantId: UUID): Either<RepositoryError, GrantWithParties> =
         try {
             val result = transaction {
                 // fetch grant
@@ -91,13 +91,13 @@ object AuthorizationGrantRepository {
                     GrantWithParties(grant, parties)
                 }
             }
-            result?.right() ?: DomainError.RepositoryError.AuthorizationNotFound.left()
+            result?.right() ?: RepositoryError.AuthorizationNotFound.left()
         } catch (e: Exception) {
             logger.error("Unknown error occurred during fetch grant by id: ${e.message}")
-            DomainError.RepositoryError.Unexpected(e).left()
+            RepositoryError.Unexpected(e).left()
         }
 
-    fun findScopesById(grantId: UUID): Either<DomainError, List<AuthorizationScope>> = try {
+    fun findScopesById(grantId: UUID): Either<RepositoryError, List<AuthorizationScope>> = try {
         transaction {
             // check if grant exist
             AuthorizationGrant.Entity
@@ -119,9 +119,9 @@ object AuthorizationGrantRepository {
                             )
                         }
                 }
-        }?.right() ?: DomainError.RepositoryError.AuthorizationNotFound.left()
+        }?.right() ?: RepositoryError.AuthorizationNotFound.left()
     } catch (e: Exception) {
         logger.error("Unknown error occurred during fetch scope by id: ${e.message}")
-        DomainError.RepositoryError.Unexpected(e).left()
+        RepositoryError.Unexpected(e).left()
     }
 }
