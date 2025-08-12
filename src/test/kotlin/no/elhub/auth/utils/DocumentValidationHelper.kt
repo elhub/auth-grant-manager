@@ -8,7 +8,7 @@ import eu.europa.esig.dss.pades.validation.PDFDocumentValidator
 import eu.europa.esig.dss.spi.validation.CommonCertificateVerifier
 import eu.europa.esig.dss.spi.x509.CommonTrustedCertificateSource
 import io.kotest.matchers.shouldBe
-import no.elhub.auth.config.loadCerts
+import no.elhub.auth.presentation.config.loadCerts
 import java.io.File
 
 object DocumentValidationHelper {
