@@ -1,4 +1,5 @@
 import no.elhub.auth.utils.generateSelfSignedCertificate
+import no.elhub.auth.utils.validateJsonApiSpec
 
 plugins {
     alias(libs.plugins.elhub.gradle.plugin)
@@ -7,6 +8,7 @@ plugins {
     alias(libs.plugins.ksp.plugin)
     alias(libs.plugins.liquibase.plugin)
     alias(libs.plugins.gradle.docker)
+    alias(libs.plugins.openapi.generator.plugin)
 }
 
 buildscript {
@@ -99,6 +101,11 @@ dockerCompose {
     }
 }
 
+openApiValidate {
+    inputSpec = "$projectDir/src/main/resources/openapi.yaml"
+    recommend = true
+}
+
 tasks.register("generateTestCerts") {
     group = "build setup"
     description = "Generates self-signed certificates for local development to be used in document signing and verification."
@@ -107,8 +114,18 @@ tasks.register("generateTestCerts") {
     }
 }
 
+tasks.register("validateJsonApiSpec") {
+    group = "build setup"
+    description = "Does some stuff"
+    doLast {
+        validateJsonApiSpec("src/main/resources/schemas")
+    }
+}
+
 tasks.named("test").configure {
     dependsOn(tasks.named("generateTestCerts"))
+    dependsOn(tasks.named("openApiValidate"))
+    dependsOn(tasks.named("validateJsonApiSpec"))
 }
 
 tasks.named("liquibaseUpdate").configure {

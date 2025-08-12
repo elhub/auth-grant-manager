@@ -22,6 +22,7 @@ liquibase = "4.33.0"
 liquibase-plugin = "3.0.2"
 micrometer = "1.15.2"
 mockk = "1.14.5"
+openapi-generator = "7.14.0"
 picocli = "4.7.7"
 postgresql = "42.7.7"
 slf4j = "2.0.17"
@@ -42,6 +43,7 @@ ksp-plugin = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 ktor-plugin = { id = "io.ktor.plugin", version.ref = "ktor" }
 kotlin-plugin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlinx-serialization-plugin" }
 liquibase-plugin = { id = "org.liquibase.gradle", version.ref = "liquibase-plugin" }
+openapi-generator-plugin = { id = "org.openapi.generator", version.ref = "openapi-generator" }
 
 [libraries]
 elhub-json-wrapper = { group = "no.elhub.devxp", name = "devxp-json-api-wrapper", version.ref = "jsonapi" }
