@@ -79,7 +79,7 @@ object AuthorizationGrantRepository {
                     null // signal NotFoundError after transaction
                 } else {
                     // fetch all parties in one query and map by ID
-                    val partyIds = grant.let { listOf(grant.grantedFor, it.grantedBy, grant.grantedTo).toSet() } ?: emptySet()
+                    val partyIds = grant.let { listOf(grant.grantedFor, it.grantedBy, grant.grantedTo).toSet() }
                     val parties = AuthorizationParty.Entity
                         .selectAll()
                         .where { AuthorizationParty.Entity.id inList partyIds }
