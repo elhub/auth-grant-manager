@@ -19,10 +19,7 @@
         "permissionType": {
           "type": "string",
           "description": "The type of permission granted by the scope.",
-          "enum": [
-            "ChangeOfSupplier",
-            "ReadAccess"
-          ]
+          "enum": ["ChangeOfSupplier", "ReadAccess"]
         }
       }
     },
@@ -70,9 +67,7 @@
             "type": {
               "type": "string",
               "description": "A relationship to a scoped object.",
-              "enum": [
-                "MeteringPoint"
-              ]
+              "enum": ["MeteringPoint"]
             },
             "id": {
               "type": "string",
@@ -87,11 +82,9 @@
               }
             }
           ]
-        },
-        "required": [
-          "data"
-        ]
-      }
+        }
+      },
+      "required": ["data"]
     },
     "scopeReference": {
       "type": "object",
@@ -100,19 +93,14 @@
         "type": {
           "type": "string",
           "description": "The type of the object.",
-          "enum": [
-            "AuthorizationScope"
-          ]
+          "enum": ["AuthorizationScope"]
         },
         "id": {
-          "type": "uuid",
+          "type": "string",
           "description": "ID of the scope object."
         }
       },
-      "required": [
-        "type",
-        "id"
-      ]
+      "required": ["type", "id"]
     }
   }
 }

@@ -1,4 +1,5 @@
 import no.elhub.auth.utils.generateSelfSignedCertificate
+import no.elhub.auth.utils.validateJsonApiSpec
 
 plugins {
     alias(libs.plugins.elhub.gradle.plugin)
@@ -113,9 +114,18 @@ tasks.register("generateTestCerts") {
     }
 }
 
+tasks.register("validateJsonApiSpec") {
+    group = "build setup"
+    description = "Does some stuff"
+    doLast {
+        validateJsonApiSpec("src/main/resources/schemas")
+    }
+}
+
 tasks.named("test").configure {
     dependsOn(tasks.named("generateTestCerts"))
     dependsOn(tasks.named("openApiValidate"))
+    dependsOn(tasks.named("validateJsonApiSpec"))
 }
 
 tasks.named("liquibaseUpdate").configure {
