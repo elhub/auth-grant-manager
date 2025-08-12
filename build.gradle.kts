@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.ksp.plugin)
     alias(libs.plugins.liquibase.plugin)
     alias(libs.plugins.gradle.docker)
+    alias(libs.plugins.openapi.generator.plugin)
 }
 
 buildscript {
@@ -99,6 +100,11 @@ dockerCompose {
     }
 }
 
+openApiValidate {
+    inputSpec = "$projectDir/src/main/resources/openapi.yaml"
+    recommend = true
+}
+
 tasks.register("generateTestCerts") {
     group = "build setup"
     description = "Generates self-signed certificates for local development to be used in document signing and verification."
@@ -109,6 +115,7 @@ tasks.register("generateTestCerts") {
 
 tasks.named("test").configure {
     dependsOn(tasks.named("generateTestCerts"))
+    dependsOn(tasks.named("openApiValidate"))
 }
 
 tasks.named("liquibaseUpdate").configure {
