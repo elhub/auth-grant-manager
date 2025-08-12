@@ -7,13 +7,11 @@
     "id": {
       "$ref": "base-definitions.schema.json#/definitions/resourceId"
     },
-    "type": [
-      {
-        "type": "string",
-        "description": "The type of the resource object.",
-        "const": "AuthorizationGrant"
-      }
-    ],
+    "type": {
+      "type": "string",
+      "description": "The type of the resource object.",
+      "const": "AuthorizationGrant"
+    },
     "attributes": {
       "type": "object",
       "description": "The attributes of the authorization grant.",
