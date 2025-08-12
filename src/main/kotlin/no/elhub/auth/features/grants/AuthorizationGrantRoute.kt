@@ -89,7 +89,7 @@ fun Route.grants(grantHandler: AuthorizationGrantHandler) {
     }
 }
 
-// TODO -> this function is also used by AuthorizationRequestRoute
+// TODO -> this function is also used by AuthorizationRequestRoute. Will be removed when feat/utilize-arrow-plugin is merged into main
 suspend fun <T> ApplicationCall.withValidatedId(
     idParam: String?,
     validate: (String?) -> Either<DomainError, T>,
