@@ -1,36 +1,27 @@
 package no.elhub.auth.features.requests
 
-import arrow.core.getOrElse
 import io.ktor.http.HttpStatusCode
-import io.ktor.serialization.JsonConvertException
-import io.ktor.server.plugins.BadRequestException
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
-import io.ktor.server.util.url
 import no.elhub.auth.config.ID
 import no.elhub.auth.features.errors.ApiError
-import no.elhub.auth.features.errors.ApiErrorJson
+import no.elhub.auth.features.errors.mapErrorToResponse
+import no.elhub.auth.features.grants.withValidatedId
 import no.elhub.auth.features.utils.validateId
-import java.util.UUID
+import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 
 fun Route.requests(requestHandler: AuthorizationRequestHandler) {
     get {
         requestHandler.getAllRequests().fold(
             ifLeft = { authRequestProblem ->
-                when (authRequestProblem) {
-                    is AuthorizationRequestProblemList.DataBaseError,
-                    is AuthorizationRequestProblemList.UnexpectedError ->
-                        call.respond(
-                            HttpStatusCode.InternalServerError,
-                            ApiErrorJson.from(
-                                ApiError.InternalServerError(detail = "Unexpected error occurred during fetch authorization requests"),
-                                call.url(),
-                            ),
-                        )
-                }
+                val response = mapErrorToResponse(authRequestProblem)
+                call.respond(
+                    status = HttpStatusCode.fromValue(response.status.toInt()),
+                    message = JsonApiErrorCollection(listOf(response))
+                )
             },
             ifRight = { requests ->
                 call.respond(
@@ -42,75 +33,45 @@ fun Route.requests(requestHandler: AuthorizationRequestHandler) {
     }
 
     get("/{$ID}") {
-        val id: UUID =
-            validateId(call.parameters[ID]).getOrElse { error ->
-                call.respond(HttpStatusCode.fromValue(error.status), ApiErrorJson.from(error, call.url()))
-                return@get
-            }
-
-        requestHandler.getRequestById(id).fold(
-            ifLeft = { authRequestProblem ->
-                when (authRequestProblem) {
-                    is AuthorizationRequestProblemById.NotFoundError ->
-                        call.respond(
-                            HttpStatusCode.NotFound,
-                            ApiErrorJson.from(
-                                ApiError.NotFound(detail = "Authorization request with id=$id not found"),
-                                call.url(),
-                            ),
-                        )
-
-                    is AuthorizationRequestProblemById.DataBaseError, AuthorizationRequestProblemById.UnexpectedError ->
-                        call.respond(
-                            HttpStatusCode.InternalServerError,
-                            ApiErrorJson.from(
-                                ApiError.InternalServerError(detail = "Unexpected error occurred during fetch authorization request with id=$id"),
-                                call.url(),
-                            ),
-                        )
+        call.withValidatedId(
+            idParam = call.parameters[ID],
+            validate = ::validateId
+        ) { validatedId ->
+            requestHandler.getRequestById(validatedId).fold(
+                ifLeft = { authRequestProblem ->
+                    val response = mapErrorToResponse(authRequestProblem)
+                    call.respond(
+                        status = HttpStatusCode.fromValue(response.status.toInt()),
+                        message = JsonApiErrorCollection(listOf(response))
+                    )
+                },
+                ifRight = { request ->
+                    call.respond(
+                        status = HttpStatusCode.OK,
+                        message = request.toGetAuthorizationRequestResponse()
+                    )
                 }
-            },
-            ifRight = { request ->
-                call.respond(
-                    status = HttpStatusCode.OK,
-                    message = request.toGetAuthorizationRequestResponse()
-                )
-            },
-        )
+            )
+        }
     }
 
     post {
-        val payload = try {
-            call.receive<PostAuthorizationRequestPayload>()
-        } catch (badRequestException: BadRequestException) {
-            val cause = badRequestException.cause
-            when (cause) {
-                is JsonConvertException -> {
-                    call.respond(
-                        HttpStatusCode.BadRequest,
-                        ApiErrorJson.from(
-                            ApiError.BadRequest(detail = "Authorization request contains extra, unknown, or missing fields. "),
-                            call.url(),
-                        )
-                    )
-                }
-            }
+        val payload = runCatching { call.receive<PostAuthorizationRequestPayload>() }.getOrElse { exception ->
+            val response = mapErrorToResponse(ApiError.AuthorizationPayloadInvalid(exception))
+            call.respond(
+                status = HttpStatusCode.fromValue(response.status.toInt()),
+                message = JsonApiErrorCollection(listOf(response))
+            )
             return@post
         }
 
         requestHandler.postRequest(payload).fold(
             ifLeft = { authRequestProblem ->
-                when (authRequestProblem) {
-                    is AuthorizationRequestProblemCreate.DataBaseError,
-                    is AuthorizationRequestProblemCreate.UnexpectedError ->
-                        call.respond(
-                            HttpStatusCode.InternalServerError,
-                            ApiErrorJson.from(
-                                ApiError.InternalServerError(detail = "Unexpected error occurred during creating authorization request. "),
-                                call.url(),
-                            ),
-                        )
-                }
+                val response = mapErrorToResponse(authRequestProblem)
+                call.respond(
+                    status = HttpStatusCode.fromValue(response.status.toInt()),
+                    message = JsonApiErrorCollection(listOf(response))
+                )
             },
             ifRight = { request ->
                 call.respond(

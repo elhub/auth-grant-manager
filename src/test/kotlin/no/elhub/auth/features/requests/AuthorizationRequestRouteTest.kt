@@ -156,7 +156,7 @@ class AuthorizationRequestRouteTest :
                 }
             }
 
-            test("Should return 400 Bad Request on an invalid ID format") {
+            test("Should return 400 on an invalid ID format") {
                 val response = testApp.client.get("$AUTHORIZATION_REQUEST/invalid-id")
                 response.status shouldBe HttpStatusCode.BadRequest
                 val responseJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
@@ -164,36 +164,28 @@ class AuthorizationRequestRouteTest :
                     "errors".shouldBeList(size = 1) {
                         item(0) {
                             "status" shouldBe "400"
-                            "title" shouldBe "Bad Request"
-                            "detail" shouldBe "Missing or malformed id."
+                            "code" shouldBe "INVALID_RESOURCE_ID"
+                            "title" shouldBe "Malformed ID"
+                            "detail" shouldBe "The provided ID is not valid"
                         }
-                    }
-                    "links" {
-                        "self" shouldBe "http://localhost/authorization-requests/invalid-id"
-                    }
-                    "meta" {
-                        "createdAt".shouldNotBeNull()
                     }
                 }
             }
 
-            test("Should return 404 Not Found on an invalid ID that is a UUID") {
+            test("Should return 404 on a nonexistent ID") {
                 val response = testApp.client.get("$AUTHORIZATION_REQUEST/167b1be9-f563-4b31-af1a-50439d567ee5")
                 response.status shouldBe HttpStatusCode.NotFound
                 val responseJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
                 responseJson.validate {
                     "errors".shouldBeList(size = 1) {
                         item(0) {
-                            "status" shouldBe "404"
-                            "title" shouldBe "Not Found"
-                            "detail" shouldBe "Authorization request with id=167b1be9-f563-4b31-af1a-50439d567ee5 not found"
+                            item(0) {
+                                "status" shouldBe "404"
+                                "code" shouldBe "NOT_FOUND"
+                                "title" shouldBe "Authorization not found"
+                                "detail" shouldBe "The authorization was not found"
+                            }
                         }
-                    }
-                    "links" {
-                        "self" shouldBe "http://localhost/authorization-requests/167b1be9-f563-4b31-af1a-50439d567ee5"
-                    }
-                    "meta" {
-                        "createdAt".shouldNotBeNull()
                     }
                 }
             }
@@ -310,15 +302,10 @@ class AuthorizationRequestRouteTest :
                     "errors".shouldBeList(size = 1) {
                         item(0) {
                             "status" shouldBe "400"
-                            "title" shouldBe "Bad Request"
-                            "detail" shouldBe "Authorization request contains extra, unknown, or missing fields. "
+                            "code" shouldBe "INVALID_PAYLOAD"
+                            "title" shouldBe "Payload not valid"
+                            "detail" shouldBe "Authorization request contains extra, unknown, or missing fields"
                         }
-                    }
-                    "links" {
-                        "self" shouldBe "http://localhost/authorization-requests"
-                    }
-                    "meta" {
-                        "createdAt".shouldNotBeNull()
                     }
                 }
             }
@@ -358,15 +345,10 @@ class AuthorizationRequestRouteTest :
                     "errors".shouldBeList(size = 1) {
                         item(0) {
                             "status" shouldBe "400"
-                            "title" shouldBe "Bad Request"
-                            "detail" shouldBe "Authorization request contains extra, unknown, or missing fields. "
+                            "code" shouldBe "INVALID_PAYLOAD"
+                            "title" shouldBe "Payload not valid"
+                            "detail" shouldBe "Authorization request contains extra, unknown, or missing fields"
                         }
-                    }
-                    "links" {
-                        "self" shouldBe "http://localhost/authorization-requests"
-                    }
-                    "meta" {
-                        "createdAt".shouldNotBeNull()
                     }
                 }
             }
