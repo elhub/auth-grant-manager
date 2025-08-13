@@ -18,29 +18,29 @@ data class AuthorizationGrant(
     val validFrom: LocalDateTime,
     val validTo: LocalDateTime,
 ) {
-    object Entity : UUIDTable("authorization_grant") {
+    object Table : UUIDTable("authorization_grant") {
         val grantStatus =
             customEnumeration(
                 name = "status",
                 fromDb = { value -> GrantStatus.valueOf(value as String) },
                 toDb = { PGEnum("authorization_grant_status", it) },
             )
-        val grantedFor = long("granted_for").references(AuthorizationParty.Entity.id)
-        val grantedBy = long("granted_by").references(AuthorizationParty.Entity.id)
-        val grantedTo = long("granted_to").references(AuthorizationParty.Entity.id)
+        val grantedFor = long("granted_for").references(AuthorizationParty.Table.id)
+        val grantedBy = long("granted_by").references(AuthorizationParty.Table.id)
+        val grantedTo = long("granted_to").references(AuthorizationParty.Table.id)
         val grantedAt = datetime("granted_at").defaultExpression(CurrentDateTime)
         val validFrom = datetime("valid_from").defaultExpression(CurrentDateTime)
         val validTo = datetime("valid_to").defaultExpression(CurrentDateTime)
     }
 
     constructor(row: ResultRow) : this(
-        id = row[Entity.id].toString(),
-        grantStatus = row[Entity.grantStatus],
-        grantedFor = row[Entity.grantedFor],
-        grantedBy = row[Entity.grantedBy],
-        grantedTo = row[Entity.grantedTo],
-        grantedAt = row[Entity.grantedAt].toKotlinLocalDateTime(),
-        validFrom = row[Entity.validFrom].toKotlinLocalDateTime(),
-        validTo = row[Entity.validTo].toKotlinLocalDateTime(),
+        id = row[Table.id].toString(),
+        grantStatus = row[Table.grantStatus],
+        grantedFor = row[Table.grantedFor],
+        grantedBy = row[Table.grantedBy],
+        grantedTo = row[Table.grantedTo],
+        grantedAt = row[Table.grantedAt].toKotlinLocalDateTime(),
+        validFrom = row[Table.validFrom].toKotlinLocalDateTime(),
+        validTo = row[Table.validTo].toKotlinLocalDateTime(),
     )
 }

@@ -24,14 +24,14 @@ object AuthorizationRequestRepository {
 
     fun findAll(): Either<RepositoryError, List<AuthorizationRequest>> = either {
         transaction {
-            val requests = AuthorizationRequest.Entity
+            val requests = AuthorizationRequest.Table
                 .selectAll()
                 .map(::AuthorizationRequest)
             val requestIds = requests.map { UUID.fromString(it.id) }
 
-            val propertiesByRequestId = AuthorizationRequestProperty.Entity
+            val propertiesByRequestId = AuthorizationRequestProperty.Table
                 .selectAll()
-                .where { AuthorizationRequestProperty.Entity.authorizationRequestId inList requestIds }
+                .where { AuthorizationRequestProperty.Table.authorizationRequestId inList requestIds }
                 .map { AuthorizationRequestProperty(it) }
                 .groupBy { it.authorizationRequestId }
 
@@ -44,9 +44,9 @@ object AuthorizationRequestRepository {
 
     fun findById(requestId: UUID): Either<RepositoryError, AuthorizationRequest> = either {
         transaction {
-            val request = AuthorizationRequest.Entity
+            val request = AuthorizationRequest.Table
                 .selectAll()
-                .where { AuthorizationRequest.Entity.id eq requestId }
+                .where { AuthorizationRequest.Table.id eq requestId }
                 .singleOrNull()
                 ?.let { AuthorizationRequest(it) }
                 ?: run {
@@ -54,9 +54,9 @@ object AuthorizationRequestRepository {
                     raise(RepositoryError.AuthorizationNotFound)
                 }
 
-            val properties = AuthorizationRequestProperty.Entity
+            val properties = AuthorizationRequestProperty.Table
                 .selectAll()
-                .where { AuthorizationRequestProperty.Entity.authorizationRequestId eq requestId }
+                .where { AuthorizationRequestProperty.Table.authorizationRequestId eq requestId }
                 .map { AuthorizationRequestProperty(it) }
 
             request.properties.addAll(properties)
@@ -66,7 +66,7 @@ object AuthorizationRequestRepository {
 
     fun create(request: PostAuthorizationRequestPayload): Either<RepositoryError, AuthorizationRequest> = either {
         transaction {
-            val authorizationRequestId = AuthorizationRequest.Entity.insertAndGetId {
+            val authorizationRequestId = AuthorizationRequest.Table.insertAndGetId {
                 it[id] = UUID.randomUUID()
                 it[requestType] = RequestType.valueOf(request.data.attributes.requestType)
                 it[status] = RequestStatus.Pending

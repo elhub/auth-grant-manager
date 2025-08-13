@@ -11,7 +11,7 @@ data class AuthorizationParty(
     val descriptor: String,
     val createdAt: Instant
 ) {
-    object Entity : LongIdTable("authorization_party") {
+    object Table : LongIdTable("authorization_party") {
         val type =
             customEnumeration(
                 name = "type",
