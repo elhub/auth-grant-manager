@@ -32,21 +32,21 @@ object AuthorizationGrantRepository {
 
     private fun mapRowToParty(row: ResultRow): AuthorizationParty =
         AuthorizationParty(
-            id = row[AuthorizationParty.Entity.id].value,
-            type = ElhubResource.valueOf(row[AuthorizationParty.Entity.type].toString()),
-            descriptor = row[AuthorizationParty.Entity.descriptor],
-            createdAt = Instant.parse(row[AuthorizationParty.Entity.createdAt].toString())
+            id = row[AuthorizationParty.Table.id].value,
+            type = ElhubResource.valueOf(row[AuthorizationParty.Table.type].toString()),
+            descriptor = row[AuthorizationParty.Table.descriptor],
+            createdAt = Instant.parse(row[AuthorizationParty.Table.createdAt].toString())
         )
 
     fun findAll(): Either<RepositoryError, GrantsWithParties> = either {
         transaction {
-            val grants = AuthorizationGrant.Entity
+            val grants = AuthorizationGrant.Table
                 .selectAll()
                 .map(::AuthorizationGrant)
             val partyIds = grants.flatMap { listOf(it.grantedFor, it.grantedBy, it.grantedTo) }.toSet()
-            val parties = AuthorizationParty.Entity
+            val parties = AuthorizationParty.Table
                 .selectAll()
-                .where { AuthorizationParty.Entity.id inList partyIds }
+                .where { AuthorizationParty.Table.id inList partyIds }
                 .associate { row ->
                     val party = mapRowToParty(row)
                     party.id to party
@@ -64,9 +64,9 @@ object AuthorizationGrantRepository {
 
     fun findById(grantId: UUID): Either<RepositoryError, GrantWithParties> = either {
         transaction {
-            val grant = AuthorizationGrant.Entity
+            val grant = AuthorizationGrant.Table
                 .selectAll()
-                .where { AuthorizationGrant.Entity.id eq grantId }
+                .where { AuthorizationGrant.Table.id eq grantId }
                 .singleOrNull()
                 ?.let { AuthorizationGrant(it) }
                 ?: run {
@@ -75,9 +75,9 @@ object AuthorizationGrantRepository {
                 }
 
             val partyIds = listOf(grant.grantedFor, grant.grantedBy, grant.grantedTo)
-            val parties = AuthorizationParty.Entity
+            val parties = AuthorizationParty.Table
                 .selectAll()
-                .where { AuthorizationParty.Entity.id inList partyIds }
+                .where { AuthorizationParty.Table.id inList partyIds }
                 .associate { row ->
                     val party = mapRowToParty(row)
                     party.id to party
@@ -88,9 +88,9 @@ object AuthorizationGrantRepository {
 
     fun findScopesById(grantId: UUID): Either<RepositoryError, List<AuthorizationScope>> = either {
         transaction {
-            val scopes = AuthorizationGrant.Entity
+            val scopes = AuthorizationGrant.Table
                 .selectAll()
-                .where { AuthorizationGrant.Entity.id eq grantId }
+                .where { AuthorizationGrant.Table.id eq grantId }
                 .singleOrNull()
                 ?.let {
                     (AuthorizationGrantScopes innerJoin AuthorizationScopes)

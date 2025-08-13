@@ -19,7 +19,7 @@ data class AuthorizationRequest(
     val validTo: LocalDateTime,
     val properties: ArrayList<AuthorizationRequestProperty> = ArrayList()
 ) {
-    object Entity : UUIDTable("authorization_request") {
+    object Table : UUIDTable("authorization_request") {
         val requestType = customEnumeration(
             name = "request_type",
             fromDb = { value -> RequestType.valueOf(value as String) },
@@ -38,13 +38,13 @@ data class AuthorizationRequest(
     }
 
     constructor(row: ResultRow) : this(
-        id = row[Entity.id].toString(),
-        requestType = row[Entity.requestType],
-        status = row[Entity.status],
-        requestedBy = row[Entity.requestedBy],
-        requestedFrom = row[Entity.requestedFrom],
-        createdAt = row[Entity.createdAt].toKotlinLocalDateTime(),
-        updatedAt = row[Entity.updatedAt].toKotlinLocalDateTime(),
-        validTo = row[Entity.validTo].toKotlinLocalDateTime()
+        id = row[Table.id].toString(),
+        requestType = row[Table.requestType],
+        status = row[Table.status],
+        requestedBy = row[Table.requestedBy],
+        requestedFrom = row[Table.requestedFrom],
+        createdAt = row[Table.createdAt].toKotlinLocalDateTime(),
+        updatedAt = row[Table.updatedAt].toKotlinLocalDateTime(),
+        validTo = row[Table.validTo].toKotlinLocalDateTime()
     )
 }
