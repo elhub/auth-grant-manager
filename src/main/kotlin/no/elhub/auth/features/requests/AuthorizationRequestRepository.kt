@@ -44,7 +44,6 @@ object AuthorizationRequestRepository {
         }
     }
 
-
     fun findById(requestId: UUID): Either<RepositoryError, AuthorizationRequest> =
         catchDbExceptions {
             either {
