@@ -2,7 +2,7 @@ package no.elhub.auth.features.requests
 
 import arrow.core.Either
 import arrow.core.raise.either
-import no.elhub.auth.features.errors.DomainError
+import no.elhub.auth.features.errors.RepositoryError
 import no.elhub.auth.model.AuthorizationRequest
 import no.elhub.auth.model.AuthorizationRequestProperty
 import no.elhub.auth.model.RequestStatus
@@ -22,7 +22,7 @@ object AuthorizationRequestRepository {
         val request: AuthorizationRequest?
     )
 
-    fun findAll(): Either<DomainError, List<AuthorizationRequest>> = catchDbExceptions {
+    fun findAll(): Either<RepositoryError, List<AuthorizationRequest>> = catchDbExceptions {
         either {
             transaction {
                 val requests = AuthorizationRequest.Entity
@@ -44,7 +44,8 @@ object AuthorizationRequestRepository {
         }
     }
 
-    fun findById(requestId: UUID): Either<DomainError, AuthorizationRequest> =
+
+    fun findById(requestId: UUID): Either<RepositoryError, AuthorizationRequest> =
         catchDbExceptions {
             either {
                 transaction {
@@ -53,7 +54,7 @@ object AuthorizationRequestRepository {
                         .where { AuthorizationRequest.Entity.id eq requestId }
                         .singleOrNull()
                         ?.let { AuthorizationRequest(it) }
-                        ?: raise(DomainError.RepositoryError.AuthorizationNotFound)
+                        ?: raise(RepositoryError.AuthorizationNotFound)
 
                     val properties = AuthorizationRequestProperty.Entity
                         .selectAll()
@@ -66,7 +67,7 @@ object AuthorizationRequestRepository {
             }
         }
 
-    fun create(request: PostAuthorizationRequestPayload): Either<DomainError, AuthorizationRequest> =
+    fun create(request: PostAuthorizationRequestPayload): Either<RepositoryError, AuthorizationRequest> =
         catchDbExceptions {
             either {
                 transaction {
@@ -82,7 +83,7 @@ object AuthorizationRequestRepository {
                     findById(authorizationRequestId.value)
                         .mapLeft { error ->
                             when (error) {
-                                is DomainError.RepositoryError.AuthorizationNotFound -> raise(DomainError.RepositoryError.AuthorizationNotCreated)
+                                is RepositoryError.AuthorizationNotFound -> raise(RepositoryError.AuthorizationNotCreated)
                                 else -> raise(error)
                             }
                         }
@@ -92,11 +93,11 @@ object AuthorizationRequestRepository {
         }
 
     // Ensures any unexpected exception during a database query is safely caught and wrapped
-    private inline fun <T> catchDbExceptions(block: () -> Either<DomainError, T>): Either<DomainError, T> =
+    private inline fun <T> catchDbExceptions(block: () -> Either<RepositoryError, T>): Either<RepositoryError, T> =
         try {
             block()
         } catch (ex: Exception) {
             logger.error("Unknown error occurred during authorization request flow: ${ex.message}")
-            Either.Left(DomainError.RepositoryError.Unexpected(ex))
+            Either.Left(RepositoryError.Unexpected(ex))
         }
 }

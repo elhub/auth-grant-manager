@@ -8,9 +8,10 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import no.elhub.auth.config.ID
-import no.elhub.auth.features.errors.DomainError
+import no.elhub.auth.features.errors.ApiError
 import no.elhub.auth.features.errors.mapErrorToResponse
-import no.elhub.auth.features.utils.validateIdWithDomainError
+import no.elhub.auth.features.grants.withValidatedId
+import no.elhub.auth.features.utils.validateId
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 
 fun Route.requests(requestHandler: AuthorizationRequestHandler) {
@@ -31,44 +32,52 @@ fun Route.requests(requestHandler: AuthorizationRequestHandler) {
     }
 
     get("/{$ID}") {
-        either {
-            val id = validateIdWithDomainError(call.parameters[ID]).bind()
-            val request = requestHandler.getRequestById(id).bind()
-            call.respond(
-                status = HttpStatusCode.OK,
-                message = request.toGetAuthorizationRequestResponse()
-            )
-        }.mapLeft { error ->
-            val response = mapErrorToResponse(error)
-            call.respond(
-                status = HttpStatusCode.fromValue(response.status.toInt()),
-                message = JsonApiErrorCollection(listOf(response))
+        call.withValidatedId(
+            idParam = call.parameters[ID],
+            validate = ::validateId
+        ) { validatedId ->
+            requestHandler.getRequestById(validatedId).fold(
+                ifLeft = { authRequestProblem ->
+                    val response = mapErrorToResponse(authRequestProblem)
+                    call.respond(
+                        status = HttpStatusCode.fromValue(response.status.toInt()),
+                        message = JsonApiErrorCollection(listOf(response))
+                    )
+                },
+                ifRight = { request ->
+                    call.respond(
+                        status = HttpStatusCode.OK,
+                        message = request.toGetAuthorizationRequestResponse()
+                    )
+                }
             )
         }
     }
 
     post {
-        either {
-            val payload = runCatching { call.receive<PostAuthorizationRequestPayload>() }.getOrElse { exception ->
-                val response = mapErrorToResponse(DomainError.ApiError.AuthorizationPayloadInvalid(exception))
-                call.respond(
-                    status = HttpStatusCode.fromValue(response.status.toInt()),
-                    message = JsonApiErrorCollection(listOf(response))
-                )
-                return@post
-            }
-
-            val response = requestHandler.postRequest(payload).bind()
-            call.respond(
-                status = HttpStatusCode.Created,
-                message = response.toGetAuthorizationRequestResponse()
-            )
-        }.mapLeft { error ->
-            val response = mapErrorToResponse(error)
+        val payload = runCatching { call.receive<PostAuthorizationRequestPayload>() }.getOrElse { exception ->
+            val response = mapErrorToResponse(ApiError.AuthorizationPayloadInvalid(exception))
             call.respond(
                 status = HttpStatusCode.fromValue(response.status.toInt()),
                 message = JsonApiErrorCollection(listOf(response))
             )
+            return@post
         }
+
+        requestHandler.postRequest(payload).fold(
+            ifLeft = { authRequestProblem ->
+                val response = mapErrorToResponse(authRequestProblem)
+                call.respond(
+                    status = HttpStatusCode.fromValue(response.status.toInt()),
+                    message = JsonApiErrorCollection(listOf(response))
+                )
+            },
+            ifRight = { request ->
+                call.respond(
+                    status = HttpStatusCode.Created,
+                    message = request.toGetAuthorizationRequestResponse()
+                )
+            }
+        )
     }
 }

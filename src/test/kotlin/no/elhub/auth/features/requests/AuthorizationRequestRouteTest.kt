@@ -156,23 +156,7 @@ class AuthorizationRequestRouteTest :
                 }
             }
 
-            xtest("Should return 404 Not Found on missing id") {
-                val response = testApp.client.get("$AUTHORIZATION_REQUEST/ ")
-                println(response.bodyAsText())
-                response.status shouldBe HttpStatusCode.NotFound
-                val responseJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
-                responseJson.validate {
-                    "errors".shouldBeList(size = 1) {
-                        item(0) {
-                            "status" shouldBe "404"
-                            "title" shouldBe "Missing id"
-                            "detail" shouldBe "Missing required parameter id"
-                        }
-                    }
-                }
-            }
-
-            test("Should return 400 Bad Request on an invalid ID format") {
+            test("Should return 400 on an invalid ID format") {
                 val response = testApp.client.get("$AUTHORIZATION_REQUEST/invalid-id")
                 response.status shouldBe HttpStatusCode.BadRequest
                 val responseJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
@@ -180,6 +164,7 @@ class AuthorizationRequestRouteTest :
                     "errors".shouldBeList(size = 1) {
                         item(0) {
                             "status" shouldBe "400"
+                            "code" shouldBe "INVALID_RESOURCE_ID"
                             "title" shouldBe "Malformed ID"
                             "detail" shouldBe "The provided ID is not valid"
                         }
@@ -187,16 +172,19 @@ class AuthorizationRequestRouteTest :
                 }
             }
 
-            test("Should return 404 Not Found on an ID that does not exist") {
+            test("Should return 404 on a nonexistent ID") {
                 val response = testApp.client.get("$AUTHORIZATION_REQUEST/167b1be9-f563-4b31-af1a-50439d567ee5")
                 response.status shouldBe HttpStatusCode.NotFound
                 val responseJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
                 responseJson.validate {
                     "errors".shouldBeList(size = 1) {
                         item(0) {
-                            "status" shouldBe "404"
-                            "title" shouldBe "Authorization not found"
-                            "detail" shouldBe "The requested authorization was not found"
+                            item(0) {
+                                "status" shouldBe "404"
+                                "code" shouldBe "NOT_FOUND"
+                                "title" shouldBe "Authorization not found"
+                                "detail" shouldBe "The authorization was not found"
+                            }
                         }
                     }
                 }
@@ -314,15 +302,10 @@ class AuthorizationRequestRouteTest :
                     "errors".shouldBeList(size = 1) {
                         item(0) {
                             "status" shouldBe "400"
-                            "title" shouldBe "Bad Request"
-                            "detail" shouldBe "Authorization request contains extra, unknown, or missing fields. "
+                            "code" shouldBe "INVALID_PAYLOAD"
+                            "title" shouldBe "Payload not valid"
+                            "detail" shouldBe "Authorization request contains extra, unknown, or missing fields"
                         }
-                    }
-                    "links" {
-                        "self" shouldBe "http://localhost/authorization-requests"
-                    }
-                    "meta" {
-                        "createdAt".shouldNotBeNull()
                     }
                 }
             }
@@ -358,13 +341,13 @@ class AuthorizationRequestRouteTest :
 
                 response.status shouldBe HttpStatusCode.BadRequest
                 val responseJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
-                println(response.bodyAsText())
                 responseJson.validate {
                     "errors".shouldBeList(size = 1) {
                         item(0) {
                             "status" shouldBe "400"
+                            "code" shouldBe "INVALID_PAYLOAD"
                             "title" shouldBe "Payload not valid"
-                            "detail" shouldBe "Authorization request contains extra, unknown, or missing fields."
+                            "detail" shouldBe "Authorization request contains extra, unknown, or missing fields"
                         }
                     }
                 }
