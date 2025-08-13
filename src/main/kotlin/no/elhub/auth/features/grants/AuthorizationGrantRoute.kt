@@ -20,7 +20,8 @@ fun Route.grants(grantHandler: AuthorizationGrantHandler) {
                 call.respond(
                     status = HttpStatusCode.OK,
                     message = result.grants.toGetAuthorizationGrantsResponse { id ->
-                        result.parties[id] ?: throw RuntimeException("Party not found for id=$id") // respond w/ internalServerError if thrown
+                        // repository should guarantee all parties are present
+                        result.parties[id]!!
                     }
                 )
             }.mapLeft { error ->
@@ -40,8 +41,8 @@ fun Route.grants(grantHandler: AuthorizationGrantHandler) {
                     call.respond(
                         status = HttpStatusCode.OK,
                         message = it.toGetAuthorizationGrantResponse { id ->
-                            result.parties[id]
-                                ?: throw RuntimeException("Party not found for id=$id")
+                            // repository should guarantee all parties are present
+                            result.parties[id]!!
                         }
                     )
                 }

@@ -1,8 +1,7 @@
 package no.elhub.auth.features.grants
 
 import arrow.core.Either
-import arrow.core.left
-import arrow.core.right
+import arrow.core.raise.either
 import kotlinx.datetime.Instant
 import no.elhub.auth.features.errors.RepositoryError
 import no.elhub.auth.model.AuthorizationGrant
@@ -39,17 +38,12 @@ object AuthorizationGrantRepository {
             createdAt = Instant.parse(row[AuthorizationParty.Entity.createdAt].toString())
         )
 
-    fun findAll(): Either<RepositoryError, GrantsWithParties> = try {
+    fun findAll(): Either<RepositoryError, GrantsWithParties> = either {
         transaction {
-            // fetch all grants
             val grants = AuthorizationGrant.Entity
                 .selectAll()
                 .map(::AuthorizationGrant)
-
-            // collect all unique party IDs reference by the grants
             val partyIds = grants.flatMap { listOf(it.grantedFor, it.grantedBy, it.grantedTo) }.toSet()
-
-            // fetch all parties in one query and map by ID
             val parties = AuthorizationParty.Entity
                 .selectAll()
                 .where { AuthorizationParty.Entity.id inList partyIds }
@@ -58,54 +52,47 @@ object AuthorizationGrantRepository {
                     party.id to party
                 }
 
+            val missingPartyIds = partyIds.filter { it !in parties }
+            if (missingPartyIds.isNotEmpty()) {
+                logger.error("Missing parties for grants: $missingPartyIds")
+                raise(RepositoryError.AuthorizationPartyNotFound)
+            }
+
             GrantsWithParties(grants, parties)
-        }.right()
-    } catch (e: Exception) {
-        logger.error("Unknown error occurred during fetch all grants and parties: ${e.message}")
-        RepositoryError.Unexpected(e).left()
+        }
     }
 
-    fun findById(grantId: UUID): Either<RepositoryError, GrantWithParties> =
-        try {
-            val result = transaction {
-                // fetch grant
-                val grant = AuthorizationGrant.Entity
-                    .selectAll()
-                    .where { AuthorizationGrant.Entity.id eq grantId }
-                    .singleOrNull()
-                    ?.let { AuthorizationGrant(it) }
-
-                if (grant == null) {
-                    null // signal NotFoundError after transaction
-                } else {
-                    // fetch all parties in one query and map by ID
-                    val partyIds = grant.let { listOf(grant.grantedFor, it.grantedBy, grant.grantedTo).toSet() }
-                    val parties = AuthorizationParty.Entity
-                        .selectAll()
-                        .where { AuthorizationParty.Entity.id inList partyIds }
-                        .associate { row ->
-                            val party = mapRowToParty(row)
-                            party.id to party
-                        }
-
-                    GrantWithParties(grant, parties)
-                }
-            }
-            result?.right() ?: RepositoryError.AuthorizationNotFound.left()
-        } catch (e: Exception) {
-            logger.error("Unknown error occurred during fetch grant by id: ${e.message}")
-            RepositoryError.Unexpected(e).left()
-        }
-
-    fun findScopesById(grantId: UUID): Either<RepositoryError, List<AuthorizationScope>> = try {
+    fun findById(grantId: UUID): Either<RepositoryError, GrantWithParties> = either {
         transaction {
-            // check if grant exist
-            AuthorizationGrant.Entity
+            val grant = AuthorizationGrant.Entity
+                .selectAll()
+                .where { AuthorizationGrant.Entity.id eq grantId }
+                .singleOrNull()
+                ?.let { AuthorizationGrant(it) }
+                ?: run {
+                    logger.error("Authorization grant not found for id=$grantId")
+                    raise(RepositoryError.AuthorizationNotFound)
+                }
+
+            val partyIds = listOf(grant.grantedFor, grant.grantedBy, grant.grantedTo)
+            val parties = AuthorizationParty.Entity
+                .selectAll()
+                .where { AuthorizationParty.Entity.id inList partyIds }
+                .associate { row ->
+                    val party = mapRowToParty(row)
+                    party.id to party
+                }
+            GrantWithParties(grant, parties)
+        }
+    }
+
+    fun findScopesById(grantId: UUID): Either<RepositoryError, List<AuthorizationScope>> = either {
+        transaction {
+            val scopes = AuthorizationGrant.Entity
                 .selectAll()
                 .where { AuthorizationGrant.Entity.id eq grantId }
                 .singleOrNull()
                 ?.let {
-                    // fetch all related scopes via join if grant exists
                     (AuthorizationGrantScopes innerJoin AuthorizationScopes)
                         .selectAll()
                         .where { AuthorizationGrantScopes.authorizationGrantId eq grantId }
@@ -118,10 +105,11 @@ object AuthorizationGrantRepository {
                                 createdAt = Instant.parse(row[AuthorizationScopes.createdAt].toString())
                             )
                         }
-                }
-        }?.right() ?: RepositoryError.AuthorizationNotFound.left()
-    } catch (e: Exception) {
-        logger.error("Unknown error occurred during fetch scope by id: ${e.message}")
-        RepositoryError.Unexpected(e).left()
+                } ?: run {
+                logger.error("Scope not found for authorization grant with id=$grantId")
+                raise(RepositoryError.AuthorizationNotFound)
+            }
+            scopes
+        }
     }
 }

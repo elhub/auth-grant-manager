@@ -6,6 +6,7 @@ import no.elhub.devxp.jsonapi.response.JsonApiErrorObject
 internal fun mapErrorToResponse(err: DomainError): JsonApiErrorObject = when (err) {
     is ApiError -> handleApiError(err)
     is RepositoryError -> handleRepositoryError(err)
+    is UnexpectedError -> handleUnknownError(err)
 }
 
 fun handleApiError(err: ApiError): JsonApiErrorObject = when (err) {
@@ -47,11 +48,24 @@ fun handleRepositoryError(err: RepositoryError): JsonApiErrorObject {
             detail = "The authorization was not found"
         )
 
-        is RepositoryError.Unexpected -> return JsonApiErrorObject(
+        is RepositoryError.UnexpectedRepositoryFailure -> return JsonApiErrorObject(
             status = HttpStatusCode.InternalServerError.value.toString(),
             code = "INTERNAL_SERVER_ERROR",
             title = "Unexpected error",
             detail = err.throwable.localizedMessage ?: "Unexpected error occurred"
+        )
+
+        RepositoryError.AuthorizationPartyNotFound -> TODO()
+    }
+}
+
+fun handleUnknownError(err: UnexpectedError): JsonApiErrorObject {
+    when (err) {
+        is UnexpectedError.UnexpectedFailure -> return JsonApiErrorObject(
+            status = HttpStatusCode.InternalServerError.value.toString(),
+            code = "UNEXPECTED_ERROR",
+            title = "Unexpected error",
+            detail = err.throwable.localizedMessage ?: "Unknown exception occurred"
         )
     }
 }

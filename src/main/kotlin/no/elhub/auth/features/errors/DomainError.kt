@@ -11,5 +11,10 @@ sealed class ApiError : DomainError() {
 sealed class RepositoryError : DomainError() {
     data object AuthorizationNotCreated : RepositoryError()
     data object AuthorizationNotFound : RepositoryError()
-    data class Unexpected(val throwable: Throwable) : RepositoryError()
+    data object AuthorizationPartyNotFound : RepositoryError()
+    data class UnexpectedRepositoryFailure(val throwable: Throwable) : RepositoryError()
+}
+
+sealed class UnexpectedError : DomainError() {
+    data class UnexpectedFailure(val throwable: Throwable) : UnexpectedError()
 }

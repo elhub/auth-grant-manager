@@ -22,81 +22,73 @@ object AuthorizationRequestRepository {
         val request: AuthorizationRequest?
     )
 
-    fun findAll(): Either<RepositoryError, List<AuthorizationRequest>> = catchDbExceptions {
-        either {
-            transaction {
-                val requests = AuthorizationRequest.Entity
-                    .selectAll()
-                    .map(::AuthorizationRequest)
-                val requestIds = requests.map { UUID.fromString(it.id) }
+    fun findAll(): Either<RepositoryError, List<AuthorizationRequest>> = either {
+        transaction {
+            val requests = AuthorizationRequest.Entity
+                .selectAll()
+                .map(::AuthorizationRequest)
+            val requestIds = requests.map { UUID.fromString(it.id) }
 
-                val propertiesByRequestId = AuthorizationRequestProperty.Entity
-                    .selectAll()
-                    .where { AuthorizationRequestProperty.Entity.authorizationRequestId inList requestIds }
-                    .map { AuthorizationRequestProperty(it) }
-                    .groupBy { it.authorizationRequestId }
+            val propertiesByRequestId = AuthorizationRequestProperty.Entity
+                .selectAll()
+                .where { AuthorizationRequestProperty.Entity.authorizationRequestId inList requestIds }
+                .map { AuthorizationRequestProperty(it) }
+                .groupBy { it.authorizationRequestId }
 
-                requests.forEach { request ->
-                    request.properties.addAll(propertiesByRequestId.getOrElse(request.id) { emptyList() })
-                }
-                requests
+            requests.forEach { request ->
+                request.properties.addAll(propertiesByRequestId.getOrElse(request.id) { emptyList() })
             }
+            requests
         }
     }
 
-    fun findById(requestId: UUID): Either<RepositoryError, AuthorizationRequest> =
-        catchDbExceptions {
-            either {
-                transaction {
-                    val request = AuthorizationRequest.Entity
-                        .selectAll()
-                        .where { AuthorizationRequest.Entity.id eq requestId }
-                        .singleOrNull()
-                        ?.let { AuthorizationRequest(it) }
-                        ?: raise(RepositoryError.AuthorizationNotFound)
-
-                    val properties = AuthorizationRequestProperty.Entity
-                        .selectAll()
-                        .where { AuthorizationRequestProperty.Entity.authorizationRequestId eq requestId }
-                        .map { AuthorizationRequestProperty(it) }
-
-                    request.properties.addAll(properties)
-                    request
+    fun findById(requestId: UUID): Either<RepositoryError, AuthorizationRequest> = either {
+        transaction {
+            val request = AuthorizationRequest.Entity
+                .selectAll()
+                .where { AuthorizationRequest.Entity.id eq requestId }
+                .singleOrNull()
+                ?.let { AuthorizationRequest(it) }
+                ?: run {
+                    logger.error("Authorization request not found for id=$requestId")
+                    raise(RepositoryError.AuthorizationNotFound)
                 }
-            }
+
+            val properties = AuthorizationRequestProperty.Entity
+                .selectAll()
+                .where { AuthorizationRequestProperty.Entity.authorizationRequestId eq requestId }
+                .map { AuthorizationRequestProperty(it) }
+
+            request.properties.addAll(properties)
+            request
         }
+    }
 
-    fun create(request: PostAuthorizationRequestPayload): Either<RepositoryError, AuthorizationRequest> =
-        catchDbExceptions {
-            either {
-                transaction {
-                    val authorizationRequestId = AuthorizationRequest.Entity.insertAndGetId {
-                        it[id] = UUID.randomUUID()
-                        it[requestType] = RequestType.valueOf(request.data.attributes.requestType)
-                        it[status] = RequestStatus.Pending
-                        it[requestedBy] = request.data.relationships.requestedBy.data.id
-                        it[requestedFrom] = request.data.relationships.requestedFrom.data.id
-                        it[validTo] = LocalDateTime.now().plusDays(30)
-                    }
+    fun create(request: PostAuthorizationRequestPayload): Either<RepositoryError, AuthorizationRequest> = either {
+        transaction {
+            val authorizationRequestId = AuthorizationRequest.Entity.insertAndGetId {
+                it[id] = UUID.randomUUID()
+                it[requestType] = RequestType.valueOf(request.data.attributes.requestType)
+                it[status] = RequestStatus.Pending
+                it[requestedBy] = request.data.relationships.requestedBy.data.id
+                it[requestedFrom] = request.data.relationships.requestedFrom.data.id
+                it[validTo] = LocalDateTime.now().plusDays(30)
+            }
 
-                    findById(authorizationRequestId.value)
-                        .mapLeft { error ->
-                            when (error) {
-                                is RepositoryError.AuthorizationNotFound -> raise(RepositoryError.AuthorizationNotCreated)
-                                else -> raise(error)
-                            }
+            findById(authorizationRequestId.value)
+                .mapLeft { error ->
+                    when (error) {
+                        is RepositoryError.AuthorizationNotFound -> {
+                            logger.error("Authorization request was not successfully created: $error")
+                            raise(RepositoryError.AuthorizationNotCreated)
                         }
-                        .bind()
+                        else -> {
+                            logger.error("Unknown error occurred: $error")
+                            raise(error)
+                        }
+                    }
                 }
-            }
+                .bind()
         }
-
-    // Ensures any unexpected exception during a database query is safely caught and wrapped
-    private inline fun <T> catchDbExceptions(block: () -> Either<RepositoryError, T>): Either<RepositoryError, T> =
-        try {
-            block()
-        } catch (ex: Exception) {
-            logger.error("Unknown error occurred during authorization request flow: ${ex.message}")
-            Either.Left(RepositoryError.Unexpected(ex))
-        }
+    }
 }
