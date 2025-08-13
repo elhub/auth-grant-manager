@@ -76,6 +76,7 @@ ktor-server-metrics-micrometer = { group = "io.ktor", name = "ktor-server-metric
 ktor-client-content-negotiation = { group = "io.ktor", name = "ktor-client-content-negotiation", version.ref = "ktor" }
 ktor-server-netty = { group = "io.ktor", name = "ktor-server-netty", version.ref = "ktor" }
 ktor-server-swagger = { group = "io.ktor", name = "ktor-server-swagger", version.ref = "ktor" }
+ktor-server-status-pages = { group = "io.ktor", name = "ktor-server-status-pages", version.ref = "ktor" }
 logging-slf4j-simple = { group = "org.slf4j", name = "slf4j-simple", version.ref = "slf4j" }
 logging-oshai-kotlin-logging = { group = "io.github.oshai", name = "kotlin-logging-jvm", version.ref = "kotlin-logging" }
 monitoring-cohort-hikari = { group = "com.sksamuel.cohort", name = "cohort-hikari", version.ref = "cohort" }
@@ -108,7 +109,7 @@ dependency-injection = ["di-koin-ktor", "di-koin-logger-slf4j", "di-koin-annotat
 documentation = ["ktor-server-swagger"]
 functional-programming = ["fp-arrow-core", "fp-arrow-fx-coroutines"]
 ktor = ["ktor-server-core", "ktor-server-netty", "ktor-server-content-negotiation", "ktor-server-config-yaml", "ktor-client-core", "ktor-client-cio",
-  "ktor-client-content-negotiation", "ktor-client-logging"]
+  "ktor-client-content-negotiation", "ktor-client-logging", "ktor-server-status-pages"]
 logging = ["ktor-server-call-logging", "logging-slf4j-simple", "logging-oshai-kotlin-logging"]
 monitoring = ["ktor-server-metrics-micrometer", "monitoring-micrometer-registry-prometheus", "monitoring-cohort-hikari", "monitoring-cohort-ktor",
   "monitoring-cohort-micrometer"]
