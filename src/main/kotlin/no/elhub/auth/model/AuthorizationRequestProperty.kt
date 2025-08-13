@@ -14,9 +14,6 @@ data class AuthorizationRequestProperty(
     val createdAt: LocalDateTime
 
 ) {
-    /**
-     * Entity class for the AuthorizationRequest table.
-     */
     object Table : ExposedTable("authorization_request_property") {
         val authorizationRequestId = uuid("authorization_request_id")
         val key = varchar("key", 64)
