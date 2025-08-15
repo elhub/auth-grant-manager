@@ -8,7 +8,7 @@ import eu.europa.esig.dss.pades.validation.PDFDocumentValidator
 import eu.europa.esig.dss.spi.validation.CommonCertificateVerifier
 import eu.europa.esig.dss.spi.x509.CommonTrustedCertificateSource
 import io.kotest.matchers.shouldBe
-import no.elhub.auth.presentation.config.loadCerts
+import no.elhub.auth.config.loadCerts
 import java.io.File
 
 object DocumentValidationHelper {
@@ -46,7 +46,8 @@ object DocumentValidationHelper {
         certificateChain.certificate.size shouldBe 1 // We expect only one certificate (self-signed) in the chain for this test
 
         val signingCertificateReference =
-            certificateChain.certificate.first().id ?: throw IllegalStateException("Certificate reference is null, expected a valid certificate in the chain")
+            certificateChain.certificate.first().id
+                ?: throw IllegalStateException("Certificate reference is null, expected a valid certificate in the chain")
 
         // Validate that the signing certificate is the one we expect
         val signingCertificateWrapper = reports.diagnosticData.getUsedCertificateById(signingCertificateReference)

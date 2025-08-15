@@ -15,9 +15,9 @@ import no.elhub.auth.data.signing.VaultSignatureProvider
 import no.elhub.auth.extensions.VaultTransitTestContainerExtension
 import no.elhub.auth.extensions.httpTestClient
 import no.elhub.auth.extensions.localVaultConfig
-import no.elhub.auth.presentation.config.SigningCertificate
-import no.elhub.auth.presentation.config.SigningCertificateChain
-import no.elhub.auth.presentation.config.loadCerts
+import no.elhub.auth.config.SigningCertificate
+import no.elhub.auth.config.SigningCertificateChain
+import no.elhub.auth.config.loadCerts
 import no.elhub.auth.utils.TestCertificateUtil
 import org.apache.commons.codec.Resources
 import java.io.File
@@ -111,7 +111,8 @@ class SigningServiceTest : FunSpec({
 
         // Confirm that the digest of the tampered content no longer matches the embedded digest
         val tamperedDigestBase64 = computeDigestOverByteRange(tamperedPdfBytes, byteRange)
-        val tamperedEmbeddedDigestBase64 = Base64.getEncoder().encodeToString(tamperedSignature.messageDigest.digestValue)
+        val tamperedEmbeddedDigestBase64 =
+            Base64.getEncoder().encodeToString(tamperedSignature.messageDigest.digestValue)
 
         tamperedDigestBase64 shouldNotBe tamperedEmbeddedDigestBase64
     }
