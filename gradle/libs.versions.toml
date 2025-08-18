@@ -100,6 +100,8 @@ dss-token = { group = "eu.europa.ec.joinup.sd-dss", name = "dss-token", version.
 dss-validation = { group = "eu.europa.ec.joinup.sd-dss", name = "dss-validation", version.ref = "dss" }
 dss-utils-apache-commons = { group = "eu.europa.ec.joinup.sd-dss", name = "dss-utils-apache-commons", version.ref = "dss" }
 dss-crl-parser-stream = { group = "eu.europa.ec.joinup.sd-dss", name = "dss-crl-parser-stream", version.ref = "dss" }
+dss-cms-stream = { group = "eu.europa.ec.joinup.sd-dss", name = "dss-cms-stream", version.ref = "dss" }
+dss-policy-jaxb = { group = "eu.europa.ec.joinup.sd-dss", name = "dss-policy-jaxb", version.ref = "dss" }
 
 # Bundles should be used to group dependencies that are frequently used together.
 [bundles]
@@ -115,4 +117,4 @@ monitoring = ["ktor-server-metrics-micrometer", "monitoring-micrometer-registry-
   "monitoring-cohort-micrometer"]
 serialization = ["kotlinx-datetime", "kotlinx-serialization-json", "ktor-serialization-kotlinx-json", "serialization-yaml-snakeyaml"]
 pdf-generation = ["templating-mustache", "pdf-openhtmltopdf-pdfbox", "pdf-pdfbox"]
-dss = ["dss-pades-pdfbox", "dss-token", "dss-validation", "dss-utils-apache-commons", "dss-crl-parser-stream"]
+dss = ["dss-pades-pdfbox", "dss-token", "dss-validation", "dss-utils-apache-commons", "dss-crl-parser-stream", "dss-cms-stream", "dss-policy-jaxb"]

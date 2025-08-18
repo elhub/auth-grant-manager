@@ -18,7 +18,6 @@ import no.elhub.auth.extensions.httpTestClient
 import no.elhub.auth.extensions.localVaultConfig
 import no.elhub.auth.providers.vault.VaultSignatureProvider
 import no.elhub.auth.utils.TestCertificateUtil
-import org.apache.commons.codec.Resources
 import java.io.File
 import java.math.BigInteger
 import java.security.MessageDigest
@@ -39,7 +38,7 @@ class SigningServiceTest : FunSpec({
         loadCerts(File(TestCertificateUtil.Constants.CERTIFICATE_LOCATION))
 
     val signingService = SigningService(vaultSignatureProvider, signingCertificate, signingCertificateChain)
-    val unsignedPdfBytes = Resources.getInputStream("unsigned.pdf").readAllBytes()
+    val unsignedPdfBytes = this::class.java.classLoader.getResourceAsStream("unsigned.pdf")!!.readAllBytes()
 
     test("Should add one signature with proper parameters") {
         val signedPdfBytes = signingService.addPadesSignature(unsignedPdfBytes)
