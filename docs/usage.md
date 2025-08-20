@@ -107,14 +107,21 @@ PDF document that meets legal and regulatory standards.
 
 ### Authorization Document Signing Requirements
 
-* The Market Party MUST use a trusted document signing service for the end user to sign the document.
-    * The signing service MUST be on the [Nkom's Trusted list](https://www.nkom.no/tjenester/tillitsliste)
-* The signing process MUST meet:
-    * **High level of assurance**: Security Level 4 (sikkerhetsnivå 4)
-      * **Signature Standard**: PAdES B-B
-      * **Identity validation**: The signing service must provide the OCSP extension: `2.16.578.1.16.3.2`
-            (Norwegian national identity number – fødselsnummer). This is required in order for Elhub to
-            verify the identity of the end user.
+The Authorization Grant Manager requires that all documents are signed with a qualified electronic signature (QES),
+compliant with the PAdES B-B standard.
+
+In addition, there must be a mechanism that allows the Authorization Grant Manager to obtain the signer’s Norwegian
+national identity number (fødselsnummer). This is necessary in order to verify the identity of the person who signed the document.
+
+#### Supported Signing Solutions
+Currently, the Authorization Grant Manager only supports the BankId signing solution, provided through a qualified BankID partner.
+(TODO: Reference documentation here)
+
+If there is demand from the market, additional signing solutions may be supported in the future, provided that they meet the following requirements:
+
+#### Future support
+1. The signature complies with the QES / PAdES B-B standard.
+2. A mechanism exists that enables the Authorization Grant Manager to obtain the signer’s Norwegian national identity number for identity verification.
 
 ### Technical Flow
 
