@@ -1,6 +1,5 @@
 package no.elhub.auth.extensions
 
-import io.kotest.core.annotation.AutoScan
 import io.kotest.core.listeners.AfterProjectListener
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
@@ -21,7 +20,6 @@ val httpTestClient =
         }
     }
 
-@AutoScan
 object CloseHttpClient : AfterProjectListener {
     override suspend fun afterProject() {
         httpTestClient.close()
