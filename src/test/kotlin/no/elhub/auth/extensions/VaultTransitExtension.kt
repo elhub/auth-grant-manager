@@ -4,7 +4,6 @@ import com.github.dockerjava.api.model.ExposedPort
 import com.github.dockerjava.api.model.HostConfig
 import com.github.dockerjava.api.model.PortBinding
 import com.github.dockerjava.api.model.Ports
-import io.kotest.core.annotation.AutoScan
 import io.kotest.core.listeners.AfterProjectListener
 import io.kotest.core.listeners.BeforeSpecListener
 import io.kotest.core.spec.Spec
@@ -67,7 +66,6 @@ object VaultTransitTestContainerExtension : BeforeSpecListener {
     }
 }
 
-@AutoScan
 object StopVaultTransitTestContainer : AfterProjectListener {
     override suspend fun afterProject() {
         VaultTransitTestContainer.stopIfStarted()

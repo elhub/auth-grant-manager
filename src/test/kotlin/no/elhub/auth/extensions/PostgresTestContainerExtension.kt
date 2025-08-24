@@ -6,7 +6,6 @@ import com.github.dockerjava.api.model.PortBinding
 import com.github.dockerjava.api.model.Ports
 import io.kotest.core.listeners.AfterProjectListener
 import io.kotest.core.listeners.BeforeSpecListener
-import io.kotest.core.spec.AutoScan
 import io.kotest.core.spec.Spec
 import liquibase.Liquibase
 import liquibase.database.DatabaseFactory
@@ -78,7 +77,6 @@ object PostgresTestContainerExtension : BeforeSpecListener {
     }
 }
 
-@AutoScan
 object StopPostgresTestContainerExtension : AfterProjectListener {
     override suspend fun afterProject() {
         PostgresTestContainer.stopIfStarted()
