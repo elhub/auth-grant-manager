@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Authorization Request",
+  "description": "Schema for returning a single authorization document object in the Elhub authorization manager.",
+  "type": "object",
+  "properties": {
+    "data": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "authorization-document-definitions.json#/$defs/id"
+        },
+        "type": {
+          "$ref": "authorization-document-definitions.json#/$defs/type"
+        },
+        "attributes": {
+          "type": "object",
+          "properties": {
+            "documentType": {
+              "$ref": "authorization-document-definitions.json#/$defs/attributes/$defs/documentType"
+            },
+            "status": {
+              "$ref": "authorization-document-definitions.json#/$defs/attributes/$defs/status"
+            },
+            "createdAt": {
+              "$ref": "authorization-document-definitions.json#/$defs/attributes/$defs/createdAt"
+            },
+            "updatedAt": {
+              "$ref": "authorization-document-definitions.json#/$defs/attributes/$defs/updatedAt"
+            }
+          }
+        },
+        "relationships": {
+          "type": "object",
+          "properties": {
+            "requestedBy": {
+              "$ref": "authorization-document-definitions.json#/$defs/relationships/$defs/requestedBy"
+            },
+            "requestedFrom": {
+              "$ref": "authorization-document-definitions.json#/$defs/relationships/$defs/requestedFrom"
+            },
+            "signedBy": {
+              "$ref": "authorization-document-definitions.json#/$defs/relationships/$defs/signedBy"
+            }
+          }
+        },
+        "links": {
+          "type": "object",
+          "properties": {
+            "self": {
+              "description": "Link to the authorization document itself",
+              "$ref": "authorization-document-definitions.json#/$defs/links/$defs/self"
+            },
+            "file": {
+              "description": "Link to the actual authorization document pdf file",
+              "$ref": "authorization-document-definitions.json#/$defs/links/$defs/file"
+            }
+          }
+        }
+      }
+    },
+    "links": {
+      "description": "Link members related to the primary data.",
+      "$ref": "../base-definitions.schema.json#/definitions/topLevelLinks"
+    },
+    "meta": {
+      "$ref": "../base-definitions.schema.json#/definitions/topLevelMeta"
+    }
+  }
+}
