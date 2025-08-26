@@ -22,7 +22,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "schemas/authorization-document-get-list-response.schema.json"
+                $ref: "schemas/documents/authorization-document-get-list-response.schema.json"
         "401":
           $ref: "#/components/responses/401UnauthorizedError"
         "500":
@@ -34,14 +34,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "schemas/authorization-document-post-request.schema.json"
+              $ref: "schemas/documents/authorization-document-post-request.schema.json"
       responses:
         "200":
           description: This creates a new authorization document and returns the details of the request initiated (including the link to the actual document).
           content:
             application/json:
               schema:
-                $ref: "schemas/authorization-document-post-response.schema.json"
+                $ref: "schemas/documents/authorization-document-post-response.schema.json"
         "400":
           $ref: "#/components/responses/400BadRequestError"
         "401":
@@ -66,7 +66,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "schemas/authorization-document-get-response.schema.json"
+                $ref: "schemas/documents/authorization-document-get-response.schema.json"
         "401":
           $ref: "#/components/responses/401UnauthorizedError"
         "404":
