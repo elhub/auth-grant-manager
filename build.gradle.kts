@@ -51,6 +51,8 @@ dependencies {
     testImplementation(libs.test.kotest.runner.junit5)
     testImplementation(libs.test.kotest.assertions.core)
     testImplementation(libs.test.kotest.assertions.json)
+    testImplementation(libs.test.kotest.extensions.koin)
+    testImplementation(libs.test.koin.test)
     testImplementation(libs.test.testcontainers)
     testImplementation(libs.test.testcontainers.postgres)
     testImplementation(libs.test.mybatis)
