@@ -6,7 +6,6 @@ import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.testing.TestApplication
-import no.elhub.auth.utils.defaultTestApplication
 
 class ApplicationTest : FunSpec({
 
