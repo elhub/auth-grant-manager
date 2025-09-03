@@ -13,10 +13,10 @@ import io.ktor.server.testing.TestApplication
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import no.elhub.auth.config.AUTHORIZATION_REQUEST
-import no.elhub.auth.extensions.PostgresTestContainerExtension
-import no.elhub.auth.extensions.RunPostgresScriptExtension
-import no.elhub.auth.utils.defaultTestApplication
-import no.elhub.auth.validate
+import no.elhub.auth.defaultTestApplication
+import no.elhub.auth.features.common.PostgresTestContainerExtension
+import no.elhub.auth.features.common.RunPostgresScriptExtension
+import no.elhub.auth.features.validate
 
 class AuthorizationRequestRouteTest :
     FunSpec({
