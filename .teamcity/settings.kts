@@ -43,17 +43,17 @@ elhubProject(group = Group.AUTH, name = "auth-grant-manager") {
                 gitOps {
                     clusters = setOf(KubeCluster.TEST11)
                     gitOpsRepository = gitOpsRepo
-                }.triggerOnVcsChange()
+                }
 
                 gitOps {
                     clusters = setOf(KubeCluster.TEST13)
                     gitOpsRepository = gitOpsRepo
-                }.triggerOnVcsChange()
+                }
 
                 gitOps {
                     clusters = setOf(KubeCluster.TEST14)
                     gitOpsRepository = gitOpsRepo
-                }.triggerOnVcsChange()
+                }
             }
         }
     }
