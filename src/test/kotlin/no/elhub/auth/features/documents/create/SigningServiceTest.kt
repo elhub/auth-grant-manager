@@ -9,6 +9,7 @@ import eu.europa.esig.dss.model.InMemoryDocument
 import eu.europa.esig.dss.pades.signature.PAdESService
 import eu.europa.esig.dss.pades.validation.PDFDocumentValidator
 import eu.europa.esig.dss.spi.validation.CommonCertificateVerifier
+import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -44,13 +45,13 @@ class SigningServiceTest : FunSpec({
 
     test("Should add one signature with proper parameters") {
         val pdfBytes = signingService.getDataToSign(unsignedPdfBytes)
-            .getOrElse { TODO("Determine how to handle Arrow Either in tests") }
+            .shouldBeRight()
 
         val signatureBytes = vaultSignatureProvider.fetchSignature(pdfBytes)
-            .getOrElse { TODO("Determine how to handle Arrow Either in tests") }
+            .shouldBeRight()
 
         val signedPdfBytes = signingService.sign(pdfBytes, signatureBytes)
-            .getOrElse { TODO("Determine how to handle Arrow Either in tests") }
+            .shouldBeRight()
 
         val signedPdf = InMemoryDocument(signedPdfBytes)
 
@@ -82,13 +83,13 @@ class SigningServiceTest : FunSpec({
 
     test("Should invalidate signature when PDF is tampered with") {
         val pdfBytes = signingService.getDataToSign(unsignedPdfBytes)
-            .getOrElse { TODO("Determine how to handle Arrow Either in tests") }
+            .shouldBeRight()
 
         val signatureBytes = vaultSignatureProvider.fetchSignature(pdfBytes)
-            .getOrElse { TODO("Determine how to handle Arrow Either in tests") }
+            .shouldBeRight()
 
         val signedPdfBytes = signingService.sign(pdfBytes, signatureBytes)
-            .getOrElse { TODO("Determine how to handle Arrow Either in tests") }
+            .shouldBeRight()
 
         val signedPdf = InMemoryDocument(signedPdfBytes)
 
