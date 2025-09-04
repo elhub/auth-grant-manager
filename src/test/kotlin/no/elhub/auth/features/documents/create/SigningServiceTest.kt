@@ -39,7 +39,7 @@ class SigningServiceTest : FunSpec({
     val padesService = PAdESService(CommonCertificateVerifier())
 
     val signingService =
-        PAdESDocumentSigningService(signingCertificate, signingCertificateChain, padesService)
+        PAdESDocumentSigningService(vaultSignatureProvider, signingCertificate, signingCertificateChain, padesService)
     val unsignedPdfBytes = this::class.java.classLoader.getResourceAsStream("unsigned.pdf")!!.readAllBytes()
 
     test("Should add one signature with proper parameters") {
