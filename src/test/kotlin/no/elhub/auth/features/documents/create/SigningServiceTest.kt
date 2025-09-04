@@ -1,6 +1,5 @@
 package no.elhub.auth.features.documents.create
 
-import arrow.core.getOrElse
 import eu.europa.esig.dss.enumerations.CertificationPermission
 import eu.europa.esig.dss.enumerations.DigestAlgorithm
 import eu.europa.esig.dss.enumerations.SignatureAlgorithm
@@ -37,28 +36,18 @@ class SigningServiceTest : FunSpec({
     val signingCertificateChain: SigningCertificateChain =
         loadCerts(File(TestCertificateUtil.Constants.CERTIFICATE_LOCATION))
 
-    val padessService = PAdESService(CommonCertificateVerifier())
+    val padesService = PAdESService(CommonCertificateVerifier())
 
     val signingService =
-        PAdESDocumentSigningService(vaultSignatureProvider, signingCertificate, signingCertificateChain, padessService)
+        PAdESDocumentSigningService(signingCertificate, signingCertificateChain, padesService)
     val unsignedPdfBytes = this::class.java.classLoader.getResourceAsStream("unsigned.pdf")!!.readAllBytes()
 
     test("Should add one signature with proper parameters") {
-        val pdfBytes = signingService.getDataToSign(unsignedPdfBytes)
-            .shouldBeRight()
-
-        val signatureBytes = vaultSignatureProvider.fetchSignature(pdfBytes)
-            .shouldBeRight()
-
-        val signedPdfBytes = signingService.sign(pdfBytes, signatureBytes)
-            .shouldBeRight()
-=======
         val dataToSign = signingService.getDataToSign(unsignedPdfBytes).shouldBeRight()
 
         val signatureBytes = vaultSignatureProvider.fetchSignature(dataToSign).shouldBeRight()
 
         val signedPdfBytes = signingService.sign(unsignedPdfBytes, signatureBytes).shouldBeRight()
->>>>>>> Stashed changes
 
         val signedPdf = InMemoryDocument(signedPdfBytes)
 
@@ -89,21 +78,11 @@ class SigningServiceTest : FunSpec({
     }
 
     test("Should invalidate signature when PDF is tampered with") {
-        val pdfBytes = signingService.getDataToSign(unsignedPdfBytes)
-            .shouldBeRight()
-
-        val signatureBytes = vaultSignatureProvider.fetchSignature(pdfBytes)
-            .shouldBeRight()
-
-        val signedPdfBytes = signingService.sign(pdfBytes, signatureBytes)
-            .shouldBeRight()
-=======
         val dataToSign = signingService.getDataToSign(unsignedPdfBytes).shouldBeRight()
 
         val signatureBytes = vaultSignatureProvider.fetchSignature(dataToSign).shouldBeRight()
 
         val signedPdfBytes = signingService.sign(unsignedPdfBytes, signatureBytes).shouldBeRight()
->>>>>>> Stashed changes
 
         val signedPdf = InMemoryDocument(signedPdfBytes)
 
