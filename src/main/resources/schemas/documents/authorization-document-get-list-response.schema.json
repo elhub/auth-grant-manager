@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Authorization Document Response Collection",
+  "description": "Schema for returning a collection of authorization document objects in the Elhub authorization manager.",
+  "type": "object",
+  "properties": {
+    "data": {
+      "type": "array",
+      "items": {
+        "$ref": "authorization-document-get-response.schema.json#/properties/data"
+      }
+    },
+    "links": {
+      "description": "Link members related to the primary data.",
+      "$ref": "../base-definitions.schema.json#/definitions/topLevelLinks"
+    },
+    "meta": {
+      "$ref": "../base-definitions.schema.json#/definitions/topLevelMeta"
+    }
+  }
+}

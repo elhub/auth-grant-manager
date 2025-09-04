@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Authorization Document Post Request",
+  "description": "Schema for creating authorization documents in the Elhub authorization manager.",
+  "type": "object",
+  "properties": {
+    "data": {
+      "description": "The authorization document to be created.",
+      "type": "object",
+      "properties": {
+        "type": {
+          "$ref": "authorization-document-definitions.json#/$defs/type"
+        },
+        "attributes": {
+          "type": "object",
+          "description": "The attributes of the authorization document.",
+          "properties": {
+            "documentType": {
+              "$ref": "authorization-document-definitions.json#/$defs/attributes/$defs/documentType"
+            }
+          },
+          "required": ["documentType"]
+        },
+        "meta": {
+          "type": "object",
+          "description": "Additional meta-information related to the resource. Most of this information is used for informational purposes.",
+          "properties": {
+            "requestedFromName": {
+              "$ref": "authorization-document-definitions.json#/$defs/meta/$defs/requestedFromName"
+            },
+            "requestedForMeteringPointId": {
+              "$ref": "authorization-document-definitions.json#/$defs/meta/$defs/requestedForMeteringPointId"
+            },
+            "requestedForMeteringPointAddress": {
+              "$ref": "authorization-document-definitions.json#/$defs/meta/$defs/requestedForMeteringPointAddress"
+            },
+            "balanceSupplierContractName": {
+              "$ref": "authorization-document-definitions.json#/$defs/meta/$defs/balanceSupplierContractName"
+            }
+          }
+        },
+        "relationships": {
+          "type": "object",
+          "description": "The related entities of the authorization document (persons and organizations).",
+          "properties": {
+            "requestedBy": {
+              "$ref": "authorization-document-definitions.json#/$defs/relationships/$defs/requestedBy"
+            },
+            "requestedFrom": {
+              "$ref": "authorization-document-definitions.json#/$defs/relationships/$defs/requestedFrom"
+            },
+            "signedBy": {
+              "$ref": "authorization-document-definitions.json#/$defs/relationships/$defs/signedBy"
+            }
+          }
+        }
+      }
+    }
+  },
+  "required": ["data"]
+}
