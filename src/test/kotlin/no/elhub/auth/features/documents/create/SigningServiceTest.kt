@@ -52,6 +52,13 @@ class SigningServiceTest : FunSpec({
 
         val signedPdfBytes = signingService.sign(pdfBytes, signatureBytes)
             .shouldBeRight()
+=======
+        val dataToSign = signingService.getDataToSign(unsignedPdfBytes).shouldBeRight()
+
+        val signatureBytes = vaultSignatureProvider.fetchSignature(dataToSign).shouldBeRight()
+
+        val signedPdfBytes = signingService.sign(unsignedPdfBytes, signatureBytes).shouldBeRight()
+>>>>>>> Stashed changes
 
         val signedPdf = InMemoryDocument(signedPdfBytes)
 
@@ -90,6 +97,13 @@ class SigningServiceTest : FunSpec({
 
         val signedPdfBytes = signingService.sign(pdfBytes, signatureBytes)
             .shouldBeRight()
+=======
+        val dataToSign = signingService.getDataToSign(unsignedPdfBytes).shouldBeRight()
+
+        val signatureBytes = vaultSignatureProvider.fetchSignature(dataToSign).shouldBeRight()
+
+        val signedPdfBytes = signingService.sign(unsignedPdfBytes, signatureBytes).shouldBeRight()
+>>>>>>> Stashed changes
 
         val signedPdf = InMemoryDocument(signedPdfBytes)
 
