@@ -28,7 +28,7 @@ class CreateDocumentHandler(
         val signature = signatureProvider.fetchSignature(dataToSign)
             .getOrElse { return CreateDocumentError.SignatureFetchingError.left() }
 
-        val signedDocument = signingService.sign(dataToSign, signature)
+        val signedDocument = signingService.sign(documentBytes, signature)
             .getOrElse { return CreateDocumentError.SigningError.left() }
 
         val documentToCreate = command.toAuthorizationDocument(signedDocument)

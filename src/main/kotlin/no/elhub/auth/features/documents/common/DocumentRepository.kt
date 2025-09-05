@@ -21,6 +21,7 @@ import org.jetbrains.exposed.sql.javatime.timestamp
 import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.javatime.datetime
+import org.jetbrains.exposed.sql.selectAll
 
 
 interface DocumentRepository {
@@ -70,7 +71,8 @@ class ExposedDocumentRepository : DocumentRepository {
     private fun findOrNull(id: UUID): Either<RepositoryReadError, AuthorizationDocument?> =
         Either.catch {
             transaction {
-                AuthorizationDocumentTable.select(listOf(AuthorizationDocumentTable.file))
+                AuthorizationDocumentTable
+                    .selectAll()
                     .where { AuthorizationDocumentTable.id eq id }
                     .map { it.toAuthorizationDocument() }
                     .singleOrNull()

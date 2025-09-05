@@ -45,7 +45,7 @@ class PAdESDocumentSigningService(
         padesService.getDataToSign(InMemoryDocument(pdfByteArray), defaultSignatureParameters).bytes
     }.mapLeft { DocumentSigningError.SigningDataGenerationError }
 
-    suspend override fun sign(
+    override suspend fun sign(
         pdfByteArray: ByteArray,
         signatureBytes: ByteArray
     ): Either<DocumentSigningError, ByteArray> = sign(
@@ -53,7 +53,7 @@ class PAdESDocumentSigningService(
         SignatureValue(defaultSignatureParameters.signatureAlgorithm, signatureBytes),
     )
 
-    suspend private fun sign(
+    private fun sign(
         document: DSSDocument,
         signature: SignatureValue
     ): Either<DocumentSigningError, ByteArray> = Either.catch {
@@ -64,6 +64,8 @@ class PAdESDocumentSigningService(
         )
             .openStream()
             .use { it.readBytes() }
-    }.mapLeft { DocumentSigningError.SigningError }
+    }.mapLeft { ex ->
+        print(ex)
+        DocumentSigningError.SigningError }
 }
 

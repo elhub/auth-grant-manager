@@ -27,7 +27,7 @@ typealias AuthorizationDocumentResponse = JsonApiResponse.SingleDocumentWithRela
 fun AuthorizationDocument.toResponse() =
     AuthorizationDocumentResponse(
         data = JsonApiResponseResourceObjectWithRelationships(
-            type = (AuthorizationDocument::class).simpleName ?: "AuthorizationDocument",
+            type = "AuthorizationDocument",
             id = this.id.toString(),
             attributes = DocumentResponseAttributes(
                 status = this.status.toString(),

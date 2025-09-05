@@ -43,7 +43,7 @@ fun Route.getDocumentRoute(handler: GetDocumentHandler) {
         }
     }
 
-    route("$ID.pdf") {
+    route("{$ID}.pdf") {
         get {
             val id: UUID = validateId(call.parameters[ID])
                 .getOrElse { err ->
