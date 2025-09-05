@@ -5,24 +5,21 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
+import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.documents.common.toResponse
+import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import java.util.*
 
 fun Route.queryDocumentsRoute(handler: QueryDocumentsHandler) {
     get {
         val documents = handler(QueryDocumentsQuery())
-            .getOrElse { error ->
-                when (error) {
-                    is QueryDocumentsError.NotFoundError -> call.respond(HttpStatusCode.NotFound)
-                    is QueryDocumentsError.IOError -> call.respond(HttpStatusCode.InternalServerError)
-                }
+            .getOrElse { err ->
+                val (status, body) = err.toApiErrorResponse()
+                call.respond(status, JsonApiErrorCollection(listOf(body)))
                 return@get
             }
 
-        call.respond(
-            status = HttpStatusCode.OK,
-            message = documents.toResponse()
-        )
+        call.respond(HttpStatusCode.OK, documents.toResponse())
     }
 }
 

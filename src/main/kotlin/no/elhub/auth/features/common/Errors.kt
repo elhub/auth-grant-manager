@@ -34,11 +34,27 @@ sealed class RepositoryReadError : RepositoryError() {
     data object UnexpectedError : RepositoryReadError()
 }
 
-fun InputError.toApiErrorResponse(): JsonApiErrorObject = when (this) {
-    InputError.MissingInputError, InputError.MalformedInputError -> JsonApiErrorObject(
-        status = HttpStatusCode.BadRequest.value.toString(),
+fun InputError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorObject> = when (this) {
+    InputError.MissingInputError, InputError.MalformedInputError -> HttpStatusCode.BadRequest to JsonApiErrorObject(
+        status = HttpStatusCode.BadRequest.toString(),
         code = "INVALID_RESOURCE_ID",
         title = "Malformed ID",
-        detail = "The provided ID is not valid"
+        detail = "The provided ID is not valid",
+    )
+}
+
+fun QueryError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorObject> = when (this) {
+    QueryError.ResourceNotFoundError -> HttpStatusCode.NotFound to JsonApiErrorObject(
+        status = HttpStatusCode.NotFound.value.toString(),
+        code = "NOT_FOUND",
+        title = "Not Found",
+        detail = "The requested resource could not be found",
+    )
+
+    QueryError.IOError -> HttpStatusCode.InternalServerError to JsonApiErrorObject(
+        status = HttpStatusCode.InternalServerError.value.toString(),
+        code = "INTERNAL_SERVER_ERROR",
+        title = "Internal Server Error",
+        detail = "An error occurred when attempted to perform the query",
     )
 }

@@ -13,6 +13,7 @@ import no.elhub.auth.features.common.QueryError
 import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.common.validateId
 import no.elhub.auth.features.documents.common.toResponse
+import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import java.util.*
 
 fun Route.getDocumentRoute(handler: GetDocumentHandler) {
@@ -20,24 +21,17 @@ fun Route.getDocumentRoute(handler: GetDocumentHandler) {
         get {
             val id: UUID = validateId(call.parameters[ID])
                 .getOrElse { err ->
-                    call.respond(HttpStatusCode.BadRequest, err.toApiErrorResponse())
+                    val (status, body) = err.toApiErrorResponse()
+                    call.respond(status, JsonApiErrorCollection(listOf(body)))
                     return@get
                 }
 
-            val document = handler(GetDocumentQuery(id)).getOrElse { error ->
-                when (error) {
-                    is QueryError.ResourceNotFoundError -> call.respond(
-                        HttpStatusCode.NotFound,
-                        "Document not found"
-                    )
-
-                    is QueryError.IOError -> call.respond(
-                        HttpStatusCode.InternalServerError,
-                        "An error occurred when attempting to retrieve the document from the database"
-                    )
+            val document = handler(GetDocumentQuery(id))
+                .getOrElse { err ->
+                    val (status, body) = err.toApiErrorResponse()
+                    call.respond(status, JsonApiErrorCollection(listOf(body)))
+                    return@get
                 }
-                return@get
-            }
 
             call.respond(HttpStatusCode.OK, document.toResponse())
         }
@@ -47,24 +41,17 @@ fun Route.getDocumentRoute(handler: GetDocumentHandler) {
         get {
             val id: UUID = validateId(call.parameters[ID])
                 .getOrElse { err ->
-                    call.respond(HttpStatusCode.BadRequest, err.toApiErrorResponse())
+                    val (status, body) = err.toApiErrorResponse()
+                    call.respond(status, JsonApiErrorCollection(listOf(body)))
                     return@get
                 }
 
-            val document = handler(GetDocumentQuery(id)).getOrElse { error ->
-                when (error) {
-                    is QueryError.ResourceNotFoundError -> call.respond(
-                        HttpStatusCode.NotFound,
-                        "Document not found"
-                    )
-
-                    is QueryError.IOError -> call.respond(
-                        HttpStatusCode.InternalServerError,
-                        "An error occurred when attempting to retrieve the document from the database"
-                    )
+            val document = handler(GetDocumentQuery(id))
+                .getOrElse { err ->
+                    val (status, body) = err.toApiErrorResponse()
+                    call.respond(status, JsonApiErrorCollection(listOf(body)))
+                    return@get
                 }
-                return@get
-            }
 
             call.respondBytes(document.pdfBytes, ContentType.Application.Pdf)
         }

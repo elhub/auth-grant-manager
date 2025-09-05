@@ -10,9 +10,11 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
 import io.ktor.server.util.url
 import no.elhub.auth.features.common.QueryError
+import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.requests.common.toResponse
 import no.elhub.auth.features.requests.get.GetRequestHandler
 import no.elhub.auth.features.requests.get.GetRequestQuery
+import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 
 fun Route.createRequestRoute(createHandler: CreateRequestHandler, getHandler: GetRequestHandler) {
     post {
@@ -30,11 +32,9 @@ fun Route.createRequestRoute(createHandler: CreateRequestHandler, getHandler: Ge
             }
 
         val authorizationRequest = getHandler(GetRequestQuery(requestId))
-            .getOrElse { error ->
-                when (error) {
-                    is QueryError.ResourceNotFoundError -> call.respond(HttpStatusCode.NotFound)
-                    is QueryError.IOError -> call.respond(HttpStatusCode.InternalServerError)
-                }
+            .getOrElse { err ->
+                val (status, body) = err.toApiErrorResponse()
+                call.respond(status, JsonApiErrorCollection(listOf(body)))
                 return@post
             }
 

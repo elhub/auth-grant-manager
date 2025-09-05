@@ -11,30 +11,24 @@ import no.elhub.auth.features.common.QueryError
 import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.common.validateId
 import no.elhub.auth.features.requests.common.toResponse
+import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import java.util.UUID
 
 fun Route.getRequestRoute(handler: GetRequestHandler) {
     get("/$ID") {
         val id: UUID = validateId(call.parameters[ID])
             .getOrElse { err ->
-                call.respond(HttpStatusCode.BadRequest, err.toApiErrorResponse())
+                val (status, body) = err.toApiErrorResponse()
+                call.respond(status, JsonApiErrorCollection(listOf(body)))
                 return@get
             }
 
-        val authorizationRequest = handler(GetRequestQuery(id)).getOrElse { error ->
-            when (error) {
-                is QueryError.ResourceNotFoundError -> call.respond(
-                    HttpStatusCode.NotFound,
-                    "Authorization request not found"
-                )
-
-                is QueryError.IOError -> call.respond(
-                    HttpStatusCode.InternalServerError,
-                    "An error occurred when attempting to retrieve the authorization request from the database"
-                )
+        val authorizationRequest = handler(GetRequestQuery(id))
+            .getOrElse { err ->
+                val (status, body) = err.toApiErrorResponse()
+                call.respond(status, JsonApiErrorCollection(listOf(body)))
+                return@get
             }
-            return@get
-        }
 
         call.respond(HttpStatusCode.OK, authorizationRequest.toResponse())
     }

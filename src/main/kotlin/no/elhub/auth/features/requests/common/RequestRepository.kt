@@ -118,7 +118,7 @@ fun ResultRow.toAuthorizationRequest() = AuthorizationRequest(
     createdAt = this[AuthorizationRequestTable.createdAt].toKotlinLocalDateTime(),
     updatedAt = this[AuthorizationRequestTable.updatedAt].toKotlinLocalDateTime(),
     validTo = this[AuthorizationRequestTable.validTo].toKotlinLocalDateTime(),
-    TODO("Add properties"),
+    // TODO: Add properties"
     // properties = AuthorizationRequest.Property(
     //    this[AuthorizationRequestPropertyTable.authorizationRequestId].toString(),
     //    this[AuthorizationRequestPropertyTable.key],

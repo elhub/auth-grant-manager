@@ -7,9 +7,11 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
 import no.elhub.auth.features.common.QueryError
+import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.documents.common.toResponse
 import no.elhub.auth.features.documents.get.GetDocumentHandler
 import no.elhub.auth.features.documents.get.GetDocumentQuery
+import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 
 fun Route.createDocumentRoute(createHandler: CreateDocumentHandler, getHandler: GetDocumentHandler) {
     post {
@@ -31,11 +33,9 @@ fun Route.createDocumentRoute(createHandler: CreateDocumentHandler, getHandler: 
             }
 
         val authorizationDocument = getHandler(GetDocumentQuery(documentId))
-            .getOrElse { error ->
-                when (error) {
-                    is QueryError.ResourceNotFoundError -> call.respond(HttpStatusCode.NotFound)
-                    is QueryError.IOError -> call.respond(HttpStatusCode.InternalServerError)
-                }
+            .getOrElse { err ->
+                val (status, body) = err.toApiErrorResponse()
+                call.respond(status, JsonApiErrorCollection(listOf(body)))
                 return@post
             }
 

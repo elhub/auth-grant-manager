@@ -21,34 +21,17 @@ fun Route.getGrantRoute(handler: GetGrantHandler) {
         get {
             val id: UUID = validateId(call.parameters[ID])
                 .getOrElse { err ->
-                    call.respond(HttpStatusCode.BadRequest, JsonApiErrorCollection(listOf(err.toApiErrorResponse())))
+                    val (status, body) = err.toApiErrorResponse()
+                    call.respond(status, JsonApiErrorCollection(listOf(body)))
                     return@get
                 }
 
-            val grant = handler(GetGrantQuery(id)).getOrElse { error ->
-                when (error) {
-                    is QueryError.ResourceNotFoundError ->
-                        call.respond(
-                            HttpStatusCode.NotFound,
-                            JsonApiErrorCollection(listOf( JsonApiErrorObject(
-                                id = null,
-                                status = "404",
-                                code = "NOT_FOUND",
-                                title = "Authorization not found",
-                                detail = "The authorization was not found",
-                                meta = null
-                            )))
-                        )
-
-                    is QueryError.IOError ->
-                        call.respond(
-                            HttpStatusCode.InternalServerError,
-                            "Unexpected error occurred during fetch authorization grant with id=$id",
-                        )
+            val grant = handler(GetGrantQuery(id))
+                .getOrElse { err ->
+                    val (status, body) = err.toApiErrorResponse()
+                    call.respond(status, JsonApiErrorCollection(listOf(body)))
+                    return@get
                 }
-
-                return@get
-            }
 
             call.respond(HttpStatusCode.OK, grant.toResponse())
         }
