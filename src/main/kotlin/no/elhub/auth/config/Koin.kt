@@ -1,21 +1,35 @@
 package no.elhub.auth.config
 
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.cio.CIO
-import io.ktor.client.plugins.HttpTimeout
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.plugins.logging.LogLevel
-import io.ktor.client.plugins.logging.Logging
-import io.ktor.serialization.kotlinx.json.json
-import io.ktor.server.application.Application
-import io.ktor.server.application.install
-import io.ktor.server.config.ApplicationConfig
+import com.github.mustachejava.DefaultMustacheFactory
+import eu.europa.esig.dss.spi.validation.CommonCertificateVerifier
+import eu.europa.esig.dss.pades.signature.PAdESService
+import io.ktor.client.*
+import io.ktor.client.engine.cio.*
+import io.ktor.client.plugins.*
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.plugins.logging.*
+import io.ktor.serialization.kotlinx.json.*
+import io.ktor.server.application.*
+import io.ktor.server.config.*
 import kotlinx.serialization.json.Json
-import no.elhub.auth.features.documents.AuthorizationDocumentHandler
-import no.elhub.auth.features.documents.SigningService
-import no.elhub.auth.features.grants.AuthorizationGrantHandler
-import no.elhub.auth.features.requests.AuthorizationRequestHandler
-import no.elhub.auth.providers.vault.VaultSignatureProvider
+import no.elhub.auth.features.documents.common.DocumentRepository
+import no.elhub.auth.features.documents.common.ExposedDocumentRepository
+import no.elhub.auth.features.documents.confirm.ConfirmDocumentHandler
+import no.elhub.auth.features.documents.create.*
+import no.elhub.auth.features.documents.get.GetDocumentHandler
+import no.elhub.auth.features.grants.common.ExposedGrantRepository
+import no.elhub.auth.features.grants.common.GrantRepository
+import no.elhub.auth.features.grants.get.GetGrantHandler
+import no.elhub.auth.features.grants.getScopes.GetGrantScopesHandler
+import no.elhub.auth.features.grants.query.QueryGrantsHandler
+import no.elhub.auth.features.requests.common.ExposedRequestRepository
+import no.elhub.auth.features.requests.common.RequestRepository
+import no.elhub.auth.features.requests.confirm.ConfirmRequestHandler
+import no.elhub.auth.features.requests.create.CreateRequestHandler
+import no.elhub.auth.features.requests.get.GetRequestHandler
+import no.elhub.auth.features.requests.query.QueryRequestsHandler
+import org.koin.core.module.dsl.singleOf
+import org.koin.dsl.bind
 import org.koin.dsl.module
 import org.koin.ktor.plugin.Koin
 import java.io.File
@@ -32,8 +46,9 @@ data class CertificateConfig(
     val file: String
 )
 
-typealias SigningCertificate = X509Certificate
-typealias SigningCertificateChain = List<X509Certificate>
+data class PdfGeneratorConfig(
+    val mustacheResourcePath: String
+)
 
 val signerModule = module {
     single {
@@ -60,11 +75,53 @@ val signerModule = module {
 
 val appModule =
     module {
-        single { VaultSignatureProvider(get(), get()) }
-        single { SigningService(get(), get(), get()) }
-        single { AuthorizationGrantHandler() }
-        single { AuthorizationDocumentHandler(get()) }
-        single { AuthorizationRequestHandler() }
+        singleOf(::ExposedDocumentRepository) bind DocumentRepository::class
+        singleOf(::ExposedGrantRepository) bind GrantRepository::class
+        singleOf(::ExposedRequestRepository) bind RequestRepository::class
+
+        single { PAdESService(CommonCertificateVerifier()) }
+        singleOf(::PAdESDocumentSigningService) bind DocumentSigningService::class
+        singleOf(::HashicorpVaultSignatureProvider) bind SignatureProvider::class
+
+        single {
+            val cfg = get<ApplicationConfig>().config("pdfGenerator")
+            val pdfGeneratorCfg = PdfGeneratorConfig(
+                mustacheResourcePath = cfg.property("mustacheResourcePath").getString(),
+            )
+
+            DefaultMustacheFactory(pdfGeneratorCfg.mustacheResourcePath)
+        }
+        singleOf(::PdfDocumentGenerator) bind DocumentGenerator::class
+
+        // TODO: Create dedicated testing module?
+        singleOf(::ConfirmDocumentHandler)
+        singleOf(::CreateDocumentHandler)
+        singleOf(::GetDocumentHandler)
+
+        singleOf(::GetGrantHandler)
+        singleOf(::GetGrantScopesHandler)
+        singleOf(::QueryGrantsHandler)
+
+        singleOf(::ConfirmRequestHandler)
+        singleOf(::CreateRequestHandler)
+        singleOf(::GetRequestHandler)
+        singleOf(::QueryRequestsHandler)
+
+        /*      requestScope {
+         *          scopedOf(::ConfirmDocumentHandler)
+         *          scopedOf(::CreateDocumentHandler)
+         *          scopedOf(::GetDocumentHandler)
+         *
+         *          scopedOf(::GetGrantHandler)
+         *          scopedOf(::GetGrantScopesHandler)
+         *          scopedOf(::QueryGrantsHandler)
+         *
+         *          scopedOf(::ConfirmRequestHandler)
+         *          scopedOf(::CreateRequestHandler)
+         *          scopedOf(::GetRequestHandler)
+         *          scopedOf(::QueryRequestsHandler)
+         *      }
+         */
     }
 
 val httpClientModule = module {

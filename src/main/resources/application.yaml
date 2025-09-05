@@ -12,12 +12,15 @@ ktor:
     hikari:
       maximumPoolSize: 3
 
+pdfGenerator:
+  mustacheResourcePath: $MUSTACHE_RESOURCE_PATH
+
 pdfSigner:
   # HashiCorp Vault settings
   vault:
-    url: ${VAULT_URL}
-    key: ${VAULT_KEY}
-    tokenPath: ${VAULT_TOKEN_PATH}
+    url: $VAULT_URL
+    key: $VAULT_KEY
+    tokenPath: $VAULT_TOKEN_PATH
   certificate:
-    signing: ${PATH_TO_SIGNING_CERTIFICATE}
-    chain: ${PATH_TO_SIGNING_CERTIFICATE_CHAIN}
+    signing: $PATH_TO_SIGNING_CERTIFICATE
+    chain: $PATH_TO_SIGNING_CERTIFICATE_CHAIN

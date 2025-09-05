@@ -13,10 +13,10 @@ import io.ktor.server.testing.TestApplication
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import no.elhub.auth.config.AUTHORIZATION_REQUEST
-import no.elhub.auth.extensions.PostgresTestContainerExtension
-import no.elhub.auth.extensions.RunPostgresScriptExtension
-import no.elhub.auth.utils.defaultTestApplication
-import no.elhub.auth.validate
+import no.elhub.auth.defaultTestApplication
+import no.elhub.auth.features.common.PostgresTestContainerExtension
+import no.elhub.auth.features.common.RunPostgresScriptExtension
+import no.elhub.auth.features.validate
 
 class AuthorizationRequestRouteTest :
     FunSpec({
@@ -163,7 +163,7 @@ class AuthorizationRequestRouteTest :
                 responseJson.validate {
                     "errors".shouldBeList(size = 1) {
                         item(0) {
-                            "status" shouldBe "400"
+                            "status" shouldBe "400 Bad Request"
                             "code" shouldBe "INVALID_RESOURCE_ID"
                             "title" shouldBe "Malformed ID"
                             "detail" shouldBe "The provided ID is not valid"
@@ -182,8 +182,8 @@ class AuthorizationRequestRouteTest :
                             item(0) {
                                 "status" shouldBe "404"
                                 "code" shouldBe "NOT_FOUND"
-                                "title" shouldBe "Authorization not found"
-                                "detail" shouldBe "The authorization was not found"
+                                "title" shouldBe "Not Found"
+                                "detail" shouldBe "The requested resource could not be found"
                             }
                         }
                     }
@@ -301,7 +301,7 @@ class AuthorizationRequestRouteTest :
                 responseJson.validate {
                     "errors".shouldBeList(size = 1) {
                         item(0) {
-                            "status" shouldBe "400"
+                            "status" shouldBe "400 Bad Request"
                             "code" shouldBe "INVALID_PAYLOAD"
                             "title" shouldBe "Payload not valid"
                             "detail" shouldBe "Authorization request contains extra, unknown, or missing fields"
@@ -344,7 +344,7 @@ class AuthorizationRequestRouteTest :
                 responseJson.validate {
                     "errors".shouldBeList(size = 1) {
                         item(0) {
-                            "status" shouldBe "400"
+                            "status" shouldBe "400 Bad Request"
                             "code" shouldBe "INVALID_PAYLOAD"
                             "title" shouldBe "Payload not valid"
                             "detail" shouldBe "Authorization request contains extra, unknown, or missing fields"

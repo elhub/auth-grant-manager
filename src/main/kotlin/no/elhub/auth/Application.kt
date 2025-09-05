@@ -9,7 +9,6 @@ import no.elhub.auth.config.configureMonitoring
 import no.elhub.auth.config.configureRouting
 import no.elhub.auth.config.configureSecurity
 import no.elhub.auth.config.configureSerialization
-import no.elhub.auth.config.configureStatusPages
 
 fun main(args: Array<String>) {
     EngineMain.main(args)
@@ -22,6 +21,5 @@ fun Application.module() {
     configureMonitoring(dataSource)
     configureSerialization()
     configureSecurity()
-    configureStatusPages()
     configureRouting()
 }
