@@ -11,7 +11,7 @@ import no.elhub.auth.features.grants.common.toResponse
 
 fun Route.queryGrantsRoute(handler: QueryGrantsHandler) {
     get {
-        TODO("Build query from payload")
+        // TODO("Build query from payload")
         val grants = handler(QueryGrantsQuery()).getOrElse { error ->
             when (error) {
                 is QueryError.ResourceNotFoundError ->

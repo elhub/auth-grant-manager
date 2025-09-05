@@ -35,17 +35,10 @@ sealed class RepositoryReadError : RepositoryError() {
 }
 
 fun InputError.toApiErrorResponse(): JsonApiErrorObject = when (this) {
-    InputError.MissingInputError -> JsonApiErrorObject(
+    InputError.MissingInputError, InputError.MalformedInputError -> JsonApiErrorObject(
         status = HttpStatusCode.BadRequest.value.toString(),
         code = "INVALID_RESOURCE_ID",
         title = "Malformed ID",
         detail = "The provided ID is not valid"
-    )
-
-    is InputError.MalformedInputError -> JsonApiErrorObject(
-        status = HttpStatusCode.BadRequest.value.toString(),
-        code = "INVALID_PAYLOAD",
-        title = "Payload not valid",
-        detail = "Authorization request contains extra, unknown, or missing fields"
     )
 }

@@ -13,13 +13,15 @@ import no.elhub.auth.features.common.QueryError
 import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.grants.common.toResponse
 import java.util.UUID
+import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
+import no.elhub.devxp.jsonapi.response.JsonApiErrorObject
 
 fun Route.getGrantScopesRoute(handler: GetGrantScopesHandler) {
     route("/{$ID}/scopes") {
         get {
             val id: UUID = validateId(call.parameters[ID])
                 .getOrElse { err ->
-                    call.respond(HttpStatusCode.BadRequest, err.toApiErrorResponse())
+                    call.respond(HttpStatusCode.BadRequest, JsonApiErrorCollection(listOf(err.toApiErrorResponse())))
                     return@get
                 }
 
@@ -27,9 +29,17 @@ fun Route.getGrantScopesRoute(handler: GetGrantScopesHandler) {
                 when (error) {
                     is QueryError.ResourceNotFoundError -> call.respond(
                         HttpStatusCode.NotFound,
-                        "Authorization scope for grant with id=$id not found",
+                        JsonApiErrorCollection(listOf(
+                            JsonApiErrorObject(
+                            id = null,
+                            status = "404",
+                            code = null,
+                            title = "Authorization not found",
+                            detail = "The authorization was not found",
+                            meta = null
+                        )
+                        ))
                     )
-
                     is QueryError.IOError -> call.respond(
                         HttpStatusCode.InternalServerError,
                         "Unexpected error occurred during fetch authorization scopes for authorization grant with id=$id"

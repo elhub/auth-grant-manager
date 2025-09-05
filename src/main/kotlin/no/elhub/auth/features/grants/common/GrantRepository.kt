@@ -2,34 +2,32 @@ package no.elhub.auth.features.grants.common
 
 import arrow.core.Either
 import arrow.core.raise.either
-import java.util.UUID
-import no.elhub.auth.features.grants.AuthorizationGrant
-import kotlinx.datetime.Instant
-import org.jetbrains.exposed.sql.ResultRow
-import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.transactions.transaction
-import org.slf4j.LoggerFactory
 import java.util.*
-import org.jetbrains.exposed.sql.ReferenceOption
-import org.jetbrains.exposed.sql.Table
+import kotlinx.datetime.Instant
 import kotlinx.datetime.toKotlinLocalDateTime
-import no.elhub.auth.features.grants.AuthorizationGrant.Status
-import org.jetbrains.exposed.dao.id.UUIDTable
-import org.jetbrains.exposed.sql.javatime.CurrentDateTime
-import org.jetbrains.exposed.sql.javatime.datetime
 import no.elhub.auth.features.common.PGEnum
 import no.elhub.auth.features.common.RepositoryReadError
+import no.elhub.auth.features.grants.AuthorizationGrant
+import no.elhub.auth.features.grants.AuthorizationGrant.Status
 import no.elhub.auth.features.grants.AuthorizationParty
 import no.elhub.auth.features.grants.AuthorizationResourceType
 import no.elhub.auth.features.grants.AuthorizationScope
 import no.elhub.auth.features.grants.ElhubResource
 import no.elhub.auth.features.grants.PermissionType
 import org.jetbrains.exposed.dao.id.LongIdTable
+import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.JoinType
-import org.jetbrains.exposed.sql.andWhere
+import org.jetbrains.exposed.sql.ReferenceOption
+import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
+import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.javatime.CurrentDateTime
+import org.jetbrains.exposed.sql.javatime.datetime
 import org.jetbrains.exposed.sql.javatime.timestamp
-import org.jetbrains.exposed.sql.or
-import org.jetbrains.exposed.sql.orWhere
+import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.transactions.transaction
+import org.slf4j.LoggerFactory
 
 
 interface GrantRepository {
@@ -45,60 +43,75 @@ class ExposedGrantRepository : GrantRepository {
 
     override fun findAll(): Either<RepositoryReadError, List<AuthorizationGrant>> = either {
         transaction {
-            AuthorizationGrantTable
-                .join(
-                    AuthorizationPartyTable,
-                    JoinType.LEFT,
-                    onColumn = AuthorizationGrantTable.grantedBy,
-                    otherColumn = AuthorizationPartyTable.id
-                )
-                .join(
-                    AuthorizationPartyTable,
-                    JoinType.LEFT,
-                    onColumn = AuthorizationGrantTable.grantedFor,
-                    otherColumn = AuthorizationPartyTable.id
-                )
-                .join(
-                    AuthorizationPartyTable,
-                    JoinType.LEFT,
-                    onColumn = AuthorizationGrantTable.grantedTo,
-                    otherColumn = AuthorizationPartyTable.id
-                )
+            // 1) Get all grants
+            val grantRows = AuthorizationGrantTable
                 .selectAll()
-                .map { it.toAuthorizationGrant() }
+                .toList()
+
+            if (grantRows.isEmpty()) {
+                return@transaction emptyList<AuthorizationGrant>()
+            }
+
+            // 2) Collect all distinct party ids we need (for/by/to)
+            val partyIds: List<Long> = grantRows
+                .flatMap { g ->
+                    listOf(
+                        g[AuthorizationGrantTable.grantedFor],
+                        g[AuthorizationGrantTable.grantedBy],
+                        g[AuthorizationGrantTable.grantedTo]
+                    )
+                }
+                .toSet()   // distinct
+                .toList()
+
+            // 3) Fetch all parties in ONE query and index by id
+            val partiesById: Map<Long, AuthorizationParty> =
+                AuthorizationPartyTable
+                    .selectAll()
+                    .where { AuthorizationPartyTable.id inList partyIds }
+                    .associate { row ->
+                        val party = row.toAuthorizationParty()
+                        party.id to party
+                    }
+
+            // 4) Map each grant row -> domain object using the pre-fetched parties
+            grantRows.map { g ->
+                val grantedFor = partiesById[g[AuthorizationGrantTable.grantedFor]]
+                    ?: raise(RepositoryReadError.NotFoundError)
+                val grantedBy  = partiesById[g[AuthorizationGrantTable.grantedBy]]
+                    ?: raise(RepositoryReadError.NotFoundError)
+                val grantedTo  = partiesById[g[AuthorizationGrantTable.grantedTo]]
+                    ?: raise(RepositoryReadError.NotFoundError)
+
+                g.toAuthorizationGrant(grantedFor, grantedBy, grantedTo)
+            }
         }
     }
 
     override fun find(grantId: UUID): Either<RepositoryReadError, AuthorizationGrant> = either {
         transaction {
-            AuthorizationGrantTable
-                .join(
-                    AuthorizationPartyTable,
-                    JoinType.LEFT,
-                    onColumn = AuthorizationGrantTable.grantedBy,
-                    otherColumn = AuthorizationPartyTable.id
-                )
-                .join(
-                    AuthorizationPartyTable,
-                    JoinType.LEFT,
-                    onColumn = AuthorizationGrantTable.grantedFor,
-                    otherColumn = AuthorizationPartyTable.id
-                )
-                .join(
-                    AuthorizationPartyTable,
-                    JoinType.LEFT,
-                    onColumn = AuthorizationGrantTable.grantedTo,
-                    otherColumn = AuthorizationPartyTable.id
-                )
+            val grant = AuthorizationGrantTable
                 .selectAll()
-                .singleOrNull { AuthorizationGrantTable.id == grantId }
-                ?.toAuthorizationGrant()
-                ?: run {
-                    logger.error("Authorization grant not found for id=$grantId")
-                    raise(RepositoryReadError.NotFoundError)
+                .where{AuthorizationGrantTable.id eq grantId}
+                .singleOrNull() ?: raise(RepositoryReadError.NotFoundError)
+
+            val partyIds = listOf(grant[AuthorizationGrantTable.grantedFor], grant[AuthorizationGrantTable.grantedBy], grant[AuthorizationGrantTable.grantedTo])
+
+            val parties = AuthorizationPartyTable
+                .selectAll()
+                .where { AuthorizationPartyTable.id inList partyIds }
+                .associate { row ->
+                    val party = row.toAuthorizationParty()
+                    party.id to party
                 }
+
+            val grantedFor = parties[grant[AuthorizationGrantTable.grantedFor]] ?: raise(RepositoryReadError.NotFoundError)
+            val grantedBy = parties[grant[AuthorizationGrantTable.grantedBy]] ?: raise(RepositoryReadError.NotFoundError)
+            val grantedTo = parties[grant[AuthorizationGrantTable.grantedTo]] ?: raise(RepositoryReadError.NotFoundError)
+            grant.toAuthorizationGrant(grantedFor, grantedBy, grantedTo)
         }
     }
+
 
     override fun findScopes(grantId: UUID): Either<RepositoryReadError, List<AuthorizationScope>> = either {
         transaction {
@@ -187,12 +200,12 @@ fun ResultRow.toAuthorizationParty() = AuthorizationParty(
     createdAt = Instant.parse(this[AuthorizationPartyTable.createdAt].toString())
 )
 
-fun ResultRow.toAuthorizationGrant() = AuthorizationGrant(
+fun ResultRow.toAuthorizationGrant(grantedFor: AuthorizationParty, grantedBy: AuthorizationParty, grantedTo: AuthorizationParty) = AuthorizationGrant(
     id = this[AuthorizationGrantTable.id].toString(),
     grantStatus = this[AuthorizationGrantTable.grantStatus],
-    grantedFor = this.toAuthorizationParty(),
-    grantedBy = this.toAuthorizationParty(),
-    grantedTo = this.toAuthorizationParty(),
+    grantedFor = grantedFor,
+    grantedBy = grantedBy,
+    grantedTo = grantedTo,
     grantedAt = this[AuthorizationGrantTable.grantedAt].toKotlinLocalDateTime(),
     validFrom = this[AuthorizationGrantTable.validFrom].toKotlinLocalDateTime(),
     validTo = this[AuthorizationGrantTable.validTo].toKotlinLocalDateTime(),

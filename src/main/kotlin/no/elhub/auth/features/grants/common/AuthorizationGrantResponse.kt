@@ -1,18 +1,14 @@
 package no.elhub.auth.features.grants.common
 
-import kotlinx.serialization.Serializable
 import no.elhub.auth.features.grants.AuthorizationGrant
-import no.elhub.auth.features.grants.AuthorizationParty
-import no.elhub.devxp.jsonapi.model.JsonApiAttributes
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipData
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipToOne
-import no.elhub.devxp.jsonapi.model.JsonApiRelationships
+import no.elhub.devxp.jsonapi.response.JsonApiResponse
 import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObjectWithRelationships
 
-@Serializable
-data class AuthorizationGrantResponse(
-    val data: JsonApiResponseResourceObjectWithRelationships<GrantResponseAttributes, GrantRelationships>,
-)
+
+typealias AuthorizationGrantResponse = JsonApiResponse.SingleDocumentWithRelationships<GrantResponseAttributes, GrantRelationships>
+typealias AuthorizationGrantListResponse = JsonApiResponse.CollectionDocumentWithRelationships<GrantResponseAttributes, GrantRelationships>
 
 fun AuthorizationGrant.toResponse() =
     AuthorizationGrantResponse(
@@ -40,7 +36,7 @@ fun AuthorizationGrant.toResponse() =
                 ),
                 grantedTo = JsonApiRelationshipToOne(
                     data = JsonApiRelationshipData(
-                        id = this.grantedTo.toString(),
+                        id = this.grantedTo.id.toString(),
                         type = this.grantedTo.type.name
                     )
                 )

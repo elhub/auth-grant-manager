@@ -13,13 +13,15 @@ import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.common.validateId
 import no.elhub.auth.features.grants.common.toResponse
 import java.util.UUID
+import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
+import no.elhub.devxp.jsonapi.response.JsonApiErrorObject
 
 fun Route.getGrantRoute(handler: GetGrantHandler) {
     route("/{$ID}") {
         get {
             val id: UUID = validateId(call.parameters[ID])
                 .getOrElse { err ->
-                    call.respond(HttpStatusCode.BadRequest, err.toApiErrorResponse())
+                    call.respond(HttpStatusCode.BadRequest, JsonApiErrorCollection(listOf(err.toApiErrorResponse())))
                     return@get
                 }
 
@@ -28,7 +30,14 @@ fun Route.getGrantRoute(handler: GetGrantHandler) {
                     is QueryError.ResourceNotFoundError ->
                         call.respond(
                             HttpStatusCode.NotFound,
-                            "Authorization grant with id=$id not found",
+                            JsonApiErrorCollection(listOf( JsonApiErrorObject(
+                                id = null,
+                                status = "404",
+                                code = "NOT_FOUND",
+                                title = "Authorization not found",
+                                detail = "The authorization was not found",
+                                meta = null
+                            )))
                         )
 
                     is QueryError.IOError ->
