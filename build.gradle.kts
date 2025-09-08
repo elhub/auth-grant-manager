@@ -47,10 +47,14 @@ dependencies {
     // Unit Testing
     testImplementation(libs.database.postgresql)
     testImplementation(libs.test.mockk)
+    testImplementation(libs.bundles.functional.programming)
     testImplementation(libs.test.ktor.server.test.host)
     testImplementation(libs.test.kotest.runner.junit5)
+    testImplementation(libs.test.kotest.assertions.arrow)
     testImplementation(libs.test.kotest.assertions.core)
     testImplementation(libs.test.kotest.assertions.json)
+    testImplementation(libs.test.kotest.extensions.koin)
+    testImplementation(libs.test.koin.test)
     testImplementation(libs.test.testcontainers)
     testImplementation(libs.test.testcontainers.postgres)
     testImplementation(libs.test.mybatis)
@@ -136,6 +140,7 @@ val localEnvVars = mapOf(
     "JDBC_URL" to "jdbc:postgresql://localhost:5432/auth",
     "APP_USERNAME" to "app",
     "APP_PASSWORD" to "app",
+    "MUSTACHE_RESOURCE_PATH" to "templates",
     "VAULT_URL" to "http://localhost:8200",
     "VAULT_KEY" to "test-key",
     "VAULT_TOKEN_PATH" to "somepath",

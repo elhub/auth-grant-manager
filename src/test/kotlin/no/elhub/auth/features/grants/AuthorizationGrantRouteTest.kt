@@ -9,10 +9,10 @@ import io.ktor.server.testing.TestApplication
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import no.elhub.auth.config.AUTHORIZATION_GRANT
-import no.elhub.auth.extensions.PostgresTestContainerExtension
-import no.elhub.auth.extensions.RunPostgresScriptExtension
-import no.elhub.auth.utils.defaultTestApplication
-import no.elhub.auth.validate
+import no.elhub.auth.defaultTestApplication
+import no.elhub.auth.features.common.PostgresTestContainerExtension
+import no.elhub.auth.features.common.RunPostgresScriptExtension
+import no.elhub.auth.features.validate
 
 class AuthorizationGrantRouteTest :
     FunSpec({
@@ -82,9 +82,9 @@ class AuthorizationGrantRouteTest :
                     "errors".shouldBeList(size = 1) {
                         item(0) {
                             "status" shouldBe "400"
-                            "code" shouldBe "INVALID_RESOURCE_ID"
-                            "title" shouldBe "Malformed ID"
-                            "detail" shouldBe "The provided ID is not valid"
+                            "code" shouldBe "INVALID_INPUT"
+                            "title" shouldBe "Invalid input"
+                            "detail" shouldBe "The provided payload did not satisfy the expected format"
                         }
                     }
                 }
@@ -99,8 +99,8 @@ class AuthorizationGrantRouteTest :
                         item(0) {
                             "status" shouldBe "404"
                             "code" shouldBe "NOT_FOUND"
-                            "title" shouldBe "Authorization not found"
-                            "detail" shouldBe "The authorization was not found"
+                            "title" shouldBe "Not Found"
+                            "detail" shouldBe "The requested resource could not be found"
                         }
                     }
                 }
@@ -190,9 +190,9 @@ class AuthorizationGrantRouteTest :
                     "errors".shouldBeList(size = 1) {
                         item(0) {
                             "status" shouldBe "400"
-                            "code" shouldBe "INVALID_RESOURCE_ID"
-                            "title" shouldBe "Malformed ID"
-                            "detail" shouldBe "The provided ID is not valid"
+                            "code" shouldBe "INVALID_INPUT"
+                            "title" shouldBe "Invalid input"
+                            "detail" shouldBe "The provided payload did not satisfy the expected format"
                         }
                     }
                 }
@@ -206,8 +206,8 @@ class AuthorizationGrantRouteTest :
                     "errors".shouldBeList(size = 1) {
                         item(0) {
                             "status" shouldBe "404"
-                            "title" shouldBe "Authorization not found"
-                            "detail" shouldBe "The authorization was not found"
+                            "title" shouldBe "Not Found"
+                            "detail" shouldBe "The requested resource could not be found"
                         }
                     }
                 }

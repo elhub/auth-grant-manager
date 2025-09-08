@@ -15,11 +15,9 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import no.elhub.auth.config.AUTHORIZATION_DOCUMENT
-import no.elhub.auth.extensions.PostgresTestContainerExtension
-import no.elhub.auth.extensions.VaultTransitTestContainerExtension
-import no.elhub.auth.utils.DocumentValidationHelper
-import no.elhub.auth.utils.defaultTestApplication
-import no.elhub.auth.validate
+import no.elhub.auth.defaultTestApplication
+import no.elhub.auth.features.common.PostgresTestContainerExtension
+import no.elhub.auth.features.validate
 
 class AuthorizationDocumentRouteTest :
     FunSpec({
@@ -100,7 +98,8 @@ class AuthorizationDocumentRouteTest :
                 }
 
                 // Get the pdf to validate signature
-                val document = testApp.client.get("$AUTHORIZATION_DOCUMENT/${responseBody["data"]?.jsonObject?.get("id")?.jsonPrimitive?.content}.pdf")
+                val document =
+                    testApp.client.get("$AUTHORIZATION_DOCUMENT/${responseBody["data"]?.jsonObject?.get("id")?.jsonPrimitive?.content}.pdf")
                 DocumentValidationHelper.validateInitialDocumentSignature(document.bodyAsBytes())
             }
         }

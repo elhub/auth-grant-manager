@@ -8,13 +8,17 @@ import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
-import no.elhub.auth.features.documents.AuthorizationDocumentHandler
-import no.elhub.auth.features.documents.documentRoutes
-import no.elhub.auth.features.grants.AuthorizationGrantHandler
-import no.elhub.auth.features.grants.grants
-import no.elhub.auth.features.requests.AuthorizationRequestHandler
-import no.elhub.auth.features.requests.requests
-import org.koin.ktor.ext.inject
+import no.elhub.auth.features.documents.confirm.confirmDocumentRoute
+import no.elhub.auth.features.documents.create.createDocumentRoute
+import no.elhub.auth.features.documents.get.getDocumentRoute
+import no.elhub.auth.features.grants.get.getGrantRoute
+import no.elhub.auth.features.grants.getScopes.getGrantScopesRoute
+import no.elhub.auth.features.grants.query.queryGrantsRoute
+import no.elhub.auth.features.requests.confirm.confirmRequestRoute
+import no.elhub.auth.features.requests.create.createRequestRoute
+import no.elhub.auth.features.requests.get.getRequestRoute
+import no.elhub.auth.features.requests.query.queryRequestRoute
+import org.koin.ktor.ext.get
 
 const val AUTHORIZATION_API = ""
 const val HEALTH = "$AUTHORIZATION_API/health"
@@ -24,22 +28,25 @@ const val AUTHORIZATION_REQUEST = "$AUTHORIZATION_API/authorization-requests"
 const val ID = "id"
 
 fun Application.configureRouting() {
-    val documentHandler by inject<AuthorizationDocumentHandler>()
-    val grantHandler by inject<AuthorizationGrantHandler>()
-    val requestHandler by inject<AuthorizationRequestHandler>()
-
     routing {
-        route(AUTHORIZATION_DOCUMENT) {
-            documentRoutes(documentHandler)
-        }
-        route(AUTHORIZATION_GRANT) {
-            grants(grantHandler)
-        }
-        route(AUTHORIZATION_REQUEST) {
-            requests(requestHandler)
-        }
         get(HEALTH) {
             call.respondText("OK", status = HttpStatusCode.OK)
+        }
+        route(AUTHORIZATION_DOCUMENT) {
+            createDocumentRoute(get(), get())
+            confirmDocumentRoute(get())
+            getDocumentRoute(get())
+        }
+        route(AUTHORIZATION_GRANT) {
+            getGrantRoute(get())
+            getGrantScopesRoute(get())
+            queryGrantsRoute(get())
+        }
+        route(AUTHORIZATION_REQUEST) {
+            confirmRequestRoute(get())
+            createRequestRoute(get(), get())
+            getRequestRoute(get())
+            queryRequestRoute(get())
         }
         swaggerUI(path = "openapi", swaggerFile = "openapi.yaml")
         staticResources("schemas/", "schemas")
