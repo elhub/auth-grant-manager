@@ -4,7 +4,6 @@ import arrow.core.Either
 import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
-import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.common.RequestRepository
 import java.util.UUID
 

@@ -19,7 +19,6 @@ import no.elhub.auth.features.requests.confirm.confirmRequestRoute
 import no.elhub.auth.features.requests.get.getRequestRoute
 import no.elhub.auth.features.requests.query.queryRequestRoute
 import org.koin.ktor.ext.get
-import org.koin.ktor.ext.inject
 
 const val AUTHORIZATION_API = ""
 const val HEALTH = "$AUTHORIZATION_API/health"

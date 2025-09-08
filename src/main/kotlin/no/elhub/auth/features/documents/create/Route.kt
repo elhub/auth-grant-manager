@@ -6,7 +6,6 @@ import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
-import no.elhub.auth.features.common.QueryError
 import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.documents.common.toResponse
 import no.elhub.auth.features.documents.get.GetDocumentHandler

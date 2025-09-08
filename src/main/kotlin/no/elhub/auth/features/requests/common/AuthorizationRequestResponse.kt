@@ -9,7 +9,6 @@ import no.elhub.devxp.jsonapi.model.JsonApiMeta
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipData
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipToOne
 import no.elhub.devxp.jsonapi.model.JsonApiRelationships
-import no.elhub.devxp.jsonapi.response.JsonApiResponse
 import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObjectWithRelationships
 
 @Serializable
@@ -27,7 +26,11 @@ data class RequestResponseRelationships(
     val requestedFrom: JsonApiRelationshipToOne
 ) : JsonApiRelationships
 
-typealias AuthorizationRequestResponse = JsonApiResponse.SingleDocumentWithRelationships<RequestResponseAttributes, RequestResponseRelationships>
+@Serializable
+data class AuthorizationRequestResponse(
+    val data: JsonApiResponseResourceObjectWithRelationships<RequestResponseAttributes, RequestResponseRelationships>,
+    val meta: JsonApiMeta
+)
 
 fun AuthorizationRequest.toResponse() = AuthorizationRequestResponse(
     data = JsonApiResponseResourceObjectWithRelationships(
@@ -54,7 +57,6 @@ fun AuthorizationRequest.toResponse() = AuthorizationRequestResponse(
                 )
             )
         )
-
     ),
     meta = JsonApiMeta(
         buildJsonObject {

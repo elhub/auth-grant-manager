@@ -35,11 +35,18 @@ sealed class RepositoryReadError : RepositoryError() {
 }
 
 fun InputError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorObject> = when (this) {
-    InputError.MissingInputError, InputError.MalformedInputError -> HttpStatusCode.BadRequest to JsonApiErrorObject(
-        status = HttpStatusCode.BadRequest.toString(),
-        code = "INVALID_RESOURCE_ID",
-        title = "Malformed ID",
-        detail = "The provided ID is not valid",
+    InputError.MissingInputError -> HttpStatusCode.BadRequest to JsonApiErrorObject(
+        status = HttpStatusCode.BadRequest.value.toString(),
+        code = "MISSING_INPUT",
+        title = "Missing input",
+        detail = "Necessary information was not provided",
+    )
+
+    InputError.MalformedInputError -> HttpStatusCode.BadRequest to JsonApiErrorObject(
+        status = HttpStatusCode.BadRequest.value.toString(),
+        code = "INVALID_INPUT",
+        title = "Invalid input",
+        detail = "The provided payload did not satisfy the expected format"
     )
 }
 

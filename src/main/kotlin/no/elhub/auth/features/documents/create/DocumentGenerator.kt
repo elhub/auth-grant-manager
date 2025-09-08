@@ -4,7 +4,6 @@ import arrow.core.Either
 import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.raise.either
-import arrow.core.right
 import com.github.mustachejava.DefaultMustacheFactory
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder
 import org.apache.pdfbox.Loader

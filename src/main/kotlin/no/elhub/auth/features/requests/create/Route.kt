@@ -2,14 +2,11 @@ package no.elhub.auth.features.requests.create
 
 import arrow.core.getOrElse
 import io.ktor.http.HttpStatusCode
-import io.ktor.serialization.JsonConvertException
-import io.ktor.server.plugins.BadRequestException
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
-import io.ktor.server.util.url
-import no.elhub.auth.features.common.QueryError
+import no.elhub.auth.features.common.InputError
 import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.requests.common.toResponse
 import no.elhub.auth.features.requests.get.GetRequestHandler
@@ -18,9 +15,15 @@ import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 
 fun Route.createRequestRoute(createHandler: CreateRequestHandler, getHandler: GetRequestHandler) {
     post {
-        val requestBody = call.receive<HttpRequestBody>()
+        val payload = runCatching {
+            call.receive<HttpRequestBody>()
+        }.getOrElse { exception ->
+            val (status, body) = InputError.MalformedInputError.toApiErrorResponse()
+            call.respond(status, JsonApiErrorCollection(listOf(body)))
+            return@post
+        }
 
-        val requestId = createHandler(requestBody.toCreateRequestCommand())
+        val requestId = createHandler(payload.toCreateRequestCommand())
             .getOrElse { error ->
                 when (error) {
                     is

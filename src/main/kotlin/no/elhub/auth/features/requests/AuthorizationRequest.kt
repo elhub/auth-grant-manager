@@ -11,7 +11,7 @@ data class AuthorizationRequest(
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime,
     val validTo: LocalDateTime,
-    val properties: ArrayList<Property> = ArrayList()
+    val properties: List<Property> = ArrayList()
 ) {
     enum class Status {
         Accepted,

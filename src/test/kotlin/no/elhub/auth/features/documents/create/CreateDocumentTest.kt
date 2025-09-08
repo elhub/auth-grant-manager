@@ -1,12 +1,9 @@
 package no.elhub.auth.features.documents.create
 
-import arrow.core.getOrElse
-import arrow.core.right
 import eu.europa.esig.dss.pades.signature.PAdESService
 import eu.europa.esig.dss.spi.validation.CommonCertificateVerifier
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.core.spec.style.BehaviorSpec
-import io.kotest.matchers.shouldBe
 import no.elhub.auth.config.loadCerts
 import no.elhub.auth.features.common.httpTestClient
 import no.elhub.auth.features.documents.AuthorizationDocument

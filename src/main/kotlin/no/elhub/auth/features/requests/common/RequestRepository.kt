@@ -3,28 +3,21 @@ package no.elhub.auth.features.requests.common
 import arrow.core.Either
 import java.util.UUID
 import no.elhub.auth.features.requests.AuthorizationRequest
-import arrow.core.left
 import arrow.core.raise.either
-import arrow.core.right
-import kotlinx.datetime.LocalDateTime as KotlinLocalDateTime
 import java.time.LocalDateTime
 import org.jetbrains.exposed.sql.insertAndGetId
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.slf4j.LoggerFactory
-import java.sql.SQLException
-import java.util.*
 import kotlinx.datetime.toKotlinLocalDateTime
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.javatime.CurrentDateTime
 import org.jetbrains.exposed.sql.javatime.datetime
 import no.elhub.auth.features.common.PGEnum
-import no.elhub.auth.features.common.RepositoryError
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.RepositoryWriteError
 import org.jetbrains.exposed.dao.id.UUIDTable
-import org.jetbrains.exposed.sql.JoinType
 
 interface RequestRepository {
     fun find(requestId: UUID): Either<RepositoryReadError, AuthorizationRequest>
@@ -42,34 +35,39 @@ class ExposedRequestRepository : RequestRepository {
 
     override fun findAll(): Either<RepositoryReadError, List<AuthorizationRequest>> = either {
         transaction {
-            AuthorizationRequestTable
-                .join(
-                    AuthorizationRequestPropertyTable,
-                    JoinType.LEFT,
-                    onColumn = AuthorizationRequestTable.id,
-                    otherColumn = AuthorizationRequestPropertyTable.authorizationRequestId
-                )
+            val requests = AuthorizationRequestTable
                 .selectAll()
-                .map { it.toAuthorizationRequest() }
+
+            val requestIds = requests.map { UUID.fromString(it[AuthorizationRequestTable.id].toString()) }
+
+            val properties = AuthorizationRequestPropertyTable
+                .selectAll()
+                .where { AuthorizationRequestPropertyTable.authorizationRequestId inList requestIds }
+                .map { it.toAuthorizationRequestProperty() }
+
+            requests.map { request ->
+                request.toAuthorizationRequest(
+                    properties
+                        .filter { prop -> prop.authorizationRequestId == this.id }
+                        .ifEmpty { emptyList() }
+                )
+            }
         }
     }
 
     override fun find(requestId: UUID): Either<RepositoryReadError, AuthorizationRequest> = either {
         transaction {
-            AuthorizationRequestTable
-                .join(
-                    AuthorizationRequestPropertyTable,
-                    JoinType.LEFT,
-                    onColumn = AuthorizationRequestTable.id,
-                    otherColumn = AuthorizationRequestPropertyTable.authorizationRequestId
-                )
+            val request = AuthorizationRequestTable
                 .selectAll()
-                .singleOrNull { AuthorizationRequestTable.id == requestId }
-                ?.toAuthorizationRequest()
-                ?: run {
-                    logger.error("Authorization request not found for id=$requestId")
-                    raise(RepositoryReadError.NotFoundError)
-                }
+                .where { AuthorizationRequestTable.id eq requestId }
+                .singleOrNull() ?: raise(RepositoryReadError.NotFoundError)
+
+            val properties = AuthorizationRequestPropertyTable
+                .selectAll()
+                .where { AuthorizationRequestPropertyTable.authorizationRequestId eq requestId }
+                .map { it.toAuthorizationRequestProperty() }
+
+            request.toAuthorizationRequest(properties)
         }
     }
 
@@ -109,7 +107,7 @@ object AuthorizationRequestTable : UUIDTable("authorization_request") {
     val validTo = datetime("valid_to")
 }
 
-fun ResultRow.toAuthorizationRequest() = AuthorizationRequest(
+fun ResultRow.toAuthorizationRequest(properties: List<AuthorizationRequest.Property>) = AuthorizationRequest(
     id = this[AuthorizationRequestTable.id].toString(),
     requestType = this[AuthorizationRequestTable.requestType],
     status = this[AuthorizationRequestTable.status],
@@ -118,13 +116,7 @@ fun ResultRow.toAuthorizationRequest() = AuthorizationRequest(
     createdAt = this[AuthorizationRequestTable.createdAt].toKotlinLocalDateTime(),
     updatedAt = this[AuthorizationRequestTable.updatedAt].toKotlinLocalDateTime(),
     validTo = this[AuthorizationRequestTable.validTo].toKotlinLocalDateTime(),
-    // TODO: Add properties"
-    // properties = AuthorizationRequest.Property(
-    //    this[AuthorizationRequestPropertyTable.authorizationRequestId].toString(),
-    //    this[AuthorizationRequestPropertyTable.key],
-    //    this[AuthorizationRequestPropertyTable.value],
-    //    this[AuthorizationRequestPropertyTable.createdAt].toKotlinLocalDateTime()
-    //),
+    properties = properties
 )
 
 object AuthorizationRequestPropertyTable : Table("authorization_request_property") {
@@ -133,3 +125,10 @@ object AuthorizationRequestPropertyTable : Table("authorization_request_property
     val value = text("value")
     val createdAt = datetime("created_at").defaultExpression(CurrentDateTime)
 }
+
+fun ResultRow.toAuthorizationRequestProperty() = AuthorizationRequest.Property(
+    authorizationRequestId = this[AuthorizationRequestPropertyTable.authorizationRequestId].toString(),
+    key = this[AuthorizationRequestPropertyTable.key],
+    value = this[AuthorizationRequestPropertyTable.value],
+    createdAt = this[AuthorizationRequestPropertyTable.createdAt].toKotlinLocalDateTime(),
+)

@@ -8,12 +8,8 @@ import no.elhub.auth.features.grants.PermissionType
 import no.elhub.devxp.jsonapi.model.JsonApiAttributes
 import no.elhub.devxp.jsonapi.response.JsonApiResponse
 import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObject
-import no.elhub.auth.features.grants.AuthorizationGrant
-import no.elhub.auth.features.grants.AuthorizationParty
-import no.elhub.devxp.jsonapi.model.JsonApiRelationshipData
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipToOne
 import no.elhub.devxp.jsonapi.model.JsonApiRelationships
-import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObjectWithRelationships
 
 @Serializable
 data class GrantResponseAttributes(

@@ -1,7 +1,6 @@
 package no.elhub.auth.features.documents.create
 
 import arrow.core.Either
-import arrow.core.getOrElse
 import eu.europa.esig.dss.enumerations.CertificationPermission
 import eu.europa.esig.dss.enumerations.DigestAlgorithm
 import eu.europa.esig.dss.enumerations.SignatureLevel
@@ -68,4 +67,3 @@ class PAdESDocumentSigningService(
         print(ex)
         DocumentSigningError.SigningError }
 }
-

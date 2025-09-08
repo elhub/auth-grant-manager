@@ -1,12 +1,10 @@
 package no.elhub.auth.features.grants.getScopes
 
 import arrow.core.Either
-import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
 import no.elhub.auth.features.common.QueryError
 import no.elhub.auth.features.grants.common.GrantRepository
-import no.elhub.auth.features.common.RepositoryError
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.grants.AuthorizationScope
 

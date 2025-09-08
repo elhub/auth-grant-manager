@@ -1,13 +1,13 @@
-package no.elhub.auth.features.requests.query
+package no.elhub.auth.features.requests.common
 
+import kotlinx.serialization.Serializable
 import no.elhub.auth.features.requests.AuthorizationRequest
-import no.elhub.auth.features.requests.common.RequestResponseAttributes
-import no.elhub.auth.features.requests.common.RequestResponseRelationships
-import no.elhub.auth.features.requests.common.toResponse
-import no.elhub.devxp.jsonapi.response.JsonApiResponse
 
-typealias AuthorizationRequestListResponse = JsonApiResponse.CollectionDocumentWithRelationships<RequestResponseAttributes, RequestResponseRelationships>
+@Serializable
+class AuthorizationRequestListResponse(
+    val data: List<AuthorizationRequestResponse>
+)
 
 fun List<AuthorizationRequest>.toResponse() = AuthorizationRequestListResponse(
-    data = this.map { it.toResponse().data }
+    data = this.map { request -> request.toResponse() }
 )

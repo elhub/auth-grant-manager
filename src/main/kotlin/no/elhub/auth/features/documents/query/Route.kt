@@ -8,7 +8,6 @@ import io.ktor.server.routing.get
 import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.documents.common.toResponse
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
-import java.util.*
 
 fun Route.queryDocumentsRoute(handler: QueryDocumentsHandler) {
     get {
@@ -22,4 +21,3 @@ fun Route.queryDocumentsRoute(handler: QueryDocumentsHandler) {
         call.respond(HttpStatusCode.OK, documents.toResponse())
     }
 }
-

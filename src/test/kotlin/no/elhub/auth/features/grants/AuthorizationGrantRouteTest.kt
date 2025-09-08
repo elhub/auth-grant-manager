@@ -81,10 +81,10 @@ class AuthorizationGrantRouteTest :
                 responseJson.validate {
                     "errors".shouldBeList(size = 1) {
                         item(0) {
-                            "status" shouldBe "400 Bad Request"
-                            "code" shouldBe "INVALID_RESOURCE_ID"
-                            "title" shouldBe "Malformed ID"
-                            "detail" shouldBe "The provided ID is not valid"
+                            "status" shouldBe "400"
+                            "code" shouldBe "INVALID_INPUT"
+                            "title" shouldBe "Invalid input"
+                            "detail" shouldBe "The provided payload did not satisfy the expected format"
                         }
                     }
                 }
@@ -189,10 +189,10 @@ class AuthorizationGrantRouteTest :
                 responseJson.validate {
                     "errors".shouldBeList(size = 1) {
                         item(0) {
-                            "status" shouldBe "400 Bad Request"
-                            "code" shouldBe "INVALID_RESOURCE_ID"
-                            "title" shouldBe "Malformed ID"
-                            "detail" shouldBe "The provided ID is not valid"
+                            "status" shouldBe "400"
+                            "code" shouldBe "INVALID_INPUT"
+                            "title" shouldBe "Invalid input"
+                            "detail" shouldBe "The provided payload did not satisfy the expected format"
                         }
                     }
                 }

@@ -1,7 +1,6 @@
 package no.elhub.auth.features.documents.common
 
 import arrow.core.Either
-import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
 import java.util.UUID

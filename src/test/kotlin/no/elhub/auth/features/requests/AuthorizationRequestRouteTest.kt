@@ -163,9 +163,9 @@ class AuthorizationRequestRouteTest :
                 responseJson.validate {
                     "errors".shouldBeList(size = 1) {
                         item(0) {
-                            "status" shouldBe "400 Bad Request"
-                            "code" shouldBe "INVALID_RESOURCE_ID"
-                            "title" shouldBe "Malformed ID"
+                            "status" shouldBe "400"
+                            "code" shouldBe "MISSING_INPUT"
+                            "title" shouldBe "Missing input"
                             "detail" shouldBe "The provided ID is not valid"
                         }
                     }
@@ -301,10 +301,10 @@ class AuthorizationRequestRouteTest :
                 responseJson.validate {
                     "errors".shouldBeList(size = 1) {
                         item(0) {
-                            "status" shouldBe "400 Bad Request"
-                            "code" shouldBe "INVALID_PAYLOAD"
-                            "title" shouldBe "Payload not valid"
-                            "detail" shouldBe "Authorization request contains extra, unknown, or missing fields"
+                            "status" shouldBe "400"
+                            "code" shouldBe "INVALID_INPUT"
+                            "title" shouldBe "Invalid input"
+                            "detail" shouldBe "The provided payload did not satisfy the expected format"
                         }
                     }
                 }
@@ -344,10 +344,10 @@ class AuthorizationRequestRouteTest :
                 responseJson.validate {
                     "errors".shouldBeList(size = 1) {
                         item(0) {
-                            "status" shouldBe "400 Bad Request"
-                            "code" shouldBe "INVALID_PAYLOAD"
-                            "title" shouldBe "Payload not valid"
-                            "detail" shouldBe "Authorization request contains extra, unknown, or missing fields"
+                            "status" shouldBe "400"
+                            "code" shouldBe "INVALID_INPUT"
+                            "title" shouldBe "Invalid input"
+                            "detail" shouldBe "The provided payload did not satisfy the expected format"
                         }
                     }
                 }
