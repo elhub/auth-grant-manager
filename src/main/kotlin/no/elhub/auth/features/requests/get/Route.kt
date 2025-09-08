@@ -13,7 +13,7 @@ import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import java.util.UUID
 
 fun Route.getRequestRoute(handler: GetRequestHandler) {
-    get("/${ID}") {
+    get("/{$ID}") {
         val id: UUID = validateId(call.parameters[ID])
             .getOrElse { err ->
                 val (status, body) = err.toApiErrorResponse()

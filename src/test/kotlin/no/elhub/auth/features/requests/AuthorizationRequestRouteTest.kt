@@ -40,7 +40,6 @@ class AuthorizationRequestRouteTest :
             test("Should return 200 OK") {
                 val response = testApp.client.get(AUTHORIZATION_REQUEST)
                 response.status shouldBe HttpStatusCode.OK
-
                 val responseJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
                 responseJson.validate {
                     "data".shouldBeList(size = 2) {
@@ -145,13 +144,13 @@ class AuthorizationRequestRouteTest :
                                 }
                             }
                         }
-                    }
-                    "meta" {
-                        "createdAt".shouldNotBeNull()
-                        "requestedFromName" shouldBe "Ola Normann"
-                        "requestedForMeteringPointId" shouldBe "1234567890123"
-                        "requestedForMeteringPointAddress" shouldBe "Example Street 1, 1234 Oslo"
-                        "balanceSupplierContractName" shouldBe "ExampleSupplierContract"
+                        "meta" {
+                            "createdAt".shouldNotBeNull()
+                            "requestedFromName" shouldBe "Ola Normann"
+                            "requestedForMeteringPointId" shouldBe "1234567890123"
+                            "requestedForMeteringPointAddress" shouldBe "Example Street 1, 1234 Oslo"
+                            "balanceSupplierContractName" shouldBe "ExampleSupplierContract"
+                        }
                     }
                 }
             }
@@ -164,9 +163,9 @@ class AuthorizationRequestRouteTest :
                     "errors".shouldBeList(size = 1) {
                         item(0) {
                             "status" shouldBe "400"
-                            "code" shouldBe "MISSING_INPUT"
-                            "title" shouldBe "Missing input"
-                            "detail" shouldBe "The provided ID is not valid"
+                            "code" shouldBe "INVALID_INPUT"
+                            "title" shouldBe "Invalid input"
+                            "detail" shouldBe "The provided payload did not satisfy the expected format"
                         }
                     }
                 }
@@ -254,9 +253,9 @@ class AuthorizationRequestRouteTest :
                                 }
                             }
                         }
-                    }
-                    "meta" {
-                        "createdAt".shouldNotBeNull()
+                        "meta" {
+                            "createdAt".shouldNotBeNull()
+                        }
                     }
                 }
             }

@@ -48,7 +48,7 @@ class ExposedRequestRepository : RequestRepository {
             requests.map { request ->
                 request.toAuthorizationRequest(
                     properties
-                        .filter { prop -> prop.authorizationRequestId == this.id }
+                        .filter { prop -> prop.authorizationRequestId == request[AuthorizationRequestTable.id].value.toString() }
                         .ifEmpty { emptyList() }
                 )
             }

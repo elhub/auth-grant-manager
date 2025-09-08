@@ -9,6 +9,7 @@ import no.elhub.devxp.jsonapi.model.JsonApiMeta
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipData
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipToOne
 import no.elhub.devxp.jsonapi.model.JsonApiRelationships
+import no.elhub.devxp.jsonapi.response.JsonApiResponse
 import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObjectWithRelationships
 
 @Serializable
@@ -26,11 +27,8 @@ data class RequestResponseRelationships(
     val requestedFrom: JsonApiRelationshipToOne
 ) : JsonApiRelationships
 
-@Serializable
-data class AuthorizationRequestResponse(
-    val data: JsonApiResponseResourceObjectWithRelationships<RequestResponseAttributes, RequestResponseRelationships>,
-    val meta: JsonApiMeta
-)
+
+typealias AuthorizationRequestResponse = JsonApiResponse.SingleDocumentWithRelationships<RequestResponseAttributes, RequestResponseRelationships>
 
 fun AuthorizationRequest.toResponse() = AuthorizationRequestResponse(
     data = JsonApiResponseResourceObjectWithRelationships(
@@ -46,26 +44,24 @@ fun AuthorizationRequest.toResponse() = AuthorizationRequestResponse(
         relationships = RequestResponseRelationships(
             requestedBy = JsonApiRelationshipToOne(
                 data = JsonApiRelationshipData(
-                    id = this.requestedBy.toString(),
+                    id = this.requestedBy,
                     type = "Organization"
                 )
             ),
             requestedFrom = JsonApiRelationshipToOne(
                 data = JsonApiRelationshipData(
-                    id = this.requestedFrom.toString(),
+                    id = this.requestedFrom,
                     type = "Person"
                 )
             )
-        )
-    ),
-    meta = JsonApiMeta(
-        buildJsonObject {
-            put(
-                "createdAt",
-                JsonPrimitive(this@toResponse.createdAt.toString())
-            )
-
-            this@toResponse.properties.forEach { prop -> put(prop.key, JsonPrimitive(prop.value)) }
-        }
+        ),
+        meta = mapMetaProperties(this)
     )
 )
+
+private fun mapMetaProperties(authorizationRequest: AuthorizationRequest): JsonApiMeta = buildJsonObject {
+    put("createdAt", JsonPrimitive(authorizationRequest.createdAt.toString()))
+    authorizationRequest.properties.forEach { prop ->
+        put(prop.key, JsonPrimitive(prop.value))
+    }
+}
