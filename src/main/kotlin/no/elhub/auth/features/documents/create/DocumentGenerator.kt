@@ -12,11 +12,6 @@ import java.io.ByteArrayOutputStream
 import java.io.StringWriter
 
 interface DocumentGenerator {
-
-    object Constants {
-        internal const val DEFAULT_TITLE = "Change Supplier Confirmation: "
-    }
-
     fun generate(
         meteringPointId: String,
         ssn: String,

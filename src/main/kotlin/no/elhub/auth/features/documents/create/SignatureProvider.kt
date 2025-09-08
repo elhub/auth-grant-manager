@@ -44,7 +44,7 @@ class HashicorpVaultSignatureProvider(
         return Files.readString(Paths.get(tokenPath)).trim()
     }
 
-    suspend override fun fetchSignature(digest: ByteArray): Either<SignatureFetchingError, ByteArray> =
+    override suspend fun fetchSignature(digest: ByteArray): Either<SignatureFetchingError, ByteArray> =
         Either.catch {
             val b64 = Base64.getEncoder().encodeToString(digest)
 

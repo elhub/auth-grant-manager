@@ -20,5 +20,4 @@ class QueryRequestsHandler(private val repo: RequestRepository) {
                 },
                 { requests -> requests.right() },
             )
-
 }

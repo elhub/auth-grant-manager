@@ -3,7 +3,6 @@ package no.elhub.auth.features.documents.common
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
-import java.util.UUID
 import no.elhub.auth.features.common.PGEnum
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.RepositoryWriteError
@@ -11,17 +10,17 @@ import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.grants.AuthorizationResourceType
 import no.elhub.auth.features.grants.PermissionType
 import no.elhub.auth.features.grants.common.AuthorizationScopeTable
+import org.jetbrains.exposed.dao.id.UUIDTable
+import org.jetbrains.exposed.sql.ReferenceOption
+import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.insertAndGetId
-import org.jetbrains.exposed.sql.transactions.transaction
-import org.jetbrains.exposed.sql.ReferenceOption
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.javatime.timestamp
-import org.jetbrains.exposed.dao.id.UUIDTable
-import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.javatime.datetime
+import org.jetbrains.exposed.sql.javatime.timestamp
 import org.jetbrains.exposed.sql.selectAll
-
+import org.jetbrains.exposed.sql.transactions.transaction
+import java.util.UUID
 
 interface DocumentRepository {
     fun find(id: UUID): Either<RepositoryReadError, AuthorizationDocument>

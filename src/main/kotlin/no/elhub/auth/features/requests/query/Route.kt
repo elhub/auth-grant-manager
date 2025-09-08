@@ -2,7 +2,6 @@ package no.elhub.auth.features.requests.query
 
 import arrow.core.getOrElse
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get

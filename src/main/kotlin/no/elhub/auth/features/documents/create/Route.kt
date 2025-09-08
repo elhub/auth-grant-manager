@@ -26,7 +26,7 @@ fun Route.createDocumentRoute(createHandler: CreateDocumentHandler, getHandler: 
                     CreateDocumentError.SigningDataGenerationError,
                     CreateDocumentError.SigningError,
                     CreateDocumentError.PersistenceError
-                        -> call.respond(HttpStatusCode.InternalServerError)
+                    -> call.respond(HttpStatusCode.InternalServerError)
                 }
                 return@post
             }
@@ -40,5 +40,4 @@ fun Route.createDocumentRoute(createHandler: CreateDocumentHandler, getHandler: 
 
         call.respond(status = HttpStatusCode.Created, message = authorizationDocument.toResponse())
     }
-
 }

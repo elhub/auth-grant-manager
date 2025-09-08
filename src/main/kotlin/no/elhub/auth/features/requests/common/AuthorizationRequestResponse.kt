@@ -27,7 +27,6 @@ data class RequestResponseRelationships(
     val requestedFrom: JsonApiRelationshipToOne
 ) : JsonApiRelationships
 
-
 typealias AuthorizationRequestResponse = JsonApiResponse.SingleDocumentWithRelationships<RequestResponseAttributes, RequestResponseRelationships>
 
 fun AuthorizationRequest.toResponse() = AuthorizationRequestResponse(

@@ -2,7 +2,6 @@ package no.elhub.auth.features.grants.common
 
 import arrow.core.Either
 import arrow.core.raise.either
-import java.util.*
 import kotlinx.datetime.Instant
 import kotlinx.datetime.toKotlinLocalDateTime
 import no.elhub.auth.features.common.PGEnum
@@ -25,7 +24,7 @@ import org.jetbrains.exposed.sql.javatime.timestamp
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.slf4j.LoggerFactory
-
+import java.util.*
 
 interface GrantRepository {
     fun find(grantId: UUID): Either<RepositoryReadError, AuthorizationGrant>
@@ -36,7 +35,6 @@ interface GrantRepository {
 class ExposedGrantRepository : GrantRepository {
 
     private val logger = LoggerFactory.getLogger(ExposedGrantRepository::class.java)
-
 
     override fun findAll(): Either<RepositoryReadError, List<AuthorizationGrant>> = either {
         transaction {
@@ -58,7 +56,7 @@ class ExposedGrantRepository : GrantRepository {
                         g[AuthorizationGrantTable.grantedTo]
                     )
                 }
-                .toSet()   // distinct
+                .toSet() // distinct
                 .toList()
 
             // 3) Fetch all parties in ONE query and index by id
@@ -75,9 +73,9 @@ class ExposedGrantRepository : GrantRepository {
             grantRows.map { g ->
                 val grantedFor = partiesById[g[AuthorizationGrantTable.grantedFor]]
                     ?: raise(RepositoryReadError.NotFoundError)
-                val grantedBy  = partiesById[g[AuthorizationGrantTable.grantedBy]]
+                val grantedBy = partiesById[g[AuthorizationGrantTable.grantedBy]]
                     ?: raise(RepositoryReadError.NotFoundError)
-                val grantedTo  = partiesById[g[AuthorizationGrantTable.grantedTo]]
+                val grantedTo = partiesById[g[AuthorizationGrantTable.grantedTo]]
                     ?: raise(RepositoryReadError.NotFoundError)
 
                 g.toAuthorizationGrant(grantedFor, grantedBy, grantedTo)
@@ -89,7 +87,7 @@ class ExposedGrantRepository : GrantRepository {
         transaction {
             val grant = AuthorizationGrantTable
                 .selectAll()
-                .where{AuthorizationGrantTable.id eq grantId}
+                .where { AuthorizationGrantTable.id eq grantId }
                 .singleOrNull() ?: raise(RepositoryReadError.NotFoundError)
 
             val partyIds = listOf(grant[AuthorizationGrantTable.grantedFor], grant[AuthorizationGrantTable.grantedBy], grant[AuthorizationGrantTable.grantedTo])
@@ -108,7 +106,6 @@ class ExposedGrantRepository : GrantRepository {
             grant.toAuthorizationGrant(grantedFor, grantedBy, grantedTo)
         }
     }
-
 
     override fun findScopes(grantId: UUID): Either<RepositoryReadError, List<AuthorizationScope>> = either {
         transaction {

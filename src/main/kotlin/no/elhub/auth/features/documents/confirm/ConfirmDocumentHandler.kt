@@ -8,7 +8,5 @@ class ConfirmDocumentHandler(
     private val signingService: DocumentSigningService,
     private val documentRepository: DocumentRepository,
 ) {
-    operator fun invoke(command: ConfirmDocumentCommand): AuthorizationDocument {
-        throw NotImplementedError()
-    }
+    operator fun invoke(command: ConfirmDocumentCommand): AuthorizationDocument = throw NotImplementedError()
 }

@@ -1,21 +1,31 @@
 package no.elhub.auth.config
 
 import com.github.mustachejava.DefaultMustacheFactory
-import eu.europa.esig.dss.spi.validation.CommonCertificateVerifier
 import eu.europa.esig.dss.pades.signature.PAdESService
-import io.ktor.client.*
-import io.ktor.client.engine.cio.*
-import io.ktor.client.plugins.*
-import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.client.plugins.logging.*
-import io.ktor.serialization.kotlinx.json.*
-import io.ktor.server.application.*
-import io.ktor.server.config.*
+import eu.europa.esig.dss.spi.validation.CommonCertificateVerifier
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.logging.LogLevel
+import io.ktor.client.plugins.logging.Logging
+import io.ktor.serialization.kotlinx.json.json
+import io.ktor.server.application.Application
+import io.ktor.server.application.install
+import io.ktor.server.config.ApplicationConfig
 import kotlinx.serialization.json.Json
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.documents.common.ExposedDocumentRepository
 import no.elhub.auth.features.documents.confirm.ConfirmDocumentHandler
-import no.elhub.auth.features.documents.create.*
+import no.elhub.auth.features.documents.create.CreateDocumentHandler
+import no.elhub.auth.features.documents.create.DocumentGenerator
+import no.elhub.auth.features.documents.create.DocumentSigningService
+import no.elhub.auth.features.documents.create.HashicorpVaultSignatureProvider
+import no.elhub.auth.features.documents.create.PAdESDocumentSigningService
+import no.elhub.auth.features.documents.create.PdfDocumentGenerator
+import no.elhub.auth.features.documents.create.SignatureProvider
+import no.elhub.auth.features.documents.create.SigningCertificate
+import no.elhub.auth.features.documents.create.SigningCertificateChain
 import no.elhub.auth.features.documents.get.GetDocumentHandler
 import no.elhub.auth.features.grants.common.ExposedGrantRepository
 import no.elhub.auth.features.grants.common.GrantRepository
@@ -78,11 +88,9 @@ val appModule =
         singleOf(::ExposedDocumentRepository) bind DocumentRepository::class
         singleOf(::ExposedGrantRepository) bind GrantRepository::class
         singleOf(::ExposedRequestRepository) bind RequestRepository::class
-
         single { PAdESService(CommonCertificateVerifier()) }
         singleOf(::PAdESDocumentSigningService) bind DocumentSigningService::class
         singleOf(::HashicorpVaultSignatureProvider) bind SignatureProvider::class
-
         single {
             val cfg = get<ApplicationConfig>().config("pdfGenerator")
             val pdfGeneratorCfg = PdfGeneratorConfig(
@@ -92,7 +100,6 @@ val appModule =
             DefaultMustacheFactory(pdfGeneratorCfg.mustacheResourcePath)
         }
         singleOf(::PdfDocumentGenerator) bind DocumentGenerator::class
-
         // TODO: Create dedicated testing module?
         singleOf(::ConfirmDocumentHandler)
         singleOf(::CreateDocumentHandler)

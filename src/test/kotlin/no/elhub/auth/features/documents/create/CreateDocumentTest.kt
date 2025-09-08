@@ -21,16 +21,16 @@ import org.koin.test.KoinTest
 import org.koin.test.inject
 import java.io.File
 
-const val elhubSignature = "Elhub"
-const val ssn = "ssn"
+const val ELHUB_SIGNATURE = "Elhub"
+const val SSN = "ssn"
 
 // TODO: Implement
-fun ByteArray.getSignature() = elhubSignature
+fun ByteArray.getSignature() = ELHUB_SIGNATURE
 
 // TODO: Implement
 fun ByteArray.isPdf() = this.isNotEmpty()
 
-fun ByteArray.metadata() = mapOf(ssn to "01010112345")
+fun ByteArray.metadata() = mapOf(SSN to "01010112345")
 
 /*
  * As a supplier

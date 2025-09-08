@@ -4,10 +4,10 @@ import arrow.core.Either
 import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
-import java.time.LocalDateTime
-import java.util.UUID
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.DocumentRepository
+import java.time.LocalDateTime
+import java.util.UUID
 
 class CreateDocumentHandler(
     private val documentGenerator: DocumentGenerator,
@@ -63,4 +63,3 @@ fun CreateDocumentCommand.toAuthorizationDocument(pdfBytes: ByteArray): Either<C
             updatedAt = LocalDateTime.now()
         )
     }.mapLeft { CreateDocumentError.MappingError }
-

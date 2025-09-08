@@ -65,5 +65,6 @@ class PAdESDocumentSigningService(
             .use { it.readBytes() }
     }.mapLeft { ex ->
         print(ex)
-        DocumentSigningError.SigningError }
+        DocumentSigningError.SigningError
+    }
 }

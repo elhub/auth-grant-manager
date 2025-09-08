@@ -5,8 +5,8 @@ import arrow.core.left
 import arrow.core.right
 import no.elhub.auth.features.common.QueryError
 import no.elhub.auth.features.common.RepositoryReadError
-import no.elhub.auth.features.grants.common.GrantRepository
 import no.elhub.auth.features.grants.AuthorizationGrant
+import no.elhub.auth.features.grants.common.GrantRepository
 
 class GetGrantHandler(private val repo: GrantRepository) {
     operator fun invoke(query: GetGrantQuery): Either<QueryError, AuthorizationGrant> =

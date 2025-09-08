@@ -11,7 +11,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.LocalDateTime
 import java.util.*
 
-class ExposedDocumentRepositoryTests :
+class ExposedDocumentRepositoryTest :
     FunSpec({
         extensions(PostgresTestContainerExtension)
         val repository = ExposedDocumentRepository()
