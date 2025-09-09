@@ -5,24 +5,37 @@ import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.devxp.jsonapi.model.JsonApiAttributes
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipToOne
 import no.elhub.devxp.jsonapi.model.JsonApiRelationships
+import no.elhub.devxp.jsonapi.model.JsonApiResourceMeta
 import no.elhub.devxp.jsonapi.request.JsonApiRequest
 
 @Serializable
 data class DocumentRequestAttributes(
-    val meteringPoint: String
+    val documentType: AuthorizationDocument.Type
 ) : JsonApiAttributes
 
 @Serializable
 data class DocumentRelationships(
     val requestedBy: JsonApiRelationshipToOne,
-    val requestedTo: JsonApiRelationshipToOne
+    val requestedFrom: JsonApiRelationshipToOne
 ) : JsonApiRelationships
 
-typealias HttpRequestBody = JsonApiRequest.SingleDocumentWithRelationships<DocumentRequestAttributes, DocumentRelationships>
+@Serializable
+data class DocumentMeta(
+    val requestedFromName: String,
+    val requestedForMeteringPointId: String,
+    val requestedForMeteringPointAddress: String,
+    val balanceSupplierContractName: String,
+) : JsonApiResourceMeta
 
-fun HttpRequestBody.toCreateDocumentCommand() = CreateDocumentCommand(
-    type = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
-    requestedBy = this.data.relationships.requestedBy.data.id,
-    requestedTo = this.data.relationships.requestedTo.data.id,
-    meteringPoint = this.data.attributes.meteringPoint,
+typealias CreateDocumentRequest = JsonApiRequest.SingleDocumentWithRelationshipsAndMeta<DocumentRequestAttributes, DocumentRelationships, DocumentMeta>
+
+fun CreateDocumentRequest.toCreateDocumentChangeOfSupplierCommand() = CreateDocumentCommand.ChangeOfSupplier(
+    requestedFrom = this.data.relationships.requestedFrom.data.id,
+    requestedFromName = this.data.meta.requestedFromName,
+    requestedBy = this.data.relationships.requestedFrom.data.id,
+    balanceSupplierContractName = this.data.meta.balanceSupplierContractName,
+    meteringPointId = this.data.meta.requestedForMeteringPointId,
+    meteringPointAddress = this.data.meta.requestedForMeteringPointAddress,
 )
+
+

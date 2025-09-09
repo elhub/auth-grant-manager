@@ -18,11 +18,11 @@ import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.documents.common.ExposedDocumentRepository
 import no.elhub.auth.features.documents.confirm.ConfirmDocumentHandler
 import no.elhub.auth.features.documents.create.CreateDocumentHandler
-import no.elhub.auth.features.documents.create.DocumentGenerator
+import no.elhub.auth.features.documents.create.PdfGenerator
 import no.elhub.auth.features.documents.create.DocumentSigningService
 import no.elhub.auth.features.documents.create.HashicorpVaultSignatureProvider
 import no.elhub.auth.features.documents.create.PAdESDocumentSigningService
-import no.elhub.auth.features.documents.create.PdfDocumentGenerator
+import no.elhub.auth.features.documents.create.PdfGeneratorImpl
 import no.elhub.auth.features.documents.create.SignatureProvider
 import no.elhub.auth.features.documents.create.SigningCertificate
 import no.elhub.auth.features.documents.create.SigningCertificateChain
@@ -100,6 +100,7 @@ val appModule =
             DefaultMustacheFactory(pdfGeneratorCfg.mustacheResourcePath)
         }
         singleOf(::PdfDocumentGenerator) bind DocumentGenerator::class
+        // TODO: Create dedicated testing module?
         singleOf(::ConfirmDocumentHandler)
         singleOf(::CreateDocumentHandler)
         singleOf(::GetDocumentHandler)
