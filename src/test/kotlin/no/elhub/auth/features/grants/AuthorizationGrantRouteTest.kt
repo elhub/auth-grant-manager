@@ -12,7 +12,7 @@ import no.elhub.auth.config.AUTHORIZATION_GRANT
 import no.elhub.auth.defaultTestApplication
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.RunPostgresScriptExtension
-import no.elhub.auth.features.validate
+import no.elhub.devxp.jsonapi.validate
 
 class AuthorizationGrantRouteTest :
     FunSpec({
