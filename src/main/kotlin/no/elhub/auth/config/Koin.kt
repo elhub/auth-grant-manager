@@ -100,7 +100,6 @@ val appModule =
             DefaultMustacheFactory(pdfGeneratorCfg.mustacheResourcePath)
         }
         singleOf(::PdfDocumentGenerator) bind DocumentGenerator::class
-        // TODO: Create dedicated testing module?
         singleOf(::ConfirmDocumentHandler)
         singleOf(::CreateDocumentHandler)
         singleOf(::GetDocumentHandler)
@@ -113,22 +112,6 @@ val appModule =
         singleOf(::CreateRequestHandler)
         singleOf(::GetRequestHandler)
         singleOf(::QueryRequestsHandler)
-
-        /*      requestScope {
-         *          scopedOf(::ConfirmDocumentHandler)
-         *          scopedOf(::CreateDocumentHandler)
-         *          scopedOf(::GetDocumentHandler)
-         *
-         *          scopedOf(::GetGrantHandler)
-         *          scopedOf(::GetGrantScopesHandler)
-         *          scopedOf(::QueryGrantsHandler)
-         *
-         *          scopedOf(::ConfirmRequestHandler)
-         *          scopedOf(::CreateRequestHandler)
-         *          scopedOf(::GetRequestHandler)
-         *          scopedOf(::QueryRequestsHandler)
-         *      }
-         */
     }
 
 val httpClientModule = module {
