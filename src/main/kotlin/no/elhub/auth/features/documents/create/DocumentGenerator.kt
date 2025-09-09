@@ -14,7 +14,7 @@ import java.io.StringWriter
 interface DocumentGenerator {
     fun generate(
         meteringPointId: String,
-        ssn: String,
+        nin: String,
         supplier: String
     ): Either<DocumentGenerationError, ByteArray>
 }
@@ -30,23 +30,23 @@ class PdfDocumentGenerator(
     object MustacheConstants {
         internal const val RESOURCES_PATH = "templates"
         internal const val TEMPLATE_CHANGE_SUPPLIER_CONTRACT = "contract.mustache"
-        internal const val VARIABLE_KEY_SSN = "ssn"
+        internal const val VARIABLE_KEY_NIN = "nin"
         internal const val VARIABLE_KEY_SUPPLIER_ID = "balanceSupplierId"
         internal const val VARIABLE_KEY_METER_ID = "meteringPointId"
     }
 
     object PdfConstants {
-        internal const val PDF_METADATA_KEY_SSN = "ssn"
+        internal const val PDF_METADATA_KEY_NIN = "nin"
     }
 
     override fun generate(
         meteringPointId: String,
-        ssn: String,
+        nin: String,
         supplier: String,
     ): Either<DocumentGenerationError, ByteArray> = either {
         val contractHtmlString =
             generateHtml(
-                ssn,
+                nin,
                 supplier,
                 meteringPointId,
             ).getOrElse {
@@ -57,12 +57,12 @@ class PdfDocumentGenerator(
             generatePdfFromHtml(contractHtmlString).getOrElse { return DocumentGenerationError.ContentGenerationError.left() }
 
         return pdfBytes.addMetadataToPdf(
-            mapOf(PdfConstants.PDF_METADATA_KEY_SSN to ssn)
+            mapOf(PdfConstants.PDF_METADATA_KEY_NIN to nin)
         )
     }
 
     private fun generateHtml(
-        ssn: String,
+        nin: String,
         supplierId: String,
         meteringPointId: String
     ): Either<DocumentGenerationError, String> = Either.catch {
@@ -72,7 +72,7 @@ class PdfDocumentGenerator(
                 .execute(
                     this,
                     mapOf(
-                        MustacheConstants.VARIABLE_KEY_SSN to ssn,
+                        MustacheConstants.VARIABLE_KEY_NIN to nin,
                         MustacheConstants.VARIABLE_KEY_SUPPLIER_ID to supplierId,
                         MustacheConstants.VARIABLE_KEY_METER_ID to meteringPointId
                     )

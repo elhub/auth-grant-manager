@@ -17,7 +17,7 @@ class CreateDocumentHandler(
 ) {
     suspend operator fun invoke(command: CreateDocumentCommand): Either<CreateDocumentError, UUID> {
         val documentBytes = documentGenerator.generate(
-            ssn = command.requestedTo,
+            nin = command.requestedTo,
             supplier = command.requestedBy,
             meteringPointId = command.meteringPoint
         ).getOrElse { return CreateDocumentError.DocumentGenerationError.left() }
