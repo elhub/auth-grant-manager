@@ -7,6 +7,7 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
 import no.elhub.auth.features.common.toApiErrorResponse
+import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.toResponse
 import no.elhub.auth.features.documents.get.GetDocumentHandler
 import no.elhub.auth.features.documents.get.GetDocumentQuery
@@ -14,16 +15,17 @@ import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 
 fun Route.createDocumentRoute(createHandler: CreateDocumentHandler, getHandler: GetDocumentHandler) {
     post {
-        val requestBody = call.receive<HttpRequestBody>()
+        val createDocumentRequest = call.receive<CreateDocumentRequest>()
 
-        val documentId = createHandler(requestBody.toCreateDocumentCommand())
+        val command = when (createDocumentRequest.data.attributes.documentType) {
+            AuthorizationDocument.Type.ChangeOfSupplierConfirmation -> createDocumentRequest.toCreateDocumentChangeOfSupplierCommand()
+        }
+
+        val documentId = createHandler(command)
             .getOrElse { error ->
                 when (error) {
                     is
                     CreateDocumentError.DocumentGenerationError,
-                    CreateDocumentError.MappingError,
-                    CreateDocumentError.SignatureFetchingError,
-                    CreateDocumentError.SigningDataGenerationError,
                     CreateDocumentError.SigningError,
                     CreateDocumentError.PersistenceError
                     -> call.respond(HttpStatusCode.InternalServerError)

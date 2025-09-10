@@ -42,29 +42,28 @@ class AuthorizationDocumentRouteTest :
                             setBody(
                                 """
                                 {
-                                    "data": {
-                                        "type": "AuthorizationDocument",
-                                        "attributes": {
-                                            "meteringPoint": "1234"
-                                        },
-                                        "relationships": {
-                                            "requestedBy": {
-                                                "data": {
-                                                    "id": "12345678901",
-                                                    "type": "User"
-                                                }
-                                            },
-                                            "requestedTo": {
-                                                "data": {
-                                                    "id": "98765432109",
-                                                    "type": "User"
-                                                }
-                                            }
-                                        }
-
+                                  "data": {
+                                    "type": "AuthorizationDocument",
+                                    "attributes": {
+                                      "documentType": "ChangeOfSupplierConfirmation"
+                                    },
+                                    "relationships": {
+                                      "requestedBy": {
+                                        "data": { "id": "12345678901", "type": "User" }
+                                      },
+                                      "requestedFrom": {
+                                        "data": { "id": "98765432109", "type": "User" }
+                                      }
+                                    },
+                                    "meta": {
+                                      "requestedFromName": "Ola Normann",
+                                      "requestedForMeteringPointId": "1234",
+                                      "requestedForMeteringPointAddress": "Storgata 1, 0001 Oslo",
+                                      "balanceSupplierContractName": "Spotpris"
                                     }
+                                  }
                                 }
-                                """.trimIndent(),
+                                """.trimIndent()
                             )
                         }
 
@@ -87,7 +86,7 @@ class AuthorizationDocumentRouteTest :
                                     "type" shouldBe "User"
                                 }
                             }
-                            "requestedTo" {
+                            "requestedFrom" {
                                 "data" {
                                     "id" shouldBe "98765432109"
                                     "type" shouldBe "User"
