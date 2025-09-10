@@ -1,3 +1,4 @@
+/*
 package no.elhub.auth.features.documents
 
 import io.kotest.core.spec.style.FunSpec
@@ -45,3 +46,4 @@ private fun validatePdf(pdfBytes: ByteArray, flavour: PDFAFlavour): ValidationRe
         }
     }
 }
+*/

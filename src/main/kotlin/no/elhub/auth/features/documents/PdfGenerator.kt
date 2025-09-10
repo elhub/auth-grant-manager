@@ -1,3 +1,4 @@
+/*
 package no.elhub.auth.features.documents
 
 import com.github.mustachejava.DefaultMustacheFactory
@@ -97,3 +98,4 @@ private fun PdfRendererBuilder.useFonts(fonts: List<FontDef>): PdfRendererBuilde
     return this
 }
 
+*/

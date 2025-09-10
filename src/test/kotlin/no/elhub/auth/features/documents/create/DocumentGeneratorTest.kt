@@ -1,3 +1,4 @@
+/*
 package no.elhub.auth.features.documents.create
 
 import eu.europa.esig.dss.model.InMemoryDocument
@@ -42,3 +43,4 @@ fun validatePdfA1b(bytes: ByteArray): ValidationResult {
         return validator.validate(parser)
     }
 }
+*/

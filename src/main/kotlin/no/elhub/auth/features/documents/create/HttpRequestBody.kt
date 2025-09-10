@@ -32,10 +32,8 @@ typealias CreateDocumentRequest = JsonApiRequest.SingleDocumentWithRelationships
 fun CreateDocumentRequest.toCreateDocumentChangeOfSupplierCommand() = CreateDocumentCommand.ChangeOfSupplier(
     requestedFrom = this.data.relationships.requestedFrom.data.id,
     requestedFromName = this.data.meta.requestedFromName,
-    requestedBy = this.data.relationships.requestedFrom.data.id,
+    requestedBy = this.data.relationships.requestedBy.data.id,
     balanceSupplierContractName = this.data.meta.balanceSupplierContractName,
     meteringPointId = this.data.meta.requestedForMeteringPointId,
     meteringPointAddress = this.data.meta.requestedForMeteringPointAddress,
 )
-
-

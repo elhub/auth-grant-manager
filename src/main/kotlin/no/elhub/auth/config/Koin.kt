@@ -18,11 +18,11 @@ import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.documents.common.ExposedDocumentRepository
 import no.elhub.auth.features.documents.confirm.ConfirmDocumentHandler
 import no.elhub.auth.features.documents.create.CreateDocumentHandler
-import no.elhub.auth.features.documents.create.PdfGenerator
-import no.elhub.auth.features.documents.create.DocumentSigningService
 import no.elhub.auth.features.documents.create.HashicorpVaultSignatureProvider
-import no.elhub.auth.features.documents.create.PAdESDocumentSigningService
-import no.elhub.auth.features.documents.create.PdfGeneratorImpl
+import no.elhub.auth.features.documents.create.HtmlToPdfFactory
+import no.elhub.auth.features.documents.create.PadESSigningService
+import no.elhub.auth.features.documents.create.PdfFactory
+import no.elhub.auth.features.documents.create.PdfSigningService
 import no.elhub.auth.features.documents.create.SignatureProvider
 import no.elhub.auth.features.documents.create.SigningCertificate
 import no.elhub.auth.features.documents.create.SigningCertificateChain
@@ -89,8 +89,9 @@ val appModule =
         singleOf(::ExposedGrantRepository) bind GrantRepository::class
         singleOf(::ExposedRequestRepository) bind RequestRepository::class
         single { PAdESService(CommonCertificateVerifier()) }
-        singleOf(::PAdESDocumentSigningService) bind DocumentSigningService::class
+        singleOf(::PadESSigningService) bind PdfSigningService::class
         singleOf(::HashicorpVaultSignatureProvider) bind SignatureProvider::class
+        singleOf(::HtmlToPdfFactory) bind PdfFactory::class
         single {
             val cfg = get<ApplicationConfig>().config("pdfGenerator")
             val pdfGeneratorCfg = PdfGeneratorConfig(
@@ -99,7 +100,6 @@ val appModule =
 
             DefaultMustacheFactory(pdfGeneratorCfg.mustacheResourcePath)
         }
-        singleOf(::PdfDocumentGenerator) bind DocumentGenerator::class
         // TODO: Create dedicated testing module?
         singleOf(::ConfirmDocumentHandler)
         singleOf(::CreateDocumentHandler)

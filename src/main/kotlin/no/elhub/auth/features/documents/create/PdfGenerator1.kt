@@ -1,3 +1,4 @@
+/*
 package no.elhub.auth.features.documents.create
 
 import com.github.mustachejava.DefaultMustacheFactory
@@ -80,3 +81,4 @@ object PdfGenerator1 {
     }
 }
 
+*/

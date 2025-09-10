@@ -39,15 +39,11 @@ class SigningServiceTest : FunSpec({
     val padesService = PAdESService(CommonCertificateVerifier())
 
     val signingService =
-        PAdESDocumentSigningService(vaultSignatureProvider, signingCertificate, signingCertificateChain, padesService)
+        PadESSigningService(vaultSignatureProvider, signingCertificate, signingCertificateChain, padesService)
     val unsignedPdfBytes = this::class.java.classLoader.getResourceAsStream("unsigned.pdf")!!.readAllBytes()
 
     test("Should add one signature with proper parameters") {
-        val dataToSign = signingService.getDataToSign(unsignedPdfBytes).shouldBeRight()
-
-        val signatureBytes = vaultSignatureProvider.fetchSignature(dataToSign).shouldBeRight()
-
-        val signedPdfBytes = signingService.sign(unsignedPdfBytes, signatureBytes).shouldBeRight()
+        val signedPdfBytes = signingService.sign(unsignedPdfBytes).shouldBeRight()
 
         val signedPdf = InMemoryDocument(signedPdfBytes)
 
@@ -78,11 +74,7 @@ class SigningServiceTest : FunSpec({
     }
 
     test("Should invalidate signature when PDF is tampered with") {
-        val dataToSign = signingService.getDataToSign(unsignedPdfBytes).shouldBeRight()
-
-        val signatureBytes = vaultSignatureProvider.fetchSignature(dataToSign).shouldBeRight()
-
-        val signedPdfBytes = signingService.sign(unsignedPdfBytes, signatureBytes).shouldBeRight()
+        val signedPdfBytes = signingService.sign(unsignedPdfBytes).shouldBeRight()
 
         val signedPdf = InMemoryDocument(signedPdfBytes)
 

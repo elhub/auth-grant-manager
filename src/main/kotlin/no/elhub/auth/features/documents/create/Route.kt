@@ -26,9 +26,6 @@ fun Route.createDocumentRoute(createHandler: CreateDocumentHandler, getHandler: 
                 when (error) {
                     is
                     CreateDocumentError.DocumentGenerationError,
-                    CreateDocumentError.MappingError,
-                    CreateDocumentError.SignatureFetchingError,
-                    CreateDocumentError.SigningDataGenerationError,
                     CreateDocumentError.SigningError,
                     CreateDocumentError.PersistenceError
                     -> call.respond(HttpStatusCode.InternalServerError)

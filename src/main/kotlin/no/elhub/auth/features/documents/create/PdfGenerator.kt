@@ -1,5 +1,9 @@
 package no.elhub.auth.features.documents.create
 
+import arrow.core.Either
+import arrow.core.getOrElse
+import arrow.core.left
+import arrow.core.raise.either
 import com.github.mustachejava.DefaultMustacheFactory
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder
 import org.apache.pdfbox.Loader
@@ -7,45 +11,85 @@ import org.apache.pdfbox.pdmodel.PDDocumentInformation
 import java.io.ByteArrayOutputStream
 import java.io.StringWriter
 
+typealias MustacheVariableTags = Map<String, String>
+
 typealias PdfBytes = ByteArray
 
-object PdfFactory {
+sealed interface PdfError {
+    data object HtmlGenerationError : PdfError
+    data object PdfGenerationError : PdfError
+    data object MetaDataError : PdfError
+}
+
+fun interface PdfFactory {
+    fun create(command: CreateDocumentCommand): Either<PdfError, PdfBytes>
+}
+
+class HtmlToPdfFactory : PdfFactory {
     private val mustacheFactory: DefaultMustacheFactory = DefaultMustacheFactory("templates")
+
+    enum class MustacheTemplateFile(val fileName: String) {
+        ChangeOfSupplier("change_of_supplier.mustache")
+    }
+
+    data class PdfData(
+        val template: MustacheTemplateFile,
+        val toBeSignedBy: String,
+        val tags: MustacheVariableTags
+    )
 
     object PdfMetaData {
         internal const val NIN = "NIN"
     }
 
-    fun create(createDocumentCommand: CreateDocumentCommand): PdfBytes {
-        val pdfData = createDocumentCommand.toPdfData()
-        val htmlString = generateHtmlString(pdfData.template, pdfData.tags)
-        return htmlToPdfBytes(htmlString).addMetadata(
+    private fun CreateDocumentCommand.toPdfData(): PdfData = when (this) {
+        is CreateDocumentCommand.ChangeOfSupplier -> PdfData(
+            template = MustacheTemplateFile.ChangeOfSupplier,
+            toBeSignedBy = requestedFrom,
+            tags = mapOf(
+                "customerName" to requestedFromName,
+                "nationalIdentityNumber" to requestedFrom,
+                "meteringPointAddress" to meteringPointAddress,
+                "meteringPointId" to meteringPointId,
+                "balanceSupplierName" to requestedBy,
+                "balanceSupplierContractName" to balanceSupplierContractName,
+            )
+        )
+    }
+
+    override fun create(command: CreateDocumentCommand): Either<PdfError, PdfBytes> = either {
+        val pdfData = command.toPdfData()
+        val htmlString = generateHtmlString(pdfData.template, pdfData.tags).getOrElse { return PdfError.PdfGenerationError.left() }
+        val pdfBytes = htmlToPdfBytes(htmlString).getOrElse { return PdfError.PdfGenerationError.left() }
+        return pdfBytes.addMetadata(
             mapOf(PdfMetaData.NIN to pdfData.toBeSignedBy)
         )
     }
 
-    private fun generateHtmlString(template: MustacheTemplateFile, variableTags: VariableTags): String {
-        return StringWriter().apply {
-            mustacheFactory
-                .compile(template.fileName)
-                .execute(this, variableTags)
-                .flush()
-        }.toString()
-    }
+    private fun generateHtmlString(template: MustacheTemplateFile, variableTags: MustacheVariableTags): Either<PdfError.HtmlGenerationError, String> =
+        Either.catch {
+            StringWriter().apply {
+                mustacheFactory
+                    .compile(template.fileName)
+                    .execute(this, variableTags)
+                    .flush()
+            }.toString()
+        }.mapLeft { PdfError.HtmlGenerationError }
 
-    private fun htmlToPdfBytes(htmlString: String): ByteArray {
-        return ByteArrayOutputStream().use { out ->
+    private fun htmlToPdfBytes(htmlString: String): Either<PdfError.PdfGenerationError, PdfBytes> = Either.catch {
+        ByteArrayOutputStream().use { out ->
             PdfRendererBuilder()
                 .withHtmlContent(htmlString, null)
                 .toStream(out)
                 .run()
             out.toByteArray()
         }
-    }
+    }.mapLeft { PdfError.PdfGenerationError }
 
     private fun PdfBytes.addMetadata(
-        metadata: Map<String, String>) : PdfBytes {
-        return ByteArrayOutputStream().use { out ->
+        metadata: Map<String, String>
+    ) = Either.catch {
+        ByteArrayOutputStream().use { out ->
             Loader.loadPDF(this).use { doc ->
                 doc.documentInformation = PDDocumentInformation().apply {
                     for (metadataPair in metadata) {
@@ -56,45 +100,5 @@ object PdfFactory {
             }
             out.toByteArray()
         }
-    }
-}
-
-/**
- * Enum of all available Mustache templates.
- * The fileName has to match the resource file name in the resources/templates folder.
- */
-enum class MustacheTemplateFile(val fileName: String) {
-    ChangeOfSupplier("change_of_supplier.mustache")
-}
-
-/**
- * Represents the input required to render a Mustache template into a PDF.
- *
- * @param template The Mustache template file to use for rendering.
- * @param toBeSignedBy The national identity number of the person who will sign the document.
- * @param tags The variables to be interpolated into the Mustache template.
- *             The keys must exactly match the tag names (e.g. {{customerName}})
- *             defined in the template file, otherwise the placeholders will not be replaced.
- */
-typealias VariableTags = Map<String, String>
-data class PdfData(
-    val template: MustacheTemplateFile,
-    val toBeSignedBy: String,
-    val tags: VariableTags
-)
-
-
-fun CreateDocumentCommand.toPdfData(): PdfData = when (this) {
-    is CreateDocumentCommand.ChangeOfSupplier -> PdfData(
-        template = MustacheTemplateFile.ChangeOfSupplier,
-        toBeSignedBy = requestedFrom,
-        tags = mapOf(
-            "customerName" to requestedFromName,
-            "nationalIdentityNumber" to requestedFrom,
-            "meteringPointAddress" to meteringPointAddress,
-            "meteringPointId" to meteringPointId,
-            "balanceSupplierName" to requestedBy,
-            "balanceSupplierContractName" to balanceSupplierContractName,
-        )
-    )
+    }.mapLeft { PdfError.MetaDataError }
 }

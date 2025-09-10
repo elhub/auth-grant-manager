@@ -16,7 +16,7 @@ import java.security.cert.X509Certificate
 typealias SigningCertificate = X509Certificate
 typealias SigningCertificateChain = List<X509Certificate>
 
-interface DocumentSigningService {
+interface PdfSigningService {
     suspend fun sign(pdfByteArray: ByteArray): Either<DocumentSigningError, ByteArray>
 }
 
@@ -25,12 +25,12 @@ sealed class DocumentSigningError {
     data object SigningError : DocumentSigningError()
 }
 
-class PAdESDocumentSigningService(
+class PadESSigningService(
     private val vaultProvider: SignatureProvider,
     private val certificate: SigningCertificate,
     private val chain: SigningCertificateChain,
     private val padesService: PAdESService,
-) : DocumentSigningService {
+) : PdfSigningService {
 
     private val defaultSignatureParameters = PAdESSignatureParameters().apply {
         signatureLevel = SignatureLevel.PAdES_BASELINE_B
@@ -47,14 +47,13 @@ class PAdESDocumentSigningService(
     override suspend fun sign(
         pdfByteArray: ByteArray,
     ): Either<DocumentSigningError, ByteArray> {
-
         val dataToSign = getDataToSign(pdfByteArray)
             .getOrElse { return Either.Left(it) }
 
         val signature = vaultProvider.fetchSignature(dataToSign)
             .getOrElse { return Either.Left(DocumentSigningError.SigningError) }
 
-        return  sign(
+        return sign(
             InMemoryDocument(pdfByteArray),
             SignatureValue(defaultSignatureParameters.signatureAlgorithm, signature),
         )
