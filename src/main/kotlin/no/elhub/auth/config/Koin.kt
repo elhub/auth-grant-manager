@@ -100,7 +100,7 @@ val appModule =
 
             DefaultMustacheFactory(pdfGeneratorCfg.mustacheResourcePath)
         }
-        // TODO: Create dedicated testing module?
+
         singleOf(::ConfirmDocumentHandler)
         singleOf(::CreateDocumentHandler)
         singleOf(::GetDocumentHandler)
