@@ -1,6 +1,7 @@
 package no.elhub.auth.features.documents.create
 
 import arrow.core.Either
+import arrow.core.getOrElse
 import eu.europa.esig.dss.enumerations.CertificationPermission
 import eu.europa.esig.dss.enumerations.DigestAlgorithm
 import eu.europa.esig.dss.enumerations.SignatureLevel
@@ -15,9 +16,8 @@ import java.security.cert.X509Certificate
 typealias SigningCertificate = X509Certificate
 typealias SigningCertificateChain = List<X509Certificate>
 
-interface DocumentSigningService {
-    fun getDataToSign(pdfByteArray: ByteArray): Either<DocumentSigningError, ByteArray>
-    suspend fun sign(pdfByteArray: ByteArray, signatureBytes: ByteArray): Either<DocumentSigningError, ByteArray>
+interface PdfSigningService {
+    suspend fun sign(pdfByteArray: ByteArray): Either<DocumentSigningError, ByteArray>
 }
 
 sealed class DocumentSigningError {
@@ -25,12 +25,12 @@ sealed class DocumentSigningError {
     data object SigningError : DocumentSigningError()
 }
 
-class PAdESDocumentSigningService(
+class PadESSigningService(
     private val vaultProvider: SignatureProvider,
     private val certificate: SigningCertificate,
     private val chain: SigningCertificateChain,
     private val padesService: PAdESService,
-) : DocumentSigningService {
+) : PdfSigningService {
 
     private val defaultSignatureParameters = PAdESSignatureParameters().apply {
         signatureLevel = SignatureLevel.PAdES_BASELINE_B
@@ -40,17 +40,24 @@ class PAdESDocumentSigningService(
         certificateChain = chain.map(::CertificateToken)
     }
 
-    override fun getDataToSign(pdfByteArray: ByteArray): Either<DocumentSigningError, ByteArray> = Either.catch {
+    private fun getDataToSign(pdfByteArray: ByteArray): Either<DocumentSigningError, ByteArray> = Either.catch {
         padesService.getDataToSign(InMemoryDocument(pdfByteArray), defaultSignatureParameters).bytes
     }.mapLeft { DocumentSigningError.SigningDataGenerationError }
 
     override suspend fun sign(
         pdfByteArray: ByteArray,
-        signatureBytes: ByteArray
-    ): Either<DocumentSigningError, ByteArray> = sign(
-        InMemoryDocument(pdfByteArray),
-        SignatureValue(defaultSignatureParameters.signatureAlgorithm, signatureBytes),
-    )
+    ): Either<DocumentSigningError, ByteArray> {
+        val dataToSign = getDataToSign(pdfByteArray)
+            .getOrElse { return Either.Left(it) }
+
+        val signature = vaultProvider.fetchSignature(dataToSign)
+            .getOrElse { return Either.Left(DocumentSigningError.SigningError) }
+
+        return sign(
+            InMemoryDocument(pdfByteArray),
+            SignatureValue(defaultSignatureParameters.signatureAlgorithm, signature),
+        )
+    }
 
     private fun sign(
         document: DSSDocument,

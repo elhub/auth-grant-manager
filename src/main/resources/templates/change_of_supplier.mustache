@@ -5,7 +5,7 @@
     <title>Samtykke til leverandørskifte og/eller anleggsovertagelse</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: LiberationSans;
             margin: 40px;
         }
         h1 {
@@ -29,11 +29,12 @@
         a {
             color: #1a0dab;
         }
+
         .elhub-logo {
             text-align: right;
             font-size: 28px;
             color: #2e7d32;
-            font-family: Georgia, serif;
+            font-family: LibreBodoni;
         }
     </style>
 </head>
@@ -66,15 +67,15 @@
 <table>
     <tr>
         <td>Kunde</td>
-        <td>TODO</td>
+        <td>{{customerName}}</td>
     </tr>
     <tr>
         <td>Fødselsnummer</td>
-        <td>{{nin}}</td>
+        <td>{{nationalIdentityNumber}}</td>
     </tr>
     <tr>
         <td>Adresse</td>
-        <td>TODO</td>
+        <td>{{meteringPointAddress}}</td>
     </tr>
     <tr>
         <td>MålepunktID</td>
@@ -82,11 +83,11 @@
     </tr>
     <tr>
         <td>Strømleverandør</td>
-        <td>{{balanceSupplierId}}</td>
+        <td>{{balanceSupplierName}}</td>
     </tr>
     <tr>
         <td>Strømavtale</td>
-        <td>TODO</td>
+        <td>{{balanceSupplierContractName}}</td>
     </tr>
 </table>
 </body>
