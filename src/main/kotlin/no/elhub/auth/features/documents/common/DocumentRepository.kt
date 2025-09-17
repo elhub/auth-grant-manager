@@ -77,7 +77,14 @@ class ExposedDocumentRepository : DocumentRepository {
             }
         }.mapLeft { RepositoryReadError.UnexpectedError }
 
-    override fun findAll() = TODO()
+    override fun findAll(): Either<RepositoryReadError, List<AuthorizationDocument>> =
+        Either.catch {
+            transaction {
+                AuthorizationDocumentTable
+                    .selectAll()
+                    .map { it.toAuthorizationDocument() }
+            }
+        }.mapLeft { RepositoryReadError.UnexpectedError }
 }
 
 object AuthorizationDocumentTable : UUIDTable("auth.authorization_document") {
