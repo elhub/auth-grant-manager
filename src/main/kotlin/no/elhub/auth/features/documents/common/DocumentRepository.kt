@@ -16,6 +16,7 @@ import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.insertAndGetId
+import org.jetbrains.exposed.sql.insertReturning
 import org.jetbrains.exposed.sql.javatime.datetime
 import org.jetbrains.exposed.sql.javatime.timestamp
 import org.jetbrains.exposed.sql.selectAll
@@ -24,40 +25,42 @@ import java.util.UUID
 
 interface DocumentRepository {
     fun find(id: UUID): Either<RepositoryReadError, AuthorizationDocument>
-    fun insert(doc: AuthorizationDocument): Either<RepositoryWriteError, UUID>
+    fun insert(doc: AuthorizationDocument): Either<RepositoryWriteError, AuthorizationDocument>
     fun findAll(): Either<RepositoryReadError, List<AuthorizationDocument>>
 }
 
 class ExposedDocumentRepository : DocumentRepository {
 
-    override fun insert(doc: AuthorizationDocument): Either<RepositoryWriteError, UUID> = Either.catch {
-        transaction {
-            val documentId = AuthorizationDocumentTable.insertAndGetId {
-                it[id] = doc.id
-                it[title] = doc.title
-                it[type] = doc.type
-                it[status] = doc.status
-                it[file] = doc.file
-                it[requestedBy] = doc.requestedBy
-                it[requestedTo] = doc.requestedFrom
-                it[createdAt] = doc.createdAt
-                it[updatedAt] = doc.updatedAt
-            }
+    override fun insert(doc: AuthorizationDocument): Either<RepositoryWriteError, AuthorizationDocument> =
+        Either.catch {
+            transaction {
+                val document = AuthorizationDocumentTable.insertReturning {
+                    it[id] = doc.id
+                    it[title] = doc.title
+                    it[type] = doc.type
+                    it[status] = doc.status
+                    it[file] = doc.file
+                    it[requestedBy] = doc.requestedBy
+                    it[requestedTo] = doc.requestedFrom
+                    it[createdAt] = doc.createdAt
+                    it[updatedAt] = doc.updatedAt
+                }.map { it.toAuthorizationDocument() }
+                    .single()
 
-            val scopeId = AuthorizationScopeTable.insertAndGetId {
-                it[authorizedResourceType] = AuthorizationResourceType.MeteringPoint
-                it[authorizedResourceId] = "Something"
-                it[permissionType] = PermissionType.ChangeOfSupplier
-            }
+                val scopeId = AuthorizationScopeTable.insertAndGetId {
+                    it[authorizedResourceType] = AuthorizationResourceType.MeteringPoint
+                    it[authorizedResourceId] = "Something"
+                    it[permissionType] = PermissionType.ChangeOfSupplier
+                }
 
-            AuthorizationDocumentScopeTable.insert {
-                it[authorizationDocumentId] = documentId.value
-                it[authorizationScopeId] = scopeId.value
-            }
+                AuthorizationDocumentScopeTable.insert {
+                    it[authorizationDocumentId] = document.id
+                    it[authorizationScopeId] = scopeId.value
+                }
 
-            doc.id
-        }
-    }.mapLeft { RepositoryWriteError.UnexpectedError }
+                document
+            }
+        }.mapLeft { RepositoryWriteError.UnexpectedError }
 
     override fun find(id: UUID): Either<RepositoryReadError, AuthorizationDocument> = findOrNull(id).fold(
         { error -> error.left() },

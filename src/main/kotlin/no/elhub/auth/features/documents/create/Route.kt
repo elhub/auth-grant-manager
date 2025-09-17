@@ -8,15 +8,13 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
 import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.documents.common.toResponse
-import no.elhub.auth.features.documents.get.GetDocumentHandler
-import no.elhub.auth.features.documents.get.GetDocumentQuery
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 
-fun Route.createDocumentRoute(createHandler: CreateDocumentHandler, getHandler: GetDocumentHandler) {
+fun Route.createDocumentRoute(createHandler: CreateDocumentHandler) {
     post {
         val requestBody = call.receive<CreateDocumentRequest>()
 
-        val documentId = createHandler(requestBody.toCreateDocumentCommand())
+        val document = createHandler(requestBody.toCreateDocumentCommand())
             .getOrElse { error ->
                 when (error) {
                     is
@@ -27,18 +25,11 @@ fun Route.createDocumentRoute(createHandler: CreateDocumentHandler, getHandler: 
                     CreateDocumentError.SigningDataGenerationError,
                     CreateDocumentError.SigningError,
                     CreateDocumentError.PersistenceError
-                    -> call.respond(HttpStatusCode.InternalServerError)
+                        -> call.respond(HttpStatusCode.InternalServerError)
                 }
                 return@post
             }
 
-        val authorizationDocument = getHandler(GetDocumentQuery(documentId))
-            .getOrElse { err ->
-                val (status, body) = err.toApiErrorResponse()
-                call.respond(status, JsonApiErrorCollection(listOf(body)))
-                return@post
-            }
-
-        call.respond(status = HttpStatusCode.Created, message = authorizationDocument.toResponse())
+        call.respond(status = HttpStatusCode.Created, message = document.toResponse())
     }
 }
