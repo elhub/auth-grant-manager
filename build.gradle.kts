@@ -11,6 +11,12 @@ plugins {
     alias(libs.plugins.openapi.generator.plugin)
 }
 
+kotlin {
+    compilerOptions {
+        freeCompilerArgs.add("-opt-in=kotlin.time.ExperimentalTime")
+    }
+}
+
 buildscript {
     dependencies {
         classpath(libs.database.liquibase.core)

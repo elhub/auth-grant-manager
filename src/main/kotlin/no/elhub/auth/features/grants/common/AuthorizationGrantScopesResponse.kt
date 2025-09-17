@@ -1,6 +1,6 @@
 package no.elhub.auth.features.grants.common
 
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import kotlinx.serialization.Serializable
 import no.elhub.auth.features.grants.AuthorizationResourceType
 import no.elhub.auth.features.grants.AuthorizationScope

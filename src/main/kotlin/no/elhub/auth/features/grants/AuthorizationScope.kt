@@ -1,9 +1,7 @@
 package no.elhub.auth.features.grants
 
-import kotlinx.datetime.Instant
-import kotlinx.serialization.Serializable
+import kotlin.time.Instant
 
-@Serializable
 data class AuthorizationScope(
     val id: Long,
     val authorizedResourceType: AuthorizationResourceType,
@@ -12,14 +10,12 @@ data class AuthorizationScope(
     val createdAt: Instant
 )
 
-@Serializable
 enum class AuthorizationResourceType {
     MeteringPoint,
     Organization,
     Person
 }
 
-@Serializable
 enum class PermissionType {
     ChangeOfSupplier,
     FullDelegation,

@@ -2,8 +2,8 @@ package no.elhub.auth.features.grants.common
 
 import arrow.core.Either
 import arrow.core.raise.either
-import kotlinx.datetime.Instant
 import kotlinx.datetime.toKotlinLocalDateTime
+import kotlin.time.Instant
 import no.elhub.auth.features.common.PGEnum
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.grants.AuthorizationGrant
@@ -90,7 +90,11 @@ class ExposedGrantRepository : GrantRepository {
                 .where { AuthorizationGrantTable.id eq grantId }
                 .singleOrNull() ?: raise(RepositoryReadError.NotFoundError)
 
-            val partyIds = listOf(grant[AuthorizationGrantTable.grantedFor], grant[AuthorizationGrantTable.grantedBy], grant[AuthorizationGrantTable.grantedTo])
+            val partyIds = listOf(
+                grant[AuthorizationGrantTable.grantedFor],
+                grant[AuthorizationGrantTable.grantedBy],
+                grant[AuthorizationGrantTable.grantedTo]
+            )
 
             val parties = AuthorizationPartyTable
                 .selectAll()
@@ -100,9 +104,12 @@ class ExposedGrantRepository : GrantRepository {
                     party.id to party
                 }
 
-            val grantedFor = parties[grant[AuthorizationGrantTable.grantedFor]] ?: raise(RepositoryReadError.NotFoundError)
-            val grantedBy = parties[grant[AuthorizationGrantTable.grantedBy]] ?: raise(RepositoryReadError.NotFoundError)
-            val grantedTo = parties[grant[AuthorizationGrantTable.grantedTo]] ?: raise(RepositoryReadError.NotFoundError)
+            val grantedFor =
+                parties[grant[AuthorizationGrantTable.grantedFor]] ?: raise(RepositoryReadError.NotFoundError)
+            val grantedBy =
+                parties[grant[AuthorizationGrantTable.grantedBy]] ?: raise(RepositoryReadError.NotFoundError)
+            val grantedTo =
+                parties[grant[AuthorizationGrantTable.grantedTo]] ?: raise(RepositoryReadError.NotFoundError)
             grant.toAuthorizationGrant(grantedFor, grantedBy, grantedTo)
         }
     }
@@ -194,7 +201,11 @@ fun ResultRow.toAuthorizationParty() = AuthorizationParty(
     createdAt = Instant.parse(this[AuthorizationPartyTable.createdAt].toString())
 )
 
-fun ResultRow.toAuthorizationGrant(grantedFor: AuthorizationParty, grantedBy: AuthorizationParty, grantedTo: AuthorizationParty) = AuthorizationGrant(
+fun ResultRow.toAuthorizationGrant(
+    grantedFor: AuthorizationParty,
+    grantedBy: AuthorizationParty,
+    grantedTo: AuthorizationParty
+) = AuthorizationGrant(
     id = this[AuthorizationGrantTable.id].toString(),
     grantStatus = this[AuthorizationGrantTable.grantStatus],
     grantedFor = grantedFor,

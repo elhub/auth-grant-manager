@@ -21,6 +21,7 @@ import org.jetbrains.exposed.sql.javatime.timestamp
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.UUID
+import java.time.Clock
 
 interface DocumentRepository {
     fun find(id: UUID): Either<RepositoryReadError, AuthorizationDocument>
@@ -106,7 +107,7 @@ object AuthorizationDocumentScopeTable : Table("auth.authorization_document_scop
         .references(AuthorizationDocumentTable.id, onDelete = ReferenceOption.CASCADE)
     val authorizationScopeId = long("authorization_scope_id")
         .references(AuthorizationScopeTable.id, onDelete = ReferenceOption.CASCADE)
-    val createdAt = timestamp("created_at").clientDefault { java.time.Instant.now() }
+    val createdAt = timestamp("created_at").clientDefault { Clock.systemUTC().instant() }
     override val primaryKey = PrimaryKey(authorizationDocumentId, authorizationScopeId)
 }
 

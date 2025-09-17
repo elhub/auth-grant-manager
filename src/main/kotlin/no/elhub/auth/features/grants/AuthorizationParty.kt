@@ -1,6 +1,6 @@
 package no.elhub.auth.features.grants
 
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 
 data class AuthorizationParty(
     val id: Long,
