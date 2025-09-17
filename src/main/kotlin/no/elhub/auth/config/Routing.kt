@@ -33,7 +33,7 @@ fun Application.configureRouting() {
             call.respondText("OK", status = HttpStatusCode.OK)
         }
         route(AUTHORIZATION_DOCUMENT) {
-            createDocumentRoute(get(), get())
+            createDocumentRoute(get())
             confirmDocumentRoute(get())
             getDocumentRoute(get())
         }

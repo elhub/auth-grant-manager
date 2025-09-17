@@ -15,7 +15,7 @@ class CreateDocumentHandler(
     private val signatureProvider: SignatureProvider,
     private val repo: DocumentRepository
 ) {
-    suspend operator fun invoke(command: CreateDocumentCommand): Either<CreateDocumentError, UUID> {
+    suspend operator fun invoke(command: CreateDocumentCommand): Either<CreateDocumentError, AuthorizationDocument> {
         val documentBytes = documentGenerator.generate(
             nin = command.requestedTo,
             supplier = command.requestedBy,
