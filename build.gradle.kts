@@ -153,3 +153,9 @@ tasks.named<JavaExec>("run").configure {
     dependsOn("generateTestCerts", "servicesComposeUp", "liquibaseUpdate")
     localEnvVars.forEach { (key, value) -> environment(key, value) }
 }
+
+dependencyCheck {
+    nvd {
+        datafeedUrl = "https://owasp.elhub.cloud"
+    }
+}
