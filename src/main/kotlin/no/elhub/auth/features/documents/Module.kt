@@ -14,7 +14,6 @@ import io.ktor.server.config.ApplicationConfig
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import kotlinx.serialization.json.Json
-import no.elhub.auth.API_PATH
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.documents.common.ExposedDocumentRepository
 import no.elhub.auth.features.documents.confirm.ConfirmDocumentHandler
@@ -39,7 +38,7 @@ import org.koin.dsl.bind
 import org.koin.ktor.ext.get
 import org.koin.ktor.plugin.koinModule
 
-const val DOCUMENTS_PATH = "$API_PATH/authorization-documents"
+const val DOCUMENTS_PATH = "/authorization-documents"
 
 fun Application.module() {
     koinModule {

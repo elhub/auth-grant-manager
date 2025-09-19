@@ -3,7 +3,6 @@ package no.elhub.auth.features.grants
 import io.ktor.server.application.Application
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
-import no.elhub.auth.API_PATH
 import no.elhub.auth.features.grants.common.ExposedGrantRepository
 import no.elhub.auth.features.grants.common.GrantRepository
 import no.elhub.auth.features.grants.get.GetGrantHandler
@@ -17,7 +16,7 @@ import org.koin.dsl.bind
 import org.koin.ktor.ext.get
 import org.koin.ktor.plugin.koinModule
 
-const val GRANTS_PATH = "$API_PATH/authorization-grants"
+const val GRANTS_PATH = "/authorization-grants"
 
 fun Application.module() {
     koinModule {

@@ -14,8 +14,6 @@ fun main(args: Array<String>) {
     EngineMain.main(args)
 }
 
-const val API_PATH = ""
-
 fun Application.module() {
     install(Koin)
     val dataSource = configureDatabase()
