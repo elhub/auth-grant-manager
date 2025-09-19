@@ -23,10 +23,10 @@ class CreateDocumentHandler(
             meteringPointId = command.meteringPoint
         ).getOrElse { return CreateDocumentError.DocumentGenerationError.left() }
 
-        var certChain = certProvider.getCertificateChain()
+        val certChain = certProvider.getCertificateChain()
             .getOrElse { return CreateDocumentError.CertificateRetrievalError.left() }
 
-        var signingCert = certProvider.getCertificate()
+        val signingCert = certProvider.getCertificate()
             .getOrElse { return CreateDocumentError.CertificateRetrievalError.left() }
 
         val dataToSign = signingService.getDataToSign(documentBytes, certChain, signingCert)
