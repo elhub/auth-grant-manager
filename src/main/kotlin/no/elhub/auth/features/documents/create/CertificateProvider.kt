@@ -9,8 +9,8 @@ import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
 
 interface CertificateProvider {
-    suspend fun getCertificate(): Either<CertificateRetrievalError, X509Certificate>
-    suspend fun getCertificateChain(): Either<CertificateRetrievalError, List<X509Certificate>>
+    fun getCertificate(): Either<CertificateRetrievalError, X509Certificate>
+    fun getCertificateChain(): Either<CertificateRetrievalError, List<X509Certificate>>
 }
 
 sealed class CertificateRetrievalError {
@@ -28,7 +28,7 @@ class FileCertificateProvider(
     private val cfg: FileCertificateProviderConfig
 ) : CertificateProvider {
 
-    private suspend fun getCertificateChain(path: String): Either<CertificateRetrievalError, List<X509Certificate>> =
+    private fun getCertificateChain(path: String): Either<CertificateRetrievalError, List<X509Certificate>> =
         Either.catch {
             File(path)
                 .inputStream()
@@ -40,12 +40,12 @@ class FileCertificateProvider(
                 }
         }.mapLeft { CertificateRetrievalError.IOError }
 
-    override suspend fun getCertificate(): Either<CertificateRetrievalError, X509Certificate> =
+    override fun getCertificate(): Either<CertificateRetrievalError, X509Certificate> =
         getCertificateChain(cfg.pathToSigningCertificate)
             .fold(
                 { error -> error.left() },
                 { certificates -> certificates.single().right() }
             )
 
-    override suspend fun getCertificateChain() = getCertificateChain(cfg.pathToCertificateChain)
+    override fun getCertificateChain() = getCertificateChain(cfg.pathToCertificateChain)
 }
