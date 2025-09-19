@@ -20,7 +20,7 @@ data class DocumentRelationships(
 
 typealias HttpRequestBody = JsonApiRequest.SingleDocumentWithRelationships<DocumentRequestAttributes, DocumentRelationships>
 
-fun HttpRequestBody.toCreateDocumentCommand() = CreateDocumentCommand(
+fun HttpRequestBody.toCommand() = Command(
     type = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
     requestedBy = this.data.relationships.requestedBy.data.id,
     requestedTo = this.data.relationships.requestedTo.data.id,

@@ -17,7 +17,7 @@ import kotlinx.serialization.json.Json
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.documents.common.ExposedDocumentRepository
 import no.elhub.auth.features.documents.confirm.ConfirmDocumentHandler
-import no.elhub.auth.features.documents.create.CreateDocumentHandler
+import no.elhub.auth.features.documents.create.Handler as CreateDocumentHandler
 import no.elhub.auth.features.documents.create.DocumentGenerator
 import no.elhub.auth.features.documents.create.DocumentSigningService
 import no.elhub.auth.features.documents.create.HashicorpVaultSignatureProvider

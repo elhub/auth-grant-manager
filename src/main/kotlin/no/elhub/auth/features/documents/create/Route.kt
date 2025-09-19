@@ -6,24 +6,28 @@ import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
-import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.documents.common.toResponse
-import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 
-fun Route.createDocumentRoute(createHandler: CreateDocumentHandler) {
+fun Route.createDocumentRoute(handler: Handler) {
     post {
         val requestBody = call.receive<HttpRequestBody>()
 
-        val document = createHandler(requestBody.toCreateDocumentCommand())
+        val command = requestBody.toCommand()
+            .getOrElse { errors ->
+                call.respond(HttpStatusCode.BadRequest)
+                return@post
+            }
+
+        val document = handler(command)
             .getOrElse { error ->
                 when (error) {
                     is
-                    CreateDocumentError.DocumentGenerationError,
-                    CreateDocumentError.MappingError,
-                    CreateDocumentError.SignatureFetchingError,
-                    CreateDocumentError.SigningDataGenerationError,
-                    CreateDocumentError.SigningError,
-                    CreateDocumentError.PersistenceError
+                    Error.DocumentGenerationError,
+                    Error.MappingError,
+                    Error.SignatureFetchingError,
+                    Error.SigningDataGenerationError,
+                    Error.SigningError,
+                    Error.PersistenceError
                         -> call.respond(HttpStatusCode.InternalServerError)
                 }
                 return@post

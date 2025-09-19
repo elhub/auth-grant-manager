@@ -1,15 +1,19 @@
 package no.elhub.auth.features.documents.create
 
 import arrow.core.getOrElse
+import arrow.core.right
 import com.github.mustachejava.DefaultMustacheFactory
 import eu.europa.esig.dss.pades.signature.PAdESService
 import eu.europa.esig.dss.spi.validation.CommonCertificateVerifier
+import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.koin.KoinExtension
 import io.kotest.koin.KoinLifecycleMode
 import io.kotest.matchers.maps.shouldContain
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 import no.elhub.auth.config.loadCerts
 import no.elhub.auth.features.common.httpTestClient
 import no.elhub.auth.features.documents.AuthorizationDocument
@@ -53,25 +57,28 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
             singleOf(::ExposedDocumentRepository) bind DocumentRepository::class
 
-            singleOf(::CreateDocumentHandler)
+            singleOf(::ApiEndUserRepository) bind EndUserRepository::class
+
+            singleOf(::Handler)
         }, mode = KoinLifecycleMode.Root))
 
         xcontext("Generate a Change of Supplier document") {
 
             When("I request a Change of Supplier document") {
 
-                val handler by inject<CreateDocumentHandler>()
+                val handler by inject<Handler>()
 
                 val endUserNin = "01010112345"
 
-                val document = handler(
-                    CreateDocumentCommand(
-                        AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
-                        "supplierABC",
-                        endUserNin,
-                        "abc123",
-                    )
-                ).getOrElse { fail("Document not returned") }
+                val command = Command(
+                    AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                    "supplierABC",
+                    endUserNin,
+                    "abc123",
+                ).getOrElse { fail("Unexpected command construction error") }
+
+                val document = handler(command)
+                    .getOrElse { fail("Document not returned") }
 
                 Then("I should receive a link to a PDF document") {
                     fail("Received the PDF bytes")
@@ -91,6 +98,72 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                 }
             }
 
+            Given("that the end user is not already registered in Elhub") {
+
+                val endUserRepo by inject<EndUserRepository>()
+
+                When("I request a Change of Supplier document") {
+
+                    val handler by inject<Handler>()
+
+                    val endUserNin = "01010112345"
+
+                    val command = Command(
+                        AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                        "supplierABC",
+                        endUserNin,
+                        "abc123",
+                    ).getOrElse { fail("Unexpected command construction error") }
+
+                    val document = handler(command).getOrElse { fail("Document not returned") }
+
+                    Then("the user should be registered in Elhub") {
+                        val endUser = endUserRepo.findOrCreateByNin(endUserNin)
+                            .getOrElse { fail("Could not retrieve the end user") }
+                        endUser.id shouldNotBe null
+                    }
+
+                    Then("I should receive a link to a PDF document") {
+                        fail("Received the PDF bytes")
+                    }
+
+                    Then("that document should be signed by Elhub") {
+                        document.pdfBytes.isSignedByUs() shouldBe true
+                    }
+
+                    Then("that document should contain the necessary metadata") {
+                        // TODO: PDF specific references in these tests?
+                        document.pdfBytes.getEndUserNin() shouldBe endUserNin
+                    }
+
+                    Then("that document should conform to the PDF/A-2b standard") {
+                        document.pdfBytes.isConformant() shouldBe true
+                    }
+                }
+            }
+
+            Given("that no balance supplier ID has been provided") {
+
+                val supplierId = ""
+
+                When("I request a Change of Supplier document") {
+
+                    val handler by inject<Handler>()
+
+                    val endUserNin = "01010112345"
+
+                    val command = Command(
+                        AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                        supplierId,
+                        endUserNin,
+                        "abc123",
+                    )
+
+                    Then("I should receive an error message about missing balance supplier ID") {
+                        command.shouldBeLeft(ValidationError.MissingRequestedBy)
+                    }
+                }
+            }
         }
     }
 }
