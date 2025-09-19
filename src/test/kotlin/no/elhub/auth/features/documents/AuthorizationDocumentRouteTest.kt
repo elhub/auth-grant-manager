@@ -14,7 +14,6 @@ import io.ktor.server.testing.TestApplication
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import no.elhub.auth.config.AUTHORIZATION_DOCUMENT
 import no.elhub.auth.defaultTestApplication
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.devxp.jsonapi.validate
@@ -37,7 +36,7 @@ class AuthorizationDocumentRouteTest :
 
                 val response =
                     testApp.client
-                        .post(AUTHORIZATION_DOCUMENT) {
+                        .post(DOCUMENTS_PATH) {
                             contentType(ContentType.Application.Json)
                             setBody(
                                 """
@@ -99,7 +98,7 @@ class AuthorizationDocumentRouteTest :
 
                 // Get the pdf to validate signature
                 val document =
-                    testApp.client.get("$AUTHORIZATION_DOCUMENT/${responseBody["data"]?.jsonObject?.get("id")?.jsonPrimitive?.content}.pdf")
+                    testApp.client.get("$DOCUMENTS_PATH/${responseBody["data"]?.jsonObject?.get("id")?.jsonPrimitive?.content}.pdf")
                 DocumentValidationHelper.validateInitialDocumentSignature(document.bodyAsBytes())
             }
         }

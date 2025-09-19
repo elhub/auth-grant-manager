@@ -21,6 +21,7 @@ fun Route.createDocumentRoute(createHandler: CreateDocumentHandler, getHandler: 
                 when (error) {
                     is
                     CreateDocumentError.DocumentGenerationError,
+                    CreateDocumentError.CertificateRetrievalError,
                     CreateDocumentError.MappingError,
                     CreateDocumentError.SignatureFetchingError,
                     CreateDocumentError.SigningDataGenerationError,

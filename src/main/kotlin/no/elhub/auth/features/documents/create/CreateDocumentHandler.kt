@@ -11,6 +11,7 @@ import java.util.UUID
 
 class CreateDocumentHandler(
     private val documentGenerator: DocumentGenerator,
+    private val certProvider: CertificateProvider,
     private val signingService: DocumentSigningService,
     private val signatureProvider: SignatureProvider,
     private val repo: DocumentRepository
@@ -22,13 +23,19 @@ class CreateDocumentHandler(
             meteringPointId = command.meteringPoint
         ).getOrElse { return CreateDocumentError.DocumentGenerationError.left() }
 
-        val dataToSign = signingService.getDataToSign(documentBytes)
+        val certChain = certProvider.getCertificateChain()
+            .getOrElse { return CreateDocumentError.CertificateRetrievalError.left() }
+
+        val signingCert = certProvider.getCertificate()
+            .getOrElse { return CreateDocumentError.CertificateRetrievalError.left() }
+
+        val dataToSign = signingService.getDataToSign(documentBytes, certChain, signingCert)
             .getOrElse { return CreateDocumentError.SigningDataGenerationError.left() }
 
         val signature = signatureProvider.fetchSignature(dataToSign)
             .getOrElse { return CreateDocumentError.SignatureFetchingError.left() }
 
-        val signedDocument = signingService.sign(documentBytes, signature)
+        val signedDocument = signingService.sign(documentBytes, signature, certChain, signingCert)
             .getOrElse { return CreateDocumentError.SigningError.left() }
 
         val documentToCreate = command.toAuthorizationDocument(signedDocument)
@@ -42,6 +49,7 @@ class CreateDocumentHandler(
 
 sealed class CreateDocumentError {
     data object DocumentGenerationError : CreateDocumentError()
+    data object CertificateRetrievalError : CreateDocumentError()
     data object SigningDataGenerationError : CreateDocumentError()
     data object SignatureFetchingError : CreateDocumentError()
     data object SigningError : CreateDocumentError()

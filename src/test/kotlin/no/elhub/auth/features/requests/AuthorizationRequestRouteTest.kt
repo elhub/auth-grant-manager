@@ -12,7 +12,6 @@ import io.ktor.http.contentType
 import io.ktor.server.testing.TestApplication
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
-import no.elhub.auth.config.AUTHORIZATION_REQUEST
 import no.elhub.auth.defaultTestApplication
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.RunPostgresScriptExtension
@@ -36,9 +35,8 @@ class AuthorizationRequestRouteTest :
         }
 
         context("GET /authorization-requests") {
-
             test("Should return 200 OK") {
-                val response = testApp.client.get(AUTHORIZATION_REQUEST)
+                val response = testApp.client.get(REQUESTS_PATH)
                 response.status shouldBe HttpStatusCode.OK
                 val responseJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
                 responseJson.validate {
@@ -115,7 +113,7 @@ class AuthorizationRequestRouteTest :
         context("GET /authorization-requests/{id}") {
 
             test("Should return 200 OK on a valid ID") {
-                val response = testApp.client.get("$AUTHORIZATION_REQUEST/d81e5bf2-8a0c-4348-a788-2a3fab4e77d6")
+                val response = testApp.client.get("$REQUESTS_PATH/d81e5bf2-8a0c-4348-a788-2a3fab4e77d6")
                 response.status shouldBe HttpStatusCode.OK
 
                 val responseJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
@@ -156,7 +154,7 @@ class AuthorizationRequestRouteTest :
             }
 
             test("Should return 400 on an invalid ID format") {
-                val response = testApp.client.get("$AUTHORIZATION_REQUEST/invalid-id")
+                val response = testApp.client.get("$REQUESTS_PATH/invalid-id")
                 response.status shouldBe HttpStatusCode.BadRequest
                 val responseJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
                 responseJson.validate {
@@ -172,7 +170,7 @@ class AuthorizationRequestRouteTest :
             }
 
             test("Should return 404 on a nonexistent ID") {
-                val response = testApp.client.get("$AUTHORIZATION_REQUEST/167b1be9-f563-4b31-af1a-50439d567ee5")
+                val response = testApp.client.get("$REQUESTS_PATH/167b1be9-f563-4b31-af1a-50439d567ee5")
                 response.status shouldBe HttpStatusCode.NotFound
                 val responseJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
                 responseJson.validate {
@@ -194,7 +192,7 @@ class AuthorizationRequestRouteTest :
 
             test("Should return 201 Created") {
                 val response =
-                    testApp.client.post(AUTHORIZATION_REQUEST) {
+                    testApp.client.post(REQUESTS_PATH) {
                         contentType(ContentType.Application.Json)
                         setBody(
                             """
@@ -264,7 +262,7 @@ class AuthorizationRequestRouteTest :
             // Switch on when stricter validation is added (e.g., schema validation).
             xtest("Should return 400 Bad Request if the requestBody is invalid (added extra attribute)") {
                 val response =
-                    testApp.client.post(AUTHORIZATION_REQUEST) {
+                    testApp.client.post(REQUESTS_PATH) {
                         contentType(ContentType.Application.Json)
                         setBody(
                             """
@@ -311,7 +309,7 @@ class AuthorizationRequestRouteTest :
 
             test("Should return 400 Bad Request if the requestBody is invalid (missing attribute)") {
                 val response =
-                    testApp.client.post(AUTHORIZATION_REQUEST) {
+                    testApp.client.post(REQUESTS_PATH) {
                         contentType(ContentType.Application.Json)
                         setBody(
                             """
