@@ -7,16 +7,17 @@ import io.ktor.server.response.respond
 import io.ktor.server.response.respondBytes
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
-import no.elhub.auth.config.ID
 import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.common.validateId
 import no.elhub.auth.features.documents.common.toResponse
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import java.util.*
 
+const val DOCUMENT_ID_PARAM = "id"
+
 fun Route.getDocumentRoute(handler: GetDocumentHandler) {
-    get(ID) {
-        val id: UUID = validateId(call.parameters[ID])
+    get("/{$DOCUMENT_ID_PARAM}") {
+        val id: UUID = validateId(call.parameters[DOCUMENT_ID_PARAM])
             .getOrElse { err ->
                 val (status, body) = err.toApiErrorResponse()
                 call.respond(status, JsonApiErrorCollection(listOf(body)))
@@ -33,8 +34,8 @@ fun Route.getDocumentRoute(handler: GetDocumentHandler) {
         call.respond(HttpStatusCode.OK, document.toResponse())
     }
 
-    get("{$ID}.pdf") {
-        val id: UUID = validateId(call.parameters[ID])
+    get("/{$DOCUMENT_ID_PARAM}.pdf") {
+        val id: UUID = validateId(call.parameters[DOCUMENT_ID_PARAM])
             .getOrElse { err ->
                 val (status, body) = err.toApiErrorResponse()
                 call.respond(status, JsonApiErrorCollection(listOf(body)))

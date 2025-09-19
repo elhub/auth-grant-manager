@@ -23,12 +23,17 @@ sealed class DocumentGenerationError {
     data object ContentGenerationError : DocumentGenerationError()
 }
 
+data class PdfGeneratorConfig(
+    val mustacheResourcePath: String
+)
+
 class PdfDocumentGenerator(
-    private val mustacheFactory: DefaultMustacheFactory = DefaultMustacheFactory(MustacheConstants.RESOURCES_PATH),
+    private val cfg: PdfGeneratorConfig,
 ) : DocumentGenerator {
 
+    private val mustacheFactory: DefaultMustacheFactory = DefaultMustacheFactory(cfg.mustacheResourcePath)
+
     object MustacheConstants {
-        internal const val RESOURCES_PATH = "templates"
         internal const val TEMPLATE_CHANGE_SUPPLIER_CONTRACT = "contract.mustache"
         internal const val VARIABLE_KEY_NIN = "nin"
         internal const val VARIABLE_KEY_SUPPLIER_ID = "balanceSupplierId"

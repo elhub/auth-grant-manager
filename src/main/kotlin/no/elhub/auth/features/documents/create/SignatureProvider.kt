@@ -10,7 +10,6 @@ import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import kotlinx.serialization.Serializable
-import no.elhub.auth.config.VaultConfig
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.*
@@ -22,6 +21,12 @@ interface SignatureProvider {
 sealed class SignatureFetchingError {
     data object UnexpectedError : SignatureFetchingError()
 }
+
+data class VaultConfig(
+    val url: String,
+    val key: String,
+    val tokenPath: String
+)
 
 class HashicorpVaultSignatureProvider(
     private val client: HttpClient,
@@ -39,10 +44,10 @@ class HashicorpVaultSignatureProvider(
         data class Data(val signature: String)
     }
 
-    private fun readVaultToken(): String {
-        val tokenPath = cfg.tokenPath
-        return Files.readString(Paths.get(tokenPath)).trim()
-    }
+    private fun readVaultToken() =
+        Files.readString(
+            Paths.get(cfg.tokenPath)
+        ).trim()
 
     override suspend fun fetchSignature(digest: ByteArray): Either<SignatureFetchingError, ByteArray> =
         Either.catch {

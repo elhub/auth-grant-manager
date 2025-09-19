@@ -7,7 +7,7 @@ import com.github.dockerjava.api.model.Ports
 import io.kotest.core.listeners.AfterProjectListener
 import io.kotest.core.listeners.BeforeSpecListener
 import io.kotest.core.spec.Spec
-import no.elhub.auth.config.VaultConfig
+import no.elhub.auth.features.documents.create.VaultConfig
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.wait.strategy.Wait
 import org.testcontainers.utility.DockerImageName
@@ -74,5 +74,5 @@ object StopVaultTransitTestContainer : AfterProjectListener {
 val localVaultConfig = VaultConfig(
     url = "http://localhost:$VAULT_PORT/v1/transit",
     key = "test-key",
-    tokenPath = "src/test/resources/vault_token_mock.txt"
+    tokenPath = "src/test/resources/vault_token_mock.txt",
 )

@@ -12,12 +12,10 @@ import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import no.elhub.auth.config.loadCerts
 import no.elhub.auth.features.common.httpTestClient
 import no.elhub.auth.features.documents.TestCertificateUtil
 import no.elhub.auth.features.documents.VaultTransitTestContainerExtension
 import no.elhub.auth.features.documents.localVaultConfig
-import java.io.File
 import java.math.BigInteger
 import java.security.MessageDigest
 import java.util.Base64
@@ -30,24 +28,30 @@ class SigningServiceTest : FunSpec({
         cfg = localVaultConfig
     )
 
-    val signingCertificate: SigningCertificate =
-        loadCerts(File(TestCertificateUtil.Constants.CERTIFICATE_LOCATION)).single()
+    val certProviderConfig = FileCertificateProviderConfig(
+        TestCertificateUtil.Constants.CERTIFICATE_LOCATION,
+        TestCertificateUtil.Constants.CERTIFICATE_LOCATION,
+    )
 
-    val signingCertificateChain: SigningCertificateChain =
-        loadCerts(File(TestCertificateUtil.Constants.CERTIFICATE_LOCATION))
-
+    val certProvider = FileCertificateProvider(certProviderConfig)
     val padesService = PAdESService(CommonCertificateVerifier())
 
-    val signingService =
-        PAdESDocumentSigningService(vaultSignatureProvider, signingCertificate, signingCertificateChain, padesService)
+    val signingService = PAdESDocumentSigningService(padesService)
+
     val unsignedPdfBytes = this::class.java.classLoader.getResourceAsStream("unsigned.pdf")!!.readAllBytes()
 
     test("Should add one signature with proper parameters") {
-        val dataToSign = signingService.getDataToSign(unsignedPdfBytes).shouldBeRight()
+
+        val certChain = certProvider.getCertificateChain().shouldBeRight()
+
+        val signingCert = certProvider.getCertificate().shouldBeRight()
+
+        val dataToSign = signingService.getDataToSign(unsignedPdfBytes, certChain, signingCert).shouldBeRight()
 
         val signatureBytes = vaultSignatureProvider.fetchSignature(dataToSign).shouldBeRight()
 
-        val signedPdfBytes = signingService.sign(unsignedPdfBytes, signatureBytes).shouldBeRight()
+        val signedPdfBytes =
+            signingService.sign(unsignedPdfBytes, signatureBytes, certChain, signingCert).shouldBeRight()
 
         val signedPdf = InMemoryDocument(signedPdfBytes)
 
@@ -73,16 +77,23 @@ class SigningServiceTest : FunSpec({
         // Validate that the signing certificate matches the expected certificate
         val certRef = signature.signingCertificateReference.certificateId
         val certUsed = diagnosticData.getUsedCertificateById(certRef)
-        certUsed.serialNumber shouldBe signingCertificate.serialNumber.toString()
-        certUsed.certificateDN shouldBe signingCertificate.issuerX500Principal.name
+
+        certUsed.serialNumber shouldBe signingCert.serialNumber.toString()
+        certUsed.certificateDN shouldBe signingCert.issuerX500Principal.name
     }
 
     test("Should invalidate signature when PDF is tampered with") {
-        val dataToSign = signingService.getDataToSign(unsignedPdfBytes).shouldBeRight()
+
+        val certChain = certProvider.getCertificateChain().shouldBeRight()
+
+        val signingCert = certProvider.getCertificate().shouldBeRight()
+
+        val dataToSign = signingService.getDataToSign(unsignedPdfBytes, certChain, signingCert).shouldBeRight()
 
         val signatureBytes = vaultSignatureProvider.fetchSignature(dataToSign).shouldBeRight()
 
-        val signedPdfBytes = signingService.sign(unsignedPdfBytes, signatureBytes).shouldBeRight()
+        val signedPdfBytes =
+            signingService.sign(unsignedPdfBytes, signatureBytes, certChain, signingCert).shouldBeRight()
 
         val signedPdf = InMemoryDocument(signedPdfBytes)
 
