@@ -5,7 +5,6 @@ import io.ktor.server.testing.TestApplication
 import no.elhub.auth.features.documents.TestCertificateUtil
 import no.elhub.auth.features.documents.module as documentsModule
 import no.elhub.auth.features.grants.module as grantsModule
-import no.elhub.auth.features.health.module as healthModule
 import no.elhub.auth.features.openapi.module as openapiModule
 import no.elhub.auth.features.requests.module as requestsModule
 
@@ -14,7 +13,6 @@ fun defaultTestApplication(): TestApplication = TestApplication {
         module()
         documentsModule()
         grantsModule()
-        healthModule()
         openapiModule()
         requestsModule()
     }
