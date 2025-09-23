@@ -99,7 +99,7 @@ fun Application.module() {
 
     routing {
         route(DOCUMENTS_PATH) {
-            createDocumentRoute(get(), get())
+            createDocumentRoute(get())
             confirmDocumentRoute(get())
             getDocumentRoute(get())
         }

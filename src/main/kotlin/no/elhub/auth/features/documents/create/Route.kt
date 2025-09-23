@@ -6,15 +6,19 @@ import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
-import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.documents.common.toResponse
-import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 
-fun Route.createDocumentRoute(createHandler: CreateDocumentHandler) {
+fun Route.createDocumentRoute(handler: CreateDocumentHandler) {
     post {
         val requestBody = call.receive<CreateDocumentRequest>()
 
-        val document = createHandler(requestBody.toCreateDocumentCommand())
+        val command = requestBody.toCreateDocumentCommand()
+            .getOrElse { errors ->
+                call.respond(HttpStatusCode.BadRequest)
+                return@post
+            }
+
+        val document = handler(command)
             .getOrElse { error ->
                 when (error) {
                     is
