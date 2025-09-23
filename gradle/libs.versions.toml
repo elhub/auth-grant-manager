@@ -4,7 +4,7 @@ format.version = "1.1"
 [versions]
 arrow = "2.1.2"
 cohort = "2.8.0"
-elhub-gradle = "0.8.4"
+elhub-gradle = "0.8.6"
 elhub-jsonapi-wrapper = "0.2.6"
 exposed = "0.61.0"
 gradle-docker = "0.17.12"
