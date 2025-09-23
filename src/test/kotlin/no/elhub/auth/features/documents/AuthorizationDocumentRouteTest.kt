@@ -80,7 +80,7 @@ class AuthorizationDocumentRouteTest :
                             "status" shouldBe "Pending"
                         }
                         "relationships" {
-                            "requestedBy" {
+                            "supplierId" {
                                 "data" {
                                     "id" shouldBe "12345678901"
                                     "type" shouldBe "User"

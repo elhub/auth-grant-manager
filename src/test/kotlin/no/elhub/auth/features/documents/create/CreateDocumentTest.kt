@@ -25,6 +25,30 @@ import org.koin.test.KoinTest
 import org.koin.test.inject
 import kotlin.test.fail
 
+
+// TODO: Provide a valid supplier ID
+private const val VALID_SUPPLIER_ID = "abc123"
+private const val INVALID_SUPPLIER_ID = "^%)"
+
+private const val VALID_SUPPLIER_NAME = "Supplier AS"
+
+private const val VALID_END_USER_ID = "01010112345"
+private const val INVALID_END_USER_ID = "^%)"
+
+// TODO: Provide a valid metering point
+private const val VALID_METERING_POINT_ID = "abc123"
+private const val INVALID_METERING_POINT_ID = "^%)"
+
+private const val VALID_METERING_POINT_ADDRESS = "Adressevegen 1, 1234"
+
+// TODO: Provide a valid signing party ID
+private const val VALID_SIGNING_PARTY_ID = "abc123"
+
+private const val VALID_CONTRACT_NAME = "Contract 123"
+
+private const val BLANK = ""
+private const val EMPTY = " "
+
 /*
  * As a balance supplier or service provider
  * I want to generate a Change of Supplier document
@@ -64,15 +88,25 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
             When("I request a Change of Supplier document") {
 
-                val handler by inject<CreateDocumentHandler>()
+                val supplierId = VALID_SUPPLIER_ID
+                val supplierName = VALID_SUPPLIER_NAME
+                val endUserId = VALID_END_USER_ID
+                val meteringPointId = VALID_METERING_POINT_ID
+                val meteringPointAddress = VALID_METERING_POINT_ADDRESS
+                val signingPartyId = VALID_SIGNING_PARTY_ID
+                val contractName = VALID_CONTRACT_NAME
 
-                val endUserNin = "01010112345"
+                val handler by inject<CreateDocumentHandler>()
 
                 val command = CreateDocumentCommand(
                     AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
-                    "supplierABC",
-                    endUserNin,
-                    "abc123",
+                    supplierId,
+                    supplierName,
+                    endUserId,
+                    meteringPointId,
+                    meteringPointAddress,
+                    signingPartyId,
+                    contractName,
                 ).getOrElse { fail("Unexpected command construction error") }
 
                 val document = handler(command)
@@ -88,7 +122,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
                 Then("that document should contain the necessary metadata") {
                     // TODO: PDF specific references in these tests?
-                    document.pdfBytes.getEndUserNin() shouldBe endUserNin
+                    document.pdfBytes.getEndUserNin() shouldBe endUserId
                 }
 
                 Then("that document should conform to the PDF/A-2b standard") {
@@ -102,21 +136,31 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
                 When("I request a Change of Supplier document") {
 
-                    val handler by inject<CreateDocumentHandler>()
+                    val supplierId = VALID_SUPPLIER_ID
+                    val supplierName = VALID_SUPPLIER_NAME
+                    val endUserId = VALID_END_USER_ID
+                    val meteringPointId = VALID_METERING_POINT_ID
+                    val meteringPointAddress = VALID_METERING_POINT_ADDRESS
+                    val signingPartyId = VALID_SIGNING_PARTY_ID
+                    val contractName = VALID_CONTRACT_NAME
 
-                    val endUserNin = "01010112345"
+                    val handler by inject<CreateDocumentHandler>()
 
                     val command = CreateDocumentCommand(
                         AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
-                        "supplierABC",
-                        endUserNin,
-                        "abc123",
+                        supplierId,
+                        supplierName,
+                        endUserId,
+                        meteringPointId,
+                        meteringPointAddress,
+                        signingPartyId,
+                        contractName,
                     ).getOrElse { fail("Unexpected command construction error") }
 
                     val document = handler(command).getOrElse { fail("Document not returned") }
 
                     Then("the user should be registered in Elhub") {
-                        val endUser = endUserRepo.findOrCreateByNin(endUserNin)
+                        val endUser = endUserRepo.findOrCreateByNin(endUserId)
                             .getOrElse { fail("Could not retrieve the end user") }
                         endUser.id shouldNotBe null
                     }
@@ -131,7 +175,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
                     Then("that document should contain the necessary metadata") {
                         // TODO: PDF specific references in these tests?
-                        document.pdfBytes.getEndUserNin() shouldBe endUserNin
+                        document.pdfBytes.getEndUserNin() shouldBe endUserId
                     }
 
                     Then("that document should conform to the PDF/A-2b standard") {
@@ -142,23 +186,309 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
             Given("that no balance supplier ID has been provided") {
 
-                val supplierId = ""
+                val supplierId = BLANK
+                val supplierName = VALID_SUPPLIER_NAME
+                val endUserId = VALID_END_USER_ID
+                val meteringPointId = VALID_METERING_POINT_ID
+                val meteringPointAddress = VALID_METERING_POINT_ADDRESS
+                val signingPartyId = VALID_SIGNING_PARTY_ID
+                val contractName = VALID_CONTRACT_NAME
+                When("I request a Change of Supplier document") {
+
+                    val handler by inject<CreateDocumentHandler>()
+
+                    val command = CreateDocumentCommand(
+                        AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                        supplierId,
+                        supplierName,
+                        endUserId,
+                        meteringPointId,
+                        meteringPointAddress,
+                        signingPartyId,
+                        contractName,
+                    )
+
+                    Then("I should receive an error message about missing balance supplier ID") {
+                        command.shouldBeLeft(listOf(ValidationError.MissingSupplierId))
+                    }
+                }
+            }
+
+            Given("that an invalid balance supplier ID has been provided (GLN)") {
+
+                val supplierId = INVALID_SUPPLIER_ID
+                val supplierName = VALID_SUPPLIER_NAME
+                val endUserId = VALID_END_USER_ID
+                val meteringPointId = VALID_METERING_POINT_ID
+                val meteringPointAddress = VALID_METERING_POINT_ADDRESS
+                val signingPartyId = VALID_SIGNING_PARTY_ID
+                val contractName = VALID_CONTRACT_NAME
 
                 When("I request a Change of Supplier document") {
 
                     val handler by inject<CreateDocumentHandler>()
 
-                    val endUserNin = "01010112345"
+                    val command = CreateDocumentCommand(
+                        AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                        supplierId,
+                        supplierName,
+                        endUserId,
+                        meteringPointId,
+                        meteringPointAddress,
+                        signingPartyId,
+                        contractName,
+                    )
+
+                    Then("I should receive an error message about invalid balance supplier ID") {
+                        command.shouldBeLeft(listOf(ValidationError.InvalidRequestedFrom))
+                    }
+                }
+            }
+
+            Given("that no balance suppliername has been provided") {
+
+                val supplierId = VALID_SUPPLIER_ID
+                val supplierName = BLANK
+                val endUserId = VALID_END_USER_ID
+                val meteringPointId = VALID_METERING_POINT_ID
+                val meteringPointAddress = VALID_METERING_POINT_ADDRESS
+                val signingPartyId = VALID_SIGNING_PARTY_ID
+                val contractName = VALID_CONTRACT_NAME
+
+                When("I request a Change of Supplier document") {
+
+                    val handler by inject<CreateDocumentHandler>()
 
                     val command = CreateDocumentCommand(
                         AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
                         supplierId,
-                        endUserNin,
-                        "abc123",
+                        supplierName,
+                        endUserId,
+                        meteringPointId,
+                        meteringPointAddress,
+                        signingPartyId,
+                        contractName,
                     )
 
-                    Then("I should receive an error message about missing balance supplier ID") {
-                        command.shouldBeLeft(listOf(ValidationError.MissingRequestedBy))
+                    Then("I should receive an error message about missing balance supplier name") {
+                        command.shouldBeLeft(listOf(ValidationError.MissingSupplierName))
+                    }
+                }
+            }
+
+            Given("that no end user ID has been provided (NIN/GLN)") {
+
+                val supplierId = VALID_SUPPLIER_ID
+                val supplierName = VALID_SUPPLIER_NAME
+                val endUserId = BLANK
+                val meteringPointId = VALID_METERING_POINT_ID
+                val meteringPointAddress = VALID_METERING_POINT_ADDRESS
+                val signingPartyId = VALID_SIGNING_PARTY_ID
+                val contractName = VALID_CONTRACT_NAME
+
+                When("I request a Change of Supplier document") {
+
+                    val handler by inject<CreateDocumentHandler>()
+
+                    val command = CreateDocumentCommand(
+                        AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                        supplierId,
+                        supplierName,
+                        endUserId,
+                        meteringPointId,
+                        meteringPointAddress,
+                        signingPartyId,
+                        contractName,
+                    )
+
+                    Then("I should receive an error message about missing end user ID") {
+                        command.shouldBeLeft(listOf(ValidationError.MissingRequestedTo))
+                    }
+                }
+            }
+
+            Given("that an invalid end user ID has been provided (NIN/GLN)") {
+
+                val supplierId = VALID_SUPPLIER_ID
+                val supplierName = VALID_SUPPLIER_NAME
+                val endUserId = INVALID_END_USER_ID
+                val meteringPointId = VALID_METERING_POINT_ID
+                val meteringPointAddress = VALID_METERING_POINT_ADDRESS
+                val signingPartyId = VALID_SIGNING_PARTY_ID
+                val contractName = VALID_CONTRACT_NAME
+
+                When("I request a Change of Supplier document") {
+
+                    val handler by inject<CreateDocumentHandler>()
+
+                    val command = CreateDocumentCommand(
+                        AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                        supplierId,
+                        supplierName,
+                        endUserId,
+                        meteringPointId,
+                        meteringPointAddress,
+                        signingPartyId,
+                        contractName,
+                    )
+
+                    Then("I should receive an error message about invalid end user ID") {
+                        command.shouldBeLeft(listOf(ValidationError.InvalidRequestedTo))
+                    }
+                }
+            }
+
+            Given("that no metering point ID has been provided") {
+
+                val supplierId = VALID_SUPPLIER_ID
+                val supplierName = VALID_SUPPLIER_NAME
+                val endUserId = VALID_END_USER_ID
+                val meteringPointId = BLANK
+                val meteringPointAddress = VALID_METERING_POINT_ADDRESS
+                val signingPartyId = VALID_SIGNING_PARTY_ID
+                val contractName = VALID_CONTRACT_NAME
+
+                When("I request a Change of Supplier document") {
+
+                    val handler by inject<CreateDocumentHandler>()
+
+                    val command = CreateDocumentCommand(
+                        AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                        supplierId,
+                        supplierName,
+                        endUserId,
+                        meteringPointId,
+                        meteringPointAddress,
+                        signingPartyId,
+                        contractName,
+                    )
+
+                    Then("I should receive an error message about missing metering point ID") {
+                        command.shouldBeLeft(listOf(ValidationError.MissingMeteringPointId))
+                    }
+                }
+            }
+
+            Given("that an invalid metering point ID has been provided") {
+
+                val supplierId = VALID_SUPPLIER_ID
+                val supplierName = VALID_SUPPLIER_NAME
+                val endUserId = VALID_END_USER_ID
+                val meteringPointId = INVALID_METERING_POINT_ID
+                val meteringPointAddress = VALID_METERING_POINT_ADDRESS
+                val signingPartyId = VALID_SIGNING_PARTY_ID
+                val contractName = VALID_CONTRACT_NAME
+
+                When("I request a Change of Supplier document") {
+
+                    val handler by inject<CreateDocumentHandler>()
+
+                    val command = CreateDocumentCommand(
+                        AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                        supplierId,
+                        supplierName,
+                        endUserId,
+                        meteringPointId,
+                        meteringPointAddress,
+                        signingPartyId,
+                        contractName,
+                    )
+
+                    Then("I should receive an error message about invalid metering point ID") {
+                        command.shouldBeLeft(listOf(ValidationError.InvalidMeteringPointId))
+                    }
+                }
+            }
+
+            Given("that no metering point address has been provided") {
+
+                val supplierId = VALID_SUPPLIER_ID
+                val supplierName = VALID_SUPPLIER_NAME
+                val endUserId = VALID_END_USER_ID
+                val meteringPointId = VALID_METERING_POINT_ID
+                val meteringPointAddress = BLANK
+                val signingPartyId = VALID_SIGNING_PARTY_ID
+                val contractName = VALID_CONTRACT_NAME
+
+                When("I request a Change of Supplier document") {
+
+                    val handler by inject<CreateDocumentHandler>()
+
+                    val command = CreateDocumentCommand(
+                        AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                        supplierId,
+                        supplierName,
+                        endUserId,
+                        meteringPointId,
+                        meteringPointAddress,
+                        signingPartyId,
+                        contractName,
+                    )
+
+                    Then("I should receive an error message about missing metering point address") {
+                        command.shouldBeLeft(listOf(ValidationError.MissingMeteringPointAddress))
+                    }
+                }
+            }
+
+            Given("that no signing party ID has been provided (NIN)") {
+
+                val supplierId = VALID_SUPPLIER_ID
+                val supplierName = VALID_SUPPLIER_NAME
+                val endUserId = VALID_END_USER_ID
+                val meteringPointId = VALID_METERING_POINT_ID
+                val meteringPointAddress = VALID_METERING_POINT_ADDRESS
+                val signingPartyId = BLANK
+                val contractName = VALID_CONTRACT_NAME
+
+                When("I request a Change of Supplier document") {
+
+                    val handler by inject<CreateDocumentHandler>()
+
+                    val command = CreateDocumentCommand(
+                        AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                        supplierId,
+                        supplierName,
+                        endUserId,
+                        meteringPointId,
+                        meteringPointAddress,
+                        signingPartyId,
+                        contractName,
+                    )
+
+                    Then("I should receive an error message about missing signing party ID") {
+                        command.shouldBeLeft(listOf(ValidationError.MissingSigningPartyId))
+                    }
+                }
+            }
+
+            Given("that no contract name has been provided") {
+
+                val supplierId = VALID_SUPPLIER_ID
+                val supplierName = VALID_SUPPLIER_NAME
+                val endUserId = VALID_END_USER_ID
+                val meteringPointId = VALID_METERING_POINT_ID
+                val meteringPointAddress = VALID_METERING_POINT_ADDRESS
+                val signingPartyId = VALID_SIGNING_PARTY_ID
+                val contractName = BLANK
+
+                When("I request a Change of Supplier document") {
+
+                    val handler by inject<CreateDocumentHandler>()
+
+                    val command = CreateDocumentCommand(
+                        AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                        supplierId,
+                        supplierName,
+                        endUserId,
+                        meteringPointId,
+                        meteringPointAddress,
+                        signingPartyId,
+                        contractName,
+                    )
+
+                    Then("I should receive an error message about missing contract name") {
+                        command.shouldBeLeft(listOf(ValidationError.MissingContractName))
                     }
                 }
             }

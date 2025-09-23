@@ -60,6 +60,7 @@ di-koin-ksp-compiler = { group = "io.insert-koin", name = "koin-ksp-compiler", v
 di-koin-ktor = { group = "io.insert-koin", name = "koin-ktor", version.ref = "koin" }
 di-koin-logger-slf4j = { group = "io.insert-koin", name = "koin-logger-slf4j", version.ref = "koin" }
 fp-arrow-core = { group = "io.arrow-kt", name = "arrow-core", version.ref = "arrow" }
+fp-arrow-core-high-arity = { group = "io.arrow-kt", name = "arrow-core-high-arity", version.ref = "arrow" }
 fp-arrow-fx-coroutines = { group = "io.arrow-kt", name = "arrow-fx-coroutines", version.ref = "arrow" }
 json-skema = { group = "com.github.erosb", name = "json-sKema", version.ref = "json-skema" }
 kotlinx-datetime = { group = "org.jetbrains.kotlinx", name = "kotlinx-datetime", version.ref = "kotlinx-datetime" }
@@ -112,7 +113,7 @@ database = ["database-exposed-core", "database-exposed-dao", "database-exposed-j
   "database-liquibase-core", "database-postgresql"]
 dependency-injection = ["di-koin-ktor", "di-koin-logger-slf4j", "di-koin-annotations"]
 documentation = ["ktor-server-swagger"]
-functional-programming = ["fp-arrow-core", "fp-arrow-fx-coroutines"]
+functional-programming = ["fp-arrow-core", "fp-arrow-core-high-arity", "fp-arrow-fx-coroutines"]
 ktor = ["ktor-server-core", "ktor-server-netty", "ktor-server-content-negotiation", "ktor-server-config-yaml", "ktor-client-core", "ktor-client-cio",
   "ktor-client-content-negotiation", "ktor-client-logging", "ktor-server-status-pages"]
 logging = ["ktor-server-call-logging", "logging-slf4j-simple", "logging-oshai-kotlin-logging"]

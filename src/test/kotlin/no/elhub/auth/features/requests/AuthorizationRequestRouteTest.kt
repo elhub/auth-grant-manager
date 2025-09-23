@@ -52,7 +52,7 @@ class AuthorizationRequestRouteTest :
                                 "validTo".shouldNotBeNull()
                             }
                             "relationships" {
-                                "requestedBy" {
+                                "supplierId" {
                                     "data" {
                                         "id" shouldBe "84797600005"
                                         "type" shouldBe "Organization"
@@ -84,7 +84,7 @@ class AuthorizationRequestRouteTest :
                                 "validTo".shouldNotBeNull()
                             }
                             "relationships" {
-                                "requestedBy" {
+                                "supplierId" {
                                     "data" {
                                         "id" shouldBe "84797600005"
                                         "type" shouldBe "Organization"
@@ -129,7 +129,7 @@ class AuthorizationRequestRouteTest :
                             "validTo".shouldNotBeNull()
                         }
                         "relationships" {
-                            "requestedBy" {
+                            "supplierId" {
                                 "data" {
                                     "id" shouldBe "84797600005"
                                     "type" shouldBe "Organization"
@@ -203,7 +203,7 @@ class AuthorizationRequestRouteTest :
                                         "requestType": "ChangeOfSupplierConfirmation"
                                     },
                                     "relationships": {
-                                        "requestedBy": {
+                                        "supplierId": {
                                             "data": {
                                                 "id": "12345678901",
                                                 "type": "Organization"
@@ -238,7 +238,7 @@ class AuthorizationRequestRouteTest :
                             "validTo".shouldNotBeNull()
                         }
                         "relationships" {
-                            "requestedBy" {
+                            "supplierId" {
                                 "data" {
                                     "id" shouldBe "12345678901"
                                     "type" shouldBe "Organization"
@@ -274,7 +274,7 @@ class AuthorizationRequestRouteTest :
                                         "foo": "bar"
                                     },
                                     "relationships": {
-                                        "requestedBy": {
+                                        "supplierId": {
                                             "data": {
                                                 "id": "0847976000005",
                                                 "type": "Organization"
@@ -317,7 +317,7 @@ class AuthorizationRequestRouteTest :
                                 "data": {
                                     "type": "AuthorizationRequest",
                                     "relationships": {
-                                        "requestedBy": {
+                                        "supplierId": {
                                             "data": {
                                                 "id": "0847976000005",
                                                 "type": "Organization"
