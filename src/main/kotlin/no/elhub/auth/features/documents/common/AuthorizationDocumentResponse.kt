@@ -19,7 +19,7 @@ data class DocumentResponseAttributes(
 @Serializable
 data class DocumentRelationships(
     val requestedBy: JsonApiRelationshipToOne,
-    val requestedTo: JsonApiRelationshipToOne
+    val requestedFrom: JsonApiRelationshipToOne
 ) : JsonApiRelationships
 
 typealias AuthorizationDocumentResponse = JsonApiResponse.SingleDocumentWithRelationships<DocumentResponseAttributes, DocumentRelationships>
@@ -41,7 +41,7 @@ fun AuthorizationDocument.toResponse() =
                         type = "User"
                     )
                 ),
-                requestedTo = JsonApiRelationshipToOne(
+                requestedFrom = JsonApiRelationshipToOne(
                     data = JsonApiRelationshipData(
                         id = this.requestedTo,
                         type = "User"

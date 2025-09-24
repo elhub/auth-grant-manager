@@ -37,7 +37,7 @@ class ExposedDocumentRepository : DocumentRepository {
                 it[title] = doc.title
                 it[type] = doc.type
                 it[status] = doc.status
-                it[file] = doc.pdfBytes
+                it[file] = doc.file
                 it[requestedBy] = doc.requestedBy
                 it[requestedTo] = doc.requestedTo
                 it[createdAt] = doc.createdAt
@@ -115,7 +115,7 @@ fun ResultRow.toAuthorizationDocument() = AuthorizationDocument(
     title = this[AuthorizationDocumentTable.title],
     type = this[AuthorizationDocumentTable.type],
     status = this[AuthorizationDocumentTable.status],
-    pdfBytes = this[AuthorizationDocumentTable.file],
+    file = this[AuthorizationDocumentTable.file],
     requestedBy = this[AuthorizationDocumentTable.requestedBy],
     requestedTo = this[AuthorizationDocumentTable.requestedTo],
     createdAt = this[AuthorizationDocumentTable.createdAt],

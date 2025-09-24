@@ -12,15 +12,15 @@ import eu.europa.esig.dss.pades.PAdESSignatureParameters
 import eu.europa.esig.dss.pades.signature.PAdESService
 import java.security.cert.X509Certificate
 
-interface DocumentSigningService {
+interface FileSigningService {
     fun getDataToSign(
-        pdfByteArray: ByteArray,
+        file: ByteArray,
         certChain: List<X509Certificate>,
         signingCert: X509Certificate,
     ): Either<DocumentSigningError, ByteArray>
 
-    suspend fun sign(
-        pdfByteArray: ByteArray,
+    suspend fun embedSignatureIntoFile(
+        file: ByteArray,
         signatureBytes: ByteArray,
         certChain: List<X509Certificate>,
         signingCert: X509Certificate,
@@ -34,7 +34,7 @@ sealed class DocumentSigningError {
 
 class PAdESDocumentSigningService(
     private val padesService: PAdESService,
-) : DocumentSigningService {
+) : FileSigningService {
 
     private val defaultSignatureParameters = PAdESSignatureParameters().apply {
         signatureLevel = SignatureLevel.PAdES_BASELINE_B
@@ -43,12 +43,12 @@ class PAdESDocumentSigningService(
     }
 
     override fun getDataToSign(
-        pdfByteArray: ByteArray,
+        file: ByteArray,
         certChain: List<X509Certificate>,
         signingCert: X509Certificate,
     ): Either<DocumentSigningError, ByteArray> = Either.catch {
         padesService.getDataToSign(
-            InMemoryDocument(pdfByteArray),
+            InMemoryDocument(file),
             defaultSignatureParameters.apply {
                 certificateChain = certChain.map(::CertificateToken)
                 signingCertificate = CertificateToken(signingCert)
@@ -56,13 +56,13 @@ class PAdESDocumentSigningService(
         ).bytes
     }.mapLeft { DocumentSigningError.SigningDataGenerationError }
 
-    override suspend fun sign(
-        pdfByteArray: ByteArray,
+    override suspend fun embedSignatureIntoFile(
+        file: ByteArray,
         signatureBytes: ByteArray,
         certChain: List<X509Certificate>,
         signingCert: X509Certificate,
     ): Either<DocumentSigningError, ByteArray> = sign(
-        InMemoryDocument(pdfByteArray),
+        InMemoryDocument(file),
         SignatureValue(defaultSignatureParameters.signatureAlgorithm, signatureBytes),
         certChain.map(::CertificateToken),
         CertificateToken(signingCert),
