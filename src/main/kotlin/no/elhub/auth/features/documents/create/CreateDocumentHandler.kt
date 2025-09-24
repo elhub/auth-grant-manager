@@ -60,16 +60,16 @@ sealed class CreateDocumentError {
     data object PersistenceError : CreateDocumentError()
 }
 
-fun CreateDocumentCommand.toAuthorizationDocument(pdfBytes: ByteArray): Either<CreateDocumentError.MappingError, AuthorizationDocument> =
+fun CreateDocumentCommand.toAuthorizationDocument(file: ByteArray): Either<CreateDocumentError.MappingError, AuthorizationDocument> =
     Either.catch {
         AuthorizationDocument(
             id = UUID.randomUUID(),
             title = "Title",
-            file = pdfBytes,
+            file = file,
             type = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
             status = AuthorizationDocument.Status.Pending,
             requestedBy = this.requestedBy,
-            requestedTo = this.requestedFrom,
+            requestedFrom = this.requestedFrom,
             createdAt = LocalDateTime.now(),
             updatedAt = LocalDateTime.now()
         )

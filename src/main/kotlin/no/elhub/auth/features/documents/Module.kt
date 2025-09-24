@@ -25,9 +25,9 @@ import no.elhub.auth.features.documents.create.FileCertificateProviderConfig
 import no.elhub.auth.features.documents.create.FileGenerator
 import no.elhub.auth.features.documents.create.FileSigningService
 import no.elhub.auth.features.documents.create.HashicorpVaultSignatureProvider
-import no.elhub.auth.features.documents.create.PAdESDocumentSigningService
 import no.elhub.auth.features.documents.create.PdfGenerator
 import no.elhub.auth.features.documents.create.PdfGeneratorConfig
+import no.elhub.auth.features.documents.create.PdfSigningService
 import no.elhub.auth.features.documents.create.SignatureProvider
 import no.elhub.auth.features.documents.create.VaultConfig
 import no.elhub.auth.features.documents.create.createDocumentRoute
@@ -52,7 +52,7 @@ fun Application.module() {
         }
         singleOf(::FileCertificateProvider) bind CertificateProvider::class
         single { PAdESService(CommonCertificateVerifier()) }
-        singleOf(::PAdESDocumentSigningService) bind FileSigningService::class
+        singleOf(::PdfSigningService) bind FileSigningService::class
 
         factory {
             HttpClient(CIO) {

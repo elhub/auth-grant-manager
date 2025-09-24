@@ -10,7 +10,7 @@ data class AuthorizationDocument(
     val status: Status,
     val file: ByteArray,
     val requestedBy: String,
-    val requestedTo: String,
+    val requestedFrom: String,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime,
 ) {

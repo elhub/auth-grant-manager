@@ -36,7 +36,7 @@ class SigningServiceTest : FunSpec({
     val certProvider = FileCertificateProvider(certProviderConfig)
     val padesService = PAdESService(CommonCertificateVerifier())
 
-    val signingService = PAdESDocumentSigningService(padesService)
+    val signingService = PdfSigningService(padesService)
 
     val unsignedPdfBytes = this::class.java.classLoader.getResourceAsStream("unsigned.pdf")!!.readAllBytes()
 
