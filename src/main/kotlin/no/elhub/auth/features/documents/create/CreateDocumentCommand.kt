@@ -45,7 +45,7 @@ class CreateDocumentCommand private constructor(
                 { ensure(meteringPointId.isNotBlank()) { ValidationError.MissingMeteringPointId } },
                 { ensure(meteringPointId.matches(Regex(REGEX_METERING_POINT))) { ValidationError.InvalidMeteringPointId } },
                 { ensure(meteringPointAddress.isNotBlank()) { ValidationError.MissingMeteringPointAddress } },
-            ) { _, _, _, _, _, _, _, _, _ ->
+            ) { _, _, _, _, _, _, _, _, _, _ ->
                 CreateDocumentCommand(
                     type,
                     requestedFrom,
