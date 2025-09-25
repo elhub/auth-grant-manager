@@ -195,8 +195,6 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                 val meteringPointAddress = VALID_METERING_POINT_ADDRESS
                 When("I request a Change of Supplier document") {
 
-                    val handler by inject<CreateDocumentHandler>()
-
                     val command = CreateDocumentCommand(
                         AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
                         requestedFrom,
@@ -225,8 +223,6 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                 val meteringPointAddress = VALID_METERING_POINT_ADDRESS
 
                 When("I request a Change of Supplier document") {
-
-                    val handler by inject<CreateDocumentHandler>()
 
                     val command = CreateDocumentCommand(
                         AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
@@ -257,8 +253,6 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
                 When("I request a Change of Supplier document") {
 
-                    val handler by inject<CreateDocumentHandler>()
-
                     val command = CreateDocumentCommand(
                         AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
                         requestedFrom,
@@ -287,8 +281,6 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                 val meteringPointAddress = VALID_METERING_POINT_ADDRESS
 
                 When("I request a Change of Supplier document") {
-
-                    val handler by inject<CreateDocumentHandler>()
 
                     val command = CreateDocumentCommand(
                         AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
@@ -319,8 +311,6 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
                 When("I request a Change of Supplier document") {
 
-                    val handler by inject<CreateDocumentHandler>()
-
                     val command = CreateDocumentCommand(
                         AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
                         requestedFrom,
@@ -349,8 +339,6 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                 val meteringPointAddress = VALID_METERING_POINT_ADDRESS
 
                 When("I request a Change of Supplier document") {
-
-                    val handler by inject<CreateDocumentHandler>()
 
                     val command = CreateDocumentCommand(
                         AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
@@ -381,8 +369,6 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
                 When("I request a Change of Supplier document") {
 
-                    val handler by inject<CreateDocumentHandler>()
-
                     val command = CreateDocumentCommand(
                         AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
                         requestedFrom,
@@ -412,8 +398,6 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
                 When("I request a Change of Supplier document") {
 
-                    val handler by inject<CreateDocumentHandler>()
-
                     val command = CreateDocumentCommand(
                         AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
                         requestedFrom,
@@ -442,8 +426,6 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                 val meteringPointAddress = VALID_METERING_POINT_ADDRESS
 
                 When("I request a Change of Supplier document") {
-
-                    val handler by inject<CreateDocumentHandler>()
 
                     val command = CreateDocumentCommand(
                         AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
