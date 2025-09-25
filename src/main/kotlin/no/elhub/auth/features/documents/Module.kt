@@ -20,14 +20,14 @@ import no.elhub.auth.features.documents.confirm.ConfirmDocumentHandler
 import no.elhub.auth.features.documents.confirm.confirmDocumentRoute
 import no.elhub.auth.features.documents.create.CertificateProvider
 import no.elhub.auth.features.documents.create.CreateDocumentHandler
-import no.elhub.auth.features.documents.create.DocumentGenerator
-import no.elhub.auth.features.documents.create.DocumentSigningService
 import no.elhub.auth.features.documents.create.FileCertificateProvider
 import no.elhub.auth.features.documents.create.FileCertificateProviderConfig
+import no.elhub.auth.features.documents.create.FileGenerator
+import no.elhub.auth.features.documents.create.FileSigningService
 import no.elhub.auth.features.documents.create.HashicorpVaultSignatureProvider
-import no.elhub.auth.features.documents.create.PAdESDocumentSigningService
-import no.elhub.auth.features.documents.create.PdfDocumentGenerator
+import no.elhub.auth.features.documents.create.PdfGenerator
 import no.elhub.auth.features.documents.create.PdfGeneratorConfig
+import no.elhub.auth.features.documents.create.PdfSigningService
 import no.elhub.auth.features.documents.create.SignatureProvider
 import no.elhub.auth.features.documents.create.VaultConfig
 import no.elhub.auth.features.documents.create.createDocumentRoute
@@ -52,7 +52,7 @@ fun Application.module() {
         }
         singleOf(::FileCertificateProvider) bind CertificateProvider::class
         single { PAdESService(CommonCertificateVerifier()) }
-        singleOf(::PAdESDocumentSigningService) bind DocumentSigningService::class
+        singleOf(::PdfSigningService) bind FileSigningService::class
 
         factory {
             HttpClient(CIO) {
@@ -90,7 +90,7 @@ fun Application.module() {
                 mustacheResourcePath = cfg.property("mustacheResourcePath").getString(),
             )
         }
-        singleOf(::PdfDocumentGenerator) bind DocumentGenerator::class
+        singleOf(::PdfGenerator) bind FileGenerator::class
         singleOf(::ExposedDocumentRepository) bind DocumentRepository::class
         singleOf(::ConfirmDocumentHandler)
         singleOf(::CreateDocumentHandler)

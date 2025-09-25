@@ -11,11 +11,14 @@ import org.apache.pdfbox.pdmodel.PDDocumentInformation
 import java.io.ByteArrayOutputStream
 import java.io.StringWriter
 
-interface DocumentGenerator {
+interface FileGenerator {
     fun generate(
+        customerNin: String,
+        customerName: String,
+        meteringPointAddress: String,
         meteringPointId: String,
-        nin: String,
-        supplier: String
+        balanceSupplierName: String,
+        balanceSupplierContractName: String
     ): Either<DocumentGenerationError, ByteArray>
 }
 
@@ -27,34 +30,36 @@ data class PdfGeneratorConfig(
     val mustacheResourcePath: String
 )
 
-class PdfDocumentGenerator(
-    private val cfg: PdfGeneratorConfig,
-) : DocumentGenerator {
+class PdfGenerator(
+    cfg: PdfGeneratorConfig,
+) : FileGenerator {
 
     private val mustacheFactory: DefaultMustacheFactory = DefaultMustacheFactory(cfg.mustacheResourcePath)
 
     object MustacheConstants {
-        internal const val TEMPLATE_CHANGE_SUPPLIER_CONTRACT = "contract.mustache"
-        internal const val VARIABLE_KEY_NIN = "nin"
-        internal const val VARIABLE_KEY_SUPPLIER_ID = "balanceSupplierId"
-        internal const val VARIABLE_KEY_METER_ID = "meteringPointId"
+        internal const val TEMPLATE_CHANGE_SUPPLIER_CONTRACT = "change_of_supplier.mustache"
+        internal const val VARIABLE_KEY_CUSTOMER_NIN = "customerNin"
+        internal const val VARIABLE_KEY_CUSTOMER_NAME = "customerName"
+        internal const val VARIABLE_KEY_METERING_POINT_ADDRESS = "meteringPointAddress"
+        internal const val VARIABLE_KEY_METERING_POINT_ID = "meteringPointId"
+        internal const val VARIABLE_KEY_BALANCE_SUPPLIER_NAME = "balanceSupplierName"
+        internal const val VARIABLE_KEY_BALANCE_SUPPLIER_CONTRACT_NAME = "balanceSupplierContractName"
     }
 
     object PdfConstants {
-        internal const val PDF_METADATA_KEY_NIN = "nin"
+        internal const val PDF_METADATA_KEY_NIN = "signerNin"
     }
 
     override fun generate(
+        customerNin: String,
+        customerName: String,
+        meteringPointAddress: String,
         meteringPointId: String,
-        nin: String,
-        supplier: String,
+        balanceSupplierName: String,
+        balanceSupplierContractName: String
     ): Either<DocumentGenerationError, ByteArray> = either {
         val contractHtmlString =
-            generateHtml(
-                nin,
-                supplier,
-                meteringPointId,
-            ).getOrElse {
+            generateHtml(customerNin, customerName, meteringPointAddress, meteringPointId, balanceSupplierName, balanceSupplierContractName).getOrElse {
                 return DocumentGenerationError.ContentGenerationError.left()
             }
 
@@ -62,14 +67,17 @@ class PdfDocumentGenerator(
             generatePdfFromHtml(contractHtmlString).getOrElse { return DocumentGenerationError.ContentGenerationError.left() }
 
         return pdfBytes.addMetadataToPdf(
-            mapOf(PdfConstants.PDF_METADATA_KEY_NIN to nin)
+            mapOf(PdfConstants.PDF_METADATA_KEY_NIN to customerNin)
         )
     }
 
     private fun generateHtml(
-        nin: String,
-        supplierId: String,
-        meteringPointId: String
+        customerNin: String,
+        customerName: String,
+        meteringPointAddress: String,
+        meteringPointId: String,
+        balanceSupplierName: String,
+        balanceSupplierContractName: String
     ): Either<DocumentGenerationError, String> = Either.catch {
         StringWriter().apply {
             mustacheFactory
@@ -77,9 +85,12 @@ class PdfDocumentGenerator(
                 .execute(
                     this,
                     mapOf(
-                        MustacheConstants.VARIABLE_KEY_NIN to nin,
-                        MustacheConstants.VARIABLE_KEY_SUPPLIER_ID to supplierId,
-                        MustacheConstants.VARIABLE_KEY_METER_ID to meteringPointId
+                        MustacheConstants.VARIABLE_KEY_CUSTOMER_NIN to customerNin,
+                        MustacheConstants.VARIABLE_KEY_CUSTOMER_NAME to customerName,
+                        MustacheConstants.VARIABLE_KEY_METERING_POINT_ID to meteringPointId,
+                        MustacheConstants.VARIABLE_KEY_METERING_POINT_ADDRESS to meteringPointAddress,
+                        MustacheConstants.VARIABLE_KEY_BALANCE_SUPPLIER_NAME to balanceSupplierName,
+                        MustacheConstants.VARIABLE_KEY_BALANCE_SUPPLIER_CONTRACT_NAME to balanceSupplierContractName
                     )
                 ).flush()
         }.toString()

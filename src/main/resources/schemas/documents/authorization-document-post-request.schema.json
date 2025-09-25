@@ -34,6 +34,10 @@
             "requestedForMeteringPointAddress": {
               "$ref": "authorization-document-definitions.json#/$defs/meta/$defs/requestedForMeteringPointAddress"
             },
+            "balanceSupplierName": {
+              "$ref": "authorization-document-definitions.json#/$defs/meta/$defs/balanceSupplierName"
+            },
+
             "balanceSupplierContractName": {
               "$ref": "authorization-document-definitions.json#/$defs/meta/$defs/balanceSupplierContractName"
             }
@@ -48,9 +52,6 @@
             },
             "requestedFrom": {
               "$ref": "authorization-document-definitions.json#/$defs/relationships/$defs/requestedFrom"
-            },
-            "signedBy": {
-              "$ref": "authorization-document-definitions.json#/$defs/relationships/$defs/signedBy"
             }
           }
         }

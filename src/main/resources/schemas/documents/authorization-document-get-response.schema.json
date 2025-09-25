@@ -38,9 +38,6 @@
             },
             "requestedFrom": {
               "$ref": "authorization-document-definitions.json#/$defs/relationships/$defs/requestedFrom"
-            },
-            "signedBy": {
-              "$ref": "authorization-document-definitions.json#/$defs/relationships/$defs/signedBy"
             }
           }
         },

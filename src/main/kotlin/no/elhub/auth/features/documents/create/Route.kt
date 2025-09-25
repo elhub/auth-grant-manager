@@ -14,13 +14,13 @@ import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 
 fun Route.createDocumentRoute(createHandler: CreateDocumentHandler, getHandler: GetDocumentHandler) {
     post {
-        val requestBody = call.receive<HttpRequestBody>()
+        val requestBody = call.receive<CreateDocumentRequest>()
 
         val documentId = createHandler(requestBody.toCreateDocumentCommand())
             .getOrElse { error ->
                 when (error) {
                     is
-                    CreateDocumentError.DocumentGenerationError,
+                    CreateDocumentError.FileGenerationError,
                     CreateDocumentError.CertificateRetrievalError,
                     CreateDocumentError.MappingError,
                     CreateDocumentError.SignatureFetchingError,

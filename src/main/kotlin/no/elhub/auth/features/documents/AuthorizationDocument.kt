@@ -8,9 +8,9 @@ data class AuthorizationDocument(
     val title: String,
     val type: Type,
     val status: Status,
-    val pdfBytes: ByteArray,
+    val file: ByteArray,
     val requestedBy: String,
-    val requestedTo: String,
+    val requestedFrom: String,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime,
 ) {

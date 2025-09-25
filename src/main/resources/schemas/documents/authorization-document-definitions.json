@@ -67,6 +67,11 @@
           "type": "string",
           "description": "The unique name of a supplier contract associated with the authorization document.",
           "examples": ["ExampleSupplierContract"]
+        },
+        "balanceSupplierName": {
+          "type": "string",
+          "description": "The name of the balance supplier associated with the authorization document.",
+          "examples": ["Example Supplier AS"]
         }
       }
     },

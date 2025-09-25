@@ -36,7 +36,7 @@ class SigningServiceTest : FunSpec({
     val certProvider = FileCertificateProvider(certProviderConfig)
     val padesService = PAdESService(CommonCertificateVerifier())
 
-    val signingService = PAdESDocumentSigningService(padesService)
+    val signingService = PdfSigningService(padesService)
 
     val unsignedPdfBytes = this::class.java.classLoader.getResourceAsStream("unsigned.pdf")!!.readAllBytes()
 
@@ -51,7 +51,7 @@ class SigningServiceTest : FunSpec({
         val signatureBytes = vaultSignatureProvider.fetchSignature(dataToSign).shouldBeRight()
 
         val signedPdfBytes =
-            signingService.sign(unsignedPdfBytes, signatureBytes, certChain, signingCert).shouldBeRight()
+            signingService.embedSignatureIntoFile(unsignedPdfBytes, signatureBytes, certChain, signingCert).shouldBeRight()
 
         val signedPdf = InMemoryDocument(signedPdfBytes)
 
@@ -93,7 +93,7 @@ class SigningServiceTest : FunSpec({
         val signatureBytes = vaultSignatureProvider.fetchSignature(dataToSign).shouldBeRight()
 
         val signedPdfBytes =
-            signingService.sign(unsignedPdfBytes, signatureBytes, certChain, signingCert).shouldBeRight()
+            signingService.embedSignatureIntoFile(unsignedPdfBytes, signatureBytes, certChain, signingCert).shouldBeRight()
 
         val signedPdf = InMemoryDocument(signedPdfBytes)
 
