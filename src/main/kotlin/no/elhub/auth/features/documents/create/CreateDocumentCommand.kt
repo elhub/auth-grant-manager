@@ -8,8 +8,8 @@ import java.util.UUID
 
 // TODO: Use appropriate regex
 private const val REGEX_NUMBERS_LETTERS_SYMBOLS = "^[a-zA-Z0-9_.-]*$"
+private const val REGEX_REQUESTED_FROM = REGEX_NUMBERS_LETTERS_SYMBOLS
 private const val REGEX_REQUESTED_BY = REGEX_NUMBERS_LETTERS_SYMBOLS
-private const val REGEX_REQUESTED_TO = REGEX_NUMBERS_LETTERS_SYMBOLS
 private const val REGEX_METERING_POINT = REGEX_NUMBERS_LETTERS_SYMBOLS
 
 class CreateDocumentCommand private constructor(
@@ -36,10 +36,10 @@ class CreateDocumentCommand private constructor(
             // https://arrow-kt.io/learn/typed-errors/validation/#fail-first-vs-accumulation
             zipOrAccumulate(
                 { ensure(requestedFrom.isNotBlank()) { ValidationError.MissingRequestedFrom } },
-                { ensure(requestedFrom.matches(Regex(REGEX_REQUESTED_BY))) { ValidationError.InvalidRequestedFrom } },
+                { ensure(requestedFrom.matches(Regex(REGEX_REQUESTED_FROM))) { ValidationError.InvalidRequestedFrom } },
                 { ensure(requestedFromName.isNotBlank()) { ValidationError.MissingRequestedFromName } },
                 { ensure(requestedBy.isNotBlank()) { ValidationError.MissingRequestedBy } },
-                { ensure(requestedBy.matches(Regex(REGEX_REQUESTED_TO))) { ValidationError.InvalidRequestedBy } },
+                { ensure(requestedBy.matches(Regex(REGEX_REQUESTED_BY))) { ValidationError.InvalidRequestedBy } },
                 { ensure(balanceSupplierName.isNotBlank()) { ValidationError.MissingBalanceSupplierName } },
                 { ensure(balanceSupplierContractName.isNotBlank()) { ValidationError.MissingBalanceSupplierContractName } },
                 { ensure(meteringPointId.isNotBlank()) { ValidationError.MissingMeteringPointId } },
