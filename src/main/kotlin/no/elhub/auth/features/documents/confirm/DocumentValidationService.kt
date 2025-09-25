@@ -1,8 +1,6 @@
 package no.elhub.auth.features.documents.confirm
 
 import arrow.core.Either
-import arrow.core.left
-import arrow.core.right
 import no.elhub.auth.features.documents.AuthorizationDocument
 import org.apache.commons.lang3.NotImplementedException
 

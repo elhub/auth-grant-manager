@@ -6,14 +6,10 @@ import io.kotest.matchers.shouldBe
 import io.ktor.client.call.body
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
-import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.testing.testApplication
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.jsonObject
-import no.elhub.auth.defaultTestApplication
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.RunPostgresScriptExtension
 import no.elhub.auth.features.grants.common.AuthorizationGrantListResponse

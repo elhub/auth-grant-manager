@@ -29,7 +29,7 @@ fun Route.createRequestRoute(createHandler: CreateRequestHandler, getHandler: Ge
                     is
                     CreateRequestError.MappingError,
                     CreateRequestError.PersistenceError
-                        -> call.respond(HttpStatusCode.InternalServerError)
+                    -> call.respond(HttpStatusCode.InternalServerError)
                 }
                 return@post
             }

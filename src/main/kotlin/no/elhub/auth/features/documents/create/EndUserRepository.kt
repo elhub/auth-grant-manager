@@ -1,13 +1,11 @@
 package no.elhub.auth.features.documents.create
 
 import arrow.core.Either
-import arrow.core.left
 import arrow.core.right
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
-import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import no.elhub.auth.features.common.RepositoryWriteError

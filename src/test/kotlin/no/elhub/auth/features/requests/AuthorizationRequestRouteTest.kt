@@ -1,10 +1,8 @@
 package no.elhub.auth.features.requests
 
 import io.kotest.core.spec.style.FunSpec
-import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.maps.shouldContain
 import io.kotest.matchers.maps.shouldContainKey
-import io.kotest.matchers.maps.shouldContainValue
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.ktor.client.call.body
@@ -12,20 +10,14 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
-import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.config.MapApplicationConfig
-import io.ktor.server.testing.TestApplication
 import io.ktor.server.testing.testApplication
-import io.mockk.InternalPlatformDsl.toArray
-import io.mockk.core.ValueClassSupport.boxedValue
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import no.elhub.auth.defaultTestApplication
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.RunPostgresScriptExtension
 import no.elhub.auth.features.requests.common.AuthorizationRequestListResponse
@@ -35,10 +27,8 @@ import no.elhub.auth.features.requests.create.CreateRequestRelationships
 import no.elhub.auth.features.requests.create.CreateRequestRequest
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipData
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipToOne
-import no.elhub.devxp.jsonapi.request.JsonApiRequest
 import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObjectWithRelationships
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
-import no.elhub.devxp.jsonapi.response.JsonApiErrorObject
 import no.elhub.auth.module as applicationModule
 
 class AuthorizationRequestRouteTest : FunSpec({
