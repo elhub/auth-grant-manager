@@ -16,7 +16,7 @@ import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 fun Route.createRequestRoute(createHandler: CreateRequestHandler, getHandler: GetRequestHandler) {
     post {
         val payload = runCatching {
-            call.receive<HttpRequestBody>()
+            call.receive<CreateRequestRequest>()
         }.getOrElse { exception ->
             val (status, body) = InputError.MalformedInputError.toApiErrorResponse()
             call.respond(status, JsonApiErrorCollection(listOf(body)))
@@ -29,7 +29,7 @@ fun Route.createRequestRoute(createHandler: CreateRequestHandler, getHandler: Ge
                     is
                     CreateRequestError.MappingError,
                     CreateRequestError.PersistenceError
-                    -> call.respond(HttpStatusCode.InternalServerError)
+                        -> call.respond(HttpStatusCode.InternalServerError)
                 }
                 return@post
             }

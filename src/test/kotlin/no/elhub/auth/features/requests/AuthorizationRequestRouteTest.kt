@@ -32,6 +32,7 @@ import no.elhub.auth.features.requests.common.AuthorizationRequestListResponse
 import no.elhub.auth.features.requests.common.AuthorizationRequestResponse
 import no.elhub.auth.features.requests.create.CreateRequestAttributes
 import no.elhub.auth.features.requests.create.CreateRequestRelationships
+import no.elhub.auth.features.requests.create.CreateRequestRequest
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipData
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipToOne
 import no.elhub.devxp.jsonapi.request.JsonApiRequest
@@ -270,7 +271,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                     val response = client.post(REQUESTS_PATH) {
                         contentType(ContentType.Application.Json)
                         setBody(
-                            JsonApiRequest.SingleDocumentWithRelationships<CreateRequestAttributes, CreateRequestRelationships>(
+                            CreateRequestRequest(
                                 data = JsonApiRequestResourceObjectWithRelationships<CreateRequestAttributes, CreateRequestRelationships>(
                                     type = "AuthorizationRequest",
                                     attributes = CreateRequestAttributes(
