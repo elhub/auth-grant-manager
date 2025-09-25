@@ -6,8 +6,8 @@ import arrow.core.raise.zipOrAccumulate
 import no.elhub.auth.features.documents.AuthorizationDocument
 import java.util.UUID
 
+// TODO: Use appropriate regex
 private const val REGEX_NUMBERS_LETTERS_SYMBOLS = "^[a-zA-Z0-9_.-]*$"
-
 private const val REGEX_REQUESTED_BY = REGEX_NUMBERS_LETTERS_SYMBOLS
 private const val REGEX_REQUESTED_TO = REGEX_NUMBERS_LETTERS_SYMBOLS
 private const val REGEX_METERING_POINT = REGEX_NUMBERS_LETTERS_SYMBOLS

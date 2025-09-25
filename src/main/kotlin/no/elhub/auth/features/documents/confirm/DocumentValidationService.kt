@@ -10,6 +10,7 @@ interface DocumentValidationService {
     fun validate(pdfBytes: ByteArray)
 }
 
+// TODO: Implement validation of PDF
 fun ByteArray.hasValidSignature(): Either<DocumentValidationError, Boolean> = throw NotImplementedException()
 
 fun ByteArray.isSignedByUs(): Either<DocumentValidationError, Boolean> = throw NotImplementedException()
@@ -18,7 +19,8 @@ fun ByteArray.isSignedByEndUser(): Either<DocumentValidationError, Boolean> = th
 
 fun ByteArray.isSignedByDesiredSignatory(): Either<DocumentValidationError, Boolean> = throw NotImplementedException()
 
-fun ByteArray.matchesDocumentRequest(document: AuthorizationDocument): Either<DocumentValidationError, Boolean> = throw NotImplementedException()
+fun ByteArray.matchesDocumentRequest(document: AuthorizationDocument): Either<DocumentValidationError, Boolean> =
+    throw NotImplementedException()
 
 fun ByteArray.getEndUserNin(): Either<DocumentValidationError, String> = throw NotImplementedException()
 
