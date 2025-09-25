@@ -25,7 +25,6 @@ import org.koin.test.KoinTest
 import org.koin.test.inject
 import kotlin.test.fail
 
-
 // TODO: Provide a valid supplier ID
 private const val VALID_SUPPLIER_ID = "abc123"
 private const val INVALID_SUPPLIER_ID = "^%)"
@@ -56,33 +55,38 @@ private const val EMPTY = " "
  */
 class CreateDocumentTest : BehaviorSpec(), KoinTest {
     init {
-        extension(KoinExtension(module {
+        extension(
+            KoinExtension(
+                module {
 
-            single {
-                FileCertificateProviderConfig(
-                    TestCertificateUtil.Constants.CERTIFICATE_LOCATION,
-                    TestCertificateUtil.Constants.CERTIFICATE_LOCATION,
-                )
-            }
+                    single {
+                        FileCertificateProviderConfig(
+                            TestCertificateUtil.Constants.CERTIFICATE_LOCATION,
+                            TestCertificateUtil.Constants.CERTIFICATE_LOCATION,
+                        )
+                    }
 
-            singleOf(::FileCertificateProvider) bind CertificateProvider::class
+                    singleOf(::FileCertificateProvider) bind CertificateProvider::class
 
-            single { PAdESService(CommonCertificateVerifier()) }
+                    single { PAdESService(CommonCertificateVerifier()) }
 
-            single { httpTestClient }
-            single { localVaultConfig }
-            singleOf(::HashicorpVaultSignatureProvider) bind SignatureProvider::class
-            singleOf(::PAdESDocumentSigningService) bind DocumentSigningService::class
+                    single { httpTestClient }
+                    single { localVaultConfig }
+                    singleOf(::HashicorpVaultSignatureProvider) bind SignatureProvider::class
+                    singleOf(::PAdESDocumentSigningService) bind DocumentSigningService::class
 
-            single { PdfGeneratorConfig("templates") }
-            singleOf(::PdfDocumentGenerator) bind DocumentGenerator::class
+                    single { PdfGeneratorConfig("templates") }
+                    singleOf(::PdfDocumentGenerator) bind DocumentGenerator::class
 
-            singleOf(::ExposedDocumentRepository) bind DocumentRepository::class
-            single { EndUserApiConfig("baseUrl", "/persons/") }
-            singleOf(::ApiEndUserRepository) bind EndUserRepository::class
+                    singleOf(::ExposedDocumentRepository) bind DocumentRepository::class
+                    single { EndUserApiConfig("baseUrl", "/persons/") }
+                    singleOf(::ApiEndUserRepository) bind EndUserRepository::class
 
-            singleOf(::CreateDocumentHandler)
-        }, mode = KoinLifecycleMode.Root))
+                    singleOf(::CreateDocumentHandler)
+                },
+                mode = KoinLifecycleMode.Root
+            )
+        )
 
         context("Generate a Change of Supplier document") {
 

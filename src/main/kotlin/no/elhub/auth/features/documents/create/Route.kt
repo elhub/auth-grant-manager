@@ -29,7 +29,7 @@ fun Route.createDocumentRoute(handler: CreateDocumentHandler) {
                     CreateDocumentError.SigningDataGenerationError,
                     CreateDocumentError.SigningError,
                     CreateDocumentError.PersistenceError
-                        -> call.respond(HttpStatusCode.InternalServerError)
+                    -> call.respond(HttpStatusCode.InternalServerError)
                 }
                 return@post
             }

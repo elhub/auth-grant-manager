@@ -8,9 +8,9 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
+import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.testing.testApplication
-import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import no.elhub.auth.defaultTestApplication
@@ -30,7 +30,6 @@ class AuthorizationGrantRouteTest : FunSpec({
         RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-grant-scopes.sql"),
         RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-party.sql")
     )
-
 
     context("GET /authorization-grants/{id}") {
         testApplication {
