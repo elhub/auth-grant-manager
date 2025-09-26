@@ -33,6 +33,8 @@ import no.elhub.auth.features.documents.create.VaultConfig
 import no.elhub.auth.features.documents.create.createDocumentRoute
 import no.elhub.auth.features.documents.get.GetDocumentHandler
 import no.elhub.auth.features.documents.get.getDocumentRoute
+import no.elhub.auth.features.documents.query.Handler as QueryHandler
+import no.elhub.auth.features.documents.query.route as queryRoute
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
 import org.koin.ktor.ext.get
@@ -95,6 +97,7 @@ fun Application.module() {
         singleOf(::ConfirmDocumentHandler)
         singleOf(::CreateDocumentHandler)
         singleOf(::GetDocumentHandler)
+        singleOf(::QueryHandler)
     }
 
     routing {
@@ -102,6 +105,7 @@ fun Application.module() {
             createDocumentRoute(get())
             confirmDocumentRoute(get())
             getDocumentRoute(get())
+            queryRoute(get())
         }
     }
 }

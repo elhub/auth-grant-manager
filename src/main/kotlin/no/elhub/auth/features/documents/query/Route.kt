@@ -9,9 +9,9 @@ import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.documents.common.toResponse
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 
-fun Route.queryDocumentsRoute(handler: QueryDocumentsHandler) {
+fun Route.route(handler: Handler) {
     get {
-        val documents = handler(QueryDocumentsQuery())
+        val documents = handler(Query())
             .getOrElse { err ->
                 val (status, body) = err.toApiErrorResponse()
                 call.respond(status, JsonApiErrorCollection(listOf(body)))
