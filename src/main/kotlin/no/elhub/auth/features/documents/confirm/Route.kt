@@ -7,7 +7,7 @@ import io.ktor.server.routing.patch
 
 const val DOCUMENT_ID_PARAM = "id"
 
-fun Route.confirmDocumentRoute(handler: ConfirmDocumentHandler) {
+fun Route.route(handler: Handler) {
     patch("/{${DOCUMENT_ID_PARAM}") {
         call.respond(HttpStatusCode.NotImplemented)
     }

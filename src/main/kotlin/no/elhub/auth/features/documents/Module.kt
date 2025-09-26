@@ -16,8 +16,8 @@ import io.ktor.server.routing.routing
 import kotlinx.serialization.json.Json
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.documents.common.ExposedDocumentRepository
-import no.elhub.auth.features.documents.confirm.ConfirmDocumentHandler
-import no.elhub.auth.features.documents.confirm.confirmDocumentRoute
+import no.elhub.auth.features.documents.confirm.Handler as ConfirmHandler
+import no.elhub.auth.features.documents.confirm.route as confirmRoute
 import no.elhub.auth.features.documents.create.CertificateProvider
 import no.elhub.auth.features.documents.create.FileCertificateProvider
 import no.elhub.auth.features.documents.create.FileCertificateProviderConfig
@@ -94,7 +94,7 @@ fun Application.module() {
         }
         singleOf(::PdfGenerator) bind FileGenerator::class
         singleOf(::ExposedDocumentRepository) bind DocumentRepository::class
-        singleOf(::ConfirmDocumentHandler)
+        singleOf(::ConfirmHandler)
         singleOf(::CreateHandler)
         singleOf(::GetHandler)
         singleOf(::QueryHandler)
@@ -103,7 +103,7 @@ fun Application.module() {
     routing {
         route(DOCUMENTS_PATH) {
             createRoute(get())
-            confirmDocumentRoute(get())
+            confirmRoute(get())
             getRoute(get())
             queryRoute(get())
         }
