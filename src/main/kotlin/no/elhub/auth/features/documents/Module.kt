@@ -19,7 +19,6 @@ import no.elhub.auth.features.documents.common.ExposedDocumentRepository
 import no.elhub.auth.features.documents.confirm.ConfirmDocumentHandler
 import no.elhub.auth.features.documents.confirm.confirmDocumentRoute
 import no.elhub.auth.features.documents.create.CertificateProvider
-import no.elhub.auth.features.documents.create.CreateDocumentHandler
 import no.elhub.auth.features.documents.create.FileCertificateProvider
 import no.elhub.auth.features.documents.create.FileCertificateProviderConfig
 import no.elhub.auth.features.documents.create.FileGenerator
@@ -30,7 +29,8 @@ import no.elhub.auth.features.documents.create.PdfGeneratorConfig
 import no.elhub.auth.features.documents.create.PdfSigningService
 import no.elhub.auth.features.documents.create.SignatureProvider
 import no.elhub.auth.features.documents.create.VaultConfig
-import no.elhub.auth.features.documents.create.createDocumentRoute
+import no.elhub.auth.features.documents.create.Handler as CreateHandler
+import no.elhub.auth.features.documents.create.route as createRoute
 import no.elhub.auth.features.documents.get.Handler as GetHandler
 import no.elhub.auth.features.documents.get.route as getRoute
 import no.elhub.auth.features.documents.query.Handler as QueryHandler
@@ -95,14 +95,14 @@ fun Application.module() {
         singleOf(::PdfGenerator) bind FileGenerator::class
         singleOf(::ExposedDocumentRepository) bind DocumentRepository::class
         singleOf(::ConfirmDocumentHandler)
-        singleOf(::CreateDocumentHandler)
+        singleOf(::CreateHandler)
         singleOf(::GetHandler)
         singleOf(::QueryHandler)
     }
 
     routing {
         route(DOCUMENTS_PATH) {
-            createDocumentRoute(get())
+            createRoute(get())
             confirmDocumentRoute(get())
             getRoute(get())
             queryRoute(get())

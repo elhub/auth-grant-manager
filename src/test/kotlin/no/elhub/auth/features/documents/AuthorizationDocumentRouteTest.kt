@@ -16,10 +16,9 @@ import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.testing.testApplication
-import kotlinx.serialization.json.Json
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.documents.common.AuthorizationDocumentResponse
-import no.elhub.auth.features.documents.create.CreateDocumentRequest
+import no.elhub.auth.features.documents.create.Request
 import no.elhub.auth.features.documents.create.DocumentMeta
 import no.elhub.auth.features.documents.create.DocumentRelationships
 import no.elhub.auth.features.documents.create.DocumentRequestAttributes
@@ -69,35 +68,35 @@ class AuthorizationDocumentRouteTest :
                                 contentType(ContentType.Application.Json)
                                 accept(ContentType.Application.Json)
                                 setBody(
-                                    CreateDocumentRequest(
+                                    Request(
                                         data =
-                                        JsonApiRequestResourceObjectWithRelationshipsAndMeta<DocumentRequestAttributes, DocumentRelationships, DocumentMeta>(
-                                            "AuthorizationDocument",
-                                            attributes = DocumentRequestAttributes(
-                                                AuthorizationDocument.Type.ChangeOfSupplierConfirmation
-                                            ),
-                                            relationships = DocumentRelationships(
-                                                requestedBy = JsonApiRelationshipToOne(
-                                                    JsonApiRelationshipData(
-                                                        "User",
-                                                        "12345678901"
+                                            JsonApiRequestResourceObjectWithRelationshipsAndMeta<DocumentRequestAttributes, DocumentRelationships, DocumentMeta>(
+                                                "AuthorizationDocument",
+                                                attributes = DocumentRequestAttributes(
+                                                    AuthorizationDocument.Type.ChangeOfSupplierConfirmation
+                                                ),
+                                                relationships = DocumentRelationships(
+                                                    requestedBy = JsonApiRelationshipToOne(
+                                                        JsonApiRelationshipData(
+                                                            "User",
+                                                            "12345678901"
+                                                        )
+                                                    ),
+                                                    requestedFrom = JsonApiRelationshipToOne(
+                                                        JsonApiRelationshipData(
+                                                            "User",
+                                                            "98765432109"
+                                                        )
                                                     )
                                                 ),
-                                                requestedFrom = JsonApiRelationshipToOne(
-                                                    JsonApiRelationshipData(
-                                                        "User",
-                                                        "98765432109"
-                                                    )
+                                                meta = DocumentMeta(
+                                                    "Some user",
+                                                    "1234",
+                                                    "Adressevegen 1, 1234 Oslo",
+                                                    "Supplier AS",
+                                                    "My Contract",
                                                 )
-                                            ),
-                                            meta = DocumentMeta(
-                                                "Some user",
-                                                "1234",
-                                                "Adressevegen 1, 1234 Oslo",
-                                                "Supplier AS",
-                                                "My Contract",
                                             )
-                                        )
                                     )
                                 )
                             }

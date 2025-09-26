@@ -28,9 +28,9 @@ data class DocumentMeta(
     val balanceSupplierContractName: String
 ) : JsonApiResourceMeta
 
-typealias CreateDocumentRequest = JsonApiRequest.SingleDocumentWithRelationshipsAndMeta<DocumentRequestAttributes, DocumentRelationships, DocumentMeta>
+typealias Request = JsonApiRequest.SingleDocumentWithRelationshipsAndMeta<DocumentRequestAttributes, DocumentRelationships, DocumentMeta>
 
-fun CreateDocumentRequest.toCreateDocumentCommand() = CreateDocumentCommand(
+fun Request.toCommand() = Command(
     type = this.data.attributes.documentType,
     requestedFrom = this.data.relationships.requestedFrom.data.id,
     requestedFromName = this.data.meta.requestedFromName,
