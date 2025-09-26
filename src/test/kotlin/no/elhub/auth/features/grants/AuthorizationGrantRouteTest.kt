@@ -1,72 +1,85 @@
 package no.elhub.auth.features.grants
 
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import io.ktor.client.call.body
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
-import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.testing.TestApplication
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.jsonObject
-import no.elhub.auth.defaultTestApplication
+import io.ktor.serialization.kotlinx.json.json
+import io.ktor.server.config.MapApplicationConfig
+import io.ktor.server.testing.testApplication
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.RunPostgresScriptExtension
-import no.elhub.devxp.jsonapi.validate
+import no.elhub.auth.features.grants.common.AuthorizationGrantListResponse
+import no.elhub.auth.features.grants.common.AuthorizationGrantResponse
+import no.elhub.auth.features.grants.common.AuthorizationGrantScopesResponse
+import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
+import no.elhub.auth.module as applicationModule
 
-class AuthorizationGrantRouteTest :
-    FunSpec({
-        extensions(
-            PostgresTestContainerExtension,
-            RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-grants.sql"),
-            RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-scopes.sql"),
-            RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-grant-scopes.sql"),
-            RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-party.sql")
-        )
+class AuthorizationGrantRouteTest : FunSpec({
+    extensions(
+        PostgresTestContainerExtension,
+        RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-grants.sql"),
+        RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-scopes.sql"),
+        RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-grant-scopes.sql"),
+        RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-party.sql")
+    )
 
-        lateinit var testApp: TestApplication
+    context("GET /authorization-grants/{id}") {
+        testApplication {
+            client = createClient {
+                install(ContentNegotiation) {
+                    json()
+                }
+            }
 
-        beforeSpec {
-            testApp = defaultTestApplication()
-        }
+            application {
+                applicationModule()
+                module()
+            }
 
-        afterSpec {
-            testApp.stop()
-        }
-
-        context("GET /authorization-grants/{id}") {
+            environment {
+                config = MapApplicationConfig(
+                    "ktor.database.username" to "app",
+                    "ktor.database.password" to "app",
+                    "ktor.database.url" to "jdbc:postgresql://localhost:5432/auth",
+                    "ktor.database.driverClass" to "org.postgresql.Driver",
+                )
+            }
 
             test("Should return 200 OK on a valid ID") {
-                val response = testApp.client.get("$GRANTS_PATH/123e4567-e89b-12d3-a456-426614174000")
+                val response = client.get("$GRANTS_PATH/123e4567-e89b-12d3-a456-426614174000")
                 response.status shouldBe HttpStatusCode.OK
-                val responseJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
-                responseJson.validate {
-                    "data" {
-                        "id".shouldNotBeNull()
-                        "type" shouldBe "AuthorizationGrant"
-                        "attributes" {
-                            "status" shouldBe "Active"
-                            "grantedAt" shouldBe "2025-04-04T04:00"
-                            "validFrom" shouldBe "2025-04-04T04:00"
-                            "validTo" shouldBe "2026-04-04T04:00"
+                val responseJson: AuthorizationGrantResponse = response.body()
+                responseJson.data.apply {
+                    id.shouldNotBeNull()
+                    type shouldBe "AuthorizationGrant"
+                    attributes.shouldNotBeNull()
+                    attributes!!.apply {
+                        status shouldBe "Active"
+                        grantedAt shouldBe "2025-04-04T04:00"
+                        validFrom shouldBe "2025-04-04T04:00"
+                        validTo shouldBe "2026-04-04T04:00"
+                    }
+                    relationships.apply {
+                        grantedFor.apply {
+                            data.apply {
+                                id shouldBe "1111111111111111"
+                                type shouldBe "Person"
+                            }
                         }
-                        "relationships" {
-                            "grantedFor" {
-                                "data" {
-                                    "id" shouldBe "1111111111111111"
-                                    "type" shouldBe "Person"
-                                }
+                        grantedBy.apply {
+                            data.apply {
+                                id shouldBe "1111111111111111"
+                                type shouldBe "Person"
                             }
-                            "grantedBy" {
-                                "data" {
-                                    "id" shouldBe "1111111111111111"
-                                    "type" shouldBe "Person"
-                                }
-                            }
-                            "grantedTo" {
-                                "data" {
-                                    "id" shouldBe "2222222222222222"
-                                    "type" shouldBe "Organization"
-                                }
+                        }
+                        grantedTo.apply {
+                            data.apply {
+                                id shouldBe "2222222222222222"
+                                type shouldBe "Organization"
                             }
                         }
                     }
@@ -74,240 +87,276 @@ class AuthorizationGrantRouteTest :
             }
 
             test("Should return 400 on an invalid ID") {
-                val response = testApp.client.get("$GRANTS_PATH/test")
+                val response = client.get("$GRANTS_PATH/test")
                 response.status shouldBe HttpStatusCode.BadRequest
-                val responseJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
-                responseJson.validate {
-                    "errors".shouldBeList(size = 1) {
-                        item(0) {
-                            "status" shouldBe "400"
-                            "code" shouldBe "INVALID_INPUT"
-                            "title" shouldBe "Invalid input"
-                            "detail" shouldBe "The provided payload did not satisfy the expected format"
-                        }
+                val responseJson: JsonApiErrorCollection = response.body()
+                responseJson.errors.apply {
+                    size shouldBe 1
+                    this[0].apply {
+                        status shouldBe "400"
+                        code shouldBe "INVALID_INPUT"
+                        title shouldBe "Invalid input"
+                        detail shouldBe "The provided payload did not satisfy the expected format"
                     }
                 }
             }
 
             test("Should return 404 on a nonexistent ID") {
-                val response = testApp.client.get("$GRANTS_PATH/123e4567-e89b-12d3-a456-426614174001")
+                val response = client.get("$GRANTS_PATH/123e4567-e89b-12d3-a456-426614174001")
                 response.status shouldBe HttpStatusCode.NotFound
-                val responseJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
-                responseJson.validate {
-                    "errors".shouldBeList(size = 1) {
-                        item(0) {
-                            "status" shouldBe "404"
-                            "code" shouldBe "NOT_FOUND"
-                            "title" shouldBe "Not Found"
-                            "detail" shouldBe "The requested resource could not be found"
-                        }
+                val responseJson: JsonApiErrorCollection = response.body()
+                responseJson.errors.apply {
+                    size shouldBe 1
+                    this[0].apply {
+                        status shouldBe "404"
+                        code shouldBe "NOT_FOUND"
+                        title shouldBe "Not Found"
+                        detail shouldBe "The requested resource could not be found"
                     }
                 }
             }
         }
+    }
 
-        context("GET /authorization-grants/{id}/scopes") {
+    context("GET /authorization-grants/{id}/scopes") {
+        testApplication {
+            client = createClient {
+                install(ContentNegotiation) {
+                    json()
+                }
+            }
+
+            application {
+                applicationModule()
+                module()
+            }
+
+            environment {
+                config = MapApplicationConfig(
+                    "ktor.database.username" to "app",
+                    "ktor.database.password" to "app",
+                    "ktor.database.url" to "jdbc:postgresql://localhost:5432/auth",
+                    "ktor.database.driverClass" to "org.postgresql.Driver",
+                )
+            }
 
             test("Should return 200 OK on a valid ID and a single authorization scope") {
-                val response = testApp.client.get("$GRANTS_PATH/123e4567-e89b-12d3-a456-426614174000/scopes")
+                val response = client.get("$GRANTS_PATH/123e4567-e89b-12d3-a456-426614174000/scopes")
                 response.status shouldBe HttpStatusCode.OK
-
-                val responseJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
-                responseJson.validate {
-                    "data".shouldBeList(size = 1) {
-                        item(0) {
-                            "id" shouldBe "123"
-                            "type" shouldBe "AuthorizationScope"
-                            "attributes" {
-                                "authorizedResourceType" shouldBe "MeteringPoint"
-                                "authorizedResourceId" shouldBe "b7f9c2e4"
-                                "permissionType" shouldBe "ReadAccess"
-                                "createdAt".shouldNotBeNull()
-                            }
+                val responseJson: AuthorizationGrantScopesResponse = response.body()
+                responseJson.data.apply {
+                    size shouldBe 1
+                    this[0].apply {
+                        id shouldBe "123"
+                        type shouldBe "AuthorizationScope"
+                        attributes.shouldNotBeNull()
+                        attributes!!.apply {
+                            authorizedResourceType shouldBe AuthorizationResourceType.MeteringPoint
+                            authorizedResourceId shouldBe "b7f9c2e4"
+                            permissionType shouldBe PermissionType.ReadAccess
+                            createdAt.shouldNotBeNull()
                         }
                     }
                 }
             }
 
             test("Should return 200 OK and an empty list for a grant with no authorization scopes") {
-                val response = testApp.client.get("$GRANTS_PATH/a8f9c2e4-5a3d-4e2b-9c1a-8f6e2d3c4b5a/scopes")
+                val response = client.get("$GRANTS_PATH/a8f9c2e4-5a3d-4e2b-9c1a-8f6e2d3c4b5a/scopes")
                 response.status shouldBe HttpStatusCode.OK
-
-                val responseJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
-
-                responseJson.validate {
-                    "data".shouldBeList(size = 0) {}
-                }
+                val responseJson: AuthorizationGrantScopesResponse = response.body()
+                responseJson.data.size shouldBe 0
             }
 
             test("Should return 200 OK on a valid ID and multiple authorization scope") {
-                val response = testApp.client.get("$GRANTS_PATH/b7f9c2e4-5a3d-4e2b-9c1a-8f6e2d3c4b5a/scopes")
+                val response = client.get("$GRANTS_PATH/b7f9c2e4-5a3d-4e2b-9c1a-8f6e2d3c4b5a/scopes")
                 response.status shouldBe HttpStatusCode.OK
-
-                val responseJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
-                responseJson.validate {
-                    "data".shouldBeList(size = 3) {
-                        item(0) {
-                            "id" shouldBe "345"
-                            "type" shouldBe "AuthorizationScope"
-                            "attributes" {
-                                "authorizedResourceType" shouldBe "MeteringPoint"
-                                "authorizedResourceId" shouldBe "b7f9c2e4"
-                                "permissionType" shouldBe "ChangeOfSupplier"
-                                "createdAt".shouldNotBeNull()
-                            }
+                val responseJson: AuthorizationGrantScopesResponse = response.body()
+                responseJson.data.apply {
+                    size shouldBe 3
+                    this[0].apply {
+                        id shouldBe "345"
+                        type shouldBe "AuthorizationScope"
+                        attributes.shouldNotBeNull()
+                        attributes!!.apply {
+                            authorizedResourceType shouldBe AuthorizationResourceType.MeteringPoint
+                            authorizedResourceId shouldBe "b7f9c2e4"
+                            permissionType shouldBe PermissionType.ChangeOfSupplier
+                            createdAt.shouldNotBeNull()
                         }
-                        item(1) {
-                            "id" shouldBe "567"
-                            "type" shouldBe "AuthorizationScope"
-                            "attributes" {
-                                "authorizedResourceType" shouldBe "Organization"
-                                "authorizedResourceId" shouldBe "b7f9c2e4"
-                                "permissionType" shouldBe "ChangeOfSupplier"
-                                "createdAt".shouldNotBeNull()
-                            }
+                    }
+                    this[1].apply {
+                        id shouldBe "567"
+                        type shouldBe "AuthorizationScope"
+                        attributes.shouldNotBeNull()
+                        attributes!!.apply {
+                            authorizedResourceType shouldBe AuthorizationResourceType.Organization
+                            authorizedResourceId shouldBe "b7f9c2e4"
+                            permissionType shouldBe PermissionType.ChangeOfSupplier
+                            createdAt.shouldNotBeNull()
                         }
-                        item(2) {
-                            "id" shouldBe "678"
-                            "type" shouldBe "AuthorizationScope"
-                            "attributes" {
-                                "authorizedResourceType" shouldBe "Person"
-                                "authorizedResourceId" shouldBe "b7f9c2e4"
-                                "permissionType" shouldBe "FullDelegation"
-                                "createdAt".shouldNotBeNull()
-                            }
+                    }
+                    this[2].apply {
+                        id shouldBe "678"
+                        type shouldBe "AuthorizationScope"
+                        attributes.shouldNotBeNull()
+                        attributes!!.apply {
+                            authorizedResourceType shouldBe AuthorizationResourceType.Person
+                            authorizedResourceId shouldBe "b7f9c2e4"
+                            permissionType shouldBe PermissionType.FullDelegation
+                            createdAt.shouldNotBeNull()
                         }
                     }
                 }
             }
 
             test("Should return 400 on an invalid ID") {
-                val response = testApp.client.get("$GRANTS_PATH/test/scopes")
+                val response = client.get("$GRANTS_PATH/test/scopes")
                 response.status shouldBe HttpStatusCode.BadRequest
-                val responseJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
-                responseJson.validate {
-                    "errors".shouldBeList(size = 1) {
-                        item(0) {
-                            "status" shouldBe "400"
-                            "code" shouldBe "INVALID_INPUT"
-                            "title" shouldBe "Invalid input"
-                            "detail" shouldBe "The provided payload did not satisfy the expected format"
-                        }
+                val responseJson: JsonApiErrorCollection = response.body()
+                responseJson.errors.apply {
+                    size shouldBe 1
+                    this[0].apply {
+                        status shouldBe "400"
+                        code shouldBe "INVALID_INPUT"
+                        title shouldBe "Invalid input"
+                        detail shouldBe "The provided payload did not satisfy the expected format"
                     }
                 }
             }
 
             test("Should return 404 on a nonexistent ID") {
-                val response = testApp.client.get("$GRANTS_PATH/123e4567-e89b-12d3-a456-426614174005/scopes")
+                val response = client.get("$GRANTS_PATH/123e4567-e89b-12d3-a456-426614174005/scopes")
                 response.status shouldBe HttpStatusCode.NotFound
-                val responseJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
-                responseJson.validate {
-                    "errors".shouldBeList(size = 1) {
-                        item(0) {
-                            "status" shouldBe "404"
-                            "title" shouldBe "Not Found"
-                            "detail" shouldBe "The requested resource could not be found"
-                        }
+                val responseJson: JsonApiErrorCollection = response.body()
+                responseJson.errors.apply {
+                    size shouldBe 1
+                    this[0].apply {
+                        status shouldBe "404"
+                        title shouldBe "Not Found"
+                        detail shouldBe "The requested resource could not be found"
                     }
                 }
             }
         }
+    }
 
-        context("GET /authorization-grants") {
+    context("GET /authorization-grants") {
+        testApplication {
+            client = createClient {
+                install(ContentNegotiation) {
+                    json()
+                }
+            }
+
+            application {
+                applicationModule()
+                module()
+            }
+
+            environment {
+                config = MapApplicationConfig(
+                    "ktor.database.username" to "app",
+                    "ktor.database.password" to "app",
+                    "ktor.database.url" to "jdbc:postgresql://localhost:5432/auth",
+                    "ktor.database.driverClass" to "org.postgresql.Driver",
+                )
+            }
 
             test("Should return 200 OK") {
-                val response = testApp.client.get(GRANTS_PATH)
+                val response = client.get(GRANTS_PATH)
                 response.status shouldBe HttpStatusCode.OK
-                val responseJson = Json.parseToJsonElement(response.bodyAsText()).jsonObject
-                responseJson.validate {
-                    "data".shouldBeList(size = 3) {
-                        item(0) {
-                            "id".shouldNotBeNull()
-                            "type" shouldBe "AuthorizationGrant"
-                            "attributes" {
-                                "status" shouldBe "Active"
-                                "grantedAt" shouldBe "2025-04-04T04:00"
-                                "validFrom" shouldBe "2025-04-04T04:00"
-                                "validTo" shouldBe "2026-04-04T04:00"
+                val responseJson: AuthorizationGrantListResponse = response.body()
+                responseJson.data.apply {
+                    size shouldBe 3
+                    this[0].apply {
+                        id.shouldNotBeNull()
+                        type shouldBe "AuthorizationGrant"
+                        attributes.shouldNotBeNull()
+                        attributes!!.apply {
+                            status shouldBe "Active"
+                            grantedAt shouldBe "2025-04-04T04:00"
+                            validFrom shouldBe "2025-04-04T04:00"
+                            validTo shouldBe "2026-04-04T04:00"
+                        }
+                        relationships.apply {
+                            grantedFor.apply {
+                                data.apply {
+                                    id shouldBe "1111111111111111"
+                                    type shouldBe "Person"
+                                }
                             }
-                            "relationships" {
-                                "grantedFor" {
-                                    "data" {
-                                        "id" shouldBe "1111111111111111"
-                                        "type" shouldBe "Person"
-                                    }
+                            grantedBy.apply {
+                                data.apply {
+                                    id shouldBe "1111111111111111"
+                                    type shouldBe "Person"
                                 }
-                                "grantedBy" {
-                                    "data" {
-                                        "id" shouldBe "1111111111111111"
-                                        "type" shouldBe "Person"
-                                    }
-                                }
-                                "grantedTo" {
-                                    "data" {
-                                        "id" shouldBe "2222222222222222"
-                                        "type" shouldBe "Organization"
-                                    }
+                            }
+                            grantedTo.apply {
+                                data.apply {
+                                    id shouldBe "2222222222222222"
+                                    type shouldBe "Organization"
                                 }
                             }
                         }
-                        item(1) {
-                            "id".shouldNotBeNull()
-                            "type" shouldBe "AuthorizationGrant"
-                            "attributes" {
-                                "status" shouldBe "Expired"
-                                "grantedAt" shouldBe "2023-04-04T04:00"
-                                "validFrom" shouldBe "2023-04-04T04:00"
-                                "validTo" shouldBe "2024-04-04T04:00"
+                    }
+                    this[1].apply {
+                        id.shouldNotBeNull()
+                        type shouldBe "AuthorizationGrant"
+                        attributes.shouldNotBeNull()
+                        attributes!!.apply {
+                            status shouldBe "Expired"
+                            grantedAt shouldBe "2023-04-04T04:00"
+                            validFrom shouldBe "2023-04-04T04:00"
+                            validTo shouldBe "2024-04-04T04:00"
+                        }
+                        relationships.apply {
+                            grantedFor.apply {
+                                data.apply {
+                                    id shouldBe "3333333333333333"
+                                    type shouldBe "Person"
+                                }
                             }
-                            "relationships" {
-                                "grantedFor" {
-                                    "data" {
-                                        "id" shouldBe "3333333333333333"
-                                        "type" shouldBe "Person"
-                                    }
+                            grantedBy.apply {
+                                data.apply {
+                                    id shouldBe "3333333333333333"
+                                    type shouldBe "Person"
                                 }
-                                "grantedBy" {
-                                    "data" {
-                                        "id" shouldBe "3333333333333333"
-                                        "type" shouldBe "Person"
-                                    }
-                                }
-                                "grantedTo" {
-                                    "data" {
-                                        "id" shouldBe "2222222222222222"
-                                        "type" shouldBe "Organization"
-                                    }
+                            }
+                            grantedTo.apply {
+                                data.apply {
+                                    id shouldBe "2222222222222222"
+                                    type shouldBe "Organization"
                                 }
                             }
                         }
-                        item(2) {
-                            "id".shouldNotBeNull()
-                            "type" shouldBe "AuthorizationGrant"
-                            "attributes" {
-                                "status" shouldBe "Revoked"
-                                "grantedAt" shouldBe "2025-01-04T03:00"
-                                "validFrom" shouldBe "2025-02-03T17:07"
-                                "validTo" shouldBe "2025-05-16T04:00"
+                    }
+                    this[2].apply {
+                        id.shouldNotBeNull()
+                        type shouldBe "AuthorizationGrant"
+                        attributes.shouldNotBeNull()
+                        attributes!!.apply {
+                            status shouldBe "Revoked"
+                            grantedAt shouldBe "2025-01-04T03:00"
+                            validFrom shouldBe "2025-02-03T17:07"
+                            validTo shouldBe "2025-05-16T04:00"
+                        }
+                        relationships.apply {
+                            grantedFor.apply {
+                                data.apply {
+                                    id shouldBe "4444444444444444"
+                                    type shouldBe "OrganizationEntity"
+                                }
                             }
-                            "relationships" {
-                                "grantedFor" {
-                                    "data" {
-                                        "id" shouldBe "4444444444444444"
-                                        "type" shouldBe "OrganizationEntity"
-                                    }
+                            grantedBy.apply {
+                                data.apply {
+                                    id shouldBe "3333333333333333"
+                                    type shouldBe "Person"
                                 }
-                                "grantedBy" {
-                                    "data" {
-                                        "id" shouldBe "3333333333333333"
-                                        "type" shouldBe "Person"
-                                    }
-                                }
-                                "grantedTo" {
-                                    "data" {
-                                        "id" shouldBe "5555555555555555"
-                                        "type" shouldBe "MeteringPoint"
-                                    }
+                            }
+                            grantedTo.apply {
+                                data.apply {
+                                    id shouldBe "5555555555555555"
+                                    type shouldBe "MeteringPoint"
                                 }
                             }
                         }
@@ -315,4 +364,5 @@ class AuthorizationGrantRouteTest :
                 }
             }
         }
-    })
+    }
+})

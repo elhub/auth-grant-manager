@@ -18,9 +18,9 @@ data class CreateRequestRelationships(
     val requestedFrom: JsonApiRelationshipToOne,
 ) : JsonApiRelationships
 
-typealias HttpRequestBody = JsonApiRequest.SingleDocumentWithRelationships<CreateRequestAttributes, CreateRequestRelationships>
+typealias CreateRequestRequest = JsonApiRequest.SingleDocumentWithRelationships<CreateRequestAttributes, CreateRequestRelationships>
 
-fun HttpRequestBody.toCreateRequestCommand() = CreateRequestCommand(
+fun CreateRequestRequest.toCreateRequestCommand() = CreateRequestCommand(
     AuthorizationRequest.Type.ChangeOfSupplierConfirmation,
     requester = this.data.relationships.requestedBy.data.id,
     requestee = this.data.relationships.requestedFrom.data.id,

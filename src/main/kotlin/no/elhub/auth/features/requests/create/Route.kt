@@ -16,7 +16,7 @@ import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 fun Route.createRequestRoute(createHandler: CreateRequestHandler, getHandler: GetRequestHandler) {
     post {
         val payload = runCatching {
-            call.receive<HttpRequestBody>()
+            call.receive<CreateRequestRequest>()
         }.getOrElse { exception ->
             val (status, body) = InputError.MalformedInputError.toApiErrorResponse()
             call.respond(status, JsonApiErrorCollection(listOf(body)))

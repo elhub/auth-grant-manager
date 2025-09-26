@@ -59,7 +59,14 @@ class PdfGenerator(
         balanceSupplierContractName: String
     ): Either<DocumentGenerationError, ByteArray> = either {
         val contractHtmlString =
-            generateHtml(customerNin, customerName, meteringPointAddress, meteringPointId, balanceSupplierName, balanceSupplierContractName).getOrElse {
+            generateHtml(
+                customerNin,
+                customerName,
+                meteringPointAddress,
+                meteringPointId,
+                balanceSupplierName,
+                balanceSupplierContractName
+            ).getOrElse {
                 return DocumentGenerationError.ContentGenerationError.left()
             }
 
