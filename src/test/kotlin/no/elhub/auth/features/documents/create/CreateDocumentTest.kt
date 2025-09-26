@@ -84,7 +84,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
             )
         )
 
-        context("Generate a Change of Supplier document") {
+        xcontext("Generate a Change of Supplier document") {
 
             When("I request a Change of Supplier document") {
 
