@@ -72,15 +72,15 @@ application {
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
 }
 
-val dbUsername = System.getenv("DB_USERNAME") ?: ""
-val dbPassword = System.getenv("DB_PASSWORD") ?: ""
+val dbUsername = System.getenv("DB_USERNAME") ?: "postgres"
+val dbPassword = System.getenv("DB_PASSWORD") ?: "postgres"
 
 liquibase {
     jvmArgs =
         arrayOf(
             "-Dliquibase.command.url=jdbc:postgresql://localhost:5432/auth",
             "-Dliquibase.command.username=$dbUsername",
-            "-Dliquibase.command.password=$dbPassword",
+            "-Dliquibase.command.password=$dbUsername",
             "-DAPP_USERNAME=app",
             "-DAPP_PASSWORD=app",
             "-Dliquibase.command.driver=org.postgresql.Driver",
@@ -92,6 +92,8 @@ liquibase {
 val certDir = layout.buildDirectory.dir("tmp/test-certs")
 val testCertPath = certDir.map { it.file("self-signed-cert.pem").asFile.path }
 val testKeyPath = certDir.map { it.file("self-signed-key.pem").asFile.path }
+val minioUsername = System.getenv("MINIO_USERNAME") ?: "minio"
+val minioPassword = System.getenv("MINIO_PASSWORD") ?: "minio"
 
 dockerCompose {
     createNested("services").apply {
@@ -100,7 +102,9 @@ dockerCompose {
             mapOf(
                 "DB_USERNAME" to dbUsername,
                 "DB_PASSWORD" to dbPassword,
-                "PRIVATE_KEY_PATH" to testKeyPath.get()
+                "PRIVATE_KEY_PATH" to testKeyPath.get(),
+                "MINIO_USERNAME" to minioUsername,
+                "MINIO_PASSWORD" to minioPassword,
             ),
         )
     }
@@ -139,18 +143,20 @@ tasks.named("liquibaseUpdate").configure {
 
 val localEnvVars = mapOf(
     "JDBC_URL" to "jdbc:postgresql://localhost:5432/auth",
-    "APP_USERNAME" to "app",
-    "APP_PASSWORD" to "app",
+    "APP_USERNAME" to dbUsername,
+    "APP_PASSWORD" to dbPassword,
     "MUSTACHE_RESOURCE_PATH" to "templates",
     "VAULT_URL" to "http://localhost:8200",
     "VAULT_KEY" to "test-key",
+    "MINIO_USERNAME" to minioUsername,
+    "MINIO_PASSWORD" to minioPassword,
     "VAULT_TOKEN_PATH" to "somepath",
     "PATH_TO_SIGNING_CERTIFICATE" to testCertPath.get(),
     "PATH_TO_SIGNING_CERTIFICATE_CHAIN" to testCertPath.get(),
 )
 
 tasks.named<JavaExec>("run").configure {
-    dependsOn("generateTestCerts", "servicesComposeUp", "liquibaseUpdate")
+    dependsOn("generateTestCerts", "servicesComposeUp") //, "liquibaseUpdate")
     localEnvVars.forEach { (key, value) -> environment(key, value) }
 }
 

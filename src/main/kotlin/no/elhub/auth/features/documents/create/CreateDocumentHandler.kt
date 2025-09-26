@@ -6,6 +6,7 @@ import arrow.core.left
 import arrow.core.right
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.DocumentRepository
+import java.net.URI
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -14,6 +15,7 @@ class CreateDocumentHandler(
     private val certificateProvider: CertificateProvider,
     private val fileSigningService: FileSigningService,
     private val signatureProvider: SignatureProvider,
+    private val fileStorage: FileStorage,
     private val repo: DocumentRepository
 ) {
     suspend operator fun invoke(command: CreateDocumentCommand): Either<CreateDocumentError, AuthorizationDocument> {
@@ -41,7 +43,10 @@ class CreateDocumentHandler(
         val signedFile = fileSigningService.embedSignatureIntoFile(file, signature, certChain, signingCert)
             .getOrElse { return CreateDocumentError.SigningError.left() }
 
-        val documentToCreate = command.toAuthorizationDocument(signedFile)
+        val fileReference = fileStorage.upload(signedFile.inputStream(), UUID.randomUUID().toString())
+            .getOrElse { return CreateDocumentError.UploadError.left() }
+
+        val documentToCreate = command.toAuthorizationDocument(fileReference)
             .getOrElse { return CreateDocumentError.MappingError.left() }
 
         return repo.insert(documentToCreate)
@@ -56,16 +61,17 @@ sealed class CreateDocumentError {
     data object SigningDataGenerationError : CreateDocumentError()
     data object SignatureFetchingError : CreateDocumentError()
     data object SigningError : CreateDocumentError()
+    data object UploadError : CreateDocumentError()
     data object MappingError : CreateDocumentError()
     data object PersistenceError : CreateDocumentError()
 }
 
-fun CreateDocumentCommand.toAuthorizationDocument(file: ByteArray): Either<CreateDocumentError.MappingError, AuthorizationDocument> =
+fun CreateDocumentCommand.toAuthorizationDocument(fileRef: URI): Either<CreateDocumentError.MappingError, AuthorizationDocument> =
     Either.catch {
         AuthorizationDocument(
             id = UUID.randomUUID(),
             title = "Title",
-            file = file,
+            file = fileRef,
             type = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
             status = AuthorizationDocument.Status.Pending,
             requestedBy = this.requestedBy,

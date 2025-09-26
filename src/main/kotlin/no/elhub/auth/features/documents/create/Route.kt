@@ -28,6 +28,7 @@ fun Route.createDocumentRoute(handler: CreateDocumentHandler) {
                     CreateDocumentError.SignatureFetchingError,
                     CreateDocumentError.SigningDataGenerationError,
                     CreateDocumentError.SigningError,
+                    CreateDocumentError.UploadError,
                     CreateDocumentError.PersistenceError
                     -> call.respond(HttpStatusCode.InternalServerError)
                 }

@@ -49,6 +49,6 @@ fun Route.getDocumentRoute(handler: GetDocumentHandler) {
                 return@get
             }
 
-        call.respondBytes(document.file, ContentType.Application.Pdf)
+        call.respond(HttpStatusCode.OK, document)
     }
 }
