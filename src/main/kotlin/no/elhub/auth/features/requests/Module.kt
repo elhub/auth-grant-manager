@@ -11,8 +11,8 @@ import no.elhub.auth.features.requests.create.CreateRequestHandler
 import no.elhub.auth.features.requests.create.createRequestRoute
 import no.elhub.auth.features.requests.get.GetRequestHandler
 import no.elhub.auth.features.requests.get.getRequestRoute
-import no.elhub.auth.features.requests.query.QueryRequestsHandler
-import no.elhub.auth.features.requests.query.queryRequestRoute
+import no.elhub.auth.features.requests.query.Handler as QueryHandler
+import no.elhub.auth.features.requests.query.route as queryRoute
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
 import org.koin.ktor.ext.get
@@ -26,7 +26,7 @@ fun Application.module() {
         singleOf(::ConfirmRequestHandler)
         singleOf(::CreateRequestHandler)
         singleOf(::GetRequestHandler)
-        singleOf(::QueryRequestsHandler)
+        singleOf(::QueryHandler)
     }
 
     routing {
@@ -34,7 +34,7 @@ fun Application.module() {
             confirmRequestRoute(get())
             createRequestRoute(get(), get())
             getRequestRoute(get())
-            queryRequestRoute(get())
+            queryRoute(get())
         }
     }
 }
