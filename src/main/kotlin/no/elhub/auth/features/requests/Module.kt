@@ -5,8 +5,8 @@ import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import no.elhub.auth.features.requests.common.ExposedRequestRepository
 import no.elhub.auth.features.requests.common.RequestRepository
-import no.elhub.auth.features.requests.confirm.ConfirmRequestHandler
-import no.elhub.auth.features.requests.confirm.confirmRequestRoute
+import no.elhub.auth.features.requests.confirm.Handler as ConfirmHandler
+import no.elhub.auth.features.requests.confirm.route as confirmRoute
 import no.elhub.auth.features.requests.create.Handler as CreateHandler
 import no.elhub.auth.features.requests.create.route as createRoute
 import no.elhub.auth.features.requests.get.Handler as GetHandler
@@ -23,7 +23,7 @@ const val REQUESTS_PATH = "/authorization-requests"
 fun Application.module() {
     koinModule {
         singleOf(::ExposedRequestRepository) bind RequestRepository::class
-        singleOf(::ConfirmRequestHandler)
+        singleOf(::ConfirmHandler)
         singleOf(::CreateHandler)
         singleOf(::GetHandler)
         singleOf(::QueryHandler)
@@ -31,7 +31,7 @@ fun Application.module() {
 
     routing {
         route(REQUESTS_PATH) {
-            confirmRequestRoute(get())
+            confirmRoute(get())
             createRoute(get(), get())
             getRoute(get())
             queryRoute(get())
