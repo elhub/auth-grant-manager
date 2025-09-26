@@ -9,11 +9,11 @@ import io.ktor.server.routing.post
 import no.elhub.auth.features.common.InputError
 import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.requests.common.toResponse
-import no.elhub.auth.features.requests.get.GetRequestHandler
-import no.elhub.auth.features.requests.get.GetRequestQuery
+import no.elhub.auth.features.requests.get.Handler
+import no.elhub.auth.features.requests.get.Query
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 
-fun Route.createRequestRoute(createHandler: CreateRequestHandler, getHandler: GetRequestHandler) {
+fun Route.createRequestRoute(createHandler: CreateRequestHandler, getHandler: Handler) {
     post {
         val payload = runCatching {
             call.receive<CreateRequestRequest>()
@@ -29,12 +29,12 @@ fun Route.createRequestRoute(createHandler: CreateRequestHandler, getHandler: Ge
                     is
                     CreateRequestError.MappingError,
                     CreateRequestError.PersistenceError
-                    -> call.respond(HttpStatusCode.InternalServerError)
+                        -> call.respond(HttpStatusCode.InternalServerError)
                 }
                 return@post
             }
 
-        val authorizationRequest = getHandler(GetRequestQuery(requestId))
+        val authorizationRequest = getHandler(Query(requestId))
             .getOrElse { err ->
                 val (status, body) = err.toApiErrorResponse()
                 call.respond(status, JsonApiErrorCollection(listOf(body)))
