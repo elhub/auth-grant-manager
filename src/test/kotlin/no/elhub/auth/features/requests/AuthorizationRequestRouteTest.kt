@@ -16,7 +16,6 @@ import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.testing.testApplication
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonPrimitive
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.RunPostgresScriptExtension
@@ -24,7 +23,7 @@ import no.elhub.auth.features.requests.common.AuthorizationRequestListResponse
 import no.elhub.auth.features.requests.common.AuthorizationRequestResponse
 import no.elhub.auth.features.requests.create.CreateRequestAttributes
 import no.elhub.auth.features.requests.create.CreateRequestRelationships
-import no.elhub.auth.features.requests.create.CreateRequestRequest
+import no.elhub.auth.features.requests.create.Request
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipData
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipToOne
 import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObjectWithRelationships
@@ -261,7 +260,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                     val response = client.post(REQUESTS_PATH) {
                         contentType(ContentType.Application.Json)
                         setBody(
-                            CreateRequestRequest(
+                            Request(
                                 data = JsonApiRequestResourceObjectWithRelationships<CreateRequestAttributes, CreateRequestRelationships>(
                                     type = "AuthorizationRequest",
                                     attributes = CreateRequestAttributes(
