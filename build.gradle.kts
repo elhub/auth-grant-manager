@@ -107,7 +107,7 @@ dockerCompose {
 }
 
 openApiValidate {
-    inputSpec = "$projectDir/src/main/resources/openapi.yaml"
+    inputSpec = "$projectDir/src/main/resources/static/openapi.yaml"
     recommend = true
 }
 
@@ -123,7 +123,7 @@ tasks.register("validateJsonApiSpec") {
     group = "build setup"
     description = "Does some stuff"
     doLast {
-        validateJsonApiSpec("src/main/resources/schemas")
+        validateJsonApiSpec("src/main/resources/static/schemas")
     }
 }
 

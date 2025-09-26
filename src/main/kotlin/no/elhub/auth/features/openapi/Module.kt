@@ -5,14 +5,14 @@ import io.ktor.server.http.content.staticResources
 import io.ktor.server.plugins.swagger.swaggerUI
 import io.ktor.server.routing.routing
 
-const val OPENAPI = "openapi"
-const val SPEC_FILE = "openapi.yaml"
-const val SCHEMAS_LOCATION = "schemas/"
-const val SCHEMAS = "schemas"
+const val API_PATH_OPENAPI = "openapi"
+const val FILEPATH_OPENAPI_SPEC = "static/openapi.yaml"
+const val API_PATH_SCHEMAS = "$API_PATH_OPENAPI/schemas"
+const val FILEPATH_SCHEMAS = "static/schemas"
 
 fun Application.module() {
     routing {
-        swaggerUI(path = OPENAPI, swaggerFile = SPEC_FILE)
-        staticResources(SCHEMAS_LOCATION, SCHEMAS)
+        swaggerUI(path = API_PATH_OPENAPI, swaggerFile = FILEPATH_OPENAPI_SPEC)
+        staticResources(API_PATH_SCHEMAS, FILEPATH_SCHEMAS)
     }
 }
