@@ -1,5 +1,5 @@
 package no.elhub.auth.features.documents.confirm
 
-data class ConfirmDocumentCommand(
+data class Command(
     val documentId: String
 )

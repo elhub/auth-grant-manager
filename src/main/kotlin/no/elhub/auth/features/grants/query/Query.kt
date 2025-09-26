@@ -1,3 +1,3 @@
 package no.elhub.auth.features.grants.query
 
-class QueryGrantsQuery
+class Query

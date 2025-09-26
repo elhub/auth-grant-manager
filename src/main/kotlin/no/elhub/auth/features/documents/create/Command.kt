@@ -11,7 +11,7 @@ private const val REGEX_REQUESTED_FROM = REGEX_NUMBERS_LETTERS_SYMBOLS
 private const val REGEX_REQUESTED_BY = REGEX_NUMBERS_LETTERS_SYMBOLS
 private const val REGEX_METERING_POINT = REGEX_NUMBERS_LETTERS_SYMBOLS
 
-class CreateDocumentCommand private constructor(
+class Command private constructor(
     val type: AuthorizationDocument.Type,
     val requestedFrom: String,
     val requestedFromName: String,
@@ -45,7 +45,7 @@ class CreateDocumentCommand private constructor(
                 { ensure(meteringPointId.matches(Regex(REGEX_METERING_POINT))) { ValidationError.InvalidMeteringPointId } },
                 { ensure(meteringPointAddress.isNotBlank()) { ValidationError.MissingMeteringPointAddress } },
             ) { _, _, _, _, _, _, _, _, _, _ ->
-                CreateDocumentCommand(
+                Command(
                     type,
                     requestedFrom,
                     requestedFromName,

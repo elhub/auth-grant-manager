@@ -9,10 +9,10 @@ import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.grants.common.toResponse
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 
-fun Route.queryGrantsRoute(handler: QueryGrantsHandler) {
+fun Route.route(handler: Handler) {
     get {
         // TODO: Build query from payload
-        val grants = handler(QueryGrantsQuery())
+        val grants = handler(Query())
             .getOrElse { err ->
                 val (status, body) = err.toApiErrorResponse()
                 call.respond(status, JsonApiErrorCollection(listOf(body)))

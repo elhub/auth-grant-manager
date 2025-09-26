@@ -2,6 +2,6 @@ package no.elhub.auth.features.grants.getScopes
 
 import java.util.UUID
 
-data class GetGrantScopesQuery(
+data class Query(
     val id: UUID
 )

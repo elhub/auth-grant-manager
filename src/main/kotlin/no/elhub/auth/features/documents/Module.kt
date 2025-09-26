@@ -16,10 +16,7 @@ import io.ktor.server.routing.routing
 import kotlinx.serialization.json.Json
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.documents.common.ExposedDocumentRepository
-import no.elhub.auth.features.documents.confirm.ConfirmDocumentHandler
-import no.elhub.auth.features.documents.confirm.confirmDocumentRoute
 import no.elhub.auth.features.documents.create.CertificateProvider
-import no.elhub.auth.features.documents.create.CreateDocumentHandler
 import no.elhub.auth.features.documents.create.FileCertificateProvider
 import no.elhub.auth.features.documents.create.FileCertificateProviderConfig
 import no.elhub.auth.features.documents.create.FileGenerator
@@ -30,13 +27,18 @@ import no.elhub.auth.features.documents.create.PdfGeneratorConfig
 import no.elhub.auth.features.documents.create.PdfSigningService
 import no.elhub.auth.features.documents.create.SignatureProvider
 import no.elhub.auth.features.documents.create.VaultConfig
-import no.elhub.auth.features.documents.create.createDocumentRoute
-import no.elhub.auth.features.documents.get.GetDocumentHandler
-import no.elhub.auth.features.documents.get.getDocumentRoute
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
 import org.koin.ktor.ext.get
 import org.koin.ktor.plugin.koinModule
+import no.elhub.auth.features.documents.confirm.Handler as ConfirmHandler
+import no.elhub.auth.features.documents.confirm.route as confirmRoute
+import no.elhub.auth.features.documents.create.Handler as CreateHandler
+import no.elhub.auth.features.documents.create.route as createRoute
+import no.elhub.auth.features.documents.get.Handler as GetHandler
+import no.elhub.auth.features.documents.get.route as getRoute
+import no.elhub.auth.features.documents.query.Handler as QueryHandler
+import no.elhub.auth.features.documents.query.route as queryRoute
 
 const val DOCUMENTS_PATH = "/authorization-documents"
 
@@ -92,16 +94,18 @@ fun Application.module() {
         }
         singleOf(::PdfGenerator) bind FileGenerator::class
         singleOf(::ExposedDocumentRepository) bind DocumentRepository::class
-        singleOf(::ConfirmDocumentHandler)
-        singleOf(::CreateDocumentHandler)
-        singleOf(::GetDocumentHandler)
+        singleOf(::ConfirmHandler)
+        singleOf(::CreateHandler)
+        singleOf(::GetHandler)
+        singleOf(::QueryHandler)
     }
 
     routing {
         route(DOCUMENTS_PATH) {
-            createDocumentRoute(get())
-            confirmDocumentRoute(get())
-            getDocumentRoute(get())
+            createRoute(get())
+            confirmRoute(get())
+            getRoute(get())
+            queryRoute(get())
         }
     }
 }

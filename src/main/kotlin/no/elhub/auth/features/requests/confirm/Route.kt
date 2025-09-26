@@ -7,7 +7,7 @@ import io.ktor.server.routing.patch
 
 const val REQUEST_ID_PARAM = "id"
 
-fun Route.confirmRequestRoute(handler: ConfirmRequestHandler) {
+fun Route.route(handler: Handler) {
     patch("/{$REQUEST_ID_PARAM}") {
         call.respond(HttpStatusCode.NotImplemented)
     }

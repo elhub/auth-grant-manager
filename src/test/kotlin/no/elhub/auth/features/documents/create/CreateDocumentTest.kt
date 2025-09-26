@@ -78,7 +78,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                     single { EndUserApiConfig("baseUrl", "/persons/") }
                     singleOf(::ApiEndUserRepository) bind EndUserRepository::class
 
-                    singleOf(::CreateDocumentHandler)
+                    singleOf(::Handler)
                 },
                 mode = KoinLifecycleMode.Root
             )
@@ -96,9 +96,9 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                 val meteringPointId = VALID_METERING_POINT_ID
                 val meteringPointAddress = VALID_METERING_POINT_ADDRESS
 
-                val handler by inject<CreateDocumentHandler>()
+                val handler by inject<Handler>()
 
-                val command = CreateDocumentCommand(
+                val command = Command(
                     AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
                     requestedFrom,
                     requestedFromName,
@@ -144,9 +144,9 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                     val balanceSupplierContractName = VALID_BALANCE_SUPPLIER_CONTRACT_NAME
                     val meteringPointAddress = VALID_METERING_POINT_ADDRESS
 
-                    val handler by inject<CreateDocumentHandler>()
+                    val handler by inject<Handler>()
 
-                    val command = CreateDocumentCommand(
+                    val command = Command(
                         AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
                         requestedFrom,
                         requestedFromName,
@@ -195,7 +195,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                 val meteringPointAddress = VALID_METERING_POINT_ADDRESS
                 When("I request a Change of Supplier document") {
 
-                    val command = CreateDocumentCommand(
+                    val command = Command(
                         AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
                         requestedFrom,
                         requestedFromName,
@@ -224,7 +224,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
                 When("I request a Change of Supplier document") {
 
-                    val command = CreateDocumentCommand(
+                    val command = Command(
                         AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
                         requestedFrom,
                         requestedFromName,
@@ -253,7 +253,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
                 When("I request a Change of Supplier document") {
 
-                    val command = CreateDocumentCommand(
+                    val command = Command(
                         AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
                         requestedFrom,
                         requestedFromName,
@@ -282,7 +282,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
                 When("I request a Change of Supplier document") {
 
-                    val command = CreateDocumentCommand(
+                    val command = Command(
                         AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
                         requestedFrom,
                         requestedFromName,
@@ -311,7 +311,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
                 When("I request a Change of Supplier document") {
 
-                    val command = CreateDocumentCommand(
+                    val command = Command(
                         AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
                         requestedFrom,
                         requestedFromName,
@@ -340,7 +340,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
                 When("I request a Change of Supplier document") {
 
-                    val command = CreateDocumentCommand(
+                    val command = Command(
                         AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
                         requestedFrom,
                         requestedFromName,
@@ -369,7 +369,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
                 When("I request a Change of Supplier document") {
 
-                    val command = CreateDocumentCommand(
+                    val command = Command(
                         AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
                         requestedFrom,
                         requestedFromName,
@@ -398,7 +398,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
                 When("I request a Change of Supplier document") {
 
-                    val command = CreateDocumentCommand(
+                    val command = Command(
                         AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
                         requestedFrom,
                         requestedFromName,
@@ -427,7 +427,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
                 When("I request a Change of Supplier document") {
 
-                    val command = CreateDocumentCommand(
+                    val command = Command(
                         AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
                         requestedFrom,
                         requestedFromName,

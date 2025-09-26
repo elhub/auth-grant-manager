@@ -8,10 +8,10 @@ import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.DocumentRepository
 
-class QueryDocumentsHandler(
+class Handler(
     private val repo: DocumentRepository
 ) {
-    operator fun invoke(query: QueryDocumentsQuery): Either<QueryError, List<AuthorizationDocument>> =
+    operator fun invoke(query: Query): Either<QueryError, List<AuthorizationDocument>> =
         repo.findAll()
             .fold(
                 { error ->

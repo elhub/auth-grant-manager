@@ -13,7 +13,7 @@ import java.util.UUID
 
 const val GRANT_ID_PARAM = "id"
 
-fun Route.getGrantRoute(handler: GetGrantHandler) {
+fun Route.route(handler: Handler) {
     get("/{$GRANT_ID_PARAM}") {
         val id: UUID = validateId(call.parameters[GRANT_ID_PARAM])
             .getOrElse { err ->
@@ -22,7 +22,7 @@ fun Route.getGrantRoute(handler: GetGrantHandler) {
                 return@get
             }
 
-        val grant = handler(GetGrantQuery(id))
+        val grant = handler(Query(id))
             .getOrElse { err ->
                 val (status, body) = err.toApiErrorResponse()
                 call.respond(status, JsonApiErrorCollection(listOf(body)))

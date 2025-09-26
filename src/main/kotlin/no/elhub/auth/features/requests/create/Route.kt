@@ -9,32 +9,32 @@ import io.ktor.server.routing.post
 import no.elhub.auth.features.common.InputError
 import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.requests.common.toResponse
-import no.elhub.auth.features.requests.get.GetRequestHandler
-import no.elhub.auth.features.requests.get.GetRequestQuery
+import no.elhub.auth.features.requests.get.Query
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
+import no.elhub.auth.features.requests.get.Handler as GetHandler
 
-fun Route.createRequestRoute(createHandler: CreateRequestHandler, getHandler: GetRequestHandler) {
+fun Route.route(createHandler: Handler, getHandler: GetHandler) {
     post {
         val payload = runCatching {
-            call.receive<CreateRequestRequest>()
+            call.receive<Request>()
         }.getOrElse { exception ->
             val (status, body) = InputError.MalformedInputError.toApiErrorResponse()
             call.respond(status, JsonApiErrorCollection(listOf(body)))
             return@post
         }
 
-        val requestId = createHandler(payload.toCreateRequestCommand())
+        val requestId = createHandler(payload.toCommand())
             .getOrElse { error ->
                 when (error) {
                     is
-                    CreateRequestError.MappingError,
-                    CreateRequestError.PersistenceError
+                    no.elhub.auth.features.requests.create.Error.MappingError,
+                    Error.PersistenceError
                     -> call.respond(HttpStatusCode.InternalServerError)
                 }
                 return@post
             }
 
-        val authorizationRequest = getHandler(GetRequestQuery(requestId))
+        val authorizationRequest = getHandler(Query(requestId))
             .getOrElse { err ->
                 val (status, body) = err.toApiErrorResponse()
                 call.respond(status, JsonApiErrorCollection(listOf(body)))

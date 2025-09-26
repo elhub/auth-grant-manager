@@ -9,14 +9,14 @@ import no.elhub.auth.features.documents.common.DocumentRepository
 import java.time.LocalDateTime
 import java.util.UUID
 
-class CreateDocumentHandler(
+class Handler(
     private val fileGenerator: FileGenerator,
     private val certificateProvider: CertificateProvider,
     private val fileSigningService: FileSigningService,
     private val signatureProvider: SignatureProvider,
     private val repo: DocumentRepository
 ) {
-    suspend operator fun invoke(command: CreateDocumentCommand): Either<CreateDocumentError, AuthorizationDocument> {
+    suspend operator fun invoke(command: Command): Either<CreateDocumentError, AuthorizationDocument> {
         val file = fileGenerator.generate(
             customerNin = command.requestedFrom,
             customerName = command.requestedFromName,
@@ -60,7 +60,7 @@ sealed class CreateDocumentError {
     data object PersistenceError : CreateDocumentError()
 }
 
-fun CreateDocumentCommand.toAuthorizationDocument(file: ByteArray): Either<CreateDocumentError.MappingError, AuthorizationDocument> =
+fun Command.toAuthorizationDocument(file: ByteArray): Either<CreateDocumentError.MappingError, AuthorizationDocument> =
     Either.catch {
         AuthorizationDocument(
             id = UUID.randomUUID(),
