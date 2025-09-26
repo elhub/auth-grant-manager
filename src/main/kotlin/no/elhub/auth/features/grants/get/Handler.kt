@@ -8,8 +8,8 @@ import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.common.GrantRepository
 
-class GetGrantHandler(private val repo: GrantRepository) {
-    operator fun invoke(query: GetGrantQuery): Either<QueryError, AuthorizationGrant> =
+class Handler(private val repo: GrantRepository) {
+    operator fun invoke(query: Query): Either<QueryError, AuthorizationGrant> =
         repo.find(query.id)
             .fold(
                 { error ->
