@@ -8,8 +8,8 @@ import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.grants.AuthorizationScope
 import no.elhub.auth.features.grants.common.GrantRepository
 
-class GetGrantScopesHandler(private val repo: GrantRepository) {
-    operator fun invoke(query: GetGrantScopesQuery): Either<QueryError, List<AuthorizationScope>> =
+class Handler(private val repo: GrantRepository) {
+    operator fun invoke(query: Query): Either<QueryError, List<AuthorizationScope>> =
         repo
             .findScopes(query.id)
             .fold(

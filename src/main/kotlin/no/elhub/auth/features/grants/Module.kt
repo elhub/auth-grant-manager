@@ -7,8 +7,8 @@ import no.elhub.auth.features.grants.common.ExposedGrantRepository
 import no.elhub.auth.features.grants.common.GrantRepository
 import no.elhub.auth.features.grants.get.GetGrantHandler
 import no.elhub.auth.features.grants.get.getGrantRoute
-import no.elhub.auth.features.grants.getScopes.GetGrantScopesHandler
-import no.elhub.auth.features.grants.getScopes.getGrantScopesRoute
+import no.elhub.auth.features.grants.getScopes.Handler as GetScopesHandler
+import no.elhub.auth.features.grants.getScopes.route as getScopesRoute
 import no.elhub.auth.features.grants.query.Handler as QueryHandler
 import no.elhub.auth.features.grants.query.route as queryRoute
 import org.koin.core.module.dsl.singleOf
@@ -22,14 +22,14 @@ fun Application.module() {
     koinModule {
         singleOf(::ExposedGrantRepository) bind GrantRepository::class
         singleOf(::GetGrantHandler)
-        singleOf(::GetGrantScopesHandler)
+        singleOf(::GetScopesHandler)
         singleOf(::QueryHandler)
     }
 
     routing {
         route(GRANTS_PATH) {
             getGrantRoute(get())
-            getGrantScopesRoute(get())
+            getScopesRoute(get())
             queryRoute(get())
         }
     }
