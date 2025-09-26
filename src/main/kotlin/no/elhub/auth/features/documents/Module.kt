@@ -16,8 +16,6 @@ import io.ktor.server.routing.routing
 import kotlinx.serialization.json.Json
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.documents.common.ExposedDocumentRepository
-import no.elhub.auth.features.documents.confirm.Handler as ConfirmHandler
-import no.elhub.auth.features.documents.confirm.route as confirmRoute
 import no.elhub.auth.features.documents.create.CertificateProvider
 import no.elhub.auth.features.documents.create.FileCertificateProvider
 import no.elhub.auth.features.documents.create.FileCertificateProviderConfig
@@ -29,16 +27,18 @@ import no.elhub.auth.features.documents.create.PdfGeneratorConfig
 import no.elhub.auth.features.documents.create.PdfSigningService
 import no.elhub.auth.features.documents.create.SignatureProvider
 import no.elhub.auth.features.documents.create.VaultConfig
+import org.koin.core.module.dsl.singleOf
+import org.koin.dsl.bind
+import org.koin.ktor.ext.get
+import org.koin.ktor.plugin.koinModule
+import no.elhub.auth.features.documents.confirm.Handler as ConfirmHandler
+import no.elhub.auth.features.documents.confirm.route as confirmRoute
 import no.elhub.auth.features.documents.create.Handler as CreateHandler
 import no.elhub.auth.features.documents.create.route as createRoute
 import no.elhub.auth.features.documents.get.Handler as GetHandler
 import no.elhub.auth.features.documents.get.route as getRoute
 import no.elhub.auth.features.documents.query.Handler as QueryHandler
 import no.elhub.auth.features.documents.query.route as queryRoute
-import org.koin.core.module.dsl.singleOf
-import org.koin.dsl.bind
-import org.koin.ktor.ext.get
-import org.koin.ktor.plugin.koinModule
 
 const val DOCUMENTS_PATH = "/authorization-documents"
 

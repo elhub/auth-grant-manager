@@ -5,16 +5,16 @@ import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import no.elhub.auth.features.grants.common.ExposedGrantRepository
 import no.elhub.auth.features.grants.common.GrantRepository
+import org.koin.core.module.dsl.singleOf
+import org.koin.dsl.bind
+import org.koin.ktor.ext.get
+import org.koin.ktor.plugin.koinModule
 import no.elhub.auth.features.grants.get.Handler as GetHandler
 import no.elhub.auth.features.grants.get.route as getRoute
 import no.elhub.auth.features.grants.getScopes.Handler as GetScopesHandler
 import no.elhub.auth.features.grants.getScopes.route as getScopesRoute
 import no.elhub.auth.features.grants.query.Handler as QueryHandler
 import no.elhub.auth.features.grants.query.route as queryRoute
-import org.koin.core.module.dsl.singleOf
-import org.koin.dsl.bind
-import org.koin.ktor.ext.get
-import org.koin.ktor.plugin.koinModule
 
 const val GRANTS_PATH = "/authorization-grants"
 

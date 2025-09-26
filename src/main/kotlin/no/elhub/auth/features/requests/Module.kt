@@ -5,6 +5,10 @@ import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import no.elhub.auth.features.requests.common.ExposedRequestRepository
 import no.elhub.auth.features.requests.common.RequestRepository
+import org.koin.core.module.dsl.singleOf
+import org.koin.dsl.bind
+import org.koin.ktor.ext.get
+import org.koin.ktor.plugin.koinModule
 import no.elhub.auth.features.requests.confirm.Handler as ConfirmHandler
 import no.elhub.auth.features.requests.confirm.route as confirmRoute
 import no.elhub.auth.features.requests.create.Handler as CreateHandler
@@ -13,10 +17,6 @@ import no.elhub.auth.features.requests.get.Handler as GetHandler
 import no.elhub.auth.features.requests.get.route as getRoute
 import no.elhub.auth.features.requests.query.Handler as QueryHandler
 import no.elhub.auth.features.requests.query.route as queryRoute
-import org.koin.core.module.dsl.singleOf
-import org.koin.dsl.bind
-import org.koin.ktor.ext.get
-import org.koin.ktor.plugin.koinModule
 
 const val REQUESTS_PATH = "/authorization-requests"
 
