@@ -31,8 +31,8 @@ import no.elhub.auth.features.documents.create.PdfSigningService
 import no.elhub.auth.features.documents.create.SignatureProvider
 import no.elhub.auth.features.documents.create.VaultConfig
 import no.elhub.auth.features.documents.create.createDocumentRoute
-import no.elhub.auth.features.documents.get.GetDocumentHandler
-import no.elhub.auth.features.documents.get.getDocumentRoute
+import no.elhub.auth.features.documents.get.Handler as GetHandler
+import no.elhub.auth.features.documents.get.route as getRoute
 import no.elhub.auth.features.documents.query.Handler as QueryHandler
 import no.elhub.auth.features.documents.query.route as queryRoute
 import org.koin.core.module.dsl.singleOf
@@ -96,7 +96,7 @@ fun Application.module() {
         singleOf(::ExposedDocumentRepository) bind DocumentRepository::class
         singleOf(::ConfirmDocumentHandler)
         singleOf(::CreateDocumentHandler)
-        singleOf(::GetDocumentHandler)
+        singleOf(::GetHandler)
         singleOf(::QueryHandler)
     }
 
@@ -104,7 +104,7 @@ fun Application.module() {
         route(DOCUMENTS_PATH) {
             createDocumentRoute(get())
             confirmDocumentRoute(get())
-            getDocumentRoute(get())
+            getRoute(get())
             queryRoute(get())
         }
     }
