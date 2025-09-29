@@ -59,6 +59,7 @@ dependencies {
     testImplementation(libs.test.testcontainers)
     testImplementation(libs.test.testcontainers.postgres)
     testImplementation(libs.test.mybatis)
+    testImplementation("org.verapdf:validation-model:1.28.2")
 }
 
 ksp {

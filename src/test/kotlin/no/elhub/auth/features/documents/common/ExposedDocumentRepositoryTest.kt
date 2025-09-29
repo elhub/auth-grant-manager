@@ -2,6 +2,7 @@ package no.elhub.auth.features.documents.common
 
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldNotBe
+import no.elhub.auth.features.common.PostgresTestContainer
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.grants.common.AuthorizationScopeTable
@@ -18,10 +19,10 @@ class ExposedDocumentRepositoryTest :
 
         beforeSpec {
             Database.connect(
-                url = "jdbc:postgresql://localhost:5432/auth",
-                driver = "org.postgresql.Driver",
-                user = "postgres",
-                password = "postgres",
+                url = PostgresTestContainer.JDBC_URL,
+                driver = PostgresTestContainer.DRIVER,
+                user = PostgresTestContainer.USERNAME,
+                password = PostgresTestContainer.PASSWORD,
             )
         }
 

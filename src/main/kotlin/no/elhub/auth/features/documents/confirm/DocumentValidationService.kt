@@ -22,8 +22,6 @@ fun ByteArray.matchesDocumentRequest(document: AuthorizationDocument): Either<Do
 
 fun ByteArray.getEndUserNin(): Either<DocumentValidationError, String> = throw NotImplementedException()
 
-fun ByteArray.isConformant(): Either<DocumentValidationError, Boolean> = throw NotImplementedException()
-
 sealed class DocumentValidationError {
     data object InvalidSignatureError : DocumentValidationError()
 }

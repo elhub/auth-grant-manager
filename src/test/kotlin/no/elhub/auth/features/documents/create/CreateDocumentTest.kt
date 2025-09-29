@@ -9,20 +9,29 @@ import io.kotest.koin.KoinExtension
 import io.kotest.koin.KoinLifecycleMode
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import no.elhub.auth.features.common.PostgresTestContainer
+import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.httpTestClient
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.TestCertificateUtil
+import no.elhub.auth.features.documents.VaultTransitTestContainerExtension
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.documents.common.ExposedDocumentRepository
 import no.elhub.auth.features.documents.confirm.getEndUserNin
-import no.elhub.auth.features.documents.confirm.isConformant
 import no.elhub.auth.features.documents.confirm.isSignedByUs
 import no.elhub.auth.features.documents.localVaultConfig
+import org.jetbrains.exposed.sql.Database
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
 import org.koin.dsl.module
 import org.koin.test.KoinTest
 import org.koin.test.inject
+import org.verapdf.gf.foundry.VeraGreenfieldFoundryProvider
+import org.verapdf.pdfa.Foundries
+import org.verapdf.pdfa.PDFAParser
+import org.verapdf.pdfa.PDFAValidator
+import org.verapdf.pdfa.flavours.PDFAFlavour
+import java.io.ByteArrayInputStream
 import kotlin.test.fail
 
 // TODO: Provide a valid supplier ID
@@ -52,6 +61,7 @@ private const val EMPTY = " "
  */
 class CreateDocumentTest : BehaviorSpec(), KoinTest {
     init {
+        extensions(VaultTransitTestContainerExtension, PostgresTestContainerExtension)
         extension(
             KoinExtension(
                 module {
@@ -84,7 +94,16 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
             )
         )
 
-        xcontext("Generate a Change of Supplier document") {
+        beforeSpec {
+            Database.connect(
+                url = PostgresTestContainer.JDBC_URL,
+                driver = PostgresTestContainer.DRIVER,
+                user = PostgresTestContainer.USERNAME,
+                password = PostgresTestContainer.PASSWORD,
+            )
+        }
+
+        context("Generate a Change of Supplier document") {
 
             When("I request a Change of Supplier document") {
 
@@ -112,15 +131,15 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                 val document = handler(command)
                     .getOrElse { fail("Document not returned") }
 
-                Then("I should receive a link to a PDF document") {
+                xThen("I should receive a link to a PDF document") {
                     fail("Received the PDF bytes")
                 }
 
-                Then("that document should be signed by Elhub") {
+                xThen("that document should be signed by Elhub") {
                     document.file.isSignedByUs() shouldBe true
                 }
 
-                Then("that document should contain the necessary metadata") {
+                xThen("that document should contain the necessary metadata") {
                     // TODO: PDF specific references in these tests?
                     document.file.getEndUserNin() shouldBe requestedFrom
                 }
@@ -130,7 +149,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                 }
             }
 
-            Given("that the end user is not already registered in Elhub") {
+            xGiven("that the end user is not already registered in Elhub") {
 
                 val endUserRepo by inject<EndUserRepository>()
 
@@ -184,7 +203,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                 }
             }
 
-            Given("that no balance supplier ID has been provided") {
+            xGiven("that no balance supplier ID has been provided") {
 
                 val requestedFrom = VALID_REQUESTED_FROM
                 val requestedFromName = VALID_REQUESTED_FROM_NAME
@@ -212,7 +231,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                 }
             }
 
-            Given("that an invalid balance supplier ID has been provided (GLN)") {
+            xGiven("that an invalid balance supplier ID has been provided (GLN)") {
 
                 val requestedFrom = VALID_REQUESTED_FROM
                 val requestedFromName = VALID_REQUESTED_FROM_NAME
@@ -241,7 +260,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                 }
             }
 
-            Given("that no balance supplier name has been provided") {
+            xGiven("that no balance supplier name has been provided") {
 
                 val requestedFrom = VALID_REQUESTED_FROM
                 val requestedFromName = VALID_REQUESTED_FROM_NAME
@@ -270,7 +289,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                 }
             }
 
-            Given("that no end user ID has been provided (NIN/GLN)") {
+            xGiven("that no end user ID has been provided (NIN/GLN)") {
 
                 val requestedFrom = BLANK
                 val requestedFromName = VALID_REQUESTED_FROM_NAME
@@ -299,7 +318,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                 }
             }
 
-            Given("that an invalid end user ID has been provided (NIN/GLN)") {
+            xGiven("that an invalid end user ID has been provided (NIN/GLN)") {
 
                 val requestedFrom = INVALID_REQUESTED_FROM
                 val requestedFromName = VALID_REQUESTED_FROM_NAME
@@ -328,7 +347,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                 }
             }
 
-            Given("that no metering point ID has been provided") {
+            xGiven("that no metering point ID has been provided") {
 
                 val requestedFrom = VALID_REQUESTED_FROM
                 val requestedFromName = VALID_REQUESTED_FROM_NAME
@@ -357,7 +376,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                 }
             }
 
-            Given("that an invalid metering point ID has been provided") {
+            xGiven("that an invalid metering point ID has been provided") {
 
                 val requestedFrom = VALID_REQUESTED_FROM
                 val requestedFromName = VALID_REQUESTED_FROM_NAME
@@ -386,7 +405,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                 }
             }
 
-            Given("that no metering point address has been provided") {
+            xGiven("that no metering point address has been provided") {
 
                 val requestedFrom = VALID_REQUESTED_FROM
                 val requestedFromName = VALID_REQUESTED_FROM_NAME
@@ -415,7 +434,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                 }
             }
 
-            Given("that no contract name has been provided") {
+            xGiven("that no contract name has been provided") {
 
                 val requestedFrom = VALID_REQUESTED_FROM
                 val requestedFromName = VALID_REQUESTED_FROM_NAME
@@ -443,6 +462,18 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                     }
                 }
             }
+        }
+    }
+}
+
+fun ByteArray.isConformant(): Boolean {
+    VeraGreenfieldFoundryProvider.initialise()
+    val flavour = PDFAFlavour.PDFA_2_B
+    ByteArrayInputStream(this).use { input ->
+        Foundries.defaultInstance().createParser(input, flavour).use { parser: PDFAParser ->
+            val validator: PDFAValidator =
+                Foundries.defaultInstance().createValidator(flavour, false)
+            return validator.validate(parser).isCompliant
         }
     }
 }

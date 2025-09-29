@@ -16,16 +16,21 @@ import org.testcontainers.utility.DockerImageName
 import java.nio.file.Paths
 import java.sql.DriverManager
 
-private object PostgresTestContainer {
+object PostgresTestContainer {
     private const val POSTGRES_PORT = 5432
     var started = false
         private set
 
+    val USERNAME = "postgres"
+    val PASSWORD = "postgres"
+    val DRIVER = "org.postgresql.Driver"
+    val JDBC_URL = "jdbc:postgresql://localhost:$POSTGRES_PORT/auth"
+
     private val postgres: PostgreSQLContainer<*> by lazy {
         PostgreSQLContainer(DockerImageName.parse("postgres:15-alpine"))
             .withDatabaseName("auth")
-            .withUsername("postgres")
-            .withPassword("postgres")
+            .withUsername(USERNAME)
+            .withPassword(PASSWORD)
             .withExposedPorts(POSTGRES_PORT)
             .withCreateContainerCmdModifier { cmd ->
                 cmd.withHostConfig(
