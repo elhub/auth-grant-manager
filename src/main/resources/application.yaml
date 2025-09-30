@@ -30,9 +30,8 @@ pdfSigner:
     chain: $PATH_TO_SIGNING_CERTIFICATE_CHAIN
 
 minio:
-  url: http://localhost:9000
-  externalUrl: http://localhost:9000
-  bucket: documents
-  username: minio
-  password: miniopassword
-  linkExpiryHours: 1
+  url: $MINIO_URL
+  bucket: $MINIO_BUCKET
+  username: $MINIO_USERNAME
+  password: $MINIO_PASSWORD
+  linkExpiryHours: $MINIO_LINK_EXPIRY_HOURS
