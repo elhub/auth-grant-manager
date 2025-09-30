@@ -84,7 +84,7 @@
             "https://api.elhub.no/authorization-documents/123e4567-e89b-12d3-a456-426614174000"
           ]
         },
-        "file": {
+        "reference": {
           "type": "string",
           "format": "uri",
           "description": "Link to download the pdf document",
