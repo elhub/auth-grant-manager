@@ -73,7 +73,7 @@ class PdfGenerator(
             Font(loadClasspathResource("/fonts/libre-bodoni/LibreBodoni-BoldItalic.ttf"), "LibreBodoni", 700, BaseRendererBuilder.FontStyle.ITALIC)
         )
 
-    val colorProfile = loadClasspathResource("/fonts/sRGB_IEC61966-2-1.icc")
+    val colorProfile = loadClasspathResource("/fonts/sRGB.icc")
 
     object PdfConstants {
         internal const val PDF_METADATA_KEY_NIN = "signerNin"
@@ -132,7 +132,7 @@ class PdfGenerator(
         }.toString()
     }.mapLeft { PdfDocumentGenerationError.HtmlGenerationError }
 
-    fun generatePdfFromHtml(htmlString: String) = Either.catch {
+    private fun generatePdfFromHtml(htmlString: String) = Either.catch {
         ByteArrayOutputStream().use { out ->
             PdfRendererBuilder()
                 .withHtmlContent(htmlString, null)

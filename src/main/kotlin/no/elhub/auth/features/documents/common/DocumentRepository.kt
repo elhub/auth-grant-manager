@@ -29,7 +29,7 @@ interface DocumentRepository {
     fun findAll(): Either<RepositoryReadError, List<AuthorizationDocument>>
 }
 
-class ExposedDocumentRepository() : DocumentRepository {
+class ExposedDocumentRepository : DocumentRepository {
 
     override fun insert(doc: AuthorizationDocument): Either<RepositoryWriteError, AuthorizationDocument> =
         Either.catch {

@@ -1,6 +1,5 @@
 [metadata]
 format.version = "1.1"
-
 [versions]
 arrow = "2.1.2"
 cohort = "2.8.0"
@@ -34,6 +33,7 @@ mustache = "0.9.14"
 openhtmltopdf = "1.1.31"
 pdfbox = "3.0.5"
 dss = "6.3"
+verapdf = "1.28.2"
 
 
 [plugins]
@@ -106,6 +106,7 @@ dss-utils-apache-commons = { group = "eu.europa.ec.joinup.sd-dss", name = "dss-u
 dss-crl-parser-stream = { group = "eu.europa.ec.joinup.sd-dss", name = "dss-crl-parser-stream", version.ref = "dss" }
 dss-cms-stream = { group = "eu.europa.ec.joinup.sd-dss", name = "dss-cms-stream", version.ref = "dss" }
 dss-policy-jaxb = { group = "eu.europa.ec.joinup.sd-dss", name = "dss-policy-jaxb", version.ref = "dss" }
+test-verapdf-validation-model = { group = "org.verapdf", name = "validation-model", version.ref = "verapdf" }
 
 # Bundles should be used to group dependencies that are frequently used together.
 [bundles]
