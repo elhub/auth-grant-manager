@@ -2,7 +2,7 @@ package no.elhub.auth
 
 import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.testing.TestApplication
-import no.elhub.auth.features.documents.TestCertificateUtil
+import no.elhub.auth.features.documents.common.TestCertificateUtil
 import no.elhub.auth.features.documents.module as documentsModule
 import no.elhub.auth.features.grants.module as grantsModule
 import no.elhub.auth.features.openapi.module as openapiModule

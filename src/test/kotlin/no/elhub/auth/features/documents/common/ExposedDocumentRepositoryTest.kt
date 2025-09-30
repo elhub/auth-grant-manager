@@ -9,6 +9,7 @@ import no.elhub.auth.features.grants.common.AuthorizationScopeTable
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.net.URI
 import java.time.LocalDateTime
 import java.util.*
 
@@ -33,7 +34,7 @@ class ExposedDocumentRepositoryTest :
                     AuthorizationDocument(
                         id = UUID.randomUUID(),
                         title = "Title",
-                        file = byteArrayOf(),
+                        fileReference = URI("https://mylink.com/documents/123"),
                         type = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
                         status = AuthorizationDocument.Status.Pending,
                         requestedBy = "1234567890",
