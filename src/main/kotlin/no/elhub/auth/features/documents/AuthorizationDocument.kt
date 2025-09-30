@@ -1,5 +1,6 @@
 package no.elhub.auth.features.documents
 
+import java.net.URI
 import java.time.LocalDateTime
 import java.util.*
 
@@ -8,7 +9,7 @@ data class AuthorizationDocument(
     val title: String,
     val type: Type,
     val status: Status,
-    val file: ByteArray,
+    val fileReference: URI,
     val requestedBy: String,
     val requestedFrom: String,
     val createdAt: LocalDateTime,

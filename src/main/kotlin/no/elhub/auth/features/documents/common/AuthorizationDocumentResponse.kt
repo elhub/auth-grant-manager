@@ -12,6 +12,7 @@ import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObjectWithRelation
 @Serializable
 data class DocumentResponseAttributes(
     val status: String,
+    val reference: String,
     val createdAt: String,
     val updatedAt: String
 ) : JsonApiAttributes
@@ -31,8 +32,9 @@ fun AuthorizationDocument.toResponse() =
             id = this.id.toString(),
             attributes = DocumentResponseAttributes(
                 status = this.status.toString(),
+                reference = this.fileReference.toString(),
                 createdAt = this.createdAt.toString(),
-                updatedAt = this.updatedAt.toString()
+                updatedAt = this.updatedAt.toString(),
             ),
             relationships = DocumentRelationships(
                 requestedBy = JsonApiRelationshipToOne(
