@@ -54,16 +54,15 @@ class MinioFileStorage(
                 )
             }
 
-            val response =
-                client.putObject(
-                    PutObjectArgs
-                        .builder()
-                        .bucket(cfg.bucket)
-                        .`object`(filename)
-                        .stream(inputStream, -1, 10485760)
-                        .contentType(MIME_TYPE_PDF)
-                        .build()
-                )
+            client.putObject(
+                PutObjectArgs
+                    .builder()
+                    .bucket(cfg.bucket)
+                    .`object`(filename)
+                    .stream(inputStream, -1, 10485760)
+                    .contentType(MIME_TYPE_PDF)
+                    .build()
+            )
 
             val shareableLink = client.getPresignedObjectUrl(
                 GetPresignedObjectUrlArgs
@@ -77,8 +76,5 @@ class MinioFileStorage(
             )
 
             URI(shareableLink)
-        }.mapLeft { error ->
-            println(error.message)
-            FileUploadError.UnexpectedError
-        }
+        }.mapLeft { FileUploadError.UnexpectedError }
 }
