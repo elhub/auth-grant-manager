@@ -48,9 +48,9 @@
               "description": "Link to the authorization document itself",
               "$ref": "authorization-document-definitions.json#/$defs/links/$defs/self"
             },
-            "file": {
+            "reference": {
               "description": "Link to the actual authorization document pdf file",
-              "$ref": "authorization-document-definitions.json#/$defs/links/$defs/file"
+              "$ref": "authorization-document-definitions.json#/$defs/links/$defs/reference"
             }
           }
         }
