@@ -31,22 +31,4 @@ fun Route.route(handler: Handler) {
 
         call.respond(HttpStatusCode.OK, document.toResponse())
     }
-
-    get("/{$DOCUMENT_ID_PARAM}.pdf") {
-        val id: UUID = validateId(call.parameters[DOCUMENT_ID_PARAM])
-            .getOrElse { err ->
-                val (status, body) = err.toApiErrorResponse()
-                call.respond(status, JsonApiErrorCollection(listOf(body)))
-                return@get
-            }
-
-        val document = handler(Query(id))
-            .getOrElse { err ->
-                val (status, body) = err.toApiErrorResponse()
-                call.respond(status, JsonApiErrorCollection(listOf(body)))
-                return@get
-            }
-
-        call.respond(HttpStatusCode.OK, document)
-    }
 }
