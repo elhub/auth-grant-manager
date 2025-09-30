@@ -5,14 +5,17 @@ import eu.europa.esig.dss.spi.validation.CommonCertificateVerifier
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.plugins.cache.storage.FileStorage
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import io.ktor.server.config.ApplicationConfig
+import io.ktor.server.config.getAs
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
+import io.minio.MinioClient
 import kotlinx.serialization.json.Json
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.documents.common.ExposedDocumentRepository
@@ -21,7 +24,10 @@ import no.elhub.auth.features.documents.create.FileCertificateProvider
 import no.elhub.auth.features.documents.create.FileCertificateProviderConfig
 import no.elhub.auth.features.documents.create.FileGenerator
 import no.elhub.auth.features.documents.create.FileSigningService
+import no.elhub.auth.features.documents.create.FileStorage
 import no.elhub.auth.features.documents.create.HashicorpVaultSignatureProvider
+import no.elhub.auth.features.documents.create.MinioConfig
+import no.elhub.auth.features.documents.create.MinioFileStorage
 import no.elhub.auth.features.documents.create.PdfGenerator
 import no.elhub.auth.features.documents.create.PdfGeneratorConfig
 import no.elhub.auth.features.documents.create.PdfSigningService
@@ -93,6 +99,27 @@ fun Application.module() {
             )
         }
         singleOf(::PdfGenerator) bind FileGenerator::class
+
+        single {
+            val cfg = get<ApplicationConfig>().config("minio")
+            MinioConfig(
+                url = cfg.property("url").getString(),
+                bucket = cfg.property("bucket").getString(),
+                username = cfg.property("username").getString(),
+                password = cfg.property("password").getString(),
+                linkExpiryHours = cfg.property("linkExpiryHours").getAs<Int>(),
+            )
+        }
+        single {
+            val cfg = get<MinioConfig>()
+            MinioClient
+                .builder()
+                .endpoint(cfg.url)
+                .credentials(cfg.username, cfg.password)
+                .build()
+        }
+        singleOf(::MinioFileStorage) bind FileStorage::class
+
         singleOf(::ExposedDocumentRepository) bind DocumentRepository::class
         singleOf(::ConfirmHandler)
         singleOf(::CreateHandler)

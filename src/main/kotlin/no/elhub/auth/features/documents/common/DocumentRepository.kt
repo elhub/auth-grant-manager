@@ -21,6 +21,7 @@ import org.jetbrains.exposed.sql.javatime.datetime
 import org.jetbrains.exposed.sql.javatime.timestamp
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.net.URI
 import java.util.UUID
 
 interface DocumentRepository {
@@ -39,7 +40,7 @@ class ExposedDocumentRepository : DocumentRepository {
                     it[title] = doc.title
                     it[type] = doc.type
                     it[status] = doc.status
-                    it[file] = doc.file
+                    it[fileReference] = doc.fileReference.toString()
                     it[requestedBy] = doc.requestedBy
                     it[requestedTo] = doc.requestedFrom
                     it[createdAt] = doc.createdAt
@@ -91,7 +92,7 @@ object AuthorizationDocumentTable : UUIDTable("auth.authorization_document") {
         fromDb = { AuthorizationDocument.Type.valueOf(it as String) },
         toDb = { PGEnum("document_type", it) },
     )
-    val file = binary("file")
+    val fileReference = varchar("file_reference", 510)
     val status = customEnumeration(
         name = "status",
         sql = "authorization_document_status",
@@ -118,7 +119,7 @@ fun ResultRow.toAuthorizationDocument() = AuthorizationDocument(
     title = this[AuthorizationDocumentTable.title],
     type = this[AuthorizationDocumentTable.type],
     status = this[AuthorizationDocumentTable.status],
-    file = this[AuthorizationDocumentTable.file],
+    fileReference = URI(this[AuthorizationDocumentTable.fileReference]),
     requestedBy = this[AuthorizationDocumentTable.requestedBy],
     requestedFrom = this[AuthorizationDocumentTable.requestedTo],
     createdAt = this[AuthorizationDocumentTable.createdAt],
