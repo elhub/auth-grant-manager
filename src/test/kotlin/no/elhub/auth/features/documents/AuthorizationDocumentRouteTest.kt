@@ -82,33 +82,33 @@ class AuthorizationDocumentRouteTest :
                                 setBody(
                                     Request(
                                         data =
-                                            JsonApiRequestResourceObjectWithRelationshipsAndMeta<DocumentRequestAttributes, DocumentRelationships, DocumentMeta>(
-                                                "AuthorizationDocument",
-                                                attributes = DocumentRequestAttributes(
-                                                    AuthorizationDocument.Type.ChangeOfSupplierConfirmation
-                                                ),
-                                                relationships = DocumentRelationships(
-                                                    requestedBy = JsonApiRelationshipToOne(
-                                                        JsonApiRelationshipData(
-                                                            "User",
-                                                            "12345678901"
-                                                        )
-                                                    ),
-                                                    requestedFrom = JsonApiRelationshipToOne(
-                                                        JsonApiRelationshipData(
-                                                            "User",
-                                                            "98765432109"
-                                                        )
+                                        JsonApiRequestResourceObjectWithRelationshipsAndMeta<DocumentRequestAttributes, DocumentRelationships, DocumentMeta>(
+                                            "AuthorizationDocument",
+                                            attributes = DocumentRequestAttributes(
+                                                AuthorizationDocument.Type.ChangeOfSupplierConfirmation
+                                            ),
+                                            relationships = DocumentRelationships(
+                                                requestedBy = JsonApiRelationshipToOne(
+                                                    JsonApiRelationshipData(
+                                                        "User",
+                                                        "12345678901"
                                                     )
                                                 ),
-                                                meta = DocumentMeta(
-                                                    "Some user",
-                                                    "1234",
-                                                    "Adressevegen 1, 1234 Oslo",
-                                                    "Supplier AS",
-                                                    "My Contract",
+                                                requestedFrom = JsonApiRelationshipToOne(
+                                                    JsonApiRelationshipData(
+                                                        "User",
+                                                        "98765432109"
+                                                    )
                                                 )
+                                            ),
+                                            meta = DocumentMeta(
+                                                "Some user",
+                                                "1234",
+                                                "Adressevegen 1, 1234 Oslo",
+                                                "Supplier AS",
+                                                "My Contract",
                                             )
+                                        )
                                     )
                                 )
                             }
