@@ -30,10 +30,7 @@ fun Route.route(handler: Handler) {
                     CreateDocumentError.SigningError,
                     CreateDocumentError.UploadError,
                     CreateDocumentError.PersistenceError
-                    -> {
-                        println(error.toString())
-                        call.respond(HttpStatusCode.InternalServerError)
-                    }
+                    -> call.respond(HttpStatusCode.InternalServerError)
                 }
                 return@post
             }
