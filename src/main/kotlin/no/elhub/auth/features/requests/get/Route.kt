@@ -13,7 +13,7 @@ import java.util.UUID
 
 const val REQUEST_ID_PARAM = "id"
 
-fun Route.getRequestRoute(handler: GetRequestHandler) {
+fun Route.route(handler: Handler) {
     get("/{$REQUEST_ID_PARAM}") {
         val id: UUID = validateId(call.parameters[REQUEST_ID_PARAM])
             .getOrElse { err ->
@@ -22,7 +22,7 @@ fun Route.getRequestRoute(handler: GetRequestHandler) {
                 return@get
             }
 
-        val request = handler(GetRequestQuery(id))
+        val request = handler(Query(id))
             .getOrElse { err ->
                 val (status, body) = err.toApiErrorResponse()
                 call.respond(status, JsonApiErrorCollection(listOf(body)))

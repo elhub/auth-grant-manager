@@ -16,13 +16,12 @@ import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.testing.testApplication
-import kotlinx.serialization.json.Json
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.documents.common.AuthorizationDocumentResponse
-import no.elhub.auth.features.documents.create.CreateDocumentRequest
 import no.elhub.auth.features.documents.create.DocumentMeta
 import no.elhub.auth.features.documents.create.DocumentRelationships
 import no.elhub.auth.features.documents.create.DocumentRequestAttributes
+import no.elhub.auth.features.documents.create.Request
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipData
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipToOne
 import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObjectWithRelationshipsAndMeta
@@ -69,7 +68,7 @@ class AuthorizationDocumentRouteTest :
                                 contentType(ContentType.Application.Json)
                                 accept(ContentType.Application.Json)
                                 setBody(
-                                    CreateDocumentRequest(
+                                    Request(
                                         data =
                                         JsonApiRequestResourceObjectWithRelationshipsAndMeta<DocumentRequestAttributes, DocumentRelationships, DocumentMeta>(
                                             "AuthorizationDocument",

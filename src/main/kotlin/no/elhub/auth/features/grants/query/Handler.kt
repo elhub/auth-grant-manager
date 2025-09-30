@@ -1,4 +1,4 @@
-package no.elhub.auth.features.grants.get
+package no.elhub.auth.features.grants.query
 
 import arrow.core.Either
 import arrow.core.left
@@ -8,9 +8,9 @@ import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.common.GrantRepository
 
-class GetGrantHandler(private val repo: GrantRepository) {
-    operator fun invoke(query: GetGrantQuery): Either<QueryError, AuthorizationGrant> =
-        repo.find(query.id)
+class Handler(private val repo: GrantRepository) {
+    operator fun invoke(query: Query): Either<QueryError, List<AuthorizationGrant>> =
+        repo.findAll()
             .fold(
                 { error ->
                     when (error) {
@@ -18,6 +18,6 @@ class GetGrantHandler(private val repo: GrantRepository) {
                         is RepositoryReadError.UnexpectedError -> QueryError.IOError.left()
                     }
                 },
-                { grant -> grant.right() }
+                { grants -> grants.right() },
             )
 }

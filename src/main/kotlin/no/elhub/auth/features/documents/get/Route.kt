@@ -15,7 +15,7 @@ import java.util.*
 
 const val DOCUMENT_ID_PARAM = "id"
 
-fun Route.getDocumentRoute(handler: GetDocumentHandler) {
+fun Route.route(handler: Handler) {
     get("/{$DOCUMENT_ID_PARAM}") {
         val id: UUID = validateId(call.parameters[DOCUMENT_ID_PARAM])
             .getOrElse { err ->
@@ -24,7 +24,7 @@ fun Route.getDocumentRoute(handler: GetDocumentHandler) {
                 return@get
             }
 
-        val document = handler(GetDocumentQuery(id))
+        val document = handler(Query(id))
             .getOrElse { err ->
                 val (status, body) = err.toApiErrorResponse()
                 call.respond(status, JsonApiErrorCollection(listOf(body)))
@@ -42,7 +42,7 @@ fun Route.getDocumentRoute(handler: GetDocumentHandler) {
                 return@get
             }
 
-        val document = handler(GetDocumentQuery(id))
+        val document = handler(Query(id))
             .getOrElse { err ->
                 val (status, body) = err.toApiErrorResponse()
                 call.respond(status, JsonApiErrorCollection(listOf(body)))

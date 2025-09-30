@@ -8,11 +8,11 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
 import no.elhub.auth.features.documents.common.toResponse
 
-fun Route.createDocumentRoute(handler: CreateDocumentHandler) {
+fun Route.route(handler: Handler) {
     post {
-        val requestBody = call.receive<CreateDocumentRequest>()
+        val requestBody = call.receive<Request>()
 
-        val command = requestBody.toCreateDocumentCommand()
+        val command = requestBody.toCommand()
             .getOrElse { errors ->
                 call.respond(HttpStatusCode.BadRequest)
                 return@post
