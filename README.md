@@ -11,7 +11,7 @@ processing user authorization data. The main objectives are to:
 * Provide a centralized repository for storing and managing user authorization preferences.
 * Enable granular control over authorization grants, allowing users to specify their preferences for different
     types of data processing activities.
-* Ensure compliance with regulatory requirements and standards related to data privacy and consent management.
+* Ensure compliance with regulatory requirements and standards related to data privacy and consent management cool.
 
 ## Getting Started
 
