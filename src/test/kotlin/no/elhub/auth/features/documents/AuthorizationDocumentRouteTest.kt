@@ -3,6 +3,7 @@ package no.elhub.auth.features.documents
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.ktor.client.call.body
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.accept
@@ -17,11 +18,12 @@ import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.testing.testApplication
 import no.elhub.auth.features.common.PostgresTestContainerExtension
+import no.elhub.auth.features.common.httpTestClient
 import no.elhub.auth.features.documents.common.AuthorizationDocumentResponse
-import no.elhub.auth.features.documents.common.DocumentValidationHelper
 import no.elhub.auth.features.documents.common.MinIOTestContainer
 import no.elhub.auth.features.documents.common.TestCertificateUtil
 import no.elhub.auth.features.documents.common.VaultTransitTestContainerExtension
+import no.elhub.auth.features.documents.common.validateFileIsSignedByUs
 import no.elhub.auth.features.documents.create.DocumentMeta
 import no.elhub.auth.features.documents.create.DocumentRelationships
 import no.elhub.auth.features.documents.create.DocumentRequestAttributes
@@ -121,6 +123,7 @@ class AuthorizationDocumentRouteTest :
                             createdAt.shouldNotBeNull()
                             updatedAt.shouldNotBeNull()
                             status shouldBe "Pending"
+                            reference shouldNotBe null
                         }
                         relationships.apply {
                             requestedBy.apply {
@@ -139,7 +142,7 @@ class AuthorizationDocumentRouteTest :
                     }
 
                     // Get the pdf to validate signature
-                    val file = client.get("$DOCUMENTS_PATH/${documentResponse.data.id}.pdf").bodyAsBytes()
+                    val file = httpTestClient.get(documentResponse.data.attributes!!.reference).bodyAsBytes()
                     file.validateFileIsSignedByUs()
                 }
             }
