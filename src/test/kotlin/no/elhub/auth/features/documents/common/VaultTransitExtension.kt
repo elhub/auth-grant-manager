@@ -1,4 +1,4 @@
-package no.elhub.auth.features.documents
+package no.elhub.auth.features.documents.common
 
 import com.github.dockerjava.api.model.ExposedPort
 import com.github.dockerjava.api.model.HostConfig
