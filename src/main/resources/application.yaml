@@ -28,3 +28,11 @@ pdfSigner:
   certificate:
     signing: $PATH_TO_SIGNING_CERTIFICATE
     chain: $PATH_TO_SIGNING_CERTIFICATE_CHAIN
+
+minio:
+  url: http://localhost:9000
+  externalUrl: http://localhost:9000
+  bucket: documents
+  username: minio
+  password: miniopassword
+  linkExpiryHours: 1

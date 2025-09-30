@@ -1,10 +1,8 @@
 package no.elhub.auth.features.documents.get
 
 import arrow.core.getOrElse
-import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.response.respond
-import io.ktor.server.response.respondBytes
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import no.elhub.auth.features.common.toApiErrorResponse
@@ -49,6 +47,6 @@ fun Route.route(handler: Handler) {
                 return@get
             }
 
-        call.respondBytes(document.file, ContentType.Application.Pdf)
+        call.respond(HttpStatusCode.OK, document)
     }
 }
