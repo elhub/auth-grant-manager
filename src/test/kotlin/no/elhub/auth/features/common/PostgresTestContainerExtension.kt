@@ -25,10 +25,11 @@ object PostgresTestContainer {
     val PASSWORD = "postgres"
     val DRIVER = "org.postgresql.Driver"
     val JDBC_URL = "jdbc:postgresql://localhost:$POSTGRES_PORT/auth"
+    val DATABASE_NAME = "auth"
 
     private val postgres: PostgreSQLContainer<*> by lazy {
         PostgreSQLContainer(DockerImageName.parse("postgres:15-alpine"))
-            .withDatabaseName("auth")
+            .withDatabaseName(DATABASE_NAME)
             .withUsername(USERNAME)
             .withPassword(PASSWORD)
             .withExposedPorts(POSTGRES_PORT)
