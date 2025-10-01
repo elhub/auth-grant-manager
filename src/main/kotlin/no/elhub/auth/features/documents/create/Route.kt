@@ -13,7 +13,7 @@ fun Route.route(handler: Handler) {
         val requestBody = call.receive<Request>()
 
         val command = requestBody.toCommand()
-            .getOrElse { _ ->
+            .getOrElse {
                 call.respond(HttpStatusCode.BadRequest)
                 return@post
             }

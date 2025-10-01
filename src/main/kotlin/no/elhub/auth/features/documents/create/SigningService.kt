@@ -84,5 +84,5 @@ class PdfSigningService(
         )
             .openStream()
             .use { it.readBytes() }
-    }.mapLeft { _ -> FileSigningError.SigningError }
+    }.mapLeft { FileSigningError.SigningError }
 }
