@@ -3,25 +3,25 @@ package no.elhub.auth.features.common
 import io.ktor.http.HttpStatusCode
 import no.elhub.devxp.jsonapi.response.JsonApiErrorObject
 
-abstract class Error
+interface Error
 
-sealed class InputError : Error() {
+sealed class InputError : Error {
     data object MissingInputError : InputError()
     data object MalformedInputError : InputError()
 }
 
-sealed class CommandError : Error() {
+sealed class CommandError : Error {
     data object ResourceAlreadyExistsError : CommandError()
     data object ResourceNotFoundError : CommandError()
     data object IOError : CommandError()
 }
 
-sealed class QueryError : Error() {
+sealed class QueryError : Error {
     data object ResourceNotFoundError : QueryError()
     data object IOError : QueryError()
 }
 
-abstract class RepositoryError : Error()
+abstract class RepositoryError : Error
 
 sealed class RepositoryWriteError : RepositoryError() {
     data object ConflictError : RepositoryWriteError()

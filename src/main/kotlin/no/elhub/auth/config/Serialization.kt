@@ -25,16 +25,3 @@ fun Application.configureSerialization() {
         json(json = defaultJson)
     }
 }
-
-/*@OptIn(ExperimentalSerializationApi::class)
-private val defaultJson: Json = Json {
-    encodeDefaults = true
-    explicitNulls = false
-    isLenient = true
-    allowSpecialFloatingPointValues = true
-    allowStructuredMapKeys = true
-    prettyPrint = false
-    useArrayPolymorphism = true
-    ignoreUnknownKeys = true
-}
-*/

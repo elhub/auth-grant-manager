@@ -17,7 +17,7 @@ fun Route.route(createHandler: Handler, getHandler: GetHandler) {
     post {
         val payload = runCatching {
             call.receive<Request>()
-        }.getOrElse { exception ->
+        }.getOrElse { _ ->
             val (status, body) = InputError.MalformedInputError.toApiErrorResponse()
             call.respond(status, JsonApiErrorCollection(listOf(body)))
             return@post
