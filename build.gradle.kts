@@ -147,8 +147,8 @@ tasks.named("liquibaseUpdate").configure {
 
 val localEnvVars = mapOf(
     "JDBC_URL" to "jdbc:postgresql://localhost:5432/auth",
-    "APP_USERNAME" to dbUsername,
-    "APP_PASSWORD" to dbPassword,
+    "APP_USERNAME" to "app",
+    "APP_PASSWORD" to "app",
     "MUSTACHE_RESOURCE_PATH" to "templates",
     "VAULT_URL" to "http://localhost:8200/v1/transit",
     "VAULT_KEY" to "test-key",
