@@ -1,6 +1,7 @@
 package no.elhub.auth.features.documents.confirm
 
 import arrow.core.Either
+import no.elhub.auth.features.documents.AuthorizationDocument
 import org.apache.commons.lang3.NotImplementedException
 
 fun interface DocumentValidationService {
@@ -15,7 +16,7 @@ fun ByteArray.isSignedByEndUser(): Either<DocumentValidationError, Boolean> = th
 
 fun ByteArray.isSignedByDesiredSignatory(): Either<DocumentValidationError, Boolean> = throw NotImplementedException()
 
-fun ByteArray.matchesDocumentRequest(): Either<DocumentValidationError, Boolean> =
+fun ByteArray.matchesDocumentRequest(document: AuthorizationDocument): Either<DocumentValidationError, Boolean> =
     throw NotImplementedException()
 
 fun ByteArray.getEndUserNin(): Either<DocumentValidationError, String> = throw NotImplementedException()
