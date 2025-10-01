@@ -1,0 +1,5 @@
+EXTENDS:
+  - https://raw.githubusercontent.com/elhub/devxp-lint-configuration/main/resources/.mega-linter.yml
+
+
+EDITORCONFIG_FILTER_REGEX_EXCLUDE: (.*\.icc|.*\.ttf)

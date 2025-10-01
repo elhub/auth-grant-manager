@@ -70,7 +70,7 @@ class AuthorizationDocumentRouteTest :
                                 setBody(
                                     Request(
                                         data =
-                                        JsonApiRequestResourceObjectWithRelationshipsAndMeta<DocumentRequestAttributes, DocumentRelationships, DocumentMeta>(
+                                        JsonApiRequestResourceObjectWithRelationshipsAndMeta(
                                             "AuthorizationDocument",
                                             attributes = DocumentRequestAttributes(
                                                 AuthorizationDocument.Type.ChangeOfSupplierConfirmation
