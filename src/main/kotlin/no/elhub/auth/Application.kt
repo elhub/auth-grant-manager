@@ -6,7 +6,6 @@ import io.ktor.server.netty.EngineMain
 import no.elhub.auth.config.configureDatabase
 import no.elhub.auth.config.configureLogging
 import no.elhub.auth.config.configureMonitoring
-import no.elhub.auth.config.configureSecurity
 import no.elhub.auth.config.configureSerialization
 import org.koin.ktor.plugin.Koin
 
@@ -20,5 +19,4 @@ fun Application.module() {
     configureLogging()
     configureMonitoring(dataSource)
     configureSerialization()
-    configureSecurity()
 }

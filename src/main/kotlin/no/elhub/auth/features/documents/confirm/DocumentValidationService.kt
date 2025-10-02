@@ -4,11 +4,10 @@ import arrow.core.Either
 import no.elhub.auth.features.documents.AuthorizationDocument
 import org.apache.commons.lang3.NotImplementedException
 
-interface DocumentValidationService {
+fun interface DocumentValidationService {
     fun validate(pdfBytes: ByteArray)
 }
 
-// TODO: Implement validation of PDF
 fun ByteArray.hasValidSignature(): Either<DocumentValidationError, Boolean> = throw NotImplementedException()
 
 fun ByteArray.isSignedByUs(): Either<DocumentValidationError, Boolean> = throw NotImplementedException()
