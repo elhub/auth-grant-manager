@@ -8,13 +8,14 @@ import no.elhub.devxp.jsonapi.model.JsonApiRelationshipToOne
 import no.elhub.devxp.jsonapi.model.JsonApiRelationships
 import no.elhub.devxp.jsonapi.response.JsonApiResponse
 import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObjectWithRelationships
+import java.net.URI
 
 @Serializable
 data class DocumentResponseAttributes(
     val status: String,
-    val reference: String,
     val createdAt: String,
-    val updatedAt: String
+    val updatedAt: String,
+    val reference: String
 ) : JsonApiAttributes
 
 @Serializable
@@ -25,31 +26,32 @@ data class DocumentRelationships(
 
 typealias AuthorizationDocumentResponse = JsonApiResponse.SingleDocumentWithRelationships<DocumentResponseAttributes, DocumentRelationships>
 
-fun AuthorizationDocument.toResponse() =
-    AuthorizationDocumentResponse(
-        data = JsonApiResponseResourceObjectWithRelationships(
-            type = "AuthorizationDocument",
-            id = this.id.toString(),
-            attributes = DocumentResponseAttributes(
-                status = this.status.toString(),
-                reference = this.fileReference.toString(),
-                createdAt = this.createdAt.toString(),
-                updatedAt = this.updatedAt.toString(),
+fun Pair<AuthorizationDocument, URI>.toResponse() = AuthorizationDocumentResponse(
+    data =
+    JsonApiResponseResourceObjectWithRelationships<DocumentResponseAttributes, DocumentRelationships>(
+        id = this.first.id.toString(),
+        type = "AuthorizationDocument",
+        attributes = DocumentResponseAttributes(
+            status = this.first.status.toString(),
+            createdAt = this.first.createdAt.toString(),
+            updatedAt = this.first.updatedAt.toString(),
+            reference = this.second.toString()
+        ),
+        relationships = DocumentRelationships(
+            requestedBy = JsonApiRelationshipToOne(
+                data = JsonApiRelationshipData(
+                    id = this.first.requestedBy,
+                    type = "User"
+                )
             ),
-            relationships = DocumentRelationships(
-                requestedBy = JsonApiRelationshipToOne(
-                    data = JsonApiRelationshipData(
-                        id = this.requestedBy,
-                        type = "User"
-                    )
-                ),
-                requestedFrom = JsonApiRelationshipToOne(
-                    data = JsonApiRelationshipData(
-                        id = this.requestedFrom,
-                        type = "User"
+            requestedFrom = JsonApiRelationshipToOne(
+                data = JsonApiRelationshipData(
+                    id = this.first.requestedFrom,
+                    type = "User"
 
-                    )
                 )
             )
         )
+
     )
+)
