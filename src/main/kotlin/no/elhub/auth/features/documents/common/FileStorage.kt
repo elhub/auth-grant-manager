@@ -1,7 +1,6 @@
-package no.elhub.auth.features.documents.create
+package no.elhub.auth.features.documents.common
 
 import arrow.core.Either
-import io.ktor.http.contentType
 import io.minio.BucketExistsArgs
 import io.minio.GetPresignedObjectUrlArgs
 import io.minio.MakeBucketArgs
@@ -13,11 +12,12 @@ import java.net.URI
 import java.util.concurrent.TimeUnit
 
 interface FileStorage {
-    suspend fun upload(inputStream: InputStream, filename: String): Either<FileUploadError, URI>
+    suspend fun upsert(inputStream: InputStream, filename: String): Either<FileStorageError, URI>
+    suspend fun find(filename: String): Either<FileStorageError, URI>
 }
 
-sealed class FileUploadError {
-    data object UnexpectedError : FileUploadError()
+sealed class FileStorageError {
+    data object UnexpectedError : FileStorageError()
 }
 
 private const val KEY_CONTENT_TYPE = "response-content-type"
@@ -36,7 +36,7 @@ class MinioFileStorage(
     private val client: MinioClient,
 ) : FileStorage {
 
-    override suspend fun upload(inputStream: InputStream, filename: String): Either<FileUploadError, URI> =
+    override suspend fun upsert(inputStream: InputStream, filename: String): Either<FileStorageError, URI> =
         Either.catch {
             val bucketExists = client.bucketExists(
                 BucketExistsArgs
@@ -64,17 +64,22 @@ class MinioFileStorage(
                     .build()
             )
 
-            val shareableLink = client.getPresignedObjectUrl(
-                GetPresignedObjectUrlArgs
-                    .builder()
-                    .method(Method.GET)
-                    .bucket(cfg.bucket)
-                    .`object`(filename)
-                    .expiry(cfg.linkExpiryHours, TimeUnit.HOURS)
-                    .extraQueryParams(mapOf(KEY_CONTENT_TYPE to MIME_TYPE_PDF))
-                    .build()
-            )
+            return find(filename)
+        }.mapLeft { FileStorageError.UnexpectedError }
 
-            URI(shareableLink)
-        }.mapLeft { FileUploadError.UnexpectedError }
+    override suspend fun find(filename: String): Either<FileStorageError, URI> =
+        Either.catch {
+            URI(
+                client.getPresignedObjectUrl(
+                    GetPresignedObjectUrlArgs
+                        .builder()
+                        .method(Method.GET)
+                        .bucket(cfg.bucket)
+                        .`object`(filename)
+                        .expiry(cfg.linkExpiryHours, TimeUnit.HOURS)
+                        .extraQueryParams(mapOf(KEY_CONTENT_TYPE to MIME_TYPE_PDF))
+                        .build()
+                )
+            )
+        }.mapLeft { FileStorageError.UnexpectedError }
 }

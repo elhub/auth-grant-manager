@@ -6,6 +6,7 @@ import arrow.core.left
 import arrow.core.right
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.DocumentRepository
+import no.elhub.auth.features.documents.common.FileStorage
 import java.net.URI
 import java.time.LocalDateTime
 import java.util.UUID
@@ -18,7 +19,7 @@ class Handler(
     private val fileStorage: FileStorage,
     private val repo: DocumentRepository
 ) {
-    suspend operator fun invoke(command: Command): Either<CreateDocumentError, AuthorizationDocument> {
+    suspend operator fun invoke(command: Command): Either<CreateDocumentError, Pair<AuthorizationDocument, URI>> {
         val file = fileGenerator.generate(
             customerNin = command.requestedFrom,
             customerName = command.requestedFromName,
@@ -43,15 +44,16 @@ class Handler(
         val signedFile = fileSigningService.embedSignatureIntoFile(file, signature, certChain, signingCert)
             .getOrElse { return CreateDocumentError.SigningError.left() }
 
-        val fileReference = fileStorage.upload(signedFile.inputStream(), UUID.randomUUID().toString())
-            .getOrElse { return CreateDocumentError.UploadError.left() }
-
-        val documentToCreate = command.toAuthorizationDocument(fileReference)
+        val documentToCreate = command.toAuthorizationDocument()
             .getOrElse { return CreateDocumentError.MappingError.left() }
 
-        return repo.insert(documentToCreate)
+        val fileReference = fileStorage.upsert(signedFile.inputStream(), documentToCreate.id.toString())
+            .getOrElse { return CreateDocumentError.UploadError.left() }
+
+        val createdDocument = repo.insert(documentToCreate)
             .getOrElse { return CreateDocumentError.PersistenceError.left() }
-            .right()
+
+        return (createdDocument to fileReference).right()
     }
 }
 
@@ -66,17 +68,16 @@ sealed class CreateDocumentError {
     data object PersistenceError : CreateDocumentError()
 }
 
-fun Command.toAuthorizationDocument(fileReference: URI): Either<CreateDocumentError.MappingError, AuthorizationDocument> =
+fun Command.toAuthorizationDocument(): Either<CreateDocumentError.MappingError, AuthorizationDocument> =
     Either.catch {
         AuthorizationDocument(
             id = UUID.randomUUID(),
             title = "Title",
-            fileReference = fileReference,
             type = this.type,
             status = AuthorizationDocument.Status.Pending,
             requestedBy = this.requestedBy,
             requestedFrom = this.requestedFrom,
             createdAt = LocalDateTime.now(),
-            updatedAt = LocalDateTime.now()
+            updatedAt = LocalDateTime.now(),
         )
     }.mapLeft { CreateDocumentError.MappingError }
