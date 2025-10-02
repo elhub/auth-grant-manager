@@ -19,7 +19,10 @@ import io.kotest.matchers.uri.shouldHaveHost
 import io.minio.MinioClient
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.documents.common.ExposedDocumentRepository
+import no.elhub.auth.features.documents.common.FileStorage
 import no.elhub.auth.features.documents.common.MinIOTestContainer
+import no.elhub.auth.features.documents.common.MinioConfig
+import no.elhub.auth.features.documents.common.MinioFileStorage
 import no.elhub.auth.features.documents.common.TestCertificateUtil
 import no.elhub.auth.features.documents.common.VaultTransitTestContainerExtension
 import no.elhub.auth.features.documents.common.localVaultConfig
@@ -163,8 +166,8 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                 val document = handler(command)
                     .getOrElse { error -> fail("Document not returned: $error") }
 
-                xThen("I should receive a link to a PDF document") {
-                    document.fileReference shouldHaveHost URI(inject<MinioConfig>().value.url).host
+                Then("I should receive a link to a PDF document") {
+                    document.second shouldHaveHost URI(inject<MinioConfig>().value.url).host
                 }
 
                 Then("that document should be signed by Elhub") {
@@ -218,7 +221,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                     }
 
                     Then("I should receive a link to a PDF document") {
-                        document.fileReference shouldHaveHost URI(inject<MinioConfig>().value.url).host
+                        document.second shouldHaveHost URI(inject<MinioConfig>().value.url).host
                     }
 
                     xThen("that document should be signed by Elhub") {
