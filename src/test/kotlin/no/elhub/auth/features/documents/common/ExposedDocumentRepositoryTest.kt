@@ -33,7 +33,6 @@ class ExposedDocumentRepositoryTest :
                     AuthorizationDocument(
                         id = UUID.randomUUID(),
                         title = "Title",
-                        file = byteArrayOf(),
                         type = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
                         status = AuthorizationDocument.Status.Pending,
                         requestedBy = "1234567890",
