@@ -15,8 +15,6 @@ import no.elhub.auth.features.common.PostgresTestContainer
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.httpTestClient
 import no.elhub.auth.features.documents.AuthorizationDocument
-import no.elhub.auth.features.documents.TestCertificateUtil
-import no.elhub.auth.features.documents.VaultTransitTestContainerExtension
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.documents.common.ExposedDocumentRepository
 import no.elhub.auth.features.documents.common.FileStorage
@@ -28,7 +26,6 @@ import no.elhub.auth.features.documents.common.VaultTransitTestContainerExtensio
 import no.elhub.auth.features.documents.common.localVaultConfig
 import no.elhub.auth.features.documents.confirm.getEndUserNin
 import no.elhub.auth.features.documents.confirm.isSignedByUs
-import no.elhub.auth.features.documents.localVaultConfig
 import org.jetbrains.exposed.sql.Database
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
