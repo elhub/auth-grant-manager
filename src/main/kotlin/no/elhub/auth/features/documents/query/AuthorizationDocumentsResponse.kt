@@ -22,29 +22,28 @@ typealias AuthorizationDocumentsResponse = List<AuthorizationDocumentResponse>
 fun List<AuthorizationDocument>.toResponse() = this.map {
     AuthorizationDocumentResponse(
         data =
-            JsonApiResponseResourceObjectWithRelationships<DocumentResponseAttributes, DocumentRelationships>(
-                id = it.id.toString(),
-                type = "AuthorizationDocument",
-                attributes = DocumentResponseAttributes(
-                    status = it.status.toString(),
-                    createdAt = it.createdAt.toString(),
-                    updatedAt = it.updatedAt.toString(),
+        JsonApiResponseResourceObjectWithRelationships<DocumentResponseAttributes, DocumentRelationships>(
+            id = it.id.toString(),
+            type = "AuthorizationDocument",
+            attributes = DocumentResponseAttributes(
+                status = it.status.toString(),
+                createdAt = it.createdAt.toString(),
+                updatedAt = it.updatedAt.toString(),
+            ),
+            relationships = DocumentRelationships(
+                requestedBy = JsonApiRelationshipToOne(
+                    data = JsonApiRelationshipData(
+                        id = it.requestedBy,
+                        type = "User"
+                    )
                 ),
-                relationships = DocumentRelationships(
-                    requestedBy = JsonApiRelationshipToOne(
-                        data = JsonApiRelationshipData(
-                            id = it.requestedBy,
-                            type = "User"
-                        )
-                    ),
-                    requestedFrom = JsonApiRelationshipToOne(
-                        data = JsonApiRelationshipData(
-                            id = it.requestedFrom,
-                            type = "User"
-                        )
+                requestedFrom = JsonApiRelationshipToOne(
+                    data = JsonApiRelationshipData(
+                        id = it.requestedFrom,
+                        type = "User"
                     )
                 )
             )
+        )
     )
 }
-
