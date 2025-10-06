@@ -13,14 +13,16 @@ import no.elhub.auth.features.common.PostgresTestContainer
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.httpTestClient
 import no.elhub.auth.features.documents.AuthorizationDocument
-import no.elhub.auth.features.documents.DocumentValidationHelper
 import no.elhub.auth.features.documents.TestCertificateUtil
 import no.elhub.auth.features.documents.VaultTransitTestContainerExtension
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.documents.common.ExposedDocumentRepository
 import no.elhub.auth.features.documents.confirm.getEndUserNin
 import no.elhub.auth.features.documents.confirm.isSignedByUs
+import no.elhub.auth.features.documents.getCustomMetaDataValue
 import no.elhub.auth.features.documents.localVaultConfig
+import no.elhub.auth.features.documents.validateFileIsPDFA2BCompliant
+import no.elhub.auth.features.documents.validateFileIsSignedByUs
 import org.jetbrains.exposed.sql.Database
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
@@ -131,16 +133,16 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                 }
 
                 Then("that document should be signed by Elhub") {
-                    DocumentValidationHelper.validateInitialDocumentSignature(document.file)
+                    document.file.validateFileIsSignedByUs()
                 }
 
                 Then("that document should contain the necessary metadata") {
-                    val signerNin = DocumentValidationHelper.getCustomMetaDataValue(document.file, PdfGenerator.PdfConstants.PDF_METADATA_KEY_NIN)
+                    val signerNin = document.file.getCustomMetaDataValue(PdfGenerator.PdfConstants.PDF_METADATA_KEY_NIN)
                     signerNin shouldBe command.requestedFrom
                 }
 
                 Then("that document should conform to the PDF/A-2b standard") {
-                    DocumentValidationHelper.validateDocumentIsCompliant(document.file) shouldBe true
+                    document.file.validateFileIsPDFA2BCompliant() shouldBe true
                 }
             }
 
@@ -193,7 +195,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                     }
 
                     Then("that document should conform to the PDF/A-2b standard") {
-                        DocumentValidationHelper.validateDocumentIsCompliant(document.file) shouldBe true
+                        document.file.validateFileIsPDFA2BCompliant() shouldBe true
                     }
                 }
             }
