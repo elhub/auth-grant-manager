@@ -9,10 +9,13 @@ import com.oracle.bmc.objectstorage.requests.CreatePreauthenticatedRequestReques
 import com.oracle.bmc.objectstorage.requests.GetBucketRequest
 import com.oracle.bmc.objectstorage.requests.PutObjectRequest
 import io.minio.BucketExistsArgs
+import io.minio.GetObjectArgs
 import io.minio.GetPresignedObjectUrlArgs
 import io.minio.MakeBucketArgs
 import io.minio.MinioClient
 import io.minio.PutObjectArgs
+import io.minio.ServerSideEncryption
+import io.minio.ServerSideEncryptionKms
 import io.minio.http.Method
 import java.io.InputStream
 import java.net.URI
@@ -20,10 +23,14 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.Date
 import java.util.concurrent.TimeUnit
+import javax.crypto.Cipher
+import javax.crypto.CipherInputStream
+import javax.crypto.CipherOutputStream
 
 interface FileStorage {
     suspend fun upsert(inputStream: InputStream, filename: String): Either<FileStorageError, URI>
     suspend fun find(filename: String): Either<FileStorageError, URI>
+    suspend fun getThing(filename: String): Either<FileStorageError, InputStream>
 }
 
 sealed class FileStorageError {
@@ -64,6 +71,8 @@ class MinioFileStorage(
                 )
             }
 
+            val sseKms = ServerSideEncryptionKms("", mapOf("" to ""))
+
             client.putObject(
                 PutObjectArgs
                     .builder()
@@ -71,6 +80,7 @@ class MinioFileStorage(
                     .`object`(filename)
                     .stream(inputStream, -1, 10485760)
                     .contentType(MIME_TYPE_PDF)
+                    .sse(sseKms)
                     .build()
             )
 
@@ -90,6 +100,20 @@ class MinioFileStorage(
                         .extraQueryParams(mapOf(KEY_CONTENT_TYPE to MIME_TYPE_PDF))
                         .build()
                 )
+            )
+        }.mapLeft { FileStorageError.UnexpectedError }
+
+    override suspend fun getThing(filename: String): Either<FileStorageError, InputStream> =
+        Either.catch {
+            client.getObject(
+                GetObjectArgs
+                    .builder()
+                    .bucket(cfg.bucket)
+                    .`object`(filename)
+                    .extraQueryParams(
+                        mapOf(KEY_CONTENT_TYPE to MIME_TYPE_PDF)
+                    )
+                    .build()
             )
         }.mapLeft { FileStorageError.UnexpectedError }
 }

@@ -10,12 +10,15 @@ import no.elhub.auth.features.documents.common.FileStorage
 import java.net.URI
 import java.time.LocalDateTime
 import java.util.UUID
+import javax.crypto.Cipher
+import javax.crypto.CipherInputStream
 
 class Handler(
     private val fileGenerator: FileGenerator,
     private val certificateProvider: CertificateProvider,
     private val fileSigningService: FileSigningService,
     private val signatureProvider: SignatureProvider,
+    private val encryptionService: EncryptionService,
     private val fileStorage: FileStorage,
     private val repo: DocumentRepository
 ) {
@@ -44,10 +47,13 @@ class Handler(
         val signedFile = fileSigningService.embedSignatureIntoFile(file, signature, certChain, signingCert)
             .getOrElse { return CreateDocumentError.SigningError.left() }
 
+        val encryptedFilestream = encryptionService.encrypt(signedFile.inputStream())
+            .getOrElse { return CreateDocumentError.EncryptionError.left() }
+
         val documentToCreate = command.toAuthorizationDocument()
             .getOrElse { return CreateDocumentError.MappingError.left() }
 
-        val fileReference = fileStorage.upsert(signedFile.inputStream(), documentToCreate.id.toString())
+        val fileReference = fileStorage.upsert(encryptedFilestream, documentToCreate.id.toString())
             .getOrElse { return CreateDocumentError.UploadError.left() }
 
         val createdDocument = repo.insert(documentToCreate)
@@ -63,6 +69,7 @@ sealed class CreateDocumentError {
     data object SigningDataGenerationError : CreateDocumentError()
     data object SignatureFetchingError : CreateDocumentError()
     data object SigningError : CreateDocumentError()
+    data object EncryptionError : CreateDocumentError()
     data object UploadError : CreateDocumentError()
     data object MappingError : CreateDocumentError()
     data object PersistenceError : CreateDocumentError()

@@ -28,9 +28,10 @@ fun Route.route(handler: Handler) {
                     CreateDocumentError.SignatureFetchingError,
                     CreateDocumentError.SigningDataGenerationError,
                     CreateDocumentError.SigningError,
+                    CreateDocumentError.EncryptionError,
                     CreateDocumentError.UploadError,
                     CreateDocumentError.PersistenceError
-                    -> call.respond(HttpStatusCode.InternalServerError)
+                        -> call.respond(HttpStatusCode.InternalServerError)
                 }
                 return@post
             }
