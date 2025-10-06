@@ -8,6 +8,14 @@ import eu.europa.esig.dss.pades.validation.PDFDocumentValidator
 import eu.europa.esig.dss.spi.validation.CommonCertificateVerifier
 import eu.europa.esig.dss.spi.x509.CommonTrustedCertificateSource
 import io.kotest.matchers.shouldBe
+import no.elhub.auth.features.documents.create.PdfGenerator
+import org.apache.pdfbox.Loader
+import org.verapdf.gf.foundry.VeraGreenfieldFoundryProvider
+import org.verapdf.pdfa.Foundries
+import org.verapdf.pdfa.PDFAParser
+import org.verapdf.pdfa.PDFAValidator
+import org.verapdf.pdfa.flavours.PDFAFlavour
+import java.io.ByteArrayInputStream
 import java.io.File
 import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
@@ -69,5 +77,25 @@ object DocumentValidationHelper {
 
         signingCertificateDN shouldBe testCertificate.issuer.rfC2253
         signingCertificateSerialNumber shouldBe testCertificate.serialNumber.toString()
+    }
+
+    fun validateDocumentIsCompliant(byteArray: ByteArray): Boolean {
+        VeraGreenfieldFoundryProvider.initialise()
+        val flavour = PDFAFlavour.PDFA_2_B
+        ByteArrayInputStream(byteArray).use { input ->
+            Foundries.defaultInstance().createParser(input, flavour).use { parser: PDFAParser ->
+                val validator: PDFAValidator =
+                    Foundries.defaultInstance().createValidator(flavour, false)
+                return validator.validate(parser).isCompliant
+            }
+        }
+    }
+
+    fun getCustomMetaDataValue(
+        byteArray: ByteArray,
+        key: String
+    ): String? = Loader.loadPDF(byteArray).use { doc ->
+        val info = doc.documentInformation
+        return info.getCustomMetadataValue(key)
     }
 }

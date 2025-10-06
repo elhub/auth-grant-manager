@@ -13,6 +13,7 @@ import no.elhub.auth.features.common.PostgresTestContainer
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.httpTestClient
 import no.elhub.auth.features.documents.AuthorizationDocument
+import no.elhub.auth.features.documents.DocumentValidationHelper
 import no.elhub.auth.features.documents.TestCertificateUtil
 import no.elhub.auth.features.documents.VaultTransitTestContainerExtension
 import no.elhub.auth.features.documents.common.DocumentRepository
@@ -26,12 +27,6 @@ import org.koin.dsl.bind
 import org.koin.dsl.module
 import org.koin.test.KoinTest
 import org.koin.test.inject
-import org.verapdf.gf.foundry.VeraGreenfieldFoundryProvider
-import org.verapdf.pdfa.Foundries
-import org.verapdf.pdfa.PDFAParser
-import org.verapdf.pdfa.PDFAValidator
-import org.verapdf.pdfa.flavours.PDFAFlavour
-import java.io.ByteArrayInputStream
 import kotlin.test.fail
 
 // TODO: Provide a valid supplier ID
@@ -135,17 +130,17 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                     fail("Received the PDF bytes")
                 }
 
-                xThen("that document should be signed by Elhub") {
-                    document.file.isSignedByUs() shouldBe true
+                Then("that document should be signed by Elhub") {
+                    DocumentValidationHelper.validateInitialDocumentSignature(document.file)
                 }
 
-                xThen("that document should contain the necessary metadata") {
-                    // TODO: PDF specific references in these tests?
-                    document.file.getEndUserNin() shouldBe requestedFrom
+                Then("that document should contain the necessary metadata") {
+                    val signerNin = DocumentValidationHelper.getCustomMetaDataValue(document.file, PdfGenerator.PdfConstants.PDF_METADATA_KEY_NIN)
+                    signerNin shouldBe command.requestedFrom
                 }
 
                 Then("that document should conform to the PDF/A-2b standard") {
-                    document.file.isConformant() shouldBe true
+                    DocumentValidationHelper.validateDocumentIsCompliant(document.file) shouldBe true
                 }
             }
 
@@ -198,7 +193,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                     }
 
                     Then("that document should conform to the PDF/A-2b standard") {
-                        document.file.isConformant() shouldBe true
+                        DocumentValidationHelper.validateDocumentIsCompliant(document.file) shouldBe true
                     }
                 }
             }
@@ -462,18 +457,6 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                     }
                 }
             }
-        }
-    }
-}
-
-fun ByteArray.isConformant(): Boolean {
-    VeraGreenfieldFoundryProvider.initialise()
-    val flavour = PDFAFlavour.PDFA_2_B
-    ByteArrayInputStream(this).use { input ->
-        Foundries.defaultInstance().createParser(input, flavour).use { parser: PDFAParser ->
-            val validator: PDFAValidator =
-                Foundries.defaultInstance().createValidator(flavour, false)
-            return validator.validate(parser).isCompliant
         }
     }
 }
