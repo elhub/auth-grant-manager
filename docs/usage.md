@@ -108,20 +108,20 @@ PDF document that meets legal and regulatory standards.
 ### Authorization Document Signing Requirements
 
 The Authorization Grant Manager requires that all documents are signed with a qualified electronic signature (QES),
-compliant with the PAdES B-B standard.
+compliant with the PAdES B-LT standard.
 
-In addition, there must be a mechanism that allows the Authorization Grant Manager to obtain the signer’s Norwegian
+In addition, we require a mechanism to allow the Authorization Grant Manager to obtain the signer’s Norwegian
 national identity number (fødselsnummer). This is necessary in order to verify the identity of the person who signed the document.
 
 #### Supported Signing Solutions
-Currently, the Authorization Grant Manager only supports the BankId signing solution, provided through a qualified BankID partner.
-(TODO: Reference documentation here)
-
-If there is demand from the market, additional signing solutions may be supported in the future, provided that they meet the following requirements:
+Currently, the Authorization Grant Manager supports the following solutions:
+* BankId signing solution, provided through a qualified BankID partner.
 
 #### Future support
-1. The signature complies with the QES / PAdES B-B standard.
-2. A mechanism exists that enables the Authorization Grant Manager to obtain the signer’s Norwegian national identity number for identity verification.
+If there is demand from the market, additional signing solutions may be supported in the future, provided that they meet the following requirements:
+1. The signature complies with the QES / PAdES B-LT standard.
+2. A secure and reasonable mechanism exists that enables the Authorization Grant Manager to obtain the signer’s Norwegian national identity number for identity verification.
+3. There is a stated need in the market for supporting the suggested solution.
 
 ### Technical Flow
 
@@ -139,7 +139,7 @@ If there is demand from the market, additional signing solutions may be supporte
     * The Market Party retrieves the document using the document ID.
         * The document is forwarded to a **Nkom-approved signing service**.
         * The End User signs the document using their individual certificate.
-        * The signature uses the **PAdES B-B** standard.
+        * The signature uses the **PAdES B-LT** standard.
 5. **Return to Elhub**<br>
     * The Market Party submits the signed document to Elhub using the original document ID.
 6. **Verification by Elhub**<br>
