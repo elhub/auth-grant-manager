@@ -28,3 +28,10 @@ pdfSigner:
   certificate:
     signing: $PATH_TO_SIGNING_CERTIFICATE
     chain: $PATH_TO_SIGNING_CERTIFICATE_CHAIN
+
+minio:
+  url: $MINIO_URL
+  bucket: $MINIO_BUCKET
+  username: $MINIO_USERNAME
+  password: $MINIO_PASSWORD
+  linkExpiryHours: $MINIO_LINK_EXPIRY_HOURS

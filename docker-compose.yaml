@@ -1,6 +1,11 @@
+---
+name: auth-grant-manager
+
 services:
   db:
     image: postgres:15
+    networks:
+      - auth-grant-manager
     ports:
       - "5432:5432"
     environment:
@@ -10,7 +15,28 @@ services:
 
   vault-transit-mock:
     image: docker.jfrog.elhub.cloud/frzq0sxltynr/auth/vault-transit-secrets-engine-mock:0.1.0-2
+    networks:
+      - auth-grant-manager
     ports:
       - "8200:8200"
     volumes:
       - "${PRIVATE_KEY_PATH}:/key/private.pem:ro"
+
+  minio:
+    image: quay.io/minio/minio
+    command: server /data --console-address ":9001"
+    ports:
+      - 9000:9000
+      - 9001:9001
+    container_name: minio
+    volumes:
+      - ~/minio/data:/data
+    networks:
+      - auth-grant-manager
+    environment:
+      - MINIO_ROOT_USER=$MINIO_USERNAME
+      - MINIO_ROOT_PASSWORD=$MINIO_PASSWORD
+
+networks:
+  auth-grant-manager:
+    name: auth-grant-manager
