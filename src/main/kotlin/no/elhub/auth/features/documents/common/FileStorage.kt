@@ -1,6 +1,13 @@
 package no.elhub.auth.features.documents.common
 
 import arrow.core.Either
+import com.oracle.bmc.objectstorage.ObjectStorage
+import com.oracle.bmc.objectstorage.model.CreateBucketDetails
+import com.oracle.bmc.objectstorage.model.CreatePreauthenticatedRequestDetails
+import com.oracle.bmc.objectstorage.requests.CreateBucketRequest
+import com.oracle.bmc.objectstorage.requests.CreatePreauthenticatedRequestRequest
+import com.oracle.bmc.objectstorage.requests.GetBucketRequest
+import com.oracle.bmc.objectstorage.requests.PutObjectRequest
 import io.minio.BucketExistsArgs
 import io.minio.GetPresignedObjectUrlArgs
 import io.minio.MakeBucketArgs
@@ -9,6 +16,9 @@ import io.minio.PutObjectArgs
 import io.minio.http.Method
 import java.io.InputStream
 import java.net.URI
+import java.time.Instant
+import java.time.temporal.ChronoUnit
+import java.util.Date
 import java.util.concurrent.TimeUnit
 
 interface FileStorage {
@@ -82,4 +92,77 @@ class MinioFileStorage(
                 )
             )
         }.mapLeft { FileStorageError.UnexpectedError }
+}
+
+data class OciObjectStorageConfig(
+    val url: String,
+    val bucket: String,
+    val linkExpiryHours: Long,
+)
+
+class OciObjectStorage(
+    val cfg: OciObjectStorageConfig,
+    val ociClient: ObjectStorage,
+) : FileStorage {
+
+    override suspend fun upsert(inputStream: InputStream, filename: String): Either<FileStorageError, URI> =
+        Either.catch {
+            val bucketExists = ociClient.getBucket(
+                GetBucketRequest
+                    .builder()
+                    .bucketName(cfg.bucket)
+                    .build()
+            ) != null
+
+            if (!bucketExists) {
+                ociClient.createBucket(
+                    CreateBucketRequest
+                        .builder()
+                        .createBucketDetails(
+                            CreateBucketDetails
+                                .builder()
+                                .name(cfg.bucket)
+                                .build()
+                        )
+                        .build()
+                )
+            }
+
+            ociClient.putObject(
+                PutObjectRequest
+                    .builder()
+                    .bucketName(cfg.bucket)
+                    .objectName(filename)
+                    .putObjectBody(inputStream)
+                    .contentType(MIME_TYPE_PDF)
+                    .build()
+            )
+
+            return find(filename)
+        }.mapLeft { FileStorageError.UnexpectedError }
+
+    override suspend fun find(filename: String): Either<FileStorageError, URI> = Either.catch {
+        URI(
+            ociClient.createPreauthenticatedRequest(
+                CreatePreauthenticatedRequestRequest
+                    .builder()
+                    .createPreauthenticatedRequestDetails(
+                        CreatePreauthenticatedRequestDetails
+                            .builder()
+                            .objectName(filename)
+                            .timeExpires(
+                                Date.from(
+                                    Instant
+                                        .now()
+                                        .plus(cfg.linkExpiryHours, ChronoUnit.HOURS)
+                                )
+                            )
+                            .build()
+                    )
+                    .build()
+            )
+                .preauthenticatedRequest
+                .accessUri
+        )
+    }.mapLeft { FileStorageError.UnexpectedError }
 }

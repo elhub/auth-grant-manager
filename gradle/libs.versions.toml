@@ -23,6 +23,7 @@ liquibase-plugin = "3.0.2"
 micrometer = "1.15.4"
 minio = "8.5.17"
 mockk = "1.14.6"
+oci = "3.74.1"
 openapi-generator = "7.16.0"
 picocli = "4.7.7"
 postgresql = "42.7.8"
@@ -101,6 +102,7 @@ test-mybatis = { group = "org.mybatis", name = "mybatis", version.ref = "mybatis
 templating-mustache = { group = "com.github.spullara.mustache.java", name = "compiler", version.ref = "mustache" }
 pdf-openhtmltopdf-pdfbox = { group = "io.github.openhtmltopdf", name = "openhtmltopdf-pdfbox", version.ref = "openhtmltopdf" }
 storage-minio = { group = "io.minio", name = "minio", version.ref = "minio" }
+storage-oci = { group = "com.oracle.oci.sdk", name = "oci-java-sdk-objectstorage", version.ref = "oci" }
 pdf-pdfbox = { group = "org.apache.pdfbox", name = "pdfbox", version.ref = "pdfbox" }
 dss-pades-pdfbox = { group = "eu.europa.ec.joinup.sd-dss", name = "dss-pades-pdfbox", version.ref = "dss" }
 dss-token = { group = "eu.europa.ec.joinup.sd-dss", name = "dss-token", version.ref = "dss" }
@@ -124,5 +126,5 @@ logging = ["ktor-server-call-logging", "logging-slf4j-simple", "logging-oshai-ko
 monitoring = ["ktor-server-metrics-micrometer", "monitoring-micrometer-registry-prometheus", "monitoring-cohort-hikari", "monitoring-cohort-ktor",
   "monitoring-cohort-micrometer"]
 serialization = ["kotlinx-datetime", "kotlinx-serialization-json", "ktor-serialization-kotlinx-json", "serialization-yaml-snakeyaml"]
-pdf-generation = ["storage-minio", "templating-mustache", "pdf-openhtmltopdf-pdfbox", "pdf-pdfbox"]
+pdf-generation = ["storage-minio", "storage-oci", "templating-mustache", "pdf-openhtmltopdf-pdfbox", "pdf-pdfbox"]
 dss = ["dss-pades-pdfbox", "dss-token", "dss-validation", "dss-utils-apache-commons", "dss-crl-parser-stream", "dss-cms-stream", "dss-policy-jaxb"]
