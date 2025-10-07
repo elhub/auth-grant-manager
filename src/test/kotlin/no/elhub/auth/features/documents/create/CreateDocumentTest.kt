@@ -10,6 +10,8 @@ import io.kotest.koin.KoinLifecycleMode
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.uri.shouldHaveHost
+import io.ktor.client.request.get
+import io.ktor.client.statement.readRawBytes
 import io.minio.MinioClient
 import no.elhub.auth.features.common.PostgresTestContainer
 import no.elhub.auth.features.common.PostgresTestContainerExtension
@@ -23,25 +25,18 @@ import no.elhub.auth.features.documents.common.MinioConfig
 import no.elhub.auth.features.documents.common.MinioFileStorage
 import no.elhub.auth.features.documents.common.TestCertificateUtil
 import no.elhub.auth.features.documents.common.VaultTransitTestContainerExtension
+import no.elhub.auth.features.documents.common.getCustomMetaDataValue
 import no.elhub.auth.features.documents.common.localVaultConfig
+import no.elhub.auth.features.documents.common.validateFileIsPDFA2BCompliant
+import no.elhub.auth.features.documents.common.validateFileIsSignedByUs
 import no.elhub.auth.features.documents.confirm.getEndUserNin
 import no.elhub.auth.features.documents.confirm.isSignedByUs
-import no.elhub.auth.features.documents.getCustomMetaDataValue
-import no.elhub.auth.features.documents.localVaultConfig
-import no.elhub.auth.features.documents.validateFileIsPDFA2BCompliant
-import no.elhub.auth.features.documents.validateFileIsSignedByUs
 import org.jetbrains.exposed.sql.Database
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
 import org.koin.dsl.module
 import org.koin.test.KoinTest
 import org.koin.test.inject
-import org.verapdf.gf.foundry.VeraGreenfieldFoundryProvider
-import org.verapdf.pdfa.Foundries
-import org.verapdf.pdfa.PDFAParser
-import org.verapdf.pdfa.PDFAValidator
-import org.verapdf.pdfa.flavours.PDFAFlavour
-import java.io.ByteArrayInputStream
 import java.net.URI
 import kotlin.test.fail
 
@@ -164,21 +159,23 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                 val document = handler(command)
                     .getOrElse { error -> fail("Document not returned: $error") }
 
+                val file = httpTestClient.get(document.second.toString()).readRawBytes()
+
                 Then("I should receive a link to a PDF document") {
                     document.second shouldHaveHost URI(inject<MinioConfig>().value.url).host
                 }
 
                 Then("that document should be signed by Elhub") {
-                    document.file.validateFileIsSignedByUs()
+                    file.validateFileIsSignedByUs()
                 }
 
                 Then("that document should contain the necessary metadata") {
-                    val signerNin = document.file.getCustomMetaDataValue(PdfGenerator.PdfConstants.PDF_METADATA_KEY_NIN)
+                    val signerNin = file.getCustomMetaDataValue(PdfGenerator.PdfConstants.PDF_METADATA_KEY_NIN)
                     signerNin shouldBe command.requestedFrom
                 }
 
                 Then("that document should conform to the PDF/A-2b standard") {
-                    document.file.validateFileIsPDFA2BCompliant() shouldBe true
+                    file.validateFileIsPDFA2BCompliant() shouldBe true
                 }
             }
 
@@ -212,6 +209,8 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                     val document = handler(command)
                         .getOrElse { error -> fail("Document not returned: $error") }
 
+                    val file = httpTestClient.get(document.second.toString()).readRawBytes()
+
                     xThen("the user should be registered in Elhub") {
                         val endUser = endUserRepo.findOrCreateByNin(requestedFrom)
                             .getOrElse { fail("Could not retrieve the end user") }
@@ -223,18 +222,15 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                     }
 
                     xThen("that document should be signed by Elhub") {
-                        val file = ByteArray(0)
                         file.isSignedByUs() shouldBe true
                     }
 
                     xThen("that document should contain the necessary metadata") {
-                        // TODO: PDF specific references in these tests?
-                        val file = ByteArray(0)
                         file.getEndUserNin() shouldBe requestedFrom
                     }
 
                     Then("that document should conform to the PDF/A-2b standard") {
-                        document.file.validateFileIsPDFA2BCompliant() shouldBe true
+                        file.validateFileIsPDFA2BCompliant() shouldBe true
                     }
                 }
             }
