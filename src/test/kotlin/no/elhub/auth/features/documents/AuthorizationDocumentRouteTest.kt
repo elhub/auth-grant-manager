@@ -31,7 +31,8 @@ class AuthorizationDocumentRouteTest :
     FunSpec({
         extensions(
             PostgresTestContainerExtension,
-            VaultTransitTestContainerExtension
+            VaultTransitTestContainerExtension,
+            StartAuthPersonTestContainer
         )
 
         context("Create document") {
