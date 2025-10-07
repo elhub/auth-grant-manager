@@ -120,7 +120,8 @@ Currently, the Authorization Grant Manager supports the following solutions:
 #### Future support
 If there is demand from the market, additional signing solutions may be supported in the future, provided that they meet the following requirements:
 1. The signature complies with the QES / PAdES B-LT standard.
-2. A secure and reasonable mechanism exists that enables the Authorization Grant Manager to obtain the signer’s Norwegian national identity number for identity verification.
+2. A secure and reasonable mechanism exists that enables the Authorization Grant Manager to obtain the signer’s Norwegian national identity number for
+identity verification.
 3. There is a stated need in the market for supporting the suggested solution.
 
 ### Technical Flow
