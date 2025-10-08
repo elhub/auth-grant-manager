@@ -2,7 +2,6 @@
 CREATE TABLE auth.authorization_document
 (
     id              UUID                                   NOT NULL,
-    title           VARCHAR(255)                           NOT NULL,
     type            auth.document_type                     NOT NULL,
     file            BYTEA                                  NOT NULL,
     status          auth.authorization_document_status     NOT NULL,

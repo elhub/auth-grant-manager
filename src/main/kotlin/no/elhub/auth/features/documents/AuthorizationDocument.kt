@@ -5,7 +5,6 @@ import java.util.*
 
 data class AuthorizationDocument(
     val id: UUID,
-    val title: String,
     val type: Type,
     val status: Status,
     val file: ByteArray,

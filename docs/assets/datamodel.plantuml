@@ -105,7 +105,6 @@ entity AuthorizationRequestProperty {
 entity AuthorizationDocument {
   id: UUID
   --
-  title: String
   type: DocumentType
   file: Blob
   status: AuthorizationDocumentStatus

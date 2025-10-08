@@ -36,7 +36,6 @@ class ExposedDocumentRepository : DocumentRepository {
             transaction {
                 val document = AuthorizationDocumentTable.insertReturning {
                     it[id] = doc.id
-                    it[title] = doc.title
                     it[type] = doc.type
                     it[status] = doc.status
                     it[file] = doc.file
@@ -84,7 +83,6 @@ class ExposedDocumentRepository : DocumentRepository {
 }
 
 object AuthorizationDocumentTable : UUIDTable("auth.authorization_document") {
-    val title = varchar("title", 255)
     val type = customEnumeration(
         name = "type",
         sql = "document_type",
@@ -115,7 +113,6 @@ object AuthorizationDocumentScopeTable : Table("auth.authorization_document_scop
 
 fun ResultRow.toAuthorizationDocument() = AuthorizationDocument(
     id = this[AuthorizationDocumentTable.id].value,
-    title = this[AuthorizationDocumentTable.title],
     type = this[AuthorizationDocumentTable.type],
     status = this[AuthorizationDocumentTable.status],
     file = this[AuthorizationDocumentTable.file],

@@ -64,7 +64,6 @@ fun Command.toAuthorizationDocument(file: ByteArray): Either<CreateDocumentError
     Either.catch {
         AuthorizationDocument(
             id = UUID.randomUUID(),
-            title = "Title",
             file = file,
             type = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
             status = AuthorizationDocument.Status.Pending,
