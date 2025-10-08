@@ -63,7 +63,7 @@ class AuthorizationDocumentRouteTest :
                     )
                 }
 
-                test("Should create a document with a valid signature") {
+                test("Should create a document with a valid signggitature") {
                     val response =
                         client
                             .post(DOCUMENTS_PATH) {
@@ -131,8 +131,8 @@ class AuthorizationDocumentRouteTest :
                     }
 
                     // Get the pdf to validate signature
-                    val document = client.get("$DOCUMENTS_PATH/${documentResponse.data.id}.pdf")
-                    DocumentValidationHelper.validateInitialDocumentSignature(document.bodyAsBytes())
+                    val file = client.get("$DOCUMENTS_PATH/${documentResponse.data.id}.pdf").bodyAsBytes()
+                    file.validateFileIsSignedByUs()
                 }
             }
         }

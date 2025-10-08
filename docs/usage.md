@@ -107,14 +107,22 @@ PDF document that meets legal and regulatory standards.
 
 ### Authorization Document Signing Requirements
 
-* The Market Party MUST use a trusted document signing service for the end user to sign the document.
-  * The signing service MUST be on the [Nkom's Trusted list](https://www.nkom.no/tjenester/tillitsliste)
-* The signing process MUST meet:
-  * **High level of assurance**: Security Level 4 (sikkerhetsnivå 4)
-    * **Signature Standard**: PAdES B-B
-    * **Identity validation**: The signing service must provide the OCSP extension: `2.16.578.1.16.3.2`
-            (Norwegian national identity number – fødselsnummer). This is required in order for Elhub to
-            verify the identity of the end user.
+The Authorization Grant Manager requires that all documents are signed with a qualified electronic signature (QES),
+compliant with the PAdES B-LT standard.
+
+In addition, we require a mechanism to allow the Authorization Grant Manager to obtain the signer’s Norwegian
+national identity number (fødselsnummer). This is necessary in order to verify the identity of the person who signed the document.
+
+#### Supported Signing Solutions
+Currently, the Authorization Grant Manager supports the following solutions:
+* BankId signing solution, provided through a qualified BankID partner.
+
+#### Future support
+If there is demand from the market, additional signing solutions may be supported in the future, provided that they meet the following requirements:
+1. The signature complies with the QES / PAdES B-LT standard.
+2. A secure and reasonable mechanism exists that enables the Authorization Grant Manager to obtain the signer’s Norwegian national identity number for
+identity verification.
+3. There is a stated need in the market for supporting the suggested solution.
 
 ### Technical Flow
 
@@ -132,7 +140,7 @@ PDF document that meets legal and regulatory standards.
     * The Market Party retrieves the document using the document ID.
         * The document is forwarded to a **Nkom-approved signing service**.
         * The End User signs the document using their individual certificate.
-        * The signature uses the **PAdES B-B** standard.
+        * The signature uses the **PAdES B-LT** standard.
 5. **Return to Elhub**<br>
     * The Market Party submits the signed document to Elhub using the original document ID.
 6. **Verification by Elhub**<br>
