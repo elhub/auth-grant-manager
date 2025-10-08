@@ -125,7 +125,7 @@ entity AuthorizationDocumentProperty {
 
 entity AuthorizationDocumentSignatories {
   authorizationDocumentId: UUID, FK→Document
-  requestedTo: BigInt, FK→AuthorizationParty
+  requestedFrom: BigInt, FK→AuthorizationParty
   --
   signedBy: BigInt, FK→AuthorizationParty
   signedAt: DateTime
