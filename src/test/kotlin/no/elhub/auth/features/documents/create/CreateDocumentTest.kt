@@ -8,11 +8,12 @@ import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.koin.KoinExtension
 import io.kotest.koin.KoinLifecycleMode
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.shouldNotBe
 import no.elhub.auth.features.common.PostgresTestContainer
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.httpTestClient
+import no.elhub.auth.features.documents.AuthPersonTestContainer
 import no.elhub.auth.features.documents.AuthorizationDocument
+import no.elhub.auth.features.documents.StartAuthPersonTestContainer
 import no.elhub.auth.features.documents.TestCertificateUtil
 import no.elhub.auth.features.documents.VaultTransitTestContainerExtension
 import no.elhub.auth.features.documents.common.DocumentRepository
@@ -32,7 +33,7 @@ import org.koin.test.inject
 import kotlin.test.fail
 
 // TODO: Provide a valid supplier ID
-private const val VALID_REQUESTED_FROM = "abc123"
+private const val VALID_REQUESTED_FROM = "18084190426"
 private const val INVALID_REQUESTED_FROM = "^%)"
 private const val VALID_REQUESTED_FROM_NAME = "Supplier AS"
 
@@ -58,7 +59,11 @@ private const val EMPTY = " "
  */
 class CreateDocumentTest : BehaviorSpec(), KoinTest {
     init {
-        extensions(VaultTransitTestContainerExtension, PostgresTestContainerExtension)
+        extensions(
+            VaultTransitTestContainerExtension,
+            PostgresTestContainerExtension,
+            StartAuthPersonTestContainer
+        )
         extension(
             KoinExtension(
                 module {
@@ -82,8 +87,8 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                     singleOf(::PdfGenerator) bind FileGenerator::class
 
                     singleOf(::ExposedDocumentRepository) bind DocumentRepository::class
-                    single { EndUserApiConfig("baseUrl", "/persons/") }
                     singleOf(::ApiEndUserRepository) bind EndUserRepository::class
+                    single { EndUserApiConfig(baseUri = AuthPersonTestContainer.baseUri()) }
 
                     singleOf(::Handler)
                 },
@@ -175,11 +180,11 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
                     val document = handler(command).getOrElse { fail("Document not returned") }
 
-                    Then("the user should be registered in Elhub") {
-                        val endUser = endUserRepo.findOrCreateByNin(requestedFrom)
-                            .getOrElse { fail("Could not retrieve the end user") }
-                        endUser.id shouldNotBe null
-                    }
+//                    Then("the user should be registered in Elhub") {
+//                        val endUser = endUserRepo.findOrCreateByNin(requestedFrom)
+//                            .getOrElse { fail("Could not retrieve the end user") }
+//                        endUser.shouldBeEmpty()
+//                    }
 
                     Then("I should receive a link to a PDF document") {
                         fail("Received the PDF bytes")

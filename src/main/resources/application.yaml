@@ -28,3 +28,6 @@ pdfSigner:
   certificate:
     signing: $PATH_TO_SIGNING_CERTIFICATE
     chain: $PATH_TO_SIGNING_CERTIFICATE_CHAIN
+
+endUser:
+  baseUri: $PATH_TO_AUTH_PERSONS
