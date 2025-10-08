@@ -4,7 +4,6 @@ import arrow.core.Either
 import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
-import no.elhub.auth.features.common.RepositoryWriteError
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.DocumentRepository
 import java.time.LocalDateTime
@@ -43,7 +42,7 @@ class Handler(
         val signedFile = fileSigningService.embedSignatureIntoFile(file, signature, certChain, signingCert)
             .getOrElse { return CreateDocumentError.SigningError.left() }
 
-        val internalId = resolveRequestedTo(command.requestedFrom)
+        val internalId = endUserRepo.findInternalIdByNin(command.requestedFrom)
             .getOrElse { return CreateDocumentError.MappingError.left() }
 
         val documentToCreate = command.toAuthorizationDocument(signedFile, internalId)
@@ -53,11 +52,6 @@ class Handler(
             .getOrElse { return CreateDocumentError.PersistenceError.left() }
             .right()
     }
-
-    private suspend fun resolveRequestedTo(nin: String): Either<RepositoryWriteError, String> {
-        return endUserRepo.findOrCreateByNin(nin)
-    }
-
 }
 
 sealed class CreateDocumentError {
@@ -70,7 +64,7 @@ sealed class CreateDocumentError {
     data object PersistenceError : CreateDocumentError()
 }
 
-fun Command.toAuthorizationDocument(file: ByteArray, elhubInternalId: String): Either<CreateDocumentError.MappingError, AuthorizationDocument> =
+fun Command.toAuthorizationDocument(file: ByteArray, elhubInternalId: UUID): Either<CreateDocumentError.MappingError, AuthorizationDocument> =
     Either.catch {
         AuthorizationDocument(
             id = UUID.randomUUID(),

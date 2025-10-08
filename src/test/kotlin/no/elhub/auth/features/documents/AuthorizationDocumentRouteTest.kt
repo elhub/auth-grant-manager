@@ -59,6 +59,7 @@ class AuthorizationDocumentRouteTest :
                         "pdfSigner.vault.key" to "test-key",
                         "pdfSigner.certificate.signing" to TestCertificateUtil.Constants.CERTIFICATE_LOCATION,
                         "pdfSigner.certificate.chain" to TestCertificateUtil.Constants.CERTIFICATE_LOCATION,
+                        "endUser.baseUri" to AuthPersonTestContainer.baseUri(),
                     )
                 }
 
@@ -86,7 +87,7 @@ class AuthorizationDocumentRouteTest :
                                                 requestedFrom = JsonApiRelationshipToOne(
                                                     JsonApiRelationshipData(
                                                         "User",
-                                                        "98765432109"
+                                                        "18084190426"
                                                     )
                                                 )
                                             ),
@@ -122,7 +123,7 @@ class AuthorizationDocumentRouteTest :
                             }
                             requestedFrom.apply {
                                 data.apply {
-                                    id shouldBe "98765432109"
+                                    id shouldBe "4066e7d6-18e2-68f1-e063-34778d0a4876"
                                     type shouldBe "User"
                                 }
                             }

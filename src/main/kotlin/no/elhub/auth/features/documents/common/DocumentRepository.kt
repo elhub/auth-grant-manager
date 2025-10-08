@@ -41,7 +41,7 @@ class ExposedDocumentRepository : DocumentRepository {
                     it[status] = doc.status
                     it[file] = doc.file
                     it[requestedBy] = doc.requestedBy
-                    it[requestedTo] = doc.requestedFrom
+                    it[requestedFrom] = doc.requestedFrom
                     it[createdAt] = doc.createdAt
                     it[updatedAt] = doc.updatedAt
                 }.map { it.toAuthorizationDocument() }
@@ -99,7 +99,7 @@ object AuthorizationDocumentTable : UUIDTable("auth.authorization_document") {
         toDb = { PGEnum("authorization_document_status", it) },
     )
     val requestedBy = varchar("requested_by", 16)
-    val requestedTo = varchar("requested_to", 16)
+    val requestedFrom = uuid("requested_from")
     val createdAt = datetime("created_at")
     val updatedAt = datetime("updated_at")
 }
@@ -120,7 +120,7 @@ fun ResultRow.toAuthorizationDocument() = AuthorizationDocument(
     status = this[AuthorizationDocumentTable.status],
     file = this[AuthorizationDocumentTable.file],
     requestedBy = this[AuthorizationDocumentTable.requestedBy],
-    requestedFrom = this[AuthorizationDocumentTable.requestedTo],
+    requestedFrom = this[AuthorizationDocumentTable.requestedFrom],
     createdAt = this[AuthorizationDocumentTable.createdAt],
     updatedAt = this[AuthorizationDocumentTable.updatedAt],
 )

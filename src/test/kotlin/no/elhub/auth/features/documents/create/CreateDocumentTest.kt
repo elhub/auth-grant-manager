@@ -65,7 +65,8 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
         extensions(
             VaultTransitTestContainerExtension,
             PostgresTestContainerExtension,
-            StartAuthPersonTestContainer)
+            StartAuthPersonTestContainer
+        )
         extension(
             KoinExtension(
                 module {
@@ -89,8 +90,8 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                     singleOf(::PdfGenerator) bind FileGenerator::class
 
                     singleOf(::ExposedDocumentRepository) bind DocumentRepository::class
-                    single { EndUserApiConfig(baseUri = AuthPersonTestContainer.baseUri(), "/persons") }
                     singleOf(::ApiEndUserRepository) bind EndUserRepository::class
+                    single { EndUserApiConfig(baseUri = AuthPersonTestContainer.baseUri()) }
 
                     singleOf(::Handler)
                 },
@@ -134,10 +135,6 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
                 val document = handler(command)
                     .getOrElse { fail("Document not returned") }
-
-                Then("test connection to authPersonTestContainer - delete me later pleaseee") {
-                    println("NISSE5: ${document.requestedFrom}")
-                }
 
                 xThen("I should receive a link to a PDF document") {
                     fail("Received the PDF bytes")

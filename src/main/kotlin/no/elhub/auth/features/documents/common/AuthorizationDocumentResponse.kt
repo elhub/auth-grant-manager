@@ -43,7 +43,7 @@ fun AuthorizationDocument.toResponse() =
                 ),
                 requestedFrom = JsonApiRelationshipToOne(
                     data = JsonApiRelationshipData(
-                        id = this.requestedFrom,
+                        id = this.requestedFrom.toString(),
                         type = "User"
 
                     )

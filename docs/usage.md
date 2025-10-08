@@ -108,11 +108,11 @@ PDF document that meets legal and regulatory standards.
 ### Authorization Document Signing Requirements
 
 * The Market Party MUST use a trusted document signing service for the end user to sign the document.
-    * The signing service MUST be on the [Nkom's Trusted list](https://www.nkom.no/tjenester/tillitsliste)
+  * The signing service MUST be on the [Nkom's Trusted list](https://www.nkom.no/tjenester/tillitsliste)
 * The signing process MUST meet:
-    * **High level of assurance**: Security Level 4 (sikkerhetsnivå 4)
-      * **Signature Standard**: PAdES B-B
-      * **Identity validation**: The signing service must provide the OCSP extension: `2.16.578.1.16.3.2`
+  * **High level of assurance**: Security Level 4 (sikkerhetsnivå 4)
+    * **Signature Standard**: PAdES B-B
+    * **Identity validation**: The signing service must provide the OCSP extension: `2.16.578.1.16.3.2`
             (Norwegian national identity number – fødselsnummer). This is required in order for Elhub to
             verify the identity of the end user.
 

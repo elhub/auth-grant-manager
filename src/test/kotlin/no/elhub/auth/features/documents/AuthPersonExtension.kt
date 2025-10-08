@@ -18,8 +18,9 @@ object AuthPersonTestContainer {
         container = GenericContainer(image).apply {
             withExposedPorts(8080)
             waitingFor(
-                Wait.forHttp("/persons/18084190426")
-                    .forStatusCodeMatching{ it == 200 || it == 404 }
+                // WireMock-based mock of the auth-persons service is use in tests. The image contains predefined stubs (mappings)
+                Wait.forHttp("/__admin/health")
+                    .forStatusCodeMatching { it == 200 }
                     .withStartupTimeout(Duration.ofSeconds(30))
             )
             start()
@@ -35,7 +36,6 @@ object AuthPersonTestContainer {
         val c = container ?: error("AuthPersonsTestContainer not started")
         return "http://${c.host}:${c.getMappedPort(8080)}"
     }
-
 }
 
 object StartAuthPersonTestContainer : BeforeSpecListener {

@@ -18,6 +18,7 @@ import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.documents.common.ExposedDocumentRepository
 import no.elhub.auth.features.documents.create.ApiEndUserRepository
 import no.elhub.auth.features.documents.create.CertificateProvider
+import no.elhub.auth.features.documents.create.EndUserApiConfig
 import no.elhub.auth.features.documents.create.EndUserRepository
 import no.elhub.auth.features.documents.create.FileCertificateProvider
 import no.elhub.auth.features.documents.create.FileCertificateProviderConfig
@@ -57,6 +58,12 @@ fun Application.module() {
         singleOf(::FileCertificateProvider) bind CertificateProvider::class
         single { PAdESService(CommonCertificateVerifier()) }
         singleOf(::PdfSigningService) bind FileSigningService::class
+        single {
+            val cfg = get<ApplicationConfig>().config("endUser")
+            EndUserApiConfig(
+                baseUri = cfg.property("baseUri").getString(),
+            )
+        }
 
         factory {
             HttpClient(CIO) {
