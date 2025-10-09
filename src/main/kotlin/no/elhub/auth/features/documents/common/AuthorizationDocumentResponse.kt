@@ -24,7 +24,9 @@ data class DocumentRelationships(
 
 typealias AuthorizationDocumentResponse = JsonApiResponse.SingleDocumentWithRelationships<DocumentResponseAttributes, DocumentRelationships>
 
-fun AuthorizationDocument.toResponse() =
+fun AuthorizationDocument.toResponse(
+    requestedFromParty: AuthorizationParty
+) =
     AuthorizationDocumentResponse(
         data = JsonApiResponseResourceObjectWithRelationships(
             type = "AuthorizationDocument",
@@ -43,9 +45,8 @@ fun AuthorizationDocument.toResponse() =
                 ),
                 requestedFrom = JsonApiRelationshipToOne(
                     data = JsonApiRelationshipData(
-                        id = this.requestedFrom,
-                        type = "User"
-
+                        id = requestedFromParty.id.toString(),
+                        type = requestedFromParty.type.name
                     )
                 )
             )

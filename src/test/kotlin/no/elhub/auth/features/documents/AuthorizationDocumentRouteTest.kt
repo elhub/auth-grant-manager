@@ -61,7 +61,7 @@ class AuthorizationDocumentRouteTest :
                     )
                 }
 
-                test("Should create a document with a valid signggitature") {
+                test("Should create a document with a valid signature") {
                     val response =
                         client
                             .post(DOCUMENTS_PATH) {
@@ -78,13 +78,13 @@ class AuthorizationDocumentRouteTest :
                                             relationships = DocumentRelationships(
                                                 requestedBy = JsonApiRelationshipToOne(
                                                     JsonApiRelationshipData(
-                                                        "User",
+                                                        "Person",
                                                         "12345678901"
                                                     )
                                                 ),
                                                 requestedFrom = JsonApiRelationshipToOne(
                                                     JsonApiRelationshipData(
-                                                        "User",
+                                                        "Person",
                                                         "98765432109"
                                                     )
                                                 )
@@ -116,13 +116,13 @@ class AuthorizationDocumentRouteTest :
                             requestedBy.apply {
                                 data.apply {
                                     id shouldBe "12345678901"
-                                    type shouldBe "User"
+                                    type shouldBe "Person"
                                 }
                             }
                             requestedFrom.apply {
                                 data.apply {
                                     id shouldBe "98765432109"
-                                    type shouldBe "User"
+                                    type shouldBe "Person"
                                 }
                             }
                         }

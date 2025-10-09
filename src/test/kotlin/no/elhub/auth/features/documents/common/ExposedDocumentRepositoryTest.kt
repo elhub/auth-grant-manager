@@ -36,7 +36,7 @@ class ExposedDocumentRepositoryTest :
                         type = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
                         status = AuthorizationDocument.Status.Pending,
                         requestedBy = "1234567890",
-                        requestedFrom = "987654321",
+                        requestedFrom = UUID.randomUUID(),
                         createdAt = LocalDateTime.now(),
                         updatedAt = LocalDateTime.now()
                     )

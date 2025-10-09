@@ -108,8 +108,8 @@ entity AuthorizationDocument {
   type: DocumentType
   file: Blob
   status: AuthorizationDocumentStatus
-  requestedBy: BigInt, FK→AuthorizationParty
-  requestedFrom: BigInt, FK→AuthorizationParty
+  requestedBy: UUID, FK→AuthorizationParty
+  requestedFrom: UUID, FK→AuthorizationParty
   createdAt: DateTime
   updatedAt: DateTime
 }
@@ -124,9 +124,9 @@ entity AuthorizationDocumentProperty {
 
 entity AuthorizationDocumentSignatories {
   authorizationDocumentId: UUID, FK→Document
-  requestedFrom: BigInt, FK→AuthorizationParty
+  requestedFrom: UUID, FK→AuthorizationParty
   --
-  signedBy: BigInt, FK→AuthorizationParty
+  signedBy: UUID, FK→AuthorizationParty
   signedAt: DateTime
 }
 
@@ -161,7 +161,7 @@ entity AuthorizationScope {
 }
 
 entity AuthorizationParty {
-  id: BigSerial
+  id: UUID
   --
   type: ElhubResource
   descriptor: String

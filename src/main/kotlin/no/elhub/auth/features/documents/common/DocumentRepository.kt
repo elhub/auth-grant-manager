@@ -97,7 +97,7 @@ object AuthorizationDocumentTable : UUIDTable("auth.authorization_document") {
         toDb = { PGEnum("authorization_document_status", it) },
     )
     val requestedBy = varchar("requested_by", 16)
-    val requestedFrom = varchar("requested_from", 16)
+    val requestedFrom = uuid("requested_from")
     val createdAt = datetime("created_at")
     val updatedAt = datetime("updated_at")
 }

@@ -31,7 +31,7 @@ fun Route.route(handler: Handler) {
                 return@get
             }
 
-        call.respond(HttpStatusCode.OK, document.toResponse())
+        call.respond(HttpStatusCode.OK, document.toResponse(document.requestedFrom))
     }
 
     get("/{$DOCUMENT_ID_PARAM}.pdf") {

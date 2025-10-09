@@ -5,7 +5,10 @@ import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
 import no.elhub.auth.features.documents.AuthorizationDocument
+import no.elhub.auth.features.documents.common.AuthorizationParty
 import no.elhub.auth.features.documents.common.DocumentRepository
+import no.elhub.auth.features.documents.common.ElhubResource
+import no.elhub.auth.features.documents.common.PartyRepository
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -14,11 +17,13 @@ class Handler(
     private val certificateProvider: CertificateProvider,
     private val fileSigningService: FileSigningService,
     private val signatureProvider: SignatureProvider,
-    private val repo: DocumentRepository
+    private val partyRepo: PartyRepository,
+    private val documentRepo: DocumentRepository
 ) {
     suspend operator fun invoke(command: Command): Either<CreateDocumentError, AuthorizationDocument> {
+        val originalRequestedFrom = command.requestedFrom.id
         val file = fileGenerator.generate(
-            customerNin = command.requestedFrom,
+            customerNin = originalRequestedFrom,
             customerName = command.requestedFromName,
             meteringPointAddress = command.meteringPointAddress,
             meteringPointId = command.meteringPointId,
@@ -41,10 +46,18 @@ class Handler(
         val signedFile = fileSigningService.embedSignatureIntoFile(file, signature, certChain, signingCert)
             .getOrElse { return CreateDocumentError.SigningError.left() }
 
-        val documentToCreate = command.toAuthorizationDocument(signedFile)
+        // TODO val requestedBy = partyRepo.findOrCreate(ElhubResource.Person, command.requestedBy)
+        val requestedFrom = partyRepo.findOrCreate(ElhubResource.valueOf(command.requestedFrom.type), command.requestedFrom.id)
             .getOrElse { return CreateDocumentError.MappingError.left() }
 
-        return repo.insert(documentToCreate)
+        println("NISSE: $requestedFrom")
+
+        val documentToCreate = command.toAuthorizationDocument(requestedFrom, signedFile)
+            .getOrElse { return CreateDocumentError.MappingError.left() }
+
+        println("NISSE2: $documentToCreate")
+
+        return documentRepo.insert(documentToCreate)
             .getOrElse { return CreateDocumentError.PersistenceError.left() }
             .right()
     }
@@ -60,7 +73,7 @@ sealed class CreateDocumentError {
     data object PersistenceError : CreateDocumentError()
 }
 
-fun Command.toAuthorizationDocument(file: ByteArray): Either<CreateDocumentError.MappingError, AuthorizationDocument> =
+fun Command.toAuthorizationDocument(requestedFrom: AuthorizationParty, file: ByteArray): Either<CreateDocumentError.MappingError, AuthorizationDocument> =
     Either.catch {
         AuthorizationDocument(
             id = UUID.randomUUID(),
@@ -68,7 +81,7 @@ fun Command.toAuthorizationDocument(file: ByteArray): Either<CreateDocumentError
             type = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
             status = AuthorizationDocument.Status.Pending,
             requestedBy = this.requestedBy,
-            requestedFrom = this.requestedFrom,
+            requestedFrom = requestedFrom.id,
             createdAt = LocalDateTime.now(),
             updatedAt = LocalDateTime.now()
         )

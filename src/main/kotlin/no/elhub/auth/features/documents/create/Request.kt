@@ -2,6 +2,7 @@ package no.elhub.auth.features.documents.create
 
 import kotlinx.serialization.Serializable
 import no.elhub.auth.features.documents.AuthorizationDocument
+import no.elhub.auth.features.documents.common.PartyRef
 import no.elhub.devxp.jsonapi.model.JsonApiAttributes
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipToOne
 import no.elhub.devxp.jsonapi.model.JsonApiRelationships
@@ -32,7 +33,10 @@ typealias Request = JsonApiRequest.SingleDocumentWithRelationshipsAndMeta<Docume
 
 fun Request.toCommand() = Command(
     type = this.data.attributes.documentType,
-    requestedFrom = this.data.relationships.requestedFrom.data.id,
+    requestedFrom = PartyRef(
+        type = this.data.relationships.requestedFrom.data.type,
+        id = this.data.relationships.requestedFrom.data.id
+    ),
     requestedFromName = this.data.meta.requestedFromName,
     requestedBy = this.data.relationships.requestedBy.data.id,
     balanceSupplierName = this.data.meta.balanceSupplierName,
