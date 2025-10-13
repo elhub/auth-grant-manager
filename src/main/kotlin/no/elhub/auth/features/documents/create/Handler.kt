@@ -14,7 +14,8 @@ class Handler(
     private val certificateProvider: CertificateProvider,
     private val fileSigningService: FileSigningService,
     private val signatureProvider: SignatureProvider,
-    private val repo: DocumentRepository
+    private val documentRepo: DocumentRepository,
+    private val endUserRepo: EndUserRepository
 ) {
     suspend operator fun invoke(command: Command): Either<CreateDocumentError, AuthorizationDocument> {
         val file = fileGenerator.generate(
@@ -41,10 +42,13 @@ class Handler(
         val signedFile = fileSigningService.embedSignatureIntoFile(file, signature, certChain, signingCert)
             .getOrElse { return CreateDocumentError.SigningError.left() }
 
-        val documentToCreate = command.toAuthorizationDocument(signedFile)
+        val internalId = endUserRepo.findInternalIdByNin(command.requestedFrom)
             .getOrElse { return CreateDocumentError.MappingError.left() }
 
-        return repo.insert(documentToCreate)
+        val documentToCreate = command.toAuthorizationDocument(signedFile, internalId)
+            .getOrElse { return CreateDocumentError.MappingError.left() }
+
+        return documentRepo.insert(documentToCreate)
             .getOrElse { return CreateDocumentError.PersistenceError.left() }
             .right()
     }
@@ -60,7 +64,7 @@ sealed class CreateDocumentError {
     data object PersistenceError : CreateDocumentError()
 }
 
-fun Command.toAuthorizationDocument(file: ByteArray): Either<CreateDocumentError.MappingError, AuthorizationDocument> =
+fun Command.toAuthorizationDocument(file: ByteArray, elhubInternalId: UUID): Either<CreateDocumentError.MappingError, AuthorizationDocument> =
     Either.catch {
         AuthorizationDocument(
             id = UUID.randomUUID(),
@@ -69,7 +73,7 @@ fun Command.toAuthorizationDocument(file: ByteArray): Either<CreateDocumentError
             type = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
             status = AuthorizationDocument.Status.Pending,
             requestedBy = this.requestedBy,
-            requestedFrom = this.requestedFrom,
+            requestedFrom = elhubInternalId,
             createdAt = LocalDateTime.now(),
             updatedAt = LocalDateTime.now()
         )
