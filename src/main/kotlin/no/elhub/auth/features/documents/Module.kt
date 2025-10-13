@@ -16,6 +16,8 @@ import io.ktor.server.routing.routing
 import kotlinx.serialization.json.Json
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.documents.common.ExposedDocumentRepository
+import no.elhub.auth.features.documents.common.ExposedPartyRepository
+import no.elhub.auth.features.documents.common.PartyRepository
 import no.elhub.auth.features.documents.create.CertificateProvider
 import no.elhub.auth.features.documents.create.FileCertificateProvider
 import no.elhub.auth.features.documents.create.FileCertificateProviderConfig
@@ -93,6 +95,7 @@ fun Application.module() {
             )
         }
         singleOf(::PdfGenerator) bind FileGenerator::class
+        singleOf(::ExposedPartyRepository) bind PartyRepository::class
         singleOf(::ExposedDocumentRepository) bind DocumentRepository::class
         singleOf(::ConfirmHandler)
         singleOf(::CreateHandler)

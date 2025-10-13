@@ -4,16 +4,19 @@ import arrow.core.raise.either
 import arrow.core.raise.ensure
 import arrow.core.raise.zipOrAccumulate
 import no.elhub.auth.features.documents.AuthorizationDocument
+import no.elhub.auth.features.documents.common.PartyRef
 
 // TODO: Use appropriate regex
 private const val REGEX_NUMBERS_LETTERS_SYMBOLS = "^[a-zA-Z0-9_.-]*$"
 private const val REGEX_REQUESTED_FROM = REGEX_NUMBERS_LETTERS_SYMBOLS
 private const val REGEX_REQUESTED_BY = REGEX_NUMBERS_LETTERS_SYMBOLS
 private const val REGEX_METERING_POINT = REGEX_NUMBERS_LETTERS_SYMBOLS
+private const val REGEX_ID = "^[a-zA-Z0-9_.-]*$"
+private const val REGEX_TYPE = "^[A-Z][a-zA-Z0-9]*$" // Simple PascalCase check, adjust if needed
 
 class Command private constructor(
     val type: AuthorizationDocument.Type,
-    val requestedFrom: String,
+    val requestedFrom: PartyRef,
     val requestedFromName: String,
     val requestedBy: String,
     val balanceSupplierName: String,
@@ -24,7 +27,7 @@ class Command private constructor(
     companion object {
         operator fun invoke(
             type: AuthorizationDocument.Type,
-            requestedFrom: String,
+            requestedFrom: PartyRef,
             requestedFromName: String,
             requestedBy: String,
             balanceSupplierName: String,
@@ -34,9 +37,9 @@ class Command private constructor(
         ) = either {
             // https://arrow-kt.io/learn/typed-errors/validation/#fail-first-vs-accumulation
             zipOrAccumulate(
-                { ensure(requestedFrom.isNotBlank()) { ValidationError.MissingRequestedFrom } },
-                { ensure(requestedFrom.matches(Regex(REGEX_REQUESTED_FROM))) { ValidationError.InvalidRequestedFrom } },
-                { ensure(requestedFromName.isNotBlank()) { ValidationError.MissingRequestedFromName } },
+                { ensure(requestedFrom.id.isNotBlank()) { ValidationError.MissingRequestedFrom } },
+                { ensure(requestedFrom.id.matches(Regex(REGEX_ID))) { ValidationError.InvalidRequestedFrom } },
+                { ensure(requestedFrom.type.matches(Regex(REGEX_TYPE))) { ValidationError.InvalidRequestedFromType } },
                 { ensure(requestedBy.isNotBlank()) { ValidationError.MissingRequestedBy } },
                 { ensure(requestedBy.matches(Regex(REGEX_REQUESTED_BY))) { ValidationError.InvalidRequestedBy } },
                 { ensure(balanceSupplierName.isNotBlank()) { ValidationError.MissingBalanceSupplierName } },
@@ -63,9 +66,11 @@ class Command private constructor(
 sealed class ValidationError {
     data object MissingRequestedFrom : ValidationError()
     data object InvalidRequestedFrom : ValidationError()
+    data object InvalidRequestedFromType : ValidationError()
     data object MissingRequestedFromName : ValidationError()
     data object MissingRequestedBy : ValidationError()
     data object InvalidRequestedBy : ValidationError()
+    data object InvalidRequestedByType : ValidationError()
     data object MissingBalanceSupplierName : ValidationError()
     data object MissingBalanceSupplierContractName : ValidationError()
     data object MissingMeteringPointId : ValidationError()

@@ -36,12 +36,11 @@ class ExposedDocumentRepository : DocumentRepository {
             transaction {
                 val document = AuthorizationDocumentTable.insertReturning {
                     it[id] = doc.id
-                    it[title] = doc.title
                     it[type] = doc.type
                     it[status] = doc.status
                     it[file] = doc.file
                     it[requestedBy] = doc.requestedBy
-                    it[requestedTo] = doc.requestedFrom
+                    it[requestedFrom] = doc.requestedFrom
                     it[createdAt] = doc.createdAt
                     it[updatedAt] = doc.updatedAt
                 }.map { it.toAuthorizationDocument() }
@@ -84,7 +83,6 @@ class ExposedDocumentRepository : DocumentRepository {
 }
 
 object AuthorizationDocumentTable : UUIDTable("auth.authorization_document") {
-    val title = varchar("title", 255)
     val type = customEnumeration(
         name = "type",
         sql = "document_type",
@@ -99,7 +97,7 @@ object AuthorizationDocumentTable : UUIDTable("auth.authorization_document") {
         toDb = { PGEnum("authorization_document_status", it) },
     )
     val requestedBy = varchar("requested_by", 16)
-    val requestedTo = varchar("requested_to", 16)
+    val requestedFrom = uuid("requested_from")
     val createdAt = datetime("created_at")
     val updatedAt = datetime("updated_at")
 }
@@ -115,12 +113,11 @@ object AuthorizationDocumentScopeTable : Table("auth.authorization_document_scop
 
 fun ResultRow.toAuthorizationDocument() = AuthorizationDocument(
     id = this[AuthorizationDocumentTable.id].value,
-    title = this[AuthorizationDocumentTable.title],
     type = this[AuthorizationDocumentTable.type],
     status = this[AuthorizationDocumentTable.status],
     file = this[AuthorizationDocumentTable.file],
     requestedBy = this[AuthorizationDocumentTable.requestedBy],
-    requestedFrom = this[AuthorizationDocumentTable.requestedTo],
+    requestedFrom = this[AuthorizationDocumentTable.requestedFrom],
     createdAt = this[AuthorizationDocumentTable.createdAt],
     updatedAt = this[AuthorizationDocumentTable.updatedAt],
 )

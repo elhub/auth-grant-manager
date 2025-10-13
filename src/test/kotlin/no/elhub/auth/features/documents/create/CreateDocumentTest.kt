@@ -17,6 +17,7 @@ import no.elhub.auth.features.documents.TestCertificateUtil
 import no.elhub.auth.features.documents.VaultTransitTestContainerExtension
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.documents.common.ExposedDocumentRepository
+import no.elhub.auth.features.documents.common.PartyRef
 import no.elhub.auth.features.documents.confirm.getEndUserNin
 import no.elhub.auth.features.documents.confirm.isSignedByUs
 import no.elhub.auth.features.documents.getCustomMetaDataValue
@@ -103,8 +104,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
         context("Generate a Change of Supplier document") {
 
             When("I request a Change of Supplier document") {
-
-                val requestedFrom = VALID_REQUESTED_FROM
+                val requestedFrom = PartyRef("Person", VALID_REQUESTED_FROM)
                 val requestedFromName = VALID_REQUESTED_FROM_NAME
                 val requestedBy = VALID_REQUESTED_BY
                 val balanceSupplierName = VALID_BALANCE_SUPPLIER_NAME
@@ -152,7 +152,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
                 When("I request a Change of Supplier document") {
 
-                    val requestedFrom = VALID_REQUESTED_FROM
+                    val requestedFrom = PartyRef("Person", VALID_REQUESTED_FROM)
                     val requestedFromName = VALID_REQUESTED_FROM_NAME
                     val requestedBy = VALID_REQUESTED_BY
                     val balanceSupplierName = VALID_BALANCE_SUPPLIER_NAME
@@ -176,7 +176,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                     val document = handler(command).getOrElse { fail("Document not returned") }
 
                     Then("the user should be registered in Elhub") {
-                        val endUser = endUserRepo.findOrCreateByNin(requestedFrom)
+                        val endUser = endUserRepo.findOrCreateByNin(VALID_REQUESTED_FROM)
                             .getOrElse { fail("Could not retrieve the end user") }
                         endUser.id shouldNotBe null
                     }
@@ -202,7 +202,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
             xGiven("that no balance supplier ID has been provided") {
 
-                val requestedFrom = VALID_REQUESTED_FROM
+                val requestedFrom = PartyRef("Person", VALID_REQUESTED_FROM)
                 val requestedFromName = VALID_REQUESTED_FROM_NAME
                 val requestedBy = BLANK
                 val balanceSupplierName = VALID_BALANCE_SUPPLIER_NAME
@@ -230,7 +230,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
             xGiven("that an invalid balance supplier ID has been provided (GLN)") {
 
-                val requestedFrom = VALID_REQUESTED_FROM
+                val requestedFrom = PartyRef("Person", VALID_REQUESTED_FROM)
                 val requestedFromName = VALID_REQUESTED_FROM_NAME
                 val requestedBy = INVALID_REQUESTED_BY
                 val balanceSupplierName = VALID_BALANCE_SUPPLIER_NAME
@@ -259,7 +259,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
             xGiven("that no balance supplier name has been provided") {
 
-                val requestedFrom = VALID_REQUESTED_FROM
+                val requestedFrom = PartyRef("Person", VALID_REQUESTED_FROM)
                 val requestedFromName = VALID_REQUESTED_FROM_NAME
                 val requestedBy = VALID_REQUESTED_BY
                 val balanceSupplierName = BLANK
@@ -288,7 +288,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
             xGiven("that no end user ID has been provided (NIN/GLN)") {
 
-                val requestedFrom = BLANK
+                val requestedFrom = PartyRef("Person", BLANK)
                 val requestedFromName = VALID_REQUESTED_FROM_NAME
                 val requestedBy = VALID_REQUESTED_BY
                 val balanceSupplierName = VALID_BALANCE_SUPPLIER_NAME
@@ -317,7 +317,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
             xGiven("that an invalid end user ID has been provided (NIN/GLN)") {
 
-                val requestedFrom = INVALID_REQUESTED_FROM
+                val requestedFrom = PartyRef("Person", INVALID_REQUESTED_FROM)
                 val requestedFromName = VALID_REQUESTED_FROM_NAME
                 val requestedBy = VALID_REQUESTED_BY
                 val balanceSupplierName = VALID_BALANCE_SUPPLIER_NAME
@@ -346,7 +346,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
             xGiven("that no metering point ID has been provided") {
 
-                val requestedFrom = VALID_REQUESTED_FROM
+                val requestedFrom = PartyRef("Person", VALID_REQUESTED_FROM)
                 val requestedFromName = VALID_REQUESTED_FROM_NAME
                 val requestedBy = VALID_REQUESTED_BY
                 val balanceSupplierName = VALID_BALANCE_SUPPLIER_NAME
@@ -375,7 +375,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
             xGiven("that an invalid metering point ID has been provided") {
 
-                val requestedFrom = VALID_REQUESTED_FROM
+                val requestedFrom = PartyRef("Person", VALID_REQUESTED_FROM)
                 val requestedFromName = VALID_REQUESTED_FROM_NAME
                 val requestedBy = VALID_REQUESTED_BY
                 val balanceSupplierName = VALID_BALANCE_SUPPLIER_NAME
@@ -404,7 +404,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
             xGiven("that no metering point address has been provided") {
 
-                val requestedFrom = VALID_REQUESTED_FROM
+                val requestedFrom = PartyRef("Person", VALID_REQUESTED_FROM)
                 val requestedFromName = VALID_REQUESTED_FROM_NAME
                 val requestedBy = VALID_REQUESTED_BY
                 val balanceSupplierName = VALID_BALANCE_SUPPLIER_NAME
@@ -433,7 +433,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
             xGiven("that no contract name has been provided") {
 
-                val requestedFrom = VALID_REQUESTED_FROM
+                val requestedFrom = PartyRef("Person", VALID_REQUESTED_FROM)
                 val requestedFromName = VALID_REQUESTED_FROM_NAME
                 val requestedBy = VALID_REQUESTED_BY
                 val balanceSupplierName = VALID_BALANCE_SUPPLIER_NAME

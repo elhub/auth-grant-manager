@@ -34,6 +34,6 @@ fun Route.route(handler: Handler) {
                 return@post
             }
 
-        call.respond(status = HttpStatusCode.Created, message = document.toResponse())
+        call.respond(status = HttpStatusCode.Created, message = document.toResponse(command.requestedFromParty))
     }
 }

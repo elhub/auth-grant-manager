@@ -5,12 +5,11 @@ import java.util.*
 
 data class AuthorizationDocument(
     val id: UUID,
-    val title: String,
     val type: Type,
     val status: Status,
     val file: ByteArray,
     val requestedBy: String,
-    val requestedFrom: String,
+    val requestedFrom: UUID,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime,
 ) {
