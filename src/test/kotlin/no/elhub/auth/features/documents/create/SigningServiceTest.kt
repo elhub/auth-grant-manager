@@ -13,9 +13,9 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import no.elhub.auth.features.common.httpTestClient
-import no.elhub.auth.features.documents.TestCertificateUtil
-import no.elhub.auth.features.documents.VaultTransitTestContainerExtension
-import no.elhub.auth.features.documents.localVaultConfig
+import no.elhub.auth.features.documents.common.TestCertificateUtil
+import no.elhub.auth.features.documents.common.VaultTransitTestContainerExtension
+import no.elhub.auth.features.documents.common.localVaultConfig
 import java.math.BigInteger
 import java.security.MessageDigest
 import java.util.Base64
