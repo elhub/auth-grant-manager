@@ -1,5 +1,7 @@
 package no.elhub.auth.features.documents.create
 
+import arrow.core.Either
+import arrow.core.NonEmptyList
 import arrow.core.raise.either
 import arrow.core.raise.ensure
 import arrow.core.raise.zipOrAccumulate
@@ -31,7 +33,7 @@ class Command private constructor(
             balanceSupplierContractName: String,
             meteringPointId: String,
             meteringPointAddress: String,
-        ) = either {
+        ): Either<NonEmptyList<ValidationError>, Command> = either {
             // https://arrow-kt.io/learn/typed-errors/validation/#fail-first-vs-accumulation
             zipOrAccumulate(
                 { ensure(requestedFrom.isNotBlank()) { ValidationError.MissingRequestedFrom } },
