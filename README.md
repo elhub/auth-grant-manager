@@ -72,7 +72,7 @@ See [the documentation](docs/usage.md) for information on how to use the API.
 
 ## API Endpoints
 
-Review the [OpenAPI spec](https://github.com/elhub/auth-grant-manager/blob/main/src/main/resources/openapi.yaml) to
+Review the [OpenAPI spec](https://github.com/elhub/auth-grant-manager/blob/main/src/main/resources/static/openapi.yaml) to
 view the available endpoints.
 
 ## Contributing
