@@ -1,5 +1,11 @@
 package no.elhub.auth.features.documents
 
+import com.oracle.bmc.ConfigFileReader
+import com.oracle.bmc.Region
+import com.oracle.bmc.auth.ConfigFileAuthenticationDetailsProvider
+import com.oracle.bmc.auth.SimpleAuthenticationDetailsProvider
+import com.oracle.bmc.auth.SimplePrivateKeySupplier
+import com.oracle.bmc.objectstorage.ObjectStorageClient
 import eu.europa.esig.dss.pades.signature.PAdESService
 import eu.europa.esig.dss.spi.validation.CommonCertificateVerifier
 import io.ktor.client.HttpClient
@@ -15,13 +21,12 @@ import io.ktor.server.config.ApplicationConfig
 import io.ktor.server.config.getAs
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
-import io.minio.MinioClient
 import kotlinx.serialization.json.Json
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.documents.common.ExposedDocumentRepository
 import no.elhub.auth.features.documents.common.FileStorage
-import no.elhub.auth.features.documents.common.MinioConfig
-import no.elhub.auth.features.documents.common.MinioFileStorage
+import no.elhub.auth.features.documents.common.OciObjectStorage
+import no.elhub.auth.features.documents.common.OciObjectStorageConfig
 import no.elhub.auth.features.documents.create.CertificateProvider
 import no.elhub.auth.features.documents.create.FileCertificateProvider
 import no.elhub.auth.features.documents.create.FileCertificateProviderConfig
@@ -101,24 +106,40 @@ fun Application.module() {
         singleOf(::PdfGenerator) bind FileGenerator::class
 
         single {
-            val cfg = get<ApplicationConfig>().config("minio")
-            MinioConfig(
-                url = cfg.property("url").getString(),
+            val cfg = get<ApplicationConfig>().config("ociObjectStorage")
+            OciObjectStorageConfig(
+                region = cfg.property("region").getString(),
+                namespace = cfg.property("namespace").getString(),
                 bucket = cfg.property("bucket").getString(),
-                username = cfg.property("username").getString(),
-                password = cfg.property("password").getString(),
-                linkExpiryHours = cfg.property("linkExpiryHours").getAs<Int>(),
+                linkExpiryHours = cfg.property("linkExpiryHours").getAs<Long>(),
+                fingerprint = cfg.property("fingerprint").getString(),
+                tenant = cfg.property("tenant").getString(),
+                user = cfg.property("user").getString(),
+                privateKeyPath = cfg.property("privateKeyPath").getString(),
             )
         }
+
         single {
-            val cfg = get<MinioConfig>()
-            MinioClient
+            val configFile = ConfigFileReader.parse("~/.oci/config", "TEST11")
+            val authDetailsProvider = ConfigFileAuthenticationDetailsProvider(configFile)
+
+            val cfg = get<OciObjectStorageConfig>()
+            val authDetailsProvider2 = SimpleAuthenticationDetailsProvider
                 .builder()
-                .endpoint(cfg.url)
-                .credentials(cfg.username, cfg.password)
+                .fingerprint(cfg.fingerprint)
+                .privateKeySupplier(SimplePrivateKeySupplier(cfg.privateKeyPath))
+                .region(Region.fromRegionCode(cfg.region))
+                .tenantId(cfg.tenant)
+                .userId(cfg.user)
                 .build()
+
+            ObjectStorageClient
+                .builder()
+                .region(cfg.region)
+                .build(authDetailsProvider2)
         }
-        singleOf(::MinioFileStorage) bind FileStorage::class
+
+        singleOf(::OciObjectStorage) bind FileStorage::class
 
         singleOf(::ExposedDocumentRepository) bind DocumentRepository::class
         singleOf(::ConfirmHandler)

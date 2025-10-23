@@ -58,7 +58,6 @@ dependencies {
     testImplementation(libs.test.koin.test)
     testImplementation(libs.test.testcontainers)
     testImplementation(libs.test.testcontainers.postgres)
-    testImplementation(libs.test.testcontainers.minio)
     testImplementation(libs.test.mybatis)
     testImplementation(libs.test.verapdf.validation.model)
 }
@@ -95,8 +94,6 @@ val certDir = layout.buildDirectory.dir("tmp/test-certs")
 val testCertPath = certDir.map { it.file("self-signed-cert.pem").asFile.path }
 val testKeyPath = certDir.map { it.file("self-signed-key.pem").asFile.path }
 val vaultTokenPath = "./src/test/resources/vault_token_mock.txt"
-val minioUsername = System.getenv("MINIO_USERNAME") ?: "minio"
-val minioPassword = System.getenv("MINIO_PASSWORD") ?: "miniopassword"
 
 dockerCompose {
     createNested("services").apply {
@@ -107,8 +104,6 @@ dockerCompose {
                 "DB_PASSWORD" to dbPassword,
                 "PRIVATE_KEY_PATH" to testKeyPath.get(),
                 "VAULT_TOKEN_PATH" to vaultTokenPath,
-                "MINIO_USERNAME" to minioUsername,
-                "MINIO_PASSWORD" to minioPassword,
             ),
         )
     }
@@ -152,11 +147,14 @@ val localEnvVars = mapOf(
     "MUSTACHE_RESOURCE_PATH" to "templates",
     "VAULT_URL" to "http://localhost:8200/v1/transit",
     "VAULT_KEY" to "test-key",
-    "MINIO_USERNAME" to minioUsername,
-    "MINIO_PASSWORD" to minioPassword,
-    "MINIO_URL" to "http://localhost:9000",
-    "MINIO_BUCKET" to "documents",
-    "MINIO_LINK_EXPIRY_HOURS" to 1,
+    "OCI_OS_NAMESPACE" to "frzq0sxltynr",
+    "OCI_OS_REGION" to "eu-frankfurt-1",
+    "OCI_OS_BUCKET" to "elhub-test11-consent-osb",
+    "OCI_OS_LINK_EXPIRY_HOURS" to 1,
+    "OCI_OS_FINGERPRINT" to "ff:a8:3d:fa:62:5d:16:0f:3e:21:a3:7e:be:d8:2a:08",
+    "OCI_OS_TENANT" to "ocid1.tenancy.oc1..aaaaaaaafudunklodqxlpkiem3qwgvumoiex53txlnxev3hlikzhzkksw3vq",
+    "OCI_OS_USER" to "ocid1.user.oc1..aaaaaaaaj3udzaeoo3luj3wyqcbs3i6njdvhro4e3hqtjleftzbfyvo3tcbq",
+    "OCI_OS_PRIVATE_KEY_PATH" to "./src/test/resources/oci-key.pem",
     "VAULT_TOKEN_PATH" to vaultTokenPath,
     "PATH_TO_SIGNING_CERTIFICATE" to testCertPath.get(),
     "PATH_TO_SIGNING_CERTIFICATE_CHAIN" to testCertPath.get(),

@@ -29,9 +29,12 @@ pdfSigner:
     signing: $PATH_TO_SIGNING_CERTIFICATE
     chain: $PATH_TO_SIGNING_CERTIFICATE_CHAIN
 
-minio:
-  url: $MINIO_URL
-  bucket: $MINIO_BUCKET
-  username: $MINIO_USERNAME
-  password: $MINIO_PASSWORD
-  linkExpiryHours: $MINIO_LINK_EXPIRY_HOURS
+ociObjectStorage:
+  namespace: $OCI_OS_NAMESPACE
+  region: $OCI_OS_REGION
+  bucket: $OCI_OS_BUCKET
+  linkExpiryHours: $OCI_OS_LINK_EXPIRY_HOURS
+  fingerprint: $OCI_OS_FINGERPRINT
+  tenant: $OCI_OS_TENANT
+  user: $OCI_OS_USER
+  privateKeyPath: $OCI_OS_PRIVATE_KEY_PATH
