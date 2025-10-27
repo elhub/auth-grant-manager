@@ -94,7 +94,7 @@ test-koin-test = { group = "io.insert-koin", name = "koin-test", version.ref = "
 test-ktor-server-test-host = { group = "io.ktor", name = "ktor-server-test-host", version.ref = "ktor" }
 test-mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
 test-testcontainers = { group = "org.testcontainers", name = "testcontainers", version.ref = "testcontainers" }
-test-testcontainers-postgres = { group = "org.testcontainers", name = "postgresql", version.ref = "testcontainers" }
+test-testcontainers-postgres = { group = "org.testcontainers", name = "testcontainers-postgresql", version.ref = "testcontainers" }
 test-mybatis = { group = "org.mybatis", name = "mybatis", version.ref = "mybatis" }
 templating-mustache = { group = "com.github.spullara.mustache.java", name = "compiler", version.ref = "mustache" }
 pdf-openhtmltopdf-pdfbox = { group = "io.github.openhtmltopdf", name = "openhtmltopdf-pdfbox", version.ref = "openhtmltopdf" }
