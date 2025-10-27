@@ -11,10 +11,10 @@ import liquibase.Liquibase
 import liquibase.database.DatabaseFactory
 import liquibase.database.jvm.JdbcConnection
 import liquibase.resource.DirectoryResourceAccessor
+import org.testcontainers.postgresql.PostgreSQLContainer
 import org.testcontainers.utility.DockerImageName
 import java.nio.file.Paths
 import java.sql.DriverManager
-import org.testcontainers.postgresql.PostgreSQLContainer
 
 object PostgresTestContainer {
     private const val POSTGRES_PORT = 5432
