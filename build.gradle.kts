@@ -94,6 +94,8 @@ val certDir = layout.buildDirectory.dir("tmp/test-certs")
 val testCertPath = certDir.map { it.file("self-signed-cert.pem").asFile.path }
 val testKeyPath = certDir.map { it.file("self-signed-key.pem").asFile.path }
 val vaultTokenPath = "./src/test/resources/vault_token_mock.txt"
+val s3Username = System.getenv("S3_USERNAME") ?: "garage"
+val s3Password = System.getenv("S3_PASSWORD") ?: "garage"
 
 dockerCompose {
     createNested("services").apply {
@@ -104,6 +106,8 @@ dockerCompose {
                 "DB_PASSWORD" to dbPassword,
                 "PRIVATE_KEY_PATH" to testKeyPath.get(),
                 "VAULT_TOKEN_PATH" to vaultTokenPath,
+                "S3_USERNAME" to s3Username,
+                "S3_PASSWORD" to s3Password,
             ),
         )
     }
@@ -147,6 +151,12 @@ val localEnvVars = mapOf(
     "MUSTACHE_RESOURCE_PATH" to "templates",
     "VAULT_URL" to "http://localhost:8200/v1/transit",
     "VAULT_KEY" to "test-key",
+    "S3_USERNAME" to s3Username,
+    "S3_PASSWORD" to s3Password,
+    "S3_URL" to "http://localhost:3900",
+    "S3_REGION" to "garage",
+    "S3_BUCKET" to "documents",
+    "S3_LINK_EXPIRY_HOURS" to 1,
     "OCI_OS_NAMESPACE" to "frzq0sxltynr",
     "OCI_OS_REGION" to "eu-frankfurt-1",
     "OCI_OS_BUCKET" to "elhub-test11-consent-osb",

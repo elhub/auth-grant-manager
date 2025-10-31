@@ -22,6 +22,16 @@ services:
     volumes:
       - "${PRIVATE_KEY_PATH}:/key/private.pem:ro"
 
+  garage:
+    image: dxflrs/garage:v2.1.0
+    ports:
+      - 3900:3900
+      - 3901:3901
+      - 3902:3902
+      - 3903:3903
+    volumes:
+      - ./src/test/resources/garage-conf.toml:/etc/garage.toml
+
 networks:
   auth-grant-manager:
     name: auth-grant-manager

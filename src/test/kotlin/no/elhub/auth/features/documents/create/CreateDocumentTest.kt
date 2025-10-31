@@ -20,9 +20,9 @@ import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.documents.common.ExposedDocumentRepository
 import no.elhub.auth.features.documents.common.FileStorage
-import no.elhub.auth.features.documents.common.MinIOTestContainer
-import no.elhub.auth.features.documents.common.MinioConfig
-import no.elhub.auth.features.documents.common.MinioFileStorage
+import no.elhub.auth.features.documents.common.S3Config
+import no.elhub.auth.features.documents.common.S3ObjectStorage
+import no.elhub.auth.features.documents.common.S3TestContainer
 import no.elhub.auth.features.documents.common.TestCertificateUtil
 import no.elhub.auth.features.documents.common.VaultTransitTestContainerExtension
 import no.elhub.auth.features.documents.common.getCustomMetaDataValue
@@ -70,7 +70,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
         extensions(
             PostgresTestContainerExtension,
             VaultTransitTestContainerExtension,
-            MinIOTestContainer,
+            S3TestContainer,
             KoinExtension(
                 module {
 
@@ -93,16 +93,17 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                     singleOf(::PdfGenerator) bind FileGenerator::class
 
                     single {
-                        MinioConfig(
-                            url = "http://localhost:9000",
+                        S3Config(
+                            url = "http://localhost:3900",
+                            region = "garage",
                             bucket = "documents",
-                            username = "minio",
-                            password = "miniopassword",
+                            username = "garage",
+                            password = "garage",
                             linkExpiryHours = 1,
                         )
                     }
                     single {
-                        val cfg = get<MinioConfig>()
+                        val cfg = get<S3Config>()
                         MinioClient
                             .builder()
                             .endpoint(cfg.url)
@@ -110,7 +111,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                             .build()
                     }
 
-                    singleOf(::MinioFileStorage) bind FileStorage::class
+                    singleOf(::S3ObjectStorage) bind FileStorage::class
 
                     singleOf(::ExposedDocumentRepository) bind DocumentRepository::class
                     single { EndUserApiConfig("baseUrl", "/persons/") }
@@ -162,7 +163,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                 val file = httpTestClient.get(document.second.toString()).readRawBytes()
 
                 Then("I should receive a link to a PDF document") {
-                    document.second shouldHaveHost URI(inject<MinioConfig>().value.url).host
+                    document.second shouldHaveHost URI(inject<S3Config>().value.url).host
                 }
 
                 Then("that document should be signed by Elhub") {
@@ -218,7 +219,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                     }
 
                     Then("I should receive a link to a PDF document") {
-                        document.second shouldHaveHost URI(inject<MinioConfig>().value.url).host
+                        document.second shouldHaveHost URI(inject<S3Config>().value.url).host
                     }
 
                     xThen("that document should be signed by Elhub") {
