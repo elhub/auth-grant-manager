@@ -5,6 +5,8 @@ import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import no.elhub.auth.features.grants.common.ExposedGrantRepository
 import no.elhub.auth.features.grants.common.GrantRepository
+import no.elhub.auth.features.parties.ExposedPartyRepository
+import no.elhub.auth.features.parties.PartyRepository
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
 import org.koin.ktor.ext.get
@@ -20,6 +22,7 @@ const val GRANTS_PATH = "/authorization-grants"
 
 fun Application.module() {
     koinModule {
+        singleOf(::ExposedPartyRepository) bind PartyRepository::class
         singleOf(::ExposedGrantRepository) bind GrantRepository::class
         singleOf(::GetHandler)
         singleOf(::GetScopesHandler)
