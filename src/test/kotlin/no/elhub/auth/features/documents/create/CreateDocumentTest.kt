@@ -23,7 +23,7 @@ import no.elhub.auth.features.documents.getCustomMetaDataValue
 import no.elhub.auth.features.documents.localVaultConfig
 import no.elhub.auth.features.documents.validateFileIsPDFA2BCompliant
 import no.elhub.auth.features.documents.validateFileIsSignedByUs
-import no.elhub.auth.features.parties.ElhubResource
+import no.elhub.auth.features.parties.AuthorizationParty
 import no.elhub.auth.features.parties.ExposedPartyRepository
 import no.elhub.auth.features.parties.PartyRepository
 import org.jetbrains.exposed.sql.Database
@@ -35,11 +35,11 @@ import org.koin.test.inject
 import kotlin.test.fail
 
 // TODO: Provide a valid supplier ID
-private val VALID_REQUESTED_FROM = PartyRef(ElhubResource.Person, "123455")
+private val VALID_REQUESTED_FROM = PartyRef(AuthorizationParty.ElhubResource.Person, "123455")
 private const val INVALID_REQUESTED_FROM = "^%)"
 private const val VALID_REQUESTED_FROM_NAME = "Supplier AS"
 
-private val VALID_REQUESTED_BY = PartyRef(ElhubResource.Organization, "567891")
+private val VALID_REQUESTED_BY = PartyRef(AuthorizationParty.ElhubResource.Organization, "567891")
 private const val INVALID_REQUESTED_BY = "^%)"
 
 // TODO: Provide a valid metering point
@@ -209,7 +209,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
                 val requestedFrom = VALID_REQUESTED_FROM
                 val requestedFromName = VALID_REQUESTED_FROM_NAME
-                val requestedBy = PartyRef(ElhubResource.valueOf(""), "")
+                val requestedBy = PartyRef(AuthorizationParty.ElhubResource.valueOf(""), "")
                 val balanceSupplierName = VALID_BALANCE_SUPPLIER_NAME
                 val balanceSupplierContractName = VALID_BALANCE_SUPPLIER_CONTRACT_NAME
                 val meteringPointId = VALID_METERING_POINT_ID
@@ -237,7 +237,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
                 val requestedFrom = VALID_REQUESTED_FROM
                 val requestedFromName = VALID_REQUESTED_FROM_NAME
-                val requestedBy = PartyRef(ElhubResource.valueOf(""), "") // TODO - might need better test data here
+                val requestedBy = PartyRef(AuthorizationParty.ElhubResource.valueOf(""), "") // TODO - might need better test data here
                 val balanceSupplierName = VALID_BALANCE_SUPPLIER_NAME
                 val balanceSupplierContractName = VALID_BALANCE_SUPPLIER_CONTRACT_NAME
                 val meteringPointId = VALID_METERING_POINT_ID
@@ -293,7 +293,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
             xGiven("that no end user ID has been provided (NIN/GLN)") {
 
-                val requestedFrom = PartyRef(ElhubResource.valueOf(""), "") // TODO better test data here
+                val requestedFrom = PartyRef(AuthorizationParty.ElhubResource.valueOf(""), "") // TODO better test data here
                 val requestedFromName = VALID_REQUESTED_FROM_NAME
                 val requestedBy = VALID_REQUESTED_BY
                 val balanceSupplierName = VALID_BALANCE_SUPPLIER_NAME
@@ -322,7 +322,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
             xGiven("that an invalid end user ID has been provided (NIN/GLN)") {
 
-                val requestedFrom = PartyRef(ElhubResource.valueOf(""), "") // TODO better test data
+                val requestedFrom = PartyRef(AuthorizationParty.ElhubResource.valueOf(""), "") // TODO better test data
                 val requestedFromName = VALID_REQUESTED_FROM_NAME
                 val requestedBy = VALID_REQUESTED_BY
                 val balanceSupplierName = VALID_BALANCE_SUPPLIER_NAME

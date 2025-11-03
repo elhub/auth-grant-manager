@@ -6,7 +6,7 @@ import arrow.core.raise.either
 import arrow.core.raise.ensure
 import arrow.core.raise.zipOrAccumulate
 import no.elhub.auth.features.documents.AuthorizationDocument
-import no.elhub.auth.features.parties.ElhubResource
+import no.elhub.auth.features.parties.AuthorizationParty
 
 // TODO: Use appropriate regex
 private const val REGEX_NUMBERS_LETTERS_SYMBOLS = "^[a-zA-Z0-9_.-]*$"
@@ -15,7 +15,7 @@ private const val REGEX_REQUESTED_BY = REGEX_NUMBERS_LETTERS_SYMBOLS
 private const val REGEX_METERING_POINT = REGEX_NUMBERS_LETTERS_SYMBOLS
 
 data class PartyRef(
-    val type: ElhubResource,
+    val type: AuthorizationParty.ElhubResource,
     val resourceId: String
 )
 

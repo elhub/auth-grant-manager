@@ -31,10 +31,10 @@ class ExposedPartyRepositoryTest : FunSpec({
     test("findOrCreate returns the same row when called twice with the same resourceId") {
         val resourceId = "4066e7d6-18e2-68f1-e063-34778d0a4876"
 
-        val first = repository.findOrInsert(ElhubResource.Person, resourceId)
+        val first = repository.findOrInsert(AuthorizationParty.ElhubResource.Person, resourceId)
             .getOrElse { error("First call failed: $it") }
 
-        val second = repository.findOrInsert(ElhubResource.Person, resourceId)
+        val second = repository.findOrInsert(AuthorizationParty.ElhubResource.Person, resourceId)
             .getOrElse { error("Second call failed: $it") }
 
         second.id shouldBe first.id
@@ -52,10 +52,10 @@ class ExposedPartyRepositoryTest : FunSpec({
         val existingResourceId = "4066e7d6-18e2-68f1-e063-34778d0a4876"
         val secondResourceId = "6920e7d6-20e2-68d1-s163-75283d1w4888"
 
-        val first = repository.findOrInsert(ElhubResource.Person, existingResourceId)
+        val first = repository.findOrInsert(AuthorizationParty.ElhubResource.Person, existingResourceId)
             .getOrElse { error("First call failed: $it") }
 
-        val second = repository.findOrInsert(ElhubResource.Person, secondResourceId)
+        val second = repository.findOrInsert(AuthorizationParty.ElhubResource.Person, secondResourceId)
             .getOrElse { error("Second call failed: $it") }
 
         second.id shouldNotBe first.id

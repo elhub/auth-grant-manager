@@ -7,7 +7,6 @@ import arrow.core.right
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.parties.AuthorizationParty
-import no.elhub.auth.features.parties.ElhubResource
 import no.elhub.auth.features.parties.PartyRepository
 import java.time.LocalDateTime
 import java.util.UUID
@@ -51,10 +50,10 @@ class Handler(
         val signedFile = fileSigningService.embedSignatureIntoFile(file, signature, certChain, signingCert)
             .getOrElse { return CreateDocumentError.SigningError.left() }
 
-        val requestedBy = partyRepo.findOrInsert(ElhubResource.valueOf(command.requestedBy.type.name), command.requestedBy.resourceId)
+        val requestedBy = partyRepo.findOrInsert(AuthorizationParty.ElhubResource.valueOf(command.requestedBy.type.name), command.requestedBy.resourceId)
             .getOrElse { return CreateDocumentError.PartyError.left() }
 
-        val requestedFrom = partyRepo.findOrInsert(ElhubResource.valueOf(command.requestedFrom.type.name), command.requestedFrom.resourceId)
+        val requestedFrom = partyRepo.findOrInsert(AuthorizationParty.ElhubResource.valueOf(command.requestedFrom.type.name), command.requestedFrom.resourceId)
             .getOrElse { return CreateDocumentError.PartyError.left() }
 
         val documentToCreate = toAuthorizationDocument(signedFile, requestedBy, requestedFrom)
