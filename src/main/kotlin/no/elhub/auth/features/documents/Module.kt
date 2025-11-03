@@ -16,8 +16,6 @@ import io.ktor.server.routing.routing
 import kotlinx.serialization.json.Json
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.documents.common.ExposedDocumentRepository
-import no.elhub.auth.features.parties.ExposedPartyRepository
-import no.elhub.auth.features.parties.PartyRepository
 import no.elhub.auth.features.documents.create.CertificateProvider
 import no.elhub.auth.features.documents.create.FileCertificateProvider
 import no.elhub.auth.features.documents.create.FileCertificateProviderConfig
@@ -29,6 +27,8 @@ import no.elhub.auth.features.documents.create.PdfGeneratorConfig
 import no.elhub.auth.features.documents.create.PdfSigningService
 import no.elhub.auth.features.documents.create.SignatureProvider
 import no.elhub.auth.features.documents.create.VaultConfig
+import no.elhub.auth.features.parties.ExposedPartyRepository
+import no.elhub.auth.features.parties.PartyRepository
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
 import org.koin.ktor.ext.get

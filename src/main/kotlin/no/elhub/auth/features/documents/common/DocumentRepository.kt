@@ -10,6 +10,7 @@ import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.grants.AuthorizationResourceType
 import no.elhub.auth.features.grants.PermissionType
 import no.elhub.auth.features.grants.common.AuthorizationScopeTable
+import no.elhub.auth.features.parties.AuthorizationPartyTable
 import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.ResultRow
@@ -98,8 +99,8 @@ object AuthorizationDocumentTable : UUIDTable("auth.authorization_document") {
         fromDb = { AuthorizationDocument.Status.valueOf(it as String) },
         toDb = { PGEnum("authorization_document_status", it) },
     )
-    val requestedBy = varchar("requested_by", 16)
-    val requestedFrom = varchar("requested_from", 16)
+    val requestedBy = uuid("requested_by").references(AuthorizationPartyTable.id)
+    val requestedFrom = uuid("requested_from").references(AuthorizationPartyTable.id)
     val createdAt = datetime("created_at")
     val updatedAt = datetime("updated_at")
 }

@@ -53,6 +53,7 @@ class ExposedGrantRepository(
             }
 
             // 2) Collect all distinct party ids we need (for/by/to)
+            // TODO use authorization party repo here !!
             val partyIds: List<UUID> = grantRows
                 .flatMap { g ->
                     listOf(

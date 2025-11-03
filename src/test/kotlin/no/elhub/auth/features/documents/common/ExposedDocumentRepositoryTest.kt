@@ -36,8 +36,8 @@ class ExposedDocumentRepositoryTest :
                         file = byteArrayOf(),
                         type = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
                         status = AuthorizationDocument.Status.Pending,
-                        requestedBy = "1234567890",
-                        requestedFrom = "987654321",
+                        requestedBy = UUID.randomUUID(),
+                        requestedFrom = UUID.randomUUID(),
                         createdAt = LocalDateTime.now(),
                         updatedAt = LocalDateTime.now()
                     )

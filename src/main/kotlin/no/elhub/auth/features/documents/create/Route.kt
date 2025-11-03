@@ -18,7 +18,7 @@ fun Route.route(handler: Handler) {
                 return@post
             }
 
-        val document = handler(command)
+        val result = handler(command)
             .getOrElse { error ->
                 when (error) {
                     is
@@ -28,12 +28,16 @@ fun Route.route(handler: Handler) {
                     CreateDocumentError.SignatureFetchingError,
                     CreateDocumentError.SigningDataGenerationError,
                     CreateDocumentError.SigningError,
-                    CreateDocumentError.PersistenceError
+                    CreateDocumentError.PersistenceError,
+                    CreateDocumentError.PartyError
                     -> call.respond(HttpStatusCode.InternalServerError)
                 }
                 return@post
             }
 
-        call.respond(status = HttpStatusCode.Created, message = document.toResponse())
+        call.respond(
+            status = HttpStatusCode.Created,
+            message = result.document.toResponse(result.requestedByParty, result.requestedFromParty)
+        )
     }
 }

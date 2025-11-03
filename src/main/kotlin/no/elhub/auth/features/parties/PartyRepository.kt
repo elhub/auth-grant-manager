@@ -18,7 +18,7 @@ interface PartyRepository {
     fun find(id: UUID): Either<RepositoryReadError, AuthorizationParty>
 }
 
-class ExposedPartyRepository: PartyRepository {
+class ExposedPartyRepository : PartyRepository {
 
     override fun findOrInsert(type: ElhubResource, resourceId: String): Either<RepositoryWriteError, AuthorizationParty> =
         Either.catch {
@@ -35,15 +35,16 @@ class ExposedPartyRepository: PartyRepository {
                             it[AuthorizationPartyTable.type] = type
                             it[AuthorizationPartyTable.resourceId] = resourceId
                         }
-                        if (ins.resultedValues?.isNotEmpty() == true)
+                        if (ins.resultedValues?.isNotEmpty() == true) {
                             ins.resultedValues!!.first().toAuthorizationParty() // return if created
-                        else
+                        } else {
                             // run the same select again if the insert was ignored
                             AuthorizationPartyTable
                                 .selectAll()
                                 .where { (AuthorizationPartyTable.type eq type) and (AuthorizationPartyTable.resourceId eq resourceId) }
                                 .single()
                                 .toAuthorizationParty()
+                        }
                     }
             }
         }.mapLeft { RepositoryWriteError.UnexpectedError }
@@ -61,8 +62,11 @@ class ExposedPartyRepository: PartyRepository {
                 }
             }
             .mapLeft {
-                if (it is NoSuchElementException) RepositoryReadError.NotFoundError
-                else RepositoryReadError.UnexpectedError
+                if (it is NoSuchElementException) {
+                    RepositoryReadError.NotFoundError
+                } else {
+                    RepositoryReadError.UnexpectedError
+                }
             }
 }
 
@@ -79,7 +83,6 @@ object AuthorizationPartyTable : UUIDTable("auth.authorization_party") {
     init {
         index(isUnique = true, columns = arrayOf(type, resourceId))
     }
-
 }
 
 fun ResultRow.toAuthorizationParty() = AuthorizationParty(

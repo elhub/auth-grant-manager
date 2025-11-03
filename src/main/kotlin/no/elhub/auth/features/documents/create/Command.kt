@@ -6,6 +6,7 @@ import arrow.core.raise.either
 import arrow.core.raise.ensure
 import arrow.core.raise.zipOrAccumulate
 import no.elhub.auth.features.documents.AuthorizationDocument
+import no.elhub.auth.features.parties.ElhubResource
 
 // TODO: Use appropriate regex
 private const val REGEX_NUMBERS_LETTERS_SYMBOLS = "^[a-zA-Z0-9_.-]*$"
@@ -13,11 +14,16 @@ private const val REGEX_REQUESTED_FROM = REGEX_NUMBERS_LETTERS_SYMBOLS
 private const val REGEX_REQUESTED_BY = REGEX_NUMBERS_LETTERS_SYMBOLS
 private const val REGEX_METERING_POINT = REGEX_NUMBERS_LETTERS_SYMBOLS
 
+data class PartyRef(
+    val type: ElhubResource,
+    val resourceId: String
+)
+
 class Command private constructor(
     val type: AuthorizationDocument.Type,
-    val requestedFrom: String,
+    val requestedFrom: PartyRef,
     val requestedFromName: String,
-    val requestedBy: String,
+    val requestedBy: PartyRef,
     val balanceSupplierName: String,
     val balanceSupplierContractName: String,
     val meteringPointId: String,
@@ -26,9 +32,9 @@ class Command private constructor(
     companion object {
         operator fun invoke(
             type: AuthorizationDocument.Type,
-            requestedFrom: String,
+            requestedFrom: PartyRef,
             requestedFromName: String,
-            requestedBy: String,
+            requestedBy: PartyRef,
             balanceSupplierName: String,
             balanceSupplierContractName: String,
             meteringPointId: String,
@@ -36,11 +42,11 @@ class Command private constructor(
         ): Either<NonEmptyList<ValidationError>, Command> = either {
             // https://arrow-kt.io/learn/typed-errors/validation/#fail-first-vs-accumulation
             zipOrAccumulate(
-                { ensure(requestedFrom.isNotBlank()) { ValidationError.MissingRequestedFrom } },
-                { ensure(requestedFrom.matches(Regex(REGEX_REQUESTED_FROM))) { ValidationError.InvalidRequestedFrom } },
+                { ensure(requestedFrom.resourceId.isNotBlank()) { ValidationError.MissingRequestedFrom } },
+                { ensure(requestedFrom.type.name.matches(Regex(REGEX_REQUESTED_FROM))) { ValidationError.InvalidRequestedFrom } },
                 { ensure(requestedFromName.isNotBlank()) { ValidationError.MissingRequestedFromName } },
-                { ensure(requestedBy.isNotBlank()) { ValidationError.MissingRequestedBy } },
-                { ensure(requestedBy.matches(Regex(REGEX_REQUESTED_BY))) { ValidationError.InvalidRequestedBy } },
+                { ensure(requestedBy.resourceId.isNotBlank()) { ValidationError.MissingRequestedBy } },
+                { ensure(requestedBy.type.name.matches(Regex(REGEX_REQUESTED_BY))) { ValidationError.InvalidRequestedBy } },
                 { ensure(balanceSupplierName.isNotBlank()) { ValidationError.MissingBalanceSupplierName } },
                 { ensure(balanceSupplierContractName.isNotBlank()) { ValidationError.MissingBalanceSupplierContractName } },
                 { ensure(meteringPointId.isNotBlank()) { ValidationError.MissingMeteringPointId } },

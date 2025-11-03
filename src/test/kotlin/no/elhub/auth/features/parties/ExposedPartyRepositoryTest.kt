@@ -28,7 +28,7 @@ class ExposedPartyRepositoryTest : FunSpec({
         transaction { AuthorizationPartyTable.deleteAll() }
     }
 
-    test ("findOrCreate returns the same row when called twice with the same resourceId") {
+    test("findOrCreate returns the same row when called twice with the same resourceId") {
         val resourceId = "4066e7d6-18e2-68f1-e063-34778d0a4876"
 
         val first = repository.findOrInsert(ElhubResource.Person, resourceId)
@@ -37,7 +37,7 @@ class ExposedPartyRepositoryTest : FunSpec({
         val second = repository.findOrInsert(ElhubResource.Person, resourceId)
             .getOrElse { error("Second call failed: $it") }
 
-        second.id shouldBe  first.id
+        second.id shouldBe first.id
         second.type shouldBe first.type
         second.resourceId shouldBe first.resourceId
 
@@ -67,5 +67,4 @@ class ExposedPartyRepositoryTest : FunSpec({
 
         count shouldBe 2
     }
-
 })

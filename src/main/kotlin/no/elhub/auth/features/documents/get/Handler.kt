@@ -1,24 +1,53 @@
 package no.elhub.auth.features.documents.get
 
 import arrow.core.Either
-import arrow.core.left
-import arrow.core.right
+import arrow.core.raise.either
 import no.elhub.auth.features.common.QueryError
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.DocumentRepository
+import no.elhub.auth.features.parties.AuthorizationParty
+import no.elhub.auth.features.parties.PartyRepository
+
+data class GetDocumentResult(
+    val document: AuthorizationDocument,
+    val requestedByParty: AuthorizationParty,
+    val requestedFromParty: AuthorizationParty
+)
 
 class Handler(
-    private val repo: DocumentRepository
+    private val documentRepo: DocumentRepository,
+    private val partyRepo: PartyRepository,
 ) {
-    operator fun invoke(query: Query): Either<QueryError, AuthorizationDocument> =
-        repo.find(query.id).fold(
-            { error ->
+    operator fun invoke(query: Query): Either<QueryError, GetDocumentResult> = either {
+        val documentToGet = documentRepo.find(query.id)
+            .mapLeft { error ->
                 when (error) {
-                    is RepositoryReadError.NotFoundError -> QueryError.ResourceNotFoundError.left()
-                    is RepositoryReadError.UnexpectedError -> QueryError.IOError.left()
+                    is RepositoryReadError.NotFoundError -> QueryError.ResourceNotFoundError
+                    is RepositoryReadError.UnexpectedError -> QueryError.IOError
                 }
-            },
-            { document -> document.right() }
+            }.bind()
+
+        val requestedBy = partyRepo.find(documentToGet.requestedBy)
+            .mapLeft { error ->
+                when (error) {
+                    is RepositoryReadError.NotFoundError -> QueryError.ResourceNotFoundError
+                    is RepositoryReadError.UnexpectedError -> QueryError.IOError
+                }
+            }.bind()
+
+        val requestedFrom = partyRepo.find(documentToGet.requestedFrom)
+            .mapLeft { error ->
+                when (error) {
+                    is RepositoryReadError.NotFoundError -> QueryError.ResourceNotFoundError
+                    is RepositoryReadError.UnexpectedError -> QueryError.IOError
+                }
+            }.bind()
+
+        GetDocumentResult(
+            document = documentToGet,
+            requestedByParty = requestedBy,
+            requestedFromParty = requestedFrom
         )
+    }
 }

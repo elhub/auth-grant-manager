@@ -24,14 +24,17 @@ fun Route.route(handler: Handler) {
                 return@get
             }
 
-        val document = handler(Query(id))
+        val result = handler(Query(id))
             .getOrElse { err ->
                 val (status, body) = err.toApiErrorResponse()
                 call.respond(status, JsonApiErrorCollection(listOf(body)))
                 return@get
             }
 
-        call.respond(HttpStatusCode.OK, document.toResponse())
+        call.respond(
+            status = HttpStatusCode.OK,
+            message = result.document.toResponse(result.requestedByParty, result.requestedFromParty)
+        )
     }
 
     get("/{$DOCUMENT_ID_PARAM}.pdf") {
@@ -42,13 +45,16 @@ fun Route.route(handler: Handler) {
                 return@get
             }
 
-        val document = handler(Query(id))
+        val result = handler(Query(id))
             .getOrElse { err ->
                 val (status, body) = err.toApiErrorResponse()
                 call.respond(status, JsonApiErrorCollection(listOf(body)))
                 return@get
             }
 
-        call.respondBytes(document.file, ContentType.Application.Pdf)
+        call.respondBytes(
+            bytes = result.document.file,
+            contentType = ContentType.Application.Pdf
+        )
     }
 }
