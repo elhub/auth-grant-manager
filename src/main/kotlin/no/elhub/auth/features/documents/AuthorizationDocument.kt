@@ -1,14 +1,13 @@
 package no.elhub.auth.features.documents
 
 import java.time.LocalDateTime
-import java.util.*
+import java.util.UUID
 
 data class AuthorizationDocument(
     val id: UUID,
     val title: String,
     val type: Type,
     val status: Status,
-    val file: ByteArray,
     val requestedBy: String,
     val requestedFrom: String,
     val createdAt: LocalDateTime,

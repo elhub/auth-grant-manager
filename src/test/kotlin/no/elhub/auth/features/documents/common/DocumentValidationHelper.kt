@@ -1,4 +1,4 @@
-package no.elhub.auth.features.documents
+package no.elhub.auth.features.documents.common
 
 import eu.europa.esig.dss.enumerations.ValidationLevel
 import eu.europa.esig.dss.model.DSSDocument

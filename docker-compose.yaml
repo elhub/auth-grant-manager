@@ -1,6 +1,11 @@
+---
+name: auth-grant-manager
+
 services:
   db:
     image: postgres:15
+    networks:
+      - auth-grant-manager
     ports:
       - "5432:5432"
     environment:
@@ -10,7 +15,23 @@ services:
 
   vault-transit-mock:
     image: docker.jfrog.elhub.cloud/frzq0sxltynr/auth/vault-transit-secrets-engine-mock:0.1.0-2
+    networks:
+      - auth-grant-manager
     ports:
       - "8200:8200"
     volumes:
       - "${PRIVATE_KEY_PATH}:/key/private.pem:ro"
+
+  garage:
+    image: dxflrs/garage:v2.1.0
+    ports:
+      - 3900:3900
+      - 3901:3901
+      - 3902:3902
+      - 3903:3903
+    volumes:
+      - ./src/test/resources/garage-conf.toml:/etc/garage.toml
+
+networks:
+  auth-grant-manager:
+    name: auth-grant-manager

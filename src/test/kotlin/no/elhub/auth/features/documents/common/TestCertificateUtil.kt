@@ -1,4 +1,4 @@
-package no.elhub.auth.features.documents
+package no.elhub.auth.features.documents.common
 
 import java.io.File
 

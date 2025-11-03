@@ -28,3 +28,24 @@ pdfSigner:
   certificate:
     signing: $PATH_TO_SIGNING_CERTIFICATE
     chain: $PATH_TO_SIGNING_CERTIFICATE_CHAIN
+
+documentStorage:
+  storage: "s3"
+
+s3:
+  url: $S3_URL
+  region: $S3_REGION
+  bucket: $S3_BUCKET
+  username: $S3_USERNAME
+  password: $S3_PASSWORD
+  linkExpiryHours: $S3_LINK_EXPIRY_HOURS
+
+ociObjectStorage:
+  namespace: $OCI_OS_NAMESPACE
+  region: $OCI_OS_REGION
+  bucket: $OCI_OS_BUCKET
+  linkExpiryHours: $OCI_OS_LINK_EXPIRY_HOURS
+  fingerprint: $OCI_OS_FINGERPRINT
+  tenant: $OCI_OS_TENANT
+  user: $OCI_OS_USER
+  privateKeyPath: $OCI_OS_PRIVATE_KEY_PATH

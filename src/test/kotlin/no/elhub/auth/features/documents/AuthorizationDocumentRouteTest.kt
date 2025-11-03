@@ -3,6 +3,7 @@ package no.elhub.auth.features.documents
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.ktor.client.call.body
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.accept
@@ -17,7 +18,12 @@ import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.testing.testApplication
 import no.elhub.auth.features.common.PostgresTestContainerExtension
+import no.elhub.auth.features.common.httpTestClient
 import no.elhub.auth.features.documents.common.AuthorizationDocumentResponse
+import no.elhub.auth.features.documents.common.S3TestContainer
+import no.elhub.auth.features.documents.common.TestCertificateUtil
+import no.elhub.auth.features.documents.common.VaultTransitTestContainerExtension
+import no.elhub.auth.features.documents.common.validateFileIsSignedByUs
 import no.elhub.auth.features.documents.create.DocumentMeta
 import no.elhub.auth.features.documents.create.DocumentRelationships
 import no.elhub.auth.features.documents.create.DocumentRequestAttributes
@@ -31,7 +37,8 @@ class AuthorizationDocumentRouteTest :
     FunSpec({
         extensions(
             PostgresTestContainerExtension,
-            VaultTransitTestContainerExtension
+            VaultTransitTestContainerExtension,
+            S3TestContainer,
         )
 
         context("Create document") {
@@ -58,6 +65,12 @@ class AuthorizationDocumentRouteTest :
                         "pdfSigner.vault.key" to "test-key",
                         "pdfSigner.certificate.signing" to TestCertificateUtil.Constants.CERTIFICATE_LOCATION,
                         "pdfSigner.certificate.chain" to TestCertificateUtil.Constants.CERTIFICATE_LOCATION,
+                        "s3.url" to "http://localhost:3900",
+                        "s3.region" to "bucket",
+                        "s3.bucket" to "documents",
+                        "s3.username" to "garage",
+                        "s3.password" to "garage",
+                        "s3.linkExpiryHours" to "1",
                     )
                 }
 
@@ -70,33 +83,33 @@ class AuthorizationDocumentRouteTest :
                                 setBody(
                                     Request(
                                         data =
-                                        JsonApiRequestResourceObjectWithRelationshipsAndMeta(
-                                            "AuthorizationDocument",
-                                            attributes = DocumentRequestAttributes(
-                                                AuthorizationDocument.Type.ChangeOfSupplierConfirmation
-                                            ),
-                                            relationships = DocumentRelationships(
-                                                requestedBy = JsonApiRelationshipToOne(
-                                                    JsonApiRelationshipData(
-                                                        "User",
-                                                        "12345678901"
+                                            JsonApiRequestResourceObjectWithRelationshipsAndMeta<DocumentRequestAttributes, DocumentRelationships, DocumentMeta>(
+                                                "AuthorizationDocument",
+                                                attributes = DocumentRequestAttributes(
+                                                    AuthorizationDocument.Type.ChangeOfSupplierConfirmation
+                                                ),
+                                                relationships = DocumentRelationships(
+                                                    requestedBy = JsonApiRelationshipToOne(
+                                                        JsonApiRelationshipData(
+                                                            "User",
+                                                            "12345678901"
+                                                        )
+                                                    ),
+                                                    requestedFrom = JsonApiRelationshipToOne(
+                                                        JsonApiRelationshipData(
+                                                            "User",
+                                                            "98765432109"
+                                                        )
                                                     )
                                                 ),
-                                                requestedFrom = JsonApiRelationshipToOne(
-                                                    JsonApiRelationshipData(
-                                                        "User",
-                                                        "98765432109"
-                                                    )
+                                                meta = DocumentMeta(
+                                                    "Some user",
+                                                    "1234",
+                                                    "Adressevegen 1, 1234 Oslo",
+                                                    "Supplier AS",
+                                                    "My Contract",
                                                 )
-                                            ),
-                                            meta = DocumentMeta(
-                                                "Some user",
-                                                "1234",
-                                                "Adressevegen 1, 1234 Oslo",
-                                                "Supplier AS",
-                                                "My Contract",
                                             )
-                                        )
                                     )
                                 )
                             }
@@ -111,6 +124,7 @@ class AuthorizationDocumentRouteTest :
                             createdAt.shouldNotBeNull()
                             updatedAt.shouldNotBeNull()
                             status shouldBe "Pending"
+                            reference shouldNotBe null
                         }
                         relationships.apply {
                             requestedBy.apply {
@@ -129,7 +143,7 @@ class AuthorizationDocumentRouteTest :
                     }
 
                     // Get the pdf to validate signature
-                    val file = client.get("$DOCUMENTS_PATH/${documentResponse.data.id}.pdf").bodyAsBytes()
+                    val file = httpTestClient.get(documentResponse.data.attributes!!.reference).bodyAsBytes()
                     file.validateFileIsSignedByUs()
                 }
             }
