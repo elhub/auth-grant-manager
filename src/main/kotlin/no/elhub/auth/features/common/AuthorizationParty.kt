@@ -1,4 +1,4 @@
-package no.elhub.auth.features.parties
+package no.elhub.auth.features.common
 
 import java.time.Instant
 import java.util.UUID

@@ -4,6 +4,9 @@ import arrow.core.getOrElse
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import no.elhub.auth.features.common.AuthorizationParty
+import no.elhub.auth.features.common.AuthorizationPartyTable
+import no.elhub.auth.features.common.ExposedPartyRepository
 import no.elhub.auth.features.common.PostgresTestContainer
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import org.jetbrains.exposed.sql.Database

@@ -5,8 +5,8 @@ import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import no.elhub.auth.features.grants.common.ExposedGrantRepository
 import no.elhub.auth.features.grants.common.GrantRepository
-import no.elhub.auth.features.parties.ExposedPartyRepository
-import no.elhub.auth.features.parties.PartyRepository
+import no.elhub.auth.features.common.ExposedPartyRepository
+import no.elhub.auth.features.common.PartyRepository
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
 import org.koin.ktor.ext.get

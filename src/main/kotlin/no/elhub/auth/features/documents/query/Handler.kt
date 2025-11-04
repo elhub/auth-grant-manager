@@ -5,8 +5,8 @@ import arrow.core.raise.either
 import no.elhub.auth.features.common.QueryError
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.DocumentRepository
-import no.elhub.auth.features.parties.AuthorizationParty
-import no.elhub.auth.features.parties.PartyRepository
+import no.elhub.auth.features.common.AuthorizationParty
+import no.elhub.auth.features.common.PartyRepository
 
 data class QueryDocumentResult(
     val document: AuthorizationDocument,

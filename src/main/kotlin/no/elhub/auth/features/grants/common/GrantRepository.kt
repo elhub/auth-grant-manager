@@ -12,10 +12,10 @@ import no.elhub.auth.features.grants.AuthorizationGrant.Status
 import no.elhub.auth.features.grants.AuthorizationResourceType
 import no.elhub.auth.features.grants.AuthorizationScope
 import no.elhub.auth.features.grants.PermissionType
-import no.elhub.auth.features.parties.AuthorizationParty
-import no.elhub.auth.features.parties.AuthorizationPartyTable
-import no.elhub.auth.features.parties.PartyRepository
-import no.elhub.auth.features.parties.toAuthorizationParty
+import no.elhub.auth.features.common.AuthorizationParty
+import no.elhub.auth.features.common.AuthorizationPartyTable
+import no.elhub.auth.features.common.PartyRepository
+import no.elhub.auth.features.common.toAuthorizationParty
 import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.ReferenceOption

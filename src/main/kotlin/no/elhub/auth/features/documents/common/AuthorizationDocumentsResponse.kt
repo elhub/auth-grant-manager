@@ -1,7 +1,7 @@
 package no.elhub.auth.features.documents.common
 
 import no.elhub.auth.features.documents.AuthorizationDocument
-import no.elhub.auth.features.parties.AuthorizationParty
+import no.elhub.auth.features.common.AuthorizationParty
 import java.util.UUID
 
 typealias AuthorizationDocumentsResponse = List<AuthorizationDocumentResponse>

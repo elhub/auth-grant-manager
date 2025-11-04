@@ -6,7 +6,7 @@ import arrow.core.raise.either
 import arrow.core.raise.ensure
 import arrow.core.raise.zipOrAccumulate
 import no.elhub.auth.features.documents.AuthorizationDocument
-import no.elhub.auth.features.parties.AuthorizationParty
+import no.elhub.auth.features.common.AuthorizationParty
 
 // TODO: Use appropriate regex
 private const val REGEX_NUMBERS_LETTERS_SYMBOLS = "^[a-zA-Z0-9_.-]*$"

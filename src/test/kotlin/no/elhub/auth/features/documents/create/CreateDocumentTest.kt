@@ -23,9 +23,9 @@ import no.elhub.auth.features.documents.getCustomMetaDataValue
 import no.elhub.auth.features.documents.localVaultConfig
 import no.elhub.auth.features.documents.validateFileIsPDFA2BCompliant
 import no.elhub.auth.features.documents.validateFileIsSignedByUs
-import no.elhub.auth.features.parties.AuthorizationParty
-import no.elhub.auth.features.parties.ExposedPartyRepository
-import no.elhub.auth.features.parties.PartyRepository
+import no.elhub.auth.features.common.AuthorizationParty
+import no.elhub.auth.features.common.ExposedPartyRepository
+import no.elhub.auth.features.common.PartyRepository
 import org.jetbrains.exposed.sql.Database
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind

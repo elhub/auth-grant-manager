@@ -6,8 +6,8 @@ import arrow.core.left
 import arrow.core.right
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.DocumentRepository
-import no.elhub.auth.features.parties.AuthorizationParty
-import no.elhub.auth.features.parties.PartyRepository
+import no.elhub.auth.features.common.AuthorizationParty
+import no.elhub.auth.features.common.PartyRepository
 import java.time.LocalDateTime
 import java.util.UUID
 
