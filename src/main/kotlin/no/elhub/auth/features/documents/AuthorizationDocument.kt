@@ -1,5 +1,6 @@
 package no.elhub.auth.features.documents
 
+import no.elhub.auth.features.common.AuthorizationParty
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -9,8 +10,8 @@ data class AuthorizationDocument(
     val type: Type,
     val status: Status,
     val file: ByteArray,
-    val requestedBy: UUID,
-    val requestedFrom: UUID,
+    val requestedBy: AuthorizationParty,
+    val requestedFrom: AuthorizationParty,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime,
 ) {

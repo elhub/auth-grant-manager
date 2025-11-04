@@ -1,7 +1,7 @@
 package no.elhub.auth.features.grants
 
 import kotlinx.datetime.LocalDateTime
-import no.elhub.auth.features.parties.AuthorizationParty
+import no.elhub.auth.features.common.AuthorizationParty
 
 data class AuthorizationGrant(
     val id: String,

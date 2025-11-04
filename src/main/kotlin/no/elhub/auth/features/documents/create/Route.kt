@@ -18,7 +18,7 @@ fun Route.route(handler: Handler) {
                 return@post
             }
 
-        val result = handler(command)
+        val document = handler(command)
             .getOrElse { error ->
                 when (error) {
                     is
@@ -37,7 +37,7 @@ fun Route.route(handler: Handler) {
 
         call.respond(
             status = HttpStatusCode.Created,
-            message = result.document.toResponse(result.requestedByParty, result.requestedFromParty)
+            message = document.toResponse()
         )
     }
 }

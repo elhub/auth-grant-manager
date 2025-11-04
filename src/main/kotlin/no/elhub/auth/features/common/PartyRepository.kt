@@ -1,9 +1,6 @@
-package no.elhub.auth.features.parties
+package no.elhub.auth.features.common
 
 import arrow.core.Either
-import no.elhub.auth.features.common.PGEnum
-import no.elhub.auth.features.common.RepositoryReadError
-import no.elhub.auth.features.common.RepositoryWriteError
 import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.and
@@ -11,16 +8,17 @@ import org.jetbrains.exposed.sql.insertIgnore
 import org.jetbrains.exposed.sql.javatime.timestamp
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.time.Instant
 import java.util.UUID
 
 interface PartyRepository {
-    fun findOrInsert(type: AuthorizationParty.ElhubResource, resourceId: String): Either<RepositoryWriteError, AuthorizationParty>
-    fun find(id: UUID): Either<RepositoryReadError, AuthorizationParty>
+    fun findOrInsert(type: ElhubResourceType, resourceId: String): Either<RepositoryWriteError, AuthorizationPartyRecord>
+    fun find(id: UUID): Either<RepositoryReadError, AuthorizationPartyRecord>
 }
 
-class ExposedPartyRepository : PartyRepository {
+class ExposedPartyRepository() : PartyRepository {
 
-    override fun findOrInsert(type: AuthorizationParty.ElhubResource, resourceId: String): Either<RepositoryWriteError, AuthorizationParty> =
+    override fun findOrInsert(type: ElhubResourceType, resourceId: String): Either<RepositoryWriteError, AuthorizationPartyRecord> =
         Either.catch {
             transaction {
                 AuthorizationPartyTable
@@ -49,7 +47,7 @@ class ExposedPartyRepository : PartyRepository {
             }
         }.mapLeft { RepositoryWriteError.UnexpectedError }
 
-    override fun find(id: UUID): Either<RepositoryReadError, AuthorizationParty> =
+    override fun find(id: UUID): Either<RepositoryReadError, AuthorizationPartyRecord> =
         Either
             .catch {
                 transaction {
@@ -73,19 +71,26 @@ class ExposedPartyRepository : PartyRepository {
 object AuthorizationPartyTable : UUIDTable("auth.authorization_party") {
     val type = customEnumeration(
         name = "type",
-        fromDb = { value -> AuthorizationParty.ElhubResource.valueOf(value as String) },
+        fromDb = { value -> ElhubResourceType.valueOf(value as String) },
         toDb = { PGEnum("elhub_resource", it) },
     )
 
     val resourceId = varchar("resource_id", 255)
-    val createdAt = timestamp("created_at").clientDefault { java.time.Instant.now() }
+    val createdAt = timestamp("created_at").clientDefault { Instant.now() }
 
     init {
         index(isUnique = true, columns = arrayOf(type, resourceId))
     }
 }
 
-fun ResultRow.toAuthorizationParty() = AuthorizationParty(
+data class AuthorizationPartyRecord(
+    val id: UUID,
+    val type: ElhubResourceType,
+    val resourceId: String,
+    val createdAt: Instant,
+)
+
+fun ResultRow.toAuthorizationParty() = AuthorizationPartyRecord(
     id = this[AuthorizationPartyTable.id].value,
     type = this[AuthorizationPartyTable.type],
     resourceId = this[AuthorizationPartyTable.resourceId],

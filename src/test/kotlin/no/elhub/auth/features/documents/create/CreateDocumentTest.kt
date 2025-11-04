@@ -9,6 +9,10 @@ import io.kotest.koin.KoinExtension
 import io.kotest.koin.KoinLifecycleMode
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import no.elhub.auth.features.common.AuthorizationParty
+import no.elhub.auth.features.common.ElhubResourceType
+import no.elhub.auth.features.common.ExposedPartyRepository
+import no.elhub.auth.features.common.PartyRepository
 import no.elhub.auth.features.common.PostgresTestContainer
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.httpTestClient
@@ -23,9 +27,6 @@ import no.elhub.auth.features.documents.getCustomMetaDataValue
 import no.elhub.auth.features.documents.localVaultConfig
 import no.elhub.auth.features.documents.validateFileIsPDFA2BCompliant
 import no.elhub.auth.features.documents.validateFileIsSignedByUs
-import no.elhub.auth.features.parties.AuthorizationParty
-import no.elhub.auth.features.parties.ExposedPartyRepository
-import no.elhub.auth.features.parties.PartyRepository
 import org.jetbrains.exposed.sql.Database
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
@@ -35,11 +36,11 @@ import org.koin.test.inject
 import kotlin.test.fail
 
 // TODO: Provide a valid supplier ID
-private val VALID_REQUESTED_FROM = PartyRef(AuthorizationParty.ElhubResource.Person, "123455")
+private val VALID_REQUESTED_FROM = AuthorizationParty(type = ElhubResourceType.Person, resourceId = "123455")
 private const val INVALID_REQUESTED_FROM = "^%)"
 private const val VALID_REQUESTED_FROM_NAME = "Supplier AS"
 
-private val VALID_REQUESTED_BY = PartyRef(AuthorizationParty.ElhubResource.Organization, "567891")
+private val VALID_REQUESTED_BY = AuthorizationParty(type = ElhubResourceType.Organization, resourceId = "567891")
 private const val INVALID_REQUESTED_BY = "^%)"
 
 // TODO: Provide a valid metering point
@@ -129,7 +130,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                     meteringPointAddress,
                 ).getOrElse { fail("Unexpected command construction error") }
 
-                val result = handler(command)
+                val document = handler(command)
                     .getOrElse { fail("Document not returned") }
 
                 xThen("I should receive a link to a PDF document") {
@@ -137,17 +138,17 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                 }
 
                 Then("that document should be signed by Elhub") {
-                    result.document.file.validateFileIsSignedByUs()
+                    document.file.validateFileIsSignedByUs()
                 }
 
                 // TODO disabled - resolve end-user nin from auth-persons service
                 xThen("that document should contain the necessary metadata") {
-                    val signerNin = result.document.file.getCustomMetaDataValue(PdfGenerator.PdfConstants.PDF_METADATA_KEY_NIN)
+                    val signerNin = document.file.getCustomMetaDataValue(PdfGenerator.PdfConstants.PDF_METADATA_KEY_NIN)
                     signerNin shouldBe command.requestedFrom
                 }
 
                 Then("that document should conform to the PDF/A-2b standard") {
-                    result.document.file.validateFileIsPDFA2BCompliant() shouldBe true
+                    document.file.validateFileIsPDFA2BCompliant() shouldBe true
                 }
             }
 
@@ -178,7 +179,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                         meteringPointAddress,
                     ).getOrElse { fail("Unexpected command construction error") }
 
-                    val result = handler(command).getOrElse { fail("Document not returned") }
+                    val document = handler(command).getOrElse { fail("Document not returned") }
 
                     Then("the user should be registered in Elhub") {
                         val endUser = endUserRepo.findOrCreateByNin(requestedFrom.resourceId)
@@ -191,16 +192,16 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                     }
 
                     Then("that document should be signed by Elhub") {
-                        result.document.file.isSignedByUs() shouldBe true
+                        document.file.isSignedByUs() shouldBe true
                     }
 
                     Then("that document should contain the necessary metadata") {
                         // TODO: PDF specific references in these tests?
-                        result.document.file.getEndUserNin() shouldBe requestedFrom
+                        document.file.getEndUserNin() shouldBe requestedFrom
                     }
 
                     Then("that document should conform to the PDF/A-2b standard") {
-                        result.document.file.validateFileIsPDFA2BCompliant() shouldBe true
+                        document.file.validateFileIsPDFA2BCompliant() shouldBe true
                     }
                 }
             }
@@ -209,7 +210,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
                 val requestedFrom = VALID_REQUESTED_FROM
                 val requestedFromName = VALID_REQUESTED_FROM_NAME
-                val requestedBy = PartyRef(AuthorizationParty.ElhubResource.valueOf(""), "")
+                val requestedBy = AuthorizationParty(resourceId = "", type = ElhubResourceType.valueOf(""))
                 val balanceSupplierName = VALID_BALANCE_SUPPLIER_NAME
                 val balanceSupplierContractName = VALID_BALANCE_SUPPLIER_CONTRACT_NAME
                 val meteringPointId = VALID_METERING_POINT_ID
@@ -237,7 +238,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
                 val requestedFrom = VALID_REQUESTED_FROM
                 val requestedFromName = VALID_REQUESTED_FROM_NAME
-                val requestedBy = PartyRef(AuthorizationParty.ElhubResource.valueOf(""), "") // TODO - might need better test data here
+                val requestedBy = AuthorizationParty(resourceId = "", type = ElhubResourceType.valueOf("")) // TODO - might need better test data here
                 val balanceSupplierName = VALID_BALANCE_SUPPLIER_NAME
                 val balanceSupplierContractName = VALID_BALANCE_SUPPLIER_CONTRACT_NAME
                 val meteringPointId = VALID_METERING_POINT_ID
@@ -293,7 +294,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
             xGiven("that no end user ID has been provided (NIN/GLN)") {
 
-                val requestedFrom = PartyRef(AuthorizationParty.ElhubResource.valueOf(""), "") // TODO better test data here
+                val requestedFrom = AuthorizationParty(resourceId = "", type = ElhubResourceType.valueOf("")) // TODO better test data here
                 val requestedFromName = VALID_REQUESTED_FROM_NAME
                 val requestedBy = VALID_REQUESTED_BY
                 val balanceSupplierName = VALID_BALANCE_SUPPLIER_NAME
@@ -322,7 +323,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
             xGiven("that an invalid end user ID has been provided (NIN/GLN)") {
 
-                val requestedFrom = PartyRef(AuthorizationParty.ElhubResource.valueOf(""), "") // TODO better test data
+                val requestedFrom = AuthorizationParty(resourceId = "", type = ElhubResourceType.valueOf("")) // TODO better test data
                 val requestedFromName = VALID_REQUESTED_FROM_NAME
                 val requestedBy = VALID_REQUESTED_BY
                 val balanceSupplierName = VALID_BALANCE_SUPPLIER_NAME

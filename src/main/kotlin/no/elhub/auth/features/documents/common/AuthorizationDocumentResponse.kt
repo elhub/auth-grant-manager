@@ -2,7 +2,6 @@ package no.elhub.auth.features.documents.common
 
 import kotlinx.serialization.Serializable
 import no.elhub.auth.features.documents.AuthorizationDocument
-import no.elhub.auth.features.parties.AuthorizationParty
 import no.elhub.devxp.jsonapi.model.JsonApiAttributes
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipData
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipToOne
@@ -25,10 +24,7 @@ data class DocumentRelationships(
 
 typealias AuthorizationDocumentResponse = JsonApiResponse.SingleDocumentWithRelationships<DocumentResponseAttributes, DocumentRelationships>
 
-fun AuthorizationDocument.toResponse(
-    requestedByParty: AuthorizationParty,
-    requestedByFrom: AuthorizationParty
-) =
+fun AuthorizationDocument.toResponse() =
     AuthorizationDocumentResponse(
         data = JsonApiResponseResourceObjectWithRelationships(
             type = "AuthorizationDocument",
@@ -41,14 +37,14 @@ fun AuthorizationDocument.toResponse(
             relationships = DocumentRelationships(
                 requestedBy = JsonApiRelationshipToOne(
                     data = JsonApiRelationshipData(
-                        id = requestedByParty.resourceId,
-                        type = requestedByParty.type.name
+                        id = this.requestedBy.resourceId,
+                        type = this.requestedBy.type.name
                     )
                 ),
                 requestedFrom = JsonApiRelationshipToOne(
                     data = JsonApiRelationshipData(
-                        id = requestedByFrom.resourceId,
-                        type = requestedByFrom.type.name
+                        id = this.requestedFrom.resourceId,
+                        type = this.requestedFrom.type.name
                     )
                 )
             )

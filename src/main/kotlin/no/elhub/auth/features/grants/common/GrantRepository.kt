@@ -5,17 +5,18 @@ import arrow.core.getOrElse
 import arrow.core.raise.either
 import kotlinx.datetime.Instant
 import kotlinx.datetime.toKotlinLocalDateTime
+import no.elhub.auth.features.common.AuthorizationParty
+import no.elhub.auth.features.common.AuthorizationPartyRecord
+import no.elhub.auth.features.common.AuthorizationPartyTable
 import no.elhub.auth.features.common.PGEnum
+import no.elhub.auth.features.common.PartyRepository
 import no.elhub.auth.features.common.RepositoryReadError
+import no.elhub.auth.features.common.toAuthorizationParty
 import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.AuthorizationGrant.Status
 import no.elhub.auth.features.grants.AuthorizationResourceType
 import no.elhub.auth.features.grants.AuthorizationScope
 import no.elhub.auth.features.grants.PermissionType
-import no.elhub.auth.features.parties.AuthorizationParty
-import no.elhub.auth.features.parties.AuthorizationPartyTable
-import no.elhub.auth.features.parties.PartyRepository
-import no.elhub.auth.features.parties.toAuthorizationParty
 import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.ReferenceOption
@@ -66,7 +67,7 @@ class ExposedGrantRepository(
                 .toList()
 
             // 3) Fetch all parties in ONE query and index by id
-            val partiesById: Map<UUID, AuthorizationParty> =
+            val partiesById: Map<UUID, AuthorizationPartyRecord> =
                 AuthorizationPartyTable
                     .selectAll()
                     .where { AuthorizationPartyTable.id inList partyIds }
@@ -173,13 +174,16 @@ object AuthorizationScopeTable : LongIdTable(name = "auth.authorization_scope") 
     val createdAt = timestamp("created_at").clientDefault { java.time.Instant.now() }
 }
 
-fun ResultRow.toAuthorizationGrant(grantedFor: AuthorizationParty, grantedBy: AuthorizationParty, grantedTo: AuthorizationParty) = AuthorizationGrant(
-    id = this[AuthorizationGrantTable.id].toString(),
-    grantStatus = this[AuthorizationGrantTable.grantStatus],
-    grantedFor = grantedFor,
-    grantedBy = grantedBy,
-    grantedTo = grantedTo,
-    grantedAt = this[AuthorizationGrantTable.grantedAt].toKotlinLocalDateTime(),
-    validFrom = this[AuthorizationGrantTable.validFrom].toKotlinLocalDateTime(),
-    validTo = this[AuthorizationGrantTable.validTo].toKotlinLocalDateTime(),
-)
+fun ResultRow.toAuthorizationGrant(grantedFor: AuthorizationPartyRecord, grantedBy: AuthorizationPartyRecord, grantedTo: AuthorizationPartyRecord) =
+    AuthorizationGrant(
+        id = this[AuthorizationGrantTable.id].toString(),
+        grantStatus = this[AuthorizationGrantTable.grantStatus],
+        grantedFor = grantedFor.toAuthorizationParty(),
+        grantedBy = grantedBy.toAuthorizationParty(),
+        grantedTo = grantedTo.toAuthorizationParty(),
+        grantedAt = this[AuthorizationGrantTable.grantedAt].toKotlinLocalDateTime(),
+        validFrom = this[AuthorizationGrantTable.validFrom].toKotlinLocalDateTime(),
+        validTo = this[AuthorizationGrantTable.validTo].toKotlinLocalDateTime(),
+    )
+
+fun AuthorizationPartyRecord.toAuthorizationParty() = AuthorizationParty(resourceId = this.resourceId, type = this.type)
