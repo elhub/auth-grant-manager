@@ -4,4 +4,4 @@ import no.elhub.auth.features.documents.AuthorizationDocument
 
 typealias AuthorizationDocumentsResponse = List<AuthorizationDocumentResponse>
 
-fun List<AuthorizationDocument>.toResponse() = this.map { it.toResponse() }
+fun List<AuthorizationDocument>.toResponse(): AuthorizationDocumentsResponse = this.map { it.toResponse() }

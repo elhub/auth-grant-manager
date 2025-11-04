@@ -14,11 +14,11 @@ class Handler(
     private val certificateProvider: CertificateProvider,
     private val fileSigningService: FileSigningService,
     private val signatureProvider: SignatureProvider,
-    private val repo: DocumentRepository
+    private val repo: DocumentRepository,
 ) {
     suspend operator fun invoke(command: Command): Either<CreateDocumentError, AuthorizationDocument> {
         val file = fileGenerator.generate(
-            customerNin = command.requestedFrom,
+            customerNin = command.requestedFrom.resourceId,
             customerName = command.requestedFromName,
             meteringPointAddress = command.meteringPointAddress,
             meteringPointId = command.meteringPointId,
@@ -44,9 +44,10 @@ class Handler(
         val documentToCreate = command.toAuthorizationDocument(signedFile)
             .getOrElse { return CreateDocumentError.MappingError.left() }
 
-        return repo.insert(documentToCreate)
+        val savedDocument = repo.insert(documentToCreate)
             .getOrElse { return CreateDocumentError.PersistenceError.left() }
-            .right()
+
+        return savedDocument.right()
     }
 }
 
@@ -58,6 +59,7 @@ sealed class CreateDocumentError {
     data object SigningError : CreateDocumentError()
     data object MappingError : CreateDocumentError()
     data object PersistenceError : CreateDocumentError()
+    data object PartyError : CreateDocumentError()
 }
 
 fun Command.toAuthorizationDocument(file: ByteArray): Either<CreateDocumentError.MappingError, AuthorizationDocument> =

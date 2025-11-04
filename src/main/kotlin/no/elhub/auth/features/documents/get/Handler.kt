@@ -1,24 +1,22 @@
 package no.elhub.auth.features.documents.get
 
 import arrow.core.Either
-import arrow.core.left
-import arrow.core.right
+import arrow.core.raise.either
 import no.elhub.auth.features.common.QueryError
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.DocumentRepository
 
 class Handler(
-    private val repo: DocumentRepository
+    private val documentRepo: DocumentRepository,
 ) {
-    operator fun invoke(query: Query): Either<QueryError, AuthorizationDocument> =
-        repo.find(query.id).fold(
-            { error ->
+    operator fun invoke(query: Query): Either<QueryError, AuthorizationDocument> = either {
+        documentRepo.find(query.id)
+            .mapLeft { error ->
                 when (error) {
-                    is RepositoryReadError.NotFoundError -> QueryError.ResourceNotFoundError.left()
-                    is RepositoryReadError.UnexpectedError -> QueryError.IOError.left()
+                    is RepositoryReadError.NotFoundError -> QueryError.ResourceNotFoundError
+                    is RepositoryReadError.UnexpectedError -> QueryError.IOError
                 }
-            },
-            { document -> document.right() }
-        )
+            }.bind()
+    }
 }

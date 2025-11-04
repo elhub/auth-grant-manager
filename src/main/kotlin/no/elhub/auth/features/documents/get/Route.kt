@@ -31,7 +31,10 @@ fun Route.route(handler: Handler) {
                 return@get
             }
 
-        call.respond(HttpStatusCode.OK, document.toResponse())
+        call.respond(
+            status = HttpStatusCode.OK,
+            message = document.toResponse()
+        )
     }
 
     get("/{$DOCUMENT_ID_PARAM}.pdf") {
@@ -49,6 +52,9 @@ fun Route.route(handler: Handler) {
                 return@get
             }
 
-        call.respondBytes(document.file, ContentType.Application.Pdf)
+        call.respondBytes(
+            bytes = document.file,
+            contentType = ContentType.Application.Pdf
+        )
     }
 }

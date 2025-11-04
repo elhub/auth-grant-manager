@@ -66,19 +66,19 @@ class AuthorizationGrantRouteTest : FunSpec({
                     relationships.apply {
                         grantedFor.apply {
                             data.apply {
-                                id shouldBe "1111111111111111"
+                                id shouldBe "12345678901"
                                 type shouldBe "Person"
                             }
                         }
                         grantedBy.apply {
                             data.apply {
-                                id shouldBe "1111111111111111"
+                                id shouldBe "12345678901"
                                 type shouldBe "Person"
                             }
                         }
                         grantedTo.apply {
                             data.apply {
-                                id shouldBe "2222222222222222"
+                                id shouldBe "987654321"
                                 type shouldBe "Organization"
                             }
                         }
@@ -281,19 +281,19 @@ class AuthorizationGrantRouteTest : FunSpec({
                         relationships.apply {
                             grantedFor.apply {
                                 data.apply {
-                                    id shouldBe "1111111111111111"
+                                    id shouldBe "12345678901"
                                     type shouldBe "Person"
                                 }
                             }
                             grantedBy.apply {
                                 data.apply {
-                                    id shouldBe "1111111111111111"
+                                    id shouldBe "12345678901"
                                     type shouldBe "Person"
                                 }
                             }
                             grantedTo.apply {
                                 data.apply {
-                                    id shouldBe "2222222222222222"
+                                    id shouldBe "987654321"
                                     type shouldBe "Organization"
                                 }
                             }
@@ -312,19 +312,19 @@ class AuthorizationGrantRouteTest : FunSpec({
                         relationships.apply {
                             grantedFor.apply {
                                 data.apply {
-                                    id shouldBe "3333333333333333"
+                                    id shouldBe "23456789012"
                                     type shouldBe "Person"
                                 }
                             }
                             grantedBy.apply {
                                 data.apply {
-                                    id shouldBe "3333333333333333"
+                                    id shouldBe "23456789012"
                                     type shouldBe "Person"
                                 }
                             }
                             grantedTo.apply {
                                 data.apply {
-                                    id shouldBe "2222222222222222"
+                                    id shouldBe "987654321"
                                     type shouldBe "Organization"
                                 }
                             }
@@ -343,19 +343,19 @@ class AuthorizationGrantRouteTest : FunSpec({
                         relationships.apply {
                             grantedFor.apply {
                                 data.apply {
-                                    id shouldBe "4444444444444444"
+                                    id shouldBe "123123123"
                                     type shouldBe "OrganizationEntity"
                                 }
                             }
                             grantedBy.apply {
                                 data.apply {
-                                    id shouldBe "3333333333333333"
+                                    id shouldBe "23456789012"
                                     type shouldBe "Person"
                                 }
                             }
                             grantedTo.apply {
                                 data.apply {
-                                    id shouldBe "5555555555555555"
+                                    id shouldBe "34567890123"
                                     type shouldBe "MeteringPoint"
                                 }
                             }

@@ -28,12 +28,16 @@ fun Route.route(handler: Handler) {
                     CreateDocumentError.SignatureFetchingError,
                     CreateDocumentError.SigningDataGenerationError,
                     CreateDocumentError.SigningError,
-                    CreateDocumentError.PersistenceError
+                    CreateDocumentError.PersistenceError,
+                    CreateDocumentError.PartyError
                     -> call.respond(HttpStatusCode.InternalServerError)
                 }
                 return@post
             }
 
-        call.respond(status = HttpStatusCode.Created, message = document.toResponse())
+        call.respond(
+            status = HttpStatusCode.Created,
+            message = document.toResponse()
+        )
     }
 }

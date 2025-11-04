@@ -53,9 +53,9 @@ entity AuthorizationGrant {
   id: UUID
   --
   status: AuthorizationGrantStatus
-  grantedFor: BigInt, FK→AuthorizationParty
-  grantedBy: BigInt, FK→AuthorizationParty
-  grantedTo: BigInt, FK→AuthorizationParty
+  grantedFor: UUID, FK→AuthorizationParty
+  grantedBy: UUID, FK→AuthorizationParty
+  grantedTo: UUID, FK→AuthorizationParty
   grantedAt: DateTime
   validFrom: DateTime
   validTo: DateTime
@@ -74,7 +74,7 @@ entity AuthorizationAuditLog {
   authorizationGrantId: UUID, FK->AuthorizationGrant
   changedAt: DateTime
   --
-  changedBy: BigInt, FK→AuthorizationParty
+  changedBy: UUID, FK→AuthorizationParty
   valueChanged: String
   valueBefore: String
   valueAfter: String
@@ -86,8 +86,8 @@ entity AuthorizationRequest {
   --
   type: RequestType
   status: AuthorizationRequestStatus
-  requestedBy: BigInt, FK→AuthorizationParty
-  requestedFrom: BigInt, FK→AuthorizationParty
+  requestedBy: UUID, FK→AuthorizationParty
+  requestedFrom: UUID, FK→AuthorizationParty
   createdAt: DateTime
   updatedAt: DateTime
   validTo: DateTime
@@ -109,8 +109,8 @@ entity AuthorizationDocument {
   type: DocumentType
   file: Blob
   status: AuthorizationDocumentStatus
-  requestedBy: BigInt, FK→AuthorizationParty
-  requestedFrom: BigInt, FK→AuthorizationParty
+  requestedBy: UUID, FK→AuthorizationParty
+  requestedFrom: UUID, FK→AuthorizationParty
   createdAt: DateTime
   updatedAt: DateTime
 }
@@ -125,9 +125,9 @@ entity AuthorizationDocumentProperty {
 
 entity AuthorizationDocumentSignatories {
   authorizationDocumentId: UUID, FK→Document
-  requestedTo: BigInt, FK→AuthorizationParty
+  requestedFrom: UUID, FK→AuthorizationParty
   --
-  signedBy: BigInt, FK→AuthorizationParty
+  signedBy: UUID, FK→AuthorizationParty
   signedAt: DateTime
 }
 
@@ -162,10 +162,10 @@ entity AuthorizationScope {
 }
 
 entity AuthorizationParty {
-  id: BigSerial
+  id: UUID
   --
   type: ElhubResource
-  descriptor: String
+  resourceId: String
   createdAt: DateTime
 }
 

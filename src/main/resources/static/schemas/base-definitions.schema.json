@@ -24,7 +24,7 @@
                 "System"
               ]
             },
-            "id": {
+            "resourceId": {
               "type": "string",
               "description": "The unique identifier of the linked resource."
             }
@@ -32,7 +32,7 @@
           "examples": [
             {
               "type": "Person",
-              "id": "12345678901"
+              "resourceId": "12345678901"
             }
           ]
         }

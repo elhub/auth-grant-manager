@@ -17,6 +17,7 @@ import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.testing.testApplication
 import no.elhub.auth.features.common.PostgresTestContainerExtension
+import no.elhub.auth.features.common.RunPostgresScriptExtension
 import no.elhub.auth.features.documents.common.AuthorizationDocumentResponse
 import no.elhub.auth.features.documents.create.DocumentMeta
 import no.elhub.auth.features.documents.create.DocumentRelationships
@@ -31,6 +32,7 @@ class AuthorizationDocumentRouteTest :
     FunSpec({
         extensions(
             PostgresTestContainerExtension,
+            RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-party.sql"),
             VaultTransitTestContainerExtension
         )
 
@@ -61,7 +63,7 @@ class AuthorizationDocumentRouteTest :
                     )
                 }
 
-                test("Should create a document with a valid signggitature") {
+                test("Should create a document with a valid signature") {
                     val response =
                         client
                             .post(DOCUMENTS_PATH) {
@@ -78,13 +80,13 @@ class AuthorizationDocumentRouteTest :
                                             relationships = DocumentRelationships(
                                                 requestedBy = JsonApiRelationshipToOne(
                                                     JsonApiRelationshipData(
-                                                        "User",
+                                                        "Person",
                                                         "12345678901"
                                                     )
                                                 ),
                                                 requestedFrom = JsonApiRelationshipToOne(
                                                     JsonApiRelationshipData(
-                                                        "User",
+                                                        "Person",
                                                         "98765432109"
                                                     )
                                                 )
@@ -116,13 +118,13 @@ class AuthorizationDocumentRouteTest :
                             requestedBy.apply {
                                 data.apply {
                                     id shouldBe "12345678901"
-                                    type shouldBe "User"
+                                    type shouldBe "Person"
                                 }
                             }
                             requestedFrom.apply {
                                 data.apply {
                                     id shouldBe "98765432109"
-                                    type shouldBe "User"
+                                    type shouldBe "Person"
                                 }
                             }
                         }
