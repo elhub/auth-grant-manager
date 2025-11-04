@@ -10,12 +10,6 @@ import no.elhub.auth.features.documents.common.DocumentRepository
 import java.time.LocalDateTime
 import java.util.UUID
 
-data class CreateDocumentResult(
-    val document: AuthorizationDocument,
-    val requestedByParty: AuthorizationPartyRecord,
-    val requestedFromParty: AuthorizationPartyRecord
-)
-
 class Handler(
     private val fileGenerator: FileGenerator,
     private val certificateProvider: CertificateProvider,
