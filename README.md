@@ -29,7 +29,8 @@ You can build and run the application locally  using gradle.
 
 #### Run Locally
 
-1. Make sure the Liquibase CLI is installed and available on your `PATH` (the Gradle plugin is temporarily removed due to [liquibase/liquibase-gradle-plugin#173](https://github.com/liquibase/liquibase-gradle-plugin/issues/173)); verify with `liquibase --version`.
+1. Make sure the Liquibase CLI is installed and available on your `PATH` (the Gradle plugin is temporarily removed due
+to [liquibase/liquibase-gradle-plugin#173](https://github.com/liquibase/liquibase-gradle-plugin/issues/173)); verify with `liquibase --version`.
 2. Launch the application (Gradle will start Docker services and run the Liquibase update for you):
    ```bash
    ./gradlew run
