@@ -5,7 +5,8 @@ import arrow.core.NonEmptyList
 import arrow.core.raise.either
 import arrow.core.raise.ensure
 import arrow.core.raise.zipOrAccumulate
-import no.elhub.auth.features.common.AuthorizationParty
+import no.elhub.auth.features.common.ElhubResource
+import no.elhub.auth.features.common.ElhubResourceType
 import no.elhub.auth.features.documents.AuthorizationDocument
 
 // TODO: Use appropriate regex
@@ -14,16 +15,12 @@ private const val REGEX_REQUESTED_FROM = REGEX_NUMBERS_LETTERS_SYMBOLS
 private const val REGEX_REQUESTED_BY = REGEX_NUMBERS_LETTERS_SYMBOLS
 private const val REGEX_METERING_POINT = REGEX_NUMBERS_LETTERS_SYMBOLS
 
-data class PartyRef(
-    val type: AuthorizationParty.ElhubResource,
-    val resourceId: String
-)
 
 class Command private constructor(
     val type: AuthorizationDocument.Type,
-    val requestedFrom: PartyRef,
+    val requestedFrom: ElhubResource,
     val requestedFromName: String,
-    val requestedBy: PartyRef,
+    val requestedBy: ElhubResource,
     val balanceSupplierName: String,
     val balanceSupplierContractName: String,
     val meteringPointId: String,
@@ -32,9 +29,9 @@ class Command private constructor(
     companion object {
         operator fun invoke(
             type: AuthorizationDocument.Type,
-            requestedFrom: PartyRef,
+            requestedFrom: ElhubResource,
             requestedFromName: String,
-            requestedBy: PartyRef,
+            requestedBy: ElhubResource,
             balanceSupplierName: String,
             balanceSupplierContractName: String,
             meteringPointId: String,

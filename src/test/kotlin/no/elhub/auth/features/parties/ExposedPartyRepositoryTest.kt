@@ -4,11 +4,11 @@ import arrow.core.getOrElse
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import no.elhub.auth.features.common.AuthorizationParty
 import no.elhub.auth.features.common.AuthorizationPartyTable
 import no.elhub.auth.features.common.ExposedPartyRepository
 import no.elhub.auth.features.common.PostgresTestContainer
 import no.elhub.auth.features.common.PostgresTestContainerExtension
+import no.elhub.auth.features.common.ElhubResourceType
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.deleteAll
 import org.jetbrains.exposed.sql.selectAll
@@ -34,10 +34,10 @@ class ExposedPartyRepositoryTest : FunSpec({
     test("findOrCreate returns the same row when called twice with the same resourceId") {
         val resourceId = "4066e7d6-18e2-68f1-e063-34778d0a4876"
 
-        val first = repository.findOrInsert(AuthorizationParty.ElhubResource.Person, resourceId)
+        val first = repository.findOrInsert(ElhubResourceType.Person, resourceId)
             .getOrElse { error("First call failed: $it") }
 
-        val second = repository.findOrInsert(AuthorizationParty.ElhubResource.Person, resourceId)
+        val second = repository.findOrInsert(ElhubResourceType.Person, resourceId)
             .getOrElse { error("Second call failed: $it") }
 
         second.id shouldBe first.id
@@ -55,10 +55,10 @@ class ExposedPartyRepositoryTest : FunSpec({
         val existingResourceId = "4066e7d6-18e2-68f1-e063-34778d0a4876"
         val secondResourceId = "6920e7d6-20e2-68d1-s163-75283d1w4888"
 
-        val first = repository.findOrInsert(AuthorizationParty.ElhubResource.Person, existingResourceId)
+        val first = repository.findOrInsert(ElhubResourceType.Person, existingResourceId)
             .getOrElse { error("First call failed: $it") }
 
-        val second = repository.findOrInsert(AuthorizationParty.ElhubResource.Person, secondResourceId)
+        val second = repository.findOrInsert(ElhubResourceType.Person, secondResourceId)
             .getOrElse { error("Second call failed: $it") }
 
         second.id shouldNotBe first.id

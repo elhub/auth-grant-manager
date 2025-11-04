@@ -11,7 +11,7 @@ import no.elhub.auth.features.common.PartyRepository
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.RepositoryWriteError
 import no.elhub.auth.features.documents.AuthorizationDocument
-import no.elhub.auth.features.documents.create.PartyRef
+import no.elhub.auth.features.common.ElhubResource
 import no.elhub.auth.features.grants.AuthorizationResourceType
 import no.elhub.auth.features.grants.PermissionType
 import no.elhub.auth.features.grants.common.AuthorizationScopeTable
@@ -146,8 +146,8 @@ fun ResultRow.toAuthorizationDocument(requestedBy: AuthorizationParty, requested
     type = this[AuthorizationDocumentTable.type],
     status = this[AuthorizationDocumentTable.status],
     file = this[AuthorizationDocumentTable.file],
-    requestedBy = PartyRef(requestedBy.type, requestedBy.resourceId),
-    requestedFrom = PartyRef(requestedFrom.type, requestedFrom.resourceId),
+    requestedBy = ElhubResource(resourceId = requestedBy.resourceId, type = requestedBy.type),
+    requestedFrom = ElhubResource(resourceId = requestedFrom.resourceId, type = requestedBy.type),
     createdAt = this[AuthorizationDocumentTable.createdAt],
     updatedAt = this[AuthorizationDocumentTable.updatedAt],
 )
