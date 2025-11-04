@@ -22,19 +22,19 @@ fun AuthorizationGrant.toResponse() =
             relationships = GrantRelationships(
                 grantedFor = JsonApiRelationshipToOne(
                     data = JsonApiRelationshipData(
-                        id = this.grantedFor.id.toString(),
+                        id = this.grantedFor.resourceId,
                         type = this.grantedFor.type.name
                     )
                 ),
                 grantedBy = JsonApiRelationshipToOne(
                     data = JsonApiRelationshipData(
-                        id = this.grantedBy.id.toString(),
+                        id = this.grantedBy.resourceId,
                         type = this.grantedBy.type.name
                     )
                 ),
                 grantedTo = JsonApiRelationshipToOne(
                     data = JsonApiRelationshipData(
-                        id = this.grantedTo.id.toString(),
+                        id = this.grantedTo.resourceId,
                         type = this.grantedTo.type.name
                     )
                 )

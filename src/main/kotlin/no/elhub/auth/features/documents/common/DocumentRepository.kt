@@ -5,13 +5,13 @@ import arrow.core.left
 import arrow.core.raise.either
 import arrow.core.right
 import no.elhub.auth.features.common.AuthorizationParty
+import no.elhub.auth.features.common.AuthorizationPartyRecord
 import no.elhub.auth.features.common.AuthorizationPartyTable
 import no.elhub.auth.features.common.PGEnum
 import no.elhub.auth.features.common.PartyRepository
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.RepositoryWriteError
 import no.elhub.auth.features.documents.AuthorizationDocument
-import no.elhub.auth.features.common.ElhubResource
 import no.elhub.auth.features.grants.AuthorizationResourceType
 import no.elhub.auth.features.grants.PermissionType
 import no.elhub.auth.features.grants.common.AuthorizationScopeTable
@@ -140,14 +140,14 @@ object AuthorizationDocumentScopeTable : Table("auth.authorization_document_scop
     override val primaryKey = PrimaryKey(authorizationDocumentId, authorizationScopeId)
 }
 
-fun ResultRow.toAuthorizationDocument(requestedBy: AuthorizationParty, requestedFrom: AuthorizationParty) = AuthorizationDocument(
+fun ResultRow.toAuthorizationDocument(requestedBy: AuthorizationPartyRecord, requestedFrom: AuthorizationPartyRecord) = AuthorizationDocument(
     id = this[AuthorizationDocumentTable.id].value,
     title = this[AuthorizationDocumentTable.title],
     type = this[AuthorizationDocumentTable.type],
     status = this[AuthorizationDocumentTable.status],
     file = this[AuthorizationDocumentTable.file],
-    requestedBy = ElhubResource(resourceId = requestedBy.resourceId, type = requestedBy.type),
-    requestedFrom = ElhubResource(resourceId = requestedFrom.resourceId, type = requestedBy.type),
+    requestedBy = AuthorizationParty(resourceId = requestedBy.resourceId, type = requestedBy.type),
+    requestedFrom = AuthorizationParty(resourceId = requestedFrom.resourceId, type = requestedBy.type),
     createdAt = this[AuthorizationDocumentTable.createdAt],
     updatedAt = this[AuthorizationDocumentTable.updatedAt],
 )

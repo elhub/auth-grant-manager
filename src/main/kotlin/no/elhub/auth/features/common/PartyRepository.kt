@@ -12,13 +12,13 @@ import java.time.Instant
 import java.util.UUID
 
 interface PartyRepository {
-    fun findOrInsert(type: ElhubResourceType, resourceId: String): Either<RepositoryWriteError, AuthorizationParty>
-    fun find(id: UUID): Either<RepositoryReadError, AuthorizationParty>
+    fun findOrInsert(type: ElhubResourceType, resourceId: String): Either<RepositoryWriteError, AuthorizationPartyRecord>
+    fun find(id: UUID): Either<RepositoryReadError, AuthorizationPartyRecord>
 }
 
 class ExposedPartyRepository() : PartyRepository {
 
-    override fun findOrInsert(type: ElhubResourceType, resourceId: String): Either<RepositoryWriteError, AuthorizationParty> =
+    override fun findOrInsert(type: ElhubResourceType, resourceId: String): Either<RepositoryWriteError, AuthorizationPartyRecord> =
         Either.catch {
             transaction {
                 AuthorizationPartyTable
@@ -47,7 +47,7 @@ class ExposedPartyRepository() : PartyRepository {
             }
         }.mapLeft { RepositoryWriteError.UnexpectedError }
 
-    override fun find(id: UUID): Either<RepositoryReadError, AuthorizationParty> =
+    override fun find(id: UUID): Either<RepositoryReadError, AuthorizationPartyRecord> =
         Either
             .catch {
                 transaction {
@@ -83,14 +83,14 @@ object AuthorizationPartyTable : UUIDTable("auth.authorization_party") {
     }
 }
 
-data class AuthorizationParty(
+data class AuthorizationPartyRecord(
     val id: UUID,
     val type: ElhubResourceType,
     val resourceId: String,
     val createdAt: Instant,
 )
 
-fun ResultRow.toAuthorizationParty() = AuthorizationParty(
+fun ResultRow.toAuthorizationParty() = AuthorizationPartyRecord(
     id = this[AuthorizationPartyTable.id].value,
     type = this[AuthorizationPartyTable.type],
     resourceId = this[AuthorizationPartyTable.resourceId],

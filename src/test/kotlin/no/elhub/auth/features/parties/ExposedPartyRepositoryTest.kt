@@ -5,10 +5,10 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import no.elhub.auth.features.common.AuthorizationPartyTable
+import no.elhub.auth.features.common.ElhubResourceType
 import no.elhub.auth.features.common.ExposedPartyRepository
 import no.elhub.auth.features.common.PostgresTestContainer
 import no.elhub.auth.features.common.PostgresTestContainerExtension
-import no.elhub.auth.features.common.ElhubResourceType
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.deleteAll
 import org.jetbrains.exposed.sql.selectAll

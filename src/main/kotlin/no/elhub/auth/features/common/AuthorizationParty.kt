@@ -8,4 +8,4 @@ enum class ElhubResourceType {
     System
 }
 
-data class ElhubResource(val resourceId: String, val type: ElhubResourceType)
+data class AuthorizationParty(val resourceId: String, val type: ElhubResourceType)

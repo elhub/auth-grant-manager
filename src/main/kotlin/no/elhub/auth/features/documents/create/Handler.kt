@@ -4,8 +4,7 @@ import arrow.core.Either
 import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
-import no.elhub.auth.features.common.AuthorizationParty
-import no.elhub.auth.features.common.PartyRepository
+import no.elhub.auth.features.common.AuthorizationPartyRecord
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.DocumentRepository
 import java.time.LocalDateTime
@@ -13,8 +12,8 @@ import java.util.UUID
 
 data class CreateDocumentResult(
     val document: AuthorizationDocument,
-    val requestedByParty: AuthorizationParty,
-    val requestedFromParty: AuthorizationParty
+    val requestedByParty: AuthorizationPartyRecord,
+    val requestedFromParty: AuthorizationPartyRecord
 )
 
 class Handler(

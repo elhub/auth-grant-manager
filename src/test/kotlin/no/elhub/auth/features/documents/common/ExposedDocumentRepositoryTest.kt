@@ -2,7 +2,7 @@ package no.elhub.auth.features.documents.common
 
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldNotBe
-import no.elhub.auth.features.common.ElhubResource
+import no.elhub.auth.features.common.AuthorizationParty
 import no.elhub.auth.features.common.ElhubResourceType
 import no.elhub.auth.features.common.ExposedPartyRepository
 import no.elhub.auth.features.common.PostgresTestContainer
@@ -40,8 +40,8 @@ class ExposedDocumentRepositoryTest :
                         file = byteArrayOf(),
                         type = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
                         status = AuthorizationDocument.Status.Pending,
-                        requestedBy = ElhubResource(type = ElhubResourceType.Person, resourceId = "1234567890"),
-                        requestedFrom = ElhubResource(type = ElhubResourceType.Person, resourceId = "1234567890"),
+                        requestedBy = AuthorizationParty(type = ElhubResourceType.Person, resourceId = "1234567890"),
+                        requestedFrom = AuthorizationParty(type = ElhubResourceType.Person, resourceId = "1234567890"),
                         createdAt = LocalDateTime.now(),
                         updatedAt = LocalDateTime.now()
                     )
