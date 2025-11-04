@@ -9,6 +9,9 @@ import io.kotest.koin.KoinExtension
 import io.kotest.koin.KoinLifecycleMode
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import no.elhub.auth.features.common.AuthorizationParty
+import no.elhub.auth.features.common.ExposedPartyRepository
+import no.elhub.auth.features.common.PartyRepository
 import no.elhub.auth.features.common.PostgresTestContainer
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.httpTestClient
@@ -23,9 +26,6 @@ import no.elhub.auth.features.documents.getCustomMetaDataValue
 import no.elhub.auth.features.documents.localVaultConfig
 import no.elhub.auth.features.documents.validateFileIsPDFA2BCompliant
 import no.elhub.auth.features.documents.validateFileIsSignedByUs
-import no.elhub.auth.features.common.AuthorizationParty
-import no.elhub.auth.features.common.ExposedPartyRepository
-import no.elhub.auth.features.common.PartyRepository
 import org.jetbrains.exposed.sql.Database
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
@@ -129,7 +129,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                     meteringPointAddress,
                 ).getOrElse { fail("Unexpected command construction error") }
 
-                val result = handler(command)
+                val document = handler(command)
                     .getOrElse { fail("Document not returned") }
 
                 xThen("I should receive a link to a PDF document") {
@@ -137,17 +137,17 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                 }
 
                 Then("that document should be signed by Elhub") {
-                    result.document.file.validateFileIsSignedByUs()
+                    document.file.validateFileIsSignedByUs()
                 }
 
                 // TODO disabled - resolve end-user nin from auth-persons service
                 xThen("that document should contain the necessary metadata") {
-                    val signerNin = result.document.file.getCustomMetaDataValue(PdfGenerator.PdfConstants.PDF_METADATA_KEY_NIN)
+                    val signerNin = document.file.getCustomMetaDataValue(PdfGenerator.PdfConstants.PDF_METADATA_KEY_NIN)
                     signerNin shouldBe command.requestedFrom
                 }
 
                 Then("that document should conform to the PDF/A-2b standard") {
-                    result.document.file.validateFileIsPDFA2BCompliant() shouldBe true
+                    document.file.validateFileIsPDFA2BCompliant() shouldBe true
                 }
             }
 
@@ -178,7 +178,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                         meteringPointAddress,
                     ).getOrElse { fail("Unexpected command construction error") }
 
-                    val result = handler(command).getOrElse { fail("Document not returned") }
+                    val document = handler(command).getOrElse { fail("Document not returned") }
 
                     Then("the user should be registered in Elhub") {
                         val endUser = endUserRepo.findOrCreateByNin(requestedFrom.resourceId)
@@ -191,16 +191,16 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                     }
 
                     Then("that document should be signed by Elhub") {
-                        result.document.file.isSignedByUs() shouldBe true
+                        document.file.isSignedByUs() shouldBe true
                     }
 
                     Then("that document should contain the necessary metadata") {
                         // TODO: PDF specific references in these tests?
-                        result.document.file.getEndUserNin() shouldBe requestedFrom
+                        document.file.getEndUserNin() shouldBe requestedFrom
                     }
 
                     Then("that document should conform to the PDF/A-2b standard") {
-                        result.document.file.validateFileIsPDFA2BCompliant() shouldBe true
+                        document.file.validateFileIsPDFA2BCompliant() shouldBe true
                     }
                 }
             }

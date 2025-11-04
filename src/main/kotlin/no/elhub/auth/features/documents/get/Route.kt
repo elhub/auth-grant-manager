@@ -24,7 +24,7 @@ fun Route.route(handler: Handler) {
                 return@get
             }
 
-        val result = handler(Query(id))
+        val document = handler(Query(id))
             .getOrElse { err ->
                 val (status, body) = err.toApiErrorResponse()
                 call.respond(status, JsonApiErrorCollection(listOf(body)))
@@ -33,7 +33,7 @@ fun Route.route(handler: Handler) {
 
         call.respond(
             status = HttpStatusCode.OK,
-            message = result.document.toResponse(result.requestedByParty, result.requestedFromParty)
+            message = document.toResponse()
         )
     }
 
@@ -45,7 +45,7 @@ fun Route.route(handler: Handler) {
                 return@get
             }
 
-        val result = handler(Query(id))
+        val document = handler(Query(id))
             .getOrElse { err ->
                 val (status, body) = err.toApiErrorResponse()
                 call.respond(status, JsonApiErrorCollection(listOf(body)))
@@ -53,7 +53,7 @@ fun Route.route(handler: Handler) {
             }
 
         call.respondBytes(
-            bytes = result.document.file,
+            bytes = document.file,
             contentType = ContentType.Application.Pdf
         )
     }

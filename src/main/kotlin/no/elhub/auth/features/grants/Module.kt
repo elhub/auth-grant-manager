@@ -3,10 +3,10 @@ package no.elhub.auth.features.grants
 import io.ktor.server.application.Application
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
-import no.elhub.auth.features.grants.common.ExposedGrantRepository
-import no.elhub.auth.features.grants.common.GrantRepository
 import no.elhub.auth.features.common.ExposedPartyRepository
 import no.elhub.auth.features.common.PartyRepository
+import no.elhub.auth.features.grants.common.ExposedGrantRepository
+import no.elhub.auth.features.grants.common.GrantRepository
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
 import org.koin.ktor.ext.get

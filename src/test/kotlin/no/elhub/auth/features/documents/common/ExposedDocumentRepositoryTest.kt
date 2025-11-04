@@ -2,9 +2,12 @@ package no.elhub.auth.features.documents.common
 
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldNotBe
+import no.elhub.auth.features.common.AuthorizationParty
+import no.elhub.auth.features.common.ExposedPartyRepository
 import no.elhub.auth.features.common.PostgresTestContainer
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.documents.AuthorizationDocument
+import no.elhub.auth.features.documents.create.PartyRef
 import no.elhub.auth.features.grants.common.AuthorizationScopeTable
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.selectAll
@@ -15,7 +18,8 @@ import java.util.*
 class ExposedDocumentRepositoryTest :
     FunSpec({
         extensions(PostgresTestContainerExtension)
-        val repository = ExposedDocumentRepository()
+        val partyRepository = ExposedPartyRepository()
+        val repository = ExposedDocumentRepository(partyRepository)
 
         beforeSpec {
             Database.connect(
@@ -36,8 +40,8 @@ class ExposedDocumentRepositoryTest :
                         file = byteArrayOf(),
                         type = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
                         status = AuthorizationDocument.Status.Pending,
-                        requestedBy = UUID.randomUUID(),
-                        requestedFrom = UUID.randomUUID(),
+                        requestedBy = PartyRef(type = AuthorizationParty.ElhubResource.Person, resourceId = "1234567890"),
+                        requestedFrom = PartyRef(type = AuthorizationParty.ElhubResource.Person, resourceId = "1234567890"),
                         createdAt = LocalDateTime.now(),
                         updatedAt = LocalDateTime.now()
                     )
