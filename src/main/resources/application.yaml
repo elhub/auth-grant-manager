@@ -17,7 +17,7 @@ ktor:
       maximumPoolSize: 3
 
 pdfGenerator:
-  mustacheResourcePath: $MUSTACHE_RESOURCE_PATH
+  mustacheResourcePath: "templates"
 
 pdfSigner:
   # HashiCorp Vault settings
