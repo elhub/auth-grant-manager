@@ -28,3 +28,6 @@ pdfSigner:
   certificate:
     signing: $PATH_TO_SIGNING_CERTIFICATE
     chain: $PATH_TO_SIGNING_CERTIFICATE_CHAIN
+
+featureToggle:
+  enableEndpoints: ${IS_ENDPOINTS_ENABLED:-false}

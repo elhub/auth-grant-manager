@@ -55,6 +55,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                     "ktor.database.password" to "app",
                     "ktor.database.url" to "jdbc:postgresql://localhost:5432/auth",
                     "ktor.database.driverClass" to "org.postgresql.Driver",
+                    "featureToggle.enableEndpoints" to "true"
                 )
             }
             test("Should return 200 OK") {
@@ -159,6 +160,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                         "ktor.database.password" to "app",
                         "ktor.database.url" to "jdbc:postgresql://localhost:5432/auth",
                         "ktor.database.driverClass" to "org.postgresql.Driver",
+                        "featureToggle.enableEndpoints" to "true"
                     )
                 }
                 test("Should return 200 OK on a valid ID") {
@@ -254,6 +256,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                         "ktor.database.password" to "app",
                         "ktor.database.url" to "jdbc:postgresql://localhost:5432/auth",
                         "ktor.database.driverClass" to "org.postgresql.Driver",
+                        "featureToggle.enableEndpoints" to "true"
                     )
                 }
                 test("Should return 201 Created") {
