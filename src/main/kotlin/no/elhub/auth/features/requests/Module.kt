@@ -3,6 +3,7 @@ package no.elhub.auth.features.requests
 import io.ktor.server.application.Application
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
+import no.elhub.auth.features.common.shouldRegisterEndpoint
 import no.elhub.auth.features.requests.common.ExposedRequestRepository
 import no.elhub.auth.features.requests.common.RequestRepository
 import org.koin.core.module.dsl.singleOf
@@ -31,10 +32,12 @@ fun Application.module() {
 
     routing {
         route(REQUESTS_PATH) {
-            confirmRoute(get())
-            createRoute(get(), get())
-            getRoute(get())
-            queryRoute(get())
+            shouldRegisterEndpoint {
+                confirmRoute(get())
+                createRoute(get(), get())
+                getRoute(get())
+                queryRoute(get())
+            }
         }
     }
 }

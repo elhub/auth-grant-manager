@@ -16,6 +16,7 @@ import io.ktor.server.routing.routing
 import kotlinx.serialization.json.Json
 import no.elhub.auth.features.common.ExposedPartyRepository
 import no.elhub.auth.features.common.PartyRepository
+import no.elhub.auth.features.common.shouldRegisterEndpoint
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.documents.common.ExposedDocumentRepository
 import no.elhub.auth.features.documents.create.CertificateProvider
@@ -105,10 +106,12 @@ fun Application.module() {
 
     routing {
         route(DOCUMENTS_PATH) {
-            createRoute(get())
-            confirmRoute(get())
-            getRoute(get())
-            queryRoute(get())
+            shouldRegisterEndpoint {
+                createRoute(get())
+                confirmRoute(get())
+                getRoute(get())
+                queryRoute(get())
+            }
         }
     }
 }

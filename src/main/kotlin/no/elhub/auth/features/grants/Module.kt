@@ -5,6 +5,7 @@ import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import no.elhub.auth.features.common.ExposedPartyRepository
 import no.elhub.auth.features.common.PartyRepository
+import no.elhub.auth.features.common.shouldRegisterEndpoint
 import no.elhub.auth.features.grants.common.ExposedGrantRepository
 import no.elhub.auth.features.grants.common.GrantRepository
 import org.koin.core.module.dsl.singleOf
@@ -31,9 +32,11 @@ fun Application.module() {
 
     routing {
         route(GRANTS_PATH) {
-            getRoute(get())
-            getScopesRoute(get())
-            queryRoute(get())
+            shouldRegisterEndpoint {
+                getRoute(get())
+                getScopesRoute(get())
+                queryRoute(get())
+            }
         }
     }
 }
