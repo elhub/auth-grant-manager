@@ -30,4 +30,4 @@ pdfSigner:
     chain: $PATH_TO_SIGNING_CERTIFICATE_CHAIN
 
 featureToggle:
-  enableEndpoints: ${IS_ENDPOINTS_ENABLED:-false}
+  enableEndpoints: ${ENABLE_ENDPOINTS:false}
