@@ -65,7 +65,6 @@ class Handler(
         } else {
             requestedFrom.right()
         }
-
 }
 
 sealed class CreateDocumentError {
