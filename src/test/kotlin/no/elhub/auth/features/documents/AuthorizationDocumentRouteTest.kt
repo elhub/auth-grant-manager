@@ -62,7 +62,8 @@ class AuthorizationDocumentRouteTest :
                         "pdfSigner.vault.key" to "test-key",
                         "pdfSigner.certificate.signing" to TestCertificateUtil.Constants.CERTIFICATE_LOCATION,
                         "pdfSigner.certificate.chain" to TestCertificateUtil.Constants.CERTIFICATE_LOCATION,
-                        "authPersons.baseUri" to AuthPersonsTestContainer.baseUri(),
+                        "featureToggle.enableEndpoints" to "true",
+                        "authPersons.baseUri" to AuthPersonsTestContainer.baseUri()
                     )
                 }
 

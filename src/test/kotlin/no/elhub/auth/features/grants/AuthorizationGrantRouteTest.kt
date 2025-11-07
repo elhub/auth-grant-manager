@@ -46,6 +46,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                     "ktor.database.password" to "app",
                     "ktor.database.url" to "jdbc:postgresql://localhost:5432/auth",
                     "ktor.database.driverClass" to "org.postgresql.Driver",
+                    "featureToggle.enableEndpoints" to "true"
                 )
             }
 
@@ -137,6 +138,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                     "ktor.database.password" to "app",
                     "ktor.database.url" to "jdbc:postgresql://localhost:5432/auth",
                     "ktor.database.driverClass" to "org.postgresql.Driver",
+                    "featureToggle.enableEndpoints" to "true"
                 )
             }
 
@@ -259,6 +261,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                     "ktor.database.password" to "app",
                     "ktor.database.url" to "jdbc:postgresql://localhost:5432/auth",
                     "ktor.database.driverClass" to "org.postgresql.Driver",
+                    "featureToggle.enableEndpoints" to "true"
                 )
             }
 

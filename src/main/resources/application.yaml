@@ -7,7 +7,7 @@ ktor:
       - no.elhub.auth.features.grants.ModuleKt.module
       - no.elhub.auth.features.requests.ModuleKt.module
   deployment:
-    port: 1234 # TODO remove this testing port
+    port: 8080
   database:
     url: "$JDBC_URL"
     driverClass: "org.postgresql.Driver"
@@ -28,6 +28,9 @@ pdfSigner:
   certificate:
     signing: $PATH_TO_SIGNING_CERTIFICATE
     chain: $PATH_TO_SIGNING_CERTIFICATE_CHAIN
+
+featureToggle:
+  enableEndpoints: ${ENABLE_ENDPOINTS:false}
 
 authPersons:
   baseUri: $AUTH_PERSONS_URL
