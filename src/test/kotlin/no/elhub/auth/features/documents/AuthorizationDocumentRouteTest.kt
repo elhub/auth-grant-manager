@@ -3,6 +3,7 @@ package no.elhub.auth.features.documents
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldMatch
 import io.ktor.client.call.body
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.accept
@@ -33,7 +34,8 @@ class AuthorizationDocumentRouteTest :
         extensions(
             PostgresTestContainerExtension,
             RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-party.sql"),
-            VaultTransitTestContainerExtension
+            VaultTransitTestContainerExtension,
+            AuthPersonsTestContainerExtension,
         )
 
         context("Create document") {
@@ -60,6 +62,7 @@ class AuthorizationDocumentRouteTest :
                         "pdfSigner.vault.key" to "test-key",
                         "pdfSigner.certificate.signing" to TestCertificateUtil.Constants.CERTIFICATE_LOCATION,
                         "pdfSigner.certificate.chain" to TestCertificateUtil.Constants.CERTIFICATE_LOCATION,
+                        "authPersons.baseUri" to AuthPersonsTestContainer.baseUri(),
                     )
                 }
 
@@ -80,14 +83,14 @@ class AuthorizationDocumentRouteTest :
                                             relationships = DocumentRelationships(
                                                 requestedBy = JsonApiRelationshipToOne(
                                                     JsonApiRelationshipData(
-                                                        "Person",
-                                                        "12345678901"
+                                                        "Organization",
+                                                        "987654321"
                                                     )
                                                 ),
                                                 requestedFrom = JsonApiRelationshipToOne(
                                                     JsonApiRelationshipData(
                                                         "Person",
-                                                        "98765432109"
+                                                        "18084190426"
                                                     )
                                                 )
                                             ),
@@ -117,13 +120,13 @@ class AuthorizationDocumentRouteTest :
                         relationships.apply {
                             requestedBy.apply {
                                 data.apply {
-                                    id shouldBe "12345678901"
-                                    type shouldBe "Person"
+                                    id shouldBe "987654321"
+                                    type shouldBe "Organization"
                                 }
                             }
                             requestedFrom.apply {
                                 data.apply {
-                                    id shouldBe "98765432109"
+                                    id shouldMatch Regex("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
                                     type shouldBe "Person"
                                 }
                             }

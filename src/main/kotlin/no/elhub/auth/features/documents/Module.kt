@@ -18,7 +18,10 @@ import no.elhub.auth.features.common.ExposedPartyRepository
 import no.elhub.auth.features.common.PartyRepository
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.documents.common.ExposedDocumentRepository
+import no.elhub.auth.features.documents.create.ApiEndUserService
 import no.elhub.auth.features.documents.create.CertificateProvider
+import no.elhub.auth.features.documents.create.EndUserApiConfig
+import no.elhub.auth.features.documents.create.EndUserService
 import no.elhub.auth.features.documents.create.FileCertificateProvider
 import no.elhub.auth.features.documents.create.FileCertificateProviderConfig
 import no.elhub.auth.features.documents.create.FileGenerator
@@ -94,9 +97,18 @@ fun Application.module() {
                 mustacheResourcePath = cfg.property("mustacheResourcePath").getString(),
             )
         }
+
+        single {
+            val cfg = get<ApplicationConfig>().config("authPersons")
+            EndUserApiConfig(
+                baseUri = cfg.property("baseUri").getString()
+            )
+        }
+
         singleOf(::PdfGenerator) bind FileGenerator::class
         singleOf(::ExposedDocumentRepository) bind DocumentRepository::class
         singleOf(::ExposedPartyRepository) bind PartyRepository::class
+        singleOf(::ApiEndUserService) bind EndUserService::class
         singleOf(::ConfirmHandler)
         singleOf(::CreateHandler)
         singleOf(::GetHandler)

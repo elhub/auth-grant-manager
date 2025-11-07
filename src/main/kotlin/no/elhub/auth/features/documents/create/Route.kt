@@ -29,7 +29,8 @@ fun Route.route(handler: Handler) {
                     CreateDocumentError.SigningDataGenerationError,
                     CreateDocumentError.SigningError,
                     CreateDocumentError.PersistenceError,
-                    CreateDocumentError.PartyError
+                    CreateDocumentError.PartyError,
+                    CreateDocumentError.EndUserError
                     -> call.respond(HttpStatusCode.InternalServerError)
                 }
                 return@post
