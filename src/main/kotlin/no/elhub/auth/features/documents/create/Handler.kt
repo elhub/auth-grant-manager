@@ -44,7 +44,7 @@ class Handler(
         val signedFile = fileSigningService.embedSignatureIntoFile(file, signature, certChain, signingCert)
             .getOrElse { return CreateDocumentError.SigningError.left() }
 
-        // resolve requestedFrom: replace external NIN with internal Elhub UUID for persons (organizations keep their GLN/org number as resourceId)
+        // replace external NIN with internal Elhub UUID for persons (organizations keep their GLN/org number as resourceId)
         val requestedFromParty = resolveRequestedFromParty(command.requestedFrom)
             .getOrElse { return it.left() }
 
@@ -57,9 +57,7 @@ class Handler(
         return savedDocument.right()
     }
 
-    private suspend fun resolveRequestedFromParty(
-        requestedFrom: AuthorizationParty
-    ): Either<CreateDocumentError, AuthorizationParty> =
+    private suspend fun resolveRequestedFromParty(requestedFrom: AuthorizationParty): Either<CreateDocumentError, AuthorizationParty> =
         if (requestedFrom.type == ElhubResourceType.Person) {
             endUserService.findOrCreateByNin(requestedFrom.resourceId)
                 .map { endUser -> requestedFrom.copy(resourceId = endUser.internalId.toString()) }
