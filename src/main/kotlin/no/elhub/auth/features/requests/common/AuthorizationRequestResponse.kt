@@ -43,14 +43,14 @@ fun AuthorizationRequest.toResponse() = AuthorizationRequestResponse(
         relationships = RequestResponseRelationships(
             requestedBy = JsonApiRelationshipToOne(
                 data = JsonApiRelationshipData(
-                    id = this.requestedBy,
-                    type = "Organization"
+                    id = this.requestedBy.resourceId,
+                    type = this.requestedBy.type.name,
                 )
             ),
             requestedFrom = JsonApiRelationshipToOne(
                 data = JsonApiRelationshipData(
-                    id = this.requestedFrom,
-                    type = "Person"
+                    id = this.requestedFrom.resourceId,
+                    type = this.requestedFrom.type.name,
                 )
             )
         ),

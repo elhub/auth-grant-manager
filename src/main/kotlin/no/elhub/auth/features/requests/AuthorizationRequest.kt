@@ -1,13 +1,14 @@
 package no.elhub.auth.features.requests
 
 import kotlinx.datetime.LocalDateTime
+import no.elhub.auth.features.common.AuthorizationParty
 
 data class AuthorizationRequest(
     val id: String,
     val requestType: Type,
     val status: Status,
-    val requestedBy: String,
-    val requestedFrom: String,
+    val requestedBy: AuthorizationParty,
+    val requestedFrom: AuthorizationParty,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime,
     val validTo: LocalDateTime,

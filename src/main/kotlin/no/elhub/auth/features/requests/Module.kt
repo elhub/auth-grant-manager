@@ -3,6 +3,8 @@ package no.elhub.auth.features.requests
 import io.ktor.server.application.Application
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
+import no.elhub.auth.features.common.ExposedPartyRepository
+import no.elhub.auth.features.common.PartyRepository
 import no.elhub.auth.features.common.shouldRegisterEndpoint
 import no.elhub.auth.features.requests.common.ExposedRequestRepository
 import no.elhub.auth.features.requests.common.RequestRepository
@@ -24,6 +26,7 @@ const val REQUESTS_PATH = "/authorization-requests"
 fun Application.module() {
     koinModule {
         singleOf(::ExposedRequestRepository) bind RequestRepository::class
+        singleOf(::ExposedPartyRepository) bind PartyRepository::class
         singleOf(::ConfirmHandler)
         singleOf(::CreateHandler)
         singleOf(::GetHandler)
