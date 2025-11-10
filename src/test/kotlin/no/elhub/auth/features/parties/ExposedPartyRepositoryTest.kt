@@ -4,19 +4,24 @@ import arrow.core.getOrElse
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.types.shouldBeInstanceOf
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import no.elhub.auth.features.common.AuthorizationPartyTable
 import no.elhub.auth.features.common.ElhubResourceType
 import no.elhub.auth.features.common.ExposedPartyRepository
 import no.elhub.auth.features.common.PostgresTestContainer
 import no.elhub.auth.features.common.PostgresTestContainerExtension
+import no.elhub.auth.features.common.RepositoryReadError
 import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.deleteAll
+import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.util.UUID
 
 class ExposedPartyRepositoryTest : FunSpec({
     extension(PostgresTestContainerExtension)
-    val repository = ExposedPartyRepository()
+    val partyRepo = ExposedPartyRepository()
 
     beforeSpec {
         Database.connect(
@@ -27,47 +32,60 @@ class ExposedPartyRepositoryTest : FunSpec({
         )
     }
 
-    beforeTest {
-        transaction { AuthorizationPartyTable.deleteAll() }
+    test("find existing by id succeeds") {
+        val rid = "FIND_ME"
+        val inserted = partyRepo.findOrInsert(ElhubResourceType.Person, rid).getOrElse { error(it) }
+        val found = partyRepo.find(inserted.id).getOrElse { error(it) }
+        found.id shouldBe inserted.id
+        found.resourceId shouldBe rid
     }
 
-    test("findOrCreate returns the same row when called twice with the same resourceId") {
-        val resourceId = "4066e7d6-18e2-68f1-e063-34778d0a4876"
+    test("Insert first then idempotent second") {
+        val resourceId = "12345678901"
+        val first = partyRepo.findOrInsert(ElhubResourceType.Person, resourceId).getOrElse { error(it) }
+        val second = partyRepo.findOrInsert(ElhubResourceType.Person, resourceId).getOrElse { error(it) }
 
-        val first = repository.findOrInsert(ElhubResourceType.Person, resourceId)
-            .getOrElse { error("First call failed: $it") }
-
-        val second = repository.findOrInsert(ElhubResourceType.Person, resourceId)
-            .getOrElse { error("Second call failed: $it") }
-
-        second.id shouldBe first.id
-        second.type shouldBe first.type
-        second.resourceId shouldBe first.resourceId
-
-        val count = transaction {
-            AuthorizationPartyTable.selectAll().count()
-        }
-
-        count shouldBe 1
+        first.id shouldBe second.id
+        first.resourceId shouldBe resourceId
     }
 
-    test("findOrCreate returns a new authorization party when called with a nonexistent resourceId") {
-        val existingResourceId = "4066e7d6-18e2-68f1-e063-34778d0a4876"
-        val secondResourceId = "6920e7d6-20e2-68d1-s163-75283d1w4888"
+    test("Different type same resourceId produces two rows") {
+        val rid = "DUPLICATE_KEY"
+        val org = partyRepo.findOrInsert(ElhubResourceType.Organization, rid).getOrElse { error(it) }
+        val person = partyRepo.findOrInsert(ElhubResourceType.Person, rid).getOrElse { error(it) }
+        org.id shouldNotBe person.id
+    }
 
-        val first = repository.findOrInsert(ElhubResourceType.Person, existingResourceId)
-            .getOrElse { error("First call failed: $it") }
+    test("find missing returns NotFoundError") {
+        val randomId = UUID.randomUUID()
+        val res = partyRepo.find(randomId)
+        res.isLeft() shouldBe true
+        res.swap().getOrNull().shouldBeInstanceOf<RepositoryReadError.NotFoundError>()
+    }
 
-        val second = repository.findOrInsert(ElhubResourceType.Person, secondResourceId)
-            .getOrElse { error("Second call failed: $it") }
-
-        second.id shouldNotBe first.id
-        second.resourceId shouldNotBe first.resourceId
-
-        val count = transaction {
-            AuthorizationPartyTable.selectAll().count()
+    test("Concurrent same insert yields single row") {
+        val rid = "RACE_TEST"
+        runBlocking {
+            repeat(10) {
+                launch {
+                    partyRepo.findOrInsert(ElhubResourceType.Person, rid)
+                }
+            }
         }
 
-        count shouldBe 2
+        transaction {
+            AuthorizationPartyTable
+                .selectAll()
+                .where { (AuthorizationPartyTable.type eq ElhubResourceType.Person) and (AuthorizationPartyTable.resourceId eq rid) }
+                .count() shouldBe 1
+        }
+    }
+
+    test("Two different resourceIds stay separate") {
+        val rid1 = "RID_A"
+        val rid2 = "RID_B"
+        val a = partyRepo.findOrInsert(ElhubResourceType.Person, rid1).getOrElse { error(it) }
+        val b = partyRepo.findOrInsert(ElhubResourceType.Person, rid2).getOrElse { error(it) }
+        a.id shouldNotBe b.id
     }
 })
