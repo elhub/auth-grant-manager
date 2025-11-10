@@ -3,7 +3,11 @@ package no.elhub.auth.features.requests.common
 import arrow.core.Either
 import arrow.core.raise.either
 import kotlinx.datetime.toKotlinLocalDateTime
+import no.elhub.auth.features.common.AuthorizationParty
+import no.elhub.auth.features.common.AuthorizationPartyRecord
+import no.elhub.auth.features.common.AuthorizationPartyTable
 import no.elhub.auth.features.common.PGEnum
+import no.elhub.auth.features.common.PartyRepository
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.RepositoryWriteError
 import no.elhub.auth.features.requests.AuthorizationRequest
@@ -15,7 +19,6 @@ import org.jetbrains.exposed.sql.javatime.CurrentDateTime
 import org.jetbrains.exposed.sql.javatime.datetime
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
-import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -24,32 +27,43 @@ interface RequestRepository {
     fun findAll(): Either<RepositoryReadError, List<AuthorizationRequest>>
     fun insert(
         type: AuthorizationRequest.Type,
-        requester: String,
-        requestee: String,
+        requester: AuthorizationParty,
+        requestee: AuthorizationParty,
     ): Either<RepositoryWriteError, UUID>
 }
 
-class ExposedRequestRepository : RequestRepository {
-
-    private val logger = LoggerFactory.getLogger(RequestRepository::class.java)
+class ExposedRequestRepository(
+    private val partyRepo: PartyRepository
+) : RequestRepository {
 
     override fun findAll(): Either<RepositoryReadError, List<AuthorizationRequest>> = either {
         transaction {
-            val requests = AuthorizationRequestTable
-                .selectAll()
-
-            val requestIds = requests.map { UUID.fromString(it[AuthorizationRequestTable.id].toString()) }
+            val rows = AuthorizationRequestTable.selectAll()
+            val requestIds = rows.map { UUID.fromString(it[AuthorizationRequestTable.id].toString()) }
 
             val properties = AuthorizationRequestPropertyTable
                 .selectAll()
                 .where { AuthorizationRequestPropertyTable.authorizationRequestId inList requestIds }
                 .map { it.toAuthorizationRequestProperty() }
 
-            requests.map { request ->
+            rows.map { request ->
+                val requestedById = request[AuthorizationRequestTable.requestedBy]
+                val requestedFromId = request[AuthorizationRequestTable.requestedFrom]
+
+                val requestedByParty = partyRepo.find(requestedById)
+                    .mapLeft { RepositoryReadError.UnexpectedError }
+                    .bind()
+
+                val requestedFromParty = partyRepo.find(requestedFromId)
+                    .mapLeft { RepositoryReadError.UnexpectedError }
+                    .bind()
+
                 request.toAuthorizationRequest(
                     properties
                         .filter { prop -> prop.authorizationRequestId == request[AuthorizationRequestTable.id].value.toString() }
-                        .ifEmpty { emptyList() }
+                        .ifEmpty { emptyList() },
+                    requestedByParty,
+                    requestedFromParty
                 )
             }
         }
@@ -62,27 +76,45 @@ class ExposedRequestRepository : RequestRepository {
                 .where { AuthorizationRequestTable.id eq requestId }
                 .singleOrNull() ?: raise(RepositoryReadError.NotFoundError)
 
+            val requestedByDbId = request[AuthorizationRequestTable.requestedBy]
+            val requestedByParty = partyRepo.find(requestedByDbId)
+                .mapLeft { RepositoryReadError.UnexpectedError }
+                .bind()
+
+            val requestedFromDbId = request[AuthorizationRequestTable.requestedFrom]
+            val requestedFromParty = partyRepo.find(requestedFromDbId)
+                .mapLeft { RepositoryReadError.UnexpectedError }
+                .bind()
+
             val properties = AuthorizationRequestPropertyTable
                 .selectAll()
                 .where { AuthorizationRequestPropertyTable.authorizationRequestId eq requestId }
                 .map { it.toAuthorizationRequestProperty() }
 
-            request.toAuthorizationRequest(properties)
+            request.toAuthorizationRequest(properties, requestedByParty, requestedFromParty)
         }
     }
 
     override fun insert(
         type: AuthorizationRequest.Type,
-        requester: String,
-        requestee: String
-    ): Either<RepositoryWriteError, UUID> = Either.catch {
+        requester: AuthorizationParty,
+        requestee: AuthorizationParty
+    ): Either<RepositoryWriteError, UUID> = either {
         transaction {
+            val requestedByParty = partyRepo.findOrInsert(requester.type, requester.resourceId)
+                .mapLeft { RepositoryWriteError.UnexpectedError }
+                .bind()
+
+            val requestedFromParty = partyRepo.findOrInsert(requestee.type, requestee.resourceId)
+                .mapLeft { RepositoryWriteError.UnexpectedError }
+                .bind()
+
             AuthorizationRequestTable.insertAndGetId {
                 it[id] = UUID.randomUUID()
                 it[requestType] = type
                 it[status] = AuthorizationRequest.Status.Pending
-                it[requestedBy] = requester
-                it[requestedFrom] = requestee
+                it[requestedBy] = requestedByParty.id
+                it[requestedFrom] = requestedFromParty.id
                 it[validTo] = LocalDateTime.now().plusDays(30)
             }.value
         }
@@ -100,19 +132,23 @@ object AuthorizationRequestTable : UUIDTable("authorization_request") {
         fromDb = { value -> AuthorizationRequest.Status.valueOf(value as String) },
         toDb = { PGEnum("authorization_request_status", it) }
     )
-    val requestedBy = varchar("requested_by", 16)
-    val requestedFrom = varchar("requested_from", 16)
+    val requestedBy = uuid("requested_by").references(AuthorizationPartyTable.id)
+    val requestedFrom = uuid("requested_from").references(AuthorizationPartyTable.id)
     val createdAt = datetime("created_at").defaultExpression(CurrentDateTime)
     val updatedAt = datetime("updated_at").defaultExpression(CurrentDateTime)
     val validTo = datetime("valid_to")
 }
 
-fun ResultRow.toAuthorizationRequest(properties: List<AuthorizationRequest.Property>) = AuthorizationRequest(
+fun ResultRow.toAuthorizationRequest(
+    properties: List<AuthorizationRequest.Property>,
+    requestedBy: AuthorizationPartyRecord,
+    requestedFrom: AuthorizationPartyRecord
+) = AuthorizationRequest(
     id = this[AuthorizationRequestTable.id].toString(),
     requestType = this[AuthorizationRequestTable.requestType],
     status = this[AuthorizationRequestTable.status],
-    requestedBy = this[AuthorizationRequestTable.requestedBy],
-    requestedFrom = this[AuthorizationRequestTable.requestedFrom],
+    requestedBy = AuthorizationParty(resourceId = requestedBy.resourceId, type = requestedBy.type),
+    requestedFrom = AuthorizationParty(resourceId = requestedFrom.resourceId, type = requestedFrom.type),
     createdAt = this[AuthorizationRequestTable.createdAt].toKotlinLocalDateTime(),
     updatedAt = this[AuthorizationRequestTable.updatedAt].toKotlinLocalDateTime(),
     validTo = this[AuthorizationRequestTable.validTo].toKotlinLocalDateTime(),

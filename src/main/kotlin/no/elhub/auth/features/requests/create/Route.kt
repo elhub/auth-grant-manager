@@ -27,7 +27,7 @@ fun Route.route(createHandler: Handler, getHandler: GetHandler) {
             .getOrElse { error ->
                 when (error) {
                     is
-                    no.elhub.auth.features.requests.create.Error.MappingError,
+                    Error.MappingError,
                     Error.PersistenceError
                     -> call.respond(HttpStatusCode.InternalServerError)
                 }
