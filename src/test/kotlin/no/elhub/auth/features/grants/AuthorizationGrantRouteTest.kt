@@ -359,7 +359,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                             grantedTo.apply {
                                 data.apply {
                                     id shouldBe "34567890123"
-                                    type shouldBe "MeteringPoint"
+                                    type shouldBe "OrganizationEntity"
                                 }
                             }
                         }

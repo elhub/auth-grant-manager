@@ -1,11 +1,9 @@
 package no.elhub.auth.features.common
 
-enum class ElhubResourceType {
-    MeteringPoint,
+enum class AuthorizationPartyResourceType {
     Organization,
     OrganizationEntity,
-    Person,
-    System
+    Person
 }
 
-data class AuthorizationParty(val resourceId: String, val type: ElhubResourceType)
+data class AuthorizationParty(val resourceId: String, val type: AuthorizationPartyResourceType)
