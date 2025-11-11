@@ -16,13 +16,7 @@
             "type": {
               "type": "string",
               "description": "A relationship to a party (person or organization).",
-              "enum": [
-                "MeteringPoint",
-                "Organization",
-                "OrganizationEntity",
-                "Person",
-                "System"
-              ]
+              "enum": ["Organization", "OrganizationEntity", "Person"]
             },
             "resourceId": {
               "type": "string",
@@ -37,6 +31,35 @@
           ]
         }
       }
+    },
+    "partyIdentifier": {
+      "type": "object",
+      "properties": {
+        "idType": {
+          "type": "string",
+          "description": "Specify the type of identifier",
+          "enum": [
+            "NationalIdentityNumber",
+            "OrganizationNumber",
+            "GlobalIdentityNumber"
+          ]
+        },
+        "idValue": {
+          "type": "string",
+          "description": "The actual value of the identifier corresponding to the specified idType."
+        }
+      }
+    },
+    "nationalIdentityIdentifier": {
+      "$comment": "Split out as a separate definition because some relationships must always use a NationalIdentityNumber. This keeps validation strict and avoids per-field overrides.",
+      "allOf": [
+        { "$ref": "#/definitions/partyIdentifier" },
+        {
+          "properties": {
+            "idType": { "const": "NationalIdentityNumber" }
+          }
+        }
+      ]
     },
     "resourceId": {
       "type": "string",

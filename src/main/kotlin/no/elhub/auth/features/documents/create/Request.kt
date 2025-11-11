@@ -1,14 +1,9 @@
 package no.elhub.auth.features.documents.create
 
 import kotlinx.serialization.Serializable
-import no.elhub.auth.features.common.AuthorizationParty
-import no.elhub.auth.features.common.PartyType
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.devxp.jsonapi.model.JsonApiAttributes
-import no.elhub.devxp.jsonapi.model.JsonApiRelationshipToOne
-import no.elhub.devxp.jsonapi.model.JsonApiRelationships
 import no.elhub.devxp.jsonapi.model.JsonApiResourceMeta
-import no.elhub.devxp.jsonapi.request.JsonApiRequest
 
 @Serializable
 data class DocumentRequestAttributes(
@@ -16,13 +11,11 @@ data class DocumentRequestAttributes(
 ) : JsonApiAttributes
 
 @Serializable
-data class DocumentRelationships(
-    val requestedBy: JsonApiRelationshipToOne,
-    val requestedFrom: JsonApiRelationshipToOne
-) : JsonApiRelationships
-
-@Serializable
 data class DocumentMeta(
+    val requestedBy: PartyIdentifier,
+    val requestedFrom: PartyIdentifier,
+    val requestedTo: PartyIdentifier,
+    val signedBy: PartyIdentifier,
     val requestedFromName: String,
     val requestedForMeteringPointId: String,
     val requestedForMeteringPointAddress: String,
@@ -30,19 +23,39 @@ data class DocumentMeta(
     val balanceSupplierContractName: String
 ) : JsonApiResourceMeta
 
-typealias Request = JsonApiRequest.SingleDocumentWithRelationshipsAndMeta<DocumentRequestAttributes, DocumentRelationships, DocumentMeta>
+@Serializable
+data class PartyIdentifier(
+    val idType: PartyIdentifierType,
+    val idValue: String
+)
+
+@Serializable
+enum class PartyIdentifierType {
+    NationalIdentityNumber,
+    OrganizationNumber,
+    GlobalLocationNumber
+}
+
+// We need to move this to json wrapper
+@Serializable
+data class RequestData(
+    val type: String,
+    val attributes: DocumentRequestAttributes,
+    val meta: DocumentMeta,
+)
+
+@Serializable
+data class Request(
+    val data: RequestData,
+)
 
 fun Request.toCommand() = Command(
     type = this.data.attributes.documentType,
-    requestedFrom = AuthorizationParty(
-        type = PartyType.valueOf(this.data.relationships.requestedFrom.data.type),
-        resourceId = this.data.relationships.requestedFrom.data.id
-    ),
+    requestedByIdentifier = this.data.meta.requestedBy,
+    requestedFromIdentifier = this.data.meta.requestedFrom,
+    requestedToIdentifier = this.data.meta.requestedTo,
+    signedByIdentifier = this.data.meta.signedBy,
     requestedFromName = this.data.meta.requestedFromName,
-    requestedBy = AuthorizationParty(
-        type = PartyType.valueOf(this.data.relationships.requestedBy.data.type),
-        resourceId = this.data.relationships.requestedBy.data.id
-    ),
     balanceSupplierName = this.data.meta.balanceSupplierName,
     balanceSupplierContractName = this.data.meta.balanceSupplierContractName,
     meteringPointId = this.data.meta.requestedForMeteringPointId,

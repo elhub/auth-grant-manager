@@ -20,12 +20,11 @@ import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.RunPostgresScriptExtension
 import no.elhub.auth.features.documents.common.AuthorizationDocumentResponse
 import no.elhub.auth.features.documents.create.DocumentMeta
-import no.elhub.auth.features.documents.create.DocumentRelationships
 import no.elhub.auth.features.documents.create.DocumentRequestAttributes
+import no.elhub.auth.features.documents.create.PartyIdentifier
+import no.elhub.auth.features.documents.create.PartyIdentifierType
 import no.elhub.auth.features.documents.create.Request
-import no.elhub.devxp.jsonapi.model.JsonApiRelationshipData
-import no.elhub.devxp.jsonapi.model.JsonApiRelationshipToOne
-import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObjectWithRelationshipsAndMeta
+import no.elhub.auth.features.documents.create.RequestData
 import no.elhub.auth.module as applicationModule
 
 class AuthorizationDocumentRouteTest :
@@ -73,31 +72,34 @@ class AuthorizationDocumentRouteTest :
                                 setBody(
                                     Request(
                                         data =
-                                        JsonApiRequestResourceObjectWithRelationshipsAndMeta(
+                                        RequestData(
                                             "AuthorizationDocument",
                                             attributes = DocumentRequestAttributes(
                                                 AuthorizationDocument.Type.ChangeOfSupplierConfirmation
                                             ),
-                                            relationships = DocumentRelationships(
-                                                requestedBy = JsonApiRelationshipToOne(
-                                                    JsonApiRelationshipData(
-                                                        "Person",
-                                                        "12345678901"
-                                                    )
-                                                ),
-                                                requestedFrom = JsonApiRelationshipToOne(
-                                                    JsonApiRelationshipData(
-                                                        "Person",
-                                                        "98765432109"
-                                                    )
-                                                )
-                                            ),
                                             meta = DocumentMeta(
-                                                "Some user",
-                                                "1234",
-                                                "Adressevegen 1, 1234 Oslo",
-                                                "Supplier AS",
-                                                "My Contract",
+                                                requestedBy = PartyIdentifier(
+                                                    idType = PartyIdentifierType.NationalIdentityNumber,
+                                                    idValue = "12345678901"
+                                                ),
+                                                requestedFrom = PartyIdentifier(
+                                                    idType = PartyIdentifierType.NationalIdentityNumber,
+                                                    idValue = "98765432109"
+                                                ),
+                                                requestedTo = PartyIdentifier(
+                                                    idType = PartyIdentifierType.NationalIdentityNumber,
+                                                    idValue = "something"
+                                                ),
+                                                signedBy = PartyIdentifier(
+                                                    idType = PartyIdentifierType.NationalIdentityNumber,
+                                                    idValue = "something"
+                                                ),
+                                                requestedFromName = "Hillary Orr",
+                                                requestedForMeteringPointId = "atomorum",
+                                                requestedForMeteringPointAddress = "quaerendum",
+                                                balanceSupplierName = "Jami Wade",
+                                                balanceSupplierContractName = "Selena Chandler"
+
                                             )
                                         )
                                     )
