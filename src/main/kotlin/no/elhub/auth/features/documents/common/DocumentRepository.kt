@@ -12,7 +12,7 @@ import no.elhub.auth.features.common.PartyRepository
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.RepositoryWriteError
 import no.elhub.auth.features.documents.AuthorizationDocument
-import no.elhub.auth.features.grants.AuthorizationResourceType
+import no.elhub.auth.features.grants.ElhubResource
 import no.elhub.auth.features.grants.PermissionType
 import no.elhub.auth.features.grants.common.AuthorizationScopeTable
 import org.jetbrains.exposed.dao.id.UUIDTable
@@ -63,7 +63,7 @@ class ExposedDocumentRepository(
                     .single()
 
                 val scopeId = AuthorizationScopeTable.insertAndGetId {
-                    it[authorizedResourceType] = AuthorizationResourceType.MeteringPoint
+                    it[authorizedResourceType] = ElhubResource.MeteringPoint
                     it[authorizedResourceId] = "Something"
                     it[permissionType] = PermissionType.ChangeOfSupplier
                 }

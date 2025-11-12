@@ -2,8 +2,8 @@ package no.elhub.auth.features.grants.common
 
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
-import no.elhub.auth.features.grants.AuthorizationResourceType
 import no.elhub.auth.features.grants.AuthorizationScope
+import no.elhub.auth.features.grants.ElhubResource
 import no.elhub.auth.features.grants.PermissionType
 import no.elhub.devxp.jsonapi.model.JsonApiAttributes
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipToOne
@@ -28,7 +28,7 @@ data class GrantRelationships(
 
 @Serializable
 data class AuthorizationGrantScopeAttributes(
-    val authorizedResourceType: AuthorizationResourceType,
+    val authorizedResourceType: ElhubResource,
     val authorizedResourceId: String,
     val permissionType: PermissionType,
     val createdAt: Instant

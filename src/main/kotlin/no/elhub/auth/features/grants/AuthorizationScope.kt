@@ -6,17 +6,19 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class AuthorizationScope(
     val id: Long,
-    val authorizedResourceType: AuthorizationResourceType,
+    val authorizedResourceType: ElhubResource,
     val authorizedResourceId: String,
     val permissionType: PermissionType,
     val createdAt: Instant
 )
 
 @Serializable
-enum class AuthorizationResourceType {
+enum class ElhubResource {
     MeteringPoint,
     Organization,
-    Person
+    OrganizationEntity,
+    Person,
+    System
 }
 
 @Serializable
