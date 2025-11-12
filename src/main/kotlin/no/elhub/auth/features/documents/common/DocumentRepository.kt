@@ -12,7 +12,7 @@ import no.elhub.auth.features.common.PartyRepository
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.RepositoryWriteError
 import no.elhub.auth.features.documents.AuthorizationDocument
-import no.elhub.auth.features.grants.AuthorizationResourceType
+import no.elhub.auth.features.grants.ElhubResource
 import no.elhub.auth.features.grants.PermissionType
 import no.elhub.auth.features.grants.common.AuthorizationScopeTable
 import org.jetbrains.exposed.dao.id.UUIDTable
@@ -49,6 +49,14 @@ class ExposedDocumentRepository(
                     .mapLeft { RepositoryWriteError.UnexpectedError }
                     .bind()
 
+                val requestedToParty = partyRepo.findOrInsert(doc.requestedTo.type, doc.requestedTo.resourceId)
+                    .mapLeft { RepositoryWriteError.UnexpectedError }
+                    .bind()
+
+                val signedByParty = partyRepo.findOrInsert(doc.signedBy.type, doc.signedBy.resourceId)
+                    .mapLeft { RepositoryWriteError.UnexpectedError }
+                    .bind()
+
                 val document = AuthorizationDocumentTable.insertReturning {
                     it[id] = doc.id
                     it[title] = doc.title
@@ -57,13 +65,15 @@ class ExposedDocumentRepository(
                     it[file] = doc.file
                     it[requestedBy] = requestedByParty.id
                     it[requestedFrom] = requestedFromParty.id
+                    it[requestedTo] = requestedFromParty.id
+                    it[signedBy] = requestedFromParty.id
                     it[createdAt] = doc.createdAt
                     it[updatedAt] = doc.updatedAt
-                }.map { it.toAuthorizationDocument(requestedByParty, requestedFromParty) }
+                }.map { it.toAuthorizationDocument(requestedByParty, requestedFromParty, requestedToParty, signedByParty) }
                     .single()
 
                 val scopeId = AuthorizationScopeTable.insertAndGetId {
-                    it[authorizedResourceType] = AuthorizationResourceType.MeteringPoint
+                    it[authorizedResourceType] = ElhubResource.MeteringPoint
                     it[authorizedResourceId] = "Something"
                     it[permissionType] = PermissionType.ChangeOfSupplier
                 }
@@ -94,20 +104,28 @@ class ExposedDocumentRepository(
                     .singleOrNull() ?: return@transaction null
 
                 val requestedByDbId = documentRow[AuthorizationDocumentTable.requestedBy]
-                val requestedByParty = partyRepo.find(requestedByDbId)
-                    .mapLeft { RepositoryReadError.UnexpectedError }
-                    .bind()
+                val requestedByParty = resolveParty(requestedByDbId).bind()
 
                 val requestedFromDbId = documentRow[AuthorizationDocumentTable.requestedBy]
-                val requestedFromParty = partyRepo.find(requestedFromDbId)
-                    .mapLeft { RepositoryReadError.UnexpectedError }
-                    .bind()
+                val requestedFromParty = resolveParty(requestedFromDbId).bind()
 
-                documentRow.toAuthorizationDocument(requestedByParty, requestedFromParty)
+                val requestedToDbId = documentRow[AuthorizationDocumentTable.requestedTo]
+                val requestedToParty = resolveParty(requestedToDbId).bind()
+
+                val signedByDbId = documentRow[AuthorizationDocumentTable.signedBy]
+                val signedByParty = resolveParty(signedByDbId).bind()
+
+                documentRow.toAuthorizationDocument(requestedByParty, requestedFromParty, requestedToParty, signedByParty)
             }
         }
 
     override fun findAll() = TODO()
+
+    private fun resolveParty(
+        partyId: UUID
+    ): Either<RepositoryReadError.UnexpectedError, AuthorizationPartyRecord> =
+        partyRepo.find(partyId)
+            .mapLeft { RepositoryReadError.UnexpectedError }
 }
 
 object AuthorizationDocumentTable : UUIDTable("auth.authorization_document") {
@@ -127,6 +145,8 @@ object AuthorizationDocumentTable : UUIDTable("auth.authorization_document") {
     )
     val requestedBy = uuid("requested_by").references(AuthorizationPartyTable.id)
     val requestedFrom = uuid("requested_from").references(AuthorizationPartyTable.id)
+    val requestedTo = uuid("requested_to").references(AuthorizationPartyTable.id)
+    val signedBy = uuid("signed_by").references(AuthorizationPartyTable.id)
     val createdAt = datetime("created_at")
     val updatedAt = datetime("updated_at")
 }
@@ -140,14 +160,21 @@ object AuthorizationDocumentScopeTable : Table("auth.authorization_document_scop
     override val primaryKey = PrimaryKey(authorizationDocumentId, authorizationScopeId)
 }
 
-fun ResultRow.toAuthorizationDocument(requestedBy: AuthorizationPartyRecord, requestedFrom: AuthorizationPartyRecord) = AuthorizationDocument(
+fun ResultRow.toAuthorizationDocument(
+    requestedBy: AuthorizationPartyRecord,
+    requestedFrom: AuthorizationPartyRecord,
+    requestedTo: AuthorizationPartyRecord,
+    signedBy: AuthorizationPartyRecord
+) = AuthorizationDocument(
     id = this[AuthorizationDocumentTable.id].value,
     title = this[AuthorizationDocumentTable.title],
     type = this[AuthorizationDocumentTable.type],
     status = this[AuthorizationDocumentTable.status],
     file = this[AuthorizationDocumentTable.file],
     requestedBy = AuthorizationParty(resourceId = requestedBy.resourceId, type = requestedBy.type),
-    requestedFrom = AuthorizationParty(resourceId = requestedFrom.resourceId, type = requestedFrom.type),
+    requestedFrom = AuthorizationParty(resourceId = requestedFrom.resourceId, type = requestedBy.type),
+    requestedTo = AuthorizationParty(resourceId = requestedTo.resourceId, type = requestedTo.type),
+    signedBy = AuthorizationParty(resourceId = signedBy.resourceId, type = signedBy.type),
     createdAt = this[AuthorizationDocumentTable.createdAt],
     updatedAt = this[AuthorizationDocumentTable.updatedAt],
 )

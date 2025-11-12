@@ -41,6 +41,12 @@ enum ElhubResource {
   System
 }
 
+enum PartyType {
+  Organization
+  OrganizationEntity
+  Person
+}
+
 enum DocumentType {
   ChangeOfSupplierConfirmation
 }
@@ -164,7 +170,7 @@ entity AuthorizationScope {
 entity AuthorizationParty {
   id: UUID
   --
-  type: ElhubResource
+  type: PartyType
   resourceId: String
   createdAt: DateTime
 }
@@ -191,6 +197,6 @@ AuthorizationRequest "1" *-- "0..*" AuthorizationRequestProperty
 AuthorizationRequest "1" *-- "1..*" AuthorizationRequestScope
 AuthorizationRequest --> RequestType
 AuthorizationRequest --> RequestStatus
-AuthorizationParty --> ElhubResource
+AuthorizationParty --> PartyType
 
 @enduml

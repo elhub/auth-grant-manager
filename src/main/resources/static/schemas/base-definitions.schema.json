@@ -16,13 +16,7 @@
             "type": {
               "type": "string",
               "description": "A relationship to a party (person or organization).",
-              "enum": [
-                "MeteringPoint",
-                "Organization",
-                "OrganizationEntity",
-                "Person",
-                "System"
-              ]
+              "enum": ["Organization", "OrganizationEntity", "Person"]
             },
             "resourceId": {
               "type": "string",
@@ -35,6 +29,24 @@
               "resourceId": "12345678901"
             }
           ]
+        }
+      }
+    },
+    "partyIdentifier": {
+      "type": "object",
+      "properties": {
+        "idType": {
+          "type": "string",
+          "description": "Specify the type of identifier",
+          "enum": [
+            "NationalIdentityNumber",
+            "OrganizationNumber",
+            "GlobalLocationNumber"
+          ]
+        },
+        "idValue": {
+          "type": "string",
+          "description": "The actual value of the identifier corresponding to the specified idType."
         }
       }
     },

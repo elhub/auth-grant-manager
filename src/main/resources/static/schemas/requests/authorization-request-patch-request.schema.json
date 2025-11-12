@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Authorization Request Request",
+  "description": "Schema for creating authorization requests to the Elhub authorization manager.",
+  "type": "object",
+  "properties": {
+    "data": {
+      "description": "The authorization request to be created.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "authorization-request-definitions.json#/$defs/id"
+        },
+        "type": {
+          "$ref": "authorization-request-definitions.json#/$defs/type"
+        },
+        "attributes": {
+          "type": "object",
+          "description": "The attributes of the authorization request.",
+          "properties": {
+            "requestType": {
+              "type": "string",
+              "description": "The type of the authorization request.",
+              "enum": ["SupplierChangeConsentRequest"]
+            }
+          }
+        },
+        "meta": {
+          "type": "object",
+          "description": "Additional meta-information related to the resource. Most of this information is used for informational purposes.",
+          "properties": {
+            "requestedFromName": {
+              "$ref": "authorization-request-definitions.json#/$defs/meta/$defs/requestedFromName"
+            },
+            "requestedForMeteringPointId": {
+              "$ref": "authorization-request-definitions.json#/$defs/meta/$defs/requestedForMeteringPointId"
+            },
+            "requestedForMeteringPointAddress": {
+              "$ref": "authorization-request-definitions.json#/$defs/meta/$defs/requestedForMeteringPointAddress"
+            },
+            "balanceSupplierContractName": {
+              "$ref": "authorization-request-definitions.json#/$defs/meta/$defs/balanceSupplierContractName"
+            }
+          }
+        },
+        "relationships": {
+          "type": "object",
+          "description": "The related entities of the authorization request (persons and organizations).",
+          "properties": {
+            "requestedBy": {
+              "$ref": "authorization-request-definitions.json#/$defs/relationships/$defs/requestedBy"
+            },
+            "requestedFrom": {
+              "$ref": "authorization-request-definitions.json#/$defs/relationships/$defs/requestedFrom"
+            }
+          }
+        }
+      }
+    }
+  },
+  "required": ["data"],
+  "additionalProperties": false
+}

@@ -1,11 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Authorization Request Resource",
-  "description": "Schema for authorization request data object.",
-  "type": "object",
-  "properties": {
+  "$defs": {
     "id": {
-      "$ref": "base-definitions.schema.json#/definitions/resourceId"
+      "$ref": "../base-definitions.schema.json#/definitions/resourceId"
     },
     "type": {
       "type": "string",
@@ -13,9 +10,7 @@
       "const": "AuthorizationRequest"
     },
     "attributes": {
-      "type": "object",
-      "description": "The attributes of the authorization request.",
-      "properties": {
+      "$defs": {
         "requestType": {
           "type": "string",
           "description": "The type of the authorization request.",
@@ -44,27 +39,7 @@
       }
     },
     "meta": {
-      "$ref": "#/definitions/resourceMeta"
-    },
-    "relationships": {
-      "type": "object",
-      "description": "The related entities of the authorization request (persons and organizations).",
-      "properties": {
-        "requestedBy": {
-          "$ref": "base-definitions.schema.json#/definitions/relationshipParty"
-        },
-        "requestedFrom": {
-          "$ref": "base-definitions.schema.json#/definitions/relationshipParty"
-        }
-      }
-    }
-  },
-  "additionalProperties": false,
-  "definitions": {
-    "resourceMeta": {
-      "description": "Additional meta-information related to the resource. Most of this information is used for informational purposes.",
-      "type": "object",
-      "properties": {
+      "$defs": {
         "requestedFromName": {
           "type": "string",
           "description": "The name of the organization or person who the authorization document is requested from.",
@@ -84,6 +59,16 @@
           "type": "string",
           "description": "The unique name of a supplier contract associated with the authorization document.",
           "examples": ["ExampleSupplierContract"]
+        }
+      }
+    },
+    "relationships": {
+      "$defs": {
+        "requestedBy": {
+          "$ref": "../base-definitions.schema.json#/definitions/relationshipParty"
+        },
+        "requestedFrom": {
+          "$ref": "../base-definitions.schema.json#/definitions/relationshipParty"
         }
       }
     }
