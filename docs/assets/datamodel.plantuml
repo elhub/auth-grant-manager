@@ -33,7 +33,7 @@ enum RequestStatus {
   Rejected
 }
 
-enum AuthorizationResourceType {
+enum ElhubResource {
   MeteringPoint
   Organization
   OrganizationEntity
@@ -41,7 +41,7 @@ enum AuthorizationResourceType {
   System
 }
 
-enum AuthorizationPartyResource {
+enum PartyType {
   Organization
   OrganizationEntity
   Person
@@ -160,7 +160,7 @@ entity AuthorizationRequestScope {
 
 entity AuthorizationScope {
   id: BigSerial
-  authorizedResourceType: AuthorizationResourceType
+  authorizedResourceType: ElhubResource
   authorizedResourceId: String
   permissionType: PermissionType
   --
@@ -170,7 +170,7 @@ entity AuthorizationScope {
 entity AuthorizationParty {
   id: UUID
   --
-  type: AuthorizationPartyResource
+  type: PartyType
   resourceId: String
   createdAt: DateTime
 }
@@ -181,7 +181,7 @@ AuthorizationGrant "0..1" *-- "1..*" AuthorizationGrantScope
 AuthorizationGrant "1" *-- "0..*" AuthorizationAuditLog
 AuthorizationGrant --> AuthorizationGrantStatus
 AuthorizationGrant --> AuthorizationParty
-AuthorizationScope --> AuthorizationResourceType
+AuthorizationScope --> ElhubResource
 AuthorizationScope --> PermissionType
 AuthorizationScope "1" *-- "0..*" AuthorizationGrantScope
 AuthorizationScope "1" *-- "0..*" AuthorizationRequestScope
@@ -197,6 +197,6 @@ AuthorizationRequest "1" *-- "0..*" AuthorizationRequestProperty
 AuthorizationRequest "1" *-- "1..*" AuthorizationRequestScope
 AuthorizationRequest --> RequestType
 AuthorizationRequest --> RequestStatus
-AuthorizationParty --> AuthorizationPartyResource
+AuthorizationParty --> PartyType
 
 @enduml
