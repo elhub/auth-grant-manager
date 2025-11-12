@@ -1,11 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Authorization Grant Resource",
-  "description": "Schema for authorization grant data object.",
-  "type": "object",
-  "properties": {
+  "$defs": {
     "id": {
-      "$ref": "base-definitions.schema.json#/definitions/resourceId"
+      "$ref": "../base-definitions.schema.json#/definitions/resourceId"
     },
     "type": {
       "type": "string",
@@ -13,9 +10,7 @@
       "const": "AuthorizationGrant"
     },
     "attributes": {
-      "type": "object",
-      "description": "The attributes of the authorization grant.",
-      "properties": {
+      "$defs": {
         "status": {
           "type": "string",
           "description": "The status of the authorization grant.",
@@ -39,20 +34,17 @@
       }
     },
     "relationships": {
-      "type": "object",
-      "description": "The related entities of the authorization grant (person and organizations).",
-      "properties": {
+      "$defs": {
         "grantedFor": {
-          "$ref": "base-definitions.schema.json#/definitions/relationshipParty"
+          "$ref": "../base-definitions.schema.json#/definitions/relationshipParty"
         },
         "grantedBy": {
-          "$ref": "base-definitions.schema.json#/definitions/relationshipParty"
+          "$ref": "../base-definitions.schema.json#/definitions/relationshipParty"
         },
         "grantedTo": {
-          "$ref": "base-definitions.schema.json#/definitions/relationshipParty"
+          "$ref": "../base-definitions.schema.json#/definitions/relationshipParty"
         }
       }
     }
-  },
-  "additionalProperties": false
+  }
 }
