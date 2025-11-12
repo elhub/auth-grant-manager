@@ -218,7 +218,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "./schemas/authorization-request-get-list-response.schema.json"
+                $ref: "./schemas/requests/authorization-request-get-list-response.schema.json"
         "401":
           $ref: "#/components/responses/401UnauthorizedError"
         "500":
@@ -230,14 +230,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "./schemas/authorization-request-patch-request.schema.json"
+              $ref: "./schemas/requests/authorization-request-patch-request.schema.json"
       responses:
         "201":
           description: The authorization request was updated.
           content:
             application/json:
               schema:
-                $ref: "./schemas/authorization-request-get-response.schema.json"
+                $ref: "./schemas/requests/authorization-request-get-response.schema.json"
         "400":
           $ref: "#/components/responses/400BadRequestError"
         "401":
@@ -251,7 +251,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "./schemas/authorization-request-post-request.schema.json"
+              $ref: "./schemas/requests/authorization-request-post-request.schema.json"
       responses:
         "201":
           description: |
@@ -259,7 +259,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "./schemas/authorization-request-post-response.schema.json"
+                $ref: "./schemas/requests/authorization-request-post-response.schema.json"
         "400":
           $ref: "#/components/responses/400BadRequestError"
         "401":
@@ -283,7 +283,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "./schemas/authorization-request-get-response.schema.json"
+                $ref: "./schemas/requests/authorization-request-get-response.schema.json"
         "401":
           $ref: "#/components/responses/401UnauthorizedError"
         "404":
