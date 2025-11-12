@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Authorization Request",
+  "description": "Schema for returning a single authorization request in the Elhub authorization manager.",
+  "type": "object",
+  "properties": {
+    "data": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "authorization-request-definitions.json#/$defs/id"
+        },
+        "type": {
+          "$ref": "authorization-request-definitions.json#/$defs/type"
+        },
+        "attributes": {
+          "type": "object",
+          "properties": {
+            "requestType": {
+              "$ref": "authorization-request-definitions.json#/$defs/attributes/$defs/requestType"
+            },
+            "status": {
+              "$ref": "authorization-request-definitions.json#/$defs/attributes/$defs/status"
+            },
+            "createdAt": {
+              "$ref": "authorization-request-definitions.json#/$defs/attributes/$defs/createdAt"
+            },
+            "updatedAt": {
+              "$ref": "authorization-request-definitions.json#/$defs/attributes/$defs/updatedAt"
+            },
+            "validTo": {
+              "$ref": "authorization-request-definitions.json#/$defs/attributes/$defs/validTo"
+            }
+          }
+        },
+        "meta": {
+          "type": "object",
+          "description": "Additional meta-information related to the resource. Most of this information is used for informational purposes.",
+          "properties": {
+            "requestedFromName": {
+              "$ref": "authorization-request-definitions.json#/$defs/meta/$defs/requestedFromName"
+            },
+            "requestedForMeteringPointId": {
+              "$ref": "authorization-request-definitions.json#/$defs/meta/$defs/requestedForMeteringPointId"
+            },
+            "requestedForMeteringPointAddress": {
+              "$ref": "authorization-request-definitions.json#/$defs/meta/$defs/requestedForMeteringPointAddress"
+            },
+            "balanceSupplierContractName": {
+              "$ref": "authorization-request-definitions.json#/$defs/meta/$defs/balanceSupplierContractName"
+            }
+          }
+        },
+        "relationships": {
+          "type": "object",
+          "properties": {
+            "requestedBy": {
+              "$ref": "authorization-request-definitions.json#/$defs/relationships/$defs/requestedBy"
+            },
+            "requestedFrom": {
+              "$ref": "authorization-request-definitions.json#/$defs/relationships/$defs/requestedFrom"
+            }
+          }
+        }
+      }
+    },
+    "links": {
+      "description": "Link members related to the primary data.",
+      "$ref": "../base-definitions.schema.json#/definitions/topLevelLinks"
+    },
+    "meta": {
+      "$ref": "../base-definitions.schema.json#/definitions/topLevelMeta"
+    }
+  },
+  "allOf": [
+    {
+      "$ref": "../base-definitions.schema.json#/definitions/topLevelPropertyConstraint"
+    }
+  ],
+  "additionalProperties": false
+}
