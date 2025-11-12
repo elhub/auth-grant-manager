@@ -1,11 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Authorization Scope Resource",
-  "description": "Schema for the authorization scope data object.",
-  "type": "object",
-  "properties": {
+  "$defs": {
     "id": {
-      "$ref": "base-definitions.schema.json#/definitions/resourceId"
+      "$ref": "../base-definitions.schema.json#/definitions/resourceId"
     },
     "type": {
       "type": "string",
@@ -13,9 +10,7 @@
       "const": "AuthorizationScope"
     },
     "attributes": {
-      "type": "object",
-      "description": "The attributes of the authorization scope.",
-      "properties": {
+      "$defs": {
         "permissionType": {
           "type": "string",
           "description": "The type of permission granted by the scope.",
@@ -24,12 +19,16 @@
       }
     },
     "meta": {
-      "$ref": "#/definitions/resourceMeta"
+      "$defs": {
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The date and time when the authorization scope was created."
+        }
+      }
     },
     "relationships": {
-      "type": "object",
-      "description": "The related entities of the authorization grant.",
-      "properties": {
+      "$defs": {
         "authorizedResources": {
           "type": "object",
           "description": "The resources that this scope gives permissions for.",
@@ -37,24 +36,11 @@
             "data": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/relationshipObject"
+                "$ref": "#/$defs/relationshipObject"
               }
             }
-          }
-        }
-      }
-    }
-  },
-  "additionalProperties": false,
-  "definitions": {
-    "resourceMeta": {
-      "description": "Additional meta-information related to the resource. Most of this information is used for informational purposes.",
-      "type": "object",
-      "properties": {
-        "createdAt": {
-          "type": "string",
-          "format": "date-time",
-          "description": "The date and time when the authorization document was created."
+          },
+          "required": ["data"]
         }
       }
     },
