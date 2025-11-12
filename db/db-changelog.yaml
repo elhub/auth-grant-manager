@@ -15,6 +15,3 @@ databaseChangeLog:
   - includeAll:
       path: tables/
       relativeToChangelogFile: true
-  - includeAll:
-      path: changes/
-      relativeToChangelogFile: true
