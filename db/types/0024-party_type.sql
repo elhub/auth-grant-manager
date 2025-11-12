@@ -1,4 +1,4 @@
---changeset elhub:24
+--changeset elhub:25
 CREATE TYPE auth.party_type AS ENUM (
     'Organization',
     'OrganizationEntity',

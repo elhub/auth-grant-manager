@@ -14,8 +14,8 @@ import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.toAuthorizationParty
 import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.AuthorizationGrant.Status
-import no.elhub.auth.features.grants.ElhubResource
 import no.elhub.auth.features.grants.AuthorizationScope
+import no.elhub.auth.features.grants.ElhubResource
 import no.elhub.auth.features.grants.PermissionType
 import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.dao.id.UUIDTable

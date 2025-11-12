@@ -3,8 +3,8 @@ package no.elhub.auth.features.documents.common
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldNotBe
 import no.elhub.auth.features.common.AuthorizationParty
-import no.elhub.auth.features.common.PartyType
 import no.elhub.auth.features.common.ExposedPartyRepository
+import no.elhub.auth.features.common.PartyType
 import no.elhub.auth.features.common.PostgresTestContainer
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.documents.AuthorizationDocument
