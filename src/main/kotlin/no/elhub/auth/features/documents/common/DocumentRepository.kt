@@ -104,30 +104,28 @@ class ExposedDocumentRepository(
                     .singleOrNull() ?: return@transaction null
 
                 val requestedByDbId = documentRow[AuthorizationDocumentTable.requestedBy]
-                val requestedByParty = partyRepo.find(requestedByDbId)
-                    .mapLeft { RepositoryReadError.UnexpectedError }
-                    .bind()
+                val requestedByParty = resolveParty(requestedByDbId).bind()
 
                 val requestedFromDbId = documentRow[AuthorizationDocumentTable.requestedBy]
-                val requestedFromParty = partyRepo.find(requestedFromDbId)
-                    .mapLeft { RepositoryReadError.UnexpectedError }
-                    .bind()
+                val requestedFromParty = resolveParty(requestedFromDbId).bind()
 
                 val requestedToDbId = documentRow[AuthorizationDocumentTable.requestedTo]
-                val requestedToParty = partyRepo.find(requestedToDbId)
-                    .mapLeft { RepositoryReadError.UnexpectedError }
-                    .bind()
+                val requestedToParty = resolveParty(requestedToDbId).bind()
 
                 val signedByDbId = documentRow[AuthorizationDocumentTable.signedBy]
-                val signedByParty = partyRepo.find(signedByDbId)
-                    .mapLeft { RepositoryReadError.UnexpectedError }
-                    .bind()
+                val signedByParty = resolveParty(signedByDbId).bind()
 
                 documentRow.toAuthorizationDocument(requestedByParty, requestedFromParty, requestedToParty, signedByParty)
             }
         }
 
     override fun findAll() = TODO()
+
+    private fun resolveParty(
+        partyId: UUID
+    ): Either<RepositoryReadError.UnexpectedError, AuthorizationPartyRecord> =
+        partyRepo.find(partyId)
+            .mapLeft { RepositoryReadError.UnexpectedError }
 }
 
 object AuthorizationDocumentTable : UUIDTable("auth.authorization_document") {

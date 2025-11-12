@@ -41,7 +41,7 @@
           "enum": [
             "NationalIdentityNumber",
             "OrganizationNumber",
-            "GlobalIdentityNumber"
+            "GlobalLocationNumber"
           ]
         },
         "idValue": {

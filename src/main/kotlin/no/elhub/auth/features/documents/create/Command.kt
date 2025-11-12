@@ -103,5 +103,4 @@ sealed class ValidationError {
     data object MissingMeteringPointId : ValidationError()
     data object InvalidMeteringPointId : ValidationError()
     data object MissingMeteringPointAddress : ValidationError()
-    data object InvalidPartyIdentifier : ValidationError()
 }
