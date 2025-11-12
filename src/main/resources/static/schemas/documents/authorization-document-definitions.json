@@ -58,11 +58,11 @@
         },
         "requestedTo": {
           "description": "The party identifier of the person authorized to review and approve the authorization document on behalf of the owner.",
-          "$ref": "../base-definitions.schema.json#/definitions/nationalIdentityIdentifier"
+          "$ref": "../base-definitions.schema.json#/definitions/partyIdentifier"
         },
         "signedBy": {
           "description": "The party identifier of the person who signs the authorization document.",
-          "$ref": "../base-definitions.schema.json#/definitions/nationalIdentityIdentifier"
+          "$ref": "../base-definitions.schema.json#/definitions/partyIdentifier"
         },
         "requestedFromName": {
           "type": "string",

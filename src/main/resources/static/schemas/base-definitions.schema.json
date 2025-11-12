@@ -50,17 +50,6 @@
         }
       }
     },
-    "nationalIdentityIdentifier": {
-      "$comment": "Split out as a separate definition because some relationships must always use a NationalIdentityNumber. This keeps validation strict and avoids per-field overrides.",
-      "allOf": [
-        { "$ref": "#/definitions/partyIdentifier" },
-        {
-          "properties": {
-            "idType": { "const": "NationalIdentityNumber" }
-          }
-        }
-      ]
-    },
     "resourceId": {
       "type": "string",
       "format": "UUID",
