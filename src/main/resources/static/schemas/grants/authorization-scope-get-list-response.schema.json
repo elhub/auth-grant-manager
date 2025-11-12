@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Authorization Scope Response Collection",
+  "description": "Schema for returning a collection of authorization scope objects in the Elhub authorization manager.",
+  "type": "object",
+  "properties": {
+    "data": {
+      "description": "An array of authorization scope resource objects.",
+      "type": "array",
+      "items": {
+        "$ref": "authorization-scope-get-response.schema.json#/properties/data"
+      },
+      "uniqueItems": true
+    },
+    "links": {
+      "description": "Link members related to the primary data.",
+      "type": "object",
+      "properties": {
+        "self": {
+          "$ref": "../base-definitions.schema.json#/definitions/topLevelLinks/properties/self"
+        }
+      }
+    },
+    "meta": {
+      "description": "Meta-information for the JSON document.",
+      "type": "object",
+      "properties": {
+        "createdAt": {
+          "$ref": "../base-definitions.schema.json#/definitions/topLevelMeta/properties/createdAt"
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "$ref": "../base-definitions.schema.json#/definitions/topLevelPropertyConstraint"
+    }
+  ],
+  "additionalProperties": false
+}

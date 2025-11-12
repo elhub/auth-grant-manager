@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Authorization Scope",
+  "description": "Schema for returning a single authorization scope object in the Elhub authorization manager.",
+  "type": "object",
+  "properties": {
+    "data": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "authorization-scope-definitions.json#/$defs/id"
+        },
+        "type": {
+          "$ref": "authorization-scope-definitions.json#/$defs/type"
+        },
+        "attributes": {
+          "type": "object",
+          "properties": {
+            "permissionType": {
+              "$ref": "authorization-scope-definitions.json#/$defs/attributes/$defs/permissionType"
+            }
+          }
+        },
+        "meta": {
+          "type": "object",
+          "properties": {
+            "createdAt": {
+              "$ref": "authorization-scope-definitions.json#/$defs/meta/$defs/createdAt"
+            }
+          }
+        },
+        "relationships": {
+          "type": "object",
+          "properties": {
+            "authorizedResources": {
+              "$ref": "authorization-scope-definitions.json#/$defs/relationships/$defs/authorizedResources"
+            }
+          }
+        }
+      }
+    },
+    "links": {
+      "description": "Link members related to the primary data.",
+      "type": "object",
+      "properties": {
+        "self": {
+          "$ref": "../base-definitions.schema.json#/definitions/topLevelLinks/properties/self"
+        }
+      }
+    },
+    "meta": {
+      "description": "Meta-information for the JSON document.",
+      "type": "object",
+      "properties": {
+        "createdAt": {
+          "$ref": "../base-definitions.schema.json#/definitions/topLevelMeta/properties/createdAt"
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "$ref": "../base-definitions.schema.json#/definitions/topLevelPropertyConstraint"
+    }
+  ],
+  "additionalProperties": false
+}
