@@ -9,10 +9,8 @@ import io.kotest.koin.KoinExtension
 import io.kotest.koin.KoinLifecycleMode
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import no.elhub.auth.features.common.AuthorizationParty
 import no.elhub.auth.features.common.ExposedPartyRepository
 import no.elhub.auth.features.common.PartyRepository
-import no.elhub.auth.features.common.PartyType
 import no.elhub.auth.features.common.PostgresTestContainer
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.httpTestClient
@@ -36,12 +34,15 @@ import org.koin.test.inject
 import kotlin.test.fail
 
 // TODO: Provide a valid supplier ID
-private val VALID_REQUESTED_FROM = AuthorizationParty(type = PartyType.Person, resourceId = "123455")
+private val VALID_REQUESTED_FROM_IDENTIFIER = PartyIdentifier(idType = PartyIdentifierType.NationalIdentityNumber, idValue = "123455")
 private const val INVALID_REQUESTED_FROM = "^%)"
 private const val VALID_REQUESTED_FROM_NAME = "Supplier AS"
 
-private val VALID_REQUESTED_BY = AuthorizationParty(type = PartyType.Organization, resourceId = "567891")
+private val VALID_REQUESTED_BY_IDENTIFIER = PartyIdentifier(idType = PartyIdentifierType.NationalIdentityNumber, idValue = "567891")
 private const val INVALID_REQUESTED_BY = "^%)"
+
+private val VALID_REQUESTED_TO_IDENTIFIER = PartyIdentifier(idType = PartyIdentifierType.NationalIdentityNumber, idValue = "567891")
+private val VALID_SIGNED_BY_IDENTIFIER = PartyIdentifier(idType = PartyIdentifierType.NationalIdentityNumber, idValue = "567891")
 
 // TODO: Provide a valid metering point
 private const val VALID_METERING_POINT_ID = "abc123"
@@ -109,9 +110,12 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
             When("I request a Change of Supplier document") {
 
-                val requestedFrom = VALID_REQUESTED_FROM
+                val requestedFrom = VALID_REQUESTED_FROM_IDENTIFIER
                 val requestedFromName = VALID_REQUESTED_FROM_NAME
-                val requestedBy = VALID_REQUESTED_BY
+                val requestedBy = VALID_REQUESTED_FROM_IDENTIFIER
+                val requestedTo = VALID_REQUESTED_TO_IDENTIFIER
+                val signedBy = VALID_SIGNED_BY_IDENTIFIER
+
                 val balanceSupplierName = VALID_BALANCE_SUPPLIER_NAME
                 val balanceSupplierContractName = VALID_BALANCE_SUPPLIER_CONTRACT_NAME
                 val meteringPointId = VALID_METERING_POINT_ID
@@ -120,14 +124,16 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                 val handler by inject<Handler>()
 
                 val command = Command(
-                    AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
-                    requestedFrom,
-                    requestedFromName,
-                    requestedBy,
-                    balanceSupplierName,
-                    balanceSupplierContractName,
-                    meteringPointId,
-                    meteringPointAddress,
+                    type = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                    requestedByIdentifier = requestedBy,
+                    requestedFromIdentifier = requestedFrom,
+                    requestedToIdentifier = requestedTo,
+                    signedByIdentifier = signedBy,
+                    requestedFromName = requestedFromName,
+                    balanceSupplierName = balanceSupplierName,
+                    balanceSupplierContractName = balanceSupplierContractName,
+                    meteringPointId = meteringPointId,
+                    meteringPointAddress = meteringPointAddress
                 ).getOrElse { fail("Unexpected command construction error") }
 
                 val document = handler(command)
@@ -144,7 +150,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                 // TODO disabled - resolve end-user nin from auth-persons service
                 xThen("that document should contain the necessary metadata") {
                     val signerNin = document.file.getCustomMetaDataValue(PdfGenerator.PdfConstants.PDF_METADATA_KEY_NIN)
-                    signerNin shouldBe command.requestedFrom
+                    signerNin shouldBe command.requestedFromIdentifier
                 }
 
                 Then("that document should conform to the PDF/A-2b standard") {
@@ -158,9 +164,11 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
                 When("I request a Change of Supplier document") {
 
-                    val requestedFrom = VALID_REQUESTED_FROM
+                    val requestedFrom = VALID_REQUESTED_FROM_IDENTIFIER
                     val requestedFromName = VALID_REQUESTED_FROM_NAME
-                    val requestedBy = VALID_REQUESTED_BY
+                    val requestedBy = VALID_REQUESTED_BY_IDENTIFIER
+                    val requestedTo = VALID_REQUESTED_TO_IDENTIFIER
+                    val signedBy = VALID_SIGNED_BY_IDENTIFIER
                     val balanceSupplierName = VALID_BALANCE_SUPPLIER_NAME
                     val meteringPointId = VALID_METERING_POINT_ID
                     val balanceSupplierContractName = VALID_BALANCE_SUPPLIER_CONTRACT_NAME
@@ -169,20 +177,22 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                     val handler by inject<Handler>()
 
                     val command = Command(
-                        AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
-                        requestedFrom,
-                        requestedFromName,
-                        requestedBy,
-                        balanceSupplierName,
-                        balanceSupplierContractName,
-                        meteringPointId,
-                        meteringPointAddress,
+                        type = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                        requestedByIdentifier = requestedBy,
+                        requestedFromIdentifier = requestedFrom,
+                        requestedToIdentifier = requestedTo,
+                        signedByIdentifier = signedBy,
+                        requestedFromName = requestedFromName,
+                        balanceSupplierName = balanceSupplierName,
+                        balanceSupplierContractName = balanceSupplierContractName,
+                        meteringPointId = meteringPointId,
+                        meteringPointAddress = meteringPointAddress
                     ).getOrElse { fail("Unexpected command construction error") }
 
                     val document = handler(command).getOrElse { fail("Document not returned") }
 
                     Then("the user should be registered in Elhub") {
-                        val endUser = endUserRepo.findOrCreateByNin(requestedFrom.resourceId)
+                        val endUser = endUserRepo.findOrCreateByNin(requestedFrom.idValue)
                             .getOrElse { fail("Could not retrieve the end user") }
                         endUser.id shouldNotBe null
                     }
@@ -208,9 +218,11 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
             xGiven("that no balance supplier ID has been provided") {
 
-                val requestedFrom = VALID_REQUESTED_FROM
+                val requestedFrom = VALID_REQUESTED_FROM_IDENTIFIER
                 val requestedFromName = VALID_REQUESTED_FROM_NAME
-                val requestedBy = AuthorizationParty(resourceId = "", type = PartyType.valueOf(""))
+                val requestedBy = PartyIdentifier(idType = PartyIdentifierType.NationalIdentityNumber, idValue = "")
+                val requestedTo = VALID_REQUESTED_TO_IDENTIFIER
+                val signedBy = VALID_SIGNED_BY_IDENTIFIER
                 val balanceSupplierName = VALID_BALANCE_SUPPLIER_NAME
                 val balanceSupplierContractName = VALID_BALANCE_SUPPLIER_CONTRACT_NAME
                 val meteringPointId = VALID_METERING_POINT_ID
@@ -218,28 +230,31 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                 When("I request a Change of Supplier document") {
 
                     val command = Command(
-                        AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
-                        requestedFrom,
-                        requestedFromName,
-                        requestedBy,
-                        balanceSupplierName,
-                        balanceSupplierContractName,
-                        meteringPointId,
-                        meteringPointAddress,
+                        type = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                        requestedByIdentifier = requestedBy,
+                        requestedFromIdentifier = requestedFrom,
+                        requestedToIdentifier = requestedTo,
+                        signedByIdentifier = signedBy,
+                        requestedFromName = requestedFromName,
+                        balanceSupplierName = balanceSupplierName,
+                        balanceSupplierContractName = balanceSupplierContractName,
+                        meteringPointId = meteringPointId,
+                        meteringPointAddress = meteringPointAddress
                     )
 
                     Then("I should receive an error message about missing balance supplier ID") {
-                        command.shouldBeLeft(listOf(ValidationError.MissingRequestedBy))
+                        command.shouldBeLeft(ValidationError.MissingRequestedBy)
                     }
                 }
             }
 
             xGiven("that an invalid balance supplier ID has been provided (GLN)") {
 
-                val requestedFrom = VALID_REQUESTED_FROM
+                val requestedFrom = VALID_REQUESTED_FROM_IDENTIFIER
                 val requestedFromName = VALID_REQUESTED_FROM_NAME
-                // TODO - might need better test data for requestedBy
-                val requestedBy = AuthorizationParty(resourceId = "", type = PartyType.valueOf(""))
+                val requestedBy = PartyIdentifier(idType = PartyIdentifierType.NationalIdentityNumber, idValue = "")
+                val requestedTo = VALID_REQUESTED_TO_IDENTIFIER
+                val signedBy = VALID_SIGNED_BY_IDENTIFIER
                 val balanceSupplierName = VALID_BALANCE_SUPPLIER_NAME
                 val balanceSupplierContractName = VALID_BALANCE_SUPPLIER_CONTRACT_NAME
                 val meteringPointId = VALID_METERING_POINT_ID
@@ -248,27 +263,31 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                 When("I request a Change of Supplier document") {
 
                     val command = Command(
-                        AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
-                        requestedFrom,
-                        requestedFromName,
-                        requestedBy,
-                        balanceSupplierName,
-                        balanceSupplierContractName,
-                        meteringPointId,
-                        meteringPointAddress,
+                        type = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                        requestedByIdentifier = requestedBy,
+                        requestedFromIdentifier = requestedFrom,
+                        requestedToIdentifier = requestedTo,
+                        signedByIdentifier = signedBy,
+                        requestedFromName = requestedFromName,
+                        balanceSupplierName = balanceSupplierName,
+                        balanceSupplierContractName = balanceSupplierContractName,
+                        meteringPointId = meteringPointId,
+                        meteringPointAddress = meteringPointAddress
                     )
 
                     Then("I should receive an error message about invalid balance supplier ID") {
-                        command.shouldBeLeft(listOf(ValidationError.InvalidRequestedBy))
+                        command.shouldBeLeft(ValidationError.InvalidRequestedBy)
                     }
                 }
             }
 
             xGiven("that no balance supplier name has been provided") {
 
-                val requestedFrom = VALID_REQUESTED_FROM
+                val requestedFrom = VALID_REQUESTED_FROM_IDENTIFIER
                 val requestedFromName = VALID_REQUESTED_FROM_NAME
-                val requestedBy = VALID_REQUESTED_BY
+                val requestedBy = VALID_REQUESTED_BY_IDENTIFIER
+                val requestedTo = VALID_REQUESTED_TO_IDENTIFIER
+                val signedBy = VALID_SIGNED_BY_IDENTIFIER
                 val balanceSupplierName = BLANK
                 val balanceSupplierContractName = VALID_BALANCE_SUPPLIER_CONTRACT_NAME
                 val meteringPointId = VALID_METERING_POINT_ID
@@ -277,27 +296,31 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                 When("I request a Change of Supplier document") {
 
                     val command = Command(
-                        AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
-                        requestedFrom,
-                        requestedFromName,
-                        requestedBy,
-                        balanceSupplierName,
-                        balanceSupplierContractName,
-                        meteringPointId,
-                        meteringPointAddress,
+                        type = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                        requestedByIdentifier = requestedBy,
+                        requestedFromIdentifier = requestedFrom,
+                        requestedToIdentifier = requestedTo,
+                        signedByIdentifier = signedBy,
+                        requestedFromName = requestedFromName,
+                        balanceSupplierName = balanceSupplierName,
+                        balanceSupplierContractName = balanceSupplierContractName,
+                        meteringPointId = meteringPointId,
+                        meteringPointAddress = meteringPointAddress
                     )
 
                     Then("I should receive an error message about missing balance supplier name") {
-                        command.shouldBeLeft(listOf(ValidationError.MissingBalanceSupplierName))
+                        command.shouldBeLeft(ValidationError.MissingBalanceSupplierName)
                     }
                 }
             }
 
             xGiven("that no end user ID has been provided (NIN/GLN)") {
 
-                val requestedFrom = AuthorizationParty(resourceId = "", type = PartyType.valueOf("")) // TODO better test data here
+                val requestedFrom = PartyIdentifier(idType = PartyIdentifierType.NationalIdentityNumber, idValue = "")
                 val requestedFromName = VALID_REQUESTED_FROM_NAME
-                val requestedBy = VALID_REQUESTED_BY
+                val requestedBy = VALID_REQUESTED_BY_IDENTIFIER
+                val requestedTo = VALID_REQUESTED_TO_IDENTIFIER
+                val signedBy = VALID_SIGNED_BY_IDENTIFIER
                 val balanceSupplierName = VALID_BALANCE_SUPPLIER_NAME
                 val balanceSupplierContractName = VALID_BALANCE_SUPPLIER_CONTRACT_NAME
                 val meteringPointId = VALID_METERING_POINT_ID
@@ -306,27 +329,31 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                 When("I request a Change of Supplier document") {
 
                     val command = Command(
-                        AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
-                        requestedFrom,
-                        requestedFromName,
-                        requestedBy,
-                        balanceSupplierName,
-                        balanceSupplierContractName,
-                        meteringPointId,
-                        meteringPointAddress,
+                        type = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                        requestedByIdentifier = requestedBy,
+                        requestedFromIdentifier = requestedFrom,
+                        requestedToIdentifier = requestedTo,
+                        signedByIdentifier = signedBy,
+                        requestedFromName = requestedFromName,
+                        balanceSupplierName = balanceSupplierName,
+                        balanceSupplierContractName = balanceSupplierContractName,
+                        meteringPointId = meteringPointId,
+                        meteringPointAddress = meteringPointAddress
                     )
 
                     Then("I should receive an error message about missing end user ID") {
-                        command.shouldBeLeft(listOf(ValidationError.MissingRequestedFrom))
+                        command.shouldBeLeft(ValidationError.MissingRequestedFrom)
                     }
                 }
             }
 
             xGiven("that an invalid end user ID has been provided (NIN/GLN)") {
 
-                val requestedFrom = AuthorizationParty(resourceId = "", type = PartyType.valueOf("")) // TODO better test data
+                val requestedFrom = PartyIdentifier(idType = PartyIdentifierType.NationalIdentityNumber, idValue = "")
                 val requestedFromName = VALID_REQUESTED_FROM_NAME
-                val requestedBy = VALID_REQUESTED_BY
+                val requestedBy = VALID_REQUESTED_BY_IDENTIFIER
+                val requestedTo = VALID_REQUESTED_TO_IDENTIFIER
+                val signedBy = VALID_SIGNED_BY_IDENTIFIER
                 val balanceSupplierName = VALID_BALANCE_SUPPLIER_NAME
                 val balanceSupplierContractName = VALID_BALANCE_SUPPLIER_CONTRACT_NAME
                 val meteringPointId = VALID_METERING_POINT_ID
@@ -335,27 +362,31 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                 When("I request a Change of Supplier document") {
 
                     val command = Command(
-                        AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
-                        requestedFrom,
-                        requestedFromName,
-                        requestedBy,
-                        balanceSupplierName,
-                        balanceSupplierContractName,
-                        meteringPointId,
-                        meteringPointAddress,
+                        type = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                        requestedByIdentifier = requestedBy,
+                        requestedFromIdentifier = requestedFrom,
+                        requestedToIdentifier = requestedTo,
+                        signedByIdentifier = signedBy,
+                        requestedFromName = requestedFromName,
+                        balanceSupplierName = balanceSupplierName,
+                        balanceSupplierContractName = balanceSupplierContractName,
+                        meteringPointId = meteringPointId,
+                        meteringPointAddress = meteringPointAddress
                     )
 
                     Then("I should receive an error message about invalid end user ID") {
-                        command.shouldBeLeft(listOf(ValidationError.InvalidRequestedFrom))
+                        command.shouldBeLeft(ValidationError.InvalidRequestedFrom)
                     }
                 }
             }
 
             xGiven("that no metering point ID has been provided") {
 
-                val requestedFrom = VALID_REQUESTED_FROM
+                val requestedFrom = VALID_REQUESTED_FROM_IDENTIFIER
                 val requestedFromName = VALID_REQUESTED_FROM_NAME
-                val requestedBy = VALID_REQUESTED_BY
+                val requestedBy = VALID_REQUESTED_BY_IDENTIFIER
+                val requestedTo = VALID_REQUESTED_TO_IDENTIFIER
+                val signedBy = VALID_SIGNED_BY_IDENTIFIER
                 val balanceSupplierName = VALID_BALANCE_SUPPLIER_NAME
                 val balanceSupplierContractName = VALID_BALANCE_SUPPLIER_CONTRACT_NAME
                 val meteringPointId = BLANK
@@ -364,27 +395,31 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                 When("I request a Change of Supplier document") {
 
                     val command = Command(
-                        AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
-                        requestedFrom,
-                        requestedFromName,
-                        requestedBy,
-                        balanceSupplierName,
-                        balanceSupplierContractName,
-                        meteringPointId,
-                        meteringPointAddress,
+                        type = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                        requestedByIdentifier = requestedBy,
+                        requestedFromIdentifier = requestedFrom,
+                        requestedToIdentifier = requestedTo,
+                        signedByIdentifier = signedBy,
+                        requestedFromName = requestedFromName,
+                        balanceSupplierName = balanceSupplierName,
+                        balanceSupplierContractName = balanceSupplierContractName,
+                        meteringPointId = meteringPointId,
+                        meteringPointAddress = meteringPointAddress
                     )
 
                     Then("I should receive an error message about missing metering point ID") {
-                        command.shouldBeLeft(listOf(ValidationError.MissingMeteringPointId))
+                        command.shouldBeLeft(ValidationError.MissingMeteringPointId)
                     }
                 }
             }
 
             xGiven("that an invalid metering point ID has been provided") {
 
-                val requestedFrom = VALID_REQUESTED_FROM
+                val requestedFrom = VALID_REQUESTED_FROM_IDENTIFIER
                 val requestedFromName = VALID_REQUESTED_FROM_NAME
-                val requestedBy = VALID_REQUESTED_BY
+                val requestedBy = VALID_REQUESTED_BY_IDENTIFIER
+                val requestedTo = VALID_REQUESTED_TO_IDENTIFIER
+                val signedBy = VALID_SIGNED_BY_IDENTIFIER
                 val balanceSupplierName = VALID_BALANCE_SUPPLIER_NAME
                 val balanceSupplierContractName = VALID_BALANCE_SUPPLIER_CONTRACT_NAME
                 val meteringPointId = INVALID_METERING_POINT_ID
@@ -393,27 +428,31 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                 When("I request a Change of Supplier document") {
 
                     val command = Command(
-                        AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
-                        requestedFrom,
-                        requestedFromName,
-                        requestedBy,
-                        balanceSupplierName,
-                        balanceSupplierContractName,
-                        meteringPointId,
-                        meteringPointAddress,
+                        type = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                        requestedByIdentifier = requestedBy,
+                        requestedFromIdentifier = requestedFrom,
+                        requestedToIdentifier = requestedTo,
+                        signedByIdentifier = signedBy,
+                        requestedFromName = requestedFromName,
+                        balanceSupplierName = balanceSupplierName,
+                        balanceSupplierContractName = balanceSupplierContractName,
+                        meteringPointId = meteringPointId,
+                        meteringPointAddress = meteringPointAddress
                     )
 
                     Then("I should receive an error message about invalid metering point ID") {
-                        command.shouldBeLeft(listOf(ValidationError.InvalidMeteringPointId))
+                        command.shouldBeLeft(ValidationError.InvalidMeteringPointId)
                     }
                 }
             }
 
             xGiven("that no metering point address has been provided") {
 
-                val requestedFrom = VALID_REQUESTED_FROM
+                val requestedFrom = VALID_REQUESTED_FROM_IDENTIFIER
                 val requestedFromName = VALID_REQUESTED_FROM_NAME
-                val requestedBy = VALID_REQUESTED_BY
+                val requestedBy = VALID_REQUESTED_BY_IDENTIFIER
+                val requestedTo = VALID_REQUESTED_TO_IDENTIFIER
+                val signedBy = VALID_SIGNED_BY_IDENTIFIER
                 val balanceSupplierName = VALID_BALANCE_SUPPLIER_NAME
                 val balanceSupplierContractName = VALID_BALANCE_SUPPLIER_CONTRACT_NAME
                 val meteringPointId = VALID_METERING_POINT_ID
@@ -422,27 +461,31 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                 When("I request a Change of Supplier document") {
 
                     val command = Command(
-                        AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
-                        requestedFrom,
-                        requestedFromName,
-                        requestedBy,
-                        balanceSupplierName,
-                        balanceSupplierContractName,
-                        meteringPointId,
-                        meteringPointAddress,
+                        type = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                        requestedByIdentifier = requestedBy,
+                        requestedFromIdentifier = requestedFrom,
+                        requestedToIdentifier = requestedTo,
+                        signedByIdentifier = signedBy,
+                        requestedFromName = requestedFromName,
+                        balanceSupplierName = balanceSupplierName,
+                        balanceSupplierContractName = balanceSupplierContractName,
+                        meteringPointId = meteringPointId,
+                        meteringPointAddress = meteringPointAddress
                     )
 
                     Then("I should receive an error message about missing metering point address") {
-                        command.shouldBeLeft(listOf(ValidationError.MissingMeteringPointAddress))
+                        command.shouldBeLeft(ValidationError.MissingMeteringPointAddress)
                     }
                 }
             }
 
             xGiven("that no contract name has been provided") {
 
-                val requestedFrom = VALID_REQUESTED_FROM
+                val requestedFrom = VALID_REQUESTED_FROM_IDENTIFIER
                 val requestedFromName = VALID_REQUESTED_FROM_NAME
-                val requestedBy = VALID_REQUESTED_BY
+                val requestedBy = VALID_REQUESTED_BY_IDENTIFIER
+                val requestedTo = VALID_REQUESTED_TO_IDENTIFIER
+                val signedBy = VALID_SIGNED_BY_IDENTIFIER
                 val balanceSupplierName = VALID_BALANCE_SUPPLIER_NAME
                 val balanceSupplierContractName = BLANK
                 val meteringPointId = VALID_METERING_POINT_ID
@@ -451,18 +494,20 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                 When("I request a Change of Supplier document") {
 
                     val command = Command(
-                        AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
-                        requestedFrom,
-                        requestedFromName,
-                        requestedBy,
-                        balanceSupplierName,
-                        balanceSupplierContractName,
-                        meteringPointId,
-                        meteringPointAddress,
+                        type = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                        requestedByIdentifier = requestedBy,
+                        requestedFromIdentifier = requestedFrom,
+                        requestedToIdentifier = requestedTo,
+                        signedByIdentifier = signedBy,
+                        requestedFromName = requestedFromName,
+                        balanceSupplierName = balanceSupplierName,
+                        balanceSupplierContractName = balanceSupplierContractName,
+                        meteringPointId = meteringPointId,
+                        meteringPointAddress = meteringPointAddress
                     )
 
                     Then("I should receive an error message about missing contract name") {
-                        command.shouldBeLeft(listOf(ValidationError.MissingBalanceSupplierContractName))
+                        command.shouldBeLeft(ValidationError.MissingBalanceSupplierContractName)
                     }
                 }
             }

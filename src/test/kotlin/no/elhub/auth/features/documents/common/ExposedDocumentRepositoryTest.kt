@@ -42,7 +42,8 @@ class ExposedDocumentRepositoryTest :
                         status = AuthorizationDocument.Status.Pending,
                         requestedBy = AuthorizationParty(type = PartyType.Person, resourceId = "1234567890"),
                         requestedFrom = AuthorizationParty(type = PartyType.Person, resourceId = "1234567890"),
-                        createdAt = LocalDateTime.now(),
+                        requestedTo = AuthorizationParty(type = PartyType.Person, resourceId = "1234567890"),
+                        signedBy = AuthorizationParty(type = PartyType.Person, resourceId = "1234567890"), createdAt = LocalDateTime.now(),
                         updatedAt = LocalDateTime.now()
                     )
 

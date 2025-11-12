@@ -4,10 +4,10 @@ import arrow.core.Either
 import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
+import no.elhub.auth.features.common.AuthorizationParty
+import no.elhub.auth.features.common.PartyType
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.DocumentRepository
-import java.time.LocalDateTime
-import java.util.UUID
 
 class Handler(
     private val fileGenerator: FileGenerator,
@@ -17,8 +17,13 @@ class Handler(
     private val repo: DocumentRepository,
 ) {
     suspend operator fun invoke(command: Command): Either<CreateDocumentError, AuthorizationDocument> {
+        val requestedFromParty = command.requestedFromIdentifier.toAuthorizationParty()
+        val requestedByParty = command.requestedByIdentifier.toAuthorizationParty()
+        val requestedToParty = command.requestedToIdentifier.toAuthorizationParty()
+        val signedByParty = command.signedByIdentifier.toAuthorizationParty()
+
         val file = fileGenerator.generate(
-            customerNin = command.requestedFrom.resourceId,
+            customerNin = command.requestedFromIdentifier.idValue,
             customerName = command.requestedFromName,
             meteringPointAddress = command.meteringPointAddress,
             meteringPointId = command.meteringPointId,
@@ -41,8 +46,14 @@ class Handler(
         val signedFile = fileSigningService.embedSignatureIntoFile(file, signature, certChain, signingCert)
             .getOrElse { return CreateDocumentError.SigningError.left() }
 
-        val documentToCreate = command.toAuthorizationDocument(signedFile)
-            .getOrElse { return CreateDocumentError.MappingError.left() }
+        val documentToCreate = AuthorizationDocument.create(
+            type = command.type,
+            file = signedFile,
+            requestedBy = requestedByParty,
+            requestedFrom = requestedFromParty,
+            requestedTo = requestedToParty,
+            signedBy = signedByParty
+        )
 
         val savedDocument = repo.insert(documentToCreate)
             .getOrElse { return CreateDocumentError.PersistenceError.left() }
@@ -62,17 +73,9 @@ sealed class CreateDocumentError {
     data object PartyError : CreateDocumentError()
 }
 
-fun Command.toAuthorizationDocument(file: ByteArray): Either<CreateDocumentError.MappingError, AuthorizationDocument> =
-    Either.catch {
-        AuthorizationDocument(
-            id = UUID.randomUUID(),
-            title = "Title",
-            file = file,
-            type = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
-            status = AuthorizationDocument.Status.Pending,
-            requestedBy = this.requestedBy,
-            requestedFrom = this.requestedFrom,
-            createdAt = LocalDateTime.now(),
-            updatedAt = LocalDateTime.now()
-        )
-    }.mapLeft { CreateDocumentError.MappingError }
+fun PartyIdentifier.toAuthorizationParty(): AuthorizationParty =
+    when (this.idType) {
+        PartyIdentifierType.NationalIdentityNumber -> AuthorizationParty(resourceId = this.idValue, type = PartyType.Person)
+        PartyIdentifierType.OrganizationNumber -> AuthorizationParty(resourceId = this.idValue, type = PartyType.Organization)
+        PartyIdentifierType.GlobalLocationNumber -> AuthorizationParty(resourceId = this.idValue, type = PartyType.OrganizationEntity)
+    }

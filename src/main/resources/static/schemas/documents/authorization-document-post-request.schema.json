@@ -25,6 +25,18 @@
           "type": "object",
           "description": "Additional meta-information related to the resource. Most of this information is used for informational purposes.",
           "properties": {
+            "requestedBy": {
+              "$ref": "authorization-document-definitions.json#/$defs/meta/$defs/requestedBy"
+            },
+            "requestedFrom": {
+              "$ref": "authorization-document-definitions.json#/$defs/meta/$defs/requestedFrom"
+            },
+            "requestedTo": {
+              "$ref": "authorization-document-definitions.json#/$defs/meta/$defs/requestedTo"
+            },
+            "SignedBy": {
+              "$ref": "authorization-document-definitions.json#/$defs/meta/$defs/signedBy"
+            },
             "requestedFromName": {
               "$ref": "authorization-document-definitions.json#/$defs/meta/$defs/requestedFromName"
             },
