@@ -12,13 +12,13 @@ import java.time.Instant
 import java.util.UUID
 
 interface PartyRepository {
-    fun findOrInsert(type: AuthorizationPartyResourceType, resourceId: String): Either<RepositoryWriteError, AuthorizationPartyRecord>
+    fun findOrInsert(type: PartyType, resourceId: String): Either<RepositoryWriteError, AuthorizationPartyRecord>
     fun find(id: UUID): Either<RepositoryReadError, AuthorizationPartyRecord>
 }
 
 class ExposedPartyRepository() : PartyRepository {
 
-    override fun findOrInsert(type: AuthorizationPartyResourceType, resourceId: String): Either<RepositoryWriteError, AuthorizationPartyRecord> =
+    override fun findOrInsert(type: PartyType, resourceId: String): Either<RepositoryWriteError, AuthorizationPartyRecord> =
         Either.catch {
             transaction {
                 AuthorizationPartyTable
@@ -71,8 +71,8 @@ class ExposedPartyRepository() : PartyRepository {
 object AuthorizationPartyTable : UUIDTable("auth.authorization_party") {
     val type = customEnumeration(
         name = "type",
-        fromDb = { value -> AuthorizationPartyResourceType.valueOf(value as String) },
-        toDb = { PGEnum("party_resource", it) },
+        fromDb = { value -> PartyType.valueOf(value as String) },
+        toDb = { PGEnum("party_type", it) },
     )
 
     val resourceId = varchar("resource_id", 255)
@@ -85,7 +85,7 @@ object AuthorizationPartyTable : UUIDTable("auth.authorization_party") {
 
 data class AuthorizationPartyRecord(
     val id: UUID,
-    val type: AuthorizationPartyResourceType,
+    val type: PartyType,
     val resourceId: String,
     val createdAt: Instant,
 )

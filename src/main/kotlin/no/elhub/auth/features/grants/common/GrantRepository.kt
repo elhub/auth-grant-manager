@@ -14,7 +14,7 @@ import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.toAuthorizationParty
 import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.AuthorizationGrant.Status
-import no.elhub.auth.features.grants.AuthorizationResourceType
+import no.elhub.auth.features.grants.ElhubResource
 import no.elhub.auth.features.grants.AuthorizationScope
 import no.elhub.auth.features.grants.PermissionType
 import org.jetbrains.exposed.dao.id.LongIdTable
@@ -161,7 +161,7 @@ object AuthorizationScopeTable : LongIdTable(name = "auth.authorization_scope") 
     val authorizedResourceType = customEnumeration(
         name = "authorized_resource_type",
         sql = "authorization_resource",
-        fromDb = { AuthorizationResourceType.valueOf(it as String) },
+        fromDb = { ElhubResource.valueOf(it as String) },
         toDb = { PGEnum("authorization_resource", it) }
     )
     val authorizedResourceId = varchar("authorized_resource_id", length = 64)

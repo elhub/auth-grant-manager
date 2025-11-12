@@ -7,7 +7,7 @@ import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import no.elhub.auth.features.common.AuthorizationPartyResourceType
+import no.elhub.auth.features.common.PartyType
 import no.elhub.auth.features.common.AuthorizationPartyTable
 import no.elhub.auth.features.common.ExposedPartyRepository
 import no.elhub.auth.features.common.PostgresTestContainer
@@ -34,7 +34,7 @@ class ExposedPartyRepositoryTest : FunSpec({
 
     test("find existing by id succeeds") {
         val rid = "FIND_ME"
-        val inserted = partyRepo.findOrInsert(AuthorizationPartyResourceType.Person, rid).getOrElse { error(it) }
+        val inserted = partyRepo.findOrInsert(PartyType.Person, rid).getOrElse { error(it) }
         val found = partyRepo.find(inserted.id).getOrElse { error(it) }
         found.id shouldBe inserted.id
         found.resourceId shouldBe rid
@@ -42,8 +42,8 @@ class ExposedPartyRepositoryTest : FunSpec({
 
     test("Insert first then idempotent second") {
         val resourceId = "12345678901"
-        val first = partyRepo.findOrInsert(AuthorizationPartyResourceType.Person, resourceId).getOrElse { error(it) }
-        val second = partyRepo.findOrInsert(AuthorizationPartyResourceType.Person, resourceId).getOrElse { error(it) }
+        val first = partyRepo.findOrInsert(PartyType.Person, resourceId).getOrElse { error(it) }
+        val second = partyRepo.findOrInsert(PartyType.Person, resourceId).getOrElse { error(it) }
 
         first.id shouldBe second.id
         first.resourceId shouldBe resourceId
@@ -51,8 +51,8 @@ class ExposedPartyRepositoryTest : FunSpec({
 
     test("Different type same resourceId produces two rows") {
         val rid = "DUPLICATE_KEY"
-        val org = partyRepo.findOrInsert(AuthorizationPartyResourceType.Organization, rid).getOrElse { error(it) }
-        val person = partyRepo.findOrInsert(AuthorizationPartyResourceType.Person, rid).getOrElse { error(it) }
+        val org = partyRepo.findOrInsert(PartyType.Organization, rid).getOrElse { error(it) }
+        val person = partyRepo.findOrInsert(PartyType.Person, rid).getOrElse { error(it) }
         org.id shouldNotBe person.id
     }
 
@@ -68,7 +68,7 @@ class ExposedPartyRepositoryTest : FunSpec({
         runBlocking {
             repeat(10) {
                 launch {
-                    partyRepo.findOrInsert(AuthorizationPartyResourceType.Person, rid)
+                    partyRepo.findOrInsert(PartyType.Person, rid)
                 }
             }
         }
@@ -76,7 +76,7 @@ class ExposedPartyRepositoryTest : FunSpec({
         transaction {
             AuthorizationPartyTable
                 .selectAll()
-                .where { (AuthorizationPartyTable.type eq AuthorizationPartyResourceType.Person) and (AuthorizationPartyTable.resourceId eq rid) }
+                .where { (AuthorizationPartyTable.type eq PartyType.Person) and (AuthorizationPartyTable.resourceId eq rid) }
                 .count() shouldBe 1
         }
     }
@@ -84,8 +84,8 @@ class ExposedPartyRepositoryTest : FunSpec({
     test("Two different resourceIds stay separate") {
         val rid1 = "RID_A"
         val rid2 = "RID_B"
-        val a = partyRepo.findOrInsert(AuthorizationPartyResourceType.Person, rid1).getOrElse { error(it) }
-        val b = partyRepo.findOrInsert(AuthorizationPartyResourceType.Person, rid2).getOrElse { error(it) }
+        val a = partyRepo.findOrInsert(PartyType.Person, rid1).getOrElse { error(it) }
+        val b = partyRepo.findOrInsert(PartyType.Person, rid2).getOrElse { error(it) }
         a.id shouldNotBe b.id
     }
 })

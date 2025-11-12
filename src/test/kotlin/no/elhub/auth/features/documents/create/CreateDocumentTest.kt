@@ -10,7 +10,7 @@ import io.kotest.koin.KoinLifecycleMode
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import no.elhub.auth.features.common.AuthorizationParty
-import no.elhub.auth.features.common.AuthorizationPartyResourceType
+import no.elhub.auth.features.common.PartyType
 import no.elhub.auth.features.common.ExposedPartyRepository
 import no.elhub.auth.features.common.PartyRepository
 import no.elhub.auth.features.common.PostgresTestContainer
@@ -36,11 +36,11 @@ import org.koin.test.inject
 import kotlin.test.fail
 
 // TODO: Provide a valid supplier ID
-private val VALID_REQUESTED_FROM = AuthorizationParty(type = AuthorizationPartyResourceType.Person, resourceId = "123455")
+private val VALID_REQUESTED_FROM = AuthorizationParty(type = PartyType.Person, resourceId = "123455")
 private const val INVALID_REQUESTED_FROM = "^%)"
 private const val VALID_REQUESTED_FROM_NAME = "Supplier AS"
 
-private val VALID_REQUESTED_BY = AuthorizationParty(type = AuthorizationPartyResourceType.Organization, resourceId = "567891")
+private val VALID_REQUESTED_BY = AuthorizationParty(type = PartyType.Organization, resourceId = "567891")
 private const val INVALID_REQUESTED_BY = "^%)"
 
 // TODO: Provide a valid metering point
@@ -210,7 +210,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
                 val requestedFrom = VALID_REQUESTED_FROM
                 val requestedFromName = VALID_REQUESTED_FROM_NAME
-                val requestedBy = AuthorizationParty(resourceId = "", type = AuthorizationPartyResourceType.valueOf(""))
+                val requestedBy = AuthorizationParty(resourceId = "", type = PartyType.valueOf(""))
                 val balanceSupplierName = VALID_BALANCE_SUPPLIER_NAME
                 val balanceSupplierContractName = VALID_BALANCE_SUPPLIER_CONTRACT_NAME
                 val meteringPointId = VALID_METERING_POINT_ID
@@ -239,7 +239,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                 val requestedFrom = VALID_REQUESTED_FROM
                 val requestedFromName = VALID_REQUESTED_FROM_NAME
                 // TODO - might need better test data for requestedBy
-                val requestedBy = AuthorizationParty(resourceId = "", type = AuthorizationPartyResourceType.valueOf(""))
+                val requestedBy = AuthorizationParty(resourceId = "", type = PartyType.valueOf(""))
                 val balanceSupplierName = VALID_BALANCE_SUPPLIER_NAME
                 val balanceSupplierContractName = VALID_BALANCE_SUPPLIER_CONTRACT_NAME
                 val meteringPointId = VALID_METERING_POINT_ID
@@ -295,7 +295,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
             xGiven("that no end user ID has been provided (NIN/GLN)") {
 
-                val requestedFrom = AuthorizationParty(resourceId = "", type = AuthorizationPartyResourceType.valueOf("")) // TODO better test data here
+                val requestedFrom = AuthorizationParty(resourceId = "", type = PartyType.valueOf("")) // TODO better test data here
                 val requestedFromName = VALID_REQUESTED_FROM_NAME
                 val requestedBy = VALID_REQUESTED_BY
                 val balanceSupplierName = VALID_BALANCE_SUPPLIER_NAME
@@ -324,7 +324,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
             xGiven("that an invalid end user ID has been provided (NIN/GLN)") {
 
-                val requestedFrom = AuthorizationParty(resourceId = "", type = AuthorizationPartyResourceType.valueOf("")) // TODO better test data
+                val requestedFrom = AuthorizationParty(resourceId = "", type = PartyType.valueOf("")) // TODO better test data
                 val requestedFromName = VALID_REQUESTED_FROM_NAME
                 val requestedBy = VALID_REQUESTED_BY
                 val balanceSupplierName = VALID_BALANCE_SUPPLIER_NAME

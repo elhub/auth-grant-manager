@@ -153,7 +153,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                         type shouldBe "AuthorizationScope"
                         attributes.shouldNotBeNull()
                         attributes!!.apply {
-                            authorizedResourceType shouldBe AuthorizationResourceType.MeteringPoint
+                            authorizedResourceType shouldBe ElhubResource.MeteringPoint
                             authorizedResourceId shouldBe "b7f9c2e4"
                             permissionType shouldBe PermissionType.ReadAccess
                             createdAt.shouldNotBeNull()
@@ -180,7 +180,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                         type shouldBe "AuthorizationScope"
                         attributes.shouldNotBeNull()
                         attributes!!.apply {
-                            authorizedResourceType shouldBe AuthorizationResourceType.MeteringPoint
+                            authorizedResourceType shouldBe ElhubResource.MeteringPoint
                             authorizedResourceId shouldBe "b7f9c2e4"
                             permissionType shouldBe PermissionType.ChangeOfSupplier
                             createdAt.shouldNotBeNull()
@@ -191,7 +191,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                         type shouldBe "AuthorizationScope"
                         attributes.shouldNotBeNull()
                         attributes!!.apply {
-                            authorizedResourceType shouldBe AuthorizationResourceType.Organization
+                            authorizedResourceType shouldBe ElhubResource.Organization
                             authorizedResourceId shouldBe "b7f9c2e4"
                             permissionType shouldBe PermissionType.ChangeOfSupplier
                             createdAt.shouldNotBeNull()
@@ -202,7 +202,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                         type shouldBe "AuthorizationScope"
                         attributes.shouldNotBeNull()
                         attributes!!.apply {
-                            authorizedResourceType shouldBe AuthorizationResourceType.Person
+                            authorizedResourceType shouldBe ElhubResource.Person
                             authorizedResourceId shouldBe "b7f9c2e4"
                             permissionType shouldBe PermissionType.FullDelegation
                             createdAt.shouldNotBeNull()

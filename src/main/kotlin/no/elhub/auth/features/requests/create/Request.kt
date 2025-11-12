@@ -2,7 +2,7 @@ package no.elhub.auth.features.requests.create
 
 import kotlinx.serialization.Serializable
 import no.elhub.auth.features.common.AuthorizationParty
-import no.elhub.auth.features.common.AuthorizationPartyResourceType
+import no.elhub.auth.features.common.PartyType
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.devxp.jsonapi.model.JsonApiAttributes
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipToOne
@@ -25,11 +25,11 @@ typealias Request = JsonApiRequest.SingleDocumentWithRelationships<CreateRequest
 fun Request.toCommand() = Command(
     AuthorizationRequest.Type.ChangeOfSupplierConfirmation,
     requester = AuthorizationParty(
-        type = AuthorizationPartyResourceType.valueOf(this.data.relationships.requestedBy.data.type),
+        type = PartyType.valueOf(this.data.relationships.requestedBy.data.type),
         resourceId = this.data.relationships.requestedBy.data.id
     ),
     requestee = AuthorizationParty(
-        type = AuthorizationPartyResourceType.valueOf(this.data.relationships.requestedFrom.data.type),
+        type = PartyType.valueOf(this.data.relationships.requestedFrom.data.type),
         resourceId = this.data.relationships.requestedFrom.data.id
     ),
 )
