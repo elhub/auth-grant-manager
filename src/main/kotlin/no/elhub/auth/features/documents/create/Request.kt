@@ -1,7 +1,10 @@
 package no.elhub.auth.features.documents.create
 
+import arrow.core.Either
 import kotlinx.serialization.Serializable
 import no.elhub.auth.features.documents.AuthorizationDocument
+import no.elhub.auth.features.documents.create.command.ChangeOfSupplierDocumentCommand
+import no.elhub.auth.features.documents.create.command.ValidationError
 import no.elhub.devxp.jsonapi.model.JsonApiAttributes
 import no.elhub.devxp.jsonapi.model.JsonApiResourceMeta
 
@@ -49,15 +52,14 @@ data class Request(
     val data: RequestData,
 )
 
-fun Request.toCommand() = Command(
-    type = this.data.attributes.documentType,
-    requestedByIdentifier = this.data.meta.requestedBy,
-    requestedFromIdentifier = this.data.meta.requestedFrom,
-    requestedToIdentifier = this.data.meta.requestedTo,
-    signedByIdentifier = this.data.meta.signedBy,
-    requestedFromName = this.data.meta.requestedFromName,
-    balanceSupplierName = this.data.meta.balanceSupplierName,
-    balanceSupplierContractName = this.data.meta.balanceSupplierContractName,
-    meteringPointId = this.data.meta.requestedForMeteringPointId,
-    meteringPointAddress = this.data.meta.requestedForMeteringPointAddress
+fun DocumentMeta.toChangeOfSupplierDocumentCommand(): Either<ValidationError, ChangeOfSupplierDocumentCommand> = ChangeOfSupplierDocumentCommand(
+    requestedBy = this.requestedBy,
+    requestedFrom = this.requestedFrom,
+    requestedTo = this.requestedTo,
+    signedBy = this.signedBy,
+    requestedFromName = this.requestedFromName,
+    balanceSupplierName = this.balanceSupplierName,
+    balanceSupplierContractName = this.balanceSupplierContractName,
+    meteringPointId = this.requestedForMeteringPointId,
+    meteringPointAddress = this.requestedForMeteringPointAddress
 )

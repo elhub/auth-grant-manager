@@ -8,6 +8,8 @@ import no.elhub.auth.features.common.AuthorizationParty
 import no.elhub.auth.features.common.PartyType
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.DocumentRepository
+import no.elhub.auth.features.documents.create.command.DocumentCommand
+import no.elhub.auth.features.documents.create.command.toAuthorizationDocumentType
 
 class Handler(
     private val fileGenerator: FileGenerator,
@@ -17,19 +19,15 @@ class Handler(
     private val documentRepo: DocumentRepository,
     private val personService: PersonService,
 ) {
-    suspend operator fun invoke(command: Command): Either<CreateDocumentError, AuthorizationDocument> {
-        val requestedFromParty = command.requestedFromIdentifier.toAuthorizationParty()
-        val requestedByParty = command.requestedByIdentifier.toAuthorizationParty()
-        val requestedToParty = command.requestedToIdentifier.toAuthorizationParty()
-        val signedByParty = command.signedByIdentifier.toAuthorizationParty()
+    suspend operator fun invoke(command: DocumentCommand): Either<CreateDocumentError, AuthorizationDocument> {
+        val requestedFromParty = command.requestedFrom.toAuthorizationParty()
+        val requestedByParty = command.requestedBy.toAuthorizationParty()
+        val requestedToParty = command.requestedTo.toAuthorizationParty()
+        val signedByParty = command.signedBy.toAuthorizationParty()
 
         val file = fileGenerator.generate(
-            customerNin = command.requestedFromIdentifier.idValue,
-            customerName = command.requestedFromName,
-            meteringPointAddress = command.meteringPointAddress,
-            meteringPointId = command.meteringPointId,
-            balanceSupplierName = command.balanceSupplierName,
-            balanceSupplierContractName = command.balanceSupplierContractName
+            signerNin = command.signedBy.idValue,
+            documentMeta = command.meta
         ).getOrElse { return CreateDocumentError.FileGenerationError.left() }
 
         val certChain = certificateProvider.getCertificateChain()
@@ -47,12 +45,13 @@ class Handler(
         val signedFile = fileSigningService.embedSignatureIntoFile(file, signature, certChain, signingCert)
             .getOrElse { return CreateDocumentError.SigningError.left() }
 
+        val documentType = command.toAuthorizationDocumentType()
         // replace external NIN with internal Elhub UUID for persons (organizations keep their GLN/org number as resourceId)
         val resolvedRequestedFromParty = resolveRequestedFromParty(requestedFromParty)
             .getOrElse { return it.left() }
 
         val documentToCreate = AuthorizationDocument.create(
-            type = command.type,
+            type = documentType,
             file = signedFile,
             requestedBy = requestedByParty,
             requestedFrom = resolvedRequestedFromParty,
@@ -90,7 +89,18 @@ sealed class CreateDocumentError {
 
 fun PartyIdentifier.toAuthorizationParty(): AuthorizationParty =
     when (this.idType) {
-        PartyIdentifierType.NationalIdentityNumber -> AuthorizationParty(resourceId = this.idValue, type = PartyType.Person)
-        PartyIdentifierType.OrganizationNumber -> AuthorizationParty(resourceId = this.idValue, type = PartyType.Organization)
-        PartyIdentifierType.GlobalLocationNumber -> AuthorizationParty(resourceId = this.idValue, type = PartyType.OrganizationEntity)
+        PartyIdentifierType.NationalIdentityNumber -> AuthorizationParty(
+            resourceId = this.idValue,
+            type = PartyType.Person
+        )
+
+        PartyIdentifierType.OrganizationNumber -> AuthorizationParty(
+            resourceId = this.idValue,
+            type = PartyType.Organization
+        )
+
+        PartyIdentifierType.GlobalLocationNumber -> AuthorizationParty(
+            resourceId = this.idValue,
+            type = PartyType.OrganizationEntity
+        )
     }

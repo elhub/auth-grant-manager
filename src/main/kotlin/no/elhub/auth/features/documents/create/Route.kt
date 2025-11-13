@@ -6,17 +6,21 @@ import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
+import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.toResponse
 
 fun Route.route(handler: Handler) {
     post {
         val requestBody = call.receive<Request>()
 
-        val command = requestBody.toCommand()
-            .getOrElse {
-                call.respond(HttpStatusCode.BadRequest)
-                return@post
-            }
+        val documentType = requestBody.data.attributes.documentType
+        val documentMeta = requestBody.data.meta
+        val command = when (documentType) {
+            AuthorizationDocument.Type.ChangeOfSupplierConfirmation -> documentMeta.toChangeOfSupplierDocumentCommand()
+        }.getOrElse {
+            call.respond(HttpStatusCode.BadRequest)
+            return@post
+        }
 
         val document = handler(command)
             .getOrElse { error ->

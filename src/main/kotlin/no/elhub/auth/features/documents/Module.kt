@@ -26,13 +26,13 @@ import no.elhub.auth.features.documents.create.FileCertificateProviderConfig
 import no.elhub.auth.features.documents.create.FileGenerator
 import no.elhub.auth.features.documents.create.FileSigningService
 import no.elhub.auth.features.documents.create.HashicorpVaultSignatureProvider
-import no.elhub.auth.features.documents.create.PdfGenerator
-import no.elhub.auth.features.documents.create.PdfGeneratorConfig
 import no.elhub.auth.features.documents.create.PdfSigningService
 import no.elhub.auth.features.documents.create.PersonApiConfig
 import no.elhub.auth.features.documents.create.PersonService
 import no.elhub.auth.features.documents.create.SignatureProvider
 import no.elhub.auth.features.documents.create.VaultConfig
+import no.elhub.auth.features.filegenerator.PdfGenerator
+import no.elhub.auth.features.filegenerator.PdfGeneratorConfig
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
 import org.koin.ktor.ext.get
