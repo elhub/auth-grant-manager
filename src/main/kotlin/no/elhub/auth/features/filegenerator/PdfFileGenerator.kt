@@ -52,14 +52,54 @@ class PdfGenerator(
 
     val fonts =
         listOf(
-            Font(loadClasspathResource("/fonts/liberation-sans/LiberationSans-Regular.ttf"), "LiberationSans", 400, BaseRendererBuilder.FontStyle.NORMAL),
-            Font(loadClasspathResource("/fonts/liberation-sans/LiberationSans-Bold.ttf"), "LiberationSans", 700, BaseRendererBuilder.FontStyle.NORMAL),
-            Font(loadClasspathResource("/fonts/liberation-sans/LiberationSans-Italic.ttf"), "LiberationSans", 400, BaseRendererBuilder.FontStyle.ITALIC),
-            Font(loadClasspathResource("/fonts/liberation-sans/LiberationSans-BoldItalic.ttf"), "LiberationSans", 700, BaseRendererBuilder.FontStyle.ITALIC),
-            Font(loadClasspathResource("/fonts/libre-bodoni/LibreBodoni-Regular.ttf"), "LibreBodoni", 400, BaseRendererBuilder.FontStyle.NORMAL),
-            Font(loadClasspathResource("/fonts/libre-bodoni/LibreBodoni-Bold.ttf"), "LibreBodoni", 700, BaseRendererBuilder.FontStyle.NORMAL),
-            Font(loadClasspathResource("/fonts/libre-bodoni/LibreBodoni-Italic.ttf"), "LibreBodoni", 400, BaseRendererBuilder.FontStyle.ITALIC),
-            Font(loadClasspathResource("/fonts/libre-bodoni/LibreBodoni-BoldItalic.ttf"), "LibreBodoni", 700, BaseRendererBuilder.FontStyle.ITALIC)
+            Font(
+                loadClasspathResource("/fonts/liberation-sans/LiberationSans-Regular.ttf"),
+                "LiberationSans",
+                400,
+                BaseRendererBuilder.FontStyle.NORMAL
+            ),
+            Font(
+                loadClasspathResource("/fonts/liberation-sans/LiberationSans-Bold.ttf"),
+                "LiberationSans",
+                700,
+                BaseRendererBuilder.FontStyle.NORMAL
+            ),
+            Font(
+                loadClasspathResource("/fonts/liberation-sans/LiberationSans-Italic.ttf"),
+                "LiberationSans",
+                400,
+                BaseRendererBuilder.FontStyle.ITALIC
+            ),
+            Font(
+                loadClasspathResource("/fonts/liberation-sans/LiberationSans-BoldItalic.ttf"),
+                "LiberationSans",
+                700,
+                BaseRendererBuilder.FontStyle.ITALIC
+            ),
+            Font(
+                loadClasspathResource("/fonts/libre-bodoni/LibreBodoni-Regular.ttf"),
+                "LibreBodoni",
+                400,
+                BaseRendererBuilder.FontStyle.NORMAL
+            ),
+            Font(
+                loadClasspathResource("/fonts/libre-bodoni/LibreBodoni-Bold.ttf"),
+                "LibreBodoni",
+                700,
+                BaseRendererBuilder.FontStyle.NORMAL
+            ),
+            Font(
+                loadClasspathResource("/fonts/libre-bodoni/LibreBodoni-Italic.ttf"),
+                "LibreBodoni",
+                400,
+                BaseRendererBuilder.FontStyle.ITALIC
+            ),
+            Font(
+                loadClasspathResource("/fonts/libre-bodoni/LibreBodoni-BoldItalic.ttf"),
+                "LibreBodoni",
+                700,
+                BaseRendererBuilder.FontStyle.ITALIC
+            )
         )
 
     val colorProfile = loadClasspathResource("/fonts/sRGB.icc")
@@ -72,8 +112,7 @@ class PdfGenerator(
         signerNin: String,
         documentMeta: DocumentMetaMarker
     ): Either<DocumentGenerationError.ContentGenerationError, ByteArray> = either {
-
-        val contractHtmlString = when(documentMeta) {
+        val contractHtmlString = when (documentMeta) {
             is ChangeOfSupplierMetaMarker -> generateChangeOfSupplierHtml(
                 customerNin = signerNin,
                 customerName = documentMeta.requestedFromName,
@@ -83,8 +122,6 @@ class PdfGenerator(
                 balanceSupplierContractName = documentMeta.balanceSupplierContractName
             )
         }.getOrElse { return DocumentGenerationError.ContentGenerationError.left() }
-
-
 
         val pdfBytes =
             generatePdfFromHtml(contractHtmlString).getOrElse { return DocumentGenerationError.ContentGenerationError.left() }
@@ -130,7 +167,7 @@ class PdfGenerator(
                 .run()
             out.toByteArray()
         }
-    }.mapLeft { DocumentGenerationError.ContentGenerationError}
+    }.mapLeft { DocumentGenerationError.ContentGenerationError }
 
     private fun ByteArray.addMetadataToPdf(
         metadata: Map<String, String>

@@ -14,8 +14,6 @@ sealed class DocumentCommand(
     val meta: DocumentMetaMarker
 )
 
-fun DocumentCommand.toAuthorizationDocumentType(): AuthorizationDocument.Type {
-    return when (this) {
-        is ChangeOfSupplierDocumentCommand -> AuthorizationDocument.Type.ChangeOfSupplierConfirmation
-    }
+fun DocumentCommand.toAuthorizationDocumentType(): AuthorizationDocument.Type = when (this) {
+    is ChangeOfSupplierDocumentCommand -> AuthorizationDocument.Type.ChangeOfSupplierConfirmation
 }

@@ -43,45 +43,45 @@ class ChangeOfSupplierDocumentCommand private constructor(
             meteringPointId: String,
             meteringPointAddress: String,
         ): Either<ValidationError, ChangeOfSupplierDocumentCommand> {
-                if (requestedFromName.isBlank()) {
-                    return ValidationError.MissingRequestedFromName.left()
-                }
+            if (requestedFromName.isBlank()) {
+                return ValidationError.MissingRequestedFromName.left()
+            }
 
-                if (balanceSupplierName.isBlank()) {
-                    return ValidationError.MissingBalanceSupplierName.left()
-                }
+            if (balanceSupplierName.isBlank()) {
+                return ValidationError.MissingBalanceSupplierName.left()
+            }
 
-                if (balanceSupplierContractName.isBlank()) {
-                    return ValidationError.MissingBalanceSupplierContractName.left()
-                }
+            if (balanceSupplierContractName.isBlank()) {
+                return ValidationError.MissingBalanceSupplierContractName.left()
+            }
 
-                if (meteringPointId.isBlank()) {
-                    return ValidationError.MissingMeteringPointId.left()
-                }
+            if (meteringPointId.isBlank()) {
+                return ValidationError.MissingMeteringPointId.left()
+            }
 
-                if (!meteringPointId.matches(Regex(REGEX_METERING_POINT))) {
-                    return ValidationError.MissingMeteringPointId.left()
-                }
+            if (!meteringPointId.matches(Regex(REGEX_METERING_POINT))) {
+                return ValidationError.MissingMeteringPointId.left()
+            }
 
-                if (meteringPointAddress.isBlank()) {
-                    return ValidationError.MissingMeteringPointAddress.left()
-                }
+            if (meteringPointAddress.isBlank()) {
+                return ValidationError.MissingMeteringPointAddress.left()
+            }
 
-                if (requestedBy.idValue.isBlank()) {
-                    return ValidationError.MissingRequestedBy.left()
-                }
+            if (requestedBy.idValue.isBlank()) {
+                return ValidationError.MissingRequestedBy.left()
+            }
 
-                if (!requestedBy.idValue.matches(Regex(REGEX_REQUESTED_BY))) {
-                    return ValidationError.MissingRequestedBy.left()
-                }
+            if (!requestedBy.idValue.matches(Regex(REGEX_REQUESTED_BY))) {
+                return ValidationError.MissingRequestedBy.left()
+            }
 
-                if (requestedFrom.idValue.isBlank()) {
-                    return ValidationError.MissingRequestedFrom.left()
-                }
+            if (requestedFrom.idValue.isBlank()) {
+                return ValidationError.MissingRequestedFrom.left()
+            }
 
-                if (!requestedFrom.idValue.matches(Regex(REGEX_REQUESTED_FROM))) {
-                    return ValidationError.MissingRequestedFrom.left()
-                }
+            if (!requestedFrom.idValue.matches(Regex(REGEX_REQUESTED_FROM))) {
+                return ValidationError.MissingRequestedFrom.left()
+            }
 
             val changeOfSupplierMeta = ChangeOfSupplierMetaMarker(
                 balanceSupplierName = balanceSupplierName,
