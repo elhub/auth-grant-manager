@@ -44,11 +44,11 @@ private val VALID_REQUESTED_FROM_IDENTIFIER = PartyIdentifier(idType = PartyIden
 private const val INVALID_REQUESTED_FROM = "^%)"
 private const val VALID_REQUESTED_FROM_NAME = "Supplier AS"
 
-private val VALID_REQUESTED_BY_IDENTIFIER = PartyIdentifier(idType = PartyIdentifierType.NationalIdentityNumber, idValue = "56012398745")
+private val VALID_REQUESTED_BY_IDENTIFIER = PartyIdentifier(idType = PartyIdentifierType.NationalIdentityNumber, idValue = "56012398741")
 private const val INVALID_REQUESTED_BY = "^%)"
 
-private val VALID_REQUESTED_TO_IDENTIFIER = PartyIdentifier(idType = PartyIdentifierType.NationalIdentityNumber, idValue = "56012398745")
-private val VALID_SIGNED_BY_IDENTIFIER = PartyIdentifier(idType = PartyIdentifierType.NationalIdentityNumber, idValue = "567891")
+private val VALID_REQUESTED_TO_IDENTIFIER = PartyIdentifier(idType = PartyIdentifierType.NationalIdentityNumber, idValue = "56012398742")
+private val VALID_SIGNED_BY_IDENTIFIER = PartyIdentifier(idType = PartyIdentifierType.NationalIdentityNumber, idValue = "56012398743")
 
 // TODO: Provide a valid metering point
 private const val VALID_METERING_POINT_ID = "abc123"
@@ -122,7 +122,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
                 val requestedFrom = VALID_REQUESTED_FROM_IDENTIFIER
                 val requestedFromName = VALID_REQUESTED_FROM_NAME
-                val requestedBy = VALID_REQUESTED_FROM_IDENTIFIER
+                val requestedBy = VALID_REQUESTED_BY_IDENTIFIER
                 val requestedTo = VALID_REQUESTED_TO_IDENTIFIER
                 val signedBy = VALID_SIGNED_BY_IDENTIFIER
 
@@ -158,7 +158,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
                 Then("that document should contain the necessary metadata") {
                     val signerNin = document.file.getCustomMetaDataValue(PdfGenerator.PdfConstants.PDF_METADATA_KEY_NIN)
-                    signerNin shouldBe command.requestedFrom.toAuthorizationParty().resourceId
+                    signerNin shouldBe command.signedBy.idValue
                 }
 
                 Then("that document should conform to the PDF/A-2b standard") {
