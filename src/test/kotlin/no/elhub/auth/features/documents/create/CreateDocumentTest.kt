@@ -22,7 +22,7 @@ import no.elhub.auth.features.documents.TestCertificateUtil
 import no.elhub.auth.features.documents.VaultTransitTestContainerExtension
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.documents.common.ExposedDocumentRepository
-import no.elhub.auth.features.documents.confirm.getEndUserNin
+import no.elhub.auth.features.documents.confirm.getPersonNin
 import no.elhub.auth.features.documents.confirm.isSignedByUs
 import no.elhub.auth.features.documents.getCustomMetaDataValue
 import no.elhub.auth.features.documents.localVaultConfig
@@ -95,8 +95,8 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
                     singleOf(::ExposedDocumentRepository) bind DocumentRepository::class
                     singleOf(::ExposedPartyRepository) bind PartyRepository::class
-                    singleOf(::ApiEndUserService) bind EndUserService::class
-                    single { EndUserApiConfig(baseUri = AuthPersonsTestContainer.baseUri()) }
+                    singleOf(::ApiPersonService) bind PersonService::class
+                    single { PersonApiConfig(baseUri = AuthPersonsTestContainer.baseUri()) }
 
                     singleOf(::Handler)
                 },
@@ -214,7 +214,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
                     xThen("that document should contain the necessary metadata") {
                         // TODO: PDF specific references in these tests?
-                        document.file.getEndUserNin() shouldBe requestedFrom
+                        document.file.getPersonNin() shouldBe requestedFrom
                     }
 
                     Then("that document should conform to the PDF/A-2b standard") {

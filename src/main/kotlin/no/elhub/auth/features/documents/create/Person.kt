@@ -6,13 +6,13 @@ import no.elhub.devxp.jsonapi.response.JsonApiResponse
 import java.util.UUID
 
 @Serializable
-data class EndUserAttributes(
+data class PersonAttributes(
     val type: String,
     val id: String
 ) : JsonApiAttributes
 
-typealias AuthPersonsResponse = JsonApiResponse.SingleDocument<EndUserAttributes>
+typealias AuthPersonsResponse = JsonApiResponse.SingleDocument<PersonAttributes>
 
-data class EndUser(
+data class Person(
     val internalId: UUID,
 )

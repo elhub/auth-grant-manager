@@ -19,10 +19,8 @@ import no.elhub.auth.features.common.PartyRepository
 import no.elhub.auth.features.common.shouldRegisterEndpoint
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.documents.common.ExposedDocumentRepository
-import no.elhub.auth.features.documents.create.ApiEndUserService
+import no.elhub.auth.features.documents.create.ApiPersonService
 import no.elhub.auth.features.documents.create.CertificateProvider
-import no.elhub.auth.features.documents.create.EndUserApiConfig
-import no.elhub.auth.features.documents.create.EndUserService
 import no.elhub.auth.features.documents.create.FileCertificateProvider
 import no.elhub.auth.features.documents.create.FileCertificateProviderConfig
 import no.elhub.auth.features.documents.create.FileGenerator
@@ -31,6 +29,8 @@ import no.elhub.auth.features.documents.create.HashicorpVaultSignatureProvider
 import no.elhub.auth.features.documents.create.PdfGenerator
 import no.elhub.auth.features.documents.create.PdfGeneratorConfig
 import no.elhub.auth.features.documents.create.PdfSigningService
+import no.elhub.auth.features.documents.create.PersonApiConfig
+import no.elhub.auth.features.documents.create.PersonService
 import no.elhub.auth.features.documents.create.SignatureProvider
 import no.elhub.auth.features.documents.create.VaultConfig
 import org.koin.core.module.dsl.singleOf
@@ -101,7 +101,7 @@ fun Application.module() {
 
         single {
             val cfg = get<ApplicationConfig>().config("authPersons")
-            EndUserApiConfig(
+            PersonApiConfig(
                 baseUri = cfg.property("baseUri").getString()
             )
         }
@@ -109,7 +109,7 @@ fun Application.module() {
         singleOf(::PdfGenerator) bind FileGenerator::class
         singleOf(::ExposedDocumentRepository) bind DocumentRepository::class
         singleOf(::ExposedPartyRepository) bind PartyRepository::class
-        singleOf(::ApiEndUserService) bind EndUserService::class
+        singleOf(::ApiPersonService) bind PersonService::class
         singleOf(::ConfirmHandler)
         singleOf(::CreateHandler)
         singleOf(::GetHandler)

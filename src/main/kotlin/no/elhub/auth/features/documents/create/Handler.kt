@@ -15,7 +15,7 @@ class Handler(
     private val fileSigningService: FileSigningService,
     private val signatureProvider: SignatureProvider,
     private val documentRepo: DocumentRepository,
-    private val endUserService: EndUserService,
+    private val personService: PersonService,
 ) {
     suspend operator fun invoke(command: Command): Either<CreateDocumentError, AuthorizationDocument> {
         val requestedFromParty = command.requestedFromIdentifier.toAuthorizationParty()
@@ -68,9 +68,9 @@ class Handler(
 
     private suspend fun resolveRequestedFromParty(requestedFrom: AuthorizationParty): Either<CreateDocumentError, AuthorizationParty> =
         if (requestedFrom.type == PartyType.Person) {
-            endUserService.findOrCreateByNin(requestedFrom.resourceId)
-                .map { endUser -> requestedFrom.copy(resourceId = endUser.internalId.toString()) }
-                .mapLeft { CreateDocumentError.EndUserError }
+            personService.findOrCreateByNin(requestedFrom.resourceId)
+                .map { person -> requestedFrom.copy(resourceId = person.internalId.toString()) }
+                .mapLeft { CreateDocumentError.PersonError }
         } else {
             requestedFrom.right()
         }
@@ -85,7 +85,7 @@ sealed class CreateDocumentError {
     data object MappingError : CreateDocumentError()
     data object PersistenceError : CreateDocumentError()
     data object PartyError : CreateDocumentError()
-    data object EndUserError : CreateDocumentError()
+    data object PersonError : CreateDocumentError()
 }
 
 fun PartyIdentifier.toAuthorizationParty(): AuthorizationParty =

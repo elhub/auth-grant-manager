@@ -30,7 +30,7 @@ fun Route.route(handler: Handler) {
                     CreateDocumentError.SigningError,
                     CreateDocumentError.PersistenceError,
                     CreateDocumentError.PartyError,
-                    CreateDocumentError.EndUserError
+                    CreateDocumentError.PersonError
                     -> call.respond(HttpStatusCode.InternalServerError)
                 }
                 return@post
