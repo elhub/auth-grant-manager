@@ -48,22 +48,14 @@ class Handler(
             .getOrElse { return CreateDocumentError.SigningError.left() }
 
         // replace external NIN with internal Elhub UUID for persons (organizations keep their GLN/org number as resourceId)
-        val requestedFromParty2 = resolveRequestedFromParty(command.requestedFrom)
+        val resolvedRequestedFromParty = resolveRequestedFromParty(requestedFromParty)
             .getOrElse { return it.left() }
-
-        /*
-        val documentToCreate = command.toAuthorizationDocument(signedFile, requestedFromParty)
-            .getOrElse { return CreateDocumentError.MappingError.left() }
-
-        val savedDocument = documentRepo.insert(documentToCreate)
-            .getOrElse { return CreateDocumentError.PersistenceError.left() }
-        * */
 
         val documentToCreate = AuthorizationDocument.create(
             type = command.type,
             file = signedFile,
             requestedBy = requestedByParty,
-            requestedFrom = requestedFromParty,
+            requestedFrom = resolvedRequestedFromParty,
             requestedTo = requestedToParty,
             signedBy = signedByParty
         )
@@ -75,7 +67,7 @@ class Handler(
     }
 
     private suspend fun resolveRequestedFromParty(requestedFrom: AuthorizationParty): Either<CreateDocumentError, AuthorizationParty> =
-        if (requestedFrom.type == ElhubResourceType.Person) {
+        if (requestedFrom.type == PartyType.Person) {
             endUserService.findOrCreateByNin(requestedFrom.resourceId)
                 .map { endUser -> requestedFrom.copy(resourceId = endUser.internalId.toString()) }
                 .mapLeft { CreateDocumentError.EndUserError }
