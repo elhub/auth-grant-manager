@@ -1,41 +1,48 @@
-package no.elhub.auth.features.documents.create
+package no.elhub.auth.features.documents.create.command
 
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
-import no.elhub.auth.features.documents.AuthorizationDocument
+import no.elhub.auth.features.documents.create.PartyIdentifier
 
-// TODO: Use appropriate regex
 private const val REGEX_NUMBERS_LETTERS_SYMBOLS = "^[a-zA-Z0-9_.-]*$"
 private const val REGEX_REQUESTED_FROM = REGEX_NUMBERS_LETTERS_SYMBOLS
 private const val REGEX_REQUESTED_BY = REGEX_NUMBERS_LETTERS_SYMBOLS
 private const val REGEX_METERING_POINT = REGEX_NUMBERS_LETTERS_SYMBOLS
 
-class Command private constructor(
-    val type: AuthorizationDocument.Type,
-    val requestedByIdentifier: PartyIdentifier,
-    val requestedFromIdentifier: PartyIdentifier,
-    val requestedToIdentifier: PartyIdentifier,
-    val signedByIdentifier: PartyIdentifier,
-    val requestedFromName: String,
+data class ChangeOfSupplierMetaMarker(
     val balanceSupplierName: String,
     val balanceSupplierContractName: String,
     val meteringPointId: String,
     val meteringPointAddress: String,
+    val requestedFromName: String,
+) : DocumentMetaMarker
+
+class ChangeOfSupplierDocumentCommand private constructor(
+    requestedFrom: PartyIdentifier,
+    requestedTo: PartyIdentifier,
+    requestedBy: PartyIdentifier,
+    signedBy: PartyIdentifier,
+    meta: ChangeOfSupplierMetaMarker
+) : DocumentCommand(
+    requestedFrom,
+    requestedTo,
+    requestedBy,
+    signedBy,
+    meta
 ) {
     companion object {
         operator fun invoke(
-            type: AuthorizationDocument.Type,
-            requestedByIdentifier: PartyIdentifier,
-            requestedFromIdentifier: PartyIdentifier,
-            requestedToIdentifier: PartyIdentifier,
-            signedByIdentifier: PartyIdentifier,
+            requestedBy: PartyIdentifier,
+            requestedFrom: PartyIdentifier,
+            requestedTo: PartyIdentifier,
+            signedBy: PartyIdentifier,
             requestedFromName: String,
             balanceSupplierName: String,
             balanceSupplierContractName: String,
             meteringPointId: String,
             meteringPointAddress: String,
-        ): Either<ValidationError, Command> {
+        ): Either<ValidationError, ChangeOfSupplierDocumentCommand> {
             if (requestedFromName.isBlank()) {
                 return ValidationError.MissingRequestedFromName.left()
             }
@@ -60,33 +67,36 @@ class Command private constructor(
                 return ValidationError.MissingMeteringPointAddress.left()
             }
 
-            if (requestedByIdentifier.idValue.isBlank()) {
+            if (requestedBy.idValue.isBlank()) {
                 return ValidationError.MissingRequestedBy.left()
             }
 
-            if (!requestedByIdentifier.idValue.matches(Regex(REGEX_REQUESTED_BY))) {
+            if (!requestedBy.idValue.matches(Regex(REGEX_REQUESTED_BY))) {
                 return ValidationError.MissingRequestedBy.left()
             }
 
-            if (requestedFromIdentifier.idValue.isBlank()) {
+            if (requestedFrom.idValue.isBlank()) {
                 return ValidationError.MissingRequestedFrom.left()
             }
 
-            if (!requestedFromIdentifier.idValue.matches(Regex(REGEX_REQUESTED_FROM))) {
+            if (!requestedFrom.idValue.matches(Regex(REGEX_REQUESTED_FROM))) {
                 return ValidationError.MissingRequestedFrom.left()
             }
 
-            return Command(
-                type = type,
-                requestedByIdentifier = requestedByIdentifier,
-                requestedFromIdentifier = requestedFromIdentifier,
-                requestedToIdentifier = requestedToIdentifier,
-                signedByIdentifier = signedByIdentifier,
-                requestedFromName = requestedFromName,
+            val changeOfSupplierMeta = ChangeOfSupplierMetaMarker(
                 balanceSupplierName = balanceSupplierName,
                 balanceSupplierContractName = balanceSupplierContractName,
                 meteringPointId = meteringPointId,
                 meteringPointAddress = meteringPointAddress,
+                requestedFromName = requestedFromName
+            )
+
+            return ChangeOfSupplierDocumentCommand(
+                requestedBy = requestedBy,
+                requestedFrom = requestedFrom,
+                requestedTo = requestedTo,
+                signedBy = signedBy,
+                meta = changeOfSupplierMeta
             ).right()
         }
     }

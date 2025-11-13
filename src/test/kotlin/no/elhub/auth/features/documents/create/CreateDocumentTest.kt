@@ -14,17 +14,20 @@ import no.elhub.auth.features.common.PartyRepository
 import no.elhub.auth.features.common.PostgresTestContainer
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.httpTestClient
-import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.TestCertificateUtil
 import no.elhub.auth.features.documents.VaultTransitTestContainerExtension
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.documents.common.ExposedDocumentRepository
 import no.elhub.auth.features.documents.confirm.getEndUserNin
 import no.elhub.auth.features.documents.confirm.isSignedByUs
+import no.elhub.auth.features.documents.create.command.ChangeOfSupplierDocumentCommand
+import no.elhub.auth.features.documents.create.command.ValidationError
 import no.elhub.auth.features.documents.getCustomMetaDataValue
 import no.elhub.auth.features.documents.localVaultConfig
 import no.elhub.auth.features.documents.validateFileIsPDFA2BCompliant
 import no.elhub.auth.features.documents.validateFileIsSignedByUs
+import no.elhub.auth.features.filegenerator.PdfGenerator
+import no.elhub.auth.features.filegenerator.PdfGeneratorConfig
 import org.jetbrains.exposed.sql.Database
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
@@ -123,12 +126,11 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
                 val handler by inject<Handler>()
 
-                val command = Command(
-                    type = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
-                    requestedByIdentifier = requestedBy,
-                    requestedFromIdentifier = requestedFrom,
-                    requestedToIdentifier = requestedTo,
-                    signedByIdentifier = signedBy,
+                val command = ChangeOfSupplierDocumentCommand(
+                    requestedBy = requestedBy,
+                    requestedFrom = requestedFrom,
+                    requestedTo = requestedTo,
+                    signedBy = signedBy,
                     requestedFromName = requestedFromName,
                     balanceSupplierName = balanceSupplierName,
                     balanceSupplierContractName = balanceSupplierContractName,
@@ -150,7 +152,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                 // TODO disabled - resolve end-user nin from auth-persons service
                 xThen("that document should contain the necessary metadata") {
                     val signerNin = document.file.getCustomMetaDataValue(PdfGenerator.PdfConstants.PDF_METADATA_KEY_NIN)
-                    signerNin shouldBe command.requestedFromIdentifier
+                    signerNin shouldBe command.requestedFrom
                 }
 
                 Then("that document should conform to the PDF/A-2b standard") {
@@ -176,12 +178,11 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
                     val handler by inject<Handler>()
 
-                    val command = Command(
-                        type = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
-                        requestedByIdentifier = requestedBy,
-                        requestedFromIdentifier = requestedFrom,
-                        requestedToIdentifier = requestedTo,
-                        signedByIdentifier = signedBy,
+                    val command = ChangeOfSupplierDocumentCommand(
+                        requestedBy = requestedBy,
+                        requestedFrom = requestedFrom,
+                        requestedTo = requestedTo,
+                        signedBy = signedBy,
                         requestedFromName = requestedFromName,
                         balanceSupplierName = balanceSupplierName,
                         balanceSupplierContractName = balanceSupplierContractName,
@@ -229,12 +230,11 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                 val meteringPointAddress = VALID_METERING_POINT_ADDRESS
                 When("I request a Change of Supplier document") {
 
-                    val command = Command(
-                        type = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
-                        requestedByIdentifier = requestedBy,
-                        requestedFromIdentifier = requestedFrom,
-                        requestedToIdentifier = requestedTo,
-                        signedByIdentifier = signedBy,
+                    val command = ChangeOfSupplierDocumentCommand(
+                        requestedBy = requestedBy,
+                        requestedFrom = requestedFrom,
+                        requestedTo = requestedTo,
+                        signedBy = signedBy,
                         requestedFromName = requestedFromName,
                         balanceSupplierName = balanceSupplierName,
                         balanceSupplierContractName = balanceSupplierContractName,
@@ -262,12 +262,11 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
                 When("I request a Change of Supplier document") {
 
-                    val command = Command(
-                        type = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
-                        requestedByIdentifier = requestedBy,
-                        requestedFromIdentifier = requestedFrom,
-                        requestedToIdentifier = requestedTo,
-                        signedByIdentifier = signedBy,
+                    val command = ChangeOfSupplierDocumentCommand(
+                        requestedBy = requestedBy,
+                        requestedFrom = requestedFrom,
+                        requestedTo = requestedTo,
+                        signedBy = signedBy,
                         requestedFromName = requestedFromName,
                         balanceSupplierName = balanceSupplierName,
                         balanceSupplierContractName = balanceSupplierContractName,
@@ -295,12 +294,11 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
                 When("I request a Change of Supplier document") {
 
-                    val command = Command(
-                        type = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
-                        requestedByIdentifier = requestedBy,
-                        requestedFromIdentifier = requestedFrom,
-                        requestedToIdentifier = requestedTo,
-                        signedByIdentifier = signedBy,
+                    val command = ChangeOfSupplierDocumentCommand(
+                        requestedBy = requestedBy,
+                        requestedFrom = requestedFrom,
+                        requestedTo = requestedTo,
+                        signedBy = signedBy,
                         requestedFromName = requestedFromName,
                         balanceSupplierName = balanceSupplierName,
                         balanceSupplierContractName = balanceSupplierContractName,
@@ -328,12 +326,11 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
                 When("I request a Change of Supplier document") {
 
-                    val command = Command(
-                        type = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
-                        requestedByIdentifier = requestedBy,
-                        requestedFromIdentifier = requestedFrom,
-                        requestedToIdentifier = requestedTo,
-                        signedByIdentifier = signedBy,
+                    val command = ChangeOfSupplierDocumentCommand(
+                        requestedBy = requestedBy,
+                        requestedFrom = requestedFrom,
+                        requestedTo = requestedTo,
+                        signedBy = signedBy,
                         requestedFromName = requestedFromName,
                         balanceSupplierName = balanceSupplierName,
                         balanceSupplierContractName = balanceSupplierContractName,
@@ -361,12 +358,11 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
                 When("I request a Change of Supplier document") {
 
-                    val command = Command(
-                        type = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
-                        requestedByIdentifier = requestedBy,
-                        requestedFromIdentifier = requestedFrom,
-                        requestedToIdentifier = requestedTo,
-                        signedByIdentifier = signedBy,
+                    val command = ChangeOfSupplierDocumentCommand(
+                        requestedBy = requestedBy,
+                        requestedFrom = requestedFrom,
+                        requestedTo = requestedTo,
+                        signedBy = signedBy,
                         requestedFromName = requestedFromName,
                         balanceSupplierName = balanceSupplierName,
                         balanceSupplierContractName = balanceSupplierContractName,
@@ -394,12 +390,11 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
                 When("I request a Change of Supplier document") {
 
-                    val command = Command(
-                        type = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
-                        requestedByIdentifier = requestedBy,
-                        requestedFromIdentifier = requestedFrom,
-                        requestedToIdentifier = requestedTo,
-                        signedByIdentifier = signedBy,
+                    val command = ChangeOfSupplierDocumentCommand(
+                        requestedBy = requestedBy,
+                        requestedFrom = requestedFrom,
+                        requestedTo = requestedTo,
+                        signedBy = signedBy,
                         requestedFromName = requestedFromName,
                         balanceSupplierName = balanceSupplierName,
                         balanceSupplierContractName = balanceSupplierContractName,
@@ -427,12 +422,11 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
                 When("I request a Change of Supplier document") {
 
-                    val command = Command(
-                        type = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
-                        requestedByIdentifier = requestedBy,
-                        requestedFromIdentifier = requestedFrom,
-                        requestedToIdentifier = requestedTo,
-                        signedByIdentifier = signedBy,
+                    val command = ChangeOfSupplierDocumentCommand(
+                        requestedBy = requestedBy,
+                        requestedFrom = requestedFrom,
+                        requestedTo = requestedTo,
+                        signedBy = signedBy,
                         requestedFromName = requestedFromName,
                         balanceSupplierName = balanceSupplierName,
                         balanceSupplierContractName = balanceSupplierContractName,
@@ -460,12 +454,11 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
                 When("I request a Change of Supplier document") {
 
-                    val command = Command(
-                        type = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
-                        requestedByIdentifier = requestedBy,
-                        requestedFromIdentifier = requestedFrom,
-                        requestedToIdentifier = requestedTo,
-                        signedByIdentifier = signedBy,
+                    val command = ChangeOfSupplierDocumentCommand(
+                        requestedBy = requestedBy,
+                        requestedFrom = requestedFrom,
+                        requestedTo = requestedTo,
+                        signedBy = signedBy,
                         requestedFromName = requestedFromName,
                         balanceSupplierName = balanceSupplierName,
                         balanceSupplierContractName = balanceSupplierContractName,
@@ -493,12 +486,11 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
                 When("I request a Change of Supplier document") {
 
-                    val command = Command(
-                        type = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
-                        requestedByIdentifier = requestedBy,
-                        requestedFromIdentifier = requestedFrom,
-                        requestedToIdentifier = requestedTo,
-                        signedByIdentifier = signedBy,
+                    val command = ChangeOfSupplierDocumentCommand(
+                        requestedBy = requestedBy,
+                        requestedFrom = requestedFrom,
+                        requestedTo = requestedTo,
+                        signedBy = signedBy,
                         requestedFromName = requestedFromName,
                         balanceSupplierName = balanceSupplierName,
                         balanceSupplierContractName = balanceSupplierContractName,
