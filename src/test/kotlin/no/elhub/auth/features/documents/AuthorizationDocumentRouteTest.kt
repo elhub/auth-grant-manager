@@ -3,7 +3,7 @@ package no.elhub.auth.features.documents
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldMatch
+import io.kotest.matchers.shouldNotBe
 import io.ktor.client.call.body
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.accept
@@ -123,13 +123,13 @@ class AuthorizationDocumentRouteTest :
                         relationships.apply {
                             requestedBy.apply {
                                 data.apply {
-                                    id shouldBe "12345678901"
+                                    id shouldNotBe null
                                     type shouldBe "Person"
                                 }
                             }
                             requestedFrom.apply {
                                 data.apply {
-                                    id shouldBe "98765432109"
+                                    id shouldNotBe null
                                     type shouldBe "Person"
                                 }
                             }

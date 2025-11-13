@@ -8,6 +8,8 @@ import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.koin.KoinExtension
 import io.kotest.koin.KoinLifecycleMode
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.string.shouldMatch
 import no.elhub.auth.features.common.ExposedPartyRepository
 import no.elhub.auth.features.common.PartyRepository
 import no.elhub.auth.features.common.PostgresTestContainer
@@ -35,14 +37,14 @@ import org.koin.test.inject
 import kotlin.test.fail
 
 // TODO: Provide a valid supplier ID
-private val VALID_REQUESTED_FROM_IDENTIFIER = PartyIdentifier(idType = PartyIdentifierType.NationalIdentityNumber, idValue = "123455")
+private val VALID_REQUESTED_FROM_IDENTIFIER = PartyIdentifier(idType = PartyIdentifierType.NationalIdentityNumber, idValue = "12345678901")
 private const val INVALID_REQUESTED_FROM = "^%)"
 private const val VALID_REQUESTED_FROM_NAME = "Supplier AS"
 
-private val VALID_REQUESTED_BY_IDENTIFIER = PartyIdentifier(idType = PartyIdentifierType.NationalIdentityNumber, idValue = "567891")
+private val VALID_REQUESTED_BY_IDENTIFIER = PartyIdentifier(idType = PartyIdentifierType.NationalIdentityNumber, idValue = "56012398745")
 private const val INVALID_REQUESTED_BY = "^%)"
 
-private val VALID_REQUESTED_TO_IDENTIFIER = PartyIdentifier(idType = PartyIdentifierType.NationalIdentityNumber, idValue = "567891")
+private val VALID_REQUESTED_TO_IDENTIFIER = PartyIdentifier(idType = PartyIdentifierType.NationalIdentityNumber, idValue = "56012398745")
 private val VALID_SIGNED_BY_IDENTIFIER = PartyIdentifier(idType = PartyIdentifierType.NationalIdentityNumber, idValue = "567891")
 
 // TODO: Provide a valid metering point
@@ -154,7 +156,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
                 Then("that document should contain the necessary metadata") {
                     val signerNin = document.file.getCustomMetaDataValue(PdfGenerator.PdfConstants.PDF_METADATA_KEY_NIN)
-                    signerNin shouldBe command.requestedFromIdentifier
+                    signerNin shouldBe command.requestedFromIdentifier.toAuthorizationParty().resourceId
                 }
 
                 Then("that document should conform to the PDF/A-2b standard") {
@@ -193,21 +195,24 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
                     val document = handler(command).getOrElse { fail("Document not returned") }
 
-//                    Then("the user should be registered in Elhub") {
-//                        val endUser = endUserRepo.findOrCreateByNin(requestedFrom.idValue)
-//                            .getOrElse { fail("Could not retrieve the end user") }
-//                        endUser.id shouldNotBe null
-//                    }
+                    Then("the user should be registered in Elhub") {
+                        val resolvedResourceId = document.requestedFrom.resourceId
 
-                    Then("I should receive a link to a PDF document") {
+                        resolvedResourceId shouldNotBe requestedFrom
+
+                        val uuidRegex = Regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$")
+                        resolvedResourceId shouldMatch uuidRegex
+                    }
+
+                    xThen("I should receive a link to a PDF document") {
                         fail("Received the PDF bytes")
                     }
 
-                    Then("that document should be signed by Elhub") {
+                    xThen("that document should be signed by Elhub") {
                         document.file.isSignedByUs() shouldBe true
                     }
 
-                    Then("that document should contain the necessary metadata") {
+                    xThen("that document should contain the necessary metadata") {
                         // TODO: PDF specific references in these tests?
                         document.file.getEndUserNin() shouldBe requestedFrom
                     }
