@@ -7,16 +7,20 @@ import arrow.core.right
 import no.elhub.auth.features.common.AuthorizationParty
 import no.elhub.auth.features.common.PartyType
 import no.elhub.auth.features.documents.AuthorizationDocument
+import no.elhub.auth.features.documents.common.AuthorizationDocumentProperty
+import no.elhub.auth.features.documents.common.DocumentPropertiesRepository
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.documents.create.command.DocumentCommand
 import no.elhub.auth.features.documents.create.command.toAuthorizationDocumentType
+import java.util.UUID
 
 class Handler(
     private val fileGenerator: FileGenerator,
     private val certificateProvider: CertificateProvider,
     private val fileSigningService: FileSigningService,
     private val signatureProvider: SignatureProvider,
-    private val documentRepo: DocumentRepository,
+    private val documentRepository: DocumentRepository,
+    private val documentPropertiesRepository: DocumentPropertiesRepository,
     private val personService: PersonService,
 ) {
     suspend operator fun invoke(command: DocumentCommand): Either<CreateDocumentError, AuthorizationDocument> {
@@ -65,7 +69,14 @@ class Handler(
         )
 
         val savedDocument = documentRepo.insert(documentToCreate)
+        val savedDocument = documentRepository.insert(documentToCreate)
             .getOrElse { return CreateDocumentError.PersistenceError.left() }
+
+        val documentProperties = command.meta
+            .toMetaAttributes()
+            .toDocumentProperties(savedDocument.id)
+
+        documentPropertiesRepository.insert(documentProperties)
 
         return savedDocument.right()
     }
@@ -104,3 +115,12 @@ sealed class CreateDocumentError {
     data object SignedByPartyError : CreateDocumentError()
     data object PersonError : CreateDocumentError()
 }
+
+fun Map<String, String>.toDocumentProperties(documentId: UUID) =
+    this.map { (key, value) ->
+        AuthorizationDocumentProperty(
+            documentId = documentId,
+            key = key,
+            value = value
+        )
+    }.toList()

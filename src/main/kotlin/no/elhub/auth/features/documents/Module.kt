@@ -17,7 +17,9 @@ import kotlinx.serialization.json.Json
 import no.elhub.auth.features.common.ExposedPartyRepository
 import no.elhub.auth.features.common.PartyRepository
 import no.elhub.auth.features.common.shouldRegisterEndpoint
+import no.elhub.auth.features.documents.common.DocumentPropertiesRepository
 import no.elhub.auth.features.documents.common.DocumentRepository
+import no.elhub.auth.features.documents.common.ExposedDocumentPropertiesRepository
 import no.elhub.auth.features.documents.common.ExposedDocumentRepository
 import no.elhub.auth.features.documents.create.ApiPersonService
 import no.elhub.auth.features.documents.create.CertificateProvider
@@ -108,6 +110,7 @@ fun Application.module() {
 
         singleOf(::PdfGenerator) bind FileGenerator::class
         singleOf(::ExposedDocumentRepository) bind DocumentRepository::class
+        singleOf(::ExposedDocumentPropertiesRepository) bind DocumentPropertiesRepository::class
         singleOf(::ExposedPartyRepository) bind PartyRepository::class
         singleOf(::ApiPersonService) bind PersonService::class
         singleOf(::ConfirmHandler)
