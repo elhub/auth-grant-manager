@@ -6,6 +6,7 @@ import no.elhub.auth.features.grants.AuthorizationScope
 import no.elhub.auth.features.grants.ElhubResource
 import no.elhub.auth.features.grants.PermissionType
 import no.elhub.devxp.jsonapi.model.JsonApiAttributes
+import no.elhub.devxp.jsonapi.model.JsonApiLinks
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipToOne
 import no.elhub.devxp.jsonapi.model.JsonApiRelationships
 import no.elhub.devxp.jsonapi.response.JsonApiResponse
@@ -36,7 +37,7 @@ data class AuthorizationGrantScopeAttributes(
 
 typealias AuthorizationGrantScopesResponse = JsonApiResponse.CollectionDocument<AuthorizationGrantScopeAttributes>
 
-fun List<AuthorizationScope>.toResponse() =
+fun List<AuthorizationScope>.toResponse(grantId: String) =
     AuthorizationGrantScopesResponse(
         data = this.map { authorizationScope ->
             val attributes = AuthorizationGrantScopeAttributes(
@@ -51,5 +52,8 @@ fun List<AuthorizationScope>.toResponse() =
                 id = authorizationScope.id.toString(),
                 attributes = attributes
             )
-        }
+        },
+        links = JsonApiLinks.ResourceObjectLink(
+            self = "authorization-grants/{id}/scopes"
+        )
     )

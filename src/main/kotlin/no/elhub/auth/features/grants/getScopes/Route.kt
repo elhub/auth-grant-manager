@@ -29,6 +29,6 @@ fun Route.route(handler: Handler) {
                 return@get
             }
 
-        call.respond(HttpStatusCode.OK, scopes.toResponse())
+        call.respond(HttpStatusCode.OK, scopes.toResponse(id.toString()))
     }
 }

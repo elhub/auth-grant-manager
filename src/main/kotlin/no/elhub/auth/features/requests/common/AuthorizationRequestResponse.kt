@@ -5,6 +5,7 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.devxp.jsonapi.model.JsonApiAttributes
+import no.elhub.devxp.jsonapi.model.JsonApiLinks
 import no.elhub.devxp.jsonapi.model.JsonApiMeta
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipData
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipToOne
@@ -55,7 +56,8 @@ fun AuthorizationRequest.toResponse() = AuthorizationRequestResponse(
             )
         ),
         meta = mapMetaProperties(this)
-    )
+    ),
+    links = JsonApiLinks.ResourceObjectLink("/authorization-requests")
 )
 
 private fun mapMetaProperties(authorizationRequest: AuthorizationRequest): JsonApiMeta = buildJsonObject {
