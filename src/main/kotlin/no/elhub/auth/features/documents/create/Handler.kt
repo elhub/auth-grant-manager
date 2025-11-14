@@ -24,7 +24,6 @@ class Handler(
     private val personService: PersonService,
 ) {
     suspend operator fun invoke(command: DocumentCommand): Either<CreateDocumentError, AuthorizationDocument> {
-
         val requestedFromParty = command.requestedFrom.toAuthorizationParty()
             .getOrElse { return CreateDocumentError.RequestedFromPartyError.left() }
 
@@ -80,7 +79,7 @@ class Handler(
         return savedDocument.right()
     }
 
-    private suspend fun PartyIdentifier.toAuthorizationParty():  Either<CreateDocumentError, AuthorizationParty> =
+    private suspend fun PartyIdentifier.toAuthorizationParty(): Either<CreateDocumentError, AuthorizationParty> =
         when (this.idType) {
             PartyIdentifierType.NationalIdentityNumber ->
                 // replace external NIN with internal Elhub UUID for persons (organizations keep their GLN/org number as resourceId)
