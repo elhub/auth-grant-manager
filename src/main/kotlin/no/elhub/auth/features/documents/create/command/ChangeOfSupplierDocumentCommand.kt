@@ -10,20 +10,29 @@ private const val REGEX_REQUESTED_FROM = REGEX_NUMBERS_LETTERS_SYMBOLS
 private const val REGEX_REQUESTED_BY = REGEX_NUMBERS_LETTERS_SYMBOLS
 private const val REGEX_METERING_POINT = REGEX_NUMBERS_LETTERS_SYMBOLS
 
-data class ChangeOfSupplierMetaMarker(
+data class ChangeOfSupplierDocumentMeta(
     val balanceSupplierName: String,
     val balanceSupplierContractName: String,
     val meteringPointId: String,
     val meteringPointAddress: String,
     val requestedFromName: String,
-) : DocumentMetaMarker
+) : DocumentMetaMarker {
+    override fun toMetaAttributes(): Map<String, String> =
+        mapOf(
+            "balanceSupplierName" to balanceSupplierName,
+            "balanceSupplierContractName" to balanceSupplierContractName,
+            "meteringPointId" to meteringPointId,
+            "meteringPointAddress" to meteringPointAddress,
+            "requestedFromName" to requestedFromName,
+        )
+}
 
 class ChangeOfSupplierDocumentCommand private constructor(
     requestedFrom: PartyIdentifier,
     requestedTo: PartyIdentifier,
     requestedBy: PartyIdentifier,
     signedBy: PartyIdentifier,
-    meta: ChangeOfSupplierMetaMarker
+    meta: ChangeOfSupplierDocumentMeta
 ) : DocumentCommand(
     requestedFrom,
     requestedTo,
@@ -83,7 +92,7 @@ class ChangeOfSupplierDocumentCommand private constructor(
                 return ValidationError.MissingRequestedFrom.left()
             }
 
-            val changeOfSupplierMeta = ChangeOfSupplierMetaMarker(
+            val changeOfSupplierMeta = ChangeOfSupplierDocumentMeta(
                 balanceSupplierName = balanceSupplierName,
                 balanceSupplierContractName = balanceSupplierContractName,
                 meteringPointId = meteringPointId,

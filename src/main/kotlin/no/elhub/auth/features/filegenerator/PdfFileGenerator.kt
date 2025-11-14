@@ -10,7 +10,7 @@ import com.openhtmltopdf.outputdevice.helper.BaseRendererBuilder
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder
 import no.elhub.auth.features.documents.create.DocumentGenerationError
 import no.elhub.auth.features.documents.create.FileGenerator
-import no.elhub.auth.features.documents.create.command.ChangeOfSupplierMetaMarker
+import no.elhub.auth.features.documents.create.command.ChangeOfSupplierDocumentMeta
 import no.elhub.auth.features.documents.create.command.DocumentMetaMarker
 import org.apache.pdfbox.Loader
 import org.apache.pdfbox.pdmodel.PDDocumentInformation
@@ -113,7 +113,7 @@ class PdfGenerator(
         documentMeta: DocumentMetaMarker
     ): Either<DocumentGenerationError.ContentGenerationError, ByteArray> = either {
         val contractHtmlString = when (documentMeta) {
-            is ChangeOfSupplierMetaMarker -> generateChangeOfSupplierHtml(
+            is ChangeOfSupplierDocumentMeta -> generateChangeOfSupplierHtml(
                 customerNin = signerNin,
                 customerName = documentMeta.requestedFromName,
                 meteringPointAddress = documentMeta.meteringPointAddress,
