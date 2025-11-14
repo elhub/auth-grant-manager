@@ -16,7 +16,9 @@ import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.httpTestClient
 import no.elhub.auth.features.documents.TestCertificateUtil
 import no.elhub.auth.features.documents.VaultTransitTestContainerExtension
+import no.elhub.auth.features.documents.common.DocumentPropertiesRepository
 import no.elhub.auth.features.documents.common.DocumentRepository
+import no.elhub.auth.features.documents.common.ExposedDocumentPropertiesRepository
 import no.elhub.auth.features.documents.common.ExposedDocumentRepository
 import no.elhub.auth.features.documents.confirm.getEndUserNin
 import no.elhub.auth.features.documents.confirm.isSignedByUs
@@ -91,6 +93,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
                     singleOf(::ExposedDocumentRepository) bind DocumentRepository::class
                     singleOf(::ExposedPartyRepository) bind PartyRepository::class
+                    singleOf(::ExposedDocumentPropertiesRepository) bind DocumentPropertiesRepository::class
                     single { EndUserApiConfig("baseUrl", "/persons/") }
                     singleOf(::ApiEndUserRepository) bind EndUserRepository::class
 
