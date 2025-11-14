@@ -20,10 +20,18 @@ class Handler(
     private val personService: PersonService,
 ) {
     suspend operator fun invoke(command: DocumentCommand): Either<CreateDocumentError, AuthorizationDocument> {
+
         val requestedFromParty = command.requestedFrom.toAuthorizationParty()
+            .getOrElse { return CreateDocumentError.RequestedFromPartyError.left() }
+
         val requestedByParty = command.requestedBy.toAuthorizationParty()
+            .getOrElse { return CreateDocumentError.RequestedByPartyError.left() }
+
         val requestedToParty = command.requestedTo.toAuthorizationParty()
+            .getOrElse { return CreateDocumentError.RequestedToPartyError.left() }
+
         val signedByParty = command.signedBy.toAuthorizationParty()
+            .getOrElse { return CreateDocumentError.SignedByPartyError.left() }
 
         val file = fileGenerator.generate(
             signerNin = command.signedBy.idValue,
@@ -46,15 +54,12 @@ class Handler(
             .getOrElse { return CreateDocumentError.SigningError.left() }
 
         val documentType = command.toAuthorizationDocumentType()
-        // replace external NIN with internal Elhub UUID for persons (organizations keep their GLN/org number as resourceId)
-        val resolvedRequestedFromParty = resolveRequestedFromParty(requestedFromParty)
-            .getOrElse { return it.left() }
 
         val documentToCreate = AuthorizationDocument.create(
             type = documentType,
             file = signedFile,
             requestedBy = requestedByParty,
-            requestedFrom = resolvedRequestedFromParty,
+            requestedFrom = requestedFromParty,
             requestedTo = requestedToParty,
             signedBy = signedByParty
         )
@@ -65,13 +70,23 @@ class Handler(
         return savedDocument.right()
     }
 
-    private suspend fun resolveRequestedFromParty(requestedFrom: AuthorizationParty): Either<CreateDocumentError, AuthorizationParty> =
-        if (requestedFrom.type == PartyType.Person) {
-            personService.findOrCreateByNin(requestedFrom.resourceId)
-                .map { person -> requestedFrom.copy(resourceId = person.internalId.toString()) }
-                .mapLeft { CreateDocumentError.PersonError }
-        } else {
-            requestedFrom.right()
+    private suspend fun PartyIdentifier.toAuthorizationParty():  Either<CreateDocumentError, AuthorizationParty> =
+        when (this.idType) {
+            PartyIdentifierType.NationalIdentityNumber ->
+                // replace external NIN with internal Elhub UUID for persons (organizations keep their GLN/org number as resourceId)
+                personService.findOrCreateByNin(idValue)
+                    .map { AuthorizationParty(resourceId = it.internalId.toString(), type = PartyType.Person) }
+                    .mapLeft { CreateDocumentError.PersonError }
+
+            PartyIdentifierType.OrganizationNumber -> AuthorizationParty(
+                resourceId = this.idValue,
+                type = PartyType.Organization
+            ).right()
+
+            PartyIdentifierType.GlobalLocationNumber -> AuthorizationParty(
+                resourceId = this.idValue,
+                type = PartyType.OrganizationEntity
+            ).right()
         }
 }
 
@@ -83,24 +98,9 @@ sealed class CreateDocumentError {
     data object SigningError : CreateDocumentError()
     data object MappingError : CreateDocumentError()
     data object PersistenceError : CreateDocumentError()
-    data object PartyError : CreateDocumentError()
+    data object RequestedFromPartyError : CreateDocumentError()
+    data object RequestedByPartyError : CreateDocumentError()
+    data object RequestedToPartyError : CreateDocumentError()
+    data object SignedByPartyError : CreateDocumentError()
     data object PersonError : CreateDocumentError()
 }
-
-fun PartyIdentifier.toAuthorizationParty(): AuthorizationParty =
-    when (this.idType) {
-        PartyIdentifierType.NationalIdentityNumber -> AuthorizationParty(
-            resourceId = this.idValue,
-            type = PartyType.Person
-        )
-
-        PartyIdentifierType.OrganizationNumber -> AuthorizationParty(
-            resourceId = this.idValue,
-            type = PartyType.Organization
-        )
-
-        PartyIdentifierType.GlobalLocationNumber -> AuthorizationParty(
-            resourceId = this.idValue,
-            type = PartyType.OrganizationEntity
-        )
-    }

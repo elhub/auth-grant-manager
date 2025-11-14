@@ -91,11 +91,11 @@ class AuthorizationDocumentRouteTest :
                                                 ),
                                                 requestedTo = PartyIdentifier(
                                                     idType = PartyIdentifierType.NationalIdentityNumber,
-                                                    idValue = "something"
+                                                    idValue = "00011122233"
                                                 ),
                                                 signedBy = PartyIdentifier(
                                                     idType = PartyIdentifierType.NationalIdentityNumber,
-                                                    idValue = "something"
+                                                    idValue = "98765432100"
                                                 ),
                                                 requestedFromName = "Hillary Orr",
                                                 requestedForMeteringPointId = "atomorum",
