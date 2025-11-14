@@ -68,7 +68,6 @@ class Handler(
             signedBy = signedByParty
         )
 
-        val savedDocument = documentRepo.insert(documentToCreate)
         val savedDocument = documentRepository.insert(documentToCreate)
             .getOrElse { return CreateDocumentError.PersistenceError.left() }
 
