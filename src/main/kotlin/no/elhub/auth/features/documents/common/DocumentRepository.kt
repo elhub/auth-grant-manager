@@ -172,7 +172,7 @@ fun ResultRow.toAuthorizationDocument(
     status = this[AuthorizationDocumentTable.status],
     file = this[AuthorizationDocumentTable.file],
     requestedBy = AuthorizationParty(resourceId = requestedBy.resourceId, type = requestedBy.type),
-    requestedFrom = AuthorizationParty(resourceId = requestedFrom.resourceId, type = requestedBy.type),
+    requestedFrom = AuthorizationParty(resourceId = requestedFrom.resourceId, type = requestedFrom.type),
     requestedTo = AuthorizationParty(resourceId = requestedTo.resourceId, type = requestedTo.type),
     signedBy = AuthorizationParty(resourceId = signedBy.resourceId, type = signedBy.type),
     createdAt = this[AuthorizationDocumentTable.createdAt],

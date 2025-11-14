@@ -31,3 +31,6 @@ pdfSigner:
 
 featureToggle:
   enableEndpoints: ${ENABLE_ENDPOINTS:false}
+
+authPersons:
+  baseUri: $AUTH_PERSONS_URL

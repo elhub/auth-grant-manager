@@ -9,18 +9,21 @@ import io.kotest.koin.KoinExtension
 import io.kotest.koin.KoinLifecycleMode
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.string.shouldMatch
 import no.elhub.auth.features.common.ExposedPartyRepository
 import no.elhub.auth.features.common.PartyRepository
 import no.elhub.auth.features.common.PostgresTestContainer
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.httpTestClient
+import no.elhub.auth.features.documents.AuthPersonsTestContainer
+import no.elhub.auth.features.documents.AuthPersonsTestContainerExtension
 import no.elhub.auth.features.documents.TestCertificateUtil
 import no.elhub.auth.features.documents.VaultTransitTestContainerExtension
 import no.elhub.auth.features.documents.common.DocumentPropertiesRepository
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.documents.common.ExposedDocumentPropertiesRepository
 import no.elhub.auth.features.documents.common.ExposedDocumentRepository
-import no.elhub.auth.features.documents.confirm.getEndUserNin
+import no.elhub.auth.features.documents.confirm.getPersonNin
 import no.elhub.auth.features.documents.confirm.isSignedByUs
 import no.elhub.auth.features.documents.create.command.ChangeOfSupplierDocumentCommand
 import no.elhub.auth.features.documents.create.command.ValidationError
@@ -39,15 +42,15 @@ import org.koin.test.inject
 import kotlin.test.fail
 
 // TODO: Provide a valid supplier ID
-private val VALID_REQUESTED_FROM_IDENTIFIER = PartyIdentifier(idType = PartyIdentifierType.NationalIdentityNumber, idValue = "123455")
+private val VALID_REQUESTED_FROM_IDENTIFIER = PartyIdentifier(idType = PartyIdentifierType.NationalIdentityNumber, idValue = "12345678901")
 private const val INVALID_REQUESTED_FROM = "^%)"
 private const val VALID_REQUESTED_FROM_NAME = "Supplier AS"
 
-private val VALID_REQUESTED_BY_IDENTIFIER = PartyIdentifier(idType = PartyIdentifierType.NationalIdentityNumber, idValue = "567891")
+private val VALID_REQUESTED_BY_IDENTIFIER = PartyIdentifier(idType = PartyIdentifierType.NationalIdentityNumber, idValue = "56012398741")
 private const val INVALID_REQUESTED_BY = "^%)"
 
-private val VALID_REQUESTED_TO_IDENTIFIER = PartyIdentifier(idType = PartyIdentifierType.NationalIdentityNumber, idValue = "567891")
-private val VALID_SIGNED_BY_IDENTIFIER = PartyIdentifier(idType = PartyIdentifierType.NationalIdentityNumber, idValue = "567891")
+private val VALID_REQUESTED_TO_IDENTIFIER = PartyIdentifier(idType = PartyIdentifierType.NationalIdentityNumber, idValue = "56012398742")
+private val VALID_SIGNED_BY_IDENTIFIER = PartyIdentifier(idType = PartyIdentifierType.NationalIdentityNumber, idValue = "56012398743")
 
 // TODO: Provide a valid metering point
 private const val VALID_METERING_POINT_ID = "abc123"
@@ -68,7 +71,11 @@ private const val EMPTY = " "
  */
 class CreateDocumentTest : BehaviorSpec(), KoinTest {
     init {
-        extensions(VaultTransitTestContainerExtension, PostgresTestContainerExtension)
+        extensions(
+            VaultTransitTestContainerExtension,
+            PostgresTestContainerExtension,
+            AuthPersonsTestContainerExtension,
+        )
         extension(
             KoinExtension(
                 module {
@@ -93,9 +100,9 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
                     singleOf(::ExposedDocumentRepository) bind DocumentRepository::class
                     singleOf(::ExposedPartyRepository) bind PartyRepository::class
+                    singleOf(::ApiPersonService) bind PersonService::class
+                    single { PersonApiConfig(baseUri = AuthPersonsTestContainer.baseUri()) }
                     singleOf(::ExposedDocumentPropertiesRepository) bind DocumentPropertiesRepository::class
-                    single { EndUserApiConfig("baseUrl", "/persons/") }
-                    singleOf(::ApiEndUserRepository) bind EndUserRepository::class
 
                     singleOf(::Handler)
                 },
@@ -118,7 +125,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
                 val requestedFrom = VALID_REQUESTED_FROM_IDENTIFIER
                 val requestedFromName = VALID_REQUESTED_FROM_NAME
-                val requestedBy = VALID_REQUESTED_FROM_IDENTIFIER
+                val requestedBy = VALID_REQUESTED_BY_IDENTIFIER
                 val requestedTo = VALID_REQUESTED_TO_IDENTIFIER
                 val signedBy = VALID_SIGNED_BY_IDENTIFIER
 
@@ -152,10 +159,9 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                     document.file.validateFileIsSignedByUs()
                 }
 
-                // TODO disabled - resolve end-user nin from auth-persons service
-                xThen("that document should contain the necessary metadata") {
+                Then("that document should contain the necessary metadata") {
                     val signerNin = document.file.getCustomMetaDataValue(PdfGenerator.PdfConstants.PDF_METADATA_KEY_NIN)
-                    signerNin shouldBe command.requestedFrom
+                    signerNin shouldBe command.signedBy.idValue
                 }
 
                 Then("that document should conform to the PDF/A-2b standard") {
@@ -163,9 +169,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                 }
             }
 
-            xGiven("that the end user is not already registered in Elhub") {
-
-                val endUserRepo by inject<EndUserRepository>()
+            Given("that the end user is not already registered in Elhub") {
 
                 When("I request a Change of Supplier document") {
 
@@ -196,22 +200,25 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                     val document = handler(command).getOrElse { fail("Document not returned") }
 
                     Then("the user should be registered in Elhub") {
-                        val endUser = endUserRepo.findOrCreateByNin(requestedFrom.idValue)
-                            .getOrElse { fail("Could not retrieve the end user") }
-                        endUser.id shouldNotBe null
+                        val resolvedResourceId = document.requestedFrom.resourceId
+
+                        resolvedResourceId shouldNotBe requestedFrom
+
+                        val uuidRegex = Regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$")
+                        resolvedResourceId shouldMatch uuidRegex
                     }
 
-                    Then("I should receive a link to a PDF document") {
+                    xThen("I should receive a link to a PDF document") {
                         fail("Received the PDF bytes")
                     }
 
-                    Then("that document should be signed by Elhub") {
+                    xThen("that document should be signed by Elhub") {
                         document.file.isSignedByUs() shouldBe true
                     }
 
-                    Then("that document should contain the necessary metadata") {
+                    xThen("that document should contain the necessary metadata") {
                         // TODO: PDF specific references in these tests?
-                        document.file.getEndUserNin() shouldBe requestedFrom
+                        document.file.getPersonNin() shouldBe requestedFrom
                     }
 
                     Then("that document should conform to the PDF/A-2b standard") {
