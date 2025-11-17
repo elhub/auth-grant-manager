@@ -82,7 +82,6 @@ class Handler(
     private suspend fun PartyIdentifier.toAuthorizationParty(): Either<CreateDocumentError, AuthorizationParty> =
         when (this.idType) {
             PartyIdentifierType.NationalIdentityNumber ->
-                // replace external NIN with internal Elhub UUID for persons (organizations keep their GLN/org number as resourceId)
                 personService.findOrCreateByNin(idValue)
                     .map { AuthorizationParty(resourceId = it.internalId.toString(), type = PartyType.Person) }
                     .mapLeft { CreateDocumentError.PersonError }
