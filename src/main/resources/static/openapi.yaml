@@ -36,8 +36,8 @@ paths:
             schema:
               $ref: "./schemas/documents/authorization-document-post-request.schema.json"
       responses:
-        "200":
-          description: This creates a new authorization document and returns the details of the request initiated (including the link to the actual document).
+        "201":
+          description: Returns the identifier of the created authorization document together with links to the resource and its PDF file.
           content:
             application/json:
               schema:
@@ -134,7 +134,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "./schemas/json-api-meta.schema.json"
+                $ref: "./schemas/documents/authorization-document-patch-response.schema.json"
         "400":
           $ref: "#/components/responses/400BadRequestError"
         "401":

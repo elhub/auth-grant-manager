@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Authorization Request",
+  "title": "Authorization Document",
   "description": "Schema for returning a single authorization document object in the Elhub authorization manager.",
   "type": "object",
   "properties": {

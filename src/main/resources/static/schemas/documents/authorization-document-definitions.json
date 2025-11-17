@@ -43,6 +43,33 @@
         },
         "signedBy": {
           "$ref": "../base-definitions.schema.json#/definitions/relationshipParty"
+        },
+        "grant": {
+          "type": "object",
+          "properties": {
+            "links": {
+              "type": "object",
+              "properties": {
+                "self": {
+                  "type": "string",
+                  "examples": [
+                    "/authorization-grant/123e4567-e89b-12d3-a456-426614174000"
+                  ]
+                }
+              }
+            },
+            "data": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "$ref": "../grants/authorization-grant-definitions.json#/$defs/type"
+                },
+                "id": {
+                  "$ref": "../base-definitions.schema.json#/definitions/resourceId"
+                }
+              }
+            }
+          }
         }
       }
     },

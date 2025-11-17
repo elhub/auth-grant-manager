@@ -19,7 +19,7 @@ import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.testing.testApplication
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.RunPostgresScriptExtension
-import no.elhub.auth.features.documents.common.AuthorizationDocumentResponse
+import no.elhub.auth.features.documents.create.CreateDocumentResponse
 import no.elhub.auth.features.documents.create.DocumentMeta
 import no.elhub.auth.features.documents.create.DocumentRequestAttributes
 import no.elhub.auth.features.documents.create.PartyIdentifier
@@ -110,30 +110,16 @@ class AuthorizationDocumentRouteTest :
                             }
 
                     response.status shouldBe HttpStatusCode.Created
-                    val documentResponse: AuthorizationDocumentResponse = response.body()
+                    val documentResponse: CreateDocumentResponse = response.body()
                     documentResponse.data.apply {
                         type shouldBe "AuthorizationDocument"
                         id.shouldNotBeNull()
-                        attributes.shouldNotBeNull()
-                        attributes!!.apply {
-                            createdAt.shouldNotBeNull()
-                            updatedAt.shouldNotBeNull()
-                            status shouldBe "Pending"
-                        }
-                        relationships.apply {
-                            requestedBy.apply {
-                                data.apply {
-                                    id shouldNotBe null
-                                    type shouldBe "Person"
-                                }
-                            }
-                            requestedFrom.apply {
-                                data.apply {
-                                    id shouldNotBe null
-                                    type shouldBe "Person"
-                                }
-                            }
-                        }
+                        links.self shouldBe "$DOCUMENTS_PATH/$id"
+                        links.file shouldBe "$DOCUMENTS_PATH/$id.pdf"
+                    }
+
+                    documentResponse.links.apply {
+                        self shouldBe "/authorization-documents"
                     }
 
                     // Get the pdf to validate signature
