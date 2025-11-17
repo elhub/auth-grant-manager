@@ -11,8 +11,6 @@ import java.time.Duration
 object AuthPersonsTestContainer {
 
     private val image = DockerImageName.parse("docker.jfrog.elhub.cloud/frzq0sxltynr/auth/auth-persons-mock:0.1.17-29")
-
-// private val image = DockerImageName.parse("localhost:5000/auth-persons-mock:latest") //TODO remove
     private var container: GenericContainer<*>? = null
 
     fun start() {

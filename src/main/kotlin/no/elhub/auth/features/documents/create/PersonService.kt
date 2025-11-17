@@ -47,7 +47,7 @@ class ApiPersonService(
             val responseBody: PersonsResponse = response.body()
             Person(internalId = UUID.fromString(responseBody.data.id))
         }.mapLeft { throwable ->
-            logger.error("Failed to fetch person by NIN: {}, \n Error message: {}", nin, throwable.message)
+            logger.error("Failed to fetch person: {}", throwable.message)
             ClientError.UnexpectedError(throwable)
         }
 }
