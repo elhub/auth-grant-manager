@@ -7,8 +7,8 @@ import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
-import io.ktor.http.contentType
 import io.ktor.http.ContentType
+import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObject
 import org.slf4j.LoggerFactory
