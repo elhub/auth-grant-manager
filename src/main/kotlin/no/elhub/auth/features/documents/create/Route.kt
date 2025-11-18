@@ -23,7 +23,6 @@ fun Route.route(handler: Handler) {
 
         val document = handler(command)
             .getOrElse { error ->
-                println(error.toString())
                 when (error) {
                     is
                     CreateDocumentError.FileGenerationError,
