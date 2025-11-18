@@ -2,7 +2,6 @@ package no.elhub.auth.features.requests.common
 
 import arrow.core.Either
 import arrow.core.raise.either
-import kotlinx.datetime.toKotlinLocalDateTime
 import no.elhub.auth.features.common.AuthorizationParty
 import no.elhub.auth.features.common.AuthorizationPartyRecord
 import no.elhub.auth.features.common.AuthorizationPartyTable
@@ -144,14 +143,14 @@ fun ResultRow.toAuthorizationRequest(
     requestedBy: AuthorizationPartyRecord,
     requestedFrom: AuthorizationPartyRecord
 ) = AuthorizationRequest(
-    id = this[AuthorizationRequestTable.id].toString(),
-    requestType = this[AuthorizationRequestTable.requestType],
+    id = this[AuthorizationRequestTable.id].value,
+    type = this[AuthorizationRequestTable.requestType],
     status = this[AuthorizationRequestTable.status],
     requestedBy = AuthorizationParty(resourceId = requestedBy.resourceId, type = requestedBy.type),
     requestedFrom = AuthorizationParty(resourceId = requestedFrom.resourceId, type = requestedFrom.type),
-    createdAt = this[AuthorizationRequestTable.createdAt].toKotlinLocalDateTime(),
-    updatedAt = this[AuthorizationRequestTable.updatedAt].toKotlinLocalDateTime(),
-    validTo = this[AuthorizationRequestTable.validTo].toKotlinLocalDateTime(),
+    createdAt = this[AuthorizationRequestTable.createdAt],
+    updatedAt = this[AuthorizationRequestTable.updatedAt],
+    validTo = this[AuthorizationRequestTable.validTo],
     properties = properties
 )
 
@@ -166,5 +165,5 @@ fun ResultRow.toAuthorizationRequestProperty() = AuthorizationRequest.Property(
     authorizationRequestId = this[AuthorizationRequestPropertyTable.authorizationRequestId].toString(),
     key = this[AuthorizationRequestPropertyTable.key],
     value = this[AuthorizationRequestPropertyTable.value],
-    createdAt = this[AuthorizationRequestPropertyTable.createdAt].toKotlinLocalDateTime(),
+    createdAt = this[AuthorizationRequestPropertyTable.createdAt],
 )
