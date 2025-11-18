@@ -11,6 +11,7 @@ import no.elhub.auth.features.common.AuthorizationPartyTable
 import no.elhub.auth.features.common.PGEnum
 import no.elhub.auth.features.common.PartyRepository
 import no.elhub.auth.features.common.RepositoryReadError
+import no.elhub.auth.features.common.RepositoryWriteError
 import no.elhub.auth.features.common.toAuthorizationParty
 import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.AuthorizationGrant.Status
@@ -22,18 +23,27 @@ import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.batchInsert
+import org.jetbrains.exposed.sql.insertReturning
 import org.jetbrains.exposed.sql.javatime.CurrentDateTime
 import org.jetbrains.exposed.sql.javatime.datetime
 import org.jetbrains.exposed.sql.javatime.timestamp
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
 import java.util.*
 
 interface GrantRepository {
     fun find(grantId: UUID): Either<RepositoryReadError, AuthorizationGrant>
     fun findScopes(grantId: UUID): Either<RepositoryReadError, List<AuthorizationScope>>
     fun findAll(): Either<RepositoryReadError, List<AuthorizationGrant>>
+    fun insert(
+        grantedFor: AuthorizationParty,
+        grantedBy: AuthorizationParty,
+        grantedTo: AuthorizationParty,
+        scopes: List<AuthorizationScope>
+    ): Either<RepositoryWriteError, AuthorizationGrant>
 }
 
 class ExposedGrantRepository(
@@ -131,12 +141,53 @@ class ExposedGrantRepository(
             scopes
         }
     }
+    override fun insert(
+        grantedFor: AuthorizationParty,
+        grantedBy: AuthorizationParty,
+        grantedTo: AuthorizationParty,
+        scopes: List<AuthorizationScope>
+    ): Either<RepositoryWriteError, AuthorizationGrant> =
+        either {
+            transaction {
+                val grantedForRecord = partyRepository.findOrInsert(grantedFor.type, grantedFor.resourceId)
+                    .mapLeft { RepositoryWriteError.UnexpectedError }
+                    .bind()
+                val grantedByRecord = partyRepository.findOrInsert(grantedBy.type, grantedBy.resourceId)
+                    .mapLeft { RepositoryWriteError.UnexpectedError }
+                    .bind()
+                val grantedToRecord = partyRepository.findOrInsert(grantedTo.type, grantedTo.resourceId)
+                    .mapLeft { RepositoryWriteError.UnexpectedError }
+                    .bind()
+
+                val now = LocalDateTime.now()
+                val grantId = UUID.randomUUID()
+                val insertedGrant = AuthorizationGrantTable.insertReturning {
+                    it[id] = grantId
+                    it[grantStatus] = Status.Active
+                    it[AuthorizationGrantTable.grantedFor] = grantedForRecord.id
+                    it[AuthorizationGrantTable.grantedBy] = grantedByRecord.id
+                    it[AuthorizationGrantTable.grantedTo] = grantedToRecord.id
+                    it[grantedAt] = now
+                    it[validFrom] = now
+                    it[validTo] = now.plusYears(1)
+                }.single()
+
+                if (scopes.isNotEmpty()) {
+                    AuthorizationGrantScopeTable.batchInsert(scopes) { scope ->
+                        this[AuthorizationGrantScopeTable.authorizationGrantId] = grantId
+                        this[AuthorizationGrantScopeTable.authorizationScopeId] = scope.id
+                    }
+                }
+
+                insertedGrant.toAuthorizationGrant(grantedForRecord, grantedByRecord, grantedToRecord)
+            }
+        }.mapLeft { RepositoryWriteError.UnexpectedError }
 }
 
 object AuthorizationGrantScopeTable : Table("auth.authorization_grant_scope") {
     val authorizationGrantId = uuid("authorization_grant_id")
         .references(AuthorizationGrantTable.id, onDelete = ReferenceOption.CASCADE)
-    private val authorizationScopeId = long("authorization_scope_id")
+    val authorizationScopeId = long("authorization_scope_id")
         .references(AuthorizationScopeTable.id, onDelete = ReferenceOption.CASCADE)
     val createdAt = timestamp("created_at").clientDefault { java.time.Instant.now() }
     override val primaryKey = PrimaryKey(authorizationGrantId, authorizationScopeId)

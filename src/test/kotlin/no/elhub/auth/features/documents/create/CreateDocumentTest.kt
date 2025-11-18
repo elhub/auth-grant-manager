@@ -73,7 +73,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
     init {
         extensions(
             VaultTransitTestContainerExtension,
-            PostgresTestContainerExtension,
+            PostgresTestContainerExtension(),
             AuthPersonsTestContainerExtension,
         )
         extension(

@@ -19,7 +19,7 @@ import no.elhub.auth.features.requests.module as requestsModule
 
 class FeatureToggleTest : FunSpec({
     extensions(
-        PostgresTestContainerExtension,
+        PostgresTestContainerExtension(),
     )
 
     test("returns 404 for business endpoints when feature toggle is variable is set to false") {

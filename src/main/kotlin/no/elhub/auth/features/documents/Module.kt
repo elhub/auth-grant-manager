@@ -35,6 +35,8 @@ import no.elhub.auth.features.documents.create.SignatureProvider
 import no.elhub.auth.features.documents.create.VaultConfig
 import no.elhub.auth.features.filegenerator.PdfGenerator
 import no.elhub.auth.features.filegenerator.PdfGeneratorConfig
+import no.elhub.auth.features.grants.common.ExposedGrantRepository
+import no.elhub.auth.features.grants.common.GrantRepository
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
 import org.koin.ktor.ext.get
@@ -110,6 +112,7 @@ fun Application.module() {
 
         singleOf(::PdfGenerator) bind FileGenerator::class
         singleOf(::ExposedDocumentRepository) bind DocumentRepository::class
+        singleOf(::ExposedGrantRepository) bind GrantRepository::class
         singleOf(::ExposedDocumentPropertiesRepository) bind DocumentPropertiesRepository::class
         singleOf(::ExposedPartyRepository) bind PartyRepository::class
         singleOf(::ApiPersonService) bind PersonService::class

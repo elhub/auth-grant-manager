@@ -5,6 +5,7 @@ import com.github.dockerjava.api.model.HostConfig
 import com.github.dockerjava.api.model.PortBinding
 import com.github.dockerjava.api.model.Ports
 import io.kotest.core.listeners.AfterProjectListener
+import io.kotest.core.listeners.AfterSpecListener
 import io.kotest.core.listeners.BeforeSpecListener
 import io.kotest.core.spec.Spec
 import liquibase.Liquibase
@@ -16,16 +17,15 @@ import org.testcontainers.utility.DockerImageName
 import java.nio.file.Paths
 import java.sql.DriverManager
 
-object PostgresTestContainer {
-    private const val POSTGRES_PORT = 5432
-    var started = false
-        private set
-
-    val USERNAME = "postgres"
-    val PASSWORD = "postgres"
-    val DRIVER = "org.postgresql.Driver"
-    val JDBC_URL = "jdbc:postgresql://localhost:$POSTGRES_PORT/auth"
-    val DATABASE_NAME = "auth"
+class PostgresTestContainer {
+    companion object {
+        private const val POSTGRES_PORT = 5432
+        val USERNAME = "postgres"
+        val PASSWORD = "postgres"
+        val DRIVER = "org.postgresql.Driver"
+        val JDBC_URL = "jdbc:postgresql://localhost:$POSTGRES_PORT/auth"
+        val DATABASE_NAME = "auth"
+    }
 
     private val postgres: PostgreSQLContainer by lazy {
         PostgreSQLContainer(DockerImageName.parse("postgres:15-alpine"))
@@ -45,13 +45,10 @@ object PostgresTestContainer {
     fun start() {
         postgres.start()
         migrate(postgres)
-        started = true
     }
 
-    fun stopIfStarted() {
-        if (started) {
-            postgres.stop()
-        }
+    fun stop() {
+        postgres.stop()
     }
 
     private fun migrate(pg: PostgreSQLContainer) {
@@ -75,16 +72,13 @@ object PostgresTestContainer {
     }
 }
 
-object PostgresTestContainerExtension : BeforeSpecListener {
+class PostgresTestContainerExtension : BeforeSpecListener, AfterSpecListener {
+    val postgres = PostgresTestContainer()
     override suspend fun beforeSpec(spec: Spec) {
-        if (!PostgresTestContainer.started) {
-            PostgresTestContainer.start()
-        }
+        postgres.start()
     }
-}
 
-object StopPostgresTestContainerExtension : AfterProjectListener {
-    override suspend fun afterProject() {
-        PostgresTestContainer.stopIfStarted()
+    override suspend fun afterSpec(spec: Spec) {
+        postgres.stop()
     }
 }

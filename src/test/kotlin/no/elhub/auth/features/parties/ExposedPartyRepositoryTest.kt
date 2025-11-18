@@ -20,7 +20,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.UUID
 
 class ExposedPartyRepositoryTest : FunSpec({
-    extension(PostgresTestContainerExtension)
+    extension(PostgresTestContainerExtension())
     val partyRepo = ExposedPartyRepository()
 
     beforeSpec {

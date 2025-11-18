@@ -12,6 +12,7 @@ sealed class DocumentCommand(
     val requestedTo: PartyIdentifier,
     val requestedBy: PartyIdentifier,
     val signedBy: PartyIdentifier,
+
     val meta: DocumentMetaMarker
 )
 

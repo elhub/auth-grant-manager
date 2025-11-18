@@ -17,7 +17,7 @@ import java.util.*
 
 class ExposedDocumentRepositoryTest :
     FunSpec({
-        extensions(PostgresTestContainerExtension)
+        extensions(PostgresTestContainerExtension())
         val partyRepository = ExposedPartyRepository()
         val repository = ExposedDocumentRepository(partyRepository)
 

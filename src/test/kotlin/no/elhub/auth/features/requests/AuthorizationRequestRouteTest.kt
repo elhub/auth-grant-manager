@@ -32,7 +32,7 @@ import no.elhub.auth.module as applicationModule
 
 class AuthorizationRequestRouteTest : FunSpec({
     extensions(
-        PostgresTestContainerExtension,
+        PostgresTestContainerExtension(),
         RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-party.sql"),
         RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-requests.sql")
     )

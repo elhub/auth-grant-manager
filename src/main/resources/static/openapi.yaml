@@ -128,6 +128,13 @@ paths:
           description: The id of the authorization document to change.
           schema:
             type: string
+      requestBody:
+        required: true
+        content:
+          application/pdf:
+            schema:
+              type: string
+              format: binary
       responses:
         "200":
           description: The document was registered and accepted.

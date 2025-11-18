@@ -20,23 +20,17 @@ class RunPostgresScriptExtension(
         private const val JDBC_USER = "app"
         private const val JDBC_PASSWORD = "app"
 
-        private val executedScripts: MutableSet<String> =
-            Collections.synchronizedSet(mutableSetOf())
-
         private fun getConnection(): Connection = DriverManager.getConnection(JDBC_URL, JDBC_USER, JDBC_PASSWORD)
     }
 
     override suspend fun beforeSpec(spec: Spec) {
-        val firstTime = executedScripts.add(scriptResourcePath)
-        if (firstTime) {
-            getConnection().use { connection ->
-                val runner = ScriptRunner(connection)
-                val reader = Resources.getResourceAsReader(scriptResourcePath)
+        getConnection().use { connection ->
+            val runner = ScriptRunner(connection)
+            val reader = Resources.getResourceAsReader(scriptResourcePath)
 
-                runner.runScript(reader)
-                reader.close()
-                println("Executed script: $scriptResourcePath")
-            }
+            runner.runScript(reader)
+            reader.close()
+            println("Executed script: $scriptResourcePath")
         }
     }
 }
