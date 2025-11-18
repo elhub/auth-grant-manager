@@ -32,10 +32,10 @@ typealias AuthorizationRequestResponse = JsonApiResponse.SingleDocumentWithRelat
 
 fun AuthorizationRequest.toResponse() = AuthorizationRequestResponse(
     data = JsonApiResponseResourceObjectWithRelationships(
-        id = this.id,
+        id = this.id.toString(),
         type = (AuthorizationRequest::class).simpleName ?: "AuthorizationRequest",
         attributes = RequestResponseAttributes(
-            requestType = this.requestType.toString(),
+            requestType = this.type.toString(),
             status = this.status.toString(),
             createdAt = this.createdAt.toString(),
             updatedAt = this.updatedAt.toString(),
