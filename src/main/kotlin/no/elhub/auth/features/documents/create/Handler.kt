@@ -20,13 +20,21 @@ class Handler(
     private val fileSigningService: FileSigningService,
     private val signatureProvider: SignatureProvider,
     private val documentRepository: DocumentRepository,
-    private val documentPropertiesRepository: DocumentPropertiesRepository
+    private val documentPropertiesRepository: DocumentPropertiesRepository,
+    private val personService: PersonService,
 ) {
     suspend operator fun invoke(command: DocumentCommand): Either<CreateDocumentError, AuthorizationDocument> {
         val requestedFromParty = command.requestedFrom.toAuthorizationParty()
+            .getOrElse { return CreateDocumentError.RequestedFromPartyError.left() }
+
         val requestedByParty = command.requestedBy.toAuthorizationParty()
+            .getOrElse { return CreateDocumentError.RequestedByPartyError.left() }
+
         val requestedToParty = command.requestedTo.toAuthorizationParty()
+            .getOrElse { return CreateDocumentError.RequestedToPartyError.left() }
+
         val signedByParty = command.signedBy.toAuthorizationParty()
+            .getOrElse { return CreateDocumentError.SignedByPartyError.left() }
 
         val file = fileGenerator.generate(
             signerNin = command.signedBy.idValue,
@@ -49,6 +57,7 @@ class Handler(
             .getOrElse { return CreateDocumentError.SigningError.left() }
 
         val documentType = command.toAuthorizationDocumentType()
+
         val documentToCreate = AuthorizationDocument.create(
             type = documentType,
             file = signedFile,
@@ -69,6 +78,24 @@ class Handler(
 
         return savedDocument.right()
     }
+
+    private suspend fun PartyIdentifier.toAuthorizationParty(): Either<CreateDocumentError, AuthorizationParty> =
+        when (this.idType) {
+            PartyIdentifierType.NationalIdentityNumber ->
+                personService.findOrCreateByNin(idValue)
+                    .map { AuthorizationParty(resourceId = it.internalId.toString(), type = PartyType.Person) }
+                    .mapLeft { CreateDocumentError.PersonError }
+
+            PartyIdentifierType.OrganizationNumber -> AuthorizationParty(
+                resourceId = this.idValue,
+                type = PartyType.Organization
+            ).right()
+
+            PartyIdentifierType.GlobalLocationNumber -> AuthorizationParty(
+                resourceId = this.idValue,
+                type = PartyType.OrganizationEntity
+            ).right()
+        }
 }
 
 sealed class CreateDocumentError {
@@ -79,26 +106,12 @@ sealed class CreateDocumentError {
     data object SigningError : CreateDocumentError()
     data object MappingError : CreateDocumentError()
     data object PersistenceError : CreateDocumentError()
-    data object PartyError : CreateDocumentError()
+    data object RequestedFromPartyError : CreateDocumentError()
+    data object RequestedByPartyError : CreateDocumentError()
+    data object RequestedToPartyError : CreateDocumentError()
+    data object SignedByPartyError : CreateDocumentError()
+    data object PersonError : CreateDocumentError()
 }
-
-fun PartyIdentifier.toAuthorizationParty(): AuthorizationParty =
-    when (this.idType) {
-        PartyIdentifierType.NationalIdentityNumber -> AuthorizationParty(
-            resourceId = this.idValue,
-            type = PartyType.Person
-        )
-
-        PartyIdentifierType.OrganizationNumber -> AuthorizationParty(
-            resourceId = this.idValue,
-            type = PartyType.Organization
-        )
-
-        PartyIdentifierType.GlobalLocationNumber -> AuthorizationParty(
-            resourceId = this.idValue,
-            type = PartyType.OrganizationEntity
-        )
-    }
 
 fun Map<String, String>.toDocumentProperties(documentId: UUID) =
     this.map { (key, value) ->
