@@ -9,7 +9,6 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.common.validateId
-import no.elhub.auth.features.documents.common.toResponse
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import java.util.*
 
@@ -33,7 +32,7 @@ fun Route.route(handler: Handler) {
 
         call.respond(
             status = HttpStatusCode.OK,
-            message = document.toResponse()
+            message = document.toGetResponse()
         )
     }
 

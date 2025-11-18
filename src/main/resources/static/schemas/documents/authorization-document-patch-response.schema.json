@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Create Document Response",
+  "type": "object",
+  "properties": {
+    "data": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "authorization-document-definitions.json#/$defs/id"
+        },
+        "type": {
+          "$ref": "authorization-document-definitions.json#/$defs/type"
+        },
+        "attributes": {
+          "type": "object",
+          "properties": {
+            "documentType": {
+              "$ref": "authorization-document-definitions.json#/$defs/attributes/$defs/documentType"
+            },
+            "status": {
+              "$ref": "authorization-document-definitions.json#/$defs/attributes/$defs/status",
+              "examples": ["Signed"]
+            }
+          }
+        },
+        "relationships": {
+          "type": "object",
+          "properties": {
+            "grant": {
+              "$ref": "authorization-document-definitions.json#/$defs/relationships/$defs/grant"
+            }
+          }
+        }
+      }
+    }
+  },
+  "required": ["data"]
+}

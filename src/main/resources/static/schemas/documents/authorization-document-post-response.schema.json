@@ -1,4 +1,32 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$ref": "authorization-document-get-response.schema.json"
+  "title": "Create Document Response",
+  "type": "object",
+  "properties": {
+    "data": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "authorization-document-definitions.json#/$defs/id"
+        },
+        "type": {
+          "$ref": "authorization-document-definitions.json#/$defs/type"
+        },
+        "links": {
+          "type": "object",
+          "properties": {
+            "self": {
+              "$ref": "authorization-document-definitions.json#/$defs/links/$defs/self"
+            },
+            "file": {
+              "$ref": "authorization-document-definitions.json#/$defs/links/$defs/file"
+            }
+          },
+          "required": ["self", "file"]
+        }
+      },
+      "required": ["id", "type", "links"]
+    }
+  },
+  "required": ["data"]
 }

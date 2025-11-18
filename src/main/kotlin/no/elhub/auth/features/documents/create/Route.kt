@@ -7,7 +7,6 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
 import no.elhub.auth.features.documents.AuthorizationDocument
-import no.elhub.auth.features.documents.common.toResponse
 
 fun Route.route(handler: Handler) {
     post {
@@ -45,7 +44,7 @@ fun Route.route(handler: Handler) {
 
         call.respond(
             status = HttpStatusCode.Created,
-            message = document.toResponse()
+            message = document.toCreateDocumentResponse()
         )
     }
 }
