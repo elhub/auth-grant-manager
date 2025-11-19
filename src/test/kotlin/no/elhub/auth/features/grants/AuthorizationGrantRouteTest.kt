@@ -27,9 +27,6 @@ class AuthorizationGrantRouteTest : FunSpec({
         RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-party.sql")
     )
 
-    beforeSpec {
-        // do something
-    }
 
     context("GET /authorization-grants/{id}") {
         testApplication {

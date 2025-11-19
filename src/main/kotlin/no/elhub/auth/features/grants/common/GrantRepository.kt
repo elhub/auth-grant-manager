@@ -54,7 +54,6 @@ class ExposedGrantRepository(
 
     override fun findAll(): Either<RepositoryReadError, List<AuthorizationGrant>> = either {
         transaction {
-            // 1) Get all grants
             val grantRows = AuthorizationGrantTable
                 .selectAll()
                 .toList()
@@ -63,7 +62,6 @@ class ExposedGrantRepository(
                 return@transaction emptyList<AuthorizationGrant>()
             }
 
-            // 2) Collect all distinct party ids we need (for/by/to)
             // TODO use authorization party repo here !!
             val partyIds: List<UUID> = grantRows
                 .flatMap { g ->
@@ -76,7 +74,6 @@ class ExposedGrantRepository(
                 .toSet() // distinct
                 .toList()
 
-            // 3) Fetch all parties in ONE query and index by id
             val partiesById: Map<UUID, AuthorizationPartyRecord> =
                 AuthorizationPartyTable
                     .selectAll()

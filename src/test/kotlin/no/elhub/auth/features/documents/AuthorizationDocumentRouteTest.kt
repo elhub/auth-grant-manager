@@ -33,6 +33,8 @@ import no.elhub.auth.features.grants.GRANTS_PATH
 import no.elhub.auth.features.grants.PermissionType
 import no.elhub.auth.features.grants.common.AuthorizationGrantResponse
 import no.elhub.auth.features.grants.common.AuthorizationGrantScopesResponse
+import java.time.LocalDate
+import java.time.LocalDateTime
 import no.elhub.auth.features.grants.module as grantsModule
 import no.elhub.auth.module as applicationModule
 
@@ -201,6 +203,15 @@ class AuthorizationDocumentRouteTest :
                     grantId = patchDocumentResponse.data.relationships.grant.data.id
                 }
 
+                test("Get document should give status Signed") {
+                    val response = client.get(linkToDocument)
+                    response.status shouldBe HttpStatusCode.OK
+                    val getDocumentResponse: GetDocumentResponse = response.body()
+                    getDocumentResponse.data.attributes.shouldNotBeNull().apply {
+                        status shouldBe AuthorizationDocument.Status.Signed.toString()
+                    }
+                }
+
                 test("Get grant by id should return proper response") {
                     val response = client.get("$GRANTS_PATH/$grantId")
                     response.status shouldBe HttpStatusCode.OK
@@ -211,8 +222,8 @@ class AuthorizationDocumentRouteTest :
                         attributes.shouldNotBeNull().apply {
                             status shouldBe "Active"
                             grantedAt.shouldNotBeNull()
-                            validFrom.shouldNotBeNull()
-                            validTo.shouldNotBeNull()
+                            LocalDateTime.parse(validFrom).toLocalDate() shouldBe LocalDate.now()
+                            LocalDateTime.parse(validTo).toLocalDate() shouldBe LocalDate.now().plusYears(1)
                         }
                         relationships.apply {
                             grantedFor.apply {

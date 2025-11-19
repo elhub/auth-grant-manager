@@ -38,7 +38,7 @@ fun Route.route(handler: Handler) {
             )
         ).getOrElse { error ->
             when (error) {
-                ConfirmDocumentError.DocumentNotFound -> call.respond(HttpStatusCode.NotFound)
+                ConfirmDocumentError.DocumentNotFoundError -> call.respond(HttpStatusCode.NotFound)
                 ConfirmDocumentError.DocumentReadError,
                 ConfirmDocumentError.DocumentUpdateError,
                 ConfirmDocumentError.ScopeReadError,
