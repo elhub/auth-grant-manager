@@ -8,39 +8,42 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
 import no.elhub.auth.features.common.InputError
 import no.elhub.auth.features.common.toApiErrorResponse
+import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.common.toResponse
-import no.elhub.auth.features.requests.get.Query
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
-import no.elhub.auth.features.requests.get.Handler as GetHandler
 
-fun Route.route(createHandler: Handler, getHandler: GetHandler) {
+fun Route.route(handler: Handler) {
     post {
-        val payload = runCatching {
-            call.receive<Request>()
+        val requestBody = runCatching {
+            call.receive<CreateRequest>()
         }.getOrElse {
             val (status, body) = InputError.MalformedInputError.toApiErrorResponse()
             call.respond(status, JsonApiErrorCollection(listOf(body)))
             return@post
         }
 
-        val requestId = createHandler(payload.toCommand())
+        val requestType = requestBody.data.attributes.requestType
+        val requestMeta = requestBody.data.meta
+        val command = when (requestType) {
+            AuthorizationRequest.Type.ChangeOfSupplierConfirmation -> requestMeta.toChangeOfSupplierRequestCommand()
+        }.getOrElse {
+            call.respond(HttpStatusCode.BadRequest)
+            return@post
+        }
+
+        val request = handler(command)
             .getOrElse { error ->
                 when (error) {
                     is
-                    Error.MappingError,
-                    Error.PersistenceError
+                    CreateRequestError.MappingError,
+                    CreateRequestError.PersistenceError,
+                    CreateRequestError.RequestedByPartyError,
+                    CreateRequestError.RequestedFromPartyError
                     -> call.respond(HttpStatusCode.InternalServerError)
                 }
                 return@post
             }
 
-        val authorizationRequest = getHandler(Query(requestId))
-            .getOrElse { err ->
-                val (status, body) = err.toApiErrorResponse()
-                call.respond(status, JsonApiErrorCollection(listOf(body)))
-                return@post
-            }
-
-        call.respond(HttpStatusCode.Created, authorizationRequest.toResponse())
+        call.respond(HttpStatusCode.Created, request.toResponse())
     }
 }

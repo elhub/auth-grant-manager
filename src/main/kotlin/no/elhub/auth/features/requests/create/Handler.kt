@@ -4,17 +4,82 @@ import arrow.core.Either
 import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
+import no.elhub.auth.features.common.AuthorizationParty
+import no.elhub.auth.features.common.PartyIdentifier
+import no.elhub.auth.features.common.PartyIdentifierType
+import no.elhub.auth.features.common.PartyType
+import no.elhub.auth.features.requests.AuthorizationRequest
+import no.elhub.auth.features.requests.common.AuthorizationRequestProperty
+import no.elhub.auth.features.requests.common.RequestPropertiesRepository
 import no.elhub.auth.features.requests.common.RequestRepository
+import no.elhub.auth.features.requests.create.command.RequestCommand
+import no.elhub.auth.features.requests.create.command.toAuthorizationRequestType
 import java.util.UUID
 
-class Handler(private val repo: RequestRepository) {
-    operator fun invoke(command: Command): Either<Error, UUID> =
-        repo.insert(command.type, command.requester, command.requestee)
-            .getOrElse { return Error.PersistenceError.left() }
-            .right()
+class Handler(
+    private val requestRepo: RequestRepository,
+    private val requestPropertyRepo: RequestPropertiesRepository
+) {
+    operator fun invoke(command: RequestCommand): Either<CreateRequestError, AuthorizationRequest> {
+        val requestedFromParty = command.requestedFrom.toAuthorizationParty()
+            .getOrElse { return CreateRequestError.RequestedFromPartyError.left() }
+
+        val requestedByParty = command.requestedBy.toAuthorizationParty()
+            .getOrElse { return CreateRequestError.RequestedByPartyError.left() }
+
+        val requestType = command.toAuthorizationRequestType()
+
+        val requestToCreate = AuthorizationRequest.create(
+            type = requestType,
+            requestedFrom = requestedFromParty,
+            requestedBy = requestedByParty,
+        )
+
+        val savedRequest = requestRepo.insert(requestToCreate)
+            .getOrElse { return CreateRequestError.PersistenceError.left() }
+
+        val requestProperties = command.meta
+            .toMetaAttributes()
+            .toRequestProperties(savedRequest.id)
+
+        requestPropertyRepo.insert(requestProperties)
+
+        return savedRequest.right()
+    }
+
+    // TODO duplicate to documents flow -> should be moved to common
+    private fun PartyIdentifier.toAuthorizationParty(): Either<CreateRequestError, AuthorizationParty> =
+        when (this.idType) {
+            // TODO need to handle with auth-persons here
+            PartyIdentifierType.NationalIdentityNumber -> AuthorizationParty(
+                resourceId = this.idValue,
+                type = PartyType.Person
+            ).right()
+
+            PartyIdentifierType.OrganizationNumber -> AuthorizationParty(
+                resourceId = this.idValue,
+                type = PartyType.Organization
+            ).right()
+
+            PartyIdentifierType.GlobalLocationNumber -> AuthorizationParty(
+                resourceId = this.idValue,
+                type = PartyType.OrganizationEntity
+            ).right()
+        }
 }
 
-sealed class Error {
-    data object MappingError : Error()
-    data object PersistenceError : Error()
+sealed class CreateRequestError {
+    data object MappingError : CreateRequestError()
+    data object PersistenceError : CreateRequestError()
+    data object RequestedFromPartyError : CreateRequestError()
+    data object RequestedByPartyError : CreateRequestError()
 }
+
+fun Map<String, String>.toRequestProperties(requestId: UUID) =
+    this.map { (key, value) ->
+        AuthorizationRequestProperty(
+            requestId = requestId,
+            key = key,
+            value = value
+        )
+    }.toList()

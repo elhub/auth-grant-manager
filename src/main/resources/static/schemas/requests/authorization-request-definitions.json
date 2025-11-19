@@ -42,22 +42,22 @@
       "$defs": {
         "requestedFromName": {
           "type": "string",
-          "description": "The name of the organization or person who the authorization document is requested from.",
+          "description": "The name of the organization or person who the authorization request is requested from.",
           "examples": ["Ola Normann"]
         },
         "requestedForMeteringPointId": {
           "type": "string",
-          "description": "The unique identifier of the metering point associated with the authorization document.",
+          "description": "The unique identifier of the metering point associated with the authorization request.",
           "examples": ["1234567890123"]
         },
         "requestedForMeteringPointAddress": {
           "type": "string",
-          "description": "The address of the metering point associated with the authorization document.",
+          "description": "The address of the metering point associated with the authorization request.",
           "examples": ["Example Street 1, 1234 Oslo"]
         },
         "balanceSupplierContractName": {
           "type": "string",
-          "description": "The unique name of a supplier contract associated with the authorization document.",
+          "description": "The unique name of a supplier contract associated with the authorization request.",
           "examples": ["ExampleSupplierContract"]
         }
       }
@@ -69,6 +69,17 @@
         },
         "requestedFrom": {
           "$ref": "../base-definitions.schema.json#/definitions/relationshipParty"
+        }
+      }
+    },
+    "links": {
+      "$defs": {
+        "self": {
+          "type": "string",
+          "format": "uri",
+          "examples": [
+            "https://api.elhub.no/authorization-requests/123e4567-e89b-12d3-a456-426614174000"
+          ]
         }
       }
     }

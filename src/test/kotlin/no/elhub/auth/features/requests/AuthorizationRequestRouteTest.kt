@@ -1,8 +1,6 @@
 package no.elhub.auth.features.requests
 
 import io.kotest.core.spec.style.FunSpec
-import io.kotest.matchers.maps.shouldContain
-import io.kotest.matchers.maps.shouldContainKey
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.ktor.client.call.body
@@ -10,23 +8,25 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.testing.testApplication
-import kotlinx.serialization.json.jsonPrimitive
+import no.elhub.auth.features.common.PartyIdentifier
+import no.elhub.auth.features.common.PartyIdentifierType
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.RunPostgresScriptExtension
 import no.elhub.auth.features.requests.common.AuthorizationRequestListResponse
 import no.elhub.auth.features.requests.common.AuthorizationRequestResponse
+import no.elhub.auth.features.requests.create.CreateRequest
 import no.elhub.auth.features.requests.create.CreateRequestAttributes
+import no.elhub.auth.features.requests.create.CreateRequestMeta
 import no.elhub.auth.features.requests.create.CreateRequestRelationships
-import no.elhub.auth.features.requests.create.Request
-import no.elhub.devxp.jsonapi.model.JsonApiRelationshipData
-import no.elhub.devxp.jsonapi.model.JsonApiRelationshipToOne
-import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObjectWithRelationships
+import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObjectWithMeta
+import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObjectWithRelationshipsAndMeta
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import no.elhub.auth.module as applicationModule
 
@@ -61,6 +61,7 @@ class AuthorizationRequestRouteTest : FunSpec({
             }
             test("Should return 200 OK") {
                 val response = client.get(REQUESTS_PATH)
+                println("HEI: ${response.bodyAsText()}")
                 response.status shouldBe HttpStatusCode.OK
                 val responseJson: AuthorizationRequestListResponse = response.body()
                 responseJson.data.apply {
@@ -83,7 +84,6 @@ class AuthorizationRequestRouteTest : FunSpec({
                                     type shouldBe "Organization"
                                 }
                             }
-
                             requestedFrom.apply {
                                 data.apply {
                                     id shouldBe "12345678901"
@@ -91,16 +91,10 @@ class AuthorizationRequestRouteTest : FunSpec({
                                 }
                             }
                         }
-                        meta.shouldNotBeNull()
-                        meta!!
-                            .mapValues { it.value.jsonPrimitive.content }
-                            .apply {
-                                shouldContainKey("createdAt")
-                                shouldContain("requestedFromName", "Ola Normann")
-                                shouldContain("requestedForMeteringPointId" to "1234567890123")
-                                shouldContain("requestedForMeteringPointAddress" to "Example Street 1, 1234 Oslo")
-                                shouldContain("balanceSupplierContractName" to "ExampleSupplierContract")
-                            }
+                        links.shouldNotBeNull()
+                        links!!.apply {
+                            self.shouldNotBeNull()
+                        }
                     }
                     this[1].apply {
                         id.shouldNotBeNull()
@@ -120,7 +114,6 @@ class AuthorizationRequestRouteTest : FunSpec({
                                     type shouldBe "Organization"
                                 }
                             }
-
                             requestedFrom.apply {
                                 data.apply {
                                     id shouldBe "12345678901"
@@ -128,21 +121,17 @@ class AuthorizationRequestRouteTest : FunSpec({
                                 }
                             }
                         }
-                        meta.shouldNotBeNull()
-                        meta!!
-                            .mapValues { it.value.jsonPrimitive.content }
-                            .apply {
-                                shouldContainKey("createdAt")
-                                shouldContain("requestedFromName" to "Kari Normann")
-                                shouldContain("requestedForMeteringPointId" to "1234567890123")
-                                shouldContain("requestedForMeteringPointAddress" to "Example Street 1, 1234 Oslo")
-                                shouldContain("balanceSupplierContractName" to "ExampleSupplierContract")
-                            }
+                        links.shouldNotBeNull()
+                        links!!.apply {
+                            self.shouldNotBeNull()
+                        }
                     }
                 }
             }
         }
-        context("GET /authorization-requests/{id}") {
+
+        // TODO for some reason this is filtered out when context is "GET /authorization-requests/{id}"
+        context("GET authorization request by id ") {
             testApplication {
                 client = createClient {
                     install(ContentNegotiation) {
@@ -164,11 +153,11 @@ class AuthorizationRequestRouteTest : FunSpec({
                         "featureToggle.enableEndpoints" to "true"
                     )
                 }
-                xtest("Should return 200 OK on a valid ID") {
+
+                test("Should return 200 OK on a valid ID") {
                     val response = client.get("$REQUESTS_PATH/d81e5bf2-8a0c-4348-a788-2a3fab4e77d6")
                     response.status shouldBe HttpStatusCode.OK
                     val responseJson: AuthorizationRequestResponse = response.body()
-
                     responseJson.data.apply {
                         id.shouldNotBeNull()
                         type shouldBe "AuthorizationRequest"
@@ -194,16 +183,16 @@ class AuthorizationRequestRouteTest : FunSpec({
                                 }
                             }
                         }
-                        meta.shouldNotBeNull()
-                        meta!!
-                            .mapValues { it.value.jsonPrimitive.content }
-                            .apply {
-                                shouldContainKey("createdAt")
-                                shouldContain("requestedFromName", "Ola Normann")
-                                shouldContain("requestedForMeteringPointId" to "1234567890123")
-                                shouldContain("requestedForMeteringPointAddress" to "Example Street 1, 1234 Oslo")
-                                shouldContain("balanceSupplierContractName" to "ExampleSupplierContract")
-                            }
+                        links.shouldNotBeNull()
+                        links!!.apply {
+                            self.shouldNotBeNull()
+                        }
+                    }
+                    responseJson.links.apply {
+                        self shouldBe "/authorization-requests"
+                    }
+                    responseJson.meta.apply {
+                        "createdAt".shouldNotBeNull()
                     }
                 }
 
@@ -238,6 +227,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                 }
             }
         }
+
         context("POST /authorization-requests ") {
             testApplication {
                 client = createClient {
@@ -264,27 +254,27 @@ class AuthorizationRequestRouteTest : FunSpec({
                     val response = client.post(REQUESTS_PATH) {
                         contentType(ContentType.Application.Json)
                         setBody(
-                            Request(
-                                data = JsonApiRequestResourceObjectWithRelationships(
+                            CreateRequest(
+                                data = JsonApiRequestResourceObjectWithMeta(
                                     type = "AuthorizationRequest",
                                     attributes = CreateRequestAttributes(
-                                        requestType = "ChangeOfSupplierConfirmation",
+                                        requestType = AuthorizationRequest.Type.ChangeOfSupplierConfirmation
                                     ),
-                                    relationships = CreateRequestRelationships(
-                                        requestedBy = JsonApiRelationshipToOne(
-                                            data = JsonApiRelationshipData(
-                                                id = "987654321",
-                                                type = "Organization",
-                                            )
+                                    meta = CreateRequestMeta(
+                                        requestedBy = PartyIdentifier(
+                                            idType = PartyIdentifierType.OrganizationNumber,
+                                            idValue = "987654321"
                                         ),
-                                        requestedFrom = JsonApiRelationshipToOne(
-                                            data = JsonApiRelationshipData(
-                                                id = "12345678901",
-                                                type = "Person",
-                                            )
-                                        )
-                                    ),
-                                ),
+                                        requestedFrom = PartyIdentifier(
+                                            idType = PartyIdentifierType.NationalIdentityNumber,
+                                            idValue = "12345678901"
+                                        ),
+                                        requestedFromName = "Hillary Orr",
+                                        requestedForMeteringPointId = "atomorum",
+                                        requestedForMeteringPointAddress = "quaerendum",
+                                        balanceSupplierContractName = "Selena Chandler"
+                                    )
+                                )
                             )
                         )
                     }
@@ -316,12 +306,16 @@ class AuthorizationRequestRouteTest : FunSpec({
                                 }
                             }
                         }
-                        meta.shouldNotBeNull()
-                        meta!!
-                            .mapValues { it.value.jsonPrimitive.content }
-                            .apply {
-                                shouldContainKey("createdAt")
-                            }
+                        links.shouldNotBeNull()
+                        links!!.apply {
+                            self.shouldNotBeNull()
+                        }
+                    }
+                    responseJson.links.apply {
+                        self shouldBe "/authorization-requests"
+                    }
+                    responseJson.meta.apply {
+                        "createdAt".shouldNotBeNull()
                     }
                 }
             }

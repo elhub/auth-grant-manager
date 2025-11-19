@@ -13,15 +13,12 @@ data class AuthorizationRequest(
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime,
     val validTo: LocalDateTime,
-    val properties: List<Property> = emptyList()
 ) {
     companion object {
         fun create(
             type: Type,
             requestedBy: AuthorizationParty,
             requestedFrom: AuthorizationParty,
-            validTo: LocalDateTime,
-            properties: List<Property> = emptyList()
         ): AuthorizationRequest = AuthorizationRequest(
             id = UUID.randomUUID(),
             type = type,
@@ -30,8 +27,7 @@ data class AuthorizationRequest(
             requestedFrom = requestedFrom,
             createdAt = LocalDateTime.now(),
             updatedAt = LocalDateTime.now(),
-            validTo = validTo,
-            properties = properties
+            validTo = LocalDateTime.now().plusDays(30) // TODO not clear about this field - why 30 days ?
         )
     }
 

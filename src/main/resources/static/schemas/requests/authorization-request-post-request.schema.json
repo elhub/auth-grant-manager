@@ -27,6 +27,12 @@
           "type": "object",
           "description": "Additional meta-information related to the resource. Most of this information is used for informational purposes.",
           "properties": {
+            "requestedBy": {
+              "$ref": "authorization-request-definitions.json#/$defs/relationships/$defs/requestedBy"
+            },
+            "requestedFrom": {
+              "$ref": "authorization-request-definitions.json#/$defs/relationships/$defs/requestedFrom"
+            },
             "requestedFromName": {
               "$ref": "authorization-request-definitions.json#/$defs/meta/$defs/requestedFromName"
             },
@@ -38,18 +44,6 @@
             },
             "balanceSupplierContractName": {
               "$ref": "authorization-request-definitions.json#/$defs/meta/$defs/balanceSupplierContractName"
-            }
-          }
-        },
-        "relationships": {
-          "type": "object",
-          "description": "The related entities of the authorization request (persons and organizations).",
-          "properties": {
-            "requestedBy": {
-              "$ref": "authorization-request-definitions.json#/$defs/relationships/$defs/requestedBy"
-            },
-            "requestedFrom": {
-              "$ref": "authorization-request-definitions.json#/$defs/relationships/$defs/requestedFrom"
             }
           }
         }
