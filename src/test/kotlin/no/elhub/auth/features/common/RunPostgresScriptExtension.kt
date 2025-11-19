@@ -6,7 +6,6 @@ import org.apache.ibatis.io.Resources
 import org.apache.ibatis.jdbc.ScriptRunner
 import java.sql.Connection
 import java.sql.DriverManager
-import java.util.Collections
 
 /**
  * @param scriptResourcePath
