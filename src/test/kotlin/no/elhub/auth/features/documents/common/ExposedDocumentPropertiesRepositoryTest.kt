@@ -18,7 +18,7 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 class ExposedDocumentPropertiesRepositoryTest : FunSpec({
-    extensions(PostgresTestContainerExtension)
+    extensions(PostgresTestContainerExtension())
 
     val repository = ExposedDocumentPropertiesRepository()
     val documentRepository = ExposedDocumentRepository(partyRepo = ExposedPartyRepository())

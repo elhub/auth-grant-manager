@@ -3,8 +3,8 @@ ktor:
     modules:
       - no.elhub.auth.ApplicationKt.module
       - no.elhub.auth.features.openapi.ModuleKt.module
-      - no.elhub.auth.features.documents.ModuleKt.module
       - no.elhub.auth.features.grants.ModuleKt.module
+      - no.elhub.auth.features.documents.ModuleKt.module
       - no.elhub.auth.features.requests.ModuleKt.module
   deployment:
     port: 8080

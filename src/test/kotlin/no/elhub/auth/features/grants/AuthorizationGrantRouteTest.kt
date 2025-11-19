@@ -20,7 +20,7 @@ import no.elhub.auth.module as applicationModule
 
 class AuthorizationGrantRouteTest : FunSpec({
     extensions(
-        PostgresTestContainerExtension,
+        PostgresTestContainerExtension(),
         RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-grants.sql"),
         RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-scopes.sql"),
         RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-grant-scopes.sql"),

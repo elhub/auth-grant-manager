@@ -50,7 +50,5 @@ fun AuthorizationDocument.toGetResponse() =
                 )
             )
         ),
-        links = JsonApiLinks.ResourceObjectLink(
-            self = "/authorization-documents/${this.id}",
-        )
+        links = JsonApiLinks.ResourceObjectLink("/authorization-documents/${this.id}")
     )
