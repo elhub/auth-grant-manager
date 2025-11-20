@@ -26,12 +26,6 @@ data class CreateRequestMeta(
     val balanceSupplierContractName: String
 ) : JsonApiResourceMeta
 
-@Serializable
-data class CreateRequestRelationships(
-    val requestedBy: PartyIdentifier,
-    val requestedFrom: PartyIdentifier,
-) : JsonApiRelationships
-
 typealias CreateRequest = JsonApiRequest.SingleDocumentWithMeta<CreateRequestAttributes, CreateRequestMeta>
 
 fun CreateRequestMeta.toChangeOfSupplierRequestCommand(): Either<RequestValidationError, ChangeOfSupplierRequestCommand> = ChangeOfSupplierRequestCommand(
