@@ -59,7 +59,6 @@ class AuthorizationRequestRouteTest : FunSpec({
             }
             test("Should return 200 OK") {
                 val response = client.get(REQUESTS_PATH)
-                println("HEI: ${response.bodyAsText()}")
                 response.status shouldBe HttpStatusCode.OK
                 val responseJson: AuthorizationRequestListResponse = response.body()
                 responseJson.data.apply {
