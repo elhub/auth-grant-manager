@@ -40,6 +40,14 @@
     },
     "meta": {
       "$defs": {
+        "requestedBy": {
+          "description": "The party identifier of the actor requesting the authorization request",
+          "$ref": "../base-definitions.schema.json#/definitions/partyIdentifier"
+        },
+        "requestedFrom": {
+          "description": "The party identifier representing the owner of the access or rights for which the authorization request is being requested.",
+          "$ref": "../base-definitions.schema.json#/definitions/partyIdentifier"
+        },
         "requestedFromName": {
           "type": "string",
           "description": "The name of the organization or person who the authorization request is requested from.",
@@ -59,16 +67,6 @@
           "type": "string",
           "description": "The unique name of a supplier contract associated with the authorization request.",
           "examples": ["ExampleSupplierContract"]
-        }
-      }
-    },
-    "relationships": {
-      "$defs": {
-        "requestedBy": {
-          "$ref": "../base-definitions.schema.json#/definitions/relationshipParty"
-        },
-        "requestedFrom": {
-          "$ref": "../base-definitions.schema.json#/definitions/relationshipParty"
         }
       }
     },

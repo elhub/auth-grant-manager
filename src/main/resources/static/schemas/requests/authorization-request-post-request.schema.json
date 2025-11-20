@@ -28,10 +28,10 @@
           "description": "Additional meta-information related to the resource. Most of this information is used for informational purposes.",
           "properties": {
             "requestedBy": {
-              "$ref": "authorization-request-definitions.json#/$defs/relationships/$defs/requestedBy"
+              "$ref": "authorization-request-definitions.json#/$defs/meta/$defs/requestedBy"
             },
             "requestedFrom": {
-              "$ref": "authorization-request-definitions.json#/$defs/relationships/$defs/requestedFrom"
+              "$ref": "authorization-request-definitions.json#/$defs/meta/$defs/requestedFrom"
             },
             "requestedFromName": {
               "$ref": "authorization-request-definitions.json#/$defs/meta/$defs/requestedFromName"
