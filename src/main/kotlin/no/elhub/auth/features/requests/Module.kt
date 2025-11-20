@@ -6,7 +6,9 @@ import io.ktor.server.routing.routing
 import no.elhub.auth.features.common.ExposedPartyRepository
 import no.elhub.auth.features.common.PartyRepository
 import no.elhub.auth.features.common.shouldRegisterEndpoint
+import no.elhub.auth.features.requests.common.ExposedRequestPropertiesRepository
 import no.elhub.auth.features.requests.common.ExposedRequestRepository
+import no.elhub.auth.features.requests.common.RequestPropertiesRepository
 import no.elhub.auth.features.requests.common.RequestRepository
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
@@ -26,6 +28,7 @@ const val REQUESTS_PATH = "/authorization-requests"
 fun Application.module() {
     koinModule {
         singleOf(::ExposedRequestRepository) bind RequestRepository::class
+        singleOf(::ExposedRequestPropertiesRepository) bind RequestPropertiesRepository::class
         singleOf(::ExposedPartyRepository) bind PartyRepository::class
         singleOf(::ConfirmHandler)
         singleOf(::CreateHandler)
@@ -37,7 +40,7 @@ fun Application.module() {
         route(REQUESTS_PATH) {
             shouldRegisterEndpoint {
                 confirmRoute(get())
-                createRoute(get(), get())
+                createRoute(get())
                 getRoute(get())
                 queryRoute(get())
             }

@@ -4,7 +4,6 @@ import arrow.core.Either
 import arrow.core.raise.either
 import no.elhub.auth.features.common.AuthorizationParty
 import no.elhub.auth.features.common.AuthorizationPartyRecord
-import no.elhub.auth.features.common.AuthorizationPartyTable
 import no.elhub.auth.features.common.PGEnum
 import no.elhub.auth.features.common.PartyRepository
 import no.elhub.auth.features.common.RepositoryReadError
@@ -12,23 +11,17 @@ import no.elhub.auth.features.common.RepositoryWriteError
 import no.elhub.auth.features.requests.AuthorizationRequest
 import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.ResultRow
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.insertAndGetId
+import org.jetbrains.exposed.sql.insertReturning
 import org.jetbrains.exposed.sql.javatime.CurrentDateTime
 import org.jetbrains.exposed.sql.javatime.datetime
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
-import java.time.LocalDateTime
 import java.util.UUID
 
 interface RequestRepository {
     fun find(requestId: UUID): Either<RepositoryReadError, AuthorizationRequest>
     fun findAll(): Either<RepositoryReadError, List<AuthorizationRequest>>
-    fun insert(
-        type: AuthorizationRequest.Type,
-        requester: AuthorizationParty,
-        requestee: AuthorizationParty,
-    ): Either<RepositoryWriteError, UUID>
+    fun insert(req: AuthorizationRequest): Either<RepositoryWriteError, AuthorizationRequest>
 }
 
 class ExposedRequestRepository(
@@ -38,12 +31,6 @@ class ExposedRequestRepository(
     override fun findAll(): Either<RepositoryReadError, List<AuthorizationRequest>> = either {
         transaction {
             val rows = AuthorizationRequestTable.selectAll()
-            val requestIds = rows.map { UUID.fromString(it[AuthorizationRequestTable.id].toString()) }
-
-            val properties = AuthorizationRequestPropertyTable
-                .selectAll()
-                .where { AuthorizationRequestPropertyTable.authorizationRequestId inList requestIds }
-                .map { it.toAuthorizationRequestProperty() }
 
             rows.map { request ->
                 val requestedById = request[AuthorizationRequestTable.requestedBy]
@@ -58,9 +45,6 @@ class ExposedRequestRepository(
                     .bind()
 
                 request.toAuthorizationRequest(
-                    properties
-                        .filter { prop -> prop.authorizationRequestId == request[AuthorizationRequestTable.id].value.toString() }
-                        .ifEmpty { emptyList() },
                     requestedByParty,
                     requestedFromParty
                 )
@@ -85,39 +69,39 @@ class ExposedRequestRepository(
                 .mapLeft { RepositoryReadError.UnexpectedError }
                 .bind()
 
-            val properties = AuthorizationRequestPropertyTable
-                .selectAll()
-                .where { AuthorizationRequestPropertyTable.authorizationRequestId eq requestId }
-                .map { it.toAuthorizationRequestProperty() }
-
-            request.toAuthorizationRequest(properties, requestedByParty, requestedFromParty)
+            request.toAuthorizationRequest(requestedByParty, requestedFromParty)
         }
     }
 
-    override fun insert(
-        type: AuthorizationRequest.Type,
-        requester: AuthorizationParty,
-        requestee: AuthorizationParty
-    ): Either<RepositoryWriteError, UUID> = either {
-        transaction {
-            val requestedByParty = partyRepo.findOrInsert(requester.type, requester.resourceId)
-                .mapLeft { RepositoryWriteError.UnexpectedError }
-                .bind()
+    override fun insert(req: AuthorizationRequest): Either<RepositoryWriteError, AuthorizationRequest> =
+        either {
+            transaction {
+                val requestedByParty = partyRepo.findOrInsert(req.requestedBy.type, req.requestedBy.resourceId)
+                    .mapLeft { RepositoryWriteError.UnexpectedError }
+                    .bind()
 
-            val requestedFromParty = partyRepo.findOrInsert(requestee.type, requestee.resourceId)
-                .mapLeft { RepositoryWriteError.UnexpectedError }
-                .bind()
+                val requestedFromParty = partyRepo.findOrInsert(req.requestedFrom.type, req.requestedFrom.resourceId)
+                    .mapLeft { RepositoryWriteError.UnexpectedError }
+                    .bind()
 
-            AuthorizationRequestTable.insertAndGetId {
-                it[id] = UUID.randomUUID()
-                it[requestType] = type
-                it[status] = AuthorizationRequest.Status.Pending
-                it[requestedBy] = requestedByParty.id
-                it[requestedFrom] = requestedFromParty.id
-                it[validTo] = LocalDateTime.now().plusDays(30)
-            }.value
-        }
-    }.mapLeft { RepositoryWriteError.UnexpectedError }
+                val request = AuthorizationRequestTable.insertReturning {
+                    it[id] = req.id
+                    it[requestType] = req.type
+                    it[requestStatus] = req.status
+                    it[requestedBy] = requestedByParty.id
+                    it[requestedFrom] = requestedFromParty.id
+                    it[validTo] = req.validTo
+                    it[createdAt] = req.createdAt
+                }.map {
+                    it.toAuthorizationRequest(
+                        requestedByParty,
+                        requestedFromParty
+                    )
+                }.single()
+
+                request
+            }
+        }.mapLeft { RepositoryWriteError.UnexpectedError }
 }
 
 object AuthorizationRequestTable : UUIDTable("authorization_request") {
@@ -126,44 +110,29 @@ object AuthorizationRequestTable : UUIDTable("authorization_request") {
         fromDb = { value -> AuthorizationRequest.Type.valueOf(value as String) },
         toDb = { PGEnum("authorization_request_type", it) }
     )
-    val status = customEnumeration(
+    val requestStatus = customEnumeration(
         name = "request_status",
         fromDb = { value -> AuthorizationRequest.Status.valueOf(value as String) },
         toDb = { PGEnum("authorization_request_status", it) }
     )
-    val requestedBy = uuid("requested_by").references(AuthorizationPartyTable.id)
-    val requestedFrom = uuid("requested_from").references(AuthorizationPartyTable.id)
+    val requestedBy = uuid("requested_by").references(id)
+    val requestedFrom = uuid("requested_from").references(id)
     val createdAt = datetime("created_at").defaultExpression(CurrentDateTime)
     val updatedAt = datetime("updated_at").defaultExpression(CurrentDateTime)
     val validTo = datetime("valid_to")
 }
 
 fun ResultRow.toAuthorizationRequest(
-    properties: List<AuthorizationRequest.Property>,
     requestedBy: AuthorizationPartyRecord,
-    requestedFrom: AuthorizationPartyRecord
+    requestedFrom: AuthorizationPartyRecord,
+
 ) = AuthorizationRequest(
     id = this[AuthorizationRequestTable.id].value,
     type = this[AuthorizationRequestTable.requestType],
-    status = this[AuthorizationRequestTable.status],
+    status = this[AuthorizationRequestTable.requestStatus],
     requestedBy = AuthorizationParty(resourceId = requestedBy.resourceId, type = requestedBy.type),
     requestedFrom = AuthorizationParty(resourceId = requestedFrom.resourceId, type = requestedFrom.type),
     createdAt = this[AuthorizationRequestTable.createdAt],
     updatedAt = this[AuthorizationRequestTable.updatedAt],
     validTo = this[AuthorizationRequestTable.validTo],
-    properties = properties
-)
-
-object AuthorizationRequestPropertyTable : Table("authorization_request_property") {
-    val authorizationRequestId = uuid("authorization_request_id")
-    val key = varchar("key", 64)
-    val value = text("value")
-    val createdAt = datetime("created_at").defaultExpression(CurrentDateTime)
-}
-
-fun ResultRow.toAuthorizationRequestProperty() = AuthorizationRequest.Property(
-    authorizationRequestId = this[AuthorizationRequestPropertyTable.authorizationRequestId].toString(),
-    key = this[AuthorizationRequestPropertyTable.key],
-    value = this[AuthorizationRequestPropertyTable.value],
-    createdAt = this[AuthorizationRequestPropertyTable.createdAt],
 )
