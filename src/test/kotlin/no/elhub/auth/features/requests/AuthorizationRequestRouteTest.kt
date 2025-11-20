@@ -24,9 +24,7 @@ import no.elhub.auth.features.requests.common.AuthorizationRequestResponse
 import no.elhub.auth.features.requests.create.CreateRequest
 import no.elhub.auth.features.requests.create.CreateRequestAttributes
 import no.elhub.auth.features.requests.create.CreateRequestMeta
-import no.elhub.auth.features.requests.create.CreateRequestRelationships
 import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObjectWithMeta
-import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObjectWithRelationshipsAndMeta
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import no.elhub.auth.module as applicationModule
 
