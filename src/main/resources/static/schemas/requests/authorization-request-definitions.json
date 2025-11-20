@@ -70,6 +70,16 @@
         }
       }
     },
+    "relationships": {
+      "$defs": {
+        "requestedBy": {
+          "$ref": "../base-definitions.schema.json#/definitions/relationshipParty"
+        },
+        "requestedFrom": {
+          "$ref": "../base-definitions.schema.json#/definitions/relationshipParty"
+        }
+      }
+    },
     "links": {
       "$defs": {
         "self": {
