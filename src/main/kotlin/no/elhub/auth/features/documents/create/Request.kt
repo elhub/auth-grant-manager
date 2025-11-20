@@ -7,6 +7,7 @@ import no.elhub.auth.features.documents.create.command.ChangeOfSupplierDocumentC
 import no.elhub.auth.features.documents.create.command.ValidationError
 import no.elhub.devxp.jsonapi.model.JsonApiAttributes
 import no.elhub.devxp.jsonapi.model.JsonApiResourceMeta
+import no.elhub.devxp.jsonapi.request.JsonApiRequest
 
 @Serializable
 data class DocumentRequestAttributes(
@@ -39,18 +40,7 @@ enum class PartyIdentifierType {
     GlobalLocationNumber
 }
 
-// We need to move this to json wrapper
-@Serializable
-data class RequestData(
-    val type: String,
-    val attributes: DocumentRequestAttributes,
-    val meta: DocumentMeta,
-)
-
-@Serializable
-data class Request(
-    val data: RequestData,
-)
+typealias Request = JsonApiRequest.SingleDocumentWithMeta<DocumentRequestAttributes, DocumentMeta>
 
 fun DocumentMeta.toChangeOfSupplierDocumentCommand(): Either<ValidationError, ChangeOfSupplierDocumentCommand> = ChangeOfSupplierDocumentCommand(
     requestedBy = this.requestedBy,

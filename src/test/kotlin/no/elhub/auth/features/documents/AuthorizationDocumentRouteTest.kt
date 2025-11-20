@@ -26,13 +26,13 @@ import no.elhub.auth.features.documents.create.DocumentRequestAttributes
 import no.elhub.auth.features.documents.create.PartyIdentifier
 import no.elhub.auth.features.documents.create.PartyIdentifierType
 import no.elhub.auth.features.documents.create.Request
-import no.elhub.auth.features.documents.create.RequestData
 import no.elhub.auth.features.documents.get.GetDocumentResponse
 import no.elhub.auth.features.grants.ElhubResource
 import no.elhub.auth.features.grants.GRANTS_PATH
 import no.elhub.auth.features.grants.PermissionType
 import no.elhub.auth.features.grants.common.AuthorizationGrantResponse
 import no.elhub.auth.features.grants.common.AuthorizationGrantScopesResponse
+import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObjectWithMeta
 import java.time.LocalDate
 import java.time.LocalDateTime
 import no.elhub.auth.features.grants.module as grantsModule
@@ -91,11 +91,10 @@ class AuthorizationDocumentRouteTest :
                                 accept(ContentType.Application.Json)
                                 setBody(
                                     Request(
-                                        data =
-                                        RequestData(
-                                            "AuthorizationDocument",
+                                        data = JsonApiRequestResourceObjectWithMeta(
+                                            type = "AuthorizationDocument",
                                             attributes = DocumentRequestAttributes(
-                                                AuthorizationDocument.Type.ChangeOfSupplierConfirmation
+                                                documentType = AuthorizationDocument.Type.ChangeOfSupplierConfirmation
                                             ),
                                             meta = DocumentMeta(
                                                 requestedBy = PartyIdentifier(
@@ -119,7 +118,6 @@ class AuthorizationDocumentRouteTest :
                                                 requestedForMeteringPointAddress = "quaerendum",
                                                 balanceSupplierName = "Jami Wade",
                                                 balanceSupplierContractName = "Selena Chandler"
-
                                             )
                                         )
                                     )
