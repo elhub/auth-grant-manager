@@ -71,7 +71,7 @@ fun AuthorizationRequest.toResponse() = AuthorizationRequestResponse(
     )
 )
 
-fun List<AuthorizationRequest>.toResponses() = AuthorizationRequestListResponse(
+fun List<AuthorizationRequest>.toResponse() = AuthorizationRequestListResponse(
     data = this.map { it.toResponse().data },
     links = JsonApiLinks.ResourceObjectLink("/authorization-requests")
 )
