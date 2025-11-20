@@ -6,6 +6,8 @@ import io.ktor.server.application.Application
 import io.ktor.server.config.ApplicationConfig
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
+import no.elhub.auth.features.common.auth.AuthorizationProvider
+import no.elhub.auth.features.common.auth.PDPAuthorizationProvider
 import no.elhub.auth.features.common.shouldRegisterEndpoint
 import no.elhub.auth.features.documents.common.DocumentPropertiesRepository
 import no.elhub.auth.features.documents.common.DocumentRepository
@@ -71,6 +73,11 @@ fun Application.module() {
             )
         }
 
+        single {
+            val pdpBaseUrl = get<ApplicationConfig>().property("pdp.baseUrl").getString()
+            PDPAuthorizationProvider(httpClient = get(), pdpBaseUrl = pdpBaseUrl)
+        } bind AuthorizationProvider::class
+
         singleOf(::PdfGenerator) bind FileGenerator::class
         singleOf(::ExposedDocumentRepository) bind DocumentRepository::class
         singleOf(::ExposedGrantRepository) bind GrantRepository::class
@@ -84,7 +91,7 @@ fun Application.module() {
     routing {
         route(DOCUMENTS_PATH) {
             shouldRegisterEndpoint {
-                createRoute(get())
+                createRoute(get(), get())
                 confirmRoute(get())
                 getRoute(get())
                 queryRoute(get())

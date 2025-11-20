@@ -30,6 +30,25 @@ paths:
     post:
       summary: Initiate a new authorization document flow.
       description: Initiate a new authorization document flow. This creates a authorization document for signing.
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          description: Bearer Maskinporten token for the calling party .
+          schema:
+            type: string
+        - name: SenderGln
+          in: header
+          required: true
+          description: GLN of the sender service issuing the request. Used for delegated Maskinporten flows.
+          schema:
+            type: string
+        - name: OnBehalfOfGln
+          in: header
+          required: false
+          description: GLN of the party the sender is acting on behalf of in delegated Maskinporten flows.
+          schema:
+            type: string
       requestBody:
         content:
           application/json:

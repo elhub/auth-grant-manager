@@ -30,6 +30,9 @@ pdfSigner:
     signing: $PATH_TO_SIGNING_CERTIFICATE
     chain: $PATH_TO_SIGNING_CERTIFICATE_CHAIN
 
+pdp:
+  baseUrl: ${PDP_BASE_URL}
+
 featureToggle:
   enableEndpoints: ${ENABLE_ENDPOINTS:false}
 
