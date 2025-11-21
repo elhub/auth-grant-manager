@@ -8,7 +8,6 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
-import io.ktor.client.statement.*
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
@@ -283,12 +282,6 @@ class AuthorizationRequestRouteTest : FunSpec({
 
                     response.status shouldBe HttpStatusCode.Created
                     val responseJson: AuthorizationRequestResponse = response.body()
-                    println("nisse: ${response.bodyAsText()}")
-//                    responseJson.data.apply {
-//                        id.shouldNotBeNull()
-//                        type shouldBe "AuthorizationRequest"
-//
-//                    }
                     responseJson.data.apply {
                         id.shouldNotBeNull()
                         type shouldBe "AuthorizationRequest"

@@ -4,8 +4,7 @@ import arrow.core.Either
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
-
-class PartyIdentifierResolver(
+class PartyResolver(
     private val personService: PersonService,
     private val partyRepository: PartyRepository
 ) {
@@ -29,7 +28,7 @@ class PartyIdentifierResolver(
 }
 
 object PartyIdentifierResolverCompanion : KoinComponent {
-    private val resolver: PartyIdentifierResolver by inject()
+    private val resolver: PartyResolver by inject()
 
     suspend fun resolve(partyIdentifier: PartyIdentifier): Either<PartyError, AuthorizationParty> =
         resolver.resolve(partyIdentifier)
@@ -37,7 +36,6 @@ object PartyIdentifierResolverCompanion : KoinComponent {
 
 suspend fun PartyIdentifier.toAuthorizationParty(): Either<PartyError, AuthorizationParty> =
     PartyIdentifierResolverCompanion.resolve(this)
-
 
 sealed class PartyError {
     data object PersonResolutionError : PartyError()
