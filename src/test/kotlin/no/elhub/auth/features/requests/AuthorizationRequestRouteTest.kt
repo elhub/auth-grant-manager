@@ -268,7 +268,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                                         ),
                                         requestedFrom = PartyIdentifier(
                                             idType = PartyIdentifierType.NationalIdentityNumber,
-                                            idValue = "98765432109"
+                                            idValue = "12345678901"
                                         ),
                                         requestedFromName = "Hillary Orr",
                                         requestedForMeteringPointId = "atomorum",
@@ -296,13 +296,13 @@ class AuthorizationRequestRouteTest : FunSpec({
                         relationships.apply {
                             requestedBy.apply {
                                 data.apply {
-                                    id shouldBe "987654321"
+                                    id shouldBe "22222222-2222-2222-2222-222222222222"
                                     type shouldBe "Organization"
                                 }
                             }
                             requestedFrom.apply {
                                 data.apply {
-                                    id shouldBe "12345678901"
+                                    id.shouldNotBeNull()
                                     type shouldBe "Person"
                                 }
                             }

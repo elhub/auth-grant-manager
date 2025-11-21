@@ -27,7 +27,6 @@ class ApiPersonService(
 
     override suspend fun findOrCreateByNin(nin: String): Either<ClientError, Person> =
         Either.catch {
-            println("nisse1")
             val response = client.post("${cfg.baseUri}/persons") {
                 contentType(ContentType.Application.Json)
                 setBody(
