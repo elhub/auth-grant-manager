@@ -4,11 +4,11 @@ import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.plugins.logging.LogLevel
+import io.ktor.client.plugins.logging.Logging
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
-import io.ktor.server.config.*
+import io.ktor.server.config.ApplicationConfig
 import kotlinx.serialization.json.Json
 import no.elhub.auth.features.common.ApiPersonService
 import no.elhub.auth.features.common.ExposedPartyRepository
@@ -16,9 +16,9 @@ import no.elhub.auth.features.common.PartyRepository
 import no.elhub.auth.features.common.PartyResolver
 import no.elhub.auth.features.common.PersonApiConfig
 import no.elhub.auth.features.common.PersonService
-import org.koin.ktor.plugin.koinModule
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
+import org.koin.ktor.plugin.koinModule
 
 fun Application.baseModule() {
     koinModule {
