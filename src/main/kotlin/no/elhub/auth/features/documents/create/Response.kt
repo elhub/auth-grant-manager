@@ -30,7 +30,7 @@ fun AuthorizationDocument.toCreateDocumentResponse() = CreateDocumentResponse(
         links = CreateDocumentResponseLinks(
             self = "/authorization-documents/${this.id}",
             file = "/authorization-documents/${this.id}.pdf"
-        ),
+        ), // TODO -> mismatch in openapi spec !! the spec is missing attributes
         attributes = CreateDocumentResponseAttributes(
             status = this.status.toString(),
             documentType = this.type.toString()

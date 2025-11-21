@@ -23,6 +23,7 @@ import no.elhub.auth.features.requests.common.AuthorizationRequestResponse
 import no.elhub.auth.features.requests.create.CreateRequest
 import no.elhub.auth.features.requests.create.CreateRequestAttributes
 import no.elhub.auth.features.requests.create.CreateRequestMeta
+import no.elhub.auth.features.requests.create.CreateRequestResponse
 import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObjectWithMeta
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import no.elhub.auth.module as applicationModule
@@ -276,42 +277,22 @@ class AuthorizationRequestRouteTest : FunSpec({
                     }
 
                     response.status shouldBe HttpStatusCode.Created
-                    val responseJson: AuthorizationRequestResponse = response.body()
+                    val responseJson: CreateRequestResponse = response.body()
                     responseJson.data.apply {
                         id.shouldNotBeNull()
                         type shouldBe "AuthorizationRequest"
                         attributes.shouldNotBeNull()
-                        attributes!!.apply {
+                        attributes.apply {
                             requestType shouldBe "ChangeOfSupplierConfirmation"
-                            status shouldBe "Pending"
-                            createdAt.shouldNotBeNull()
-                            updatedAt.shouldNotBeNull()
-                            validTo.shouldNotBeNull()
-                        }
-                        relationships.apply {
-                            requestedBy.apply {
-                                data.apply {
-                                    id shouldBe "987654321"
-                                    type shouldBe "Organization"
-                                }
-                            }
-                            requestedFrom.apply {
-                                data.apply {
-                                    id shouldBe "12345678901"
-                                    type shouldBe "Person"
-                                }
-                            }
+                            status shouldBe AuthorizationRequest.Status.Pending.name
                         }
                         links.shouldNotBeNull()
-                        links!!.apply {
+                        links.apply {
                             self.shouldNotBeNull()
                         }
                     }
                     responseJson.links.apply {
                         self shouldBe "/authorization-requests"
-                    }
-                    responseJson.meta.apply {
-                        "createdAt".shouldNotBeNull()
                     }
                 }
             }

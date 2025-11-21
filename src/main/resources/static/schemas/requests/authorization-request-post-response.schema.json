@@ -12,6 +12,17 @@
         "type": {
           "$ref": "authorization-request-definitions.json#/$defs/type"
         },
+        "attributes": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "$ref": "authorization-request-definitions.json#/$defs/attributes/$defs/status"
+            },
+            "requestType": {
+              "$ref": "authorization-request-definitions.json#/$defs/attributes/$defs/requestType"
+            }
+          }
+        },
         "links": {
           "type": "object",
           "properties": {
@@ -22,7 +33,7 @@
           "required": ["self"]
         }
       },
-      "required": ["id", "type", "links"]
+      "required": ["id", "type", "attributes", "links"]
     }
   },
   "required": ["data"]
