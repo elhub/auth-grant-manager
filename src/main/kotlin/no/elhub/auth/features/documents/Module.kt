@@ -21,7 +21,8 @@ import no.elhub.auth.features.documents.common.DocumentPropertiesRepository
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.documents.common.ExposedDocumentPropertiesRepository
 import no.elhub.auth.features.documents.common.ExposedDocumentRepository
-import no.elhub.auth.features.documents.create.ApiPersonService
+import no.elhub.auth.features.common.ApiPersonService
+import no.elhub.auth.features.common.PartyIdentifierResolver
 import no.elhub.auth.features.documents.create.CertificateProvider
 import no.elhub.auth.features.documents.create.FileCertificateProvider
 import no.elhub.auth.features.documents.create.FileCertificateProviderConfig
@@ -29,8 +30,8 @@ import no.elhub.auth.features.documents.create.FileGenerator
 import no.elhub.auth.features.documents.create.FileSigningService
 import no.elhub.auth.features.documents.create.HashicorpVaultSignatureProvider
 import no.elhub.auth.features.documents.create.PdfSigningService
-import no.elhub.auth.features.documents.create.PersonApiConfig
-import no.elhub.auth.features.documents.create.PersonService
+import no.elhub.auth.features.common.PersonApiConfig
+import no.elhub.auth.features.common.PersonService
 import no.elhub.auth.features.documents.create.SignatureProvider
 import no.elhub.auth.features.documents.create.VaultConfig
 import no.elhub.auth.features.filegenerator.PdfGenerator
@@ -116,6 +117,7 @@ fun Application.module() {
         singleOf(::ExposedDocumentPropertiesRepository) bind DocumentPropertiesRepository::class
         singleOf(::ExposedPartyRepository) bind PartyRepository::class
         singleOf(::ApiPersonService) bind PersonService::class
+        singleOf(::PartyIdentifierResolver)
         singleOf(::ConfirmHandler)
         singleOf(::CreateHandler)
         singleOf(::GetHandler)

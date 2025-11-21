@@ -20,6 +20,7 @@ class ExposedPartyRepository() : PartyRepository {
 
     override fun findOrInsert(type: PartyType, resourceId: String): Either<RepositoryWriteError, AuthorizationPartyRecord> =
         Either.catch {
+            println("nisse2")
             transaction {
                 AuthorizationPartyTable
                     // look in the table where type == given AND resource_id = given

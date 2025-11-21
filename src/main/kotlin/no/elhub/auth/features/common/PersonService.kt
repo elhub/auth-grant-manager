@@ -1,4 +1,4 @@
-package no.elhub.auth.features.documents.create
+package no.elhub.auth.features.common
 
 import arrow.core.Either
 import io.ktor.client.HttpClient
@@ -27,6 +27,7 @@ class ApiPersonService(
 
     override suspend fun findOrCreateByNin(nin: String): Either<ClientError, Person> =
         Either.catch {
+            println("nisse1")
             val response = client.post("${cfg.baseUri}/persons") {
                 contentType(ContentType.Application.Json)
                 setBody(

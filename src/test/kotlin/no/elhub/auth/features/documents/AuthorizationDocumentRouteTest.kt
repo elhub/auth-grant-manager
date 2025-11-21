@@ -23,8 +23,8 @@ import no.elhub.auth.features.documents.confirm.ConfirmDocumentResponse
 import no.elhub.auth.features.documents.create.CreateDocumentResponse
 import no.elhub.auth.features.documents.create.DocumentMeta
 import no.elhub.auth.features.documents.create.DocumentRequestAttributes
-import no.elhub.auth.features.documents.create.PartyIdentifier
-import no.elhub.auth.features.documents.create.PartyIdentifierType
+import no.elhub.auth.features.common.PartyIdentifier
+import no.elhub.auth.features.common.PartyIdentifierType
 import no.elhub.auth.features.documents.create.Request
 import no.elhub.auth.features.documents.get.GetDocumentResponse
 import no.elhub.auth.features.grants.ElhubResource

@@ -3,7 +3,7 @@ package no.elhub.auth.features.documents.create.command
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
-import no.elhub.auth.features.documents.create.PartyIdentifier
+import no.elhub.auth.features.common.PartyIdentifier
 
 private const val REGEX_NUMBERS_LETTERS_SYMBOLS = "^[a-zA-Z0-9_.-]*$"
 private const val REGEX_REQUESTED_FROM = REGEX_NUMBERS_LETTERS_SYMBOLS
