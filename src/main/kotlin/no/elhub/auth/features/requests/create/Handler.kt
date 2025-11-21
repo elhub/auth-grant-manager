@@ -43,7 +43,6 @@ class Handler(
 
         return savedRequest.right()
     }
-
 }
 
 sealed class CreateRequestError {

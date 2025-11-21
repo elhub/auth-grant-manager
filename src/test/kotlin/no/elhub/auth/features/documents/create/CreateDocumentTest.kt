@@ -12,11 +12,11 @@ import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldMatch
 import no.elhub.auth.features.common.ApiPersonService
 import no.elhub.auth.features.common.ExposedPartyRepository
+import no.elhub.auth.features.common.PartyIdentifier
+import no.elhub.auth.features.common.PartyIdentifierType
 import no.elhub.auth.features.common.PartyRepository
 import no.elhub.auth.features.common.PersonApiConfig
 import no.elhub.auth.features.common.PersonService
-import no.elhub.auth.features.common.PartyIdentifier
-import no.elhub.auth.features.common.PartyIdentifierType
 import no.elhub.auth.features.common.PostgresTestContainer
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.httpTestClient
