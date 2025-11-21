@@ -18,6 +18,8 @@ import no.elhub.auth.features.common.PartyIdentifier
 import no.elhub.auth.features.common.PartyIdentifierType
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.RunPostgresScriptExtension
+import no.elhub.auth.features.documents.AuthPersonsTestContainer
+import no.elhub.auth.features.documents.AuthPersonsTestContainerExtension
 import no.elhub.auth.features.requests.common.AuthorizationRequestListResponse
 import no.elhub.auth.features.requests.common.AuthorizationRequestResponse
 import no.elhub.auth.features.requests.create.CreateRequest
@@ -29,6 +31,7 @@ import no.elhub.auth.module as applicationModule
 
 class AuthorizationRequestRouteTest : FunSpec({
     extensions(
+        AuthPersonsTestContainerExtension,
         PostgresTestContainerExtension(),
         RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-party.sql"),
         RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-requests.sql")
@@ -53,7 +56,8 @@ class AuthorizationRequestRouteTest : FunSpec({
                     "ktor.database.password" to "app",
                     "ktor.database.url" to "jdbc:postgresql://localhost:5432/auth",
                     "ktor.database.driverClass" to "org.postgresql.Driver",
-                    "featureToggle.enableEndpoints" to "true"
+                    "featureToggle.enableEndpoints" to "true",
+                    "authPersons.baseUri" to AuthPersonsTestContainer.baseUri()
                 )
             }
             test("Should return 200 OK") {
@@ -243,7 +247,8 @@ class AuthorizationRequestRouteTest : FunSpec({
                         "ktor.database.password" to "app",
                         "ktor.database.url" to "jdbc:postgresql://localhost:5432/auth",
                         "ktor.database.driverClass" to "org.postgresql.Driver",
-                        "featureToggle.enableEndpoints" to "true"
+                        "featureToggle.enableEndpoints" to "true",
+                        "authPersons.baseUri" to AuthPersonsTestContainer.baseUri()
                     )
                 }
                 test("Should return 201 Created") {
@@ -291,13 +296,13 @@ class AuthorizationRequestRouteTest : FunSpec({
                         relationships.apply {
                             requestedBy.apply {
                                 data.apply {
-                                    id shouldBe "987654321"
+                                    id shouldBe "22222222-2222-2222-2222-222222222222"
                                     type shouldBe "Organization"
                                 }
                             }
                             requestedFrom.apply {
                                 data.apply {
-                                    id shouldBe "12345678901"
+                                    id.shouldNotBeNull()
                                     type shouldBe "Person"
                                 }
                             }

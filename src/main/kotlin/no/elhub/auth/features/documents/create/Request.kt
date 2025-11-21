@@ -2,6 +2,7 @@ package no.elhub.auth.features.documents.create
 
 import arrow.core.Either
 import kotlinx.serialization.Serializable
+import no.elhub.auth.features.common.PartyIdentifier
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.create.command.ChangeOfSupplierDocumentCommand
 import no.elhub.auth.features.documents.create.command.ValidationError
@@ -26,19 +27,6 @@ data class DocumentMeta(
     val balanceSupplierName: String,
     val balanceSupplierContractName: String
 ) : JsonApiResourceMeta
-
-@Serializable
-data class PartyIdentifier(
-    val idType: PartyIdentifierType,
-    val idValue: String
-)
-
-@Serializable
-enum class PartyIdentifierType {
-    NationalIdentityNumber,
-    OrganizationNumber,
-    GlobalLocationNumber
-}
 
 typealias Request = JsonApiRequest.SingleDocumentWithMeta<DocumentRequestAttributes, DocumentMeta>
 

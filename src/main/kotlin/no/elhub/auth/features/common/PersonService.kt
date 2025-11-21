@@ -1,4 +1,4 @@
-package no.elhub.auth.features.documents.create
+package no.elhub.auth.features.common
 
 import arrow.core.Either
 import io.ktor.client.HttpClient
