@@ -20,8 +20,8 @@ import no.elhub.auth.features.common.PersonService
 import no.elhub.auth.features.common.PostgresTestContainer
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.httpTestClient
-import no.elhub.auth.features.documents.AuthPersonsTestContainer
-import no.elhub.auth.features.documents.AuthPersonsTestContainerExtension
+import no.elhub.auth.features.common.AuthPersonsTestContainer
+import no.elhub.auth.features.common.AuthPersonsTestContainerExtension
 import no.elhub.auth.features.documents.TestCertificateUtil
 import no.elhub.auth.features.documents.VaultTransitTestContainerExtension
 import no.elhub.auth.features.documents.common.DocumentPropertiesRepository

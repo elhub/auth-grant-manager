@@ -1,4 +1,4 @@
-package no.elhub.auth.features.documents
+package no.elhub.auth.features.common
 
 import io.kotest.core.listeners.AfterProjectListener
 import io.kotest.core.listeners.BeforeSpecListener
