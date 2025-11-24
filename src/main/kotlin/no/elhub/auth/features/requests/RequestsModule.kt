@@ -13,7 +13,7 @@ import no.elhub.auth.features.requests.get.Handler as GetHandler
 import no.elhub.auth.features.requests.query.Handler as QueryHandler
 
 val requestsModule = module {
-    singleOf(::ExposedRequestRepository)           bind RequestRepository::class
+    singleOf(::ExposedRequestRepository) bind RequestRepository::class
     singleOf(::ExposedRequestPropertiesRepository) bind RequestPropertiesRepository::class
     singleOf(::ConfirmHandler)
     singleOf(::CreateHandler)
