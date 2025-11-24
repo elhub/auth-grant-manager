@@ -14,6 +14,8 @@ import no.elhub.devxp.jsonapi.response.JsonApiResponse
 import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObjectWithRelationships
 import java.time.LocalDateTime
 
+// TODO split into operation-specific responses (CreateRequestResponse, GetRequestResponse, etc.)
+
 @Serializable
 data class RequestResponseAttribute(
     val status: String,
