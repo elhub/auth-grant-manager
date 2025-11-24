@@ -11,11 +11,12 @@ import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.testing.testApplication
 import no.elhub.auth.features.common.PostgresTestContainerExtension
+import no.elhub.auth.features.requests.configureRequestsRouting
+import no.elhub.auth.features.requests.requestsModule
 import java.util.UUID
 import no.elhub.auth.features.documents.module as documentsModule
 import no.elhub.auth.features.grants.module as grantsModule
 import no.elhub.auth.features.openapi.module as openApiModule
-import no.elhub.auth.features.requests.module as requestsModule
 
 class FeatureToggleTest : FunSpec({
     extensions(
@@ -42,8 +43,10 @@ class FeatureToggleTest : FunSpec({
             application {
                 documentsModule()
                 grantsModule()
-                requestsModule()
+                requestsModule
                 openApiModule()
+
+                configureRequestsRouting()
             }
 
             client = createClient {
@@ -100,7 +103,7 @@ class FeatureToggleTest : FunSpec({
             application {
                 documentsModule()
                 grantsModule()
-                requestsModule()
+                requestsModule
                 openApiModule()
             }
 
