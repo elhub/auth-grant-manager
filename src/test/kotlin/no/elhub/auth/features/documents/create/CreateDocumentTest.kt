@@ -11,6 +11,8 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldMatch
 import no.elhub.auth.features.common.ApiPersonService
+import no.elhub.auth.features.common.AuthPersonsTestContainer
+import no.elhub.auth.features.common.AuthPersonsTestContainerExtension
 import no.elhub.auth.features.common.ExposedPartyRepository
 import no.elhub.auth.features.common.PartyIdentifier
 import no.elhub.auth.features.common.PartyIdentifierType
@@ -20,8 +22,6 @@ import no.elhub.auth.features.common.PersonService
 import no.elhub.auth.features.common.PostgresTestContainer
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.httpTestClient
-import no.elhub.auth.features.common.AuthPersonsTestContainer
-import no.elhub.auth.features.common.AuthPersonsTestContainerExtension
 import no.elhub.auth.features.documents.TestCertificateUtil
 import no.elhub.auth.features.documents.VaultTransitTestContainerExtension
 import no.elhub.auth.features.documents.common.DocumentPropertiesRepository
