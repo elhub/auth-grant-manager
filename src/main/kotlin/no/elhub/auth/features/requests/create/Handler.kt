@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
+import no.elhub.auth.features.common.PartyService
 import no.elhub.auth.features.common.toAuthorizationParty
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.common.AuthorizationRequestProperty
@@ -15,13 +16,14 @@ import java.util.UUID
 
 class Handler(
     private val requestRepo: RequestRepository,
-    private val requestPropertyRepo: RequestPropertiesRepository
+    private val requestPropertyRepo: RequestPropertiesRepository,
+    private val partyService: PartyService
 ) {
     suspend operator fun invoke(command: RequestCommand): Either<CreateRequestError, AuthorizationRequest> {
-        val requestedFromParty = command.requestedFrom.toAuthorizationParty()
+        val requestedFromParty = command.requestedFrom.toAuthorizationParty(partyService)
             .getOrElse { return CreateRequestError.RequestedFromPartyError.left() }
 
-        val requestedByParty = command.requestedBy.toAuthorizationParty()
+        val requestedByParty = command.requestedBy.toAuthorizationParty(partyService)
             .getOrElse { return CreateRequestError.RequestedByPartyError.left() }
 
         val requestType = command.toAuthorizationRequestType()

@@ -17,6 +17,7 @@ import no.elhub.auth.features.common.ExposedPartyRepository
 import no.elhub.auth.features.common.PartyIdentifier
 import no.elhub.auth.features.common.PartyIdentifierType
 import no.elhub.auth.features.common.PartyRepository
+import no.elhub.auth.features.common.PartyService
 import no.elhub.auth.features.common.PersonApiConfig
 import no.elhub.auth.features.common.PersonService
 import no.elhub.auth.features.common.PostgresTestContainer
@@ -107,6 +108,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                     singleOf(::ExposedPartyRepository) bind PartyRepository::class
                     singleOf(::ApiPersonService) bind PersonService::class
                     single { PersonApiConfig(baseUri = AuthPersonsTestContainer.baseUri()) }
+                    single { PartyService(get()) }
                     singleOf(::ExposedDocumentPropertiesRepository) bind DocumentPropertiesRepository::class
 
                     singleOf(::Handler)

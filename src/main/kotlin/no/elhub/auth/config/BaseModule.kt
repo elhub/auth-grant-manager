@@ -12,7 +12,7 @@ import kotlinx.serialization.json.Json
 import no.elhub.auth.features.common.ApiPersonService
 import no.elhub.auth.features.common.ExposedPartyRepository
 import no.elhub.auth.features.common.PartyRepository
-import no.elhub.auth.features.common.PartyResolver
+import no.elhub.auth.features.common.PartyService
 import no.elhub.auth.features.common.PersonApiConfig
 import no.elhub.auth.features.common.PersonService
 import org.koin.core.module.dsl.singleOf
@@ -49,5 +49,5 @@ val baseModule = module {
 
     singleOf(::ExposedPartyRepository) bind PartyRepository::class
     singleOf(::ApiPersonService) bind PersonService::class
-    singleOf(::PartyResolver)
+    singleOf(::PartyService) bind PartyService::class
 }
