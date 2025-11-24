@@ -48,7 +48,7 @@ class AuthorizationRequestRouteTest : FunSpec({
 
             application {
                 applicationModule()
-                requestsModule
+                module()
             }
 
             environment {
@@ -142,7 +142,7 @@ class AuthorizationRequestRouteTest : FunSpec({
 
                 application {
                     applicationModule()
-                    requestsModule
+                    module()
                 }
 
                 environment {
@@ -239,7 +239,7 @@ class AuthorizationRequestRouteTest : FunSpec({
 
                 application {
                     applicationModule()
-                    requestsModule
+                    module()
                 }
 
                 environment {
