@@ -6,7 +6,6 @@ import io.ktor.server.application.Application
 import io.ktor.server.config.ApplicationConfig
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
-import no.elhub.auth.config.baseModule
 import no.elhub.auth.features.common.shouldRegisterEndpoint
 import no.elhub.auth.features.documents.common.DocumentPropertiesRepository
 import no.elhub.auth.features.documents.common.DocumentRepository
@@ -43,7 +42,6 @@ const val DOCUMENTS_PATH = "/authorization-documents"
 fun Application.module() {
     koinModule {
         single { environment.config }
-        baseModule()
         single {
             val cfg = get<ApplicationConfig>().config("pdfSigner.certificate")
             FileCertificateProviderConfig(
