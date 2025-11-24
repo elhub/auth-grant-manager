@@ -9,7 +9,6 @@ import io.ktor.server.routing.post
 import no.elhub.auth.features.common.InputError
 import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.requests.AuthorizationRequest
-import no.elhub.auth.features.requests.common.toResponse
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 
 fun Route.route(handler: Handler) {
@@ -44,6 +43,6 @@ fun Route.route(handler: Handler) {
                 return@post
             }
 
-        call.respond(HttpStatusCode.Created, request.toResponse())
+        call.respond(HttpStatusCode.Created, request.toCreateResponse())
     }
 }
