@@ -10,6 +10,7 @@ sealed interface RequestMetaMarker {
 sealed class RequestCommand(
     val requestedFrom: PartyIdentifier,
     val requestedBy: PartyIdentifier,
+    val requestedTo: PartyIdentifier,
     val meta: RequestMetaMarker,
 )
 

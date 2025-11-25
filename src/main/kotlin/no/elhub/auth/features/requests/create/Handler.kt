@@ -25,12 +25,16 @@ class Handler(
         val requestedByParty = partyService.resolve(command.requestedBy)
             .getOrElse { return CreateRequestError.RequestedByPartyError.left() }
 
+        val requestedToParty = partyService.resolve(command.requestedTo)
+            .getOrElse { return CreateRequestError.RequestedByPartyError.left() }
+
         val requestType = command.toAuthorizationRequestType()
 
         val requestToCreate = AuthorizationRequest.create(
             type = requestType,
             requestedFrom = requestedFromParty,
             requestedBy = requestedByParty,
+            requestedTo = requestedToParty
         )
 
         val savedRequest = requestRepo.insert(requestToCreate)

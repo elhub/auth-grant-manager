@@ -277,6 +277,10 @@ class AuthorizationRequestRouteTest : FunSpec({
                                             idValue = "12345678901"
                                         ),
                                         requestedFromName = "Hillary Orr",
+                                        requestedTo = PartyIdentifier(
+                                            idType = PartyIdentifierType.NationalIdentityNumber,
+                                            idValue = "12345678902"
+                                        ),
                                         requestedForMeteringPointId = "atomorum",
                                         requestedForMeteringPointAddress = "quaerendum",
                                         balanceSupplierContractName = "Selena Chandler"

@@ -35,6 +35,7 @@ class ExposedRequestRepository(
             rows.map { request ->
                 val requestedById = request[AuthorizationRequestTable.requestedBy]
                 val requestedFromId = request[AuthorizationRequestTable.requestedFrom]
+                val requestedToId = request[AuthorizationRequestTable.requestedTo]
 
                 val requestedByParty = partyRepo.find(requestedById)
                     .mapLeft { RepositoryReadError.UnexpectedError }
@@ -44,9 +45,14 @@ class ExposedRequestRepository(
                     .mapLeft { RepositoryReadError.UnexpectedError }
                     .bind()
 
+                val requestedToParty = partyRepo.find(requestedToId)
+                    .mapLeft { RepositoryReadError.UnexpectedError }
+                    .bind()
+
                 request.toAuthorizationRequest(
                     requestedByParty,
-                    requestedFromParty
+                    requestedFromParty,
+                    requestedByParty,
                 )
             }
         }
@@ -69,7 +75,12 @@ class ExposedRequestRepository(
                 .mapLeft { RepositoryReadError.UnexpectedError }
                 .bind()
 
-            request.toAuthorizationRequest(requestedByParty, requestedFromParty)
+            val requestedToDbId = request[AuthorizationRequestTable.requestedFrom]
+            val requestedToParty = partyRepo.find(requestedToDbId)
+                .mapLeft { RepositoryReadError.UnexpectedError }
+                .bind()
+
+            request.toAuthorizationRequest(requestedByParty, requestedFromParty, requestedToParty)
         }
     }
 
@@ -84,18 +95,24 @@ class ExposedRequestRepository(
                     .mapLeft { RepositoryWriteError.UnexpectedError }
                     .bind()
 
+                val requestedToParty = partyRepo.findOrInsert(req.requestedTo.type, req.requestedTo.resourceId)
+                    .mapLeft { RepositoryWriteError.UnexpectedError }
+                    .bind()
+
                 val request = AuthorizationRequestTable.insertReturning {
                     it[id] = req.id
                     it[requestType] = req.type
                     it[requestStatus] = req.status
                     it[requestedBy] = requestedByParty.id
                     it[requestedFrom] = requestedFromParty.id
+                    it[requestedTo] = requestedToParty.id
                     it[validTo] = req.validTo
                     it[createdAt] = req.createdAt
                 }.map {
                     it.toAuthorizationRequest(
                         requestedByParty,
-                        requestedFromParty
+                        requestedFromParty,
+                        requestedToParty
                     )
                 }.single()
 
@@ -117,6 +134,7 @@ object AuthorizationRequestTable : UUIDTable("authorization_request") {
     )
     val requestedBy = uuid("requested_by").references(id)
     val requestedFrom = uuid("requested_from").references(id)
+    val requestedTo = uuid("requested_to").references(id)
     val createdAt = datetime("created_at").defaultExpression(CurrentDateTime)
     val updatedAt = datetime("updated_at").defaultExpression(CurrentDateTime)
     val validTo = datetime("valid_to")
@@ -125,6 +143,7 @@ object AuthorizationRequestTable : UUIDTable("authorization_request") {
 fun ResultRow.toAuthorizationRequest(
     requestedBy: AuthorizationPartyRecord,
     requestedFrom: AuthorizationPartyRecord,
+    requestedTo: AuthorizationPartyRecord
 
 ) = AuthorizationRequest(
     id = this[AuthorizationRequestTable.id].value,
@@ -132,6 +151,7 @@ fun ResultRow.toAuthorizationRequest(
     status = this[AuthorizationRequestTable.requestStatus],
     requestedBy = AuthorizationParty(resourceId = requestedBy.resourceId, type = requestedBy.type),
     requestedFrom = AuthorizationParty(resourceId = requestedFrom.resourceId, type = requestedFrom.type),
+    requestedTo = AuthorizationParty(resourceId = requestedTo.resourceId, type = requestedTo.type),
     createdAt = this[AuthorizationRequestTable.createdAt],
     updatedAt = this[AuthorizationRequestTable.updatedAt],
     validTo = this[AuthorizationRequestTable.validTo],

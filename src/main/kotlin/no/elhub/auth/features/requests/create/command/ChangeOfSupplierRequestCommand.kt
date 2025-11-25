@@ -28,10 +28,12 @@ data class ChangeOfSupplierRequestMeta(
 class ChangeOfSupplierRequestCommand private constructor(
     requestedFrom: PartyIdentifier,
     requestedBy: PartyIdentifier,
+    requestedTo: PartyIdentifier,
     meta: ChangeOfSupplierRequestMeta
 ) : RequestCommand(
     requestedFrom,
     requestedBy,
+    requestedTo,
     meta
 ) {
     companion object {
@@ -39,6 +41,7 @@ class ChangeOfSupplierRequestCommand private constructor(
             requestedFrom: PartyIdentifier,
             requestedBy: PartyIdentifier,
             requestedFromName: String,
+            requestedTo: PartyIdentifier,
             requestedForMeteringPointId: String,
             requestedForMeteringPointAddress: String,
             balanceSupplierContractName: String,
@@ -89,6 +92,7 @@ class ChangeOfSupplierRequestCommand private constructor(
             return ChangeOfSupplierRequestCommand(
                 requestedBy = requestedBy,
                 requestedFrom = requestedFrom,
+                requestedTo = requestedTo,
                 meta = changeOfSupplierMeta
             ).right()
         }
