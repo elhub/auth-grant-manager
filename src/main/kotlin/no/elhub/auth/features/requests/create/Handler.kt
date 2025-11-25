@@ -4,10 +4,7 @@ import arrow.core.Either
 import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
-import no.elhub.auth.features.common.AuthorizationParty
-import no.elhub.auth.features.common.PartyIdentifier
-import no.elhub.auth.features.common.PartyIdentifierType
-import no.elhub.auth.features.common.PartyType
+import no.elhub.auth.features.common.PartyService
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.common.AuthorizationRequestProperty
 import no.elhub.auth.features.requests.common.RequestPropertiesRepository
@@ -18,13 +15,14 @@ import java.util.UUID
 
 class Handler(
     private val requestRepo: RequestRepository,
-    private val requestPropertyRepo: RequestPropertiesRepository
+    private val requestPropertyRepo: RequestPropertiesRepository,
+    private val partyService: PartyService
 ) {
-    operator fun invoke(command: RequestCommand): Either<CreateRequestError, AuthorizationRequest> {
-        val requestedFromParty = command.requestedFrom.toAuthorizationParty()
+    suspend operator fun invoke(command: RequestCommand): Either<CreateRequestError, AuthorizationRequest> {
+        val requestedFromParty = partyService.resolve(command.requestedFrom)
             .getOrElse { return CreateRequestError.RequestedFromPartyError.left() }
 
-        val requestedByParty = command.requestedBy.toAuthorizationParty()
+        val requestedByParty = partyService.resolve(command.requestedBy)
             .getOrElse { return CreateRequestError.RequestedByPartyError.left() }
 
         val requestType = command.toAuthorizationRequestType()
@@ -46,26 +44,6 @@ class Handler(
 
         return savedRequest.right()
     }
-
-    // TODO duplicate to documents flow -> should be moved to common
-    private fun PartyIdentifier.toAuthorizationParty(): Either<CreateRequestError, AuthorizationParty> =
-        when (this.idType) {
-            // TODO need to handle with auth-persons here
-            PartyIdentifierType.NationalIdentityNumber -> AuthorizationParty(
-                resourceId = this.idValue,
-                type = PartyType.Person
-            ).right()
-
-            PartyIdentifierType.OrganizationNumber -> AuthorizationParty(
-                resourceId = this.idValue,
-                type = PartyType.Organization
-            ).right()
-
-            PartyIdentifierType.GlobalLocationNumber -> AuthorizationParty(
-                resourceId = this.idValue,
-                type = PartyType.OrganizationEntity
-            ).right()
-        }
 }
 
 sealed class CreateRequestError {

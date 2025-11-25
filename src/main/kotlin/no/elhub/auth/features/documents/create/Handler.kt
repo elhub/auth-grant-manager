@@ -4,8 +4,7 @@ import arrow.core.Either
 import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
-import no.elhub.auth.features.common.AuthorizationParty
-import no.elhub.auth.features.common.PartyType
+import no.elhub.auth.features.common.PartyService
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.AuthorizationDocumentProperty
 import no.elhub.auth.features.documents.common.DocumentPropertiesRepository
@@ -21,19 +20,19 @@ class Handler(
     private val signatureProvider: SignatureProvider,
     private val documentRepository: DocumentRepository,
     private val documentPropertiesRepository: DocumentPropertiesRepository,
-    private val personService: PersonService,
+    private val partyService: PartyService
 ) {
     suspend operator fun invoke(command: DocumentCommand): Either<CreateDocumentError, AuthorizationDocument> {
-        val requestedFromParty = command.requestedFrom.toAuthorizationParty()
+        val requestedFromParty = partyService.resolve(command.requestedFrom)
             .getOrElse { return CreateDocumentError.RequestedFromPartyError.left() }
 
-        val requestedByParty = command.requestedBy.toAuthorizationParty()
+        val requestedByParty = partyService.resolve(command.requestedBy)
             .getOrElse { return CreateDocumentError.RequestedByPartyError.left() }
 
-        val requestedToParty = command.requestedTo.toAuthorizationParty()
+        val requestedToParty = partyService.resolve(command.requestedTo)
             .getOrElse { return CreateDocumentError.RequestedToPartyError.left() }
 
-        val signedByParty = command.signedBy.toAuthorizationParty()
+        val signedByParty = partyService.resolve(command.signedBy)
             .getOrElse { return CreateDocumentError.SignedByPartyError.left() }
 
         val file = fileGenerator.generate(
@@ -78,24 +77,6 @@ class Handler(
 
         return savedDocument.right()
     }
-
-    private suspend fun PartyIdentifier.toAuthorizationParty(): Either<CreateDocumentError, AuthorizationParty> =
-        when (this.idType) {
-            PartyIdentifierType.NationalIdentityNumber ->
-                personService.findOrCreateByNin(idValue)
-                    .map { AuthorizationParty(resourceId = it.internalId.toString(), type = PartyType.Person) }
-                    .mapLeft { CreateDocumentError.PersonError }
-
-            PartyIdentifierType.OrganizationNumber -> AuthorizationParty(
-                resourceId = this.idValue,
-                type = PartyType.Organization
-            ).right()
-
-            PartyIdentifierType.GlobalLocationNumber -> AuthorizationParty(
-                resourceId = this.idValue,
-                type = PartyType.OrganizationEntity
-            ).right()
-        }
 }
 
 sealed class CreateDocumentError {

@@ -17,14 +17,17 @@ import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.testing.testApplication
+import no.elhub.auth.features.common.AuthPersonsTestContainer
+import no.elhub.auth.features.common.AuthPersonsTestContainerExtension
+import no.elhub.auth.features.common.PartyIdentifier
+import no.elhub.auth.features.common.PartyIdentifierType
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.RunPostgresScriptExtension
+import no.elhub.auth.features.common.commonModule
 import no.elhub.auth.features.documents.confirm.ConfirmDocumentResponse
 import no.elhub.auth.features.documents.create.CreateDocumentResponse
 import no.elhub.auth.features.documents.create.DocumentMeta
 import no.elhub.auth.features.documents.create.DocumentRequestAttributes
-import no.elhub.auth.features.documents.create.PartyIdentifier
-import no.elhub.auth.features.documents.create.PartyIdentifierType
 import no.elhub.auth.features.documents.create.Request
 import no.elhub.auth.features.documents.get.GetDocumentResponse
 import no.elhub.auth.features.grants.ElhubResource
@@ -62,6 +65,7 @@ class AuthorizationDocumentRouteTest :
                 }
                 application {
                     applicationModule()
+                    commonModule()
                     grantsModule()
                     module()
                 }

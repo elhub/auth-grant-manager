@@ -14,10 +14,13 @@ import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.testing.testApplication
+import no.elhub.auth.features.common.AuthPersonsTestContainer
+import no.elhub.auth.features.common.AuthPersonsTestContainerExtension
 import no.elhub.auth.features.common.PartyIdentifier
 import no.elhub.auth.features.common.PartyIdentifierType
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.RunPostgresScriptExtension
+import no.elhub.auth.features.common.commonModule
 import no.elhub.auth.features.requests.common.AuthorizationRequestListResponse
 import no.elhub.auth.features.requests.common.AuthorizationRequestResponse
 import no.elhub.auth.features.requests.create.CreateRequest
@@ -30,6 +33,7 @@ import no.elhub.auth.module as applicationModule
 
 class AuthorizationRequestRouteTest : FunSpec({
     extensions(
+        AuthPersonsTestContainerExtension,
         PostgresTestContainerExtension(),
         RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-party.sql"),
         RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-requests.sql")
@@ -45,6 +49,7 @@ class AuthorizationRequestRouteTest : FunSpec({
 
             application {
                 applicationModule()
+                commonModule()
                 module()
             }
 
@@ -54,7 +59,8 @@ class AuthorizationRequestRouteTest : FunSpec({
                     "ktor.database.password" to "app",
                     "ktor.database.url" to "jdbc:postgresql://localhost:5432/auth",
                     "ktor.database.driverClass" to "org.postgresql.Driver",
-                    "featureToggle.enableEndpoints" to "true"
+                    "featureToggle.enableEndpoints" to "true",
+                    "authPersons.baseUri" to AuthPersonsTestContainer.baseUri()
                 )
             }
             test("Should return 200 OK") {
@@ -138,6 +144,7 @@ class AuthorizationRequestRouteTest : FunSpec({
 
                 application {
                     applicationModule()
+                    commonModule()
                     module()
                 }
 
@@ -147,7 +154,8 @@ class AuthorizationRequestRouteTest : FunSpec({
                         "ktor.database.password" to "app",
                         "ktor.database.url" to "jdbc:postgresql://localhost:5432/auth",
                         "ktor.database.driverClass" to "org.postgresql.Driver",
-                        "featureToggle.enableEndpoints" to "true"
+                        "featureToggle.enableEndpoints" to "true",
+                        "authPersons.baseUri" to AuthPersonsTestContainer.baseUri()
                     )
                 }
 
@@ -235,6 +243,7 @@ class AuthorizationRequestRouteTest : FunSpec({
 
                 application {
                     applicationModule()
+                    commonModule()
                     module()
                 }
 
@@ -244,7 +253,8 @@ class AuthorizationRequestRouteTest : FunSpec({
                         "ktor.database.password" to "app",
                         "ktor.database.url" to "jdbc:postgresql://localhost:5432/auth",
                         "ktor.database.driverClass" to "org.postgresql.Driver",
-                        "featureToggle.enableEndpoints" to "true"
+                        "featureToggle.enableEndpoints" to "true",
+                        "authPersons.baseUri" to AuthPersonsTestContainer.baseUri()
                     )
                 }
                 test("Should return 201 Created") {

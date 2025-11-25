@@ -16,7 +16,7 @@ interface PartyRepository {
     fun find(id: UUID): Either<RepositoryReadError, AuthorizationPartyRecord>
 }
 
-class ExposedPartyRepository() : PartyRepository {
+class ExposedPartyRepository : PartyRepository {
 
     override fun findOrInsert(type: PartyType, resourceId: String): Either<RepositoryWriteError, AuthorizationPartyRecord> =
         Either.catch {

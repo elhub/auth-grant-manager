@@ -10,13 +10,19 @@ import io.kotest.koin.KoinLifecycleMode
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldMatch
+import no.elhub.auth.features.common.ApiPersonService
+import no.elhub.auth.features.common.AuthPersonsTestContainer
+import no.elhub.auth.features.common.AuthPersonsTestContainerExtension
 import no.elhub.auth.features.common.ExposedPartyRepository
+import no.elhub.auth.features.common.PartyIdentifier
+import no.elhub.auth.features.common.PartyIdentifierType
 import no.elhub.auth.features.common.PartyRepository
+import no.elhub.auth.features.common.PartyService
+import no.elhub.auth.features.common.PersonApiConfig
+import no.elhub.auth.features.common.PersonService
 import no.elhub.auth.features.common.PostgresTestContainer
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.httpTestClient
-import no.elhub.auth.features.documents.AuthPersonsTestContainer
-import no.elhub.auth.features.documents.AuthPersonsTestContainerExtension
 import no.elhub.auth.features.documents.TestCertificateUtil
 import no.elhub.auth.features.documents.VaultTransitTestContainerExtension
 import no.elhub.auth.features.documents.common.DocumentPropertiesRepository
@@ -102,6 +108,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                     singleOf(::ExposedPartyRepository) bind PartyRepository::class
                     singleOf(::ApiPersonService) bind PersonService::class
                     single { PersonApiConfig(baseUri = AuthPersonsTestContainer.baseUri()) }
+                    single { PartyService(get()) }
                     singleOf(::ExposedDocumentPropertiesRepository) bind DocumentPropertiesRepository::class
 
                     singleOf(::Handler)
