@@ -2,6 +2,7 @@ ktor:
   application:
     modules:
       - no.elhub.auth.ApplicationKt.module
+      - no.elhub.auth.features.common.CommonModuleKt.commonModule
       - no.elhub.auth.features.openapi.ModuleKt.module
       - no.elhub.auth.features.grants.ModuleKt.module
       - no.elhub.auth.features.documents.ModuleKt.module

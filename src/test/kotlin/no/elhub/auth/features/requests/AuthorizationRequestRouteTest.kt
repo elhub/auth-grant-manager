@@ -20,6 +20,7 @@ import no.elhub.auth.features.common.PartyIdentifier
 import no.elhub.auth.features.common.PartyIdentifierType
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.RunPostgresScriptExtension
+import no.elhub.auth.features.common.commonModule
 import no.elhub.auth.features.requests.common.AuthorizationRequestListResponse
 import no.elhub.auth.features.requests.common.AuthorizationRequestResponse
 import no.elhub.auth.features.requests.create.CreateRequest
@@ -48,6 +49,7 @@ class AuthorizationRequestRouteTest : FunSpec({
 
             application {
                 applicationModule()
+                commonModule()
                 module()
             }
 
@@ -142,6 +144,7 @@ class AuthorizationRequestRouteTest : FunSpec({
 
                 application {
                     applicationModule()
+                    commonModule()
                     module()
                 }
 
@@ -240,6 +243,7 @@ class AuthorizationRequestRouteTest : FunSpec({
 
                 application {
                     applicationModule()
+                    commonModule()
                     module()
                 }
 

@@ -23,6 +23,7 @@ import no.elhub.auth.features.common.PartyIdentifier
 import no.elhub.auth.features.common.PartyIdentifierType
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.RunPostgresScriptExtension
+import no.elhub.auth.features.common.commonModule
 import no.elhub.auth.features.documents.confirm.ConfirmDocumentResponse
 import no.elhub.auth.features.documents.create.CreateDocumentResponse
 import no.elhub.auth.features.documents.create.DocumentMeta
@@ -64,6 +65,7 @@ class AuthorizationDocumentRouteTest :
                 }
                 application {
                     applicationModule()
+                    commonModule()
                     grantsModule()
                     module()
                 }
