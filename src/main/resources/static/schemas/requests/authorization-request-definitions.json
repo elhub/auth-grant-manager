@@ -53,6 +53,10 @@
           "description": "The name of the organization or person who the authorization request is requested from.",
           "examples": ["Ola Normann"]
         },
+        "requestedTo": {
+          "description": "The party identifier of the person authorized to review and approve the authorization request on behalf of the owner.",
+          "$ref": "../base-definitions.schema.json#/definitions/partyIdentifier"
+        },
         "requestedForMeteringPointId": {
           "type": "string",
           "description": "The unique identifier of the metering point associated with the authorization request.",
@@ -67,6 +71,10 @@
           "type": "string",
           "description": "The unique name of a supplier contract associated with the authorization request.",
           "examples": ["ExampleSupplierContract"]
+        },
+        "approvedBy": {
+          "description": "The party identifier of the person who approved the authorization request",
+          "$ref": "../base-definitions.schema.json#/definitions/partyIdentifier"
         }
       }
     },

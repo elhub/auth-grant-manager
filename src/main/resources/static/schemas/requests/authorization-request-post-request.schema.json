@@ -36,6 +36,9 @@
             "requestedFromName": {
               "$ref": "authorization-request-definitions.json#/$defs/meta/$defs/requestedFromName"
             },
+            "requestedTo": {
+              "$ref": "authorization-request-definitions.json#/$defs/meta/$defs/requestedTo"
+            },
             "requestedForMeteringPointId": {
               "$ref": "authorization-request-definitions.json#/$defs/meta/$defs/requestedForMeteringPointId"
             },

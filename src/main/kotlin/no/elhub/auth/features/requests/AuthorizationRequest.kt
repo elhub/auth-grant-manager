@@ -10,6 +10,7 @@ data class AuthorizationRequest(
     val status: Status,
     val requestedBy: AuthorizationParty,
     val requestedFrom: AuthorizationParty,
+    val requestedTo: AuthorizationParty,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime,
     val validTo: LocalDateTime,
@@ -19,12 +20,14 @@ data class AuthorizationRequest(
             type: Type,
             requestedBy: AuthorizationParty,
             requestedFrom: AuthorizationParty,
+            requestedTo: AuthorizationParty,
         ): AuthorizationRequest = AuthorizationRequest(
             id = UUID.randomUUID(),
             type = type,
             status = Status.Pending,
             requestedBy = requestedBy,
             requestedFrom = requestedFrom,
+            requestedTo = requestedTo,
             createdAt = LocalDateTime.now(),
             updatedAt = LocalDateTime.now(),
             validTo = LocalDateTime.now().plusDays(30) // TODO not clear about this field - why 30 days ?

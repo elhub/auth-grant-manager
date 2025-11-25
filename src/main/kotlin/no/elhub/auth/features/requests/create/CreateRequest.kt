@@ -20,6 +20,7 @@ data class CreateRequestMeta(
     val requestedBy: PartyIdentifier,
     val requestedFrom: PartyIdentifier,
     val requestedFromName: String,
+    val requestedTo: PartyIdentifier,
     val requestedForMeteringPointId: String,
     val requestedForMeteringPointAddress: String,
     val balanceSupplierContractName: String
@@ -31,6 +32,7 @@ fun CreateRequestMeta.toChangeOfSupplierRequestCommand(): Either<RequestValidati
     requestedBy = this.requestedBy,
     requestedFrom = this.requestedFrom,
     requestedFromName = this.requestedFromName,
+    requestedTo = this.requestedTo,
     requestedForMeteringPointId = this.requestedForMeteringPointId,
     requestedForMeteringPointAddress = this.requestedForMeteringPointAddress,
     balanceSupplierContractName = this.balanceSupplierContractName
