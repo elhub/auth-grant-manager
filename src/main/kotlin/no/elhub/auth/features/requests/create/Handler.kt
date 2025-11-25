@@ -5,7 +5,6 @@ import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
 import no.elhub.auth.features.common.PartyService
-import no.elhub.auth.features.common.toAuthorizationParty
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.common.AuthorizationRequestProperty
 import no.elhub.auth.features.requests.common.RequestPropertiesRepository
@@ -20,10 +19,10 @@ class Handler(
     private val partyService: PartyService
 ) {
     suspend operator fun invoke(command: RequestCommand): Either<CreateRequestError, AuthorizationRequest> {
-        val requestedFromParty = command.requestedFrom.toAuthorizationParty(partyService)
+        val requestedFromParty = partyService.resolve(command.requestedFrom)
             .getOrElse { return CreateRequestError.RequestedFromPartyError.left() }
 
-        val requestedByParty = command.requestedBy.toAuthorizationParty(partyService)
+        val requestedByParty = partyService.resolve(command.requestedBy)
             .getOrElse { return CreateRequestError.RequestedByPartyError.left() }
 
         val requestType = command.toAuthorizationRequestType()

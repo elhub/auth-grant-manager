@@ -5,7 +5,6 @@ import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
 import no.elhub.auth.features.common.PartyService
-import no.elhub.auth.features.common.toAuthorizationParty
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.AuthorizationDocumentProperty
 import no.elhub.auth.features.documents.common.DocumentPropertiesRepository
@@ -24,16 +23,16 @@ class Handler(
     private val partyService: PartyService
 ) {
     suspend operator fun invoke(command: DocumentCommand): Either<CreateDocumentError, AuthorizationDocument> {
-        val requestedFromParty = command.requestedFrom.toAuthorizationParty(partyService)
+        val requestedFromParty = partyService.resolve(command.requestedFrom)
             .getOrElse { return CreateDocumentError.RequestedFromPartyError.left() }
 
-        val requestedByParty = command.requestedBy.toAuthorizationParty(partyService)
+        val requestedByParty = partyService.resolve(command.requestedBy)
             .getOrElse { return CreateDocumentError.RequestedByPartyError.left() }
 
-        val requestedToParty = command.requestedTo.toAuthorizationParty(partyService)
+        val requestedToParty = partyService.resolve(command.requestedTo)
             .getOrElse { return CreateDocumentError.RequestedToPartyError.left() }
 
-        val signedByParty = command.signedBy.toAuthorizationParty(partyService)
+        val signedByParty = partyService.resolve(command.signedBy)
             .getOrElse { return CreateDocumentError.SignedByPartyError.left() }
 
         val file = fileGenerator.generate(

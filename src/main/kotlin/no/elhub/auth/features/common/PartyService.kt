@@ -25,11 +25,6 @@ class PartyService(
         }
 }
 
-suspend fun PartyIdentifier.toAuthorizationParty(
-    service: PartyService
-): Either<PartyError, AuthorizationParty> =
-    service.resolve(this)
-
 sealed class PartyError {
     data object PersonResolutionError : PartyError()
 }
