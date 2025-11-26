@@ -84,7 +84,7 @@ fun Application.module() {
     routing {
         route(DOCUMENTS_PATH) {
             shouldRegisterEndpoint {
-                createRoute(get())
+                createRoute(get(), get())
                 confirmRoute(get())
                 getRoute(get())
                 queryRoute(get())

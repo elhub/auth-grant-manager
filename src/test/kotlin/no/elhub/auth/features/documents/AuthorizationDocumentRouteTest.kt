@@ -7,22 +7,31 @@ import io.ktor.client.call.body
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.accept
 import io.ktor.client.request.get
+import io.ktor.client.request.header
 import io.ktor.client.request.patch
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsBytes
 import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.testing.testApplication
+import kotlinx.serialization.json.Json
 import no.elhub.auth.features.common.AuthPersonsTestContainer
 import no.elhub.auth.features.common.AuthPersonsTestContainerExtension
 import no.elhub.auth.features.common.PartyIdentifier
 import no.elhub.auth.features.common.PartyIdentifierType
+import no.elhub.auth.features.common.PdpTestContainerExtension
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.RunPostgresScriptExtension
+import no.elhub.auth.features.common.auth.AuthInfo
+import no.elhub.auth.features.common.auth.PDPAuthorizationProvider
+import no.elhub.auth.features.common.auth.PdpResponse
+import no.elhub.auth.features.common.auth.Result
+import no.elhub.auth.features.common.auth.TokenInfo
 import no.elhub.auth.features.common.commonModule
 import no.elhub.auth.features.documents.confirm.ConfirmDocumentResponse
 import no.elhub.auth.features.documents.create.CreateDocumentResponse
@@ -48,6 +57,24 @@ class AuthorizationDocumentRouteTest :
             RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-party.sql"),
             VaultTransitTestContainerExtension,
             AuthPersonsTestContainerExtension,
+            PdpTestContainerExtension(
+                alwaysReturn = Json.encodeToString(
+                    PdpResponse(
+                        result = Result(
+                            tokenInfo =
+                            TokenInfo(
+                                tokenStatus = "verified",
+                                partyId = "something",
+                                tokenType = "maskinporten"
+                            ),
+                            authInfo = AuthInfo(
+                                actingFunction = "BalanceSupplier",
+                                actingGLN = "0107000000021"
+                            )
+                        )
+                    )
+                )
+            )
         )
 
         lateinit var createdDocumentId: String
@@ -83,7 +110,8 @@ class AuthorizationDocumentRouteTest :
                         "pdfSigner.certificate.signing" to TestCertificateUtil.Constants.CERTIFICATE_LOCATION,
                         "pdfSigner.certificate.chain" to TestCertificateUtil.Constants.CERTIFICATE_LOCATION,
                         "featureToggle.enableEndpoints" to "true",
-                        "authPersons.baseUri" to AuthPersonsTestContainer.baseUri()
+                        "authPersons.baseUri" to AuthPersonsTestContainer.baseUri(),
+                        "pdp.baseUrl" to "http://localhost:8085"
                     )
                 }
 
@@ -93,6 +121,8 @@ class AuthorizationDocumentRouteTest :
                             .post(DOCUMENTS_PATH) {
                                 contentType(ContentType.Application.Json)
                                 accept(ContentType.Application.Json)
+                                header(HttpHeaders.Authorization, "Bearer something")
+                                header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
                                 setBody(
                                     Request(
                                         data = JsonApiRequestResourceObjectWithMeta(

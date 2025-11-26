@@ -10,6 +10,8 @@ import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import io.ktor.server.config.ApplicationConfig
 import kotlinx.serialization.json.Json
+import no.elhub.auth.features.common.auth.AuthorizationProvider
+import no.elhub.auth.features.common.auth.PDPAuthorizationProvider
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
 import org.koin.ktor.plugin.koinModule
@@ -42,6 +44,11 @@ fun Application.commonModule() {
                 baseUri = cfg.property("baseUri").getString()
             )
         }
+
+        single {
+            val pdpBaseUrl = get<ApplicationConfig>().property("pdp.baseUrl").getString()
+            PDPAuthorizationProvider(httpClient = get(), pdpBaseUrl = pdpBaseUrl)
+        } bind AuthorizationProvider::class
 
         singleOf(::ExposedPartyRepository) bind PartyRepository::class
         singleOf(::ApiPersonService) bind PersonService::class
