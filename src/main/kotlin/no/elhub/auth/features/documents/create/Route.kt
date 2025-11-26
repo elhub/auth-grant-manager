@@ -10,10 +10,9 @@ import no.elhub.auth.features.common.auth.AuthorizationProvider
 import no.elhub.auth.features.common.auth.RoleType
 import no.elhub.auth.features.common.auth.toApiErrorResponse
 import no.elhub.auth.features.documents.AuthorizationDocument
-import org.koin.ktor.ext.get
 import org.slf4j.LoggerFactory
 
-private val log = LoggerFactory.getLogger("no.elhub.auth.features.documents.create.Route")
+private val log = LoggerFactory.getLogger(Route::class.java)
 
 fun Route.route(
     handler: Handler,
@@ -62,10 +61,7 @@ fun Route.route(
                     CreateDocumentError.RequestedToPartyError,
                     CreateDocumentError.SignedByPartyError,
                     CreateDocumentError.PersonError
-                    -> call.respond(
-                        status = HttpStatusCode.InternalServerError,
-                        message = mapOf("error" to error::class.simpleName.orEmpty())
-                    )
+                    -> call.respond(HttpStatusCode.InternalServerError)
                 }
                 return@post
             }

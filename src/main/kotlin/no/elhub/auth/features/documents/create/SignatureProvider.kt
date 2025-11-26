@@ -4,16 +4,12 @@ import arrow.core.Either
 import arrow.core.right
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
-import io.ktor.client.plugins.ClientRequestException
-import io.ktor.client.plugins.ServerResponseException
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
-import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import kotlinx.serialization.Serializable
-import org.slf4j.LoggerFactory
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.*
@@ -36,8 +32,6 @@ class HashicorpVaultSignatureProvider(
     private val client: HttpClient,
     private val cfg: VaultConfig,
 ) : SignatureProvider {
-
-    private val log = LoggerFactory.getLogger(HashicorpVaultSignatureProvider::class.java)
 
     @Serializable
     private data class SignRequest(
@@ -67,19 +61,5 @@ class HashicorpVaultSignatureProvider(
 
             val raw = resp.data.signature.removePrefix("vault:v1:")
             return Base64.getDecoder().decode(raw).right()
-        }.mapLeft {
-            when (it) {
-                is ClientRequestException,
-                is ServerResponseException -> {
-                    val status = it.response.status.value
-                    val body = runCatching { it.response.bodyAsText() }.getOrElse { "<unreadable>" }
-                    log.error("Vault signing request failed: status={} body={}", status, body)
-                }
-
-                else -> {
-                    log.error("Unexpected error during vault signing request", it)
-                }
-            }
-            SignatureFetchingError.UnexpectedError
-        }
+        }.mapLeft { SignatureFetchingError.UnexpectedError }
 }

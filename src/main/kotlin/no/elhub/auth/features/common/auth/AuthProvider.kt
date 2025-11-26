@@ -4,26 +4,16 @@ import arrow.core.Either
 import arrow.core.raise.either
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
-import io.ktor.client.engine.cio.CIO
-import io.ktor.client.plugins.HttpTimeout
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.plugins.logging.LogLevel
-import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
-import io.ktor.http.HttpHeaders
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
-import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.ApplicationCall
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
-import java.util.UUID
-import kotlin.text.removePrefix
+import java.util.*
 
 enum class RoleType {
     BalanceSupplier
@@ -49,7 +39,7 @@ interface AuthorizationProvider {
 }
 
 class PDPAuthorizationProvider(
-    private val httpClient: HttpClient = defaultHttpClient(),
+    private val httpClient: HttpClient,
     private val pdpBaseUrl: String,
 ) : AuthorizationProvider {
     private val log = LoggerFactory.getLogger(PDPAuthorizationProvider::class.java)
@@ -58,26 +48,9 @@ class PDPAuthorizationProvider(
         const val POLICY = "v1/data/v2/token/authinfo"
 
         object Headers {
+            const val AUTHORIZATION = "Authorization"
             const val SENDER_GLN = "SenderGLN"
             const val ON_BEHALF_OF_GLN = "OnBehalfOfGLN"
-        }
-
-        fun defaultHttpClient() = HttpClient(CIO) {
-            install(HttpTimeout) {
-                requestTimeoutMillis = 10_000
-                connectTimeoutMillis = 10_000
-                socketTimeoutMillis = 10_000
-            }
-            install(ContentNegotiation) {
-                json(
-                    Json {
-                        ignoreUnknownKeys = true
-                    }
-                )
-            }
-            install(Logging) {
-                level = LogLevel.ALL
-            }
         }
     }
 
@@ -94,7 +67,7 @@ class PDPAuthorizationProvider(
 
     override suspend fun authorizeMarketParty(call: ApplicationCall): Either<AuthError, ResolvedActor> = either {
         val traceId = UUID.randomUUID().toString()
-        val authorizationHeader = call.request.headers[HttpHeaders.Authorization] ?: raise(AuthError.MissingAuthorizationHeader)
+        val authorizationHeader = call.request.headers[Headers.AUTHORIZATION] ?: raise(AuthError.MissingAuthorizationHeader)
         val token = authorizationHeader.removePrefix("Bearer ").takeIf { it != authorizationHeader } ?: raise(AuthError.InvalidAuthorizationHeader)
 
         val senderGLN = call.request.headers[Headers.SENDER_GLN] ?: raise(AuthError.MissingSenderGlnHeader)
