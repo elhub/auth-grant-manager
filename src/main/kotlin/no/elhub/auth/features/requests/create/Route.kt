@@ -22,9 +22,8 @@ fun Route.route(handler: Handler) {
         }
 
         val requestType = requestBody.data.attributes.requestType
-        val requestMeta = requestBody.data.meta
         val command = when (requestType) {
-            AuthorizationRequest.Type.ChangeOfSupplierConfirmation -> requestMeta.toChangeOfSupplierRequestCommand()
+            AuthorizationRequest.Type.ChangeOfSupplierConfirmation -> requestBody.toChangeOfSupplierRequestCommand()
         }.getOrElse {
             call.respond(HttpStatusCode.BadRequest)
             return@post

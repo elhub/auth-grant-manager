@@ -13,6 +13,7 @@ import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.insertReturning
 import org.jetbrains.exposed.sql.javatime.CurrentDateTime
+import org.jetbrains.exposed.sql.javatime.date
 import org.jetbrains.exposed.sql.javatime.datetime
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -52,7 +53,7 @@ class ExposedRequestRepository(
                 request.toAuthorizationRequest(
                     requestedByParty,
                     requestedFromParty,
-                    requestedByParty,
+                    requestedToParty,
                 )
             }
         }
@@ -137,14 +138,13 @@ object AuthorizationRequestTable : UUIDTable("authorization_request") {
     val requestedTo = uuid("requested_to").references(id)
     val createdAt = datetime("created_at").defaultExpression(CurrentDateTime)
     val updatedAt = datetime("updated_at").defaultExpression(CurrentDateTime)
-    val validTo = datetime("valid_to")
+    val validTo = date("valid_to")
 }
 
 fun ResultRow.toAuthorizationRequest(
     requestedBy: AuthorizationPartyRecord,
     requestedFrom: AuthorizationPartyRecord,
     requestedTo: AuthorizationPartyRecord
-
 ) = AuthorizationRequest(
     id = this[AuthorizationRequestTable.id].value,
     type = this[AuthorizationRequestTable.requestType],

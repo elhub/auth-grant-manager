@@ -11,6 +11,7 @@ import no.elhub.auth.features.requests.common.RequestPropertiesRepository
 import no.elhub.auth.features.requests.common.RequestRepository
 import no.elhub.auth.features.requests.create.command.RequestCommand
 import no.elhub.auth.features.requests.create.command.toAuthorizationRequestType
+import java.time.LocalDate
 import java.util.UUID
 
 class Handler(
@@ -30,23 +31,36 @@ class Handler(
 
         val requestType = command.toAuthorizationRequestType()
 
+        val validTo = LocalDate.parse(command.validTo)
+
         val requestToCreate = AuthorizationRequest.create(
             type = requestType,
             requestedFrom = requestedFromParty,
             requestedBy = requestedByParty,
-            requestedTo = requestedToParty
+            requestedTo = requestedToParty,
+            validTo = validTo
         )
 
-        val savedRequest = requestRepo.insert(requestToCreate)
-            .getOrElse { return CreateRequestError.PersistenceError.left() }
+        val savedRequest = requestRepo.insert(requestToCreate).getOrElse { return CreateRequestError.PersistenceError.left() }
 
-        val requestProperties = command.meta
-            .toMetaAttributes()
-            .toRequestProperties(savedRequest.id)
+        val metaAttributes = command.meta.toMetaAttributes()
+
+        val requestProperties = metaAttributes.toRequestProperties(savedRequest.id)
 
         requestPropertyRepo.insert(requestProperties)
 
-        return savedRequest.right()
+        val properties = requestPropertyRepo.find(savedRequest.id)
+
+        val requestToRespond = AuthorizationRequest.create(
+            type = requestType,
+            requestedFrom = requestedFromParty,
+            requestedBy = requestedByParty,
+            requestedTo = requestedToParty,
+            validTo = validTo,
+            properties = properties
+        )
+
+        return requestToRespond.right()
     }
 }
 

@@ -14,6 +14,7 @@ data class ChangeOfSupplierRequestMeta(
     val requestedFromName: String,
     val requestedForMeteringPointId: String,
     val requestedForMeteringPointAddress: String,
+    val balanceSupplierName: String,
     val balanceSupplierContractName: String
 ) : RequestMetaMarker {
     override fun toMetaAttributes(): Map<String, String> =
@@ -21,6 +22,7 @@ data class ChangeOfSupplierRequestMeta(
             "requestedFromName" to requestedFromName,
             "requestedForMeteringPointId" to requestedForMeteringPointId,
             "requestedForMeteringPointAddress" to requestedForMeteringPointAddress,
+            "balanceSupplierName" to balanceSupplierName,
             "balanceSupplierContractName" to balanceSupplierContractName
         )
 }
@@ -29,11 +31,13 @@ class ChangeOfSupplierRequestCommand private constructor(
     requestedFrom: PartyIdentifier,
     requestedBy: PartyIdentifier,
     requestedTo: PartyIdentifier,
+    validTo: String,
     meta: ChangeOfSupplierRequestMeta
 ) : RequestCommand(
     requestedFrom,
     requestedBy,
     requestedTo,
+    validTo,
     meta
 ) {
     companion object {
@@ -42,8 +46,10 @@ class ChangeOfSupplierRequestCommand private constructor(
             requestedBy: PartyIdentifier,
             requestedFromName: String,
             requestedTo: PartyIdentifier,
+            validTo: String,
             requestedForMeteringPointId: String,
             requestedForMeteringPointAddress: String,
+            balanceSupplierName: String,
             balanceSupplierContractName: String,
         ): Either<RequestValidationError, ChangeOfSupplierRequestCommand> {
             if (requestedFromName.isBlank()) {
@@ -82,10 +88,25 @@ class ChangeOfSupplierRequestCommand private constructor(
                 return RequestValidationError.MissingRequestedFrom.left()
             }
 
+            if (requestedTo.idValue.isBlank()) {
+                return RequestValidationError.MissingRequestedFrom.left()
+            }
+
+            if (!requestedTo.idValue.matches(Regex(REGEX_REQUESTED_FROM))) {
+                return RequestValidationError.MissingRequestedFrom.left()
+            }
+
+            if (validTo.isBlank()) {
+                return RequestValidationError.MissingRequestedFrom.left()
+            }
+
+            // TODO check that validTo is Date?
+
             val changeOfSupplierMeta = ChangeOfSupplierRequestMeta(
                 requestedFromName = requestedFromName,
                 requestedForMeteringPointId = requestedForMeteringPointAddress,
                 requestedForMeteringPointAddress = requestedForMeteringPointAddress,
+                balanceSupplierName = balanceSupplierName,
                 balanceSupplierContractName = balanceSupplierContractName
             )
 
@@ -93,6 +114,7 @@ class ChangeOfSupplierRequestCommand private constructor(
                 requestedBy = requestedBy,
                 requestedFrom = requestedFrom,
                 requestedTo = requestedTo,
+                validTo = validTo,
                 meta = changeOfSupplierMeta
             ).right()
         }

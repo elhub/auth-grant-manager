@@ -12,7 +12,8 @@ import no.elhub.devxp.jsonapi.request.JsonApiRequest
 
 @Serializable
 data class CreateRequestAttributes(
-    val requestType: AuthorizationRequest.Type
+    val requestType: AuthorizationRequest.Type,
+    val validTo: String
 ) : JsonApiAttributes
 
 @Serializable
@@ -23,17 +24,20 @@ data class CreateRequestMeta(
     val requestedTo: PartyIdentifier,
     val requestedForMeteringPointId: String,
     val requestedForMeteringPointAddress: String,
+    val balanceSupplierName: String,
     val balanceSupplierContractName: String
 ) : JsonApiResourceMeta
 
 typealias CreateRequest = JsonApiRequest.SingleDocumentWithMeta<CreateRequestAttributes, CreateRequestMeta>
 
-fun CreateRequestMeta.toChangeOfSupplierRequestCommand(): Either<RequestValidationError, ChangeOfSupplierRequestCommand> = ChangeOfSupplierRequestCommand(
-    requestedBy = this.requestedBy,
-    requestedFrom = this.requestedFrom,
-    requestedFromName = this.requestedFromName,
-    requestedTo = this.requestedTo,
-    requestedForMeteringPointId = this.requestedForMeteringPointId,
-    requestedForMeteringPointAddress = this.requestedForMeteringPointAddress,
-    balanceSupplierContractName = this.balanceSupplierContractName
+fun CreateRequest.toChangeOfSupplierRequestCommand(): Either<RequestValidationError, ChangeOfSupplierRequestCommand> = ChangeOfSupplierRequestCommand(
+    requestedBy = this.data.meta.requestedBy,
+    requestedFrom = this.data.meta.requestedFrom,
+    requestedFromName = this.data.meta.requestedFromName,
+    requestedTo = this.data.meta.requestedTo,
+    validTo = this.data.attributes.validTo,
+    requestedForMeteringPointId = this.data.meta.requestedForMeteringPointId,
+    requestedForMeteringPointAddress = this.data.meta.requestedForMeteringPointAddress,
+    balanceSupplierName = this.data.meta.balanceSupplierName,
+    balanceSupplierContractName = this.data.meta.balanceSupplierContractName
 )
