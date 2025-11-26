@@ -1,6 +1,7 @@
 import no.elhub.auth.utils.generateSelfSignedCertificate
 import no.elhub.auth.utils.validateJsonApiSpec
 import org.gradle.api.tasks.Exec
+import org.gradle.api.tasks.testing.Test
 
 plugins {
     alias(libs.plugins.elhub.gradle.plugin)
@@ -39,6 +40,7 @@ dependencies {
     testImplementation(libs.test.mockk)
     testImplementation(libs.bundles.functional.programming)
     testImplementation(libs.test.ktor.server.test.host)
+    testImplementation(libs.ktor.client.mock)
     testImplementation(libs.test.kotest.runner.junit5)
     testImplementation(libs.test.kotest.assertions.arrow)
     testImplementation(libs.test.kotest.assertions.core)
@@ -103,6 +105,11 @@ tasks.register("validateJsonApiSpec") {
     }
 }
 
+tasks.withType<Test>().configureEach {
+    // Run AWT-dependent PDF validation in headless mode so tests work without an X server
+    systemProperty("java.awt.headless", "true")
+}
+
 tasks.named("test").configure {
     dependsOn(tasks.named("generateTestCerts"))
     dependsOn(tasks.named("openApiValidate"))
@@ -137,11 +144,13 @@ val localEnvVars = mapOf(
     "APP_USERNAME" to "app",
     "APP_PASSWORD" to "app",
     "MUSTACHE_RESOURCE_PATH" to "templates",
-    "VAULT_URL" to "http://localhost:8200",
+    "VAULT_URL" to "http://localhost:8200/v1/transit",
     "VAULT_KEY" to "test-key",
-    "VAULT_TOKEN_PATH" to "somepath",
+    "VAULT_TOKEN_PATH" to "src/test/resources/vault_token_mock.txt",
     "PATH_TO_SIGNING_CERTIFICATE" to testCertPath.get(),
     "PATH_TO_SIGNING_CERTIFICATE_CHAIN" to testCertPath.get(),
+    "ENABLE_ENDPOINTS" to "true",
+    "AUTH_PERSONS_URL" to "http://localhost:8081",
 )
 
 tasks.named<JavaExec>("run").configure {
