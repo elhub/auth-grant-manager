@@ -22,12 +22,6 @@
             "status": {
               "$ref": "authorization-request-definitions.json#/$defs/attributes/$defs/status"
             },
-            "createdAt": {
-              "$ref": "authorization-request-definitions.json#/$defs/attributes/$defs/createdAt"
-            },
-            "updatedAt": {
-              "$ref": "authorization-request-definitions.json#/$defs/attributes/$defs/updatedAt"
-            },
             "validTo": {
               "$ref": "authorization-request-definitions.json#/$defs/attributes/$defs/validTo"
             }
@@ -35,8 +29,13 @@
         },
         "meta": {
           "type": "object",
-          "description": "Additional meta-information related to the resource. Most of this information is used for informational purposes.",
           "properties": {
+            "createdAt": {
+              "$ref": "authorization-request-definitions.json#/$defs/attributes/$defs/createdAt"
+            },
+            "updatedAt": {
+              "$ref": "authorization-request-definitions.json#/$defs/attributes/$defs/updatedAt"
+            },
             "requestedFromName": {
               "$ref": "authorization-request-definitions.json#/$defs/meta/$defs/requestedFromName"
             },
@@ -45,6 +44,9 @@
             },
             "requestedForMeteringPointAddress": {
               "$ref": "authorization-request-definitions.json#/$defs/meta/$defs/requestedForMeteringPointAddress"
+            },
+            "balanceSupplierName": {
+              "$ref": "authorization-request-definitions.json#/$defs/meta/$defs/balanceSupplierName"
             },
             "balanceSupplierContractName": {
               "$ref": "authorization-request-definitions.json#/$defs/meta/$defs/balanceSupplierContractName"
@@ -59,10 +61,26 @@
             },
             "requestedFrom": {
               "$ref": "authorization-request-definitions.json#/$defs/relationships/$defs/requestedFrom"
+            },
+            "requestedTo": {
+              "$ref": "authorization-request-definitions.json#/$defs/relationships/$defs/requestedTo"
+            },
+            "approvedBy": {
+              "$ref": "authorization-request-definitions.json#/$defs/relationships/$defs/approvedBy"
+            }
+          }
+        },
+        "links": {
+          "type": "object",
+          "properties": {
+            "self": {
+              "description": "Link to the authorization document itself",
+              "$ref": "authorization-request-definitions.json#/$defs/links/$defs/self"
             }
           }
         }
-      }
+      },
+      "required": ["id", "type", "attributes", "links", "relationships", "meta"]
     },
     "links": {
       "description": "Link members related to the primary data.",

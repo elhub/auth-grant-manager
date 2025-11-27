@@ -62,6 +62,10 @@
           "description": "The party identifier of the person authorized to review and approve the authorization request on behalf of the owner.",
           "$ref": "../base-definitions.schema.json#/definitions/partyIdentifier"
         },
+        "approvedBy": {
+          "description": "The party identifier of the person who approved the authorization request",
+          "$ref": "../base-definitions.schema.json#/definitions/partyIdentifier"
+        },
         "requestedForMeteringPointId": {
           "type": "string",
           "description": "The unique identifier of the metering point associated with the authorization request.",
@@ -81,22 +85,25 @@
           "type": "string",
           "description": "The name of the balance supplier associated with the authorization document.",
           "examples": ["Example Supplier AS"]
-        },
-        "approvedBy": {
-          "description": "The party identifier of the person who approved the authorization request",
-          "$ref": "../base-definitions.schema.json#/definitions/partyIdentifier"
         }
       }
     },
     "relationships": {
       "$defs": {
         "requestedBy": {
+          "description": "Relationship to the party initiating this authorization request.",
           "$ref": "../base-definitions.schema.json#/definitions/relationshipParty"
         },
         "requestedFrom": {
+          "description": "Relationship to the party who owns the access or rights being requested.",
           "$ref": "../base-definitions.schema.json#/definitions/relationshipParty"
         },
         "requestedTo": {
+          "description": "Relationship to the authorized representative who can approve this request.",
+          "$ref": "../base-definitions.schema.json#/definitions/relationshipParty"
+        },
+        "approvedBy": {
+          "description": "Relationship to the party who approved this authorization request (optional, populated after approval).",
           "$ref": "../base-definitions.schema.json#/definitions/relationshipParty"
         }
       }
