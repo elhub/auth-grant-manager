@@ -134,8 +134,6 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                 val requestedFromName = VALID_REQUESTED_FROM_NAME
                 val requestedBy = VALID_REQUESTED_BY_IDENTIFIER
                 val requestedTo = VALID_REQUESTED_TO_IDENTIFIER
-                val signedBy = VALID_SIGNED_BY_IDENTIFIER
-
                 val balanceSupplierName = VALID_BALANCE_SUPPLIER_NAME
                 val balanceSupplierContractName = VALID_BALANCE_SUPPLIER_CONTRACT_NAME
                 val meteringPointId = VALID_METERING_POINT_ID
@@ -147,7 +145,6 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                     requestedBy = requestedBy,
                     requestedFrom = requestedFrom,
                     requestedTo = requestedTo,
-                    signedBy = signedBy,
                     requestedFromName = requestedFromName,
                     balanceSupplierName = balanceSupplierName,
                     balanceSupplierContractName = balanceSupplierContractName,
@@ -168,7 +165,7 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
                 Then("that document should contain the necessary metadata") {
                     val signerNin = document.file.getCustomMetaDataValue(PdfGenerator.PdfConstants.PDF_METADATA_KEY_NIN)
-                    signerNin shouldBe command.signedBy.idValue
+                    signerNin shouldBe command.requestedTo.idValue
                 }
 
                 Then("that document should conform to the PDF/A-2b standard") {
@@ -184,7 +181,6 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                     val requestedFromName = VALID_REQUESTED_FROM_NAME
                     val requestedBy = VALID_REQUESTED_BY_IDENTIFIER
                     val requestedTo = VALID_REQUESTED_TO_IDENTIFIER
-                    val signedBy = VALID_SIGNED_BY_IDENTIFIER
                     val balanceSupplierName = VALID_BALANCE_SUPPLIER_NAME
                     val meteringPointId = VALID_METERING_POINT_ID
                     val balanceSupplierContractName = VALID_BALANCE_SUPPLIER_CONTRACT_NAME
@@ -196,7 +192,6 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                         requestedBy = requestedBy,
                         requestedFrom = requestedFrom,
                         requestedTo = requestedTo,
-                        signedBy = signedBy,
                         requestedFromName = requestedFromName,
                         balanceSupplierName = balanceSupplierName,
                         balanceSupplierContractName = balanceSupplierContractName,
@@ -251,7 +246,6 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                         requestedBy = requestedBy,
                         requestedFrom = requestedFrom,
                         requestedTo = requestedTo,
-                        signedBy = signedBy,
                         requestedFromName = requestedFromName,
                         balanceSupplierName = balanceSupplierName,
                         balanceSupplierContractName = balanceSupplierContractName,
@@ -283,7 +277,6 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                         requestedBy = requestedBy,
                         requestedFrom = requestedFrom,
                         requestedTo = requestedTo,
-                        signedBy = signedBy,
                         requestedFromName = requestedFromName,
                         balanceSupplierName = balanceSupplierName,
                         balanceSupplierContractName = balanceSupplierContractName,
@@ -315,7 +308,6 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                         requestedBy = requestedBy,
                         requestedFrom = requestedFrom,
                         requestedTo = requestedTo,
-                        signedBy = signedBy,
                         requestedFromName = requestedFromName,
                         balanceSupplierName = balanceSupplierName,
                         balanceSupplierContractName = balanceSupplierContractName,
@@ -347,7 +339,6 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                         requestedBy = requestedBy,
                         requestedFrom = requestedFrom,
                         requestedTo = requestedTo,
-                        signedBy = signedBy,
                         requestedFromName = requestedFromName,
                         balanceSupplierName = balanceSupplierName,
                         balanceSupplierContractName = balanceSupplierContractName,
@@ -379,7 +370,6 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                         requestedBy = requestedBy,
                         requestedFrom = requestedFrom,
                         requestedTo = requestedTo,
-                        signedBy = signedBy,
                         requestedFromName = requestedFromName,
                         balanceSupplierName = balanceSupplierName,
                         balanceSupplierContractName = balanceSupplierContractName,
@@ -411,7 +401,6 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                         requestedBy = requestedBy,
                         requestedFrom = requestedFrom,
                         requestedTo = requestedTo,
-                        signedBy = signedBy,
                         requestedFromName = requestedFromName,
                         balanceSupplierName = balanceSupplierName,
                         balanceSupplierContractName = balanceSupplierContractName,
@@ -431,7 +420,6 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                 val requestedFromName = VALID_REQUESTED_FROM_NAME
                 val requestedBy = VALID_REQUESTED_BY_IDENTIFIER
                 val requestedTo = VALID_REQUESTED_TO_IDENTIFIER
-                val signedBy = VALID_SIGNED_BY_IDENTIFIER
                 val balanceSupplierName = VALID_BALANCE_SUPPLIER_NAME
                 val balanceSupplierContractName = VALID_BALANCE_SUPPLIER_CONTRACT_NAME
                 val meteringPointId = INVALID_METERING_POINT_ID
@@ -443,7 +431,6 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                         requestedBy = requestedBy,
                         requestedFrom = requestedFrom,
                         requestedTo = requestedTo,
-                        signedBy = signedBy,
                         requestedFromName = requestedFromName,
                         balanceSupplierName = balanceSupplierName,
                         balanceSupplierContractName = balanceSupplierContractName,
@@ -463,7 +450,6 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                 val requestedFromName = VALID_REQUESTED_FROM_NAME
                 val requestedBy = VALID_REQUESTED_BY_IDENTIFIER
                 val requestedTo = VALID_REQUESTED_TO_IDENTIFIER
-                val signedBy = VALID_SIGNED_BY_IDENTIFIER
                 val balanceSupplierName = VALID_BALANCE_SUPPLIER_NAME
                 val balanceSupplierContractName = VALID_BALANCE_SUPPLIER_CONTRACT_NAME
                 val meteringPointId = VALID_METERING_POINT_ID
@@ -475,7 +461,6 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                         requestedBy = requestedBy,
                         requestedFrom = requestedFrom,
                         requestedTo = requestedTo,
-                        signedBy = signedBy,
                         requestedFromName = requestedFromName,
                         balanceSupplierName = balanceSupplierName,
                         balanceSupplierContractName = balanceSupplierContractName,
@@ -507,7 +492,6 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                         requestedBy = requestedBy,
                         requestedFrom = requestedFrom,
                         requestedTo = requestedTo,
-                        signedBy = signedBy,
                         requestedFromName = requestedFromName,
                         balanceSupplierName = balanceSupplierName,
                         balanceSupplierContractName = balanceSupplierContractName,

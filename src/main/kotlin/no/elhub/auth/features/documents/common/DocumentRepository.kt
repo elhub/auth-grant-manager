@@ -2,6 +2,7 @@ package no.elhub.auth.features.documents.common
 
 import arrow.core.Either
 import arrow.core.left
+import arrow.core.raise.context.bind
 import arrow.core.raise.either
 import arrow.core.right
 import kotlinx.datetime.Instant
@@ -36,7 +37,13 @@ interface DocumentRepository {
     fun find(id: UUID): Either<RepositoryReadError, AuthorizationDocument>
     fun insert(doc: AuthorizationDocument): Either<RepositoryWriteError, AuthorizationDocument>
     fun findAll(): Either<RepositoryReadError, List<AuthorizationDocument>>
-    fun confirm(documentId: UUID, signedFile: ByteArray): Either<RepositoryWriteError, AuthorizationDocument>
+    fun confirm(
+        documentId: UUID,
+        signedFile: ByteArray,
+        requestedFrom: AuthorizationParty,
+        signatory: AuthorizationParty
+    ): Either<RepositoryWriteError, AuthorizationDocument>
+
     fun findScopes(documentId: UUID): Either<RepositoryReadError, List<AuthorizationScope>>
 }
 
@@ -59,10 +66,6 @@ class ExposedDocumentRepository(
                     .mapLeft { RepositoryWriteError.UnexpectedError }
                     .bind()
 
-                val signedByParty = partyRepo.findOrInsert(doc.signedBy.type, doc.signedBy.resourceId)
-                    .mapLeft { RepositoryWriteError.UnexpectedError }
-                    .bind()
-
                 val document = AuthorizationDocumentTable.insertReturning {
                     it[id] = doc.id
                     it[title] = doc.title
@@ -72,10 +75,9 @@ class ExposedDocumentRepository(
                     it[requestedBy] = requestedByParty.id
                     it[requestedFrom] = requestedFromParty.id
                     it[requestedTo] = requestedToParty.id
-                    it[signedBy] = signedByParty.id
                     it[createdAt] = doc.createdAt
                     it[updatedAt] = doc.updatedAt
-                }.map { it.toAuthorizationDocument(requestedByParty, requestedFromParty, requestedToParty, signedByParty) }
+                }.map { it.toAuthorizationDocument(requestedByParty, requestedFromParty, requestedToParty) }
                     .single()
 
                 val scopeId = AuthorizationScopeTable.insertAndGetId {
@@ -118,22 +120,30 @@ class ExposedDocumentRepository(
                 val requestedToDbId = documentRow[AuthorizationDocumentTable.requestedTo]
                 val requestedToParty = resolveParty(requestedToDbId).bind()
 
-                val signedByDbId = documentRow[AuthorizationDocumentTable.signedBy]
-                val signedByParty = resolveParty(signedByDbId).bind()
-
-                documentRow.toAuthorizationDocument(requestedByParty, requestedFromParty, requestedToParty, signedByParty)
+                documentRow.toAuthorizationDocument(requestedByParty, requestedFromParty, requestedToParty)
             }
         }
 
     override fun confirm(
         documentId: UUID,
-        signedFile: ByteArray
+        signedFile: ByteArray,
+        requestedFrom: AuthorizationParty,
+        signatory: AuthorizationParty
     ): Either<RepositoryWriteError, AuthorizationDocument> =
         either {
             val updatedCount =
                 Either
                     .catch {
                         transaction {
+                            val signatoryRecord = partyRepo.findOrInsert(signatory.type, signatory.resourceId).bind()
+                            val requestedFromRecord = partyRepo.findOrInsert(requestedFrom.type, requestedFrom.resourceId).bind()
+
+                            AuthorizationDocumentSignatoriesTable.insert {
+                                it[authorizationDocumentId] = documentId
+                                it[this.requestedFrom] = requestedFromRecord.id
+                                it[signedBy] = signatoryRecord.id
+                            }
+
                             AuthorizationDocumentTable.update(
                                 where = { AuthorizationDocumentTable.id eq documentId }
                             ) {
@@ -203,7 +213,6 @@ object AuthorizationDocumentTable : UUIDTable("auth.authorization_document") {
     val requestedBy = uuid("requested_by").references(AuthorizationPartyTable.id)
     val requestedFrom = uuid("requested_from").references(AuthorizationPartyTable.id)
     val requestedTo = uuid("requested_to").references(AuthorizationPartyTable.id)
-    val signedBy = uuid("signed_by").references(AuthorizationPartyTable.id)
     val createdAt = datetime("created_at")
     val updatedAt = datetime("updated_at")
 }
@@ -217,11 +226,22 @@ object AuthorizationDocumentScopeTable : Table("auth.authorization_document_scop
     override val primaryKey = PrimaryKey(authorizationDocumentId, authorizationScopeId)
 }
 
+object AuthorizationDocumentSignatoriesTable : Table("auth.authorization_document_signatories") {
+    val authorizationDocumentId = uuid("authorization_document_id")
+        .references(AuthorizationDocumentTable.id, onDelete = ReferenceOption.CASCADE)
+    val requestedFrom = uuid("requested_from")
+        .references(AuthorizationPartyTable.id)
+    val signedBy = uuid("signed_by")
+        .references(AuthorizationPartyTable.id)
+    val signedAt = timestamp("signed_at").clientDefault { java.time.Instant.now() }
+
+    override val primaryKey = PrimaryKey(authorizationDocumentId, requestedFrom)
+}
+
 fun ResultRow.toAuthorizationDocument(
     requestedBy: AuthorizationPartyRecord,
     requestedFrom: AuthorizationPartyRecord,
     requestedTo: AuthorizationPartyRecord,
-    signedBy: AuthorizationPartyRecord
 ) = AuthorizationDocument(
     id = this[AuthorizationDocumentTable.id].value,
     title = this[AuthorizationDocumentTable.title],
@@ -231,7 +251,6 @@ fun ResultRow.toAuthorizationDocument(
     requestedBy = AuthorizationParty(resourceId = requestedBy.resourceId, type = requestedBy.type),
     requestedFrom = AuthorizationParty(resourceId = requestedFrom.resourceId, type = requestedFrom.type),
     requestedTo = AuthorizationParty(resourceId = requestedTo.resourceId, type = requestedTo.type),
-    signedBy = AuthorizationParty(resourceId = signedBy.resourceId, type = signedBy.type),
     createdAt = this[AuthorizationDocumentTable.createdAt],
     updatedAt = this[AuthorizationDocumentTable.updatedAt],
 )

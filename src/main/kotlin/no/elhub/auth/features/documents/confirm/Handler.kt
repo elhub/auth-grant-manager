@@ -23,7 +23,12 @@ class Handler(
             }.bind()
         // TODO: Implement validation of the signed file
 
-        val confirmedDocument = documentRepository.confirm(documentId = document.id, signedFile = command.signedFile)
+        val confirmedDocument = documentRepository.confirm(
+            documentId = document.id,
+            signedFile = command.signedFile,
+            requestedFrom = document.requestedFrom,
+            signatory = document.requestedTo
+        )
             .mapLeft { error ->
                 when (error) {
                     is RepositoryWriteError.NotFoundError -> ConfirmDocumentError.DocumentNotFoundError
@@ -42,7 +47,7 @@ class Handler(
 
         val grant = grantRepository.insert(
             grantedFor = confirmedDocument.requestedFrom,
-            grantedBy = confirmedDocument.signedBy,
+            grantedBy = confirmedDocument.requestedBy,
             grantedTo = confirmedDocument.requestedTo,
             scopes = scopes
         ).mapLeft { ConfirmDocumentError.GrantCreationError }.bind()

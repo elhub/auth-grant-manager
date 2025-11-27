@@ -32,11 +32,8 @@ class Handler(
         val requestedToParty = partyService.resolve(command.requestedTo)
             .getOrElse { return CreateDocumentError.RequestedToPartyError.left() }
 
-        val signedByParty = partyService.resolve(command.signedBy)
-            .getOrElse { return CreateDocumentError.SignedByPartyError.left() }
-
         val file = fileGenerator.generate(
-            signerNin = command.signedBy.idValue,
+            signerNin = command.requestedTo.idValue,
             documentMeta = command.meta
         ).getOrElse { return CreateDocumentError.FileGenerationError.left() }
 
@@ -63,7 +60,6 @@ class Handler(
             requestedBy = requestedByParty,
             requestedFrom = requestedFromParty,
             requestedTo = requestedToParty,
-            signedBy = signedByParty
         )
 
         val savedDocument = documentRepository.insert(documentToCreate)

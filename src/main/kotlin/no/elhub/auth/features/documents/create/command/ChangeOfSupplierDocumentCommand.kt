@@ -31,13 +31,11 @@ class ChangeOfSupplierDocumentCommand private constructor(
     requestedFrom: PartyIdentifier,
     requestedTo: PartyIdentifier,
     requestedBy: PartyIdentifier,
-    signedBy: PartyIdentifier,
     meta: ChangeOfSupplierDocumentMeta
 ) : DocumentCommand(
     requestedFrom,
     requestedTo,
     requestedBy,
-    signedBy,
     meta
 ) {
     companion object {
@@ -45,7 +43,6 @@ class ChangeOfSupplierDocumentCommand private constructor(
             requestedBy: PartyIdentifier,
             requestedFrom: PartyIdentifier,
             requestedTo: PartyIdentifier,
-            signedBy: PartyIdentifier,
             requestedFromName: String,
             balanceSupplierName: String,
             balanceSupplierContractName: String,
@@ -104,7 +101,6 @@ class ChangeOfSupplierDocumentCommand private constructor(
                 requestedBy = requestedBy,
                 requestedFrom = requestedFrom,
                 requestedTo = requestedTo,
-                signedBy = signedBy,
                 meta = changeOfSupplierMeta
             ).right()
         }
