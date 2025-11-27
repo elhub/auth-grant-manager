@@ -12,6 +12,60 @@
         "type": {
           "$ref": "authorization-document-definitions.json#/$defs/type"
         },
+        "attributes": {
+          "type": "object",
+          "properties": {
+            "documentType": {
+              "$ref": "authorization-document-definitions.json#/$defs/attributes/$defs/documentType"
+            },
+            "status": {
+              "$ref": "authorization-document-definitions.json#/$defs/attributes/$defs/status"
+            },
+            "validTo": {
+              "$ref": "authorization-document-definitions.json#/$defs/attributes/$defs/validTo"
+            }
+          }
+        },
+        "relationships": {
+          "type": "object",
+          "properties": {
+            "requestedBy": {
+              "$ref": "authorization-document-definitions.json#/$defs/relationships/$defs/requestedBy"
+            },
+            "requestedFrom": {
+              "$ref": "authorization-document-definitions.json#/$defs/relationships/$defs/requestedFrom"
+            },
+            "requestedTo": {
+              "$ref": "authorization-document-definitions.json#/$defs/relationships/$defs/requestedTo"
+            }
+          }
+        },
+        "metadata": {
+          "type": "object",
+          "properties": {
+            "createdAt": {
+              "$ref": "authorization-document-definitions.json#/$defs/attributes/$defs/createdAt"
+            },
+            "updatedAt": {
+              "$ref": "authorization-document-definitions.json#/$defs/attributes/$defs/updatedAt"
+            },
+            "requestedFromName": {
+              "$ref": "authorization-document-definitions.json#/$defs/meta/$defs/requestedFromName"
+            },
+            "requestedForMeteringPointId": {
+              "$ref": "authorization-document-definitions.json#/$defs/meta/$defs/requestedForMeteringPointId"
+            },
+            "requestedForMeteringPointAddress": {
+              "$ref": "authorization-document-definitions.json#/$defs/meta/$defs/requestedForMeteringPointAddress"
+            },
+            "balanceSupplierName": {
+              "$ref": "authorization-document-definitions.json#/$defs/meta/$defs/balanceSupplierName"
+            },
+            "balanceSupplierContractName": {
+              "$ref": "authorization-document-definitions.json#/$defs/meta/$defs/balanceSupplierContractName"
+            }
+          }
+        },
         "links": {
           "type": "object",
           "properties": {
@@ -26,6 +80,13 @@
         }
       },
       "required": ["id", "type", "links"]
+    },
+    "links": {
+      "description": "Link members related to the primary data.",
+      "$ref": "../base-definitions.schema.json#/definitions/topLevelLinks"
+    },
+    "meta": {
+      "$ref": "../base-definitions.schema.json#/definitions/topLevelMeta"
     }
   },
   "required": ["data"]
