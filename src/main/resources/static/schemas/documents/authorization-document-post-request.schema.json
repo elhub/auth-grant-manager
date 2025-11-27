@@ -34,9 +34,6 @@
             "requestedTo": {
               "$ref": "authorization-document-definitions.json#/$defs/meta/$defs/requestedTo"
             },
-            "SignedBy": {
-              "$ref": "authorization-document-definitions.json#/$defs/meta/$defs/signedBy"
-            },
             "requestedFromName": {
               "$ref": "authorization-document-definitions.json#/$defs/meta/$defs/requestedFromName"
             },

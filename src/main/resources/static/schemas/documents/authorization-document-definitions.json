@@ -30,6 +30,12 @@
           "type": "string",
           "format": "date-time",
           "description": "The date and time when the authorization document was updated last."
+        },
+        "validTo": {
+          "type": "string",
+          "format": "date",
+          "description": "The date when the authorization document is no longer valid.",
+          "examples": ["2025-12-31"]
         }
       }
     },
@@ -39,6 +45,9 @@
           "$ref": "../base-definitions.schema.json#/definitions/relationshipParty"
         },
         "requestedFrom": {
+          "$ref": "../base-definitions.schema.json#/definitions/relationshipParty"
+        },
+        "requestedTo": {
           "$ref": "../base-definitions.schema.json#/definitions/relationshipParty"
         },
         "signedBy": {
