@@ -2,12 +2,15 @@ package no.elhub.auth.features.requests.create.command
 
 import no.elhub.auth.features.common.PartyIdentifier
 import no.elhub.auth.features.requests.AuthorizationRequest
+import no.elhub.auth.features.requests.common.AuthorizationRequestProperty
+import java.util.UUID
 
-sealed interface RequestMetaMarker {
+interface RequestMetaMarker {
     fun toMetaAttributes(): Map<String, String>
 }
 
-sealed class RequestCommand(
+data class RequestCommand(
+    val type: AuthorizationRequest.Type,
     val requestedFrom: PartyIdentifier,
     val requestedBy: PartyIdentifier,
     val requestedTo: PartyIdentifier,
@@ -15,6 +18,11 @@ sealed class RequestCommand(
     val meta: RequestMetaMarker,
 )
 
-fun RequestCommand.toAuthorizationRequestType(): AuthorizationRequest.Type = when (this) {
-    is ChangeOfSupplierRequestCommand -> AuthorizationRequest.Type.ChangeOfSupplierConfirmation
-}
+fun Map<String, String>.toRequestProperties(requestId: UUID) =
+    this.map { (key, value) ->
+        AuthorizationRequestProperty(
+            requestId = requestId,
+            key = key,
+            value = value,
+        )
+    }.toList()
