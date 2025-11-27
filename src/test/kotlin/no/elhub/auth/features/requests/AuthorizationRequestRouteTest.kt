@@ -29,6 +29,7 @@ import no.elhub.auth.features.requests.create.CreateRequestMeta
 import no.elhub.auth.features.requests.create.CreateRequestResponse
 import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObjectWithMeta
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
+import java.time.LocalDate
 import no.elhub.auth.module as applicationModule
 
 class AuthorizationRequestRouteTest : FunSpec({
@@ -265,7 +266,8 @@ class AuthorizationRequestRouteTest : FunSpec({
                                 data = JsonApiRequestResourceObjectWithMeta(
                                     type = "AuthorizationRequest",
                                     attributes = CreateRequestAttributes(
-                                        requestType = AuthorizationRequest.Type.ChangeOfSupplierConfirmation
+                                        requestType = AuthorizationRequest.Type.ChangeOfSupplierConfirmation,
+                                        validTo = LocalDate.now().plusDays(30).toString()
                                     ),
                                     meta = CreateRequestMeta(
                                         requestedBy = PartyIdentifier(
@@ -283,6 +285,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                                         ),
                                         requestedForMeteringPointId = "atomorum",
                                         requestedForMeteringPointAddress = "quaerendum",
+                                        balanceSupplierName = "Balance Supplier",
                                         balanceSupplierContractName = "Selena Chandler"
                                     )
                                 )
@@ -291,6 +294,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                     }
 
                     response.status shouldBe HttpStatusCode.Created
+
                     val responseJson: CreateRequestResponse = response.body()
                     responseJson.data.apply {
                         id.shouldNotBeNull()
@@ -299,6 +303,38 @@ class AuthorizationRequestRouteTest : FunSpec({
                         attributes.apply {
                             requestType shouldBe "ChangeOfSupplierConfirmation"
                             status shouldBe AuthorizationRequest.Status.Pending.name
+                            validTo.shouldNotBeNull()
+                        }
+                        relationships.apply {
+                            relationships.apply {
+                                requestedBy.apply {
+                                    data.apply {
+                                        id shouldBe "987654321"
+                                        type shouldBe "Organization"
+                                    }
+                                }
+                                requestedFrom.apply {
+                                    data.apply {
+                                        id.shouldNotBeNull()
+                                        type shouldBe "Person"
+                                    }
+                                }
+                                requestedFrom.apply {
+                                    data.apply {
+                                        id.shouldNotBeNull()
+                                        type shouldBe "Person"
+                                    }
+                                }
+                            }
+                        }
+                        meta.apply {
+                            createdAt.shouldNotBeNull()
+                            updatedAt.shouldNotBeNull()
+                            requestedFromName shouldBe "Hillary Orr"
+                            requestedForMeteringPointId shouldBe "quaerendum"
+                            requestedForMeteringPointAddress shouldBe "quaerendum"
+                            balanceSupplierName shouldBe "Balance Supplier"
+                            balanceSupplierContractName shouldBe "Selena Chandler"
                         }
                         links.shouldNotBeNull()
                         links.apply {
@@ -306,7 +342,10 @@ class AuthorizationRequestRouteTest : FunSpec({
                         }
                     }
                     responseJson.links.apply {
-                        self shouldBe "/authorization-requests"
+                        self shouldBe "https://api.elhub.no/authorization-requests"
+                    }
+                    responseJson.meta.apply {
+                        "createdAt".shouldNotBeNull()
                     }
                 }
             }

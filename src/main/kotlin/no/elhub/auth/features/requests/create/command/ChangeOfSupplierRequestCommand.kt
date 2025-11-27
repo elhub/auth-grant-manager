@@ -14,6 +14,7 @@ data class ChangeOfSupplierRequestMeta(
     val requestedFromName: String,
     val requestedForMeteringPointId: String,
     val requestedForMeteringPointAddress: String,
+    val balanceSupplierName: String,
     val balanceSupplierContractName: String
 ) : RequestMetaMarker {
     override fun toMetaAttributes(): Map<String, String> =
@@ -21,6 +22,7 @@ data class ChangeOfSupplierRequestMeta(
             "requestedFromName" to requestedFromName,
             "requestedForMeteringPointId" to requestedForMeteringPointId,
             "requestedForMeteringPointAddress" to requestedForMeteringPointAddress,
+            "balanceSupplierName" to balanceSupplierName,
             "balanceSupplierContractName" to balanceSupplierContractName
         )
 }
@@ -29,11 +31,13 @@ class ChangeOfSupplierRequestCommand private constructor(
     requestedFrom: PartyIdentifier,
     requestedBy: PartyIdentifier,
     requestedTo: PartyIdentifier,
+    validTo: String,
     meta: ChangeOfSupplierRequestMeta
 ) : RequestCommand(
     requestedFrom,
     requestedBy,
     requestedTo,
+    validTo,
     meta
 ) {
     companion object {
@@ -42,16 +46,45 @@ class ChangeOfSupplierRequestCommand private constructor(
             requestedBy: PartyIdentifier,
             requestedFromName: String,
             requestedTo: PartyIdentifier,
+            validTo: String,
             requestedForMeteringPointId: String,
             requestedForMeteringPointAddress: String,
+            balanceSupplierName: String,
             balanceSupplierContractName: String,
         ): Either<RequestValidationError, ChangeOfSupplierRequestCommand> {
+            // TODO too many if-statements ...
+
+            if (requestedFrom.idValue.isBlank()) {
+                return RequestValidationError.MissingRequestedFrom.left()
+            }
+
+            if (!requestedFrom.idValue.matches(Regex(REGEX_REQUESTED_FROM))) {
+                return RequestValidationError.MissingRequestedFrom.left()
+            }
+
+            if (requestedBy.idValue.isBlank()) {
+                return RequestValidationError.MissingRequestedBy.left()
+            }
+
+            if (!requestedBy.idValue.matches(Regex(REGEX_REQUESTED_BY))) {
+                return RequestValidationError.MissingRequestedBy.left()
+            }
+
             if (requestedFromName.isBlank()) {
                 return RequestValidationError.MissingRequestedFromName.left()
             }
 
-            if (balanceSupplierContractName.isBlank()) {
-                return RequestValidationError.MissingBalanceSupplierContractName.left()
+            if (requestedTo.idValue.isBlank()) {
+                return RequestValidationError.MissingRequestedFrom.left()
+            }
+
+            if (!requestedTo.idValue.matches(Regex(REGEX_REQUESTED_FROM))) {
+                return RequestValidationError.MissingRequestedFrom.left()
+            }
+
+            // TODO check that validTo is Date?
+            if (validTo.isBlank()) {
+                return RequestValidationError.MissingRequestedFrom.left()
             }
 
             if (requestedForMeteringPointId.isBlank()) {
@@ -66,26 +99,19 @@ class ChangeOfSupplierRequestCommand private constructor(
                 return RequestValidationError.MissingMeteringPointAddress.left()
             }
 
-            if (requestedBy.idValue.isBlank()) {
-                return RequestValidationError.MissingRequestedBy.left()
+            if (balanceSupplierName.isBlank()) {
+                return RequestValidationError.MissingBalanceSupplierName.left()
             }
 
-            if (!requestedBy.idValue.matches(Regex(REGEX_REQUESTED_BY))) {
-                return RequestValidationError.MissingRequestedBy.left()
-            }
-
-            if (requestedFrom.idValue.isBlank()) {
-                return RequestValidationError.MissingRequestedFrom.left()
-            }
-
-            if (!requestedFrom.idValue.matches(Regex(REGEX_REQUESTED_FROM))) {
-                return RequestValidationError.MissingRequestedFrom.left()
+            if (balanceSupplierContractName.isBlank()) {
+                return RequestValidationError.MissingBalanceSupplierContractName.left()
             }
 
             val changeOfSupplierMeta = ChangeOfSupplierRequestMeta(
                 requestedFromName = requestedFromName,
                 requestedForMeteringPointId = requestedForMeteringPointAddress,
                 requestedForMeteringPointAddress = requestedForMeteringPointAddress,
+                balanceSupplierName = balanceSupplierName,
                 balanceSupplierContractName = balanceSupplierContractName
             )
 
@@ -93,6 +119,7 @@ class ChangeOfSupplierRequestCommand private constructor(
                 requestedBy = requestedBy,
                 requestedFrom = requestedFrom,
                 requestedTo = requestedTo,
+                validTo = validTo,
                 meta = changeOfSupplierMeta
             ).right()
         }
@@ -104,6 +131,7 @@ sealed class RequestValidationError {
     data object MissingRequestedFromName : RequestValidationError()
     data object MissingRequestedBy : RequestValidationError()
     data object MissingBalanceSupplierContractName : RequestValidationError()
+    data object MissingBalanceSupplierName : RequestValidationError()
     data object MissingMeteringPointId : RequestValidationError()
     data object MissingMeteringPointAddress : RequestValidationError()
 }

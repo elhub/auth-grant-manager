@@ -1,6 +1,7 @@
 package no.elhub.auth.features.requests
 
 import no.elhub.auth.features.common.AuthorizationParty
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -13,7 +14,8 @@ data class AuthorizationRequest(
     val requestedTo: AuthorizationParty,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime,
-    val validTo: LocalDateTime,
+    val validTo: LocalDate,
+    val properties: Map<String, String> = emptyMap()
 ) {
     companion object {
         fun create(
@@ -21,6 +23,8 @@ data class AuthorizationRequest(
             requestedBy: AuthorizationParty,
             requestedFrom: AuthorizationParty,
             requestedTo: AuthorizationParty,
+            validTo: LocalDate,
+            properties: Map<String, String> = emptyMap(),
         ): AuthorizationRequest = AuthorizationRequest(
             id = UUID.randomUUID(),
             type = type,
@@ -30,7 +34,8 @@ data class AuthorizationRequest(
             requestedTo = requestedTo,
             createdAt = LocalDateTime.now(),
             updatedAt = LocalDateTime.now(),
-            validTo = LocalDateTime.now().plusDays(30) // TODO not clear about this field - why 30 days ?
+            validTo = validTo,
+            properties = properties,
         )
     }
 
@@ -44,11 +49,4 @@ data class AuthorizationRequest(
     enum class Type {
         ChangeOfSupplierConfirmation,
     }
-
-    data class Property(
-        val authorizationRequestId: String,
-        val key: String,
-        val value: String,
-        val createdAt: LocalDateTime
-    )
 }
