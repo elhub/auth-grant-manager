@@ -1,3 +1,7 @@
 package no.elhub.auth.features.documents.query
 
-class Query()
+import no.elhub.auth.features.common.PartyIdentifier
+
+data class Query(
+    val requestedByIdentifier: PartyIdentifier
+)

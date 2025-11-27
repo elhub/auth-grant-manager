@@ -2,7 +2,6 @@ package no.elhub.auth.features.documents.common
 
 import arrow.core.Either
 import arrow.core.left
-import arrow.core.raise.context.bind
 import arrow.core.raise.either
 import arrow.core.right
 import kotlinx.datetime.Instant
@@ -13,6 +12,7 @@ import no.elhub.auth.features.common.PGEnum
 import no.elhub.auth.features.common.PartyRepository
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.RepositoryWriteError
+import no.elhub.auth.features.common.toAuthorizationParty
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.grants.AuthorizationScope
 import no.elhub.auth.features.grants.ElhubResource
@@ -36,7 +36,7 @@ import java.util.*
 interface DocumentRepository {
     fun find(id: UUID): Either<RepositoryReadError, AuthorizationDocument>
     fun insert(doc: AuthorizationDocument): Either<RepositoryWriteError, AuthorizationDocument>
-    fun findAll(): Either<RepositoryReadError, List<AuthorizationDocument>>
+    fun findAll(requestedBy: AuthorizationParty): Either<RepositoryReadError, List<AuthorizationDocument>>
     fun confirm(
         documentId: UUID,
         signedFile: ByteArray,
@@ -186,7 +186,49 @@ class ExposedDocumentRepository(
             }
         }.mapLeft { RepositoryReadError.UnexpectedError }
 
-    override fun findAll() = TODO()
+    override fun findAll(requestedBy: AuthorizationParty): Either<RepositoryReadError, List<AuthorizationDocument>> = either {
+        transaction {
+            val partyRecord = partyRepo.findOrInsert(type = requestedBy.type, resourceId = requestedBy.resourceId)
+                .mapLeft { RepositoryReadError.UnexpectedError }
+                .bind()
+
+            val documentsRecords = AuthorizationDocumentTable
+                .selectAll()
+                .where { AuthorizationDocumentTable.requestedBy eq partyRecord.id }
+                .toList()
+
+            if (documentsRecords.isEmpty()) {
+                return@transaction emptyList()
+            }
+
+            val partyIds = documentsRecords.flatMap { row ->
+                listOf(
+                    row[AuthorizationDocumentTable.requestedBy],
+                    row[AuthorizationDocumentTable.requestedFrom],
+                    row[AuthorizationDocumentTable.requestedTo],
+                )
+            }.toSet().toList()
+
+            val partiesById = AuthorizationPartyTable
+                .selectAll()
+                .where { AuthorizationPartyTable.id inList partyIds }
+                .associate { row ->
+                    val party = row.toAuthorizationParty()
+                    party.id to party
+                }
+
+            documentsRecords.map { row ->
+                val requestedByParty =
+                    partiesById[row[AuthorizationDocumentTable.requestedBy]] ?: raise(RepositoryReadError.UnexpectedError)
+                val requestedFromParty =
+                    partiesById[row[AuthorizationDocumentTable.requestedFrom]] ?: raise(RepositoryReadError.UnexpectedError)
+                val requestedToParty =
+                    partiesById[row[AuthorizationDocumentTable.requestedTo]] ?: raise(RepositoryReadError.UnexpectedError)
+
+                row.toAuthorizationDocument(requestedByParty, requestedFromParty, requestedToParty)
+            }
+        }
+    }
 
     private fun resolveParty(
         partyId: UUID

@@ -1,6 +1,11 @@
 package no.elhub.auth.features.documents.common
 
+import arrow.core.getOrElse
+import io.kotest.assertions.fail
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.collections.shouldContain
+import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldNotBe
 import no.elhub.auth.features.common.AuthorizationParty
 import no.elhub.auth.features.common.ExposedPartyRepository
@@ -13,7 +18,7 @@ import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.LocalDateTime
-import java.util.*
+import java.util.UUID
 
 class ExposedDocumentRepositoryTest :
     FunSpec({
@@ -43,7 +48,8 @@ class ExposedDocumentRepositoryTest :
                         requestedBy = AuthorizationParty(type = PartyType.Person, resourceId = "1234567890"),
                         requestedFrom = AuthorizationParty(type = PartyType.Person, resourceId = "1234567890"),
                         requestedTo = AuthorizationParty(type = PartyType.Person, resourceId = "1234567890"),
-                        signedBy = AuthorizationParty(type = PartyType.Person, resourceId = "1234567890"), createdAt = LocalDateTime.now(),
+                        signedBy = AuthorizationParty(type = PartyType.Person, resourceId = "1234567890"),
+                        createdAt = LocalDateTime.now(),
                         updatedAt = LocalDateTime.now()
                     )
 
@@ -72,6 +78,52 @@ class ExposedDocumentRepositoryTest :
                             .singleOrNull()
                     }
                 authorizationScopeRow shouldNotBe null
+            }
+        }
+
+        context("Find all") {
+            test("should return only documents requested by the given party") {
+                val matchingRequestedBy = AuthorizationParty(type = PartyType.Organization, resourceId = "matching-party")
+                val otherRequestedBy = AuthorizationParty(type = PartyType.Organization, resourceId = "other-party")
+
+                val matchingDocument = AuthorizationDocument(
+                    id = UUID.randomUUID(),
+                    title = "Matching",
+                    file = byteArrayOf(),
+                    type = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                    status = AuthorizationDocument.Status.Pending,
+                    requestedBy = matchingRequestedBy,
+                    requestedFrom = AuthorizationParty(type = PartyType.Person, resourceId = "from-1"),
+                    requestedTo = AuthorizationParty(type = PartyType.Person, resourceId = "to-1"),
+                    signedBy = AuthorizationParty(type = PartyType.Person, resourceId = "signer-1"),
+                    createdAt = LocalDateTime.now(),
+                    updatedAt = LocalDateTime.now()
+                )
+
+                val otherDocument = AuthorizationDocument(
+                    id = UUID.randomUUID(),
+                    title = "Other",
+                    file = byteArrayOf(),
+                    type = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                    status = AuthorizationDocument.Status.Pending,
+                    requestedBy = otherRequestedBy,
+                    requestedFrom = AuthorizationParty(type = PartyType.Person, resourceId = "from-2"),
+                    requestedTo = AuthorizationParty(type = PartyType.Person, resourceId = "to-2"),
+                    signedBy = AuthorizationParty(type = PartyType.Person, resourceId = "signer-2"),
+                    createdAt = LocalDateTime.now(),
+                    updatedAt = LocalDateTime.now()
+                )
+
+                repository.insert(matchingDocument)
+                repository.insert(otherDocument)
+
+                val documents = repository.findAll(AuthorizationParty(matchingRequestedBy.resourceId, PartyType.Organization))
+                    .getOrElse { error -> fail("Failed to fetch documents: $error") }
+                val documentIds = documents.map { it.id }
+
+                documentIds.shouldHaveSize(1)
+                documentIds shouldContain matchingDocument.id
+                documentIds shouldNotContain otherDocument.id
             }
         }
     })
