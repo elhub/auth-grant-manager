@@ -52,12 +52,39 @@ class ChangeOfSupplierRequestCommand private constructor(
             balanceSupplierName: String,
             balanceSupplierContractName: String,
         ): Either<RequestValidationError, ChangeOfSupplierRequestCommand> {
+            // TODO too many if-statements ...
+
+            if (requestedFrom.idValue.isBlank()) {
+                return RequestValidationError.MissingRequestedFrom.left()
+            }
+
+            if (!requestedFrom.idValue.matches(Regex(REGEX_REQUESTED_FROM))) {
+                return RequestValidationError.MissingRequestedFrom.left()
+            }
+
+            if (requestedBy.idValue.isBlank()) {
+                return RequestValidationError.MissingRequestedBy.left()
+            }
+
+            if (!requestedBy.idValue.matches(Regex(REGEX_REQUESTED_BY))) {
+                return RequestValidationError.MissingRequestedBy.left()
+            }
+
             if (requestedFromName.isBlank()) {
                 return RequestValidationError.MissingRequestedFromName.left()
             }
 
-            if (balanceSupplierContractName.isBlank()) {
-                return RequestValidationError.MissingBalanceSupplierContractName.left()
+            if (requestedTo.idValue.isBlank()) {
+                return RequestValidationError.MissingRequestedFrom.left()
+            }
+
+            if (!requestedTo.idValue.matches(Regex(REGEX_REQUESTED_FROM))) {
+                return RequestValidationError.MissingRequestedFrom.left()
+            }
+
+            // TODO check that validTo is Date?
+            if (validTo.isBlank()) {
+                return RequestValidationError.MissingRequestedFrom.left()
             }
 
             if (requestedForMeteringPointId.isBlank()) {
@@ -72,35 +99,13 @@ class ChangeOfSupplierRequestCommand private constructor(
                 return RequestValidationError.MissingMeteringPointAddress.left()
             }
 
-            if (requestedBy.idValue.isBlank()) {
-                return RequestValidationError.MissingRequestedBy.left()
+            if (balanceSupplierName.isBlank()) {
+                return RequestValidationError.MissingBalanceSupplierName.left()
             }
 
-            if (!requestedBy.idValue.matches(Regex(REGEX_REQUESTED_BY))) {
-                return RequestValidationError.MissingRequestedBy.left()
+            if (balanceSupplierContractName.isBlank()) {
+                return RequestValidationError.MissingBalanceSupplierContractName.left()
             }
-
-            if (requestedFrom.idValue.isBlank()) {
-                return RequestValidationError.MissingRequestedFrom.left()
-            }
-
-            if (!requestedFrom.idValue.matches(Regex(REGEX_REQUESTED_FROM))) {
-                return RequestValidationError.MissingRequestedFrom.left()
-            }
-
-            if (requestedTo.idValue.isBlank()) {
-                return RequestValidationError.MissingRequestedFrom.left()
-            }
-
-            if (!requestedTo.idValue.matches(Regex(REGEX_REQUESTED_FROM))) {
-                return RequestValidationError.MissingRequestedFrom.left()
-            }
-
-            if (validTo.isBlank()) {
-                return RequestValidationError.MissingRequestedFrom.left()
-            }
-
-            // TODO check that validTo is Date?
 
             val changeOfSupplierMeta = ChangeOfSupplierRequestMeta(
                 requestedFromName = requestedFromName,
@@ -126,6 +131,7 @@ sealed class RequestValidationError {
     data object MissingRequestedFromName : RequestValidationError()
     data object MissingRequestedBy : RequestValidationError()
     data object MissingBalanceSupplierContractName : RequestValidationError()
+    data object MissingBalanceSupplierName : RequestValidationError()
     data object MissingMeteringPointId : RequestValidationError()
     data object MissingMeteringPointAddress : RequestValidationError()
 }

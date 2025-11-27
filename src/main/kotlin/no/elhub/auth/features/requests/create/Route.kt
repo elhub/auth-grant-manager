@@ -42,6 +42,8 @@ fun Route.route(handler: Handler) {
                 return@post
             }
 
+        val req = request.toCreateResponse()
+
         call.respond(HttpStatusCode.Created, request.toCreateResponse())
     }
 }

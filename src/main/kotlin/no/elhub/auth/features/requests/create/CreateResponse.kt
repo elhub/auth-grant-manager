@@ -4,16 +4,17 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import no.elhub.auth.features.requests.AuthorizationRequest
-import no.elhub.auth.features.requests.AuthorizationRequestResponseHey
 import no.elhub.devxp.jsonapi.model.JsonApiAttributes
 import no.elhub.devxp.jsonapi.model.JsonApiLinks
 import no.elhub.devxp.jsonapi.model.JsonApiMeta
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipData
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipToOne
 import no.elhub.devxp.jsonapi.model.JsonApiRelationships
+import no.elhub.devxp.jsonapi.model.JsonApiResourceLinks
 import no.elhub.devxp.jsonapi.model.JsonApiResourceMeta
 import no.elhub.devxp.jsonapi.response.JsonApiResponse
-import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObjectWithRelationships
+import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObjectWithRelationshipsAndMetaAndLinks
+import java.time.LocalDateTime
 
 @Serializable
 data class CreateRequestResponseAttributes(
@@ -29,15 +30,31 @@ data class CreateRequestResponseRelationShips(
     val requestedTo: JsonApiRelationshipToOne,
 ) : JsonApiRelationships
 
+@Serializable
 data class CreateRequestResponseMeta(
     val createdAt: String,
+    val updatedAt: String,
+    val requestedFromName: String,
+    val requestedForMeteringPointId: String,
+    val requestedForMeteringPointAddress: String,
+    val balanceSupplierName: String,
+    val balanceSupplierContractName: String
 ) : JsonApiResourceMeta
 
-typealias CreateRequestResponseResource = JsonApiResponseResourceObjectWithRelationships<CreateRequestResponseAttributes, CreateRequestResponseRelationShips>
-typealias CreateRequestResponse = JsonApiResponse.SingleDocumentWithRelationships<CreateRequestResponseAttributes, CreateRequestResponseRelationShips>
+@Serializable
+data class CreateRequestResponseLinks(
+    val self: String
+) : JsonApiResourceLinks
+
+typealias CreateRequestResponse = JsonApiResponse.SingleDocumentWithRelationshipsAndMetaAndLinks<
+    CreateRequestResponseAttributes,
+    CreateRequestResponseRelationShips,
+    CreateRequestResponseMeta,
+    CreateRequestResponseLinks
+    >
 
 fun AuthorizationRequest.toCreateResponse() = CreateRequestResponse(
-    data = CreateRequestResponseResource(
+    data = JsonApiResponseResourceObjectWithRelationshipsAndMetaAndLinks(
         type = "AuthorizationRequest",
         id = this.id.toString(),
         attributes = CreateRequestResponseAttributes(
@@ -65,19 +82,23 @@ fun AuthorizationRequest.toCreateResponse() = CreateRequestResponse(
                 )
             ),
         ),
-        links = JsonApiLinks.ResourceObjectLink("/authorization-requests/${this.id}"),
-        meta = JsonApiMeta(
-            buildJsonObject {
-                properties.forEach { prop ->
-                    put(prop.key, prop.value)
-                }
-            }
+        meta = CreateRequestResponseMeta(
+            createdAt = this.createdAt.toString(),
+            updatedAt = this.updatedAt.toString(),
+            requestedFromName = this.properties["requestedFromName"].toString(),
+            requestedForMeteringPointId = this.properties["requestedForMeteringPointId"].toString(),
+            requestedForMeteringPointAddress = this.properties["requestedForMeteringPointAddress"].toString(),
+            balanceSupplierName = this.properties["balanceSupplierName"].toString(),
+            balanceSupplierContractName = this.properties["balanceSupplierContractName"].toString(),
+        ),
+        links = CreateRequestResponseLinks(
+            self = "https://api.elhub.no/authorization-requests/${this.id}"
         )
     ),
-    links = JsonApiLinks.ResourceObjectLink("/authorization-requests"),
+    links = JsonApiLinks.ResourceObjectLink("https://api.elhub.no/authorization-requests"),
     meta = JsonApiMeta(
         buildJsonObject {
-            put("createdAt", "test")
+            put("createdAt", LocalDateTime.now().toString())
         }
     )
 )

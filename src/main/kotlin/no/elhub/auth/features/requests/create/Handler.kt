@@ -49,15 +49,13 @@ class Handler(
 
         requestPropertyRepo.insert(requestProperties)
 
-        val properties = requestPropertyRepo.find(savedRequest.id)
-
         val requestToRespond = AuthorizationRequest.create(
             type = requestType,
             requestedFrom = requestedFromParty,
             requestedBy = requestedByParty,
             requestedTo = requestedToParty,
             validTo = validTo,
-            properties = properties
+            properties = metaAttributes
         )
 
         return requestToRespond.right()

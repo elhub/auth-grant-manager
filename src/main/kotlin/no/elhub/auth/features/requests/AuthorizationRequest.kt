@@ -1,7 +1,6 @@
 package no.elhub.auth.features.requests
 
 import no.elhub.auth.features.common.AuthorizationParty
-import no.elhub.auth.features.requests.common.AuthorizationRequestProperty
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
@@ -16,7 +15,7 @@ data class AuthorizationRequest(
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime,
     val validTo: LocalDate,
-    val properties: List<AuthorizationRequestProperty> = emptyList()
+    val properties: Map<String, String> = emptyMap()
 ) {
     companion object {
         fun create(
@@ -25,7 +24,7 @@ data class AuthorizationRequest(
             requestedFrom: AuthorizationParty,
             requestedTo: AuthorizationParty,
             validTo: LocalDate,
-            properties: List<AuthorizationRequestProperty> = emptyList(),
+            properties: Map<String, String> = emptyMap(),
         ): AuthorizationRequest = AuthorizationRequest(
             id = UUID.randomUUID(),
             type = type,
