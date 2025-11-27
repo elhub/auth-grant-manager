@@ -13,9 +13,9 @@ data class AuthorizationDocument(
     val requestedBy: AuthorizationParty,
     val requestedFrom: AuthorizationParty,
     val requestedTo: AuthorizationParty,
-    val signedBy: AuthorizationParty,
+    val signedBy: AuthorizationParty? = null,
     val createdAt: LocalDateTime,
-    val updatedAt: LocalDateTime,
+    val updatedAt: LocalDateTime
 ) {
     companion object {
         fun create(
@@ -24,7 +24,6 @@ data class AuthorizationDocument(
             requestedBy: AuthorizationParty,
             requestedFrom: AuthorizationParty,
             requestedTo: AuthorizationParty,
-            signedBy: AuthorizationParty
         ): AuthorizationDocument = AuthorizationDocument(
             id = UUID.randomUUID(),
             title = type.name,
@@ -34,7 +33,6 @@ data class AuthorizationDocument(
             requestedBy = requestedBy,
             requestedFrom = requestedFrom,
             requestedTo = requestedTo,
-            signedBy = signedBy,
             createdAt = LocalDateTime.now(),
             updatedAt = LocalDateTime.now()
         )

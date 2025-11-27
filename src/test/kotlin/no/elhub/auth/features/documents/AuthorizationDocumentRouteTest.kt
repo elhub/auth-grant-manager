@@ -143,10 +143,6 @@ class AuthorizationDocumentRouteTest :
                                                     idType = PartyIdentifierType.NationalIdentityNumber,
                                                     idValue = "00011122233"
                                                 ),
-                                                signedBy = PartyIdentifier(
-                                                    idType = PartyIdentifierType.NationalIdentityNumber,
-                                                    idValue = "98765432100"
-                                                ),
                                                 requestedFromName = "Hillary Orr",
                                                 requestedForMeteringPointId = "atomorum",
                                                 requestedForMeteringPointAddress = "quaerendum",
