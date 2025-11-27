@@ -33,23 +33,9 @@ class Handler(
 
         val validTo = LocalDate.parse(command.validTo)
 
-        val requestToCreate = AuthorizationRequest.create(
-            type = requestType,
-            requestedFrom = requestedFromParty,
-            requestedBy = requestedByParty,
-            requestedTo = requestedToParty,
-            validTo = validTo
-        )
-
-        val savedRequest = requestRepo.insert(requestToCreate).getOrElse { return CreateRequestError.PersistenceError.left() }
-
         val metaAttributes = command.meta.toMetaAttributes()
 
-        val requestProperties = metaAttributes.toRequestProperties(savedRequest.id)
-
-        requestPropertyRepo.insert(requestProperties)
-
-        val requestToRespond = AuthorizationRequest.create(
+        val requestToCreate = AuthorizationRequest.create(
             type = requestType,
             requestedFrom = requestedFromParty,
             requestedBy = requestedByParty,
@@ -58,7 +44,12 @@ class Handler(
             properties = metaAttributes
         )
 
-        return requestToRespond.right()
+        val savedRequest = requestRepo.insert(requestToCreate).getOrElse { return CreateRequestError.PersistenceError.left() }
+        val requestProperties = metaAttributes.toRequestProperties(savedRequest.id)
+
+        requestPropertyRepo.insert(requestProperties)
+
+        return requestToCreate.right()
     }
 }
 
