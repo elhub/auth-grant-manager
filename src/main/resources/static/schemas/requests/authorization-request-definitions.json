@@ -14,27 +14,32 @@
         "requestType": {
           "type": "string",
           "description": "The type of the authorization request.",
-          "enum": ["ChangeOfSupplierConfirmation"]
+          "enum": ["ChangeOfSupplierConfirmation"],
+          "examples": ["ChangeOfSupplierConfirmation"]
         },
         "status": {
           "type": "string",
           "description": "The status of the authorization request.",
-          "enum": ["Accepted", "Expired", "Pending", "Rejected"]
+          "enum": ["Accepted", "Expired", "Pending", "Rejected"],
+          "examples": ["Accepted"]
         },
         "createdAt": {
           "type": "string",
           "format": "date-time",
-          "description": "The date and time when the authorization request was created."
+          "description": "The date and time when the authorization request was created.",
+          "examples": ["2025-12-31"]
         },
         "updatedAt": {
           "type": "string",
           "format": "date-time",
-          "description": "The date and time when the authorization request was updated."
+          "description": "The date and time when the authorization request was updated.",
+          "examples": ["2025-12-31"]
         },
         "validTo": {
           "type": "string",
           "format": "date-time",
-          "description": "The date and time when the authorization request is valid to."
+          "description": "The date and time when the authorization request is valid to.",
+          "examples": ["2025-12-31"]
         }
       }
     },
@@ -72,6 +77,11 @@
           "description": "The unique name of a supplier contract associated with the authorization request.",
           "examples": ["ExampleSupplierContract"]
         },
+        "balanceSupplierName": {
+          "type": "string",
+          "description": "The name of the balance supplier associated with the authorization document.",
+          "examples": ["Example Supplier AS"]
+        },
         "approvedBy": {
           "description": "The party identifier of the person who approved the authorization request",
           "$ref": "../base-definitions.schema.json#/definitions/partyIdentifier"
@@ -84,6 +94,9 @@
           "$ref": "../base-definitions.schema.json#/definitions/relationshipParty"
         },
         "requestedFrom": {
+          "$ref": "../base-definitions.schema.json#/definitions/relationshipParty"
+        },
+        "requestedTo": {
           "$ref": "../base-definitions.schema.json#/definitions/relationshipParty"
         }
       }
