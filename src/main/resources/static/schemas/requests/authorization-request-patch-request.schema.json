@@ -23,7 +23,7 @@
           "additionalProperties": false
         }
       },
-      "required": ["id", "type", "attributes"],
+      "required": ["type", "attributes"],
       "additionalProperties": false
     }
   },
