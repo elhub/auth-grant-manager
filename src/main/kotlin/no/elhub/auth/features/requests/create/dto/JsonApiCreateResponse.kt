@@ -63,45 +63,46 @@ fun AuthorizationRequest.toCreateResponse() =
             CreateRequestResponseAttributes(
                 status = this.status.name,
                 requestType = this.type.name,
-            validTo = this.validTo.toString()
-        ),
-        relationships = CreateRequestResponseRelationShips(
-            requestedBy = JsonApiRelationshipToOne(
-                data = JsonApiRelationshipData(
-                    type = this.requestedBy.type.name,
-                    id = this.requestedBy.resourceId
-                )
+                validTo = this.validTo.toString()
             ),
-            requestedFrom = JsonApiRelationshipToOne(
-                data = JsonApiRelationshipData(
-                    type = this.requestedFrom.type.name,
-                    id = this.requestedFrom.resourceId
-                )
+            relationships = CreateRequestResponseRelationShips(
+                requestedBy = JsonApiRelationshipToOne(
+                    data = JsonApiRelationshipData(
+                        type = this.requestedBy.type.name,
+                        id = this.requestedBy.resourceId
+                    )
+                ),
+                requestedFrom = JsonApiRelationshipToOne(
+                    data = JsonApiRelationshipData(
+                        type = this.requestedFrom.type.name,
+                        id = this.requestedFrom.resourceId
+                    )
+                ),
+                requestedTo = JsonApiRelationshipToOne(
+                    data = JsonApiRelationshipData(
+                        type = this.requestedTo.type.name,
+                        id = this.requestedTo.resourceId
+                    )
+                ),
             ),
-            requestedTo = JsonApiRelationshipToOne(
-                data = JsonApiRelationshipData(
-                    type = this.requestedTo.type.name,
-                    id = this.requestedTo.resourceId
-                )
+            meta = CreateRequestResponseMeta(
+                createdAt = this.createdAt.toString(),
+                updatedAt = this.updatedAt.toString(),
+                requestedFromName = this.properties["requestedFromName"].toString(),
+                requestedForMeteringPointId = this.properties["requestedForMeteringPointId"].toString(),
+                requestedForMeteringPointAddress = this.properties["requestedForMeteringPointAddress"].toString(),
+                balanceSupplierName = this.properties["balanceSupplierName"].toString(),
+                balanceSupplierContractName = this.properties["balanceSupplierContractName"].toString(),
             ),
-        ),
-        meta = CreateRequestResponseMeta(
-            createdAt = this.createdAt.toString(),
-            updatedAt = this.updatedAt.toString(),
-            requestedFromName = this.properties["requestedFromName"].toString(),
-            requestedForMeteringPointId = this.properties["requestedForMeteringPointId"].toString(),
-            requestedForMeteringPointAddress = this.properties["requestedForMeteringPointAddress"].toString(),
-            balanceSupplierName = this.properties["balanceSupplierName"].toString(),
-            balanceSupplierContractName = this.properties["balanceSupplierContractName"].toString(),),
             links =
             CreateRequestResponseLinks(
                 self = "https://api.elhub.no/authorization-requests/${this.id}"
             ),
         ),
         links = JsonApiLinks.ResourceObjectLink("https://api.elhub.no/authorization-requests"),
-    meta = JsonApiMeta(
-        buildJsonObject {
-            put("createdAt", LocalDateTime.now().toString())
-        }
+        meta = JsonApiMeta(
+            buildJsonObject {
+                put("createdAt", LocalDateTime.now().toString())
+            }
+        )
     )
-)

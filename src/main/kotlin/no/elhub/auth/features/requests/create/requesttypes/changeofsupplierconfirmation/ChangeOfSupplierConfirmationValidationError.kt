@@ -7,7 +7,7 @@ import no.elhub.auth.features.requests.create.requesttypes.RequestTypeValidation
 sealed class ChangeOfSupplierConfirmationValidationError(
     override val code: String,
     override val message: String,
-) : RequestTypeValidationError() {
+) : RequestTypeValidationError {
     @Serializable
     data object MissingRequestedFromName : ChangeOfSupplierConfirmationValidationError("missing_requested_from_name", "Requested from name is missing")
 
@@ -26,11 +26,15 @@ sealed class ChangeOfSupplierConfirmationValidationError(
     @Serializable
     data object MissingMeteringPointAddress : ChangeOfSupplierConfirmationValidationError("missing_metering_point_address", "Metering point address is missing")
 
+    @Serializable
     data object MissingRequestedBy : ChangeOfSupplierConfirmationValidationError("missing_requested_by", "Requested by is missing")
 
+    @Serializable
     data object InvalidRequestedBy : ChangeOfSupplierConfirmationValidationError("invalid_requested_by", "Requested by has invalid format")
 
+    @Serializable
     data object MissingRequestedFrom : ChangeOfSupplierConfirmationValidationError("missing_requested_from", "Requested from is missing")
 
+    @Serializable
     data object InvalidRequestedFrom : ChangeOfSupplierConfirmationValidationError("invalid_requested_from", "Requested from has invalid format")
 }

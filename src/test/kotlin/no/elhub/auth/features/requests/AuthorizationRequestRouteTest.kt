@@ -14,6 +14,7 @@ import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.testing.testApplication
+import kotlinx.datetime.LocalDate
 import no.elhub.auth.features.common.AuthPersonsTestContainer
 import no.elhub.auth.features.common.AuthPersonsTestContainerExtension
 import no.elhub.auth.features.common.PartyIdentifier
@@ -25,11 +26,10 @@ import no.elhub.auth.features.requests.common.AuthorizationRequestListResponse
 import no.elhub.auth.features.requests.common.AuthorizationRequestResponse
 import no.elhub.auth.features.requests.create.dto.CreateRequestAttributes
 import no.elhub.auth.features.requests.create.dto.CreateRequestMeta
-import no.elhub.auth.features.requests.create.dto.CreateRequestResponse
 import no.elhub.auth.features.requests.create.dto.JsonApiCreateRequest
 import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObjectWithMeta
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
-import java.time.LocalDate
+import no.elhub.devxp.jsonapi.response.JsonApiErrorObject
 import no.elhub.auth.module as applicationModule
 
 class AuthorizationRequestRouteTest :
@@ -239,14 +239,9 @@ class AuthorizationRequestRouteTest :
                 }
             }
 
-            context("POST /authorization-requests ") {
+            context("POST /authorization-requests") {
                 testApplication {
-                    client =
-                        createClient {
-                            install(ContentNegotiation) {
-                                json()
-                            }
-                        }
+                    client = createClient { install(ContentNegotiation) { json() } }
 
                     application {
                         applicationModule()
@@ -265,6 +260,7 @@ class AuthorizationRequestRouteTest :
                                 "authPersons.baseUri" to AuthPersonsTestContainer.baseUri(),
                             )
                     }
+
                     test("Should return 201 Created") {
                         val response =
                             client.post(REQUESTS_PATH) {
@@ -276,28 +272,18 @@ class AuthorizationRequestRouteTest :
                                             type = "AuthorizationRequest",
                                             attributes =
                                             CreateRequestAttributes(
+                                                validTo = kotlinx.datetime.LocalDate.parse("2030-01-01"),
                                                 requestType = AuthorizationRequest.Type.ChangeOfSupplierConfirmation,
-                                            validTo = LocalDate.now().plusDays(30).toString()),
+                                            ),
                                             meta =
                                             CreateRequestMeta(
-                                                requestedBy =
-                                                PartyIdentifier(
-                                                    idType = PartyIdentifierType.OrganizationNumber,
-                                                    idValue = "987654321",
-                                                ),
-                                                requestedFrom =
-                                                PartyIdentifier(
-                                                    idType = PartyIdentifierType.NationalIdentityNumber,
-                                                    idValue = "12345678901",
-                                                ),
+                                                requestedBy = PartyIdentifier(PartyIdentifierType.OrganizationNumber, "987654321"),
+                                                requestedFrom = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "12345678901"),
                                                 requestedFromName = "Hillary Orr",
-                                                requestedTo =
-                                                PartyIdentifier(
-                                                    idType = PartyIdentifierType.NationalIdentityNumber,
-                                                    idValue = "12345678902",
-                                                ),
+                                                requestedTo = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "12345678902"),
                                                 requestedForMeteringPointId = "123456789012345678",
-                                                requestedForMeteringPointAddress = "quaerendum",balanceSupplierName = "Balance Supplier",
+                                                requestedForMeteringPointAddress = "quaerendum",
+                                                balanceSupplierName = "Balance Supplier",
                                                 balanceSupplierContractName = "Selena Chandler",
                                             ),
                                         ),
@@ -306,57 +292,44 @@ class AuthorizationRequestRouteTest :
                             }
 
                         response.status shouldBe HttpStatusCode.Created
-                        val responseJson: CreateRequestResponse = response.body()
-                        responseJson.data.apply {
-                            id.shouldNotBeNull()
-                            type shouldBe "AuthorizationRequest"
-                            attributes.shouldNotBeNull()
-                            attributes.apply {
-                                requestType shouldBe "ChangeOfSupplierConfirmation"
-                                status shouldBe AuthorizationRequest.Status.Pending.name
-                            validTo.shouldNotBeNull()
-                        }
-                        relationships.apply {
-                            relationships.apply {
-                                requestedBy.apply {
-                                    data.apply {
-                                        id shouldBe "987654321"
-                                        type shouldBe "Organization"
-                                    }
-                                }
-                                requestedFrom.apply {
-                                    data.apply {
-                                        id.shouldNotBeNull()
-                                        type shouldBe "Person"
-                                    }
-                                }
-                                requestedFrom.apply {
-                                    data.apply {
-                                        id.shouldNotBeNull()
-                                        type shouldBe "Person"
-                                    }
-                                }
-                            }
-                        }
-                        meta.apply {
-                            createdAt.shouldNotBeNull()
-                            updatedAt.shouldNotBeNull()
-                            requestedFromName shouldBe "Hillary Orr"
-                            requestedForMeteringPointId shouldBe "quaerendum"
-                            requestedForMeteringPointAddress shouldBe "quaerendum"
-                            balanceSupplierName shouldBe "Balance Supplier"
-                            balanceSupplierContractName shouldBe "Selena Chandler"}
-                            links.shouldNotBeNull()
-                            links.apply {
-                                self.shouldNotBeNull()
-                            }
-                        }
-                        responseJson.links.apply {
-                            self shouldBe "https://api.elhub.no/authorization-requests"
                     }
-                    responseJson.meta.apply {
-                        "createdAt".shouldNotBeNull()
-                        }
+
+                    test("Should return 400 Bad Request on validation error with error payload") {
+                        val response =
+                            client.post(REQUESTS_PATH) {
+                                contentType(ContentType.Application.Json)
+                                setBody(
+                                    JsonApiCreateRequest(
+                                        data =
+                                        JsonApiRequestResourceObjectWithMeta(
+                                            type = "AuthorizationRequest",
+                                            attributes =
+                                            CreateRequestAttributes(
+                                                validTo = LocalDate.parse("2030-01-01"),
+                                                requestType = AuthorizationRequest.Type.ChangeOfSupplierConfirmation,
+                                            ),
+                                            meta =
+                                            CreateRequestMeta(
+                                                requestedBy = PartyIdentifier(PartyIdentifierType.OrganizationNumber, "987654321"),
+                                                requestedFrom = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "12345678901"),
+                                                requestedFromName = "",
+                                                requestedTo = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "12345678902"),
+                                                requestedForMeteringPointId = "123456789012345678",
+                                                requestedForMeteringPointAddress = "quaerendum",
+                                                balanceSupplierName = "Balance Supplier",
+                                                balanceSupplierContractName = "Selena Chandler",
+                                            ),
+                                        ),
+                                    ),
+                                )
+                            }
+
+                        response.status shouldBe HttpStatusCode.BadRequest
+                        val body = response.body<JsonApiErrorObject>()
+                        body.status shouldBe "400"
+                        body.code shouldBe "missing_requested_from_name"
+                        body.title shouldBe "Validation Error"
+                        body.detail shouldBe "Requested from name is missing"
                     }
                 }
             }

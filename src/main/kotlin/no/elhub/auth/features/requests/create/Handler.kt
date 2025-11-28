@@ -2,6 +2,7 @@ package no.elhub.auth.features.requests.create
 
 import arrow.core.Either
 import arrow.core.getOrElse
+import io.ktor.http.HttpStatusCode
 import no.elhub.auth.features.common.PartyService
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.common.RequestPropertiesRepository
@@ -10,7 +11,7 @@ import no.elhub.auth.features.requests.create.command.toRequestProperties
 import no.elhub.auth.features.requests.create.model.CreateRequestModel
 import no.elhub.auth.features.requests.create.requesttypes.RequestTypeOrchestrator
 import no.elhub.auth.features.requests.create.requesttypes.RequestTypeValidationError
-import java.time.LocalDate
+import no.elhub.devxp.jsonapi.response.JsonApiErrorObject
 
 class Handler(
     private val requestTypeOrchestrator: RequestTypeOrchestrator,
@@ -38,8 +39,6 @@ class Handler(
                 .resolve(command.requestedBy)
                 .getOrElse { return Either.Left(CreateRequestError.RequestedByPartyError) }
 
-        val validTo = LocalDate.parse(command.validTo)
-
         val metaAttributes = command.meta.toMetaAttributes()
 
         val requestedToParty =
@@ -53,7 +52,7 @@ class Handler(
                 requestedFrom = requestedFromParty,
                 requestedBy = requestedByParty,
                 requestedTo = requestedToParty,
-                validTo = validTo,
+                validTo = command.validTo,
             )
 
         val savedRequest =
@@ -84,3 +83,15 @@ sealed class CreateRequestError {
         val reason: RequestTypeValidationError,
     ) : CreateRequestError()
 }
+
+/**
+ * Map a domain validation error to an HTTP/JSON:API error.
+ */
+fun CreateRequestError.ValidationError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorObject> =
+    HttpStatusCode.BadRequest to
+        JsonApiErrorObject(
+            title = "Validation Error",
+            code = this.reason.code,
+            status = HttpStatusCode.BadRequest.value.toString(),
+            detail = this.reason.message,
+        )

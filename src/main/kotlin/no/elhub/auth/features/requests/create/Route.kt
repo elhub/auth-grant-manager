@@ -33,12 +33,13 @@ fun Route.route(handler: Handler) {
                     CreateRequestError.RequestedByPartyError,
                     CreateRequestError.RequestedFromPartyError,
                     -> call.respond(HttpStatusCode.InternalServerError)
-                    is CreateRequestError.ValidationError -> call.respond(HttpStatusCode.BadRequest, error.reason)
+                    is CreateRequestError.ValidationError -> {
+                        val (status, error) = error.toApiErrorResponse()
+                        call.respond(status, error)
+                    }
                 }
                 return@post
             }
-
-        val req = request.toCreateResponse()
 
         call.respond(HttpStatusCode.Created, request.toCreateResponse())
     }

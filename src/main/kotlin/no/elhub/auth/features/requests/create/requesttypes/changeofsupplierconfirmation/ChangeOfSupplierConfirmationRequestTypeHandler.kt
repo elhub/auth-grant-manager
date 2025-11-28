@@ -9,6 +9,7 @@ import no.elhub.auth.features.requests.create.command.RequestMetaMarker
 import no.elhub.auth.features.requests.create.model.CreateRequestModel
 import no.elhub.auth.features.requests.create.requesttypes.RequestTypeHandler
 import no.elhub.auth.features.requests.create.requesttypes.RequestTypeValidationError
+import no.elhub.auth.features.requests.create.requesttypes.changeofsupplierconfirmation.ChangeOfSupplierConfirmationValidationError
 
 private const val REGEX_NUMBERS_LETTERS_SYMBOLS = "^[a-zA-Z0-9_.-]*$"
 private const val REGEX_REQUESTED_FROM = REGEX_NUMBERS_LETTERS_SYMBOLS
@@ -61,6 +62,7 @@ class ChangeOfSupplierConfirmationRequestTypeHandler : RequestTypeHandler {
                 requestedForMeteringPointId = meta.requestedForMeteringPointId,
                 requestedForMeteringPointAddress = meta.requestedForMeteringPointAddress,
                 balanceSupplierContractName = meta.balanceSupplierContractName,
+                balanceSupplierName = meta.balanceSupplierName,
             )
 
         val command =
@@ -69,6 +71,7 @@ class ChangeOfSupplierConfirmationRequestTypeHandler : RequestTypeHandler {
                 requestedBy = meta.requestedBy,
                 requestedFrom = meta.requestedFrom,
                 requestedTo = meta.requestedTo,
+                validTo = model.validTo,
                 meta = changeOfSupplierMeta,
             )
 
