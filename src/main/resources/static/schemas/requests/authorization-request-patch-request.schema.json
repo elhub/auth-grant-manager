@@ -8,6 +8,12 @@
       "description": "The authorization request properties to be updated.",
       "type": "object",
       "properties": {
+        "id": {
+          "$ref": "authorization-request-definitions.json#/$defs/id"
+        },
+        "type": {
+          "$ref": "authorization-request-definitions.json#/$defs/type"
+        },
         "attributes": {
           "type": "object",
           "description": "The attributes of the authorization request.",
