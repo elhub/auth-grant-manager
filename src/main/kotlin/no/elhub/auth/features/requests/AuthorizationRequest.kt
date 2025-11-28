@@ -1,7 +1,7 @@
 package no.elhub.auth.features.requests
 
+import kotlinx.datetime.LocalDate
 import no.elhub.auth.features.common.AuthorizationParty
-import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -15,7 +15,7 @@ data class AuthorizationRequest(
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime,
     val validTo: LocalDate,
-    val properties: Map<String, String> = emptyMap()
+    val properties: Map<String, String> = emptyMap(),
 ) {
     companion object {
         fun create(
@@ -25,18 +25,19 @@ data class AuthorizationRequest(
             requestedTo: AuthorizationParty,
             validTo: LocalDate,
             properties: Map<String, String> = emptyMap(),
-        ): AuthorizationRequest = AuthorizationRequest(
-            id = UUID.randomUUID(),
-            type = type,
-            status = Status.Pending,
-            requestedBy = requestedBy,
-            requestedFrom = requestedFrom,
-            requestedTo = requestedTo,
-            createdAt = LocalDateTime.now(),
-            updatedAt = LocalDateTime.now(),
-            validTo = validTo,
-            properties = properties,
-        )
+        ): AuthorizationRequest =
+            AuthorizationRequest(
+                id = UUID.randomUUID(),
+                type = type,
+                status = Status.Pending,
+                requestedBy = requestedBy,
+                requestedFrom = requestedFrom,
+                requestedTo = requestedTo,
+                createdAt = LocalDateTime.now(),
+                updatedAt = LocalDateTime.now(),
+                validTo = validTo,
+                properties = properties,
+            )
     }
 
     enum class Status {

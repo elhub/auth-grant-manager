@@ -2,69 +2,96 @@ package no.elhub.auth.features.requests.create
 
 import arrow.core.Either
 import arrow.core.getOrElse
-import arrow.core.left
-import arrow.core.right
+import io.ktor.http.HttpStatusCode
 import no.elhub.auth.features.common.PartyService
 import no.elhub.auth.features.requests.AuthorizationRequest
-import no.elhub.auth.features.requests.common.AuthorizationRequestProperty
 import no.elhub.auth.features.requests.common.RequestPropertiesRepository
 import no.elhub.auth.features.requests.common.RequestRepository
-import no.elhub.auth.features.requests.create.command.RequestCommand
-import no.elhub.auth.features.requests.create.command.toAuthorizationRequestType
-import java.time.LocalDate
-import java.util.UUID
+import no.elhub.auth.features.requests.create.command.toRequestProperties
+import no.elhub.auth.features.requests.create.model.CreateRequestModel
+import no.elhub.auth.features.requests.create.requesttypes.RequestTypeOrchestrator
+import no.elhub.auth.features.requests.create.requesttypes.RequestTypeValidationError
+import no.elhub.devxp.jsonapi.response.JsonApiErrorObject
 
 class Handler(
+    private val requestTypeOrchestrator: RequestTypeOrchestrator,
+    private val partyService: PartyService,
     private val requestRepo: RequestRepository,
     private val requestPropertyRepo: RequestPropertiesRepository,
-    private val partyService: PartyService
 ) {
-    suspend operator fun invoke(command: RequestCommand): Either<CreateRequestError, AuthorizationRequest> {
-        val requestedFromParty = partyService.resolve(command.requestedFrom)
-            .getOrElse { return CreateRequestError.RequestedFromPartyError.left() }
+    suspend operator fun invoke(model: CreateRequestModel): Either<CreateRequestError, AuthorizationRequest> {
+        val requestTypeHandler = requestTypeOrchestrator.resolve(model.requestType)
 
-        val requestedByParty = partyService.resolve(command.requestedBy)
-            .getOrElse { return CreateRequestError.RequestedByPartyError.left() }
+        val command =
+            requestTypeHandler
+                .handle(model)
+                .getOrElse { validationError ->
+                    return Either.Left(CreateRequestError.ValidationError(validationError))
+                }
 
-        val requestedToParty = partyService.resolve(command.requestedTo)
-            .getOrElse { return CreateRequestError.RequestedByPartyError.left() }
+        val requestedFromParty =
+            partyService
+                .resolve(command.requestedFrom)
+                .getOrElse { return Either.Left(CreateRequestError.RequestedFromPartyError) }
 
-        val requestType = command.toAuthorizationRequestType()
-
-        val validTo = LocalDate.parse(command.validTo)
+        val requestedByParty =
+            partyService
+                .resolve(command.requestedBy)
+                .getOrElse { return Either.Left(CreateRequestError.RequestedByPartyError) }
 
         val metaAttributes = command.meta.toMetaAttributes()
 
-        val requestToCreate = AuthorizationRequest.create(
-            type = requestType,
-            requestedFrom = requestedFromParty,
-            requestedBy = requestedByParty,
-            requestedTo = requestedToParty,
-            validTo = validTo,
-            properties = metaAttributes
-        )
+        val requestedToParty =
+            partyService
+                .resolve(command.requestedTo)
+                .getOrElse { return Either.Left(CreateRequestError.RequestedByPartyError) }
 
-        val savedRequest = requestRepo.insert(requestToCreate).getOrElse { return CreateRequestError.PersistenceError.left() }
-        val requestProperties = metaAttributes.toRequestProperties(savedRequest.id)
+        val requestToCreate =
+            AuthorizationRequest.create(
+                type = command.type,
+                requestedFrom = requestedFromParty,
+                requestedBy = requestedByParty,
+                requestedTo = requestedToParty,
+                validTo = command.validTo,
+            )
+
+        val savedRequest =
+            requestRepo
+                .insert(requestToCreate)
+                .getOrElse { return Either.Left(CreateRequestError.PersistenceError) }
+
+        val requestProperties =
+            metaAttributes
+                .toRequestProperties(savedRequest.id)
 
         requestPropertyRepo.insert(requestProperties)
 
-        return requestToCreate.right()
+        return Either.Right(savedRequest)
     }
 }
 
 sealed class CreateRequestError {
     data object MappingError : CreateRequestError()
+
     data object PersistenceError : CreateRequestError()
+
     data object RequestedFromPartyError : CreateRequestError()
+
     data object RequestedByPartyError : CreateRequestError()
+
+    data class ValidationError(
+        val reason: RequestTypeValidationError,
+    ) : CreateRequestError()
 }
 
-fun Map<String, String>.toRequestProperties(requestId: UUID) =
-    this.map { (key, value) ->
-        AuthorizationRequestProperty(
-            requestId = requestId,
-            key = key,
-            value = value
+/**
+ * Map a domain validation error to an HTTP/JSON:API error.
+ */
+fun CreateRequestError.ValidationError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorObject> =
+    HttpStatusCode.BadRequest to
+        JsonApiErrorObject(
+            title = "Validation Error",
+            code = this.reason.code,
+            status = HttpStatusCode.BadRequest.value.toString(),
+            detail = this.reason.message,
         )
-    }.toList()
