@@ -1,103 +1,26 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Authorization Request Request",
-  "description": "Schema for creating authorization requests to the Elhub authorization manager.",
+  "title": "Authorization Request Patch Request",
+  "description": "Schema for updating authorization requests to the Elhub authorization manager.",
   "type": "object",
   "properties": {
     "data": {
-      "description": "The authorization request to be created.",
+      "description": "The authorization request properties to be updated.",
       "type": "object",
       "properties": {
-        "id": {
-          "$ref": "authorization-request-definitions.json#/$defs/id"
-        },
-        "type": {
-          "$ref": "authorization-request-definitions.json#/$defs/type"
-        },
         "attributes": {
           "type": "object",
           "description": "The attributes of the authorization request.",
           "properties": {
-            "requestType": {
-              "$ref": "authorization-request-definitions.json#/$defs/attributes/$defs/requestType"
-            },
             "status": {
               "$ref": "authorization-request-definitions.json#/$defs/attributes/$defs/status"
-            },
-            "validTo": {
-              "$ref": "authorization-request-definitions.json#/$defs/attributes/$defs/validTo"
-            }
-          }
-        },
-        "meta": {
-          "type": "object",
-          "properties": {
-            "createdAt": {
-              "$ref": "authorization-request-definitions.json#/$defs/attributes/$defs/createdAt"
-            },
-            "updatedAt": {
-              "$ref": "authorization-request-definitions.json#/$defs/attributes/$defs/updatedAt"
-            },
-            "requestedFromName": {
-              "$ref": "authorization-request-definitions.json#/$defs/meta/$defs/requestedFromName"
-            },
-            "requestedForMeteringPointId": {
-              "$ref": "authorization-request-definitions.json#/$defs/meta/$defs/requestedForMeteringPointId"
-            },
-            "requestedForMeteringPointAddress": {
-              "$ref": "authorization-request-definitions.json#/$defs/meta/$defs/requestedForMeteringPointAddress"
-            },
-            "balanceSupplierName": {
-              "$ref": "authorization-request-definitions.json#/$defs/meta/$defs/balanceSupplierName"
-            },
-            "balanceSupplierContractName": {
-              "$ref": "authorization-request-definitions.json#/$defs/meta/$defs/balanceSupplierContractName"
-            }
-          }
-        },
-        "relationships": {
-          "type": "object",
-          "description": "The related entities of the authorization request (persons and organizations).",
-          "properties": {
-            "requestedBy": {
-              "$ref": "authorization-request-definitions.json#/$defs/relationships/$defs/requestedBy"
-            },
-            "requestedFrom": {
-              "$ref": "authorization-request-definitions.json#/$defs/relationships/$defs/requestedFrom"
-            },
-            "requestedTo": {
-              "$ref": "authorization-request-definitions.json#/$defs/relationships/$defs/requestedTo"
-            },
-            "approvedBy": {
-              "$ref": "authorization-request-definitions.json#/$defs/relationships/$defs/approvedBy"
-            }
-          }
-        },
-        "links": {
-          "type": "object",
-          "properties": {
-            "self": {
-              "description": "Link to the authorization document itself",
-              "$ref": "authorization-request-definitions.json#/$defs/links/$defs/self"
             }
           }
         }
       },
-      "required": ["id", "type", "attributes", "links", "relationships", "meta"]
-    },
-    "links": {
-      "description": "Link members related to the primary data.",
-      "$ref": "../base-definitions.schema.json#/definitions/topLevelLinks"
-    },
-    "meta": {
-      "$ref": "../base-definitions.schema.json#/definitions/topLevelMeta"
+      "required": ["status"]
     }
   },
   "required": ["data"],
-  "allOf": [
-    {
-      "$ref": "../base-definitions.schema.json#/definitions/topLevelPropertyConstraint"
-    }
-  ],
   "additionalProperties": false
 }
