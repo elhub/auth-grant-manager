@@ -3,12 +3,19 @@ package no.elhub.auth.features.requests.create.requesttypes.changeofsupplierconf
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
+import kotlinx.datetime.DatePeriod
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.plus
+import kotlinx.datetime.toLocalDateTime
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.create.command.RequestCommand
 import no.elhub.auth.features.requests.create.command.RequestMetaMarker
 import no.elhub.auth.features.requests.create.model.CreateRequestModel
 import no.elhub.auth.features.requests.create.requesttypes.RequestTypeHandler
 import no.elhub.auth.features.requests.create.requesttypes.RequestTypeValidationError
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
 
 private const val REGEX_NUMBERS_LETTERS_SYMBOLS = "^[a-zA-Z0-9_.-]*$"
 private const val REGEX_REQUESTED_FROM = REGEX_NUMBERS_LETTERS_SYMBOLS
@@ -70,12 +77,22 @@ class ChangeOfSupplierConfirmationRequestTypeHandler : RequestTypeHandler {
                 requestedBy = meta.requestedBy,
                 requestedFrom = meta.requestedFrom,
                 requestedTo = meta.requestedTo,
-                validTo = model.validTo,
+                validTo = calculateValidTo(),
                 meta = changeOfSupplierMeta,
             )
 
         return command.right()
     }
+}
+
+/**
+ * Calculate the validity for an authorization request
+ * Currently temporary - should be replaced with the actual validation/calculation by the value stream
+ */
+@OptIn(ExperimentalTime::class)
+private fun calculateValidTo(): LocalDate {
+    val now = Clock.System.now().toLocalDateTime(TimeZone.UTC).date
+    return now.plus(DatePeriod(days = 30))
 }
 
 private data class ChangeOfSupplierRequestMeta(
