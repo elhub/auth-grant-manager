@@ -8,5 +8,5 @@ import no.elhub.auth.features.requests.create.model.CreateRequestModel
  * Handler for a specific AuthorizationRequest.Type. Validates and maps to a RequestCommand.
  */
 interface RequestTypeHandler {
-    suspend fun handle(meta: CreateRequestModel): Either<RequestTypeValidationError, RequestCommand>
+    suspend fun handle(model: CreateRequestModel): Either<RequestTypeValidationError, RequestCommand>
 }
