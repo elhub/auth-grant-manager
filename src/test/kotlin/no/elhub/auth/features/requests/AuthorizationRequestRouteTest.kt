@@ -14,7 +14,6 @@ import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.testing.testApplication
-import kotlinx.datetime.LocalDate
 import no.elhub.auth.features.common.AuthPersonsTestContainer
 import no.elhub.auth.features.common.AuthPersonsTestContainerExtension
 import no.elhub.auth.features.common.PartyIdentifier
@@ -272,7 +271,6 @@ class AuthorizationRequestRouteTest :
                                             type = "AuthorizationRequest",
                                             attributes =
                                             CreateRequestAttributes(
-                                                validTo = kotlinx.datetime.LocalDate.parse("2030-01-01"),
                                                 requestType = AuthorizationRequest.Type.ChangeOfSupplierConfirmation,
                                             ),
                                             meta =
@@ -305,7 +303,6 @@ class AuthorizationRequestRouteTest :
                                             type = "AuthorizationRequest",
                                             attributes =
                                             CreateRequestAttributes(
-                                                validTo = LocalDate.parse("2030-01-01"),
                                                 requestType = AuthorizationRequest.Type.ChangeOfSupplierConfirmation,
                                             ),
                                             meta =

@@ -1,11 +1,9 @@
 package no.elhub.auth.features.requests.create.model
 
-import kotlinx.datetime.LocalDate
 import no.elhub.auth.features.common.PartyIdentifier
 import no.elhub.auth.features.requests.AuthorizationRequest
 
 data class CreateRequestModel(
-    val validTo: LocalDate,
     val requestType: AuthorizationRequest.Type,
     val meta: CreateRequestMeta,
 )

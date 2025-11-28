@@ -3,8 +3,8 @@ package no.elhub.auth.features.requests.create.requesttypes.changeofsupplierconf
 import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
-import kotlinx.datetime.LocalDate
 import no.elhub.auth.features.common.PartyIdentifier
 import no.elhub.auth.features.common.PartyIdentifierType
 import no.elhub.auth.features.requests.AuthorizationRequest
@@ -20,7 +20,6 @@ class ChangeOfSupplierConfirmationRequestTypeHandlerTest :
             val handler = ChangeOfSupplierConfirmationRequestTypeHandler()
             val model =
                 CreateRequestModel(
-                    validTo = LocalDate.parse("2030-01-01"),
                     requestType = AuthorizationRequest.Type.ChangeOfSupplierConfirmation,
                     meta =
                     CreateRequestMeta(
@@ -44,7 +43,6 @@ class ChangeOfSupplierConfirmationRequestTypeHandlerTest :
             val handler = ChangeOfSupplierConfirmationRequestTypeHandler()
             val model =
                 CreateRequestModel(
-                    validTo = LocalDate.parse("2030-01-01"),
                     requestType = AuthorizationRequest.Type.ChangeOfSupplierConfirmation,
                     meta =
                     CreateRequestMeta(
@@ -65,6 +63,7 @@ class ChangeOfSupplierConfirmationRequestTypeHandlerTest :
             command.requestedBy shouldBe model.meta.requestedBy
             command.requestedFrom shouldBe model.meta.requestedFrom
             command.requestedTo shouldBe model.meta.requestedTo
+            command.validTo.shouldNotBeNull()
 
             val metaAttributes = command.meta.toMetaAttributes()
             metaAttributes["requestedFromName"] shouldBe "Supplier AS"

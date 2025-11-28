@@ -17,9 +17,6 @@
           "properties": {
             "requestType": {
               "$ref": "authorization-request-definitions.json#/$defs/attributes/$defs/requestType"
-            },
-            "status": {
-              "$ref": "authorization-request-definitions.json#/$defs/attributes/$defs/status"
             }
           }
         },
