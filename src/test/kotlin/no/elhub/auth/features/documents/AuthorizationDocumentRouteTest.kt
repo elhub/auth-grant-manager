@@ -132,8 +132,8 @@ class AuthorizationDocumentRouteTest :
                                             ),
                                             meta = DocumentMeta(
                                                 requestedBy = PartyIdentifier(
-                                                    idType = PartyIdentifierType.NationalIdentityNumber,
-                                                    idValue = "12345678901"
+                                                    idType = PartyIdentifierType.GlobalLocationNumber,
+                                                    idValue = "0107000000021"
                                                 ),
                                                 requestedFrom = PartyIdentifier(
                                                     idType = PartyIdentifierType.NationalIdentityNumber,
@@ -173,7 +173,10 @@ class AuthorizationDocumentRouteTest :
                 }
 
                 test("Get created document should return correct response") {
-                    val response = client.get(linkToDocument)
+                    val response = client.get(linkToDocument) {
+                        header(HttpHeaders.Authorization, "Bearer something")
+                        header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                    }
                     response.status shouldBe HttpStatusCode.OK
                     val getDocumentResponse: GetDocumentResponse = response.body()
                     getDocumentResponse
@@ -187,7 +190,7 @@ class AuthorizationDocumentRouteTest :
                             }
                             relationships.apply {
                                 requestedBy.data.apply {
-                                    type shouldBe "Person"
+                                    type shouldBe "OrganizationEntity"
                                     id.shouldNotBeNull()
                                 }
                                 requestedFrom.data.apply {
@@ -203,7 +206,10 @@ class AuthorizationDocumentRouteTest :
                 }
 
                 test("Get pdf file should have proper signature") {
-                    signedFile = client.get(linkToDocumentFile).bodyAsBytes()
+                    signedFile = client.get(linkToDocumentFile) {
+                        header(HttpHeaders.Authorization, "Bearer something")
+                        header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                    }.bodyAsBytes()
                     signedFile.validateFileIsSignedByUs()
                 }
 
@@ -232,7 +238,10 @@ class AuthorizationDocumentRouteTest :
                 }
 
                 test("Get document should give status Signed") {
-                    val response = client.get(linkToDocument)
+                    val response = client.get(linkToDocument) {
+                        header(HttpHeaders.Authorization, "Bearer something")
+                        header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                    }
                     response.status shouldBe HttpStatusCode.OK
                     val getDocumentResponse: GetDocumentResponse = response.body()
                     getDocumentResponse.data.attributes.shouldNotBeNull().apply {
@@ -263,7 +272,7 @@ class AuthorizationDocumentRouteTest :
                             grantedBy.apply {
                                 data.apply {
                                     id.shouldNotBeNull()
-                                    type shouldBe "Person"
+                                    type shouldBe "OrganizationEntity"
                                 }
                             }
                             grantedTo.apply {

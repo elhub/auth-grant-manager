@@ -86,8 +86,8 @@ fun Application.module() {
             shouldRegisterEndpoint {
                 createRoute(get(), get())
                 confirmRoute(get())
-                getRoute(get())
-                queryRoute(get())
+                getRoute(get(), get())
+                queryRoute(get(), get())
             }
         }
     }
