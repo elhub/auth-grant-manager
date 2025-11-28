@@ -302,6 +302,13 @@ paths:
     patch:
       summary: Update an authorization request.
       description: Update an authorization request. This is an internal API for MinSide.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The id of the authorization request to update.
+          schema:
+            type: string
       requestBody:
         content:
           application/json:
