@@ -22,10 +22,10 @@
           "required": ["status"],
           "additionalProperties": false
         }
-      }
-    },
-    "required": ["id", "type", "attributes"],
-    "additionalProperties": false
+      },
+      "required": ["id", "type", "attributes"],
+      "additionalProperties": false
+    }
   },
   "required": ["data"],
   "additionalProperties": false
