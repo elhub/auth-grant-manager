@@ -8,9 +8,6 @@
       "description": "The authorization request properties to be updated.",
       "type": "object",
       "properties": {
-        "id": {
-          "$ref": "authorization-request-definitions.json#/$defs/id"
-        },
         "type": {
           "$ref": "authorization-request-definitions.json#/$defs/type"
         },
@@ -21,11 +18,14 @@
             "status": {
               "$ref": "authorization-request-definitions.json#/$defs/attributes/$defs/status"
             }
-          }
+          },
+          "required": ["status"],
+          "additionalProperties": false
         }
-      },
-      "required": ["status"]
-    }
+      }
+    },
+    "required": ["id", "type", "attributes"],
+    "additionalProperties": false
   },
   "required": ["data"],
   "additionalProperties": false
