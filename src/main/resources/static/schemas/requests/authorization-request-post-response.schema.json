@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Create Request Response",
+  "title": "Authorization Request Post Response",
   "type": "object",
   "properties": {
     "data": {
