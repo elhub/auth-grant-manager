@@ -8,6 +8,7 @@ import no.elhub.auth.features.common.AuthorizationParty
 import no.elhub.auth.features.common.AuthorizationPartyRecord
 import no.elhub.auth.features.common.PGEnum
 import no.elhub.auth.features.common.PartyRepository
+import no.elhub.auth.features.common.RepositoryError
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.RepositoryWriteError
 import no.elhub.auth.features.requests.AuthorizationRequest
@@ -19,14 +20,17 @@ import org.jetbrains.exposed.sql.javatime.date
 import org.jetbrains.exposed.sql.javatime.datetime
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.sql.update
 import java.util.UUID
 
 interface RequestRepository {
     fun find(requestId: UUID): Either<RepositoryReadError, AuthorizationRequest>
-
     fun findAll(): Either<RepositoryReadError, List<AuthorizationRequest>>
-
     fun insert(req: AuthorizationRequest): Either<RepositoryWriteError, AuthorizationRequest>
+    fun confirm(
+        requestId: UUID,
+        newStatus: AuthorizationRequest.Status,
+    ): Either<RepositoryError, AuthorizationRequest>
 }
 
 class ExposedRequestRepository(
@@ -146,6 +150,56 @@ class ExposedRequestRepository(
                 request
             }
         }.mapLeft { RepositoryWriteError.UnexpectedError }
+
+    override fun confirm(requestId: UUID, newStatus: AuthorizationRequest.Status): Either<RepositoryError, AuthorizationRequest> = either {
+        transaction {
+            val existingRequest =
+                AuthorizationRequestTable
+                    .selectAll()
+                    .where { AuthorizationRequestTable.id eq requestId }
+                    .singleOrNull()
+                    ?: raise(RepositoryReadError.NotFoundError)
+
+            val rowsUpdated =
+                AuthorizationRequestTable.update(
+                    where = { AuthorizationRequestTable.id eq requestId }
+                ) {
+                    it[requestStatus] = newStatus
+                    it[updatedAt] = java.time.LocalDateTime.now()
+                }
+
+            if (rowsUpdated == 0) {
+                raise(RepositoryWriteError.UnexpectedError)
+            }
+
+            val requestedByDbId = existingRequest[AuthorizationRequestTable.requestedBy]
+            val requestedByParty =
+                partyRepo
+                    .find(requestedByDbId)
+                    .mapLeft { RepositoryReadError.UnexpectedError }
+                    .bind()
+
+            val requestedFromDbId = existingRequest[AuthorizationRequestTable.requestedFrom]
+            val requestedFromParty =
+                partyRepo
+                    .find(requestedFromDbId)
+                    .mapLeft { RepositoryReadError.UnexpectedError }
+                    .bind()
+
+            val requestedToDbId = existingRequest[AuthorizationRequestTable.requestedTo]
+            val requestedToParty =
+                partyRepo
+                    .find(requestedToDbId)
+                    .mapLeft { RepositoryReadError.UnexpectedError }
+                    .bind()
+
+            existingRequest.toAuthorizationRequest(
+                requestedByParty,
+                requestedFromParty,
+                requestedToParty,
+            )
+        }
+    }
 }
 
 object AuthorizationRequestTable : UUIDTable("authorization_request") {
