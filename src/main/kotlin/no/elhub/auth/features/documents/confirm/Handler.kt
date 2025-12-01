@@ -32,6 +32,7 @@ class Handler(
             .mapLeft { error ->
                 when (error) {
                     is RepositoryWriteError.NotFoundError -> ConfirmDocumentError.DocumentNotFoundError
+
                     is RepositoryWriteError.ConflictError,
                     is RepositoryWriteError.UnexpectedError -> ConfirmDocumentError.DocumentUpdateError
                 }
@@ -49,7 +50,9 @@ class Handler(
             grantedFor = confirmedDocument.requestedFrom,
             grantedBy = confirmedDocument.requestedBy,
             grantedTo = confirmedDocument.requestedTo,
-            scopes = scopes
+            scopes = scopes,
+            sourceType = AuthorizationGrant.SourceType.Document,
+            sourceId = confirmedDocument.id
         ).mapLeft { ConfirmDocumentError.GrantCreationError }.bind()
 
         ConfirmDocumentResult(

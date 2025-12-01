@@ -14,6 +14,7 @@ import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.RepositoryWriteError
 import no.elhub.auth.features.common.toAuthorizationParty
 import no.elhub.auth.features.grants.AuthorizationGrant
+import no.elhub.auth.features.grants.AuthorizationGrant.SourceType
 import no.elhub.auth.features.grants.AuthorizationGrant.Status
 import no.elhub.auth.features.grants.AuthorizationScope
 import no.elhub.auth.features.grants.ElhubResource
@@ -23,6 +24,7 @@ import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.batchInsert
 import org.jetbrains.exposed.sql.insertReturning
 import org.jetbrains.exposed.sql.javatime.CurrentDateTime
@@ -36,13 +38,16 @@ import java.util.*
 
 interface GrantRepository {
     fun find(grantId: UUID): Either<RepositoryReadError, AuthorizationGrant>
+    fun findBySource(sourceType: SourceType, sourceId: UUID): Either<RepositoryReadError, AuthorizationGrant?>
     fun findScopes(grantId: UUID): Either<RepositoryReadError, List<AuthorizationScope>>
     fun findAll(): Either<RepositoryReadError, List<AuthorizationGrant>>
     fun insert(
         grantedFor: AuthorizationParty,
         grantedBy: AuthorizationParty,
         grantedTo: AuthorizationParty,
-        scopes: List<AuthorizationScope>
+        scopes: List<AuthorizationScope>,
+        sourceType: SourceType,
+        sourceId: UUID
     ): Either<RepositoryWriteError, AuthorizationGrant>
 }
 
@@ -112,6 +117,25 @@ class ExposedGrantRepository(
         }
     }
 
+    override fun findBySource(sourceType: SourceType, sourceId: UUID): Either<RepositoryReadError, AuthorizationGrant?> =
+        either {
+            transaction {
+                val grant = AuthorizationGrantTable
+                    .selectAll()
+                    .where {
+                        (AuthorizationGrantTable.sourceType eq sourceType) and (AuthorizationGrantTable.sourceId eq sourceId)
+                    }
+                    .singleOrNull()
+                    ?: return@transaction null
+
+                val grantedFor = partyRepository.find(grant[AuthorizationGrantTable.grantedFor]).bind()
+                val grantedBy = partyRepository.find(grant[AuthorizationGrantTable.grantedBy]).bind()
+                val grantedTo = partyRepository.find(grant[AuthorizationGrantTable.grantedTo]).bind()
+
+                grant.toAuthorizationGrant(grantedFor, grantedBy, grantedTo)
+            }
+        }
+
     override fun findScopes(grantId: UUID): Either<RepositoryReadError, List<AuthorizationScope>> = either {
         transaction {
             val scopes = AuthorizationGrantTable
@@ -138,11 +162,14 @@ class ExposedGrantRepository(
             scopes
         }
     }
+
     override fun insert(
         grantedFor: AuthorizationParty,
         grantedBy: AuthorizationParty,
         grantedTo: AuthorizationParty,
-        scopes: List<AuthorizationScope>
+        scopes: List<AuthorizationScope>,
+        sourceType: SourceType,
+        sourceId: UUID
     ): Either<RepositoryWriteError, AuthorizationGrant> =
         either {
             transaction {
@@ -167,6 +194,8 @@ class ExposedGrantRepository(
                     it[grantedAt] = now
                     it[validFrom] = now
                     it[validTo] = now.plusYears(1)
+                    it[AuthorizationGrantTable.sourceType] = sourceType
+                    it[AuthorizationGrantTable.sourceId] = sourceId
                 }.single()
 
                 if (scopes.isNotEmpty()) {
@@ -203,6 +232,14 @@ object AuthorizationGrantTable : UUIDTable("authorization_grant") {
     val grantedAt = datetime("granted_at").defaultExpression(CurrentDateTime)
     val validFrom = datetime("valid_from").defaultExpression(CurrentDateTime)
     val validTo = datetime("valid_to").defaultExpression(CurrentDateTime)
+    val sourceType =
+        customEnumeration(
+            name = "source_type",
+            sql = "grant_source_type",
+            fromDb = { value -> SourceType.valueOf(value as String) },
+            toDb = { PGEnum("grant_source_type", it) },
+        )
+    val sourceId = uuid("source_id")
 }
 
 object AuthorizationScopeTable : LongIdTable(name = "auth.authorization_scope") {
@@ -232,6 +269,8 @@ fun ResultRow.toAuthorizationGrant(grantedFor: AuthorizationPartyRecord, granted
         grantedAt = this[AuthorizationGrantTable.grantedAt].toKotlinLocalDateTime(),
         validFrom = this[AuthorizationGrantTable.validFrom].toKotlinLocalDateTime(),
         validTo = this[AuthorizationGrantTable.validTo].toKotlinLocalDateTime(),
+        sourceType = this[AuthorizationGrantTable.sourceType],
+        sourceId = this[AuthorizationGrantTable.sourceId],
     )
 
 fun AuthorizationPartyRecord.toAuthorizationParty() = AuthorizationParty(resourceId = this.resourceId, type = this.type)
