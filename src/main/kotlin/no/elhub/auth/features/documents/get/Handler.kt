@@ -1,7 +1,6 @@
 package no.elhub.auth.features.documents.get
 
 import arrow.core.Either
-import arrow.core.raise.context.bind
 import arrow.core.raise.either
 import no.elhub.auth.features.common.PartyService
 import no.elhub.auth.features.common.QueryError
@@ -10,7 +9,6 @@ import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.common.GrantRepository
-import java.util.UUID
 
 class Handler(
     private val documentRepo: DocumentRepository,
