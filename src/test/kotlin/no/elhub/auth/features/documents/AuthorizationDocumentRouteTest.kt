@@ -1,6 +1,7 @@
 package no.elhub.auth.features.documents
 
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.ktor.client.call.body
@@ -197,6 +198,7 @@ class AuthorizationDocumentRouteTest :
                                     type shouldBe "Person"
                                     id.shouldNotBeNull()
                                 }
+                                grant.shouldBeNull()
                             }
                         }
 
@@ -237,7 +239,7 @@ class AuthorizationDocumentRouteTest :
                     grantId = patchDocumentResponse.data.relationships.grant.data.id
                 }
 
-                test("Get document should give status Signed") {
+                test("Get document should give status Signed and reference to created grant") {
                     val response = client.get(linkToDocument) {
                         header(HttpHeaders.Authorization, "Bearer something")
                         header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
@@ -246,6 +248,16 @@ class AuthorizationDocumentRouteTest :
                     val getDocumentResponse: GetDocumentResponse = response.body()
                     getDocumentResponse.data.attributes.shouldNotBeNull().apply {
                         status shouldBe AuthorizationDocument.Status.Signed.toString()
+                    }
+
+                    getDocumentResponse.data.relationships.grant.shouldNotBeNull().apply {
+                        data.apply {
+                            type shouldBe "AuthorizationGrant"
+                            id shouldBe grantId
+                        }
+                        links.shouldNotBeNull().apply {
+                            self shouldBe "authorization-grants/$grantId"
+                        }
                     }
                 }
 
@@ -281,9 +293,19 @@ class AuthorizationDocumentRouteTest :
                                     type shouldBe "Person"
                                 }
                             }
+                            source.apply {
+                                data.apply {
+                                    id shouldBe createdDocumentId
+                                    type shouldBe "AuthorizationDocument"
+                                }
+                                links.shouldNotBeNull().apply {
+                                    self shouldBe "/authorization-documents/$createdDocumentId"
+                                }
+                            }
                         }
                     }
                 }
+
                 test("Get grant scopes by id should return proper response") {
                     val response = client.get("$GRANTS_PATH/$grantId/scopes")
                     response.status shouldBe HttpStatusCode.OK
