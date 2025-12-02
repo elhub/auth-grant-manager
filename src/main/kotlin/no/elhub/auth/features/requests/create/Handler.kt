@@ -60,13 +60,11 @@ class Handler(
                 .insert(requestToCreate)
                 .getOrElse { return Either.Left(CreateRequestError.PersistenceError) }
 
-        val requestProperties =
-            metaAttributes
-                .toRequestProperties(savedRequest.id)
+        val requestProperties = metaAttributes.toRequestProperties(savedRequest.id)
 
         requestPropertyRepo.insert(requestProperties)
 
-        return Either.Right(savedRequest)
+        return Either.Right(savedRequest.copy(properties = metaAttributes))
     }
 }
 
