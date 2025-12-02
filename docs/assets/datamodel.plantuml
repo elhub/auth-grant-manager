@@ -116,9 +116,9 @@ entity AuthorizationDocument {
   type: DocumentType
   file: Blob
   status: AuthorizationDocumentStatus
-  requestedBy: UUID, FK→AuthorizationParty  /' The party that made the request '/
-  requestedFrom: UUID, FK→AuthorizationParty /' The party that the request is made to '/
-  requestedTo: UUID, FK→AuthorizationParty   /' The party that is expected to respond to the request '/
+  requestedBy: UUID, FK→AuthorizationParty  /' The party that requested the document '/
+  requestedFrom: UUID, FK→AuthorizationParty /' The party that the document is issued for '/
+  requestedTo: UUID, FK→AuthorizationParty   /' The party that is expected to sign the document '/
   createdAt: DateTime
   updatedAt: DateTime
 }
