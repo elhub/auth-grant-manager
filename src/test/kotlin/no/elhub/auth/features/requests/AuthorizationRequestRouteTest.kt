@@ -296,6 +296,57 @@ class AuthorizationRequestRouteTest :
                         }
 
                     response.status shouldBe HttpStatusCode.Created
+
+                    val responseJson: CreateRequestResponse = response.body()
+                    responseJson.data.apply {
+                        id.shouldNotBeNull()
+                        type shouldBe "AuthorizationRequest"
+                        attributes.shouldNotBeNull().apply {
+                            requestType shouldBe "ChangeOfSupplierConfirmation"
+                            status shouldBe AuthorizationRequest.Status.Pending.name
+                            validTo.shouldNotBeNull()
+                        }
+                        relationships.shouldNotBeNull().apply {
+                            relationships.apply {
+                                requestedBy.apply {
+                                    data.apply {
+                                        id shouldBe "987654321"
+                                        type shouldBe "Organization"
+                                    }
+                                }
+                                requestedFrom.apply {
+                                    data.apply {
+                                        id.shouldNotBeNull()
+                                        type shouldBe "Person"
+                                    }
+                                }
+                                requestedFrom.apply {
+                                    data.apply {
+                                        id.shouldNotBeNull()
+                                        type shouldBe "Person"
+                                    }
+                                }
+                            }
+                        }
+                        meta.shouldNotBeNull().apply {
+                            createdAt.shouldNotBeNull()
+                            updatedAt.shouldNotBeNull()
+                            requestedFromName shouldBe "Hillary Orr"
+                            requestedForMeteringPointId shouldBe "123456789012345678"
+                            requestedForMeteringPointAddress shouldBe "quaerendum"
+                            balanceSupplierName shouldBe "Balance Supplier"
+                            balanceSupplierContractName shouldBe "Selena Chandler"
+                        }
+                        links.shouldNotBeNull().apply {
+                            self.shouldNotBeNull()
+                        }
+                    }
+                    responseJson.links.shouldNotBeNull().apply {
+                        self shouldBe "https://api.elhub.no/authorization-requests"
+                    }
+                    responseJson.meta.shouldNotBeNull().apply {
+                        "createdAt".shouldNotBeNull()
+                    }
                 }
 
                 test("Should return 400 Bad Request on validation error with error payload") {

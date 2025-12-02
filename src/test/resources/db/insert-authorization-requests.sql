@@ -42,6 +42,8 @@ VALUES ('d81e5bf2-8a0c-4348-a788-2a3fab4e77d6', 'requestedForMeteringPointId', '
 INSERT INTO auth.authorization_request_property(authorization_request_id, key, value)
 VALUES ('d81e5bf2-8a0c-4348-a788-2a3fab4e77d6', 'requestedForMeteringPointAddress', 'Example Street 1, 1234 Oslo');
 INSERT INTO auth.authorization_request_property(authorization_request_id, key, value)
+VALUES ('d81e5bf2-8a0c-4348-a788-2a3fab4e77d6', 'balanceSupplierName', 'Example Energy AS');
+INSERT INTO auth.authorization_request_property(authorization_request_id, key, value)
 VALUES ('d81e5bf2-8a0c-4348-a788-2a3fab4e77d6', 'balanceSupplierContractName', 'ExampleSupplierContract');
 
 -- Meta properties for second request
@@ -52,4 +54,30 @@ VALUES ('4f71d596-99e4-415e-946d-7252c1a40c5b', 'requestedForMeteringPointId', '
 INSERT INTO auth.authorization_request_property(authorization_request_id, key, value)
 VALUES ('4f71d596-99e4-415e-946d-7252c1a40c5b', 'requestedForMeteringPointAddress', 'Example Street 1, 1234 Oslo');
 INSERT INTO auth.authorization_request_property(authorization_request_id, key, value)
+VALUES ('4f71d596-99e4-415e-946d-7252c1a40c5b', 'balanceSupplierName', 'Example Energy AS');
+INSERT INTO auth.authorization_request_property(authorization_request_id, key, value)
 VALUES ('4f71d596-99e4-415e-946d-7252c1a40c5b', 'balanceSupplierContractName', 'ExampleSupplierContract');
+
+-- Meta properties for third request
+INSERT INTO auth.authorization_request_property(authorization_request_id, key, value)
+VALUES ('4f71d596-99e4-415e-946d-7252c1a40c51', 'requestedFromName', 'Per Hansen');
+INSERT INTO auth.authorization_request_property(authorization_request_id, key, value)
+VALUES ('4f71d596-99e4-415e-946d-7252c1a40c51', 'requestedForMeteringPointId', '9876543210987');
+INSERT INTO auth.authorization_request_property(authorization_request_id, key, value)
+VALUES ('4f71d596-99e4-415e-946d-7252c1a40c51', 'requestedForMeteringPointAddress', 'Main Street 42, 5000 Bergen');
+INSERT INTO auth.authorization_request_property(authorization_request_id, key, value)
+VALUES ('4f71d596-99e4-415e-946d-7252c1a40c51', 'balanceSupplierName', 'Green Power Ltd');
+INSERT INTO auth.authorization_request_property(authorization_request_id, key, value)
+VALUES ('4f71d596-99e4-415e-946d-7252c1a40c51', 'balanceSupplierContractName', 'GreenPowerContract2025');
+
+-- Meta properties for fourth request
+INSERT INTO auth.authorization_request_property(authorization_request_id, key, value)
+VALUES ('4f71d596-99e4-415e-946d-7252c1a40c52', 'requestedFromName', 'Anna Johansen');
+INSERT INTO auth.authorization_request_property(authorization_request_id, key, value)
+VALUES ('4f71d596-99e4-415e-946d-7252c1a40c52', 'requestedForMeteringPointId', '5555555555555');
+INSERT INTO auth.authorization_request_property(authorization_request_id, key, value)
+VALUES ('4f71d596-99e4-415e-946d-7252c1a40c52', 'requestedForMeteringPointAddress', 'Sunset Avenue 10, 0150 Oslo');
+INSERT INTO auth.authorization_request_property(authorization_request_id, key, value)
+VALUES ('4f71d596-99e4-415e-946d-7252c1a40c52', 'balanceSupplierName', 'Nordic Energy Group');
+INSERT INTO auth.authorization_request_property(authorization_request_id, key, value)
+VALUES ('4f71d596-99e4-415e-946d-7252c1a40c52', 'balanceSupplierContractName', 'NordicEnergyQ1-2025');

@@ -15,7 +15,7 @@ data class AuthorizationRequest(
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime,
     val validTo: LocalDate,
-    val properties: Map<String, String> = emptyMap(),
+    var properties: Map<String, String> = emptyMap(),
 ) {
     companion object {
         fun create(
