@@ -59,9 +59,9 @@ entity AuthorizationGrant {
   id: UUID
   --
   status: AuthorizationGrantStatus
-  grantedFor: UUID, FK→AuthorizationParty
-  grantedBy: UUID, FK→AuthorizationParty
-  grantedTo: UUID, FK→AuthorizationParty
+  grantedFor: UUID, FK→AuthorizationParty /' The party for whom the grant is made '/
+  grantedBy: UUID, FK→AuthorizationParty /' The party that made/signed the grant '/
+  grantedTo: UUID, FK→AuthorizationParty /' The party that is given the rights by the grant '/
   grantedAt: DateTime
   validFrom: DateTime
   validTo: DateTime
@@ -92,8 +92,9 @@ entity AuthorizationRequest {
   --
   type: RequestType
   status: AuthorizationRequestStatus
-  requestedBy: UUID, FK→AuthorizationParty
-  requestedFrom: UUID, FK→AuthorizationParty
+  requestedBy: UUID, FK→AuthorizationParty  /' The party that made the request '/
+  requestedFrom: UUID, FK→AuthorizationParty /' The party that the request is made to '/
+  requestedTo: UUID, FK→AuthorizationParty   /' The party that is expected to respond to the request '/
   createdAt: DateTime
   updatedAt: DateTime
   validTo: DateTime
@@ -115,8 +116,9 @@ entity AuthorizationDocument {
   type: DocumentType
   file: Blob
   status: AuthorizationDocumentStatus
-  requestedBy: UUID, FK→AuthorizationParty
-  requestedFrom: UUID, FK→AuthorizationParty
+  requestedBy: UUID, FK→AuthorizationParty  /' The party that made the request '/
+  requestedFrom: UUID, FK→AuthorizationParty /' The party that the request is made to '/
+  requestedTo: UUID, FK→AuthorizationParty   /' The party that is expected to respond to the request '/
   createdAt: DateTime
   updatedAt: DateTime
 }
