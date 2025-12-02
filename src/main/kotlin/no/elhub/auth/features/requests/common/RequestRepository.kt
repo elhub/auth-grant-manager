@@ -76,34 +76,7 @@ class ExposedRequestRepository(
     override fun find(requestId: UUID): Either<RepositoryReadError, AuthorizationRequest> =
         either {
             transaction {
-                val request =
-                    AuthorizationRequestTable
-                        .selectAll()
-                        .where { AuthorizationRequestTable.id eq requestId }
-                        .singleOrNull() ?: raise(RepositoryReadError.NotFoundError)
-
-                val requestedByDbId = request[AuthorizationRequestTable.requestedBy]
-                val requestedByParty =
-                    partyRepo
-                        .find(requestedByDbId)
-                        .mapLeft { RepositoryReadError.UnexpectedError }
-                        .bind()
-
-                val requestedFromDbId = request[AuthorizationRequestTable.requestedFrom]
-                val requestedFromParty =
-                    partyRepo
-                        .find(requestedFromDbId)
-                        .mapLeft { RepositoryReadError.UnexpectedError }
-                        .bind()
-
-                val requestedToDbId = request[AuthorizationRequestTable.requestedFrom]
-                val requestedToParty =
-                    partyRepo
-                        .find(requestedToDbId)
-                        .mapLeft { RepositoryReadError.UnexpectedError }
-                        .bind()
-
-                request.toAuthorizationRequest(requestedByParty, requestedFromParty, requestedToParty)
+                findInternal(requestId).bind()
             }
         }
 
@@ -151,55 +124,66 @@ class ExposedRequestRepository(
             }
         }.mapLeft { RepositoryWriteError.UnexpectedError }
 
-    override fun confirm(requestId: UUID, newStatus: AuthorizationRequest.Status): Either<RepositoryError, AuthorizationRequest> = either {
-        transaction {
-            val existingRequest =
+    override fun confirm(
+        requestId: UUID,
+        newStatus: AuthorizationRequest.Status
+    ): Either<RepositoryError, AuthorizationRequest> =
+        either {
+            transaction {
+                val rowsUpdated =
+                    AuthorizationRequestTable.update(
+                        where = { AuthorizationRequestTable.id eq requestId }
+                    ) {
+                        it[requestStatus] = newStatus
+                        it[updatedAt] = java.time.LocalDateTime.now()
+                    }
+
+                if (rowsUpdated == 0) {
+                    raise(RepositoryWriteError.UnexpectedError)
+                }
+
+                findInternal(requestId)
+                    .mapLeft { readError ->
+                        when (readError) {
+                            is RepositoryReadError.NotFoundError -> RepositoryWriteError.UnexpectedError
+                            is RepositoryReadError.UnexpectedError -> RepositoryWriteError.UnexpectedError
+                        }
+                    }
+                    .bind()
+            }
+        }
+
+    private fun findInternal(requestId: UUID): Either<RepositoryReadError, AuthorizationRequest> =
+        either {
+            val request =
                 AuthorizationRequestTable
                     .selectAll()
                     .where { AuthorizationRequestTable.id eq requestId }
-                    .singleOrNull()
-                    ?: raise(RepositoryReadError.NotFoundError)
+                    .singleOrNull() ?: raise(RepositoryReadError.NotFoundError)
 
-            val rowsUpdated =
-                AuthorizationRequestTable.update(
-                    where = { AuthorizationRequestTable.id eq requestId }
-                ) {
-                    it[requestStatus] = newStatus
-                    it[updatedAt] = java.time.LocalDateTime.now()
-                }
-
-            if (rowsUpdated == 0) {
-                raise(RepositoryWriteError.UnexpectedError)
-            }
-
-            val requestedByDbId = existingRequest[AuthorizationRequestTable.requestedBy]
+            val requestedByDbId = request[AuthorizationRequestTable.requestedBy]
             val requestedByParty =
                 partyRepo
                     .find(requestedByDbId)
                     .mapLeft { RepositoryReadError.UnexpectedError }
                     .bind()
 
-            val requestedFromDbId = existingRequest[AuthorizationRequestTable.requestedFrom]
+            val requestedFromDbId = request[AuthorizationRequestTable.requestedFrom]
             val requestedFromParty =
                 partyRepo
                     .find(requestedFromDbId)
                     .mapLeft { RepositoryReadError.UnexpectedError }
                     .bind()
 
-            val requestedToDbId = existingRequest[AuthorizationRequestTable.requestedTo]
+            val requestedToDbId = request[AuthorizationRequestTable.requestedTo]
             val requestedToParty =
                 partyRepo
                     .find(requestedToDbId)
                     .mapLeft { RepositoryReadError.UnexpectedError }
                     .bind()
 
-            existingRequest.toAuthorizationRequest(
-                requestedByParty,
-                requestedFromParty,
-                requestedToParty,
-            )
+            request.toAuthorizationRequest(requestedByParty, requestedFromParty, requestedToParty)
         }
-    }
 }
 
 object AuthorizationRequestTable : UUIDTable("authorization_request") {
