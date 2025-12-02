@@ -7,7 +7,6 @@ import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.insertIgnore
 import org.jetbrains.exposed.sql.javatime.timestamp
 import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.Instant
 import java.util.UUID
 
@@ -20,7 +19,6 @@ class ExposedPartyRepository : PartyRepository {
 
     override fun findOrInsert(type: PartyType, resourceId: String): Either<RepositoryWriteError, AuthorizationPartyRecord> =
         Either.catch {
-//            transaction {
             AuthorizationPartyTable
                 // look in the table where type == given AND resource_id = given
                 .selectAll()
@@ -44,20 +42,17 @@ class ExposedPartyRepository : PartyRepository {
                             .toAuthorizationParty()
                     }
                 }
-//            }
         }.mapLeft { RepositoryWriteError.UnexpectedError }
 
     override fun find(id: UUID): Either<RepositoryReadError, AuthorizationPartyRecord> =
         Either
             .catch {
-//                transaction {
                 AuthorizationPartyTable
                     .selectAll()
                     .where { AuthorizationPartyTable.id eq id }
                     .singleOrNull()
                     ?.toAuthorizationParty()
                     ?: throw NoSuchElementException("Party not found: $id")
-//                }
             }
             .mapLeft {
                 if (it is NoSuchElementException) {
