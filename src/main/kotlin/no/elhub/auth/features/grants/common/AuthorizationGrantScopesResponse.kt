@@ -25,6 +25,7 @@ data class GrantRelationships(
     val grantedFor: JsonApiRelationshipToOne,
     val grantedBy: JsonApiRelationshipToOne,
     val grantedTo: JsonApiRelationshipToOne,
+    val source: JsonApiRelationshipToOne,
 ) : JsonApiRelationships
 
 @Serializable

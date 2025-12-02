@@ -20,7 +20,8 @@ data class GetDocumentResponseAttributes(
 @Serializable
 data class GetDocumentResponseRelationships(
     val requestedBy: JsonApiRelationshipToOne,
-    val requestedFrom: JsonApiRelationshipToOne
+    val requestedFrom: JsonApiRelationshipToOne,
+    val grant: JsonApiRelationshipToOne? = null
 ) : JsonApiRelationships
 
 typealias GetDocumentResponse = JsonApiResponse.SingleDocumentWithRelationships<GetDocumentResponseAttributes, GetDocumentResponseRelationships>
@@ -47,7 +48,18 @@ fun AuthorizationDocument.toGetResponse() =
                         id = this.requestedFrom.resourceId,
                         type = this.requestedFrom.type.name
                     )
-                )
+                ),
+                grant = this.grantId?.let { grantId ->
+                    JsonApiRelationshipToOne(
+                        data = JsonApiRelationshipData(
+                            id = grantId,
+                            type = "AuthorizationGrant"
+                        ),
+                        links = JsonApiLinks.RelationShipLink(
+                            self = "authorization-grants/$grantId"
+                        )
+                    )
+                }
             )
         ),
         links = JsonApiLinks.ResourceObjectLink("/authorization-documents/${this.id}")

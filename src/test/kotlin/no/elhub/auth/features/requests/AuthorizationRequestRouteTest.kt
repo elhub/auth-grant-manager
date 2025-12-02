@@ -77,7 +77,7 @@ class AuthorizationRequestRouteTest :
                     response.status shouldBe HttpStatusCode.OK
                     val responseJson: AuthorizationRequestListResponse = response.body()
                     responseJson.data.apply {
-                        size shouldBe 2
+                        size shouldBe 4
                         this[0].apply {
                             id.shouldNotBeNull()
                             type shouldBe "AuthorizationRequest"

@@ -38,6 +38,21 @@ fun AuthorizationGrant.toResponse() =
                         id = this.grantedTo.resourceId,
                         type = this.grantedTo.type.name
                     )
+                ),
+                source = JsonApiRelationshipToOne(
+                    data = JsonApiRelationshipData(
+                        id = this.sourceId.toString(),
+                        type = when (this.sourceType) {
+                            AuthorizationGrant.SourceType.Document -> "AuthorizationDocument"
+                            AuthorizationGrant.SourceType.Request -> "AuthorizationRequest"
+                        }
+                    ),
+                    links = JsonApiLinks.RelationShipLink(
+                        self = when (this.sourceType) {
+                            AuthorizationGrant.SourceType.Document -> "/authorization-documents/$sourceId"
+                            AuthorizationGrant.SourceType.Request -> "/authorization-requests/$sourceId"
+                        }
+                    )
                 )
             )
         ),

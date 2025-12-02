@@ -37,6 +37,9 @@ fun ConfirmDocumentResult.toResponse(): ConfirmDocumentResponse =
                     data = JsonApiRelationshipData(
                         id = grant.id,
                         type = "AuthorizationGrant"
+                    ),
+                    links = JsonApiLinks.RelationShipLink(
+                        self = "/authorization-grants/${grant.id}"
                     )
                 )
             )
