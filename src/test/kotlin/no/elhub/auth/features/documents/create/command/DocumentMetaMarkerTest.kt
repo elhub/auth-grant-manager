@@ -9,8 +9,8 @@ class DocumentMetaMarkerTest : FunSpec({
         val meta = ChangeOfSupplierDocumentMeta(
             balanceSupplierName = "Balance Supplier",
             balanceSupplierContractName = "Contract Name",
-            meteringPointId = "Meter123",
-            meteringPointAddress = "Address 1",
+            requestedForMeteringPointId = "Meter123",
+            requestedForMeteringPointAddress = "Address 1",
             requestedFromName = "Requester"
         )
 
