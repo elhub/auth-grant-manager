@@ -9,16 +9,16 @@ class DocumentMetaMarkerTest : FunSpec({
         val meta = ChangeOfSupplierDocumentMeta(
             balanceSupplierName = "Balance Supplier",
             balanceSupplierContractName = "Contract Name",
-            meteringPointId = "Meter123",
-            meteringPointAddress = "Address 1",
+            requestedForMeteringPointId = "Meter123",
+            requestedForMeteringPointAddress = "Address 1",
             requestedFromName = "Requester"
         )
 
         meta.toMetaAttributes() shouldBe mapOf(
             "balanceSupplierName" to "Balance Supplier",
             "balanceSupplierContractName" to "Contract Name",
-            "meteringPointId" to "Meter123",
-            "meteringPointAddress" to "Address 1",
+            "requestedForMeteringPointId" to "Meter123",
+            "requestedForMeteringPointAddress" to "Address 1",
             "requestedFromName" to "Requester"
         )
     }

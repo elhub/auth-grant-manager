@@ -116,8 +116,8 @@ class PdfGenerator(
             is ChangeOfSupplierDocumentMeta -> generateChangeOfSupplierHtml(
                 customerNin = signerNin,
                 customerName = documentMeta.requestedFromName,
-                meteringPointAddress = documentMeta.meteringPointAddress,
-                meteringPointId = documentMeta.meteringPointId,
+                meteringPointAddress = documentMeta.requestedForMeteringPointAddress,
+                meteringPointId = documentMeta.requestedForMeteringPointId,
                 balanceSupplierName = documentMeta.balanceSupplierName,
                 balanceSupplierContractName = documentMeta.balanceSupplierContractName
             )

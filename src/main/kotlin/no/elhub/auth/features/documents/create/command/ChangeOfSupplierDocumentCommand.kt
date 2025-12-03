@@ -13,16 +13,16 @@ private const val REGEX_METERING_POINT = REGEX_NUMBERS_LETTERS_SYMBOLS
 data class ChangeOfSupplierDocumentMeta(
     val balanceSupplierName: String,
     val balanceSupplierContractName: String,
-    val meteringPointId: String,
-    val meteringPointAddress: String,
+    val requestedForMeteringPointId: String,
+    val requestedForMeteringPointAddress: String,
     val requestedFromName: String,
 ) : DocumentMetaMarker {
     override fun toMetaAttributes(): Map<String, String> =
         mapOf(
             "balanceSupplierName" to balanceSupplierName,
             "balanceSupplierContractName" to balanceSupplierContractName,
-            "meteringPointId" to meteringPointId,
-            "meteringPointAddress" to meteringPointAddress,
+            "requestedForMeteringPointId" to requestedForMeteringPointId,
+            "requestedForMeteringPointAddress" to requestedForMeteringPointAddress,
             "requestedFromName" to requestedFromName,
         )
 }
@@ -92,8 +92,8 @@ class ChangeOfSupplierDocumentCommand private constructor(
             val changeOfSupplierMeta = ChangeOfSupplierDocumentMeta(
                 balanceSupplierName = balanceSupplierName,
                 balanceSupplierContractName = balanceSupplierContractName,
-                meteringPointId = meteringPointId,
-                meteringPointAddress = meteringPointAddress,
+                requestedForMeteringPointId = meteringPointId,
+                requestedForMeteringPointAddress = meteringPointAddress,
                 requestedFromName = requestedFromName
             )
 

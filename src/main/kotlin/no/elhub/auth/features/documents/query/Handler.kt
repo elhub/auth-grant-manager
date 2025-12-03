@@ -6,6 +6,7 @@ import no.elhub.auth.features.common.PartyService
 import no.elhub.auth.features.common.QueryError
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.documents.AuthorizationDocument
+import no.elhub.auth.features.documents.common.DocumentPropertiesRepository
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.common.GrantRepository
@@ -13,6 +14,7 @@ import no.elhub.auth.features.grants.common.GrantRepository
 class Handler(
     private val repo: DocumentRepository,
     private val partyService: PartyService,
+    private val documentPropertiesRepo: DocumentPropertiesRepository,
     private val grantRepository: GrantRepository
 ) {
     suspend operator fun invoke(query: Query): Either<QueryError, List<AuthorizationDocument>> = either {
@@ -36,11 +38,13 @@ class Handler(
                         RepositoryReadError.UnexpectedError -> QueryError.IOError
                     }
                 }.bind()
-            grant?.let {
-                document.copy(
-                    grantId = grant.id
-                )
-            } ?: document
+
+            val properties = documentPropertiesRepo.find(document.id)
+
+            document.copy(
+                grantId = grant?.id,
+                properties = properties
+            )
         }
     }
 }

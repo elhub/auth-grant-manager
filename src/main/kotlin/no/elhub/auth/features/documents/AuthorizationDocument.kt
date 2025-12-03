@@ -1,8 +1,9 @@
 package no.elhub.auth.features.documents
 
 import no.elhub.auth.features.common.AuthorizationParty
+import no.elhub.auth.features.documents.common.AuthorizationDocumentProperty
 import java.time.LocalDateTime
-import java.util.UUID
+import java.util.*
 
 data class AuthorizationDocument(
     val id: UUID,
@@ -15,6 +16,7 @@ data class AuthorizationDocument(
     val requestedTo: AuthorizationParty,
     val signedBy: AuthorizationParty? = null,
     val grantId: String? = null,
+    val properties: List<AuthorizationDocumentProperty> = emptyList(),
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime
 ) {
