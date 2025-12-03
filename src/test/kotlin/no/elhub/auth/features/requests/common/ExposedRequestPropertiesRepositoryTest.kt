@@ -37,8 +37,7 @@ class ExposedRequestPropertiesRepositoryTest : FunSpec({
     }
 
     context("Request properties repository") {
-
-        test ("insert empty list should return success ") {
+        test("insert empty list should return success ") {
             val result = propertyRepo.insert(emptyList())
             result.isRight() shouldBe true
         }
@@ -89,7 +88,5 @@ class ExposedRequestPropertiesRepositoryTest : FunSpec({
                 stored[1].value shouldBe "Kari Normann AS"
             }
         }
-
     }
-
 })
