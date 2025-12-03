@@ -1,6 +1,8 @@
 package no.elhub.auth.features.documents.get
 
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.devxp.jsonapi.model.JsonApiAttributes
 import no.elhub.devxp.jsonapi.model.JsonApiLinks
@@ -60,7 +62,14 @@ fun AuthorizationDocument.toGetResponse() =
                         )
                     )
                 }
-            )
+            ),
+            meta = buildJsonObject {
+                put("createdAt", JsonPrimitive(this@toGetResponse.createdAt.toString()))
+                put("updatedAt", JsonPrimitive(this@toGetResponse.updatedAt.toString()))
+                this@toGetResponse.properties.forEach {
+                    put(it.key, JsonPrimitive(it.value))
+                }
+            }
         ),
         links = JsonApiLinks.ResourceObjectLink("/authorization-documents/${this.id}")
     )

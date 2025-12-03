@@ -1,6 +1,8 @@
 package no.elhub.auth.features.documents
 
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.maps.shouldContain
+import io.kotest.matchers.maps.shouldContainKey
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
@@ -21,6 +23,7 @@ import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.testing.testApplication
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonPrimitive
 import no.elhub.auth.features.common.AuthPersonsTestContainer
 import no.elhub.auth.features.common.AuthPersonsTestContainerExtension
 import no.elhub.auth.features.common.PartyIdentifier
@@ -199,6 +202,19 @@ class AuthorizationDocumentRouteTest :
                                     id.shouldNotBeNull()
                                 }
                                 grant.shouldBeNull()
+                            }
+                            meta.shouldNotBeNull().toMap().apply {
+                                this.mapValues { (_, v) ->
+                                    v.jsonPrimitive.content
+                                }.apply {
+                                    shouldContain("requestedFromName", "Hillary Orr")
+                                    shouldContain("requestedForMeteringPointId", "atomorum")
+                                    shouldContain("requestedForMeteringPointAddress", "quaerendum")
+                                    shouldContain("balanceSupplierName", "Jami Wade")
+                                    shouldContain("balanceSupplierContractName", "Selena Chandler")
+                                    shouldContainKey("createdAt")
+                                    shouldContainKey("updatedAt")
+                                }
                             }
                         }
 

@@ -21,8 +21,8 @@ data class ChangeOfSupplierDocumentMeta(
         mapOf(
             "balanceSupplierName" to balanceSupplierName,
             "balanceSupplierContractName" to balanceSupplierContractName,
-            "meteringPointId" to meteringPointId,
-            "meteringPointAddress" to meteringPointAddress,
+            "requestedForMeteringPointId" to meteringPointId,
+            "requestedForMeteringPointAddress" to meteringPointAddress,
             "requestedFromName" to requestedFromName,
         )
 }
