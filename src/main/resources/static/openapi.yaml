@@ -137,7 +137,7 @@ paths:
           $ref: "#/components/responses/404NotFoundError"
         "500":
           $ref: "#/components/responses/500InternalServerError"
-    patch:
+    put:
       summary: Submit a signed authorization document.
       description: Submit a signed authorization document. Elhub will validate the document, generate any necessary authorization grants and store the document.
       parameters:
@@ -155,12 +155,8 @@ paths:
               type: string
               format: binary
       responses:
-        "200":
-          description: The document was registered and accepted.
-          content:
-            application/json:
-              schema:
-                $ref: "./schemas/documents/authorization-document-patch-response.schema.json"
+        "204":
+          description: The signature was validated and the document was registered and accepted. No content is returned.
         "400":
           $ref: "#/components/responses/400BadRequestError"
         "401":

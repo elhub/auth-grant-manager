@@ -6,15 +6,17 @@ import io.kotest.matchers.maps.shouldContainKey
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldBeEmpty
 import io.ktor.client.call.body
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.accept
 import io.ktor.client.request.get
 import io.ktor.client.request.header
-import io.ktor.client.request.patch
 import io.ktor.client.request.post
+import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsBytes
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
@@ -37,7 +39,6 @@ import no.elhub.auth.features.common.auth.PdpResponse
 import no.elhub.auth.features.common.auth.Result
 import no.elhub.auth.features.common.auth.TokenInfo
 import no.elhub.auth.features.common.commonModule
-import no.elhub.auth.features.documents.confirm.ConfirmDocumentResponse
 import no.elhub.auth.features.documents.create.CreateDocumentResponse
 import no.elhub.auth.features.documents.create.DocumentMeta
 import no.elhub.auth.features.documents.create.DocumentRequestAttributes
@@ -231,28 +232,13 @@ class AuthorizationDocumentRouteTest :
                     signedFile.validateFileIsSignedByUs()
                 }
 
-                test("Patch signed file should return correct response including reference to grant") {
-                    val response = client.patch("$DOCUMENTS_PATH/$createdDocumentId.pdf") {
+                test("Put signed file should return 204") {
+                    val response = client.put("$DOCUMENTS_PATH/$createdDocumentId.pdf") {
                         contentType(ContentType.Application.Pdf)
                         setBody(signedFile)
                     }
-                    response.status shouldBe HttpStatusCode.OK
-                    val patchDocumentResponse: ConfirmDocumentResponse = response.body()
-                    patchDocumentResponse.data.apply {
-                        type shouldBe "AuthorizationDocument"
-                        id shouldBe createdDocumentId
-                        attributes.shouldNotBeNull().apply {
-                            status shouldBe AuthorizationDocument.Status.Signed.toString()
-                            documentType shouldBe AuthorizationDocument.Type.ChangeOfSupplierConfirmation.toString()
-                        }
-                        relationships.apply {
-                            grant.apply {
-                                data.id.shouldNotBeNull()
-                                data.type shouldBe "AuthorizationGrant"
-                            }
-                        }
-                    }
-                    grantId = patchDocumentResponse.data.relationships.grant.data.id
+                    response.status shouldBe HttpStatusCode.NoContent
+                    response.bodyAsText().shouldBeEmpty()
                 }
 
                 test("Get document should give status Signed and reference to created grant") {
@@ -266,7 +252,9 @@ class AuthorizationDocumentRouteTest :
                         status shouldBe AuthorizationDocument.Status.Signed.toString()
                     }
 
-                    getDocumentResponse.data.relationships.grant.shouldNotBeNull().apply {
+                    val grantRelationship = getDocumentResponse.data.relationships.grant.shouldNotBeNull()
+                    grantId = grantRelationship.data.id
+                    grantRelationship.apply {
                         data.apply {
                             type shouldBe "AuthorizationGrant"
                             id shouldBe grantId

@@ -4,7 +4,6 @@ import arrow.core.Either
 import arrow.core.raise.either
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.RepositoryWriteError
-import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.common.GrantRepository
@@ -13,7 +12,7 @@ class Handler(
     private val documentRepository: DocumentRepository,
     private val grantRepository: GrantRepository,
 ) {
-    operator fun invoke(command: Command): Either<ConfirmDocumentError, ConfirmDocumentResult> = either {
+    operator fun invoke(command: Command): Either<ConfirmDocumentError, Unit> = either {
         val document = documentRepository.find(command.documentId)
             .mapLeft { error ->
                 when (error) {
@@ -46,7 +45,7 @@ class Handler(
                 }
             }.bind()
 
-        val grant = grantRepository.insert(
+        grantRepository.insert(
             grantedFor = confirmedDocument.requestedFrom,
             grantedBy = confirmedDocument.requestedBy,
             grantedTo = confirmedDocument.requestedTo,
@@ -54,18 +53,8 @@ class Handler(
             sourceType = AuthorizationGrant.SourceType.Document,
             sourceId = confirmedDocument.id
         ).mapLeft { ConfirmDocumentError.GrantCreationError }.bind()
-
-        ConfirmDocumentResult(
-            document = confirmedDocument,
-            grant = grant
-        )
     }
 }
-
-data class ConfirmDocumentResult(
-    val document: AuthorizationDocument,
-    val grant: AuthorizationGrant
-)
 
 sealed class ConfirmDocumentError {
     data object DocumentNotFoundError : ConfirmDocumentError()
