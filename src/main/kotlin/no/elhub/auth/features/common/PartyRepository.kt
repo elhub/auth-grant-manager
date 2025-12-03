@@ -7,7 +7,6 @@ import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.insertIgnore
 import org.jetbrains.exposed.sql.javatime.timestamp
 import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.Instant
 import java.util.UUID
 
@@ -20,44 +19,40 @@ class ExposedPartyRepository : PartyRepository {
 
     override fun findOrInsert(type: PartyType, resourceId: String): Either<RepositoryWriteError, AuthorizationPartyRecord> =
         Either.catch {
-            transaction {
-                AuthorizationPartyTable
-                    // look in the table where type == given AND resource_id = given
-                    .selectAll()
-                    .where { (AuthorizationPartyTable.type eq type) and (AuthorizationPartyTable.resourceId eq resourceId) }
-                    .singleOrNull()
-                    ?.toAuthorizationParty() // return if found
-                    ?: run {
-                        // try to insert a new row -> ignore if someone else is inserting the same type
-                        val ins = AuthorizationPartyTable.insertIgnore {
-                            it[AuthorizationPartyTable.type] = type
-                            it[AuthorizationPartyTable.resourceId] = resourceId
-                        }
-                        if (ins.resultedValues?.isNotEmpty() == true) {
-                            ins.resultedValues!!.first().toAuthorizationParty() // return if created
-                        } else {
-                            // run the same select again if the insert was ignored
-                            AuthorizationPartyTable
-                                .selectAll()
-                                .where { (AuthorizationPartyTable.type eq type) and (AuthorizationPartyTable.resourceId eq resourceId) }
-                                .single()
-                                .toAuthorizationParty()
-                        }
+            AuthorizationPartyTable
+                // look in the table where type == given AND resource_id = given
+                .selectAll()
+                .where { (AuthorizationPartyTable.type eq type) and (AuthorizationPartyTable.resourceId eq resourceId) }
+                .singleOrNull()
+                ?.toAuthorizationParty() // return if found
+                ?: run {
+                    // try to insert a new row -> ignore if someone else is inserting the same type
+                    val ins = AuthorizationPartyTable.insertIgnore {
+                        it[AuthorizationPartyTable.type] = type
+                        it[AuthorizationPartyTable.resourceId] = resourceId
                     }
-            }
+                    if (ins.resultedValues?.isNotEmpty() == true) {
+                        ins.resultedValues!!.first().toAuthorizationParty() // return if created
+                    } else {
+                        // run the same select again if the insert was ignored
+                        AuthorizationPartyTable
+                            .selectAll()
+                            .where { (AuthorizationPartyTable.type eq type) and (AuthorizationPartyTable.resourceId eq resourceId) }
+                            .single()
+                            .toAuthorizationParty()
+                    }
+                }
         }.mapLeft { RepositoryWriteError.UnexpectedError }
 
     override fun find(id: UUID): Either<RepositoryReadError, AuthorizationPartyRecord> =
         Either
             .catch {
-                transaction {
-                    AuthorizationPartyTable
-                        .selectAll()
-                        .where { AuthorizationPartyTable.id eq id }
-                        .singleOrNull()
-                        ?.toAuthorizationParty()
-                        ?: throw NoSuchElementException("Party not found: $id")
-                }
+                AuthorizationPartyTable
+                    .selectAll()
+                    .where { AuthorizationPartyTable.id eq id }
+                    .singleOrNull()
+                    ?.toAuthorizationParty()
+                    ?: throw NoSuchElementException("Party not found: $id")
             }
             .mapLeft {
                 if (it is NoSuchElementException) {
