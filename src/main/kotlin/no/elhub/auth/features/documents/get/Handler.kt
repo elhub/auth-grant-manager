@@ -6,14 +6,12 @@ import no.elhub.auth.features.common.PartyService
 import no.elhub.auth.features.common.QueryError
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.documents.AuthorizationDocument
-import no.elhub.auth.features.documents.common.DocumentPropertiesRepository
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.common.GrantRepository
 
 class Handler(
     private val documentRepo: DocumentRepository,
-    private val documentPropertiesRepo: DocumentPropertiesRepository,
     private val partyService: PartyService,
     private val grantRepository: GrantRepository
 ) {
@@ -33,8 +31,6 @@ class Handler(
             raise(QueryError.RequestedByMismatch)
         }
 
-        val properties = documentPropertiesRepo.find(document.id)
-
         val grant = grantRepository.findBySource(AuthorizationGrant.SourceType.Document, document.id)
             .mapLeft { error ->
                 when (error) {
@@ -45,7 +41,6 @@ class Handler(
 
         document.copy(
             grantId = grant?.id,
-            properties = properties
         )
     }
 }
