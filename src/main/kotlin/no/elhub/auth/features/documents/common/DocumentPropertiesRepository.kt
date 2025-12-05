@@ -6,35 +6,29 @@ import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.batchInsert
 import org.jetbrains.exposed.sql.javatime.timestamp
 import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.Instant
 import java.util.UUID
 
 interface DocumentPropertiesRepository {
-    fun insert(properties: List<AuthorizationDocumentProperty>)
+    fun insert(properties: List<AuthorizationDocumentProperty>, documentId: UUID)
     fun find(documentId: UUID): List<AuthorizationDocumentProperty>
 }
 
 class ExposedDocumentPropertiesRepository : DocumentPropertiesRepository {
-    override fun insert(properties: List<AuthorizationDocumentProperty>) {
+    override fun insert(properties: List<AuthorizationDocumentProperty>, documentId: UUID) {
         if (properties.isEmpty()) return
-
-        transaction {
-            AuthorizationDocumentPropertyTable.batchInsert(properties) { property ->
-                this[AuthorizationDocumentPropertyTable.documentId] = property.documentId
-                this[AuthorizationDocumentPropertyTable.key] = property.key
-                this[AuthorizationDocumentPropertyTable.value] = property.value
-            }
+        AuthorizationDocumentPropertyTable.batchInsert(properties) { property ->
+            this[AuthorizationDocumentPropertyTable.documentId] = documentId
+            this[AuthorizationDocumentPropertyTable.key] = property.key
+            this[AuthorizationDocumentPropertyTable.value] = property.value
         }
     }
 
     override fun find(documentId: UUID): List<AuthorizationDocumentProperty> =
-        transaction {
-            AuthorizationDocumentPropertyTable
-                .selectAll()
-                .where { AuthorizationDocumentPropertyTable.documentId eq documentId }
-                .map { it.toAuthorizationDocumentProperty() }
-        }
+        AuthorizationDocumentPropertyTable
+            .selectAll()
+            .where { AuthorizationDocumentPropertyTable.documentId eq documentId }
+            .map { it.toAuthorizationDocumentProperty() }
 }
 
 object AuthorizationDocumentPropertyTable : Table("auth.authorization_document_property") {
@@ -48,7 +42,6 @@ object AuthorizationDocumentPropertyTable : Table("auth.authorization_document_p
 }
 
 private fun ResultRow.toAuthorizationDocumentProperty() = AuthorizationDocumentProperty(
-    documentId = this[AuthorizationDocumentPropertyTable.documentId],
     key = this[AuthorizationDocumentPropertyTable.key],
     value = this[AuthorizationDocumentPropertyTable.value]
 )

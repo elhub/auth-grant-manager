@@ -16,7 +16,7 @@ data class AuthorizationDocument(
     val requestedTo: AuthorizationParty,
     val signedBy: AuthorizationParty? = null,
     val grantId: String? = null,
-    val properties: List<AuthorizationDocumentProperty> = emptyList(),
+    val properties: List<AuthorizationDocumentProperty>,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime
 ) {
@@ -27,6 +27,7 @@ data class AuthorizationDocument(
             requestedBy: AuthorizationParty,
             requestedFrom: AuthorizationParty,
             requestedTo: AuthorizationParty,
+            properties: List<AuthorizationDocumentProperty>
         ): AuthorizationDocument = AuthorizationDocument(
             id = UUID.randomUUID(),
             title = type.name,
@@ -36,6 +37,7 @@ data class AuthorizationDocument(
             requestedBy = requestedBy,
             requestedFrom = requestedFrom,
             requestedTo = requestedTo,
+            properties = properties,
             createdAt = LocalDateTime.now(),
             updatedAt = LocalDateTime.now()
         )

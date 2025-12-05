@@ -23,6 +23,8 @@ data class GetDocumentResponseAttributes(
 data class GetDocumentResponseRelationships(
     val requestedBy: JsonApiRelationshipToOne,
     val requestedFrom: JsonApiRelationshipToOne,
+    val requestedTo: JsonApiRelationshipToOne,
+    val signedBy: JsonApiRelationshipToOne? = null,
     val grant: JsonApiRelationshipToOne? = null
 ) : JsonApiRelationships
 
@@ -51,6 +53,20 @@ fun AuthorizationDocument.toGetResponse() =
                         type = this.requestedFrom.type.name
                     )
                 ),
+                requestedTo = JsonApiRelationshipToOne(
+                    data = JsonApiRelationshipData(
+                        id = this.requestedTo.resourceId,
+                        type = this.requestedTo.type.name
+                    )
+                ),
+                signedBy = this.signedBy?.let {
+                    JsonApiRelationshipToOne(
+                        data = JsonApiRelationshipData(
+                            id = it.resourceId,
+                            type = it.type.name
+                        )
+                    )
+                },
                 grant = this.grantId?.let { grantId ->
                     JsonApiRelationshipToOne(
                         data = JsonApiRelationshipData(
