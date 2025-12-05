@@ -1,6 +1,7 @@
 package no.elhub.auth.features.documents.create
 
 import arrow.core.getOrElse
+import arrow.core.right
 import eu.europa.esig.dss.pades.signature.PAdESService
 import eu.europa.esig.dss.spi.validation.CommonCertificateVerifier
 import io.kotest.assertions.arrow.core.shouldBeLeft
@@ -10,6 +11,7 @@ import io.kotest.koin.KoinLifecycleMode
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldMatch
+import no.elhub.auth.features.businessprocesses.changeofsupplier.ChangeOfSupplierBusinessHandler
 import no.elhub.auth.features.common.ApiPersonService
 import no.elhub.auth.features.common.AuthPersonsTestContainer
 import no.elhub.auth.features.common.AuthPersonsTestContainerExtension
@@ -23,6 +25,7 @@ import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
 import no.elhub.auth.features.common.party.PartyRepository
 import no.elhub.auth.features.common.party.PartyService
+import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.TestCertificateUtil
 import no.elhub.auth.features.documents.VaultTransitTestContainerExtension
 import no.elhub.auth.features.documents.common.DocumentPropertiesRepository
@@ -31,8 +34,11 @@ import no.elhub.auth.features.documents.common.ExposedDocumentPropertiesReposito
 import no.elhub.auth.features.documents.common.ExposedDocumentRepository
 import no.elhub.auth.features.documents.confirm.getPersonNin
 import no.elhub.auth.features.documents.confirm.isSignedByUs
-import no.elhub.auth.features.documents.create.command.ChangeOfSupplierDocumentCommand
-import no.elhub.auth.features.documents.create.command.ValidationError
+import no.elhub.auth.features.documents.create.CreateDocumentError
+import no.elhub.auth.features.documents.create.DocumentBusinessProcessOrchestrator
+import no.elhub.auth.features.documents.create.FileGenerator
+import no.elhub.auth.features.documents.create.command.DocumentMetaMarker
+import no.elhub.auth.features.documents.create.model.CreateDocumentModel
 import no.elhub.auth.features.documents.getCustomMetaDataValue
 import no.elhub.auth.features.documents.localVaultConfig
 import no.elhub.auth.features.documents.validateFileIsPDFA2BCompliant
@@ -70,12 +76,24 @@ private const val VALID_BALANCE_SUPPLIER_CONTRACT_NAME = "Contract 123"
 private const val BLANK = ""
 private const val EMPTY = " "
 
+private fun testDocumentOrchestrator(): DocumentBusinessProcessOrchestrator =
+    DocumentBusinessProcessOrchestrator(ChangeOfSupplierBusinessHandler(), FakeFileGenerator())
+
+private class FakeFileGenerator : FileGenerator {
+    override fun generate(
+        signerNin: String,
+        documentMeta: DocumentMetaMarker
+    ) = ByteArray(0).right()
+}
+
 /*
  * As a balance supplier or service provider
  * I want to generate a Change of Supplier document
  * So that I can obtain consent to move their subscription myself
  */
-class CreateDocumentTest : BehaviorSpec(), KoinTest {
+class CreateDocumentTest :
+    BehaviorSpec(),
+    KoinTest {
     init {
         extensions(
             VaultTransitTestContainerExtension,
@@ -110,11 +128,13 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                     single { PersonApiConfig(baseUri = AuthPersonsTestContainer.baseUri()) }
                     single { PartyService(get()) }
                     singleOf(::ExposedDocumentPropertiesRepository) bind DocumentPropertiesRepository::class
+                    singleOf(::ChangeOfSupplierBusinessHandler)
+                    singleOf(::DocumentBusinessProcessOrchestrator)
 
                     singleOf(::Handler)
                 },
-                mode = KoinLifecycleMode.Root
-            )
+                mode = KoinLifecycleMode.Root,
+            ),
         )
 
         beforeSpec {
@@ -141,19 +161,25 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
                 val handler by inject<Handler>()
 
-                val command = ChangeOfSupplierDocumentCommand(
-                    requestedBy = requestedBy,
-                    requestedFrom = requestedFrom,
-                    requestedTo = requestedTo,
-                    requestedFromName = requestedFromName,
-                    balanceSupplierName = balanceSupplierName,
-                    balanceSupplierContractName = balanceSupplierContractName,
-                    meteringPointId = meteringPointId,
-                    meteringPointAddress = meteringPointAddress
-                ).getOrElse { fail("Unexpected command construction error") }
+                val model =
+                    CreateDocumentModel(
+                        documentType = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                        meta =
+                        DocumentMeta(
+                            requestedBy = requestedBy,
+                            requestedFrom = requestedFrom,
+                            requestedTo = requestedTo,
+                            requestedFromName = requestedFromName,
+                            balanceSupplierName = balanceSupplierName,
+                            balanceSupplierContractName = balanceSupplierContractName,
+                            requestedForMeteringPointId = meteringPointId,
+                            requestedForMeteringPointAddress = meteringPointAddress,
+                        ),
+                    )
 
-                val document = handler(command)
-                    .getOrElse { fail("Document not returned") }
+                val document =
+                    handler(model)
+                        .getOrElse { fail("Document not returned") }
 
                 xThen("I should receive a link to a PDF document") {
                     fail("Received the PDF bytes")
@@ -188,18 +214,23 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
                     val handler by inject<Handler>()
 
-                    val command = ChangeOfSupplierDocumentCommand(
-                        requestedBy = requestedBy,
-                        requestedFrom = requestedFrom,
-                        requestedTo = requestedTo,
-                        requestedFromName = requestedFromName,
-                        balanceSupplierName = balanceSupplierName,
-                        balanceSupplierContractName = balanceSupplierContractName,
-                        meteringPointId = meteringPointId,
-                        meteringPointAddress = meteringPointAddress
-                    ).getOrElse { fail("Unexpected command construction error") }
+                    val model =
+                        CreateDocumentModel(
+                            documentType = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                            meta =
+                            DocumentMeta(
+                                requestedBy = requestedBy,
+                                requestedFrom = requestedFrom,
+                                requestedTo = requestedTo,
+                                requestedFromName = requestedFromName,
+                                balanceSupplierName = balanceSupplierName,
+                                balanceSupplierContractName = balanceSupplierContractName,
+                                requestedForMeteringPointId = meteringPointId,
+                                requestedForMeteringPointAddress = meteringPointAddress,
+                            ),
+                        )
 
-                    val document = handler(command).getOrElse { fail("Document not returned") }
+                    val document = handler(model).getOrElse { fail("Document not returned") }
 
                     Then("the user should be registered in Elhub") {
                         val resolvedResourceId = document.requestedFrom.resourceId
@@ -241,19 +272,29 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
                 val meteringPointAddress = VALID_METERING_POINT_ADDRESS
                 When("I request a Change of Supplier document") {
 
-                    val command = ChangeOfSupplierDocumentCommand(
-                        requestedBy = requestedBy,
-                        requestedFrom = requestedFrom,
-                        requestedTo = requestedTo,
-                        requestedFromName = requestedFromName,
-                        balanceSupplierName = balanceSupplierName,
-                        balanceSupplierContractName = balanceSupplierContractName,
-                        meteringPointId = meteringPointId,
-                        meteringPointAddress = meteringPointAddress
-                    )
+                    val orchestrator = testDocumentOrchestrator()
+                    val model =
+                        CreateDocumentModel(
+                            documentType = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                            meta =
+                            DocumentMeta(
+                                requestedBy = requestedBy,
+                                requestedFrom = requestedFrom,
+                                requestedTo = requestedTo,
+                                requestedFromName = requestedFromName,
+                                balanceSupplierName = balanceSupplierName,
+                                balanceSupplierContractName = balanceSupplierContractName,
+                                requestedForMeteringPointId = meteringPointId,
+                                requestedForMeteringPointAddress = meteringPointAddress,
+                            ),
+                        )
 
                     Then("I should receive an error message about missing balance supplier ID") {
-                        command.shouldBeLeft(ValidationError.MissingRequestedBy)
+                        orchestrator
+                            .handle(
+                                AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                                model,
+                            ).shouldBeLeft(CreateDocumentError.MappingError)
                     }
                 }
             }
@@ -271,19 +312,29 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
                 When("I request a Change of Supplier document") {
 
-                    val command = ChangeOfSupplierDocumentCommand(
-                        requestedBy = requestedBy,
-                        requestedFrom = requestedFrom,
-                        requestedTo = requestedTo,
-                        requestedFromName = requestedFromName,
-                        balanceSupplierName = balanceSupplierName,
-                        balanceSupplierContractName = balanceSupplierContractName,
-                        meteringPointId = meteringPointId,
-                        meteringPointAddress = meteringPointAddress
-                    )
+                    val orchestrator = testDocumentOrchestrator()
+                    val model =
+                        CreateDocumentModel(
+                            documentType = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                            meta =
+                            DocumentMeta(
+                                requestedBy = requestedBy,
+                                requestedFrom = requestedFrom,
+                                requestedTo = requestedTo,
+                                requestedFromName = requestedFromName,
+                                balanceSupplierName = balanceSupplierName,
+                                balanceSupplierContractName = balanceSupplierContractName,
+                                requestedForMeteringPointId = meteringPointId,
+                                requestedForMeteringPointAddress = meteringPointAddress,
+                            ),
+                        )
 
                     Then("I should receive an error message about invalid balance supplier ID") {
-                        command.shouldBeLeft(ValidationError.InvalidRequestedBy)
+                        orchestrator
+                            .handle(
+                                AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                                model,
+                            ).shouldBeLeft(CreateDocumentError.MappingError)
                     }
                 }
             }
@@ -301,19 +352,29 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
                 When("I request a Change of Supplier document") {
 
-                    val command = ChangeOfSupplierDocumentCommand(
-                        requestedBy = requestedBy,
-                        requestedFrom = requestedFrom,
-                        requestedTo = requestedTo,
-                        requestedFromName = requestedFromName,
-                        balanceSupplierName = balanceSupplierName,
-                        balanceSupplierContractName = balanceSupplierContractName,
-                        meteringPointId = meteringPointId,
-                        meteringPointAddress = meteringPointAddress
-                    )
+                    val orchestrator = testDocumentOrchestrator()
+                    val model =
+                        CreateDocumentModel(
+                            documentType = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                            meta =
+                            DocumentMeta(
+                                requestedBy = requestedBy,
+                                requestedFrom = requestedFrom,
+                                requestedTo = requestedTo,
+                                requestedFromName = requestedFromName,
+                                balanceSupplierName = balanceSupplierName,
+                                balanceSupplierContractName = balanceSupplierContractName,
+                                requestedForMeteringPointId = meteringPointId,
+                                requestedForMeteringPointAddress = meteringPointAddress,
+                            ),
+                        )
 
                     Then("I should receive an error message about missing balance supplier name") {
-                        command.shouldBeLeft(ValidationError.MissingBalanceSupplierName)
+                        orchestrator
+                            .handle(
+                                AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                                model,
+                            ).shouldBeLeft(CreateDocumentError.MappingError)
                     }
                 }
             }
@@ -331,19 +392,29 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
                 When("I request a Change of Supplier document") {
 
-                    val command = ChangeOfSupplierDocumentCommand(
-                        requestedBy = requestedBy,
-                        requestedFrom = requestedFrom,
-                        requestedTo = requestedTo,
-                        requestedFromName = requestedFromName,
-                        balanceSupplierName = balanceSupplierName,
-                        balanceSupplierContractName = balanceSupplierContractName,
-                        meteringPointId = meteringPointId,
-                        meteringPointAddress = meteringPointAddress
-                    )
+                    val orchestrator = testDocumentOrchestrator()
+                    val model =
+                        CreateDocumentModel(
+                            documentType = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                            meta =
+                            DocumentMeta(
+                                requestedBy = requestedBy,
+                                requestedFrom = requestedFrom,
+                                requestedTo = requestedTo,
+                                requestedFromName = requestedFromName,
+                                balanceSupplierName = balanceSupplierName,
+                                balanceSupplierContractName = balanceSupplierContractName,
+                                requestedForMeteringPointId = meteringPointId,
+                                requestedForMeteringPointAddress = meteringPointAddress,
+                            ),
+                        )
 
                     Then("I should receive an error message about missing end user ID") {
-                        command.shouldBeLeft(ValidationError.MissingRequestedFrom)
+                        orchestrator
+                            .handle(
+                                AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                                model,
+                            ).shouldBeLeft(CreateDocumentError.MappingError)
                     }
                 }
             }
@@ -361,19 +432,29 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
                 When("I request a Change of Supplier document") {
 
-                    val command = ChangeOfSupplierDocumentCommand(
-                        requestedBy = requestedBy,
-                        requestedFrom = requestedFrom,
-                        requestedTo = requestedTo,
-                        requestedFromName = requestedFromName,
-                        balanceSupplierName = balanceSupplierName,
-                        balanceSupplierContractName = balanceSupplierContractName,
-                        meteringPointId = meteringPointId,
-                        meteringPointAddress = meteringPointAddress
-                    )
+                    val orchestrator = testDocumentOrchestrator()
+                    val model =
+                        CreateDocumentModel(
+                            documentType = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                            meta =
+                            DocumentMeta(
+                                requestedBy = requestedBy,
+                                requestedFrom = requestedFrom,
+                                requestedTo = requestedTo,
+                                requestedFromName = requestedFromName,
+                                balanceSupplierName = balanceSupplierName,
+                                balanceSupplierContractName = balanceSupplierContractName,
+                                requestedForMeteringPointId = meteringPointId,
+                                requestedForMeteringPointAddress = meteringPointAddress,
+                            ),
+                        )
 
                     Then("I should receive an error message about invalid end user ID") {
-                        command.shouldBeLeft(ValidationError.InvalidRequestedFrom)
+                        orchestrator
+                            .handle(
+                                AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                                model,
+                            ).shouldBeLeft(CreateDocumentError.MappingError)
                     }
                 }
             }
@@ -391,19 +472,29 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
                 When("I request a Change of Supplier document") {
 
-                    val command = ChangeOfSupplierDocumentCommand(
-                        requestedBy = requestedBy,
-                        requestedFrom = requestedFrom,
-                        requestedTo = requestedTo,
-                        requestedFromName = requestedFromName,
-                        balanceSupplierName = balanceSupplierName,
-                        balanceSupplierContractName = balanceSupplierContractName,
-                        meteringPointId = meteringPointId,
-                        meteringPointAddress = meteringPointAddress
-                    )
+                    val orchestrator = testDocumentOrchestrator()
+                    val model =
+                        CreateDocumentModel(
+                            documentType = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                            meta =
+                            DocumentMeta(
+                                requestedBy = requestedBy,
+                                requestedFrom = requestedFrom,
+                                requestedTo = requestedTo,
+                                requestedFromName = requestedFromName,
+                                balanceSupplierName = balanceSupplierName,
+                                balanceSupplierContractName = balanceSupplierContractName,
+                                requestedForMeteringPointId = meteringPointId,
+                                requestedForMeteringPointAddress = meteringPointAddress,
+                            ),
+                        )
 
                     Then("I should receive an error message about missing metering point ID") {
-                        command.shouldBeLeft(ValidationError.MissingMeteringPointId)
+                        orchestrator
+                            .handle(
+                                AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                                model,
+                            ).shouldBeLeft(CreateDocumentError.MappingError)
                     }
                 }
             }
@@ -421,19 +512,29 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
                 When("I request a Change of Supplier document") {
 
-                    val command = ChangeOfSupplierDocumentCommand(
-                        requestedBy = requestedBy,
-                        requestedFrom = requestedFrom,
-                        requestedTo = requestedTo,
-                        requestedFromName = requestedFromName,
-                        balanceSupplierName = balanceSupplierName,
-                        balanceSupplierContractName = balanceSupplierContractName,
-                        meteringPointId = meteringPointId,
-                        meteringPointAddress = meteringPointAddress
-                    )
+                    val orchestrator = testDocumentOrchestrator()
+                    val model =
+                        CreateDocumentModel(
+                            documentType = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                            meta =
+                            DocumentMeta(
+                                requestedBy = requestedBy,
+                                requestedFrom = requestedFrom,
+                                requestedTo = requestedTo,
+                                requestedFromName = requestedFromName,
+                                balanceSupplierName = balanceSupplierName,
+                                balanceSupplierContractName = balanceSupplierContractName,
+                                requestedForMeteringPointId = meteringPointId,
+                                requestedForMeteringPointAddress = meteringPointAddress,
+                            ),
+                        )
 
                     Then("I should receive an error message about invalid metering point ID") {
-                        command.shouldBeLeft(ValidationError.InvalidMeteringPointId)
+                        orchestrator
+                            .handle(
+                                AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                                model,
+                            ).shouldBeLeft(CreateDocumentError.MappingError)
                     }
                 }
             }
@@ -451,19 +552,29 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
                 When("I request a Change of Supplier document") {
 
-                    val command = ChangeOfSupplierDocumentCommand(
-                        requestedBy = requestedBy,
-                        requestedFrom = requestedFrom,
-                        requestedTo = requestedTo,
-                        requestedFromName = requestedFromName,
-                        balanceSupplierName = balanceSupplierName,
-                        balanceSupplierContractName = balanceSupplierContractName,
-                        meteringPointId = meteringPointId,
-                        meteringPointAddress = meteringPointAddress
-                    )
+                    val orchestrator = testDocumentOrchestrator()
+                    val model =
+                        CreateDocumentModel(
+                            documentType = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                            meta =
+                            DocumentMeta(
+                                requestedBy = requestedBy,
+                                requestedFrom = requestedFrom,
+                                requestedTo = requestedTo,
+                                requestedFromName = requestedFromName,
+                                balanceSupplierName = balanceSupplierName,
+                                balanceSupplierContractName = balanceSupplierContractName,
+                                requestedForMeteringPointId = meteringPointId,
+                                requestedForMeteringPointAddress = meteringPointAddress,
+                            ),
+                        )
 
                     Then("I should receive an error message about missing metering point address") {
-                        command.shouldBeLeft(ValidationError.MissingMeteringPointAddress)
+                        orchestrator
+                            .handle(
+                                AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                                model,
+                            ).shouldBeLeft(CreateDocumentError.MappingError)
                     }
                 }
             }
@@ -481,19 +592,29 @@ class CreateDocumentTest : BehaviorSpec(), KoinTest {
 
                 When("I request a Change of Supplier document") {
 
-                    val command = ChangeOfSupplierDocumentCommand(
-                        requestedBy = requestedBy,
-                        requestedFrom = requestedFrom,
-                        requestedTo = requestedTo,
-                        requestedFromName = requestedFromName,
-                        balanceSupplierName = balanceSupplierName,
-                        balanceSupplierContractName = balanceSupplierContractName,
-                        meteringPointId = meteringPointId,
-                        meteringPointAddress = meteringPointAddress
-                    )
+                    val orchestrator = testDocumentOrchestrator()
+                    val model =
+                        CreateDocumentModel(
+                            documentType = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                            meta =
+                            DocumentMeta(
+                                requestedBy = requestedBy,
+                                requestedFrom = requestedFrom,
+                                requestedTo = requestedTo,
+                                requestedFromName = requestedFromName,
+                                balanceSupplierName = balanceSupplierName,
+                                balanceSupplierContractName = balanceSupplierContractName,
+                                requestedForMeteringPointId = meteringPointId,
+                                requestedForMeteringPointAddress = meteringPointAddress,
+                            ),
+                        )
 
                     Then("I should receive an error message about missing contract name") {
-                        command.shouldBeLeft(ValidationError.MissingBalanceSupplierContractName)
+                        orchestrator
+                            .handle(
+                                AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                                model,
+                            ).shouldBeLeft(CreateDocumentError.MappingError)
                     }
                 }
             }

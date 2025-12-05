@@ -7,27 +7,27 @@ import no.elhub.auth.features.common.party.PartyService
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.common.RequestPropertiesRepository
 import no.elhub.auth.features.requests.common.RequestRepository
+import no.elhub.auth.features.requests.create.RequestBusinessOrchestrator
+import no.elhub.auth.features.requests.create.command.toRequestCommand
 import no.elhub.auth.features.requests.create.command.toRequestProperties
 import no.elhub.auth.features.requests.create.model.CreateRequestModel
-import no.elhub.auth.features.requests.create.requesttypes.RequestTypeOrchestrator
-import no.elhub.auth.features.requests.create.requesttypes.RequestTypeValidationError
 import no.elhub.devxp.jsonapi.response.JsonApiErrorObject
 
 class Handler(
-    private val requestTypeOrchestrator: RequestTypeOrchestrator,
+    private val requestBusinessOrchestrator: RequestBusinessOrchestrator,
     private val partyService: PartyService,
     private val requestRepo: RequestRepository,
     private val requestPropertyRepo: RequestPropertiesRepository,
 ) {
     suspend operator fun invoke(model: CreateRequestModel): Either<CreateRequestError, AuthorizationRequest> {
-        val requestTypeHandler = requestTypeOrchestrator.resolve(model.requestType)
-
-        val command =
-            requestTypeHandler
+        val businessCommand =
+            requestBusinessOrchestrator
                 .handle(model)
                 .getOrElse { validationError ->
                     return Either.Left(CreateRequestError.ValidationError(validationError))
                 }
+
+        val command = businessCommand
 
         val requestedFromParty =
             partyService
