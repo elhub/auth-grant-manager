@@ -9,8 +9,8 @@ import io.ktor.server.routing.post
 import no.elhub.auth.features.common.auth.AuthorizationProvider
 import no.elhub.auth.features.common.auth.RoleType
 import no.elhub.auth.features.common.auth.toApiErrorResponse
-import org.slf4j.LoggerFactory
 import no.elhub.auth.features.documents.create.toModel
+import org.slf4j.LoggerFactory
 
 private val log = LoggerFactory.getLogger(Route::class.java)
 
@@ -50,7 +50,8 @@ fun Route.route(
                     CreateDocumentError.RequestedFromPartyError,
                     CreateDocumentError.RequestedToPartyError,
                     CreateDocumentError.SignedByPartyError,
-                    CreateDocumentError.PersonError
+                    CreateDocumentError.PersonError,
+                    CreateDocumentError.GenerateFileError
                     -> call.respond(HttpStatusCode.InternalServerError)
                 }
                 return@post

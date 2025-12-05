@@ -10,8 +10,7 @@ import no.elhub.auth.features.businessprocesses.changeofsupplier.ChangeOfSupplie
 import no.elhub.auth.features.common.PartyIdentifier
 import no.elhub.auth.features.common.PartyIdentifierType
 import no.elhub.auth.features.requests.AuthorizationRequest
-import no.elhub.auth.features.requests.create.RequestBusinessOrchestrator
-import no.elhub.auth.features.requests.create.command.toRequestCommand
+import no.elhub.auth.features.requests.common.ProxyRequestBusinessHandler
 import no.elhub.auth.features.requests.create.model.CreateRequestMeta
 import no.elhub.auth.features.requests.create.model.CreateRequestModel
 
@@ -20,50 +19,48 @@ private const val VALID_METERING_POINT = "123456789012345678"
 class ChangeOfSupplierConfirmationRequestTypeHandlerTest :
     FunSpec({
 
+        val handler = ChangeOfSupplierBusinessHandler()
+
         test("returns validation error when requestedFromName is blank") {
-            val orchestrator = RequestBusinessOrchestrator(ChangeOfSupplierBusinessHandler())
             val model =
                 CreateRequestModel(
-                    validTo = LocalDate.parse("2030-01-01"),
                     requestType = AuthorizationRequest.Type.ChangeOfSupplierConfirmation,
                     meta =
-                        CreateRequestMeta(
-                            requestedBy = PartyIdentifier(PartyIdentifierType.OrganizationNumber, "987654321"),
-                            requestedFrom = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "12345678901"),
-                            requestedFromName = "",
-                            requestedTo = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "12345678902"),
-                            requestedForMeteringPointId = VALID_METERING_POINT,
-                            requestedForMeteringPointAddress = "Some address",
-                            balanceSupplierName = "Supplier",
-                            balanceSupplierContractName = "Contract",
-                        ),
+                    CreateRequestMeta(
+                        requestedBy = PartyIdentifier(PartyIdentifierType.OrganizationNumber, "987654321"),
+                        requestedFrom = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "12345678901"),
+                        requestedFromName = "",
+                        requestedTo = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "12345678902"),
+                        requestedForMeteringPointId = VALID_METERING_POINT,
+                        requestedForMeteringPointAddress = "Some address",
+                        balanceSupplierName = "Supplier",
+                        balanceSupplierContractName = "Contract",
+                    ),
                 )
 
-            val result = orchestrator.handle(model)
+            val result = handler.validateAndReturnRequestCommand(model)
 
             result.shouldBeLeft(ChangeOfSupplierValidationError.MissingRequestedFromName)
         }
 
         test("builds RequestCommand for valid input") {
-            val orchestrator = RequestBusinessOrchestrator(ChangeOfSupplierBusinessHandler())
             val model =
                 CreateRequestModel(
-                    validTo = LocalDate.parse("2030-01-01"),
                     requestType = AuthorizationRequest.Type.ChangeOfSupplierConfirmation,
                     meta =
-                        CreateRequestMeta(
-                            requestedBy = PartyIdentifier(PartyIdentifierType.OrganizationNumber, "987654321"),
-                            requestedFrom = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "12345678901"),
-                            requestedFromName = "Supplier AS",
-                            requestedTo = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "12345678902"),
-                            requestedForMeteringPointId = VALID_METERING_POINT,
-                            requestedForMeteringPointAddress = "Some address",
-                            balanceSupplierName = "Supplier",
-                            balanceSupplierContractName = "Contract",
-                        ),
+                    CreateRequestMeta(
+                        requestedBy = PartyIdentifier(PartyIdentifierType.OrganizationNumber, "987654321"),
+                        requestedFrom = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "12345678901"),
+                        requestedFromName = "Supplier AS",
+                        requestedTo = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "12345678902"),
+                        requestedForMeteringPointId = VALID_METERING_POINT,
+                        requestedForMeteringPointAddress = "Some address",
+                        balanceSupplierName = "Supplier",
+                        balanceSupplierContractName = "Contract",
+                    ),
                 )
 
-            val command = orchestrator.handle(model).shouldBeRight()
+            val command = handler.validateAndReturnRequestCommand(model).shouldBeRight()
 
             command.type shouldBe AuthorizationRequest.Type.ChangeOfSupplierConfirmation
             command.requestedBy shouldBe model.meta.requestedBy

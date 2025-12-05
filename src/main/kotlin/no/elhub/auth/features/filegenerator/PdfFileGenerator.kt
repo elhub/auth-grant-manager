@@ -121,6 +121,7 @@ class PdfGenerator(
                 balanceSupplierName = documentMeta.balanceSupplierName,
                 balanceSupplierContractName = documentMeta.balanceSupplierContractName
             )
+
             else -> return DocumentGenerationError.ContentGenerationError.left()
         }.getOrElse { return DocumentGenerationError.ContentGenerationError.left() }
 

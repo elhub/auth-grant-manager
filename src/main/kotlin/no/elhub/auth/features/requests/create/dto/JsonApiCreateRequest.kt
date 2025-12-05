@@ -3,9 +3,7 @@ package no.elhub.auth.features.requests.create.dto
 import kotlinx.serialization.Serializable
 import no.elhub.auth.features.common.PartyIdentifier
 import no.elhub.auth.features.requests.AuthorizationRequest
-import no.elhub.auth.features.requests.create.model.CreateRequestMeta
 import no.elhub.auth.features.requests.create.model.CreateRequestModel
-import no.elhub.auth.features.requests.create.model.defaultRequestValidTo
 import no.elhub.devxp.jsonapi.model.JsonApiAttributes
 import no.elhub.devxp.jsonapi.model.JsonApiResourceMeta
 import no.elhub.devxp.jsonapi.request.JsonApiRequest
@@ -31,7 +29,6 @@ typealias JsonApiCreateRequest = JsonApiRequest.SingleDocumentWithMeta<CreateReq
 
 fun JsonApiCreateRequest.toModel(): CreateRequestModel =
     CreateRequestModel(
-        validTo = defaultRequestValidTo(),
         requestType = this.data.attributes.requestType,
         meta = this.data.meta.toModel()
     )
