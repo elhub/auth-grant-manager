@@ -288,13 +288,13 @@ class AuthorizationDocumentRouteTest :
                             grantedBy.apply {
                                 data.apply {
                                     id.shouldNotBeNull()
-                                    type shouldBe "OrganizationEntity"
+                                    type shouldBe "Person"
                                 }
                             }
                             grantedTo.apply {
                                 data.apply {
                                     id.shouldNotBeNull()
-                                    type shouldBe "Person"
+                                    type shouldBe "OrganizationEntity"
                                 }
                             }
                             source.apply {

@@ -20,7 +20,8 @@ class Handler(
                     is RepositoryReadError.UnexpectedError -> ConfirmDocumentError.DocumentReadError
                 }
             }.bind()
-        // TODO: Implement validation of the signed file
+        // TODO: Implement validation of the signed file and find the signatory
+        val signatory = document.requestedTo
 
         val confirmedDocument = documentRepository.confirm(
             documentId = document.id,
@@ -47,8 +48,8 @@ class Handler(
 
         grantRepository.insert(
             grantedFor = confirmedDocument.requestedFrom,
-            grantedBy = confirmedDocument.requestedBy,
-            grantedTo = confirmedDocument.requestedTo,
+            grantedBy = signatory,
+            grantedTo = confirmedDocument.requestedBy,
             scopes = scopes,
             sourceType = AuthorizationGrant.SourceType.Document,
             sourceId = confirmedDocument.id
