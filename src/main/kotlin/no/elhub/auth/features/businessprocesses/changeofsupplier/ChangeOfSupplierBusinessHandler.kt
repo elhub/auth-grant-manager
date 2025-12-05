@@ -2,10 +2,26 @@ package no.elhub.auth.features.businessprocesses.changeofsupplier
 
 import arrow.core.Either
 import arrow.core.left
+import arrow.core.raise.either
 import arrow.core.right
+import kotlinx.datetime.LocalDate
 import no.elhub.auth.features.common.PartyIdentifier
+import no.elhub.auth.features.documents.AuthorizationDocument
+import no.elhub.auth.features.documents.create.CreateDocumentError
+import no.elhub.auth.features.documents.create.DocumentBusinessHandler
+import no.elhub.auth.features.documents.create.DocumentGenerationError
+import no.elhub.auth.features.documents.create.command.DocumentCommand
 import no.elhub.auth.features.documents.create.command.DocumentMetaMarker
+import no.elhub.auth.features.documents.create.command.toDocumentCommand
+import no.elhub.auth.features.documents.create.model.CreateDocumentModel
+import no.elhub.auth.features.filegenerator.PdfGenerator
+import no.elhub.auth.features.requests.AuthorizationRequest
+import no.elhub.auth.features.requests.create.GrantProperties
+import no.elhub.auth.features.requests.create.RequestBusinessHandler
+import no.elhub.auth.features.requests.create.command.RequestCommand
 import no.elhub.auth.features.requests.create.command.RequestMetaMarker
+import no.elhub.auth.features.requests.create.model.CreateRequestModel
+import no.elhub.auth.features.requests.create.model.defaultRequestValidTo
 
 private const val REGEX_NUMBERS_LETTERS_SYMBOLS = "^[a-zA-Z0-9_.-]*$"
 private const val REGEX_REQUESTED_FROM = REGEX_NUMBERS_LETTERS_SYMBOLS
@@ -27,6 +43,7 @@ data class ChangeOfSupplierBusinessCommand(
     val requestedFrom: PartyIdentifier,
     val requestedBy: PartyIdentifier,
     val requestedTo: PartyIdentifier,
+    val validTo: LocalDate,
     val meta: ChangeOfSupplierBusinessMeta,
 )
 
@@ -48,8 +65,39 @@ data class ChangeOfSupplierBusinessMeta(
         )
 }
 
-class ChangeOfSupplierBusinessHandler {
-    fun handle(model: ChangeOfSupplierBusinessModel): Either<ChangeOfSupplierValidationError, ChangeOfSupplierBusinessCommand> {
+class ChangeOfSupplierBusinessHandler(
+    val pdfGenerator: PdfGenerator
+) : RequestBusinessHandler, DocumentBusinessHandler {
+
+    override fun validateAndReturnRequestCommand(createRequestModel: CreateRequestModel): Either<ChangeOfSupplierValidationError, RequestCommand> = either {
+        val model = createRequestModel.toChangeOfSupplierBusinessModel()
+        validate(model).bind().toRequestCommand()
+    }
+
+    override fun getGrantProperties(request: AuthorizationRequest): GrantProperties {
+        TODO("Not yet implemented")
+    }
+
+    override fun validateAndReturnDocumentCommand(model: CreateDocumentModel): Either<CreateDocumentError, DocumentCommand> = either {
+        val model = model.toChangeOfSupplierBusinessModel()
+        validate(model)
+            .mapLeft { raise(CreateDocumentError.MappingError) }
+            .bind()
+            .toDocumentCommand()
+    }
+
+    override fun generateFile(
+        signatoryId: String,
+        documentMeta: DocumentMetaMarker
+    ): Either<DocumentGenerationError.ContentGenerationError, ByteArray> {
+        return pdfGenerator.generate(signatoryId, documentMeta)
+    }
+
+    override fun getGrantProperties(document: AuthorizationDocument): GrantProperties {
+        TODO("Not yet implemented")
+    }
+
+    private fun validate(model: ChangeOfSupplierBusinessModel) : Either<ChangeOfSupplierValidationError, ChangeOfSupplierBusinessCommand>{
         if (model.requestedFromName.isBlank()) {
             return ChangeOfSupplierValidationError.MissingRequestedFromName.left()
         }
@@ -103,6 +151,7 @@ class ChangeOfSupplierBusinessHandler {
             requestedFrom = model.requestedFrom,
             requestedBy = model.requestedBy,
             requestedTo = model.requestedTo,
+            validTo = defaultRequestValidTo(),
             meta = meta,
         ).right()
     }

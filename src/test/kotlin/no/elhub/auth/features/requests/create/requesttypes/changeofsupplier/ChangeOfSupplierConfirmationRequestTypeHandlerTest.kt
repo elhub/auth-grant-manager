@@ -10,8 +10,7 @@ import no.elhub.auth.features.businessprocesses.changeofsupplier.ChangeOfSupplie
 import no.elhub.auth.features.common.PartyIdentifier
 import no.elhub.auth.features.common.PartyIdentifierType
 import no.elhub.auth.features.requests.AuthorizationRequest
-import no.elhub.auth.features.requests.create.RequestBusinessOrchestrator
-import no.elhub.auth.features.requests.create.command.toRequestCommand
+import no.elhub.auth.features.requests.create.ProxyRequestBusinessHandler
 import no.elhub.auth.features.requests.create.model.CreateRequestMeta
 import no.elhub.auth.features.requests.create.model.CreateRequestModel
 
@@ -21,7 +20,7 @@ class ChangeOfSupplierConfirmationRequestTypeHandlerTest :
     FunSpec({
 
         test("returns validation error when requestedFromName is blank") {
-            val orchestrator = RequestBusinessOrchestrator(ChangeOfSupplierBusinessHandler())
+            val orchestrator = ProxyRequestBusinessHandler(ChangeOfSupplierBusinessHandler())
             val model =
                 CreateRequestModel(
                     validTo = LocalDate.parse("2030-01-01"),
@@ -45,7 +44,7 @@ class ChangeOfSupplierConfirmationRequestTypeHandlerTest :
         }
 
         test("builds RequestCommand for valid input") {
-            val orchestrator = RequestBusinessOrchestrator(ChangeOfSupplierBusinessHandler())
+            val orchestrator = ProxyRequestBusinessHandler(ChangeOfSupplierBusinessHandler())
             val model =
                 CreateRequestModel(
                     validTo = LocalDate.parse("2030-01-01"),

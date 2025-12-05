@@ -12,7 +12,6 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldMatch
 import no.elhub.auth.features.businessprocesses.changeofsupplier.ChangeOfSupplierBusinessHandler
-import no.elhub.auth.features.documents.create.CreateDocumentError
 import no.elhub.auth.features.common.ApiPersonService
 import no.elhub.auth.features.common.AuthPersonsTestContainer
 import no.elhub.auth.features.common.AuthPersonsTestContainerExtension
@@ -29,7 +28,6 @@ import no.elhub.auth.features.common.httpTestClient
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.TestCertificateUtil
 import no.elhub.auth.features.documents.VaultTransitTestContainerExtension
-import no.elhub.auth.features.documents.create.DocumentBusinessProcessOrchestrator
 import no.elhub.auth.features.documents.common.DocumentPropertiesRepository
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.documents.common.ExposedDocumentPropertiesRepository
@@ -44,7 +42,6 @@ import no.elhub.auth.features.documents.validateFileIsPDFA2BCompliant
 import no.elhub.auth.features.documents.validateFileIsSignedByUs
 import no.elhub.auth.features.filegenerator.PdfGenerator
 import no.elhub.auth.features.filegenerator.PdfGeneratorConfig
-import no.elhub.auth.features.documents.create.FileGenerator
 import org.jetbrains.exposed.sql.Database
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
@@ -76,8 +73,8 @@ private const val VALID_BALANCE_SUPPLIER_CONTRACT_NAME = "Contract 123"
 private const val BLANK = ""
 private const val EMPTY = " "
 
-private fun testDocumentOrchestrator(): DocumentBusinessProcessOrchestrator =
-    DocumentBusinessProcessOrchestrator(ChangeOfSupplierBusinessHandler(), FakeFileGenerator())
+private fun testDocumentOrchestrator(): ProxyDocumentBusinessHandler =
+    ProxyDocumentBusinessHandler(ChangeOfSupplierBusinessHandler(), FakeFileGenerator())
 
 private class FakeFileGenerator : FileGenerator {
     override fun generate(
@@ -129,7 +126,7 @@ class CreateDocumentTest :
                     single { PartyService(get()) }
                     singleOf(::ExposedDocumentPropertiesRepository) bind DocumentPropertiesRepository::class
                     singleOf(::ChangeOfSupplierBusinessHandler)
-                    singleOf(::DocumentBusinessProcessOrchestrator)
+                    singleOf(::ProxyDocumentBusinessHandler)
 
                     singleOf(::Handler)
                 },

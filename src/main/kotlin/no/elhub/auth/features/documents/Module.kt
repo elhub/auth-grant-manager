@@ -13,7 +13,7 @@ import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.documents.common.ExposedDocumentPropertiesRepository
 import no.elhub.auth.features.documents.common.ExposedDocumentRepository
 import no.elhub.auth.features.documents.create.CertificateProvider
-import no.elhub.auth.features.documents.create.DocumentBusinessProcessOrchestrator
+import no.elhub.auth.features.documents.create.ProxyDocumentBusinessHandler
 import no.elhub.auth.features.documents.create.FileCertificateProvider
 import no.elhub.auth.features.documents.create.FileCertificateProviderConfig
 import no.elhub.auth.features.documents.create.FileGenerator
@@ -78,7 +78,7 @@ fun Application.module() {
         singleOf(::ExposedGrantRepository) bind GrantRepository::class
         singleOf(::ExposedDocumentPropertiesRepository) bind DocumentPropertiesRepository::class
         singleOf(::ChangeOfSupplierBusinessHandler)
-        singleOf(::DocumentBusinessProcessOrchestrator)
+        singleOf(::ProxyDocumentBusinessHandler)
         singleOf(::ConfirmHandler)
         singleOf(::CreateHandler)
         singleOf(::GetHandler)
