@@ -1,5 +1,7 @@
 package no.elhub.auth.features.documents.create.command
 
+import kotlinx.datetime.LocalDate
+import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.documents.AuthorizationDocument
 
@@ -12,5 +14,7 @@ data class DocumentCommand(
     val requestedFrom: PartyIdentifier,
     val requestedTo: PartyIdentifier,
     val requestedBy: PartyIdentifier,
+    val validTo: LocalDate,
+    val scopes: List<CreateScopeData>,
     val meta: DocumentMetaMarker,
 )

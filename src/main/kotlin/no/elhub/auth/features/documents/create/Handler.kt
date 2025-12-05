@@ -87,7 +87,7 @@ class Handler(
 
         val savedDocument =
             documentRepository
-                .insert(documentToCreate)
+                .insert(documentToCreate, command.scopes)
                 .getOrElse { return CreateDocumentError.PersistenceError.left() }
 
         return savedDocument.right()
@@ -104,6 +104,8 @@ sealed class CreateDocumentError {
     data object SignatureFetchingError : CreateDocumentError()
 
     data object SigningError : CreateDocumentError()
+
+    data object GenerateFileError : CreateDocumentError()
 
     data object MappingError : CreateDocumentError()
 
