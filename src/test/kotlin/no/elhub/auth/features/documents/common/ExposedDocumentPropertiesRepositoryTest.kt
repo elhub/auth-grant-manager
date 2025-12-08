@@ -21,7 +21,7 @@ class ExposedDocumentPropertiesRepositoryTest : FunSpec({
     extensions(PostgresTestContainerExtension())
 
     val repository = ExposedDocumentPropertiesRepository()
-    val documentRepository = ExposedDocumentRepository(partyRepo = ExposedPartyRepository())
+    val documentRepository = ExposedDocumentRepository(partyRepo = ExposedPartyRepository(), documentPropertiesRepository = repository)
 
     beforeSpec {
         Database.connect(
@@ -38,11 +38,12 @@ class ExposedDocumentPropertiesRepositoryTest : FunSpec({
         }
     }
 
+    val documentId = UUID.randomUUID()
     context("Document properties repository") {
         test("insert empty list should not create rows") {
             val properties = emptyList<AuthorizationDocumentProperty>()
-            repository.insert(properties)
             transaction {
+                repository.insert(properties, documentId)
                 AuthorizationDocumentPropertyTable.selectAll().count().shouldBe(0)
             }
         }
@@ -58,25 +59,30 @@ class ExposedDocumentPropertiesRepositoryTest : FunSpec({
                     requestedBy = AuthorizationParty(type = PartyType.Person, resourceId = "1234567890"),
                     requestedFrom = AuthorizationParty(type = PartyType.Person, resourceId = "1234567890"),
                     requestedTo = AuthorizationParty(type = PartyType.Person, resourceId = "1234567890"),
-                    signedBy = AuthorizationParty(type = PartyType.Person, resourceId = "1234567890"), createdAt = LocalDateTime.now(),
+                    signedBy = AuthorizationParty(type = PartyType.Person, resourceId = "1234567890"),
+                    properties = emptyList(),
+                    createdAt = LocalDateTime.now(),
                     updatedAt = LocalDateTime.now()
                 )
 
             documentRepository.insert(document)
 
             val properties = listOf(
-                AuthorizationDocumentProperty(document.id, "requestedFromName", "Ola Normann"),
-                AuthorizationDocumentProperty(document.id, "meteringPointId", "1234")
+                AuthorizationDocumentProperty("requestedFromName", "Ola Normann"),
+                AuthorizationDocumentProperty("meteringPointId", "1234")
             )
 
-            repository.insert(properties)
-
-            repository.find(document.id) shouldContainExactlyInAnyOrder properties
+            transaction {
+                repository.insert(properties, document.id)
+                repository.find(document.id) shouldContainExactlyInAnyOrder properties
+            }
         }
 
         test("find returns empty list when no properties exist for document") {
             val documentId = UUID.randomUUID()
-            repository.find(documentId).shouldBeEmpty()
+            transaction {
+                repository.find(documentId).shouldBeEmpty()
+            }
         }
     }
 })

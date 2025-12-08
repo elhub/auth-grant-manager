@@ -7,11 +7,9 @@ import arrow.core.right
 import no.elhub.auth.features.common.PartyService
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.AuthorizationDocumentProperty
-import no.elhub.auth.features.documents.common.DocumentPropertiesRepository
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.documents.create.command.DocumentCommand
 import no.elhub.auth.features.documents.create.command.toAuthorizationDocumentType
-import java.util.UUID
 
 class Handler(
     private val fileGenerator: FileGenerator,
@@ -19,7 +17,6 @@ class Handler(
     private val fileSigningService: FileSigningService,
     private val signatureProvider: SignatureProvider,
     private val documentRepository: DocumentRepository,
-    private val documentPropertiesRepository: DocumentPropertiesRepository,
     private val partyService: PartyService
 ) {
     suspend operator fun invoke(command: DocumentCommand): Either<CreateDocumentError, AuthorizationDocument> {
@@ -53,6 +50,9 @@ class Handler(
             .getOrElse { return CreateDocumentError.SigningError.left() }
 
         val documentType = command.toAuthorizationDocumentType()
+        val documentProperties = command.meta
+            .toMetaAttributes()
+            .toDocumentProperties()
 
         val documentToCreate = AuthorizationDocument.create(
             type = documentType,
@@ -60,16 +60,11 @@ class Handler(
             requestedBy = requestedByParty,
             requestedFrom = requestedFromParty,
             requestedTo = requestedToParty,
+            properties = documentProperties
         )
 
         val savedDocument = documentRepository.insert(documentToCreate)
             .getOrElse { return CreateDocumentError.PersistenceError.left() }
-
-        val documentProperties = command.meta
-            .toMetaAttributes()
-            .toDocumentProperties(savedDocument.id)
-
-        documentPropertiesRepository.insert(documentProperties)
 
         return savedDocument.right()
     }
@@ -90,10 +85,9 @@ sealed class CreateDocumentError {
     data object PersonError : CreateDocumentError()
 }
 
-fun Map<String, String>.toDocumentProperties(documentId: UUID) =
+fun Map<String, String>.toDocumentProperties() =
     this.map { (key, value) ->
         AuthorizationDocumentProperty(
-            documentId = documentId,
             key = key,
             value = value
         )
