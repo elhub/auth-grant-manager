@@ -2,9 +2,9 @@ package no.elhub.auth.features.grants.common
 
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
-import no.elhub.auth.features.grants.AuthorizationScope
-import no.elhub.auth.features.grants.ElhubResource
-import no.elhub.auth.features.grants.PermissionType
+import no.elhub.auth.features.common.scope.AuthorizationScope
+import no.elhub.auth.features.common.scope.ElhubResource
+import no.elhub.auth.features.common.scope.PermissionType
 import no.elhub.devxp.jsonapi.model.JsonApiAttributes
 import no.elhub.devxp.jsonapi.model.JsonApiLinks
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipToOne
@@ -33,7 +33,7 @@ data class AuthorizationGrantScopeAttributes(
     val authorizedResourceType: ElhubResource,
     val authorizedResourceId: String,
     val permissionType: PermissionType,
-    val createdAt: Instant
+    val createdAt: String
 ) : JsonApiAttributes
 
 typealias AuthorizationGrantScopesResponse = JsonApiResponse.CollectionDocument<AuthorizationGrantScopeAttributes>

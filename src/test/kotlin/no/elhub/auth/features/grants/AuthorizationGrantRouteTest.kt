@@ -12,6 +12,8 @@ import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.testing.testApplication
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.RunPostgresScriptExtension
+import no.elhub.auth.features.common.scope.ElhubResource
+import no.elhub.auth.features.common.scope.PermissionType
 import no.elhub.auth.features.grants.common.AuthorizationGrantListResponse
 import no.elhub.auth.features.grants.common.AuthorizationGrantResponse
 import no.elhub.auth.features.grants.common.AuthorizationGrantScopesResponse

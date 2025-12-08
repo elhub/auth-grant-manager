@@ -39,12 +39,12 @@ class Handler(
                 .resolve(command.requestedBy)
                 .getOrElse { return Either.Left(CreateRequestError.RequestedByPartyError) }
 
-        val metaAttributes = command.meta.toMetaAttributes()
-
         val requestedToParty =
             partyService
                 .resolve(command.requestedTo)
                 .getOrElse { return Either.Left(CreateRequestError.RequestedByPartyError) }
+
+        val metaAttributes = command.meta.toMetaAttributes()
 
         val requestToCreate =
             AuthorizationRequest.create(
@@ -57,13 +57,18 @@ class Handler(
 
         val savedRequest =
             requestRepo
-                .insert(requestToCreate)
+                .insertRequest(requestToCreate)
                 .getOrElse { return Either.Left(CreateRequestError.PersistenceError) }
 
         val requestProperties = metaAttributes.toRequestProperties(savedRequest.id)
 
         requestPropertyRepo.insert(requestProperties).getOrElse {
             return Either.Left(CreateRequestError.PersistenceError)
+        }
+
+        command.scopes.forEach { scope ->
+            requestRepo.insertScope(savedRequest.id, scope)
+                .getOrElse { return Either.Left(CreateRequestError.PersistenceError) }
         }
 
         return Either.Right(savedRequest.copy(properties = metaAttributes))

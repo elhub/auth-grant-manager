@@ -12,14 +12,12 @@ import no.elhub.auth.features.common.PGEnum
 import no.elhub.auth.features.common.PartyRepository
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.RepositoryWriteError
+import no.elhub.auth.features.common.scope.AuthorizationScope
+import no.elhub.auth.features.common.scope.AuthorizationScopeTable
 import no.elhub.auth.features.common.toAuthorizationParty
 import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.AuthorizationGrant.SourceType
 import no.elhub.auth.features.grants.AuthorizationGrant.Status
-import no.elhub.auth.features.grants.AuthorizationScope
-import no.elhub.auth.features.grants.ElhubResource
-import no.elhub.auth.features.grants.PermissionType
-import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.ResultRow
@@ -41,7 +39,7 @@ interface GrantRepository {
     fun findBySource(sourceType: SourceType, sourceId: UUID): Either<RepositoryReadError, AuthorizationGrant?>
     fun findScopes(grantId: UUID): Either<RepositoryReadError, List<AuthorizationScope>>
     fun findAll(): Either<RepositoryReadError, List<AuthorizationGrant>>
-    fun insert(
+    fun insertGrant(
         grantedFor: AuthorizationParty,
         grantedBy: AuthorizationParty,
         grantedTo: AuthorizationParty,
@@ -152,7 +150,7 @@ class ExposedGrantRepository(
                                 authorizedResourceId = row[AuthorizationScopeTable.authorizedResourceId],
                                 authorizedResourceType = row[AuthorizationScopeTable.authorizedResourceType],
                                 permissionType = row[AuthorizationScopeTable.permissionType],
-                                createdAt = Instant.parse(row[AuthorizationScopeTable.createdAt].toString())
+                                createdAt = row[AuthorizationScopeTable.createdAt].toString()
                             )
                         }
                 } ?: run {
@@ -163,7 +161,7 @@ class ExposedGrantRepository(
         }
     }
 
-    override fun insert(
+    override fun insertGrant(
         grantedFor: AuthorizationParty,
         grantedBy: AuthorizationParty,
         grantedTo: AuthorizationParty,
@@ -240,23 +238,6 @@ object AuthorizationGrantTable : UUIDTable("authorization_grant") {
             toDb = { PGEnum("grant_source_type", it) },
         )
     val sourceId = uuid("source_id")
-}
-
-object AuthorizationScopeTable : LongIdTable(name = "auth.authorization_scope") {
-    val authorizedResourceType = customEnumeration(
-        name = "authorized_resource_type",
-        sql = "authorization_resource",
-        fromDb = { ElhubResource.valueOf(it as String) },
-        toDb = { PGEnum("authorization_resource", it) }
-    )
-    val authorizedResourceId = varchar("authorized_resource_id", length = 64)
-    val permissionType = customEnumeration(
-        name = "permission_type",
-        sql = "permission_type",
-        fromDb = { PermissionType.valueOf(it as String) },
-        toDb = { PGEnum("permission_type", it) }
-    )
-    val createdAt = timestamp("created_at").clientDefault { java.time.Instant.now() }
 }
 
 fun ResultRow.toAuthorizationGrant(grantedFor: AuthorizationPartyRecord, grantedBy: AuthorizationPartyRecord, grantedTo: AuthorizationPartyRecord) =

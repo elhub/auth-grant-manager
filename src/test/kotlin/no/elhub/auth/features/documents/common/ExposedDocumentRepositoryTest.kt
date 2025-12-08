@@ -12,8 +12,8 @@ import no.elhub.auth.features.common.ExposedPartyRepository
 import no.elhub.auth.features.common.PartyType
 import no.elhub.auth.features.common.PostgresTestContainer
 import no.elhub.auth.features.common.PostgresTestContainerExtension
+import no.elhub.auth.features.common.scope.AuthorizationScopeTable
 import no.elhub.auth.features.documents.AuthorizationDocument
-import no.elhub.auth.features.grants.common.AuthorizationScopeTable
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction

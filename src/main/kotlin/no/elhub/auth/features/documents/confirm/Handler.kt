@@ -45,7 +45,7 @@ class Handler(
                 }
             }.bind()
 
-        grantRepository.insert(
+        grantRepository.insertGrant(
             grantedFor = confirmedDocument.requestedFrom,
             grantedBy = confirmedDocument.requestedBy,
             grantedTo = confirmedDocument.requestedTo,

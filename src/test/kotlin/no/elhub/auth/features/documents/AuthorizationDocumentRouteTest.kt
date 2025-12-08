@@ -39,14 +39,14 @@ import no.elhub.auth.features.common.auth.PdpResponse
 import no.elhub.auth.features.common.auth.Result
 import no.elhub.auth.features.common.auth.TokenInfo
 import no.elhub.auth.features.common.commonModule
+import no.elhub.auth.features.common.scope.ElhubResource
+import no.elhub.auth.features.common.scope.PermissionType
 import no.elhub.auth.features.documents.create.CreateDocumentResponse
 import no.elhub.auth.features.documents.create.DocumentMeta
 import no.elhub.auth.features.documents.create.DocumentRequestAttributes
 import no.elhub.auth.features.documents.create.Request
 import no.elhub.auth.features.documents.get.GetDocumentResponse
-import no.elhub.auth.features.grants.ElhubResource
 import no.elhub.auth.features.grants.GRANTS_PATH
-import no.elhub.auth.features.grants.PermissionType
 import no.elhub.auth.features.grants.common.AuthorizationGrantResponse
 import no.elhub.auth.features.grants.common.AuthorizationGrantScopesResponse
 import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObjectWithMeta

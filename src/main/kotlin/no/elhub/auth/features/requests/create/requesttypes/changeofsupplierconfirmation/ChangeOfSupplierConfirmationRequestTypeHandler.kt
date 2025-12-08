@@ -8,6 +8,9 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
+import no.elhub.auth.features.common.scope.CreateAuthorizationScope
+import no.elhub.auth.features.common.scope.ElhubResource
+import no.elhub.auth.features.common.scope.PermissionType
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.create.command.RequestCommand
 import no.elhub.auth.features.requests.create.command.RequestMetaMarker
@@ -71,6 +74,8 @@ class ChangeOfSupplierConfirmationRequestTypeHandler : RequestTypeHandler {
                 balanceSupplierName = meta.balanceSupplierName,
             )
 
+        val scopes = buildChangeOfSupplierScopes(changeOfSupplierMeta)
+
         val command =
             RequestCommand(
                 type = AuthorizationRequest.Type.ChangeOfSupplierConfirmation,
@@ -79,6 +84,7 @@ class ChangeOfSupplierConfirmationRequestTypeHandler : RequestTypeHandler {
                 requestedTo = meta.requestedTo,
                 validTo = calculateValidTo(),
                 meta = changeOfSupplierMeta,
+                scopes = scopes
             )
 
         return command.right()
@@ -111,3 +117,19 @@ private data class ChangeOfSupplierRequestMeta(
             "balanceSupplierName" to balanceSupplierName,
         )
 }
+
+/**
+ * Build authorization scopes for ChangeOfSupplier request.
+ *
+ * NOTE: This function should be updated by the value stream team
+ * if additional scopes are needed beyond the metering point scope.
+ */
+private fun buildChangeOfSupplierScopes(meta: ChangeOfSupplierRequestMeta): List<CreateAuthorizationScope> = listOf(
+    CreateAuthorizationScope(
+        authorizedResourceType = ElhubResource.MeteringPoint,
+        authorizedResourceId = meta.requestedForMeteringPointId,
+        permissionType = PermissionType.ChangeOfSupplier
+    )
+    // TODO: Value stream team – add more scopes here if needed
+    //  e.g., Organization scopes, additional MeteringPoint scopes, etc.
+)

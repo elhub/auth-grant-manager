@@ -2,6 +2,7 @@ package no.elhub.auth.features.requests.create.command
 
 import kotlinx.datetime.LocalDate
 import no.elhub.auth.features.common.PartyIdentifier
+import no.elhub.auth.features.common.scope.CreateAuthorizationScope
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.common.AuthorizationRequestProperty
 import java.util.UUID
@@ -17,6 +18,7 @@ data class RequestCommand(
     val requestedTo: PartyIdentifier,
     val validTo: LocalDate,
     val meta: RequestMetaMarker,
+    val scopes: List<CreateAuthorizationScope>
 )
 
 fun Map<String, String>.toRequestProperties(requestId: UUID) =
