@@ -68,10 +68,8 @@
             "approvedBy": {
               "$ref": "authorization-request-definitions.json#/$defs/relationships/$defs/approvedBy"
             },
-            "properties": {
-              "grant": {
-                "$ref": "authorization-request-definitions.json#/$defs/relationships/$defs/grant"
-              }
+            "grant": {
+              "$ref": "authorization-request-definitions.json#/$defs/relationships/$defs/grant"
             }
           }
         },
