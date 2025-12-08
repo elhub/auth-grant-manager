@@ -83,6 +83,7 @@ class AuthorizationDocumentRouteTest :
         )
 
         lateinit var createdDocumentId: String
+        lateinit var expectedSignatory: String
         lateinit var linkToDocument: String
         lateinit var linkToDocumentFile: String
         lateinit var signedFile: ByteArray
@@ -202,6 +203,11 @@ class AuthorizationDocumentRouteTest :
                                     type shouldBe "Person"
                                     id.shouldNotBeNull()
                                 }
+                                requestedTo.data.apply {
+                                    type shouldBe "Person"
+                                    id.shouldNotBeNull()
+                                }
+                                signedBy.shouldBeNull()
                                 grant.shouldBeNull()
                             }
                             meta.shouldNotBeNull().toMap().apply {
@@ -218,6 +224,8 @@ class AuthorizationDocumentRouteTest :
                                 }
                             }
                         }
+
+                    expectedSignatory = getDocumentResponse.data.relationships.requestedTo.data.id
 
                     getDocumentResponse.links.apply {
                         self shouldBe "/authorization-documents/$createdDocumentId"
@@ -263,6 +271,14 @@ class AuthorizationDocumentRouteTest :
                             self shouldBe "authorization-grants/$grantId"
                         }
                     }
+
+                    val signedByRelationship = getDocumentResponse.data.relationships.signedBy.shouldNotBeNull()
+                    signedByRelationship.apply {
+                        data.apply {
+                            type shouldBe "Person"
+                            id shouldBe expectedSignatory
+                        }
+                    }
                 }
 
                 test("Get grant by id should return proper response") {
@@ -288,13 +304,13 @@ class AuthorizationDocumentRouteTest :
                             grantedBy.apply {
                                 data.apply {
                                     id.shouldNotBeNull()
-                                    type shouldBe "OrganizationEntity"
+                                    type shouldBe "Person"
                                 }
                             }
                             grantedTo.apply {
                                 data.apply {
                                     id.shouldNotBeNull()
-                                    type shouldBe "Person"
+                                    type shouldBe "OrganizationEntity"
                                 }
                             }
                             source.apply {

@@ -24,7 +24,8 @@ class ExposedDocumentRepositoryTest :
     FunSpec({
         extensions(PostgresTestContainerExtension())
         val partyRepository = ExposedPartyRepository()
-        val repository = ExposedDocumentRepository(partyRepository)
+        val propertiesRepository = ExposedDocumentPropertiesRepository()
+        val repository = ExposedDocumentRepository(partyRepository, propertiesRepository)
 
         beforeSpec {
             Database.connect(
@@ -49,6 +50,7 @@ class ExposedDocumentRepositoryTest :
                         requestedFrom = AuthorizationParty(type = PartyType.Person, resourceId = "1234567890"),
                         requestedTo = AuthorizationParty(type = PartyType.Person, resourceId = "1234567890"),
                         signedBy = AuthorizationParty(type = PartyType.Person, resourceId = "1234567890"),
+                        properties = emptyList(),
                         createdAt = LocalDateTime.now(),
                         updatedAt = LocalDateTime.now()
                     )
@@ -96,6 +98,7 @@ class ExposedDocumentRepositoryTest :
                     requestedFrom = AuthorizationParty(type = PartyType.Person, resourceId = "from-1"),
                     requestedTo = AuthorizationParty(type = PartyType.Person, resourceId = "to-1"),
                     signedBy = AuthorizationParty(type = PartyType.Person, resourceId = "signer-1"),
+                    properties = emptyList(),
                     createdAt = LocalDateTime.now(),
                     updatedAt = LocalDateTime.now()
                 )
@@ -111,6 +114,7 @@ class ExposedDocumentRepositoryTest :
                     requestedTo = AuthorizationParty(type = PartyType.Person, resourceId = "to-2"),
                     signedBy = AuthorizationParty(type = PartyType.Person, resourceId = "signer-2"),
                     createdAt = LocalDateTime.now(),
+                    properties = emptyList(),
                     updatedAt = LocalDateTime.now()
                 )
 
