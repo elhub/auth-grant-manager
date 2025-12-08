@@ -30,7 +30,7 @@ data class GetRequestResponseRelationships(
     val requestedBy: JsonApiRelationshipToOne,
     val requestedFrom: JsonApiRelationshipToOne,
     val requestedTo: JsonApiRelationshipToOne,
-    val approvedBy: JsonApiRelationshipToOne,
+    val approvedBy: JsonApiRelationshipToOne? = null, // only present after a request is accepted
 ) : JsonApiRelationships
 
 @Serializable
@@ -56,7 +56,6 @@ typealias GetRequestResponse = JsonApiResponse.SingleDocumentWithRelationshipsAn
     GetRequestResponseLinks
     >
 
-// TODO approvedBy can be null
 fun AuthorizationRequest.toGetResponse() =
     GetRequestResponse(
         data =
@@ -89,12 +88,17 @@ fun AuthorizationRequest.toGetResponse() =
                         id = this.requestedTo.resourceId
                     )
                 ),
-                approvedBy = JsonApiRelationshipToOne(
-                    data = JsonApiRelationshipData(
-                        type = this.requestedTo.type.name,
-                        id = this.requestedTo.resourceId
+                // only present after a request is accepted
+                approvedBy = if (this.status == AuthorizationRequest.Status.Accepted) {
+                    JsonApiRelationshipToOne(
+                        data = JsonApiRelationshipData(
+                            type = this.requestedTo.type.name,
+                            id = this.requestedTo.resourceId
+                        )
                     )
-                ),
+                } else {
+                    null
+                }
             ),
             meta = GetRequestResponseMeta(
                 createdAt = this.createdAt.toString(),

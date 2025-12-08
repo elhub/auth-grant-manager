@@ -4,6 +4,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import no.elhub.auth.features.requests.AuthorizationRequest
+import no.elhub.auth.features.requests.get.dto.toGetResponse
 import no.elhub.devxp.jsonapi.model.JsonApiAttributes
 import no.elhub.devxp.jsonapi.model.JsonApiLinks
 import no.elhub.devxp.jsonapi.model.JsonApiMeta
@@ -30,7 +31,7 @@ data class GetRequestCollectionResponseRelationships(
     val requestedBy: JsonApiRelationshipToOne,
     val requestedFrom: JsonApiRelationshipToOne,
     val requestedTo: JsonApiRelationshipToOne,
-    val approvedBy: JsonApiRelationshipToOne,
+    val approvedBy: JsonApiRelationshipToOne? = null,
 ) : JsonApiRelationships
 
 @Serializable
@@ -88,12 +89,17 @@ fun List<AuthorizationRequest>.toGetCollectionResponse() =
                             id = it.requestedTo.resourceId
                         )
                     ),
-                    approvedBy = JsonApiRelationshipToOne(
-                        data = JsonApiRelationshipData(
-                            type = it.requestedTo.type.name,
-                            id = it.requestedTo.resourceId
+                    // only present after a request is accepted
+                    approvedBy = if (it.status == AuthorizationRequest.Status.Accepted) {
+                        JsonApiRelationshipToOne(
+                            data = JsonApiRelationshipData(
+                                type = it.requestedTo.type.name,
+                                id = it.requestedTo.resourceId
+                            )
                         )
-                    ),
+                    } else {
+                        null
+                    }
                 ),
                 meta = GetRequestCollectionResponseMeta(
                     createdAt = it.createdAt.toString(),
