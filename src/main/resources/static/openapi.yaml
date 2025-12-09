@@ -204,6 +204,38 @@ paths:
           $ref: "#/components/responses/400BadRequestError"
         "500":
           $ref: "#/components/responses/500InternalServerError"
+    patch:
+      summary: Update the status of an authorization grant
+      description: Update the authorization grant status. This is an internal API for BRS.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The id of the authorization grant to update.
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "./schemas/grants/authorization-grant-patch-request.schema.json"
+      responses:
+        "200":
+          description: The authorization grant was updated.
+          content:
+            application/json:
+              schema:
+                $ref: "./schemas/grants/authorization-grant-get-response.schema.json"
+        "400":
+          $ref: "#/components/responses/400BadRequestError"
+        "401":
+          $ref: "#/components/responses/401UnauthorizedError"
+        "404":
+          $ref: "#/components/responses/404NotFoundError"
+        "500":
+          $ref: "#/components/responses/500InternalServerError"
+      tags:
+        - TODO
   "/authorization-grants/{id}/scopes":
     get:
       summary: Retrieve all of the scopes for the identified authorization grant.
