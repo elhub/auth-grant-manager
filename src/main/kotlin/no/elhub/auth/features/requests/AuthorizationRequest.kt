@@ -34,7 +34,6 @@ data class AuthorizationRequest(
                 requestedBy = requestedBy,
                 requestedFrom = requestedFrom,
                 requestedTo = requestedTo,
-                approvedBy = null,
                 createdAt = LocalDateTime.now(),
                 updatedAt = LocalDateTime.now(),
                 validTo = validTo,
