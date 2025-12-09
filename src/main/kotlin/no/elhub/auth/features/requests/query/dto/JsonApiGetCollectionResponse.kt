@@ -89,11 +89,11 @@ fun List<AuthorizationRequest>.toGetCollectionResponse() =
                         )
                     ),
                     // only present after a request is accepted
-                    approvedBy = if (it.status == AuthorizationRequest.Status.Accepted) {
+                    approvedBy = if (it.approvedBy != null) {
                         JsonApiRelationshipToOne(
                             data = JsonApiRelationshipData(
-                                type = it.requestedTo.type.name,
-                                id = it.requestedTo.resourceId
+                                type = it.approvedBy.type.name,
+                                id = it.approvedBy.resourceId
                             )
                         )
                     } else {
