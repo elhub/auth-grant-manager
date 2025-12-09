@@ -3,11 +3,11 @@ package no.elhub.auth.features.requests.query.dto
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import no.elhub.auth.features.common.party.dto.toJsonApiRelationship
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.devxp.jsonapi.model.JsonApiAttributes
 import no.elhub.devxp.jsonapi.model.JsonApiLinks
 import no.elhub.devxp.jsonapi.model.JsonApiMeta
-import no.elhub.devxp.jsonapi.model.JsonApiRelationshipData
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipToOne
 import no.elhub.devxp.jsonapi.model.JsonApiRelationships
 import no.elhub.devxp.jsonapi.model.JsonApiResourceLinks
@@ -30,7 +30,7 @@ data class GetRequestCollectionResponseRelationships(
     val requestedBy: JsonApiRelationshipToOne,
     val requestedFrom: JsonApiRelationshipToOne,
     val requestedTo: JsonApiRelationshipToOne,
-    val approvedBy: JsonApiRelationshipToOne,
+    val approvedBy: JsonApiRelationshipToOne? = null, // only present after a request is accepted
 ) : JsonApiRelationships
 
 @Serializable
@@ -70,30 +70,10 @@ fun List<AuthorizationRequest>.toGetCollectionResponse() =
                     validTo = it.validTo.toString()
                 ),
                 relationships = GetRequestCollectionResponseRelationships(
-                    requestedBy = JsonApiRelationshipToOne(
-                        data = JsonApiRelationshipData(
-                            id = it.requestedBy.resourceId,
-                            type = it.requestedBy.type.name
-                        )
-                    ),
-                    requestedFrom = JsonApiRelationshipToOne(
-                        data = JsonApiRelationshipData(
-                            id = it.requestedFrom.resourceId,
-                            type = it.requestedFrom.type.name
-                        )
-                    ),
-                    requestedTo = JsonApiRelationshipToOne(
-                        data = JsonApiRelationshipData(
-                            type = it.requestedTo.type.name,
-                            id = it.requestedTo.resourceId
-                        )
-                    ),
-                    approvedBy = JsonApiRelationshipToOne(
-                        data = JsonApiRelationshipData(
-                            type = it.requestedTo.type.name,
-                            id = it.requestedTo.resourceId
-                        )
-                    ),
+                    requestedBy = it.requestedBy.toJsonApiRelationship(),
+                    requestedFrom = it.requestedFrom.toJsonApiRelationship(),
+                    requestedTo = it.requestedTo.toJsonApiRelationship(),
+                    approvedBy = it.approvedBy?.toJsonApiRelationship()
                 ),
                 meta = GetRequestCollectionResponseMeta(
                     createdAt = it.createdAt.toString(),

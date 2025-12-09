@@ -1,7 +1,7 @@
 package no.elhub.auth.features.requests.create.command
 
 import kotlinx.datetime.LocalDate
-import no.elhub.auth.features.common.PartyIdentifier
+import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.common.AuthorizationRequestProperty
 import java.util.UUID

@@ -5,8 +5,8 @@ import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
-import no.elhub.auth.features.common.PartyIdentifier
-import no.elhub.auth.features.common.PartyIdentifierType
+import no.elhub.auth.features.common.party.PartyIdentifier
+import no.elhub.auth.features.common.party.PartyIdentifierType
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.create.model.CreateRequestMeta
 import no.elhub.auth.features.requests.create.model.CreateRequestModel

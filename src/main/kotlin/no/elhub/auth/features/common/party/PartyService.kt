@@ -1,7 +1,8 @@
-package no.elhub.auth.features.common
+package no.elhub.auth.features.common.party
 
 import arrow.core.Either
 import arrow.core.right
+import no.elhub.auth.features.common.PersonService
 
 class PartyService(
     private val personService: PersonService,

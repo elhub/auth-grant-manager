@@ -17,18 +17,18 @@ import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.testing.testApplication
 import no.elhub.auth.features.common.AuthPersonsTestContainer
 import no.elhub.auth.features.common.AuthPersonsTestContainerExtension
-import no.elhub.auth.features.common.PartyIdentifier
-import no.elhub.auth.features.common.PartyIdentifierType
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.RunPostgresScriptExtension
 import no.elhub.auth.features.common.commonModule
+import no.elhub.auth.features.common.party.PartyIdentifier
+import no.elhub.auth.features.common.party.PartyIdentifierType
 import no.elhub.auth.features.requests.confirm.dto.ConfirmRequestAttributes
 import no.elhub.auth.features.requests.confirm.dto.JsonApiConfirmRequest
 import no.elhub.auth.features.requests.create.dto.CreateRequestAttributes
 import no.elhub.auth.features.requests.create.dto.CreateRequestMeta
 import no.elhub.auth.features.requests.create.dto.CreateRequestResponse
 import no.elhub.auth.features.requests.create.dto.JsonApiCreateRequest
-import no.elhub.auth.features.requests.get.dto.GetRequestResponse
+import no.elhub.auth.features.requests.get.dto.GetRequestSingleResponse
 import no.elhub.auth.features.requests.query.dto.GetRequestCollectionResponse
 import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObject
 import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObjectWithMeta
@@ -108,12 +108,6 @@ class AuthorizationRequestRouteTest :
                                         type shouldBe "Person"
                                     }
                                 }
-                                approvedBy.apply {
-                                    data.apply {
-                                        id shouldBe "12345678902"
-                                        type shouldBe "Person"
-                                    }
-                                }
                             }
                             links.shouldNotBeNull()
                             links.apply {
@@ -150,7 +144,7 @@ class AuthorizationRequestRouteTest :
                                         type shouldBe "Person"
                                     }
                                 }
-                                approvedBy.apply {
+                                approvedBy.shouldNotBeNull().apply {
                                     data.apply {
                                         id shouldBe "12345678902"
                                         type shouldBe "Person"
@@ -192,7 +186,7 @@ class AuthorizationRequestRouteTest :
                                         type shouldBe "Person"
                                     }
                                 }
-                                approvedBy.apply {
+                                approvedBy.shouldNotBeNull().apply {
                                     data.apply {
                                         id shouldBe "12345678902"
                                         type shouldBe "Person"
@@ -234,7 +228,7 @@ class AuthorizationRequestRouteTest :
                                         type shouldBe "Person"
                                     }
                                 }
-                                approvedBy.apply {
+                                approvedBy.shouldNotBeNull().apply {
                                     data.apply {
                                         id shouldBe "12345678902"
                                         type shouldBe "Person"
@@ -278,10 +272,10 @@ class AuthorizationRequestRouteTest :
                         )
                 }
 
-                test("Should return 200 OK on a valid ID") {
+                test("Should return 200 OK on a valid ID before request is accepted") {
                     val response = client.get("$REQUESTS_PATH/d81e5bf2-8a0c-4348-a788-2a3fab4e77d6")
                     response.status shouldBe HttpStatusCode.OK
-                    val responseJson: GetRequestResponse = response.body()
+                    val responseJson: GetRequestSingleResponse = response.body()
                     responseJson.data.apply {
                         id.shouldNotBeNull()
                         type shouldBe "AuthorizationRequest"
@@ -311,7 +305,54 @@ class AuthorizationRequestRouteTest :
                                     type shouldBe "Person"
                                 }
                             }
-                            approvedBy.apply {
+                        }
+                        links.shouldNotBeNull()
+                        links.apply {
+                            self.shouldNotBeNull()
+                        }
+                    }
+                    responseJson.links.apply {
+                        self shouldBe "https://api.elhub.no/authorization-requests"
+                    }
+                    responseJson.meta.apply {
+                        "createdAt".shouldNotBeNull()
+                    }
+                }
+
+                test("Should return 200 OK with approvedBy on a valid ID after request is accepted") {
+                    val response = client.get("$REQUESTS_PATH/4f71d596-99e4-415e-946d-7252c1a40c5b")
+                    response.status shouldBe HttpStatusCode.OK
+                    val responseJson: GetRequestSingleResponse = response.body()
+                    responseJson.data.apply {
+                        id.shouldNotBeNull()
+                        type shouldBe "AuthorizationRequest"
+                        attributes.shouldNotBeNull().apply {
+                            requestType shouldBe "ChangeOfSupplierConfirmation"
+                            status shouldBe "Accepted"
+                            createdAt.shouldNotBeNull()
+                            updatedAt.shouldNotBeNull()
+                            validTo.shouldNotBeNull()
+                        }
+                        relationships.shouldNotBeNull().apply {
+                            requestedBy.apply {
+                                data.apply {
+                                    id shouldBe "987654321"
+                                    type shouldBe "Organization"
+                                }
+                            }
+                            requestedFrom.apply {
+                                data.apply {
+                                    id shouldBe "12345678901"
+                                    type shouldBe "Person"
+                                }
+                            }
+                            requestedTo.apply {
+                                data.apply {
+                                    id shouldBe "12345678902"
+                                    type shouldBe "Person"
+                                }
+                            }
+                            approvedBy.shouldNotBeNull().apply {
                                 data.apply {
                                     id shouldBe "12345678902"
                                     type shouldBe "Person"
