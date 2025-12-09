@@ -4,10 +4,10 @@ import arrow.core.Either
 import arrow.core.raise.either
 import kotlinx.datetime.toJavaLocalDate
 import kotlinx.datetime.toKotlinLocalDate
-import no.elhub.auth.features.common.AuthorizationParty
-import no.elhub.auth.features.common.AuthorizationPartyRecord
+import no.elhub.auth.features.common.party.AuthorizationParty
+import no.elhub.auth.features.common.party.AuthorizationPartyRecord
 import no.elhub.auth.features.common.PGEnum
-import no.elhub.auth.features.common.PartyRepository
+import no.elhub.auth.features.common.party.PartyRepository
 import no.elhub.auth.features.common.RepositoryError
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.RepositoryWriteError

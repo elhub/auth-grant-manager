@@ -1,4 +1,4 @@
-package no.elhub.auth.features.common
+package no.elhub.auth.features.common.party
 
 import kotlinx.serialization.Serializable
 

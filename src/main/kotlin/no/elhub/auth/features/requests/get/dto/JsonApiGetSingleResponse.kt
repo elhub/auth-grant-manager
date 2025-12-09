@@ -3,11 +3,11 @@ package no.elhub.auth.features.requests.get.dto
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import no.elhub.auth.features.common.party.dto.toJsonApiRelationship
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.devxp.jsonapi.model.JsonApiAttributes
 import no.elhub.devxp.jsonapi.model.JsonApiLinks
 import no.elhub.devxp.jsonapi.model.JsonApiMeta
-import no.elhub.devxp.jsonapi.model.JsonApiRelationshipData
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipToOne
 import no.elhub.devxp.jsonapi.model.JsonApiRelationships
 import no.elhub.devxp.jsonapi.model.JsonApiResourceLinks
@@ -17,7 +17,7 @@ import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObjectWithRelation
 import java.time.LocalDateTime
 
 @Serializable
-data class GetRequestResponseAttributes(
+data class GetRequestSingleResponseAttributes(
     val status: String,
     val requestType: String,
     val createdAt: String,
@@ -26,7 +26,7 @@ data class GetRequestResponseAttributes(
 ) : JsonApiAttributes
 
 @Serializable
-data class GetRequestResponseRelationships(
+data class GetRequestSingleResponseRelationships(
     val requestedBy: JsonApiRelationshipToOne,
     val requestedFrom: JsonApiRelationshipToOne,
     val requestedTo: JsonApiRelationshipToOne,
@@ -34,12 +34,12 @@ data class GetRequestResponseRelationships(
 ) : JsonApiRelationships
 
 @Serializable
-data class GetRequestResponseLinks(
+data class GetRequestSingleResponseLinks(
     val self: String
 ) : JsonApiResourceLinks
 
 @Serializable
-data class GetRequestResponseMeta(
+data class GetRequestSingleResponseMeta(
     val createdAt: String,
     val updatedAt: String,
     val requestedFromName: String,
@@ -49,58 +49,33 @@ data class GetRequestResponseMeta(
     val balanceSupplierContractName: String
 ) : JsonApiResourceMeta
 
-typealias GetRequestResponse = JsonApiResponse.SingleDocumentWithRelationshipsAndMetaAndLinks<
-    GetRequestResponseAttributes,
-    GetRequestResponseRelationships,
-    GetRequestResponseMeta,
-    GetRequestResponseLinks
+typealias GetRequestSingleResponse = JsonApiResponse.SingleDocumentWithRelationshipsAndMetaAndLinks<
+    GetRequestSingleResponseAttributes,
+    GetRequestSingleResponseRelationships,
+    GetRequestSingleResponseMeta,
+    GetRequestSingleResponseLinks
     >
 
-fun AuthorizationRequest.toGetResponse() =
-    GetRequestResponse(
+fun AuthorizationRequest.toGetSingleResponse() =
+    GetRequestSingleResponse(
         data =
         JsonApiResponseResourceObjectWithRelationshipsAndMetaAndLinks(
             type = "AuthorizationRequest",
             id = this.id.toString(),
-            attributes = GetRequestResponseAttributes(
+            attributes = GetRequestSingleResponseAttributes(
                 status = this.status.name,
                 requestType = this.type.name,
                 createdAt = this.createdAt.toString(),
                 updatedAt = this.updatedAt.toString(),
                 validTo = this.validTo.toString(),
             ),
-            relationships = GetRequestResponseRelationships(
-                requestedBy = JsonApiRelationshipToOne(
-                    data = JsonApiRelationshipData(
-                        type = this.requestedBy.type.name,
-                        id = this.requestedBy.resourceId
-                    )
-                ),
-                requestedFrom = JsonApiRelationshipToOne(
-                    data = JsonApiRelationshipData(
-                        type = this.requestedFrom.type.name,
-                        id = this.requestedFrom.resourceId
-                    )
-                ),
-                requestedTo = JsonApiRelationshipToOne(
-                    data = JsonApiRelationshipData(
-                        type = this.requestedTo.type.name,
-                        id = this.requestedTo.resourceId
-                    )
-                ),
-                // only present after a request is accepted
-                approvedBy = if (this.status == AuthorizationRequest.Status.Accepted) {
-                    JsonApiRelationshipToOne(
-                        data = JsonApiRelationshipData(
-                            type = this.requestedTo.type.name,
-                            id = this.requestedTo.resourceId
-                        )
-                    )
-                } else {
-                    null
-                }
+            relationships = GetRequestSingleResponseRelationships(
+                requestedBy = this.requestedBy.toJsonApiRelationship(),
+                requestedFrom = this.requestedFrom.toJsonApiRelationship(),
+                requestedTo = this.requestedTo.toJsonApiRelationship(),
+                approvedBy = this.approvedBy?.toJsonApiRelationship()
             ),
-            meta = GetRequestResponseMeta(
+            meta = GetRequestSingleResponseMeta(
                 createdAt = this.createdAt.toString(),
                 updatedAt = this.updatedAt.toString(),
                 requestedFromName = this.properties["requestedFromName"].toString(),
@@ -110,7 +85,7 @@ fun AuthorizationRequest.toGetResponse() =
                 balanceSupplierContractName = this.properties["balanceSupplierContractName"].toString(),
             ),
             links =
-            GetRequestResponseLinks(
+            GetRequestSingleResponseLinks(
                 self = "https://api.elhub.no/authorization-requests/${this.id}"
             ),
         ),

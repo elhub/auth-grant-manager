@@ -2,7 +2,7 @@ package no.elhub.auth.features.documents.create
 
 import arrow.core.Either
 import kotlinx.serialization.Serializable
-import no.elhub.auth.features.common.PartyIdentifier
+import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.create.command.ChangeOfSupplierDocumentCommand
 import no.elhub.auth.features.documents.create.command.ValidationError

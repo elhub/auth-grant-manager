@@ -2,7 +2,7 @@ package no.elhub.auth.features.documents.get
 
 import arrow.core.Either
 import arrow.core.raise.either
-import no.elhub.auth.features.common.PartyService
+import no.elhub.auth.features.common.party.PartyService
 import no.elhub.auth.features.common.QueryError
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.documents.AuthorizationDocument
