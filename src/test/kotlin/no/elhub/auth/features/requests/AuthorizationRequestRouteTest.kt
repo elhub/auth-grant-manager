@@ -17,11 +17,11 @@ import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.testing.testApplication
 import no.elhub.auth.features.common.AuthPersonsTestContainer
 import no.elhub.auth.features.common.AuthPersonsTestContainerExtension
-import no.elhub.auth.features.common.party.PartyIdentifier
-import no.elhub.auth.features.common.party.PartyIdentifierType
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.RunPostgresScriptExtension
 import no.elhub.auth.features.common.commonModule
+import no.elhub.auth.features.common.party.PartyIdentifier
+import no.elhub.auth.features.common.party.PartyIdentifierType
 import no.elhub.auth.features.requests.confirm.dto.ConfirmRequestAttributes
 import no.elhub.auth.features.requests.confirm.dto.JsonApiConfirmRequest
 import no.elhub.auth.features.requests.create.dto.CreateRequestAttributes

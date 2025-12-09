@@ -28,8 +28,6 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonPrimitive
 import no.elhub.auth.features.common.AuthPersonsTestContainer
 import no.elhub.auth.features.common.AuthPersonsTestContainerExtension
-import no.elhub.auth.features.common.party.PartyIdentifier
-import no.elhub.auth.features.common.party.PartyIdentifierType
 import no.elhub.auth.features.common.PdpTestContainerExtension
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.RunPostgresScriptExtension
@@ -39,6 +37,8 @@ import no.elhub.auth.features.common.auth.PdpResponse
 import no.elhub.auth.features.common.auth.Result
 import no.elhub.auth.features.common.auth.TokenInfo
 import no.elhub.auth.features.common.commonModule
+import no.elhub.auth.features.common.party.PartyIdentifier
+import no.elhub.auth.features.common.party.PartyIdentifierType
 import no.elhub.auth.features.documents.create.CreateDocumentResponse
 import no.elhub.auth.features.documents.create.DocumentMeta
 import no.elhub.auth.features.documents.create.DocumentRequestAttributes

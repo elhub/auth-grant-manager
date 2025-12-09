@@ -3,13 +3,13 @@ package no.elhub.auth.features.documents.common
 import arrow.core.Either
 import arrow.core.raise.either
 import kotlinx.datetime.Instant
+import no.elhub.auth.features.common.PGEnum
+import no.elhub.auth.features.common.RepositoryReadError
+import no.elhub.auth.features.common.RepositoryWriteError
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.AuthorizationPartyRecord
 import no.elhub.auth.features.common.party.AuthorizationPartyTable
-import no.elhub.auth.features.common.PGEnum
 import no.elhub.auth.features.common.party.PartyRepository
-import no.elhub.auth.features.common.RepositoryReadError
-import no.elhub.auth.features.common.RepositoryWriteError
 import no.elhub.auth.features.common.party.toAuthorizationParty
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.grants.AuthorizationScope
