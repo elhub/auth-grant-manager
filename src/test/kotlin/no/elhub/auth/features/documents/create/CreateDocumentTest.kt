@@ -35,9 +35,6 @@ import no.elhub.auth.features.documents.common.ExposedDocumentRepository
 import no.elhub.auth.features.documents.common.ProxyDocumentBusinessHandler
 import no.elhub.auth.features.documents.confirm.getPersonNin
 import no.elhub.auth.features.documents.confirm.isSignedByUs
-import no.elhub.auth.features.documents.create.CreateDocumentError
-import no.elhub.auth.features.documents.create.DocumentBusinessProcessOrchestrator
-import no.elhub.auth.features.documents.create.FileGenerator
 import no.elhub.auth.features.documents.create.command.DocumentMetaMarker
 import no.elhub.auth.features.documents.create.model.CreateDocumentModel
 import no.elhub.auth.features.documents.getCustomMetaDataValue
@@ -77,13 +74,12 @@ private const val VALID_BALANCE_SUPPLIER_CONTRACT_NAME = "Contract 123"
 private const val BLANK = ""
 private const val EMPTY = " "
 
-private fun testDocumentOrchestrator(): ProxyDocumentBusinessHandler =
-    ProxyDocumentBusinessHandler(ChangeOfSupplierBusinessHandler(), FakeFileGenerator())
+private fun testDocumentOrchestrator(): ProxyDocumentBusinessHandler = ProxyDocumentBusinessHandler(ChangeOfSupplierBusinessHandler(), FakeFileGenerator())
 
 private class FakeFileGenerator : FileGenerator {
     override fun generate(
         signerNin: String,
-        documentMeta: DocumentMetaMarker
+        documentMeta: DocumentMetaMarker,
     ) = ByteArray(0).right()
 }
 
@@ -331,7 +327,7 @@ class CreateDocumentTest :
                     Then("I should receive an error message about invalid balance supplier ID") {
                         orchestrator
                             .validateAndReturnDocumentCommand(
-                                model
+                                model,
                             ).shouldBeLeft(CreateDocumentError.MappingError)
                     }
                 }

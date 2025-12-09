@@ -5,7 +5,7 @@ import arrow.core.left
 import arrow.core.raise.either
 import arrow.core.right
 import kotlinx.datetime.LocalDate
-import no.elhub.auth.features.common.PartyIdentifier
+import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.DocumentBusinessHandler
 import no.elhub.auth.features.documents.create.CreateDocumentError
@@ -64,30 +64,35 @@ data class ChangeOfSupplierBusinessMeta(
         )
 }
 
-class ChangeOfSupplierBusinessHandler() : RequestBusinessHandler, DocumentBusinessHandler {
+class ChangeOfSupplierBusinessHandler :
+    RequestBusinessHandler,
+    DocumentBusinessHandler {
+    override fun validateAndReturnRequestCommand(createRequestModel: CreateRequestModel): Either<ChangeOfSupplierValidationError, RequestCommand> =
+        either {
+            val model = createRequestModel.toChangeOfSupplierBusinessModel()
+            validate(model).bind().toRequestCommand()
+        }
 
-    override fun validateAndReturnRequestCommand(createRequestModel: CreateRequestModel): Either<ChangeOfSupplierValidationError, RequestCommand> = either {
-        val model = createRequestModel.toChangeOfSupplierBusinessModel()
-        validate(model).bind().toRequestCommand()
-    }
+    override fun getCreateGrantProperties(request: AuthorizationRequest): CreateGrantProperties =
+        CreateGrantProperties(
+            validTo = defaultRequestValidTo(),
+            validFrom = today(),
+        )
 
-    override fun getCreateGrantProperties(request: AuthorizationRequest): CreateGrantProperties = CreateGrantProperties(
-        validTo = defaultRequestValidTo(),
-        validFrom = today()
-    )
+    override fun validateAndReturnDocumentCommand(model: CreateDocumentModel): Either<CreateDocumentError, DocumentCommand> =
+        either {
+            val model = model.toChangeOfSupplierBusinessModel()
+            validate(model)
+                .mapLeft { raise(CreateDocumentError.MappingError) }
+                .bind()
+                .toDocumentCommand()
+        }
 
-    override fun validateAndReturnDocumentCommand(model: CreateDocumentModel): Either<CreateDocumentError, DocumentCommand> = either {
-        val model = model.toChangeOfSupplierBusinessModel()
-        validate(model)
-            .mapLeft { raise(CreateDocumentError.MappingError) }
-            .bind()
-            .toDocumentCommand()
-    }
-
-    override fun getCreateGrantProperties(document: AuthorizationDocument): CreateGrantProperties = CreateGrantProperties(
-        validTo = defaultRequestValidTo(),
-        validFrom = today()
-    )
+    override fun getCreateGrantProperties(document: AuthorizationDocument): CreateGrantProperties =
+        CreateGrantProperties(
+            validTo = defaultRequestValidTo(),
+            validFrom = today(),
+        )
 
     private fun validate(model: ChangeOfSupplierBusinessModel): Either<ChangeOfSupplierValidationError, ChangeOfSupplierBusinessCommand> {
         if (model.requestedFromName.isBlank()) {

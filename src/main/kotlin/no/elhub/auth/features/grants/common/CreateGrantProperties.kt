@@ -6,4 +6,3 @@ data class CreateGrantProperties(
     val validTo: LocalDate,
     val validFrom: LocalDate,
 )
-

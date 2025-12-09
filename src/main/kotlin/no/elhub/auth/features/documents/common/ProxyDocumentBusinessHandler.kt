@@ -10,27 +10,29 @@ import no.elhub.auth.features.documents.create.command.DocumentCommand
 import no.elhub.auth.features.documents.create.command.DocumentMetaMarker
 import no.elhub.auth.features.documents.create.model.CreateDocumentModel
 import no.elhub.auth.features.grants.common.CreateGrantProperties
-import no.elhub.auth.features.requests.create.model.defaultRequestValidTo
 
 class ProxyDocumentBusinessHandler(
     private val changeOfSupplierHandler: ChangeOfSupplierBusinessHandler,
-    private val fileGenerator: FileGenerator
+    private val fileGenerator: FileGenerator,
 ) : DocumentBusinessHandler {
-    override fun validateAndReturnDocumentCommand(model: CreateDocumentModel): Either<CreateDocumentError, DocumentCommand> = when (model.documentType) {
-        AuthorizationDocument.Type.ChangeOfSupplierConfirmation -> changeOfSupplierHandler.validateAndReturnDocumentCommand(model)
-    }
+    override fun validateAndReturnDocumentCommand(model: CreateDocumentModel): Either<CreateDocumentError, DocumentCommand> =
+        when (model.documentType) {
+            AuthorizationDocument.Type.ChangeOfSupplierConfirmation -> changeOfSupplierHandler.validateAndReturnDocumentCommand(model)
+        }
 
-    override fun getCreateGrantProperties(document: AuthorizationDocument): CreateGrantProperties = when (document.type) {
-        AuthorizationDocument.Type.ChangeOfSupplierConfirmation -> changeOfSupplierHandler.getCreateGrantProperties(document)
-    }
+    override fun getCreateGrantProperties(document: AuthorizationDocument): CreateGrantProperties =
+        when (document.type) {
+            AuthorizationDocument.Type.ChangeOfSupplierConfirmation -> changeOfSupplierHandler.getCreateGrantProperties(document)
+        }
 
     fun generateFile(
         signatoryId: String,
-        documentMeta: DocumentMetaMarker
+        documentMeta: DocumentMetaMarker,
     ): Either<DocumentGenerationError.ContentGenerationError, ByteArray> = fileGenerator.generate(signatoryId, documentMeta)
 }
 
 interface DocumentBusinessHandler {
     fun validateAndReturnDocumentCommand(model: CreateDocumentModel): Either<CreateDocumentError, DocumentCommand>
+
     fun getCreateGrantProperties(document: AuthorizationDocument): CreateGrantProperties
 }

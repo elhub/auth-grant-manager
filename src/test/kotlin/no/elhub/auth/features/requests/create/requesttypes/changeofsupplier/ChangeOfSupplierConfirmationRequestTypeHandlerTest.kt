@@ -24,16 +24,16 @@ class ChangeOfSupplierConfirmationRequestTypeHandlerTest :
                 CreateRequestModel(
                     requestType = AuthorizationRequest.Type.ChangeOfSupplierConfirmation,
                     meta =
-                        CreateRequestMeta(
-                            requestedBy = PartyIdentifier(PartyIdentifierType.OrganizationNumber, "987654321"),
-                            requestedFrom = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "12345678901"),
-                            requestedFromName = "",
-                            requestedTo = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "12345678902"),
-                            requestedForMeteringPointId = VALID_METERING_POINT,
-                            requestedForMeteringPointAddress = "Some address",
-                            balanceSupplierName = "Supplier",
-                            balanceSupplierContractName = "Contract",
-                        ),
+                    CreateRequestMeta(
+                        requestedBy = PartyIdentifier(PartyIdentifierType.OrganizationNumber, "987654321"),
+                        requestedFrom = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "12345678901"),
+                        requestedFromName = "",
+                        requestedTo = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "12345678902"),
+                        requestedForMeteringPointId = VALID_METERING_POINT,
+                        requestedForMeteringPointAddress = "Some address",
+                        balanceSupplierName = "Supplier",
+                        balanceSupplierContractName = "Contract",
+                    ),
                 )
 
             val result = handler.validateAndReturnRequestCommand(model)
@@ -46,16 +46,16 @@ class ChangeOfSupplierConfirmationRequestTypeHandlerTest :
                 CreateRequestModel(
                     requestType = AuthorizationRequest.Type.ChangeOfSupplierConfirmation,
                     meta =
-                        CreateRequestMeta(
-                            requestedBy = PartyIdentifier(PartyIdentifierType.OrganizationNumber, "987654321"),
-                            requestedFrom = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "12345678901"),
-                            requestedFromName = "Supplier AS",
-                            requestedTo = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "12345678902"),
-                            requestedForMeteringPointId = VALID_METERING_POINT,
-                            requestedForMeteringPointAddress = "Some address",
-                            balanceSupplierName = "Supplier",
-                            balanceSupplierContractName = "Contract",
-                        ),
+                    CreateRequestMeta(
+                        requestedBy = PartyIdentifier(PartyIdentifierType.OrganizationNumber, "987654321"),
+                        requestedFrom = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "12345678901"),
+                        requestedFromName = "Supplier AS",
+                        requestedTo = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "12345678902"),
+                        requestedForMeteringPointId = VALID_METERING_POINT,
+                        requestedForMeteringPointAddress = "Some address",
+                        balanceSupplierName = "Supplier",
+                        balanceSupplierContractName = "Contract",
+                    ),
                 )
 
             val command = handler.validateAndReturnRequestCommand(model).shouldBeRight()

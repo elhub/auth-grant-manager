@@ -2,7 +2,7 @@ package no.elhub.auth.features.documents.create.command
 
 import no.elhub.auth.features.businessprocesses.changeofsupplier.ChangeOfSupplierBusinessCommand
 import no.elhub.auth.features.businessprocesses.changeofsupplier.ChangeOfSupplierBusinessMeta
-import no.elhub.auth.features.common.PartyIdentifier
+import no.elhub.auth.features.common.party.PartyIdentifier
 
 data class ChangeOfSupplierDocumentCommand(
     private val commandRequestedFrom: PartyIdentifier,

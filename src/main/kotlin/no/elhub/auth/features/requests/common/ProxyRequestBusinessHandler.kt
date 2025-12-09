@@ -12,16 +12,13 @@ import no.elhub.auth.features.requests.create.model.CreateRequestModel
 class ProxyRequestBusinessHandler(
     private val changeOfSupplierHandler: ChangeOfSupplierBusinessHandler,
 ) : RequestBusinessHandler {
-
-    override fun validateAndReturnRequestCommand(createRequestModel: CreateRequestModel): Either<ChangeOfSupplierValidationError, RequestCommand> {
-        return when (createRequestModel.requestType) {
+    override fun validateAndReturnRequestCommand(createRequestModel: CreateRequestModel): Either<ChangeOfSupplierValidationError, RequestCommand> =
+        when (createRequestModel.requestType) {
             AuthorizationRequest.Type.ChangeOfSupplierConfirmation -> changeOfSupplierHandler.validateAndReturnRequestCommand(createRequestModel)
         }
-    }
 
-    override fun getCreateGrantProperties(request: AuthorizationRequest): CreateGrantProperties {
-        return when (request.type) {
+    override fun getCreateGrantProperties(request: AuthorizationRequest): CreateGrantProperties =
+        when (request.type) {
             AuthorizationRequest.Type.ChangeOfSupplierConfirmation -> changeOfSupplierHandler.getCreateGrantProperties(request)
         }
-    }
 }

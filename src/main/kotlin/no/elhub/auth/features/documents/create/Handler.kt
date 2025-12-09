@@ -11,7 +11,6 @@ import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.documents.common.ProxyDocumentBusinessHandler
 import no.elhub.auth.features.documents.create.command.toAuthorizationDocumentType
 import no.elhub.auth.features.documents.create.model.CreateDocumentModel
-import java.util.UUID
 
 class Handler(
     private val businessHandler: ProxyDocumentBusinessHandler,
@@ -42,8 +41,10 @@ class Handler(
                 .resolve(command.requestedTo)
                 .getOrElse { return CreateDocumentError.RequestedToPartyError.left() }
 
-        val file = businessHandler.generateFile(command.requestedFrom.idValue, command.meta)
-            .getOrElse { return CreateDocumentError.GenerateFileError.left() }
+        val file =
+            businessHandler
+                .generateFile(command.requestedFrom.idValue, command.meta)
+                .getOrElse { return CreateDocumentError.GenerateFileError.left() }
 
         val certChain =
             certificateProvider
@@ -71,9 +72,10 @@ class Handler(
                 .getOrElse { return CreateDocumentError.SigningError.left() }
 
         val documentType = command.toAuthorizationDocumentType()
-        val documentProperties = command.meta
-            .toMetaAttributes()
-            .toDocumentProperties()
+        val documentProperties =
+            command.meta
+                .toMetaAttributes()
+                .toDocumentProperties()
 
         val documentToCreate =
             AuthorizationDocument.create(
@@ -82,24 +84,13 @@ class Handler(
                 requestedBy = requestedByParty,
                 requestedFrom = requestedFromParty,
                 requestedTo = requestedToParty,
-                properties = documentProperties
+                properties = documentProperties,
             )
 
         val savedDocument =
             documentRepository
                 .insert(documentToCreate)
                 .getOrElse { return CreateDocumentError.PersistenceError.left() }
-
-        val documentProperties =
-            command.meta
-                .toMetaAttributes()
-                .toDocumentProperties(savedDocument.id)
-
-        runCatching {
-            documentPropertiesRepository.insert(documentProperties)
-        }.getOrElse {
-            return CreateDocumentError.PersistenceError.left()
-        }
 
         return savedDocument.right()
     }
@@ -115,6 +106,7 @@ sealed class CreateDocumentError {
     data object SignatureFetchingError : CreateDocumentError()
 
     data object SigningError : CreateDocumentError()
+
     data object GenerateFileError : CreateDocumentError()
 
     data object MappingError : CreateDocumentError()
@@ -136,7 +128,6 @@ fun Map<String, String>.toDocumentProperties() =
     this
         .map { (key, value) ->
             AuthorizationDocumentProperty(
-
                 key = key,
                 value = value,
             )

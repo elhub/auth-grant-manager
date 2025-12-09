@@ -4,8 +4,8 @@ import arrow.core.Either
 import arrow.core.getOrElse
 import io.ktor.http.HttpStatusCode
 import no.elhub.auth.features.businessprocesses.changeofsupplier.ChangeOfSupplierValidationError
-import no.elhub.auth.features.grants.common.CreateGrantProperties
 import no.elhub.auth.features.common.party.PartyService
+import no.elhub.auth.features.grants.common.CreateGrantProperties
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.common.ProxyRequestBusinessHandler
 import no.elhub.auth.features.requests.common.RequestPropertiesRepository
