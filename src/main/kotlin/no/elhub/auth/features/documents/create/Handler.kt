@@ -8,12 +8,13 @@ import no.elhub.auth.features.common.party.PartyService
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.AuthorizationDocumentProperty
 import no.elhub.auth.features.documents.common.DocumentRepository
+import no.elhub.auth.features.documents.common.ProxyDocumentBusinessHandler
 import no.elhub.auth.features.documents.create.command.toAuthorizationDocumentType
 import no.elhub.auth.features.documents.create.model.CreateDocumentModel
 import java.util.UUID
 
 class Handler(
-    private val documentBusinessProcessOrchestrator: DocumentBusinessProcessOrchestrator,
+    private val businessHandler: ProxyDocumentBusinessHandler,
     private val certificateProvider: CertificateProvider,
     private val fileSigningService: FileSigningService,
     private val signatureProvider: SignatureProvider,
@@ -21,12 +22,10 @@ class Handler(
     private val partyService: PartyService,
 ) {
     suspend operator fun invoke(model: CreateDocumentModel): Either<CreateDocumentError, AuthorizationDocument> {
-        val businessResult =
-            documentBusinessProcessOrchestrator
-                .handle(model.documentType, model)
+        val command =
+            businessHandler
+                .validateAndReturnDocumentCommand(model)
                 .getOrElse { return it.left() }
-
-        val command = businessResult.command
 
         val requestedFromParty =
             partyService
@@ -43,7 +42,8 @@ class Handler(
                 .resolve(command.requestedTo)
                 .getOrElse { return CreateDocumentError.RequestedToPartyError.left() }
 
-        val file = businessResult.file
+        val file = businessHandler.generateFile(command.requestedFrom.idValue, command.meta)
+            .getOrElse { return CreateDocumentError.GenerateFileError.left() }
 
         val certChain =
             certificateProvider
@@ -115,6 +115,7 @@ sealed class CreateDocumentError {
     data object SignatureFetchingError : CreateDocumentError()
 
     data object SigningError : CreateDocumentError()
+    data object GenerateFileError : CreateDocumentError()
 
     data object MappingError : CreateDocumentError()
 

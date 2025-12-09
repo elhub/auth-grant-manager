@@ -2,10 +2,25 @@ package no.elhub.auth.features.businessprocesses.changeofsupplier
 
 import arrow.core.Either
 import arrow.core.left
+import arrow.core.raise.either
 import arrow.core.right
+import kotlinx.datetime.LocalDate
 import no.elhub.auth.features.common.PartyIdentifier
+import no.elhub.auth.features.documents.AuthorizationDocument
+import no.elhub.auth.features.documents.common.DocumentBusinessHandler
+import no.elhub.auth.features.documents.create.CreateDocumentError
+import no.elhub.auth.features.documents.create.command.DocumentCommand
 import no.elhub.auth.features.documents.create.command.DocumentMetaMarker
+import no.elhub.auth.features.documents.create.command.toDocumentCommand
+import no.elhub.auth.features.documents.create.model.CreateDocumentModel
+import no.elhub.auth.features.grants.common.CreateGrantProperties
+import no.elhub.auth.features.requests.AuthorizationRequest
+import no.elhub.auth.features.requests.create.RequestBusinessHandler
+import no.elhub.auth.features.requests.create.command.RequestCommand
 import no.elhub.auth.features.requests.create.command.RequestMetaMarker
+import no.elhub.auth.features.requests.create.model.CreateRequestModel
+import no.elhub.auth.features.requests.create.model.defaultRequestValidTo
+import no.elhub.auth.features.requests.create.model.today
 
 private const val REGEX_NUMBERS_LETTERS_SYMBOLS = "^[a-zA-Z0-9_.-]*$"
 private const val REGEX_REQUESTED_FROM = REGEX_NUMBERS_LETTERS_SYMBOLS
@@ -27,6 +42,7 @@ data class ChangeOfSupplierBusinessCommand(
     val requestedFrom: PartyIdentifier,
     val requestedBy: PartyIdentifier,
     val requestedTo: PartyIdentifier,
+    val validTo: LocalDate,
     val meta: ChangeOfSupplierBusinessMeta,
 )
 
@@ -48,8 +64,32 @@ data class ChangeOfSupplierBusinessMeta(
         )
 }
 
-class ChangeOfSupplierBusinessHandler {
-    fun handle(model: ChangeOfSupplierBusinessModel): Either<ChangeOfSupplierValidationError, ChangeOfSupplierBusinessCommand> {
+class ChangeOfSupplierBusinessHandler() : RequestBusinessHandler, DocumentBusinessHandler {
+
+    override fun validateAndReturnRequestCommand(createRequestModel: CreateRequestModel): Either<ChangeOfSupplierValidationError, RequestCommand> = either {
+        val model = createRequestModel.toChangeOfSupplierBusinessModel()
+        validate(model).bind().toRequestCommand()
+    }
+
+    override fun getCreateGrantProperties(request: AuthorizationRequest): CreateGrantProperties = CreateGrantProperties(
+        validTo = defaultRequestValidTo(),
+        validFrom = today()
+    )
+
+    override fun validateAndReturnDocumentCommand(model: CreateDocumentModel): Either<CreateDocumentError, DocumentCommand> = either {
+        val model = model.toChangeOfSupplierBusinessModel()
+        validate(model)
+            .mapLeft { raise(CreateDocumentError.MappingError) }
+            .bind()
+            .toDocumentCommand()
+    }
+
+    override fun getCreateGrantProperties(document: AuthorizationDocument): CreateGrantProperties = CreateGrantProperties(
+        validTo = defaultRequestValidTo(),
+        validFrom = today()
+    )
+
+    private fun validate(model: ChangeOfSupplierBusinessModel): Either<ChangeOfSupplierValidationError, ChangeOfSupplierBusinessCommand> {
         if (model.requestedFromName.isBlank()) {
             return ChangeOfSupplierValidationError.MissingRequestedFromName.left()
         }
@@ -103,6 +143,7 @@ class ChangeOfSupplierBusinessHandler {
             requestedFrom = model.requestedFrom,
             requestedBy = model.requestedBy,
             requestedTo = model.requestedTo,
+            validTo = defaultRequestValidTo(),
             meta = meta,
         ).right()
     }

@@ -3,9 +3,9 @@ package no.elhub.auth.features.requests
 import no.elhub.auth.features.businessprocesses.changeofsupplier.ChangeOfSupplierBusinessHandler
 import no.elhub.auth.features.requests.common.ExposedRequestPropertiesRepository
 import no.elhub.auth.features.requests.common.ExposedRequestRepository
+import no.elhub.auth.features.requests.common.ProxyRequestBusinessHandler
 import no.elhub.auth.features.requests.common.RequestPropertiesRepository
 import no.elhub.auth.features.requests.common.RequestRepository
-import no.elhub.auth.features.requests.create.RequestBusinessOrchestrator
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
 import org.koin.dsl.module
@@ -19,7 +19,7 @@ val requestsModule =
         singleOf(::ExposedRequestRepository) bind RequestRepository::class
         singleOf(::ExposedRequestPropertiesRepository) bind RequestPropertiesRepository::class
         singleOf(::ChangeOfSupplierBusinessHandler)
-        singleOf(::RequestBusinessOrchestrator)
+        singleOf(::ProxyRequestBusinessHandler)
         singleOf(::ConfirmHandler)
         singleOf(::CreateHandler)
         singleOf(::GetHandler)

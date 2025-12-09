@@ -32,6 +32,7 @@ import no.elhub.auth.features.documents.common.DocumentPropertiesRepository
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.documents.common.ExposedDocumentPropertiesRepository
 import no.elhub.auth.features.documents.common.ExposedDocumentRepository
+import no.elhub.auth.features.documents.common.ProxyDocumentBusinessHandler
 import no.elhub.auth.features.documents.confirm.getPersonNin
 import no.elhub.auth.features.documents.confirm.isSignedByUs
 import no.elhub.auth.features.documents.create.CreateDocumentError
@@ -76,8 +77,8 @@ private const val VALID_BALANCE_SUPPLIER_CONTRACT_NAME = "Contract 123"
 private const val BLANK = ""
 private const val EMPTY = " "
 
-private fun testDocumentOrchestrator(): DocumentBusinessProcessOrchestrator =
-    DocumentBusinessProcessOrchestrator(ChangeOfSupplierBusinessHandler(), FakeFileGenerator())
+private fun testDocumentOrchestrator(): ProxyDocumentBusinessHandler =
+    ProxyDocumentBusinessHandler(ChangeOfSupplierBusinessHandler(), FakeFileGenerator())
 
 private class FakeFileGenerator : FileGenerator {
     override fun generate(
@@ -129,7 +130,7 @@ class CreateDocumentTest :
                     single { PartyService(get()) }
                     singleOf(::ExposedDocumentPropertiesRepository) bind DocumentPropertiesRepository::class
                     singleOf(::ChangeOfSupplierBusinessHandler)
-                    singleOf(::DocumentBusinessProcessOrchestrator)
+                    singleOf(::ProxyDocumentBusinessHandler)
 
                     singleOf(::Handler)
                 },
@@ -153,7 +154,6 @@ class CreateDocumentTest :
                 val requestedFrom = VALID_REQUESTED_FROM_IDENTIFIER
                 val requestedFromName = VALID_REQUESTED_FROM_NAME
                 val requestedBy = VALID_REQUESTED_BY_IDENTIFIER
-                val requestedTo = VALID_REQUESTED_TO_IDENTIFIER
                 val balanceSupplierName = VALID_BALANCE_SUPPLIER_NAME
                 val balanceSupplierContractName = VALID_BALANCE_SUPPLIER_CONTRACT_NAME
                 val meteringPointId = VALID_METERING_POINT_ID
@@ -168,7 +168,7 @@ class CreateDocumentTest :
                         DocumentMeta(
                             requestedBy = requestedBy,
                             requestedFrom = requestedFrom,
-                            requestedTo = requestedTo,
+                            requestedTo = requestedFrom,
                             requestedFromName = requestedFromName,
                             balanceSupplierName = balanceSupplierName,
                             balanceSupplierContractName = balanceSupplierContractName,
@@ -191,7 +191,7 @@ class CreateDocumentTest :
 
                 Then("that document should contain the necessary metadata") {
                     val signerNin = document.file.getCustomMetaDataValue(PdfGenerator.PdfConstants.PDF_METADATA_KEY_NIN)
-                    signerNin shouldBe command.requestedTo.idValue
+                    signerNin shouldBe model.meta.requestedTo.idValue
                 }
 
                 Then("that document should conform to the PDF/A-2b standard") {
@@ -291,8 +291,7 @@ class CreateDocumentTest :
 
                     Then("I should receive an error message about missing balance supplier ID") {
                         orchestrator
-                            .handle(
-                                AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                            .validateAndReturnDocumentCommand(
                                 model,
                             ).shouldBeLeft(CreateDocumentError.MappingError)
                     }
@@ -331,9 +330,8 @@ class CreateDocumentTest :
 
                     Then("I should receive an error message about invalid balance supplier ID") {
                         orchestrator
-                            .handle(
-                                AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
-                                model,
+                            .validateAndReturnDocumentCommand(
+                                model
                             ).shouldBeLeft(CreateDocumentError.MappingError)
                     }
                 }
@@ -371,8 +369,7 @@ class CreateDocumentTest :
 
                     Then("I should receive an error message about missing balance supplier name") {
                         orchestrator
-                            .handle(
-                                AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                            .validateAndReturnDocumentCommand(
                                 model,
                             ).shouldBeLeft(CreateDocumentError.MappingError)
                     }
@@ -411,8 +408,7 @@ class CreateDocumentTest :
 
                     Then("I should receive an error message about missing end user ID") {
                         orchestrator
-                            .handle(
-                                AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                            .validateAndReturnDocumentCommand(
                                 model,
                             ).shouldBeLeft(CreateDocumentError.MappingError)
                     }
@@ -451,8 +447,7 @@ class CreateDocumentTest :
 
                     Then("I should receive an error message about invalid end user ID") {
                         orchestrator
-                            .handle(
-                                AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                            .validateAndReturnDocumentCommand(
                                 model,
                             ).shouldBeLeft(CreateDocumentError.MappingError)
                     }
@@ -491,8 +486,7 @@ class CreateDocumentTest :
 
                     Then("I should receive an error message about missing metering point ID") {
                         orchestrator
-                            .handle(
-                                AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                            .validateAndReturnDocumentCommand(
                                 model,
                             ).shouldBeLeft(CreateDocumentError.MappingError)
                     }
@@ -531,8 +525,7 @@ class CreateDocumentTest :
 
                     Then("I should receive an error message about invalid metering point ID") {
                         orchestrator
-                            .handle(
-                                AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                            .validateAndReturnDocumentCommand(
                                 model,
                             ).shouldBeLeft(CreateDocumentError.MappingError)
                     }
@@ -571,8 +564,7 @@ class CreateDocumentTest :
 
                     Then("I should receive an error message about missing metering point address") {
                         orchestrator
-                            .handle(
-                                AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                            .validateAndReturnDocumentCommand(
                                 model,
                             ).shouldBeLeft(CreateDocumentError.MappingError)
                     }
@@ -611,8 +603,7 @@ class CreateDocumentTest :
 
                     Then("I should receive an error message about missing contract name") {
                         orchestrator
-                            .handle(
-                                AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                            .validateAndReturnDocumentCommand(
                                 model,
                             ).shouldBeLeft(CreateDocumentError.MappingError)
                     }
