@@ -1,7 +1,13 @@
-package no.elhub.auth.features.grants
+package no.elhub.auth.features.common.scope
 
-import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
+
+@Serializable
+data class CreateAuthorizationScope(
+    val authorizedResourceType: ElhubResource,
+    val authorizedResourceId: String,
+    val permissionType: PermissionType,
+)
 
 @Serializable
 data class AuthorizationScope(
@@ -9,7 +15,7 @@ data class AuthorizationScope(
     val authorizedResourceType: ElhubResource,
     val authorizedResourceId: String,
     val permissionType: PermissionType,
-    val createdAt: Instant
+    val createdAt: String
 )
 
 @Serializable

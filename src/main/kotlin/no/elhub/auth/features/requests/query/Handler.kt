@@ -10,7 +10,7 @@ import no.elhub.auth.features.requests.common.RequestRepository
 
 class Handler(private val repo: RequestRepository) {
     operator fun invoke(query: Query): Either<QueryError, List<AuthorizationRequest>> =
-        repo.findAll()
+        repo.findAllRequests()
             .fold(
                 { error ->
                     when (error) {

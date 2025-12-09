@@ -10,7 +10,7 @@ import no.elhub.auth.features.requests.common.RequestRepository
 
 class Handler(private val repo: RequestRepository) {
     operator fun invoke(query: Query): Either<QueryError, AuthorizationRequest> =
-        repo.find(query.id).fold(
+        repo.findRequest(query.id).fold(
             { error ->
                 when (error) {
                     is RepositoryReadError.NotFoundError -> QueryError.ResourceNotFoundError.left()

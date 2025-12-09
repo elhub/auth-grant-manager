@@ -11,42 +11,54 @@ import no.elhub.auth.features.common.RepositoryWriteError
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.AuthorizationPartyRecord
 import no.elhub.auth.features.common.party.PartyRepository
+import no.elhub.auth.features.common.scope.AuthorizationScopeTable
+import no.elhub.auth.features.common.scope.CreateAuthorizationScope
+import no.elhub.auth.features.common.scope.ScopeRepository
 import no.elhub.auth.features.requests.AuthorizationRequest
 import org.jetbrains.exposed.dao.id.UUIDTable
+import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.insertReturning
 import org.jetbrains.exposed.sql.javatime.CurrentDateTime
 import org.jetbrains.exposed.sql.javatime.date
 import org.jetbrains.exposed.sql.javatime.datetime
+import org.jetbrains.exposed.sql.javatime.timestamp
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.update
 import java.util.UUID
 
 interface RequestRepository {
-    fun find(requestId: UUID): Either<RepositoryReadError, AuthorizationRequest>
-    fun findAll(): Either<RepositoryReadError, List<AuthorizationRequest>>
-    fun insert(req: AuthorizationRequest): Either<RepositoryWriteError, AuthorizationRequest>
-    fun confirm(
+    fun findRequest(requestId: UUID): Either<RepositoryReadError, AuthorizationRequest>
+    fun findAllRequests(): Either<RepositoryReadError, List<AuthorizationRequest>>
+    fun insertRequest(req: AuthorizationRequest): Either<RepositoryWriteError, AuthorizationRequest>
+    fun confirmRequest(
         requestId: UUID,
         newStatus: AuthorizationRequest.Status,
     ): Either<RepositoryError, AuthorizationRequest>
+    fun insertScope(
+        requestId: UUID,
+        scope: CreateAuthorizationScope
+    ): Either<RepositoryWriteError, Long>
 }
 
 class ExposedRequestRepository(
     private val partyRepo: PartyRepository,
+    private val scopeRepo: ScopeRepository
 ) : RequestRepository {
-    override fun findAll(): Either<RepositoryReadError, List<AuthorizationRequest>> =
+    override fun findAllRequests(): Either<RepositoryReadError, List<AuthorizationRequest>> =
         either {
             transaction {
                 val rows = AuthorizationRequestTable.selectAll()
                 rows.map { request ->
-                    findInternal(request).bind()
+                    findInternalRequest(request).bind()
                 }
             }
         }
 
-    override fun find(requestId: UUID): Either<RepositoryReadError, AuthorizationRequest> =
+    override fun findRequest(requestId: UUID): Either<RepositoryReadError, AuthorizationRequest> =
         either {
             transaction {
                 val request =
@@ -54,11 +66,11 @@ class ExposedRequestRepository(
                         .selectAll()
                         .where { AuthorizationRequestTable.id eq requestId }
                         .singleOrNull() ?: raise(RepositoryReadError.NotFoundError)
-                findInternal(request).bind()
+                findInternalRequest(request).bind()
             }
         }
 
-    override fun insert(req: AuthorizationRequest): Either<RepositoryWriteError, AuthorizationRequest> =
+    override fun insertRequest(req: AuthorizationRequest): Either<RepositoryWriteError, AuthorizationRequest> =
         either {
             transaction {
                 val requestedByParty =
@@ -102,7 +114,27 @@ class ExposedRequestRepository(
             }
         }.mapLeft { RepositoryWriteError.UnexpectedError }
 
-    override fun confirm(
+    override fun insertScope(
+        requestId: UUID,
+        scope: CreateAuthorizationScope
+    ): Either<RepositoryWriteError, Long> =
+        either {
+            transaction {
+                val authScope = scopeRepo
+                    .findOrCreateScope(scope)
+                    .mapLeft { RepositoryWriteError.UnexpectedError }
+                    .bind()
+
+                AuthorizationRequestScopeTable.insert {
+                    it[authorizationRequestId] = requestId
+                    it[authorizationScopeId] = authScope
+                }
+
+                authScope
+            }
+        }.mapLeft { RepositoryWriteError.UnexpectedError }
+
+    override fun confirmRequest(
         requestId: UUID,
         newStatus: AuthorizationRequest.Status
     ): Either<RepositoryError, AuthorizationRequest> =
@@ -127,7 +159,7 @@ class ExposedRequestRepository(
                         .where { AuthorizationRequestTable.id eq requestId }
                         .singleOrNull() ?: raise(RepositoryReadError.NotFoundError)
 
-                findInternal(request)
+                findInternalRequest(request)
                     .mapLeft { readError ->
                         when (readError) {
                             is RepositoryReadError.NotFoundError -> RepositoryWriteError.UnexpectedError
@@ -138,7 +170,7 @@ class ExposedRequestRepository(
             }
         }
 
-    private fun findInternal(request: ResultRow): Either<RepositoryReadError, AuthorizationRequest> =
+    private fun findInternalRequest(request: ResultRow): Either<RepositoryReadError, AuthorizationRequest> =
         either {
             val requestedByDbId = request[AuthorizationRequestTable.requestedBy]
             val requestedFromDbId = request[AuthorizationRequestTable.requestedFrom]
@@ -199,6 +231,15 @@ object AuthorizationRequestTable : UUIDTable("authorization_request") {
     val createdAt = datetime("created_at").defaultExpression(CurrentDateTime)
     val updatedAt = datetime("updated_at").defaultExpression(CurrentDateTime)
     val validTo = date("valid_to")
+}
+
+object AuthorizationRequestScopeTable : Table("auth.authorization_request_scope") {
+    val authorizationRequestId = uuid("authorization_request_id")
+        .references(AuthorizationRequestTable.id, onDelete = ReferenceOption.CASCADE)
+    val authorizationScopeId = long("authorization_scope_id")
+        .references(AuthorizationScopeTable.id, onDelete = ReferenceOption.CASCADE)
+    val createdAt = timestamp("created_at").clientDefault { java.time.Instant.now() }
+    override val primaryKey = PrimaryKey(authorizationRequestId, authorizationScopeId)
 }
 
 fun ResultRow.toAuthorizationRequest(

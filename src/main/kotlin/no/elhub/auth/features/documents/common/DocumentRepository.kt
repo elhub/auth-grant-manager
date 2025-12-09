@@ -11,11 +11,11 @@ import no.elhub.auth.features.common.party.AuthorizationPartyRecord
 import no.elhub.auth.features.common.party.AuthorizationPartyTable
 import no.elhub.auth.features.common.party.PartyRepository
 import no.elhub.auth.features.common.party.toAuthorizationParty
+import no.elhub.auth.features.common.scope.AuthorizationScope
+import no.elhub.auth.features.common.scope.AuthorizationScopeTable
+import no.elhub.auth.features.common.scope.ElhubResource
+import no.elhub.auth.features.common.scope.PermissionType
 import no.elhub.auth.features.documents.AuthorizationDocument
-import no.elhub.auth.features.grants.AuthorizationScope
-import no.elhub.auth.features.grants.ElhubResource
-import no.elhub.auth.features.grants.PermissionType
-import no.elhub.auth.features.grants.common.AuthorizationScopeTable
 import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.ResultRow
@@ -194,7 +194,7 @@ class ExposedDocumentRepository(
                             authorizedResourceType = row[AuthorizationScopeTable.authorizedResourceType],
                             authorizedResourceId = row[AuthorizationScopeTable.authorizedResourceId],
                             permissionType = row[AuthorizationScopeTable.permissionType],
-                            createdAt = Instant.parse(row[AuthorizationScopeTable.createdAt].toString())
+                            createdAt = row[AuthorizationScopeTable.createdAt].toString()
                         )
                     }
             }

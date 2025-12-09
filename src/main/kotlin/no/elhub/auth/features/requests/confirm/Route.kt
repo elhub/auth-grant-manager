@@ -43,6 +43,9 @@ fun Route.route(handler: Handler) {
                 ConfirmError.PersistenceError,
                 ConfirmError.RequestNotFound
                 -> call.respond(HttpStatusCode.InternalServerError)
+
+                ConfirmError.UnsupportedStatusTransition
+                -> call.respond(HttpStatusCode.BadRequest)
             }
             return@patch
         }

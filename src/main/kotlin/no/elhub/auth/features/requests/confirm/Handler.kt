@@ -8,15 +8,23 @@ import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.common.RequestRepository
 
 class Handler(
-    private val repo: RequestRepository
+    private val requestRepository: RequestRepository,
 ) {
-    operator fun invoke(command: ConfirmCommand): Either<ConfirmError, AuthorizationRequest> {
-        val updated = repo.confirm(command.requestId, command.newStatus)
+    operator fun invoke(command: ConfirmCommand): Either<ConfirmError, AuthorizationRequest> = when (command.newStatus) {
+        AuthorizationRequest.Status.Accepted -> {
+            handleAcceptedRequest(command)
+        }
+
+        AuthorizationRequest.Status.Pending,
+        AuthorizationRequest.Status.Expired, // TODO is Pending -> Expired allowed here?
+        AuthorizationRequest.Status.Rejected // TODO is Pending -> Rejected allowed here?
+        -> ConfirmError.UnsupportedStatusTransition.left()
+    }
+
+    private fun handleAcceptedRequest(command: ConfirmCommand): Either<ConfirmError, AuthorizationRequest> {
+        val updatedAccepted = requestRepository.confirmRequest(command.requestId, command.newStatus)
             .getOrElse { return ConfirmError.PersistenceError.left() }
 
-        // TODO add state-transition validation in another PR
-        // TODO add authorization check in another PR
-
-        return updated.right()
+        return updatedAccepted.right()
     }
 }
