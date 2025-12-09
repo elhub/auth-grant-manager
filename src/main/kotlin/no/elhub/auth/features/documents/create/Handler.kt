@@ -4,7 +4,7 @@ import arrow.core.Either
 import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
-import no.elhub.auth.features.common.PartyService
+import no.elhub.auth.features.common.party.PartyService
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.AuthorizationDocumentProperty
 import no.elhub.auth.features.documents.common.DocumentRepository

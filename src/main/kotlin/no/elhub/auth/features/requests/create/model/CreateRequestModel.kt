@@ -1,6 +1,6 @@
 package no.elhub.auth.features.requests.create.model
 
-import no.elhub.auth.features.common.PartyIdentifier
+import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.requests.AuthorizationRequest
 
 data class CreateRequestModel(

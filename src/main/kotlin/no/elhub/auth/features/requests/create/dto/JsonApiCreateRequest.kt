@@ -1,7 +1,7 @@
 package no.elhub.auth.features.requests.create.dto
 
 import kotlinx.serialization.Serializable
-import no.elhub.auth.features.common.PartyIdentifier
+import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.create.model.CreateRequestModel
 import no.elhub.devxp.jsonapi.model.JsonApiAttributes

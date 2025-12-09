@@ -1,6 +1,6 @@
 package no.elhub.auth.features.documents.create.command
 
-import no.elhub.auth.features.common.PartyIdentifier
+import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.documents.AuthorizationDocument
 
 sealed interface DocumentMetaMarker {

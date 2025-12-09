@@ -67,6 +67,9 @@
             },
             "approvedBy": {
               "$ref": "authorization-request-definitions.json#/$defs/relationships/$defs/approvedBy"
+            },
+            "grant": {
+              "$ref": "authorization-request-definitions.json#/$defs/relationships/$defs/grant"
             }
           }
         },

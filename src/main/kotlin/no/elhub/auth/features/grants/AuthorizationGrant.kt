@@ -1,7 +1,7 @@
 package no.elhub.auth.features.grants
 
 import kotlinx.datetime.LocalDateTime
-import no.elhub.auth.features.common.AuthorizationParty
+import no.elhub.auth.features.common.party.AuthorizationParty
 import java.util.UUID
 
 data class AuthorizationGrant(

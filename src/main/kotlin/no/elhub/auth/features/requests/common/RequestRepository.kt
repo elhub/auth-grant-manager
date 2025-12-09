@@ -4,13 +4,13 @@ import arrow.core.Either
 import arrow.core.raise.either
 import kotlinx.datetime.toJavaLocalDate
 import kotlinx.datetime.toKotlinLocalDate
-import no.elhub.auth.features.common.AuthorizationParty
-import no.elhub.auth.features.common.AuthorizationPartyRecord
 import no.elhub.auth.features.common.PGEnum
-import no.elhub.auth.features.common.PartyRepository
 import no.elhub.auth.features.common.RepositoryError
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.RepositoryWriteError
+import no.elhub.auth.features.common.party.AuthorizationParty
+import no.elhub.auth.features.common.party.AuthorizationPartyRecord
+import no.elhub.auth.features.common.party.PartyRepository
 import no.elhub.auth.features.common.scope.AuthorizationScopeTable
 import no.elhub.auth.features.common.scope.CreateAuthorizationScope
 import no.elhub.auth.features.common.scope.ScopeRepository
@@ -52,35 +52,8 @@ class ExposedRequestRepository(
         either {
             transaction {
                 val rows = AuthorizationRequestTable.selectAll()
-
                 rows.map { request ->
-                    val requestedById = request[AuthorizationRequestTable.requestedBy]
-                    val requestedFromId = request[AuthorizationRequestTable.requestedFrom]
-                    val requestedToId = request[AuthorizationRequestTable.requestedTo]
-
-                    val requestedByParty =
-                        partyRepo
-                            .find(requestedById)
-                            .mapLeft { RepositoryReadError.UnexpectedError }
-                            .bind()
-
-                    val requestedFromParty =
-                        partyRepo
-                            .find(requestedFromId)
-                            .mapLeft { RepositoryReadError.UnexpectedError }
-                            .bind()
-
-                    val requestedToParty =
-                        partyRepo
-                            .find(requestedToId)
-                            .mapLeft { RepositoryReadError.UnexpectedError }
-                            .bind()
-
-                    request.toAuthorizationRequest(
-                        requestedByParty,
-                        requestedFromParty,
-                        requestedToParty,
-                    )
+                    findInternalRequest(request).bind()
                 }
             }
         }
@@ -88,7 +61,12 @@ class ExposedRequestRepository(
     override fun findRequest(requestId: UUID): Either<RepositoryReadError, AuthorizationRequest> =
         either {
             transaction {
-                findInternalRequest(requestId).bind()
+                val request =
+                    AuthorizationRequestTable
+                        .selectAll()
+                        .where { AuthorizationRequestTable.id eq requestId }
+                        .singleOrNull() ?: raise(RepositoryReadError.NotFoundError)
+                findInternalRequest(request).bind()
             }
         }
 
@@ -162,6 +140,7 @@ class ExposedRequestRepository(
     ): Either<RepositoryError, AuthorizationRequest> =
         either {
             transaction {
+                // TODO approvedBy should be in the database
                 val rowsUpdated =
                     AuthorizationRequestTable.update(
                         where = { AuthorizationRequestTable.id eq requestId }
@@ -174,7 +153,13 @@ class ExposedRequestRepository(
                     raise(RepositoryWriteError.UnexpectedError)
                 }
 
-                findInternalRequest(requestId)
+                val request =
+                    AuthorizationRequestTable
+                        .selectAll()
+                        .where { AuthorizationRequestTable.id eq requestId }
+                        .singleOrNull() ?: raise(RepositoryReadError.NotFoundError)
+
+                findInternalRequest(request)
                     .mapLeft { readError ->
                         when (readError) {
                             is RepositoryReadError.NotFoundError -> RepositoryWriteError.UnexpectedError
@@ -185,36 +170,44 @@ class ExposedRequestRepository(
             }
         }
 
-    private fun findInternalRequest(requestId: UUID): Either<RepositoryReadError, AuthorizationRequest> =
+    private fun findInternalRequest(request: ResultRow): Either<RepositoryReadError, AuthorizationRequest> =
         either {
-            val request =
-                AuthorizationRequestTable
-                    .selectAll()
-                    .where { AuthorizationRequestTable.id eq requestId }
-                    .singleOrNull() ?: raise(RepositoryReadError.NotFoundError)
-
             val requestedByDbId = request[AuthorizationRequestTable.requestedBy]
+            val requestedFromDbId = request[AuthorizationRequestTable.requestedFrom]
+            val requestedToDbId = request[AuthorizationRequestTable.requestedTo]
+            val approvedById: UUID? = request[AuthorizationRequestTable.approvedBy]
+
             val requestedByParty =
                 partyRepo
                     .find(requestedByDbId)
                     .mapLeft { RepositoryReadError.UnexpectedError }
                     .bind()
 
-            val requestedFromDbId = request[AuthorizationRequestTable.requestedFrom]
             val requestedFromParty =
                 partyRepo
                     .find(requestedFromDbId)
                     .mapLeft { RepositoryReadError.UnexpectedError }
                     .bind()
 
-            val requestedToDbId = request[AuthorizationRequestTable.requestedTo]
             val requestedToParty =
                 partyRepo
                     .find(requestedToDbId)
                     .mapLeft { RepositoryReadError.UnexpectedError }
                     .bind()
 
-            request.toAuthorizationRequest(requestedByParty, requestedFromParty, requestedToParty)
+            // fetch approvedBy only if it exists. It should exist in the database after a request has been accepted
+            val approvedByParty = approvedById?.let { id ->
+                partyRepo.find(id)
+                    .mapLeft { RepositoryReadError.UnexpectedError }
+                    .bind()
+            }
+
+            request.toAuthorizationRequest(
+                requestedByParty,
+                requestedFromParty,
+                requestedToParty,
+                approvedByParty
+            )
         }
 }
 
@@ -234,6 +227,7 @@ object AuthorizationRequestTable : UUIDTable("authorization_request") {
     val requestedBy = uuid("requested_by").references(id)
     val requestedFrom = uuid("requested_from").references(id)
     val requestedTo = uuid("requested_to").references(id)
+    val approvedBy = uuid("approved_by").references(id).nullable()
     val createdAt = datetime("created_at").defaultExpression(CurrentDateTime)
     val updatedAt = datetime("updated_at").defaultExpression(CurrentDateTime)
     val validTo = date("valid_to")
@@ -252,6 +246,7 @@ fun ResultRow.toAuthorizationRequest(
     requestedBy: AuthorizationPartyRecord,
     requestedFrom: AuthorizationPartyRecord,
     requestedTo: AuthorizationPartyRecord,
+    approvedBy: AuthorizationPartyRecord? = null
 ) = AuthorizationRequest(
     id = this[AuthorizationRequestTable.id].value,
     type = this[AuthorizationRequestTable.requestType],
@@ -259,6 +254,7 @@ fun ResultRow.toAuthorizationRequest(
     requestedBy = AuthorizationParty(resourceId = requestedBy.resourceId, type = requestedBy.type),
     requestedFrom = AuthorizationParty(resourceId = requestedFrom.resourceId, type = requestedFrom.type),
     requestedTo = AuthorizationParty(resourceId = requestedTo.resourceId, type = requestedTo.type),
+    approvedBy = approvedBy?.let { AuthorizationParty(resourceId = it.resourceId, type = it.type) },
     createdAt = this[AuthorizationRequestTable.createdAt],
     updatedAt = this[AuthorizationRequestTable.updatedAt],
     validTo = this[AuthorizationRequestTable.validTo].toKotlinLocalDate(),

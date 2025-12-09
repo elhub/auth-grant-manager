@@ -1,6 +1,6 @@
 package no.elhub.auth.features.documents
 
-import no.elhub.auth.features.common.AuthorizationParty
+import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.documents.common.AuthorizationDocumentProperty
 import java.time.LocalDateTime
 import java.util.*

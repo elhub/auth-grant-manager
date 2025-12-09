@@ -4,11 +4,11 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
-import no.elhub.auth.features.common.AuthorizationParty
-import no.elhub.auth.features.common.ExposedPartyRepository
-import no.elhub.auth.features.common.PartyType
 import no.elhub.auth.features.common.PostgresTestContainer
 import no.elhub.auth.features.common.PostgresTestContainerExtension
+import no.elhub.auth.features.common.party.AuthorizationParty
+import no.elhub.auth.features.common.party.ExposedPartyRepository
+import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.documents.AuthorizationDocument
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.deleteAll

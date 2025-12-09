@@ -7,11 +7,11 @@ import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldNotBe
-import no.elhub.auth.features.common.AuthorizationParty
-import no.elhub.auth.features.common.ExposedPartyRepository
-import no.elhub.auth.features.common.PartyType
 import no.elhub.auth.features.common.PostgresTestContainer
 import no.elhub.auth.features.common.PostgresTestContainerExtension
+import no.elhub.auth.features.common.party.AuthorizationParty
+import no.elhub.auth.features.common.party.ExposedPartyRepository
+import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.scope.AuthorizationScopeTable
 import no.elhub.auth.features.documents.AuthorizationDocument
 import org.jetbrains.exposed.sql.Database

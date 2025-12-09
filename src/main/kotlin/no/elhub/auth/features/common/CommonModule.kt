@@ -12,6 +12,9 @@ import io.ktor.server.config.ApplicationConfig
 import kotlinx.serialization.json.Json
 import no.elhub.auth.features.common.auth.AuthorizationProvider
 import no.elhub.auth.features.common.auth.PDPAuthorizationProvider
+import no.elhub.auth.features.common.party.ExposedPartyRepository
+import no.elhub.auth.features.common.party.PartyRepository
+import no.elhub.auth.features.common.party.PartyService
 import no.elhub.auth.features.common.scope.ExposedScopeRepository
 import no.elhub.auth.features.common.scope.ScopeRepository
 import org.koin.core.module.dsl.singleOf

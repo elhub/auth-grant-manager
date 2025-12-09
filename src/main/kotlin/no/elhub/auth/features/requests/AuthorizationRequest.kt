@@ -1,7 +1,7 @@
 package no.elhub.auth.features.requests
 
 import kotlinx.datetime.LocalDate
-import no.elhub.auth.features.common.AuthorizationParty
+import no.elhub.auth.features.common.party.AuthorizationParty
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -12,6 +12,7 @@ data class AuthorizationRequest(
     val requestedBy: AuthorizationParty,
     val requestedFrom: AuthorizationParty,
     val requestedTo: AuthorizationParty,
+    val approvedBy: AuthorizationParty? = null,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime,
     val validTo: LocalDate,

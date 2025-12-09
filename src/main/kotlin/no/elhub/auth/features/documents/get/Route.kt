@@ -7,10 +7,10 @@ import io.ktor.server.response.respond
 import io.ktor.server.response.respondBytes
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
-import no.elhub.auth.features.common.PartyIdentifier
-import no.elhub.auth.features.common.PartyIdentifierType
 import no.elhub.auth.features.common.auth.AuthorizationProvider
 import no.elhub.auth.features.common.auth.toApiErrorResponse
+import no.elhub.auth.features.common.party.PartyIdentifier
+import no.elhub.auth.features.common.party.PartyIdentifierType
 import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.common.validateId
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection

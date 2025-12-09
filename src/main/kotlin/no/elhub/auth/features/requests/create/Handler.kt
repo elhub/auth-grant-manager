@@ -3,7 +3,7 @@ package no.elhub.auth.features.requests.create
 import arrow.core.Either
 import arrow.core.getOrElse
 import io.ktor.http.HttpStatusCode
-import no.elhub.auth.features.common.PartyService
+import no.elhub.auth.features.common.party.PartyService
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.common.RequestPropertiesRepository
 import no.elhub.auth.features.requests.common.RequestRepository
