@@ -33,8 +33,6 @@ class Handler(
                 when (error) {
                     is RepositoryWriteError.NotFoundError -> ConfirmDocumentError.DocumentNotFoundError
 
-                    is RepositoryWriteError.DuplicateGrant -> ConfirmDocumentError.GrantCreationError
-
                     is RepositoryWriteError.ConflictError,
                     is RepositoryWriteError.UnexpectedError -> ConfirmDocumentError.DocumentUpdateError
                 }
