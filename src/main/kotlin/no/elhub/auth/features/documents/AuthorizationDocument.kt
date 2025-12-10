@@ -15,7 +15,7 @@ data class AuthorizationDocument(
     val requestedFrom: AuthorizationParty,
     val requestedTo: AuthorizationParty,
     val signedBy: AuthorizationParty? = null,
-    val grantId: String? = null,
+    val grantId: UUID? = null,
     val properties: List<AuthorizationDocumentProperty>,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime

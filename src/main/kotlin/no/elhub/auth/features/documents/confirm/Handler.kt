@@ -33,6 +33,8 @@ class Handler(
                 when (error) {
                     is RepositoryWriteError.NotFoundError -> ConfirmDocumentError.DocumentNotFoundError
 
+                    is RepositoryWriteError.DuplicateGrant -> ConfirmDocumentError.GrantCreationError
+
                     is RepositoryWriteError.ConflictError,
                     is RepositoryWriteError.UnexpectedError -> ConfirmDocumentError.DocumentUpdateError
                 }
@@ -46,14 +48,17 @@ class Handler(
                 }
             }.bind()
 
-        grantRepository.insert(
-            grantedFor = confirmedDocument.requestedFrom,
-            grantedBy = signatory,
-            grantedTo = confirmedDocument.requestedBy,
-            scopes = scopes,
-            sourceType = AuthorizationGrant.SourceType.Document,
-            sourceId = confirmedDocument.id
-        ).mapLeft { ConfirmDocumentError.GrantCreationError }.bind()
+        val grantToCreate =
+            AuthorizationGrant.create(
+                grantedBy = signatory,
+                grantedFor = confirmedDocument.requestedFrom,
+                grantedTo = confirmedDocument.requestedBy,
+                sourceType = AuthorizationGrant.SourceType.Document,
+                sourceId = confirmedDocument.id,
+            )
+
+        grantRepository.insert(grantToCreate, scopes)
+            .mapLeft { ConfirmDocumentError.GrantCreationError }.bind()
     }
 }
 
