@@ -9,7 +9,6 @@ import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.AuthorizationDocumentProperty
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.documents.common.ProxyDocumentBusinessHandler
-import no.elhub.auth.features.documents.create.command.toAuthorizationDocumentType
 import no.elhub.auth.features.documents.create.model.CreateDocumentModel
 
 class Handler(
@@ -44,7 +43,7 @@ class Handler(
         val file =
             businessHandler
                 .generateFile(command.requestedFrom.idValue, command.meta)
-                .getOrElse { return CreateDocumentError.GenerateFileError.left() }
+                .getOrElse { return CreateDocumentError.FileGenerationError.left() }
 
         val certChain =
             certificateProvider
@@ -71,7 +70,6 @@ class Handler(
                 .embedSignatureIntoFile(file, signature, certChain, signingCert)
                 .getOrElse { return CreateDocumentError.SigningError.left() }
 
-        val documentType = command.toAuthorizationDocumentType()
         val documentProperties =
             command.meta
                 .toMetaAttributes()
@@ -79,7 +77,7 @@ class Handler(
 
         val documentToCreate =
             AuthorizationDocument.create(
-                type = documentType,
+                type = command.type,
                 file = signedFile,
                 requestedBy = requestedByParty,
                 requestedFrom = requestedFromParty,
@@ -106,8 +104,6 @@ sealed class CreateDocumentError {
     data object SignatureFetchingError : CreateDocumentError()
 
     data object SigningError : CreateDocumentError()
-
-    data object GenerateFileError : CreateDocumentError()
 
     data object MappingError : CreateDocumentError()
 

@@ -4,20 +4,21 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.raise.either
 import arrow.core.right
-import kotlinx.datetime.LocalDate
-import no.elhub.auth.features.common.party.PartyIdentifier
+import no.elhub.auth.features.businessprocesses.changeofsupplier.domain.ChangeOfSupplierBusinessCommand
+import no.elhub.auth.features.businessprocesses.changeofsupplier.domain.ChangeOfSupplierBusinessMeta
+import no.elhub.auth.features.businessprocesses.changeofsupplier.domain.ChangeOfSupplierBusinessModel
+import no.elhub.auth.features.businessprocesses.changeofsupplier.domain.toChangeOfSupplierBusinessModel
+import no.elhub.auth.features.businessprocesses.changeofsupplier.domain.toDocumentCommand
+import no.elhub.auth.features.businessprocesses.changeofsupplier.domain.toRequestCommand
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.DocumentBusinessHandler
 import no.elhub.auth.features.documents.create.CreateDocumentError
 import no.elhub.auth.features.documents.create.command.DocumentCommand
-import no.elhub.auth.features.documents.create.command.DocumentMetaMarker
-import no.elhub.auth.features.documents.create.command.toDocumentCommand
 import no.elhub.auth.features.documents.create.model.CreateDocumentModel
 import no.elhub.auth.features.grants.common.CreateGrantProperties
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.create.RequestBusinessHandler
 import no.elhub.auth.features.requests.create.command.RequestCommand
-import no.elhub.auth.features.requests.create.command.RequestMetaMarker
 import no.elhub.auth.features.requests.create.model.CreateRequestModel
 import no.elhub.auth.features.requests.create.model.defaultRequestValidTo
 import no.elhub.auth.features.requests.create.model.today
@@ -25,44 +26,7 @@ import no.elhub.auth.features.requests.create.model.today
 private const val REGEX_NUMBERS_LETTERS_SYMBOLS = "^[a-zA-Z0-9_.-]*$"
 private const val REGEX_REQUESTED_FROM = REGEX_NUMBERS_LETTERS_SYMBOLS
 private const val REGEX_REQUESTED_BY = REGEX_NUMBERS_LETTERS_SYMBOLS
-private const val REGEX_METERING_POINT = REGEX_NUMBERS_LETTERS_SYMBOLS
-
-data class ChangeOfSupplierBusinessModel(
-    val requestedBy: PartyIdentifier,
-    val requestedFrom: PartyIdentifier,
-    val requestedTo: PartyIdentifier,
-    val requestedFromName: String,
-    val requestedForMeteringPointId: String,
-    val requestedForMeteringPointAddress: String,
-    val balanceSupplierName: String,
-    val balanceSupplierContractName: String,
-)
-
-data class ChangeOfSupplierBusinessCommand(
-    val requestedFrom: PartyIdentifier,
-    val requestedBy: PartyIdentifier,
-    val requestedTo: PartyIdentifier,
-    val validTo: LocalDate,
-    val meta: ChangeOfSupplierBusinessMeta,
-)
-
-data class ChangeOfSupplierBusinessMeta(
-    val requestedFromName: String,
-    val requestedForMeteringPointId: String,
-    val requestedForMeteringPointAddress: String,
-    val balanceSupplierName: String,
-    val balanceSupplierContractName: String,
-) : RequestMetaMarker,
-    DocumentMetaMarker {
-    override fun toMetaAttributes(): Map<String, String> =
-        mapOf(
-            "requestedFromName" to requestedFromName,
-            "requestedForMeteringPointId" to requestedForMeteringPointId,
-            "requestedForMeteringPointAddress" to requestedForMeteringPointAddress,
-            "balanceSupplierContractName" to balanceSupplierContractName,
-            "balanceSupplierName" to balanceSupplierName,
-        )
-}
+private const val REGEX_METERING_POINT = "^\\d{18}$"
 
 class ChangeOfSupplierBusinessHandler :
     RequestBusinessHandler,

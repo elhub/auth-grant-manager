@@ -2,7 +2,7 @@ package no.elhub.auth.features.documents.create.command
 
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
-import no.elhub.auth.features.businessprocesses.changeofsupplier.ChangeOfSupplierBusinessMeta
+import no.elhub.auth.features.businessprocesses.changeofsupplier.domain.ChangeOfSupplierBusinessMeta
 
 class DocumentMetaMarkerTest : FunSpec({
 

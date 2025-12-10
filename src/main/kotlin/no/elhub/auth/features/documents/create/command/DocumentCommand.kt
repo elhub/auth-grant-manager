@@ -7,14 +7,10 @@ interface DocumentMetaMarker {
     fun toMetaAttributes(): Map<String, String>
 }
 
-sealed class DocumentCommand(
+data class DocumentCommand(
+    val type: AuthorizationDocument.Type,
     val requestedFrom: PartyIdentifier,
     val requestedTo: PartyIdentifier,
     val requestedBy: PartyIdentifier,
     val meta: DocumentMetaMarker,
 )
-
-fun DocumentCommand.toAuthorizationDocumentType(): AuthorizationDocument.Type =
-    when (this) {
-        is ChangeOfSupplierDocumentCommand -> AuthorizationDocument.Type.ChangeOfSupplierConfirmation
-    }

@@ -63,7 +63,7 @@ private val VALID_REQUESTED_TO_IDENTIFIER = PartyIdentifier(idType = PartyIdenti
 private val VALID_SIGNED_BY_IDENTIFIER = PartyIdentifier(idType = PartyIdentifierType.NationalIdentityNumber, idValue = "56012398743")
 
 // TODO: Provide a valid metering point
-private const val VALID_METERING_POINT_ID = "abc123"
+private const val VALID_METERING_POINT_ID = "123456789012345678"
 private const val INVALID_METERING_POINT_ID = "^%)"
 
 private const val VALID_METERING_POINT_ADDRESS = "Adressevegen 1, 1234"
