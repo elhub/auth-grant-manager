@@ -38,7 +38,7 @@ interface GrantRepository {
     fun findBySource(sourceType: SourceType, sourceId: UUID): Either<RepositoryReadError, AuthorizationGrant?>
     fun findScopes(grantId: UUID): Either<RepositoryReadError, List<AuthorizationScope>>
     fun findAll(): Either<RepositoryReadError, List<AuthorizationGrant>>
-    fun insert(grant: AuthorizationGrant, scopeIds: List<Long>, ): Either<RepositoryWriteError, AuthorizationGrant>
+    fun insert(grant: AuthorizationGrant, scopeIds: List<Long>,): Either<RepositoryWriteError, AuthorizationGrant>
 }
 
 class ExposedGrantRepository(
