@@ -3,31 +3,34 @@ package no.elhub.auth.features.requests.create
 import arrow.core.Either
 import arrow.core.getOrElse
 import io.ktor.http.HttpStatusCode
+import no.elhub.auth.features.businessprocesses.changeofsupplier.ChangeOfSupplierValidationError
 import no.elhub.auth.features.common.party.PartyService
+import no.elhub.auth.features.grants.common.CreateGrantProperties
 import no.elhub.auth.features.requests.AuthorizationRequest
+import no.elhub.auth.features.requests.common.ProxyRequestBusinessHandler
 import no.elhub.auth.features.requests.common.RequestPropertiesRepository
 import no.elhub.auth.features.requests.common.RequestRepository
+import no.elhub.auth.features.requests.create.command.RequestCommand
 import no.elhub.auth.features.requests.create.command.toRequestProperties
 import no.elhub.auth.features.requests.create.model.CreateRequestModel
-import no.elhub.auth.features.requests.create.requesttypes.RequestTypeOrchestrator
 import no.elhub.auth.features.requests.create.requesttypes.RequestTypeValidationError
 import no.elhub.devxp.jsonapi.response.JsonApiErrorObject
 
 class Handler(
-    private val requestTypeOrchestrator: RequestTypeOrchestrator,
+    private val proxyRequestBusinessHandler: ProxyRequestBusinessHandler,
     private val partyService: PartyService,
     private val requestRepo: RequestRepository,
     private val requestPropertyRepo: RequestPropertiesRepository,
 ) {
     suspend operator fun invoke(model: CreateRequestModel): Either<CreateRequestError, AuthorizationRequest> {
-        val requestTypeHandler = requestTypeOrchestrator.resolve(model.requestType)
-
-        val command =
-            requestTypeHandler
-                .handle(model)
+        val businessCommand =
+            proxyRequestBusinessHandler
+                .validateAndReturnRequestCommand(model)
                 .getOrElse { validationError ->
                     return Either.Left(CreateRequestError.ValidationError(validationError))
                 }
+
+        val command = businessCommand
 
         val requestedFromParty =
             partyService
@@ -95,3 +98,8 @@ fun CreateRequestError.ValidationError.toApiErrorResponse(): Pair<HttpStatusCode
             status = HttpStatusCode.BadRequest.value.toString(),
             detail = this.reason.message,
         )
+
+interface RequestBusinessHandler {
+    fun validateAndReturnRequestCommand(createRequestModel: CreateRequestModel): Either<ChangeOfSupplierValidationError, RequestCommand>
+    fun getCreateGrantProperties(request: AuthorizationRequest): CreateGrantProperties
+}

@@ -38,7 +38,7 @@ interface GrantRepository {
     fun findBySource(sourceType: SourceType, sourceId: UUID): Either<RepositoryReadError, AuthorizationGrant?>
     fun findScopes(grantId: UUID): Either<RepositoryReadError, List<AuthorizationScope>>
     fun findAll(): Either<RepositoryReadError, List<AuthorizationGrant>>
-    fun insert(grant: AuthorizationGrant, scopes: List<AuthorizationScope>): Either<RepositoryWriteError, AuthorizationGrant>
+    fun insert(grant: AuthorizationGrant, scopeIds: List<Long>, ): Either<RepositoryWriteError, AuthorizationGrant>
 }
 
 class ExposedGrantRepository(
@@ -149,7 +149,10 @@ class ExposedGrantRepository(
         }
     }
 
-    override fun insert(grant: AuthorizationGrant, scopes: List<AuthorizationScope>): Either<RepositoryWriteError, AuthorizationGrant> =
+    override fun insert(
+        grant: AuthorizationGrant,
+        scopeIds: List<Long>,
+    ): Either<RepositoryWriteError, AuthorizationGrant> =
         either {
             transaction {
                 val grantedByParty =
@@ -191,10 +194,10 @@ class ExposedGrantRepository(
                             )
                         }.single()
 
-                if (scopes.isNotEmpty()) {
-                    AuthorizationGrantScopeTable.batchInsert(scopes) { scope ->
+                if (scopeIds.isNotEmpty()) {
+                    AuthorizationGrantScopeTable.batchInsert(scopeIds) { scopeId ->
                         this[AuthorizationGrantScopeTable.authorizationGrantId] = authorizationGrant.id
-                        this[AuthorizationGrantScopeTable.authorizationScopeId] = scope.id
+                        this[AuthorizationGrantScopeTable.authorizationScopeId] = scopeId
                     }
                 }
 

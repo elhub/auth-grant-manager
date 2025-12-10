@@ -9,7 +9,7 @@ import io.ktor.server.routing.post
 import no.elhub.auth.features.common.auth.AuthorizationProvider
 import no.elhub.auth.features.common.auth.RoleType
 import no.elhub.auth.features.common.auth.toApiErrorResponse
-import no.elhub.auth.features.documents.AuthorizationDocument
+import no.elhub.auth.features.documents.create.toModel
 import org.slf4j.LoggerFactory
 
 private val log = LoggerFactory.getLogger(Route::class.java)
@@ -27,24 +27,14 @@ fun Route.route(
             }
 
         val requestBody = call.receive<Request>()
+        val model = requestBody.toModel()
 
-        val documentType = requestBody.data.attributes.documentType
-        val documentMeta = requestBody.data.meta
-
-        val command = when (documentType) {
-            AuthorizationDocument.Type.ChangeOfSupplierConfirmation -> {
-                if (resolvedActor.role != RoleType.BalanceSupplier) {
-                    call.respond(HttpStatusCode.BadRequest)
-                    return@post
-                }
-                documentMeta.toChangeOfSupplierDocumentCommand()
-            }
-        }.getOrElse {
+        if (resolvedActor.role != RoleType.BalanceSupplier) {
             call.respond(HttpStatusCode.BadRequest)
             return@post
         }
 
-        val document = handler(command)
+        val document = handler(model)
             .getOrElse { error ->
                 log.error("Failed to create authorization document: {}", error)
                 when (error) {
@@ -60,7 +50,8 @@ fun Route.route(
                     CreateDocumentError.RequestedFromPartyError,
                     CreateDocumentError.RequestedToPartyError,
                     CreateDocumentError.SignedByPartyError,
-                    CreateDocumentError.PersonError
+                    CreateDocumentError.PersonError,
+                    CreateDocumentError.GenerateFileError
                     -> call.respond(HttpStatusCode.InternalServerError)
                 }
                 return@post

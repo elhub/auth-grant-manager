@@ -1,10 +1,11 @@
-package no.elhub.auth.features.requests.create.requesttypes.changeofsupplierconfirmation
+package no.elhub.auth.features.requests.create.requesttypes.changeofsupplier
 
 import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.core.spec.style.FunSpec
-import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import no.elhub.auth.features.businessprocesses.changeofsupplier.ChangeOfSupplierBusinessHandler
+import no.elhub.auth.features.businessprocesses.changeofsupplier.ChangeOfSupplierValidationError
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
 import no.elhub.auth.features.requests.AuthorizationRequest
@@ -16,8 +17,9 @@ private const val VALID_METERING_POINT = "123456789012345678"
 class ChangeOfSupplierConfirmationRequestTypeHandlerTest :
     FunSpec({
 
+        val handler = ChangeOfSupplierBusinessHandler()
+
         test("returns validation error when requestedFromName is blank") {
-            val handler = ChangeOfSupplierConfirmationRequestTypeHandler()
             val model =
                 CreateRequestModel(
                     requestType = AuthorizationRequest.Type.ChangeOfSupplierConfirmation,
@@ -34,13 +36,12 @@ class ChangeOfSupplierConfirmationRequestTypeHandlerTest :
                     ),
                 )
 
-            val result = handler.handle(model)
+            val result = handler.validateAndReturnRequestCommand(model)
 
-            result.shouldBeLeft(ChangeOfSupplierConfirmationValidationError.MissingRequestedFromName)
+            result.shouldBeLeft(ChangeOfSupplierValidationError.MissingRequestedFromName)
         }
 
         test("builds RequestCommand for valid input") {
-            val handler = ChangeOfSupplierConfirmationRequestTypeHandler()
             val model =
                 CreateRequestModel(
                     requestType = AuthorizationRequest.Type.ChangeOfSupplierConfirmation,
@@ -57,13 +58,12 @@ class ChangeOfSupplierConfirmationRequestTypeHandlerTest :
                     ),
                 )
 
-            val command = handler.handle(model).shouldBeRight()
+            val command = handler.validateAndReturnRequestCommand(model).shouldBeRight()
 
             command.type shouldBe AuthorizationRequest.Type.ChangeOfSupplierConfirmation
             command.requestedBy shouldBe model.meta.requestedBy
             command.requestedFrom shouldBe model.meta.requestedFrom
             command.requestedTo shouldBe model.meta.requestedTo
-            command.validTo.shouldNotBeNull()
 
             val metaAttributes = command.meta.toMetaAttributes()
             metaAttributes["requestedFromName"] shouldBe "Supplier AS"

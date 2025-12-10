@@ -2,7 +2,7 @@ package no.elhub.auth.features.documents.common
 
 import arrow.core.Either
 import arrow.core.raise.either
-import kotlinx.datetime.Instant
+import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.common.PGEnum
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.RepositoryWriteError
@@ -12,17 +12,19 @@ import no.elhub.auth.features.common.party.AuthorizationPartyTable
 import no.elhub.auth.features.common.party.PartyRepository
 import no.elhub.auth.features.common.party.toAuthorizationParty
 import no.elhub.auth.features.documents.AuthorizationDocument
-import no.elhub.auth.features.grants.AuthorizationScope
-import no.elhub.auth.features.grants.ElhubResource
-import no.elhub.auth.features.grants.PermissionType
+import no.elhub.auth.features.documents.common.AuthorizationDocumentScopeTable.authorizationDocumentId
+import no.elhub.auth.features.documents.common.AuthorizationDocumentScopeTable.authorizationScopeId
 import no.elhub.auth.features.grants.common.AuthorizationScopeTable
+import no.elhub.auth.features.grants.common.AuthorizationScopeTable.authorizedResourceId
+import no.elhub.auth.features.grants.common.AuthorizationScopeTable.authorizedResourceType
+import no.elhub.auth.features.grants.common.AuthorizationScopeTable.permissionType
 import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.batchInsert
 import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.insertAndGetId
 import org.jetbrains.exposed.sql.insertReturning
 import org.jetbrains.exposed.sql.javatime.datetime
 import org.jetbrains.exposed.sql.javatime.timestamp
@@ -34,7 +36,7 @@ import java.util.UUID
 
 interface DocumentRepository {
     fun find(id: UUID): Either<RepositoryReadError, AuthorizationDocument>
-    fun insert(doc: AuthorizationDocument): Either<RepositoryWriteError, AuthorizationDocument>
+    fun insert(doc: AuthorizationDocument, scopes: List<CreateScopeData>): Either<RepositoryWriteError, AuthorizationDocument>
     fun findAll(requestedBy: AuthorizationParty): Either<RepositoryReadError, List<AuthorizationDocument>>
     fun confirm(
         documentId: UUID,
@@ -43,7 +45,7 @@ interface DocumentRepository {
         signatory: AuthorizationParty
     ): Either<RepositoryWriteError, AuthorizationDocument>
 
-    fun findScopes(documentId: UUID): Either<RepositoryReadError, List<AuthorizationScope>>
+    fun findScopeIds(documentId: UUID): Either<RepositoryReadError, List<Long>>
 }
 
 class ExposedDocumentRepository(
@@ -51,7 +53,7 @@ class ExposedDocumentRepository(
     private val documentPropertiesRepository: DocumentPropertiesRepository,
 ) : DocumentRepository {
 
-    override fun insert(doc: AuthorizationDocument): Either<RepositoryWriteError, AuthorizationDocument> =
+    override fun insert(doc: AuthorizationDocument, scopes: List<CreateScopeData>): Either<RepositoryWriteError, AuthorizationDocument> =
         either {
             transaction {
                 val requestedByParty = partyRepo.findOrInsert(doc.requestedBy.type, doc.requestedBy.resourceId)
@@ -81,15 +83,17 @@ class ExposedDocumentRepository(
 
                 documentPropertiesRepository.insert(doc.properties, doc.id)
 
-                val scopeId = AuthorizationScopeTable.insertAndGetId {
-                    it[authorizedResourceType] = ElhubResource.MeteringPoint
-                    it[authorizedResourceId] = "Something"
-                    it[permissionType] = PermissionType.ChangeOfSupplier
-                }
+                val scopeIds: List<Long> = AuthorizationScopeTable
+                    .batchInsert(scopes) { scope ->
+                        this[authorizedResourceType] = scope.authorizedResourceType
+                        this[authorizedResourceId] = scope.authorizedResourceId
+                        this[permissionType] = scope.permissionType
+                    }
+                    .map { it[AuthorizationScopeTable.id].value }
 
-                AuthorizationDocumentScopeTable.insert {
-                    it[authorizationDocumentId] = documentRow[AuthorizationDocumentTable.id].value
-                    it[authorizationScopeId] = scopeId.value
+                AuthorizationDocumentScopeTable.batchInsert(scopeIds) { scopeId ->
+                    this[authorizationDocumentId] = documentRow[AuthorizationDocumentTable.id].value
+                    this[authorizationScopeId] = scopeId
                 }
 
                 documentRow.toAuthorizationDocument(requestedByParty, requestedFromParty, requestedToParty, doc.properties)
@@ -182,20 +186,14 @@ class ExposedDocumentRepository(
                 }.bind()
         }
 
-    override fun findScopes(documentId: UUID): Either<RepositoryReadError, List<AuthorizationScope>> =
+    override fun findScopeIds(documentId: UUID): Either<RepositoryReadError, List<Long>> =
         Either.catch {
             transaction {
                 (AuthorizationDocumentScopeTable innerJoin AuthorizationScopeTable)
-                    .selectAll()
-                    .where { AuthorizationDocumentScopeTable.authorizationDocumentId eq documentId }
+                    .select(AuthorizationScopeTable.id)
+                    .where { authorizationDocumentId eq documentId }
                     .map { row ->
-                        AuthorizationScope(
-                            id = row[AuthorizationScopeTable.id].value,
-                            authorizedResourceType = row[AuthorizationScopeTable.authorizedResourceType],
-                            authorizedResourceId = row[AuthorizationScopeTable.authorizedResourceId],
-                            permissionType = row[AuthorizationScopeTable.permissionType],
-                            createdAt = Instant.parse(row[AuthorizationScopeTable.createdAt].toString())
-                        )
+                        row[AuthorizationScopeTable.id].value
                     }
             }
         }.mapLeft { RepositoryReadError.UnexpectedError }
@@ -212,7 +210,7 @@ class ExposedDocumentRepository(
                 .toList()
 
             if (documentWithSignatoryRecords.isEmpty()) {
-                return@transaction emptyList<AuthorizationDocument>()
+                return@transaction emptyList()
             }
 
             val partyIds = documentWithSignatoryRecords.flatMap { row ->

@@ -150,7 +150,7 @@ class AuthorizationDocumentRouteTest :
                                                     idValue = "00011122233"
                                                 ),
                                                 requestedFromName = "Hillary Orr",
-                                                requestedForMeteringPointId = "atomorum",
+                                                requestedForMeteringPointId = "123456789012345678",
                                                 requestedForMeteringPointAddress = "quaerendum",
                                                 balanceSupplierName = "Jami Wade",
                                                 balanceSupplierContractName = "Selena Chandler"
@@ -215,7 +215,7 @@ class AuthorizationDocumentRouteTest :
                                     v.jsonPrimitive.content
                                 }.apply {
                                     shouldContain("requestedFromName", "Hillary Orr")
-                                    shouldContain("requestedForMeteringPointId", "atomorum")
+                                    shouldContain("requestedForMeteringPointId", "123456789012345678")
                                     shouldContain("requestedForMeteringPointAddress", "quaerendum")
                                     shouldContain("balanceSupplierName", "Jami Wade")
                                     shouldContain("balanceSupplierContractName", "Selena Chandler")
@@ -338,7 +338,7 @@ class AuthorizationDocumentRouteTest :
                             attributes.shouldNotBeNull()
                             attributes!!.apply {
                                 authorizedResourceType shouldBe ElhubResource.MeteringPoint
-                                authorizedResourceId shouldBe "Something"
+                                authorizedResourceId shouldBe "123456789012345678"
                                 permissionType shouldBe PermissionType.ChangeOfSupplier
                                 createdAt.shouldNotBeNull()
                             }

@@ -1,19 +1,20 @@
 package no.elhub.auth.features.documents.create.command
 
+import kotlinx.datetime.LocalDate
+import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.documents.AuthorizationDocument
 
-sealed interface DocumentMetaMarker {
+interface DocumentMetaMarker {
     fun toMetaAttributes(): Map<String, String>
 }
 
-sealed class DocumentCommand(
+data class DocumentCommand(
+    val type: AuthorizationDocument.Type,
     val requestedFrom: PartyIdentifier,
     val requestedTo: PartyIdentifier,
     val requestedBy: PartyIdentifier,
-    val meta: DocumentMetaMarker
+    val validTo: LocalDate,
+    val scopes: List<CreateScopeData>,
+    val meta: DocumentMetaMarker,
 )
-
-fun DocumentCommand.toAuthorizationDocumentType(): AuthorizationDocument.Type = when (this) {
-    is ChangeOfSupplierDocumentCommand -> AuthorizationDocument.Type.ChangeOfSupplierConfirmation
-}
