@@ -13,7 +13,7 @@ fun AuthorizationGrant.toResponse() =
     AuthorizationGrantResponse(
         data = JsonApiResponseResourceObjectWithRelationships(
             type = (AuthorizationGrant::class).simpleName ?: "AuthorizationGrant",
-            id = this.id,
+            id = this.id.toString(),
             attributes = GrantResponseAttributes(
                 status = this.grantStatus.toString(),
                 grantedAt = this.grantedAt.toString(),
