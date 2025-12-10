@@ -338,7 +338,7 @@ class AuthorizationDocumentRouteTest :
                             attributes.shouldNotBeNull()
                             attributes!!.apply {
                                 authorizedResourceType shouldBe ElhubResource.MeteringPoint
-                                authorizedResourceId shouldBe "Something"
+                                authorizedResourceId shouldBe "123456789012345678"
                                 permissionType shouldBe PermissionType.ChangeOfSupplier
                                 createdAt.shouldNotBeNull()
                             }

@@ -65,7 +65,7 @@ class ExposedDocumentPropertiesRepositoryTest : FunSpec({
                     updatedAt = LocalDateTime.now()
                 )
 
-            documentRepository.insert(document)
+            documentRepository.insert(document, listOf())
 
             val properties = listOf(
                 AuthorizationDocumentProperty("requestedFromName", "Ola Normann"),

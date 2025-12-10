@@ -45,7 +45,7 @@ interface GrantRepository {
         grantedFor: AuthorizationParty,
         grantedBy: AuthorizationParty,
         grantedTo: AuthorizationParty,
-        scopes: List<AuthorizationScope>,
+        scopeIds: List<Long>,
         sourceType: SourceType,
         sourceId: UUID
     ): Either<RepositoryWriteError, AuthorizationGrant>
@@ -167,7 +167,7 @@ class ExposedGrantRepository(
         grantedFor: AuthorizationParty,
         grantedBy: AuthorizationParty,
         grantedTo: AuthorizationParty,
-        scopes: List<AuthorizationScope>,
+        scopeIds: List<Long>,
         sourceType: SourceType,
         sourceId: UUID
     ): Either<RepositoryWriteError, AuthorizationGrant> =
@@ -198,10 +198,10 @@ class ExposedGrantRepository(
                     it[AuthorizationGrantTable.sourceId] = sourceId
                 }.single()
 
-                if (scopes.isNotEmpty()) {
-                    AuthorizationGrantScopeTable.batchInsert(scopes) { scope ->
+                if (scopeIds.isNotEmpty()) {
+                    AuthorizationGrantScopeTable.batchInsert(scopeIds) { scopeId ->
                         this[AuthorizationGrantScopeTable.authorizationGrantId] = grantId
-                        this[AuthorizationGrantScopeTable.authorizationScopeId] = scope.id
+                        this[AuthorizationGrantScopeTable.authorizationScopeId] = scopeId
                     }
                 }
 

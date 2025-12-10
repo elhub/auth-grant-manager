@@ -10,11 +10,14 @@ import no.elhub.auth.features.businessprocesses.changeofsupplier.domain.ChangeOf
 import no.elhub.auth.features.businessprocesses.changeofsupplier.domain.toChangeOfSupplierBusinessModel
 import no.elhub.auth.features.businessprocesses.changeofsupplier.domain.toDocumentCommand
 import no.elhub.auth.features.businessprocesses.changeofsupplier.domain.toRequestCommand
+import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.DocumentBusinessHandler
 import no.elhub.auth.features.documents.create.CreateDocumentError
 import no.elhub.auth.features.documents.create.command.DocumentCommand
 import no.elhub.auth.features.documents.create.model.CreateDocumentModel
+import no.elhub.auth.features.grants.ElhubResource
+import no.elhub.auth.features.grants.PermissionType
 import no.elhub.auth.features.grants.common.CreateGrantProperties
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.create.RequestBusinessHandler
@@ -108,11 +111,20 @@ class ChangeOfSupplierBusinessHandler :
                 balanceSupplierName = model.balanceSupplierName,
             )
 
+        val scopes = listOf(
+            CreateScopeData(
+                authorizedResourceType = ElhubResource.MeteringPoint,
+                authorizedResourceId = model.requestedForMeteringPointId,
+                permissionType = PermissionType.ChangeOfSupplier
+            )
+        )
+
         return ChangeOfSupplierBusinessCommand(
             requestedFrom = model.requestedFrom,
             requestedBy = model.requestedBy,
             requestedTo = model.requestedTo,
             validTo = defaultRequestValidTo(),
+            scopes = scopes,
             meta = meta,
         ).right()
     }

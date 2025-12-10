@@ -50,7 +50,8 @@ fun Route.route(
                     CreateDocumentError.RequestedFromPartyError,
                     CreateDocumentError.RequestedToPartyError,
                     CreateDocumentError.SignedByPartyError,
-                    CreateDocumentError.PersonError
+                    CreateDocumentError.PersonError,
+                    CreateDocumentError.GenerateFileError
                     -> call.respond(HttpStatusCode.InternalServerError)
                 }
                 return@post
