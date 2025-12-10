@@ -6,11 +6,13 @@ import io.ktor.server.application.Application
 import io.ktor.server.config.ApplicationConfig
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
+import no.elhub.auth.features.businessprocesses.changeofsupplier.ChangeOfSupplierBusinessHandler
 import no.elhub.auth.features.common.shouldRegisterEndpoint
 import no.elhub.auth.features.documents.common.DocumentPropertiesRepository
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.documents.common.ExposedDocumentPropertiesRepository
 import no.elhub.auth.features.documents.common.ExposedDocumentRepository
+import no.elhub.auth.features.documents.common.ProxyDocumentBusinessHandler
 import no.elhub.auth.features.documents.create.CertificateProvider
 import no.elhub.auth.features.documents.create.FileCertificateProvider
 import no.elhub.auth.features.documents.create.FileCertificateProviderConfig
@@ -75,6 +77,8 @@ fun Application.module() {
         singleOf(::ExposedDocumentRepository) bind DocumentRepository::class
         singleOf(::ExposedGrantRepository) bind GrantRepository::class
         singleOf(::ExposedDocumentPropertiesRepository) bind DocumentPropertiesRepository::class
+        singleOf(::ChangeOfSupplierBusinessHandler)
+        singleOf(::ProxyDocumentBusinessHandler)
         singleOf(::ConfirmHandler)
         singleOf(::CreateHandler)
         singleOf(::GetHandler)

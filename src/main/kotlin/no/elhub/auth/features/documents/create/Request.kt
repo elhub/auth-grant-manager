@@ -1,11 +1,9 @@
 package no.elhub.auth.features.documents.create
 
-import arrow.core.Either
 import kotlinx.serialization.Serializable
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.documents.AuthorizationDocument
-import no.elhub.auth.features.documents.create.command.ChangeOfSupplierDocumentCommand
-import no.elhub.auth.features.documents.create.command.ValidationError
+import no.elhub.auth.features.documents.create.model.CreateDocumentModel
 import no.elhub.devxp.jsonapi.model.JsonApiAttributes
 import no.elhub.devxp.jsonapi.model.JsonApiResourceMeta
 import no.elhub.devxp.jsonapi.request.JsonApiRequest
@@ -29,13 +27,8 @@ data class DocumentMeta(
 
 typealias Request = JsonApiRequest.SingleDocumentWithMeta<DocumentRequestAttributes, DocumentMeta>
 
-fun DocumentMeta.toChangeOfSupplierDocumentCommand(): Either<ValidationError, ChangeOfSupplierDocumentCommand> = ChangeOfSupplierDocumentCommand(
-    requestedBy = this.requestedBy,
-    requestedFrom = this.requestedFrom,
-    requestedTo = this.requestedTo,
-    requestedFromName = this.requestedFromName,
-    balanceSupplierName = this.balanceSupplierName,
-    balanceSupplierContractName = this.balanceSupplierContractName,
-    meteringPointId = this.requestedForMeteringPointId,
-    meteringPointAddress = this.requestedForMeteringPointAddress
-)
+fun Request.toModel(): CreateDocumentModel =
+    CreateDocumentModel(
+        documentType = this.data.attributes.documentType,
+        meta = this.data.meta,
+    )

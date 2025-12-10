@@ -8,9 +8,9 @@ import com.github.mustachejava.DefaultMustacheFactory
 import com.openhtmltopdf.extend.FSSupplier
 import com.openhtmltopdf.outputdevice.helper.BaseRendererBuilder
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder
+import no.elhub.auth.features.businessprocesses.changeofsupplier.domain.ChangeOfSupplierBusinessMeta
 import no.elhub.auth.features.documents.create.DocumentGenerationError
 import no.elhub.auth.features.documents.create.FileGenerator
-import no.elhub.auth.features.documents.create.command.ChangeOfSupplierDocumentMeta
 import no.elhub.auth.features.documents.create.command.DocumentMetaMarker
 import org.apache.pdfbox.Loader
 import org.apache.pdfbox.pdmodel.PDDocumentInformation
@@ -23,7 +23,7 @@ data class Font(
     val fontBytes: ByteArray,
     val family: String,
     val weight: Int = 400,
-    val style: BaseRendererBuilder.FontStyle = BaseRendererBuilder.FontStyle.NORMAL
+    val style: BaseRendererBuilder.FontStyle = BaseRendererBuilder.FontStyle.NORMAL,
 )
 
 data class PdfGeneratorConfig(
@@ -33,7 +33,6 @@ data class PdfGeneratorConfig(
 class PdfGenerator(
     cfg: PdfGeneratorConfig,
 ) : FileGenerator {
-
     private val mustacheFactory: DefaultMustacheFactory = DefaultMustacheFactory(cfg.mustacheResourcePath)
 
     object MustacheConstants {
@@ -56,50 +55,50 @@ class PdfGenerator(
                 loadClasspathResource("/fonts/liberation-sans/LiberationSans-Regular.ttf"),
                 "LiberationSans",
                 400,
-                BaseRendererBuilder.FontStyle.NORMAL
+                BaseRendererBuilder.FontStyle.NORMAL,
             ),
             Font(
                 loadClasspathResource("/fonts/liberation-sans/LiberationSans-Bold.ttf"),
                 "LiberationSans",
                 700,
-                BaseRendererBuilder.FontStyle.NORMAL
+                BaseRendererBuilder.FontStyle.NORMAL,
             ),
             Font(
                 loadClasspathResource("/fonts/liberation-sans/LiberationSans-Italic.ttf"),
                 "LiberationSans",
                 400,
-                BaseRendererBuilder.FontStyle.ITALIC
+                BaseRendererBuilder.FontStyle.ITALIC,
             ),
             Font(
                 loadClasspathResource("/fonts/liberation-sans/LiberationSans-BoldItalic.ttf"),
                 "LiberationSans",
                 700,
-                BaseRendererBuilder.FontStyle.ITALIC
+                BaseRendererBuilder.FontStyle.ITALIC,
             ),
             Font(
                 loadClasspathResource("/fonts/libre-bodoni/LibreBodoni-Regular.ttf"),
                 "LibreBodoni",
                 400,
-                BaseRendererBuilder.FontStyle.NORMAL
+                BaseRendererBuilder.FontStyle.NORMAL,
             ),
             Font(
                 loadClasspathResource("/fonts/libre-bodoni/LibreBodoni-Bold.ttf"),
                 "LibreBodoni",
                 700,
-                BaseRendererBuilder.FontStyle.NORMAL
+                BaseRendererBuilder.FontStyle.NORMAL,
             ),
             Font(
                 loadClasspathResource("/fonts/libre-bodoni/LibreBodoni-Italic.ttf"),
                 "LibreBodoni",
                 400,
-                BaseRendererBuilder.FontStyle.ITALIC
+                BaseRendererBuilder.FontStyle.ITALIC,
             ),
             Font(
                 loadClasspathResource("/fonts/libre-bodoni/LibreBodoni-BoldItalic.ttf"),
                 "LibreBodoni",
                 700,
-                BaseRendererBuilder.FontStyle.ITALIC
-            )
+                BaseRendererBuilder.FontStyle.ITALIC,
+            ),
         )
 
     val colorProfile = loadClasspathResource("/fonts/sRGB.icc")
@@ -113,7 +112,7 @@ class PdfGenerator(
         documentMeta: DocumentMetaMarker
     ): Either<DocumentGenerationError.ContentGenerationError, ByteArray> = either {
         val contractHtmlString = when (documentMeta) {
-            is ChangeOfSupplierDocumentMeta -> generateChangeOfSupplierHtml(
+            is ChangeOfSupplierBusinessMeta -> generateChangeOfSupplierHtml(
                 customerNin = signerNin,
                 customerName = documentMeta.requestedFromName,
                 meteringPointAddress = documentMeta.requestedForMeteringPointAddress,
@@ -121,6 +120,8 @@ class PdfGenerator(
                 balanceSupplierName = documentMeta.balanceSupplierName,
                 balanceSupplierContractName = documentMeta.balanceSupplierContractName
             )
+
+            else -> return DocumentGenerationError.ContentGenerationError.left()
         }.getOrElse { return DocumentGenerationError.ContentGenerationError.left() }
 
         val pdfBytes =

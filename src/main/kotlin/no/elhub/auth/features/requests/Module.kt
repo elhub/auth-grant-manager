@@ -3,14 +3,13 @@ package no.elhub.auth.features.requests
 import io.ktor.server.application.Application
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
+import no.elhub.auth.features.businessprocesses.changeofsupplier.ChangeOfSupplierBusinessHandler
 import no.elhub.auth.features.common.shouldRegisterEndpoint
 import no.elhub.auth.features.requests.common.ExposedRequestPropertiesRepository
 import no.elhub.auth.features.requests.common.ExposedRequestRepository
+import no.elhub.auth.features.requests.common.ProxyRequestBusinessHandler
 import no.elhub.auth.features.requests.common.RequestPropertiesRepository
 import no.elhub.auth.features.requests.common.RequestRepository
-import no.elhub.auth.features.requests.create.requesttypes.RequestTypeHandler
-import no.elhub.auth.features.requests.create.requesttypes.RequestTypeOrchestrator
-import no.elhub.auth.features.requests.create.requesttypes.changeofsupplierconfirmation.ChangeOfSupplierConfirmationRequestTypeHandler
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
 import org.koin.ktor.ext.get
@@ -31,8 +30,8 @@ fun Application.module() {
         single { environment.config }
         singleOf(::ExposedRequestRepository) bind RequestRepository::class
         singleOf(::ExposedRequestPropertiesRepository) bind RequestPropertiesRepository::class
-        singleOf(::ChangeOfSupplierConfirmationRequestTypeHandler) bind RequestTypeHandler::class
-        singleOf(::RequestTypeOrchestrator)
+        singleOf(::ChangeOfSupplierBusinessHandler)
+        singleOf(::ProxyRequestBusinessHandler)
         singleOf(::ConfirmHandler)
         singleOf(::CreateHandler)
         singleOf(::GetHandler)
