@@ -39,7 +39,7 @@ import no.elhub.auth.features.documents.get.route as getRoute
 import no.elhub.auth.features.documents.query.Handler as QueryHandler
 import no.elhub.auth.features.documents.query.route as queryRoute
 
-const val DOCUMENTS_PATH = "/authorization-documents"
+const val DOCUMENTS_PATH = "/access/v0/authorization-documents"
 
 fun Application.module() {
     koinModule {

@@ -11,6 +11,10 @@ import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.testing.testApplication
 import no.elhub.auth.features.common.PostgresTestContainerExtension
+import no.elhub.auth.features.documents.DOCUMENTS_PATH
+import no.elhub.auth.features.grants.GRANTS_PATH
+import no.elhub.auth.features.openapi.API_PATH_OPENAPI
+import no.elhub.auth.features.requests.REQUESTS_PATH
 import java.util.UUID
 import no.elhub.auth.features.documents.module as documentsModule
 import no.elhub.auth.features.grants.module as grantsModule
@@ -55,18 +59,18 @@ class FeatureToggleTest : FunSpec({
             val id = UUID.randomUUID().toString()
 
             val disabledEndpoints = listOf(
-                HttpMethod.Post to "/authorization-documents",
-                HttpMethod.Patch to "/authorization-documents/$id",
-                HttpMethod.Get to "/authorization-documents/$id",
-                HttpMethod.Get to "/authorization-documents/$id.pdf",
-                HttpMethod.Get to "/authorization-documents",
-                HttpMethod.Patch to "/authorization-requests/$id",
-                HttpMethod.Post to "/authorization-requests",
-                HttpMethod.Get to "/authorization-requests/$id",
-                HttpMethod.Get to "/authorization-requests",
-                HttpMethod.Get to "/authorization-grants/$id",
-                HttpMethod.Get to "/authorization-grants/$id/scopes",
-                HttpMethod.Get to "/authorization-grants"
+                HttpMethod.Post to DOCUMENTS_PATH,
+                HttpMethod.Patch to "${DOCUMENTS_PATH}/$id",
+                HttpMethod.Get to "${DOCUMENTS_PATH}/$id",
+                HttpMethod.Get to "${DOCUMENTS_PATH}/$id.pdf",
+                HttpMethod.Get to DOCUMENTS_PATH,
+                HttpMethod.Patch to "${REQUESTS_PATH}/$id",
+                HttpMethod.Post to REQUESTS_PATH,
+                HttpMethod.Get to "${REQUESTS_PATH}/$id",
+                HttpMethod.Get to REQUESTS_PATH,
+                HttpMethod.Get to "${GRANTS_PATH}/$id",
+                HttpMethod.Get to "${GRANTS_PATH}/$id/scopes",
+                HttpMethod.Get to GRANTS_PATH
             )
 
             disabledEndpoints.forEach { (method, path) ->
@@ -76,7 +80,7 @@ class FeatureToggleTest : FunSpec({
                 response.status shouldBe HttpStatusCode.NotFound
             }
 
-            val openApiResponse = client.get("/openapi")
+            val openApiResponse = client.get(API_PATH_OPENAPI)
             openApiResponse.status shouldBe HttpStatusCode.OK
         }
     }
@@ -113,18 +117,18 @@ class FeatureToggleTest : FunSpec({
             val id = UUID.randomUUID().toString()
 
             val disabledEndpoints = listOf(
-                HttpMethod.Post to "/authorization-documents",
-                HttpMethod.Patch to "/authorization-documents/$id",
-                HttpMethod.Get to "/authorization-documents/$id",
-                HttpMethod.Get to "/authorization-documents/$id.pdf",
-                HttpMethod.Get to "/authorization-documents",
-                HttpMethod.Patch to "/authorization-requests/$id",
-                HttpMethod.Post to "/authorization-requests",
-                HttpMethod.Get to "/authorization-requests/$id",
-                HttpMethod.Get to "/authorization-requests",
-                HttpMethod.Get to "/authorization-grants/$id",
-                HttpMethod.Get to "/authorization-grants/$id/scopes",
-                HttpMethod.Get to "/authorization-grants"
+                HttpMethod.Post to DOCUMENTS_PATH,
+                HttpMethod.Patch to "${DOCUMENTS_PATH}/$id",
+                HttpMethod.Get to "${DOCUMENTS_PATH}/$id",
+                HttpMethod.Get to "${DOCUMENTS_PATH}/$id.pdf",
+                HttpMethod.Get to DOCUMENTS_PATH,
+                HttpMethod.Patch to "${REQUESTS_PATH}/$id",
+                HttpMethod.Post to REQUESTS_PATH,
+                HttpMethod.Get to "${REQUESTS_PATH}/$id",
+                HttpMethod.Get to REQUESTS_PATH,
+                HttpMethod.Get to "${GRANTS_PATH}/$id",
+                HttpMethod.Get to "${GRANTS_PATH}/$id/scopes",
+                HttpMethod.Get to GRANTS_PATH
             )
 
             disabledEndpoints.forEach { (method, path) ->
@@ -134,7 +138,7 @@ class FeatureToggleTest : FunSpec({
                 response.status shouldBe HttpStatusCode.NotFound
             }
 
-            val openApiResponse = client.get("/openapi")
+            val openApiResponse = client.get(API_PATH_OPENAPI)
             openApiResponse.status shouldBe HttpStatusCode.OK
         }
     }

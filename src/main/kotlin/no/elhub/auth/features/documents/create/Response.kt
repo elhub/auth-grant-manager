@@ -2,6 +2,7 @@ package no.elhub.auth.features.documents.create
 
 import kotlinx.serialization.Serializable
 import no.elhub.auth.features.documents.AuthorizationDocument
+import no.elhub.auth.features.documents.DOCUMENTS_PATH
 import no.elhub.devxp.jsonapi.model.JsonApiAttributes
 import no.elhub.devxp.jsonapi.model.JsonApiLinks
 import no.elhub.devxp.jsonapi.model.JsonApiResourceLinks
@@ -28,13 +29,13 @@ fun AuthorizationDocument.toCreateDocumentResponse() = CreateDocumentResponse(
         type = "AuthorizationDocument",
         id = this.id.toString(),
         links = CreateDocumentResponseLinks(
-            self = "/authorization-documents/${this.id}",
-            file = "/authorization-documents/${this.id}.pdf"
-        ), // TODO -> mismatch in openapi spec !! the spec is missing attributes
+            self = "${DOCUMENTS_PATH}/${this.id}",
+            file = "${DOCUMENTS_PATH}/${this.id}.pdf"
+        ),
         attributes = CreateDocumentResponseAttributes(
             status = this.status.toString(),
             documentType = this.type.toString()
         ),
     ),
-    links = JsonApiLinks.ResourceObjectLink("/authorization-documents")
+    links = JsonApiLinks.ResourceObjectLink(DOCUMENTS_PATH)
 )

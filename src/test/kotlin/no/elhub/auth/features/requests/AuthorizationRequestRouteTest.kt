@@ -312,7 +312,7 @@ class AuthorizationRequestRouteTest :
                         }
                     }
                     responseJson.links.apply {
-                        self shouldBe "https://api.elhub.no/authorization-requests"
+                        self shouldBe REQUESTS_PATH
                     }
                     responseJson.meta.apply {
                         "createdAt".shouldNotBeNull()
@@ -365,7 +365,7 @@ class AuthorizationRequestRouteTest :
                         }
                     }
                     responseJson.links.apply {
-                        self shouldBe "https://api.elhub.no/authorization-requests"
+                        self shouldBe REQUESTS_PATH
                     }
                     responseJson.meta.apply {
                         "createdAt".shouldNotBeNull()
@@ -502,7 +502,7 @@ class AuthorizationRequestRouteTest :
                         }
                     }
                     responseJson.links.shouldNotBeNull().apply {
-                        self shouldBe "https://api.elhub.no/authorization-requests"
+                        self shouldBe REQUESTS_PATH
                     }
                     responseJson.meta.shouldNotBeNull().apply {
                         "createdAt".shouldNotBeNull()
