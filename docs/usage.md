@@ -138,7 +138,7 @@ identity verification.
         * Elhub signs the document with its own business certificate, using the **PAdES B-B** standard.
 4. **Signature Collection**<br>
     * The Market Party retrieves the document using the document ID.
-        * The document is forwarded to a **Nkom-approved signing service**.
+        * The document is forwarded to an eIDAS-compliant QTSP for QES signing.
         * The End User signs the document using their individual certificate.
         * The signature uses the **PAdES B-LT** standard.
 5. **Return to Elhub**<br>
