@@ -23,7 +23,7 @@ import no.elhub.auth.features.requests.get.route as getRoute
 import no.elhub.auth.features.requests.query.Handler as QueryHandler
 import no.elhub.auth.features.requests.query.route as queryRoute
 
-const val REQUESTS_PATH = "/authorization-requests"
+const val REQUESTS_PATH = "/access/v0/authorization-requests"
 
 fun Application.module() {
     koinModule {

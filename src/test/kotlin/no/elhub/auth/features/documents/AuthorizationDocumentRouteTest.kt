@@ -170,7 +170,7 @@ class AuthorizationDocumentRouteTest :
                     }
 
                     createDocumentResponse.links.apply {
-                        self shouldBe "/authorization-documents"
+                        self shouldBe DOCUMENTS_PATH
                     }
 
                     createdDocumentId = createDocumentResponse.data.id
@@ -228,7 +228,7 @@ class AuthorizationDocumentRouteTest :
                     expectedSignatory = getDocumentResponse.data.relationships.requestedTo.data.id
 
                     getDocumentResponse.links.apply {
-                        self shouldBe "/authorization-documents/$createdDocumentId"
+                        self shouldBe "$DOCUMENTS_PATH/$createdDocumentId"
                     }
                 }
 
@@ -268,7 +268,7 @@ class AuthorizationDocumentRouteTest :
                             id shouldBe grantId
                         }
                         links.shouldNotBeNull().apply {
-                            self shouldBe "authorization-grants/$grantId"
+                            self shouldBe "${GRANTS_PATH}/$grantId"
                         }
                     }
 
@@ -319,7 +319,7 @@ class AuthorizationDocumentRouteTest :
                                     type shouldBe "AuthorizationDocument"
                                 }
                                 links.shouldNotBeNull().apply {
-                                    self shouldBe "/authorization-documents/$createdDocumentId"
+                                    self shouldBe "$DOCUMENTS_PATH/$createdDocumentId"
                                 }
                             }
                         }

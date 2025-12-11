@@ -4,6 +4,8 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import no.elhub.auth.features.documents.AuthorizationDocument
+import no.elhub.auth.features.documents.DOCUMENTS_PATH
+import no.elhub.auth.features.grants.GRANTS_PATH
 import no.elhub.devxp.jsonapi.model.JsonApiAttributes
 import no.elhub.devxp.jsonapi.model.JsonApiLinks
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipData
@@ -74,7 +76,7 @@ fun AuthorizationDocument.toGetResponse() =
                             type = "AuthorizationGrant"
                         ),
                         links = JsonApiLinks.RelationShipLink(
-                            self = "authorization-grants/$grantId"
+                            self = "${GRANTS_PATH}/$grantId"
                         )
                     )
                 }
@@ -87,5 +89,5 @@ fun AuthorizationDocument.toGetResponse() =
                 }
             }
         ),
-        links = JsonApiLinks.ResourceObjectLink("/authorization-documents/${this.id}")
+        links = JsonApiLinks.ResourceObjectLink("${DOCUMENTS_PATH}/${this.id}")
     )

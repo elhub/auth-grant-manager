@@ -19,7 +19,7 @@ import no.elhub.auth.features.grants.getScopes.route as getScopesRoute
 import no.elhub.auth.features.grants.query.Handler as QueryHandler
 import no.elhub.auth.features.grants.query.route as queryRoute
 
-const val GRANTS_PATH = "/authorization-grants"
+const val GRANTS_PATH = "/access/v0/authorization-grants"
 
 fun Application.module() {
     koinModule {

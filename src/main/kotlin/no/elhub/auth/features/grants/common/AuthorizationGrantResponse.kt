@@ -1,6 +1,9 @@
 package no.elhub.auth.features.grants.common
 
+import no.elhub.auth.features.documents.DOCUMENTS_PATH
 import no.elhub.auth.features.grants.AuthorizationGrant
+import no.elhub.auth.features.grants.GRANTS_PATH
+import no.elhub.auth.features.requests.REQUESTS_PATH
 import no.elhub.devxp.jsonapi.model.JsonApiLinks
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipData
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipToOne
@@ -49,14 +52,14 @@ fun AuthorizationGrant.toResponse() =
                     ),
                     links = JsonApiLinks.RelationShipLink(
                         self = when (this.sourceType) {
-                            AuthorizationGrant.SourceType.Document -> "/authorization-documents/$sourceId"
-                            AuthorizationGrant.SourceType.Request -> "/authorization-requests/$sourceId"
+                            AuthorizationGrant.SourceType.Document -> "${DOCUMENTS_PATH}/$sourceId"
+                            AuthorizationGrant.SourceType.Request -> "${REQUESTS_PATH}/$sourceId"
                         }
                     )
                 )
             )
         ),
         links = JsonApiLinks.ResourceObjectLink(
-            self = "/authorization-grants/${this.id}",
+            self = "${GRANTS_PATH}/${this.id}",
         )
     )
