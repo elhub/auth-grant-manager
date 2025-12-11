@@ -10,6 +10,7 @@ import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.insertIgnore
 import org.jetbrains.exposed.sql.javatime.timestamp
 import org.jetbrains.exposed.sql.selectAll
+import org.slf4j.LoggerFactory
 import java.time.Instant
 import java.util.UUID
 
@@ -19,6 +20,8 @@ interface PartyRepository {
 }
 
 class ExposedPartyRepository : PartyRepository {
+
+    private val logger = LoggerFactory.getLogger(ExposedPartyRepository::class.java)
 
     override fun findOrInsert(type: PartyType, resourceId: String): Either<RepositoryWriteError, AuthorizationPartyRecord> =
         Either.catch {
@@ -45,7 +48,10 @@ class ExposedPartyRepository : PartyRepository {
                             .toAuthorizationParty()
                     }
                 }
-        }.mapLeft { RepositoryWriteError.UnexpectedError }
+        }.mapLeft { error ->
+            logger.error("Error occurred during findOrInsert() for authorization grant: ${error.message}")
+            RepositoryWriteError.UnexpectedError
+        }
 
     override fun find(id: UUID): Either<RepositoryReadError, AuthorizationPartyRecord> =
         Either
@@ -57,8 +63,9 @@ class ExposedPartyRepository : PartyRepository {
                     ?.toAuthorizationParty()
                     ?: throw NoSuchElementException("Party not found: $id")
             }
-            .mapLeft {
-                if (it is NoSuchElementException) {
+            .mapLeft { error ->
+                logger.error("Error occurred during find() for authorization grant: ${error.message}")
+                if (error is NoSuchElementException) {
                     RepositoryReadError.NotFoundError
                 } else {
                     RepositoryReadError.UnexpectedError
@@ -69,8 +76,9 @@ class ExposedPartyRepository : PartyRepository {
 object AuthorizationPartyTable : UUIDTable("auth.authorization_party") {
     val type = customEnumeration(
         name = "type",
+        sql = "party_type",
         fromDb = { value -> PartyType.valueOf(value as String) },
-        toDb = { PGEnum("party_type", it) },
+        toDb = { enumValue -> PGEnum("party_type", enumValue) }
     )
 
     val resourceId = varchar("resource_id", 255)

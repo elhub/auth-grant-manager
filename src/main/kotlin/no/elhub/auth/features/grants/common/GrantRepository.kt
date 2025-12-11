@@ -4,7 +4,6 @@ import arrow.core.Either
 import arrow.core.getOrElse
 import arrow.core.raise.either
 import kotlinx.datetime.Instant
-import kotlinx.datetime.toKotlinLocalDateTime
 import no.elhub.auth.features.common.PGEnum
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.RepositoryWriteError
@@ -12,7 +11,6 @@ import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.AuthorizationPartyRecord
 import no.elhub.auth.features.common.party.AuthorizationPartyTable
 import no.elhub.auth.features.common.party.PartyRepository
-import no.elhub.auth.features.common.party.toAuthorizationParty
 import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.AuthorizationGrant.SourceType
 import no.elhub.auth.features.grants.AuthorizationGrant.Status
@@ -33,22 +31,14 @@ import org.jetbrains.exposed.sql.javatime.timestamp
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.slf4j.LoggerFactory
-import java.time.LocalDateTime
-import java.util.*
+import java.util.UUID
 
 interface GrantRepository {
     fun find(grantId: UUID): Either<RepositoryReadError, AuthorizationGrant>
     fun findBySource(sourceType: SourceType, sourceId: UUID): Either<RepositoryReadError, AuthorizationGrant?>
     fun findScopes(grantId: UUID): Either<RepositoryReadError, List<AuthorizationScope>>
     fun findAll(): Either<RepositoryReadError, List<AuthorizationGrant>>
-    fun insert(
-        grantedFor: AuthorizationParty,
-        grantedBy: AuthorizationParty,
-        grantedTo: AuthorizationParty,
-        scopeIds: List<Long>,
-        sourceType: SourceType,
-        sourceId: UUID
-    ): Either<RepositoryWriteError, AuthorizationGrant>
+    fun insert(grant: AuthorizationGrant, scopeIds: List<Long>,): Either<RepositoryWriteError, AuthorizationGrant>
 }
 
 class ExposedGrantRepository(
@@ -67,7 +57,6 @@ class ExposedGrantRepository(
                 return@transaction emptyList<AuthorizationGrant>()
             }
 
-            // TODO use authorization party repo here !!
             val partyIds: List<UUID> = grantRows
                 .flatMap { g ->
                     listOf(
@@ -79,16 +68,13 @@ class ExposedGrantRepository(
                 .toSet() // distinct
                 .toList()
 
-            val partiesById: Map<UUID, AuthorizationPartyRecord> =
-                AuthorizationPartyTable
-                    .selectAll()
-                    .where { AuthorizationPartyTable.id inList partyIds }
-                    .associate { row ->
-                        val party = row.toAuthorizationParty()
-                        party.id to party
-                    }
+            val partiesById: Map<UUID, AuthorizationPartyRecord> = partyIds.associateWith { partyId ->
+                val party = partyRepository.find(partyId)
+                    .mapLeft { RepositoryReadError.UnexpectedError }
+                    .bind()
+                party
+            }
 
-            // 4) Map each grant row -> domain object using the pre-fetched parties
             grantRows.map { g ->
                 val grantedFor = partiesById[g[AuthorizationGrantTable.grantedFor]]
                     ?: raise(RepositoryReadError.NotFoundError)
@@ -97,7 +83,7 @@ class ExposedGrantRepository(
                 val grantedTo = partiesById[g[AuthorizationGrantTable.grantedTo]]
                     ?: raise(RepositoryReadError.NotFoundError)
 
-                g.toAuthorizationGrant(grantedFor, grantedBy, grantedTo)
+                g.toAuthorizationGrant(grantedBy, grantedFor, grantedTo)
             }
         }
     }
@@ -164,48 +150,58 @@ class ExposedGrantRepository(
     }
 
     override fun insert(
-        grantedFor: AuthorizationParty,
-        grantedBy: AuthorizationParty,
-        grantedTo: AuthorizationParty,
+        grant: AuthorizationGrant,
         scopeIds: List<Long>,
-        sourceType: SourceType,
-        sourceId: UUID
     ): Either<RepositoryWriteError, AuthorizationGrant> =
         either {
             transaction {
-                val grantedForRecord = partyRepository.findOrInsert(grantedFor.type, grantedFor.resourceId)
-                    .mapLeft { RepositoryWriteError.UnexpectedError }
-                    .bind()
-                val grantedByRecord = partyRepository.findOrInsert(grantedBy.type, grantedBy.resourceId)
-                    .mapLeft { RepositoryWriteError.UnexpectedError }
-                    .bind()
-                val grantedToRecord = partyRepository.findOrInsert(grantedTo.type, grantedTo.resourceId)
-                    .mapLeft { RepositoryWriteError.UnexpectedError }
-                    .bind()
+                val grantedByParty =
+                    partyRepository
+                        .findOrInsert(grant.grantedBy.type, grant.grantedBy.resourceId)
+                        .mapLeft { RepositoryWriteError.UnexpectedError }
+                        .bind()
 
-                val now = LocalDateTime.now()
-                val grantId = UUID.randomUUID()
-                val insertedGrant = AuthorizationGrantTable.insertReturning {
-                    it[id] = grantId
-                    it[grantStatus] = Status.Active
-                    it[AuthorizationGrantTable.grantedFor] = grantedForRecord.id
-                    it[AuthorizationGrantTable.grantedBy] = grantedByRecord.id
-                    it[AuthorizationGrantTable.grantedTo] = grantedToRecord.id
-                    it[grantedAt] = now
-                    it[validFrom] = now
-                    it[validTo] = now.plusYears(1)
-                    it[AuthorizationGrantTable.sourceType] = sourceType
-                    it[AuthorizationGrantTable.sourceId] = sourceId
-                }.single()
+                val grantedForParty =
+                    partyRepository
+                        .findOrInsert(grant.grantedFor.type, grant.grantedFor.resourceId)
+                        .mapLeft { RepositoryWriteError.UnexpectedError }
+                        .bind()
+
+                val grantedToParty =
+                    partyRepository
+                        .findOrInsert(grant.grantedTo.type, grant.grantedTo.resourceId)
+                        .mapLeft { RepositoryWriteError.UnexpectedError }
+                        .bind()
+
+                val authorizationGrant =
+                    AuthorizationGrantTable
+                        .insertReturning {
+                            it[id] = grant.id
+                            it[grantStatus] = grant.grantStatus
+                            it[grantedBy] = grantedByParty.id
+                            it[grantedFor] = grantedForParty.id
+                            it[grantedTo] = grantedToParty.id
+                            it[grantedAt] = grant.grantedAt
+                            it[validFrom] = grant.validFrom
+                            it[validTo] = grant.validTo
+                            it[sourceType] = grant.sourceType
+                            it[sourceId] = grant.sourceId
+                        }.map {
+                            it.toAuthorizationGrant(
+                                grantedByParty,
+                                grantedForParty,
+                                grantedToParty
+                            )
+                        }.single()
 
                 if (scopeIds.isNotEmpty()) {
                     AuthorizationGrantScopeTable.batchInsert(scopeIds) { scopeId ->
-                        this[AuthorizationGrantScopeTable.authorizationGrantId] = grantId
+                        this[AuthorizationGrantScopeTable.authorizationGrantId] = authorizationGrant.id
                         this[AuthorizationGrantScopeTable.authorizationScopeId] = scopeId
                     }
                 }
 
-                insertedGrant.toAuthorizationGrant(grantedForRecord, grantedByRecord, grantedToRecord)
+                authorizationGrant
             }
         }.mapLeft { RepositoryWriteError.UnexpectedError }
 }
@@ -223,6 +219,7 @@ object AuthorizationGrantTable : UUIDTable("authorization_grant") {
     val grantStatus =
         customEnumeration(
             name = "status",
+            sql = "auth.authorization_grant_status",
             fromDb = { value -> Status.valueOf(value as String) },
             toDb = { PGEnum("authorization_grant_status", it) },
         )
@@ -235,7 +232,7 @@ object AuthorizationGrantTable : UUIDTable("authorization_grant") {
     val sourceType =
         customEnumeration(
             name = "source_type",
-            sql = "grant_source_type",
+            sql = "auth.grant_source_type",
             fromDb = { value -> SourceType.valueOf(value as String) },
             toDb = { PGEnum("grant_source_type", it) },
         )
@@ -259,18 +256,21 @@ object AuthorizationScopeTable : LongIdTable(name = "auth.authorization_scope") 
     val createdAt = timestamp("created_at").clientDefault { java.time.Instant.now() }
 }
 
-fun ResultRow.toAuthorizationGrant(grantedFor: AuthorizationPartyRecord, grantedBy: AuthorizationPartyRecord, grantedTo: AuthorizationPartyRecord) =
-    AuthorizationGrant(
-        id = this[AuthorizationGrantTable.id].toString(),
-        grantStatus = this[AuthorizationGrantTable.grantStatus],
-        grantedFor = grantedFor.toAuthorizationParty(),
-        grantedBy = grantedBy.toAuthorizationParty(),
-        grantedTo = grantedTo.toAuthorizationParty(),
-        grantedAt = this[AuthorizationGrantTable.grantedAt].toKotlinLocalDateTime(),
-        validFrom = this[AuthorizationGrantTable.validFrom].toKotlinLocalDateTime(),
-        validTo = this[AuthorizationGrantTable.validTo].toKotlinLocalDateTime(),
-        sourceType = this[AuthorizationGrantTable.sourceType],
-        sourceId = this[AuthorizationGrantTable.sourceId],
-    )
+fun ResultRow.toAuthorizationGrant(
+    grantedBy: AuthorizationPartyRecord,
+    grantedFor: AuthorizationPartyRecord,
+    grantedTo: AuthorizationPartyRecord
+) = AuthorizationGrant(
+    id = this[AuthorizationGrantTable.id].value,
+    grantStatus = this[AuthorizationGrantTable.grantStatus],
+    grantedFor = grantedFor.toAuthorizationParty(),
+    grantedBy = grantedBy.toAuthorizationParty(),
+    grantedTo = grantedTo.toAuthorizationParty(),
+    grantedAt = this[AuthorizationGrantTable.grantedAt],
+    validFrom = this[AuthorizationGrantTable.validFrom],
+    validTo = this[AuthorizationGrantTable.validTo],
+    sourceType = this[AuthorizationGrantTable.sourceType],
+    sourceId = this[AuthorizationGrantTable.sourceId],
+)
 
 fun AuthorizationPartyRecord.toAuthorizationParty() = AuthorizationParty(resourceId = this.resourceId, type = this.type)

@@ -70,7 +70,7 @@ fun AuthorizationDocument.toGetResponse() =
                 grant = this.grantId?.let { grantId ->
                     JsonApiRelationshipToOne(
                         data = JsonApiRelationshipData(
-                            id = grantId,
+                            id = grantId.toString(),
                             type = "AuthorizationGrant"
                         ),
                         links = JsonApiLinks.RelationShipLink(

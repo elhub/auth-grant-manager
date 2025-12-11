@@ -46,14 +46,17 @@ class Handler(
                 }
             }.bind()
 
-        grantRepository.insert(
-            grantedFor = confirmedDocument.requestedFrom,
-            grantedBy = signatory,
-            grantedTo = confirmedDocument.requestedBy,
-            scopeIds = scopeIds,
-            sourceType = AuthorizationGrant.SourceType.Document,
-            sourceId = confirmedDocument.id
-        ).mapLeft { ConfirmDocumentError.GrantCreationError }.bind()
+        val grantToCreate =
+            AuthorizationGrant.create(
+                grantedFor = confirmedDocument.requestedFrom,
+                grantedBy = signatory,
+                grantedTo = confirmedDocument.requestedBy,
+                sourceType = AuthorizationGrant.SourceType.Document,
+                sourceId = confirmedDocument.id
+            )
+
+        grantRepository.insert(grantToCreate, scopeIds)
+            .mapLeft { ConfirmDocumentError.GrantCreationError }.bind()
     }
 }
 
