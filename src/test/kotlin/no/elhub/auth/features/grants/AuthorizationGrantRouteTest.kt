@@ -6,12 +6,25 @@ import io.kotest.matchers.shouldBe
 import io.ktor.client.call.body
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
+import io.ktor.client.request.header
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.config.MapApplicationConfig
+import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
+import kotlinx.serialization.json.Json
+import no.elhub.auth.features.common.AuthPersonsTestContainer
+import no.elhub.auth.features.common.AuthPersonsTestContainerExtension
+import no.elhub.auth.features.common.PdpTestContainerExtension
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.RunPostgresScriptExtension
+import no.elhub.auth.features.common.auth.AuthInfo
+import no.elhub.auth.features.common.auth.PDPAuthorizationProvider
+import no.elhub.auth.features.common.auth.PdpResponse
+import no.elhub.auth.features.common.auth.Result
+import no.elhub.auth.features.common.auth.TokenInfo
+import no.elhub.auth.features.common.commonModule
 import no.elhub.auth.features.grants.common.AuthorizationGrantListResponse
 import no.elhub.auth.features.grants.common.AuthorizationGrantResponse
 import no.elhub.auth.features.grants.common.AuthorizationGrantScopesResponse
@@ -24,31 +37,31 @@ class AuthorizationGrantRouteTest : FunSpec({
         RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-grants.sql"),
         RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-scopes.sql"),
         RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-grant-scopes.sql"),
-        RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-party.sql")
+        RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-party.sql"),
+        AuthPersonsTestContainerExtension,
+        PdpTestContainerExtension(
+            alwaysReturn = Json.encodeToString(
+                PdpResponse(
+                    result = Result(
+                        tokenInfo =
+                        TokenInfo(
+                            tokenStatus = "verified",
+                            partyId = "something",
+                            tokenType = "maskinporten"
+                        ),
+                        authInfo = AuthInfo(
+                            actingFunction = "BalanceSupplier",
+                            actingGLN = "0107000000021"
+                        )
+                    )
+                )
+            )
+        )
     )
 
     context("GET /authorization-grants/{id}") {
         testApplication {
-            client = createClient {
-                install(ContentNegotiation) {
-                    json()
-                }
-            }
-
-            application {
-                applicationModule()
-                module()
-            }
-
-            environment {
-                config = MapApplicationConfig(
-                    "ktor.database.username" to "app",
-                    "ktor.database.password" to "app",
-                    "ktor.database.url" to "jdbc:postgresql://localhost:5432/auth",
-                    "ktor.database.driverClass" to "org.postgresql.Driver",
-                    "featureToggle.enableEndpoints" to "true"
-                )
-            }
+            setupAuthorizationGrantTestApplication()
 
             test("Should return 200 OK on a valid ID") {
                 val response = client.get("$GRANTS_PATH/123e4567-e89b-12d3-a456-426614174000")
@@ -79,8 +92,8 @@ class AuthorizationGrantRouteTest : FunSpec({
                         }
                         grantedTo.apply {
                             data.apply {
-                                id shouldBe "987654321"
-                                type shouldBe "Organization"
+                                id shouldBe "0107000000021"
+                                type shouldBe "OrganizationEntity"
                             }
                         }
                     }
@@ -121,26 +134,7 @@ class AuthorizationGrantRouteTest : FunSpec({
 
     context("GET /authorization-grants/{id}/scopes") {
         testApplication {
-            client = createClient {
-                install(ContentNegotiation) {
-                    json()
-                }
-            }
-
-            application {
-                applicationModule()
-                module()
-            }
-
-            environment {
-                config = MapApplicationConfig(
-                    "ktor.database.username" to "app",
-                    "ktor.database.password" to "app",
-                    "ktor.database.url" to "jdbc:postgresql://localhost:5432/auth",
-                    "ktor.database.driverClass" to "org.postgresql.Driver",
-                    "featureToggle.enableEndpoints" to "true"
-                )
-            }
+            setupAuthorizationGrantTestApplication()
 
             test("Should return 200 OK on a valid ID and a single authorization scope") {
                 val response = client.get("$GRANTS_PATH/123e4567-e89b-12d3-a456-426614174000/scopes")
@@ -244,33 +238,17 @@ class AuthorizationGrantRouteTest : FunSpec({
 
     context("GET /authorization-grants") {
         testApplication {
-            client = createClient {
-                install(ContentNegotiation) {
-                    json()
-                }
-            }
-
-            application {
-                applicationModule()
-                module()
-            }
-
-            environment {
-                config = MapApplicationConfig(
-                    "ktor.database.username" to "app",
-                    "ktor.database.password" to "app",
-                    "ktor.database.url" to "jdbc:postgresql://localhost:5432/auth",
-                    "ktor.database.driverClass" to "org.postgresql.Driver",
-                    "featureToggle.enableEndpoints" to "true"
-                )
-            }
+            setupAuthorizationGrantTestApplication()
 
             test("Should return 200 OK") {
-                val response = client.get(GRANTS_PATH)
+                val response = client.get(GRANTS_PATH) {
+                    header(HttpHeaders.Authorization, "Bearer something")
+                    header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                }
                 response.status shouldBe HttpStatusCode.OK
                 val responseJson: AuthorizationGrantListResponse = response.body()
                 responseJson.data.apply {
-                    size shouldBe 3
+                    size shouldBe 2
                     this[0].apply {
                         id.shouldNotBeNull()
                         type shouldBe "AuthorizationGrant"
@@ -296,44 +274,13 @@ class AuthorizationGrantRouteTest : FunSpec({
                             }
                             grantedTo.apply {
                                 data.apply {
-                                    id shouldBe "987654321"
-                                    type shouldBe "Organization"
+                                    id shouldBe "0107000000021"
+                                    type shouldBe "OrganizationEntity"
                                 }
                             }
                         }
                     }
                     this[1].apply {
-                        id.shouldNotBeNull()
-                        type shouldBe "AuthorizationGrant"
-                        attributes.shouldNotBeNull()
-                        attributes!!.apply {
-                            status shouldBe "Expired"
-                            grantedAt shouldBe "2023-04-04T04:00"
-                            validFrom shouldBe "2023-04-04T04:00"
-                            validTo shouldBe "2024-04-04T04:00"
-                        }
-                        relationships.apply {
-                            grantedFor.apply {
-                                data.apply {
-                                    id shouldBe "23456789012"
-                                    type shouldBe "Person"
-                                }
-                            }
-                            grantedBy.apply {
-                                data.apply {
-                                    id shouldBe "23456789012"
-                                    type shouldBe "Person"
-                                }
-                            }
-                            grantedTo.apply {
-                                data.apply {
-                                    id shouldBe "987654321"
-                                    type shouldBe "Organization"
-                                }
-                            }
-                        }
-                    }
-                    this[2].apply {
                         id.shouldNotBeNull()
                         type shouldBe "AuthorizationGrant"
                         attributes.shouldNotBeNull()
@@ -358,7 +305,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                             }
                             grantedTo.apply {
                                 data.apply {
-                                    id shouldBe "34567890123"
+                                    id shouldBe "0107000000021"
                                     type shouldBe "OrganizationEntity"
                                 }
                             }
@@ -369,3 +316,29 @@ class AuthorizationGrantRouteTest : FunSpec({
         }
     }
 })
+
+private fun ApplicationTestBuilder.setupAuthorizationGrantTestApplication() {
+    client = createClient {
+        install(ContentNegotiation) {
+            json()
+        }
+    }
+
+    application {
+        applicationModule()
+        commonModule()
+        module()
+    }
+
+    environment {
+        config = MapApplicationConfig(
+            "ktor.database.username" to "app",
+            "ktor.database.password" to "app",
+            "ktor.database.url" to "jdbc:postgresql://localhost:5432/auth",
+            "ktor.database.driverClass" to "org.postgresql.Driver",
+            "featureToggle.enableEndpoints" to "true",
+            "authPersons.baseUri" to AuthPersonsTestContainer.baseUri(),
+            "pdp.baseUrl" to "http://localhost:8085"
+        )
+    }
+}

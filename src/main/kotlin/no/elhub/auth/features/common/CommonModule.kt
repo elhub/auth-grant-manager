@@ -21,6 +21,7 @@ import org.koin.ktor.plugin.koinModule
 
 fun Application.commonModule() {
     koinModule {
+        single { environment.config }
         single {
             HttpClient(CIO) {
                 install(HttpTimeout) {
