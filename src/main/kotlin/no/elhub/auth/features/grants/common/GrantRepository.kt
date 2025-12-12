@@ -37,8 +37,8 @@ interface GrantRepository {
     fun find(grantId: UUID): Either<RepositoryReadError, AuthorizationGrant>
     fun findBySource(sourceType: SourceType, sourceId: UUID): Either<RepositoryReadError, AuthorizationGrant?>
     fun findScopes(grantId: UUID): Either<RepositoryReadError, List<AuthorizationScope>>
-    fun findAll(): Either<RepositoryReadError, List<AuthorizationGrant>>
-    fun insert(grant: AuthorizationGrant, scopeIds: List<Long>,): Either<RepositoryWriteError, AuthorizationGrant>
+    fun findAll(grantedTo: AuthorizationParty): Either<RepositoryReadError, List<AuthorizationGrant>>
+    fun insert(grant: AuthorizationGrant, scopeIds: List<Long>): Either<RepositoryWriteError, AuthorizationGrant>
 }
 
 class ExposedGrantRepository(
@@ -47,14 +47,20 @@ class ExposedGrantRepository(
 
     private val logger = LoggerFactory.getLogger(ExposedGrantRepository::class.java)
 
-    override fun findAll(): Either<RepositoryReadError, List<AuthorizationGrant>> = either {
+    override fun findAll(grantedTo: AuthorizationParty): Either<RepositoryReadError, List<AuthorizationGrant>> = either {
         transaction {
+            val grantedToId = partyRepository.findOrInsert(type = grantedTo.type, resourceId = grantedTo.resourceId)
+                .mapLeft { RepositoryReadError.UnexpectedError }
+                .bind()
+                .id
+
             val grantRows = AuthorizationGrantTable
                 .selectAll()
+                .where { AuthorizationGrantTable.grantedTo eq grantedToId }
                 .toList()
 
             if (grantRows.isEmpty()) {
-                return@transaction emptyList<AuthorizationGrant>()
+                return@transaction emptyList()
             }
 
             val partyIds: List<UUID> = grantRows
@@ -65,7 +71,7 @@ class ExposedGrantRepository(
                         g[AuthorizationGrantTable.grantedTo]
                     )
                 }
-                .toSet() // distinct
+                .toSet()
                 .toList()
 
             val partiesById: Map<UUID, AuthorizationPartyRecord> = partyIds.associateWith { partyId ->

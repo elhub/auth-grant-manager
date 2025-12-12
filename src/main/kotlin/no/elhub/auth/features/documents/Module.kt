@@ -43,7 +43,6 @@ const val DOCUMENTS_PATH = "/authorization-documents"
 
 fun Application.module() {
     koinModule {
-        single { environment.config }
         single {
             val cfg = get<ApplicationConfig>().config("pdfSigner.certificate")
             FileCertificateProviderConfig(
