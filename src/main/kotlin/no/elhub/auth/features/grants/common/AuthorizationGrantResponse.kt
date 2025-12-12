@@ -1,6 +1,10 @@
 package no.elhub.auth.features.grants.common
 
+import no.elhub.auth.features.documents.DOCUMENTS_PATH
 import no.elhub.auth.features.grants.AuthorizationGrant
+import no.elhub.auth.features.grants.GRANTS_PATH
+import no.elhub.auth.features.requests.REQUESTS_PATH
+import no.elhub.devxp.jsonapi.model.JsonApiLinks
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipData
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipToOne
 import no.elhub.devxp.jsonapi.response.JsonApiResponse
@@ -12,7 +16,7 @@ fun AuthorizationGrant.toResponse() =
     AuthorizationGrantResponse(
         data = JsonApiResponseResourceObjectWithRelationships(
             type = (AuthorizationGrant::class).simpleName ?: "AuthorizationGrant",
-            id = this.id,
+            id = this.id.toString(),
             attributes = GrantResponseAttributes(
                 status = this.grantStatus.toString(),
                 grantedAt = this.grantedAt.toString(),
@@ -22,22 +26,40 @@ fun AuthorizationGrant.toResponse() =
             relationships = GrantRelationships(
                 grantedFor = JsonApiRelationshipToOne(
                     data = JsonApiRelationshipData(
-                        id = this.grantedFor.id.toString(),
+                        id = this.grantedFor.resourceId,
                         type = this.grantedFor.type.name
                     )
                 ),
                 grantedBy = JsonApiRelationshipToOne(
                     data = JsonApiRelationshipData(
-                        id = this.grantedBy.id.toString(),
+                        id = this.grantedBy.resourceId,
                         type = this.grantedBy.type.name
                     )
                 ),
                 grantedTo = JsonApiRelationshipToOne(
                     data = JsonApiRelationshipData(
-                        id = this.grantedTo.id.toString(),
+                        id = this.grantedTo.resourceId,
                         type = this.grantedTo.type.name
+                    )
+                ),
+                source = JsonApiRelationshipToOne(
+                    data = JsonApiRelationshipData(
+                        id = this.sourceId.toString(),
+                        type = when (this.sourceType) {
+                            AuthorizationGrant.SourceType.Document -> "AuthorizationDocument"
+                            AuthorizationGrant.SourceType.Request -> "AuthorizationRequest"
+                        }
+                    ),
+                    links = JsonApiLinks.RelationShipLink(
+                        self = when (this.sourceType) {
+                            AuthorizationGrant.SourceType.Document -> "${DOCUMENTS_PATH}/$sourceId"
+                            AuthorizationGrant.SourceType.Request -> "${REQUESTS_PATH}/$sourceId"
+                        }
                     )
                 )
             )
+        ),
+        links = JsonApiLinks.ResourceObjectLink(
+            self = "${GRANTS_PATH}/${this.id}",
         )
     )

@@ -3,6 +3,9 @@ package no.elhub.auth.features.grants
 import io.ktor.server.application.Application
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
+import no.elhub.auth.features.common.party.ExposedPartyRepository
+import no.elhub.auth.features.common.party.PartyRepository
+import no.elhub.auth.features.common.shouldRegisterEndpoint
 import no.elhub.auth.features.grants.common.ExposedGrantRepository
 import no.elhub.auth.features.grants.common.GrantRepository
 import org.koin.core.module.dsl.singleOf
@@ -16,10 +19,11 @@ import no.elhub.auth.features.grants.getScopes.route as getScopesRoute
 import no.elhub.auth.features.grants.query.Handler as QueryHandler
 import no.elhub.auth.features.grants.query.route as queryRoute
 
-const val GRANTS_PATH = "/authorization-grants"
+const val GRANTS_PATH = "/access/v0/authorization-grants"
 
 fun Application.module() {
     koinModule {
+        singleOf(::ExposedPartyRepository) bind PartyRepository::class
         singleOf(::ExposedGrantRepository) bind GrantRepository::class
         singleOf(::GetHandler)
         singleOf(::GetScopesHandler)
@@ -28,9 +32,11 @@ fun Application.module() {
 
     routing {
         route(GRANTS_PATH) {
-            getRoute(get())
-            getScopesRoute(get())
-            queryRoute(get())
+            shouldRegisterEndpoint {
+                getRoute(get())
+                getScopesRoute(get())
+                queryRoute(get())
+            }
         }
     }
 }

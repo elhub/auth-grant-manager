@@ -118,7 +118,7 @@ Currently, the Authorization Grant Manager supports the following solutions:
 * BankId signing solution, provided through a qualified BankID partner.
 
 #### Future support
-If there is demand from the market, additional signing solutions may be supported in the future, provided that they meet the following requirements:
+Additional signing solutions may be supported in the future, provided that they meet the following requirements:
 1. The signature complies with the QES / PAdES B-LT standard.
 2. A secure and reasonable mechanism exists that enables the Authorization Grant Manager to obtain the signer’s Norwegian national identity number for
 identity verification.
@@ -144,10 +144,11 @@ identity verification.
 5. **Return to Elhub**<br>
     * The Market Party submits the signed document to Elhub using the original document ID.
 6. **Verification by Elhub**<br>
-    * Elhub verifies:
-        * The document content
-        * The digital signatures
-        * The End User’s identity using OCSP lookup with the signing service
+    * Elhub validates:
+        * The document is signed with a qualified electronic signature (QES) compliant with the PAdES-B-LT profile
+        * The signer's Norwegian National Identity Number corresponds with the person who is authorized to sign this document
+        * The signed document has been returned within the validity period of the transaction
+        * The document has not been tampered with
     * Upon successful validation, Elhub registers the authorization grant for the defined valid period.
     * The authorization document is stored in Elhub for future reference.
 7. **Execute Market Process**<br>

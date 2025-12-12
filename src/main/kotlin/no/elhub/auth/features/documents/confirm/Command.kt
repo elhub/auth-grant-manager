@@ -1,5 +1,8 @@
 package no.elhub.auth.features.documents.confirm
 
+import java.util.UUID
+
 data class Command(
-    val documentId: String
+    val documentId: UUID,
+    val signedFile: ByteArray
 )

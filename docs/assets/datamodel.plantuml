@@ -41,6 +41,12 @@ enum ElhubResource {
   System
 }
 
+enum PartyType {
+  Organization
+  OrganizationEntity
+  Person
+}
+
 enum DocumentType {
   ChangeOfSupplierConfirmation
 }
@@ -53,9 +59,9 @@ entity AuthorizationGrant {
   id: UUID
   --
   status: AuthorizationGrantStatus
-  grantedFor: BigInt, FK→AuthorizationParty
-  grantedBy: BigInt, FK→AuthorizationParty
-  grantedTo: BigInt, FK→AuthorizationParty
+  grantedFor: UUID, FK→AuthorizationParty /' The party for whom the grant is made '/
+  grantedBy: UUID, FK→AuthorizationParty /' The party that made/signed the grant '/
+  grantedTo: UUID, FK→AuthorizationParty /' The party that is given the rights by the grant '/
   grantedAt: DateTime
   validFrom: DateTime
   validTo: DateTime
@@ -74,7 +80,7 @@ entity AuthorizationAuditLog {
   authorizationGrantId: UUID, FK->AuthorizationGrant
   changedAt: DateTime
   --
-  changedBy: BigInt, FK→AuthorizationParty
+  changedBy: UUID, FK→AuthorizationParty
   valueChanged: String
   valueBefore: String
   valueAfter: String
@@ -86,8 +92,9 @@ entity AuthorizationRequest {
   --
   type: RequestType
   status: AuthorizationRequestStatus
-  requestedBy: BigInt, FK→AuthorizationParty
-  requestedFrom: BigInt, FK→AuthorizationParty
+  requestedBy: UUID, FK→AuthorizationParty  /' The party that made the request '/
+  requestedFrom: UUID, FK→AuthorizationParty /' The party that the request is made to '/
+  requestedTo: UUID, FK→AuthorizationParty   /' The party that is expected to respond to the request '/
   createdAt: DateTime
   updatedAt: DateTime
   validTo: DateTime
@@ -109,8 +116,9 @@ entity AuthorizationDocument {
   type: DocumentType
   file: Blob
   status: AuthorizationDocumentStatus
-  requestedBy: BigInt, FK→AuthorizationParty
-  requestedFrom: BigInt, FK→AuthorizationParty
+  requestedBy: UUID, FK→AuthorizationParty  /' The party that requested the document '/
+  requestedFrom: UUID, FK→AuthorizationParty /' The party that the document is issued for '/
+  requestedTo: UUID, FK→AuthorizationParty   /' The party that is expected to sign the document '/
   createdAt: DateTime
   updatedAt: DateTime
 }
@@ -125,9 +133,9 @@ entity AuthorizationDocumentProperty {
 
 entity AuthorizationDocumentSignatories {
   authorizationDocumentId: UUID, FK→Document
-  requestedTo: BigInt, FK→AuthorizationParty
+  requestedFrom: UUID, FK→AuthorizationParty
   --
-  signedBy: BigInt, FK→AuthorizationParty
+  signedBy: UUID, FK→AuthorizationParty
   signedAt: DateTime
 }
 
@@ -162,10 +170,10 @@ entity AuthorizationScope {
 }
 
 entity AuthorizationParty {
-  id: BigSerial
+  id: UUID
   --
-  type: ElhubResource
-  descriptor: String
+  type: PartyType
+  resourceId: String
   createdAt: DateTime
 }
 
@@ -191,6 +199,6 @@ AuthorizationRequest "1" *-- "0..*" AuthorizationRequestProperty
 AuthorizationRequest "1" *-- "1..*" AuthorizationRequestScope
 AuthorizationRequest --> RequestType
 AuthorizationRequest --> RequestStatus
-AuthorizationParty --> ElhubResource
+AuthorizationParty --> PartyType
 
 @enduml

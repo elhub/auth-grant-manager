@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "id": {
+      "$ref": "../base-definitions.schema.json#/definitions/resourceId"
+    },
+    "type": {
+      "type": "string",
+      "description": "The type of the resource object.",
+      "const": "AuthorizationGrant"
+    },
+    "attributes": {
+      "$defs": {
+        "status": {
+          "type": "string",
+          "description": "The status of the authorization grant.",
+          "enum": ["Active", "Exhausted", "Expired", "Revoked"]
+        },
+        "grantedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The date and time when the authorization is granted at."
+        },
+        "validFrom": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The date and time when the authorization grant is valid from."
+        },
+        "validTo": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The date and time when the authorization grant is valid to."
+        }
+      }
+    },
+    "relationships": {
+      "$defs": {
+        "grantedFor": {
+          "$ref": "../base-definitions.schema.json#/definitions/relationshipParty"
+        },
+        "grantedBy": {
+          "$ref": "../base-definitions.schema.json#/definitions/relationshipParty"
+        },
+        "grantedTo": {
+          "$ref": "../base-definitions.schema.json#/definitions/relationshipParty"
+        }
+      }
+    }
+  }
+}

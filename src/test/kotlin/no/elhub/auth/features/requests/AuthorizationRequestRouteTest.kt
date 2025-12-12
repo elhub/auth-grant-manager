@@ -1,13 +1,12 @@
 package no.elhub.auth.features.requests
 
 import io.kotest.core.spec.style.FunSpec
-import io.kotest.matchers.maps.shouldContain
-import io.kotest.matchers.maps.shouldContainKey
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.ktor.client.call.body
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
+import io.ktor.client.request.patch
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
@@ -16,191 +15,360 @@ import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.testing.testApplication
-import kotlinx.serialization.json.jsonPrimitive
+import no.elhub.auth.features.common.AuthPersonsTestContainer
+import no.elhub.auth.features.common.AuthPersonsTestContainerExtension
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.RunPostgresScriptExtension
-import no.elhub.auth.features.requests.common.AuthorizationRequestListResponse
-import no.elhub.auth.features.requests.common.AuthorizationRequestResponse
-import no.elhub.auth.features.requests.create.CreateRequestAttributes
-import no.elhub.auth.features.requests.create.CreateRequestRelationships
-import no.elhub.auth.features.requests.create.Request
-import no.elhub.devxp.jsonapi.model.JsonApiRelationshipData
-import no.elhub.devxp.jsonapi.model.JsonApiRelationshipToOne
-import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObjectWithRelationships
+import no.elhub.auth.features.common.commonModule
+import no.elhub.auth.features.common.party.PartyIdentifier
+import no.elhub.auth.features.common.party.PartyIdentifierType
+import no.elhub.auth.features.requests.confirm.dto.ConfirmRequestAttributes
+import no.elhub.auth.features.requests.confirm.dto.JsonApiConfirmRequest
+import no.elhub.auth.features.requests.create.dto.CreateRequestAttributes
+import no.elhub.auth.features.requests.create.dto.CreateRequestMeta
+import no.elhub.auth.features.requests.create.dto.CreateRequestResponse
+import no.elhub.auth.features.requests.create.dto.JsonApiCreateRequest
+import no.elhub.auth.features.requests.get.dto.GetRequestSingleResponse
+import no.elhub.auth.features.requests.query.dto.GetRequestCollectionResponse
+import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObject
+import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObjectWithMeta
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
+import no.elhub.devxp.jsonapi.response.JsonApiErrorObject
 import no.elhub.auth.module as applicationModule
 
-class AuthorizationRequestRouteTest : FunSpec({
-    extensions(
-        PostgresTestContainerExtension,
-        RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-requests.sql")
-    )
+class AuthorizationRequestRouteTest :
+    FunSpec({
+        extensions(
+            AuthPersonsTestContainerExtension,
+            PostgresTestContainerExtension(),
+            RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-party.sql"),
+            RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-requests.sql"),
+        )
 
-    context("GET /authorization-requests") {
-        testApplication {
-            client = createClient {
-                install(ContentNegotiation) {
-                    json()
+        context("GET /authorization-requests") {
+            testApplication {
+                client =
+                    createClient {
+                        install(ContentNegotiation) {
+                            json()
+                        }
+                    }
+
+                application {
+                    applicationModule()
+                    commonModule()
+                    module()
+                }
+
+                environment {
+                    config =
+                        MapApplicationConfig(
+                            "ktor.database.username" to "app",
+                            "ktor.database.password" to "app",
+                            "ktor.database.url" to "jdbc:postgresql://localhost:5432/auth",
+                            "ktor.database.driverClass" to "org.postgresql.Driver",
+                            "featureToggle.enableEndpoints" to "true",
+                            "authPersons.baseUri" to AuthPersonsTestContainer.baseUri(),
+                        )
+                }
+
+                test("GET all authorization request should return 200 OK") {
+                    val response = client.get(REQUESTS_PATH)
+                    response.status shouldBe HttpStatusCode.OK
+                    val responseJson: GetRequestCollectionResponse = response.body()
+                    responseJson.data.apply {
+                        size shouldBe 4
+                        this[0].apply {
+                            id.shouldNotBeNull()
+                            type shouldBe "AuthorizationRequest"
+                            attributes.shouldNotBeNull()
+                            attributes.apply {
+                                requestType shouldBe "ChangeOfSupplierConfirmation"
+                                status shouldBe "Pending"
+                                createdAt.shouldNotBeNull()
+                                updatedAt.shouldNotBeNull()
+                                validTo.shouldNotBeNull()
+                            }
+                            relationships.apply {
+                                requestedBy.apply {
+                                    data.apply {
+                                        id shouldBe "987654321"
+                                        type shouldBe "Organization"
+                                    }
+                                }
+                                requestedFrom.apply {
+                                    data.apply {
+                                        id shouldBe "12345678901"
+                                        type shouldBe "Person"
+                                    }
+                                }
+                                requestedTo.apply {
+                                    data.apply {
+                                        id shouldBe "12345678902"
+                                        type shouldBe "Person"
+                                    }
+                                }
+                            }
+                            links.shouldNotBeNull()
+                            links.apply {
+                                self.shouldNotBeNull()
+                            }
+                        }
+                        this[1].apply {
+                            id.shouldNotBeNull()
+                            type shouldBe "AuthorizationRequest"
+                            attributes.shouldNotBeNull()
+                            attributes.apply {
+                                requestType shouldBe "ChangeOfSupplierConfirmation"
+                                status shouldBe "Accepted"
+                                createdAt.shouldNotBeNull()
+                                updatedAt.shouldNotBeNull()
+                                validTo.shouldNotBeNull()
+                            }
+                            relationships.apply {
+                                requestedBy.apply {
+                                    data.apply {
+                                        id shouldBe "987654321"
+                                        type shouldBe "Organization"
+                                    }
+                                }
+                                requestedFrom.apply {
+                                    data.apply {
+                                        id shouldBe "12345678901"
+                                        type shouldBe "Person"
+                                    }
+                                }
+                                requestedTo.apply {
+                                    data.apply {
+                                        id shouldBe "12345678902"
+                                        type shouldBe "Person"
+                                    }
+                                }
+                                approvedBy.shouldNotBeNull().apply {
+                                    data.apply {
+                                        id shouldBe "12345678902"
+                                        type shouldBe "Person"
+                                    }
+                                }
+                            }
+                            links.shouldNotBeNull()
+                            links.apply {
+                                self.shouldNotBeNull()
+                            }
+                        }
+                        this[2].apply {
+                            id.shouldNotBeNull()
+                            type shouldBe "AuthorizationRequest"
+                            attributes.shouldNotBeNull()
+                            attributes.apply {
+                                requestType shouldBe "ChangeOfSupplierConfirmation"
+                                status shouldBe "Accepted"
+                                createdAt.shouldNotBeNull()
+                                updatedAt.shouldNotBeNull()
+                                validTo.shouldNotBeNull()
+                            }
+                            relationships.apply {
+                                requestedBy.apply {
+                                    data.apply {
+                                        id shouldBe "987654321"
+                                        type shouldBe "Organization"
+                                    }
+                                }
+                                requestedFrom.apply {
+                                    data.apply {
+                                        id shouldBe "12345678901"
+                                        type shouldBe "Person"
+                                    }
+                                }
+                                requestedTo.apply {
+                                    data.apply {
+                                        id shouldBe "12345678902"
+                                        type shouldBe "Person"
+                                    }
+                                }
+                                approvedBy.shouldNotBeNull().apply {
+                                    data.apply {
+                                        id shouldBe "12345678902"
+                                        type shouldBe "Person"
+                                    }
+                                }
+                            }
+                            links.shouldNotBeNull()
+                            links.apply {
+                                self.shouldNotBeNull()
+                            }
+                        }
+                        this[3].apply {
+                            id.shouldNotBeNull()
+                            type shouldBe "AuthorizationRequest"
+                            attributes.shouldNotBeNull()
+                            attributes.apply {
+                                requestType shouldBe "ChangeOfSupplierConfirmation"
+                                status shouldBe "Accepted"
+                                createdAt.shouldNotBeNull()
+                                updatedAt.shouldNotBeNull()
+                                validTo.shouldNotBeNull()
+                            }
+                            relationships.apply {
+                                requestedBy.apply {
+                                    data.apply {
+                                        id shouldBe "987654321"
+                                        type shouldBe "Organization"
+                                    }
+                                }
+                                requestedFrom.apply {
+                                    data.apply {
+                                        id shouldBe "12345678901"
+                                        type shouldBe "Person"
+                                    }
+                                }
+                                requestedTo.apply {
+                                    data.apply {
+                                        id shouldBe "12345678902"
+                                        type shouldBe "Person"
+                                    }
+                                }
+                                approvedBy.shouldNotBeNull().apply {
+                                    data.apply {
+                                        id shouldBe "12345678902"
+                                        type shouldBe "Person"
+                                    }
+                                }
+                            }
+                            links.shouldNotBeNull()
+                            links.apply {
+                                self.shouldNotBeNull()
+                            }
+                        }
+                    }
                 }
             }
+        }
 
-            application {
-                applicationModule()
-                module()
-            }
+        context("GET /authorization-requests/{id}") {
+            testApplication {
+                client =
+                    createClient {
+                        install(ContentNegotiation) {
+                            json()
+                        }
+                    }
 
-            environment {
-                config = MapApplicationConfig(
-                    "ktor.database.username" to "app",
-                    "ktor.database.password" to "app",
-                    "ktor.database.url" to "jdbc:postgresql://localhost:5432/auth",
-                    "ktor.database.driverClass" to "org.postgresql.Driver",
-                )
-            }
-            test("Should return 200 OK") {
-                val response = client.get(REQUESTS_PATH)
-                response.status shouldBe HttpStatusCode.OK
-                val responseJson: AuthorizationRequestListResponse = response.body()
-                responseJson.data.apply {
-                    size shouldBe 2
-                    this[0].apply {
+                application {
+                    applicationModule()
+                    commonModule()
+                    module()
+                }
+
+                environment {
+                    config =
+                        MapApplicationConfig(
+                            "ktor.database.username" to "app",
+                            "ktor.database.password" to "app",
+                            "ktor.database.url" to "jdbc:postgresql://localhost:5432/auth",
+                            "ktor.database.driverClass" to "org.postgresql.Driver",
+                            "featureToggle.enableEndpoints" to "true",
+                            "authPersons.baseUri" to AuthPersonsTestContainer.baseUri(),
+                        )
+                }
+
+                test("Should return 200 OK on a valid ID before request is accepted") {
+                    val response = client.get("$REQUESTS_PATH/d81e5bf2-8a0c-4348-a788-2a3fab4e77d6")
+                    response.status shouldBe HttpStatusCode.OK
+                    val responseJson: GetRequestSingleResponse = response.body()
+                    responseJson.data.apply {
                         id.shouldNotBeNull()
                         type shouldBe "AuthorizationRequest"
-                        attributes.shouldNotBeNull()
-                        attributes!!.apply {
+                        attributes.shouldNotBeNull().apply {
                             requestType shouldBe "ChangeOfSupplierConfirmation"
                             status shouldBe "Pending"
                             createdAt.shouldNotBeNull()
                             updatedAt.shouldNotBeNull()
                             validTo.shouldNotBeNull()
                         }
-                        relationships.apply {
+                        relationships.shouldNotBeNull().apply {
                             requestedBy.apply {
                                 data.apply {
-                                    id shouldBe "84797600005"
+                                    id shouldBe "987654321"
                                     type shouldBe "Organization"
                                 }
                             }
-
                             requestedFrom.apply {
                                 data.apply {
-                                    id shouldBe "80102512345"
+                                    id shouldBe "12345678901"
+                                    type shouldBe "Person"
+                                }
+                            }
+                            requestedTo.apply {
+                                data.apply {
+                                    id shouldBe "12345678902"
                                     type shouldBe "Person"
                                 }
                             }
                         }
-                        meta.shouldNotBeNull()
-                        meta!!
-                            .mapValues { it.value.jsonPrimitive.content }
-                            .apply {
-                                shouldContainKey("createdAt")
-                                shouldContain("requestedFromName", "Ola Normann")
-                                shouldContain("requestedForMeteringPointId" to "1234567890123")
-                                shouldContain("requestedForMeteringPointAddress" to "Example Street 1, 1234 Oslo")
-                                shouldContain("balanceSupplierContractName" to "ExampleSupplierContract")
-                            }
+                        links.shouldNotBeNull()
+                        links.apply {
+                            self.shouldNotBeNull()
+                        }
                     }
-                    this[1].apply {
+                    responseJson.links.apply {
+                        self shouldBe REQUESTS_PATH
+                    }
+                    responseJson.meta.apply {
+                        "createdAt".shouldNotBeNull()
+                    }
+                }
+
+                test("Should return 200 OK with approvedBy on a valid ID after request is accepted") {
+                    val response = client.get("$REQUESTS_PATH/4f71d596-99e4-415e-946d-7252c1a40c5b")
+                    response.status shouldBe HttpStatusCode.OK
+                    val responseJson: GetRequestSingleResponse = response.body()
+                    responseJson.data.apply {
                         id.shouldNotBeNull()
                         type shouldBe "AuthorizationRequest"
-                        attributes.shouldNotBeNull()
-                        attributes!!.apply {
+                        attributes.shouldNotBeNull().apply {
                             requestType shouldBe "ChangeOfSupplierConfirmation"
                             status shouldBe "Accepted"
                             createdAt.shouldNotBeNull()
                             updatedAt.shouldNotBeNull()
                             validTo.shouldNotBeNull()
                         }
-                        relationships.apply {
+                        relationships.shouldNotBeNull().apply {
                             requestedBy.apply {
                                 data.apply {
-                                    id shouldBe "84797600005"
-                                    type shouldBe "Organization"
-                                }
-                            }
-
-                            requestedFrom.apply {
-                                data.apply {
-                                    id shouldBe "80102512345"
-                                    type shouldBe "Person"
-                                }
-                            }
-                        }
-                        meta.shouldNotBeNull()
-                        meta!!
-                            .mapValues { it.value.jsonPrimitive.content }
-                            .apply {
-                                shouldContainKey("createdAt")
-                                shouldContain("requestedFromName" to "Kari Normann")
-                                shouldContain("requestedForMeteringPointId" to "1234567890123")
-                                shouldContain("requestedForMeteringPointAddress" to "Example Street 1, 1234 Oslo")
-                                shouldContain("balanceSupplierContractName" to "ExampleSupplierContract")
-                            }
-                    }
-                }
-            }
-        }
-        context("GET /authorization-requests/{id}") {
-            testApplication {
-                client = createClient {
-                    install(ContentNegotiation) {
-                        json()
-                    }
-                }
-
-                application {
-                    applicationModule()
-                    module()
-                }
-
-                environment {
-                    config = MapApplicationConfig(
-                        "ktor.database.username" to "app",
-                        "ktor.database.password" to "app",
-                        "ktor.database.url" to "jdbc:postgresql://localhost:5432/auth",
-                        "ktor.database.driverClass" to "org.postgresql.Driver",
-                    )
-                }
-                test("Should return 200 OK on a valid ID") {
-                    val response = client.get("$REQUESTS_PATH/d81e5bf2-8a0c-4348-a788-2a3fab4e77d6")
-                    response.status shouldBe HttpStatusCode.OK
-                    val responseJson: AuthorizationRequestResponse = response.body()
-
-                    responseJson.data.apply {
-                        id.shouldNotBeNull()
-                        type shouldBe "AuthorizationRequest"
-                        attributes.shouldNotBeNull()
-                        attributes!!.apply {
-                            requestType shouldBe "ChangeOfSupplierConfirmation"
-                            status shouldBe "Pending"
-                            createdAt.shouldNotBeNull()
-                            updatedAt.shouldNotBeNull()
-                            validTo.shouldNotBeNull()
-                        }
-                        relationships.apply {
-                            requestedBy.apply {
-                                data.apply {
-                                    id shouldBe "84797600005"
+                                    id shouldBe "987654321"
                                     type shouldBe "Organization"
                                 }
                             }
                             requestedFrom.apply {
                                 data.apply {
-                                    id shouldBe "80102512345"
+                                    id shouldBe "12345678901"
+                                    type shouldBe "Person"
+                                }
+                            }
+                            requestedTo.apply {
+                                data.apply {
+                                    id shouldBe "12345678902"
+                                    type shouldBe "Person"
+                                }
+                            }
+                            approvedBy.shouldNotBeNull().apply {
+                                data.apply {
+                                    id shouldBe "12345678902"
                                     type shouldBe "Person"
                                 }
                             }
                         }
-                        meta.shouldNotBeNull()
-                        meta!!
-                            .mapValues { it.value.jsonPrimitive.content }
-                            .apply {
-                                shouldContainKey("createdAt")
-                                shouldContain("requestedFromName", "Ola Normann")
-                                shouldContain("requestedForMeteringPointId" to "1234567890123")
-                                shouldContain("requestedForMeteringPointAddress" to "Example Street 1, 1234 Oslo")
-                                shouldContain("balanceSupplierContractName" to "ExampleSupplierContract")
-                            }
+                        links.shouldNotBeNull()
+                        links.apply {
+                            self.shouldNotBeNull()
+                        }
+                    }
+                    responseJson.links.apply {
+                        self shouldBe REQUESTS_PATH
+                    }
+                    responseJson.meta.apply {
+                        "createdAt".shouldNotBeNull()
                     }
                 }
 
@@ -235,92 +403,205 @@ class AuthorizationRequestRouteTest : FunSpec({
                 }
             }
         }
-        context("POST /authorization-requests ") {
+
+        context("POST /authorization-requests") {
             testApplication {
-                client = createClient {
-                    install(ContentNegotiation) {
-                        json()
-                    }
-                }
+                client = createClient { install(ContentNegotiation) { json() } }
 
                 application {
                     applicationModule()
+                    commonModule()
                     module()
                 }
 
                 environment {
-                    config = MapApplicationConfig(
-                        "ktor.database.username" to "app",
-                        "ktor.database.password" to "app",
-                        "ktor.database.url" to "jdbc:postgresql://localhost:5432/auth",
-                        "ktor.database.driverClass" to "org.postgresql.Driver",
-                    )
+                    config =
+                        MapApplicationConfig(
+                            "ktor.database.username" to "app",
+                            "ktor.database.password" to "app",
+                            "ktor.database.url" to "jdbc:postgresql://localhost:5432/auth",
+                            "ktor.database.driverClass" to "org.postgresql.Driver",
+                            "featureToggle.enableEndpoints" to "true",
+                            "authPersons.baseUri" to AuthPersonsTestContainer.baseUri(),
+                        )
                 }
+
                 test("Should return 201 Created") {
-                    val response = client.post(REQUESTS_PATH) {
-                        contentType(ContentType.Application.Json)
-                        setBody(
-                            Request(
-                                data = JsonApiRequestResourceObjectWithRelationships<CreateRequestAttributes, CreateRequestRelationships>(
-                                    type = "AuthorizationRequest",
-                                    attributes = CreateRequestAttributes(
-                                        requestType = "ChangeOfSupplierConfirmation",
-                                    ),
-                                    relationships = CreateRequestRelationships(
-                                        requestedBy = JsonApiRelationshipToOne(
-                                            data = JsonApiRelationshipData(
-                                                id = "12345678901",
-                                                type = "Organization",
-                                            )
+                    val response =
+                        client.post(REQUESTS_PATH) {
+                            contentType(ContentType.Application.Json)
+                            setBody(
+                                JsonApiCreateRequest(
+                                    data =
+                                    JsonApiRequestResourceObjectWithMeta(
+                                        type = "AuthorizationRequest",
+                                        attributes =
+                                        CreateRequestAttributes(
+                                            requestType = AuthorizationRequest.Type.ChangeOfSupplierConfirmation,
                                         ),
-                                        requestedFrom = JsonApiRelationshipToOne(
-                                            data = JsonApiRelationshipData(
-                                                id = "98765432109",
-                                                type = "Person",
-                                            )
-                                        )
+                                        meta =
+                                        CreateRequestMeta(
+                                            requestedBy = PartyIdentifier(PartyIdentifierType.OrganizationNumber, "987654321"),
+                                            requestedFrom = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "12345678901"),
+                                            requestedFromName = "Hillary Orr",
+                                            requestedTo = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "12345678902"),
+                                            requestedForMeteringPointId = "123456789012345678",
+                                            requestedForMeteringPointAddress = "quaerendum",
+                                            balanceSupplierName = "Balance Supplier",
+                                            balanceSupplierContractName = "Selena Chandler",
+                                        ),
                                     ),
                                 ),
                             )
-                        )
-                    }
+                        }
 
                     response.status shouldBe HttpStatusCode.Created
-                    val responseJson: AuthorizationRequestResponse = response.body()
+
+                    val responseJson: CreateRequestResponse = response.body()
                     responseJson.data.apply {
                         id.shouldNotBeNull()
                         type shouldBe "AuthorizationRequest"
-                        attributes.shouldNotBeNull()
-                        attributes!!.apply {
+                        attributes.shouldNotBeNull().apply {
                             requestType shouldBe "ChangeOfSupplierConfirmation"
-                            status shouldBe "Pending"
-                            createdAt.shouldNotBeNull()
-                            updatedAt.shouldNotBeNull()
+                            status shouldBe AuthorizationRequest.Status.Pending.name
                             validTo.shouldNotBeNull()
                         }
-                        relationships.apply {
-                            requestedBy.apply {
-                                data.apply {
-                                    id shouldBe "12345678901"
-                                    type shouldBe "Organization"
+                        relationships.shouldNotBeNull().apply {
+                            relationships.apply {
+                                requestedBy.apply {
+                                    data.apply {
+                                        id shouldBe "987654321"
+                                        type shouldBe "Organization"
+                                    }
                                 }
-                            }
-                            requestedFrom.apply {
-                                data.apply {
-                                    id shouldBe "98765432109"
-                                    type shouldBe "Person"
+                                requestedFrom.apply {
+                                    data.apply {
+                                        id.shouldNotBeNull()
+                                        type shouldBe "Person"
+                                    }
+                                }
+                                requestedFrom.apply {
+                                    data.apply {
+                                        id.shouldNotBeNull()
+                                        type shouldBe "Person"
+                                    }
                                 }
                             }
                         }
-                        meta.shouldNotBeNull()
-                        meta!!
-                            .mapValues { it.value.jsonPrimitive.content }
-                            .apply {
-                                shouldContainKey("createdAt")
-                            }
+                        meta.shouldNotBeNull().apply {
+                            createdAt.shouldNotBeNull()
+                            updatedAt.shouldNotBeNull()
+                            requestedFromName shouldBe "Hillary Orr"
+                            requestedForMeteringPointId shouldBe "123456789012345678"
+                            requestedForMeteringPointAddress shouldBe "quaerendum"
+                            balanceSupplierName shouldBe "Balance Supplier"
+                            balanceSupplierContractName shouldBe "Selena Chandler"
+                        }
+                        links.shouldNotBeNull().apply {
+                            self.shouldNotBeNull()
+                        }
+                    }
+                    responseJson.links.shouldNotBeNull().apply {
+                        self shouldBe REQUESTS_PATH
+                    }
+                    responseJson.meta.shouldNotBeNull().apply {
+                        "createdAt".shouldNotBeNull()
+                    }
+                }
+
+                test("Should return 400 Bad Request on validation error with error payload") {
+                    val response =
+                        client.post(REQUESTS_PATH) {
+                            contentType(ContentType.Application.Json)
+                            setBody(
+                                JsonApiCreateRequest(
+                                    data =
+                                    JsonApiRequestResourceObjectWithMeta(
+                                        type = "AuthorizationRequest",
+                                        attributes =
+                                        CreateRequestAttributes(
+                                            requestType = AuthorizationRequest.Type.ChangeOfSupplierConfirmation,
+                                        ),
+                                        meta =
+                                        CreateRequestMeta(
+                                            requestedBy = PartyIdentifier(PartyIdentifierType.OrganizationNumber, "987654321"),
+                                            requestedFrom = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "12345678901"),
+                                            requestedFromName = "",
+                                            requestedTo = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "12345678902"),
+                                            requestedForMeteringPointId = "123456789012345678",
+                                            requestedForMeteringPointAddress = "quaerendum",
+                                            balanceSupplierName = "Balance Supplier",
+                                            balanceSupplierContractName = "Selena Chandler",
+                                        ),
+                                    ),
+                                ),
+                            )
+                        }
+
+                    response.status shouldBe HttpStatusCode.BadRequest
+                    val body = response.body<JsonApiErrorObject>()
+                    body.status shouldBe "400"
+                    body.code shouldBe "missing_requested_from_name"
+                    body.title shouldBe "Validation Error"
+                    body.detail shouldBe "Requested from name is missing"
+                }
+            }
+        }
+
+        context("PATCH /authorization-requests/{ID}") {
+            testApplication {
+                client =
+                    createClient {
+                        install(ContentNegotiation) {
+                            json()
+                        }
+                    }
+
+                application {
+                    applicationModule()
+                    commonModule()
+                    module()
+                }
+
+                environment {
+                    config =
+                        MapApplicationConfig(
+                            "ktor.database.username" to "app",
+                            "ktor.database.password" to "app",
+                            "ktor.database.url" to "jdbc:postgresql://localhost:5432/auth",
+                            "ktor.database.driverClass" to "org.postgresql.Driver",
+                            "featureToggle.enableEndpoints" to "true",
+                            "authPersons.baseUri" to AuthPersonsTestContainer.baseUri(),
+                        )
+                }
+
+                test("Should update status and return updated object as response") {
+                    val response =
+                        client.patch("${REQUESTS_PATH}/d81e5bf2-8a0c-4348-a788-2a3fab4e77d6") {
+                            contentType(ContentType.Application.Json)
+                            setBody(
+                                JsonApiConfirmRequest(
+                                    data = JsonApiRequestResourceObject(
+                                        type = "AuthorizationRequest",
+                                        attributes = ConfirmRequestAttributes(
+                                            status = AuthorizationRequest.Status.Accepted
+                                        )
+                                    )
+                                ),
+                            )
+                        }
+
+                    response.status shouldBe HttpStatusCode.OK
+                    val patchRequestResponse: CreateRequestResponse = response.body()
+
+                    patchRequestResponse.data.apply {
+                        type shouldBe "AuthorizationRequest"
+                        id.shouldNotBeNull()
+                        attributes.shouldNotBeNull().apply {
+                            status shouldBe "Accepted"
+                        }
                     }
                 }
             }
         }
-    }
-})
+    })

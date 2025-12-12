@@ -6,20 +6,37 @@ import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
-import no.elhub.auth.features.documents.common.toResponse
+import no.elhub.auth.features.common.auth.AuthorizationProvider
+import no.elhub.auth.features.common.auth.RoleType
+import no.elhub.auth.features.common.auth.toApiErrorResponse
+import no.elhub.auth.features.documents.create.toModel
+import org.slf4j.LoggerFactory
 
-fun Route.route(handler: Handler) {
+private val log = LoggerFactory.getLogger(Route::class.java)
+
+fun Route.route(
+    handler: Handler,
+    authProvider: AuthorizationProvider,
+) {
     post {
-        val requestBody = call.receive<Request>()
-
-        val command = requestBody.toCommand()
+        val resolvedActor = authProvider.authorizeMarketParty(call)
             .getOrElse {
-                call.respond(HttpStatusCode.BadRequest)
+                val error = it.toApiErrorResponse()
+                call.respond(error.first, error.second)
                 return@post
             }
 
-        val document = handler(command)
+        val requestBody = call.receive<Request>()
+        val model = requestBody.toModel()
+
+        if (resolvedActor.role != RoleType.BalanceSupplier) {
+            call.respond(HttpStatusCode.BadRequest)
+            return@post
+        }
+
+        val document = handler(model)
             .getOrElse { error ->
+                log.error("Failed to create authorization document: {}", error)
                 when (error) {
                     is
                     CreateDocumentError.FileGenerationError,
@@ -28,12 +45,22 @@ fun Route.route(handler: Handler) {
                     CreateDocumentError.SignatureFetchingError,
                     CreateDocumentError.SigningDataGenerationError,
                     CreateDocumentError.SigningError,
-                    CreateDocumentError.PersistenceError
+                    CreateDocumentError.PersistenceError,
+                    CreateDocumentError.RequestedByPartyError,
+                    CreateDocumentError.RequestedFromPartyError,
+                    CreateDocumentError.RequestedToPartyError,
+                    CreateDocumentError.SignedByPartyError,
+                    CreateDocumentError.PersonError,
+                    CreateDocumentError.GenerateFileError
                     -> call.respond(HttpStatusCode.InternalServerError)
                 }
                 return@post
             }
 
-        call.respond(status = HttpStatusCode.Created, message = document.toResponse())
+        log.debug("Successfully created document {}", document.id)
+        call.respond(
+            status = HttpStatusCode.Created,
+            message = document.toCreateDocumentResponse()
+        )
     }
 }

@@ -1,33 +1,33 @@
 [metadata]
 format.version = "1.1"
 [versions]
-arrow = "2.1.2"
+arrow = "2.2.0"
 cohort = "2.8.0"
-elhub-gradle = "0.8.9"
-elhub-jsonapi-wrapper = "0.2.6"
+elhub-gradle = "0.9.1"
+elhub-jsonapi-wrapper = "0.4.3"
 exposed = "0.61.0"
-gradle-docker = "0.17.18"
+gradle-docker = "0.17.19"
 hikari = "7.0.2"
-json-skema = "0.27.0"
+json-skema = "0.28.0"
 kotlinx-datetime = "0.7.1-0.6.x-compat"
 kotlinx-serialization = "1.9.0"
-kotlinx-serialization-plugin = "2.2.20"
+kotlinx-serialization-plugin = "2.2.21"
 koin = "4.1.1"
-koin-annotations = "2.3.0"
+koin-annotations = "2.3.1"
 kotest = "6.0.4"
 kotlin-logging = "7.0.13"
-ksp = "2.3.0"
-ktor = "3.3.1"
+ksp = "2.3.2"
+ktor = "3.3.2"
 liquibase = "4.33.0"
 liquibase-plugin = "3.0.2"
-micrometer = "1.15.5"
+micrometer = "1.16.0"
 mockk = "1.14.6"
-openapi-generator = "7.16.0"
+openapi-generator = "7.17.0"
 picocli = "4.7.7"
 postgresql = "42.7.8"
 slf4j = "2.0.17"
 snakeyaml = "2.5"
-testcontainers = "1.21.3"
+testcontainers = "2.0.2"
 mybatis = "3.5.19"
 mustache = "0.9.14"
 openhtmltopdf = "1.1.31"
@@ -73,6 +73,7 @@ ktor-server-core = { group = "io.ktor", name = "ktor-server-core", version.ref =
 ktor-client-cio = { group = "io.ktor", name = "ktor-client-cio", version.ref = "ktor" }
 ktor-client-core = { group = "io.ktor", name = "ktor-client-core", version.ref = "ktor" }
 ktor-client-logging = { group = "io.ktor", name = "ktor-client-logging", version.ref = "ktor" }
+ktor-client-mock = { group = "io.ktor", name = "ktor-client-mock", version.ref = "ktor" }
 ktor-server-metrics-micrometer = { group = "io.ktor", name = "ktor-server-metrics-micrometer", version.ref = "ktor" }
 ktor-client-content-negotiation = { group = "io.ktor", name = "ktor-client-content-negotiation", version.ref = "ktor" }
 ktor-server-netty = { group = "io.ktor", name = "ktor-server-netty", version.ref = "ktor" }
@@ -94,7 +95,7 @@ test-koin-test = { group = "io.insert-koin", name = "koin-test", version.ref = "
 test-ktor-server-test-host = { group = "io.ktor", name = "ktor-server-test-host", version.ref = "ktor" }
 test-mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
 test-testcontainers = { group = "org.testcontainers", name = "testcontainers", version.ref = "testcontainers" }
-test-testcontainers-postgres = { group = "org.testcontainers", name = "postgresql", version.ref = "testcontainers" }
+test-testcontainers-postgres = { group = "org.testcontainers", name = "testcontainers-postgresql", version.ref = "testcontainers" }
 test-mybatis = { group = "org.mybatis", name = "mybatis", version.ref = "mybatis" }
 templating-mustache = { group = "com.github.spullara.mustache.java", name = "compiler", version.ref = "mustache" }
 pdf-openhtmltopdf-pdfbox = { group = "io.github.openhtmltopdf", name = "openhtmltopdf-pdfbox", version.ref = "openhtmltopdf" }

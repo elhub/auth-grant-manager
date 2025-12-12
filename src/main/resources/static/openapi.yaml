@@ -16,6 +16,25 @@ paths:
   "/authorization-documents":
     get:
       summary: Retrieve a list of authorization document objects.
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          description: Bearer Maskinporten token for the calling party.
+          schema:
+            type: string
+        - name: SenderGln
+          in: header
+          required: true
+          description: GLN of the party issuing the request.
+          schema:
+            type: string
+        - name: OnBehalfOfGln
+          in: header
+          required: false
+          description: GLN of the party the sender is acting on behalf of in delegated Maskinporten flows.
+          schema:
+            type: string
       responses:
         "200":
           description: A list of authorization document objects.
@@ -30,14 +49,33 @@ paths:
     post:
       summary: Initiate a new authorization document flow.
       description: Initiate a new authorization document flow. This creates a authorization document for signing.
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          description: Bearer Maskinporten token for the calling party .
+          schema:
+            type: string
+        - name: SenderGln
+          in: header
+          required: true
+          description: GLN of the party issuing the request.
+          schema:
+            type: string
+        - name: OnBehalfOfGln
+          in: header
+          required: false
+          description: GLN of the party the sender is acting on behalf of in delegated Maskinporten flows.
+          schema:
+            type: string
       requestBody:
         content:
           application/json:
             schema:
               $ref: "./schemas/documents/authorization-document-post-request.schema.json"
       responses:
-        "200":
-          description: This creates a new authorization document and returns the details of the request initiated (including the link to the actual document).
+        "201":
+          description: Returns the identifier of the created authorization document together with links to the resource and its PDF file.
           content:
             application/json:
               schema:
@@ -54,6 +92,24 @@ paths:
       description: |
         Retrieve information about a specific authorization document. This can be used to check the status as well as other attributes of the document.
       parameters:
+        - name: Authorization
+          in: header
+          required: true
+          description: Bearer Maskinporten token for the calling party.
+          schema:
+            type: string
+        - name: SenderGln
+          in: header
+          required: true
+          description: GLN of the party issuing the request.
+          schema:
+            type: string
+        - name: OnBehalfOfGln
+          in: header
+          required: false
+          description: GLN of the party the sender is acting on behalf of in delegated Maskinporten flows.
+          schema:
+            type: string
         - name: id
           in: path
           required: true
@@ -77,6 +133,24 @@ paths:
       summary: Delete/cancel a signed document.
       description: Cancel a document to be signed. This can only be done if the document is not yet signed.
       parameters:
+        - name: Authorization
+          in: header
+          required: true
+          description: Bearer Maskinporten token for the calling party.
+          schema:
+            type: string
+        - name: SenderGln
+          in: header
+          required: true
+          description: GLN of the party issuing the request.
+          schema:
+            type: string
+        - name: OnBehalfOfGln
+          in: header
+          required: false
+          description: GLN of the party the sender is acting on behalf of in delegated Maskinporten flows.
+          schema:
+            type: string
         - name: id
           in: path
           required: true
@@ -94,11 +168,31 @@ paths:
           $ref: "#/components/responses/404NotFoundError"
         "500":
           $ref: "#/components/responses/500InternalServerError"
+      tags:
+        - TODO
   "/authorization-documents/{id}.pdf":
     get:
       summary: Retrieve authorization document.
       description: Retrieve the actual authorization document as a PDF file.
       parameters:
+        - name: Authorization
+          in: header
+          required: true
+          description: Bearer Maskinporten token for the calling party.
+          schema:
+            type: string
+        - name: SenderGln
+          in: header
+          required: true
+          description: GLN of the party issuing the request.
+          schema:
+            type: string
+        - name: OnBehalfOfGln
+          in: header
+          required: false
+          description: GLN of the party the sender is acting on behalf of in delegated Maskinporten flows.
+          schema:
+            type: string
         - name: id
           in: path
           required: true
@@ -118,23 +212,44 @@ paths:
           $ref: "#/components/responses/404NotFoundError"
         "500":
           $ref: "#/components/responses/500InternalServerError"
-    patch:
+    put:
       summary: Submit a signed authorization document.
       description: Submit a signed authorization document. Elhub will validate the document, generate any necessary authorization grants and store the document.
       parameters:
+        - name: Authorization
+          in: header
+          required: true
+          description: Bearer Maskinporten token for the calling party.
+          schema:
+            type: string
+        - name: SenderGln
+          in: header
+          required: true
+          description: GLN of the party issuing the request.
+          schema:
+            type: string
+        - name: OnBehalfOfGln
+          in: header
+          required: false
+          description: GLN of the party the sender is acting on behalf of in delegated Maskinporten flows.
+          schema:
+            type: string
         - name: id
           in: path
           required: true
           description: The id of the authorization document to change.
           schema:
             type: string
+      requestBody:
+        required: true
+        content:
+          application/pdf:
+            schema:
+              type: string
+              format: binary
       responses:
-        "200":
-          description: The document was registered and accepted.
-          content:
-            application/json:
-              schema:
-                $ref: "./schemas/json-api-meta.schema.json"
+        "204":
+          description: The signature was validated and the document was registered and accepted. No content is returned.
         "400":
           $ref: "#/components/responses/400BadRequestError"
         "401":
@@ -144,13 +259,32 @@ paths:
   "/authorization-grants":
     get:
       summary: Retrieve a list of authorization grants.
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          description: Bearer Maskinporten token or Enduser token.
+          schema:
+            type: string
+        - name: SenderGln
+          in: header
+          required: false
+          description: GLN of the party issuing the request.
+          schema:
+            type: string
+        - name: OnBehalfOfGln
+          in: header
+          required: false
+          description: GLN of the party the sender is acting on behalf of in delegated Maskinporten flows.
+          schema:
+            type: string
       responses:
         "200":
           description: A list of authorization grants.
           content:
             application/json:
               schema:
-                $ref: "./schemas/authorization-grant-get-list-response.schema.json"
+                $ref: "./schemas/grants/authorization-grant-get-list-response.schema.json"
         "400":
           $ref: "#/components/responses/400BadRequestError"
         "401":
@@ -161,6 +295,24 @@ paths:
     get:
       summary: Retrieve a specific authorization grant.
       parameters:
+        - name: Authorization
+          in: header
+          required: false
+          description: Bearer Maskinporten token or Enduser token.
+          schema:
+            type: string
+        - name: SenderGln
+          in: header
+          required: false
+          description: GLN of the party issuing the request.
+          schema:
+            type: string
+        - name: OnBehalfOfGln
+          in: header
+          required: false
+          description: GLN of the party the sender is acting on behalf of in delegated Maskinporten flows.
+          schema:
+            type: string
         - name: id
           in: path
           required: true
@@ -173,7 +325,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "./schemas/authorization-grant-get-response.schema.json"
+                $ref: "./schemas/grants/authorization-grant-get-response.schema.json"
         "401":
           $ref: "#/components/responses/401UnauthorizedError"
         "404":
@@ -182,10 +334,60 @@ paths:
           $ref: "#/components/responses/400BadRequestError"
         "500":
           $ref: "#/components/responses/500InternalServerError"
+    patch:
+      summary: Update the status of an authorization grant
+      description: Update the authorization grant status. This is an internal API for BRS.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The id of the authorization grant to update.
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "./schemas/grants/authorization-grant-patch-request.schema.json"
+      responses:
+        "200":
+          description: The authorization grant was updated.
+          content:
+            application/json:
+              schema:
+                $ref: "./schemas/grants/authorization-grant-get-response.schema.json"
+        "400":
+          $ref: "#/components/responses/400BadRequestError"
+        "401":
+          $ref: "#/components/responses/401UnauthorizedError"
+        "404":
+          $ref: "#/components/responses/404NotFoundError"
+        "500":
+          $ref: "#/components/responses/500InternalServerError"
+      tags:
+        - TODO
   "/authorization-grants/{id}/scopes":
     get:
       summary: Retrieve all of the scopes for the identified authorization grant.
       parameters:
+        - name: Authorization
+          in: header
+          required: true
+          description: Bearer Maskinporten token or Enduser token.
+          schema:
+            type: string
+        - name: SenderGln
+          in: header
+          required: false
+          description: GLN of the party issuing the request.
+          schema:
+            type: string
+        - name: OnBehalfOfGln
+          in: header
+          required: false
+          description: GLN of the party the sender is acting on behalf of in delegated Maskinporten flows.
+          schema:
+            type: string
         - name: id
           in: path
           required: true
@@ -198,7 +400,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "./schemas/authorization-scope-get-list-response.schema.json"
+                $ref: "./schemas/grants/authorization-scope-get-list-response.schema.json"
         "400":
           $ref: "#/components/responses/400BadRequestError"
         "401":
@@ -212,46 +414,65 @@ paths:
   "/authorization-requests":
     get:
       summary: Retrieve a list of authorization requests.
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          description: Bearer Maskinporten token or Enduser token.
+          schema:
+            type: string
+        - name: SenderGln
+          in: header
+          required: false
+          description: GLN of the party issuing the request.
+          schema:
+            type: string
+        - name: OnBehalfOfGln
+          in: header
+          required: false
+          description: GLN of the party the sender is acting on behalf of in delegated Maskinporten flows.
+          schema:
+            type: string
       responses:
         "200":
           description: A list of authorization requests.
           content:
             application/json:
               schema:
-                $ref: "./schemas/authorization-request-get-list-response.schema.json"
+                $ref: "./schemas/requests/authorization-request-get-list-response.schema.json"
         "401":
           $ref: "#/components/responses/401UnauthorizedError"
         "500":
           $ref: "#/components/responses/500InternalServerError"
-    patch:
-      summary: Update an authorization request.
-      description: Update an authorization request. This is an internal API for MinSide.
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "./schemas/authorization-request-patch-request.schema.json"
-      responses:
-        "201":
-          description: The authorization request was updated.
-          content:
-            application/json:
-              schema:
-                $ref: "./schemas/authorization-request-get-response.schema.json"
-        "400":
-          $ref: "#/components/responses/400BadRequestError"
-        "401":
-          $ref: "#/components/responses/401UnauthorizedError"
-        "500":
-          $ref: "#/components/responses/500InternalServerError"
+      tags:
+        - TODO
     post:
       summary: Initiate a new authorization request flow.
       description: Initiate a new authorization request flow. This creates an authorization request that is associated to a user in MinSide.
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          description: Bearer Maskinporten token for the calling party.
+          schema:
+            type: string
+        - name: SenderGln
+          in: header
+          required: true
+          description: GLN of the party issuing the request.
+          schema:
+            type: string
+        - name: OnBehalfOfGln
+          in: header
+          required: false
+          description: GLN of the party the sender is acting on behalf of in delegated Maskinporten flows.
+          schema:
+            type: string
       requestBody:
         content:
           application/json:
             schema:
-              $ref: "./schemas/authorization-request-post-request.schema.json"
+              $ref: "./schemas/requests/authorization-request-post-request.schema.json"
       responses:
         "201":
           description: |
@@ -259,7 +480,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "./schemas/authorization-request-post-response.schema.json"
+                $ref: "./schemas/requests/authorization-request-post-response.schema.json"
         "400":
           $ref: "#/components/responses/400BadRequestError"
         "401":
@@ -271,6 +492,24 @@ paths:
       summary: Retrieve information about a specific authorization request.
       description: Retrieve information about a specific authorization request. This can be used to check the status.
       parameters:
+        - name: Authorization
+          in: header
+          required: true
+          description: Bearer Maskinporten token or Enduser token.
+          schema:
+            type: string
+        - name: SenderGln
+          in: header
+          required: false
+          description: GLN of the party issuing the request.
+          schema:
+            type: string
+        - name: OnBehalfOfGln
+          in: header
+          required: false
+          description: GLN of the party the sender is acting on behalf of in delegated Maskinporten flows.
+          schema:
+            type: string
         - name: id
           in: path
           required: true
@@ -283,17 +522,75 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "./schemas/authorization-request-get-response.schema.json"
+                $ref: "./schemas/requests/authorization-request-get-response.schema.json"
         "401":
           $ref: "#/components/responses/401UnauthorizedError"
         "404":
           $ref: "#/components/responses/404NotFoundError"
         "500":
           $ref: "#/components/responses/500InternalServerError"
+      tags:
+        - TODO
+    patch:
+      summary: Update an authorization request.
+      description: Update an authorization request. This is an internal API for MinSide.
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          description: Enduser token.
+          schema:
+            type: string
+        - name: id
+          in: path
+          required: true
+          description: The id of the authorization request to update.
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "./schemas/requests/authorization-request-patch-request.schema.json"
+      responses:
+        "200":
+          description: The authorization request was updated.
+          content:
+            application/json:
+              schema:
+                $ref: "./schemas/requests/authorization-request-get-response.schema.json"
+        "400":
+          $ref: "#/components/responses/400BadRequestError"
+        "401":
+          $ref: "#/components/responses/401UnauthorizedError"
+        "404":
+          $ref: "#/components/responses/404NotFoundError"
+        "500":
+          $ref: "#/components/responses/500InternalServerError"
+      tags:
+        - TODO
     delete:
       summary: Delete/cancel an authorization request.
       description: Cancel an authorization request. This can only be done if the request is not yet authorized.
       parameters:
+        - name: Authorization
+          in: header
+          required: true
+          description: Bearer Maskinporten token for the calling party.
+          schema:
+            type: string
+        - name: SenderGln
+          in: header
+          required: true
+          description: GLN of the party issuing the request
+          schema:
+            type: string
+        - name: OnBehalfOfGln
+          in: header
+          required: false
+          description: GLN of the party the sender is acting on behalf of in delegated Maskinporten flows.
+          schema:
+            type: string
         - name: id
           in: path
           required: true
@@ -311,6 +608,8 @@ paths:
           $ref: "#/components/responses/404NotFoundError"
         "500":
           $ref: "#/components/responses/500InternalServerError"
+      tags:
+        - TODO
 components:
   responses:
     400BadRequestError:

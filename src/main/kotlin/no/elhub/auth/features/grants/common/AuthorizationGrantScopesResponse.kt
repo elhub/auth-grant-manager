@@ -2,10 +2,12 @@ package no.elhub.auth.features.grants.common
 
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
-import no.elhub.auth.features.grants.AuthorizationResourceType
 import no.elhub.auth.features.grants.AuthorizationScope
+import no.elhub.auth.features.grants.ElhubResource
+import no.elhub.auth.features.grants.GRANTS_PATH
 import no.elhub.auth.features.grants.PermissionType
 import no.elhub.devxp.jsonapi.model.JsonApiAttributes
+import no.elhub.devxp.jsonapi.model.JsonApiLinks
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipToOne
 import no.elhub.devxp.jsonapi.model.JsonApiRelationships
 import no.elhub.devxp.jsonapi.response.JsonApiResponse
@@ -24,11 +26,12 @@ data class GrantRelationships(
     val grantedFor: JsonApiRelationshipToOne,
     val grantedBy: JsonApiRelationshipToOne,
     val grantedTo: JsonApiRelationshipToOne,
+    val source: JsonApiRelationshipToOne,
 ) : JsonApiRelationships
 
 @Serializable
 data class AuthorizationGrantScopeAttributes(
-    val authorizedResourceType: AuthorizationResourceType,
+    val authorizedResourceType: ElhubResource,
     val authorizedResourceId: String,
     val permissionType: PermissionType,
     val createdAt: Instant
@@ -36,7 +39,7 @@ data class AuthorizationGrantScopeAttributes(
 
 typealias AuthorizationGrantScopesResponse = JsonApiResponse.CollectionDocument<AuthorizationGrantScopeAttributes>
 
-fun List<AuthorizationScope>.toResponse() =
+fun List<AuthorizationScope>.toResponse(grantId: String) =
     AuthorizationGrantScopesResponse(
         data = this.map { authorizationScope ->
             val attributes = AuthorizationGrantScopeAttributes(
@@ -51,5 +54,8 @@ fun List<AuthorizationScope>.toResponse() =
                 id = authorizationScope.id.toString(),
                 attributes = attributes
             )
-        }
+        },
+        links = JsonApiLinks.ResourceObjectLink(
+            self = "${GRANTS_PATH}/{id}/scopes"
+        )
     )

@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Authorization Grant",
+  "description": "Schema for returning a single authorization grant object in the Elhub authorization manager.",
+  "type": "object",
+  "properties": {
+    "data": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "authorization-grant-definitions.json#/$defs/id"
+        },
+        "type": {
+          "$ref": "authorization-grant-definitions.json#/$defs/type"
+        },
+        "attributes": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "$ref": "authorization-grant-definitions.json#/$defs/attributes/$defs/status"
+            },
+            "grantedAt": {
+              "$ref": "authorization-grant-definitions.json#/$defs/attributes/$defs/grantedAt"
+            },
+            "validFrom": {
+              "$ref": "authorization-grant-definitions.json#/$defs/attributes/$defs/validFrom"
+            },
+            "validTo": {
+              "$ref": "authorization-grant-definitions.json#/$defs/attributes/$defs/validTo"
+            }
+          }
+        },
+        "relationships": {
+          "type": "object",
+          "description": "The related parties for the authorization grant.",
+          "properties": {
+            "grantedFor": {
+              "$ref": "authorization-grant-definitions.json#/$defs/relationships/$defs/grantedFor"
+            },
+            "grantedBy": {
+              "$ref": "authorization-grant-definitions.json#/$defs/relationships/$defs/grantedBy"
+            },
+            "grantedTo": {
+              "$ref": "authorization-grant-definitions.json#/$defs/relationships/$defs/grantedTo"
+            }
+          }
+        }
+      }
+    },
+    "links": {
+      "description": "Link members related to the primary data.",
+      "type": "object",
+      "properties": {
+        "self": {
+          "$ref": "../base-definitions.schema.json#/definitions/topLevelLinks/properties/self"
+        }
+      }
+    },
+    "meta": {
+      "description": "Meta-information for the JSON document.",
+      "type": "object",
+      "properties": {
+        "createdAt": {
+          "$ref": "../base-definitions.schema.json#/definitions/topLevelMeta/properties/createdAt"
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "$ref": "../base-definitions.schema.json#/definitions/topLevelPropertyConstraint"
+    }
+  ],
+  "additionalProperties": false
+}

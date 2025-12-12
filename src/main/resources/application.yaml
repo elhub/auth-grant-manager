@@ -2,9 +2,10 @@ ktor:
   application:
     modules:
       - no.elhub.auth.ApplicationKt.module
+      - no.elhub.auth.features.common.CommonModuleKt.commonModule
       - no.elhub.auth.features.openapi.ModuleKt.module
-      - no.elhub.auth.features.documents.ModuleKt.module
       - no.elhub.auth.features.grants.ModuleKt.module
+      - no.elhub.auth.features.documents.ModuleKt.module
       - no.elhub.auth.features.requests.ModuleKt.module
   deployment:
     port: 8080
@@ -17,7 +18,7 @@ ktor:
       maximumPoolSize: 3
 
 pdfGenerator:
-  mustacheResourcePath: $MUSTACHE_RESOURCE_PATH
+  mustacheResourcePath: "templates"
 
 pdfSigner:
   # HashiCorp Vault settings
@@ -28,3 +29,12 @@ pdfSigner:
   certificate:
     signing: $PATH_TO_SIGNING_CERTIFICATE
     chain: $PATH_TO_SIGNING_CERTIFICATE_CHAIN
+
+pdp:
+  baseUrl: ${PDP_BASE_URL}
+
+featureToggle:
+  enableEndpoints: ${ENABLE_ENDPOINTS:false}
+
+authPersons:
+  baseUri: $AUTH_PERSONS_URL

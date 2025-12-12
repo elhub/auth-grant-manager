@@ -1,21 +1,36 @@
 package no.elhub.auth.features.documents.common
 
+import arrow.core.getOrElse
+import io.kotest.assertions.fail
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.collections.shouldContain
+import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.collections.shouldNotContain
+import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.common.PostgresTestContainer
 import no.elhub.auth.features.common.PostgresTestContainerExtension
+import no.elhub.auth.features.common.party.AuthorizationParty
+import no.elhub.auth.features.common.party.ExposedPartyRepository
+import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.documents.AuthorizationDocument
+import no.elhub.auth.features.grants.ElhubResource
+import no.elhub.auth.features.grants.PermissionType
 import no.elhub.auth.features.grants.common.AuthorizationScopeTable
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.LocalDateTime
-import java.util.*
+import java.util.UUID
 
 class ExposedDocumentRepositoryTest :
     FunSpec({
-        extensions(PostgresTestContainerExtension)
-        val repository = ExposedDocumentRepository()
+        extensions(PostgresTestContainerExtension())
+        val partyRepository = ExposedPartyRepository()
+        val propertiesRepository = ExposedDocumentPropertiesRepository()
+        val repository = ExposedDocumentRepository(partyRepository, propertiesRepository)
 
         beforeSpec {
             Database.connect(
@@ -36,14 +51,26 @@ class ExposedDocumentRepositoryTest :
                         file = byteArrayOf(),
                         type = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
                         status = AuthorizationDocument.Status.Pending,
-                        requestedBy = "1234567890",
-                        requestedFrom = "987654321",
+                        requestedBy = AuthorizationParty(type = PartyType.Person, resourceId = "1234567890"),
+                        requestedFrom = AuthorizationParty(type = PartyType.Person, resourceId = "1234567890"),
+                        requestedTo = AuthorizationParty(type = PartyType.Person, resourceId = "1234567890"),
+                        signedBy = AuthorizationParty(type = PartyType.Person, resourceId = "1234567890"),
+                        properties = emptyList(),
                         createdAt = LocalDateTime.now(),
                         updatedAt = LocalDateTime.now()
                     )
 
+                val scopes = listOf(
+                    CreateScopeData(
+                        authorizedResourceType = ElhubResource.MeteringPoint,
+                        authorizedResourceId = "1234",
+                        permissionType = PermissionType.ChangeOfSupplier
+
+                    )
+                )
+
                 // When
-                repository.insert(document)
+                repository.insert(document, scopes)
 
                 // Then
                 val documentExists = repository.find(document.id)
@@ -57,16 +84,67 @@ class ExposedDocumentRepositoryTest :
                             .map { it }
                             .singleOrNull()
                     }
-                authorizationDocumentScopeRow shouldNotBe null
+                authorizationDocumentScopeRow.shouldNotBeNull()
 
                 val authorizationScopeRow =
                     transaction {
                         AuthorizationScopeTable
                             .selectAll()
-                            .where { AuthorizationScopeTable.id eq (authorizationDocumentScopeRow!![AuthorizationDocumentScopeTable.authorizationScopeId]) }
+                            .where { AuthorizationScopeTable.id eq (authorizationDocumentScopeRow[AuthorizationDocumentScopeTable.authorizationScopeId]) }
                             .singleOrNull()
                     }
-                authorizationScopeRow shouldNotBe null
+                authorizationScopeRow.shouldNotBeNull()
+                authorizationScopeRow[AuthorizationScopeTable.authorizedResourceId] shouldBe "1234"
+                authorizationScopeRow[AuthorizationScopeTable.authorizedResourceType] shouldBe ElhubResource.MeteringPoint
+                authorizationScopeRow[AuthorizationScopeTable.permissionType] shouldBe PermissionType.ChangeOfSupplier
+            }
+        }
+
+        context("Find all") {
+            test("should return only documents requested by the given party") {
+                val matchingRequestedBy = AuthorizationParty(type = PartyType.Organization, resourceId = "matching-party")
+                val otherRequestedBy = AuthorizationParty(type = PartyType.Organization, resourceId = "other-party")
+
+                val matchingDocument = AuthorizationDocument(
+                    id = UUID.randomUUID(),
+                    title = "Matching",
+                    file = byteArrayOf(),
+                    type = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                    status = AuthorizationDocument.Status.Pending,
+                    requestedBy = matchingRequestedBy,
+                    requestedFrom = AuthorizationParty(type = PartyType.Person, resourceId = "from-1"),
+                    requestedTo = AuthorizationParty(type = PartyType.Person, resourceId = "to-1"),
+                    signedBy = AuthorizationParty(type = PartyType.Person, resourceId = "signer-1"),
+                    properties = emptyList(),
+                    createdAt = LocalDateTime.now(),
+                    updatedAt = LocalDateTime.now()
+                )
+
+                val otherDocument = AuthorizationDocument(
+                    id = UUID.randomUUID(),
+                    title = "Other",
+                    file = byteArrayOf(),
+                    type = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                    status = AuthorizationDocument.Status.Pending,
+                    requestedBy = otherRequestedBy,
+                    requestedFrom = AuthorizationParty(type = PartyType.Person, resourceId = "from-2"),
+                    requestedTo = AuthorizationParty(type = PartyType.Person, resourceId = "to-2"),
+                    signedBy = AuthorizationParty(type = PartyType.Person, resourceId = "signer-2"),
+                    createdAt = LocalDateTime.now(),
+                    properties = emptyList(),
+                    updatedAt = LocalDateTime.now()
+                )
+
+                repository.insert(matchingDocument, listOf())
+                repository.insert(otherDocument, listOf())
+
+                val documents = repository.findAll(AuthorizationParty(matchingRequestedBy.resourceId, PartyType.Organization))
+                    .getOrElse { error -> fail("Failed to fetch documents: $error") }
+                val documentIds = documents.map { it.id }
+
+                documentIds.shouldHaveSize(1)
+                documentIds shouldContain matchingDocument.id
+                documentIds shouldNotContain otherDocument.id
             }
         }
     })

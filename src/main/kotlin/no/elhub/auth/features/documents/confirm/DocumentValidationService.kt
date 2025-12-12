@@ -12,14 +12,14 @@ fun ByteArray.hasValidSignature(): Either<DocumentValidationError, Boolean> = th
 
 fun ByteArray.isSignedByUs(): Either<DocumentValidationError, Boolean> = throw NotImplementedException()
 
-fun ByteArray.isSignedByEndUser(): Either<DocumentValidationError, Boolean> = throw NotImplementedException()
+fun ByteArray.isSignedByPerson(): Either<DocumentValidationError, Boolean> = throw NotImplementedException()
 
 fun ByteArray.isSignedByDesiredSignatory(): Either<DocumentValidationError, Boolean> = throw NotImplementedException()
 
 fun ByteArray.matchesDocumentRequest(document: AuthorizationDocument): Either<DocumentValidationError, Boolean> =
     throw NotImplementedException()
 
-fun ByteArray.getEndUserNin(): Either<DocumentValidationError, String> = throw NotImplementedException()
+fun ByteArray.getPersonNin(): Either<DocumentValidationError, String> = throw NotImplementedException()
 
 sealed class DocumentValidationError {
     data object InvalidSignatureError : DocumentValidationError()

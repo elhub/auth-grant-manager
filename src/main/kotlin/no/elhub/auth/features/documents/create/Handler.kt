@@ -4,73 +4,129 @@ import arrow.core.Either
 import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
+import no.elhub.auth.features.common.party.PartyService
 import no.elhub.auth.features.documents.AuthorizationDocument
+import no.elhub.auth.features.documents.common.AuthorizationDocumentProperty
 import no.elhub.auth.features.documents.common.DocumentRepository
-import java.time.LocalDateTime
-import java.util.UUID
+import no.elhub.auth.features.documents.common.ProxyDocumentBusinessHandler
+import no.elhub.auth.features.documents.create.model.CreateDocumentModel
 
 class Handler(
-    private val fileGenerator: FileGenerator,
+    private val businessHandler: ProxyDocumentBusinessHandler,
     private val certificateProvider: CertificateProvider,
     private val fileSigningService: FileSigningService,
     private val signatureProvider: SignatureProvider,
-    private val repo: DocumentRepository
+    private val documentRepository: DocumentRepository,
+    private val partyService: PartyService,
 ) {
-    suspend operator fun invoke(command: Command): Either<CreateDocumentError, AuthorizationDocument> {
-        val file = fileGenerator.generate(
-            customerNin = command.requestedFrom,
-            customerName = command.requestedFromName,
-            meteringPointAddress = command.meteringPointAddress,
-            meteringPointId = command.meteringPointId,
-            balanceSupplierName = command.balanceSupplierName,
-            balanceSupplierContractName = command.balanceSupplierContractName
-        ).getOrElse { return CreateDocumentError.FileGenerationError.left() }
+    suspend operator fun invoke(model: CreateDocumentModel): Either<CreateDocumentError, AuthorizationDocument> {
+        val command =
+            businessHandler
+                .validateAndReturnDocumentCommand(model)
+                .getOrElse { return it.left() }
 
-        val certChain = certificateProvider.getCertificateChain()
-            .getOrElse { return CreateDocumentError.CertificateRetrievalError.left() }
+        val requestedFromParty =
+            partyService
+                .resolve(command.requestedFrom)
+                .getOrElse { return CreateDocumentError.RequestedFromPartyError.left() }
 
-        val signingCert = certificateProvider.getCertificate()
-            .getOrElse { return CreateDocumentError.CertificateRetrievalError.left() }
+        val requestedByParty =
+            partyService
+                .resolve(command.requestedBy)
+                .getOrElse { return CreateDocumentError.RequestedByPartyError.left() }
 
-        val dataToSign = fileSigningService.getDataToSign(file, certChain, signingCert)
-            .getOrElse { return CreateDocumentError.SigningDataGenerationError.left() }
+        val requestedToParty =
+            partyService
+                .resolve(command.requestedTo)
+                .getOrElse { return CreateDocumentError.RequestedToPartyError.left() }
 
-        val signature = signatureProvider.fetchSignature(dataToSign)
-            .getOrElse { return CreateDocumentError.SignatureFetchingError.left() }
+        val file =
+            businessHandler
+                .generateFile(command.requestedFrom.idValue, command.meta)
+                .getOrElse { return CreateDocumentError.FileGenerationError.left() }
 
-        val signedFile = fileSigningService.embedSignatureIntoFile(file, signature, certChain, signingCert)
-            .getOrElse { return CreateDocumentError.SigningError.left() }
+        val certChain =
+            certificateProvider
+                .getCertificateChain()
+                .getOrElse { return CreateDocumentError.CertificateRetrievalError.left() }
 
-        val documentToCreate = command.toAuthorizationDocument(signedFile)
-            .getOrElse { return CreateDocumentError.MappingError.left() }
+        val signingCert =
+            certificateProvider
+                .getCertificate()
+                .getOrElse { return CreateDocumentError.CertificateRetrievalError.left() }
 
-        return repo.insert(documentToCreate)
-            .getOrElse { return CreateDocumentError.PersistenceError.left() }
-            .right()
+        val dataToSign =
+            fileSigningService
+                .getDataToSign(file, certChain, signingCert)
+                .getOrElse { return CreateDocumentError.SigningDataGenerationError.left() }
+
+        val signature =
+            signatureProvider
+                .fetchSignature(dataToSign)
+                .getOrElse { return CreateDocumentError.SignatureFetchingError.left() }
+
+        val signedFile =
+            fileSigningService
+                .embedSignatureIntoFile(file, signature, certChain, signingCert)
+                .getOrElse { return CreateDocumentError.SigningError.left() }
+
+        val documentProperties =
+            command.meta
+                .toMetaAttributes()
+                .toDocumentProperties()
+
+        val documentToCreate =
+            AuthorizationDocument.create(
+                type = command.type,
+                file = signedFile,
+                requestedBy = requestedByParty,
+                requestedFrom = requestedFromParty,
+                requestedTo = requestedToParty,
+                properties = documentProperties,
+            )
+
+        val savedDocument =
+            documentRepository
+                .insert(documentToCreate, command.scopes)
+                .getOrElse { return CreateDocumentError.PersistenceError.left() }
+
+        return savedDocument.right()
     }
 }
 
 sealed class CreateDocumentError {
     data object FileGenerationError : CreateDocumentError()
+
     data object CertificateRetrievalError : CreateDocumentError()
+
     data object SigningDataGenerationError : CreateDocumentError()
+
     data object SignatureFetchingError : CreateDocumentError()
+
     data object SigningError : CreateDocumentError()
+
+    data object GenerateFileError : CreateDocumentError()
+
     data object MappingError : CreateDocumentError()
+
     data object PersistenceError : CreateDocumentError()
+
+    data object RequestedFromPartyError : CreateDocumentError()
+
+    data object RequestedByPartyError : CreateDocumentError()
+
+    data object RequestedToPartyError : CreateDocumentError()
+
+    data object SignedByPartyError : CreateDocumentError()
+
+    data object PersonError : CreateDocumentError()
 }
 
-fun Command.toAuthorizationDocument(file: ByteArray): Either<CreateDocumentError.MappingError, AuthorizationDocument> =
-    Either.catch {
-        AuthorizationDocument(
-            id = UUID.randomUUID(),
-            title = "Title",
-            file = file,
-            type = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
-            status = AuthorizationDocument.Status.Pending,
-            requestedBy = this.requestedBy,
-            requestedFrom = this.requestedFrom,
-            createdAt = LocalDateTime.now(),
-            updatedAt = LocalDateTime.now()
-        )
-    }.mapLeft { CreateDocumentError.MappingError }
+fun Map<String, String>.toDocumentProperties() =
+    this
+        .map { (key, value) ->
+            AuthorizationDocumentProperty(
+                key = key,
+                value = value,
+            )
+        }.toList()

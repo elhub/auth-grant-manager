@@ -6,7 +6,7 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import no.elhub.auth.features.common.toApiErrorResponse
-import no.elhub.auth.features.requests.common.toResponse
+import no.elhub.auth.features.requests.query.dto.toGetCollectionResponse
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 
 fun Route.route(handler: Handler) {
@@ -18,6 +18,6 @@ fun Route.route(handler: Handler) {
                 call.respond(status, JsonApiErrorCollection(listOf(body)))
                 return@get
             }
-        call.respond(HttpStatusCode.OK, requests.toResponse())
+        call.respond(HttpStatusCode.OK, requests.toGetCollectionResponse())
     }
 }

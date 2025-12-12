@@ -8,39 +8,39 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
 import no.elhub.auth.features.common.InputError
 import no.elhub.auth.features.common.toApiErrorResponse
-import no.elhub.auth.features.requests.common.toResponse
-import no.elhub.auth.features.requests.get.Query
+import no.elhub.auth.features.requests.create.dto.JsonApiCreateRequest
+import no.elhub.auth.features.requests.create.dto.toCreateResponse
+import no.elhub.auth.features.requests.create.dto.toModel
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
-import no.elhub.auth.features.requests.get.Handler as GetHandler
 
-fun Route.route(createHandler: Handler, getHandler: GetHandler) {
+fun Route.route(handler: Handler) {
     post {
-        val payload = runCatching {
-            call.receive<Request>()
-        }.getOrElse {
-            val (status, body) = InputError.MalformedInputError.toApiErrorResponse()
-            call.respond(status, JsonApiErrorCollection(listOf(body)))
-            return@post
-        }
-
-        val requestId = createHandler(payload.toCommand())
-            .getOrElse { error ->
-                when (error) {
-                    is
-                    no.elhub.auth.features.requests.create.Error.MappingError,
-                    Error.PersistenceError
-                    -> call.respond(HttpStatusCode.InternalServerError)
-                }
-                return@post
-            }
-
-        val authorizationRequest = getHandler(Query(requestId))
-            .getOrElse { err ->
-                val (status, body) = err.toApiErrorResponse()
+        val requestBody =
+            runCatching {
+                call.receive<JsonApiCreateRequest>()
+            }.getOrElse {
+                val (status, body) = InputError.MalformedInputError.toApiErrorResponse()
                 call.respond(status, JsonApiErrorCollection(listOf(body)))
                 return@post
             }
 
-        call.respond(HttpStatusCode.Created, authorizationRequest.toResponse())
+        val request =
+            handler(requestBody.toModel()).getOrElse { error ->
+                when (error) {
+                    is
+                    CreateRequestError.MappingError,
+                    CreateRequestError.PersistenceError,
+                    CreateRequestError.RequestedByPartyError,
+                    CreateRequestError.RequestedFromPartyError,
+                    -> call.respond(HttpStatusCode.InternalServerError)
+                    is CreateRequestError.ValidationError -> {
+                        val (status, validationError) = error.toApiErrorResponse()
+                        call.respond(status, validationError)
+                    }
+                }
+                return@post
+            }
+
+        call.respond(HttpStatusCode.Created, request.toCreateResponse())
     }
 }

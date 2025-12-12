@@ -1,25 +1,45 @@
 package no.elhub.auth.features.documents.query
 
 import arrow.core.Either
-import arrow.core.left
-import arrow.core.right
+import arrow.core.raise.either
 import no.elhub.auth.features.common.QueryError
 import no.elhub.auth.features.common.RepositoryReadError
+import no.elhub.auth.features.common.party.PartyService
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.DocumentRepository
+import no.elhub.auth.features.grants.AuthorizationGrant
+import no.elhub.auth.features.grants.common.GrantRepository
 
 class Handler(
-    private val repo: DocumentRepository
+    private val repo: DocumentRepository,
+    private val partyService: PartyService,
+    private val grantRepository: GrantRepository
 ) {
-    operator fun invoke(query: Query): Either<QueryError, List<AuthorizationDocument>> =
-        repo.findAll()
-            .fold(
-                { error ->
+    suspend operator fun invoke(query: Query): Either<QueryError, List<AuthorizationDocument>> = either {
+        val requestedByParty = partyService.resolve(query.requestedByIdentifier).mapLeft {
+            QueryError.IOError
+        }.bind()
+
+        val documents = repo.findAll(requestedByParty)
+            .mapLeft { error ->
+                when (error) {
+                    is RepositoryReadError.NotFoundError -> QueryError.ResourceNotFoundError
+                    is RepositoryReadError.UnexpectedError -> QueryError.IOError
+                }
+            }.bind()
+
+        documents.map { document ->
+            val grant = grantRepository.findBySource(AuthorizationGrant.SourceType.Document, document.id)
+                .mapLeft { error ->
                     when (error) {
-                        is RepositoryReadError.NotFoundError -> QueryError.ResourceNotFoundError.left()
-                        is RepositoryReadError.UnexpectedError -> QueryError.IOError.left()
+                        RepositoryReadError.NotFoundError -> QueryError.ResourceNotFoundError
+                        RepositoryReadError.UnexpectedError -> QueryError.IOError
                     }
-                },
-                { documents -> documents.right() }
+                }.bind()
+
+            document.copy(
+                grantId = grant?.id,
             )
+        }
+    }
 }

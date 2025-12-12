@@ -20,7 +20,7 @@ import no.elhub.auth.module as applicationModule
 
 class AuthorizationGrantRouteTest : FunSpec({
     extensions(
-        PostgresTestContainerExtension,
+        PostgresTestContainerExtension(),
         RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-grants.sql"),
         RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-scopes.sql"),
         RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-grant-scopes.sql"),
@@ -46,6 +46,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                     "ktor.database.password" to "app",
                     "ktor.database.url" to "jdbc:postgresql://localhost:5432/auth",
                     "ktor.database.driverClass" to "org.postgresql.Driver",
+                    "featureToggle.enableEndpoints" to "true"
                 )
             }
 
@@ -66,19 +67,19 @@ class AuthorizationGrantRouteTest : FunSpec({
                     relationships.apply {
                         grantedFor.apply {
                             data.apply {
-                                id shouldBe "1111111111111111"
+                                id shouldBe "12345678901"
                                 type shouldBe "Person"
                             }
                         }
                         grantedBy.apply {
                             data.apply {
-                                id shouldBe "1111111111111111"
+                                id shouldBe "12345678901"
                                 type shouldBe "Person"
                             }
                         }
                         grantedTo.apply {
                             data.apply {
-                                id shouldBe "2222222222222222"
+                                id shouldBe "987654321"
                                 type shouldBe "Organization"
                             }
                         }
@@ -137,6 +138,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                     "ktor.database.password" to "app",
                     "ktor.database.url" to "jdbc:postgresql://localhost:5432/auth",
                     "ktor.database.driverClass" to "org.postgresql.Driver",
+                    "featureToggle.enableEndpoints" to "true"
                 )
             }
 
@@ -151,7 +153,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                         type shouldBe "AuthorizationScope"
                         attributes.shouldNotBeNull()
                         attributes!!.apply {
-                            authorizedResourceType shouldBe AuthorizationResourceType.MeteringPoint
+                            authorizedResourceType shouldBe ElhubResource.MeteringPoint
                             authorizedResourceId shouldBe "b7f9c2e4"
                             permissionType shouldBe PermissionType.ReadAccess
                             createdAt.shouldNotBeNull()
@@ -178,7 +180,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                         type shouldBe "AuthorizationScope"
                         attributes.shouldNotBeNull()
                         attributes!!.apply {
-                            authorizedResourceType shouldBe AuthorizationResourceType.MeteringPoint
+                            authorizedResourceType shouldBe ElhubResource.MeteringPoint
                             authorizedResourceId shouldBe "b7f9c2e4"
                             permissionType shouldBe PermissionType.ChangeOfSupplier
                             createdAt.shouldNotBeNull()
@@ -189,7 +191,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                         type shouldBe "AuthorizationScope"
                         attributes.shouldNotBeNull()
                         attributes!!.apply {
-                            authorizedResourceType shouldBe AuthorizationResourceType.Organization
+                            authorizedResourceType shouldBe ElhubResource.Organization
                             authorizedResourceId shouldBe "b7f9c2e4"
                             permissionType shouldBe PermissionType.ChangeOfSupplier
                             createdAt.shouldNotBeNull()
@@ -200,7 +202,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                         type shouldBe "AuthorizationScope"
                         attributes.shouldNotBeNull()
                         attributes!!.apply {
-                            authorizedResourceType shouldBe AuthorizationResourceType.Person
+                            authorizedResourceType shouldBe ElhubResource.Person
                             authorizedResourceId shouldBe "b7f9c2e4"
                             permissionType shouldBe PermissionType.FullDelegation
                             createdAt.shouldNotBeNull()
@@ -259,6 +261,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                     "ktor.database.password" to "app",
                     "ktor.database.url" to "jdbc:postgresql://localhost:5432/auth",
                     "ktor.database.driverClass" to "org.postgresql.Driver",
+                    "featureToggle.enableEndpoints" to "true"
                 )
             }
 
@@ -281,19 +284,19 @@ class AuthorizationGrantRouteTest : FunSpec({
                         relationships.apply {
                             grantedFor.apply {
                                 data.apply {
-                                    id shouldBe "1111111111111111"
+                                    id shouldBe "12345678901"
                                     type shouldBe "Person"
                                 }
                             }
                             grantedBy.apply {
                                 data.apply {
-                                    id shouldBe "1111111111111111"
+                                    id shouldBe "12345678901"
                                     type shouldBe "Person"
                                 }
                             }
                             grantedTo.apply {
                                 data.apply {
-                                    id shouldBe "2222222222222222"
+                                    id shouldBe "987654321"
                                     type shouldBe "Organization"
                                 }
                             }
@@ -312,19 +315,19 @@ class AuthorizationGrantRouteTest : FunSpec({
                         relationships.apply {
                             grantedFor.apply {
                                 data.apply {
-                                    id shouldBe "3333333333333333"
+                                    id shouldBe "23456789012"
                                     type shouldBe "Person"
                                 }
                             }
                             grantedBy.apply {
                                 data.apply {
-                                    id shouldBe "3333333333333333"
+                                    id shouldBe "23456789012"
                                     type shouldBe "Person"
                                 }
                             }
                             grantedTo.apply {
                                 data.apply {
-                                    id shouldBe "2222222222222222"
+                                    id shouldBe "987654321"
                                     type shouldBe "Organization"
                                 }
                             }
@@ -343,20 +346,20 @@ class AuthorizationGrantRouteTest : FunSpec({
                         relationships.apply {
                             grantedFor.apply {
                                 data.apply {
-                                    id shouldBe "4444444444444444"
+                                    id shouldBe "123123123"
                                     type shouldBe "OrganizationEntity"
                                 }
                             }
                             grantedBy.apply {
                                 data.apply {
-                                    id shouldBe "3333333333333333"
+                                    id shouldBe "23456789012"
                                     type shouldBe "Person"
                                 }
                             }
                             grantedTo.apply {
                                 data.apply {
-                                    id shouldBe "5555555555555555"
-                                    type shouldBe "MeteringPoint"
+                                    id shouldBe "34567890123"
+                                    type shouldBe "OrganizationEntity"
                                 }
                             }
                         }

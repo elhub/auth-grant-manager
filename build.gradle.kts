@@ -1,20 +1,15 @@
 import no.elhub.auth.utils.generateSelfSignedCertificate
 import no.elhub.auth.utils.validateJsonApiSpec
+import org.gradle.api.tasks.Exec
+import org.gradle.api.tasks.testing.Test
 
 plugins {
     alias(libs.plugins.elhub.gradle.plugin)
     alias(libs.plugins.ktor.plugin)
     alias(libs.plugins.kotlin.plugin.serialization)
     alias(libs.plugins.ksp.plugin)
-    alias(libs.plugins.liquibase.plugin)
     alias(libs.plugins.gradle.docker)
     alias(libs.plugins.openapi.generator.plugin)
-}
-
-buildscript {
-    dependencies {
-        classpath(libs.database.liquibase.core)
-    }
 }
 
 dependencies {
@@ -28,11 +23,6 @@ dependencies {
     implementation(libs.bundles.serialization)
     // Database
     implementation(libs.bundles.database)
-    // Liquibase
-    liquibaseRuntime(libs.database.liquibase.core)
-    liquibaseRuntime(libs.cli.picocli)
-    liquibaseRuntime(libs.serialization.yaml.snakeyaml)
-    liquibaseRuntime(libs.database.postgresql)
     // Documentation
     implementation(libs.bundles.documentation)
     // PDF generation and signing
@@ -50,6 +40,7 @@ dependencies {
     testImplementation(libs.test.mockk)
     testImplementation(libs.bundles.functional.programming)
     testImplementation(libs.test.ktor.server.test.host)
+    testImplementation(libs.ktor.client.mock)
     testImplementation(libs.test.kotest.runner.junit5)
     testImplementation(libs.test.kotest.assertions.arrow)
     testImplementation(libs.test.kotest.assertions.core)
@@ -73,22 +64,8 @@ application {
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
 }
 
-val dbUsername = System.getenv("DB_USERNAME") ?: ""
-val dbPassword = System.getenv("DB_PASSWORD") ?: ""
-
-liquibase {
-    jvmArgs =
-        arrayOf(
-            "-Dliquibase.command.url=jdbc:postgresql://localhost:5432/auth",
-            "-Dliquibase.command.username=$dbUsername",
-            "-Dliquibase.command.password=$dbPassword",
-            "-DAPP_USERNAME=app",
-            "-DAPP_PASSWORD=app",
-            "-Dliquibase.command.driver=org.postgresql.Driver",
-            "-Dliquibase.command.changeLogFile=db/db-changelog.yaml",
-        )
-    activities.register("main")
-}
+val dbUsername = System.getenv("DB_USERNAME")?.takeIf { it.isNotBlank() } ?: "admin"
+val dbPassword = System.getenv("DB_PASSWORD")?.takeIf { it.isNotBlank() } ?: "admin"
 
 val certDir = layout.buildDirectory.dir("tmp/test-certs")
 val testCertPath = certDir.map { it.file("self-signed-cert.pem").asFile.path }
@@ -128,10 +105,34 @@ tasks.register("validateJsonApiSpec") {
     }
 }
 
+tasks.withType<Test>().configureEach {
+    // Run AWT-dependent PDF validation in headless mode so tests work without an X server
+    systemProperty("java.awt.headless", "true")
+}
+
 tasks.named("test").configure {
     dependsOn(tasks.named("generateTestCerts"))
     dependsOn(tasks.named("openApiValidate"))
     dependsOn(tasks.named("validateJsonApiSpec"))
+}
+
+tasks.register<Exec>("liquibaseUpdate") {
+    group = "database"
+    description = "Runs Liquibase update using the CLI."
+    dependsOn("servicesComposeUp")
+
+    environment("APP_USERNAME", "app")
+    environment("APP_PASSWORD", "app")
+
+    commandLine(
+        "liquibase",
+        "--url=jdbc:postgresql://localhost:5432/auth",
+        "--username=$dbUsername",
+        "--password=$dbPassword",
+        "--driver=org.postgresql.Driver",
+        "--changeLogFile=db/db-changelog.yaml",
+        "update",
+    )
 }
 
 tasks.named("liquibaseUpdate").configure {
@@ -143,11 +144,13 @@ val localEnvVars = mapOf(
     "APP_USERNAME" to "app",
     "APP_PASSWORD" to "app",
     "MUSTACHE_RESOURCE_PATH" to "templates",
-    "VAULT_URL" to "http://localhost:8200",
+    "VAULT_URL" to "http://localhost:8200/v1/transit",
     "VAULT_KEY" to "test-key",
-    "VAULT_TOKEN_PATH" to "somepath",
+    "VAULT_TOKEN_PATH" to "src/test/resources/vault_token_mock.txt",
     "PATH_TO_SIGNING_CERTIFICATE" to testCertPath.get(),
     "PATH_TO_SIGNING_CERTIFICATE_CHAIN" to testCertPath.get(),
+    "ENABLE_ENDPOINTS" to "true",
+    "AUTH_PERSONS_URL" to "http://localhost:8081",
 )
 
 tasks.named<JavaExec>("run").configure {
