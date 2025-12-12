@@ -41,6 +41,9 @@
             },
             "signedBy": {
               "$ref": "authorization-document-definitions.json#/$defs/relationships/$defs/signedBy"
+            },
+            "grant": {
+              "$ref": "authorization-document-definitions.json#/$defs/relationships/$defs/grant"
             }
           }
         },
