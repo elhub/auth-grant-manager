@@ -62,11 +62,30 @@ class ExposedGrantRepositoryTest : FunSpec({
         }
     }
 
+    test("update grant status") {
+        transaction {
+            // insert a grant
+            val grant = AuthorizationGrant.create(
+                grantedBy = AuthorizationParty(type = PartyType.Person, resourceId = "12345"),
+                grantedFor = AuthorizationParty(type = PartyType.Person, resourceId = "56789"),
+                grantedTo = AuthorizationParty(type = PartyType.Person, resourceId = "45567"),
+                sourceType = AuthorizationGrant.SourceType.Request,
+                sourceId = UUID.randomUUID(),
+            )
+
+            grantRepo.insert(grant, emptyList()).getOrElse { error((it)) }
+
+            // update the grant
+            val updated = grantRepo.update(grant.id, AuthorizationGrant.Status.Revoked).getOrElse { error(it) }
+
+            updated.grantStatus shouldBe AuthorizationGrant.Status.Revoked
+        }
+    }
+
     /*
     TODO write these tests
     - insert when scope list is not empty
     - findAll returns all grants for a specific sourceId
     - findById should return a specific scope
-    - updateStatus changes grant status
      */
 })

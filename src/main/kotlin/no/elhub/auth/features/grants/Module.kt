@@ -12,6 +12,8 @@ import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
 import org.koin.ktor.ext.get
 import org.koin.ktor.plugin.koinModule
+import no.elhub.auth.features.grants.consume.Handler as ConsumeHandler
+import no.elhub.auth.features.grants.consume.route as consumeRoute
 import no.elhub.auth.features.grants.get.Handler as GetHandler
 import no.elhub.auth.features.grants.get.route as getRoute
 import no.elhub.auth.features.grants.getScopes.Handler as GetScopesHandler
@@ -28,6 +30,7 @@ fun Application.module() {
         singleOf(::GetHandler)
         singleOf(::GetScopesHandler)
         singleOf(::QueryHandler)
+        singleOf(::ConsumeHandler)
     }
 
     routing {
@@ -36,6 +39,7 @@ fun Application.module() {
                 getRoute(get())
                 getScopesRoute(get())
                 queryRoute(get())
+                consumeRoute(get())
             }
         }
     }
