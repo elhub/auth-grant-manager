@@ -5,6 +5,7 @@ import arrow.core.getOrElse
 import arrow.core.raise.either
 import kotlinx.datetime.Instant
 import no.elhub.auth.features.common.PGEnum
+import no.elhub.auth.features.common.RepositoryError
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.RepositoryWriteError
 import no.elhub.auth.features.common.party.AuthorizationParty
@@ -30,6 +31,7 @@ import org.jetbrains.exposed.sql.javatime.datetime
 import org.jetbrains.exposed.sql.javatime.timestamp
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.sql.update
 import org.slf4j.LoggerFactory
 import java.util.UUID
 
@@ -39,6 +41,7 @@ interface GrantRepository {
     fun findScopes(grantId: UUID): Either<RepositoryReadError, List<AuthorizationScope>>
     fun findAll(grantedTo: AuthorizationParty): Either<RepositoryReadError, List<AuthorizationGrant>>
     fun insert(grant: AuthorizationGrant, scopeIds: List<Long>): Either<RepositoryWriteError, AuthorizationGrant>
+    fun update(grantId: UUID, newStatus: Status): Either<RepositoryError, AuthorizationGrant>
 }
 
 class ExposedGrantRepository(
@@ -210,6 +213,66 @@ class ExposedGrantRepository(
                 authorizationGrant
             }
         }.mapLeft { RepositoryWriteError.UnexpectedError }
+
+    override fun update(grantId: UUID, newStatus: Status): Either<RepositoryError, AuthorizationGrant> = either {
+        transaction {
+            // TODO consider state-transition validation here - is Exhausted -> Active legal for instance?
+            val rowsUpdated = AuthorizationGrantTable.update(
+                where = { AuthorizationGrantTable.id eq grantId }
+            ) {
+                it[grantStatus] = newStatus
+                // TODO consider add a updatedAt field
+            }
+
+            if (rowsUpdated == 0) {
+                raise(RepositoryWriteError.UnexpectedError)
+            }
+
+            val grant = AuthorizationGrantTable
+                .selectAll()
+                .where { AuthorizationGrantTable.id eq grantId }
+                .singleOrNull() ?: raise(RepositoryReadError.NotFoundError)
+
+            findInternalGrant(grant)
+                .mapLeft { readError ->
+                    when (readError) {
+                        is RepositoryReadError.NotFoundError, RepositoryReadError.UnexpectedError -> RepositoryReadError.UnexpectedError
+                    }
+                }.bind()
+        }
+    }
+
+    // TODO use this method in find() and findAll() as well to avoid duplicates
+    private fun findInternalGrant(grant: ResultRow): Either<RepositoryReadError, AuthorizationGrant> =
+        either {
+            val grantedByDbId = grant[AuthorizationGrantTable.grantedBy]
+            val grantedForDbId = grant[AuthorizationGrantTable.grantedFor]
+            val grantedToDbId = grant[AuthorizationGrantTable.grantedTo]
+
+            val grantedByParty =
+                partyRepository
+                    .find(grantedByDbId)
+                    .mapLeft { RepositoryReadError.UnexpectedError }
+                    .bind()
+
+            val grantedForParty =
+                partyRepository
+                    .find(grantedForDbId)
+                    .mapLeft { RepositoryReadError.UnexpectedError }
+                    .bind()
+
+            val grantedToParty =
+                partyRepository
+                    .find(grantedToDbId)
+                    .mapLeft { RepositoryReadError.UnexpectedError }
+                    .bind()
+
+            grant.toAuthorizationGrant(
+                grantedBy = grantedByParty,
+                grantedFor = grantedForParty,
+                grantedTo = grantedToParty
+            )
+        }
 }
 
 object AuthorizationGrantScopeTable : Table("auth.authorization_grant_scope") {

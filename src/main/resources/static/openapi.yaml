@@ -364,8 +364,6 @@ paths:
           $ref: "#/components/responses/404NotFoundError"
         "500":
           $ref: "#/components/responses/500InternalServerError"
-      tags:
-        - TODO
   "/authorization-grants/{id}/scopes":
     get:
       summary: Retrieve all of the scopes for the identified authorization grant.
