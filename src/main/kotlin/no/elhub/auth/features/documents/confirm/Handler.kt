@@ -2,17 +2,20 @@ package no.elhub.auth.features.documents.confirm
 
 import arrow.core.Either
 import arrow.core.raise.either
+import arrow.core.raise.ensure
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.RepositoryWriteError
+import no.elhub.auth.features.common.party.PartyService
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.common.GrantRepository
 
 class Handler(
     private val documentRepository: DocumentRepository,
+    private val partyService: PartyService,
     private val grantRepository: GrantRepository,
 ) {
-    operator fun invoke(command: Command): Either<ConfirmDocumentError, Unit> = either {
+    suspend operator fun invoke(command: Command): Either<ConfirmDocumentError, Unit> = either {
         val document = documentRepository.find(command.documentId)
             .mapLeft { error ->
                 when (error) {
@@ -20,6 +23,15 @@ class Handler(
                     is RepositoryReadError.UnexpectedError -> ConfirmDocumentError.DocumentReadError
                 }
             }.bind()
+
+        val requestedBy = partyService.resolve(command.requestedByIdentifier)
+            .mapLeft { ConfirmDocumentError.RequestedByResolutionError }
+            .bind()
+
+        ensure(requestedBy == document.requestedBy) {
+            ConfirmDocumentError.InvalidRequestedByError
+        }
+
         // TODO: Implement validation of the signed file and find the signatory
         val signatory = document.requestedTo
 
@@ -66,4 +78,6 @@ sealed class ConfirmDocumentError {
     data object DocumentUpdateError : ConfirmDocumentError()
     data object ScopeReadError : ConfirmDocumentError()
     data object GrantCreationError : ConfirmDocumentError()
+    data object RequestedByResolutionError : ConfirmDocumentError()
+    data object InvalidRequestedByError : ConfirmDocumentError()
 }
