@@ -4,6 +4,7 @@ import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 import no.elhub.auth.features.grants.AuthorizationScope
 import no.elhub.auth.features.grants.ElhubResource
+import no.elhub.auth.features.grants.GRANTS_PATH
 import no.elhub.auth.features.grants.PermissionType
 import no.elhub.devxp.jsonapi.model.JsonApiAttributes
 import no.elhub.devxp.jsonapi.model.JsonApiLinks
@@ -55,6 +56,6 @@ fun List<AuthorizationScope>.toResponse(grantId: String) =
             )
         },
         links = JsonApiLinks.ResourceObjectLink(
-            self = "authorization-grants/{id}/scopes"
+            self = "${GRANTS_PATH}/{id}/scopes"
         )
     )

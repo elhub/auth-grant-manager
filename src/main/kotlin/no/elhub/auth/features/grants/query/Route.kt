@@ -5,14 +5,25 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
+import no.elhub.auth.features.common.auth.AuthorizationProvider
+import no.elhub.auth.features.common.auth.toApiErrorResponse
+import no.elhub.auth.features.common.party.PartyIdentifier
+import no.elhub.auth.features.common.party.PartyIdentifierType
 import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.grants.common.toResponse
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 
-fun Route.route(handler: Handler) {
+fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
     get {
-        // TODO: Build query from payload
-        val grants = handler(Query())
+        val resolvedActor = authProvider.authorizeMarketParty(call)
+            .getOrElse { err ->
+                val (status, body) = err.toApiErrorResponse()
+                call.respond(status, body)
+                return@get
+            }
+
+        val partyIdentifier = PartyIdentifier(idType = PartyIdentifierType.GlobalLocationNumber, idValue = resolvedActor.gln)
+        val grants = handler(Query(grantedTo = partyIdentifier))
             .getOrElse { err ->
                 val (status, body) = err.toApiErrorResponse()
                 call.respond(status, JsonApiErrorCollection(listOf(body)))

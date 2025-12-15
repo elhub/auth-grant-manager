@@ -44,6 +44,15 @@
               "$ref": "authorization-grant-definitions.json#/$defs/relationships/$defs/grantedTo"
             }
           }
+        },
+        "links": {
+          "type": "object",
+          "properties": {
+            "self": {
+              "description": "Link to the authorization document itself",
+              "$ref": "authorization-grant-definitions.json#/$defs/links/$defs/self"
+            }
+          }
         }
       }
     },

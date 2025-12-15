@@ -170,7 +170,7 @@ class AuthorizationDocumentRouteTest :
                     }
 
                     createDocumentResponse.links.apply {
-                        self shouldBe "/authorization-documents"
+                        self shouldBe DOCUMENTS_PATH
                     }
 
                     createdDocumentId = createDocumentResponse.data.id
@@ -228,7 +228,7 @@ class AuthorizationDocumentRouteTest :
                     expectedSignatory = getDocumentResponse.data.relationships.requestedTo.data.id
 
                     getDocumentResponse.links.apply {
-                        self shouldBe "/authorization-documents/$createdDocumentId"
+                        self shouldBe "$DOCUMENTS_PATH/$createdDocumentId"
                     }
                 }
 
@@ -244,6 +244,8 @@ class AuthorizationDocumentRouteTest :
                     val response = client.put("$DOCUMENTS_PATH/$createdDocumentId.pdf") {
                         contentType(ContentType.Application.Pdf)
                         setBody(signedFile)
+                        header(HttpHeaders.Authorization, "Bearer something")
+                        header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
                     }
                     response.status shouldBe HttpStatusCode.NoContent
                     response.bodyAsText().shouldBeEmpty()
@@ -268,7 +270,7 @@ class AuthorizationDocumentRouteTest :
                             id shouldBe grantId
                         }
                         links.shouldNotBeNull().apply {
-                            self shouldBe "authorization-grants/$grantId"
+                            self shouldBe "${GRANTS_PATH}/$grantId"
                         }
                     }
 
@@ -282,7 +284,10 @@ class AuthorizationDocumentRouteTest :
                 }
 
                 test("Get grant by id should return proper response") {
-                    val response = client.get("$GRANTS_PATH/$grantId")
+                    val response = client.get("$GRANTS_PATH/$grantId") {
+                        header(HttpHeaders.Authorization, "Bearer something")
+                        header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                    }
                     response.status shouldBe HttpStatusCode.OK
                     val responseJson: AuthorizationGrantResponse = response.body()
                     responseJson.data.apply {
@@ -319,7 +324,7 @@ class AuthorizationDocumentRouteTest :
                                     type shouldBe "AuthorizationDocument"
                                 }
                                 links.shouldNotBeNull().apply {
-                                    self shouldBe "/authorization-documents/$createdDocumentId"
+                                    self shouldBe "$DOCUMENTS_PATH/$createdDocumentId"
                                 }
                             }
                         }

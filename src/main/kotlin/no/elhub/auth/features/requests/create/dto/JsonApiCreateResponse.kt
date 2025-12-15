@@ -4,6 +4,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import no.elhub.auth.features.requests.AuthorizationRequest
+import no.elhub.auth.features.requests.REQUESTS_PATH
 import no.elhub.devxp.jsonapi.model.JsonApiAttributes
 import no.elhub.devxp.jsonapi.model.JsonApiLinks
 import no.elhub.devxp.jsonapi.model.JsonApiMeta
@@ -96,10 +97,10 @@ fun AuthorizationRequest.toCreateResponse() =
             ),
             links =
             CreateRequestResponseLinks(
-                self = "https://api.elhub.no/authorization-requests/${this.id}"
+                self = "${REQUESTS_PATH}/${this.id}"
             ),
         ),
-        links = JsonApiLinks.ResourceObjectLink("https://api.elhub.no/authorization-requests"),
+        links = JsonApiLinks.ResourceObjectLink(REQUESTS_PATH),
         meta = JsonApiMeta(
             buildJsonObject {
                 put("createdAt", LocalDateTime.now().toString())

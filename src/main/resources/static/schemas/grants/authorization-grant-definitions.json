@@ -45,6 +45,17 @@
           "$ref": "../base-definitions.schema.json#/definitions/relationshipParty"
         }
       }
+    },
+    "links": {
+      "$defs": {
+        "self": {
+          "type": "string",
+          "format": "uri",
+          "examples": [
+            "https://api.elhub.no/authorization-grants/123e4567-e89b-12d3-a456-426614174000"
+          ]
+        }
+      }
     }
   }
 }
