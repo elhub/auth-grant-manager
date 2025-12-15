@@ -416,7 +416,7 @@ class AuthorizationRequestRouteTest :
                         )
                 }
 
-                test("Should update status to Accepted and return updated object as response") {
+                test("Should accept authorization-request") {
                     val response =
                         client.patch("${REQUESTS_PATH}/d81e5bf2-8a0c-4348-a788-2a3fab4e77d6") {
                             contentType(ContentType.Application.Json)
@@ -478,9 +478,9 @@ class AuthorizationRequestRouteTest :
                     }
                 }
 
-                test("Should update status to Rejected and return updated object as response") {
+                test("Should reject authorization-request") {
                     val response =
-                        client.patch("${REQUESTS_PATH}/3f2c9e6b-7a4d-4f1a-9b6e-8c1d2a5e9f47") {
+                        client.patch("${REQUESTS_PATH}/d81e5bf2-8a0c-4348-a788-2a3fab4e77d6") {
                             contentType(ContentType.Application.Json)
                             setBody(
                                 JsonApiUpdateRequest(
@@ -526,6 +526,29 @@ class AuthorizationRequestRouteTest :
                             }
                         }
                     }
+                }
+
+                test("Should return 400 Bad Request on illegal transaction") {
+                    val response =
+                        client.patch("${REQUESTS_PATH}/3f2c9e6b-7a4d-4f1a-9b6e-8c1d2a5e9f47") {
+                            contentType(ContentType.Application.Json)
+                            setBody(
+                                JsonApiUpdateRequest(
+                                    data = JsonApiRequestResourceObject(
+                                        type = "AuthorizationRequest",
+                                        attributes = UpdateRequestAttributes(
+                                            status = AuthorizationRequest.Status.Expired
+                                        )
+                                    )
+                                ),
+                            )
+                        }
+
+                    response.status shouldBe HttpStatusCode.BadRequest
+                    val body = response.body<JsonApiErrorObject>()
+                    body.status shouldBe "400"
+                    body.title shouldBe "Invalid Status Transition"
+                    body.detail shouldBe "Only 'Accepted' and 'Rejected' statuses are allowed."
                 }
             }
         }

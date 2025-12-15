@@ -7,45 +7,46 @@ import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.common.GrantRepository
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.common.RequestRepository
+import java.util.UUID
 
 class Handler(
     private val requestRepository: RequestRepository,
     private val grantRepository: GrantRepository
 ) {
     operator fun invoke(command: UpdateCommand): Either<UpdateError, AuthorizationRequest> = either {
-        // TODO add state-transition validation in another PR
-        // TODO add authorization check in another PR
-
-        val originalRequest = requestRepository.find(command.requestId)
-            .mapLeft { UpdateError.RequestNotFound }
-            .bind()
-
+        // TODO add authorization check -> only authorized consumers can accept/reject
+        // TODO add handle illegal state: Accepted -> Rejected should not be possible
         val updatedRequest = when (command.newStatus) {
             AuthorizationRequest.Status.Accepted -> {
-                handleAccept(originalRequest, command)
+                handleAccepted(command.requestId).bind()
             }
 
-            AuthorizationRequest.Status.Expired,
-            AuthorizationRequest.Status.Pending,
             AuthorizationRequest.Status.Rejected -> {
-                handleOtherStatus(command)
+                handleRejected(command.requestId).bind()
             }
-        }.mapLeft { UpdateError.PersistenceError }
-            .bind()
 
+            else -> {
+                // consumers can only send Accepted and Rejected statues
+                raise(UpdateError.IllegalTransitionError)
+            }
+        }
         updatedRequest
     }
 
-    private fun handleAccept(originalRequest: AuthorizationRequest, command: UpdateCommand): Either<UpdateError, AuthorizationRequest> = either {
+    private fun handleAccepted(requestId: UUID): Either<UpdateError, AuthorizationRequest> = either {
+        val originalRequest = requestRepository.find(requestId)
+            .mapLeft { UpdateError.RequestNotFound }
+            .bind()
+
         // TODO this will be provided by value stream via tokens. Temporary setting this as requestedTo
         val approval = originalRequest.requestedTo
 
-        val updatedRequest = requestRepository.update(
-            requestId = command.requestId,
-            newStatus = AuthorizationRequest.Status.Accepted,
+        val updatedRequest = requestRepository.updateAccept(
+            requestId = originalRequest.id,
             approvedBy = approval
-        ).mapLeft { UpdateError.PersistenceError }
-            .bind()
+        ).mapLeft {
+            UpdateError.PersistenceError
+        }.bind()
 
         val scopeIds = requestRepository
             .findScopeIds(updatedRequest.id)
@@ -71,14 +72,11 @@ class Handler(
         updatedRequest.copy(grantId = createdGrant.id)
     }
 
-    private fun handleOtherStatus(command: UpdateCommand): Either<UpdateError, AuthorizationRequest> = either {
-        val updatedRequest = requestRepository.update(
-            requestId = command.requestId,
-            newStatus = command.newStatus,
-            null
+    private fun handleRejected(requestId: UUID): Either<UpdateError, AuthorizationRequest> = either {
+        val updatedRequest = requestRepository.updateReject(
+            requestId = requestId,
         ).mapLeft { UpdateError.PersistenceError }
             .bind()
-
         updatedRequest
     }
 }

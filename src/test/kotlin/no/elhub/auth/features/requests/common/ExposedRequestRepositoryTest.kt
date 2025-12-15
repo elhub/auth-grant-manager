@@ -78,9 +78,8 @@ class ExposedRequestRepositoryTest : FunSpec({
 
             insertedRequest.status shouldBe AuthorizationRequest.Status.Pending
 
-            val updatedRequest = requestRepo.update(
+            val updatedRequest = requestRepo.updateAccept(
                 requestId = insertedRequest.id,
-                newStatus = AuthorizationRequest.Status.Accepted,
                 approvedBy = insertedRequest.requestedTo
             )
 

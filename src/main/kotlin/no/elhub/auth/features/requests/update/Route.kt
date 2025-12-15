@@ -12,6 +12,7 @@ import no.elhub.auth.features.common.validateId
 import no.elhub.auth.features.requests.update.dto.JsonApiUpdateRequest
 import no.elhub.auth.features.requests.update.dto.toUpdateResponse
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
+import no.elhub.devxp.jsonapi.response.JsonApiErrorObject
 
 const val REQUEST_ID_PARAM = "id"
 
@@ -45,6 +46,16 @@ fun Route.route(handler: Handler) {
                 UpdateError.GrantCreationError,
                 UpdateError.ScopeReadError,
                 -> call.respond(HttpStatusCode.InternalServerError)
+
+                UpdateError.IllegalTransitionError ->
+                    call.respond(
+                        HttpStatusCode.BadRequest,
+                        JsonApiErrorObject(
+                            status = "400",
+                            title = "Invalid Status Transition",
+                            detail = "Only 'Accepted' and 'Rejected' statuses are allowed."
+                        )
+                    )
             }
             return@patch
         }

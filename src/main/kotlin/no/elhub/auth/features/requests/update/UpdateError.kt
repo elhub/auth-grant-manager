@@ -5,4 +5,5 @@ sealed class UpdateError {
     data object PersistenceError : UpdateError()
     data object ScopeReadError : UpdateError()
     data object GrantCreationError : UpdateError()
+    data object IllegalTransitionError : UpdateError()
 }
