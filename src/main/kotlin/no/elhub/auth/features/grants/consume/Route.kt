@@ -41,7 +41,7 @@ fun Route.route(handler: Handler) {
             when (error) {
                 is
                 ConsumeError.PersistenceError,
-                ConsumeError.RequestNotFound
+                ConsumeError.GrantNotFound
                 -> call.respond(HttpStatusCode.InternalServerError)
             }
             return@patch
