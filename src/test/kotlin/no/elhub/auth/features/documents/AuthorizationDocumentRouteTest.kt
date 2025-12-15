@@ -244,6 +244,8 @@ class AuthorizationDocumentRouteTest :
                     val response = client.put("$DOCUMENTS_PATH/$createdDocumentId.pdf") {
                         contentType(ContentType.Application.Pdf)
                         setBody(signedFile)
+                        header(HttpHeaders.Authorization, "Bearer something")
+                        header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
                     }
                     response.status shouldBe HttpStatusCode.NoContent
                     response.bodyAsText().shouldBeEmpty()
@@ -282,7 +284,10 @@ class AuthorizationDocumentRouteTest :
                 }
 
                 test("Get grant by id should return proper response") {
-                    val response = client.get("$GRANTS_PATH/$grantId")
+                    val response = client.get("$GRANTS_PATH/$grantId") {
+                        header(HttpHeaders.Authorization, "Bearer something")
+                        header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                    }
                     response.status shouldBe HttpStatusCode.OK
                     val responseJson: AuthorizationGrantResponse = response.body()
                     responseJson.data.apply {

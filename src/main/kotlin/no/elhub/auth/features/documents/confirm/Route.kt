@@ -9,14 +9,25 @@ import io.ktor.server.routing.put
 import io.ktor.utils.io.readRemaining
 import kotlinx.io.readByteArray
 import no.elhub.auth.features.common.InputError
+import no.elhub.auth.features.common.auth.AuthorizationProvider
+import no.elhub.auth.features.common.auth.toApiErrorResponse
+import no.elhub.auth.features.common.party.PartyIdentifier
+import no.elhub.auth.features.common.party.PartyIdentifierType
 import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.common.validateId
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 
 const val DOCUMENT_ID_PARAM = "id"
 
-fun Route.route(handler: Handler) {
+fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
     put("/{$DOCUMENT_ID_PARAM}.pdf") {
+        val resolvedActor = authProvider.authorizeMarketParty(call)
+            .getOrElse {
+                val error = it.toApiErrorResponse()
+                call.respond(error.first, error.second)
+                return@put
+            }
+
         val documentId = validateId(call.parameters[DOCUMENT_ID_PARAM])
             .getOrElse { error ->
                 val (status, body) = error.toApiErrorResponse()
@@ -31,19 +42,24 @@ fun Route.route(handler: Handler) {
             return@put
         }
 
+        val requestedBy = PartyIdentifier(idType = PartyIdentifierType.GlobalLocationNumber, idValue = resolvedActor.gln)
         handler(
             Command(
                 documentId = documentId,
+                requestedByIdentifier = requestedBy,
                 signedFile = signedDocument
             )
         ).getOrElse { error ->
             when (error) {
                 ConfirmDocumentError.DocumentNotFoundError -> call.respond(HttpStatusCode.NotFound)
 
+                ConfirmDocumentError.InvalidRequestedByError -> call.respond(HttpStatusCode.Forbidden)
+
                 ConfirmDocumentError.DocumentReadError,
                 ConfirmDocumentError.DocumentUpdateError,
                 ConfirmDocumentError.ScopeReadError,
-                ConfirmDocumentError.GrantCreationError -> call.respond(HttpStatusCode.InternalServerError)
+                ConfirmDocumentError.GrantCreationError,
+                ConfirmDocumentError.RequestedByResolutionError -> call.respond(HttpStatusCode.InternalServerError)
             }
             return@put
         }
