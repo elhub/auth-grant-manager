@@ -244,6 +244,8 @@ class AuthorizationDocumentRouteTest :
                     val response = client.put("$DOCUMENTS_PATH/$createdDocumentId.pdf") {
                         contentType(ContentType.Application.Pdf)
                         setBody(signedFile)
+                        header(HttpHeaders.Authorization, "Bearer something")
+                        header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
                     }
                     response.status shouldBe HttpStatusCode.NoContent
                     response.bodyAsText().shouldBeEmpty()
