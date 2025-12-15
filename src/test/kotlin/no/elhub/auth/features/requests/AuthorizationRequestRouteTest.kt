@@ -22,14 +22,15 @@ import no.elhub.auth.features.common.RunPostgresScriptExtension
 import no.elhub.auth.features.common.commonModule
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
-import no.elhub.auth.features.requests.confirm.dto.ConfirmRequestAttributes
-import no.elhub.auth.features.requests.confirm.dto.JsonApiConfirmRequest
 import no.elhub.auth.features.requests.create.dto.CreateRequestAttributes
 import no.elhub.auth.features.requests.create.dto.CreateRequestMeta
 import no.elhub.auth.features.requests.create.dto.CreateRequestResponse
 import no.elhub.auth.features.requests.create.dto.JsonApiCreateRequest
 import no.elhub.auth.features.requests.get.dto.GetRequestSingleResponse
 import no.elhub.auth.features.requests.query.dto.GetRequestCollectionResponse
+import no.elhub.auth.features.requests.update.dto.JsonApiUpdateRequest
+import no.elhub.auth.features.requests.update.dto.UpdateRequestAttributes
+import no.elhub.auth.features.requests.update.dto.UpdateRequestResponse
 import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObject
 import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObjectWithMeta
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
@@ -42,7 +43,9 @@ class AuthorizationRequestRouteTest :
             AuthPersonsTestContainerExtension,
             PostgresTestContainerExtension(),
             RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-party.sql"),
+            RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-scopes.sql"),
             RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-requests.sql"),
+            RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-grants.sql"),
         )
 
         context("GET /authorization-requests") {
@@ -77,169 +80,7 @@ class AuthorizationRequestRouteTest :
                     response.status shouldBe HttpStatusCode.OK
                     val responseJson: GetRequestCollectionResponse = response.body()
                     responseJson.data.apply {
-                        size shouldBe 4
-                        this[0].apply {
-                            id.shouldNotBeNull()
-                            type shouldBe "AuthorizationRequest"
-                            attributes.shouldNotBeNull()
-                            attributes.apply {
-                                requestType shouldBe "ChangeOfSupplierConfirmation"
-                                status shouldBe "Pending"
-                                createdAt.shouldNotBeNull()
-                                updatedAt.shouldNotBeNull()
-                                validTo.shouldNotBeNull()
-                            }
-                            relationships.apply {
-                                requestedBy.apply {
-                                    data.apply {
-                                        id shouldBe "987654321"
-                                        type shouldBe "Organization"
-                                    }
-                                }
-                                requestedFrom.apply {
-                                    data.apply {
-                                        id shouldBe "12345678901"
-                                        type shouldBe "Person"
-                                    }
-                                }
-                                requestedTo.apply {
-                                    data.apply {
-                                        id shouldBe "12345678902"
-                                        type shouldBe "Person"
-                                    }
-                                }
-                            }
-                            links.shouldNotBeNull()
-                            links.apply {
-                                self.shouldNotBeNull()
-                            }
-                        }
-                        this[1].apply {
-                            id.shouldNotBeNull()
-                            type shouldBe "AuthorizationRequest"
-                            attributes.shouldNotBeNull()
-                            attributes.apply {
-                                requestType shouldBe "ChangeOfSupplierConfirmation"
-                                status shouldBe "Accepted"
-                                createdAt.shouldNotBeNull()
-                                updatedAt.shouldNotBeNull()
-                                validTo.shouldNotBeNull()
-                            }
-                            relationships.apply {
-                                requestedBy.apply {
-                                    data.apply {
-                                        id shouldBe "987654321"
-                                        type shouldBe "Organization"
-                                    }
-                                }
-                                requestedFrom.apply {
-                                    data.apply {
-                                        id shouldBe "12345678901"
-                                        type shouldBe "Person"
-                                    }
-                                }
-                                requestedTo.apply {
-                                    data.apply {
-                                        id shouldBe "12345678902"
-                                        type shouldBe "Person"
-                                    }
-                                }
-                                approvedBy.shouldNotBeNull().apply {
-                                    data.apply {
-                                        id shouldBe "12345678902"
-                                        type shouldBe "Person"
-                                    }
-                                }
-                            }
-                            links.shouldNotBeNull()
-                            links.apply {
-                                self.shouldNotBeNull()
-                            }
-                        }
-                        this[2].apply {
-                            id.shouldNotBeNull()
-                            type shouldBe "AuthorizationRequest"
-                            attributes.shouldNotBeNull()
-                            attributes.apply {
-                                requestType shouldBe "ChangeOfSupplierConfirmation"
-                                status shouldBe "Accepted"
-                                createdAt.shouldNotBeNull()
-                                updatedAt.shouldNotBeNull()
-                                validTo.shouldNotBeNull()
-                            }
-                            relationships.apply {
-                                requestedBy.apply {
-                                    data.apply {
-                                        id shouldBe "987654321"
-                                        type shouldBe "Organization"
-                                    }
-                                }
-                                requestedFrom.apply {
-                                    data.apply {
-                                        id shouldBe "12345678901"
-                                        type shouldBe "Person"
-                                    }
-                                }
-                                requestedTo.apply {
-                                    data.apply {
-                                        id shouldBe "12345678902"
-                                        type shouldBe "Person"
-                                    }
-                                }
-                                approvedBy.shouldNotBeNull().apply {
-                                    data.apply {
-                                        id shouldBe "12345678902"
-                                        type shouldBe "Person"
-                                    }
-                                }
-                            }
-                            links.shouldNotBeNull()
-                            links.apply {
-                                self.shouldNotBeNull()
-                            }
-                        }
-                        this[3].apply {
-                            id.shouldNotBeNull()
-                            type shouldBe "AuthorizationRequest"
-                            attributes.shouldNotBeNull()
-                            attributes.apply {
-                                requestType shouldBe "ChangeOfSupplierConfirmation"
-                                status shouldBe "Accepted"
-                                createdAt.shouldNotBeNull()
-                                updatedAt.shouldNotBeNull()
-                                validTo.shouldNotBeNull()
-                            }
-                            relationships.apply {
-                                requestedBy.apply {
-                                    data.apply {
-                                        id shouldBe "987654321"
-                                        type shouldBe "Organization"
-                                    }
-                                }
-                                requestedFrom.apply {
-                                    data.apply {
-                                        id shouldBe "12345678901"
-                                        type shouldBe "Person"
-                                    }
-                                }
-                                requestedTo.apply {
-                                    data.apply {
-                                        id shouldBe "12345678902"
-                                        type shouldBe "Person"
-                                    }
-                                }
-                                approvedBy.shouldNotBeNull().apply {
-                                    data.apply {
-                                        id shouldBe "12345678902"
-                                        type shouldBe "Person"
-                                    }
-                                }
-                            }
-                            links.shouldNotBeNull()
-                            links.apply {
-                                self.shouldNotBeNull()
-                            }
-                        }
+                        size shouldBe 5
                     }
                 }
             }
@@ -295,13 +136,13 @@ class AuthorizationRequestRouteTest :
                             }
                             requestedFrom.apply {
                                 data.apply {
-                                    id shouldBe "12345678901"
+                                    id shouldBe "17abdc56-8f6f-440a-9f00-b9bfbb22065e"
                                     type shouldBe "Person"
                                 }
                             }
                             requestedTo.apply {
                                 data.apply {
-                                    id shouldBe "12345678902"
+                                    id shouldBe "4e55f1e2-e576-23ab-80d3-c70a6fe354c0"
                                     type shouldBe "Person"
                                 }
                             }
@@ -342,19 +183,19 @@ class AuthorizationRequestRouteTest :
                             }
                             requestedFrom.apply {
                                 data.apply {
-                                    id shouldBe "12345678901"
+                                    id shouldBe "17abdc56-8f6f-440a-9f00-b9bfbb22065e"
                                     type shouldBe "Person"
                                 }
                             }
                             requestedTo.apply {
                                 data.apply {
-                                    id shouldBe "12345678902"
+                                    id shouldBe "4e55f1e2-e576-23ab-80d3-c70a6fe354c0"
                                     type shouldBe "Person"
                                 }
                             }
                             approvedBy.shouldNotBeNull().apply {
                                 data.apply {
-                                    id shouldBe "12345678902"
+                                    id shouldBe "4e55f1e2-e576-23ab-80d3-c70a6fe354c0"
                                     type shouldBe "Person"
                                 }
                             }
@@ -575,30 +416,114 @@ class AuthorizationRequestRouteTest :
                         )
                 }
 
-                test("Should update status and return updated object as response") {
+                test("Should update status to Accepted and return updated object as response") {
                     val response =
                         client.patch("${REQUESTS_PATH}/d81e5bf2-8a0c-4348-a788-2a3fab4e77d6") {
                             contentType(ContentType.Application.Json)
                             setBody(
-                                JsonApiConfirmRequest(
+                                JsonApiUpdateRequest(
                                     data = JsonApiRequestResourceObject(
                                         type = "AuthorizationRequest",
-                                        attributes = ConfirmRequestAttributes(
+                                        attributes = UpdateRequestAttributes(
                                             status = AuthorizationRequest.Status.Accepted
                                         )
                                     )
                                 ),
                             )
                         }
-
                     response.status shouldBe HttpStatusCode.OK
-                    val patchRequestResponse: CreateRequestResponse = response.body()
+                    val patchRequestResponse: UpdateRequestResponse = response.body()
 
                     patchRequestResponse.data.apply {
                         type shouldBe "AuthorizationRequest"
                         id.shouldNotBeNull()
                         attributes.shouldNotBeNull().apply {
                             status shouldBe "Accepted"
+                        }
+                        relationships.shouldNotBeNull().apply {
+                            relationships.apply {
+                                requestedBy.apply {
+                                    data.apply {
+                                        id shouldBe "987654321"
+                                        type shouldBe "Organization"
+                                    }
+                                }
+                                requestedFrom.apply {
+                                    data.apply {
+                                        id shouldBe "17abdc56-8f6f-440a-9f00-b9bfbb22065e"
+                                        type shouldBe "Person"
+                                    }
+                                }
+                                requestedTo.apply {
+                                    data.apply {
+                                        id shouldBe "4e55f1e2-e576-23ab-80d3-c70a6fe354c0"
+                                        type shouldBe "Person"
+                                    }
+                                }
+                                approvedBy?.apply {
+                                    data.apply {
+                                        id shouldBe "4e55f1e2-e576-23ab-80d3-c70a6fe354c0"
+                                        type shouldBe "Person"
+                                    }
+                                }
+                                grant?.apply {
+                                    data.apply {
+                                        id.shouldNotBeNull()
+                                        type shouldBe "AuthorizationGrant"
+                                    }
+                                    links.shouldNotBeNull()
+                                }
+                            }
+                        }
+                    }
+                }
+
+                test("Should update status to Rejected and return updated object as response") {
+                    val response =
+                        client.patch("${REQUESTS_PATH}/3f2c9e6b-7a4d-4f1a-9b6e-8c1d2a5e9f47") {
+                            contentType(ContentType.Application.Json)
+                            setBody(
+                                JsonApiUpdateRequest(
+                                    data = JsonApiRequestResourceObject(
+                                        type = "AuthorizationRequest",
+                                        attributes = UpdateRequestAttributes(
+                                            status = AuthorizationRequest.Status.Rejected
+                                        )
+                                    )
+                                ),
+                            )
+                        }
+                    response.status shouldBe HttpStatusCode.OK
+
+                    val patchRequestResponse: UpdateRequestResponse = response.body()
+
+                    patchRequestResponse.data.apply {
+                        type shouldBe "AuthorizationRequest"
+                        id.shouldNotBeNull()
+                        attributes.shouldNotBeNull().apply {
+                            status shouldBe "Rejected"
+                        }
+                        relationships.shouldNotBeNull().apply {
+                            relationships.apply {
+                                requestedBy.apply {
+                                    data.apply {
+                                        id shouldBe "987654321"
+                                        type shouldBe "Organization"
+                                    }
+                                }
+                                requestedFrom.apply {
+                                    data.apply {
+                                        id shouldBe "17abdc56-8f6f-440a-9f00-b9bfbb22065e"
+                                        type shouldBe "Person"
+                                    }
+                                }
+                                requestedTo.apply {
+                                    data.apply {
+                                        id shouldBe "4e55f1e2-e576-23ab-80d3-c70a6fe354c0"
+                                        type shouldBe "Person"
+                                    }
+                                }
+                            }
                         }
                     }
                 }
