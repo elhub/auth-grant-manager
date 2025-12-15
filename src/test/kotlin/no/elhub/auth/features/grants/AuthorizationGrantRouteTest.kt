@@ -7,8 +7,12 @@ import io.ktor.client.call.body
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
 import io.ktor.client.request.header
+import io.ktor.client.request.patch
+import io.ktor.client.request.setBody
+import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.testing.ApplicationTestBuilder
@@ -28,6 +32,10 @@ import no.elhub.auth.features.common.commonModule
 import no.elhub.auth.features.grants.common.AuthorizationGrantListResponse
 import no.elhub.auth.features.grants.common.AuthorizationGrantResponse
 import no.elhub.auth.features.grants.common.AuthorizationGrantScopesResponse
+import no.elhub.auth.features.grants.common.dto.GrantResponse
+import no.elhub.auth.features.grants.consume.dto.ConsumeRequestAttributes
+import no.elhub.auth.features.grants.consume.dto.JsonApiConsumeRequest
+import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObject
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import no.elhub.auth.module as applicationModule
 
@@ -337,6 +345,41 @@ class AuthorizationGrantRouteTest : FunSpec({
                                 }
                             }
                         }
+                    }
+                }
+            }
+        }
+    }
+
+    context("PATCH /authorization-grants/{id}") {
+        testApplication {
+            setupAuthorizationGrantTestApplication()
+
+            test("Should update status and return updated object as response") {
+                val response = client.patch("$GRANTS_PATH/123e4567-e89b-12d3-a456-426614174000") {
+                    header(HttpHeaders.Authorization, "Bearer something")
+                    header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                    contentType(ContentType.Application.Json)
+                    setBody(
+                        JsonApiConsumeRequest(
+                            data = JsonApiRequestResourceObject(
+                                type = "AuthorizationGrant",
+                                attributes = ConsumeRequestAttributes(
+                                    status = AuthorizationGrant.Status.Revoked
+                                )
+                            )
+                        ),
+                    )
+                }
+
+                response.status shouldBe HttpStatusCode.OK
+                val patchGrantResponse: GrantResponse = response.body()
+
+                patchGrantResponse.data.apply {
+                    type shouldBe "AuthorizationGrant"
+                    id.shouldNotBeNull()
+                    attributes.shouldNotBeNull().apply {
+                        status shouldBe "Revoked"
                     }
                 }
             }

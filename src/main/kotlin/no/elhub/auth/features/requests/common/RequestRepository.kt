@@ -130,8 +130,7 @@ class ExposedRequestRepository(
                 findInternal(request)
                     .mapLeft { readError ->
                         when (readError) {
-                            is RepositoryReadError.NotFoundError -> RepositoryWriteError.UnexpectedError
-                            is RepositoryReadError.UnexpectedError -> RepositoryWriteError.UnexpectedError
+                            is RepositoryReadError.NotFoundError, RepositoryReadError.UnexpectedError -> RepositoryWriteError.UnexpectedError
                         }
                     }
                     .bind()
