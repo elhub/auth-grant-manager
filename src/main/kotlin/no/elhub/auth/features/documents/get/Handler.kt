@@ -28,7 +28,7 @@ class Handler(
             .mapLeft { QueryError.IOError }.bind()
 
         if (document.requestedBy.resourceId != requestedByParty.resourceId) {
-            raise(QueryError.RequestedByMismatch)
+            raise(QueryError.NotAuthorizedError)
         }
 
         val grant = grantRepository.findBySource(AuthorizationGrant.SourceType.Document, document.id)

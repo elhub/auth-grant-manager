@@ -30,7 +30,7 @@ fun Application.module() {
     routing {
         route(GRANTS_PATH) {
             shouldRegisterEndpoint {
-                getRoute(get())
+                getRoute(get(), get())
                 getScopesRoute(get())
                 queryRoute(get(), get())
             }

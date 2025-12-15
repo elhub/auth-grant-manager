@@ -64,7 +64,10 @@ class AuthorizationGrantRouteTest : FunSpec({
             setupAuthorizationGrantTestApplication()
 
             test("Should return 200 OK on a valid ID") {
-                val response = client.get("$GRANTS_PATH/123e4567-e89b-12d3-a456-426614174000")
+                val response = client.get("$GRANTS_PATH/123e4567-e89b-12d3-a456-426614174000") {
+                    header(HttpHeaders.Authorization, "Bearer something")
+                    header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                }
                 response.status shouldBe HttpStatusCode.OK
                 val responseJson: AuthorizationGrantResponse = response.body()
                 responseJson.data.apply {
@@ -101,7 +104,10 @@ class AuthorizationGrantRouteTest : FunSpec({
             }
 
             test("Should return 400 on an invalid ID") {
-                val response = client.get("$GRANTS_PATH/test")
+                val response = client.get("$GRANTS_PATH/test") {
+                    header(HttpHeaders.Authorization, "Bearer something")
+                    header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                }
                 response.status shouldBe HttpStatusCode.BadRequest
                 val responseJson: JsonApiErrorCollection = response.body()
                 responseJson.errors.apply {
@@ -115,8 +121,29 @@ class AuthorizationGrantRouteTest : FunSpec({
                 }
             }
 
+            test("Should return 403 when the grant does not belong to the requester") {
+                val response = client.get("$GRANTS_PATH/b7f9c2e4-5a3d-4e2b-9c1a-8f6e2d3c4b5a") {
+                    header(HttpHeaders.Authorization, "Bearer something")
+                    header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                }
+                response.status shouldBe HttpStatusCode.Forbidden
+                val responseJson: JsonApiErrorCollection = response.body()
+                responseJson.errors.apply {
+                    size shouldBe 1
+                    this[0].apply {
+                        status shouldBe "403"
+                        code shouldBe "REQUESTED_BY_MISMATCH"
+                        title shouldBe "RequestedBy mismatch"
+                        detail shouldBe "The requester is not allowed to access this resource"
+                    }
+                }
+            }
+
             test("Should return 404 on a nonexistent ID") {
-                val response = client.get("$GRANTS_PATH/123e4567-e89b-12d3-a456-426614174001")
+                val response = client.get("$GRANTS_PATH/123e4567-e89b-12d3-a456-426614174001") {
+                    header(HttpHeaders.Authorization, "Bearer something")
+                    header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                }
                 response.status shouldBe HttpStatusCode.NotFound
                 val responseJson: JsonApiErrorCollection = response.body()
                 responseJson.errors.apply {
