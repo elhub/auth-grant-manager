@@ -52,27 +52,27 @@ class ExposedRequestRepositoryTest : FunSpec({
     }
 
     xtest("findAll returns all requests") {
-        /// TODO implement
+        // / TODO implement
     }
 
     xtest("find returns correct request") {
-        /// TODO implement
+        // / TODO implement
     }
 
     xtest("findScopeIds returns correct scope list") {
-        /// TODO implement
+        // / TODO implement
     }
 
     xtest("confirm authorization request with properties") {
-        /// TODO implement
+        // / TODO implement
     }
 
     test("confirm authorization request without properties") {
         val requestToConfirm = generateRequestWithoutProperties()
 
         transaction {
-            val insertedRequest = requestRepo.insert(requestToConfirm).
-                getOrElse { error ->
+            val insertedRequest = requestRepo.insert(requestToConfirm)
+                .getOrElse { error ->
                     fail("Inserted failed :$error")
                 }
 
@@ -81,7 +81,8 @@ class ExposedRequestRepositoryTest : FunSpec({
             val updatedRequest = requestRepo.update(
                 requestId = insertedRequest.id,
                 newStatus = AuthorizationRequest.Status.Accepted,
-                approvedBy = insertedRequest.requestedTo)
+                approvedBy = insertedRequest.requestedTo
+            )
 
             updatedRequest.fold(
                 ifLeft = { error ->
@@ -93,19 +94,16 @@ class ExposedRequestRepositoryTest : FunSpec({
             )
         }
     }
-
 })
 
 @OptIn(ExperimentalTime::class)
-private fun generateRequestWithoutProperties(): AuthorizationRequest {
-    return AuthorizationRequest.create(
-        type = AuthorizationRequest.Type.ChangeOfSupplierConfirmation,
-        requestedBy = AuthorizationParty(type = PartyType.Person, resourceId = "12345"),
-        requestedFrom = AuthorizationParty(type = PartyType.Person, resourceId = "56789"),
-        requestedTo = AuthorizationParty(type = PartyType.Person, resourceId = "45567"),
-        // validTo is set by the value stream team in production,
-        // but we set it here for testing purposes
-        validTo = Clock.System.now().toLocalDateTime(TimeZone.UTC).date.plus(DatePeriod(days = 30)),
-        properties = emptyMap(),
-    )
-}
+private fun generateRequestWithoutProperties(): AuthorizationRequest = AuthorizationRequest.create(
+    type = AuthorizationRequest.Type.ChangeOfSupplierConfirmation,
+    requestedBy = AuthorizationParty(type = PartyType.Person, resourceId = "12345"),
+    requestedFrom = AuthorizationParty(type = PartyType.Person, resourceId = "56789"),
+    requestedTo = AuthorizationParty(type = PartyType.Person, resourceId = "45567"),
+    // validTo is set by the value stream team in production,
+    // but we set it here for testing purposes
+    validTo = Clock.System.now().toLocalDateTime(TimeZone.UTC).date.plus(DatePeriod(days = 30)),
+    properties = emptyMap(),
+)
