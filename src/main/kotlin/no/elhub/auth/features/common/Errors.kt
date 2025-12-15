@@ -19,7 +19,7 @@ sealed class CommandError : Error {
 sealed class QueryError : Error {
     data object ResourceNotFoundError : QueryError()
     data object IOError : QueryError()
-    data object RequestedByMismatch : QueryError()
+    data object NotAuthorizedError : QueryError()
 }
 
 abstract class RepositoryError : Error
@@ -66,7 +66,7 @@ fun QueryError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorObject> = 
         detail = "An error occurred when attempted to perform the query",
     )
 
-    QueryError.RequestedByMismatch -> HttpStatusCode.Forbidden to JsonApiErrorObject(
+    QueryError.NotAuthorizedError -> HttpStatusCode.Forbidden to JsonApiErrorObject(
         status = HttpStatusCode.Forbidden.value.toString(),
         code = "REQUESTED_BY_MISMATCH",
         title = "RequestedBy mismatch",
