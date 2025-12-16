@@ -7,7 +7,6 @@ import io.ktor.server.config.ApplicationConfig
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import no.elhub.auth.features.businessprocesses.changeofsupplier.ChangeOfSupplierBusinessHandler
-import no.elhub.auth.features.common.shouldRegisterEndpoint
 import no.elhub.auth.features.documents.common.DocumentPropertiesRepository
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.documents.common.ExposedDocumentPropertiesRepository
@@ -86,12 +85,10 @@ fun Application.module() {
 
     routing {
         route(DOCUMENTS_PATH) {
-            shouldRegisterEndpoint {
-                createRoute(get(), get())
-                confirmRoute(get(), get())
-                getRoute(get(), get())
-                queryRoute(get(), get())
-            }
+            createRoute(get(), get())
+            confirmRoute(get(), get())
+            getRoute(get(), get())
+            queryRoute(get(), get())
         }
     }
 }

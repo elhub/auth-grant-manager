@@ -10,7 +10,11 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.testing.testApplication
+import no.elhub.auth.features.common.AuthPersonsTestContainer
+import no.elhub.auth.features.common.AuthPersonsTestContainerExtension
 import no.elhub.auth.features.common.PostgresTestContainerExtension
+import no.elhub.auth.features.common.RunPostgresScriptExtension
+import no.elhub.auth.features.common.commonModule
 import no.elhub.auth.features.documents.DOCUMENTS_PATH
 import no.elhub.auth.features.grants.GRANTS_PATH
 import no.elhub.auth.features.openapi.API_PATH_OPENAPI
@@ -24,27 +28,27 @@ import no.elhub.auth.features.requests.module as requestsModule
 class FeatureToggleTest : FunSpec({
     extensions(
         PostgresTestContainerExtension(),
+        RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-grants.sql"),
+
+        AuthPersonsTestContainerExtension,
     )
 
     test("returns 404 for business endpoints when feature toggle is variable is set to false") {
         testApplication {
             environment {
                 config = MapApplicationConfig().apply {
-                    put("featureToggle.enableEndpoints", "false")
-                    put("pdfSigner.certificate.chain", "chain.pem")
-                    put("pdfSigner.certificate.signing", "signing.pem")
-                    put("pdfSigner.vault.url", "http://localhost:8200")
-                    put("pdfSigner.vault.key", "test-key")
-                    put("pdfSigner.vault.tokenPath", "/token")
                     put("ktor.database.username", "app")
                     put("ktor.database.password", "app")
                     put("ktor.database.url", "jdbc:postgresql://localhost:5432/auth")
                     put("ktor.database.driverClass", "org.postgresql.Driver")
+                    put("authPersons.baseUri", AuthPersonsTestContainer.baseUri())
+                    put("pdp.baseUrl", "http://localhost:8085")
                 }
             }
 
             application {
-                documentsModule()
+                module()
+                commonModule()
                 grantsModule()
                 requestsModule()
                 openApiModule()
@@ -59,18 +63,11 @@ class FeatureToggleTest : FunSpec({
             val id = UUID.randomUUID().toString()
 
             val disabledEndpoints = listOf(
-                HttpMethod.Post to DOCUMENTS_PATH,
-                HttpMethod.Patch to "${DOCUMENTS_PATH}/$id",
-                HttpMethod.Get to "${DOCUMENTS_PATH}/$id",
-                HttpMethod.Get to "${DOCUMENTS_PATH}/$id.pdf",
-                HttpMethod.Get to DOCUMENTS_PATH,
                 HttpMethod.Patch to "${REQUESTS_PATH}/$id",
                 HttpMethod.Post to REQUESTS_PATH,
                 HttpMethod.Get to "${REQUESTS_PATH}/$id",
                 HttpMethod.Get to REQUESTS_PATH,
-                HttpMethod.Get to "${GRANTS_PATH}/$id",
-                HttpMethod.Get to "${GRANTS_PATH}/$id/scopes",
-                HttpMethod.Get to GRANTS_PATH
+                HttpMethod.Patch to "$GRANTS_PATH/b7f9c2e4-5a3d-4e2b-9c1a-8f6e2d3c4b5a"
             )
 
             disabledEndpoints.forEach { (method, path) ->
@@ -88,21 +85,18 @@ class FeatureToggleTest : FunSpec({
         testApplication {
             environment {
                 config = MapApplicationConfig().apply {
-                    put("featureToggle.enableEndpoints", "false") // This disables all endpoints
-                    put("pdfSigner.certificate.chain", "chain.pem")
-                    put("pdfSigner.certificate.signing", "signing.pem")
-                    put("pdfSigner.vault.url", "http://localhost:8200")
-                    put("pdfSigner.vault.key", "test-key")
-                    put("pdfSigner.vault.tokenPath", "/token")
                     put("ktor.database.username", "app")
                     put("ktor.database.password", "app")
                     put("ktor.database.url", "jdbc:postgresql://localhost:5432/auth")
                     put("ktor.database.driverClass", "org.postgresql.Driver")
+                    put("authPersons.baseUri", AuthPersonsTestContainer.baseUri())
+                    put("pdp.baseUrl", "http://localhost:8085")
                 }
             }
 
             application {
-                documentsModule()
+                module()
+                commonModule()
                 grantsModule()
                 requestsModule()
                 openApiModule()
@@ -117,18 +111,11 @@ class FeatureToggleTest : FunSpec({
             val id = UUID.randomUUID().toString()
 
             val disabledEndpoints = listOf(
-                HttpMethod.Post to DOCUMENTS_PATH,
-                HttpMethod.Patch to "${DOCUMENTS_PATH}/$id",
-                HttpMethod.Get to "${DOCUMENTS_PATH}/$id",
-                HttpMethod.Get to "${DOCUMENTS_PATH}/$id.pdf",
-                HttpMethod.Get to DOCUMENTS_PATH,
                 HttpMethod.Patch to "${REQUESTS_PATH}/$id",
                 HttpMethod.Post to REQUESTS_PATH,
                 HttpMethod.Get to "${REQUESTS_PATH}/$id",
                 HttpMethod.Get to REQUESTS_PATH,
-                HttpMethod.Get to "${GRANTS_PATH}/$id",
-                HttpMethod.Get to "${GRANTS_PATH}/$id/scopes",
-                HttpMethod.Get to GRANTS_PATH
+                HttpMethod.Patch to "$GRANTS_PATH/$id"
             )
 
             disabledEndpoints.forEach { (method, path) ->

@@ -32,10 +32,10 @@ fun Application.module() {
 
     routing {
         route(GRANTS_PATH) {
+            getRoute(get(), get())
+            getScopesRoute(get(), get())
+            queryRoute(get(), get())
             shouldRegisterEndpoint {
-                getRoute(get(), get())
-                getScopesRoute(get(), get())
-                queryRoute(get(), get())
                 consumeRoute(get())
             }
         }
