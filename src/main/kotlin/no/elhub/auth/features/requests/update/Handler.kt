@@ -41,7 +41,7 @@ class Handler(
         // TODO this will be provided by value stream via tokens. Temporary setting this as requestedTo
         val approval = originalRequest.requestedTo
 
-        val updatedRequest = requestRepository.updateAccept(
+        val acceptedRequest = requestRepository.acceptRequest(
             requestId = originalRequest.id,
             approvedBy = approval
         ).mapLeft {
@@ -49,7 +49,7 @@ class Handler(
         }.bind()
 
         val scopeIds = requestRepository
-            .findScopeIds(updatedRequest.id)
+            .findScopeIds(acceptedRequest.id)
             .mapLeft {
                 when (it) {
                     is RepositoryReadError.NotFoundError -> UpdateError.RequestNotFound
@@ -58,25 +58,25 @@ class Handler(
             }.bind()
 
         val grantToCreate = AuthorizationGrant.create(
-            grantedFor = updatedRequest.requestedFrom,
+            grantedFor = acceptedRequest.requestedFrom,
             grantedBy = approval,
-            grantedTo = updatedRequest.requestedBy,
+            grantedTo = acceptedRequest.requestedBy,
             sourceType = AuthorizationGrant.SourceType.Document,
-            sourceId = updatedRequest.id
+            sourceId = acceptedRequest.id
         )
 
         val createdGrant = grantRepository.insert(grantToCreate, scopeIds)
             .mapLeft { UpdateError.GrantCreationError }
             .bind()
 
-        updatedRequest.copy(grantId = createdGrant.id)
+        acceptedRequest.copy(grantId = createdGrant.id)
     }
 
     private fun handleRejected(requestId: UUID): Either<UpdateError, AuthorizationRequest> = either {
-        val updatedRequest = requestRepository.updateReject(
+        val rejectedRequest = requestRepository.rejectAccept(
             requestId = requestId,
         ).mapLeft { UpdateError.PersistenceError }
             .bind()
-        updatedRequest
+        rejectedRequest
     }
 }

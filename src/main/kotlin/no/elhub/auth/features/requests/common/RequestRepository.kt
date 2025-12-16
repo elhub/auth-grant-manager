@@ -18,7 +18,6 @@ import no.elhub.auth.features.requests.common.AuthorizationRequestScopeTable.aut
 import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.ResultRow
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.insertReturning
 import org.jetbrains.exposed.sql.javatime.CurrentDateTime
@@ -34,8 +33,8 @@ interface RequestRepository {
     fun find(requestId: UUID): Either<RepositoryReadError, AuthorizationRequest>
     fun findAll(): Either<RepositoryReadError, List<AuthorizationRequest>>
     fun insert(req: AuthorizationRequest): Either<RepositoryWriteError, AuthorizationRequest>
-    fun updateAccept(requestId: UUID, approvedBy: AuthorizationParty): Either<RepositoryError, AuthorizationRequest>
-    fun updateReject(requestId: UUID): Either<RepositoryError, AuthorizationRequest>
+    fun acceptRequest(requestId: UUID, approvedBy: AuthorizationParty): Either<RepositoryError, AuthorizationRequest>
+    fun rejectAccept(requestId: UUID): Either<RepositoryError, AuthorizationRequest>
     fun findScopeIds(requestId: UUID): Either<RepositoryReadError, List<Long>>
 }
 
@@ -108,7 +107,7 @@ class ExposedRequestRepository(
             }
         }.mapLeft { RepositoryWriteError.UnexpectedError }
 
-    override fun updateAccept(requestId: UUID, approvedBy: AuthorizationParty) = either {
+    override fun acceptRequest(requestId: UUID, approvedBy: AuthorizationParty) = either {
         transaction {
             val approvedByRecord = partyRepo.findOrInsert(approvedBy.type, approvedBy.resourceId).bind()
 
@@ -125,7 +124,7 @@ class ExposedRequestRepository(
         }
     }
 
-    override fun updateReject(requestId: UUID): Either<RepositoryError, AuthorizationRequest> = either {
+    override fun rejectAccept(requestId: UUID): Either<RepositoryError, AuthorizationRequest> = either {
         transaction {
             val rowsUpdated = AuthorizationRequestTable.update(
                 where = { AuthorizationRequestTable.id eq requestId }
