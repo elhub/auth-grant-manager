@@ -42,6 +42,9 @@
             "requestedForMeteringPointAddress": {
               "$ref": "authorization-request-definitions.json#/$defs/meta/$defs/requestedForMeteringPointAddress"
             },
+            "balanceSupplierName": {
+              "$ref": "authorization-request-definitions.json#/$defs/meta/$defs/balanceSupplierName"
+            },
             "balanceSupplierContractName": {
               "$ref": "authorization-request-definitions.json#/$defs/meta/$defs/balanceSupplierContractName"
             }
