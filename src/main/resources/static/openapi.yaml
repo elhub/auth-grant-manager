@@ -442,8 +442,6 @@ paths:
           $ref: "#/components/responses/401UnauthorizedError"
         "500":
           $ref: "#/components/responses/500InternalServerError"
-      tags:
-        - TODO
     post:
       summary: Initiate a new authorization request flow.
       description: Initiate a new authorization request flow. This creates an authorization request that is associated to a user in MinSide.
@@ -527,8 +525,6 @@ paths:
           $ref: "#/components/responses/404NotFoundError"
         "500":
           $ref: "#/components/responses/500InternalServerError"
-      tags:
-        - TODO
     patch:
       summary: Update an authorization request.
       description: Update an authorization request. This is an internal API for MinSide.
@@ -565,8 +561,6 @@ paths:
           $ref: "#/components/responses/404NotFoundError"
         "500":
           $ref: "#/components/responses/500InternalServerError"
-      tags:
-        - TODO
     delete:
       summary: Delete/cancel an authorization request.
       description: Cancel an authorization request. This can only be done if the request is not yet authorized.

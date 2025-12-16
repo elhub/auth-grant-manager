@@ -4,11 +4,13 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import no.elhub.auth.features.common.party.dto.toJsonApiRelationship
+import no.elhub.auth.features.grants.GRANTS_PATH
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.REQUESTS_PATH
 import no.elhub.devxp.jsonapi.model.JsonApiAttributes
 import no.elhub.devxp.jsonapi.model.JsonApiLinks
 import no.elhub.devxp.jsonapi.model.JsonApiMeta
+import no.elhub.devxp.jsonapi.model.JsonApiRelationshipData
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipToOne
 import no.elhub.devxp.jsonapi.model.JsonApiRelationships
 import no.elhub.devxp.jsonapi.model.JsonApiResourceLinks
@@ -31,7 +33,8 @@ data class GetRequestCollectionResponseRelationships(
     val requestedBy: JsonApiRelationshipToOne,
     val requestedFrom: JsonApiRelationshipToOne,
     val requestedTo: JsonApiRelationshipToOne,
-    val approvedBy: JsonApiRelationshipToOne? = null, // only present after a request is accepted
+    val approvedBy: JsonApiRelationshipToOne? = null,
+    val grant: JsonApiRelationshipToOne? = null
 ) : JsonApiRelationships
 
 @Serializable
@@ -74,7 +77,18 @@ fun List<AuthorizationRequest>.toGetCollectionResponse() =
                     requestedBy = it.requestedBy.toJsonApiRelationship(),
                     requestedFrom = it.requestedFrom.toJsonApiRelationship(),
                     requestedTo = it.requestedTo.toJsonApiRelationship(),
-                    approvedBy = it.approvedBy?.toJsonApiRelationship()
+                    approvedBy = it.approvedBy?.toJsonApiRelationship(),
+                    grant = it.grantId?.let { grantId ->
+                        JsonApiRelationshipToOne(
+                            data = JsonApiRelationshipData(
+                                id = grantId.toString(),
+                                type = "AuthorizationGrant"
+                            ),
+                            links = JsonApiLinks.RelationShipLink(
+                                self = "$GRANTS_PATH/$grantId"
+                            )
+                        )
+                    }
                 ),
                 meta = GetRequestCollectionResponseMeta(
                     createdAt = it.createdAt.toString(),
