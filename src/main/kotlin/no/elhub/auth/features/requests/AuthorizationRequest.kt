@@ -13,6 +13,7 @@ data class AuthorizationRequest(
     val requestedFrom: AuthorizationParty,
     val requestedTo: AuthorizationParty,
     val approvedBy: AuthorizationParty? = null,
+    val grantId: UUID? = null,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime,
     val validTo: LocalDate,

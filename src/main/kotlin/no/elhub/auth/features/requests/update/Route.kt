@@ -1,4 +1,4 @@
-package no.elhub.auth.features.requests.confirm
+package no.elhub.auth.features.requests.update
 
 import arrow.core.getOrElse
 import io.ktor.http.HttpStatusCode
@@ -9,9 +9,10 @@ import io.ktor.server.routing.patch
 import no.elhub.auth.features.common.InputError
 import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.common.validateId
-import no.elhub.auth.features.requests.confirm.dto.JsonApiConfirmRequest
-import no.elhub.auth.features.requests.create.dto.toCreateResponse
+import no.elhub.auth.features.requests.update.dto.JsonApiUpdateRequest
+import no.elhub.auth.features.requests.update.dto.toUpdateResponse
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
+import no.elhub.devxp.jsonapi.response.JsonApiErrorObject
 
 const val REQUEST_ID_PARAM = "id"
 
@@ -25,14 +26,14 @@ fun Route.route(handler: Handler) {
             }
 
         val requestBody = runCatching {
-            call.receive<JsonApiConfirmRequest>()
+            call.receive<JsonApiUpdateRequest>()
         }.getOrElse {
             val (status, body) = InputError.MalformedInputError.toApiErrorResponse()
             call.respond(status, JsonApiErrorCollection(listOf(body)))
             return@patch
         }
 
-        val command = ConfirmCommand(
+        val command = UpdateCommand(
             requestId = requestId,
             newStatus = requestBody.data.attributes.status
         )
@@ -40,14 +41,25 @@ fun Route.route(handler: Handler) {
         val updated = handler(command).getOrElse { error ->
             when (error) {
                 is
-                ConfirmError.PersistenceError,
-                ConfirmError.RequestNotFound
+                UpdateError.PersistenceError,
+                UpdateError.RequestNotFound,
+                UpdateError.GrantCreationError,
+                UpdateError.ScopeReadError,
                 -> call.respond(HttpStatusCode.InternalServerError)
+
+                UpdateError.IllegalTransitionError ->
+                    call.respond(
+                        HttpStatusCode.BadRequest,
+                        JsonApiErrorObject(
+                            status = "400",
+                            title = "Invalid Status Transition",
+                            detail = "Only 'Accepted' and 'Rejected' statuses are allowed."
+                        )
+                    )
             }
             return@patch
         }
 
-        // TODO need reference to auth-grant in the response when accepted
-        call.respond(HttpStatusCode.OK, updated.toCreateResponse())
+        call.respond(HttpStatusCode.OK, updated.toUpdateResponse())
     }
 }

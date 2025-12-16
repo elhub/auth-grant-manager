@@ -91,13 +91,13 @@ class AuthorizationGrantRouteTest : FunSpec({
                     relationships.apply {
                         grantedFor.apply {
                             data.apply {
-                                id shouldBe "12345678901"
+                                id shouldBe "17abdc56-8f6f-440a-9f00-b9bfbb22065e"
                                 type shouldBe "Person"
                             }
                         }
                         grantedBy.apply {
                             data.apply {
-                                id shouldBe "12345678901"
+                                id shouldBe "17abdc56-8f6f-440a-9f00-b9bfbb22065e"
                                 type shouldBe "Person"
                             }
                         }
@@ -297,13 +297,13 @@ class AuthorizationGrantRouteTest : FunSpec({
                         relationships.apply {
                             grantedFor.apply {
                                 data.apply {
-                                    id shouldBe "12345678901"
+                                    id shouldBe "17abdc56-8f6f-440a-9f00-b9bfbb22065e"
                                     type shouldBe "Person"
                                 }
                             }
                             grantedBy.apply {
                                 data.apply {
-                                    id shouldBe "12345678901"
+                                    id shouldBe "17abdc56-8f6f-440a-9f00-b9bfbb22065e"
                                     type shouldBe "Person"
                                 }
                             }
@@ -334,7 +334,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                             }
                             grantedBy.apply {
                                 data.apply {
-                                    id shouldBe "23456789012"
+                                    id shouldBe "6e88f1e2-e576-44ab-80d3-c70a6fe354c0"
                                     type shouldBe "Person"
                                 }
                             }

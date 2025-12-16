@@ -10,14 +10,20 @@ import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.RepositoryWriteError
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.AuthorizationPartyRecord
+import no.elhub.auth.features.common.party.AuthorizationPartyTable
 import no.elhub.auth.features.common.party.PartyRepository
+import no.elhub.auth.features.grants.common.AuthorizationScopeTable
 import no.elhub.auth.features.requests.AuthorizationRequest
+import no.elhub.auth.features.requests.common.AuthorizationRequestScopeTable.authorizationRequestId
 import org.jetbrains.exposed.dao.id.UUIDTable
+import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.insertReturning
 import org.jetbrains.exposed.sql.javatime.CurrentDateTime
 import org.jetbrains.exposed.sql.javatime.date
 import org.jetbrains.exposed.sql.javatime.datetime
+import org.jetbrains.exposed.sql.javatime.timestamp
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.update
@@ -27,10 +33,9 @@ interface RequestRepository {
     fun find(requestId: UUID): Either<RepositoryReadError, AuthorizationRequest>
     fun findAll(): Either<RepositoryReadError, List<AuthorizationRequest>>
     fun insert(req: AuthorizationRequest): Either<RepositoryWriteError, AuthorizationRequest>
-    fun confirm(
-        requestId: UUID,
-        newStatus: AuthorizationRequest.Status,
-    ): Either<RepositoryError, AuthorizationRequest>
+    fun acceptRequest(requestId: UUID, approvedBy: AuthorizationParty): Either<RepositoryError, AuthorizationRequest>
+    fun rejectAccept(requestId: UUID): Either<RepositoryError, AuthorizationRequest>
+    fun findScopeIds(requestId: UUID): Either<RepositoryReadError, List<Long>>
 }
 
 class ExposedRequestRepository(
@@ -102,40 +107,65 @@ class ExposedRequestRepository(
             }
         }.mapLeft { RepositoryWriteError.UnexpectedError }
 
-    override fun confirm(
-        requestId: UUID,
-        newStatus: AuthorizationRequest.Status
-    ): Either<RepositoryError, AuthorizationRequest> =
-        either {
-            transaction {
-                // TODO approvedBy should be in the database
-                val rowsUpdated =
-                    AuthorizationRequestTable.update(
-                        where = { AuthorizationRequestTable.id eq requestId }
-                    ) {
-                        it[requestStatus] = newStatus
-                        it[updatedAt] = java.time.LocalDateTime.now()
-                    }
+    override fun acceptRequest(requestId: UUID, approvedBy: AuthorizationParty) = either {
+        transaction {
+            val approvedByRecord = partyRepo.findOrInsert(approvedBy.type, approvedBy.resourceId).bind()
 
-                if (rowsUpdated == 0) {
-                    raise(RepositoryWriteError.UnexpectedError)
+            val rowsUpdated =
+                AuthorizationRequestTable.update(
+                    where = { AuthorizationRequestTable.id eq requestId }
+                ) {
+                    it[requestStatus] = AuthorizationRequest.Status.Accepted
+                    it[updatedAt] = java.time.LocalDateTime.now()
+                    it[this.approvedBy] = approvedByRecord.id
                 }
 
-                val request =
-                    AuthorizationRequestTable
-                        .selectAll()
-                        .where { AuthorizationRequestTable.id eq requestId }
-                        .singleOrNull() ?: raise(RepositoryReadError.NotFoundError)
+            updateAndFetch(requestId, rowsUpdated).bind()
+        }
+    }
 
-                findInternal(request)
-                    .mapLeft { readError ->
-                        when (readError) {
-                            is RepositoryReadError.NotFoundError, RepositoryReadError.UnexpectedError -> RepositoryWriteError.UnexpectedError
-                        }
+    override fun rejectAccept(requestId: UUID): Either<RepositoryError, AuthorizationRequest> = either {
+        transaction {
+            val rowsUpdated = AuthorizationRequestTable.update(
+                where = { AuthorizationRequestTable.id eq requestId }
+            ) {
+                it[requestStatus] = AuthorizationRequest.Status.Rejected
+                it[updatedAt] = java.time.LocalDateTime.now()
+            }
+
+            updateAndFetch(requestId, rowsUpdated).bind()
+        }
+    }
+
+    override fun findScopeIds(requestId: UUID): Either<RepositoryReadError, List<Long>> =
+        either {
+            transaction {
+                AuthorizationRequestScopeTable
+                    .selectAll()
+                    .where { authorizationRequestId eq requestId }
+                    .map { row ->
+                        row[AuthorizationRequestScopeTable.authorizationScopeId]
                     }
-                    .bind()
             }
         }
+
+    private fun updateAndFetch(requestId: UUID, rowsUpdated: Int): Either<RepositoryError, AuthorizationRequest> = either {
+        transaction {
+            if (rowsUpdated == 0) {
+                raise(RepositoryWriteError.UnexpectedError)
+            }
+
+            val request =
+                AuthorizationRequestTable
+                    .selectAll()
+                    .where { AuthorizationRequestTable.id eq requestId }
+                    .singleOrNull() ?: raise(RepositoryReadError.NotFoundError)
+
+            findInternal(request)
+                .mapLeft { RepositoryWriteError.UnexpectedError }
+                .bind()
+        }
+    }
 
     private fun findInternal(request: ResultRow): Either<RepositoryReadError, AuthorizationRequest> =
         either {
@@ -178,23 +208,34 @@ class ExposedRequestRepository(
         }
 }
 
+object AuthorizationRequestScopeTable : Table("auth.authorization_request_scope") {
+    val authorizationRequestId = uuid("authorization_request_id")
+        .references(AuthorizationRequestTable.id, onDelete = ReferenceOption.CASCADE)
+    val authorizationScopeId = long("authorization_scope_id")
+        .references(AuthorizationScopeTable.id, onDelete = ReferenceOption.CASCADE)
+    val createdAt = timestamp("created_at").clientDefault { java.time.Instant.now() }
+    override val primaryKey = PrimaryKey(authorizationRequestId, authorizationScopeId)
+}
+
 object AuthorizationRequestTable : UUIDTable("authorization_request") {
     val requestType =
         customEnumeration(
             name = "request_type",
+            sql = "auth.authorization_request_type",
             fromDb = { value -> AuthorizationRequest.Type.valueOf(value as String) },
             toDb = { PGEnum("authorization_request_type", it) },
         )
     val requestStatus =
         customEnumeration(
             name = "request_status",
+            sql = "auth.authorization_request_status",
             fromDb = { value -> AuthorizationRequest.Status.valueOf(value as String) },
             toDb = { PGEnum("authorization_request_status", it) },
         )
-    val requestedBy = uuid("requested_by").references(id)
-    val requestedFrom = uuid("requested_from").references(id)
-    val requestedTo = uuid("requested_to").references(id)
-    val approvedBy = uuid("approved_by").references(id).nullable()
+    val requestedBy = uuid("requested_by").references(AuthorizationPartyTable.id)
+    val requestedFrom = uuid("requested_from").references(AuthorizationPartyTable.id)
+    val requestedTo = uuid("requested_to").references(AuthorizationPartyTable.id)
+    val approvedBy = uuid("approved_by").references(AuthorizationPartyTable.id).nullable()
     val createdAt = datetime("created_at").defaultExpression(CurrentDateTime)
     val updatedAt = datetime("updated_at").defaultExpression(CurrentDateTime)
     val validTo = date("valid_to")
