@@ -26,6 +26,7 @@ links:
 relationships:
   DEPENDS_ON:
     - devxp-elhub-gradle-plugins
+    - devxp-json-api-wrapper
 customFields: null
 labels:
   - "language:kotlin"
