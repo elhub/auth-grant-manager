@@ -15,3 +15,12 @@ INSERT INTO auth.authorization_grant_scope (authorization_grant_id, authorizatio
 VALUES ('b7f9c2e4-5a3d-4e2b-9c1a-8f6e2d3c4b5a',
         678,
         '2019-08-03 20:00:00+00');
+
+INSERT INTO auth.authorization_grant_scope (authorization_grant_id, authorization_scope_id, created_at)
+VALUES ('d75522ba-0e62-449b-b1de-70b16f12ecaf',
+        345,
+        '2020-02-02 15:00:00+00');
+INSERT INTO auth.authorization_grant_scope (authorization_grant_id, authorization_scope_id, created_at)
+VALUES ('d75522ba-0e62-449b-b1de-70b16f12ecaf',
+        567,
+        '2019-08-03 20:00:00+00');
