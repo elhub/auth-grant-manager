@@ -525,8 +525,6 @@ paths:
           $ref: "#/components/responses/404NotFoundError"
         "500":
           $ref: "#/components/responses/500InternalServerError"
-      tags:
-        - TODO
     patch:
       summary: Update an authorization request.
       description: Update an authorization request. This is an internal API for MinSide.
@@ -563,8 +561,6 @@ paths:
           $ref: "#/components/responses/404NotFoundError"
         "500":
           $ref: "#/components/responses/500InternalServerError"
-      tags:
-        - TODO
     delete:
       summary: Delete/cancel an authorization request.
       description: Cancel an authorization request. This can only be done if the request is not yet authorized.
