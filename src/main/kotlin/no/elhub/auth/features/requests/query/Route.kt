@@ -11,7 +11,6 @@ import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 
 fun Route.route(handler: Handler) {
     get {
-        // TODO: Build query from payload"
         val requests = handler(Query())
             .getOrElse { err ->
                 val (status, body) = err.toApiErrorResponse()

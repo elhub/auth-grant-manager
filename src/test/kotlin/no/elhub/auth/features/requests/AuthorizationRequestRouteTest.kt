@@ -199,6 +199,13 @@ class AuthorizationRequestRouteTest :
                                     type shouldBe "Person"
                                 }
                             }
+                            grant.shouldNotBeNull().apply {
+                                data.apply {
+                                    id.shouldNotBeNull()
+                                    type shouldBe "AuthorizationGrant"
+                                }
+                                links.shouldNotBeNull()
+                            }
                         }
                         links.shouldNotBeNull()
                         links.apply {
@@ -460,13 +467,13 @@ class AuthorizationRequestRouteTest :
                                         type shouldBe "Person"
                                     }
                                 }
-                                approvedBy?.apply {
+                                approvedBy.shouldNotBeNull().apply {
                                     data.apply {
                                         id shouldBe "4e55f1e2-e576-23ab-80d3-c70a6fe354c0"
                                         type shouldBe "Person"
                                     }
                                 }
-                                grant?.apply {
+                                grant.shouldNotBeNull().apply {
                                     data.apply {
                                         id.shouldNotBeNull()
                                         type shouldBe "AuthorizationGrant"
