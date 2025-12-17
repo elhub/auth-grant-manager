@@ -50,8 +50,8 @@ class Handler(
 
         val scopeIds = requestRepository
             .findScopeIds(acceptedRequest.id)
-            .mapLeft {
-                when (it) {
+            .mapLeft { error ->
+                when (error) {
                     is RepositoryReadError.NotFoundError -> UpdateError.RequestNotFound
                     is RepositoryReadError.UnexpectedError -> UpdateError.ScopeReadError
                 }
@@ -61,7 +61,7 @@ class Handler(
             grantedFor = acceptedRequest.requestedFrom,
             grantedBy = approval,
             grantedTo = acceptedRequest.requestedBy,
-            sourceType = AuthorizationGrant.SourceType.Document,
+            sourceType = AuthorizationGrant.SourceType.Request,
             sourceId = acceptedRequest.id
         )
 
