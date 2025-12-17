@@ -1,6 +1,7 @@
 package no.elhub.auth.features.documents
 
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.maps.shouldContain
 import io.kotest.matchers.maps.shouldContainKey
 import io.kotest.matchers.nulls.shouldBeNull
@@ -50,6 +51,7 @@ import no.elhub.auth.features.grants.PermissionType
 import no.elhub.auth.features.grants.common.AuthorizationGrantResponse
 import no.elhub.auth.features.grants.common.AuthorizationGrantScopesResponse
 import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObjectWithMeta
+import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import java.time.LocalDate
 import java.time.LocalDateTime
 import no.elhub.auth.features.grants.module as grantsModule
@@ -351,6 +353,60 @@ class AuthorizationDocumentRouteTest :
                                 createdAt.shouldNotBeNull()
                             }
                         }
+                    }
+                }
+            }
+        }
+
+        // TODO this should be moved to a proper place, but for that, we need to revisit the test setup
+        context("Invalid User-Agent header") {
+            testApplication {
+                client = createClient {
+                    install(ContentNegotiation) {
+                        json()
+                    }
+                }
+                application {
+                    applicationModule()
+                    commonModule()
+                    grantsModule()
+                    module()
+                }
+
+                environment {
+                    config = MapApplicationConfig(
+                        "ktor.database.username" to "app",
+                        "ktor.database.password" to "app",
+                        "ktor.database.url" to "jdbc:postgresql://localhost:5432/auth",
+                        "ktor.database.driverClass" to "org.postgresql.Driver",
+                        "pdfGenerator.mustacheResourcePath" to "templates",
+                        "pdfSigner.vault.url" to "http://localhost:8200/v1/transit",
+                        "pdfSigner.vault.tokenPath" to "src/test/resources/vault_token_mock.txt",
+                        "pdfSigner.vault.key" to "test-key",
+                        "pdfSigner.certificate.signing" to TestCertificateUtil.Constants.CERTIFICATE_LOCATION,
+                        "pdfSigner.certificate.chain" to TestCertificateUtil.Constants.CERTIFICATE_LOCATION,
+                        "featureToggle.enableEndpoints" to "true",
+                        "authPersons.baseUri" to AuthPersonsTestContainer.baseUri(),
+                        "pdp.baseUrl" to "http://localhost:8085"
+                    )
+                }
+
+                test("Empty User-Agent header should return 400") {
+                    val response =
+                        client
+                            .get(DOCUMENTS_PATH) {
+                                header(HttpHeaders.Authorization, "Bearer something")
+                                header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                                header(HttpHeaders.UserAgent, "")
+                            }
+
+                    response.status shouldBe HttpStatusCode.BadRequest
+                    val error: JsonApiErrorCollection = response.body()
+
+                    error.errors shouldHaveSize 1
+                    error.errors[0].apply {
+                        status shouldBe "400"
+                        detail shouldBe "Missing User-Agent header"
                     }
                 }
             }
