@@ -5,7 +5,7 @@ info:
   version: 0.1.0
   description: >
     The authorization grant manager handles the authorization grants for Elhub's APIs. Note that we are still iterating
-    over the authorization-grant APIs.
+    over the authorization-grant APIs. Endpoints marked TODO are under active development and not yet enabled.
   x-status: Development
   contact:
     name: team-devxp
@@ -373,6 +373,8 @@ paths:
           $ref: "#/components/responses/404NotFoundError"
         "500":
           $ref: "#/components/responses/500InternalServerError"
+      tags:
+        - TODO
   "/authorization-grants/{id}/scopes":
     get:
       summary: Retrieve all of the scopes for the identified authorization grant.
@@ -417,8 +419,6 @@ paths:
           $ref: "#/components/responses/404NotFoundError"
         "500":
           $ref: "#/components/responses/500InternalServerError"
-      tags:
-        - TODO
   "/authorization-requests":
     get:
       summary: Retrieve a list of authorization requests.
@@ -453,6 +453,8 @@ paths:
           $ref: "#/components/responses/401UnauthorizedError"
         "500":
           $ref: "#/components/responses/500InternalServerError"
+      tags:
+        - TODO
     post:
       summary: Initiate a new authorization request flow.
       description: Initiate a new authorization request flow. This creates an authorization request that is associated to a user in MinSide.
@@ -495,6 +497,8 @@ paths:
           $ref: "#/components/responses/401UnauthorizedError"
         "500":
           $ref: "#/components/responses/500InternalServerError"
+      tags:
+        - TODO
   "/authorization-requests/{id}":
     get:
       summary: Retrieve information about a specific authorization request.
@@ -538,6 +542,8 @@ paths:
           $ref: "#/components/responses/404NotFoundError"
         "500":
           $ref: "#/components/responses/500InternalServerError"
+      tags:
+        - TODO
     patch:
       summary: Update an authorization request.
       description: Update an authorization request. This is an internal API for MinSide.
@@ -575,6 +581,8 @@ paths:
           $ref: "#/components/responses/404NotFoundError"
         "500":
           $ref: "#/components/responses/500InternalServerError"
+      tags:
+        - TODO
     delete:
       summary: Delete/cancel an authorization request.
       description: Cancel an authorization request. This can only be done if the request is not yet authorized.
