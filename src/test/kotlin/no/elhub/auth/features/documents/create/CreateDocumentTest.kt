@@ -289,7 +289,7 @@ class CreateDocumentTest :
                         orchestrator
                             .validateAndReturnDocumentCommand(
                                 model,
-                            ).shouldBeLeft(CreateDocumentError.MappingError)
+                            ).shouldBeLeft(CreateDocumentError.BusinessValidationError("Error"))
                     }
                 }
             }
@@ -328,7 +328,7 @@ class CreateDocumentTest :
                         orchestrator
                             .validateAndReturnDocumentCommand(
                                 model,
-                            ).shouldBeLeft(CreateDocumentError.MappingError)
+                            ).shouldBeLeft(CreateDocumentError.BusinessValidationError("Something"))
                     }
                 }
             }
@@ -367,7 +367,7 @@ class CreateDocumentTest :
                         orchestrator
                             .validateAndReturnDocumentCommand(
                                 model,
-                            ).shouldBeLeft(CreateDocumentError.MappingError)
+                            ).shouldBeLeft(CreateDocumentError.BusinessValidationError("Something"))
                     }
                 }
             }
@@ -406,7 +406,7 @@ class CreateDocumentTest :
                         orchestrator
                             .validateAndReturnDocumentCommand(
                                 model,
-                            ).shouldBeLeft(CreateDocumentError.MappingError)
+                            ).shouldBeLeft(CreateDocumentError.BusinessValidationError("Something"))
                     }
                 }
             }
@@ -445,7 +445,7 @@ class CreateDocumentTest :
                         orchestrator
                             .validateAndReturnDocumentCommand(
                                 model,
-                            ).shouldBeLeft(CreateDocumentError.MappingError)
+                            ).shouldBeLeft(CreateDocumentError.BusinessValidationError("Something"))
                     }
                 }
             }
@@ -484,7 +484,7 @@ class CreateDocumentTest :
                         orchestrator
                             .validateAndReturnDocumentCommand(
                                 model,
-                            ).shouldBeLeft(CreateDocumentError.MappingError)
+                            ).shouldBeLeft(CreateDocumentError.BusinessValidationError("Something"))
                     }
                 }
             }
@@ -523,7 +523,7 @@ class CreateDocumentTest :
                         orchestrator
                             .validateAndReturnDocumentCommand(
                                 model,
-                            ).shouldBeLeft(CreateDocumentError.MappingError)
+                            ).shouldBeLeft(CreateDocumentError.BusinessValidationError("Something"))
                     }
                 }
             }
@@ -562,7 +562,7 @@ class CreateDocumentTest :
                         orchestrator
                             .validateAndReturnDocumentCommand(
                                 model,
-                            ).shouldBeLeft(CreateDocumentError.MappingError)
+                            ).shouldBeLeft(CreateDocumentError.BusinessValidationError("Something"))
                     }
                 }
             }
@@ -601,7 +601,7 @@ class CreateDocumentTest :
                         orchestrator
                             .validateAndReturnDocumentCommand(
                                 model,
-                            ).shouldBeLeft(CreateDocumentError.MappingError)
+                            ).shouldBeLeft(CreateDocumentError.BusinessValidationError("Something"))
                     }
                 }
             }

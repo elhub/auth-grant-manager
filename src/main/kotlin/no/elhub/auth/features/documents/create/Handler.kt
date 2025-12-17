@@ -107,8 +107,6 @@ sealed class CreateDocumentError {
 
     data object GenerateFileError : CreateDocumentError()
 
-    data object MappingError : CreateDocumentError()
-
     data object PersistenceError : CreateDocumentError()
 
     data object RequestedFromPartyError : CreateDocumentError()
@@ -120,6 +118,9 @@ sealed class CreateDocumentError {
     data object SignedByPartyError : CreateDocumentError()
 
     data object PersonError : CreateDocumentError()
+
+    // To be used by value streams in during the business validation process. Auth Grant will return this message back to the API consumer
+    data class BusinessValidationError(val message: String) : CreateDocumentError()
 }
 
 fun Map<String, String>.toDocumentProperties() =
