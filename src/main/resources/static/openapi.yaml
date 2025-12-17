@@ -17,6 +17,7 @@ paths:
     get:
       summary: Retrieve a list of authorization document objects.
       parameters:
+        - $ref: "#/components/parameters/UserAgent"
         - name: Authorization
           in: header
           required: true
@@ -50,6 +51,7 @@ paths:
       summary: Initiate a new authorization document flow.
       description: Initiate a new authorization document flow. This creates a authorization document for signing.
       parameters:
+        - $ref: "#/components/parameters/UserAgent"
         - name: Authorization
           in: header
           required: true
@@ -92,6 +94,7 @@ paths:
       description: |
         Retrieve information about a specific authorization document. This can be used to check the status as well as other attributes of the document.
       parameters:
+        - $ref: "#/components/parameters/UserAgent"
         - name: Authorization
           in: header
           required: true
@@ -133,6 +136,7 @@ paths:
       summary: Delete/cancel a signed document.
       description: Cancel a document to be signed. This can only be done if the document is not yet signed.
       parameters:
+        - $ref: "#/components/parameters/UserAgent"
         - name: Authorization
           in: header
           required: true
@@ -175,6 +179,7 @@ paths:
       summary: Retrieve authorization document.
       description: Retrieve the actual authorization document as a PDF file.
       parameters:
+        - $ref: "#/components/parameters/UserAgent"
         - name: Authorization
           in: header
           required: true
@@ -216,6 +221,7 @@ paths:
       summary: Submit a signed authorization document.
       description: Submit a signed authorization document. Elhub will validate the document, generate any necessary authorization grants and store the document.
       parameters:
+        - $ref: "#/components/parameters/UserAgent"
         - name: Authorization
           in: header
           required: true
@@ -260,6 +266,7 @@ paths:
     get:
       summary: Retrieve a list of authorization grants.
       parameters:
+        - $ref: "#/components/parameters/UserAgent"
         - name: Authorization
           in: header
           required: true
@@ -295,6 +302,7 @@ paths:
     get:
       summary: Retrieve a specific authorization grant.
       parameters:
+        - $ref: "#/components/parameters/UserAgent"
         - name: Authorization
           in: header
           required: false
@@ -338,6 +346,7 @@ paths:
       summary: Update the status of an authorization grant
       description: Update the authorization grant status. This is an internal API for BRS.
       parameters:
+        - $ref: "#/components/parameters/UserAgent"
         - name: id
           in: path
           required: true
@@ -368,6 +377,7 @@ paths:
     get:
       summary: Retrieve all of the scopes for the identified authorization grant.
       parameters:
+        - $ref: "#/components/parameters/UserAgent"
         - name: Authorization
           in: header
           required: true
@@ -413,6 +423,7 @@ paths:
     get:
       summary: Retrieve a list of authorization requests.
       parameters:
+        - $ref: "#/components/parameters/UserAgent"
         - name: Authorization
           in: header
           required: true
@@ -446,6 +457,7 @@ paths:
       summary: Initiate a new authorization request flow.
       description: Initiate a new authorization request flow. This creates an authorization request that is associated to a user in MinSide.
       parameters:
+        - $ref: "#/components/parameters/UserAgent"
         - name: Authorization
           in: header
           required: true
@@ -488,6 +500,7 @@ paths:
       summary: Retrieve information about a specific authorization request.
       description: Retrieve information about a specific authorization request. This can be used to check the status.
       parameters:
+        - $ref: "#/components/parameters/UserAgent"
         - name: Authorization
           in: header
           required: true
@@ -529,6 +542,7 @@ paths:
       summary: Update an authorization request.
       description: Update an authorization request. This is an internal API for MinSide.
       parameters:
+        - $ref: "#/components/parameters/UserAgent"
         - name: Authorization
           in: header
           required: true
@@ -565,6 +579,7 @@ paths:
       summary: Delete/cancel an authorization request.
       description: Cancel an authorization request. This can only be done if the request is not yet authorized.
       parameters:
+        - $ref: "#/components/parameters/UserAgent"
         - name: Authorization
           in: header
           required: true
@@ -603,6 +618,14 @@ paths:
       tags:
         - TODO
 components:
+  parameters:
+    UserAgent:
+      name: User-Agent
+      in: header
+      required: true
+      description: Identifies the client software originating the request.
+      schema:
+        type: string
   responses:
     400BadRequestError:
       description: Bad request. Invalid request body.
