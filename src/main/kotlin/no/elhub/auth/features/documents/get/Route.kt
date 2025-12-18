@@ -20,7 +20,7 @@ const val DOCUMENT_ID_PARAM = "id"
 
 fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
     get("/{$DOCUMENT_ID_PARAM}") {
-        val resolvedActor = authProvider.authorizeMarketParty(call)
+        val resolvedActor = authProvider.authorizeMaskinporten(call)
             .getOrElse {
                 val error = it.toApiErrorResponse()
                 call.respond(error.first, error.second)
@@ -49,7 +49,7 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
     }
 
     get("/{$DOCUMENT_ID_PARAM}.pdf") {
-        val resolvedActor = authProvider.authorizeMarketParty(call)
+        val resolvedActor = authProvider.authorizeMaskinporten(call)
             .getOrElse {
                 val error = it.toApiErrorResponse()
                 call.respond(error.first, error.second)

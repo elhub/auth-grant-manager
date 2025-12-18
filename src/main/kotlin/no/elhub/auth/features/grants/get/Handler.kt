@@ -2,6 +2,7 @@ package no.elhub.auth.features.grants.get
 
 import arrow.core.Either
 import arrow.core.raise.either
+import arrow.core.raise.ensure
 import no.elhub.auth.features.common.QueryError
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.party.PartyService
@@ -9,10 +10,9 @@ import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.common.GrantRepository
 
 class Handler(
-    private val repo: GrantRepository,
-    private val partyService: PartyService
+    private val repo: GrantRepository
 ) {
-    suspend operator fun invoke(query: Query): Either<QueryError, AuthorizationGrant> = either {
+    operator fun invoke(query: Query): Either<QueryError, AuthorizationGrant> = either {
         val grant = repo.find(query.id)
             .mapLeft { error ->
                 when (error) {
@@ -21,12 +21,15 @@ class Handler(
                 }
             }.bind()
 
-        val grantedTo = partyService.resolve(partyIdentifier = query.grantedTo).mapLeft { QueryError.IOError }.bind()
+        when (query) {
+            is Query.GrantedFor -> {
+                println("here here: ${grant.grantedFor}vs  ${query.grantedFor}")
+                ensure(grant.grantedFor == query.grantedFor) { QueryError.NotAuthorizedError }
+            }
 
-        if (grant.grantedTo.resourceId != grantedTo.resourceId) {
-            raise(QueryError.NotAuthorizedError)
+            is Query.GrantedTo ->
+                ensure(grant.grantedTo == query.grantedTo) { QueryError.NotAuthorizedError }
         }
-
         grant
     }
 }
