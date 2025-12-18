@@ -423,8 +423,8 @@ class AuthorizationRequestRouteTest :
                         )
                 }
 
-                test("Should accept authorization-request") {
-                    val response =
+                test("Should accept authorization request and persist grant relationship") {
+                    val patchResult =
                         client.patch("${REQUESTS_PATH}/d81e5bf2-8a0c-4348-a788-2a3fab4e77d6") {
                             contentType(ContentType.Application.Json)
                             setBody(
@@ -438,10 +438,58 @@ class AuthorizationRequestRouteTest :
                                 ),
                             )
                         }
-                    response.status shouldBe HttpStatusCode.OK
-                    val patchRequestResponse: UpdateRequestResponse = response.body()
 
-                    patchRequestResponse.data.apply {
+                    patchResult.status shouldBe HttpStatusCode.OK
+                    val patchResponse: UpdateRequestResponse = patchResult.body()
+
+                    patchResponse.data.apply {
+                        type shouldBe "AuthorizationRequest"
+                        id.shouldNotBeNull()
+                        attributes.shouldNotBeNull().apply {
+                            status shouldBe "Accepted"
+                        }
+                        relationships.shouldNotBeNull().apply {
+                            relationships.apply {
+                                requestedBy.apply {
+                                    data.apply {
+                                        id shouldBe "987654321"
+                                        type shouldBe "Organization"
+                                    }
+                                }
+                                requestedFrom.apply {
+                                    data.apply {
+                                        id shouldBe "17abdc56-8f6f-440a-9f00-b9bfbb22065e"
+                                        type shouldBe "Person"
+                                    }
+                                }
+                                requestedTo.apply {
+                                    data.apply {
+                                        id shouldBe "4e55f1e2-e576-23ab-80d3-c70a6fe354c0"
+                                        type shouldBe "Person"
+                                    }
+                                }
+                                approvedBy.shouldNotBeNull().apply {
+                                    data.apply {
+                                        id shouldBe "4e55f1e2-e576-23ab-80d3-c70a6fe354c0"
+                                        type shouldBe "Person"
+                                    }
+                                }
+                                grant.shouldNotBeNull().apply {
+                                    data.apply {
+                                        id.shouldNotBeNull()
+                                        type shouldBe "AuthorizationGrant"
+                                    }
+                                    links.shouldNotBeNull()
+                                }
+                            }
+                        }
+                    }
+
+                    // verify that a subsequent GET of this resource reflects the updated state persisted in the database
+                    val getResult = client.get("${REQUESTS_PATH}/${patchResponse.data.id}")
+                    val getResponse: GetRequestSingleResponse = getResult.body()
+
+                    getResponse.data.apply {
                         type shouldBe "AuthorizationRequest"
                         id.shouldNotBeNull()
                         attributes.shouldNotBeNull().apply {

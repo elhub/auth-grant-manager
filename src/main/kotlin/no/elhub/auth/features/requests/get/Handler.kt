@@ -26,14 +26,12 @@ class Handler(
             val grant = grantRepository.findBySource(
                 AuthorizationGrant.SourceType.Request,
                 request.id
-            ).getOrNull()
-
-            if (grant == null) {
+            ).mapLeft {
                 logger.error("approvedBy is present but grant not found for request ${request.id}")
-                raise(QueryError.ResourceNotFoundError)
-            }
+                QueryError.ResourceNotFoundError
+            }.bind()
 
-            grant.let { request.copy(grantId = it.id) }
+            grant?.let { request.copy(grantId = it.id) } ?: request
         } ?: request
 
         requestWithGrant
