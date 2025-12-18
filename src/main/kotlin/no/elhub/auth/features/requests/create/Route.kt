@@ -12,6 +12,7 @@ import no.elhub.auth.features.requests.create.dto.JsonApiCreateRequest
 import no.elhub.auth.features.requests.create.dto.toCreateResponse
 import no.elhub.auth.features.requests.create.dto.toModel
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
+import no.elhub.devxp.jsonapi.response.JsonApiErrorObject
 
 fun Route.route(handler: Handler) {
     post {
@@ -33,6 +34,7 @@ fun Route.route(handler: Handler) {
                     CreateRequestError.RequestedByPartyError,
                     CreateRequestError.RequestedFromPartyError,
                     -> call.respond(HttpStatusCode.InternalServerError)
+
                     is CreateRequestError.ValidationError -> {
                         val (status, validationError) = error.toApiErrorResponse()
                         call.respond(status, validationError)

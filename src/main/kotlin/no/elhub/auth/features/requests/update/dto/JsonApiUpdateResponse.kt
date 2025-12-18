@@ -5,6 +5,7 @@ import kotlinx.serialization.json.put
 import no.elhub.auth.features.grants.GRANTS_PATH
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.REQUESTS_PATH
+import no.elhub.auth.features.requests.common.requireProperty
 import no.elhub.devxp.jsonapi.model.JsonApiAttributes
 import no.elhub.devxp.jsonapi.model.JsonApiLinks
 import no.elhub.devxp.jsonapi.model.JsonApiMeta
@@ -110,11 +111,11 @@ fun AuthorizationRequest.toUpdateResponse() =
             meta = UpdateRequestResponseMeta(
                 createdAt = this.createdAt.toString(),
                 updatedAt = this.updatedAt.toString(),
-                requestedFromName = this.properties["requestedFromName"].toString(),
-                requestedForMeteringPointId = this.properties["requestedForMeteringPointId"].toString(),
-                requestedForMeteringPointAddress = this.properties["requestedForMeteringPointAddress"].toString(),
-                balanceSupplierName = this.properties["balanceSupplierName"].toString(),
-                balanceSupplierContractName = this.properties["balanceSupplierContractName"].toString(),
+                requestedFromName = this.properties.requireProperty("requestedFromName"),
+                requestedForMeteringPointId = this.properties.requireProperty("requestedForMeteringPointId"),
+                requestedForMeteringPointAddress = this.properties.requireProperty("requestedForMeteringPointAddress"),
+                balanceSupplierName = this.properties.requireProperty("balanceSupplierName"),
+                balanceSupplierContractName = this.properties.requireProperty("balanceSupplierContractName"),
             ),
             links =
             UpdateRequestResponseLinks(

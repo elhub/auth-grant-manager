@@ -19,12 +19,11 @@ data class RequestCommand(
     val meta: RequestMetaMarker,
 )
 
-fun Map<String, String>.toRequestProperties(requestId: UUID) =
-    this
-        .map { (key, value) ->
-            AuthorizationRequestProperty(
-                requestId = requestId,
-                key = key,
-                value = value,
-            )
-        }.toList()
+// fun Map<String, String>.toRequestProperties() =
+//    this
+//        .map { (key, value) ->
+//            AuthorizationRequestProperty(
+//                key = key,
+//                value = value,
+//            )
+//        }.toList()

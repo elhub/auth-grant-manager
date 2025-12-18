@@ -147,8 +147,19 @@ class AuthorizationRequestRouteTest :
                                 }
                             }
                         }
-                        links.shouldNotBeNull()
-                        links.apply {
+                        links.shouldNotBeNull().apply {
+                            self.shouldNotBeNull()
+                        }
+                        meta.shouldNotBeNull().apply {
+                            createdAt.shouldNotBeNull()
+                            updatedAt.shouldNotBeNull()
+                            requestedFromName shouldBe "Ola Normann"
+                            requestedForMeteringPointId shouldBe "1234567890123"
+                            requestedForMeteringPointAddress shouldBe "Example Street 1, 1234 Oslo"
+                            balanceSupplierName shouldBe "Example Energy AS"
+                            balanceSupplierContractName shouldBe "ExampleSupplierContract"
+                        }
+                        links.shouldNotBeNull().apply {
                             self.shouldNotBeNull()
                         }
                     }
@@ -207,9 +218,17 @@ class AuthorizationRequestRouteTest :
                                 links.shouldNotBeNull()
                             }
                         }
-                        links.shouldNotBeNull()
-                        links.apply {
+                        links.shouldNotBeNull().apply {
                             self.shouldNotBeNull()
+                        }
+                        meta.shouldNotBeNull().apply {
+                            createdAt.shouldNotBeNull()
+                            updatedAt.shouldNotBeNull()
+                            requestedFromName shouldBe "Kari Normann"
+                            requestedForMeteringPointId shouldBe "1234567890123"
+                            requestedForMeteringPointAddress shouldBe "Example Street 1, 1234 Oslo"
+                            balanceSupplierName shouldBe "Example Energy AS"
+                            balanceSupplierContractName shouldBe "ExampleSupplierContract"
                         }
                     }
                     responseJson.links.apply {
@@ -481,6 +500,15 @@ class AuthorizationRequestRouteTest :
                                     }
                                     links.shouldNotBeNull()
                                 }
+                                meta.shouldNotBeNull().apply {
+                                    createdAt.shouldNotBeNull()
+                                    updatedAt.shouldNotBeNull()
+                                    requestedFromName shouldBe "Ola Normann"
+                                    requestedForMeteringPointId shouldBe "1234567890123"
+                                    requestedForMeteringPointAddress shouldBe "Example Street 1, 1234 Oslo"
+                                    balanceSupplierName shouldBe "Example Energy AS"
+                                    balanceSupplierContractName shouldBe "ExampleSupplierContract"
+                                }
                             }
                         }
                     }
@@ -527,6 +555,15 @@ class AuthorizationRequestRouteTest :
                                         type shouldBe "AuthorizationGrant"
                                     }
                                     links.shouldNotBeNull()
+                                }
+                                meta.shouldNotBeNull().apply {
+                                    createdAt.shouldNotBeNull()
+                                    updatedAt.shouldNotBeNull()
+                                    requestedFromName shouldBe "Ola Normann"
+                                    requestedForMeteringPointId shouldBe "1234567890123"
+                                    requestedForMeteringPointAddress shouldBe "Example Street 1, 1234 Oslo"
+                                    balanceSupplierName shouldBe "Example Energy AS"
+                                    balanceSupplierContractName shouldBe "ExampleSupplierContract"
                                 }
                             }
                         }
@@ -577,6 +614,15 @@ class AuthorizationRequestRouteTest :
                                         id shouldBe "4e55f1e2-e576-23ab-80d3-c70a6fe354c0"
                                         type shouldBe "Person"
                                     }
+                                }
+                                meta.shouldNotBeNull().apply {
+                                    createdAt.shouldNotBeNull()
+                                    updatedAt.shouldNotBeNull()
+                                    requestedFromName shouldBe "Ola Normann"
+                                    requestedForMeteringPointId shouldBe "1234567890123"
+                                    requestedForMeteringPointAddress shouldBe "Example Street 1, 1234 Oslo"
+                                    balanceSupplierName shouldBe "Example Energy AS"
+                                    balanceSupplierContractName shouldBe "ExampleSupplierContract"
                                 }
                             }
                         }

@@ -7,6 +7,7 @@ import no.elhub.auth.features.common.party.dto.toJsonApiRelationship
 import no.elhub.auth.features.grants.GRANTS_PATH
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.REQUESTS_PATH
+import no.elhub.auth.features.requests.common.requireProperty
 import no.elhub.devxp.jsonapi.model.JsonApiAttributes
 import no.elhub.devxp.jsonapi.model.JsonApiLinks
 import no.elhub.devxp.jsonapi.model.JsonApiMeta
@@ -93,11 +94,11 @@ fun List<AuthorizationRequest>.toGetCollectionResponse() =
                 meta = GetRequestCollectionResponseMeta(
                     createdAt = it.createdAt.toString(),
                     updatedAt = it.updatedAt.toString(),
-                    requestedFromName = it.properties["requestedFromName"].toString(),
-                    requestedForMeteringPointId = it.properties["requestedForMeteringPointId"].toString(),
-                    requestedForMeteringPointAddress = it.properties["requestedForMeteringPointAddress"].toString(),
-                    balanceSupplierName = it.properties["balanceSupplierName"].toString(),
-                    balanceSupplierContractName = it.properties["balanceSupplierContractName"].toString(),
+                    requestedFromName = it.properties.requireProperty("requestedFromName"),
+                    requestedForMeteringPointId = it.properties.requireProperty("requestedFromName"),
+                    requestedForMeteringPointAddress = it.properties.requireProperty("requestedFromName"),
+                    balanceSupplierName = it.properties.requireProperty("requestedFromName"),
+                    balanceSupplierContractName = it.properties.requireProperty("requestedFromName"),
                 ),
                 links = GetRequestCollectionResponseLinks(
                     self = "${REQUESTS_PATH}/${it.id}",

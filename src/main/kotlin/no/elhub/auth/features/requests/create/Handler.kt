@@ -7,11 +7,11 @@ import no.elhub.auth.features.businessprocesses.changeofsupplier.ChangeOfSupplie
 import no.elhub.auth.features.common.party.PartyService
 import no.elhub.auth.features.grants.common.CreateGrantProperties
 import no.elhub.auth.features.requests.AuthorizationRequest
+import no.elhub.auth.features.requests.common.AuthorizationRequestProperty
 import no.elhub.auth.features.requests.common.ProxyRequestBusinessHandler
 import no.elhub.auth.features.requests.common.RequestPropertiesRepository
 import no.elhub.auth.features.requests.common.RequestRepository
 import no.elhub.auth.features.requests.create.command.RequestCommand
-import no.elhub.auth.features.requests.create.command.toRequestProperties
 import no.elhub.auth.features.requests.create.model.CreateRequestModel
 import no.elhub.auth.features.requests.create.requesttypes.RequestTypeValidationError
 import no.elhub.devxp.jsonapi.response.JsonApiErrorObject
@@ -30,32 +30,30 @@ class Handler(
                     return Either.Left(CreateRequestError.ValidationError(validationError))
                 }
 
-        val command = businessCommand
-
         val requestedFromParty =
             partyService
-                .resolve(command.requestedFrom)
+                .resolve(businessCommand.requestedFrom)
                 .getOrElse { return Either.Left(CreateRequestError.RequestedFromPartyError) }
 
         val requestedByParty =
             partyService
-                .resolve(command.requestedBy)
+                .resolve(businessCommand.requestedBy)
                 .getOrElse { return Either.Left(CreateRequestError.RequestedByPartyError) }
 
-        val metaAttributes = command.meta.toMetaAttributes()
+        val metaAttributes = businessCommand.meta.toMetaAttributes()
 
         val requestedToParty =
             partyService
-                .resolve(command.requestedTo)
+                .resolve(businessCommand.requestedTo)
                 .getOrElse { return Either.Left(CreateRequestError.RequestedByPartyError) }
 
         val requestToCreate =
             AuthorizationRequest.create(
-                type = command.type,
+                type = businessCommand.type,
                 requestedFrom = requestedFromParty,
                 requestedBy = requestedByParty,
                 requestedTo = requestedToParty,
-                validTo = command.validTo,
+                validTo = businessCommand.validTo,
             )
 
         val savedRequest =
@@ -63,13 +61,19 @@ class Handler(
                 .insert(requestToCreate)
                 .getOrElse { return Either.Left(CreateRequestError.PersistenceError) }
 
-        val requestProperties = metaAttributes.toRequestProperties(savedRequest.id)
+        val requestProperties: List<AuthorizationRequestProperty> = metaAttributes.map {
+            AuthorizationRequestProperty(
+                requestId = savedRequest.id,
+                key = it.key,
+                value = it.value,
+            )
+        }
 
         requestPropertyRepo.insert(requestProperties).getOrElse {
             return Either.Left(CreateRequestError.PersistenceError)
         }
 
-        return Either.Right(savedRequest.copy(properties = metaAttributes))
+        return Either.Right(savedRequest.copy(properties = requestProperties))
     }
 }
 
