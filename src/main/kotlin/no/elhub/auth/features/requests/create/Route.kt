@@ -12,7 +12,6 @@ import no.elhub.auth.features.requests.create.dto.JsonApiCreateRequest
 import no.elhub.auth.features.requests.create.dto.toCreateResponse
 import no.elhub.auth.features.requests.create.dto.toModel
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
-import no.elhub.devxp.jsonapi.response.JsonApiErrorObject
 
 fun Route.route(handler: Handler) {
     post {
