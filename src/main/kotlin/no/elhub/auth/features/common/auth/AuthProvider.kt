@@ -103,6 +103,7 @@ class PDPAuthorizationProvider(
 
         val pdpBody: PdpResponse = when {
             response.status.isSuccess() -> response.body()
+
             else -> {
                 val err = response.bodyAsText()
                 log.warn("PDP non-2xx for traceId={} status={} body={}", traceId, response.status, err)
@@ -136,6 +137,7 @@ class PDPAuthorizationProvider(
                     .bind()
                 ResolvedActor(actingGLN, roleType)
             }
+
             else -> {
                 log.warn("Unexpected tokenType for traceId={} tokenType={}", traceId, tokenInfo.tokenType)
                 raise(AuthError.InvalidToken)

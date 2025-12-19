@@ -33,6 +33,7 @@ fun Route.route(handler: Handler) {
                     CreateRequestError.RequestedByPartyError,
                     CreateRequestError.RequestedFromPartyError,
                     -> call.respond(HttpStatusCode.InternalServerError)
+
                     is CreateRequestError.ValidationError -> {
                         val (status, validationError) = error.toApiErrorResponse()
                         call.respond(status, validationError)
