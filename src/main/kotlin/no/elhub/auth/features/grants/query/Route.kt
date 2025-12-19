@@ -15,7 +15,7 @@ import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 
 fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
     get {
-        val resolvedActor = authProvider.authorizeMarketParty(call)
+        val resolvedActor = authProvider.authorizeMaskinporten(call)
             .getOrElse { err ->
                 val (status, body) = err.toApiErrorResponse()
                 call.respond(status, body)
