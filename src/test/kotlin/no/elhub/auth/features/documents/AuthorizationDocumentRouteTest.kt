@@ -25,18 +25,13 @@ import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.testing.testApplication
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonPrimitive
 import no.elhub.auth.features.common.AuthPersonsTestContainer
 import no.elhub.auth.features.common.AuthPersonsTestContainerExtension
 import no.elhub.auth.features.common.PdpTestContainerExtension
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.RunPostgresScriptExtension
-import no.elhub.auth.features.common.auth.AuthInfo
 import no.elhub.auth.features.common.auth.PDPAuthorizationProvider
-import no.elhub.auth.features.common.auth.PdpResponse
-import no.elhub.auth.features.common.auth.Result
-import no.elhub.auth.features.common.auth.TokenInfo
 import no.elhub.auth.features.common.commonModule
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
@@ -64,24 +59,7 @@ class AuthorizationDocumentRouteTest :
             RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-party.sql"),
             VaultTransitTestContainerExtension,
             AuthPersonsTestContainerExtension,
-            PdpTestContainerExtension(
-                alwaysReturn = Json.encodeToString(
-                    PdpResponse(
-                        result = Result(
-                            tokenInfo =
-                            TokenInfo(
-                                tokenStatus = "verified",
-                                partyId = "something",
-                                tokenType = "maskinporten"
-                            ),
-                            authInfo = AuthInfo(
-                                actingFunction = "BalanceSupplier",
-                                actingGLN = "0107000000021"
-                            )
-                        )
-                    )
-                )
-            )
+            PdpTestContainerExtension()
         )
 
         lateinit var createdDocumentId: String
@@ -129,7 +107,7 @@ class AuthorizationDocumentRouteTest :
                             .post(DOCUMENTS_PATH) {
                                 contentType(ContentType.Application.Json)
                                 accept(ContentType.Application.Json)
-                                header(HttpHeaders.Authorization, "Bearer something")
+                                header(HttpHeaders.Authorization, "Bearer maskinporten")
                                 header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
                                 setBody(
                                     Request(
@@ -182,7 +160,7 @@ class AuthorizationDocumentRouteTest :
 
                 test("Get created document should return correct response") {
                     val response = client.get(linkToDocument) {
-                        header(HttpHeaders.Authorization, "Bearer something")
+                        header(HttpHeaders.Authorization, "Bearer maskinporten")
                         header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
                     }
                     response.status shouldBe HttpStatusCode.OK
@@ -236,7 +214,7 @@ class AuthorizationDocumentRouteTest :
 
                 test("Get pdf file should have proper signature") {
                     signedFile = client.get(linkToDocumentFile) {
-                        header(HttpHeaders.Authorization, "Bearer something")
+                        header(HttpHeaders.Authorization, "Bearer maskinporten")
                         header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
                     }.bodyAsBytes()
                     signedFile.validateFileIsSignedByUs()
@@ -246,7 +224,7 @@ class AuthorizationDocumentRouteTest :
                     val response = client.put("$DOCUMENTS_PATH/$createdDocumentId.pdf") {
                         contentType(ContentType.Application.Pdf)
                         setBody(signedFile)
-                        header(HttpHeaders.Authorization, "Bearer something")
+                        header(HttpHeaders.Authorization, "Bearer maskinporten")
                         header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
                     }
                     response.status shouldBe HttpStatusCode.NoContent
@@ -255,7 +233,7 @@ class AuthorizationDocumentRouteTest :
 
                 test("Get document should give status Signed and reference to created grant") {
                     val response = client.get(linkToDocument) {
-                        header(HttpHeaders.Authorization, "Bearer something")
+                        header(HttpHeaders.Authorization, "Bearer maskinporten")
                         header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
                     }
                     response.status shouldBe HttpStatusCode.OK
@@ -287,7 +265,7 @@ class AuthorizationDocumentRouteTest :
 
                 test("Get grant by id should return proper response") {
                     val response = client.get("$GRANTS_PATH/$grantId") {
-                        header(HttpHeaders.Authorization, "Bearer something")
+                        header(HttpHeaders.Authorization, "Bearer maskinporten")
                         header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
                     }
                     response.status shouldBe HttpStatusCode.OK
@@ -335,7 +313,7 @@ class AuthorizationDocumentRouteTest :
 
                 test("Get grant scopes by id should return proper response") {
                     val response = client.get("$GRANTS_PATH/$grantId/scopes") {
-                        header(HttpHeaders.Authorization, "Bearer something")
+                        header(HttpHeaders.Authorization, "Bearer maskinporten")
                         header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
                     }
                     response.status shouldBe HttpStatusCode.OK
@@ -395,7 +373,7 @@ class AuthorizationDocumentRouteTest :
                     val response =
                         client
                             .get(DOCUMENTS_PATH) {
-                                header(HttpHeaders.Authorization, "Bearer something")
+                                header(HttpHeaders.Authorization, "Bearer maskinporten")
                                 header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
                                 header(HttpHeaders.UserAgent, "")
                             }

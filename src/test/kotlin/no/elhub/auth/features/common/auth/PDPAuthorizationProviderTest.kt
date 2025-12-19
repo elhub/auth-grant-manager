@@ -19,10 +19,11 @@ import io.ktor.server.request.ApplicationRequest
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.serialization.json.Json
+import java.util.UUID
 
 typealias MachineHeaders = PDPAuthorizationProvider.Companion.Headers
 
-const val TOKEN_VALID_FORMAT = "Bearer something"
+const val TOKEN_VALID_FORMAT = "Bearer maskinporten"
 const val TOKEN_INVALID_FORMAT = "Bear something"
 
 val validHeadersForMaskinporten = headersOf(
@@ -33,18 +34,58 @@ val validHeadersForMaskinporten = headersOf(
 
 class PDPAuthorizationProviderTest : FunSpec({
 
-    context("Given authorization header is wrong, validate Provider propagates proper error") {
-        test("When authorization header is missing, Provider returns MissingAuthorizationHeader") {
+    context("authorize") {
+        test("returns AuthorizedOrganizationEntity when PDP reports maskinporten token") {
+            val response = runProviderMethod(
+                method = PDPAuthorizationProvider::authorize,
+                headers = validHeadersForMaskinporten,
+                pdpResponse = maskinportenResponse()
+            )
 
-            val response = authorizeWith(
+            response.shouldBeRight(
+                AuthorizedParty.AuthorizedOrganizationEntity(
+                    gln = "0107000000021",
+                    role = RoleType.BalanceSupplier
+                )
+            )
+        }
+
+        test("returns AuthorizedPerson when PDP reports enduser token") {
+            val partyId = "a8098c1a-f86e-11da-bd1a-00112444be1e"
+            val response = runProviderMethod(
+                method = PDPAuthorizationProvider::authorize,
+                headers = authorizationOnlyHeaders(),
+                pdpResponse = endUserResponse(partyId = partyId)
+            )
+
+            response.shouldBeRight(AuthorizedParty.AuthorizedPerson(UUID.fromString(partyId)))
+        }
+
+        test("returns InvalidToken for unsupported tokenType") {
+            val response = runProviderMethod(
+                method = PDPAuthorizationProvider::authorize,
+                headers = validHeadersForMaskinporten,
+                pdpResponse = maskinportenResponse(tokenType = "unknown")
+            )
+
+            response.shouldBeLeft(AuthError.InvalidToken)
+        }
+    }
+
+    context("authorizeMaskinporten") {
+        test("returns MissingAuthorizationHeader when authorization header is missing") {
+
+            val response = runProviderMethod(
+                method = PDPAuthorizationProvider::authorizeMaskinporten,
                 headers = Headers.Empty
             )
 
             response.shouldBeLeft(AuthError.MissingAuthorizationHeader)
         }
 
-        test("When authorization header format is invalid, Provider returns InvalidAuthorizationHeader") {
-            val response = authorizeWith(
+        test("returns InvalidAuthorizationHeader when authorization header format is invalid") {
+            val response = runProviderMethod(
+                method = PDPAuthorizationProvider::authorizeMaskinporten,
                 headersOf(
                     HttpHeaders.Authorization to listOf(TOKEN_INVALID_FORMAT),
                 )
@@ -52,207 +93,218 @@ class PDPAuthorizationProviderTest : FunSpec({
 
             response.shouldBeLeft(AuthError.InvalidAuthorizationHeader)
         }
-    }
 
-    context("Given required headers are missing, validate Provider propagates proper error") {
-        test("When senderGLN header is missing, Provider returns MissingSenderGlnHeader") {
-            val response = authorizeWith(
-                headersOf(
-                    HttpHeaders.Authorization to listOf(TOKEN_VALID_FORMAT),
+        test("returns MissingSenderGlnHeader when senderGLN header is missing") {
+            val response = runProviderMethod(
+                method = PDPAuthorizationProvider::authorizeMaskinporten,
+                headers = authorizationOnlyHeaders(),
+                pdpResponse = maskinportenResponse(
+                    authInfo = AuthInfo(
+                        actingFunction = RoleType.BalanceSupplier.name,
+                        actingGLN = "0107000000021"
+                    )
                 )
             )
 
             response.shouldBeLeft(AuthError.MissingSenderGlnHeader)
         }
-    }
 
-    context("Given getting valid response from PDP, validate PDPAuthorizationProvider responds properly") {
-        test("When PDP returns tokenStatus != 'verified', Provider returns InvalidToken") {
-            val pdpResponse = Json.encodeToString(
-                PDPAuthorizationProvider.PdpResponse(
-                    result = PDPAuthorizationProvider.PdpResponse.Result(
-                        tokenInfo = TokenInfo(
-                            tokenStatus = "wrong"
-                        )
-                    )
-                )
-            )
-            val response = authorizeWith(
+        test("returns InvalidToken when tokenStatus is not verified") {
+            val response = runProviderMethod(
+                method = PDPAuthorizationProvider::authorizeMaskinporten,
                 headers = validHeadersForMaskinporten,
-                clientResponseJson = pdpResponse
+                pdpResponse = maskinportenResponse(tokenStatus = "wrong")
             )
             response.shouldBeLeft(AuthError.InvalidToken)
         }
 
-        test("When PDP returns unexpected tokenType, Provider returns InvalidToken") {
-            val pdpResponse = Json.encodeToString(
-                PDPAuthorizationProvider.PdpResponse(
-                    result = PDPAuthorizationProvider.PdpResponse.Result(
-                        tokenInfo = TokenInfo(
-                            tokenStatus = "verified",
-                            tokenType = "random"
-                        )
-                    )
-                )
-            )
-
-            val response = authorizeWith(
+        test("returns NotAuthorized when tokenType is not maskinporten") {
+            val response = runProviderMethod(
+                method = PDPAuthorizationProvider::authorizeMaskinporten,
                 headers = validHeadersForMaskinporten,
-                clientResponseJson = pdpResponse
+                pdpResponse = maskinportenResponse(tokenType = "random")
             )
 
-            response.shouldBeLeft(AuthError.InvalidToken)
+            response.shouldBeLeft(AuthError.NotAuthorized)
         }
 
-        test("When PDP returns an authorized maskinporten decision, Provider returns ResolvedActor") {
-            val pdpResponse = Json.encodeToString(
-                PDPAuthorizationProvider.PdpResponse(
-                    result = PDPAuthorizationProvider.PdpResponse.Result(
-                        tokenInfo = TokenInfo(
-                            tokenStatus = "verified",
-                            tokenType = "maskinporten"
-                        ),
-                        authInfo = AuthInfo(
-                            actingFunction = "BalanceSupplier",
-                            actingGLN = "0107000000021"
-                        )
-                    )
+        test("returns AuthorizedOrganizationEntity for authorized maskinporten decision") {
+            val response = runProviderMethod(
+                method = PDPAuthorizationProvider::authorizeMaskinporten,
+                headers = validHeadersForMaskinporten,
+                pdpResponse = maskinportenResponse()
+            )
+            response.shouldBeRight(
+                AuthorizedParty.AuthorizedOrganizationEntity(
+                    gln = "0107000000021",
+                    role = RoleType.BalanceSupplier
                 )
             )
-            val response = authorizeWith(
-                headers = validHeadersForMaskinporten,
-                clientResponseJson = pdpResponse
-            )
-            response.shouldBeRight(ResolvedActor(gln = "0107000000021", role = RoleType.BalanceSupplier))
         }
-    }
 
-    context("Given getting invalid response from PDP, validate Provider propagates proper error") {
-        test("When PDP response is missing actingFunction, Provider returns ActingFunctionMissing") {
-            val pdpResponse = Json.encodeToString(
-                PDPAuthorizationProvider.PdpResponse(
-                    result = PDPAuthorizationProvider.PdpResponse.Result(
-                        tokenInfo = TokenInfo(
-                            tokenStatus = "verified",
-                            tokenType = "maskinporten"
-                        ),
-                        authInfo = AuthInfo(
-                            actingFunction = null,
-                            actingGLN = "0107000000021"
-                        )
+        test("returns ActingFunctionMissing when PDP response lacks actingFunction") {
+            val response = runProviderMethod(
+                method = PDPAuthorizationProvider::authorizeMaskinporten,
+                headers = validHeadersForMaskinporten,
+                pdpResponse = maskinportenResponse(
+                    authInfo = AuthInfo(
+                        actingFunction = null,
+                        actingGLN = "0107000000021"
                     )
                 )
-            )
-            val response = authorizeWith(
-                headers = validHeadersForMaskinporten,
-                clientResponseJson = pdpResponse
             )
             response.shouldBeLeft(AuthError.ActingFunctionMissing)
         }
-        test("When PDP response is missing actingGln, Provider returns ActingGlnMissing") {
-            val pdpResponse = Json.encodeToString(
-                PDPAuthorizationProvider.PdpResponse(
-                    result = PDPAuthorizationProvider.PdpResponse.Result(
-                        tokenInfo = TokenInfo(
-                            tokenStatus = "verified",
-                            tokenType = "maskinporten"
-                        ),
-                        authInfo = AuthInfo(
-                            actingFunction = "BalanceSupplier",
-                            actingGLN = null
-                        )
+        test("returns ActingGlnMissing when PDP response lacks actingGln") {
+            val response = runProviderMethod(
+                method = PDPAuthorizationProvider::authorizeMaskinporten,
+                headers = validHeadersForMaskinporten,
+                pdpResponse = maskinportenResponse(
+                    authInfo = AuthInfo(
+                        actingFunction = RoleType.BalanceSupplier.name,
+                        actingGLN = null
                     )
                 )
-            )
-            val response = authorizeWith(
-                headers = validHeadersForMaskinporten,
-                clientResponseJson = pdpResponse
             )
             response.shouldBeLeft(AuthError.ActingGlnMissing)
         }
 
-        test("When PDP response includes 'input failed:', Provider returns UnkownError") {
+        test("returns UnknownError when PDP response includes input failed") {
 
-            val pdpResponse = Json.encodeToString(
-                PDPAuthorizationProvider.PdpResponse(
-                    result = PDPAuthorizationProvider.PdpResponse.Result(
-                        tokenInfo = TokenInfo(
-                            tokenStatus = "verified",
-                            tokenType = "maskinporten"
-                        ),
-                        authInfo = AuthInfo(
-                            inputFailed = "some missing stuff"
-                        )
+            val response = runProviderMethod(
+                method = PDPAuthorizationProvider::authorizeMaskinporten,
+                headers = validHeadersForMaskinporten,
+                pdpResponse = maskinportenResponse(
+                    authInfo = AuthInfo(
+                        inputFailed = "some missing stuff"
                     )
                 )
-            )
-
-            val response = authorizeWith(
-                headers = validHeadersForMaskinporten,
-                clientResponseJson = pdpResponse
             )
             response.shouldBeLeft(AuthError.UnknownError)
         }
 
-        test("When PDP response includes unsupported actingFunction, Provider returns ActingFunctionNotSupported") {
-            val pdpResponse = Json.encodeToString(
-                PDPAuthorizationProvider.PdpResponse(
-                    result = PDPAuthorizationProvider.PdpResponse.Result(
-                        tokenInfo = TokenInfo(
-                            tokenStatus = "verified",
-                            tokenType = "maskinporten"
-                        ),
-                        authInfo = AuthInfo(
-                            actingFunction = "UnknownRole",
-                            actingGLN = "0107000000021"
-                        )
+        test("returns ActingFunctionNotSupported when PDP response includes unsupported actingFunction") {
+            val response = runProviderMethod(
+                method = PDPAuthorizationProvider::authorizeMaskinporten,
+                headers = validHeadersForMaskinporten,
+                pdpResponse = maskinportenResponse(
+                    authInfo = AuthInfo(
+                        actingFunction = "UnknownRole",
+                        actingGLN = "0107000000021"
                     )
                 )
-            )
-
-            val response = authorizeWith(
-                headers = validHeadersForMaskinporten,
-                clientResponseJson = pdpResponse
             )
 
             response.shouldBeLeft(AuthError.ActingFunctionNotSupported)
         }
     }
-})
 
-suspend fun authorizeWith(
-    headers: Headers,
-    clientResponseJson: String = ""
-): Either<AuthError, ResolvedActor> {
-    // Mock engine returning your desired JSON
-    val engine = MockEngine { _ ->
-        respond(
-            content = clientResponseJson,
-            status = HttpStatusCode.OK,
-            headers = headersOf(
-                HttpHeaders.ContentType,
-                ContentType.Application.Json.toString()
+    context("authorizePerson") {
+        test("returns NotAuthorized when tokenType is not enduser") {
+            val response = runProviderMethod(
+                method = PDPAuthorizationProvider::authorizeEndUser,
+                headers = authorizationOnlyHeaders(),
+                pdpResponse = maskinportenResponse()
             )
-        )
-    }
 
-    // Client using the mock engine
-    val client = HttpClient(engine) {
-        install(ContentNegotiation) {
-            json(Json { ignoreUnknownKeys = true })
+            response.shouldBeLeft(AuthError.NotAuthorized)
+        }
+
+        test("returns UnknownError when partyId is missing") {
+            val response = runProviderMethod(
+                method = PDPAuthorizationProvider::authorizeEndUser,
+                headers = authorizationOnlyHeaders(),
+                pdpResponse = endUserResponse(partyId = null)
+            )
+
+            response.shouldBeLeft(AuthError.UnknownError)
+        }
+
+        test("returns AuthorizedPerson when partyId is present") {
+            val partyId = "a8098c1a-f86e-11da-bd1a-00112444be1e"
+            val response = runProviderMethod(
+                method = PDPAuthorizationProvider::authorizeEndUser,
+                headers = authorizationOnlyHeaders(),
+                pdpResponse = endUserResponse(partyId = partyId)
+            )
+
+            response.shouldBeRight(AuthorizedParty.AuthorizedPerson(UUID.fromString(partyId)))
         }
     }
+})
 
+private val json = Json { ignoreUnknownKeys = true }
+
+private fun mockCall(headers: Headers): ApplicationCall {
     val request = mockk<ApplicationRequest>()
     every { request.headers } returns headers
     val call = mockk<ApplicationCall>()
     every { call.request } returns request
+    return call
+}
 
-    // Use your real provider implementation
+private suspend fun <T> runProviderMethod(
+    method: suspend PDPAuthorizationProvider.(ApplicationCall) -> Either<AuthError, T>,
+    headers: Headers,
+    pdpResponse: PdpResponse = maskinportenResponse(),
+    status: HttpStatusCode = HttpStatusCode.OK
+): Either<AuthError, T> {
+    val client = HttpClient(
+        MockEngine { _ ->
+            respond(
+                content = json.encodeToString(pdpResponse),
+                status = status,
+                headers = headersOf(
+                    HttpHeaders.ContentType,
+                    ContentType.Application.Json.toString()
+                )
+            )
+        }
+    ) {
+        install(ContentNegotiation) {
+            json(json)
+        }
+    }
+
     val provider = PDPAuthorizationProvider(
         httpClient = client,
         pdpBaseUrl = "http://mock.pdp"
     )
 
-    return provider.authorizeMarketParty(call)
+    return provider.method(mockCall(headers))
 }
+
+private fun authorizationOnlyHeaders(authorization: String = TOKEN_VALID_FORMAT) = headersOf(
+    HttpHeaders.Authorization to listOf(authorization),
+)
+
+private fun maskinportenResponse(
+    tokenStatus: String = "verified",
+    tokenType: String? = TokenType.MASKINPORTEN.value,
+    authInfo: AuthInfo? = AuthInfo(
+        actingFunction = RoleType.BalanceSupplier.name,
+        actingGLN = "0107000000021"
+    )
+) = PdpResponse(
+    result = Result(
+        tokenInfo = TokenInfo(
+            tokenStatus = tokenStatus,
+            tokenType = tokenType
+        ),
+        authInfo = authInfo
+    )
+)
+
+private fun endUserResponse(
+    tokenStatus: String = "verified",
+    partyId: String? = "a8098c1a-f86e-11da-bd1a-00112444be1e",
+    tokenType: String? = TokenType.ENDUSER.value,
+) = PdpResponse(
+    result = Result(
+        tokenInfo = TokenInfo(
+            tokenStatus = tokenStatus,
+            partyId = partyId,
+            tokenType = tokenType
+        )
+    )
+)
