@@ -5,7 +5,6 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.REQUESTS_PATH
-import no.elhub.auth.features.requests.common.requiredProperty
 import no.elhub.devxp.jsonapi.model.JsonApiAttributes
 import no.elhub.devxp.jsonapi.model.JsonApiLinks
 import no.elhub.devxp.jsonapi.model.JsonApiMeta
@@ -33,14 +32,9 @@ data class CreateRequestResponseRelationShips(
 ) : JsonApiRelationships
 
 @Serializable
-data class CreateRequestResponseMeta(
-    val createdAt: String,
-    val updatedAt: String,
-    val requestedFromName: String,
-    val requestedForMeteringPointId: String,
-    val requestedForMeteringPointAddress: String,
-    val balanceSupplierName: String,
-    val balanceSupplierContractName: String
+@JvmInline
+value class CreateRequestResponseMeta(
+    val values: Map<String, String>
 ) : JsonApiResourceMeta
 
 @Serializable
@@ -88,13 +82,13 @@ fun AuthorizationRequest.toCreateResponse() =
                 ),
             ),
             meta = CreateRequestResponseMeta(
-                createdAt = this.createdAt.toString(),
-                updatedAt = this.updatedAt.toString(),
-                requestedFromName = this.properties.requiredProperty("requestedFromName"),
-                requestedForMeteringPointId = this.properties.requiredProperty("requestedForMeteringPointId"),
-                requestedForMeteringPointAddress = this.properties.requiredProperty("requestedForMeteringPointAddress"),
-                balanceSupplierName = this.properties.requiredProperty("balanceSupplierName"),
-                balanceSupplierContractName = this.properties.requiredProperty("balanceSupplierContractName"),
+                buildMap {
+                    put("createdAt", this@toCreateResponse.createdAt.toString())
+                    put("updatedAt", this@toCreateResponse.updatedAt.toString())
+                    this@toCreateResponse.properties.forEach { prop ->
+                        put(prop.key, prop.value)
+                    }
+                }
             ),
             links =
             CreateRequestResponseLinks(
