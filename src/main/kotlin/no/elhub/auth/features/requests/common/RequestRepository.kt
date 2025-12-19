@@ -203,7 +203,7 @@ class ExposedRequestRepository(
                     .bind()
             }
 
-            val properties = requestPropertiesRepository.find(requestId = request[AuthorizationRequestTable.id].value)
+            val properties = requestPropertiesRepository.findBy(requestId = request[AuthorizationRequestTable.id].value)
 
             request.toAuthorizationRequest(
                 requestedByParty,

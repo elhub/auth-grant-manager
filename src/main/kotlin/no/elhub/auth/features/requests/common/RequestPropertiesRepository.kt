@@ -15,7 +15,7 @@ import java.util.UUID
 
 interface RequestPropertiesRepository {
     fun insert(properties: List<AuthorizationRequestProperty>): Either<RepositoryError, Unit>
-    fun find(requestId: UUID): List<AuthorizationRequestProperty>
+    fun findBy(requestId: UUID): List<AuthorizationRequestProperty>
 }
 
 class ExposedRequestPropertiesRepository : RequestPropertiesRepository {
@@ -33,7 +33,7 @@ class ExposedRequestPropertiesRepository : RequestPropertiesRepository {
             }
         }.mapLeft { RepositoryWriteError.UnexpectedError }
 
-    override fun find(requestId: UUID): List<AuthorizationRequestProperty> =
+    override fun findBy(requestId: UUID): List<AuthorizationRequestProperty> =
         AuthorizationRequestPropertyTable
             .selectAll()
             .where { AuthorizationRequestPropertyTable.requestId eq requestId }
