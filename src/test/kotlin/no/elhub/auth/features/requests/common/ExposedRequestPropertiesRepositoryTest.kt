@@ -4,6 +4,7 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import no.elhub.auth.features.common.PostgresTestContainer
 import no.elhub.auth.features.common.PostgresTestContainerExtension
+import no.elhub.auth.features.common.RunPostgresScriptExtension
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.deleteAll
@@ -13,9 +14,14 @@ import java.util.UUID
 
 class ExposedRequestPropertiesRepositoryTest : FunSpec({
 
-    extensions(PostgresTestContainerExtension())
+    extensions(
+        PostgresTestContainerExtension(),
+        RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-requests.sql")
+    )
 
     val propertyRepo = ExposedRequestPropertiesRepository()
+
+    val requestId = UUID.fromString("4f71d596-99e4-415e-946d-7252c1a40c51")
 
     beforeSpec {
         Database.connect(
@@ -27,12 +33,14 @@ class ExposedRequestPropertiesRepositoryTest : FunSpec({
 
         transaction {
             SchemaUtils.create(AuthorizationRequestPropertyTable)
+            SchemaUtils.create(AuthorizationRequestTable)
         }
     }
 
     beforeTest {
         transaction {
             AuthorizationRequestPropertyTable.deleteAll()
+            AuthorizationRequestTable.deleteAll()
         }
     }
 
@@ -43,7 +51,6 @@ class ExposedRequestPropertiesRepositoryTest : FunSpec({
         }
 
         test("insert properties should persist to database") {
-            val requestId = UUID.randomUUID()
             val properties = listOf(
                 AuthorizationRequestProperty(requestId, "key1", "value1"),
                 AuthorizationRequestProperty(requestId, "key2", "value2"),
@@ -62,7 +69,6 @@ class ExposedRequestPropertiesRepositoryTest : FunSpec({
         }
 
         test("insert properties with special characters should persist correctly") {
-            val requestId = UUID.randomUUID()
             val properties = listOf(
                 AuthorizationRequestProperty(requestId, "address", "Main Street 42, 5000 Bergen"),
                 AuthorizationRequestProperty(requestId, "name", "Kari Normann AS"),

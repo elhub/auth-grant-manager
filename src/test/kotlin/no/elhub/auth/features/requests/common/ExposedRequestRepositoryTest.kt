@@ -26,7 +26,8 @@ import kotlin.time.ExperimentalTime
 class ExposedRequestRepositoryTest : FunSpec({
     extensions(PostgresTestContainerExtension())
     val partyRepo = ExposedPartyRepository()
-    val requestRepo = ExposedRequestRepository(partyRepo)
+    val requestPropertiesRepo = ExposedRequestPropertiesRepository()
+    val requestRepo = ExposedRequestRepository(partyRepo, requestPropertiesRepo)
 
     beforeSpec {
         Database.connect(
@@ -104,5 +105,4 @@ private fun generateRequestWithoutProperties(): AuthorizationRequest = Authoriza
     // validTo is set by the value stream team in production,
     // but we set it here for testing purposes
     validTo = Clock.System.now().toLocalDateTime(TimeZone.UTC).date.plus(DatePeriod(days = 30)),
-    properties = emptyMap(),
 )

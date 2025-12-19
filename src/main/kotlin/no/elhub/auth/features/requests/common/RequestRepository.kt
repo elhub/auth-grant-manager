@@ -32,7 +32,7 @@ import java.util.UUID
 interface RequestRepository {
     fun find(requestId: UUID): Either<RepositoryReadError, AuthorizationRequest>
     fun findAll(): Either<RepositoryReadError, List<AuthorizationRequest>>
-    fun insert(req: AuthorizationRequest): Either<RepositoryWriteError, AuthorizationRequest>
+    fun insert(request: AuthorizationRequest): Either<RepositoryWriteError, AuthorizationRequest>
     fun acceptRequest(requestId: UUID, approvedBy: AuthorizationParty): Either<RepositoryError, AuthorizationRequest>
     fun rejectAccept(requestId: UUID): Either<RepositoryError, AuthorizationRequest>
     fun findScopeIds(requestId: UUID): Either<RepositoryReadError, List<Long>>
@@ -40,7 +40,9 @@ interface RequestRepository {
 
 class ExposedRequestRepository(
     private val partyRepo: PartyRepository,
+    private val requestPropertiesRepository: RequestPropertiesRepository
 ) : RequestRepository {
+
     override fun findAll(): Either<RepositoryReadError, List<AuthorizationRequest>> =
         either {
             transaction {
@@ -63,47 +65,49 @@ class ExposedRequestRepository(
             }
         }
 
-    override fun insert(req: AuthorizationRequest): Either<RepositoryWriteError, AuthorizationRequest> =
+    override fun insert(request: AuthorizationRequest): Either<RepositoryWriteError, AuthorizationRequest> =
         either {
             transaction {
                 val requestedByParty =
                     partyRepo
-                        .findOrInsert(req.requestedBy.type, req.requestedBy.resourceId)
+                        .findOrInsert(request.requestedBy.type, request.requestedBy.resourceId)
                         .mapLeft { RepositoryWriteError.UnexpectedError }
                         .bind()
 
                 val requestedFromParty =
                     partyRepo
-                        .findOrInsert(req.requestedFrom.type, req.requestedFrom.resourceId)
+                        .findOrInsert(request.requestedFrom.type, request.requestedFrom.resourceId)
                         .mapLeft { RepositoryWriteError.UnexpectedError }
                         .bind()
 
                 val requestedToParty =
                     partyRepo
-                        .findOrInsert(req.requestedTo.type, req.requestedTo.resourceId)
+                        .findOrInsert(request.requestedTo.type, request.requestedTo.resourceId)
                         .mapLeft { RepositoryWriteError.UnexpectedError }
                         .bind()
 
-                val request =
+                val insertedRequest =
                     AuthorizationRequestTable
                         .insertReturning {
-                            it[id] = req.id
-                            it[requestType] = req.type
-                            it[requestStatus] = req.status
+                            it[id] = request.id
+                            it[requestType] = request.type
+                            it[requestStatus] = request.status
                             it[requestedBy] = requestedByParty.id
                             it[requestedFrom] = requestedFromParty.id
                             it[requestedTo] = requestedToParty.id
-                            it[validTo] = req.validTo.toJavaLocalDate()
-                            it[createdAt] = req.createdAt
-                        }.map {
+                            it[validTo] = request.validTo.toJavaLocalDate()
+                            it[createdAt] = request.createdAt
+                        }
+                        .map {
                             it.toAuthorizationRequest(
                                 requestedByParty,
                                 requestedFromParty,
                                 requestedToParty,
+                                request.properties
                             )
                         }.single()
 
-                request
+                insertedRequest
             }
         }.mapLeft { RepositoryWriteError.UnexpectedError }
 
@@ -199,10 +203,13 @@ class ExposedRequestRepository(
                     .bind()
             }
 
+            val properties = requestPropertiesRepository.findBy(requestId = request[AuthorizationRequestTable.id].value)
+
             request.toAuthorizationRequest(
                 requestedByParty,
                 requestedFromParty,
                 requestedToParty,
+                properties,
                 approvedByParty
             )
         }
@@ -245,6 +252,7 @@ fun ResultRow.toAuthorizationRequest(
     requestedBy: AuthorizationPartyRecord,
     requestedFrom: AuthorizationPartyRecord,
     requestedTo: AuthorizationPartyRecord,
+    properties: List<AuthorizationRequestProperty>,
     approvedBy: AuthorizationPartyRecord? = null
 ) = AuthorizationRequest(
     id = this[AuthorizationRequestTable.id].value,
@@ -257,4 +265,5 @@ fun ResultRow.toAuthorizationRequest(
     createdAt = this[AuthorizationRequestTable.createdAt],
     updatedAt = this[AuthorizationRequestTable.updatedAt],
     validTo = this[AuthorizationRequestTable.validTo].toKotlinLocalDate(),
+    properties = properties
 )

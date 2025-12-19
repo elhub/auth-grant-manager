@@ -34,14 +34,9 @@ data class UpdateRequestResponseRelationShips(
 ) : JsonApiRelationships
 
 @Serializable
-data class UpdateRequestResponseMeta(
-    val createdAt: String,
-    val updatedAt: String,
-    val requestedFromName: String,
-    val requestedForMeteringPointId: String,
-    val requestedForMeteringPointAddress: String,
-    val balanceSupplierName: String,
-    val balanceSupplierContractName: String
+@JvmInline
+value class UpdateRequestResponseMeta(
+    val values: Map<String, String>
 ) : JsonApiResourceMeta
 
 @Serializable
@@ -108,13 +103,13 @@ fun AuthorizationRequest.toUpdateResponse() =
                 },
             ),
             meta = UpdateRequestResponseMeta(
-                createdAt = this.createdAt.toString(),
-                updatedAt = this.updatedAt.toString(),
-                requestedFromName = this.properties["requestedFromName"].toString(),
-                requestedForMeteringPointId = this.properties["requestedForMeteringPointId"].toString(),
-                requestedForMeteringPointAddress = this.properties["requestedForMeteringPointAddress"].toString(),
-                balanceSupplierName = this.properties["balanceSupplierName"].toString(),
-                balanceSupplierContractName = this.properties["balanceSupplierContractName"].toString(),
+                buildMap {
+                    put("createdAt", this@toUpdateResponse.createdAt.toString())
+                    put("updatedAt", this@toUpdateResponse.updatedAt.toString())
+                    this@toUpdateResponse.properties.forEach { prop ->
+                        put(prop.key, prop.value)
+                    }
+                }
             ),
             links =
             UpdateRequestResponseLinks(

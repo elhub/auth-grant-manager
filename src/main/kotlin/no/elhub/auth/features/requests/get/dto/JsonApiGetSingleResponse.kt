@@ -43,14 +43,9 @@ data class GetRequestSingleResponseLinks(
 ) : JsonApiResourceLinks
 
 @Serializable
-data class GetRequestSingleResponseMeta(
-    val createdAt: String,
-    val updatedAt: String,
-    val requestedFromName: String,
-    val requestedForMeteringPointId: String,
-    val requestedForMeteringPointAddress: String,
-    val balanceSupplierName: String,
-    val balanceSupplierContractName: String
+@JvmInline
+value class GetRequestSingleResponseMeta(
+    val values: Map<String, String>
 ) : JsonApiResourceMeta
 
 typealias GetRequestSingleResponse = JsonApiResponse.SingleDocumentWithRelationshipsAndMetaAndLinks<
@@ -91,13 +86,13 @@ fun AuthorizationRequest.toGetSingleResponse() =
                 }
             ),
             meta = GetRequestSingleResponseMeta(
-                createdAt = this.createdAt.toString(),
-                updatedAt = this.updatedAt.toString(),
-                requestedFromName = this.properties["requestedFromName"].toString(),
-                requestedForMeteringPointId = this.properties["requestedForMeteringPointId"].toString(),
-                requestedForMeteringPointAddress = this.properties["requestedForMeteringPointAddress"].toString(),
-                balanceSupplierName = this.properties["balanceSupplierName"].toString(),
-                balanceSupplierContractName = this.properties["balanceSupplierContractName"].toString(),
+                buildMap {
+                    put("createdAt", this@toGetSingleResponse.createdAt.toString())
+                    put("updatedAt", this@toGetSingleResponse.updatedAt.toString())
+                    this@toGetSingleResponse.properties.forEach { prop ->
+                        put(prop.key, prop.value)
+                    }
+                }
             ),
             links =
             GetRequestSingleResponseLinks(

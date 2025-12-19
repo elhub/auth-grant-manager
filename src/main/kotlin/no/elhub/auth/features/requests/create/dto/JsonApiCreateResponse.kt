@@ -32,14 +32,9 @@ data class CreateRequestResponseRelationShips(
 ) : JsonApiRelationships
 
 @Serializable
-data class CreateRequestResponseMeta(
-    val createdAt: String,
-    val updatedAt: String,
-    val requestedFromName: String,
-    val requestedForMeteringPointId: String,
-    val requestedForMeteringPointAddress: String,
-    val balanceSupplierName: String,
-    val balanceSupplierContractName: String
+@JvmInline
+value class CreateRequestResponseMeta(
+    val values: Map<String, String>
 ) : JsonApiResourceMeta
 
 @Serializable
@@ -87,13 +82,13 @@ fun AuthorizationRequest.toCreateResponse() =
                 ),
             ),
             meta = CreateRequestResponseMeta(
-                createdAt = this.createdAt.toString(),
-                updatedAt = this.updatedAt.toString(),
-                requestedFromName = this.properties["requestedFromName"].toString(),
-                requestedForMeteringPointId = this.properties["requestedForMeteringPointId"].toString(),
-                requestedForMeteringPointAddress = this.properties["requestedForMeteringPointAddress"].toString(),
-                balanceSupplierName = this.properties["balanceSupplierName"].toString(),
-                balanceSupplierContractName = this.properties["balanceSupplierContractName"].toString(),
+                buildMap {
+                    put("createdAt", this@toCreateResponse.createdAt.toString())
+                    put("updatedAt", this@toCreateResponse.updatedAt.toString())
+                    this@toCreateResponse.properties.forEach { prop ->
+                        put(prop.key, prop.value)
+                    }
+                }
             ),
             links =
             CreateRequestResponseLinks(
