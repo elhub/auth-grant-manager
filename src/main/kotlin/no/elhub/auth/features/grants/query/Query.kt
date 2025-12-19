@@ -1,7 +1,7 @@
 package no.elhub.auth.features.grants.query
 
-import no.elhub.auth.features.common.party.PartyIdentifier
+import no.elhub.auth.features.common.party.AuthorizationParty
 
 data class Query(
-    val grantedTo: PartyIdentifier
+    val authorizedParty: AuthorizationParty
 )

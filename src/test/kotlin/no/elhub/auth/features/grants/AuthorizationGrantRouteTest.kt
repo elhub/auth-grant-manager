@@ -466,6 +466,38 @@ class AuthorizationGrantRouteTest : FunSpec({
                     }
                 }
             }
+
+            test("Should return grants for an authorized person") {
+                val response = client.get(GRANTS_PATH) {
+                    header(HttpHeaders.Authorization, "Bearer enduser")
+                }
+
+                response.status shouldBe HttpStatusCode.OK
+                val responseJson: AuthorizationGrantListResponse = response.body()
+                responseJson.data.size shouldBe 1
+                responseJson.data[0].apply {
+                    id shouldBe "123e4567-e89b-12d3-a456-426614174000"
+                    relationships.grantedFor.data.apply {
+                        id shouldBe "17abdc56-8f6f-440a-9f00-b9bfbb22065e"
+                        type shouldBe "Person"
+                    }
+                }
+            }
+
+            test("Should return empty list when authorized person has no grants") {
+                PdpTestContainerExtension.registerEnduserMapping(
+                    token = "enduser-no-grants",
+                    partyId = "4e55f1e2-e576-23ab-80d3-c70a6fe354c0"
+                )
+
+                val response = client.get(GRANTS_PATH) {
+                    header(HttpHeaders.Authorization, "Bearer enduser-no-grants")
+                }
+
+                response.status shouldBe HttpStatusCode.OK
+                val responseJson: AuthorizationGrantListResponse = response.body()
+                responseJson.data.size shouldBe 0
+            }
         }
     }
 

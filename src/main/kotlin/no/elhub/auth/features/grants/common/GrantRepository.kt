@@ -29,6 +29,7 @@ import org.jetbrains.exposed.sql.insertReturning
 import org.jetbrains.exposed.sql.javatime.CurrentDateTime
 import org.jetbrains.exposed.sql.javatime.datetime
 import org.jetbrains.exposed.sql.javatime.timestamp
+import org.jetbrains.exposed.sql.or
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.update
@@ -39,7 +40,7 @@ interface GrantRepository {
     fun find(grantId: UUID): Either<RepositoryReadError, AuthorizationGrant>
     fun findBySource(sourceType: SourceType, sourceId: UUID): Either<RepositoryReadError, AuthorizationGrant?>
     fun findScopes(grantId: UUID): Either<RepositoryReadError, List<AuthorizationScope>>
-    fun findAll(grantedTo: AuthorizationParty): Either<RepositoryReadError, List<AuthorizationGrant>>
+    fun findAll(party: AuthorizationParty): Either<RepositoryReadError, List<AuthorizationGrant>>
     fun insert(grant: AuthorizationGrant, scopeIds: List<Long>): Either<RepositoryWriteError, AuthorizationGrant>
     fun update(grantId: UUID, newStatus: Status): Either<RepositoryError, AuthorizationGrant>
 }
@@ -50,16 +51,18 @@ class ExposedGrantRepository(
 
     private val logger = LoggerFactory.getLogger(ExposedGrantRepository::class.java)
 
-    override fun findAll(grantedTo: AuthorizationParty): Either<RepositoryReadError, List<AuthorizationGrant>> = either {
+    override fun findAll(party: AuthorizationParty): Either<RepositoryReadError, List<AuthorizationGrant>> = either {
         transaction {
-            val grantedToId = partyRepository.findOrInsert(type = grantedTo.type, resourceId = grantedTo.resourceId)
+            val partyId = partyRepository.findOrInsert(type = party.type, resourceId = party.resourceId)
                 .mapLeft { RepositoryReadError.UnexpectedError }
                 .bind()
                 .id
 
             val grantRows = AuthorizationGrantTable
                 .selectAll()
-                .where { AuthorizationGrantTable.grantedTo eq grantedToId }
+                .where {
+                    (AuthorizationGrantTable.grantedTo eq partyId) or (AuthorizationGrantTable.grantedFor eq partyId)
+                }
                 .toList()
 
             if (grantRows.isEmpty()) {
