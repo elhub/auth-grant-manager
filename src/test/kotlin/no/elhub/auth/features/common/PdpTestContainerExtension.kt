@@ -90,6 +90,47 @@ class PdpTestContainerExtension(
         """.trimIndent()
 
     companion object {
+        suspend fun registerEnduserMapping(token: String, partyId: String) {
+            val client = HttpClient(CIO)
+            client.post("http://localhost:8085/__admin/mappings") {
+                contentType(ContentType.Application.Json)
+                setBody(enduserMapping(token, partyId))
+            }
+            client.close()
+        }
+
+        private fun enduserMapping(token: String, partyId: String): String =
+            """
+                {
+                  "priority": 1,
+                  "request": {
+                    "method": "POST",
+                    "url": "/v1/data/v2/token/authinfo",
+                    "bodyPatterns": [
+                      { "contains": "\"token\":\"$token\"" }
+                    ]
+                  },
+                  "response": {
+                    "status": 200,
+                    "headers": { "Content-Type": "application/json" },
+                    "jsonBody": ${enduserResponse(partyId)}
+                  }
+                }
+            """.trimIndent()
+
+        private fun enduserResponse(partyId: String): String =
+            """
+                {
+                  "result": {
+                    "tokenInfo": {
+                      "tokenStatus": "verified",
+                      "partyId": "$partyId",
+                      "tokenType": "enduser"
+                    }
+                  }
+                }
+            """.trimIndent()
+
         private val DEFAULT_MASKINPORTEN_RESPONSE = """
         {
           "result": {
