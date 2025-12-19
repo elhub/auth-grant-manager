@@ -23,7 +23,6 @@ class Handler(
 
         when (query) {
             is Query.GrantedFor -> {
-                println("here here: ${grant.grantedFor}vs  ${query.grantedFor}")
                 ensure(grant.grantedFor == query.grantedFor) { QueryError.NotAuthorizedError }
             }
 

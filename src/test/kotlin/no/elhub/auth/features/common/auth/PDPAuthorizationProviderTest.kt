@@ -18,7 +18,6 @@ import io.ktor.server.application.ApplicationCall
 import io.ktor.server.request.ApplicationRequest
 import io.mockk.every
 import io.mockk.mockk
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.util.UUID
 
@@ -203,7 +202,7 @@ class PDPAuthorizationProviderTest : FunSpec({
     context("authorizePerson") {
         test("returns NotAuthorized when tokenType is not enduser") {
             val response = runProviderMethod(
-                method = PDPAuthorizationProvider::authorizePerson,
+                method = PDPAuthorizationProvider::authorizeEndUser,
                 headers = authorizationOnlyHeaders(),
                 pdpResponse = maskinportenResponse()
             )
@@ -213,7 +212,7 @@ class PDPAuthorizationProviderTest : FunSpec({
 
         test("returns UnknownError when partyId is missing") {
             val response = runProviderMethod(
-                method = PDPAuthorizationProvider::authorizePerson,
+                method = PDPAuthorizationProvider::authorizeEndUser,
                 headers = authorizationOnlyHeaders(),
                 pdpResponse = endUserResponse(partyId = null)
             )
@@ -224,7 +223,7 @@ class PDPAuthorizationProviderTest : FunSpec({
         test("returns AuthorizedPerson when partyId is present") {
             val partyId = "a8098c1a-f86e-11da-bd1a-00112444be1e"
             val response = runProviderMethod(
-                method = PDPAuthorizationProvider::authorizePerson,
+                method = PDPAuthorizationProvider::authorizeEndUser,
                 headers = authorizationOnlyHeaders(),
                 pdpResponse = endUserResponse(partyId = partyId)
             )

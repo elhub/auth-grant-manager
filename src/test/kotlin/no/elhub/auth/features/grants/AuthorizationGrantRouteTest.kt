@@ -130,6 +130,22 @@ class AuthorizationGrantRouteTest : FunSpec({
                 }
             }
 
+            test("Should return 401 when authorization header not set") {
+                val response = client.get("$GRANTS_PATH/b7f9c2e4-5a3d-4e2b-9c1a-8f6e2d3c4b5a") {
+                    header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                }
+                response.status shouldBe HttpStatusCode.Unauthorized
+                val responseJson: JsonApiErrorCollection = response.body()
+                responseJson.errors.apply {
+                    size shouldBe 1
+                    this[0].apply {
+                        status shouldBe "401"
+                        title shouldBe "Missing authorization"
+                        detail shouldBe "Bearer token is required in the Authorization header."
+                    }
+                }
+            }
+
             test("Should return 200 when correct grantedFor") {
                 val response = client.get("$GRANTS_PATH/123e4567-e89b-12d3-a456-426614174000") {
                     header(HttpHeaders.Authorization, "Bearer enduser")

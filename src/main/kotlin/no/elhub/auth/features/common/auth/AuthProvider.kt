@@ -45,7 +45,7 @@ enum class TokenType(val value: String) {
 interface AuthorizationProvider {
     suspend fun authorize(call: ApplicationCall): Either<AuthError, AuthorizedParty>
     suspend fun authorizeMaskinporten(call: ApplicationCall): Either<AuthError, AuthorizedParty.AuthorizedOrganizationEntity>
-    suspend fun authorizePerson(call: ApplicationCall): Either<AuthError, AuthorizedParty.AuthorizedPerson>
+    suspend fun authorizeEndUser(call: ApplicationCall): Either<AuthError, AuthorizedParty.AuthorizedPerson>
 }
 
 class PDPAuthorizationProvider(
@@ -65,7 +65,7 @@ class PDPAuthorizationProvider(
     }
 
     override suspend fun authorize(call: ApplicationCall): Either<AuthError, AuthorizedParty> = either {
-        val traceId = UUID.randomUUID().toString()
+        val traceId = UUID.randomUUID()
         val pdpBody: PdpResponse = pdpRequestAndValidate(call, traceId).bind()
 
         when (pdpBody.result.tokenInfo.tokenType) {
@@ -85,18 +85,18 @@ class PDPAuthorizationProvider(
     }
 
     override suspend fun authorizeMaskinporten(call: ApplicationCall): Either<AuthError, AuthorizedParty.AuthorizedOrganizationEntity> = either {
-        val traceId = UUID.randomUUID().toString()
+        val traceId = UUID.randomUUID()
         val pdpBody: PdpResponse = pdpRequestAndValidate(call, traceId).bind()
         authorizeMaskinporten(call, pdpBody, traceId).bind()
     }
 
-    override suspend fun authorizePerson(call: ApplicationCall): Either<AuthError, AuthorizedParty.AuthorizedPerson> = either {
-        val traceId = UUID.randomUUID().toString()
+    override suspend fun authorizeEndUser(call: ApplicationCall): Either<AuthError, AuthorizedParty.AuthorizedPerson> = either {
+        val traceId = UUID.randomUUID()
         val pdpBody: PdpResponse = pdpRequestAndValidate(call, traceId).bind()
         authorizePerson(pdpBody, traceId).bind()
     }
 
-    private suspend fun pdpRequestAndValidate(call: ApplicationCall, traceId: String): Either<AuthError, PdpResponse> = either {
+    private suspend fun pdpRequestAndValidate(call: ApplicationCall, traceId: UUID): Either<AuthError, PdpResponse> = either {
         val authorizationHeader = call.request.headers[Headers.AUTHORIZATION] ?: raise(AuthError.MissingAuthorizationHeader)
         val token = authorizationHeader.removePrefix("Bearer ").takeIf { it != authorizationHeader } ?: raise(AuthError.InvalidAuthorizationHeader)
 
@@ -119,7 +119,7 @@ class PDPAuthorizationProvider(
         val request = PdpRequest(
             input = Input(
                 token = token,
-                elhubTraceId = traceId,
+                elhubTraceId = traceId.toString(),
                 payload = context
             )
         )
@@ -155,7 +155,7 @@ class PDPAuthorizationProvider(
     private fun authorizeMaskinporten(
         call: ApplicationCall,
         pdpBody: PdpResponse,
-        traceId: String
+        traceId: UUID
     ): Either<AuthError, AuthorizedParty.AuthorizedOrganizationEntity> = either {
         val tokenInfo = pdpBody.result.tokenInfo
         if (!TokenType.MASKINPORTEN.value.equals(tokenInfo.tokenType)) {
@@ -182,7 +182,7 @@ class PDPAuthorizationProvider(
 
     private fun authorizePerson(
         pdpBody: PdpResponse,
-        traceId: String
+        traceId: UUID
     ): Either<AuthError, AuthorizedParty.AuthorizedPerson> = either {
         val tokenInfo = pdpBody.result.tokenInfo
         if (!TokenType.ENDUSER.value.equals(tokenInfo.tokenType)) {
