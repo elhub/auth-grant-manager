@@ -6,9 +6,10 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import no.elhub.auth.features.common.auth.AuthorizationProvider
+import no.elhub.auth.features.common.auth.AuthorizedParty
 import no.elhub.auth.features.common.auth.toApiErrorResponse
-import no.elhub.auth.features.common.party.PartyIdentifier
-import no.elhub.auth.features.common.party.PartyIdentifierType
+import no.elhub.auth.features.common.party.AuthorizationParty
+import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.common.validateId
 import no.elhub.auth.features.grants.common.toResponse
@@ -19,14 +20,12 @@ const val GRANT_ID_PARAM = "id"
 
 fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
     get("/{$GRANT_ID_PARAM}/scopes") {
-        val resolvedActor = authProvider.authorizeMaskinporten(call)
+        val authorizedParty = authProvider.authorize(call)
             .getOrElse { err ->
                 val (status, body) = err.toApiErrorResponse()
                 call.respond(status, body)
                 return@get
             }
-
-        val partyIdentifier = PartyIdentifier(idType = PartyIdentifierType.GlobalLocationNumber, idValue = resolvedActor.gln)
 
         val id: UUID = validateId(call.parameters[GRANT_ID_PARAM])
             .getOrElse { err ->
@@ -35,7 +34,25 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
                 return@get
             }
 
-        val scopes = handler(Query(id = id, grantedTo = partyIdentifier))
+        val query = when (authorizedParty) {
+            is AuthorizedParty.AuthorizedOrganizationEntity -> Query(
+                id = id,
+                authorizedParty = AuthorizationParty(
+                    resourceId = authorizedParty.gln,
+                    type = PartyType.OrganizationEntity
+                )
+            )
+
+            is AuthorizedParty.AuthorizedPerson -> Query(
+                id = id,
+                authorizedParty = AuthorizationParty(
+                    resourceId = authorizedParty.id.toString(),
+                    type = PartyType.Person
+                )
+            )
+        }
+
+        val scopes = handler(query)
             .getOrElse { err ->
                 val (status, body) = err.toApiErrorResponse()
                 call.respond(status, JsonApiErrorCollection(listOf(body)))

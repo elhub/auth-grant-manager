@@ -1,6 +1,5 @@
 package no.elhub.auth.features.grants.get
 
-import no.elhub.auth.features.common.auth.AuthorizedParty
 import no.elhub.auth.features.common.party.AuthorizationParty
 import java.util.UUID
 

@@ -290,6 +290,68 @@ class AuthorizationGrantRouteTest : FunSpec({
                 }
             }
 
+            test("Should return 401 when authorization header not set") {
+                val response = client.get("$GRANTS_PATH/123e4567-e89b-12d3-a456-426614174000/scopes") {
+                    header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                }
+                response.status shouldBe HttpStatusCode.Unauthorized
+                val responseJson: JsonApiErrorCollection = response.body()
+                responseJson.errors.apply {
+                    size shouldBe 1
+                    this[0].apply {
+                        status shouldBe "401"
+                        title shouldBe "Missing authorization"
+                        detail shouldBe "Bearer token is required in the Authorization header."
+                    }
+                }
+            }
+
+            test("Should return 403 when the grant does not belong to the requester") {
+                val response = client.get("$GRANTS_PATH/b7f9c2e4-5a3d-4e2b-9c1a-8f6e2d3c4b5a/scopes") {
+                    header(HttpHeaders.Authorization, "Bearer maskinporten")
+                    header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                }
+                response.status shouldBe HttpStatusCode.Forbidden
+                val responseJson: JsonApiErrorCollection = response.body()
+                responseJson.errors.apply {
+                    size shouldBe 1
+                    this[0].apply {
+                        status shouldBe "403"
+                        code shouldBe "REQUESTED_BY_MISMATCH"
+                        title shouldBe "RequestedBy mismatch"
+                        detail shouldBe "The requester is not allowed to access this resource"
+                    }
+                }
+            }
+
+            test("Should return 200 when correct grantedFor") {
+                val response = client.get("$GRANTS_PATH/123e4567-e89b-12d3-a456-426614174000/scopes") {
+                    header(HttpHeaders.Authorization, "Bearer enduser")
+                }
+
+                response.status shouldBe HttpStatusCode.OK
+                val responseJson: AuthorizationGrantScopesResponse = response.body()
+                responseJson.data.size shouldBe 1
+            }
+
+            test("Should return 403 when enduser tries to access a grant it does not own") {
+                val response = client.get("$GRANTS_PATH/b7f9c2e4-5a3d-4e2b-9c1a-8f6e2d3c4b5a/scopes") {
+                    header(HttpHeaders.Authorization, "Bearer enduser")
+                }
+
+                response.status shouldBe HttpStatusCode.Forbidden
+                val responseJson: JsonApiErrorCollection = response.body()
+                responseJson.errors.apply {
+                    size shouldBe 1
+                    this[0].apply {
+                        status shouldBe "403"
+                        code shouldBe "REQUESTED_BY_MISMATCH"
+                        title shouldBe "RequestedBy mismatch"
+                        detail shouldBe "The requester is not allowed to access this resource"
+                    }
+                }
+            }
+
             test("Should return 400 on an invalid ID") {
                 val response = client.get("$GRANTS_PATH/test/scopes") {
                     header(HttpHeaders.Authorization, "Bearer maskinporten")
