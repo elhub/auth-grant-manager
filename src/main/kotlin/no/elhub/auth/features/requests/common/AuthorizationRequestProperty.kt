@@ -15,7 +15,7 @@ sealed class PropertyError {
     data class NotFound(val key: String) : PropertyError()
 }
 
-fun List<AuthorizationRequestProperty>.requireProperty(key: String): String =
+fun List<AuthorizationRequestProperty>.requiredProperty(key: String): String =
     firstOrNull { it.key == key }?.value
         ?: run {
             logger.error("Required property '$key' not found for AuthorizationRequest")
