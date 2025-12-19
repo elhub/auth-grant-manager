@@ -43,14 +43,9 @@ data class GetRequestCollectionResponseLinks(
 ) : JsonApiResourceLinks
 
 @Serializable
-data class GetRequestCollectionResponseMeta(
-    val createdAt: String,
-    val updatedAt: String,
-    val requestedFromName: String,
-    val requestedForMeteringPointId: String,
-    val requestedForMeteringPointAddress: String,
-    val balanceSupplierName: String,
-    val balanceSupplierContractName: String
+@JvmInline
+value class GetRequestCollectionResponseMeta(
+    val values: Map<String, String>
 ) : JsonApiResourceMeta
 
 typealias GetRequestCollectionResponse = JsonApiResponse.CollectionDocumentWithRelationshipsAndMetaAndLinks<
@@ -62,23 +57,23 @@ typealias GetRequestCollectionResponse = JsonApiResponse.CollectionDocumentWithR
 
 fun List<AuthorizationRequest>.toGetCollectionResponse() =
     GetRequestCollectionResponse(
-        data = this.map {
+        data = this.map { request ->
             JsonApiResponseResourceObjectWithRelationshipsAndMetaAndLinks(
-                id = it.id.toString(),
+                id = request.id.toString(),
                 type = "AuthorizationRequest",
                 attributes = GetRequestCollectionResponseAttributes(
-                    status = it.status.toString(),
-                    requestType = it.type.toString(),
-                    createdAt = it.createdAt.toString(),
-                    updatedAt = it.updatedAt.toString(),
-                    validTo = it.validTo.toString()
+                    status = request.status.toString(),
+                    requestType = request.type.toString(),
+                    createdAt = request.createdAt.toString(),
+                    updatedAt = request.updatedAt.toString(),
+                    validTo = request.validTo.toString()
                 ),
                 relationships = GetRequestCollectionResponseRelationships(
-                    requestedBy = it.requestedBy.toJsonApiRelationship(),
-                    requestedFrom = it.requestedFrom.toJsonApiRelationship(),
-                    requestedTo = it.requestedTo.toJsonApiRelationship(),
-                    approvedBy = it.approvedBy?.toJsonApiRelationship(),
-                    grant = it.grantId?.let { grantId ->
+                    requestedBy = request.requestedBy.toJsonApiRelationship(),
+                    requestedFrom = request.requestedFrom.toJsonApiRelationship(),
+                    requestedTo = request.requestedTo.toJsonApiRelationship(),
+                    approvedBy = request.approvedBy?.toJsonApiRelationship(),
+                    grant = request.grantId?.let { grantId ->
                         JsonApiRelationshipToOne(
                             data = JsonApiRelationshipData(
                                 id = grantId.toString(),
@@ -91,16 +86,16 @@ fun List<AuthorizationRequest>.toGetCollectionResponse() =
                     }
                 ),
                 meta = GetRequestCollectionResponseMeta(
-                    createdAt = it.createdAt.toString(),
-                    updatedAt = it.updatedAt.toString(),
-                    requestedFromName = it.properties["requestedFromName"].toString(),
-                    requestedForMeteringPointId = it.properties["requestedForMeteringPointId"].toString(),
-                    requestedForMeteringPointAddress = it.properties["requestedForMeteringPointAddress"].toString(),
-                    balanceSupplierName = it.properties["balanceSupplierName"].toString(),
-                    balanceSupplierContractName = it.properties["balanceSupplierContractName"].toString(),
+                    buildMap {
+                        put("createdAt", request.createdAt.toString())
+                        put("updatedAt", request.updatedAt.toString())
+                        request.properties.forEach { prop ->
+                            put(prop.key, prop.value)
+                        }
+                    }
                 ),
                 links = GetRequestCollectionResponseLinks(
-                    self = "${REQUESTS_PATH}/${it.id}",
+                    self = "${REQUESTS_PATH}/${request.id}",
                 )
             )
         },

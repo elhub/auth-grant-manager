@@ -9,7 +9,8 @@ import io.ktor.server.routing.post
 import no.elhub.auth.features.common.auth.AuthorizationProvider
 import no.elhub.auth.features.common.auth.RoleType
 import no.elhub.auth.features.common.auth.toApiErrorResponse
-import no.elhub.auth.features.documents.create.toModel
+import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
+import no.elhub.devxp.jsonapi.response.JsonApiErrorObject
 import org.slf4j.LoggerFactory
 
 private val log = LoggerFactory.getLogger(Route::class.java)
@@ -19,7 +20,7 @@ fun Route.route(
     authProvider: AuthorizationProvider,
 ) {
     post {
-        val resolvedActor = authProvider.authorizeMarketParty(call)
+        val resolvedActor = authProvider.authorizeMaskinporten(call)
             .getOrElse {
                 val error = it.toApiErrorResponse()
                 call.respond(error.first, error.second)
@@ -38,10 +39,23 @@ fun Route.route(
             .getOrElse { error ->
                 log.error("Failed to create authorization document: {}", error)
                 when (error) {
+                    is CreateDocumentError.BusinessValidationError -> {
+                        call.respond(
+                            status = HttpStatusCode.BadRequest,
+                            message = JsonApiErrorCollection(
+                                listOf(
+                                    JsonApiErrorObject(
+                                        status = HttpStatusCode.BadRequest.toString(),
+                                        detail = error.message,
+                                    )
+                                )
+                            )
+                        )
+                    }
+
                     is
                     CreateDocumentError.FileGenerationError,
                     CreateDocumentError.CertificateRetrievalError,
-                    CreateDocumentError.MappingError,
                     CreateDocumentError.SignatureFetchingError,
                     CreateDocumentError.SigningDataGenerationError,
                     CreateDocumentError.SigningError,

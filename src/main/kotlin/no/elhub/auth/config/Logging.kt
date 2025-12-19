@@ -8,9 +8,12 @@ import io.ktor.server.request.path
 import org.slf4j.event.Level
 
 fun Application.configureLogging() {
+    val excludedPaths = listOf("/health", "/metrics")
     install(CallLogging) {
-        /* Configure call logging to deliver Logfmt formatted logs */
         level = Level.INFO
+        filter { call ->
+            excludedPaths.none { prefix -> call.request.path().startsWith(prefix) }
+        }
         format { call ->
             val status = call.response.status()?.value.toString()
             val method = call.request.httpMethod.value

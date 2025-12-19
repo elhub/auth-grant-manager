@@ -2,6 +2,7 @@ package no.elhub.auth.features.requests
 
 import kotlinx.datetime.LocalDate
 import no.elhub.auth.features.common.party.AuthorizationParty
+import no.elhub.auth.features.requests.common.AuthorizationRequestProperty
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -17,7 +18,7 @@ data class AuthorizationRequest(
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime,
     val validTo: LocalDate,
-    val properties: Map<String, String> = emptyMap(),
+    val properties: List<AuthorizationRequestProperty>,
 ) {
     companion object {
         fun create(
@@ -26,7 +27,6 @@ data class AuthorizationRequest(
             requestedFrom: AuthorizationParty,
             requestedTo: AuthorizationParty,
             validTo: LocalDate,
-            properties: Map<String, String> = emptyMap(),
         ): AuthorizationRequest =
             AuthorizationRequest(
                 id = UUID.randomUUID(),
@@ -38,7 +38,7 @@ data class AuthorizationRequest(
                 createdAt = LocalDateTime.now(),
                 updatedAt = LocalDateTime.now(),
                 validTo = validTo,
-                properties = properties,
+                properties = emptyList(),
             )
     }
 

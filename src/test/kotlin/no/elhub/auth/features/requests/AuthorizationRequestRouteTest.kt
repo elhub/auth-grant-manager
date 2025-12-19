@@ -116,6 +116,7 @@ class AuthorizationRequestRouteTest :
                 test("Should return 200 OK on a valid ID before request is accepted") {
                     val response = client.get("$REQUESTS_PATH/d81e5bf2-8a0c-4348-a788-2a3fab4e77d6")
                     response.status shouldBe HttpStatusCode.OK
+
                     val responseJson: GetRequestSingleResponse = response.body()
                     responseJson.data.apply {
                         id.shouldNotBeNull()
@@ -147,8 +148,19 @@ class AuthorizationRequestRouteTest :
                                 }
                             }
                         }
-                        links.shouldNotBeNull()
-                        links.apply {
+                        links.shouldNotBeNull().apply {
+                            self.shouldNotBeNull()
+                        }
+                        meta.shouldNotBeNull().apply {
+                            values["createdAt"].shouldNotBeNull()
+                            values["updatedAt"].shouldNotBeNull()
+                            values["requestedFromName"] shouldBe "Ola Normann"
+                            values["requestedForMeteringPointId"] shouldBe "1234567890123"
+                            values["requestedForMeteringPointAddress"] shouldBe "Example Street 1, 1234 Oslo"
+                            values["balanceSupplierName"] shouldBe "Example Energy AS"
+                            values["balanceSupplierContractName"] shouldBe "ExampleSupplierContract"
+                        }
+                        links.shouldNotBeNull().apply {
                             self.shouldNotBeNull()
                         }
                     }
@@ -207,9 +219,17 @@ class AuthorizationRequestRouteTest :
                                 links.shouldNotBeNull()
                             }
                         }
-                        links.shouldNotBeNull()
-                        links.apply {
+                        links.shouldNotBeNull().apply {
                             self.shouldNotBeNull()
+                        }
+                        meta.shouldNotBeNull().apply {
+                            values["createdAt"].shouldNotBeNull()
+                            values["updatedAt"].shouldNotBeNull()
+                            values["requestedFromName"] shouldBe "Kari Normann"
+                            values["requestedForMeteringPointId"] shouldBe "1234567890123"
+                            values["requestedForMeteringPointAddress"] shouldBe "Example Street 1, 1234 Oslo"
+                            values["balanceSupplierName"] shouldBe "Example Energy AS"
+                            values["balanceSupplierContractName"] shouldBe "ExampleSupplierContract"
                         }
                     }
                     responseJson.links.apply {
@@ -337,13 +357,13 @@ class AuthorizationRequestRouteTest :
                             }
                         }
                         meta.shouldNotBeNull().apply {
-                            createdAt.shouldNotBeNull()
-                            updatedAt.shouldNotBeNull()
-                            requestedFromName shouldBe "Hillary Orr"
-                            requestedForMeteringPointId shouldBe "123456789012345678"
-                            requestedForMeteringPointAddress shouldBe "quaerendum"
-                            balanceSupplierName shouldBe "Balance Supplier"
-                            balanceSupplierContractName shouldBe "Selena Chandler"
+                            values["createdAt"].shouldNotBeNull()
+                            values["updatedAt"].shouldNotBeNull()
+                            values["requestedFromName"] shouldBe "Hillary Orr"
+                            values["requestedForMeteringPointId"] shouldBe "123456789012345678"
+                            values["requestedForMeteringPointAddress"] shouldBe "quaerendum"
+                            values["balanceSupplierName"] shouldBe "Balance Supplier"
+                            values["balanceSupplierContractName"] shouldBe "Selena Chandler"
                         }
                         links.shouldNotBeNull().apply {
                             self.shouldNotBeNull()
@@ -423,8 +443,8 @@ class AuthorizationRequestRouteTest :
                         )
                 }
 
-                test("Should accept authorization-request") {
-                    val response =
+                test("Should accept authorization request and persist grant relationship") {
+                    val patchResult =
                         client.patch("${REQUESTS_PATH}/d81e5bf2-8a0c-4348-a788-2a3fab4e77d6") {
                             contentType(ContentType.Application.Json)
                             setBody(
@@ -438,10 +458,11 @@ class AuthorizationRequestRouteTest :
                                 ),
                             )
                         }
-                    response.status shouldBe HttpStatusCode.OK
-                    val patchRequestResponse: UpdateRequestResponse = response.body()
 
-                    patchRequestResponse.data.apply {
+                    patchResult.status shouldBe HttpStatusCode.OK
+                    val patchResponse: UpdateRequestResponse = patchResult.body()
+
+                    patchResponse.data.apply {
                         type shouldBe "AuthorizationRequest"
                         id.shouldNotBeNull()
                         attributes.shouldNotBeNull().apply {
@@ -479,6 +500,71 @@ class AuthorizationRequestRouteTest :
                                         type shouldBe "AuthorizationGrant"
                                     }
                                     links.shouldNotBeNull()
+                                }
+                                meta.shouldNotBeNull().apply {
+                                    values["createdAt"].shouldNotBeNull()
+                                    values["updatedAt"].shouldNotBeNull()
+                                    values["requestedFromName"] shouldBe "Ola Normann"
+                                    values["requestedForMeteringPointId"] shouldBe "1234567890123"
+                                    values["requestedForMeteringPointAddress"] shouldBe "Example Street 1, 1234 Oslo"
+                                    values["balanceSupplierName"] shouldBe "Example Energy AS"
+                                    values["balanceSupplierContractName"] shouldBe "ExampleSupplierContract"
+                                }
+                            }
+                        }
+                    }
+
+                    // verify that a subsequent GET of this resource reflects the updated state persisted in the database
+                    val getResult = client.get("${REQUESTS_PATH}/${patchResponse.data.id}")
+                    val getResponse: GetRequestSingleResponse = getResult.body()
+
+                    getResponse.data.apply {
+                        type shouldBe "AuthorizationRequest"
+                        id.shouldNotBeNull()
+                        attributes.shouldNotBeNull().apply {
+                            status shouldBe "Accepted"
+                        }
+                        relationships.shouldNotBeNull().apply {
+                            relationships.apply {
+                                requestedBy.apply {
+                                    data.apply {
+                                        id shouldBe "987654321"
+                                        type shouldBe "Organization"
+                                    }
+                                }
+                                requestedFrom.apply {
+                                    data.apply {
+                                        id shouldBe "17abdc56-8f6f-440a-9f00-b9bfbb22065e"
+                                        type shouldBe "Person"
+                                    }
+                                }
+                                requestedTo.apply {
+                                    data.apply {
+                                        id shouldBe "4e55f1e2-e576-23ab-80d3-c70a6fe354c0"
+                                        type shouldBe "Person"
+                                    }
+                                }
+                                approvedBy.shouldNotBeNull().apply {
+                                    data.apply {
+                                        id shouldBe "4e55f1e2-e576-23ab-80d3-c70a6fe354c0"
+                                        type shouldBe "Person"
+                                    }
+                                }
+                                grant.shouldNotBeNull().apply {
+                                    data.apply {
+                                        id.shouldNotBeNull()
+                                        type shouldBe "AuthorizationGrant"
+                                    }
+                                    links.shouldNotBeNull()
+                                }
+                                meta.shouldNotBeNull().apply {
+                                    values["createdAt"].shouldNotBeNull()
+                                    values["updatedAt"].shouldNotBeNull()
+                                    values["requestedFromName"] shouldBe "Ola Normann"
+                                    values["requestedForMeteringPointId"] shouldBe "1234567890123"
+                                    values["requestedForMeteringPointAddress"] shouldBe "Example Street 1, 1234 Oslo"
+                                    values["balanceSupplierName"] shouldBe "Example Energy AS"
+                                    values["balanceSupplierContractName"] shouldBe "ExampleSupplierContract"
                                 }
                             }
                         }
@@ -529,6 +615,15 @@ class AuthorizationRequestRouteTest :
                                         id shouldBe "4e55f1e2-e576-23ab-80d3-c70a6fe354c0"
                                         type shouldBe "Person"
                                     }
+                                }
+                                meta.shouldNotBeNull().apply {
+                                    values["createdAt"].shouldNotBeNull()
+                                    values["updatedAt"].shouldNotBeNull()
+                                    values["requestedFromName"] shouldBe "Ola Normann"
+                                    values["requestedForMeteringPointId"] shouldBe "1234567890123"
+                                    values["requestedForMeteringPointAddress"] shouldBe "Example Street 1, 1234 Oslo"
+                                    values["balanceSupplierName"] shouldBe "Example Energy AS"
+                                    values["balanceSupplierContractName"] shouldBe "ExampleSupplierContract"
                                 }
                             }
                         }

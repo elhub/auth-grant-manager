@@ -7,11 +7,15 @@ import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.common.GrantRepository
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.common.RequestRepository
+import org.slf4j.LoggerFactory
 
 class Handler(
     private val requestRepository: RequestRepository,
     private val grantRepository: GrantRepository,
 ) {
+
+    private val logger = LoggerFactory.getLogger(Handler::class.java)
+
     operator fun invoke(query: Query): Either<QueryError, List<AuthorizationRequest>> = either {
         val list = requestRepository.findAll()
             .mapLeft { QueryError.ResourceNotFoundError }
@@ -25,9 +29,11 @@ class Handler(
                 val grant = grantRepository.findBySource(
                     AuthorizationGrant.SourceType.Request,
                     request.id
-                )
-                    .mapLeft { QueryError.ResourceNotFoundError }
-                    .bind()
+                ).mapLeft {
+                    logger.error("approvedBy is present but grant not found for request ${request.id}")
+                    QueryError.ResourceNotFoundError
+                }.bind()
+
                 grant?.let { request.copy(grantId = it.id) } ?: request
             }
         }

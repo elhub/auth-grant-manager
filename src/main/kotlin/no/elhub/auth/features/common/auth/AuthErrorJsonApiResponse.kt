@@ -56,5 +56,11 @@ fun AuthError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection>
             title = "Internal authorization error",
             detail = "An internal error occurred."
         )
+
+        AuthError.NotAuthorized -> build(
+            status = HttpStatusCode.Unauthorized,
+            title = "Not authorized",
+            detail = "Not authorized for this endpoint."
+        )
     }
 }

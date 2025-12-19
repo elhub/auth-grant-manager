@@ -6,24 +6,40 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import no.elhub.auth.features.common.auth.AuthorizationProvider
+import no.elhub.auth.features.common.auth.AuthorizedParty
 import no.elhub.auth.features.common.auth.toApiErrorResponse
-import no.elhub.auth.features.common.party.PartyIdentifier
-import no.elhub.auth.features.common.party.PartyIdentifierType
+import no.elhub.auth.features.common.party.AuthorizationParty
+import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.grants.common.toResponse
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 
 fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
     get {
-        val resolvedActor = authProvider.authorizeMarketParty(call)
+        val authorizedParty = authProvider.authorize(call)
             .getOrElse { err ->
                 val (status, body) = err.toApiErrorResponse()
                 call.respond(status, body)
                 return@get
             }
 
-        val partyIdentifier = PartyIdentifier(idType = PartyIdentifierType.GlobalLocationNumber, idValue = resolvedActor.gln)
-        val grants = handler(Query(grantedTo = partyIdentifier))
+        val query = when (authorizedParty) {
+            is AuthorizedParty.AuthorizedOrganizationEntity -> Query(
+                authorizedParty = AuthorizationParty(
+                    resourceId = authorizedParty.gln,
+                    type = PartyType.OrganizationEntity
+                )
+            )
+
+            is AuthorizedParty.AuthorizedPerson -> Query(
+                authorizedParty = AuthorizationParty(
+                    resourceId = authorizedParty.id.toString(),
+                    type = PartyType.Person
+                )
+            )
+        }
+
+        val grants = handler(query)
             .getOrElse { err ->
                 val (status, body) = err.toApiErrorResponse()
                 call.respond(status, JsonApiErrorCollection(listOf(body)))

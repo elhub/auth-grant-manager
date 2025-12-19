@@ -50,7 +50,7 @@ class ChangeOfSupplierBusinessHandler :
         either {
             val model = model.toChangeOfSupplierBusinessModel()
             validate(model)
-                .mapLeft { raise(CreateDocumentError.MappingError) }
+                .mapLeft { raise(CreateDocumentError.BusinessValidationError(it.message)) }
                 .bind()
                 .toDocumentCommand()
         }
