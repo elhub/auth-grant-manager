@@ -47,9 +47,9 @@ class HandlerTest : FunSpec({
         val handler = Handler(repoReturning(result = grant.right()))
 
         val response = handler(
-            Query.GrantedFor(
+            Query(
                 id = grantId,
-                grantedFor = grantedFor,
+                authorizedParty = grantedFor,
             )
         )
 
@@ -60,9 +60,9 @@ class HandlerTest : FunSpec({
         val handler = Handler(repoReturning(result = grant.right()))
 
         val response = handler(
-            Query.GrantedTo(
+            Query(
                 id = grantId,
-                grantedTo = grantedTo,
+                authorizedParty = grantedTo,
             )
         )
 
@@ -73,9 +73,9 @@ class HandlerTest : FunSpec({
         val handler = Handler(repoReturning(result = grant.right()))
 
         val response = handler(
-            Query.GrantedFor(
+            Query(
                 id = grantId,
-                grantedFor = grantedFor.copy(resourceId = "other-person"),
+                authorizedParty = grantedFor.copy(resourceId = "other-person"),
             )
         )
 
@@ -86,9 +86,9 @@ class HandlerTest : FunSpec({
         val handler = Handler(repoReturning(result = grant.right()))
 
         val response = handler(
-            Query.GrantedTo(
+            Query(
                 id = grantId,
-                grantedTo = grantedTo.copy(resourceId = "other-org"),
+                authorizedParty = grantedTo.copy(resourceId = "other-org"),
             )
         )
 
@@ -99,9 +99,9 @@ class HandlerTest : FunSpec({
         val handler = Handler(repoReturning(result = RepositoryReadError.NotFoundError.left()))
 
         val response = handler(
-            Query.GrantedFor(
+            Query(
                 id = grantId,
-                grantedFor = grantedFor,
+                authorizedParty = grantedFor,
             )
         )
 
@@ -112,9 +112,9 @@ class HandlerTest : FunSpec({
         val handler = Handler(repoReturning(result = RepositoryReadError.UnexpectedError.left()))
 
         val response = handler(
-            Query.GrantedTo(
+            Query(
                 id = grantId,
-                grantedTo = grantedTo,
+                authorizedParty = grantedTo,
             )
         )
 
