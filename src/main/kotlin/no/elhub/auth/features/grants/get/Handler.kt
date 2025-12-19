@@ -20,14 +20,10 @@ class Handler(
                 }
             }.bind()
 
-        when (query) {
-            is Query.GrantedFor -> {
-                ensure(grant.grantedFor == query.grantedFor) { QueryError.NotAuthorizedError }
-            }
-
-            is Query.GrantedTo ->
-                ensure(grant.grantedTo == query.grantedTo) { QueryError.NotAuthorizedError }
+        ensure(grant.grantedTo == query.authorizedParty || grant.grantedFor == query.authorizedParty) {
+            QueryError.NotAuthorizedError
         }
+
         grant
     }
 }
