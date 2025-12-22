@@ -1,5 +1,6 @@
 package no.elhub.auth.features.requests
 
+import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
@@ -35,6 +36,8 @@ import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObject
 import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObjectWithMeta
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import no.elhub.devxp.jsonapi.response.JsonApiErrorObject
+import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
 import no.elhub.auth.module as applicationModule
 
 class AuthorizationRequestRouteTest :
@@ -124,8 +127,6 @@ class AuthorizationRequestRouteTest :
                         attributes.shouldNotBeNull().apply {
                             requestType shouldBe "ChangeOfSupplierConfirmation"
                             status shouldBe "Pending"
-                            createdAt.shouldNotBeNull()
-                            updatedAt.shouldNotBeNull()
                             validTo.shouldNotBeNull()
                         }
                         relationships.shouldNotBeNull().apply {
@@ -182,8 +183,6 @@ class AuthorizationRequestRouteTest :
                         attributes.shouldNotBeNull().apply {
                             requestType shouldBe "ChangeOfSupplierConfirmation"
                             status shouldBe "Accepted"
-                            createdAt.shouldNotBeNull()
-                            updatedAt.shouldNotBeNull()
                             validTo.shouldNotBeNull()
                         }
                         relationships.shouldNotBeNull().apply {
@@ -357,8 +356,14 @@ class AuthorizationRequestRouteTest :
                             }
                         }
                         meta.shouldNotBeNull().apply {
-                            values["createdAt"].shouldNotBeNull()
-                            values["updatedAt"].shouldNotBeNull()
+                            val createdAt = values["createdAt"].shouldNotBeNull()
+                            val updatedAt = values["updatedAt"].shouldNotBeNull()
+
+                            shouldNotThrowAny {
+                                OffsetDateTime.parse(createdAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                                OffsetDateTime.parse(updatedAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                            }
+
                             values["requestedFromName"] shouldBe "Hillary Orr"
                             values["requestedForMeteringPointId"] shouldBe "123456789012345678"
                             values["requestedForMeteringPointAddress"] shouldBe "quaerendum"

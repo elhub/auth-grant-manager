@@ -16,6 +16,9 @@ import no.elhub.devxp.jsonapi.model.JsonApiResourceMeta
 import no.elhub.devxp.jsonapi.response.JsonApiResponse
 import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObjectWithRelationshipsAndMetaAndLinks
 import java.time.LocalDateTime
+import java.time.OffsetDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 @Serializable
 data class CreateRequestResponseAttributes(
@@ -83,8 +86,8 @@ fun AuthorizationRequest.toCreateResponse() =
             ),
             meta = CreateRequestResponseMeta(
                 buildMap {
-                    put("createdAt", this@toCreateResponse.createdAt.toString())
-                    put("updatedAt", this@toCreateResponse.updatedAt.toString())
+                    put("createdAt", this@toCreateResponse.createdAt.toTimeZoneString())
+                    put("updatedAt", this@toCreateResponse.updatedAt.toTimeZoneString())
                     this@toCreateResponse.properties.forEach { prop ->
                         put(prop.key, prop.value)
                     }
@@ -102,3 +105,11 @@ fun AuthorizationRequest.toCreateResponse() =
             }
         )
     )
+
+private val OSLO_ZONE = ZoneId.of("Europe/Oslo")
+private val ISO_OFFSET_FORMATTER = DateTimeFormatter.ISO_OFFSET_DATE_TIME
+
+private fun OffsetDateTime.toTimeZoneString(): String =
+    this.toInstant()
+        .atZone(OSLO_ZONE)
+        .format(ISO_OFFSET_FORMATTER)

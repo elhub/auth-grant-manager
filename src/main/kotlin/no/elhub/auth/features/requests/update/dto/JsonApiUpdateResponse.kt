@@ -2,6 +2,7 @@ package no.elhub.auth.features.requests.update.dto
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import no.elhub.auth.features.common.toTimeZoneOffsetString
 import no.elhub.auth.features.grants.GRANTS_PATH
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.REQUESTS_PATH
@@ -104,8 +105,8 @@ fun AuthorizationRequest.toUpdateResponse() =
             ),
             meta = UpdateRequestResponseMeta(
                 buildMap {
-                    put("createdAt", this@toUpdateResponse.createdAt.toString())
-                    put("updatedAt", this@toUpdateResponse.updatedAt.toString())
+                    put("createdAt", this@toUpdateResponse.createdAt.toTimeZoneOffsetString())
+                    put("updatedAt", this@toUpdateResponse.updatedAt.toTimeZoneOffsetString())
                     this@toUpdateResponse.properties.forEach { prop ->
                         put(prop.key, prop.value)
                     }

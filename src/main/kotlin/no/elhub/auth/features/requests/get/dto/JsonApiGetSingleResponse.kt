@@ -18,13 +18,14 @@ import no.elhub.devxp.jsonapi.model.JsonApiResourceMeta
 import no.elhub.devxp.jsonapi.response.JsonApiResponse
 import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObjectWithRelationshipsAndMetaAndLinks
 import java.time.LocalDateTime
+import java.time.OffsetDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 @Serializable
 data class GetRequestSingleResponseAttributes(
     val status: String,
     val requestType: String,
-    val createdAt: String,
-    val updatedAt: String,
     val validTo: String
 ) : JsonApiAttributes
 
@@ -64,8 +65,6 @@ fun AuthorizationRequest.toGetSingleResponse() =
             attributes = GetRequestSingleResponseAttributes(
                 status = this.status.name,
                 requestType = this.type.name,
-                createdAt = this.createdAt.toString(),
-                updatedAt = this.updatedAt.toString(),
                 validTo = this.validTo.toString(),
             ),
             relationships = GetRequestSingleResponseRelationships(
@@ -87,8 +86,8 @@ fun AuthorizationRequest.toGetSingleResponse() =
             ),
             meta = GetRequestSingleResponseMeta(
                 buildMap {
-                    put("createdAt", this@toGetSingleResponse.createdAt.toString())
-                    put("updatedAt", this@toGetSingleResponse.updatedAt.toString())
+                    put("createdAt", this@toGetSingleResponse.createdAt.toOsloString())
+                    put("updatedAt", this@toGetSingleResponse.updatedAt.toOsloString())
                     this@toGetSingleResponse.properties.forEach { prop ->
                         put(prop.key, prop.value)
                     }
@@ -106,3 +105,11 @@ fun AuthorizationRequest.toGetSingleResponse() =
             }
         )
     )
+
+private val OSLO_ZONE = ZoneId.of("Europe/Oslo")
+private val ISO_OFFSET_FORMATTER = DateTimeFormatter.ISO_OFFSET_DATE_TIME
+
+private fun OffsetDateTime.toOsloString(): String =
+    this.toInstant()
+        .atZone(OSLO_ZONE)
+        .format(ISO_OFFSET_FORMATTER)

@@ -4,6 +4,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import no.elhub.auth.features.common.party.dto.toJsonApiRelationship
+import no.elhub.auth.features.common.toTimeZoneOffsetString
 import no.elhub.auth.features.grants.GRANTS_PATH
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.REQUESTS_PATH
@@ -23,8 +24,6 @@ import java.time.LocalDateTime
 data class GetRequestCollectionResponseAttributes(
     val status: String,
     val requestType: String,
-    val createdAt: String,
-    val updatedAt: String,
     val validTo: String
 ) : JsonApiAttributes
 
@@ -64,8 +63,6 @@ fun List<AuthorizationRequest>.toGetCollectionResponse() =
                 attributes = GetRequestCollectionResponseAttributes(
                     status = request.status.toString(),
                     requestType = request.type.toString(),
-                    createdAt = request.createdAt.toString(),
-                    updatedAt = request.updatedAt.toString(),
                     validTo = request.validTo.toString()
                 ),
                 relationships = GetRequestCollectionResponseRelationships(
@@ -87,8 +84,8 @@ fun List<AuthorizationRequest>.toGetCollectionResponse() =
                 ),
                 meta = GetRequestCollectionResponseMeta(
                     buildMap {
-                        put("createdAt", request.createdAt.toString())
-                        put("updatedAt", request.updatedAt.toString())
+                        put("createdAt", request.createdAt.toTimeZoneOffsetString())
+                        put("updatedAt", request.updatedAt.toTimeZoneOffsetString())
                         request.properties.forEach { prop ->
                             put(prop.key, prop.value)
                         }
