@@ -3,7 +3,9 @@ package no.elhub.auth.features.requests.get.dto
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import no.elhub.auth.features.common.currentTimeWithTimeZone
 import no.elhub.auth.features.common.party.dto.toJsonApiRelationship
+import no.elhub.auth.features.common.toTimeZoneOffsetString
 import no.elhub.auth.features.grants.GRANTS_PATH
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.REQUESTS_PATH
@@ -17,10 +19,6 @@ import no.elhub.devxp.jsonapi.model.JsonApiResourceLinks
 import no.elhub.devxp.jsonapi.model.JsonApiResourceMeta
 import no.elhub.devxp.jsonapi.response.JsonApiResponse
 import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObjectWithRelationshipsAndMetaAndLinks
-import java.time.LocalDateTime
-import java.time.OffsetDateTime
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 
 @Serializable
 data class GetRequestSingleResponseAttributes(
@@ -86,8 +84,8 @@ fun AuthorizationRequest.toGetSingleResponse() =
             ),
             meta = GetRequestSingleResponseMeta(
                 buildMap {
-                    put("createdAt", this@toGetSingleResponse.createdAt.toOsloString())
-                    put("updatedAt", this@toGetSingleResponse.updatedAt.toOsloString())
+                    put("createdAt", this@toGetSingleResponse.createdAt.toTimeZoneOffsetString())
+                    put("updatedAt", this@toGetSingleResponse.updatedAt.toTimeZoneOffsetString())
                     this@toGetSingleResponse.properties.forEach { prop ->
                         put(prop.key, prop.value)
                     }
@@ -101,15 +99,7 @@ fun AuthorizationRequest.toGetSingleResponse() =
         links = JsonApiLinks.ResourceObjectLink(REQUESTS_PATH),
         meta = JsonApiMeta(
             buildJsonObject {
-                put("createdAt", LocalDateTime.now().toString())
+                put("createdAt", currentTimeWithTimeZone().toTimeZoneOffsetString())
             }
         )
     )
-
-private val OSLO_ZONE = ZoneId.of("Europe/Oslo")
-private val ISO_OFFSET_FORMATTER = DateTimeFormatter.ISO_OFFSET_DATE_TIME
-
-private fun OffsetDateTime.toOsloString(): String =
-    this.toInstant()
-        .atZone(OSLO_ZONE)
-        .format(ISO_OFFSET_FORMATTER)

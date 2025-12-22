@@ -153,8 +153,13 @@ class AuthorizationRequestRouteTest :
                             self.shouldNotBeNull()
                         }
                         meta.shouldNotBeNull().apply {
-                            values["createdAt"].shouldNotBeNull()
-                            values["updatedAt"].shouldNotBeNull()
+                            val createdAt = values["createdAt"].shouldNotBeNull()
+                            val updatedAt = values["updatedAt"].shouldNotBeNull()
+
+                            shouldNotThrowAny {
+                                OffsetDateTime.parse(createdAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                                OffsetDateTime.parse(updatedAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                            }
                             values["requestedFromName"] shouldBe "Ola Normann"
                             values["requestedForMeteringPointId"] shouldBe "1234567890123"
                             values["requestedForMeteringPointAddress"] shouldBe "Example Street 1, 1234 Oslo"
@@ -222,8 +227,14 @@ class AuthorizationRequestRouteTest :
                             self.shouldNotBeNull()
                         }
                         meta.shouldNotBeNull().apply {
-                            values["createdAt"].shouldNotBeNull()
-                            values["updatedAt"].shouldNotBeNull()
+                            val createdAt = values["createdAt"].shouldNotBeNull()
+                            val updatedAt = values["updatedAt"].shouldNotBeNull()
+
+                            shouldNotThrowAny {
+                                OffsetDateTime.parse(createdAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                                OffsetDateTime.parse(updatedAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                            }
+
                             values["requestedFromName"] shouldBe "Kari Normann"
                             values["requestedForMeteringPointId"] shouldBe "1234567890123"
                             values["requestedForMeteringPointAddress"] shouldBe "Example Street 1, 1234 Oslo"
@@ -507,8 +518,13 @@ class AuthorizationRequestRouteTest :
                                     links.shouldNotBeNull()
                                 }
                                 meta.shouldNotBeNull().apply {
-                                    values["createdAt"].shouldNotBeNull()
-                                    values["updatedAt"].shouldNotBeNull()
+                                    val createdAt = values["createdAt"].shouldNotBeNull()
+                                    val updatedAt = values["updatedAt"].shouldNotBeNull()
+
+                                    shouldNotThrowAny {
+                                        OffsetDateTime.parse(createdAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                                        OffsetDateTime.parse(updatedAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                                    }
                                     values["requestedFromName"] shouldBe "Ola Normann"
                                     values["requestedForMeteringPointId"] shouldBe "1234567890123"
                                     values["requestedForMeteringPointAddress"] shouldBe "Example Street 1, 1234 Oslo"
@@ -563,8 +579,13 @@ class AuthorizationRequestRouteTest :
                                     links.shouldNotBeNull()
                                 }
                                 meta.shouldNotBeNull().apply {
-                                    values["createdAt"].shouldNotBeNull()
-                                    values["updatedAt"].shouldNotBeNull()
+                                    val createdAt = values["createdAt"].shouldNotBeNull()
+                                    val updatedAt = values["updatedAt"].shouldNotBeNull()
+
+                                    shouldNotThrowAny {
+                                        OffsetDateTime.parse(createdAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                                        OffsetDateTime.parse(updatedAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                                    }
                                     values["requestedFromName"] shouldBe "Ola Normann"
                                     values["requestedForMeteringPointId"] shouldBe "1234567890123"
                                     values["requestedForMeteringPointAddress"] shouldBe "Example Street 1, 1234 Oslo"
@@ -622,8 +643,13 @@ class AuthorizationRequestRouteTest :
                                     }
                                 }
                                 meta.shouldNotBeNull().apply {
-                                    values["createdAt"].shouldNotBeNull()
-                                    values["updatedAt"].shouldNotBeNull()
+                                    val createdAt = values["createdAt"].shouldNotBeNull()
+                                    val updatedAt = values["updatedAt"].shouldNotBeNull()
+
+                                    shouldNotThrowAny {
+                                        OffsetDateTime.parse(createdAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                                        OffsetDateTime.parse(updatedAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                                    }
                                     values["requestedFromName"] shouldBe "Ola Normann"
                                     values["requestedForMeteringPointId"] shouldBe "1234567890123"
                                     values["requestedForMeteringPointAddress"] shouldBe "Example Street 1, 1234 Oslo"
