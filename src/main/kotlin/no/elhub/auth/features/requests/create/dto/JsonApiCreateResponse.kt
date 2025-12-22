@@ -3,6 +3,7 @@ package no.elhub.auth.features.requests.create.dto
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import no.elhub.auth.features.common.toTimeZoneOffsetString
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.REQUESTS_PATH
 import no.elhub.devxp.jsonapi.model.JsonApiAttributes
@@ -15,7 +16,6 @@ import no.elhub.devxp.jsonapi.model.JsonApiResourceLinks
 import no.elhub.devxp.jsonapi.model.JsonApiResourceMeta
 import no.elhub.devxp.jsonapi.response.JsonApiResponse
 import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObjectWithRelationshipsAndMetaAndLinks
-import java.time.LocalDateTime
 
 @Serializable
 data class CreateRequestResponseAttributes(
@@ -83,8 +83,8 @@ fun AuthorizationRequest.toCreateResponse() =
             ),
             meta = CreateRequestResponseMeta(
                 buildMap {
-                    put("createdAt", this@toCreateResponse.createdAt.toString())
-                    put("updatedAt", this@toCreateResponse.updatedAt.toString())
+                    put("createdAt", this@toCreateResponse.createdAt.toTimeZoneOffsetString())
+                    put("updatedAt", this@toCreateResponse.updatedAt.toTimeZoneOffsetString())
                     this@toCreateResponse.properties.forEach { prop ->
                         put(prop.key, prop.value)
                     }
@@ -98,7 +98,7 @@ fun AuthorizationRequest.toCreateResponse() =
         links = JsonApiLinks.ResourceObjectLink(REQUESTS_PATH),
         meta = JsonApiMeta(
             buildJsonObject {
-                put("createdAt", LocalDateTime.now().toString())
+                put("createdAt", this@toCreateResponse.createdAt.toTimeZoneOffsetString())
             }
         )
     )

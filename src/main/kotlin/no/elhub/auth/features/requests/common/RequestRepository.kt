@@ -20,13 +20,14 @@ import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.insertReturning
-import org.jetbrains.exposed.sql.javatime.CurrentDateTime
 import org.jetbrains.exposed.sql.javatime.date
-import org.jetbrains.exposed.sql.javatime.datetime
 import org.jetbrains.exposed.sql.javatime.timestamp
+import org.jetbrains.exposed.sql.javatime.timestampWithTimeZone
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.update
+import java.time.OffsetDateTime
+import java.time.ZoneId
 import java.util.UUID
 
 interface RequestRepository {
@@ -120,7 +121,7 @@ class ExposedRequestRepository(
                     where = { AuthorizationRequestTable.id eq requestId }
                 ) {
                     it[requestStatus] = AuthorizationRequest.Status.Accepted
-                    it[updatedAt] = java.time.LocalDateTime.now()
+                    it[updatedAt] = OffsetDateTime.now(ZoneId.of("Europe/Oslo"))
                     it[this.approvedBy] = approvedByRecord.id
                 }
 
@@ -134,7 +135,7 @@ class ExposedRequestRepository(
                 where = { AuthorizationRequestTable.id eq requestId }
             ) {
                 it[requestStatus] = AuthorizationRequest.Status.Rejected
-                it[updatedAt] = java.time.LocalDateTime.now()
+                it[updatedAt] = OffsetDateTime.now(ZoneId.of("Europe/Oslo"))
             }
 
             updateAndFetch(requestId, rowsUpdated).bind()
@@ -243,8 +244,8 @@ object AuthorizationRequestTable : UUIDTable("authorization_request") {
     val requestedFrom = uuid("requested_from").references(AuthorizationPartyTable.id)
     val requestedTo = uuid("requested_to").references(AuthorizationPartyTable.id)
     val approvedBy = uuid("approved_by").references(AuthorizationPartyTable.id).nullable()
-    val createdAt = datetime("created_at").defaultExpression(CurrentDateTime)
-    val updatedAt = datetime("updated_at").defaultExpression(CurrentDateTime)
+    val createdAt = timestampWithTimeZone("created_at").default(OffsetDateTime.now(ZoneId.of("Europe/Oslo")))
+    val updatedAt = timestampWithTimeZone("updated_at").default(OffsetDateTime.now(ZoneId.of("Europe/Oslo")))
     val validTo = date("valid_to")
 }
 
