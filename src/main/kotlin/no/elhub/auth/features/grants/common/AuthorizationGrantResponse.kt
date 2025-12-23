@@ -1,5 +1,6 @@
 package no.elhub.auth.features.grants.common
 
+import no.elhub.auth.features.common.toTimeZoneOffsetString
 import no.elhub.auth.features.documents.DOCUMENTS_PATH
 import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.GRANTS_PATH
@@ -19,9 +20,9 @@ fun AuthorizationGrant.toResponse() =
             id = this.id.toString(),
             attributes = GrantResponseAttributes(
                 status = this.grantStatus.toString(),
-                grantedAt = this.grantedAt.toString(),
-                validFrom = this.validFrom.toString(),
-                validTo = this.validTo.toString()
+                grantedAt = this.grantedAt.toTimeZoneOffsetString(),
+                validFrom = this.validFrom.toTimeZoneOffsetString(),
+                validTo = this.validTo.toTimeZoneOffsetString()
             ),
             relationships = GrantRelationships(
                 grantedFor = JsonApiRelationshipToOne(

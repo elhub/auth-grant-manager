@@ -3,6 +3,8 @@ package no.elhub.auth.features.grants.common.dto
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import no.elhub.auth.features.common.currentTimeWithTimeZone
+import no.elhub.auth.features.common.toTimeZoneOffsetString
 import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.devxp.jsonapi.model.JsonApiAttributes
 import no.elhub.devxp.jsonapi.model.JsonApiLinks
@@ -12,7 +14,6 @@ import no.elhub.devxp.jsonapi.model.JsonApiRelationshipToOne
 import no.elhub.devxp.jsonapi.model.JsonApiRelationships
 import no.elhub.devxp.jsonapi.response.JsonApiResponse
 import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObjectWithRelationships
-import java.time.LocalDateTime
 
 // TODO use this response object for get and query to avoid duplications
 
@@ -43,9 +44,9 @@ fun AuthorizationGrant.toGrantResponse() =
             id = this.id.toString(),
             attributes = GrantResponseAttributes(
                 status = this.grantStatus.name,
-                grantedAt = this.grantedAt.toString(),
-                validFrom = this.validFrom.toString(),
-                validTo = this.validTo.toString()
+                grantedAt = this.grantedAt.toTimeZoneOffsetString(),
+                validFrom = this.validFrom.toTimeZoneOffsetString(),
+                validTo = this.validTo.toTimeZoneOffsetString()
             ),
             relationships = GrantResponseRelationShips(
                 grantedFor = JsonApiRelationshipToOne(
@@ -72,7 +73,7 @@ fun AuthorizationGrant.toGrantResponse() =
         links = JsonApiLinks.ResourceObjectLink("https://api.elhub.no/authorization-grants"),
         meta = JsonApiMeta(
             buildJsonObject {
-                put("createdAt", LocalDateTime.now().toString())
+                put("createdAt", currentTimeWithTimeZone().toTimeZoneOffsetString())
             }
         )
     )

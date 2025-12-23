@@ -18,6 +18,7 @@ import no.elhub.auth.features.grants.AuthorizationGrant.Status
 import no.elhub.auth.features.grants.AuthorizationScope
 import no.elhub.auth.features.grants.ElhubResource
 import no.elhub.auth.features.grants.PermissionType
+import no.elhub.auth.features.requests.common.AuthorizationRequestTable.default
 import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.ReferenceOption
@@ -29,11 +30,14 @@ import org.jetbrains.exposed.sql.insertReturning
 import org.jetbrains.exposed.sql.javatime.CurrentDateTime
 import org.jetbrains.exposed.sql.javatime.datetime
 import org.jetbrains.exposed.sql.javatime.timestamp
+import org.jetbrains.exposed.sql.javatime.timestampWithTimeZone
 import org.jetbrains.exposed.sql.or
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.update
 import org.slf4j.LoggerFactory
+import java.time.OffsetDateTime
+import java.time.ZoneId
 import java.util.UUID
 
 interface GrantRepository {
@@ -298,9 +302,9 @@ object AuthorizationGrantTable : UUIDTable("authorization_grant") {
     val grantedFor = uuid("granted_for").references(AuthorizationPartyTable.id)
     val grantedBy = uuid("granted_by").references(AuthorizationPartyTable.id)
     val grantedTo = uuid("granted_to").references(AuthorizationPartyTable.id)
-    val grantedAt = datetime("granted_at").defaultExpression(CurrentDateTime)
-    val validFrom = datetime("valid_from").defaultExpression(CurrentDateTime)
-    val validTo = datetime("valid_to").defaultExpression(CurrentDateTime)
+    val grantedAt = timestampWithTimeZone("granted_at").default(OffsetDateTime.now(ZoneId.of("Europe/Oslo")))
+    val validFrom = timestampWithTimeZone("valid_from").default(OffsetDateTime.now(ZoneId.of("Europe/Oslo")))
+    val validTo = timestampWithTimeZone("valid_to").default(OffsetDateTime.now(ZoneId.of("Europe/Oslo")))
     val sourceType =
         customEnumeration(
             name = "source_type",

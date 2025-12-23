@@ -1,7 +1,9 @@
 package no.elhub.auth.features.grants
 
+import no.elhub.auth.features.common.currentTimeWithTimeZone
 import no.elhub.auth.features.common.party.AuthorizationParty
 import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.util.UUID
 
 data class AuthorizationGrant(
@@ -10,9 +12,9 @@ data class AuthorizationGrant(
     val grantedFor: AuthorizationParty,
     val grantedBy: AuthorizationParty,
     val grantedTo: AuthorizationParty,
-    val grantedAt: LocalDateTime,
-    val validFrom: LocalDateTime,
-    val validTo: LocalDateTime,
+    val grantedAt: OffsetDateTime,
+    val validFrom: OffsetDateTime,
+    val validTo: OffsetDateTime,
     val sourceType: SourceType,
     val sourceId: UUID
 ) {
@@ -30,9 +32,9 @@ data class AuthorizationGrant(
                 grantedFor = grantedFor,
                 grantedBy = grantedBy,
                 grantedTo = grantedTo,
-                grantedAt = LocalDateTime.now(),
-                validFrom = LocalDateTime.now(),
-                validTo = LocalDateTime.now().plusYears(1), // TODO this will be handled by the value stream
+                grantedAt = currentTimeWithTimeZone(),
+                validFrom = currentTimeWithTimeZone(),
+                validTo = currentTimeWithTimeZone().plusYears(1), // TODO this will be handled by the value stream
                 sourceId = sourceId,
                 sourceType = sourceType,
             )

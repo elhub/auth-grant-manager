@@ -10,6 +10,7 @@ import io.mockk.mockk
 import kotlinx.datetime.Instant
 import no.elhub.auth.features.common.QueryError
 import no.elhub.auth.features.common.RepositoryReadError
+import no.elhub.auth.features.common.currentTimeWithTimeZone
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.grants.AuthorizationGrant
@@ -35,9 +36,9 @@ class HandlerTest : FunSpec({
             grantedFor = grantedFor,
             grantedBy = grantedBy,
             grantedTo = grantedTo,
-            grantedAt = LocalDateTime.now(),
-            validFrom = LocalDateTime.now(),
-            validTo = LocalDateTime.now().plusYears(1),
+            grantedAt = currentTimeWithTimeZone(),
+            validFrom = currentTimeWithTimeZone(),
+            validTo = currentTimeWithTimeZone().plusYears(1),
             sourceType = SourceType.Document,
             sourceId = UUID.randomUUID(),
         )

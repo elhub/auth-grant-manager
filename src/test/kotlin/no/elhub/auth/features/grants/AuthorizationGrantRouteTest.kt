@@ -32,6 +32,9 @@ import no.elhub.auth.features.grants.consume.dto.ConsumeRequestAttributes
 import no.elhub.auth.features.grants.consume.dto.JsonApiConsumeRequest
 import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObject
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
+import java.time.OffsetDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import no.elhub.auth.module as applicationModule
 
 class AuthorizationGrantRouteTest : FunSpec({
@@ -154,9 +157,9 @@ class AuthorizationGrantRouteTest : FunSpec({
                     type shouldBe "AuthorizationGrant"
                     attributes.shouldNotBeNull().apply {
                         status shouldBe "Active"
-                        grantedAt shouldBe "2025-04-04T04:00"
-                        validFrom shouldBe "2025-04-04T04:00"
-                        validTo shouldBe "2026-04-04T04:00"
+                        grantedAt shouldBe "2025-04-04T04:00:00+02:00"
+                        validFrom shouldBe "2025-04-04T04:00:00+02:00"
+                        validTo shouldBe "2026-04-04T04:00:00+02:00"
                     }
                     relationships.apply {
                         grantedFor.apply {
