@@ -43,6 +43,9 @@
         },
         "grantedTo": {
           "$ref": "../base-definitions.schema.json#/definitions/relationshipParty"
+        },
+        "source": {
+          "$ref": "../base-definitions.schema.json#/definitions/source"
         }
       }
     },
@@ -52,7 +55,7 @@
           "type": "string",
           "format": "uri",
           "examples": [
-            "https://api.elhub.no/authorization-grants/123e4567-e89b-12d3-a456-426614174000"
+            "https://api.elhub.no/access/v0/authorization-grants/123e4567-e89b-12d3-a456-426614174000"
           ]
         }
       }
