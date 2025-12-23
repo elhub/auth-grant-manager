@@ -97,7 +97,7 @@ entity AuthorizationRequest {
   requestedTo: UUID, FK→AuthorizationParty   /' The party that is expected to respond to the request '/
   createdAt: DateTime
   updatedAt: DateTime
-  validTo: DateTime
+  validTo: Date
 }
 
 entity AuthorizationRequestProperty {

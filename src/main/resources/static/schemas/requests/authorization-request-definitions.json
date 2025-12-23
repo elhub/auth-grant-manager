@@ -38,8 +38,8 @@
         "validTo": {
           "type": "string",
           "format": "date-time",
-          "description": "The date and time when the authorization request is valid to.",
-          "examples": ["2026-12-18T13:51:57.004327+01:00"]
+          "description": "The date when the authorization request is valid to.",
+          "examples": ["2026-12-18"]
         }
       }
     },
