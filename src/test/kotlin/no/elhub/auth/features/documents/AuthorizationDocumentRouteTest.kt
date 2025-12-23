@@ -43,8 +43,8 @@ import no.elhub.auth.features.documents.get.GetDocumentResponse
 import no.elhub.auth.features.grants.ElhubResource
 import no.elhub.auth.features.grants.GRANTS_PATH
 import no.elhub.auth.features.grants.PermissionType
-import no.elhub.auth.features.grants.common.AuthorizationGrantResponse
-import no.elhub.auth.features.grants.common.AuthorizationGrantScopesResponse
+import no.elhub.auth.features.grants.common.dto.AuthorizationGrantScopesResponse
+import no.elhub.auth.features.grants.common.dto.SingleGrantResponse
 import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObjectWithMeta
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import java.time.LocalDate
@@ -269,7 +269,7 @@ class AuthorizationDocumentRouteTest :
                         header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
                     }
                     response.status shouldBe HttpStatusCode.OK
-                    val responseJson: AuthorizationGrantResponse = response.body()
+                    val responseJson: SingleGrantResponse = response.body()
                     responseJson.data.apply {
                         id.shouldNotBeNull()
                         type shouldBe "AuthorizationGrant"
@@ -323,13 +323,24 @@ class AuthorizationDocumentRouteTest :
                         this[0].apply {
                             id shouldBe "1"
                             type shouldBe "AuthorizationScope"
-                            attributes.shouldNotBeNull()
-                            attributes!!.apply {
-                                authorizedResourceType shouldBe ElhubResource.MeteringPoint
-                                authorizedResourceId shouldBe "123456789012345678"
+                            attributes.shouldNotBeNull().apply {
                                 permissionType shouldBe PermissionType.ChangeOfSupplier
-                                createdAt.shouldNotBeNull()
                             }
+                            relationships.shouldNotBeNull().apply {
+                                authorizedResources.apply {
+                                    data.size shouldBe 1
+                                    data[0].apply {
+                                        id shouldBe "123456789012345678"
+                                        type shouldBe ElhubResource.MeteringPoint.name
+                                    }
+                                }
+                            }
+                        }
+                        responseJson.meta.shouldNotBeNull().apply {
+                            get("createdAt").shouldNotBeNull()
+                        }
+                        responseJson.links.apply {
+                            self shouldBe "$GRANTS_PATH/$grantId/scopes"
                         }
                     }
                 }

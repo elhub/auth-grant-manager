@@ -42,6 +42,9 @@
             },
             "grantedTo": {
               "$ref": "authorization-grant-definitions.json#/$defs/relationships/$defs/grantedTo"
+            },
+            "source": {
+              "$ref": "authorization-grant-definitions.json#/$defs/relationships/$defs/source"
             }
           }
         },

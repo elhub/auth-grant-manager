@@ -9,7 +9,7 @@ import io.ktor.server.routing.patch
 import no.elhub.auth.features.common.InputError
 import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.common.validateId
-import no.elhub.auth.features.grants.common.dto.toGrantResponse
+import no.elhub.auth.features.grants.common.dto.toSingleGrantResponse
 import no.elhub.auth.features.grants.consume.dto.JsonApiConsumeRequest
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 
@@ -47,6 +47,6 @@ fun Route.route(handler: Handler) {
             return@patch
         }
 
-        call.respond(HttpStatusCode.OK, updated.toGrantResponse())
+        call.respond(HttpStatusCode.OK, updated.toSingleGrantResponse())
     }
 }

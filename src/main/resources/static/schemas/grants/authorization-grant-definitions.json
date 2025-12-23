@@ -43,6 +43,45 @@
         },
         "grantedTo": {
           "$ref": "../base-definitions.schema.json#/definitions/relationshipParty"
+        },
+        "source": {
+          "type": "object",
+          "description": "The source that created this authorization grant.",
+          "properties": {
+            "data": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "ID of the source (authorization request or document)."
+                },
+                "type": {
+                  "type": "string",
+                  "enum": ["AuthorizationRequest", "AuthorizationDocument"]
+                }
+              },
+              "examples": [
+                {
+                  "id": "4f71d596-99e4-415e-946d-7252c1a40c5b",
+                  "type": "AuthorizationRequest"
+                }
+              ]
+            },
+            "links": {
+              "type": "object",
+              "properties": {
+                "self": {
+                  "type": "string",
+                  "format": "uri"
+                }
+              },
+              "examples": [
+                {
+                  "self": "https://api.elhub.no/access/v0/authorization-requests/4f71d596-99e4-415e-946d-7252c1a40c5b"
+                }
+              ]
+            }
+          }
         }
       }
     },
@@ -52,7 +91,7 @@
           "type": "string",
           "format": "uri",
           "examples": [
-            "https://api.elhub.no/authorization-grants/123e4567-e89b-12d3-a456-426614174000"
+            "https://api.elhub.no/access/v0/authorization-grants/123e4567-e89b-12d3-a456-426614174000"
           ]
         }
       }

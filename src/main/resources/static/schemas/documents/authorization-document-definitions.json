@@ -62,7 +62,7 @@
                 "self": {
                   "type": "string",
                   "examples": [
-                    "/authorization-grant/123e4567-e89b-12d3-a456-426614174000"
+                    "/authorization-grants/123e4567-e89b-12d3-a456-426614174000"
                   ]
                 }
               }
