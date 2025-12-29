@@ -7,7 +7,6 @@ import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.core.spec.style.FunSpec
 import io.mockk.every
 import io.mockk.mockk
-import kotlinx.datetime.Instant
 import no.elhub.auth.features.common.QueryError
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.currentTimeWithTimeZone
@@ -17,10 +16,7 @@ import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.AuthorizationGrant.SourceType
 import no.elhub.auth.features.grants.AuthorizationGrant.Status
 import no.elhub.auth.features.grants.AuthorizationScope
-import no.elhub.auth.features.grants.ElhubResource
-import no.elhub.auth.features.grants.PermissionType
 import no.elhub.auth.features.grants.common.GrantRepository
-import java.time.LocalDateTime
 import java.util.UUID
 
 class HandlerTest : FunSpec({
@@ -46,10 +42,11 @@ class HandlerTest : FunSpec({
         listOf(
             AuthorizationScope(
                 id = 1,
-                authorizedResourceType = ElhubResource.MeteringPoint,
+                authorizedResourceType = AuthorizationScope.ElhubResource.MeteringPoint,
                 authorizedResourceId = "mp-1",
-                permissionType = PermissionType.ReadAccess,
-                createdAt = Instant.fromEpochMilliseconds(0),
+                permissionType = AuthorizationScope.PermissionType.ReadAccess,
+                createdAt = currentTimeWithTimeZone(),
+//                createdAt = Instant.fromEpochMilliseconds(0),
             )
         )
 

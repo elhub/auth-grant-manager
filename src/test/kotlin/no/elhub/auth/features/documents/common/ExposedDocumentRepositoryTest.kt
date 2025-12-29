@@ -16,8 +16,7 @@ import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.ExposedPartyRepository
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.documents.AuthorizationDocument
-import no.elhub.auth.features.grants.ElhubResource
-import no.elhub.auth.features.grants.PermissionType
+import no.elhub.auth.features.grants.AuthorizationScope
 import no.elhub.auth.features.grants.common.AuthorizationScopeTable
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.selectAll
@@ -62,9 +61,9 @@ class ExposedDocumentRepositoryTest :
 
                 val scopes = listOf(
                     CreateScopeData(
-                        authorizedResourceType = ElhubResource.MeteringPoint,
+                        authorizedResourceType = AuthorizationScope.ElhubResource.MeteringPoint,
                         authorizedResourceId = "1234",
-                        permissionType = PermissionType.ChangeOfSupplier
+                        permissionType = AuthorizationScope.PermissionType.ChangeOfSupplier
 
                     )
                 )
@@ -95,8 +94,8 @@ class ExposedDocumentRepositoryTest :
                     }
                 authorizationScopeRow.shouldNotBeNull()
                 authorizationScopeRow[AuthorizationScopeTable.authorizedResourceId] shouldBe "1234"
-                authorizationScopeRow[AuthorizationScopeTable.authorizedResourceType] shouldBe ElhubResource.MeteringPoint
-                authorizationScopeRow[AuthorizationScopeTable.permissionType] shouldBe PermissionType.ChangeOfSupplier
+                authorizationScopeRow[AuthorizationScopeTable.authorizedResourceType] shouldBe AuthorizationScope.ElhubResource.MeteringPoint
+                authorizationScopeRow[AuthorizationScopeTable.permissionType] shouldBe AuthorizationScope.PermissionType.ChangeOfSupplier
             }
         }
 

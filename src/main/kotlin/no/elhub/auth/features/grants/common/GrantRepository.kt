@@ -3,7 +3,6 @@ package no.elhub.auth.features.grants.common
 import arrow.core.Either
 import arrow.core.getOrElse
 import arrow.core.raise.either
-import kotlinx.datetime.Instant
 import no.elhub.auth.features.common.PGEnum
 import no.elhub.auth.features.common.RepositoryError
 import no.elhub.auth.features.common.RepositoryReadError
@@ -16,9 +15,6 @@ import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.AuthorizationGrant.SourceType
 import no.elhub.auth.features.grants.AuthorizationGrant.Status
 import no.elhub.auth.features.grants.AuthorizationScope
-import no.elhub.auth.features.grants.ElhubResource
-import no.elhub.auth.features.grants.PermissionType
-import no.elhub.auth.features.requests.common.AuthorizationRequestTable.default
 import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.ReferenceOption
@@ -27,8 +23,6 @@ import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.batchInsert
 import org.jetbrains.exposed.sql.insertReturning
-import org.jetbrains.exposed.sql.javatime.CurrentDateTime
-import org.jetbrains.exposed.sql.javatime.datetime
 import org.jetbrains.exposed.sql.javatime.timestamp
 import org.jetbrains.exposed.sql.javatime.timestampWithTimeZone
 import org.jetbrains.exposed.sql.or
@@ -154,7 +148,7 @@ class ExposedGrantRepository(
                                 authorizedResourceId = row[AuthorizationScopeTable.authorizedResourceId],
                                 authorizedResourceType = row[AuthorizationScopeTable.authorizedResourceType],
                                 permissionType = row[AuthorizationScopeTable.permissionType],
-                                createdAt = Instant.parse(row[AuthorizationScopeTable.createdAt].toString())
+                                createdAt = row[AuthorizationScopeTable.createdAt]
                             )
                         }
                 } ?: run {
@@ -319,17 +313,17 @@ object AuthorizationScopeTable : LongIdTable(name = "auth.authorization_scope") 
     val authorizedResourceType = customEnumeration(
         name = "authorized_resource_type",
         sql = "authorization_resource",
-        fromDb = { ElhubResource.valueOf(it as String) },
+        fromDb = { AuthorizationScope.ElhubResource.valueOf(it as String) },
         toDb = { PGEnum("authorization_resource", it) }
     )
     val authorizedResourceId = varchar("authorized_resource_id", length = 64)
     val permissionType = customEnumeration(
         name = "permission_type",
         sql = "permission_type",
-        fromDb = { PermissionType.valueOf(it as String) },
+        fromDb = { AuthorizationScope.PermissionType.valueOf(it as String) },
         toDb = { PGEnum("permission_type", it) }
     )
-    val createdAt = timestamp("created_at").clientDefault { java.time.Instant.now() }
+    val createdAt = timestampWithTimeZone("created_at").default(OffsetDateTime.now(ZoneId.of("Europe/Oslo")))
 }
 
 fun ResultRow.toAuthorizationGrant(
