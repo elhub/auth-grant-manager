@@ -147,14 +147,12 @@ class AuthorizationDocumentRouteTest :
                         links.self shouldBe "$DOCUMENTS_PATH/$id"
                         links.file shouldBe "$DOCUMENTS_PATH/$id.pdf"
                     }
-
+                    createDocumentResponse.links.apply {
+                        self shouldBe DOCUMENTS_PATH
+                    }
                     createdDocumentId = createDocumentResponse.data.id
                     linkToDocument = createDocumentResponse.data.links.self
                     linkToDocumentFile = createDocumentResponse.data.links.file
-
-                    createDocumentResponse.links.apply {
-                        self shouldBe "$DOCUMENTS_PATH/$createdDocumentId"
-                    }
                 }
 
                 test("Get created document should return correct response") {
