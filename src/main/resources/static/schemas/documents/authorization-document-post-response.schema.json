@@ -91,7 +91,7 @@
       "description": "Link members related to the primary data.",
       "$ref": "../base-definitions.schema.json#/definitions/topLevelLinks",
       "examples": [
-        "/access/v0/authorization-documents/123e4567-e89b-12d3-a456-426614174000"
+        "/access/v0/authorization-documents"
       ]
     },
     "meta": {
