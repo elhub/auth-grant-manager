@@ -95,7 +95,7 @@ fun AuthorizationRequest.toCreateResponse() =
                 self = "${REQUESTS_PATH}/${this.id}"
             ),
         ),
-        links = JsonApiLinks.ResourceObjectLink("${REQUESTS_PATH}/${this.id}"),
+        links = JsonApiLinks.ResourceObjectLink(REQUESTS_PATH),
         meta = JsonApiMeta(
             buildJsonObject {
                 put("createdAt", this@toCreateResponse.createdAt.toTimeZoneOffsetString())
