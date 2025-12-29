@@ -12,7 +12,7 @@ import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.common.validateId
-import no.elhub.auth.features.grants.common.toResponse
+import no.elhub.auth.features.grants.common.dto.toSingleGrantResponse
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import java.util.UUID
 
@@ -59,6 +59,6 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
                 return@get
             }
 
-        call.respond(HttpStatusCode.OK, grant.toResponse())
+        call.respond(HttpStatusCode.OK, grant.toSingleGrantResponse())
     }
 }

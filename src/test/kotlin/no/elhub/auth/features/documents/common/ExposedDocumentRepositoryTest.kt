@@ -12,17 +12,16 @@ import io.kotest.matchers.shouldNotBe
 import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.common.PostgresTestContainer
 import no.elhub.auth.features.common.PostgresTestContainerExtension
+import no.elhub.auth.features.common.currentTimeWithTimeZone
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.ExposedPartyRepository
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.documents.AuthorizationDocument
-import no.elhub.auth.features.grants.ElhubResource
-import no.elhub.auth.features.grants.PermissionType
+import no.elhub.auth.features.grants.AuthorizationScope
 import no.elhub.auth.features.grants.common.AuthorizationScopeTable
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
-import java.time.LocalDateTime
 import java.util.UUID
 
 class ExposedDocumentRepositoryTest :
@@ -56,15 +55,15 @@ class ExposedDocumentRepositoryTest :
                         requestedTo = AuthorizationParty(type = PartyType.Person, resourceId = "1234567890"),
                         signedBy = AuthorizationParty(type = PartyType.Person, resourceId = "1234567890"),
                         properties = emptyList(),
-                        createdAt = LocalDateTime.now(),
-                        updatedAt = LocalDateTime.now()
+                        createdAt = currentTimeWithTimeZone(),
+                        updatedAt = currentTimeWithTimeZone()
                     )
 
                 val scopes = listOf(
                     CreateScopeData(
-                        authorizedResourceType = ElhubResource.MeteringPoint,
+                        authorizedResourceType = AuthorizationScope.ElhubResource.MeteringPoint,
                         authorizedResourceId = "1234",
-                        permissionType = PermissionType.ChangeOfSupplier
+                        permissionType = AuthorizationScope.PermissionType.ChangeOfSupplier
 
                     )
                 )
@@ -95,8 +94,8 @@ class ExposedDocumentRepositoryTest :
                     }
                 authorizationScopeRow.shouldNotBeNull()
                 authorizationScopeRow[AuthorizationScopeTable.authorizedResourceId] shouldBe "1234"
-                authorizationScopeRow[AuthorizationScopeTable.authorizedResourceType] shouldBe ElhubResource.MeteringPoint
-                authorizationScopeRow[AuthorizationScopeTable.permissionType] shouldBe PermissionType.ChangeOfSupplier
+                authorizationScopeRow[AuthorizationScopeTable.authorizedResourceType] shouldBe AuthorizationScope.ElhubResource.MeteringPoint
+                authorizationScopeRow[AuthorizationScopeTable.permissionType] shouldBe AuthorizationScope.PermissionType.ChangeOfSupplier
             }
         }
 
@@ -116,8 +115,8 @@ class ExposedDocumentRepositoryTest :
                     requestedTo = AuthorizationParty(type = PartyType.Person, resourceId = "to-1"),
                     signedBy = AuthorizationParty(type = PartyType.Person, resourceId = "signer-1"),
                     properties = emptyList(),
-                    createdAt = LocalDateTime.now(),
-                    updatedAt = LocalDateTime.now()
+                    createdAt = currentTimeWithTimeZone(),
+                    updatedAt = currentTimeWithTimeZone()
                 )
 
                 val otherDocument = AuthorizationDocument(
@@ -130,9 +129,9 @@ class ExposedDocumentRepositoryTest :
                     requestedFrom = AuthorizationParty(type = PartyType.Person, resourceId = "from-2"),
                     requestedTo = AuthorizationParty(type = PartyType.Person, resourceId = "to-2"),
                     signedBy = AuthorizationParty(type = PartyType.Person, resourceId = "signer-2"),
-                    createdAt = LocalDateTime.now(),
+                    createdAt = currentTimeWithTimeZone(),
                     properties = emptyList(),
-                    updatedAt = LocalDateTime.now()
+                    updatedAt = currentTimeWithTimeZone()
                 )
 
                 repository.insert(matchingDocument, listOf())

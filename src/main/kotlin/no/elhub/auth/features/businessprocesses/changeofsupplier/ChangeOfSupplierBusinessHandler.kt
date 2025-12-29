@@ -16,8 +16,7 @@ import no.elhub.auth.features.documents.common.DocumentBusinessHandler
 import no.elhub.auth.features.documents.create.CreateDocumentError
 import no.elhub.auth.features.documents.create.command.DocumentCommand
 import no.elhub.auth.features.documents.create.model.CreateDocumentModel
-import no.elhub.auth.features.grants.ElhubResource
-import no.elhub.auth.features.grants.PermissionType
+import no.elhub.auth.features.grants.AuthorizationScope
 import no.elhub.auth.features.grants.common.CreateGrantProperties
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.create.RequestBusinessHandler
@@ -113,9 +112,9 @@ class ChangeOfSupplierBusinessHandler :
 
         val scopes = listOf(
             CreateScopeData(
-                authorizedResourceType = ElhubResource.MeteringPoint,
+                authorizedResourceType = AuthorizationScope.ElhubResource.MeteringPoint,
                 authorizedResourceId = model.requestedForMeteringPointId,
-                permissionType = PermissionType.ChangeOfSupplier
+                permissionType = AuthorizationScope.PermissionType.ChangeOfSupplier
             )
         )
 
