@@ -12,6 +12,11 @@ info:
   license:
     name: MIT
     url: https://github.com/elhub/auth-grant-manager?tab=MIT-1-ov-file
+servers:
+  - url: https://api.elhub.no/access/v0
+    description: Production
+  - url: https://api-mt1.elhub.no/access/v0
+    description: MT1
 paths:
   "/authorization-documents":
     get:
