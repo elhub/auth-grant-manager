@@ -267,7 +267,6 @@ class AuthorizationDocumentRouteTest :
                         header(HttpHeaders.Authorization, "Bearer maskinporten")
                         header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
                     }
-                    println("nisse: ${response.bodyAsText()}")
                     response.status shouldBe HttpStatusCode.OK
                     val responseJson: SingleGrantResponse = response.body()
                     responseJson.data.apply {

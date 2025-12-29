@@ -1,9 +1,10 @@
 package no.elhub.auth.features.documents
 
+import no.elhub.auth.features.common.currentTimeWithTimeZone
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.documents.common.AuthorizationDocumentProperty
-import java.time.LocalDateTime
-import java.util.*
+import java.time.OffsetDateTime
+import java.util.UUID
 
 data class AuthorizationDocument(
     val id: UUID,
@@ -17,8 +18,8 @@ data class AuthorizationDocument(
     val signedBy: AuthorizationParty? = null,
     val grantId: UUID? = null,
     val properties: List<AuthorizationDocumentProperty>,
-    val createdAt: LocalDateTime,
-    val updatedAt: LocalDateTime
+    val createdAt: OffsetDateTime,
+    val updatedAt: OffsetDateTime
 ) {
     companion object {
         fun create(
@@ -38,8 +39,8 @@ data class AuthorizationDocument(
             requestedFrom = requestedFrom,
             requestedTo = requestedTo,
             properties = properties,
-            createdAt = LocalDateTime.now(),
-            updatedAt = LocalDateTime.now()
+            createdAt = currentTimeWithTimeZone(),
+            updatedAt = currentTimeWithTimeZone()
         )
     }
     enum class Status {
