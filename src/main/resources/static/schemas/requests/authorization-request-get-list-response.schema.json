@@ -14,7 +14,10 @@
     },
     "links": {
       "description": "Link members related to the primary data.",
-      "$ref": "../base-definitions.schema.json#/definitions/topLevelLinks"
+      "$ref": "../base-definitions.schema.json#/definitions/topLevelLinks",
+      "examples": [
+        "/access/v0/authorization-requests"
+      ]
     },
     "meta": {
       "$ref": "../base-definitions.schema.json#/definitions/topLevelMeta"
