@@ -2,7 +2,6 @@ package no.elhub.auth.features.grants
 
 import no.elhub.auth.features.common.currentTimeWithTimeZone
 import no.elhub.auth.features.common.party.AuthorizationParty
-import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.util.UUID
 

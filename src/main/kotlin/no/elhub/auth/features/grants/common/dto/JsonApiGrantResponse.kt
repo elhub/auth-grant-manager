@@ -17,7 +17,6 @@ import no.elhub.devxp.jsonapi.model.JsonApiRelationshipToOne
 import no.elhub.devxp.jsonapi.model.JsonApiRelationships
 import no.elhub.devxp.jsonapi.response.JsonApiResponse
 import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObjectWithRelationships
-import java.time.LocalDateTime
 
 @Serializable
 data class GrantResponseAttributes(
