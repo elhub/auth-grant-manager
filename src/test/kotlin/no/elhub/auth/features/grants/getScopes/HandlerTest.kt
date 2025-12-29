@@ -46,7 +46,6 @@ class HandlerTest : FunSpec({
                 authorizedResourceId = "mp-1",
                 permissionType = AuthorizationScope.PermissionType.ReadAccess,
                 createdAt = currentTimeWithTimeZone(),
-//                createdAt = Instant.fromEpochMilliseconds(0),
             )
         )
 
