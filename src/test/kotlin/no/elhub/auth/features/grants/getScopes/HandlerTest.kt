@@ -7,19 +7,16 @@ import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.core.spec.style.FunSpec
 import io.mockk.every
 import io.mockk.mockk
-import kotlinx.datetime.Instant
 import no.elhub.auth.features.common.QueryError
 import no.elhub.auth.features.common.RepositoryReadError
+import no.elhub.auth.features.common.currentTimeWithTimeZone
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.AuthorizationGrant.SourceType
 import no.elhub.auth.features.grants.AuthorizationGrant.Status
 import no.elhub.auth.features.grants.AuthorizationScope
-import no.elhub.auth.features.grants.ElhubResource
-import no.elhub.auth.features.grants.PermissionType
 import no.elhub.auth.features.grants.common.GrantRepository
-import java.time.LocalDateTime
 import java.util.UUID
 
 class HandlerTest : FunSpec({
@@ -35,9 +32,9 @@ class HandlerTest : FunSpec({
             grantedFor = grantedFor,
             grantedBy = grantedBy,
             grantedTo = grantedTo,
-            grantedAt = LocalDateTime.now(),
-            validFrom = LocalDateTime.now(),
-            validTo = LocalDateTime.now().plusYears(1),
+            grantedAt = currentTimeWithTimeZone(),
+            validFrom = currentTimeWithTimeZone(),
+            validTo = currentTimeWithTimeZone().plusYears(1),
             sourceType = SourceType.Document,
             sourceId = UUID.randomUUID(),
         )
@@ -45,10 +42,10 @@ class HandlerTest : FunSpec({
         listOf(
             AuthorizationScope(
                 id = 1,
-                authorizedResourceType = ElhubResource.MeteringPoint,
+                authorizedResourceType = AuthorizationScope.ElhubResource.MeteringPoint,
                 authorizedResourceId = "mp-1",
-                permissionType = PermissionType.ReadAccess,
-                createdAt = Instant.fromEpochMilliseconds(0),
+                permissionType = AuthorizationScope.PermissionType.ReadAccess,
+                createdAt = currentTimeWithTimeZone(),
             )
         )
 

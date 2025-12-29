@@ -24,12 +24,14 @@
         "createdAt": {
           "type": "string",
           "format": "date-time",
-          "description": "The date and time when the authorization document was created."
+          "description": "The date and time when the authorization document was created.",
+          "examples": ["2025-11-28T08:51:57.004327+01:00"]
         },
         "updatedAt": {
           "type": "string",
           "format": "date-time",
-          "description": "The date and time when the authorization document was updated last."
+          "description": "The date and time when the authorization document was updated last.",
+          "examples": ["2025-12-17T12:51:57.004327+01:00"]
         },
         "validTo": {
           "type": "string",
@@ -62,7 +64,7 @@
                 "self": {
                   "type": "string",
                   "examples": [
-                    "/authorization-grant/123e4567-e89b-12d3-a456-426614174000"
+                    "/authorization-grants/123e4567-e89b-12d3-a456-426614174000"
                   ]
                 }
               }

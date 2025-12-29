@@ -46,7 +46,12 @@
         "self": {
           "$ref": "../base-definitions.schema.json#/definitions/topLevelLinks/properties/self"
         }
-      }
+      },
+      "examples": [
+        {
+          "self": "https://api.elhub.no/access/v0/authorization-grants/d75522ba-0e62-449b-b1de-70b16f12ecaf/scopes"
+        }
+      ]
     },
     "meta": {
       "description": "Meta-information for the JSON document.",
