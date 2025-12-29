@@ -89,5 +89,5 @@ fun AuthorizationDocument.toGetResponse() =
                 }
             }
         ),
-        links = JsonApiLinks.ResourceObjectLink(DOCUMENTS_PATH)
+        links = JsonApiLinks.ResourceObjectLink("${DOCUMENTS_PATH}/${this.id}")
     )
