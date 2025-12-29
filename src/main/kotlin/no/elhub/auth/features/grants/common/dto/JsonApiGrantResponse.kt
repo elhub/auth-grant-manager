@@ -3,6 +3,8 @@ package no.elhub.auth.features.grants.common.dto
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import no.elhub.auth.features.common.currentTimeWithTimeZone
+import no.elhub.auth.features.common.toTimeZoneOffsetString
 import no.elhub.auth.features.documents.DOCUMENTS_PATH
 import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.GRANTS_PATH
@@ -15,7 +17,6 @@ import no.elhub.devxp.jsonapi.model.JsonApiRelationshipToOne
 import no.elhub.devxp.jsonapi.model.JsonApiRelationships
 import no.elhub.devxp.jsonapi.response.JsonApiResponse
 import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObjectWithRelationships
-import java.time.LocalDateTime
 
 @Serializable
 data class GrantResponseAttributes(
@@ -50,9 +51,9 @@ fun AuthorizationGrant.toSingleGrantResponse() =
             id = this.id.toString(),
             attributes = GrantResponseAttributes(
                 status = this.grantStatus.name,
-                grantedAt = this.grantedAt.toString(),
-                validFrom = this.validFrom.toString(),
-                validTo = this.validTo.toString()
+                grantedAt = this.grantedAt.toTimeZoneOffsetString(),
+                validFrom = this.validFrom.toTimeZoneOffsetString(),
+                validTo = this.validTo.toTimeZoneOffsetString()
             ),
             relationships = GrantResponseRelationShips(
                 grantedFor = JsonApiRelationshipToOne(
@@ -94,7 +95,7 @@ fun AuthorizationGrant.toSingleGrantResponse() =
         links = JsonApiLinks.ResourceObjectLink("https://$GRANTS_PATH"),
         meta = JsonApiMeta(
             buildJsonObject {
-                put("createdAt", LocalDateTime.now().toString())
+                put("createdAt", currentTimeWithTimeZone().toTimeZoneOffsetString())
             }
         )
     )
@@ -107,9 +108,9 @@ fun List<AuthorizationGrant>.toCollectionGrantResponse() =
                 id = grant.id.toString(),
                 attributes = GrantResponseAttributes(
                     status = grant.grantStatus.name,
-                    grantedAt = grant.grantedAt.toString(),
-                    validFrom = grant.validFrom.toString(),
-                    validTo = grant.validTo.toString()
+                    grantedAt = grant.grantedAt.toTimeZoneOffsetString(),
+                    validFrom = grant.validFrom.toTimeZoneOffsetString(),
+                    validTo = grant.validTo.toTimeZoneOffsetString()
                 ),
                 relationships = GrantResponseRelationShips(
                     grantedFor = JsonApiRelationshipToOne(
@@ -152,7 +153,7 @@ fun List<AuthorizationGrant>.toCollectionGrantResponse() =
         links = JsonApiLinks.ResourceObjectLink("https://$GRANTS_PATH"),
         meta = JsonApiMeta(
             buildJsonObject {
-                put("createdAt", LocalDateTime.now().toString())
+                put("createdAt", currentTimeWithTimeZone().toTimeZoneOffsetString())
             }
         )
     )

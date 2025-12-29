@@ -61,9 +61,9 @@ class AuthorizationGrantRouteTest : FunSpec({
                     type shouldBe "AuthorizationGrant"
                     attributes.shouldNotBeNull().apply {
                         status shouldBe "Active"
-                        grantedAt shouldBe "2025-04-04T04:00"
-                        validFrom shouldBe "2025-04-04T04:00"
-                        validTo shouldBe "2026-04-04T04:00"
+                        grantedAt shouldBe "2025-04-04T04:00:00+02:00"
+                        validFrom shouldBe "2025-04-04T04:00:00+02:00"
+                        validTo shouldBe "2026-04-04T04:00:00+02:00"
                     }
                     relationships.apply {
                         grantedFor.apply {
@@ -162,9 +162,9 @@ class AuthorizationGrantRouteTest : FunSpec({
                     type shouldBe "AuthorizationGrant"
                     attributes.shouldNotBeNull().apply {
                         status shouldBe "Active"
-                        grantedAt shouldBe "2025-04-04T04:00"
-                        validFrom shouldBe "2025-04-04T04:00"
-                        validTo shouldBe "2026-04-04T04:00"
+                        grantedAt shouldBe "2025-04-04T04:00:00+02:00"
+                        validFrom shouldBe "2025-04-04T04:00:00+02:00"
+                        validTo shouldBe "2026-04-04T04:00:00+02:00"
                     }
                     relationships.apply {
                         grantedFor.apply {
@@ -253,14 +253,14 @@ class AuthorizationGrantRouteTest : FunSpec({
                         id shouldBe "123"
                         type shouldBe "AuthorizationScope"
                         attributes.shouldNotBeNull().apply {
-                            permissionType shouldBe PermissionType.ReadAccess
+                            permissionType shouldBe AuthorizationScope.PermissionType.ReadAccess
                         }
                         relationships.shouldNotBeNull().apply {
                             authorizedResources.apply {
                                 data.size shouldBe 1
                                 data[0].apply {
                                     id shouldBe "b7f9c2e4"
-                                    type shouldBe ElhubResource.MeteringPoint.name
+                                    type shouldBe AuthorizationScope.ElhubResource.MeteringPoint.name
                                 }
                             }
                         }
@@ -297,7 +297,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                         id shouldBe "345"
                         type shouldBe "AuthorizationScope"
                         attributes.shouldNotBeNull().apply {
-                            permissionType shouldBe PermissionType.ChangeOfSupplier
+                            permissionType shouldBe AuthorizationScope.PermissionType.ChangeOfSupplier
                         }
                         relationships.shouldNotBeNull().apply {
                             authorizedResources.apply {
@@ -313,7 +313,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                         id shouldBe "567"
                         type shouldBe "AuthorizationScope"
                         attributes.shouldNotBeNull().apply {
-                            permissionType shouldBe PermissionType.ChangeOfSupplier
+                            permissionType shouldBe AuthorizationScope.PermissionType.ChangeOfSupplier
                         }
                         relationships.shouldNotBeNull().apply {
                             authorizedResources.apply {
@@ -452,9 +452,9 @@ class AuthorizationGrantRouteTest : FunSpec({
                         attributes.shouldNotBeNull()
                         attributes!!.apply {
                             status shouldBe "Active"
-                            grantedAt shouldBe "2025-04-04T04:00"
-                            validFrom shouldBe "2025-04-04T04:00"
-                            validTo shouldBe "2026-04-04T04:00"
+                            grantedAt shouldBe "2025-04-04T04:00:00+02:00"
+                            validFrom shouldBe "2025-04-04T04:00:00+02:00"
+                            validTo shouldBe "2026-04-04T04:00:00+02:00"
                         }
                         relationships.apply {
                             grantedFor.apply {
@@ -492,9 +492,9 @@ class AuthorizationGrantRouteTest : FunSpec({
                         attributes.shouldNotBeNull()
                         attributes!!.apply {
                             status shouldBe "Revoked"
-                            grantedAt shouldBe "2025-01-04T03:00"
-                            validFrom shouldBe "2025-02-03T17:07"
-                            validTo shouldBe "2025-05-16T04:00"
+                            grantedAt shouldBe "2025-01-04T03:00:00+01:00"
+                            validFrom shouldBe "2025-02-03T17:07:00+01:00"
+                            validTo shouldBe "2025-05-16T04:00:00+02:00"
                         }
                         relationships.apply {
                             grantedFor.apply {

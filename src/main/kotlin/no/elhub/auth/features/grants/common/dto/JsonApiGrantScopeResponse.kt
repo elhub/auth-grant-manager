@@ -7,7 +7,6 @@ import no.elhub.auth.features.common.currentTimeWithTimeZone
 import no.elhub.auth.features.common.toTimeZoneOffsetString
 import no.elhub.auth.features.grants.AuthorizationScope
 import no.elhub.auth.features.grants.GRANTS_PATH
-import no.elhub.auth.features.grants.PermissionType
 import no.elhub.devxp.jsonapi.model.JsonApiAttributes
 import no.elhub.devxp.jsonapi.model.JsonApiLinks
 import no.elhub.devxp.jsonapi.model.JsonApiMeta
@@ -19,7 +18,7 @@ import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObjectWithRelation
 
 @Serializable
 data class ScopeResponseAttributes(
-    val permissionType: PermissionType
+    val permissionType: AuthorizationScope.PermissionType
 ) : JsonApiAttributes
 
 @Serializable
@@ -53,7 +52,7 @@ fun List<AuthorizationScope>.toResponse(grantId: String) =
                 ),
                 meta = JsonApiMeta(
                     buildJsonObject {
-                        put("createdAt", authorizationScope.createdAt.toString()) // TODO toString() deprecated -> will be solved by TDX-1241
+                        put("createdAt", authorizationScope.createdAt.toTimeZoneOffsetString())
                     }
                 )
             )
