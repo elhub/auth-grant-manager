@@ -22,7 +22,8 @@
   },
   "allOf": [
     {
-      "$ref": "../base-definitions.schema.json#/definitions/topLevelPropertyConstraint"
+      "$ref": "../base-definitions.schema.json#/definitions/topLevelPropertyConstraint",
+      "examples": ["/access/v0/authorization-requests"]
     }
   ],
   "additionalProperties": false

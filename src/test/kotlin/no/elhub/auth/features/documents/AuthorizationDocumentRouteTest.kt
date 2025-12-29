@@ -148,13 +148,13 @@ class AuthorizationDocumentRouteTest :
                         links.file shouldBe "$DOCUMENTS_PATH/$id.pdf"
                     }
 
-                    createDocumentResponse.links.apply {
-                        self shouldBe DOCUMENTS_PATH
-                    }
-
                     createdDocumentId = createDocumentResponse.data.id
                     linkToDocument = createDocumentResponse.data.links.self
                     linkToDocumentFile = createDocumentResponse.data.links.file
+
+                    createDocumentResponse.links.apply {
+                        self shouldBe "$DOCUMENTS_PATH/$createdDocumentId"
+                    }
                 }
 
                 test("Get created document should return correct response") {
@@ -267,7 +267,6 @@ class AuthorizationDocumentRouteTest :
                         header(HttpHeaders.Authorization, "Bearer maskinporten")
                         header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
                     }
-                    println("nisse: ${response.bodyAsText()}")
                     response.status shouldBe HttpStatusCode.OK
                     val responseJson: SingleGrantResponse = response.body()
                     responseJson.data.apply {

@@ -37,5 +37,5 @@ fun AuthorizationDocument.toCreateDocumentResponse() = CreateDocumentResponse(
             documentType = this.type.toString()
         ),
     ),
-    links = JsonApiLinks.ResourceObjectLink(DOCUMENTS_PATH)
+    links = JsonApiLinks.ResourceObjectLink("${DOCUMENTS_PATH}/${this.id}")
 )

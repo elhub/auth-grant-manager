@@ -19,17 +19,20 @@
         "grantedAt": {
           "type": "string",
           "format": "date-time",
-          "description": "The date and time when the authorization is granted at."
+          "description": "The date and time when the authorization is granted at.",
+          "examples": ["2025-12-29T10:13:18.245067+01:00"]
         },
         "validFrom": {
           "type": "string",
           "format": "date-time",
-          "description": "The date and time when the authorization grant is valid from."
+          "description": "The date and time when the authorization grant is valid from.",
+          "examples": ["2025-12-29T10:13:18.245095+01:00"]
         },
         "validTo": {
           "type": "string",
           "format": "date-time",
-          "description": "The date and time when the authorization grant is valid to."
+          "description": "The date and time when the authorization grant is valid to.",
+          "examples": ["2026-12-29T10:13:18.245106+01:00"]
         }
       }
     },
@@ -77,7 +80,7 @@
               },
               "examples": [
                 {
-                  "self": "https://api.elhub.no/access/v0/authorization-requests/4f71d596-99e4-415e-946d-7252c1a40c5b"
+                  "self": "/access/v0/authorization-requests/4f71d596-99e4-415e-946d-7252c1a40c5b"
                 }
               ]
             }
@@ -91,7 +94,7 @@
           "type": "string",
           "format": "uri",
           "examples": [
-            "https://api.elhub.no/access/v0/authorization-grants/123e4567-e89b-12d3-a456-426614174000"
+            "/access/v0/authorization-grants/123e4567-e89b-12d3-a456-426614174000"
           ]
         }
       }

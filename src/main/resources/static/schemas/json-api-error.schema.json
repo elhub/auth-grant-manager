@@ -9,7 +9,8 @@
     },
     "links": {
       "description": "Link members related to the primary data.",
-      "$ref": "base-definitions.schema.json#/definitions/topLevelLinks"
+      "$ref": "base-definitions.schema.json#/definitions/topLevelLinks",
+      "examples": ["https://api.elhub.no/example-endpoint/"]
     },
     "meta": {
       "$ref": "base-definitions.schema.json#/definitions/topLevelMeta"
