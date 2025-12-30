@@ -32,7 +32,7 @@ import java.util.UUID
 
 interface RequestRepository {
     fun find(requestId: UUID): Either<RepositoryReadError, AuthorizationRequest>
-    fun findAll(): Either<RepositoryReadError, List<AuthorizationRequest>>
+    fun findAll(party: AuthorizationParty): Either<RepositoryReadError, List<AuthorizationRequest>>
     fun insert(request: AuthorizationRequest): Either<RepositoryWriteError, AuthorizationRequest>
     fun acceptRequest(requestId: UUID, approvedBy: AuthorizationParty): Either<RepositoryError, AuthorizationRequest>
     fun rejectAccept(requestId: UUID): Either<RepositoryError, AuthorizationRequest>
@@ -44,12 +44,23 @@ class ExposedRequestRepository(
     private val requestPropertiesRepository: RequestPropertiesRepository
 ) : RequestRepository {
 
-    override fun findAll(): Either<RepositoryReadError, List<AuthorizationRequest>> =
+    override fun findAll(party: AuthorizationParty): Either<RepositoryReadError, List<AuthorizationRequest>> =
         either {
             transaction {
-                val rows = AuthorizationRequestTable.selectAll()
-                rows.map { request ->
-                    findInternal(request).bind()
+                val partyId = partyRepo.findOrInsert(type = party.type, resourceId = party.resourceId)
+                    .mapLeft { RepositoryReadError.UnexpectedError }
+                    .bind()
+                    .id
+
+                val rows = AuthorizationRequestTable
+                    .selectAll()
+                    .where {
+                        (AuthorizationRequestTable.requestedTo eq partyId)
+                    }
+                    .toList()
+
+                rows.map { row ->
+                    findInternal(row).bind()
                 }
             }
         }
