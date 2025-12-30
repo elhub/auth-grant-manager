@@ -26,6 +26,7 @@ openapi-generator = "7.17.0"
 picocli = "4.7.7"
 postgresql = "42.7.8"
 slf4j = "2.0.17"
+logback = "1.5.23"
 snakeyaml = "2.5"
 testcontainers = "2.0.2"
 mybatis = "3.5.19"
@@ -66,6 +67,7 @@ json-skema = { group = "com.github.erosb", name = "json-sKema", version.ref = "j
 kotlinx-datetime = { group = "org.jetbrains.kotlinx", name = "kotlinx-datetime", version.ref = "kotlinx-datetime" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 ktor-serialization-kotlinx-json = { group = "io.ktor", name = "ktor-serialization-kotlinx-json", version.ref = "ktor" }
+ktor-server-call-id = { group = "io.ktor", name = "ktor-server-call-id", version.ref = "ktor" }
 ktor-server-call-logging = { group = "io.ktor", name = "ktor-server-call-logging", version.ref = "ktor" }
 ktor-server-config-yaml = { group = "io.ktor", name = "ktor-server-config-yaml", version.ref = "ktor" }
 ktor-server-content-negotiation = { group = "io.ktor", name = "ktor-server-content-negotiation", version.ref = "ktor" }
@@ -80,6 +82,7 @@ ktor-server-netty = { group = "io.ktor", name = "ktor-server-netty", version.ref
 ktor-server-swagger = { group = "io.ktor", name = "ktor-server-swagger", version.ref = "ktor" }
 ktor-server-status-pages = { group = "io.ktor", name = "ktor-server-status-pages", version.ref = "ktor" }
 logging-slf4j-simple = { group = "org.slf4j", name = "slf4j-simple", version.ref = "slf4j" }
+logging-logback-classic = { group = "ch.qos.logback", name = "logback-classic", version.ref = "logback" }
 logging-oshai-kotlin-logging = { group = "io.github.oshai", name = "kotlin-logging-jvm", version.ref = "kotlin-logging" }
 monitoring-cohort-hikari = { group = "com.sksamuel.cohort", name = "cohort-hikari", version.ref = "cohort" }
 monitoring-cohort-ktor = { group = "com.sksamuel.cohort", name = "cohort-ktor", version.ref = "cohort" }
@@ -118,7 +121,7 @@ documentation = ["ktor-server-swagger"]
 functional-programming = ["fp-arrow-core", "fp-arrow-core-high-arity", "fp-arrow-fx-coroutines"]
 ktor = ["ktor-server-core", "ktor-server-netty", "ktor-server-content-negotiation", "ktor-server-config-yaml", "ktor-client-core", "ktor-client-cio",
   "ktor-client-content-negotiation", "ktor-client-logging", "ktor-server-status-pages"]
-logging = ["ktor-server-call-logging", "logging-slf4j-simple", "logging-oshai-kotlin-logging"]
+logging = ["ktor-server-call-id", "ktor-server-call-logging", "logging-logback-classic", "logging-oshai-kotlin-logging"]
 monitoring = ["ktor-server-metrics-micrometer", "monitoring-micrometer-registry-prometheus", "monitoring-cohort-hikari", "monitoring-cohort-ktor",
   "monitoring-cohort-micrometer"]
 serialization = ["kotlinx-datetime", "kotlinx-serialization-json", "ktor-serialization-kotlinx-json", "serialization-yaml-snakeyaml"]

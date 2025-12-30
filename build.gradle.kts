@@ -151,6 +151,7 @@ val localEnvVars = mapOf(
     "PATH_TO_SIGNING_CERTIFICATE_CHAIN" to testCertPath.get(),
     "ENABLE_ENDPOINTS" to "true",
     "AUTH_PERSONS_URL" to "http://localhost:8081",
+    "PDP_BASE_URL" to "https://auth-policy-decision-point-test9.elhub.cloud"
 )
 
 tasks.named<JavaExec>("run").configure {

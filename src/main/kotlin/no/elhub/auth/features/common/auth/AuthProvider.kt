@@ -11,6 +11,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import io.ktor.server.application.ApplicationCall
+import io.ktor.server.plugins.callid.callId
 import org.slf4j.LoggerFactory
 import java.util.*
 
@@ -65,7 +66,7 @@ class PDPAuthorizationProvider(
     }
 
     override suspend fun authorize(call: ApplicationCall): Either<AuthError, AuthorizedParty> = either {
-        val traceId = UUID.randomUUID()
+        val traceId = resolveTraceId(call)
         val pdpBody: PdpResponse = pdpRequestAndValidate(call, traceId).bind()
 
         when (pdpBody.result.tokenInfo.tokenType) {
@@ -85,13 +86,13 @@ class PDPAuthorizationProvider(
     }
 
     override suspend fun authorizeMaskinporten(call: ApplicationCall): Either<AuthError, AuthorizedParty.AuthorizedOrganizationEntity> = either {
-        val traceId = UUID.randomUUID()
+        val traceId = resolveTraceId(call)
         val pdpBody: PdpResponse = pdpRequestAndValidate(call, traceId).bind()
         authorizeMaskinporten(call, pdpBody, traceId).bind()
     }
 
     override suspend fun authorizeEndUser(call: ApplicationCall): Either<AuthError, AuthorizedParty.AuthorizedPerson> = either {
-        val traceId = UUID.randomUUID()
+        val traceId = resolveTraceId(call)
         val pdpBody: PdpResponse = pdpRequestAndValidate(call, traceId).bind()
         authorizePerson(pdpBody, traceId).bind()
     }
@@ -191,5 +192,14 @@ class PDPAuthorizationProvider(
         }
         val partyId = tokenInfo.partyId ?: raise(AuthError.UnknownError)
         AuthorizedParty.AuthorizedPerson(UUID.fromString(partyId))
+    }
+
+    private fun resolveTraceId(call: ApplicationCall): UUID {
+        val callId = call.callId
+        if (callId.isNullOrBlank()) {
+            log.warn("callId not set, generating new trace id")
+            return UUID.randomUUID()
+        }
+        return UUID.fromString(callId)
     }
 }
