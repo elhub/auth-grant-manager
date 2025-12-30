@@ -1,0 +1,15 @@
+<configuration>
+  <property name="LOG_LEVEL" value="${LOG_LEVEL:-INFO}"/>
+
+  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+      <pattern>traceId=%X{traceId} ts=%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} level=%-5level logger=%logger{36} thread=%thread %msg%n</pattern>
+    </encoder>
+  </appender>
+
+  <logger name="e.e.e.d.s.v.CommonCertificateVerifier" level="WARN"/>
+
+  <root level="${LOG_LEVEL}">
+    <appender-ref ref="STDOUT"/>
+  </root>
+</configuration>
