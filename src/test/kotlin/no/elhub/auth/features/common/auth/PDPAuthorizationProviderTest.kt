@@ -16,6 +16,7 @@ import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.request.ApplicationRequest
+import io.ktor.util.Attributes
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.serialization.json.Json
@@ -239,6 +240,7 @@ private fun mockCall(headers: Headers): ApplicationCall {
     val request = mockk<ApplicationRequest>()
     every { request.headers } returns headers
     val call = mockk<ApplicationCall>()
+    every { call.attributes } returns Attributes()
     every { call.request } returns request
     return call
 }
