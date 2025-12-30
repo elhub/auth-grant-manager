@@ -36,22 +36,13 @@ class SigningServiceTest : FunSpec({
     val certProvider = FileCertificateProvider(certProviderConfig)
     val padesService = PAdESService(CommonCertificateVerifier())
 
-    val signingService = PdfSigningService(padesService)
+    val signingService = PdfSigningService(padesService, certProvider, vaultSignatureProvider)
 
     val unsignedPdfBytes = this::class.java.classLoader.getResourceAsStream("unsigned.pdf")!!.readAllBytes()
 
     test("Should add one signature with proper parameters") {
 
-        val certChain = certProvider.getCertificateChain().shouldBeRight()
-
-        val signingCert = certProvider.getCertificate().shouldBeRight()
-
-        val dataToSign = signingService.getDataToSign(unsignedPdfBytes, certChain, signingCert).shouldBeRight()
-
-        val signatureBytes = vaultSignatureProvider.fetchSignature(dataToSign).shouldBeRight()
-
-        val signedPdfBytes =
-            signingService.embedSignatureIntoFile(unsignedPdfBytes, signatureBytes, certChain, signingCert).shouldBeRight()
+        val signedPdfBytes = signingService.sign(unsignedPdfBytes).shouldBeRight()
 
         val signedPdf = InMemoryDocument(signedPdfBytes)
 
@@ -78,22 +69,14 @@ class SigningServiceTest : FunSpec({
         val certRef = signature.signingCertificateReference.certificateId
         val certUsed = diagnosticData.getUsedCertificateById(certRef)
 
+        val signingCert = certProvider.getCertificate().shouldBeRight()
         certUsed.serialNumber shouldBe signingCert.serialNumber.toString()
         certUsed.certificateDN shouldBe signingCert.issuerX500Principal.name
     }
 
     test("Should invalidate signature when PDF is tampered with") {
 
-        val certChain = certProvider.getCertificateChain().shouldBeRight()
-
-        val signingCert = certProvider.getCertificate().shouldBeRight()
-
-        val dataToSign = signingService.getDataToSign(unsignedPdfBytes, certChain, signingCert).shouldBeRight()
-
-        val signatureBytes = vaultSignatureProvider.fetchSignature(dataToSign).shouldBeRight()
-
-        val signedPdfBytes =
-            signingService.embedSignatureIntoFile(unsignedPdfBytes, signatureBytes, certChain, signingCert).shouldBeRight()
+        val signedPdfBytes = signingService.sign(unsignedPdfBytes).shouldBeRight()
 
         val signedPdf = InMemoryDocument(signedPdfBytes)
 
