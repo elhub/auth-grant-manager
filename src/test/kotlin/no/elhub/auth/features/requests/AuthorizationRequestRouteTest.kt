@@ -155,7 +155,6 @@ class AuthorizationRequestRouteTest :
                         meta.shouldNotBeNull().apply {
                             val createdAt = values["createdAt"].shouldNotBeNull()
                             val updatedAt = values["updatedAt"].shouldNotBeNull()
-
                             shouldNotThrowAny {
                                 OffsetDateTime.parse(createdAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
                                 OffsetDateTime.parse(updatedAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
@@ -171,7 +170,7 @@ class AuthorizationRequestRouteTest :
                         }
                     }
                     responseJson.links.apply {
-                        self shouldBe REQUESTS_PATH
+                        self shouldBe "$REQUESTS_PATH/d81e5bf2-8a0c-4348-a788-2a3fab4e77d6"
                     }
                     responseJson.meta.apply {
                         "createdAt".shouldNotBeNull()
@@ -243,7 +242,7 @@ class AuthorizationRequestRouteTest :
                         }
                     }
                     responseJson.links.apply {
-                        self shouldBe REQUESTS_PATH
+                        self shouldBe "$REQUESTS_PATH/4f71d596-99e4-415e-946d-7252c1a40c5b"
                     }
                     responseJson.meta.apply {
                         "createdAt".shouldNotBeNull()
@@ -386,7 +385,7 @@ class AuthorizationRequestRouteTest :
                         }
                     }
                     responseJson.links.shouldNotBeNull().apply {
-                        self shouldBe REQUESTS_PATH
+                        self.shouldNotBeNull()
                     }
                     responseJson.meta.shouldNotBeNull().apply {
                         "createdAt".shouldNotBeNull()

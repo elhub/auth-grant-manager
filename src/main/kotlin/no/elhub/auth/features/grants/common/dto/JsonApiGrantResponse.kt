@@ -90,9 +90,9 @@ fun AuthorizationGrant.toSingleGrantResponse() =
                     )
                 ),
             ),
-            links = JsonApiLinks.ResourceObjectLink("https://$GRANTS_PATH/${this.id}"),
+            links = JsonApiLinks.ResourceObjectLink("$GRANTS_PATH/${this.id}"),
         ),
-        links = JsonApiLinks.ResourceObjectLink("https://$GRANTS_PATH"),
+        links = JsonApiLinks.ResourceObjectLink("$GRANTS_PATH/${this.id}"),
         meta = JsonApiMeta(
             buildJsonObject {
                 put("createdAt", currentTimeWithTimeZone().toTimeZoneOffsetString())
@@ -147,10 +147,10 @@ fun List<AuthorizationGrant>.toCollectionGrantResponse() =
                         )
                     ),
                 ),
-                links = JsonApiLinks.ResourceObjectLink("https://api.elhub.no/authorization-grants${grant.id}"),
+                links = JsonApiLinks.ResourceObjectLink("$GRANTS_PATH/${grant.id}"),
             )
         },
-        links = JsonApiLinks.ResourceObjectLink("https://$GRANTS_PATH"),
+        links = JsonApiLinks.ResourceObjectLink(GRANTS_PATH),
         meta = JsonApiMeta(
             buildJsonObject {
                 put("createdAt", currentTimeWithTimeZone().toTimeZoneOffsetString())

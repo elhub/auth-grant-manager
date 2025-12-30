@@ -64,7 +64,7 @@
                 "self": {
                   "type": "string",
                   "examples": [
-                    "/authorization-grants/123e4567-e89b-12d3-a456-426614174000"
+                    "/access/v0/authorization-grants/123e4567-e89b-12d3-a456-426614174000"
                   ]
                 }
               }
@@ -135,7 +135,7 @@
           "type": "string",
           "format": "uri",
           "examples": [
-            "https://api.elhub.no/authorization-documents/123e4567-e89b-12d3-a456-426614174000"
+            "/access/v0/authorization-documents/123e4567-e89b-12d3-a456-426614174000"
           ]
         },
         "file": {
@@ -143,7 +143,7 @@
           "format": "uri",
           "description": "Link to download the pdf document",
           "examples": [
-            "https://api.elhub.no/authorization-documents/123e4567-e89b-12d3-a456-426614174000.pdf"
+            "/access/v0/authorization-documents/123e4567-e89b-12d3-a456-426614174000.pdf"
           ]
         }
       }
