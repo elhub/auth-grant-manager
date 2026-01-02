@@ -115,7 +115,7 @@ class CreateDocumentTest :
                     single { httpTestClient }
                     single { localVaultConfig }
                     singleOf(::HashicorpVaultSignatureProvider) bind SignatureProvider::class
-                    singleOf(::PdfSigningService) bind FileSigningService::class
+                    singleOf(::PdfSigningService) bind SigningService::class
                     single { PdfGeneratorConfig("templates") }
                     singleOf(::PdfGenerator) bind FileGenerator::class
 

@@ -16,10 +16,10 @@ import no.elhub.auth.features.documents.create.CertificateProvider
 import no.elhub.auth.features.documents.create.FileCertificateProvider
 import no.elhub.auth.features.documents.create.FileCertificateProviderConfig
 import no.elhub.auth.features.documents.create.FileGenerator
-import no.elhub.auth.features.documents.create.FileSigningService
 import no.elhub.auth.features.documents.create.HashicorpVaultSignatureProvider
 import no.elhub.auth.features.documents.create.PdfSigningService
 import no.elhub.auth.features.documents.create.SignatureProvider
+import no.elhub.auth.features.documents.create.SigningService
 import no.elhub.auth.features.documents.create.VaultConfig
 import no.elhub.auth.features.filegenerator.PdfGenerator
 import no.elhub.auth.features.filegenerator.PdfGeneratorConfig
@@ -51,7 +51,7 @@ fun Application.module() {
         }
         singleOf(::FileCertificateProvider) bind CertificateProvider::class
         single { PAdESService(CommonCertificateVerifier()) }
-        singleOf(::PdfSigningService) bind FileSigningService::class
+        singleOf(::PdfSigningService) bind SigningService::class
 
         single {
             val cfg = get<ApplicationConfig>().config("pdfSigner.vault")
