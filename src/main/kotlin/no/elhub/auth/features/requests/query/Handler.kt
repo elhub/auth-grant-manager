@@ -17,7 +17,7 @@ class Handler(
     private val logger = LoggerFactory.getLogger(Handler::class.java)
 
     operator fun invoke(query: Query): Either<QueryError, List<AuthorizationRequest>> = either {
-        val list = requestRepository.findAll(query.authorizedParty)
+        val list = requestRepository.findAllBy(query.authorizedParty)
             .mapLeft { QueryError.ResourceNotFoundError }
             .bind()
 
