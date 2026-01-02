@@ -1,3 +1,7 @@
 package no.elhub.auth.features.requests.query
 
-class Query
+import no.elhub.auth.features.common.party.AuthorizationParty
+
+data class Query(
+    val authorizedParty: AuthorizationParty
+)

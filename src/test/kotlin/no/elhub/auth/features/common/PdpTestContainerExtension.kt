@@ -90,6 +90,15 @@ class PdpTestContainerExtension(
         """.trimIndent()
 
     companion object {
+        suspend fun registerMaskinportenMapping(senderGln: String, actingGln: String) {
+            val client = HttpClient(CIO)
+            client.post("http://localhost:8085/__admin/mappings") {
+                contentType(ContentType.Application.Json)
+                setBody(maskinportenMapping(senderGln, actingGln))
+            }
+            client.close()
+        }
+
         suspend fun registerEnduserMapping(token: String, partyId: String) {
             val client = HttpClient(CIO)
             client.post("http://localhost:8085/__admin/mappings") {
@@ -98,6 +107,37 @@ class PdpTestContainerExtension(
             }
             client.close()
         }
+
+        private fun maskinportenMapping(senderGln: String, actingGln: String): String =
+            """
+        {
+          "priority": 1,
+          "request": {
+            "method": "POST",
+            "url": "/v1/data/v2/token/authinfo",
+            "bodyPatterns": [
+              { "matchesJsonPath": "$[?(@.input.payload.SenderGLN == \"$senderGln\")]" }
+            ]
+          },
+          "response": {
+            "status": 200,
+            "headers": { "Content-Type": "application/json" },
+            "jsonBody": {
+              "result": {
+                "tokenInfo": {
+                  "tokenStatus": "verified",
+                  "partyId": "maskinporten",
+                  "tokenType": "maskinporten"
+                },
+                "authInfo": {
+                  "actingFunction": "BalanceSupplier",
+                  "actingGLN": "$actingGln"
+                }
+              }
+            }
+          }
+        }
+            """.trimIndent()
 
         private fun enduserMapping(token: String, partyId: String): String =
             """

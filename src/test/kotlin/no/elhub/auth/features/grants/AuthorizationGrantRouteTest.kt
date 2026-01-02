@@ -445,7 +445,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                 response.status shouldBe HttpStatusCode.OK
                 val responseJson: CollectionGrantResponse = response.body()
                 responseJson.data.apply {
-                    size shouldBe 3
+                    size shouldBe 4
                     this[0].apply {
                         id.shouldNotBeNull()
                         type shouldBe "AuthorizationGrant"

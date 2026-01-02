@@ -1,5 +1,9 @@
 package no.elhub.auth.features.requests.get
 
+import no.elhub.auth.features.common.party.AuthorizationParty
 import java.util.UUID
 
-data class Query(val id: UUID)
+data class Query(
+    val id: UUID,
+    val authorizedParty: AuthorizationParty
+)
