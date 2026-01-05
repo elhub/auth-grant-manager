@@ -2,6 +2,7 @@ package no.elhub.auth.features.requests.get
 
 import arrow.core.Either
 import arrow.core.raise.either
+import arrow.core.raise.ensure
 import no.elhub.auth.features.common.QueryError
 import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.common.GrantRepository
@@ -20,6 +21,11 @@ class Handler(
         val request = requestRepository.find(query.id)
             .mapLeft { QueryError.ResourceNotFoundError }
             .bind()
+
+        ensure((request.requestedTo == query.authorizedParty) or (request.requestedBy == query.authorizedParty)) {
+            logger.error("Requestee is not authorized to get the request ${query.authorizedParty}")
+            QueryError.NotAuthorizedError
+        }
 
         // grant can only exist if approvedBy is set
         val requestWithGrant = request.approvedBy?.let {
