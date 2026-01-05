@@ -22,7 +22,8 @@ class Handler(
             .mapLeft { QueryError.ResourceNotFoundError }
             .bind()
 
-        ensure(request.requestedTo == query.authorizedParty) {
+        ensure((request.requestedTo == query.authorizedParty) or (request.requestedBy == query.authorizedParty)) {
+            logger.error("Requestee is not authorized to get the request ${query.authorizedParty}")
             QueryError.NotAuthorizedError
         }
 

@@ -23,6 +23,7 @@ import org.jetbrains.exposed.sql.insertReturning
 import org.jetbrains.exposed.sql.javatime.date
 import org.jetbrains.exposed.sql.javatime.timestamp
 import org.jetbrains.exposed.sql.javatime.timestampWithTimeZone
+import org.jetbrains.exposed.sql.or
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.update
@@ -55,7 +56,7 @@ class ExposedRequestRepository(
                 val rows = AuthorizationRequestTable
                     .selectAll()
                     .where {
-                        (AuthorizationRequestTable.requestedTo eq partyId)
+                        (AuthorizationRequestTable.requestedTo eq partyId) or (AuthorizationRequestTable.requestedBy eq partyId)
                     }
                     .toList()
 
