@@ -53,19 +53,12 @@ fun Route.route(
                         )
                     }
 
-                    is
                     CreateDocumentError.FileGenerationError,
-                    CreateDocumentError.CertificateRetrievalError,
-                    CreateDocumentError.SignatureFetchingError,
-                    CreateDocumentError.SigningDataGenerationError,
-                    CreateDocumentError.SigningError,
+                    is CreateDocumentError.SignFileError,
                     CreateDocumentError.PersistenceError,
                     CreateDocumentError.RequestedByPartyError,
                     CreateDocumentError.RequestedFromPartyError,
                     CreateDocumentError.RequestedToPartyError,
-                    CreateDocumentError.SignedByPartyError,
-                    CreateDocumentError.PersonError,
-                    CreateDocumentError.GenerateFileError
                     -> call.respond(HttpStatusCode.InternalServerError)
                 }
                 return@post

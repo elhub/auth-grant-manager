@@ -13,9 +13,7 @@ import no.elhub.auth.features.documents.create.model.CreateDocumentModel
 
 class Handler(
     private val businessHandler: ProxyDocumentBusinessHandler,
-    private val certificateProvider: CertificateProvider,
-    private val fileSigningService: FileSigningService,
-    private val signatureProvider: SignatureProvider,
+    private val signingService: SigningService,
     private val documentRepository: DocumentRepository,
     private val partyService: PartyService,
 ) {
@@ -45,30 +43,8 @@ class Handler(
                 .generateFile(command.requestedFrom.idValue, command.meta)
                 .getOrElse { return CreateDocumentError.FileGenerationError.left() }
 
-        val certChain =
-            certificateProvider
-                .getCertificateChain()
-                .getOrElse { return CreateDocumentError.CertificateRetrievalError.left() }
-
-        val signingCert =
-            certificateProvider
-                .getCertificate()
-                .getOrElse { return CreateDocumentError.CertificateRetrievalError.left() }
-
-        val dataToSign =
-            fileSigningService
-                .getDataToSign(file, certChain, signingCert)
-                .getOrElse { return CreateDocumentError.SigningDataGenerationError.left() }
-
-        val signature =
-            signatureProvider
-                .fetchSignature(dataToSign)
-                .getOrElse { return CreateDocumentError.SignatureFetchingError.left() }
-
-        val signedFile =
-            fileSigningService
-                .embedSignatureIntoFile(file, signature, certChain, signingCert)
-                .getOrElse { return CreateDocumentError.SigningError.left() }
+        val signedFile = signingService.sign(file)
+            .getOrElse { return CreateDocumentError.SignFileError(cause = it).left() }
 
         val documentProperties =
             command.meta
@@ -97,15 +73,7 @@ class Handler(
 sealed class CreateDocumentError {
     data object FileGenerationError : CreateDocumentError()
 
-    data object CertificateRetrievalError : CreateDocumentError()
-
-    data object SigningDataGenerationError : CreateDocumentError()
-
-    data object SignatureFetchingError : CreateDocumentError()
-
-    data object SigningError : CreateDocumentError()
-
-    data object GenerateFileError : CreateDocumentError()
+    data class SignFileError(val cause: FileSigningError) : CreateDocumentError()
 
     data object PersistenceError : CreateDocumentError()
 
@@ -114,10 +82,6 @@ sealed class CreateDocumentError {
     data object RequestedByPartyError : CreateDocumentError()
 
     data object RequestedToPartyError : CreateDocumentError()
-
-    data object SignedByPartyError : CreateDocumentError()
-
-    data object PersonError : CreateDocumentError()
 
     // To be used by value streams in during the business validation process. Auth Grant will return this message back to the API consumer
     data class BusinessValidationError(val message: String) : CreateDocumentError()
