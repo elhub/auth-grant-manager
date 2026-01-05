@@ -45,7 +45,7 @@ fun Application.module() {
         route(REQUESTS_PATH) {
             shouldRegisterEndpoint {
                 updateRoute(get())
-                createRoute(get())
+                createRoute(get(), get())
                 getRoute(get(), get())
                 queryRoute(get(), get())
             }
