@@ -569,8 +569,7 @@ class AuthorizationGrantRouteTest : FunSpec({
 
             test("Should update status and return updated object as response") {
                 val response = client.patch("$GRANTS_PATH/123e4567-e89b-12d3-a456-426614174000") {
-                    header(HttpHeaders.Authorization, "Bearer maskinporten")
-                    header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                    header(HttpHeaders.Authorization, "Bearer elhub-service")
                     contentType(ContentType.Application.Json)
                     setBody(
                         JsonApiConsumeRequest(
