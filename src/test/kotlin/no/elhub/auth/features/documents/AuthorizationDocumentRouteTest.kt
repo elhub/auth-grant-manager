@@ -40,17 +40,20 @@ import no.elhub.auth.features.documents.create.DocumentMeta
 import no.elhub.auth.features.documents.create.DocumentRequestAttributes
 import no.elhub.auth.features.documents.create.Request
 import no.elhub.auth.features.documents.get.GetDocumentResponse
+import no.elhub.auth.features.documents.query.AuthorizationDocumentsResponse
 import no.elhub.auth.features.grants.AuthorizationScope
 import no.elhub.auth.features.grants.GRANTS_PATH
 import no.elhub.auth.features.grants.common.dto.AuthorizationGrantScopesResponse
 import no.elhub.auth.features.grants.common.dto.SingleGrantResponse
 import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObjectWithMeta
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
+import no.elhub.devxp.jsonapi.response.JsonApiErrorObject
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import no.elhub.auth.features.grants.module as grantsModule
 import no.elhub.auth.module as applicationModule
 
+// These testing are sharing data so only works by running all tests in chronological order
 class AuthorizationDocumentRouteTest :
     FunSpec({
         val pdpContainer = PdpTestContainerExtension()
@@ -76,6 +79,8 @@ class AuthorizationDocumentRouteTest :
         lateinit var linkToDocumentFile: String
         lateinit var signedFile: ByteArray
         lateinit var grantId: String
+        lateinit var requestedFromId: String
+        lateinit var requestedToId: String
 
         context("Run document happy flow") {
             testApplication {
@@ -164,7 +169,7 @@ class AuthorizationDocumentRouteTest :
                     linkToDocumentFile = createDocumentResponse.data.links.file
                 }
 
-                test("Get created document should return correct response") {
+                test("Get created document should return correct response when authorized party is requestedBy and requestedFrom") {
                     val response = client.get(linkToDocument) {
                         header(HttpHeaders.Authorization, "Bearer maskinporten")
                         header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
@@ -188,10 +193,12 @@ class AuthorizationDocumentRouteTest :
                                 requestedFrom.data.apply {
                                     type shouldBe "Person"
                                     id.shouldNotBeNull()
+                                    requestedFromId = id
                                 }
                                 requestedTo.data.apply {
                                     type shouldBe "Person"
                                     id.shouldNotBeNull()
+                                    requestedToId = id
                                 }
                                 signedBy.shouldBeNull()
                                 grant.shouldBeNull()
@@ -216,6 +223,73 @@ class AuthorizationDocumentRouteTest :
                     getDocumentResponse.links.apply {
                         self shouldBe "$DOCUMENTS_PATH/$createdDocumentId"
                     }
+
+                    // Verify that response is the same for authorized enduser
+                    pdpContainer.registerEnduserMapping(
+                        token = "enduser",
+                        partyId = requestedFromId
+                    )
+
+                    val enduserResponse = client.get(linkToDocument) {
+                        header(HttpHeaders.Authorization, "Bearer enduser")
+                    }
+
+                    enduserResponse.status shouldBe HttpStatusCode.OK
+                    val enduserDocumentResponse: GetDocumentResponse = enduserResponse.body()
+                    enduserDocumentResponse == getDocumentResponse
+                }
+
+                test("Get created document should return 403 Not Authorized when authorized party is requestedTo") {
+                    pdpContainer.registerEnduserMapping(
+                        token = "not-authorized",
+                        partyId = requestedToId
+                    )
+
+                    val response = client.get(linkToDocument) {
+                        header(HttpHeaders.Authorization, "Bearer not-authorized")
+                    }
+
+                    response.status shouldBe HttpStatusCode.Forbidden
+
+                    val jsonApiError: JsonApiErrorCollection = response.body()
+
+                    jsonApiError shouldBe JsonApiErrorCollection(
+                        listOf(
+                            JsonApiErrorObject(
+                                status = HttpStatusCode.Forbidden.value.toString(),
+                                code = "NOT_AUTHORIZED",
+                                title = "Party Not Authorized",
+                                detail = "The party is not allowed to access this resource",
+                            )
+                        )
+                    )
+                }
+
+                test("Get document list should give proper size given the authorized user") {
+
+                    // When authorized party is the requestedBy number of documents returned should be 1
+                    val requestedByResponse: AuthorizationDocumentsResponse = client.get(DOCUMENTS_PATH) {
+                        header(HttpHeaders.Authorization, "Bearer maskinporten")
+                        header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                    }.body()
+
+                    requestedByResponse.size shouldBe 1
+
+                    // When authorized party is the requestedFrom number of documents returned should be 1
+                    val requestedFromResponse: AuthorizationDocumentsResponse = client.get(DOCUMENTS_PATH) {
+                        header(HttpHeaders.Authorization, "Bearer enduser")
+                        header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                    }.body()
+
+                    requestedFromResponse.size shouldBe 1
+
+                    // When authorized party is the requestedTo number of documents returned should be 0
+                    val requestedToResponse: AuthorizationDocumentsResponse = client.get(DOCUMENTS_PATH) {
+                        header(HttpHeaders.Authorization, "Bearer not-authorized")
+                        header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                    }.body()
+
+                    requestedToResponse.size shouldBe 0
                 }
 
                 test("Get pdf file should have proper signature") {
