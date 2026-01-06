@@ -318,6 +318,8 @@ class AuthorizationRequestRouteTest : FunSpec({
             test("Should return 201 Created") {
                 val response =
                     client.post(REQUESTS_PATH) {
+                        header(HttpHeaders.Authorization, "Bearer maskinporten")
+                        header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
                         contentType(ContentType.Application.Json)
                         setBody(
                             JsonApiCreateRequest(
@@ -407,6 +409,8 @@ class AuthorizationRequestRouteTest : FunSpec({
             test("Should return 400 Bad Request on validation error with error payload") {
                 val response =
                     client.post(REQUESTS_PATH) {
+                        header(HttpHeaders.Authorization, "Bearer maskinporten")
+                        header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
                         contentType(ContentType.Application.Json)
                         setBody(
                             JsonApiCreateRequest(

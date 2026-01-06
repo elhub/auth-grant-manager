@@ -6,41 +6,53 @@ import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
-import no.elhub.auth.features.common.InputError
-import no.elhub.auth.features.common.toApiErrorResponse
+import no.elhub.auth.features.common.auth.AuthorizationProvider
+import no.elhub.auth.features.common.auth.RoleType
+import no.elhub.auth.features.common.auth.toApiErrorResponse
 import no.elhub.auth.features.requests.create.dto.JsonApiCreateRequest
 import no.elhub.auth.features.requests.create.dto.toCreateResponse
 import no.elhub.auth.features.requests.create.dto.toModel
-import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
+import org.slf4j.LoggerFactory
 
-fun Route.route(handler: Handler) {
+private val logger = LoggerFactory.getLogger(Route::class.java)
+
+fun Route.route(
+    handler: Handler,
+    authProvider: AuthorizationProvider
+) {
     post {
-        val requestBody =
-            runCatching {
-                call.receive<JsonApiCreateRequest>()
-            }.getOrElse {
-                val (status, body) = InputError.MalformedInputError.toApiErrorResponse()
-                call.respond(status, JsonApiErrorCollection(listOf(body)))
+        val resolvedActor = authProvider.authorizeMaskinporten(call)
+            .getOrElse {
+                val error = it.toApiErrorResponse()
+                call.respond(error.first, error.second)
                 return@post
             }
+
+        val requestBody = call.receive<JsonApiCreateRequest>()
+        if (resolvedActor.role != RoleType.BalanceSupplier) {
+            call.respond(HttpStatusCode.BadRequest)
+            return@post
+        }
 
         val request =
-            handler(requestBody.toModel()).getOrElse { error ->
-                when (error) {
-                    is
-                    CreateRequestError.MappingError,
-                    CreateRequestError.PersistenceError,
-                    CreateRequestError.RequestedByPartyError,
-                    CreateRequestError.RequestedFromPartyError,
-                    -> call.respond(HttpStatusCode.InternalServerError)
+            handler(requestBody.toModel())
+                .getOrElse { error ->
+                    logger.error("Failed to create authorization request: {}", error)
+                    when (error) {
+                        is
+                        CreateRequestError.MappingError,
+                        CreateRequestError.PersistenceError,
+                        CreateRequestError.RequestedByPartyError,
+                        CreateRequestError.RequestedFromPartyError,
+                        -> call.respond(HttpStatusCode.InternalServerError)
 
-                    is CreateRequestError.ValidationError -> {
-                        val (status, validationError) = error.toApiErrorResponse()
-                        call.respond(status, validationError)
+                        is CreateRequestError.ValidationError -> {
+                            val (status, validationError) = error.toApiErrorResponse()
+                            call.respond(status, validationError)
+                        }
                     }
+                    return@post
                 }
-                return@post
-            }
 
         call.respond(HttpStatusCode.Created, request.toCreateResponse())
     }
