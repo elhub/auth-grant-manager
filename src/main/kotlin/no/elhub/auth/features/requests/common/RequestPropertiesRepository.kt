@@ -7,10 +7,11 @@ import no.elhub.auth.features.common.RepositoryWriteError
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.batchInsert
-import org.jetbrains.exposed.sql.javatime.CurrentDateTime
-import org.jetbrains.exposed.sql.javatime.datetime
+import org.jetbrains.exposed.sql.javatime.timestampWithTimeZone
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.time.OffsetDateTime
+import java.time.ZoneId
 import java.util.UUID
 
 interface RequestPropertiesRepository {
@@ -44,7 +45,7 @@ object AuthorizationRequestPropertyTable : Table("auth.authorization_request_pro
     val requestId = uuid("authorization_request_id")
     val key = varchar("key", 64)
     val value = text("value")
-    val createdAt = datetime("created_at").defaultExpression(CurrentDateTime)
+    val createdAt = timestampWithTimeZone("created_at").default(OffsetDateTime.now(ZoneId.of("Europe/Oslo")))
 }
 
 private fun ResultRow.toAuthorizationRequestProperty() = AuthorizationRequestProperty(

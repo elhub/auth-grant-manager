@@ -19,22 +19,24 @@ import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import no.elhub.auth.features.common.AuthPersonsTestContainer
 import no.elhub.auth.features.common.AuthPersonsTestContainerExtension
+import no.elhub.auth.features.common.Constants
 import no.elhub.auth.features.common.PdpTestContainerExtension
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.RunPostgresScriptExtension
 import no.elhub.auth.features.common.auth.PDPAuthorizationProvider
 import no.elhub.auth.features.common.commonModule
-import no.elhub.auth.features.grants.common.AuthorizationGrantListResponse
-import no.elhub.auth.features.grants.common.AuthorizationGrantResponse
-import no.elhub.auth.features.grants.common.AuthorizationGrantScopesResponse
-import no.elhub.auth.features.grants.common.dto.GrantResponse
+import no.elhub.auth.features.grants.common.dto.AuthorizationGrantScopesResponse
+import no.elhub.auth.features.grants.common.dto.CollectionGrantResponse
+import no.elhub.auth.features.grants.common.dto.SingleGrantResponse
 import no.elhub.auth.features.grants.consume.dto.ConsumeRequestAttributes
 import no.elhub.auth.features.grants.consume.dto.JsonApiConsumeRequest
+import no.elhub.auth.features.requests.REQUESTS_PATH
 import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObject
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import no.elhub.auth.module as applicationModule
 
 class AuthorizationGrantRouteTest : FunSpec({
+    val pdpContainer = PdpTestContainerExtension()
     extensions(
         PostgresTestContainerExtension(),
         RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-grants.sql"),
@@ -42,8 +44,26 @@ class AuthorizationGrantRouteTest : FunSpec({
         RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-grant-scopes.sql"),
         RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-party.sql"),
         AuthPersonsTestContainerExtension,
-        PdpTestContainerExtension()
+        pdpContainer
     )
+
+    beforeSpec {
+        pdpContainer.registerMaskinportenMapping(
+            token = "maskinporten",
+            actingGln = "0107000000021",
+            actingFunction = "BalanceSupplier"
+        )
+
+        pdpContainer.registerEnduserMapping(
+            token = "enduser",
+            partyId = "17abdc56-8f6f-440a-9f00-b9bfbb22065e"
+        )
+
+        pdpContainer.registerElhubServiceTokenMapping(
+            token = "elhub-service",
+            partyId = Constants.CONSENT_MANAGEMENT_OSB_ID
+        )
+    }
 
     context("GET /authorization-grants/{id}") {
         testApplication {
@@ -55,16 +75,15 @@ class AuthorizationGrantRouteTest : FunSpec({
                     header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
                 }
                 response.status shouldBe HttpStatusCode.OK
-                val responseJson: AuthorizationGrantResponse = response.body()
+                val responseJson: SingleGrantResponse = response.body()
                 responseJson.data.apply {
                     id.shouldNotBeNull()
                     type shouldBe "AuthorizationGrant"
-                    attributes.shouldNotBeNull()
-                    attributes!!.apply {
+                    attributes.shouldNotBeNull().apply {
                         status shouldBe "Active"
-                        grantedAt shouldBe "2025-04-04T04:00"
-                        validFrom shouldBe "2025-04-04T04:00"
-                        validTo shouldBe "2026-04-04T04:00"
+                        grantedAt shouldBe "2025-04-04T04:00:00+02:00"
+                        validFrom shouldBe "2025-04-04T04:00:00+02:00"
+                        validTo shouldBe "2026-04-04T04:00:00+02:00"
                     }
                     relationships.apply {
                         grantedFor.apply {
@@ -83,6 +102,15 @@ class AuthorizationGrantRouteTest : FunSpec({
                             data.apply {
                                 id shouldBe "0107000000021"
                                 type shouldBe "OrganizationEntity"
+                            }
+                        }
+                        source.apply {
+                            data.apply {
+                                id shouldBe "4f71d596-99e4-415e-946d-7252c1a40c5b"
+                                type shouldBe "AuthorizationRequest"
+                            }
+                            links.shouldNotBeNull().apply {
+                                self shouldBe "$REQUESTS_PATH/4f71d596-99e4-415e-946d-7252c1a40c5b"
                             }
                         }
                     }
@@ -118,9 +146,9 @@ class AuthorizationGrantRouteTest : FunSpec({
                     size shouldBe 1
                     this[0].apply {
                         status shouldBe "403"
-                        code shouldBe "REQUESTED_BY_MISMATCH"
-                        title shouldBe "RequestedBy mismatch"
-                        detail shouldBe "The requester is not allowed to access this resource"
+                        code shouldBe "NOT_AUTHORIZED"
+                        title shouldBe "Party Not Authorized"
+                        detail shouldBe "The party is not allowed to access this resource"
                     }
                 }
             }
@@ -147,16 +175,16 @@ class AuthorizationGrantRouteTest : FunSpec({
                 }
 
                 response.status shouldBe HttpStatusCode.OK
-                val responseJson: AuthorizationGrantResponse = response.body()
+                val responseJson: SingleGrantResponse = response.body()
 
                 responseJson.data.apply {
                     id shouldBe "123e4567-e89b-12d3-a456-426614174000"
                     type shouldBe "AuthorizationGrant"
                     attributes.shouldNotBeNull().apply {
                         status shouldBe "Active"
-                        grantedAt shouldBe "2025-04-04T04:00"
-                        validFrom shouldBe "2025-04-04T04:00"
-                        validTo shouldBe "2026-04-04T04:00"
+                        grantedAt shouldBe "2025-04-04T04:00:00+02:00"
+                        validFrom shouldBe "2025-04-04T04:00:00+02:00"
+                        validTo shouldBe "2026-04-04T04:00:00+02:00"
                     }
                     relationships.apply {
                         grantedFor.apply {
@@ -177,6 +205,15 @@ class AuthorizationGrantRouteTest : FunSpec({
                                 type shouldBe "OrganizationEntity"
                             }
                         }
+                        source.apply {
+                            data.apply {
+                                id shouldBe "4f71d596-99e4-415e-946d-7252c1a40c5b"
+                                type shouldBe "AuthorizationRequest"
+                            }
+                            links.shouldNotBeNull().apply {
+                                self shouldBe "$REQUESTS_PATH/4f71d596-99e4-415e-946d-7252c1a40c5b"
+                            }
+                        }
                     }
                 }
             }
@@ -192,9 +229,9 @@ class AuthorizationGrantRouteTest : FunSpec({
                     size shouldBe 1
                     this[0].apply {
                         status shouldBe "403"
-                        code shouldBe "REQUESTED_BY_MISMATCH"
-                        title shouldBe "RequestedBy mismatch"
-                        detail shouldBe "The requester is not allowed to access this resource"
+                        code shouldBe "NOT_AUTHORIZED"
+                        title shouldBe "Party Not Authorized"
+                        detail shouldBe "The party is not allowed to access this resource"
                     }
                 }
             }
@@ -235,13 +272,24 @@ class AuthorizationGrantRouteTest : FunSpec({
                     this[0].apply {
                         id shouldBe "123"
                         type shouldBe "AuthorizationScope"
-                        attributes.shouldNotBeNull()
-                        attributes!!.apply {
-                            authorizedResourceType shouldBe ElhubResource.MeteringPoint
-                            authorizedResourceId shouldBe "b7f9c2e4"
-                            permissionType shouldBe PermissionType.ReadAccess
-                            createdAt.shouldNotBeNull()
+                        attributes.shouldNotBeNull().apply {
+                            permissionType shouldBe AuthorizationScope.PermissionType.ReadAccess
                         }
+                        relationships.shouldNotBeNull().apply {
+                            authorizedResources.apply {
+                                data.size shouldBe 1
+                                data[0].apply {
+                                    id shouldBe "b7f9c2e4"
+                                    type shouldBe AuthorizationScope.ElhubResource.MeteringPoint.name
+                                }
+                            }
+                        }
+                    }
+                    responseJson.meta.shouldNotBeNull().apply {
+                        get("createdAt").shouldNotBeNull()
+                    }
+                    responseJson.links.apply {
+                        self shouldBe "$GRANTS_PATH/123e4567-e89b-12d3-a456-426614174000/scopes"
                     }
                 }
             }
@@ -268,25 +316,41 @@ class AuthorizationGrantRouteTest : FunSpec({
                     this[0].apply {
                         id shouldBe "345"
                         type shouldBe "AuthorizationScope"
-                        attributes.shouldNotBeNull()
-                        attributes!!.apply {
-                            authorizedResourceType shouldBe ElhubResource.MeteringPoint
-                            authorizedResourceId shouldBe "b7f9c2e4"
-                            permissionType shouldBe PermissionType.ChangeOfSupplier
-                            createdAt.shouldNotBeNull()
+                        attributes.shouldNotBeNull().apply {
+                            permissionType shouldBe AuthorizationScope.PermissionType.ChangeOfSupplier
+                        }
+                        relationships.shouldNotBeNull().apply {
+                            authorizedResources.apply {
+                                data.size shouldBe 1
+                                data[0].apply {
+                                    id shouldBe "b7f9c2e4"
+                                    type shouldBe "MeteringPoint"
+                                }
+                            }
                         }
                     }
                     this[1].apply {
                         id shouldBe "567"
                         type shouldBe "AuthorizationScope"
-                        attributes.shouldNotBeNull()
-                        attributes!!.apply {
-                            authorizedResourceType shouldBe ElhubResource.Organization
-                            authorizedResourceId shouldBe "b7f9c2e4"
-                            permissionType shouldBe PermissionType.ChangeOfSupplier
-                            createdAt.shouldNotBeNull()
+                        attributes.shouldNotBeNull().apply {
+                            permissionType shouldBe AuthorizationScope.PermissionType.ChangeOfSupplier
+                        }
+                        relationships.shouldNotBeNull().apply {
+                            authorizedResources.apply {
+                                data.size shouldBe 1
+                                data[0].apply {
+                                    id shouldBe "b7f9c2e4"
+                                    type shouldBe "Organization"
+                                }
+                            }
                         }
                     }
+                }
+                responseJson.meta.shouldNotBeNull().apply {
+                    get("createdAt").shouldNotBeNull()
+                }
+                responseJson.links.apply {
+                    self shouldBe "$GRANTS_PATH/d75522ba-0e62-449b-b1de-70b16f12ecaf/scopes"
                 }
             }
 
@@ -317,9 +381,9 @@ class AuthorizationGrantRouteTest : FunSpec({
                     size shouldBe 1
                     this[0].apply {
                         status shouldBe "403"
-                        code shouldBe "REQUESTED_BY_MISMATCH"
-                        title shouldBe "RequestedBy mismatch"
-                        detail shouldBe "The requester is not allowed to access this resource"
+                        code shouldBe "NOT_AUTHORIZED"
+                        title shouldBe "Party Not Authorized"
+                        detail shouldBe "The party is not allowed to access this resource"
                     }
                 }
             }
@@ -345,9 +409,9 @@ class AuthorizationGrantRouteTest : FunSpec({
                     size shouldBe 1
                     this[0].apply {
                         status shouldBe "403"
-                        code shouldBe "REQUESTED_BY_MISMATCH"
-                        title shouldBe "RequestedBy mismatch"
-                        detail shouldBe "The requester is not allowed to access this resource"
+                        code shouldBe "NOT_AUTHORIZED"
+                        title shouldBe "Party Not Authorized"
+                        detail shouldBe "The party is not allowed to access this resource"
                     }
                 }
             }
@@ -399,18 +463,18 @@ class AuthorizationGrantRouteTest : FunSpec({
                     header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
                 }
                 response.status shouldBe HttpStatusCode.OK
-                val responseJson: AuthorizationGrantListResponse = response.body()
+                val responseJson: CollectionGrantResponse = response.body()
                 responseJson.data.apply {
-                    size shouldBe 3
+                    size shouldBe 4
                     this[0].apply {
                         id.shouldNotBeNull()
                         type shouldBe "AuthorizationGrant"
                         attributes.shouldNotBeNull()
                         attributes!!.apply {
                             status shouldBe "Active"
-                            grantedAt shouldBe "2025-04-04T04:00"
-                            validFrom shouldBe "2025-04-04T04:00"
-                            validTo shouldBe "2026-04-04T04:00"
+                            grantedAt shouldBe "2025-04-04T04:00:00+02:00"
+                            validFrom shouldBe "2025-04-04T04:00:00+02:00"
+                            validTo shouldBe "2026-04-04T04:00:00+02:00"
                         }
                         relationships.apply {
                             grantedFor.apply {
@@ -431,6 +495,15 @@ class AuthorizationGrantRouteTest : FunSpec({
                                     type shouldBe "OrganizationEntity"
                                 }
                             }
+                            source.apply {
+                                data.apply {
+                                    id shouldBe "4f71d596-99e4-415e-946d-7252c1a40c5b"
+                                    type shouldBe "AuthorizationRequest"
+                                }
+                                links.shouldNotBeNull().apply {
+                                    self shouldBe "$REQUESTS_PATH/4f71d596-99e4-415e-946d-7252c1a40c5b"
+                                }
+                            }
                         }
                     }
                     this[1].apply {
@@ -439,9 +512,9 @@ class AuthorizationGrantRouteTest : FunSpec({
                         attributes.shouldNotBeNull()
                         attributes!!.apply {
                             status shouldBe "Revoked"
-                            grantedAt shouldBe "2025-01-04T03:00"
-                            validFrom shouldBe "2025-02-03T17:07"
-                            validTo shouldBe "2025-05-16T04:00"
+                            grantedAt shouldBe "2025-01-04T03:00:00+01:00"
+                            validFrom shouldBe "2025-02-03T17:07:00+01:00"
+                            validTo shouldBe "2025-05-16T04:00:00+02:00"
                         }
                         relationships.apply {
                             grantedFor.apply {
@@ -462,6 +535,15 @@ class AuthorizationGrantRouteTest : FunSpec({
                                     type shouldBe "OrganizationEntity"
                                 }
                             }
+                            source.apply {
+                                data.apply {
+                                    id shouldBe "4f71d596-99e4-415e-946d-7252c1a40c52"
+                                    type shouldBe "AuthorizationRequest"
+                                }
+                                links.shouldNotBeNull().apply {
+                                    self shouldBe "$REQUESTS_PATH/4f71d596-99e4-415e-946d-7252c1a40c52"
+                                }
+                            }
                         }
                     }
                 }
@@ -473,7 +555,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                 }
 
                 response.status shouldBe HttpStatusCode.OK
-                val responseJson: AuthorizationGrantListResponse = response.body()
+                val responseJson: CollectionGrantResponse = response.body()
                 responseJson.data.size shouldBe 1
                 responseJson.data[0].apply {
                     id shouldBe "123e4567-e89b-12d3-a456-426614174000"
@@ -485,7 +567,7 @@ class AuthorizationGrantRouteTest : FunSpec({
             }
 
             test("Should return empty list when authorized person has no grants") {
-                PdpTestContainerExtension.registerEnduserMapping(
+                pdpContainer.registerEnduserMapping(
                     token = "enduser-no-grants",
                     partyId = "4e55f1e2-e576-23ab-80d3-c70a6fe354c0"
                 )
@@ -495,7 +577,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                 }
 
                 response.status shouldBe HttpStatusCode.OK
-                val responseJson: AuthorizationGrantListResponse = response.body()
+                val responseJson: CollectionGrantResponse = response.body()
                 responseJson.data.size shouldBe 0
             }
         }
@@ -507,8 +589,7 @@ class AuthorizationGrantRouteTest : FunSpec({
 
             test("Should update status and return updated object as response") {
                 val response = client.patch("$GRANTS_PATH/123e4567-e89b-12d3-a456-426614174000") {
-                    header(HttpHeaders.Authorization, "Bearer maskinporten")
-                    header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                    header(HttpHeaders.Authorization, "Bearer elhub-service")
                     contentType(ContentType.Application.Json)
                     setBody(
                         JsonApiConsumeRequest(
@@ -523,7 +604,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                 }
 
                 response.status shouldBe HttpStatusCode.OK
-                val patchGrantResponse: GrantResponse = response.body()
+                val patchGrantResponse: SingleGrantResponse = response.body()
 
                 patchGrantResponse.data.apply {
                     type shouldBe "AuthorizationGrant"

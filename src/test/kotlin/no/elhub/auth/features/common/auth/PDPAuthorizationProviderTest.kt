@@ -16,6 +16,7 @@ import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.request.ApplicationRequest
+import io.ktor.util.Attributes
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.serialization.json.Json
@@ -34,16 +35,16 @@ val validHeadersForMaskinporten = headersOf(
 
 class PDPAuthorizationProviderTest : FunSpec({
 
-    context("authorize") {
+    context("authorizeEndUserOrMaskinporten") {
         test("returns AuthorizedOrganizationEntity when PDP reports maskinporten token") {
             val response = runProviderMethod(
-                method = PDPAuthorizationProvider::authorize,
+                method = PDPAuthorizationProvider::authorizeEndUserOrMaskinporten,
                 headers = validHeadersForMaskinporten,
                 pdpResponse = maskinportenResponse()
             )
 
             response.shouldBeRight(
-                AuthorizedParty.AuthorizedOrganizationEntity(
+                AuthorizedParty.OrganizationEntity(
                     gln = "0107000000021",
                     role = RoleType.BalanceSupplier
                 )
@@ -53,17 +54,66 @@ class PDPAuthorizationProviderTest : FunSpec({
         test("returns AuthorizedPerson when PDP reports enduser token") {
             val partyId = "a8098c1a-f86e-11da-bd1a-00112444be1e"
             val response = runProviderMethod(
-                method = PDPAuthorizationProvider::authorize,
+                method = PDPAuthorizationProvider::authorizeEndUserOrMaskinporten,
                 headers = authorizationOnlyHeaders(),
                 pdpResponse = endUserResponse(partyId = partyId)
             )
 
-            response.shouldBeRight(AuthorizedParty.AuthorizedPerson(UUID.fromString(partyId)))
+            response.shouldBeRight(AuthorizedParty.Person(UUID.fromString(partyId)))
         }
 
         test("returns InvalidToken for unsupported tokenType") {
             val response = runProviderMethod(
-                method = PDPAuthorizationProvider::authorize,
+                method = PDPAuthorizationProvider::authorizeEndUserOrMaskinporten,
+                headers = validHeadersForMaskinporten,
+                pdpResponse = maskinportenResponse(tokenType = "unknown")
+            )
+
+            response.shouldBeLeft(AuthError.InvalidToken)
+        }
+    }
+
+    context("authorizeAll") {
+        test("returns AuthorizedOrganizationEntity when PDP reports maskinporten token") {
+            val response = runProviderMethod(
+                method = PDPAuthorizationProvider::authorizeAll,
+                headers = validHeadersForMaskinporten,
+                pdpResponse = maskinportenResponse()
+            )
+
+            response.shouldBeRight(
+                AuthorizedParty.OrganizationEntity(
+                    gln = "0107000000021",
+                    role = RoleType.BalanceSupplier
+                )
+            )
+        }
+
+        test("returns AuthorizedPerson when PDP reports enduser token") {
+            val partyId = "a8098c1a-f86e-11da-bd1a-00112444be1e"
+            val response = runProviderMethod(
+                method = PDPAuthorizationProvider::authorizeAll,
+                headers = authorizationOnlyHeaders(),
+                pdpResponse = endUserResponse(partyId = partyId)
+            )
+
+            response.shouldBeRight(AuthorizedParty.Person(UUID.fromString(partyId)))
+        }
+
+        test("returns AuthorizedSystem when PDP reports elhub-service token") {
+            val partyId = "system-123"
+            val response = runProviderMethod(
+                method = PDPAuthorizationProvider::authorizeAll,
+                headers = authorizationOnlyHeaders(),
+                pdpResponse = elhubServiceResponse(partyId = partyId)
+            )
+
+            response.shouldBeRight(AuthorizedParty.System(partyId))
+        }
+
+        test("returns InvalidToken for unsupported tokenType") {
+            val response = runProviderMethod(
+                method = PDPAuthorizationProvider::authorizeAll,
                 headers = validHeadersForMaskinporten,
                 pdpResponse = maskinportenResponse(tokenType = "unknown")
             )
@@ -135,7 +185,7 @@ class PDPAuthorizationProviderTest : FunSpec({
                 pdpResponse = maskinportenResponse()
             )
             response.shouldBeRight(
-                AuthorizedParty.AuthorizedOrganizationEntity(
+                AuthorizedParty.OrganizationEntity(
                     gln = "0107000000021",
                     role = RoleType.BalanceSupplier
                 )
@@ -228,7 +278,40 @@ class PDPAuthorizationProviderTest : FunSpec({
                 pdpResponse = endUserResponse(partyId = partyId)
             )
 
-            response.shouldBeRight(AuthorizedParty.AuthorizedPerson(UUID.fromString(partyId)))
+            response.shouldBeRight(AuthorizedParty.Person(UUID.fromString(partyId)))
+        }
+    }
+
+    context("authorizeElhubService") {
+        test("returns NotAuthorized when tokenType is not elhub-service") {
+            val response = runProviderMethod(
+                method = PDPAuthorizationProvider::authorizeElhubService,
+                headers = authorizationOnlyHeaders(),
+                pdpResponse = endUserResponse()
+            )
+
+            response.shouldBeLeft(AuthError.NotAuthorized)
+        }
+
+        test("returns UnknownError when partyId is missing") {
+            val response = runProviderMethod(
+                method = PDPAuthorizationProvider::authorizeElhubService,
+                headers = authorizationOnlyHeaders(),
+                pdpResponse = elhubServiceResponse(partyId = null)
+            )
+
+            response.shouldBeLeft(AuthError.UnknownError)
+        }
+
+        test("returns AuthorizedSystem when partyId is present") {
+            val partyId = "system-123"
+            val response = runProviderMethod(
+                method = PDPAuthorizationProvider::authorizeElhubService,
+                headers = authorizationOnlyHeaders(),
+                pdpResponse = elhubServiceResponse(partyId = partyId)
+            )
+
+            response.shouldBeRight(AuthorizedParty.System(partyId))
         }
     }
 })
@@ -239,6 +322,7 @@ private fun mockCall(headers: Headers): ApplicationCall {
     val request = mockk<ApplicationRequest>()
     every { request.headers } returns headers
     val call = mockk<ApplicationCall>()
+    every { call.attributes } returns Attributes()
     every { call.request } returns request
     return call
 }
@@ -299,6 +383,20 @@ private fun endUserResponse(
     tokenStatus: String = "verified",
     partyId: String? = "a8098c1a-f86e-11da-bd1a-00112444be1e",
     tokenType: String? = TokenType.ENDUSER.value,
+) = PdpResponse(
+    result = Result(
+        tokenInfo = TokenInfo(
+            tokenStatus = tokenStatus,
+            partyId = partyId,
+            tokenType = tokenType
+        )
+    )
+)
+
+private fun elhubServiceResponse(
+    tokenStatus: String = "verified",
+    partyId: String? = "system-123",
+    tokenType: String? = TokenType.ELHUB_SERVICE.value,
 ) = PdpResponse(
     result = Result(
         tokenInfo = TokenInfo(

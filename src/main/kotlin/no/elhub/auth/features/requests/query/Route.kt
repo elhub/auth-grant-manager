@@ -5,13 +5,41 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
+import no.elhub.auth.features.common.auth.AuthorizationProvider
+import no.elhub.auth.features.common.auth.AuthorizedParty
+import no.elhub.auth.features.common.auth.toApiErrorResponse
+import no.elhub.auth.features.common.party.AuthorizationParty
+import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.requests.query.dto.toGetCollectionResponse
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 
-fun Route.route(handler: Handler) {
+fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
     get {
-        val requests = handler(Query())
+        val authorizedParty = authProvider.authorizeEndUserOrMaskinporten(call)
+            .getOrElse { err ->
+                val (status, body) = err.toApiErrorResponse()
+                call.respond(status, body)
+                return@get
+            }
+
+        val query = when (authorizedParty) {
+            is AuthorizedParty.OrganizationEntity -> Query(
+                authorizedParty = AuthorizationParty(
+                    resourceId = authorizedParty.gln,
+                    type = PartyType.OrganizationEntity
+                )
+            )
+
+            is AuthorizedParty.Person -> Query(
+                authorizedParty = AuthorizationParty(
+                    resourceId = authorizedParty.id.toString(),
+                    type = PartyType.Person
+                )
+            )
+        }
+
+        val requests = handler(query)
             .getOrElse { err ->
                 val (status, body) = err.toApiErrorResponse()
                 call.respond(status, JsonApiErrorCollection(listOf(body)))

@@ -8,9 +8,10 @@ import io.ktor.server.response.respondBytes
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import no.elhub.auth.features.common.auth.AuthorizationProvider
+import no.elhub.auth.features.common.auth.AuthorizedParty
 import no.elhub.auth.features.common.auth.toApiErrorResponse
-import no.elhub.auth.features.common.party.PartyIdentifier
-import no.elhub.auth.features.common.party.PartyIdentifierType
+import no.elhub.auth.features.common.party.AuthorizationParty
+import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.common.validateId
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
@@ -20,10 +21,10 @@ const val DOCUMENT_ID_PARAM = "id"
 
 fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
     get("/{$DOCUMENT_ID_PARAM}") {
-        val resolvedActor = authProvider.authorizeMaskinporten(call)
-            .getOrElse {
-                val error = it.toApiErrorResponse()
-                call.respond(error.first, error.second)
+        val authorizedParty = authProvider.authorizeEndUserOrMaskinporten(call)
+            .getOrElse { err ->
+                val (status, body) = err.toApiErrorResponse()
+                call.respond(status, body)
                 return@get
             }
 
@@ -34,8 +35,25 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
                 return@get
             }
 
-        val requestedBy = PartyIdentifier(idType = PartyIdentifierType.GlobalLocationNumber, idValue = resolvedActor.gln)
-        val document = handler(Query(documentId = id, requestedByIdentifier = requestedBy))
+        val query = when (authorizedParty) {
+            is AuthorizedParty.OrganizationEntity -> Query(
+                documentId = id,
+                authorizedParty = AuthorizationParty(
+                    resourceId = authorizedParty.gln,
+                    type = PartyType.OrganizationEntity
+                )
+            )
+
+            is AuthorizedParty.Person -> Query(
+                documentId = id,
+                authorizedParty = AuthorizationParty(
+                    resourceId = authorizedParty.id.toString(),
+                    type = PartyType.Person
+                )
+            )
+        }
+
+        val document = handler(query)
             .getOrElse { err ->
                 val (status, body) = err.toApiErrorResponse()
                 call.respond(status, JsonApiErrorCollection(listOf(body)))
@@ -49,10 +67,10 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
     }
 
     get("/{$DOCUMENT_ID_PARAM}.pdf") {
-        val resolvedActor = authProvider.authorizeMaskinporten(call)
-            .getOrElse {
-                val error = it.toApiErrorResponse()
-                call.respond(error.first, error.second)
+        val authorizedParty = authProvider.authorizeEndUserOrMaskinporten(call)
+            .getOrElse { err ->
+                val (status, body) = err.toApiErrorResponse()
+                call.respond(status, body)
                 return@get
             }
 
@@ -63,8 +81,25 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
                 return@get
             }
 
-        val requestedBy = PartyIdentifier(idType = PartyIdentifierType.GlobalLocationNumber, idValue = resolvedActor.gln)
-        val document = handler(Query(documentId = id, requestedByIdentifier = requestedBy))
+        val query = when (authorizedParty) {
+            is AuthorizedParty.OrganizationEntity -> Query(
+                documentId = id,
+                authorizedParty = AuthorizationParty(
+                    resourceId = authorizedParty.gln,
+                    type = PartyType.OrganizationEntity
+                )
+            )
+
+            is AuthorizedParty.Person -> Query(
+                documentId = id,
+                authorizedParty = AuthorizationParty(
+                    resourceId = authorizedParty.id.toString(),
+                    type = PartyType.Person
+                )
+            )
+        }
+
+        val document = handler(query)
             .getOrElse { err ->
                 val (status, body) = err.toApiErrorResponse()
                 call.respond(status, JsonApiErrorCollection(listOf(body)))

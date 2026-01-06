@@ -26,12 +26,14 @@ import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.batchInsert
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.insertReturning
-import org.jetbrains.exposed.sql.javatime.datetime
 import org.jetbrains.exposed.sql.javatime.timestamp
+import org.jetbrains.exposed.sql.javatime.timestampWithTimeZone
+import org.jetbrains.exposed.sql.or
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.update
-import java.time.LocalDateTime
+import java.time.OffsetDateTime
+import java.time.ZoneId
 import java.util.UUID
 
 interface DocumentRepository {
@@ -167,7 +169,7 @@ class ExposedDocumentRepository(
                             ) {
                                 it[status] = AuthorizationDocument.Status.Signed
                                 it[file] = signedFile
-                                it[updatedAt] = LocalDateTime.now()
+                                it[updatedAt] = OffsetDateTime.now(ZoneId.of("Europe/Oslo"))
                             }
                         }
                     }.mapLeft {
@@ -206,7 +208,7 @@ class ExposedDocumentRepository(
 
             val documentWithSignatoryRecords = (AuthorizationDocumentTable leftJoin SignatoriesTable)
                 .select(AuthorizationDocumentTable.columns + SignatoriesTable.signedBy)
-                .where { AuthorizationDocumentTable.requestedBy eq partyRecord.id }
+                .where { (AuthorizationDocumentTable.requestedBy eq partyRecord.id) or (AuthorizationDocumentTable.requestedFrom eq partyRecord.id) }
                 .toList()
 
             if (documentWithSignatoryRecords.isEmpty()) {
@@ -270,8 +272,8 @@ object AuthorizationDocumentTable : UUIDTable("auth.authorization_document") {
     val requestedBy = uuid("requested_by").references(AuthorizationPartyTable.id)
     val requestedFrom = uuid("requested_from").references(AuthorizationPartyTable.id)
     val requestedTo = uuid("requested_to").references(AuthorizationPartyTable.id)
-    val createdAt = datetime("created_at")
-    val updatedAt = datetime("updated_at")
+    val createdAt = timestampWithTimeZone("created_at").default(OffsetDateTime.now(ZoneId.of("Europe/Oslo")))
+    val updatedAt = timestampWithTimeZone("updated_at").default(OffsetDateTime.now(ZoneId.of("Europe/Oslo")))
 }
 
 object AuthorizationDocumentScopeTable : Table("auth.authorization_document_scope") {

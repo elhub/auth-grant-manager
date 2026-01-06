@@ -7,15 +7,5 @@ import java.util.UUID
 class UpdateCommand(
     val requestId: UUID,
     val newStatus: AuthorizationRequest.Status,
+    val authorizedParty: AuthorizationParty
 )
-
-sealed class UpdateRequestCommand {
-    data class Accept(
-        val requestId: UUID,
-        val approvedBy: AuthorizationParty
-    ) : UpdateRequestCommand()
-
-    data class Reject(
-        val requestId: UUID
-    ) : UpdateRequestCommand()
-}

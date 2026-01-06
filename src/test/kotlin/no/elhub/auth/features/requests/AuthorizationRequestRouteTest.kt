@@ -1,24 +1,30 @@
 package no.elhub.auth.features.requests
 
+import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.ktor.client.call.body
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
+import io.ktor.client.request.header
 import io.ktor.client.request.patch
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.config.MapApplicationConfig
+import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import no.elhub.auth.features.common.AuthPersonsTestContainer
 import no.elhub.auth.features.common.AuthPersonsTestContainerExtension
+import no.elhub.auth.features.common.PdpTestContainerExtension
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.RunPostgresScriptExtension
+import no.elhub.auth.features.common.auth.PDPAuthorizationProvider
 import no.elhub.auth.features.common.commonModule
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
@@ -35,100 +41,458 @@ import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObject
 import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObjectWithMeta
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import no.elhub.devxp.jsonapi.response.JsonApiErrorObject
+import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
 import no.elhub.auth.module as applicationModule
 
-class AuthorizationRequestRouteTest :
-    FunSpec({
-        extensions(
-            AuthPersonsTestContainerExtension,
-            PostgresTestContainerExtension(),
-            RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-party.sql"),
-            RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-scopes.sql"),
-            RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-requests.sql"),
-            RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-grants.sql"),
-        )
+class AuthorizationRequestRouteTest : FunSpec({
+    val pdpContainer = PdpTestContainerExtension()
+    extensions(
+        AuthPersonsTestContainerExtension,
+        PostgresTestContainerExtension(),
+        RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-party.sql"),
+        RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-scopes.sql"),
+        RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-requests.sql"),
+        RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-grants.sql"),
+        pdpContainer
+    )
 
-        context("GET /authorization-requests") {
-            testApplication {
-                client =
-                    createClient {
-                        install(ContentNegotiation) {
-                            json()
+    beforeSpec {
+        pdpContainer.registerMaskinportenMapping(
+            token = "maskinporten",
+            actingFunction = "BalanceSupplier",
+            actingGln = "0107000000021"
+        )
+        pdpContainer.registerEnduserMapping(
+            token = "enduser",
+            partyId = "17abdc56-8f6f-440a-9f00-b9bfbb22065e"
+        )
+    }
+
+    context("GET /authorization-requests") {
+        testApplication {
+            setUpAuthorizationRequestTestApplication()
+
+            test("Should return only requests for authenticated organization when using Maskinporten token") {
+                val response = client.get(REQUESTS_PATH) {
+                    header(HttpHeaders.Authorization, "Bearer maskinporten")
+                    header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                }
+                response.status shouldBe HttpStatusCode.OK
+                val responseJson: GetRequestCollectionResponse = response.body()
+                responseJson.data.apply {
+                    size shouldBe 1
+                }
+            }
+
+            test("Should return only requests for authenticated end user when using end-user token") {
+                val response = client.get(REQUESTS_PATH) {
+                    header(HttpHeaders.Authorization, "Bearer enduser")
+                }
+
+                response.status shouldBe HttpStatusCode.OK
+                val responseJson: GetRequestCollectionResponse = response.body()
+
+                responseJson.data.apply {
+                    size shouldBe 3
+
+                    forEach { item ->
+                        item.relationships.shouldNotBeNull().apply {
+                            requestedTo.data.apply {
+                                id shouldBe "17abdc56-8f6f-440a-9f00-b9bfbb22065e"
+                                type shouldBe "Person"
+                            }
                         }
                     }
+                }
+            }
 
-                application {
-                    applicationModule()
-                    commonModule()
-                    module()
+            test("Should return empty list when authorized organization has no requests") {
+                pdpContainer.registerMaskinportenMapping(
+                    token = "no-requests",
+                    actingGln = "0107000000022",
+                    actingFunction = "BalanceSupplier",
+                )
+
+                val response = client.get(REQUESTS_PATH) {
+                    header(HttpHeaders.Authorization, "Bearer no-requests")
+                    header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000022")
                 }
 
-                environment {
-                    config =
-                        MapApplicationConfig(
-                            "ktor.database.username" to "app",
-                            "ktor.database.password" to "app",
-                            "ktor.database.url" to "jdbc:postgresql://localhost:5432/auth",
-                            "ktor.database.driverClass" to "org.postgresql.Driver",
-                            "featureToggle.enableEndpoints" to "true",
-                            "authPersons.baseUri" to AuthPersonsTestContainer.baseUri(),
-                        )
-                }
+                response.status shouldBe HttpStatusCode.OK
+                val responseJson: GetRequestCollectionResponse = response.body()
 
-                test("GET all authorization request should return 200 OK") {
-                    val response = client.get(REQUESTS_PATH)
-                    response.status shouldBe HttpStatusCode.OK
-                    val responseJson: GetRequestCollectionResponse = response.body()
-                    responseJson.data.apply {
-                        size shouldBe 5
+                responseJson.data.apply {
+                    size shouldBe 0
+                }
+            }
+        }
+    }
+
+    context("GET /authorization-requests/{id}") {
+        testApplication {
+            setUpAuthorizationRequestTestApplication()
+
+            test("Should return the request for authenticated organization when using Maskinporten token") {
+                val response = client.get("$REQUESTS_PATH/4f71d596-99e4-415e-946d-7252c1a40c50") {
+                    header(HttpHeaders.Authorization, "Bearer maskinporten")
+                    header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                }
+                response.status shouldBe HttpStatusCode.OK
+                val responseJson: GetRequestSingleResponse = response.body()
+                responseJson.data.apply {
+                    id.shouldNotBeNull()
+                    type shouldBe "AuthorizationRequest"
+                    attributes.shouldNotBeNull().apply {
+                        requestType shouldBe "ChangeOfSupplierConfirmation"
+                        status shouldBe "Accepted"
+                        validTo.shouldNotBeNull()
+                    }
+                    relationships.shouldNotBeNull().apply {
+                        requestedBy.apply {
+                            data.apply {
+                                id shouldBe "987654321"
+                                type shouldBe "Organization"
+                            }
+                        }
+                        requestedFrom.apply {
+                            data.apply {
+                                id shouldBe "0107000000021"
+                                type shouldBe "OrganizationEntity"
+                            }
+                        }
+                        requestedTo.apply {
+                            data.apply {
+                                id shouldBe "0107000000021"
+                                type shouldBe "OrganizationEntity"
+                            }
+                        }
+                        approvedBy.shouldNotBeNull().apply {
+                            data.apply {
+                                id shouldBe "0107000000021"
+                                type shouldBe "OrganizationEntity"
+                            }
+                        }
+                        grant.shouldNotBeNull().apply {
+                            data.apply {
+                                id.shouldNotBeNull()
+                                type shouldBe "AuthorizationGrant"
+                            }
+                            links.shouldNotBeNull()
+                        }
+                    }
+                    links.shouldNotBeNull().apply {
+                        self.shouldNotBeNull()
+                    }
+                    meta.shouldNotBeNull().apply {
+                        val createdAt = values["createdAt"].shouldNotBeNull()
+                        val updatedAt = values["updatedAt"].shouldNotBeNull()
+
+                        shouldNotThrowAny {
+                            OffsetDateTime.parse(createdAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                            OffsetDateTime.parse(updatedAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                        }
+
+                        values["requestedFromName"] shouldBe "Kari Normann"
+                        values["requestedForMeteringPointId"] shouldBe "1234567890123"
+                        values["requestedForMeteringPointAddress"] shouldBe "Example Street 1, 1234 Oslo"
+                        values["balanceSupplierName"] shouldBe "Example Energy AS"
+                        values["balanceSupplierContractName"] shouldBe "ExampleSupplierContract"
+                    }
+                }
+                responseJson.links.apply {
+                    self shouldBe "$REQUESTS_PATH/4f71d596-99e4-415e-946d-7252c1a40c50"
+                }
+                responseJson.meta.apply {
+                    "createdAt".shouldNotBeNull()
+                }
+            }
+
+            test("Should return the request for authenticated end user when using end-user token") {
+                val response = client.get("$REQUESTS_PATH/4f71d596-99e4-415e-946d-7352c1a40c53") {
+                    header(HttpHeaders.Authorization, "Bearer enduser")
+                }
+                response.status shouldBe HttpStatusCode.OK
+                val responseJson: GetRequestSingleResponse = response.body()
+                responseJson.data.apply {
+                    id.shouldNotBeNull()
+                    type shouldBe "AuthorizationRequest"
+                    attributes.shouldNotBeNull().apply {
+                        requestType shouldBe "ChangeOfSupplierConfirmation"
+                        status shouldBe "Pending"
+                        validTo.shouldNotBeNull()
+                    }
+                    relationships.shouldNotBeNull().apply {
+                        requestedBy.apply {
+                            data.apply {
+                                id shouldBe "987654321"
+                                type shouldBe "Organization"
+                            }
+                        }
+                        requestedFrom.apply {
+                            data.apply {
+                                id shouldBe "17abdc56-8f6f-440a-9f00-b9bfbb22065e"
+                                type shouldBe "Person"
+                            }
+                        }
+                        requestedTo.apply {
+                            data.apply {
+                                id shouldBe "17abdc56-8f6f-440a-9f00-b9bfbb22065e"
+                                type shouldBe "Person"
+                            }
+                        }
+                    }
+                    links.shouldNotBeNull().apply {
+                        self.shouldNotBeNull()
+                    }
+                    meta.shouldNotBeNull().apply {
+                        val createdAt = values["createdAt"].shouldNotBeNull()
+                        val updatedAt = values["updatedAt"].shouldNotBeNull()
+                        shouldNotThrowAny {
+                            OffsetDateTime.parse(createdAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                            OffsetDateTime.parse(updatedAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                        }
+                        values["requestedFromName"] shouldBe "Ola Normann"
+                        values["requestedForMeteringPointId"] shouldBe "1234567890123"
+                        values["requestedForMeteringPointAddress"] shouldBe "Example Street 1, 1234 Oslo"
+                        values["balanceSupplierName"] shouldBe "Example Energy AS"
+                        values["balanceSupplierContractName"] shouldBe "ExampleSupplierContract"
+                    }
+                    links.shouldNotBeNull().apply {
+                        self.shouldNotBeNull()
+                    }
+                }
+                responseJson.links.apply {
+                    self shouldBe "$REQUESTS_PATH/4f71d596-99e4-415e-946d-7352c1a40c53"
+                }
+                responseJson.meta.apply {
+                    "createdAt".shouldNotBeNull()
+                }
+            }
+
+            test("Should return 404 on a nonexistent ID") {
+                val response = client.get("$REQUESTS_PATH/167b1be9-f563-4b31-af1a-50439d567ee5") {
+                    header(HttpHeaders.Authorization, "Bearer maskinporten")
+                    header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                }
+                response.status shouldBe HttpStatusCode.NotFound
+                val responseJson: JsonApiErrorCollection = response.body()
+                responseJson.errors.apply {
+                    size shouldBe 1
+                    this[0].apply {
+                        status shouldBe "404"
+                        code shouldBe "NOT_FOUND"
+                        title shouldBe "Not Found"
+                        detail shouldBe "The requested resource could not be found"
+                    }
+                }
+            }
+
+            test("Should return 403 when the request does not belong to the requester using maskinporten token") {
+                val response = client.get("$REQUESTS_PATH/4f71d596-99e4-415e-946d-7352c1a40c53") {
+                    header(HttpHeaders.Authorization, "Bearer maskinporten")
+                    header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                }
+                response.status shouldBe HttpStatusCode.Forbidden
+                val responseJson: JsonApiErrorCollection = response.body()
+                responseJson.errors.apply {
+                    size shouldBe 1
+                    this[0].apply {
+                        status shouldBe "403"
+                        code shouldBe "NOT_AUTHORIZED"
+                        title shouldBe "Party Not Authorized"
+                        detail shouldBe "The party is not allowed to access this resource"
+                    }
+                }
+            }
+
+            test("Should return 403 when the request does not belong to the requester using end user token") {
+                val response = client.get("$REQUESTS_PATH/3f2c9e6b-7a4d-4f1a-9b6e-8c1d2a5e9f47") {
+                    header(HttpHeaders.Authorization, "Bearer enduser")
+                }
+                response.status shouldBe HttpStatusCode.Forbidden
+                val responseJson: JsonApiErrorCollection = response.body()
+                responseJson.errors.apply {
+                    size shouldBe 1
+                    this[0].apply {
+                        status shouldBe "403"
+                        code shouldBe "NOT_AUTHORIZED"
+                        title shouldBe "Party Not Authorized"
+                        detail shouldBe "The party is not allowed to access this resource"
                     }
                 }
             }
         }
+    }
 
-        context("GET /authorization-requests/{id}") {
-            testApplication {
-                client =
-                    createClient {
-                        install(ContentNegotiation) {
-                            json()
-                        }
-                    }
+    context("POST /authorization-requests") {
+        testApplication {
+            setUpAuthorizationRequestTestApplication()
 
-                application {
-                    applicationModule()
-                    commonModule()
-                    module()
-                }
-
-                environment {
-                    config =
-                        MapApplicationConfig(
-                            "ktor.database.username" to "app",
-                            "ktor.database.password" to "app",
-                            "ktor.database.url" to "jdbc:postgresql://localhost:5432/auth",
-                            "ktor.database.driverClass" to "org.postgresql.Driver",
-                            "featureToggle.enableEndpoints" to "true",
-                            "authPersons.baseUri" to AuthPersonsTestContainer.baseUri(),
+            test("Should return 201 Created") {
+                val response =
+                    client.post(REQUESTS_PATH) {
+                        header(HttpHeaders.Authorization, "Bearer maskinporten")
+                        header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                        contentType(ContentType.Application.Json)
+                        setBody(
+                            JsonApiCreateRequest(
+                                data =
+                                JsonApiRequestResourceObjectWithMeta(
+                                    type = "AuthorizationRequest",
+                                    attributes =
+                                    CreateRequestAttributes(
+                                        requestType = AuthorizationRequest.Type.ChangeOfSupplierConfirmation,
+                                    ),
+                                    meta =
+                                    CreateRequestMeta(
+                                        requestedBy = PartyIdentifier(PartyIdentifierType.OrganizationNumber, "987654321"),
+                                        requestedFrom = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "12345678901"),
+                                        requestedFromName = "Hillary Orr",
+                                        requestedTo = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "12345678902"),
+                                        requestedForMeteringPointId = "123456789012345678",
+                                        requestedForMeteringPointAddress = "quaerendum",
+                                        balanceSupplierName = "Balance Supplier",
+                                        balanceSupplierContractName = "Selena Chandler",
+                                    ),
+                                ),
+                            ),
                         )
-                }
+                    }
 
-                test("Should return 200 OK on a valid ID before request is accepted") {
-                    val response = client.get("$REQUESTS_PATH/d81e5bf2-8a0c-4348-a788-2a3fab4e77d6")
-                    response.status shouldBe HttpStatusCode.OK
+                response.status shouldBe HttpStatusCode.Created
 
-                    val responseJson: GetRequestSingleResponse = response.body()
-                    responseJson.data.apply {
-                        id.shouldNotBeNull()
-                        type shouldBe "AuthorizationRequest"
-                        attributes.shouldNotBeNull().apply {
-                            requestType shouldBe "ChangeOfSupplierConfirmation"
-                            status shouldBe "Pending"
-                            createdAt.shouldNotBeNull()
-                            updatedAt.shouldNotBeNull()
-                            validTo.shouldNotBeNull()
+                val responseJson: CreateRequestResponse = response.body()
+                responseJson.data.apply {
+                    id.shouldNotBeNull()
+                    type shouldBe "AuthorizationRequest"
+                    attributes.shouldNotBeNull().apply {
+                        requestType shouldBe "ChangeOfSupplierConfirmation"
+                        status shouldBe AuthorizationRequest.Status.Pending.name
+                        validTo.shouldNotBeNull()
+                    }
+                    relationships.shouldNotBeNull().apply {
+                        relationships.apply {
+                            requestedBy.apply {
+                                data.apply {
+                                    id shouldBe "987654321"
+                                    type shouldBe "Organization"
+                                }
+                            }
+                            requestedFrom.apply {
+                                data.apply {
+                                    id.shouldNotBeNull()
+                                    type shouldBe "Person"
+                                }
+                            }
+                            requestedFrom.apply {
+                                data.apply {
+                                    id.shouldNotBeNull()
+                                    type shouldBe "Person"
+                                }
+                            }
                         }
-                        relationships.shouldNotBeNull().apply {
+                    }
+                    meta.shouldNotBeNull().apply {
+                        val createdAt = values["createdAt"].shouldNotBeNull()
+                        val updatedAt = values["updatedAt"].shouldNotBeNull()
+
+                        shouldNotThrowAny {
+                            OffsetDateTime.parse(createdAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                            OffsetDateTime.parse(updatedAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                        }
+
+                        values["requestedFromName"] shouldBe "Hillary Orr"
+                        values["requestedForMeteringPointId"] shouldBe "123456789012345678"
+                        values["requestedForMeteringPointAddress"] shouldBe "quaerendum"
+                        values["balanceSupplierName"] shouldBe "Balance Supplier"
+                        values["balanceSupplierContractName"] shouldBe "Selena Chandler"
+                    }
+                    links.shouldNotBeNull().apply {
+                        self.shouldNotBeNull()
+                    }
+                }
+                responseJson.links.shouldNotBeNull().apply {
+                    self.shouldNotBeNull()
+                }
+                responseJson.meta.shouldNotBeNull().apply {
+                    "createdAt".shouldNotBeNull()
+                }
+            }
+
+            test("Should return 400 Bad Request on validation error with error payload") {
+                val response =
+                    client.post(REQUESTS_PATH) {
+                        header(HttpHeaders.Authorization, "Bearer maskinporten")
+                        header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                        contentType(ContentType.Application.Json)
+                        setBody(
+                            JsonApiCreateRequest(
+                                data =
+                                JsonApiRequestResourceObjectWithMeta(
+                                    type = "AuthorizationRequest",
+                                    attributes =
+                                    CreateRequestAttributes(
+                                        requestType = AuthorizationRequest.Type.ChangeOfSupplierConfirmation,
+                                    ),
+                                    meta =
+                                    CreateRequestMeta(
+                                        requestedBy = PartyIdentifier(PartyIdentifierType.OrganizationNumber, "987654321"),
+                                        requestedFrom = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "12345678901"),
+                                        requestedFromName = "",
+                                        requestedTo = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "12345678902"),
+                                        requestedForMeteringPointId = "123456789012345678",
+                                        requestedForMeteringPointAddress = "quaerendum",
+                                        balanceSupplierName = "Balance Supplier",
+                                        balanceSupplierContractName = "Selena Chandler",
+                                    ),
+                                ),
+                            ),
+                        )
+                    }
+
+                response.status shouldBe HttpStatusCode.BadRequest
+                val body = response.body<JsonApiErrorObject>()
+                body.status shouldBe "400"
+                body.code shouldBe "missing_requested_from_name"
+                body.title shouldBe "Validation Error"
+                body.detail shouldBe "Requested from name is missing"
+            }
+        }
+    }
+
+    context("PATCH /authorization-requests/{ID}") {
+        testApplication {
+            setUpAuthorizationRequestTestApplication()
+
+            test("Should accept authorization request and persist grant relationship") {
+                val patchResult =
+                    client.patch("${REQUESTS_PATH}/d81e5bf2-8a0c-4348-a788-2a3fab4e77d6") {
+                        header(HttpHeaders.Authorization, "Bearer enduser")
+                        contentType(ContentType.Application.Json)
+                        setBody(
+                            JsonApiUpdateRequest(
+                                data = JsonApiRequestResourceObject(
+                                    type = "AuthorizationRequest",
+                                    attributes = UpdateRequestAttributes(
+                                        status = AuthorizationRequest.Status.Accepted
+                                    )
+                                )
+                            ),
+                        )
+                    }
+
+                patchResult.status shouldBe HttpStatusCode.OK
+                val patchResponse: UpdateRequestResponse = patchResult.body()
+
+                patchResponse.data.apply {
+                    type shouldBe "AuthorizationRequest"
+                    id.shouldNotBeNull()
+                    attributes.shouldNotBeNull().apply {
+                        status shouldBe "Accepted"
+                    }
+                    relationships.shouldNotBeNull().apply {
+                        relationships.apply {
                             requestedBy.apply {
                                 data.apply {
                                     id shouldBe "987654321"
@@ -143,71 +507,13 @@ class AuthorizationRequestRouteTest :
                             }
                             requestedTo.apply {
                                 data.apply {
-                                    id shouldBe "4e55f1e2-e576-23ab-80d3-c70a6fe354c0"
-                                    type shouldBe "Person"
-                                }
-                            }
-                        }
-                        links.shouldNotBeNull().apply {
-                            self.shouldNotBeNull()
-                        }
-                        meta.shouldNotBeNull().apply {
-                            values["createdAt"].shouldNotBeNull()
-                            values["updatedAt"].shouldNotBeNull()
-                            values["requestedFromName"] shouldBe "Ola Normann"
-                            values["requestedForMeteringPointId"] shouldBe "1234567890123"
-                            values["requestedForMeteringPointAddress"] shouldBe "Example Street 1, 1234 Oslo"
-                            values["balanceSupplierName"] shouldBe "Example Energy AS"
-                            values["balanceSupplierContractName"] shouldBe "ExampleSupplierContract"
-                        }
-                        links.shouldNotBeNull().apply {
-                            self.shouldNotBeNull()
-                        }
-                    }
-                    responseJson.links.apply {
-                        self shouldBe REQUESTS_PATH
-                    }
-                    responseJson.meta.apply {
-                        "createdAt".shouldNotBeNull()
-                    }
-                }
-
-                test("Should return 200 OK with approvedBy on a valid ID after request is accepted") {
-                    val response = client.get("$REQUESTS_PATH/4f71d596-99e4-415e-946d-7252c1a40c5b")
-                    response.status shouldBe HttpStatusCode.OK
-                    val responseJson: GetRequestSingleResponse = response.body()
-                    responseJson.data.apply {
-                        id.shouldNotBeNull()
-                        type shouldBe "AuthorizationRequest"
-                        attributes.shouldNotBeNull().apply {
-                            requestType shouldBe "ChangeOfSupplierConfirmation"
-                            status shouldBe "Accepted"
-                            createdAt.shouldNotBeNull()
-                            updatedAt.shouldNotBeNull()
-                            validTo.shouldNotBeNull()
-                        }
-                        relationships.shouldNotBeNull().apply {
-                            requestedBy.apply {
-                                data.apply {
-                                    id shouldBe "987654321"
-                                    type shouldBe "Organization"
-                                }
-                            }
-                            requestedFrom.apply {
-                                data.apply {
                                     id shouldBe "17abdc56-8f6f-440a-9f00-b9bfbb22065e"
-                                    type shouldBe "Person"
-                                }
-                            }
-                            requestedTo.apply {
-                                data.apply {
-                                    id shouldBe "4e55f1e2-e576-23ab-80d3-c70a6fe354c0"
                                     type shouldBe "Person"
                                 }
                             }
                             approvedBy.shouldNotBeNull().apply {
                                 data.apply {
-                                    id shouldBe "4e55f1e2-e576-23ab-80d3-c70a6fe354c0"
+                                    id shouldBe "17abdc56-8f6f-440a-9f00-b9bfbb22065e"
                                     type shouldBe "Person"
                                 }
                             }
@@ -218,440 +524,249 @@ class AuthorizationRequestRouteTest :
                                 }
                                 links.shouldNotBeNull()
                             }
-                        }
-                        links.shouldNotBeNull().apply {
-                            self.shouldNotBeNull()
-                        }
-                        meta.shouldNotBeNull().apply {
-                            values["createdAt"].shouldNotBeNull()
-                            values["updatedAt"].shouldNotBeNull()
-                            values["requestedFromName"] shouldBe "Kari Normann"
-                            values["requestedForMeteringPointId"] shouldBe "1234567890123"
-                            values["requestedForMeteringPointAddress"] shouldBe "Example Street 1, 1234 Oslo"
-                            values["balanceSupplierName"] shouldBe "Example Energy AS"
-                            values["balanceSupplierContractName"] shouldBe "ExampleSupplierContract"
-                        }
-                    }
-                    responseJson.links.apply {
-                        self shouldBe REQUESTS_PATH
-                    }
-                    responseJson.meta.apply {
-                        "createdAt".shouldNotBeNull()
-                    }
-                }
+                            meta.shouldNotBeNull().apply {
+                                val createdAt = values["createdAt"].shouldNotBeNull()
+                                val updatedAt = values["updatedAt"].shouldNotBeNull()
 
-                test("Should return 400 on an invalid ID format") {
-                    val response = client.get("$REQUESTS_PATH/invalid-id")
-                    response.status shouldBe HttpStatusCode.BadRequest
-                    val responseJson: JsonApiErrorCollection = response.body()
-                    responseJson.errors.apply {
-                        size shouldBe 1
-                        this[0].apply {
-                            status shouldBe "400"
-                            code shouldBe "INVALID_INPUT"
-                            title shouldBe "Invalid input"
-                            detail shouldBe "The provided payload did not satisfy the expected format"
+                                shouldNotThrowAny {
+                                    OffsetDateTime.parse(createdAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                                    OffsetDateTime.parse(updatedAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                                }
+                                values["requestedFromName"] shouldBe "Kasper Lind"
+                                values["requestedForMeteringPointId"] shouldBe "1234567890555"
+                                values["requestedForMeteringPointAddress"] shouldBe "Example Street 2, 0654 Oslo"
+                                values["balanceSupplierName"] shouldBe "Power AS"
+                                values["balanceSupplierContractName"] shouldBe "ExampleSupplierContract"
+                            }
                         }
                     }
                 }
 
-                test("Should return 404 on a nonexistent ID") {
-                    val response = client.get("$REQUESTS_PATH/167b1be9-f563-4b31-af1a-50439d567ee5")
-                    response.status shouldBe HttpStatusCode.NotFound
-                    val responseJson: JsonApiErrorCollection = response.body()
-                    responseJson.errors.apply {
-                        size shouldBe 1
-                        this[0].apply {
-                            status shouldBe "404"
-                            code shouldBe "NOT_FOUND"
-                            title shouldBe "Not Found"
-                            detail shouldBe "The requested resource could not be found"
+                // verify that a subsequent GET of this resource reflects the updated state persisted in the database
+                val getResult = client.get("${REQUESTS_PATH}/${patchResponse.data.id}") {
+                    header(HttpHeaders.Authorization, "Bearer enduser")
+                }
+                val getResponse: GetRequestSingleResponse = getResult.body()
+
+                getResponse.data.apply {
+                    type shouldBe "AuthorizationRequest"
+                    id.shouldNotBeNull()
+                    attributes.shouldNotBeNull().apply {
+                        status shouldBe "Accepted"
+                    }
+                    relationships.shouldNotBeNull().apply {
+                        relationships.apply {
+                            requestedBy.apply {
+                                data.apply {
+                                    id shouldBe "987654321"
+                                    type shouldBe "Organization"
+                                }
+                            }
+                            requestedFrom.apply {
+                                data.apply {
+                                    id shouldBe "17abdc56-8f6f-440a-9f00-b9bfbb22065e"
+                                    type shouldBe "Person"
+                                }
+                            }
+                            requestedTo.apply {
+                                data.apply {
+                                    id shouldBe "17abdc56-8f6f-440a-9f00-b9bfbb22065e"
+                                    type shouldBe "Person"
+                                }
+                            }
+                            approvedBy.shouldNotBeNull().apply {
+                                data.apply {
+                                    id shouldBe "17abdc56-8f6f-440a-9f00-b9bfbb22065e"
+                                    type shouldBe "Person"
+                                }
+                            }
+                            grant.shouldNotBeNull().apply {
+                                data.apply {
+                                    id.shouldNotBeNull()
+                                    type shouldBe "AuthorizationGrant"
+                                }
+                                links.shouldNotBeNull()
+                            }
+                            meta.shouldNotBeNull().apply {
+                                val createdAt = values["createdAt"].shouldNotBeNull()
+                                val updatedAt = values["updatedAt"].shouldNotBeNull()
+
+                                shouldNotThrowAny {
+                                    OffsetDateTime.parse(createdAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                                    OffsetDateTime.parse(updatedAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                                }
+                                values["requestedFromName"] shouldBe "Kasper Lind"
+                                values["requestedForMeteringPointId"] shouldBe "1234567890555"
+                                values["requestedForMeteringPointAddress"] shouldBe "Example Street 2, 0654 Oslo"
+                                values["balanceSupplierName"] shouldBe "Power AS"
+                                values["balanceSupplierContractName"] shouldBe "ExampleSupplierContract"
+                            }
                         }
                     }
                 }
             }
-        }
 
-        context("POST /authorization-requests") {
-            testApplication {
-                client = createClient { install(ContentNegotiation) { json() } }
-
-                application {
-                    applicationModule()
-                    commonModule()
-                    module()
-                }
-
-                environment {
-                    config =
-                        MapApplicationConfig(
-                            "ktor.database.username" to "app",
-                            "ktor.database.password" to "app",
-                            "ktor.database.url" to "jdbc:postgresql://localhost:5432/auth",
-                            "ktor.database.driverClass" to "org.postgresql.Driver",
-                            "featureToggle.enableEndpoints" to "true",
-                            "authPersons.baseUri" to AuthPersonsTestContainer.baseUri(),
+            test("Should reject authorization-request") {
+                val response =
+                    client.patch("${REQUESTS_PATH}/4f71d596-99e4-415e-946d-7352c1a40c53") {
+                        header(HttpHeaders.Authorization, "Bearer enduser")
+                        contentType(ContentType.Application.Json)
+                        setBody(
+                            JsonApiUpdateRequest(
+                                data = JsonApiRequestResourceObject(
+                                    type = "AuthorizationRequest",
+                                    attributes = UpdateRequestAttributes(
+                                        status = AuthorizationRequest.Status.Rejected
+                                    )
+                                )
+                            ),
                         )
-                }
+                    }
+                response.status shouldBe HttpStatusCode.OK
 
-                test("Should return 201 Created") {
-                    val response =
-                        client.post(REQUESTS_PATH) {
-                            contentType(ContentType.Application.Json)
-                            setBody(
-                                JsonApiCreateRequest(
-                                    data =
-                                    JsonApiRequestResourceObjectWithMeta(
-                                        type = "AuthorizationRequest",
-                                        attributes =
-                                        CreateRequestAttributes(
-                                            requestType = AuthorizationRequest.Type.ChangeOfSupplierConfirmation,
-                                        ),
-                                        meta =
-                                        CreateRequestMeta(
-                                            requestedBy = PartyIdentifier(PartyIdentifierType.OrganizationNumber, "987654321"),
-                                            requestedFrom = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "12345678901"),
-                                            requestedFromName = "Hillary Orr",
-                                            requestedTo = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "12345678902"),
-                                            requestedForMeteringPointId = "123456789012345678",
-                                            requestedForMeteringPointAddress = "quaerendum",
-                                            balanceSupplierName = "Balance Supplier",
-                                            balanceSupplierContractName = "Selena Chandler",
-                                        ),
-                                    ),
-                                ),
-                            )
-                        }
+                val patchRequestResponse: UpdateRequestResponse = response.body()
 
-                    response.status shouldBe HttpStatusCode.Created
-
-                    val responseJson: CreateRequestResponse = response.body()
-                    responseJson.data.apply {
-                        id.shouldNotBeNull()
-                        type shouldBe "AuthorizationRequest"
-                        attributes.shouldNotBeNull().apply {
-                            requestType shouldBe "ChangeOfSupplierConfirmation"
-                            status shouldBe AuthorizationRequest.Status.Pending.name
-                            validTo.shouldNotBeNull()
-                        }
-                        relationships.shouldNotBeNull().apply {
-                            relationships.apply {
-                                requestedBy.apply {
-                                    data.apply {
-                                        id shouldBe "987654321"
-                                        type shouldBe "Organization"
-                                    }
-                                }
-                                requestedFrom.apply {
-                                    data.apply {
-                                        id.shouldNotBeNull()
-                                        type shouldBe "Person"
-                                    }
-                                }
-                                requestedFrom.apply {
-                                    data.apply {
-                                        id.shouldNotBeNull()
-                                        type shouldBe "Person"
-                                    }
+                patchRequestResponse.data.apply {
+                    type shouldBe "AuthorizationRequest"
+                    id.shouldNotBeNull()
+                    attributes.shouldNotBeNull().apply {
+                        status shouldBe "Rejected"
+                    }
+                    relationships.shouldNotBeNull().apply {
+                        relationships.apply {
+                            requestedBy.apply {
+                                data.apply {
+                                    id shouldBe "987654321"
+                                    type shouldBe "Organization"
                                 }
                             }
-                        }
-                        meta.shouldNotBeNull().apply {
-                            values["createdAt"].shouldNotBeNull()
-                            values["updatedAt"].shouldNotBeNull()
-                            values["requestedFromName"] shouldBe "Hillary Orr"
-                            values["requestedForMeteringPointId"] shouldBe "123456789012345678"
-                            values["requestedForMeteringPointAddress"] shouldBe "quaerendum"
-                            values["balanceSupplierName"] shouldBe "Balance Supplier"
-                            values["balanceSupplierContractName"] shouldBe "Selena Chandler"
-                        }
-                        links.shouldNotBeNull().apply {
-                            self.shouldNotBeNull()
-                        }
-                    }
-                    responseJson.links.shouldNotBeNull().apply {
-                        self shouldBe REQUESTS_PATH
-                    }
-                    responseJson.meta.shouldNotBeNull().apply {
-                        "createdAt".shouldNotBeNull()
-                    }
-                }
+                            requestedFrom.apply {
+                                data.apply {
+                                    id shouldBe "17abdc56-8f6f-440a-9f00-b9bfbb22065e"
+                                    type shouldBe "Person"
+                                }
+                            }
+                            requestedTo.apply {
+                                data.apply {
+                                    id shouldBe "17abdc56-8f6f-440a-9f00-b9bfbb22065e"
+                                    type shouldBe "Person"
+                                }
+                            }
+                            meta.shouldNotBeNull().apply {
+                                val createdAt = values["createdAt"].shouldNotBeNull()
+                                val updatedAt = values["updatedAt"].shouldNotBeNull()
 
-                test("Should return 400 Bad Request on validation error with error payload") {
-                    val response =
-                        client.post(REQUESTS_PATH) {
-                            contentType(ContentType.Application.Json)
-                            setBody(
-                                JsonApiCreateRequest(
-                                    data =
-                                    JsonApiRequestResourceObjectWithMeta(
-                                        type = "AuthorizationRequest",
-                                        attributes =
-                                        CreateRequestAttributes(
-                                            requestType = AuthorizationRequest.Type.ChangeOfSupplierConfirmation,
-                                        ),
-                                        meta =
-                                        CreateRequestMeta(
-                                            requestedBy = PartyIdentifier(PartyIdentifierType.OrganizationNumber, "987654321"),
-                                            requestedFrom = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "12345678901"),
-                                            requestedFromName = "",
-                                            requestedTo = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "12345678902"),
-                                            requestedForMeteringPointId = "123456789012345678",
-                                            requestedForMeteringPointAddress = "quaerendum",
-                                            balanceSupplierName = "Balance Supplier",
-                                            balanceSupplierContractName = "Selena Chandler",
-                                        ),
-                                    ),
-                                ),
-                            )
+                                shouldNotThrowAny {
+                                    OffsetDateTime.parse(createdAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                                    OffsetDateTime.parse(updatedAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                                }
+                                values["requestedFromName"] shouldBe "Ola Normann"
+                                values["requestedForMeteringPointId"] shouldBe "1234567890123"
+                                values["requestedForMeteringPointAddress"] shouldBe "Example Street 1, 1234 Oslo"
+                                values["balanceSupplierName"] shouldBe "Example Energy AS"
+                                values["balanceSupplierContractName"] shouldBe "ExampleSupplierContract"
+                            }
                         }
-
-                    response.status shouldBe HttpStatusCode.BadRequest
-                    val body = response.body<JsonApiErrorObject>()
-                    body.status shouldBe "400"
-                    body.code shouldBe "missing_requested_from_name"
-                    body.title shouldBe "Validation Error"
-                    body.detail shouldBe "Requested from name is missing"
+                    }
                 }
             }
-        }
 
-        context("PATCH /authorization-requests/{ID}") {
-            testApplication {
-                client =
-                    createClient {
-                        install(ContentNegotiation) {
-                            json()
-                        }
-                    }
-
-                application {
-                    applicationModule()
-                    commonModule()
-                    module()
-                }
-
-                environment {
-                    config =
-                        MapApplicationConfig(
-                            "ktor.database.username" to "app",
-                            "ktor.database.password" to "app",
-                            "ktor.database.url" to "jdbc:postgresql://localhost:5432/auth",
-                            "ktor.database.driverClass" to "org.postgresql.Driver",
-                            "featureToggle.enableEndpoints" to "true",
-                            "authPersons.baseUri" to AuthPersonsTestContainer.baseUri(),
+            test("Should return 400 Bad Request on illegal transaction") {
+                val response =
+                    client.patch("${REQUESTS_PATH}/4f71d596-99e4-415e-946d-7352c1a40c53") {
+                        contentType(ContentType.Application.Json)
+                        header(HttpHeaders.Authorization, "Bearer enduser")
+                        setBody(
+                            JsonApiUpdateRequest(
+                                data = JsonApiRequestResourceObject(
+                                    type = "AuthorizationRequest",
+                                    attributes = UpdateRequestAttributes(
+                                        status = AuthorizationRequest.Status.Expired
+                                    )
+                                )
+                            ),
                         )
-                }
-
-                test("Should accept authorization request and persist grant relationship") {
-                    val patchResult =
-                        client.patch("${REQUESTS_PATH}/d81e5bf2-8a0c-4348-a788-2a3fab4e77d6") {
-                            contentType(ContentType.Application.Json)
-                            setBody(
-                                JsonApiUpdateRequest(
-                                    data = JsonApiRequestResourceObject(
-                                        type = "AuthorizationRequest",
-                                        attributes = UpdateRequestAttributes(
-                                            status = AuthorizationRequest.Status.Accepted
-                                        )
-                                    )
-                                ),
-                            )
-                        }
-
-                    patchResult.status shouldBe HttpStatusCode.OK
-                    val patchResponse: UpdateRequestResponse = patchResult.body()
-
-                    patchResponse.data.apply {
-                        type shouldBe "AuthorizationRequest"
-                        id.shouldNotBeNull()
-                        attributes.shouldNotBeNull().apply {
-                            status shouldBe "Accepted"
-                        }
-                        relationships.shouldNotBeNull().apply {
-                            relationships.apply {
-                                requestedBy.apply {
-                                    data.apply {
-                                        id shouldBe "987654321"
-                                        type shouldBe "Organization"
-                                    }
-                                }
-                                requestedFrom.apply {
-                                    data.apply {
-                                        id shouldBe "17abdc56-8f6f-440a-9f00-b9bfbb22065e"
-                                        type shouldBe "Person"
-                                    }
-                                }
-                                requestedTo.apply {
-                                    data.apply {
-                                        id shouldBe "4e55f1e2-e576-23ab-80d3-c70a6fe354c0"
-                                        type shouldBe "Person"
-                                    }
-                                }
-                                approvedBy.shouldNotBeNull().apply {
-                                    data.apply {
-                                        id shouldBe "4e55f1e2-e576-23ab-80d3-c70a6fe354c0"
-                                        type shouldBe "Person"
-                                    }
-                                }
-                                grant.shouldNotBeNull().apply {
-                                    data.apply {
-                                        id.shouldNotBeNull()
-                                        type shouldBe "AuthorizationGrant"
-                                    }
-                                    links.shouldNotBeNull()
-                                }
-                                meta.shouldNotBeNull().apply {
-                                    values["createdAt"].shouldNotBeNull()
-                                    values["updatedAt"].shouldNotBeNull()
-                                    values["requestedFromName"] shouldBe "Ola Normann"
-                                    values["requestedForMeteringPointId"] shouldBe "1234567890123"
-                                    values["requestedForMeteringPointAddress"] shouldBe "Example Street 1, 1234 Oslo"
-                                    values["balanceSupplierName"] shouldBe "Example Energy AS"
-                                    values["balanceSupplierContractName"] shouldBe "ExampleSupplierContract"
-                                }
-                            }
-                        }
                     }
 
-                    // verify that a subsequent GET of this resource reflects the updated state persisted in the database
-                    val getResult = client.get("${REQUESTS_PATH}/${patchResponse.data.id}")
-                    val getResponse: GetRequestSingleResponse = getResult.body()
+                response.status shouldBe HttpStatusCode.BadRequest
+                val body = response.body<JsonApiErrorObject>()
+                body.status shouldBe "400"
+                body.title shouldBe "Invalid Status Transition"
+                body.detail shouldBe "Only 'Accepted' and 'Rejected' statuses are allowed."
+            }
 
-                    getResponse.data.apply {
-                        type shouldBe "AuthorizationRequest"
-                        id.shouldNotBeNull()
-                        attributes.shouldNotBeNull().apply {
-                            status shouldBe "Accepted"
-                        }
-                        relationships.shouldNotBeNull().apply {
-                            relationships.apply {
-                                requestedBy.apply {
-                                    data.apply {
-                                        id shouldBe "987654321"
-                                        type shouldBe "Organization"
-                                    }
-                                }
-                                requestedFrom.apply {
-                                    data.apply {
-                                        id shouldBe "17abdc56-8f6f-440a-9f00-b9bfbb22065e"
-                                        type shouldBe "Person"
-                                    }
-                                }
-                                requestedTo.apply {
-                                    data.apply {
-                                        id shouldBe "4e55f1e2-e576-23ab-80d3-c70a6fe354c0"
-                                        type shouldBe "Person"
-                                    }
-                                }
-                                approvedBy.shouldNotBeNull().apply {
-                                    data.apply {
-                                        id shouldBe "4e55f1e2-e576-23ab-80d3-c70a6fe354c0"
-                                        type shouldBe "Person"
-                                    }
-                                }
-                                grant.shouldNotBeNull().apply {
-                                    data.apply {
-                                        id.shouldNotBeNull()
-                                        type shouldBe "AuthorizationGrant"
-                                    }
-                                    links.shouldNotBeNull()
-                                }
-                                meta.shouldNotBeNull().apply {
-                                    values["createdAt"].shouldNotBeNull()
-                                    values["updatedAt"].shouldNotBeNull()
-                                    values["requestedFromName"] shouldBe "Ola Normann"
-                                    values["requestedForMeteringPointId"] shouldBe "1234567890123"
-                                    values["requestedForMeteringPointAddress"] shouldBe "Example Street 1, 1234 Oslo"
-                                    values["balanceSupplierName"] shouldBe "Example Energy AS"
-                                    values["balanceSupplierContractName"] shouldBe "ExampleSupplierContract"
-                                }
-                            }
-                        }
+            test("Should return 401 Unauthorized when requestee has maskinport token") {
+                val response =
+                    client.patch("${REQUESTS_PATH}/4f71d596-99e4-415e-946d-7352c1a40c53") {
+                        contentType(ContentType.Application.Json)
+                        header(HttpHeaders.Authorization, "Bearer maskinporten")
+                        header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                        setBody(
+                            JsonApiUpdateRequest(
+                                data = JsonApiRequestResourceObject(
+                                    type = "AuthorizationRequest",
+                                    attributes = UpdateRequestAttributes(
+                                        status = AuthorizationRequest.Status.Expired
+                                    )
+                                )
+                            ),
+                        )
+                    }
+
+                response.status shouldBe HttpStatusCode.Unauthorized
+                val responseJson: JsonApiErrorCollection = response.body()
+                responseJson.errors.apply {
+                    size shouldBe 1
+                    this[0].apply {
+                        status shouldBe "401"
+                        title shouldBe "Not authorized"
+                        detail shouldBe "Not authorized for this endpoint."
                     }
                 }
+            }
 
-                test("Should reject authorization-request") {
-                    val response =
-                        client.patch("${REQUESTS_PATH}/d81e5bf2-8a0c-4348-a788-2a3fab4e77d6") {
-                            contentType(ContentType.Application.Json)
-                            setBody(
-                                JsonApiUpdateRequest(
-                                    data = JsonApiRequestResourceObject(
-                                        type = "AuthorizationRequest",
-                                        attributes = UpdateRequestAttributes(
-                                            status = AuthorizationRequest.Status.Rejected
-                                        )
-                                    )
-                                ),
-                            )
-                        }
-                    response.status shouldBe HttpStatusCode.OK
-
-                    val patchRequestResponse: UpdateRequestResponse = response.body()
-
-                    patchRequestResponse.data.apply {
-                        type shouldBe "AuthorizationRequest"
-                        id.shouldNotBeNull()
-                        attributes.shouldNotBeNull().apply {
-                            status shouldBe "Rejected"
-                        }
-                        relationships.shouldNotBeNull().apply {
-                            relationships.apply {
-                                requestedBy.apply {
-                                    data.apply {
-                                        id shouldBe "987654321"
-                                        type shouldBe "Organization"
-                                    }
-                                }
-                                requestedFrom.apply {
-                                    data.apply {
-                                        id shouldBe "17abdc56-8f6f-440a-9f00-b9bfbb22065e"
-                                        type shouldBe "Person"
-                                    }
-                                }
-                                requestedTo.apply {
-                                    data.apply {
-                                        id shouldBe "4e55f1e2-e576-23ab-80d3-c70a6fe354c0"
-                                        type shouldBe "Person"
-                                    }
-                                }
-                                meta.shouldNotBeNull().apply {
-                                    values["createdAt"].shouldNotBeNull()
-                                    values["updatedAt"].shouldNotBeNull()
-                                    values["requestedFromName"] shouldBe "Ola Normann"
-                                    values["requestedForMeteringPointId"] shouldBe "1234567890123"
-                                    values["requestedForMeteringPointAddress"] shouldBe "Example Street 1, 1234 Oslo"
-                                    values["balanceSupplierName"] shouldBe "Example Energy AS"
-                                    values["balanceSupplierContractName"] shouldBe "ExampleSupplierContract"
-                                }
-                            }
-                        }
-                    }
+            test("Should return 401 Unauthorized when requestee has no token") {
+                val response = client.get("$REQUESTS_PATH/4f71d596-99e4-415e-946d-7352c1a40c53") {
+                    header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
                 }
-
-                test("Should return 400 Bad Request on illegal transaction") {
-                    val response =
-                        client.patch("${REQUESTS_PATH}/3f2c9e6b-7a4d-4f1a-9b6e-8c1d2a5e9f47") {
-                            contentType(ContentType.Application.Json)
-                            setBody(
-                                JsonApiUpdateRequest(
-                                    data = JsonApiRequestResourceObject(
-                                        type = "AuthorizationRequest",
-                                        attributes = UpdateRequestAttributes(
-                                            status = AuthorizationRequest.Status.Expired
-                                        )
-                                    )
-                                ),
-                            )
-                        }
-
-                    response.status shouldBe HttpStatusCode.BadRequest
-                    val body = response.body<JsonApiErrorObject>()
-                    body.status shouldBe "400"
-                    body.title shouldBe "Invalid Status Transition"
-                    body.detail shouldBe "Only 'Accepted' and 'Rejected' statuses are allowed."
+                response.status shouldBe HttpStatusCode.Unauthorized
+                val responseJson: JsonApiErrorCollection = response.body()
+                responseJson.errors.apply {
+                    size shouldBe 1
+                    this[0].apply {
+                        status shouldBe "401"
+                        title shouldBe "Missing authorization"
+                        detail shouldBe "Bearer token is required in the Authorization header."
+                    }
                 }
             }
         }
-    })
+    }
+})
+
+private fun ApplicationTestBuilder.setUpAuthorizationRequestTestApplication() {
+    client = createClient {
+        install(ContentNegotiation) {
+            json()
+        }
+    }
+
+    application {
+        applicationModule()
+        commonModule()
+        module()
+    }
+
+    environment {
+        config =
+            MapApplicationConfig(
+                "ktor.database.username" to "app",
+                "ktor.database.password" to "app",
+                "ktor.database.url" to "jdbc:postgresql://localhost:5432/auth",
+                "ktor.database.driverClass" to "org.postgresql.Driver",
+                "featureToggle.enableEndpoints" to "true",
+                "authPersons.baseUri" to AuthPersonsTestContainer.baseUri(),
+                "pdp.baseUrl" to "http://localhost:8085"
+            )
+    }
+}

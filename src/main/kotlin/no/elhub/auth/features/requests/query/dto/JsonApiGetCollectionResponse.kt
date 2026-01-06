@@ -3,7 +3,9 @@ package no.elhub.auth.features.requests.query.dto
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import no.elhub.auth.features.common.currentTimeWithTimeZone
 import no.elhub.auth.features.common.party.dto.toJsonApiRelationship
+import no.elhub.auth.features.common.toTimeZoneOffsetString
 import no.elhub.auth.features.grants.GRANTS_PATH
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.REQUESTS_PATH
@@ -17,14 +19,11 @@ import no.elhub.devxp.jsonapi.model.JsonApiResourceLinks
 import no.elhub.devxp.jsonapi.model.JsonApiResourceMeta
 import no.elhub.devxp.jsonapi.response.JsonApiResponse
 import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObjectWithRelationshipsAndMetaAndLinks
-import java.time.LocalDateTime
 
 @Serializable
 data class GetRequestCollectionResponseAttributes(
     val status: String,
     val requestType: String,
-    val createdAt: String,
-    val updatedAt: String,
     val validTo: String
 ) : JsonApiAttributes
 
@@ -64,8 +63,6 @@ fun List<AuthorizationRequest>.toGetCollectionResponse() =
                 attributes = GetRequestCollectionResponseAttributes(
                     status = request.status.toString(),
                     requestType = request.type.toString(),
-                    createdAt = request.createdAt.toString(),
-                    updatedAt = request.updatedAt.toString(),
                     validTo = request.validTo.toString()
                 ),
                 relationships = GetRequestCollectionResponseRelationships(
@@ -87,8 +84,8 @@ fun List<AuthorizationRequest>.toGetCollectionResponse() =
                 ),
                 meta = GetRequestCollectionResponseMeta(
                     buildMap {
-                        put("createdAt", request.createdAt.toString())
-                        put("updatedAt", request.updatedAt.toString())
+                        put("createdAt", request.createdAt.toTimeZoneOffsetString())
+                        put("updatedAt", request.updatedAt.toTimeZoneOffsetString())
                         request.properties.forEach { prop ->
                             put(prop.key, prop.value)
                         }
@@ -102,7 +99,7 @@ fun List<AuthorizationRequest>.toGetCollectionResponse() =
         links = JsonApiLinks.ResourceObjectLink(REQUESTS_PATH),
         meta = JsonApiMeta(
             buildJsonObject {
-                put("createdAt", LocalDateTime.now().toString())
+                put("createdAt", currentTimeWithTimeZone().toTimeZoneOffsetString())
             }
         )
     )

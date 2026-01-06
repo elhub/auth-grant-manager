@@ -23,7 +23,8 @@
         "createdAt": {
           "type": "string",
           "format": "date-time",
-          "description": "The date and time when the authorization scope was created."
+          "description": "The date and time when the authorization scope was created.",
+          "examples": ["2025-12-29T10:13:18.245106+01:00"]
         }
       }
     },

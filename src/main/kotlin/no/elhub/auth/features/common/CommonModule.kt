@@ -6,6 +6,7 @@ import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logging
+import io.ktor.client.plugins.logging.LoggingFormat
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import io.ktor.server.config.ApplicationConfig
@@ -37,7 +38,8 @@ fun Application.commonModule() {
                     )
                 }
                 install(Logging) {
-                    level = LogLevel.ALL
+                    format = LoggingFormat.OkHttp
+                    level = LogLevel.INFO
                 }
             }
         }

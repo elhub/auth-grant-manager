@@ -7,19 +7,22 @@ import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.core.spec.style.FunSpec
 import io.mockk.every
 import io.mockk.mockk
+import no.elhub.auth.features.common.Constants
 import no.elhub.auth.features.common.QueryError
 import no.elhub.auth.features.common.RepositoryReadError
+import no.elhub.auth.features.common.currentTimeWithTimeZone
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.AuthorizationGrant.SourceType
 import no.elhub.auth.features.grants.AuthorizationGrant.Status
 import no.elhub.auth.features.grants.common.GrantRepository
-import java.time.LocalDateTime
 import java.util.UUID
 
 class HandlerTest : FunSpec({
 
+    val authorizedSystem = AuthorizationParty(resourceId = Constants.CONSENT_MANAGEMENT_OSB_ID, type = PartyType.System)
+    val unAuthorizedSystem = AuthorizationParty(resourceId = "invalid-system", type = PartyType.System)
     val grantedFor = AuthorizationParty(resourceId = "person-1", type = PartyType.Person)
     val grantedBy = AuthorizationParty(resourceId = "issuer-1", type = PartyType.Organization)
     val grantedTo = AuthorizationParty(resourceId = "org-entity-1", type = PartyType.OrganizationEntity)
@@ -31,9 +34,9 @@ class HandlerTest : FunSpec({
             grantedFor = grantedFor,
             grantedBy = grantedBy,
             grantedTo = grantedTo,
-            grantedAt = LocalDateTime.now(),
-            validFrom = LocalDateTime.now(),
-            validTo = LocalDateTime.now().plusYears(1),
+            grantedAt = currentTimeWithTimeZone(),
+            validFrom = currentTimeWithTimeZone(),
+            validTo = currentTimeWithTimeZone().plusYears(1),
             sourceType = SourceType.Document,
             sourceId = UUID.randomUUID(),
         )
@@ -42,6 +45,32 @@ class HandlerTest : FunSpec({
         mockk<GrantRepository> {
             every { find(grantId) } returns result
         }
+
+    test("returns grant when authorized party is valid System") {
+        val handler = Handler(repoReturning(result = grant.right()))
+
+        val response = handler(
+            Query(
+                id = grantId,
+                authorizedParty = authorizedSystem,
+            )
+        )
+
+        response.shouldBeRight(grant)
+    }
+
+    test("returns NotAuthorized when authorized party is unauthorized System") {
+        val handler = Handler(repoReturning(result = grant.right()))
+
+        val response = handler(
+            Query(
+                id = grantId,
+                authorizedParty = unAuthorizedSystem,
+            )
+        )
+
+        response.shouldBeLeft(QueryError.NotAuthorizedError)
+    }
 
     test("returns grant when authorized party matches grantedFor") {
         val handler = Handler(repoReturning(result = grant.right()))

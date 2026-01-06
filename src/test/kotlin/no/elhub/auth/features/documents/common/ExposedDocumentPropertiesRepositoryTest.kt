@@ -6,6 +6,7 @@ import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
 import no.elhub.auth.features.common.PostgresTestContainer
 import no.elhub.auth.features.common.PostgresTestContainerExtension
+import no.elhub.auth.features.common.currentTimeWithTimeZone
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.ExposedPartyRepository
 import no.elhub.auth.features.common.party.PartyType
@@ -14,7 +15,6 @@ import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.deleteAll
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
-import java.time.LocalDateTime
 import java.util.UUID
 
 class ExposedDocumentPropertiesRepositoryTest : FunSpec({
@@ -61,8 +61,8 @@ class ExposedDocumentPropertiesRepositoryTest : FunSpec({
                     requestedTo = AuthorizationParty(type = PartyType.Person, resourceId = "1234567890"),
                     signedBy = AuthorizationParty(type = PartyType.Person, resourceId = "1234567890"),
                     properties = emptyList(),
-                    createdAt = LocalDateTime.now(),
-                    updatedAt = LocalDateTime.now()
+                    createdAt = currentTimeWithTimeZone(),
+                    updatedAt = currentTimeWithTimeZone()
                 )
 
             documentRepository.insert(document, listOf())
@@ -79,9 +79,8 @@ class ExposedDocumentPropertiesRepositoryTest : FunSpec({
         }
 
         test("find returns empty list when no properties exist for document") {
-            val documentId = UUID.randomUUID()
             transaction {
-                repository.find(documentId).shouldBeEmpty()
+                repository.find(UUID.randomUUID()).shouldBeEmpty()
             }
         }
     }

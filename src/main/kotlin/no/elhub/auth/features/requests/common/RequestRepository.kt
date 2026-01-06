@@ -20,18 +20,20 @@ import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.insertReturning
-import org.jetbrains.exposed.sql.javatime.CurrentDateTime
 import org.jetbrains.exposed.sql.javatime.date
-import org.jetbrains.exposed.sql.javatime.datetime
 import org.jetbrains.exposed.sql.javatime.timestamp
+import org.jetbrains.exposed.sql.javatime.timestampWithTimeZone
+import org.jetbrains.exposed.sql.or
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.update
+import java.time.OffsetDateTime
+import java.time.ZoneId
 import java.util.UUID
 
 interface RequestRepository {
     fun find(requestId: UUID): Either<RepositoryReadError, AuthorizationRequest>
-    fun findAll(): Either<RepositoryReadError, List<AuthorizationRequest>>
+    fun findAllBy(party: AuthorizationParty): Either<RepositoryReadError, List<AuthorizationRequest>>
     fun insert(request: AuthorizationRequest): Either<RepositoryWriteError, AuthorizationRequest>
     fun acceptRequest(requestId: UUID, approvedBy: AuthorizationParty): Either<RepositoryError, AuthorizationRequest>
     fun rejectAccept(requestId: UUID): Either<RepositoryError, AuthorizationRequest>
@@ -43,12 +45,23 @@ class ExposedRequestRepository(
     private val requestPropertiesRepository: RequestPropertiesRepository
 ) : RequestRepository {
 
-    override fun findAll(): Either<RepositoryReadError, List<AuthorizationRequest>> =
+    override fun findAllBy(party: AuthorizationParty): Either<RepositoryReadError, List<AuthorizationRequest>> =
         either {
             transaction {
-                val rows = AuthorizationRequestTable.selectAll()
-                rows.map { request ->
-                    findInternal(request).bind()
+                val partyId = partyRepo.findOrInsert(type = party.type, resourceId = party.resourceId)
+                    .mapLeft { RepositoryReadError.UnexpectedError }
+                    .bind()
+                    .id
+
+                val rows = AuthorizationRequestTable
+                    .selectAll()
+                    .where {
+                        (AuthorizationRequestTable.requestedTo eq partyId) or (AuthorizationRequestTable.requestedBy eq partyId)
+                    }
+                    .toList()
+
+                rows.map { row ->
+                    findInternal(row).bind()
                 }
             }
         }
@@ -120,7 +133,7 @@ class ExposedRequestRepository(
                     where = { AuthorizationRequestTable.id eq requestId }
                 ) {
                     it[requestStatus] = AuthorizationRequest.Status.Accepted
-                    it[updatedAt] = java.time.LocalDateTime.now()
+                    it[updatedAt] = OffsetDateTime.now(ZoneId.of("Europe/Oslo"))
                     it[this.approvedBy] = approvedByRecord.id
                 }
 
@@ -134,7 +147,7 @@ class ExposedRequestRepository(
                 where = { AuthorizationRequestTable.id eq requestId }
             ) {
                 it[requestStatus] = AuthorizationRequest.Status.Rejected
-                it[updatedAt] = java.time.LocalDateTime.now()
+                it[updatedAt] = OffsetDateTime.now(ZoneId.of("Europe/Oslo"))
             }
 
             updateAndFetch(requestId, rowsUpdated).bind()
@@ -243,8 +256,8 @@ object AuthorizationRequestTable : UUIDTable("authorization_request") {
     val requestedFrom = uuid("requested_from").references(AuthorizationPartyTable.id)
     val requestedTo = uuid("requested_to").references(AuthorizationPartyTable.id)
     val approvedBy = uuid("approved_by").references(AuthorizationPartyTable.id).nullable()
-    val createdAt = datetime("created_at").defaultExpression(CurrentDateTime)
-    val updatedAt = datetime("updated_at").defaultExpression(CurrentDateTime)
+    val createdAt = timestampWithTimeZone("created_at").default(OffsetDateTime.now(ZoneId.of("Europe/Oslo")))
+    val updatedAt = timestampWithTimeZone("updated_at").default(OffsetDateTime.now(ZoneId.of("Europe/Oslo")))
     val validTo = date("valid_to")
 }
 

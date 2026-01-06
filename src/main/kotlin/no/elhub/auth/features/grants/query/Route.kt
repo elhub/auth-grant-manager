@@ -11,12 +11,12 @@ import no.elhub.auth.features.common.auth.toApiErrorResponse
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toApiErrorResponse
-import no.elhub.auth.features.grants.common.toResponse
+import no.elhub.auth.features.grants.common.dto.toCollectionGrantResponse
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 
 fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
     get {
-        val authorizedParty = authProvider.authorize(call)
+        val authorizedParty = authProvider.authorizeEndUserOrMaskinporten(call)
             .getOrElse { err ->
                 val (status, body) = err.toApiErrorResponse()
                 call.respond(status, body)
@@ -24,14 +24,14 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
             }
 
         val query = when (authorizedParty) {
-            is AuthorizedParty.AuthorizedOrganizationEntity -> Query(
+            is AuthorizedParty.OrganizationEntity -> Query(
                 authorizedParty = AuthorizationParty(
                     resourceId = authorizedParty.gln,
                     type = PartyType.OrganizationEntity
                 )
             )
 
-            is AuthorizedParty.AuthorizedPerson -> Query(
+            is AuthorizedParty.Person -> Query(
                 authorizedParty = AuthorizationParty(
                     resourceId = authorizedParty.id.toString(),
                     type = PartyType.Person
@@ -46,6 +46,6 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
                 return@get
             }
 
-        call.respond(HttpStatusCode.OK, grants.toResponse())
+        call.respond(HttpStatusCode.OK, grants.toCollectionGrantResponse())
     }
 }

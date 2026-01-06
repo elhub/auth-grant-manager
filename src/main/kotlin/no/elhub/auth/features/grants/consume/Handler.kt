@@ -1,19 +1,24 @@
 package no.elhub.auth.features.grants.consume
 
 import arrow.core.Either
-import arrow.core.getOrElse
-import arrow.core.left
-import arrow.core.right
+import arrow.core.raise.either
+import arrow.core.raise.ensure
+import no.elhub.auth.features.common.AuthorizationParties
 import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.common.GrantRepository
 
 class Handler(
     private val repo: GrantRepository
 ) {
-    operator fun invoke(command: ConsumeCommand): Either<ConsumeError, AuthorizationGrant> {
-        val updated = repo.update(command.grantId, command.newStatus)
-            .getOrElse { return ConsumeError.PersistenceError.left() }
+    operator fun invoke(command: ConsumeCommand): Either<ConsumeError, AuthorizationGrant> = either {
+        ensure(command.authorizedParty == AuthorizationParties.ConsentManagementSystem) {
+            ConsumeError.NotAuthorized
+        }
 
-        return updated.right()
+        val updated = repo.update(command.grantId, command.newStatus)
+            .mapLeft { ConsumeError.PersistenceError }
+            .bind()
+
+        updated
     }
 }

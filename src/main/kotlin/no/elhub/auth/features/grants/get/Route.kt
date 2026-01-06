@@ -12,7 +12,7 @@ import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.common.validateId
-import no.elhub.auth.features.grants.common.toResponse
+import no.elhub.auth.features.grants.common.dto.toSingleGrantResponse
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import java.util.UUID
 
@@ -20,7 +20,7 @@ const val GRANT_ID_PARAM = "id"
 
 fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
     get("/{$GRANT_ID_PARAM}") {
-        val authorizedParty = authProvider.authorize(call)
+        val authorizedParty = authProvider.authorizeAll(call)
             .getOrElse { err ->
                 val (status, body) = err.toApiErrorResponse()
                 call.respond(status, body)
@@ -35,7 +35,7 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
             }
 
         val query = when (authorizedParty) {
-            is AuthorizedParty.AuthorizedOrganizationEntity -> Query(
+            is AuthorizedParty.OrganizationEntity -> Query(
                 id = id,
                 authorizedParty = AuthorizationParty(
                     resourceId = authorizedParty.gln,
@@ -43,11 +43,19 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
                 )
             )
 
-            is AuthorizedParty.AuthorizedPerson -> Query(
+            is AuthorizedParty.Person -> Query(
                 id = id,
                 authorizedParty = AuthorizationParty(
                     resourceId = authorizedParty.id.toString(),
                     type = PartyType.Person
+                )
+            )
+
+            is AuthorizedParty.System -> Query(
+                id = id,
+                authorizedParty = AuthorizationParty(
+                    resourceId = authorizedParty.id,
+                    type = PartyType.System
                 )
             )
         }
@@ -59,6 +67,6 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
                 return@get
             }
 
-        call.respond(HttpStatusCode.OK, grant.toResponse())
+        call.respond(HttpStatusCode.OK, grant.toSingleGrantResponse())
     }
 }

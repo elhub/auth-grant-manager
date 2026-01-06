@@ -5,6 +5,11 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
+import no.elhub.auth.features.common.auth.AuthorizationProvider
+import no.elhub.auth.features.common.auth.AuthorizedParty
+import no.elhub.auth.features.common.auth.toApiErrorResponse
+import no.elhub.auth.features.common.party.AuthorizationParty
+import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.common.validateId
 import no.elhub.auth.features.requests.get.dto.toGetSingleResponse
@@ -13,8 +18,15 @@ import java.util.UUID
 
 const val REQUEST_ID_PARAM = "id"
 
-fun Route.route(handler: Handler) {
+fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
     get("/{$REQUEST_ID_PARAM}") {
+        val authorizedParty = authProvider.authorizeEndUserOrMaskinporten(call)
+            .getOrElse { err ->
+                val (status, body) = err.toApiErrorResponse()
+                call.respond(status, body)
+                return@get
+            }
+
         val id: UUID = validateId(call.parameters[REQUEST_ID_PARAM])
             .getOrElse { err ->
                 val (status, body) = err.toApiErrorResponse()
@@ -22,7 +34,25 @@ fun Route.route(handler: Handler) {
                 return@get
             }
 
-        val request = handler(Query(id))
+        val query = when (authorizedParty) {
+            is AuthorizedParty.OrganizationEntity -> Query(
+                id = id,
+                authorizedParty = AuthorizationParty(
+                    resourceId = authorizedParty.gln,
+                    type = PartyType.OrganizationEntity
+                )
+            )
+
+            is AuthorizedParty.Person -> Query(
+                id = id,
+                authorizedParty = AuthorizationParty(
+                    resourceId = authorizedParty.id.toString(),
+                    type = PartyType.Person
+                )
+            )
+        }
+
+        val request = handler(query)
             .getOrElse { err ->
                 val (status, body) = err.toApiErrorResponse()
                 call.respond(status, JsonApiErrorCollection(listOf(body)))

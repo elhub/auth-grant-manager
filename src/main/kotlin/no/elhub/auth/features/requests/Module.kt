@@ -44,10 +44,10 @@ fun Application.module() {
     routing {
         route(REQUESTS_PATH) {
             shouldRegisterEndpoint {
-                updateRoute(get())
-                createRoute(get())
-                getRoute(get())
-                queryRoute(get())
+                updateRoute(get(), get())
+                createRoute(get(), get())
+                getRoute(get(), get())
+                queryRoute(get(), get())
             }
         }
     }

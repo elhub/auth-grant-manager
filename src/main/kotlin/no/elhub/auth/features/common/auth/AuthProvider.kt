@@ -11,6 +11,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import io.ktor.server.application.ApplicationCall
+import io.ktor.server.plugins.callid.callId
 import org.slf4j.LoggerFactory
 import java.util.*
 
@@ -19,8 +20,10 @@ enum class RoleType {
 }
 
 sealed interface AuthorizedParty {
-    data class AuthorizedPerson(val id: UUID) : AuthorizedParty
-    data class AuthorizedOrganizationEntity(val gln: String, val role: RoleType) : AuthorizedParty
+    sealed interface PersonOrOrganizationEntity : AuthorizedParty
+    data class Person(val id: UUID) : PersonOrOrganizationEntity
+    data class OrganizationEntity(val gln: String, val role: RoleType) : PersonOrOrganizationEntity
+    data class System(val id: String) : AuthorizedParty
 }
 
 sealed interface AuthError {
@@ -40,12 +43,15 @@ sealed interface AuthError {
 enum class TokenType(val value: String) {
     MASKINPORTEN("maskinporten"),
     ENDUSER("enduser"),
+    ELHUB_SERVICE("elhub-service")
 }
 
 interface AuthorizationProvider {
-    suspend fun authorize(call: ApplicationCall): Either<AuthError, AuthorizedParty>
-    suspend fun authorizeMaskinporten(call: ApplicationCall): Either<AuthError, AuthorizedParty.AuthorizedOrganizationEntity>
-    suspend fun authorizeEndUser(call: ApplicationCall): Either<AuthError, AuthorizedParty.AuthorizedPerson>
+    suspend fun authorizeAll(call: ApplicationCall): Either<AuthError, AuthorizedParty>
+    suspend fun authorizeEndUserOrMaskinporten(call: ApplicationCall): Either<AuthError, AuthorizedParty.PersonOrOrganizationEntity>
+    suspend fun authorizeMaskinporten(call: ApplicationCall): Either<AuthError, AuthorizedParty.OrganizationEntity>
+    suspend fun authorizeEndUser(call: ApplicationCall): Either<AuthError, AuthorizedParty.Person>
+    suspend fun authorizeElhubService(call: ApplicationCall): Either<AuthError, AuthorizedParty.System>
 }
 
 class PDPAuthorizationProvider(
@@ -64,8 +70,32 @@ class PDPAuthorizationProvider(
         }
     }
 
-    override suspend fun authorize(call: ApplicationCall): Either<AuthError, AuthorizedParty> = either {
-        val traceId = UUID.randomUUID()
+    override suspend fun authorizeAll(call: ApplicationCall): Either<AuthError, AuthorizedParty> = either {
+        val traceId = resolveTraceId(call)
+        val pdpBody: PdpResponse = pdpRequestAndValidate(call, traceId).bind()
+
+        when (pdpBody.result.tokenInfo.tokenType) {
+            TokenType.MASKINPORTEN.value -> {
+                authorizeMaskinporten(call, pdpBody, traceId).bind()
+            }
+
+            TokenType.ENDUSER.value -> {
+                authorizePerson(pdpBody, traceId).bind()
+            }
+
+            TokenType.ELHUB_SERVICE.value -> {
+                authorizeSystem(pdpBody, traceId).bind()
+            }
+
+            else -> {
+                log.warn("Unexpected tokenType for traceId={} tokenType={}", traceId, pdpBody.result.tokenInfo.tokenType)
+                raise(AuthError.InvalidToken)
+            }
+        }
+    }
+
+    override suspend fun authorizeEndUserOrMaskinporten(call: ApplicationCall): Either<AuthError, AuthorizedParty.PersonOrOrganizationEntity> = either {
+        val traceId = resolveTraceId(call)
         val pdpBody: PdpResponse = pdpRequestAndValidate(call, traceId).bind()
 
         when (pdpBody.result.tokenInfo.tokenType) {
@@ -84,16 +114,22 @@ class PDPAuthorizationProvider(
         }
     }
 
-    override suspend fun authorizeMaskinporten(call: ApplicationCall): Either<AuthError, AuthorizedParty.AuthorizedOrganizationEntity> = either {
-        val traceId = UUID.randomUUID()
+    override suspend fun authorizeMaskinporten(call: ApplicationCall): Either<AuthError, AuthorizedParty.OrganizationEntity> = either {
+        val traceId = resolveTraceId(call)
         val pdpBody: PdpResponse = pdpRequestAndValidate(call, traceId).bind()
         authorizeMaskinporten(call, pdpBody, traceId).bind()
     }
 
-    override suspend fun authorizeEndUser(call: ApplicationCall): Either<AuthError, AuthorizedParty.AuthorizedPerson> = either {
-        val traceId = UUID.randomUUID()
+    override suspend fun authorizeEndUser(call: ApplicationCall): Either<AuthError, AuthorizedParty.Person> = either {
+        val traceId = resolveTraceId(call)
         val pdpBody: PdpResponse = pdpRequestAndValidate(call, traceId).bind()
         authorizePerson(pdpBody, traceId).bind()
+    }
+
+    override suspend fun authorizeElhubService(call: ApplicationCall): Either<AuthError, AuthorizedParty.System> = either {
+        val traceId = resolveTraceId(call)
+        val pdpResponse = pdpRequestAndValidate(call, traceId).bind()
+        authorizeSystem(pdpResponse, traceId).bind()
     }
 
     private suspend fun pdpRequestAndValidate(call: ApplicationCall, traceId: UUID): Either<AuthError, PdpResponse> = either {
@@ -102,7 +138,7 @@ class PDPAuthorizationProvider(
 
         val senderGLN = call.request.headers[Headers.SENDER_GLN]
         val onBehalfOfGLN = call.request.headers[Headers.ON_BEHALF_OF_GLN]
-        log.debug(
+        log.info(
             "PDP authorize request: traceId={} senderGLN={} delegated={}",
             traceId,
             senderGLN,
@@ -156,7 +192,7 @@ class PDPAuthorizationProvider(
         call: ApplicationCall,
         pdpBody: PdpResponse,
         traceId: UUID
-    ): Either<AuthError, AuthorizedParty.AuthorizedOrganizationEntity> = either {
+    ): Either<AuthError, AuthorizedParty.OrganizationEntity> = either {
         val tokenInfo = pdpBody.result.tokenInfo
         if (!TokenType.MASKINPORTEN.value.equals(tokenInfo.tokenType)) {
             raise(AuthError.NotAuthorized)
@@ -177,19 +213,41 @@ class PDPAuthorizationProvider(
                 AuthError.ActingFunctionNotSupported
             }
             .bind()
-        AuthorizedParty.AuthorizedOrganizationEntity(actingGLN, roleType)
+        AuthorizedParty.OrganizationEntity(actingGLN, roleType)
     }
 
     private fun authorizePerson(
         pdpBody: PdpResponse,
         traceId: UUID
-    ): Either<AuthError, AuthorizedParty.AuthorizedPerson> = either {
+    ): Either<AuthError, AuthorizedParty.Person> = either {
         val tokenInfo = pdpBody.result.tokenInfo
         if (!TokenType.ENDUSER.value.equals(tokenInfo.tokenType)) {
             log.warn("Unexpected tokenType for traceId={} tokenType={}", traceId, tokenInfo.tokenType)
             raise(AuthError.NotAuthorized)
         }
         val partyId = tokenInfo.partyId ?: raise(AuthError.UnknownError)
-        AuthorizedParty.AuthorizedPerson(UUID.fromString(partyId))
+        AuthorizedParty.Person(UUID.fromString(partyId))
+    }
+
+    private fun authorizeSystem(
+        pdpResponse: PdpResponse,
+        traceId: UUID
+    ): Either<AuthError, AuthorizedParty.System> = either {
+        val tokenInfo = pdpResponse.result.tokenInfo
+        if (!TokenType.ELHUB_SERVICE.value.equals(tokenInfo.tokenType)) {
+            log.warn("Unexpected tokenType for traceId={} tokenType={}", traceId, tokenInfo.tokenType)
+            raise(AuthError.NotAuthorized)
+        }
+        val partyId = tokenInfo.partyId ?: raise(AuthError.UnknownError)
+        AuthorizedParty.System(partyId)
+    }
+
+    private fun resolveTraceId(call: ApplicationCall): UUID {
+        val callId = call.callId
+        if (callId.isNullOrBlank()) {
+            log.warn("callId not set, generating new trace id")
+            return UUID.randomUUID()
+        }
+        return UUID.fromString(callId)
     }
 }
