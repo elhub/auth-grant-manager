@@ -68,8 +68,8 @@ fun QueryError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorObject> = 
 
     QueryError.NotAuthorizedError -> HttpStatusCode.Forbidden to JsonApiErrorObject(
         status = HttpStatusCode.Forbidden.value.toString(),
-        code = "REQUESTED_BY_MISMATCH",
-        title = "RequestedBy mismatch",
-        detail = "The requester is not allowed to access this resource",
+        code = "NOT_AUTHORIZED",
+        title = "Party Not Authorized",
+        detail = "The party is not allowed to access this resource",
     )
 }
