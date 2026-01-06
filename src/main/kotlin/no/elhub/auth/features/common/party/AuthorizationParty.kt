@@ -5,7 +5,8 @@ import kotlinx.serialization.Serializable
 enum class PartyType {
     Organization,
     OrganizationEntity,
-    Person
+    Person,
+    System
 }
 
 @Serializable

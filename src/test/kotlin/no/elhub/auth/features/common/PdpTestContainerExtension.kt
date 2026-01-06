@@ -18,6 +18,7 @@ import org.testcontainers.containers.GenericContainer
 class PdpTestContainerExtension(
     private val maskinportenResponse: String = DEFAULT_MASKINPORTEN_RESPONSE,
     private val enduserResponse: String = DEFAULT_ENDUSER_RESPONSE,
+    private val elhubServiceResponse: String = DEFAULT_ELHUB_SERVICE_RESPONSE
 ) : BeforeSpecListener, AfterSpecListener {
 
     private val client = HttpClient(CIO)
@@ -47,6 +48,11 @@ class PdpTestContainerExtension(
         client.post("$base/__admin/mappings") {
             contentType(ContentType.Application.Json)
             setBody(enduserMapping(enduserResponse))
+        }
+
+        client.post("$base/__admin/mappings") {
+            contentType(ContentType.Application.Json)
+            setBody(elhubServiceMapping(elhubServiceResponse))
         }
     }
 
@@ -80,6 +86,25 @@ class PdpTestContainerExtension(
         "request": {
           "method": "POST",
           "url": "/v1/data/v2/token/authinfo"
+        },
+        "response": {
+          "status": 200,
+          "headers": { "Content-Type": "application/json" },
+          "jsonBody": ${body.trimIndent()}
+        }
+      }
+        """.trimIndent()
+
+    private fun elhubServiceMapping(body: String): String =
+        """
+      {
+        "priority": 5,
+        "request": {
+          "method": "POST",
+          "url": "/v1/data/v2/token/authinfo",
+          "bodyPatterns": [
+            { "contains": "\"token\":\"elhub-service\"" }
+          ]
         },
         "response": {
           "status": 200,
@@ -194,6 +219,18 @@ class PdpTestContainerExtension(
               "tokenStatus": "verified",
               "partyId": "17abdc56-8f6f-440a-9f00-b9bfbb22065e",
               "tokenType": "enduser"
+            }
+          }
+        }
+        """.trimIndent()
+
+        private val DEFAULT_ELHUB_SERVICE_RESPONSE = """
+        {
+          "result": {
+            "tokenInfo": {
+              "tokenStatus": "verified",
+              "partyId": "${Constants.CONSENT_MANAGEMENT_OSB_ID}",
+              "tokenType": "elhub-service"
             }
           }
         }
