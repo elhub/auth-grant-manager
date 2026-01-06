@@ -46,6 +46,7 @@ import java.time.format.DateTimeFormatter
 import no.elhub.auth.module as applicationModule
 
 class AuthorizationRequestRouteTest : FunSpec({
+    val pdpContainer = PdpTestContainerExtension()
     extensions(
         AuthPersonsTestContainerExtension,
         PostgresTestContainerExtension(),
@@ -53,8 +54,20 @@ class AuthorizationRequestRouteTest : FunSpec({
         RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-scopes.sql"),
         RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-requests.sql"),
         RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-grants.sql"),
-        PdpTestContainerExtension()
+        pdpContainer
     )
+
+    beforeSpec {
+        pdpContainer.registerMaskinportenMapping(
+            token = "maskinporten",
+            actingFunction = "BalanceSupplier",
+            actingGln = "0107000000021"
+        )
+        pdpContainer.registerEnduserMapping(
+            token = "enduser",
+            partyId = "17abdc56-8f6f-440a-9f00-b9bfbb22065e"
+        )
+    }
 
     context("GET /authorization-requests") {
         testApplication {
@@ -95,13 +108,14 @@ class AuthorizationRequestRouteTest : FunSpec({
             }
 
             test("Should return empty list when authorized organization has no requests") {
-                PdpTestContainerExtension.registerMaskinportenMapping(
-                    senderGln = "0107000000022",
-                    actingGln = "0107000000022"
+                pdpContainer.registerMaskinportenMapping(
+                    token = "no-requests",
+                    actingGln = "0107000000022",
+                    actingFunction = "BalanceSupplier",
                 )
 
                 val response = client.get(REQUESTS_PATH) {
-                    header(HttpHeaders.Authorization, "Bearer maskinporten")
+                    header(HttpHeaders.Authorization, "Bearer no-requests")
                     header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000022")
                 }
 
