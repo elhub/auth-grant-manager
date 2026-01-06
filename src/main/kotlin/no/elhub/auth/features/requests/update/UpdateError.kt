@@ -1,6 +1,7 @@
 package no.elhub.auth.features.requests.update
 
 sealed class UpdateError {
+    data object NotAuthorizedError : UpdateError()
     data object RequestNotFound : UpdateError()
     data object PersistenceError : UpdateError()
     data object ScopeReadError : UpdateError()
