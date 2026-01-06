@@ -322,8 +322,8 @@ paths:
         - $ref: "#/components/parameters/UserAgent"
         - name: Authorization
           in: header
-          required: false
-          description: Bearer Maskinporten token or Enduser token.
+          required: true
+          description: Bearer Maskinporten token, Enduser token or internal token.
           schema:
             type: string
         - name: SenderGln
@@ -366,6 +366,12 @@ paths:
       description: Update the authorization grant status. This is an internal API for BRS.
       parameters:
         - $ref: "#/components/parameters/UserAgent"
+        - name: Authorization
+          in: header
+          required: true
+          description: Internal token.
+          schema:
+            type: string
         - name: id
           in: path
           required: true
@@ -392,8 +398,6 @@ paths:
           $ref: "#/components/responses/404NotFoundError"
         "500":
           $ref: "#/components/responses/500InternalServerError"
-      tags:
-        - TODO
   "/authorization-grants/{id}/scopes":
     get:
       summary: Retrieve all of the scopes for the identified authorization grant.
