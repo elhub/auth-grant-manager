@@ -6,7 +6,7 @@
     },
     "type": {
       "type": "string",
-      "description": "The type of the resource object.",
+      "description": "The type of the resource object. This refers to the JSON:API resource type, not the JSON Schema type keyword.",
       "const": "AuthorizationDocument"
     },
     "attributes": {
