@@ -2,27 +2,40 @@ package no.elhub.auth.features.requests.update
 
 import arrow.core.Either
 import arrow.core.raise.either
+import arrow.core.raise.ensure
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.common.GrantRepository
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.common.RequestRepository
-import java.util.UUID
+import org.slf4j.LoggerFactory
 
 class Handler(
     private val requestRepository: RequestRepository,
     private val grantRepository: GrantRepository
 ) {
+
+    private val logger = LoggerFactory.getLogger(Handler::class.java)
+
     operator fun invoke(command: UpdateCommand): Either<UpdateError, AuthorizationRequest> = either {
-        // TODO add authorization check -> only authorized consumers can accept/reject
         // TODO add handle illegal state: Accepted -> Rejected should not be possible
+
+        val originalRequest = requestRepository.find(command.requestId)
+            .mapLeft { UpdateError.RequestNotFound }
+            .bind()
+
+        ensure(originalRequest.requestedTo == command.authorizedParty) {
+            logger.error("Requestee is not authorized to get the request ${command.authorizedParty}")
+            UpdateError.NotAuthorizedError
+        }
+
         val updatedRequest = when (command.newStatus) {
             AuthorizationRequest.Status.Accepted -> {
-                handleAccepted(command.requestId).bind()
+                handleAccepted(originalRequest).bind()
             }
 
             AuthorizationRequest.Status.Rejected -> {
-                handleRejected(command.requestId).bind()
+                handleRejected(originalRequest).bind()
             }
 
             else -> {
@@ -33,11 +46,7 @@ class Handler(
         updatedRequest
     }
 
-    private fun handleAccepted(requestId: UUID): Either<UpdateError, AuthorizationRequest> = either {
-        val originalRequest = requestRepository.find(requestId)
-            .mapLeft { UpdateError.RequestNotFound }
-            .bind()
-
+    private fun handleAccepted(originalRequest: AuthorizationRequest): Either<UpdateError, AuthorizationRequest> = either {
         // TODO this will be provided by value stream via tokens. Temporary setting this as requestedTo
         val approval = originalRequest.requestedTo
 
@@ -72,9 +81,9 @@ class Handler(
         acceptedRequest.copy(grantId = createdGrant.id)
     }
 
-    private fun handleRejected(requestId: UUID): Either<UpdateError, AuthorizationRequest> = either {
+    private fun handleRejected(originalRequest: AuthorizationRequest): Either<UpdateError, AuthorizationRequest> = either {
         val rejectedRequest = requestRepository.rejectAccept(
-            requestId = requestId,
+            requestId = originalRequest.id,
         ).mapLeft { UpdateError.PersistenceError }
             .bind()
         rejectedRequest
