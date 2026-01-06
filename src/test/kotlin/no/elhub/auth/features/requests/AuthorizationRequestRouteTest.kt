@@ -11,6 +11,7 @@ import io.ktor.client.request.header
 import io.ktor.client.request.patch
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
@@ -28,6 +29,7 @@ import no.elhub.auth.features.common.auth.PDPAuthorizationProvider
 import no.elhub.auth.features.common.commonModule
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
+import no.elhub.auth.features.grants.GRANTS_PATH
 import no.elhub.auth.features.requests.create.dto.CreateRequestAttributes
 import no.elhub.auth.features.requests.create.dto.CreateRequestMeta
 import no.elhub.auth.features.requests.create.dto.CreateRequestResponse
@@ -454,6 +456,7 @@ class AuthorizationRequestRouteTest : FunSpec({
             test("Should accept authorization request and persist grant relationship") {
                 val patchResult =
                     client.patch("${REQUESTS_PATH}/d81e5bf2-8a0c-4348-a788-2a3fab4e77d6") {
+                        header(HttpHeaders.Authorization, "Bearer enduser")
                         contentType(ContentType.Application.Json)
                         setBody(
                             JsonApiUpdateRequest(
@@ -593,7 +596,8 @@ class AuthorizationRequestRouteTest : FunSpec({
 
             test("Should reject authorization-request") {
                 val response =
-                    client.patch("${REQUESTS_PATH}/d81e5bf2-8a0c-4348-a788-2a3fab4e77d6") {
+                    client.patch("${REQUESTS_PATH}/4f71d596-99e4-415e-946d-7352c1a40c53") {
+                        header(HttpHeaders.Authorization, "Bearer enduser")
                         contentType(ContentType.Application.Json)
                         setBody(
                             JsonApiUpdateRequest(
@@ -644,10 +648,10 @@ class AuthorizationRequestRouteTest : FunSpec({
                                     OffsetDateTime.parse(createdAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
                                     OffsetDateTime.parse(updatedAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
                                 }
-                                values["requestedFromName"] shouldBe "Kasper Lind"
-                                values["requestedForMeteringPointId"] shouldBe "1234567890555"
-                                values["requestedForMeteringPointAddress"] shouldBe "Example Street 2, 0654 Oslo"
-                                values["balanceSupplierName"] shouldBe "Power AS"
+                                values["requestedFromName"] shouldBe "Ola Normann"
+                                values["requestedForMeteringPointId"] shouldBe "1234567890123"
+                                values["requestedForMeteringPointAddress"] shouldBe "Example Street 1, 1234 Oslo"
+                                values["balanceSupplierName"] shouldBe "Example Energy AS"
                                 values["balanceSupplierContractName"] shouldBe "ExampleSupplierContract"
                             }
                         }
@@ -657,8 +661,9 @@ class AuthorizationRequestRouteTest : FunSpec({
 
             test("Should return 400 Bad Request on illegal transaction") {
                 val response =
-                    client.patch("${REQUESTS_PATH}/3f2c9e6b-7a4d-4f1a-9b6e-8c1d2a5e9f47") {
+                    client.patch("${REQUESTS_PATH}/4f71d596-99e4-415e-946d-7352c1a40c53") {
                         contentType(ContentType.Application.Json)
+                        header(HttpHeaders.Authorization, "Bearer enduser")
                         setBody(
                             JsonApiUpdateRequest(
                                 data = JsonApiRequestResourceObject(
@@ -676,6 +681,52 @@ class AuthorizationRequestRouteTest : FunSpec({
                 body.status shouldBe "400"
                 body.title shouldBe "Invalid Status Transition"
                 body.detail shouldBe "Only 'Accepted' and 'Rejected' statuses are allowed."
+            }
+
+            test("Should return 401 Unauthorized when requestee has maskinport token") {
+                val response =
+                    client.patch("${REQUESTS_PATH}/4f71d596-99e4-415e-946d-7352c1a40c53") {
+                        contentType(ContentType.Application.Json)
+                        header(HttpHeaders.Authorization, "Bearer maskinporten")
+                        header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                        setBody(
+                            JsonApiUpdateRequest(
+                                data = JsonApiRequestResourceObject(
+                                    type = "AuthorizationRequest",
+                                    attributes = UpdateRequestAttributes(
+                                        status = AuthorizationRequest.Status.Expired
+                                    )
+                                )
+                            ),
+                        )
+                    }
+
+                response.status shouldBe HttpStatusCode.Unauthorized
+                val responseJson: JsonApiErrorCollection = response.body()
+                responseJson.errors.apply {
+                    size shouldBe 1
+                    this[0].apply {
+                        status shouldBe "401"
+                        title shouldBe "Not authorized"
+                        detail shouldBe "Not authorized for this endpoint."
+                    }
+                }
+            }
+
+            test("Should return 401 Unauthorized when requestee has no token") {
+                val response = client.get("$REQUESTS_PATH/4f71d596-99e4-415e-946d-7352c1a40c53") {
+                    header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                }
+                response.status shouldBe HttpStatusCode.Unauthorized
+                val responseJson: JsonApiErrorCollection = response.body()
+                responseJson.errors.apply {
+                    size shouldBe 1
+                    this[0].apply {
+                        status shouldBe "401"
+                        title shouldBe "Missing authorization"
+                        detail shouldBe "Bearer token is required in the Authorization header."
+                    }
+                }
             }
         }
     }
