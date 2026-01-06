@@ -299,9 +299,9 @@ class AuthorizationRequestRouteTest : FunSpec({
                     size shouldBe 1
                     this[0].apply {
                         status shouldBe "403"
-                        code shouldBe "REQUESTED_BY_MISMATCH"
-                        title shouldBe "RequestedBy mismatch"
-                        detail shouldBe "The requester is not allowed to access this resource"
+                        code shouldBe "NOT_AUTHORIZED"
+                        title shouldBe "Party Not Authorized"
+                        detail shouldBe "The party is not allowed to access this resource"
                     }
                 }
             }
@@ -316,9 +316,9 @@ class AuthorizationRequestRouteTest : FunSpec({
                     size shouldBe 1
                     this[0].apply {
                         status shouldBe "403"
-                        code shouldBe "REQUESTED_BY_MISMATCH"
-                        title shouldBe "RequestedBy mismatch"
-                        detail shouldBe "The requester is not allowed to access this resource"
+                        code shouldBe "NOT_AUTHORIZED"
+                        title shouldBe "Party Not Authorized"
+                        detail shouldBe "The party is not allowed to access this resource"
                     }
                 }
             }

@@ -28,6 +28,7 @@ import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.insertReturning
 import org.jetbrains.exposed.sql.javatime.timestamp
 import org.jetbrains.exposed.sql.javatime.timestampWithTimeZone
+import org.jetbrains.exposed.sql.or
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.update
@@ -207,7 +208,7 @@ class ExposedDocumentRepository(
 
             val documentWithSignatoryRecords = (AuthorizationDocumentTable leftJoin SignatoriesTable)
                 .select(AuthorizationDocumentTable.columns + SignatoriesTable.signedBy)
-                .where { AuthorizationDocumentTable.requestedBy eq partyRecord.id }
+                .where { (AuthorizationDocumentTable.requestedBy eq partyRecord.id) or (AuthorizationDocumentTable.requestedFrom eq partyRecord.id) }
                 .toList()
 
             if (documentWithSignatoryRecords.isEmpty()) {

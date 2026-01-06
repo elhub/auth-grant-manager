@@ -2,9 +2,10 @@ package no.elhub.auth.features.documents.get
 
 import arrow.core.Either
 import arrow.core.raise.either
+import arrow.core.raise.ensure
 import no.elhub.auth.features.common.QueryError
 import no.elhub.auth.features.common.RepositoryReadError
-import no.elhub.auth.features.common.party.PartyService
+import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.grants.AuthorizationGrant
@@ -12,10 +13,9 @@ import no.elhub.auth.features.grants.common.GrantRepository
 
 class Handler(
     private val documentRepo: DocumentRepository,
-    private val partyService: PartyService,
     private val grantRepository: GrantRepository
 ) {
-    suspend operator fun invoke(query: Query): Either<QueryError, AuthorizationDocument> = either {
+    operator fun invoke(query: Query): Either<QueryError, AuthorizationDocument> = either {
         val document = documentRepo.find(query.documentId)
             .mapLeft { error ->
                 when (error) {
@@ -24,11 +24,11 @@ class Handler(
                 }
             }.bind()
 
-        val requestedByParty = partyService.resolve(query.requestedByIdentifier)
-            .mapLeft { QueryError.IOError }.bind()
-
-        if (document.requestedBy.resourceId != requestedByParty.resourceId) {
-            raise(QueryError.NotAuthorizedError)
+        ensure(
+            query.authorizedParty == document.requestedBy ||
+                query.authorizedParty == document.requestedFrom
+        ) {
+            QueryError.NotAuthorizedError
         }
 
         val grant = grantRepository.findBySource(AuthorizationGrant.SourceType.Document, document.id)
