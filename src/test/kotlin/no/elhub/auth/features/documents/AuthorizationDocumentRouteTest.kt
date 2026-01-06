@@ -53,13 +53,22 @@ import no.elhub.auth.module as applicationModule
 
 class AuthorizationDocumentRouteTest :
     FunSpec({
+        val pdpContainer = PdpTestContainerExtension()
         extensions(
             PostgresTestContainerExtension(),
             RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-party.sql"),
             VaultTransitTestContainerExtension,
             AuthPersonsTestContainerExtension,
-            PdpTestContainerExtension()
+            pdpContainer
         )
+
+        beforeSpec {
+            pdpContainer.registerMaskinportenMapping(
+                token = "maskinporten",
+                actingGln = "0107000000021",
+                actingFunction = "BalanceSupplier"
+            )
+        }
 
         lateinit var createdDocumentId: String
         lateinit var expectedSignatory: String

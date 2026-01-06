@@ -19,6 +19,7 @@ import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import no.elhub.auth.features.common.AuthPersonsTestContainer
 import no.elhub.auth.features.common.AuthPersonsTestContainerExtension
+import no.elhub.auth.features.common.Constants
 import no.elhub.auth.features.common.PdpTestContainerExtension
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.RunPostgresScriptExtension
@@ -35,6 +36,7 @@ import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import no.elhub.auth.module as applicationModule
 
 class AuthorizationGrantRouteTest : FunSpec({
+    val pdpContainer = PdpTestContainerExtension()
     extensions(
         PostgresTestContainerExtension(),
         RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-grants.sql"),
@@ -42,8 +44,26 @@ class AuthorizationGrantRouteTest : FunSpec({
         RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-grant-scopes.sql"),
         RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-party.sql"),
         AuthPersonsTestContainerExtension,
-        PdpTestContainerExtension()
+        pdpContainer
     )
+
+    beforeSpec {
+        pdpContainer.registerMaskinportenMapping(
+            token = "maskinporten",
+            actingGln = "0107000000021",
+            actingFunction = "BalanceSupplier"
+        )
+
+        pdpContainer.registerEnduserMapping(
+            token = "enduser",
+            partyId = "17abdc56-8f6f-440a-9f00-b9bfbb22065e"
+        )
+
+        pdpContainer.registerElhubServiceTokenMapping(
+            token = "elhub-service",
+            partyId = Constants.CONSENT_MANAGEMENT_OSB_ID
+        )
+    }
 
     context("GET /authorization-grants/{id}") {
         testApplication {
@@ -547,7 +567,7 @@ class AuthorizationGrantRouteTest : FunSpec({
             }
 
             test("Should return empty list when authorized person has no grants") {
-                PdpTestContainerExtension.registerEnduserMapping(
+                pdpContainer.registerEnduserMapping(
                     token = "enduser-no-grants",
                     partyId = "4e55f1e2-e576-23ab-80d3-c70a6fe354c0"
                 )
