@@ -78,26 +78,7 @@ fun AuthorizationDocument.toCreateDocumentResponse() = CreateDocumentResponse(
                     type = this.requestedTo.type.name,
                     id = this.requestedTo.resourceId,
                 )
-            ),
-            signedBy = this.signedBy?.let {
-                JsonApiRelationshipToOne(
-                    data = JsonApiRelationshipData(
-                        type = it.type.name,
-                        id = it.resourceId
-                    )
-                )
-            },
-            grant = this.grantId?.let {
-                JsonApiRelationshipToOne(
-                    data = JsonApiRelationshipData(
-                        id = it.toString(),
-                        type = "AuthorizationGrant"
-                    ),
-                    links = JsonApiLinks.RelationShipLink(
-                        self = "$GRANTS_PATH/$it"
-                    )
-                )
-            },
+            )
         ),
         meta = CreateDocumentResponseMeta(
             buildMap {
