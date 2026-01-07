@@ -36,6 +36,7 @@ import no.elhub.auth.features.documents.common.ProxyDocumentBusinessHandler
 import no.elhub.auth.features.documents.confirm.getPersonNin
 import no.elhub.auth.features.documents.confirm.isSignedByUs
 import no.elhub.auth.features.documents.create.command.DocumentMetaMarker
+import no.elhub.auth.features.documents.create.dto.CreateDocumentMeta
 import no.elhub.auth.features.documents.create.model.CreateDocumentModel
 import no.elhub.auth.features.documents.getCustomMetaDataValue
 import no.elhub.auth.features.documents.localVaultConfig
@@ -161,7 +162,7 @@ class CreateDocumentTest :
                     CreateDocumentModel(
                         documentType = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
                         meta =
-                        DocumentMeta(
+                        CreateDocumentMeta(
                             requestedBy = requestedBy,
                             requestedFrom = requestedFrom,
                             requestedTo = requestedFrom,
@@ -214,7 +215,7 @@ class CreateDocumentTest :
                         CreateDocumentModel(
                             documentType = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
                             meta =
-                            DocumentMeta(
+                            CreateDocumentMeta(
                                 requestedBy = requestedBy,
                                 requestedFrom = requestedFrom,
                                 requestedTo = requestedTo,
@@ -273,7 +274,7 @@ class CreateDocumentTest :
                         CreateDocumentModel(
                             documentType = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
                             meta =
-                            DocumentMeta(
+                            CreateDocumentMeta(
                                 requestedBy = requestedBy,
                                 requestedFrom = requestedFrom,
                                 requestedTo = requestedTo,
@@ -312,7 +313,7 @@ class CreateDocumentTest :
                         CreateDocumentModel(
                             documentType = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
                             meta =
-                            DocumentMeta(
+                            CreateDocumentMeta(
                                 requestedBy = requestedBy,
                                 requestedFrom = requestedFrom,
                                 requestedTo = requestedTo,
@@ -351,7 +352,7 @@ class CreateDocumentTest :
                         CreateDocumentModel(
                             documentType = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
                             meta =
-                            DocumentMeta(
+                            CreateDocumentMeta(
                                 requestedBy = requestedBy,
                                 requestedFrom = requestedFrom,
                                 requestedTo = requestedTo,
@@ -390,7 +391,7 @@ class CreateDocumentTest :
                         CreateDocumentModel(
                             documentType = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
                             meta =
-                            DocumentMeta(
+                            CreateDocumentMeta(
                                 requestedBy = requestedBy,
                                 requestedFrom = requestedFrom,
                                 requestedTo = requestedTo,
@@ -429,7 +430,7 @@ class CreateDocumentTest :
                         CreateDocumentModel(
                             documentType = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
                             meta =
-                            DocumentMeta(
+                            CreateDocumentMeta(
                                 requestedBy = requestedBy,
                                 requestedFrom = requestedFrom,
                                 requestedTo = requestedTo,
@@ -468,7 +469,7 @@ class CreateDocumentTest :
                         CreateDocumentModel(
                             documentType = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
                             meta =
-                            DocumentMeta(
+                            CreateDocumentMeta(
                                 requestedBy = requestedBy,
                                 requestedFrom = requestedFrom,
                                 requestedTo = requestedTo,
@@ -507,7 +508,7 @@ class CreateDocumentTest :
                         CreateDocumentModel(
                             documentType = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
                             meta =
-                            DocumentMeta(
+                            CreateDocumentMeta(
                                 requestedBy = requestedBy,
                                 requestedFrom = requestedFrom,
                                 requestedTo = requestedTo,
@@ -546,7 +547,7 @@ class CreateDocumentTest :
                         CreateDocumentModel(
                             documentType = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
                             meta =
-                            DocumentMeta(
+                            CreateDocumentMeta(
                                 requestedBy = requestedBy,
                                 requestedFrom = requestedFrom,
                                 requestedTo = requestedTo,
@@ -585,7 +586,7 @@ class CreateDocumentTest :
                         CreateDocumentModel(
                             documentType = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
                             meta =
-                            DocumentMeta(
+                            CreateDocumentMeta(
                                 requestedBy = requestedBy,
                                 requestedFrom = requestedFrom,
                                 requestedTo = requestedTo,

@@ -372,24 +372,22 @@ class AuthorizationRequestRouteTest : FunSpec({
                         validTo.shouldNotBeNull()
                     }
                     relationships.shouldNotBeNull().apply {
-                        relationships.apply {
-                            requestedBy.apply {
-                                data.apply {
-                                    id shouldBe "987654321"
-                                    type shouldBe "Organization"
-                                }
+                        requestedBy.apply {
+                            data.apply {
+                                id shouldBe "987654321"
+                                type shouldBe "Organization"
                             }
-                            requestedFrom.apply {
-                                data.apply {
-                                    id.shouldNotBeNull()
-                                    type shouldBe "Person"
-                                }
+                        }
+                        requestedFrom.apply {
+                            data.apply {
+                                id.shouldNotBeNull()
+                                type shouldBe "Person"
                             }
-                            requestedFrom.apply {
-                                data.apply {
-                                    id.shouldNotBeNull()
-                                    type shouldBe "Person"
-                                }
+                        }
+                        requestedTo.apply {
+                            data.apply {
+                                id.shouldNotBeNull()
+                                type shouldBe "Person"
                             }
                         }
                     }

@@ -7,7 +7,7 @@ import io.kotest.matchers.shouldBe
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
 import no.elhub.auth.features.documents.AuthorizationDocument
-import no.elhub.auth.features.documents.create.DocumentMeta
+import no.elhub.auth.features.documents.create.dto.CreateDocumentMeta
 import no.elhub.auth.features.documents.create.model.CreateDocumentModel
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.create.model.CreateRequestMeta
@@ -90,7 +90,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                 CreateDocumentModel(
                     documentType = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
                     meta =
-                    DocumentMeta(
+                    CreateDocumentMeta(
                         requestedBy = VALID_PARTY,
                         requestedFrom = VALID_PARTY,
                         requestedTo = VALID_PARTY,
