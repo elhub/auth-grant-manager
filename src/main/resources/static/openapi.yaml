@@ -17,6 +17,12 @@ info:
     name: MIT
     url: https://github.com/elhub/auth-grant-manager?tab=MIT-1-ov-file
 
+servers:
+  - url: https://api.elhub.no/access/v0
+    description: Production
+  - url: https://api-mt1.elhub.no/access/v0
+    description: MT1
+
 tags:
   - name: Authorization Documents
     description: Operations for creating, retrieving, managing, and submitting authorization documents.
@@ -49,7 +55,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "./schemas/documents/authorization-document-get-list-response.schema.json"
+                ref: "./schemas/documents/authorization-document-collectionn.schema.json"
         "401":
           $ref: "#/components/responses/401UnauthorizedError"
         "500":
@@ -72,7 +78,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "./schemas/documents/authorization-document-post-request.schema.json"
+              $ref: "./schemas/documents/authorization-document-submission.schema.json"
       responses:
         "201":
           description: >
@@ -81,7 +87,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "./schemas/documents/authorization-document-post-response.schema.json"
+                $ref: "./schemas/documents/authorization-document-resource.schema.json"
         "400":
           $ref: "#/components/responses/400BadRequestError"
         "401":
@@ -114,7 +120,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "./schemas/documents/authorization-document-get-response.schema.json"
+                $ref: "./schemas/documents/authorization-document-resource.schema.json"
         "401":
           $ref: "#/components/responses/401UnauthorizedError"
         "404":
@@ -123,7 +129,6 @@ paths:
           $ref: "#/components/responses/500InternalServerError"
     delete:
       tags:
-        - Authorization Documents
         - TODO
       summary: Cancel unsigned authorization document
       description: >
@@ -284,8 +289,6 @@ paths:
           $ref: "#/components/responses/500InternalServerError"
     patch:
       tags:
-        - Authorization Grants
-        - Elhub Internal
         - TODO
       summary: Update authorization grant status
       description: >
@@ -358,7 +361,6 @@ paths:
   "/authorization-requests":
     get:
       tags:
-        - Authorization Requests
         - TODO
       summary: List authorization requests
       description: >
@@ -382,7 +384,6 @@ paths:
           $ref: "#/components/responses/500InternalServerError"
     post:
       tags:
-        - Authorization Requests
         - TODO
       summary: Create authorization request for MinSide
       description: >
@@ -418,7 +419,6 @@ paths:
   "/authorization-requests/{id}":
     get:
       tags:
-        - Authorization Requests
         - TODO
       summary: Get authorization request by id
       description: >
@@ -450,8 +450,6 @@ paths:
           $ref: "#/components/responses/500InternalServerError"
     patch:
       tags:
-        - Authorization Requests
-        - Elhub Internal
         - TODO
       summary: Update authorization request
       description: >
@@ -494,7 +492,6 @@ paths:
           $ref: "#/components/responses/500InternalServerError"
     delete:
       tags:
-        - Authorization Requests
         - TODO
       summary: Cancel authorization request
       description: >

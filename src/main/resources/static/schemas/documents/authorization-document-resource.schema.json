@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Authorization Document",
+  "description": "Schema for returning a single authorization document object in the Elhub authorization manager.",
+  "type": "object",
+  "properties": {
+    "data": {
+      "type": "object",
+      "required": ["id", "type", "attributes", "relationships", "meta", "links"],
+      "properties": {
+        "id": {
+          "$ref": "authorization-document-common.schema.json#/$defs/id"
+        },
+        "type": {
+          "$ref": "authorization-document-common.schema.json#/$defs/type"
+        },
+        "attributes": {
+          "$ref": "authorization-document-common.schema.json#/$defs/attributes",
+          "required": [
+            "documentType",
+            "status",
+            "validTo",
+            "createdAt",
+            "updatedAt"
+          ]
+        },
+        "relationships": {
+          "$ref": "authorization-document-common.schema.json#/$defs/relationships",
+          "required": [
+            "requestedBy",
+            "requestedFrom",
+            "requestedTo"
+          ]
+        },
+        "meta": {
+          "$ref": "authorization-document-common.schema.json#/$defs/meta"
+        },
+        "links": {
+          "$ref": "authorization-document-common.schema.json#/$defs/links",
+          "required": ["self", "file"]
+        }
+      }
+    },
+    "links": {
+      "description": "Link members related to the primary data.",
+      "$ref": "../base-definitions.schema.json#/definitions/topLevelLinks",
+      "examples": [
+        "/access/v0/authorization-documents/123e4567-e89b-12d3-a456-426614174000"
+      ]
+    },
+    "meta": {
+      "$ref": "../base-definitions.schema.json#/definitions/topLevelMeta"
+    }
+  }
+}
