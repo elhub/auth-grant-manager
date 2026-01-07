@@ -37,7 +37,7 @@ import no.elhub.auth.features.common.commonModule
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
 import no.elhub.auth.features.documents.create.dto.CreateDocumentRequestAttributes
-import no.elhub.auth.features.documents.create.dto.CreateDocumentRequestMeta
+import no.elhub.auth.features.documents.create.dto.CreateDocumentMeta
 import no.elhub.auth.features.documents.create.dto.CreateDocumentResponse
 import no.elhub.auth.features.documents.create.dto.JsonApiCreateDocumentRequest
 import no.elhub.auth.features.documents.get.GetDocumentResponse
@@ -131,7 +131,7 @@ class AuthorizationDocumentRouteTest :
                                             attributes = CreateDocumentRequestAttributes(
                                                 documentType = AuthorizationDocument.Type.ChangeOfSupplierConfirmation
                                             ),
-                                            meta = CreateDocumentRequestMeta(
+                                            meta = CreateDocumentMeta(
                                                 requestedBy = PartyIdentifier(
                                                     idType = PartyIdentifierType.GlobalLocationNumber,
                                                     idValue = "0107000000021"

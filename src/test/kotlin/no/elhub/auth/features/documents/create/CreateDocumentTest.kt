@@ -36,8 +36,8 @@ import no.elhub.auth.features.documents.common.ProxyDocumentBusinessHandler
 import no.elhub.auth.features.documents.confirm.getPersonNin
 import no.elhub.auth.features.documents.confirm.isSignedByUs
 import no.elhub.auth.features.documents.create.command.DocumentMetaMarker
-import no.elhub.auth.features.documents.create.dto.CreateDocumentRequestMeta
-import no.elhub.auth.features.documents.create.model.CreateDocumentRequestModel
+import no.elhub.auth.features.documents.create.dto.CreateDocumentMeta
+import no.elhub.auth.features.documents.create.model.CreateDocumentModel
 import no.elhub.auth.features.documents.getCustomMetaDataValue
 import no.elhub.auth.features.documents.localVaultConfig
 import no.elhub.auth.features.documents.validateFileIsPDFA2BCompliant
@@ -159,10 +159,10 @@ class CreateDocumentTest :
                 val handler by inject<Handler>()
 
                 val model =
-                    CreateDocumentRequestModel(
+                    CreateDocumentModel(
                         documentType = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
                         meta =
-                        CreateDocumentRequestMeta(
+                        CreateDocumentMeta(
                             requestedBy = requestedBy,
                             requestedFrom = requestedFrom,
                             requestedTo = requestedFrom,
@@ -212,10 +212,10 @@ class CreateDocumentTest :
                     val handler by inject<Handler>()
 
                     val model =
-                        CreateDocumentRequestModel(
+                        CreateDocumentModel(
                             documentType = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
                             meta =
-                            CreateDocumentRequestMeta(
+                            CreateDocumentMeta(
                                 requestedBy = requestedBy,
                                 requestedFrom = requestedFrom,
                                 requestedTo = requestedTo,
@@ -271,10 +271,10 @@ class CreateDocumentTest :
 
                     val orchestrator = testDocumentOrchestrator()
                     val model =
-                        CreateDocumentRequestModel(
+                        CreateDocumentModel(
                             documentType = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
                             meta =
-                            CreateDocumentRequestMeta(
+                            CreateDocumentMeta(
                                 requestedBy = requestedBy,
                                 requestedFrom = requestedFrom,
                                 requestedTo = requestedTo,
@@ -310,10 +310,10 @@ class CreateDocumentTest :
 
                     val orchestrator = testDocumentOrchestrator()
                     val model =
-                        CreateDocumentRequestModel(
+                        CreateDocumentModel(
                             documentType = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
                             meta =
-                            CreateDocumentRequestMeta(
+                            CreateDocumentMeta(
                                 requestedBy = requestedBy,
                                 requestedFrom = requestedFrom,
                                 requestedTo = requestedTo,
@@ -349,10 +349,10 @@ class CreateDocumentTest :
 
                     val orchestrator = testDocumentOrchestrator()
                     val model =
-                        CreateDocumentRequestModel(
+                        CreateDocumentModel(
                             documentType = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
                             meta =
-                            CreateDocumentRequestMeta(
+                            CreateDocumentMeta(
                                 requestedBy = requestedBy,
                                 requestedFrom = requestedFrom,
                                 requestedTo = requestedTo,
@@ -388,10 +388,10 @@ class CreateDocumentTest :
 
                     val orchestrator = testDocumentOrchestrator()
                     val model =
-                        CreateDocumentRequestModel(
+                        CreateDocumentModel(
                             documentType = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
                             meta =
-                            CreateDocumentRequestMeta(
+                            CreateDocumentMeta(
                                 requestedBy = requestedBy,
                                 requestedFrom = requestedFrom,
                                 requestedTo = requestedTo,
@@ -427,10 +427,10 @@ class CreateDocumentTest :
 
                     val orchestrator = testDocumentOrchestrator()
                     val model =
-                        CreateDocumentRequestModel(
+                        CreateDocumentModel(
                             documentType = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
                             meta =
-                            CreateDocumentRequestMeta(
+                            CreateDocumentMeta(
                                 requestedBy = requestedBy,
                                 requestedFrom = requestedFrom,
                                 requestedTo = requestedTo,
@@ -466,10 +466,10 @@ class CreateDocumentTest :
 
                     val orchestrator = testDocumentOrchestrator()
                     val model =
-                        CreateDocumentRequestModel(
+                        CreateDocumentModel(
                             documentType = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
                             meta =
-                            CreateDocumentRequestMeta(
+                            CreateDocumentMeta(
                                 requestedBy = requestedBy,
                                 requestedFrom = requestedFrom,
                                 requestedTo = requestedTo,
@@ -505,10 +505,10 @@ class CreateDocumentTest :
 
                     val orchestrator = testDocumentOrchestrator()
                     val model =
-                        CreateDocumentRequestModel(
+                        CreateDocumentModel(
                             documentType = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
                             meta =
-                            CreateDocumentRequestMeta(
+                            CreateDocumentMeta(
                                 requestedBy = requestedBy,
                                 requestedFrom = requestedFrom,
                                 requestedTo = requestedTo,
@@ -544,10 +544,10 @@ class CreateDocumentTest :
 
                     val orchestrator = testDocumentOrchestrator()
                     val model =
-                        CreateDocumentRequestModel(
+                        CreateDocumentModel(
                             documentType = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
                             meta =
-                            CreateDocumentRequestMeta(
+                            CreateDocumentMeta(
                                 requestedBy = requestedBy,
                                 requestedFrom = requestedFrom,
                                 requestedTo = requestedTo,
@@ -583,10 +583,10 @@ class CreateDocumentTest :
 
                     val orchestrator = testDocumentOrchestrator()
                     val model =
-                        CreateDocumentRequestModel(
+                        CreateDocumentModel(
                             documentType = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
                             meta =
-                            CreateDocumentRequestMeta(
+                            CreateDocumentMeta(
                                 requestedBy = requestedBy,
                                 requestedFrom = requestedFrom,
                                 requestedTo = requestedTo,

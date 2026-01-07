@@ -7,8 +7,8 @@ import io.kotest.matchers.shouldBe
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
 import no.elhub.auth.features.documents.AuthorizationDocument
-import no.elhub.auth.features.documents.create.dto.CreateDocumentRequestMeta
-import no.elhub.auth.features.documents.create.model.CreateDocumentRequestModel
+import no.elhub.auth.features.documents.create.dto.CreateDocumentMeta
+import no.elhub.auth.features.documents.create.model.CreateDocumentModel
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.create.model.CreateRequestMeta
 import no.elhub.auth.features.requests.create.model.CreateRequestModel
@@ -87,10 +87,10 @@ class ChangeOfSupplierBusinessHandlerTest :
 
         test("document produces DocumentCommand for valid input") {
             val model =
-                CreateDocumentRequestModel(
+                CreateDocumentModel(
                     documentType = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
                     meta =
-                    CreateDocumentRequestMeta(
+                    CreateDocumentMeta(
                         requestedBy = VALID_PARTY,
                         requestedFrom = VALID_PARTY,
                         requestedTo = VALID_PARTY,
