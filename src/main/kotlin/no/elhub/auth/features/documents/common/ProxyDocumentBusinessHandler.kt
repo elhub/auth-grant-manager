@@ -8,14 +8,14 @@ import no.elhub.auth.features.documents.create.DocumentGenerationError
 import no.elhub.auth.features.documents.create.FileGenerator
 import no.elhub.auth.features.documents.create.command.DocumentCommand
 import no.elhub.auth.features.documents.create.command.DocumentMetaMarker
-import no.elhub.auth.features.documents.create.model.CreateDocumentModel
+import no.elhub.auth.features.documents.create.model.CreateDocumentRequestModel
 import no.elhub.auth.features.grants.common.CreateGrantProperties
 
 class ProxyDocumentBusinessHandler(
     private val changeOfSupplierHandler: ChangeOfSupplierBusinessHandler,
     private val fileGenerator: FileGenerator,
 ) : DocumentBusinessHandler {
-    override fun validateAndReturnDocumentCommand(model: CreateDocumentModel): Either<CreateDocumentError, DocumentCommand> =
+    override fun validateAndReturnDocumentCommand(model: CreateDocumentRequestModel): Either<CreateDocumentError, DocumentCommand> =
         when (model.documentType) {
             AuthorizationDocument.Type.ChangeOfSupplierConfirmation -> changeOfSupplierHandler.validateAndReturnDocumentCommand(model)
         }
@@ -32,7 +32,7 @@ class ProxyDocumentBusinessHandler(
 }
 
 interface DocumentBusinessHandler {
-    fun validateAndReturnDocumentCommand(model: CreateDocumentModel): Either<CreateDocumentError, DocumentCommand>
+    fun validateAndReturnDocumentCommand(model: CreateDocumentRequestModel): Either<CreateDocumentError, DocumentCommand>
 
     fun getCreateGrantProperties(document: AuthorizationDocument): CreateGrantProperties
 }

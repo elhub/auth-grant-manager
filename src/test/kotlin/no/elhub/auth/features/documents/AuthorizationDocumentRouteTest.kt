@@ -1,5 +1,6 @@
 package no.elhub.auth.features.documents
 
+import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.maps.shouldContain
@@ -35,10 +36,10 @@ import no.elhub.auth.features.common.auth.PDPAuthorizationProvider
 import no.elhub.auth.features.common.commonModule
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
-import no.elhub.auth.features.documents.create.CreateDocumentResponse
-import no.elhub.auth.features.documents.create.DocumentMeta
-import no.elhub.auth.features.documents.create.DocumentRequestAttributes
-import no.elhub.auth.features.documents.create.Request
+import no.elhub.auth.features.documents.create.dto.CreateDocumentRequestAttributes
+import no.elhub.auth.features.documents.create.dto.CreateDocumentRequestMeta
+import no.elhub.auth.features.documents.create.dto.CreateDocumentResponse
+import no.elhub.auth.features.documents.create.dto.JsonApiCreateDocumentRequest
 import no.elhub.auth.features.documents.get.GetDocumentResponse
 import no.elhub.auth.features.documents.query.AuthorizationDocumentsResponse
 import no.elhub.auth.features.grants.AuthorizationScope
@@ -50,6 +51,7 @@ import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import no.elhub.devxp.jsonapi.response.JsonApiErrorObject
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
 import no.elhub.auth.features.grants.module as grantsModule
 import no.elhub.auth.module as applicationModule
 
@@ -123,13 +125,13 @@ class AuthorizationDocumentRouteTest :
                                 header(HttpHeaders.Authorization, "Bearer maskinporten")
                                 header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
                                 setBody(
-                                    Request(
+                                    JsonApiCreateDocumentRequest(
                                         data = JsonApiRequestResourceObjectWithMeta(
                                             type = "AuthorizationDocument",
-                                            attributes = DocumentRequestAttributes(
+                                            attributes = CreateDocumentRequestAttributes(
                                                 documentType = AuthorizationDocument.Type.ChangeOfSupplierConfirmation
                                             ),
-                                            meta = DocumentMeta(
+                                            meta = CreateDocumentRequestMeta(
                                                 requestedBy = PartyIdentifier(
                                                     idType = PartyIdentifierType.GlobalLocationNumber,
                                                     idValue = "0107000000021"
@@ -158,13 +160,55 @@ class AuthorizationDocumentRouteTest :
                     createDocumentResponse.data.apply {
                         type shouldBe "AuthorizationDocument"
                         id.shouldNotBeNull()
+                        attributes.shouldNotBeNull().apply {
+                            documentType shouldBe "ChangeOfSupplierConfirmation"
+                            status shouldBe AuthorizationDocument.Status.Pending.name
+                        }
+                        relationships.shouldNotBeNull().apply {
+                            requestedBy.apply {
+                                data.apply {
+                                    id shouldBe "0107000000021"
+                                    type shouldBe "OrganizationEntity"
+                                }
+                            }
+                            requestedFrom.apply {
+                                data.apply {
+                                    id.shouldNotBeNull()
+                                    type shouldBe "Person"
+                                }
+                            }
+                            requestedTo.apply {
+                                data.apply {
+                                    id.shouldNotBeNull()
+                                    type shouldBe "Person"
+                                }
+                            }
+                        }
+                        meta.shouldNotBeNull().apply {
+                            val createdAt = values["createdAt"].shouldNotBeNull()
+                            val updatedAt = values["updatedAt"].shouldNotBeNull()
+
+                            shouldNotThrowAny {
+                                OffsetDateTime.parse(createdAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                                OffsetDateTime.parse(updatedAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                            }
+
+                            values["requestedFromName"] shouldBe "Hillary Orr"
+                            values["requestedForMeteringPointId"] shouldBe "123456789012345678"
+                            values["requestedForMeteringPointAddress"] shouldBe "quaerendum"
+                            values["balanceSupplierName"] shouldBe "Jami Wade"
+                            values["balanceSupplierContractName"] shouldBe "Selena Chandler"
+                        }
                         links.self shouldBe "$DOCUMENTS_PATH/$id"
                         links.file shouldBe "$DOCUMENTS_PATH/$id.pdf"
                     }
                     createDocumentResponse.links.apply {
                         self shouldBe DOCUMENTS_PATH
                     }
-                    createdDocumentId = createDocumentResponse.data.id
+                    createDocumentResponse.meta.shouldNotBeNull().apply {
+                        "createdAt".shouldNotBeNull()
+                    }
+                    createdDocumentId = createDocumentResponse.data.id.toString()
                     linkToDocument = createDocumentResponse.data.links.self
                     linkToDocumentFile = createDocumentResponse.data.links.file
                 }

@@ -1,20 +1,20 @@
-package no.elhub.auth.features.documents.create
+package no.elhub.auth.features.documents.create.dto
 
 import kotlinx.serialization.Serializable
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.documents.AuthorizationDocument
-import no.elhub.auth.features.documents.create.model.CreateDocumentModel
+import no.elhub.auth.features.documents.create.model.CreateDocumentRequestModel
 import no.elhub.devxp.jsonapi.model.JsonApiAttributes
 import no.elhub.devxp.jsonapi.model.JsonApiResourceMeta
 import no.elhub.devxp.jsonapi.request.JsonApiRequest
 
 @Serializable
-data class DocumentRequestAttributes(
+data class CreateDocumentRequestAttributes(
     val documentType: AuthorizationDocument.Type
 ) : JsonApiAttributes
 
 @Serializable
-data class DocumentMeta(
+data class CreateDocumentRequestMeta(
     val requestedBy: PartyIdentifier,
     val requestedFrom: PartyIdentifier,
     val requestedTo: PartyIdentifier,
@@ -25,10 +25,10 @@ data class DocumentMeta(
     val balanceSupplierContractName: String
 ) : JsonApiResourceMeta
 
-typealias Request = JsonApiRequest.SingleDocumentWithMeta<DocumentRequestAttributes, DocumentMeta>
+typealias JsonApiCreateDocumentRequest = JsonApiRequest.SingleDocumentWithMeta<CreateDocumentRequestAttributes, CreateDocumentRequestMeta>
 
-fun Request.toModel(): CreateDocumentModel =
-    CreateDocumentModel(
+fun JsonApiCreateDocumentRequest.toModel(): CreateDocumentRequestModel =
+    CreateDocumentRequestModel(
         documentType = this.data.attributes.documentType,
         meta = this.data.meta,
     )

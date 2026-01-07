@@ -19,7 +19,8 @@
               "$ref": "authorization-document-definitions.json#/$defs/attributes/$defs/documentType"
             },
             "status": {
-              "$ref": "authorization-document-definitions.json#/$defs/attributes/$defs/status"
+              "$ref": "authorization-document-definitions.json#/$defs/attributes/$defs/status",
+              "examples": ["Pending"]
             },
             "validTo": {
               "$ref": "authorization-document-definitions.json#/$defs/attributes/$defs/validTo"
@@ -37,12 +38,6 @@
             },
             "requestedTo": {
               "$ref": "authorization-document-definitions.json#/$defs/relationships/$defs/requestedTo"
-            },
-            "signedBy": {
-              "$ref": "authorization-document-definitions.json#/$defs/relationships/$defs/signedBy"
-            },
-            "grant": {
-              "$ref": "authorization-document-definitions.json#/$defs/relationships/$defs/grant"
             }
           }
         },
@@ -90,9 +85,7 @@
     "links": {
       "description": "Link members related to the primary data.",
       "$ref": "../base-definitions.schema.json#/definitions/topLevelLinks",
-      "examples": [
-        "/access/v0/authorization-documents"
-      ]
+      "examples": ["/access/v0/authorization-documents"]
     },
     "meta": {
       "$ref": "../base-definitions.schema.json#/definitions/topLevelMeta"

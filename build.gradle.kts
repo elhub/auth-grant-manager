@@ -159,6 +159,13 @@ tasks.named<JavaExec>("run").configure {
     localEnvVars.forEach { (key, value) -> environment(key, value) }
 }
 
+tasks.test {
+    // TODO nisse remove
+    testLogging {
+        showStandardStreams = true
+    }
+}
+
 dependencyCheck {
     nvd {
         datafeedUrl = "https://owasp.elhub.cloud"

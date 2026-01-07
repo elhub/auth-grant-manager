@@ -9,6 +9,9 @@ import io.ktor.server.routing.post
 import no.elhub.auth.features.common.auth.AuthorizationProvider
 import no.elhub.auth.features.common.auth.RoleType
 import no.elhub.auth.features.common.auth.toApiErrorResponse
+import no.elhub.auth.features.documents.create.dto.JsonApiCreateDocumentRequest
+import no.elhub.auth.features.documents.create.dto.toCreateDocumentResponse
+import no.elhub.auth.features.documents.create.dto.toModel
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import no.elhub.devxp.jsonapi.response.JsonApiErrorObject
 import org.slf4j.LoggerFactory
@@ -27,7 +30,7 @@ fun Route.route(
                 return@post
             }
 
-        val requestBody = call.receive<Request>()
+        val requestBody = call.receive<JsonApiCreateDocumentRequest>()
         val model = requestBody.toModel()
 
         if (resolvedActor.role != RoleType.BalanceSupplier) {

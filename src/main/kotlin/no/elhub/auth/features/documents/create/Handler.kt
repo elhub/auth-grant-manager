@@ -9,7 +9,7 @@ import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.AuthorizationDocumentProperty
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.documents.common.ProxyDocumentBusinessHandler
-import no.elhub.auth.features.documents.create.model.CreateDocumentModel
+import no.elhub.auth.features.documents.create.model.CreateDocumentRequestModel
 
 class Handler(
     private val businessHandler: ProxyDocumentBusinessHandler,
@@ -17,7 +17,7 @@ class Handler(
     private val documentRepository: DocumentRepository,
     private val partyService: PartyService,
 ) {
-    suspend operator fun invoke(model: CreateDocumentModel): Either<CreateDocumentError, AuthorizationDocument> {
+    suspend operator fun invoke(model: CreateDocumentRequestModel): Either<CreateDocumentError, AuthorizationDocument> {
         val command =
             businessHandler
                 .validateAndReturnDocumentCommand(model)
