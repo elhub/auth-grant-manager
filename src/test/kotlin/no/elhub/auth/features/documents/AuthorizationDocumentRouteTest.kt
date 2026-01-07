@@ -41,7 +41,7 @@ import no.elhub.auth.features.documents.create.dto.CreateDocumentRequestAttribut
 import no.elhub.auth.features.documents.create.dto.CreateDocumentResponse
 import no.elhub.auth.features.documents.create.dto.JsonApiCreateDocumentRequest
 import no.elhub.auth.features.documents.get.GetDocumentResponse
-import no.elhub.auth.features.documents.query.AuthorizationDocumentsResponse
+import no.elhub.auth.features.documents.query.GetDocumentListResponse
 import no.elhub.auth.features.grants.AuthorizationScope
 import no.elhub.auth.features.grants.GRANTS_PATH
 import no.elhub.auth.features.grants.common.dto.AuthorizationGrantScopesResponse
@@ -312,28 +312,28 @@ class AuthorizationDocumentRouteTest :
                 test("Get document list should give proper size given the authorized user") {
 
                     // When authorized party is the requestedBy number of documents returned should be 1
-                    val requestedByResponse: AuthorizationDocumentsResponse = client.get(DOCUMENTS_PATH) {
+                    val requestedByResponse: GetDocumentListResponse = client.get(DOCUMENTS_PATH) {
                         header(HttpHeaders.Authorization, "Bearer maskinporten")
                         header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
                     }.body()
 
-                    requestedByResponse.size shouldBe 1
+                    requestedByResponse.data.size shouldBe 1
 
                     // When authorized party is the requestedFrom number of documents returned should be 1
-                    val requestedFromResponse: AuthorizationDocumentsResponse = client.get(DOCUMENTS_PATH) {
+                    val requestedFromResponse: GetDocumentListResponse = client.get(DOCUMENTS_PATH) {
                         header(HttpHeaders.Authorization, "Bearer enduser")
                         header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
                     }.body()
 
-                    requestedFromResponse.size shouldBe 1
+                    requestedFromResponse.data.size shouldBe 1
 
                     // When authorized party is the requestedTo number of documents returned should be 0
-                    val requestedToResponse: AuthorizationDocumentsResponse = client.get(DOCUMENTS_PATH) {
+                    val requestedToResponse: GetDocumentListResponse = client.get(DOCUMENTS_PATH) {
                         header(HttpHeaders.Authorization, "Bearer not-authorized")
                         header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
                     }.body()
 
-                    requestedToResponse.size shouldBe 0
+                    requestedToResponse.data.size shouldBe 0
                 }
 
                 test("Get pdf file should have proper signature") {
