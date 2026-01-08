@@ -213,7 +213,9 @@ class PDPAuthorizationProvider(
                 AuthError.ActingFunctionNotSupported
             }
             .bind()
-        AuthorizedParty.OrganizationEntity(actingGLN, roleType)
+        val authorizedParty = AuthorizedParty.OrganizationEntity(actingGLN, roleType)
+        log.info("Authorized party is $authorizedParty")
+        authorizedParty
     }
 
     private fun authorizePerson(
@@ -226,7 +228,9 @@ class PDPAuthorizationProvider(
             raise(AuthError.NotAuthorized)
         }
         val partyId = tokenInfo.partyId ?: raise(AuthError.UnknownError)
-        AuthorizedParty.Person(UUID.fromString(partyId))
+        val authorizedParty = AuthorizedParty.Person(UUID.fromString(partyId))
+        log.info("Authorized party is $authorizedParty")
+        authorizedParty
     }
 
     private fun authorizeSystem(
@@ -239,7 +243,9 @@ class PDPAuthorizationProvider(
             raise(AuthError.NotAuthorized)
         }
         val partyId = tokenInfo.partyId ?: raise(AuthError.UnknownError)
-        AuthorizedParty.System(partyId)
+        val authorizedParty = AuthorizedParty.System(partyId)
+        log.info("Authorized party is $authorizedParty")
+        authorizedParty
     }
 
     private fun resolveTraceId(call: ApplicationCall): UUID {
