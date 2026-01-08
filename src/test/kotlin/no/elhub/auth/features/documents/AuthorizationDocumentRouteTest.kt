@@ -265,8 +265,6 @@ class AuthorizationDocumentRouteTest :
                     expectedSignatory = getDocumentResponse.data.relationships.requestedTo.data.id
 
                     getDocumentResponse.links.shouldNotBeNull().apply {
-                        self shouldBe "$DOCUMENTS_PATH/$createdDocumentId"
-                    getDocumentResponse.links.apply {
                         self shouldBe "$DOCUMENTS_PATH"
                     }
 
