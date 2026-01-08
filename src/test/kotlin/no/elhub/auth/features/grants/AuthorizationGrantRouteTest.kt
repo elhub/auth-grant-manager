@@ -288,7 +288,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                     responseJson.meta.shouldNotBeNull().apply {
                         get("createdAt").shouldNotBeNull()
                     }
-                    responseJson.links.apply {
+                    responseJson.links.shouldNotBeNull().apply {
                         self shouldBe "$GRANTS_PATH/123e4567-e89b-12d3-a456-426614174000/scopes"
                     }
                 }
@@ -349,7 +349,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                 responseJson.meta.shouldNotBeNull().apply {
                     get("createdAt").shouldNotBeNull()
                 }
-                responseJson.links.apply {
+                responseJson.links.shouldNotBeNull().apply {
                     self shouldBe "$GRANTS_PATH/d75522ba-0e62-449b-b1de-70b16f12ecaf/scopes"
                 }
             }

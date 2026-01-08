@@ -200,7 +200,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                         values["balanceSupplierContractName"] shouldBe "ExampleSupplierContract"
                     }
                 }
-                responseJson.links.apply {
+                responseJson.links.shouldNotBeNull().apply {
                     self shouldBe "$REQUESTS_PATH/4f71d596-99e4-415e-946d-7252c1a40c50"
                 }
                 responseJson.meta.apply {
@@ -262,7 +262,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                         self.shouldNotBeNull()
                     }
                 }
-                responseJson.links.apply {
+                responseJson.links.shouldNotBeNull().apply {
                     self shouldBe "$REQUESTS_PATH/4f71d596-99e4-415e-946d-7352c1a40c53"
                 }
                 responseJson.meta.apply {
