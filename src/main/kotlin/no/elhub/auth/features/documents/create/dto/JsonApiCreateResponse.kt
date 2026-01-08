@@ -6,7 +6,6 @@ import kotlinx.serialization.json.put
 import no.elhub.auth.features.common.toTimeZoneOffsetString
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.DOCUMENTS_PATH
-import no.elhub.auth.features.grants.GRANTS_PATH
 import no.elhub.devxp.jsonapi.model.JsonApiAttributes
 import no.elhub.devxp.jsonapi.model.JsonApiLinks
 import no.elhub.devxp.jsonapi.model.JsonApiMeta
@@ -78,26 +77,7 @@ fun AuthorizationDocument.toCreateDocumentResponse() = CreateDocumentResponse(
                     type = this.requestedTo.type.name,
                     id = this.requestedTo.resourceId,
                 )
-            ),
-            signedBy = this.signedBy?.let {
-                JsonApiRelationshipToOne(
-                    data = JsonApiRelationshipData(
-                        type = it.type.name,
-                        id = it.resourceId
-                    )
-                )
-            },
-            grant = this.grantId?.let {
-                JsonApiRelationshipToOne(
-                    data = JsonApiRelationshipData(
-                        id = it.toString(),
-                        type = "AuthorizationGrant"
-                    ),
-                    links = JsonApiLinks.RelationShipLink(
-                        self = "$GRANTS_PATH/$it"
-                    )
-                )
-            },
+            )
         ),
         meta = CreateDocumentResponseMeta(
             buildMap {

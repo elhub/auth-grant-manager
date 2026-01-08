@@ -11,6 +11,7 @@ import no.elhub.auth.features.common.auth.toApiErrorResponse
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toApiErrorResponse
+import no.elhub.auth.features.documents.query.dto.toGetCollectionResponse
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 
 fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
@@ -45,6 +46,6 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
                 return@get
             }
 
-        call.respond(HttpStatusCode.OK, documents.toGetResponse())
+        call.respond(HttpStatusCode.OK, documents.toGetCollectionResponse())
     }
 }
