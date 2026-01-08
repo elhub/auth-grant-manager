@@ -202,7 +202,7 @@ class AuthorizationDocumentRouteTest :
                         links.self shouldBe "$DOCUMENTS_PATH/$id"
                         links.file shouldBe "$DOCUMENTS_PATH/$id.pdf"
                     }
-                    createDocumentResponse.links.apply {
+                    createDocumentResponse.links.shouldNotBeNull().apply {
                         self shouldBe DOCUMENTS_PATH
                     }
                     createDocumentResponse.meta.shouldNotBeNull().apply {
@@ -264,7 +264,7 @@ class AuthorizationDocumentRouteTest :
 
                     expectedSignatory = getDocumentResponse.data.relationships.requestedTo.data.id
 
-                    getDocumentResponse.links.apply {
+                    getDocumentResponse.links.shouldNotBeNull().apply {
                         self shouldBe "$DOCUMENTS_PATH/$createdDocumentId"
                     }
 
@@ -463,7 +463,7 @@ class AuthorizationDocumentRouteTest :
                         responseJson.meta.shouldNotBeNull().apply {
                             get("createdAt").shouldNotBeNull()
                         }
-                        responseJson.links.apply {
+                        responseJson.links.shouldNotBeNull().apply {
                             self shouldBe "$GRANTS_PATH/$grantId/scopes"
                         }
                     }
