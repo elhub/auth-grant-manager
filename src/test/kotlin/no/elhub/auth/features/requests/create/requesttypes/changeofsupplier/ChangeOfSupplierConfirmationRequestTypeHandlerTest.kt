@@ -6,8 +6,10 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import no.elhub.auth.features.businessprocesses.changeofsupplier.ChangeOfSupplierBusinessHandler
 import no.elhub.auth.features.businessprocesses.changeofsupplier.ChangeOfSupplierValidationError
+import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
+import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.create.model.CreateRequestMeta
 import no.elhub.auth.features.requests.create.model.CreateRequestModel
@@ -17,11 +19,13 @@ private const val VALID_METERING_POINT = "123456789012345678"
 class ChangeOfSupplierConfirmationRequestTypeHandlerTest :
     FunSpec({
 
+        val authorizedParty = AuthorizationParty(resourceId = "987654321", type = PartyType.Organization)
         val handler = ChangeOfSupplierBusinessHandler()
 
         test("returns validation error when requestedFromName is blank") {
             val model =
                 CreateRequestModel(
+                    authorizedParty = authorizedParty,
                     requestType = AuthorizationRequest.Type.ChangeOfSupplierConfirmation,
                     meta =
                     CreateRequestMeta(
@@ -44,6 +48,7 @@ class ChangeOfSupplierConfirmationRequestTypeHandlerTest :
         test("builds RequestCommand for valid input") {
             val model =
                 CreateRequestModel(
+                    authorizedParty = authorizedParty,
                     requestType = AuthorizationRequest.Type.ChangeOfSupplierConfirmation,
                     meta =
                     CreateRequestMeta(
