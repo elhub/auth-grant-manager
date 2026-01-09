@@ -18,6 +18,7 @@ import no.elhub.auth.features.requests.create.model.defaultRequestValidTo
 
 private val VALID_PARTY = PartyIdentifier(PartyIdentifierType.OrganizationNumber, "123456789")
 private val VALID_METERING_POINT = "123456789012345678"
+private val AUTHORIZED_PARTY = AuthorizationParty(resourceId = VALID_PARTY.idValue, type = PartyType.Organization)
 
 class ChangeOfSupplierBusinessHandlerTest :
     FunSpec({
@@ -27,6 +28,7 @@ class ChangeOfSupplierBusinessHandlerTest :
         test("request validation fails on missing requestedFromName") {
             val model =
                 CreateRequestModel(
+                    authorizedParty = AUTHORIZED_PARTY,
                     requestType = AuthorizationRequest.Type.ChangeOfSupplierConfirmation,
                     meta =
                     CreateRequestMeta(
@@ -47,6 +49,7 @@ class ChangeOfSupplierBusinessHandlerTest :
         test("request validation fails on invalid metering point") {
             val model =
                 CreateRequestModel(
+                    authorizedParty = AUTHORIZED_PARTY,
                     requestType = AuthorizationRequest.Type.ChangeOfSupplierConfirmation,
                     meta =
                     CreateRequestMeta(
@@ -67,6 +70,7 @@ class ChangeOfSupplierBusinessHandlerTest :
         test("request produces RequestCommand for valid input") {
             val model =
                 CreateRequestModel(
+                    authorizedParty = AUTHORIZED_PARTY,
                     requestType = AuthorizationRequest.Type.ChangeOfSupplierConfirmation,
                     meta =
                     CreateRequestMeta(
