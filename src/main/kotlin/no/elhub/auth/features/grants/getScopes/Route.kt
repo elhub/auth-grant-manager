@@ -20,7 +20,7 @@ const val GRANT_ID_PARAM = "id"
 
 fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
     get("/{$GRANT_ID_PARAM}/scopes") {
-        val authorizedParty = authProvider.authorizeEndUserOrMaskinporten(call)
+        val authorizedParty = authProvider.authorizeAll(call)
             .getOrElse { err ->
                 val (status, body) = err.toApiErrorResponse()
                 call.respond(status, body)
@@ -48,6 +48,14 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
                 authorizedParty = AuthorizationParty(
                     resourceId = authorizedParty.id.toString(),
                     type = PartyType.Person
+                )
+            )
+
+            is AuthorizedParty.System -> Query(
+                id = grantId,
+                authorizedParty = AuthorizationParty(
+                    resourceId = authorizedParty.id,
+                    type = PartyType.System
                 )
             )
         }

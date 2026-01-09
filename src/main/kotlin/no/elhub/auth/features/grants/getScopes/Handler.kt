@@ -3,8 +3,10 @@ package no.elhub.auth.features.grants.getScopes
 import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensure
+import no.elhub.auth.features.common.Constants
 import no.elhub.auth.features.common.QueryError
 import no.elhub.auth.features.common.RepositoryReadError
+import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.grants.AuthorizationScope
 import no.elhub.auth.features.grants.common.GrantRepository
 
@@ -20,8 +22,17 @@ class Handler(
                 }
             }.bind()
 
-        ensure(grant.grantedTo == query.authorizedParty || grant.grantedFor == query.authorizedParty) {
-            QueryError.NotAuthorizedError
+        val authorizedParty = query.authorizedParty
+        when (authorizedParty.type) {
+            PartyType.System -> ensure(authorizedParty.resourceId == Constants.CONSENT_MANAGEMENT_OSB_ID) {
+                QueryError.NotAuthorizedError
+            }
+
+            else -> ensure(
+                grant.grantedTo == authorizedParty || grant.grantedFor == authorizedParty
+            ) {
+                QueryError.NotAuthorizedError
+            }
         }
 
         repo
