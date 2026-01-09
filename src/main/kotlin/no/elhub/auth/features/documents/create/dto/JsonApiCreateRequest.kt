@@ -1,6 +1,7 @@
 package no.elhub.auth.features.documents.create.dto
 
 import kotlinx.serialization.Serializable
+import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.create.model.CreateDocumentModel
@@ -27,8 +28,9 @@ data class CreateDocumentMeta(
 
 typealias JsonApiCreateDocumentRequest = JsonApiRequest.SingleDocumentWithMeta<CreateDocumentRequestAttributes, CreateDocumentMeta>
 
-fun JsonApiCreateDocumentRequest.toModel(): CreateDocumentModel =
+fun JsonApiCreateDocumentRequest.toModel(authorizedParty: AuthorizationParty): CreateDocumentModel =
     CreateDocumentModel(
+        authorizedParty = authorizedParty,
         documentType = this.data.attributes.documentType,
         meta = this.data.meta,
     )
