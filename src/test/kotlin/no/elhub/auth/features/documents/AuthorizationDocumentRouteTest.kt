@@ -1,9 +1,8 @@
 package no.elhub.auth.features.documents
 
+import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldHaveSize
-import io.kotest.matchers.maps.shouldContain
-import io.kotest.matchers.maps.shouldContainKey
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
@@ -25,7 +24,6 @@ import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.testing.testApplication
-import kotlinx.serialization.json.jsonPrimitive
 import no.elhub.auth.features.common.AuthPersonsTestContainer
 import no.elhub.auth.features.common.AuthPersonsTestContainerExtension
 import no.elhub.auth.features.common.PdpTestContainerExtension
@@ -35,12 +33,12 @@ import no.elhub.auth.features.common.auth.PDPAuthorizationProvider
 import no.elhub.auth.features.common.commonModule
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
-import no.elhub.auth.features.documents.create.CreateDocumentResponse
-import no.elhub.auth.features.documents.create.DocumentMeta
-import no.elhub.auth.features.documents.create.DocumentRequestAttributes
-import no.elhub.auth.features.documents.create.Request
-import no.elhub.auth.features.documents.get.GetDocumentResponse
-import no.elhub.auth.features.documents.query.AuthorizationDocumentsResponse
+import no.elhub.auth.features.documents.create.dto.CreateDocumentMeta
+import no.elhub.auth.features.documents.create.dto.CreateDocumentRequestAttributes
+import no.elhub.auth.features.documents.create.dto.CreateDocumentResponse
+import no.elhub.auth.features.documents.create.dto.JsonApiCreateDocumentRequest
+import no.elhub.auth.features.documents.get.dto.GetDocumentSingleResponse
+import no.elhub.auth.features.documents.query.dto.GetDocumentCollectionResponse
 import no.elhub.auth.features.grants.AuthorizationScope
 import no.elhub.auth.features.grants.GRANTS_PATH
 import no.elhub.auth.features.grants.common.dto.AuthorizationGrantScopesResponse
@@ -50,6 +48,7 @@ import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import no.elhub.devxp.jsonapi.response.JsonApiErrorObject
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
 import no.elhub.auth.features.grants.module as grantsModule
 import no.elhub.auth.module as applicationModule
 
@@ -123,13 +122,13 @@ class AuthorizationDocumentRouteTest :
                                 header(HttpHeaders.Authorization, "Bearer maskinporten")
                                 header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
                                 setBody(
-                                    Request(
+                                    JsonApiCreateDocumentRequest(
                                         data = JsonApiRequestResourceObjectWithMeta(
                                             type = "AuthorizationDocument",
-                                            attributes = DocumentRequestAttributes(
+                                            attributes = CreateDocumentRequestAttributes(
                                                 documentType = AuthorizationDocument.Type.ChangeOfSupplierConfirmation
                                             ),
-                                            meta = DocumentMeta(
+                                            meta = CreateDocumentMeta(
                                                 requestedBy = PartyIdentifier(
                                                     idType = PartyIdentifierType.GlobalLocationNumber,
                                                     idValue = "0107000000021"
@@ -158,13 +157,55 @@ class AuthorizationDocumentRouteTest :
                     createDocumentResponse.data.apply {
                         type shouldBe "AuthorizationDocument"
                         id.shouldNotBeNull()
+                        attributes.shouldNotBeNull().apply {
+                            documentType shouldBe AuthorizationDocument.Type.ChangeOfSupplierConfirmation.name
+                            status shouldBe AuthorizationDocument.Status.Pending.name
+                        }
+                        relationships.shouldNotBeNull().apply {
+                            requestedBy.apply {
+                                data.apply {
+                                    id shouldBe "0107000000021"
+                                    type shouldBe "OrganizationEntity"
+                                }
+                            }
+                            requestedFrom.apply {
+                                data.apply {
+                                    id.shouldNotBeNull()
+                                    type shouldBe "Person"
+                                }
+                            }
+                            requestedTo.apply {
+                                data.apply {
+                                    id.shouldNotBeNull()
+                                    type shouldBe "Person"
+                                }
+                            }
+                        }
+                        meta.shouldNotBeNull().apply {
+                            val createdAt = values["createdAt"].shouldNotBeNull()
+                            val updatedAt = values["updatedAt"].shouldNotBeNull()
+
+                            shouldNotThrowAny {
+                                OffsetDateTime.parse(createdAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                                OffsetDateTime.parse(updatedAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                            }
+
+                            values["requestedFromName"] shouldBe "Hillary Orr"
+                            values["requestedForMeteringPointId"] shouldBe "123456789012345678"
+                            values["requestedForMeteringPointAddress"] shouldBe "quaerendum"
+                            values["balanceSupplierName"] shouldBe "Jami Wade"
+                            values["balanceSupplierContractName"] shouldBe "Selena Chandler"
+                        }
                         links.self shouldBe "$DOCUMENTS_PATH/$id"
                         links.file shouldBe "$DOCUMENTS_PATH/$id.pdf"
                     }
-                    createDocumentResponse.links.apply {
+                    createDocumentResponse.links.shouldNotBeNull().apply {
                         self shouldBe DOCUMENTS_PATH
                     }
-                    createdDocumentId = createDocumentResponse.data.id
+                    createDocumentResponse.meta.shouldNotBeNull().apply {
+                        "createdAt".shouldNotBeNull()
+                    }
+                    createdDocumentId = createDocumentResponse.data.id.toString()
                     linkToDocument = createDocumentResponse.data.links.self
                     linkToDocumentFile = createDocumentResponse.data.links.file
                 }
@@ -175,15 +216,14 @@ class AuthorizationDocumentRouteTest :
                         header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
                     }
                     response.status shouldBe HttpStatusCode.OK
-                    val getDocumentResponse: GetDocumentResponse = response.body()
+                    val getDocumentResponse: GetDocumentSingleResponse = response.body()
                     getDocumentResponse
                         .data.apply {
                             type shouldBe "AuthorizationDocument"
                             id.shouldNotBeNull()
                             attributes.shouldNotBeNull().apply {
                                 status shouldBe AuthorizationDocument.Status.Pending.toString()
-                                createdAt.shouldNotBeNull()
-                                updatedAt.shouldNotBeNull()
+                                documentType shouldBe AuthorizationDocument.Type.ChangeOfSupplierConfirmation.name
                             }
                             relationships.apply {
                                 requestedBy.data.apply {
@@ -203,25 +243,29 @@ class AuthorizationDocumentRouteTest :
                                 signedBy.shouldBeNull()
                                 grant.shouldBeNull()
                             }
-                            meta.shouldNotBeNull().toMap().apply {
-                                this.mapValues { (_, v) ->
-                                    v.jsonPrimitive.content
-                                }.apply {
-                                    shouldContain("requestedFromName", "Hillary Orr")
-                                    shouldContain("requestedForMeteringPointId", "123456789012345678")
-                                    shouldContain("requestedForMeteringPointAddress", "quaerendum")
-                                    shouldContain("balanceSupplierName", "Jami Wade")
-                                    shouldContain("balanceSupplierContractName", "Selena Chandler")
-                                    shouldContainKey("createdAt")
-                                    shouldContainKey("updatedAt")
+                            meta.shouldNotBeNull().apply {
+                                val createdAt = values["createdAt"].shouldNotBeNull()
+                                val updatedAt = values["updatedAt"].shouldNotBeNull()
+
+                                shouldNotThrowAny {
+                                    OffsetDateTime.parse(createdAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                                    OffsetDateTime.parse(updatedAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
                                 }
+
+                                values["requestedFromName"] shouldBe "Hillary Orr"
+                                values["requestedForMeteringPointId"] shouldBe "123456789012345678"
+                                values["requestedForMeteringPointAddress"] shouldBe "quaerendum"
+                                values["balanceSupplierName"] shouldBe "Jami Wade"
+                                values["balanceSupplierContractName"] shouldBe "Selena Chandler"
                             }
+                            links.self shouldBe "$DOCUMENTS_PATH/$id"
+                            links.file shouldBe "$DOCUMENTS_PATH/$id.pdf"
                         }
 
                     expectedSignatory = getDocumentResponse.data.relationships.requestedTo.data.id
 
-                    getDocumentResponse.links.apply {
-                        self shouldBe "$DOCUMENTS_PATH/$createdDocumentId"
+                    getDocumentResponse.links.shouldNotBeNull().apply {
+                        self shouldBe "$DOCUMENTS_PATH"
                     }
 
                     // Verify that response is the same for authorized enduser
@@ -235,7 +279,7 @@ class AuthorizationDocumentRouteTest :
                     }
 
                     enduserResponse.status shouldBe HttpStatusCode.OK
-                    val enduserDocumentResponse: GetDocumentResponse = enduserResponse.body()
+                    val enduserDocumentResponse: GetDocumentSingleResponse = enduserResponse.body()
                     enduserDocumentResponse == getDocumentResponse
                 }
 
@@ -268,28 +312,28 @@ class AuthorizationDocumentRouteTest :
                 test("Get document list should give proper size given the authorized user") {
 
                     // When authorized party is the requestedBy number of documents returned should be 1
-                    val requestedByResponse: AuthorizationDocumentsResponse = client.get(DOCUMENTS_PATH) {
+                    val requestedByResponse: GetDocumentCollectionResponse = client.get(DOCUMENTS_PATH) {
                         header(HttpHeaders.Authorization, "Bearer maskinporten")
                         header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
                     }.body()
 
-                    requestedByResponse.size shouldBe 1
+                    requestedByResponse.data.size shouldBe 1
 
                     // When authorized party is the requestedFrom number of documents returned should be 1
-                    val requestedFromResponse: AuthorizationDocumentsResponse = client.get(DOCUMENTS_PATH) {
+                    val requestedFromResponse: GetDocumentCollectionResponse = client.get(DOCUMENTS_PATH) {
                         header(HttpHeaders.Authorization, "Bearer enduser")
                         header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
                     }.body()
 
-                    requestedFromResponse.size shouldBe 1
+                    requestedFromResponse.data.size shouldBe 1
 
                     // When authorized party is the requestedTo number of documents returned should be 0
-                    val requestedToResponse: AuthorizationDocumentsResponse = client.get(DOCUMENTS_PATH) {
+                    val requestedToResponse: GetDocumentCollectionResponse = client.get(DOCUMENTS_PATH) {
                         header(HttpHeaders.Authorization, "Bearer not-authorized")
                         header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
                     }.body()
 
-                    requestedToResponse.size shouldBe 0
+                    requestedToResponse.data.size shouldBe 0
                 }
 
                 test("Get pdf file should have proper signature") {
@@ -317,7 +361,7 @@ class AuthorizationDocumentRouteTest :
                         header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
                     }
                     response.status shouldBe HttpStatusCode.OK
-                    val getDocumentResponse: GetDocumentResponse = response.body()
+                    val getDocumentResponse: GetDocumentSingleResponse = response.body()
                     getDocumentResponse.data.attributes.shouldNotBeNull().apply {
                         status shouldBe AuthorizationDocument.Status.Signed.toString()
                     }
@@ -419,7 +463,7 @@ class AuthorizationDocumentRouteTest :
                         responseJson.meta.shouldNotBeNull().apply {
                             get("createdAt").shouldNotBeNull()
                         }
-                        responseJson.links.apply {
+                        responseJson.links.shouldNotBeNull().apply {
                             self shouldBe "$GRANTS_PATH/$grantId/scopes"
                         }
                     }

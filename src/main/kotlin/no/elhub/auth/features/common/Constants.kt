@@ -5,7 +5,7 @@ import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
 
 object Constants {
-    const val CONSENT_MANAGEMENT_OSB_ID = "consent_management_osb"
+    const val CONSENT_MANAGEMENT_OSB_ID = "consent-management-osb"
 }
 
 object AuthorizationParties {

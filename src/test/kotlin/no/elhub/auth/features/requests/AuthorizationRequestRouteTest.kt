@@ -200,7 +200,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                         values["balanceSupplierContractName"] shouldBe "ExampleSupplierContract"
                     }
                 }
-                responseJson.links.apply {
+                responseJson.links.shouldNotBeNull().apply {
                     self shouldBe "$REQUESTS_PATH/4f71d596-99e4-415e-946d-7252c1a40c50"
                 }
                 responseJson.meta.apply {
@@ -262,7 +262,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                         self.shouldNotBeNull()
                     }
                 }
-                responseJson.links.apply {
+                responseJson.links.shouldNotBeNull().apply {
                     self shouldBe "$REQUESTS_PATH/4f71d596-99e4-415e-946d-7352c1a40c53"
                 }
                 responseJson.meta.apply {
@@ -346,7 +346,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                                     ),
                                     meta =
                                     CreateRequestMeta(
-                                        requestedBy = PartyIdentifier(PartyIdentifierType.OrganizationNumber, "987654321"),
+                                        requestedBy = PartyIdentifier(PartyIdentifierType.GlobalLocationNumber, "0107000000021"),
                                         requestedFrom = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "12345678901"),
                                         requestedFromName = "Hillary Orr",
                                         requestedTo = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "12345678902"),
@@ -372,24 +372,22 @@ class AuthorizationRequestRouteTest : FunSpec({
                         validTo.shouldNotBeNull()
                     }
                     relationships.shouldNotBeNull().apply {
-                        relationships.apply {
-                            requestedBy.apply {
-                                data.apply {
-                                    id shouldBe "987654321"
-                                    type shouldBe "Organization"
-                                }
+                        requestedBy.apply {
+                            data.apply {
+                                id shouldBe "0107000000021"
+                                type shouldBe "OrganizationEntity"
                             }
-                            requestedFrom.apply {
-                                data.apply {
-                                    id.shouldNotBeNull()
-                                    type shouldBe "Person"
-                                }
+                        }
+                        requestedFrom.apply {
+                            data.apply {
+                                id.shouldNotBeNull()
+                                type shouldBe "Person"
                             }
-                            requestedFrom.apply {
-                                data.apply {
-                                    id.shouldNotBeNull()
-                                    type shouldBe "Person"
-                                }
+                        }
+                        requestedTo.apply {
+                            data.apply {
+                                id.shouldNotBeNull()
+                                type shouldBe "Person"
                             }
                         }
                     }
@@ -437,7 +435,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                                     ),
                                     meta =
                                     CreateRequestMeta(
-                                        requestedBy = PartyIdentifier(PartyIdentifierType.OrganizationNumber, "987654321"),
+                                        requestedBy = PartyIdentifier(PartyIdentifierType.GlobalLocationNumber, "0107000000021"),
                                         requestedFrom = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "12345678901"),
                                         requestedFromName = "",
                                         requestedTo = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "12345678902"),

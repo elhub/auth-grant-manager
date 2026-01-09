@@ -1,7 +1,8 @@
 package no.elhub.auth.features.requests.create
 
 import arrow.core.Either
-import arrow.core.getOrElse
+import arrow.core.raise.either
+import arrow.core.raise.ensure
 import io.ktor.http.HttpStatusCode
 import no.elhub.auth.features.businessprocesses.changeofsupplier.ChangeOfSupplierValidationError
 import no.elhub.auth.features.common.party.PartyService
@@ -22,30 +23,36 @@ class Handler(
     private val requestRepo: RequestRepository,
     private val requestPropertyRepo: RequestPropertiesRepository,
 ) {
-    suspend operator fun invoke(model: CreateRequestModel): Either<CreateRequestError, AuthorizationRequest> {
-        val businessCommand =
-            proxyRequestBusinessHandler
-                .validateAndReturnRequestCommand(model)
-                .getOrElse { validationError ->
-                    return Either.Left(CreateRequestError.ValidationError(validationError))
-                }
+    suspend operator fun invoke(model: CreateRequestModel): Either<CreateRequestError, AuthorizationRequest> = either {
+        val requestedByParty =
+            partyService
+                .resolve(model.meta.requestedBy)
+                .mapLeft { CreateRequestError.RequestedByPartyError }
+                .bind()
+
+        ensure(model.authorizedParty == requestedByParty) {
+            CreateRequestError.AuthorizationError
+        }
 
         val requestedFromParty =
             partyService
-                .resolve(businessCommand.requestedFrom)
-                .getOrElse { return Either.Left(CreateRequestError.RequestedFromPartyError) }
-
-        val requestedByParty =
-            partyService
-                .resolve(businessCommand.requestedBy)
-                .getOrElse { return Either.Left(CreateRequestError.RequestedByPartyError) }
-
-        val metaAttributes = businessCommand.meta.toMetaAttributes()
+                .resolve(model.meta.requestedFrom)
+                .mapLeft { CreateRequestError.RequestedFromPartyError }
+                .bind()
 
         val requestedToParty =
             partyService
-                .resolve(businessCommand.requestedTo)
-                .getOrElse { return Either.Left(CreateRequestError.RequestedByPartyError) }
+                .resolve(model.meta.requestedTo)
+                .mapLeft { CreateRequestError.RequestedByPartyError }
+                .bind()
+
+        val businessCommand =
+            proxyRequestBusinessHandler
+                .validateAndReturnRequestCommand(model)
+                .mapLeft { validationError -> CreateRequestError.ValidationError(validationError) }
+                .bind()
+
+        val metaAttributes = businessCommand.meta.toMetaAttributes()
 
         val requestToCreate =
             AuthorizationRequest.create(
@@ -59,7 +66,8 @@ class Handler(
         val savedRequest =
             requestRepo
                 .insert(requestToCreate)
-                .getOrElse { return Either.Left(CreateRequestError.PersistenceError) }
+                .mapLeft { CreateRequestError.PersistenceError }
+                .bind()
 
         val requestProperties: List<AuthorizationRequestProperty> = metaAttributes.map {
             AuthorizationRequestProperty(
@@ -69,16 +77,19 @@ class Handler(
             )
         }
 
-        requestPropertyRepo.insert(requestProperties).getOrElse {
-            return Either.Left(CreateRequestError.PersistenceError)
-        }
+        requestPropertyRepo
+            .insert(requestProperties)
+            .mapLeft { CreateRequestError.PersistenceError }
+            .bind()
 
-        return Either.Right(savedRequest.copy(properties = requestProperties))
+        savedRequest.copy(properties = requestProperties)
     }
 }
 
 sealed class CreateRequestError {
     data object MappingError : CreateRequestError()
+
+    data object AuthorizationError : CreateRequestError()
 
     data object PersistenceError : CreateRequestError()
 
