@@ -7,6 +7,7 @@ import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.core.spec.style.FunSpec
 import io.mockk.every
 import io.mockk.mockk
+import no.elhub.auth.features.common.Constants
 import no.elhub.auth.features.common.QueryError
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.currentTimeWithTimeZone
@@ -21,6 +22,8 @@ import java.util.UUID
 
 class HandlerTest : FunSpec({
 
+    val authorizedSystem = AuthorizationParty(resourceId = Constants.CONSENT_MANAGEMENT_OSB_ID, type = PartyType.System)
+    val unAuthorizedSystem = AuthorizationParty(resourceId = "invalid-system", type = PartyType.System)
     val grantedFor = AuthorizationParty(resourceId = "person-1", type = PartyType.Person)
     val grantedBy = AuthorizationParty(resourceId = "issuer-1", type = PartyType.Organization)
     val grantedTo = AuthorizationParty(resourceId = "org-entity-1", type = PartyType.OrganizationEntity)
@@ -57,6 +60,32 @@ class HandlerTest : FunSpec({
             every { find(grantId) } returns grantResult
             every { findScopes(grantId) } returns scopesResult
         }
+
+    test("returns scopes when authorized party is valid System") {
+        val handler = Handler(repoReturning(grantResult = grant.right()))
+
+        val response = handler(
+            Query(
+                id = grantId,
+                authorizedParty = authorizedSystem,
+            )
+        )
+
+        response.shouldBeRight(scopes)
+    }
+
+    test("returns NotAuthorized when authorized party is unauthorized System") {
+        val handler = Handler(repoReturning(grantResult = grant.right()))
+
+        val response = handler(
+            Query(
+                id = grantId,
+                authorizedParty = unAuthorizedSystem,
+            )
+        )
+
+        response.shouldBeLeft(QueryError.NotAuthorizedError)
+    }
 
     test("returns scopes when authorized party matches grantedFor") {
         val handler = Handler(repoReturning(grantResult = grant.right()))

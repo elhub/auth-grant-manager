@@ -20,11 +20,13 @@ import no.elhub.auth.features.common.PersonService
 import no.elhub.auth.features.common.PostgresTestContainer
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.httpTestClient
+import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.ExposedPartyRepository
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
 import no.elhub.auth.features.common.party.PartyRepository
 import no.elhub.auth.features.common.party.PartyService
+import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.TestCertificateUtil
 import no.elhub.auth.features.documents.VaultTransitTestContainerExtension
@@ -36,6 +38,7 @@ import no.elhub.auth.features.documents.common.ProxyDocumentBusinessHandler
 import no.elhub.auth.features.documents.confirm.getPersonNin
 import no.elhub.auth.features.documents.confirm.isSignedByUs
 import no.elhub.auth.features.documents.create.command.DocumentMetaMarker
+import no.elhub.auth.features.documents.create.dto.CreateDocumentMeta
 import no.elhub.auth.features.documents.create.model.CreateDocumentModel
 import no.elhub.auth.features.documents.getCustomMetaDataValue
 import no.elhub.auth.features.documents.localVaultConfig
@@ -56,7 +59,7 @@ private val VALID_REQUESTED_FROM_IDENTIFIER = PartyIdentifier(idType = PartyIden
 private const val INVALID_REQUESTED_FROM = "^%)"
 private const val VALID_REQUESTED_FROM_NAME = "Supplier AS"
 
-private val VALID_REQUESTED_BY_IDENTIFIER = PartyIdentifier(idType = PartyIdentifierType.NationalIdentityNumber, idValue = "56012398741")
+private val VALID_REQUESTED_BY_IDENTIFIER = PartyIdentifier(idType = PartyIdentifierType.GlobalLocationNumber, idValue = "56012398741")
 private const val INVALID_REQUESTED_BY = "^%)"
 
 private val VALID_REQUESTED_TO_IDENTIFIER = PartyIdentifier(idType = PartyIdentifierType.NationalIdentityNumber, idValue = "56012398742")
@@ -73,6 +76,18 @@ private const val VALID_BALANCE_SUPPLIER_CONTRACT_NAME = "Contract 123"
 
 private const val BLANK = ""
 private const val EMPTY = " "
+
+private fun authorizedPartyFor(identifier: PartyIdentifier): AuthorizationParty =
+    when (identifier.idType) {
+        PartyIdentifierType.NationalIdentityNumber ->
+            AuthorizationParty(resourceId = identifier.idValue, type = PartyType.Person)
+
+        PartyIdentifierType.OrganizationNumber ->
+            AuthorizationParty(resourceId = identifier.idValue, type = PartyType.Organization)
+
+        PartyIdentifierType.GlobalLocationNumber ->
+            AuthorizationParty(resourceId = identifier.idValue, type = PartyType.OrganizationEntity)
+    }
 
 private fun testDocumentOrchestrator(): ProxyDocumentBusinessHandler = ProxyDocumentBusinessHandler(ChangeOfSupplierBusinessHandler(), FakeFileGenerator())
 
@@ -159,9 +174,10 @@ class CreateDocumentTest :
 
                 val model =
                     CreateDocumentModel(
+                        authorizedParty = authorizedPartyFor(requestedBy),
                         documentType = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
                         meta =
-                        DocumentMeta(
+                        CreateDocumentMeta(
                             requestedBy = requestedBy,
                             requestedFrom = requestedFrom,
                             requestedTo = requestedFrom,
@@ -212,9 +228,10 @@ class CreateDocumentTest :
 
                     val model =
                         CreateDocumentModel(
+                            authorizedParty = authorizedPartyFor(requestedBy),
                             documentType = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
                             meta =
-                            DocumentMeta(
+                            CreateDocumentMeta(
                                 requestedBy = requestedBy,
                                 requestedFrom = requestedFrom,
                                 requestedTo = requestedTo,
@@ -271,9 +288,10 @@ class CreateDocumentTest :
                     val orchestrator = testDocumentOrchestrator()
                     val model =
                         CreateDocumentModel(
+                            authorizedParty = authorizedPartyFor(requestedBy),
                             documentType = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
                             meta =
-                            DocumentMeta(
+                            CreateDocumentMeta(
                                 requestedBy = requestedBy,
                                 requestedFrom = requestedFrom,
                                 requestedTo = requestedTo,
@@ -310,9 +328,10 @@ class CreateDocumentTest :
                     val orchestrator = testDocumentOrchestrator()
                     val model =
                         CreateDocumentModel(
+                            authorizedParty = authorizedPartyFor(requestedBy),
                             documentType = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
                             meta =
-                            DocumentMeta(
+                            CreateDocumentMeta(
                                 requestedBy = requestedBy,
                                 requestedFrom = requestedFrom,
                                 requestedTo = requestedTo,
@@ -349,9 +368,10 @@ class CreateDocumentTest :
                     val orchestrator = testDocumentOrchestrator()
                     val model =
                         CreateDocumentModel(
+                            authorizedParty = authorizedPartyFor(requestedBy),
                             documentType = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
                             meta =
-                            DocumentMeta(
+                            CreateDocumentMeta(
                                 requestedBy = requestedBy,
                                 requestedFrom = requestedFrom,
                                 requestedTo = requestedTo,
@@ -388,9 +408,10 @@ class CreateDocumentTest :
                     val orchestrator = testDocumentOrchestrator()
                     val model =
                         CreateDocumentModel(
+                            authorizedParty = authorizedPartyFor(requestedBy),
                             documentType = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
                             meta =
-                            DocumentMeta(
+                            CreateDocumentMeta(
                                 requestedBy = requestedBy,
                                 requestedFrom = requestedFrom,
                                 requestedTo = requestedTo,
@@ -427,9 +448,10 @@ class CreateDocumentTest :
                     val orchestrator = testDocumentOrchestrator()
                     val model =
                         CreateDocumentModel(
+                            authorizedParty = authorizedPartyFor(requestedBy),
                             documentType = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
                             meta =
-                            DocumentMeta(
+                            CreateDocumentMeta(
                                 requestedBy = requestedBy,
                                 requestedFrom = requestedFrom,
                                 requestedTo = requestedTo,
@@ -466,9 +488,10 @@ class CreateDocumentTest :
                     val orchestrator = testDocumentOrchestrator()
                     val model =
                         CreateDocumentModel(
+                            authorizedParty = authorizedPartyFor(requestedBy),
                             documentType = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
                             meta =
-                            DocumentMeta(
+                            CreateDocumentMeta(
                                 requestedBy = requestedBy,
                                 requestedFrom = requestedFrom,
                                 requestedTo = requestedTo,
@@ -505,9 +528,10 @@ class CreateDocumentTest :
                     val orchestrator = testDocumentOrchestrator()
                     val model =
                         CreateDocumentModel(
+                            authorizedParty = authorizedPartyFor(requestedBy),
                             documentType = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
                             meta =
-                            DocumentMeta(
+                            CreateDocumentMeta(
                                 requestedBy = requestedBy,
                                 requestedFrom = requestedFrom,
                                 requestedTo = requestedTo,
@@ -544,9 +568,10 @@ class CreateDocumentTest :
                     val orchestrator = testDocumentOrchestrator()
                     val model =
                         CreateDocumentModel(
+                            authorizedParty = authorizedPartyFor(requestedBy),
                             documentType = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
                             meta =
-                            DocumentMeta(
+                            CreateDocumentMeta(
                                 requestedBy = requestedBy,
                                 requestedFrom = requestedFrom,
                                 requestedTo = requestedTo,
@@ -583,9 +608,10 @@ class CreateDocumentTest :
                     val orchestrator = testDocumentOrchestrator()
                     val model =
                         CreateDocumentModel(
+                            authorizedParty = authorizedPartyFor(requestedBy),
                             documentType = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
                             meta =
-                            DocumentMeta(
+                            CreateDocumentMeta(
                                 requestedBy = requestedBy,
                                 requestedFrom = requestedFrom,
                                 requestedTo = requestedTo,

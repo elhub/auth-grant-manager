@@ -9,6 +9,11 @@ import io.ktor.server.routing.post
 import no.elhub.auth.features.common.auth.AuthorizationProvider
 import no.elhub.auth.features.common.auth.RoleType
 import no.elhub.auth.features.common.auth.toApiErrorResponse
+import no.elhub.auth.features.common.party.AuthorizationParty
+import no.elhub.auth.features.common.party.PartyType
+import no.elhub.auth.features.documents.create.dto.JsonApiCreateDocumentRequest
+import no.elhub.auth.features.documents.create.dto.toCreateDocumentResponse
+import no.elhub.auth.features.documents.create.dto.toModel
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import no.elhub.devxp.jsonapi.response.JsonApiErrorObject
 import org.slf4j.LoggerFactory
@@ -27,13 +32,19 @@ fun Route.route(
                 return@post
             }
 
-        val requestBody = call.receive<Request>()
-        val model = requestBody.toModel()
+        val requestBody = call.receive<JsonApiCreateDocumentRequest>()
 
         if (resolvedActor.role != RoleType.BalanceSupplier) {
             call.respond(HttpStatusCode.BadRequest)
             return@post
         }
+
+        val authorizedParty = AuthorizationParty(
+            resourceId = resolvedActor.gln,
+            type = PartyType.OrganizationEntity
+        )
+
+        val model = requestBody.toModel(authorizedParty)
 
         val document = handler(model)
             .getOrElse { error ->
@@ -47,6 +58,22 @@ fun Route.route(
                                     JsonApiErrorObject(
                                         status = HttpStatusCode.BadRequest.toString(),
                                         detail = error.message,
+                                    )
+                                )
+                            )
+                        )
+                    }
+
+                    CreateDocumentError.AuthorizationError -> {
+                        call.respond(
+                            status = HttpStatusCode.Forbidden,
+                            message = JsonApiErrorCollection(
+                                listOf(
+                                    JsonApiErrorObject(
+                                        status = HttpStatusCode.Forbidden.toString(),
+                                        code = "NOT_AUTHORIZED",
+                                        title = "Party Not Authorized",
+                                        detail = "RequestedBy must match the authorized party",
                                     )
                                 )
                             )

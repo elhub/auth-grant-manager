@@ -1,9 +1,8 @@
 package no.elhub.auth.features.documents.create
 
 import arrow.core.Either
-import arrow.core.getOrElse
-import arrow.core.left
-import arrow.core.right
+import arrow.core.raise.either
+import arrow.core.raise.ensure
 import no.elhub.auth.features.common.party.PartyService
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.AuthorizationDocumentProperty
@@ -17,34 +16,43 @@ class Handler(
     private val documentRepository: DocumentRepository,
     private val partyService: PartyService,
 ) {
-    suspend operator fun invoke(model: CreateDocumentModel): Either<CreateDocumentError, AuthorizationDocument> {
-        val command =
-            businessHandler
-                .validateAndReturnDocumentCommand(model)
-                .getOrElse { return it.left() }
+    suspend operator fun invoke(model: CreateDocumentModel): Either<CreateDocumentError, AuthorizationDocument> = either {
+        val requestedByParty =
+            partyService
+                .resolve(model.meta.requestedBy)
+                .mapLeft { CreateDocumentError.RequestedByPartyError }
+                .bind()
+
+        ensure(model.authorizedParty == requestedByParty) {
+            CreateDocumentError.AuthorizationError
+        }
 
         val requestedFromParty =
             partyService
-                .resolve(command.requestedFrom)
-                .getOrElse { return CreateDocumentError.RequestedFromPartyError.left() }
-
-        val requestedByParty =
-            partyService
-                .resolve(command.requestedBy)
-                .getOrElse { return CreateDocumentError.RequestedByPartyError.left() }
+                .resolve(model.meta.requestedFrom)
+                .mapLeft { CreateDocumentError.RequestedFromPartyError }
+                .bind()
 
         val requestedToParty =
             partyService
-                .resolve(command.requestedTo)
-                .getOrElse { return CreateDocumentError.RequestedToPartyError.left() }
+                .resolve(model.meta.requestedTo)
+                .mapLeft { CreateDocumentError.RequestedToPartyError }
+                .bind()
+
+        val command =
+            businessHandler
+                .validateAndReturnDocumentCommand(model)
+                .bind()
 
         val file =
             businessHandler
                 .generateFile(command.requestedFrom.idValue, command.meta)
-                .getOrElse { return CreateDocumentError.FileGenerationError.left() }
+                .mapLeft { CreateDocumentError.FileGenerationError }
+                .bind()
 
         val signedFile = signingService.sign(file)
-            .getOrElse { return CreateDocumentError.SignFileError(cause = it).left() }
+            .mapLeft { CreateDocumentError.SignFileError(cause = it) }
+            .bind()
 
         val documentProperties =
             command.meta
@@ -64,9 +72,10 @@ class Handler(
         val savedDocument =
             documentRepository
                 .insert(documentToCreate, command.scopes)
-                .getOrElse { return CreateDocumentError.PersistenceError.left() }
+                .mapLeft { CreateDocumentError.PersistenceError }
+                .bind()
 
-        return savedDocument.right()
+        savedDocument
     }
 }
 
@@ -74,6 +83,8 @@ sealed class CreateDocumentError {
     data object FileGenerationError : CreateDocumentError()
 
     data class SignFileError(val cause: FileSigningError) : CreateDocumentError()
+
+    data object AuthorizationError : CreateDocumentError()
 
     data object PersistenceError : CreateDocumentError()
 
