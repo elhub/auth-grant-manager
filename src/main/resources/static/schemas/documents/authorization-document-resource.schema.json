@@ -6,7 +6,14 @@
   "properties": {
     "data": {
       "type": "object",
-      "required": ["id", "type", "attributes", "relationships", "meta", "links"],
+      "required": [
+        "id",
+        "type",
+        "attributes",
+        "relationships",
+        "meta",
+        "links"
+      ],
       "properties": {
         "id": {
           "$ref": "authorization-document-common.schema.json#/$defs/id"
@@ -33,11 +40,33 @@
           ]
         },
         "meta": {
-          "$ref": "authorization-document-common.schema.json#/$defs/meta"
+          "type": "object",
+          "description": "Read-only context specific to this resource view.",
+          "additionalProperties": false,
+          "properties": {
+            "requestedFromName": {
+              "$ref": "authorization-document-common.schema.json#/$defs/meta/$defs/requestedFromName"
+            },
+            "requestedForMeteringPointId": {
+              "$ref": "authorization-document-common.schema.json#/$defs/meta/$defs/requestedForMeteringPointId"
+            },
+            "requestedForMeteringPointAddress": {
+              "$ref": "authorization-document-common.schema.json#/$defs/meta/$defs/requestedForMeteringPointAddress"
+            },
+            "balanceSupplierName": {
+              "$ref": "authorization-document-common.schema.json#/$defs/meta/$defs/balanceSupplierName"
+            },
+            "balanceSupplierContractName": {
+              "$ref": "authorization-document-common.schema.json#/$defs/meta/$defs/balanceSupplierContractName"
+            }
+          }
         },
         "links": {
           "$ref": "authorization-document-common.schema.json#/$defs/links",
-          "required": ["self", "file"]
+          "required": [
+            "self",
+            "file"
+          ]
         }
       }
     },
