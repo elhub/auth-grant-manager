@@ -289,7 +289,7 @@ paths:
           $ref: "#/components/responses/500InternalServerError"
     patch:
       tags:
-        - TODO
+        - Authorization Grants
       summary: Update authorization grant status
       description: >
         Update the status of an authorization grant. This endpoint is intended for internal
@@ -361,7 +361,7 @@ paths:
   "/authorization-requests":
     get:
       tags:
-        - TODO
+        - Authorization Requests
       summary: List authorization requests
       description: >
         Retrieve a list of authorization requests. The result is constrained by the caller's
@@ -384,7 +384,7 @@ paths:
           $ref: "#/components/responses/500InternalServerError"
     post:
       tags:
-        - TODO
+        - Authorization Requests
       summary: Create authorization request for MinSide
       description: >
         Initiate a new authorization request flow. This creates an authorization request that
@@ -419,7 +419,7 @@ paths:
   "/authorization-requests/{id}":
     get:
       tags:
-        - TODO
+        - Authorization Requests
       summary: Get authorization request by id
       description: >
         Retrieve information about a specific authorization request. This can be used to
@@ -450,7 +450,7 @@ paths:
           $ref: "#/components/responses/500InternalServerError"
     patch:
       tags:
-        - TODO
+        - Authorization Requests
       summary: Update authorization request
       description: >
         Update an authorization request. This endpoint is intended for internal MinSide usage
