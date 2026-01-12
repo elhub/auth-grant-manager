@@ -18,7 +18,8 @@
             "requestType": {
               "$ref": "authorization-request-definitions.json#/$defs/attributes/$defs/requestType"
             }
-          }
+          },
+          "required": ["requestType"]
         },
         "meta": {
           "type": "object",
@@ -48,9 +49,20 @@
             "balanceSupplierContractName": {
               "$ref": "authorization-request-definitions.json#/$defs/meta/$defs/balanceSupplierContractName"
             }
-          }
+          },
+          "required": [
+            "requestedBy",
+            "requestedFrom",
+            "requestedFromName",
+            "requestedTo",
+            "requestedForMeteringPointId",
+            "requestedForMeteringPointAddress",
+            "balanceSupplierContractName",
+            "balanceSupplierName"
+          ]
         }
-      }
+      },
+      "required": ["type", "attributes", "meta"]
     }
   },
   "required": ["data"],
