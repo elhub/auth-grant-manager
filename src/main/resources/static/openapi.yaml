@@ -55,7 +55,7 @@ paths:
           content:
             application/json:
               schema:
-                ref: "./schemas/documents/authorization-document-collectionn.schema.json"
+                $ref: "./schemas/documents/authorization-document-collection.schema.json"
         "401":
           $ref: "#/components/responses/401UnauthorizedError"
         "500":
