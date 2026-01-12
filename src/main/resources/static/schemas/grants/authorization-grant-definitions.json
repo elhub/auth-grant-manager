@@ -20,19 +20,19 @@
           "type": "string",
           "format": "date-time",
           "description": "The date and time when the authorization is granted at.",
-          "examples": ["2025-12-29T10:13:18.245067+01:00"]
+          "examples": ["2025-12-29T10:13:18+01:00"]
         },
         "validFrom": {
           "type": "string",
           "format": "date-time",
           "description": "The date and time when the authorization grant is valid from.",
-          "examples": ["2025-12-29T10:13:18.245095+01:00"]
+          "examples": ["2025-12-29T10:13:18+01:00"]
         },
         "validTo": {
           "type": "string",
           "format": "date-time",
           "description": "The date and time when the authorization grant is valid to.",
-          "examples": ["2026-12-29T10:13:18.245106+01:00"]
+          "examples": ["2026-12-29T10:13:18+01:00"]
         }
       }
     },
