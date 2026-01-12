@@ -31,7 +31,7 @@ data class GetDocumentSingleResponseRelationship(
     val requestedFrom: JsonApiRelationshipToOne,
     val requestedTo: JsonApiRelationshipToOne,
     val signedBy: JsonApiRelationshipToOne? = null,
-    val grant: JsonApiRelationshipToOne? = null
+    val authorizationGrant: JsonApiRelationshipToOne? = null
 ) : JsonApiRelationships
 
 @Serializable
@@ -74,7 +74,7 @@ fun AuthorizationDocument.toGetSingleResponse() =
                         )
                     )
                 },
-                grant = this.grantId?.let {
+                authorizationGrant = this.grantId?.let {
                     JsonApiRelationshipToOne(
                         data = JsonApiRelationshipData(
                             id = it.toString(),
