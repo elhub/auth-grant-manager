@@ -241,7 +241,7 @@ class AuthorizationDocumentRouteTest :
                                     requestedToId = id
                                 }
                                 signedBy.shouldBeNull()
-                                grant.shouldBeNull()
+                                authorizationGrant.shouldBeNull()
                             }
                             meta.shouldNotBeNull().apply {
                                 val createdAt = values["createdAt"].shouldNotBeNull()
@@ -366,7 +366,7 @@ class AuthorizationDocumentRouteTest :
                         status shouldBe AuthorizationDocument.Status.Signed.toString()
                     }
 
-                    val grantRelationship = getDocumentResponse.data.relationships.grant.shouldNotBeNull()
+                    val grantRelationship = getDocumentResponse.data.relationships.authorizationGrant.shouldNotBeNull()
                     grantId = grantRelationship.data.id
                     grantRelationship.apply {
                         data.apply {
