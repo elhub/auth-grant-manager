@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Authorization Grant Update",
+  "description": "Schema for updating an authorization grant in the Elhub authorization manager.",
+  "type": "object",
+  "properties": {
+    "data": {
+      "type": "object",
+      "required": [
+        "type",
+        "attributes"
+      ],
+      "properties": {
+        "type": {
+          "$ref": "authorization-grant-common.schema.json#/$defs/type"
+        },
+        "attributes": {
+          "type": "object",
+          "description": "The attributes of the authorization grant to  update.",
+          "properties": {
+            "status": {
+              "$ref": "authorization-grant-common.schema.json#/$defs/status"
+            }
+          },
+          "required": [
+            "status"
+          ]
+        }
+      }
+    }
+  },
+  "required": [
+    "data"
+  ]
+}

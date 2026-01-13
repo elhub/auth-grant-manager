@@ -1,14 +1,14 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Authorization Document Collection",
-  "description": "Schema for returning a collection of authorization documents.",
+  "title": "Authorization Grant Collection",
+  "description": "Schema for returning a collection of authorization grants.",
   "type": "object",
   "properties": {
     "data": {
-      "description": "An array of authorization document resource objects.",
+      "description": "An array of authorization grant resource objects.",
       "type": "array",
       "items": {
-        "$ref": "authorization-document-resource.schema.json#/properties/data"
+        "$ref": "authorization-grant-resource.schema.json#/properties/data"
       },
       "uniqueItems": true
     },

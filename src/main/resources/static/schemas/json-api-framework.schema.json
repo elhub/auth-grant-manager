@@ -1,0 +1,56 @@
+{
+  "$defs": {
+    "linkUrl": {
+      "description": "A string containing the link's URL.",
+      "type": "string",
+      "format": "uri",
+      "$comment": "URI regex as per https://tools.ietf.org/html/rfc3986#appendix-B",
+      "pattern": "^(([^:/?#]+):)?(//([^/?#]*))?([^?#]*)(\\?([^#]*))?(#(.*))?"
+    },
+    "memberName": {
+      "description": "Member name may contain any valid JSON value.",
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9]{1}(?:[-\\w]*[a-zA-Z0-9])?$"
+    },
+    "topLevelLinks": {
+      "description": "The top-level links object **may** contain the following members: self, related, pagination links. Currently, only self is defined.",
+      "type": "object",
+      "properties": {
+        "self": {
+          "description": "The link that generated the current JSON document.",
+          "$ref": "#/$defs/linkUrl"
+        }
+      }
+    },
+    "topLevelMeta": {
+      "description": "Meta-information for the JSON document.",
+      "type": "object",
+      "properties": {
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The date and time when the document was created.",
+          "examples": [
+            "2025-12-17T12:51:57.004327+01:00"
+          ]
+        }
+      }
+    },
+    "topLevelPropertyConstraint": {
+      "anyOf": [
+        {
+          "type": "object",
+          "required": [
+            "meta"
+          ]
+        },
+        {
+          "type": "object",
+          "required": [
+            "data"
+          ]
+        }
+      ]
+    }
+  }
+}

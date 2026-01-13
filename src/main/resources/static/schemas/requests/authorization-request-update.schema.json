@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Authorization Request Patch Request",
+  "description": "Schema for updating authorization requests to the Elhub authorization manager.",
+  "type": "object",
+  "properties": {
+    "data": {
+      "type": "object",
+      "required": [
+        "type",
+        "id",
+        "attributes"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "authorization-request-common.schema.json#/$defs/id"
+        },
+        "type": {
+          "$ref": "authorization-request-common.schema.json#/$defs/type"
+        },
+        "attributes": {
+          "type": "object",
+          "description": "The attributes of the authorization request to update.",
+          "properties": {
+            "status": {
+              "$ref": "authorization-request-common.schema.json#/$defs/status"
+            }
+          },
+          "required": [
+            "status"
+          ]
+        }
+      }
+    }
+  },
+  "required": [
+    "data"
+  ]
+}
