@@ -93,7 +93,11 @@ class ExposedGrantRepository(
                 val grantedTo = partiesById[g[AuthorizationGrantTable.grantedTo]]
                     ?: raise(RepositoryReadError.NotFoundError)
 
-                g.toAuthorizationGrant(grantedBy, grantedFor, grantedTo)
+                g.toAuthorizationGrant(
+                    grantedBy = grantedBy,
+                    grantedFor = grantedFor,
+                    grantedTo = grantedTo
+                )
             }
         }
     }
@@ -109,7 +113,11 @@ class ExposedGrantRepository(
             val grantedBy = partyRepository.find(grant[AuthorizationGrantTable.grantedBy]).getOrElse { error("Failed to get grantedBy: $it") }
             val grantedTo = partyRepository.find(grant[AuthorizationGrantTable.grantedTo]).getOrElse { error("Failed to get grantedTo: $it") }
 
-            grant.toAuthorizationGrant(grantedFor, grantedBy, grantedTo)
+            grant.toAuthorizationGrant(
+                grantedBy = grantedBy,
+                grantedFor = grantedFor,
+                grantedTo = grantedTo
+            )
         }
     }
 
@@ -128,7 +136,11 @@ class ExposedGrantRepository(
                 val grantedBy = partyRepository.find(grant[AuthorizationGrantTable.grantedBy]).bind()
                 val grantedTo = partyRepository.find(grant[AuthorizationGrantTable.grantedTo]).bind()
 
-                grant.toAuthorizationGrant(grantedFor, grantedBy, grantedTo)
+                grant.toAuthorizationGrant(
+                    grantedBy = grantedBy,
+                    grantedFor = grantedFor,
+                    grantedTo = grantedTo
+                )
             }
         }
 
@@ -198,9 +210,9 @@ class ExposedGrantRepository(
                             it[sourceId] = grant.sourceId
                         }.map {
                             it.toAuthorizationGrant(
-                                grantedByParty,
-                                grantedForParty,
-                                grantedToParty
+                                grantedBy = grantedByParty,
+                                grantedFor = grantedForParty,
+                                grantedTo = grantedToParty
                             )
                         }.single()
 
