@@ -29,6 +29,10 @@ class Handler(
             UpdateError.NotAuthorizedError
         }
 
+        ensure(originalRequest.status == AuthorizationRequest.Status.Pending) {
+            UpdateError.IllegalStateError
+        }
+
         val updatedRequest = when (command.newStatus) {
             AuthorizationRequest.Status.Accepted -> {
                 handleAccepted(originalRequest).bind()

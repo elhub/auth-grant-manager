@@ -28,6 +28,8 @@ import no.elhub.auth.features.common.auth.PDPAuthorizationProvider
 import no.elhub.auth.features.common.commonModule
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
+import no.elhub.auth.features.requests.common.AuthorizationRequestPropertyTable
+import no.elhub.auth.features.requests.common.AuthorizationRequestTable
 import no.elhub.auth.features.requests.create.dto.CreateRequestAttributes
 import no.elhub.auth.features.requests.create.dto.CreateRequestMeta
 import no.elhub.auth.features.requests.create.dto.CreateRequestResponse
@@ -41,8 +43,13 @@ import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObject
 import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObjectWithMeta
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import no.elhub.devxp.jsonapi.response.JsonApiErrorObject
+import org.jetbrains.exposed.sql.batchInsert
+import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
+import java.util.UUID
+import java.time.LocalDate as JavaLocalDate
 import no.elhub.auth.module as applicationModule
 
 class AuthorizationRequestRouteTest : FunSpec({
@@ -464,8 +471,17 @@ class AuthorizationRequestRouteTest : FunSpec({
             setUpAuthorizationRequestTestApplication()
 
             test("Should accept authorization request and persist grant relationship") {
+                val requestId = insertAuthorizationRequest(
+                    properties = mapOf(
+                        "requestedFromName" to "Kasper Lind",
+                        "requestedForMeteringPointId" to "1234567890555",
+                        "requestedForMeteringPointAddress" to "Example Street 2, 0654 Oslo",
+                        "balanceSupplierName" to "Power AS",
+                        "balanceSupplierContractName" to "ExampleSupplierContract"
+                    )
+                )
                 val patchResult =
-                    client.patch("${REQUESTS_PATH}/d81e5bf2-8a0c-4348-a788-2a3fab4e77d6") {
+                    client.patch("${REQUESTS_PATH}/$requestId") {
                         header(HttpHeaders.Authorization, "Bearer enduser")
                         contentType(ContentType.Application.Json)
                         setBody(
@@ -605,8 +621,17 @@ class AuthorizationRequestRouteTest : FunSpec({
             }
 
             test("Should reject authorization-request") {
+                val requestId = insertAuthorizationRequest(
+                    properties = mapOf(
+                        "requestedFromName" to "Ola Normann",
+                        "requestedForMeteringPointId" to "1234567890123",
+                        "requestedForMeteringPointAddress" to "Example Street 1, 1234 Oslo",
+                        "balanceSupplierName" to "Example Energy AS",
+                        "balanceSupplierContractName" to "ExampleSupplierContract"
+                    )
+                )
                 val response =
-                    client.patch("${REQUESTS_PATH}/4f71d596-99e4-415e-946d-7352c1a40c53") {
+                    client.patch("${REQUESTS_PATH}/$requestId") {
                         header(HttpHeaders.Authorization, "Bearer enduser")
                         contentType(ContentType.Application.Json)
                         setBody(
@@ -670,8 +695,9 @@ class AuthorizationRequestRouteTest : FunSpec({
             }
 
             test("Should return 400 Bad Request on illegal transaction") {
+                val requestId = insertAuthorizationRequest()
                 val response =
-                    client.patch("${REQUESTS_PATH}/4f71d596-99e4-415e-946d-7352c1a40c53") {
+                    client.patch("${REQUESTS_PATH}/$requestId") {
                         contentType(ContentType.Application.Json)
                         header(HttpHeaders.Authorization, "Bearer enduser")
                         setBody(
@@ -767,4 +793,38 @@ private fun ApplicationTestBuilder.setUpAuthorizationRequestTestApplication() {
                 "pdp.baseUrl" to "http://localhost:8085"
             )
     }
+}
+
+private fun insertAuthorizationRequest(
+    status: AuthorizationRequest.Status = AuthorizationRequest.Status.Pending,
+    validToDate: JavaLocalDate = JavaLocalDate.now().plusDays(10),
+    properties: Map<String, String> = emptyMap()
+): UUID {
+    val requestId = UUID.randomUUID()
+    val requestedById = UUID.fromString("22222222-2222-2222-2222-222222222222")
+    val requestedFromId = UUID.fromString("11111111-1111-1111-1111-111111111111")
+    val requestedToId = UUID.fromString("11111111-1111-1111-1111-111111111111")
+
+    transaction {
+        AuthorizationRequestTable.insert {
+            it[id] = requestId
+            it[requestType] = AuthorizationRequest.Type.ChangeOfSupplierConfirmation
+            it[requestStatus] = status
+            it[requestedBy] = requestedById
+            it[requestedFrom] = requestedFromId
+            it[requestedTo] = requestedToId
+            it[approvedBy] = null
+            it[validTo] = validToDate
+        }
+
+        if (properties.isNotEmpty()) {
+            AuthorizationRequestPropertyTable.batchInsert(properties.entries) { (key, value) ->
+                this[AuthorizationRequestPropertyTable.requestId] = requestId
+                this[AuthorizationRequestPropertyTable.key] = key
+                this[AuthorizationRequestPropertyTable.value] = value
+            }
+        }
+    }
+
+    return requestId
 }

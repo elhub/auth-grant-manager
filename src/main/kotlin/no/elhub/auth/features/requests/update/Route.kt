@@ -68,6 +68,16 @@ fun Route.route(
                         )
                     )
 
+                UpdateError.IllegalStateError ->
+                    call.respond(
+                        HttpStatusCode.BadRequest,
+                        JsonApiErrorObject(
+                            status = "400",
+                            title = "Invalid Status State",
+                            detail = "Request must be in 'Pending' status to update."
+                        )
+                    )
+
                 UpdateError.NotAuthorizedError -> {
                     val (status, body) = AuthError.NotAuthorized.toApiErrorResponse()
                     call.respond(status, body)
