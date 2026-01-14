@@ -13,7 +13,6 @@ import no.elhub.auth.features.businessprocesses.movein.domain.toRequestCommand
 import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.DocumentBusinessHandler
-import no.elhub.auth.features.documents.create.CreateDocumentError
 import no.elhub.auth.features.documents.create.CreateDocumentError.BusinessValidationError
 import no.elhub.auth.features.documents.create.command.DocumentCommand
 import no.elhub.auth.features.documents.create.model.CreateDocumentModel

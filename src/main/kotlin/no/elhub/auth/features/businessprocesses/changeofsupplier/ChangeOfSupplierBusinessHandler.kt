@@ -18,7 +18,7 @@ import no.elhub.auth.features.businessprocesses.changeofsupplier.domain.toReques
 import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.DocumentBusinessHandler
-import no.elhub.auth.features.documents.create.CreateDocumentError
+import no.elhub.auth.features.documents.create.CreateDocumentError.BusinessValidationError
 import no.elhub.auth.features.documents.create.command.DocumentCommand
 import no.elhub.auth.features.documents.create.model.CreateDocumentModel
 import no.elhub.auth.features.grants.AuthorizationScope
@@ -50,11 +50,11 @@ class ChangeOfSupplierBusinessHandler :
             validFrom = today(),
         )
 
-    override fun validateAndReturnDocumentCommand(model: CreateDocumentModel): Either<CreateDocumentError, DocumentCommand> =
+    override fun validateAndReturnDocumentCommand(model: CreateDocumentModel): Either<BusinessValidationError, DocumentCommand> =
         either {
             val model = model.toChangeOfSupplierBusinessModel()
             validate(model)
-                .mapLeft { raise(CreateDocumentError.BusinessValidationError(it.message)) }
+                .mapLeft { raise(BusinessValidationError(it.message)) }
                 .bind()
                 .toDocumentCommand()
         }
