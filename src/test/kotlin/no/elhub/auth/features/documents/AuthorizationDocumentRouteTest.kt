@@ -24,6 +24,7 @@ import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.testing.testApplication
+import no.elhub.auth.features.businessprocesses.changeofsupplier.defaultValidTo
 import no.elhub.auth.features.common.AuthPersonsTestContainer
 import no.elhub.auth.features.common.AuthPersonsTestContainerExtension
 import no.elhub.auth.features.common.PdpTestContainerExtension
@@ -160,6 +161,7 @@ class AuthorizationDocumentRouteTest :
                         attributes.shouldNotBeNull().apply {
                             documentType shouldBe AuthorizationDocument.Type.ChangeOfSupplierConfirmation.name
                             status shouldBe AuthorizationDocument.Status.Pending.name
+                            validTo shouldBe defaultValidTo().toString()
                         }
                         relationships.shouldNotBeNull().apply {
                             requestedBy.apply {
@@ -224,6 +226,7 @@ class AuthorizationDocumentRouteTest :
                             attributes.shouldNotBeNull().apply {
                                 status shouldBe AuthorizationDocument.Status.Pending.toString()
                                 documentType shouldBe AuthorizationDocument.Type.ChangeOfSupplierConfirmation.name
+                                validTo shouldBe defaultValidTo().toString()
                             }
                             relationships.apply {
                                 requestedBy.data.apply {

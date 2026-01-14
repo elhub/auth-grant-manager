@@ -105,6 +105,7 @@ class HandlerTest : FunSpec({
             requestedFrom = requestedFromParty,
             requestedTo = requestedToParty,
             properties = commandMeta.toMetaAttributes().toDocumentProperties(),
+            validTo = command.validTo,
         )
         every { documentRepository.insert(any(), command.scopes) } returns savedDocument.right()
 

@@ -23,6 +23,7 @@ import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObjectWithRelation
 data class GetDocumentSingleResponseAttributes(
     val status: String,
     val documentType: String,
+    val validTo: String,
 ) : JsonApiAttributes
 
 @Serializable
@@ -61,6 +62,7 @@ fun AuthorizationDocument.toGetSingleResponse() =
             attributes = GetDocumentSingleResponseAttributes(
                 status = this.status.name,
                 documentType = this.type.name,
+                validTo = this.validTo.toString(),
             ),
             relationships = GetDocumentSingleResponseRelationship(
                 requestedBy = this.requestedBy.toJsonApiRelationship(),

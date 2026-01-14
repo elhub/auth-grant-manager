@@ -8,6 +8,7 @@ import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.core.spec.style.FunSpec
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.datetime.LocalDate
 import no.elhub.auth.features.common.QueryError
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.currentTimeWithTimeZone
@@ -25,6 +26,7 @@ class HandlerTest : FunSpec({
     val requestedBy = AuthorizationParty(resourceId = "org-entity-1", type = PartyType.OrganizationEntity)
     val requestedFrom = AuthorizationParty(resourceId = "person-1", type = PartyType.Person)
     val requestedTo = AuthorizationParty(resourceId = "person-2", type = PartyType.Person)
+    val validTo = LocalDate(2025, 1, 1)
 
     val documentId = UUID.randomUUID()
     val document = AuthorizationDocument(
@@ -37,6 +39,7 @@ class HandlerTest : FunSpec({
         requestedFrom = requestedFrom,
         requestedTo = requestedTo,
         properties = listOf(AuthorizationDocumentProperty(key = "k", value = "v")),
+        validTo = validTo,
         createdAt = currentTimeWithTimeZone(),
         updatedAt = currentTimeWithTimeZone()
     )

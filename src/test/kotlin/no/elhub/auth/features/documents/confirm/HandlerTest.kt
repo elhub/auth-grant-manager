@@ -8,6 +8,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import no.elhub.auth.features.businessprocesses.changeofsupplier.defaultValidTo
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
@@ -34,7 +35,8 @@ class HandlerTest : FunSpec({
                 requestedBy = requestedBy,
                 requestedFrom = requestedFrom,
                 requestedTo = requestedTo,
-                properties = emptyList()
+                properties = emptyList(),
+                validTo = defaultValidTo()
             ).copy(
                 id = documentId,
                 status = AuthorizationDocument.Status.Signed
