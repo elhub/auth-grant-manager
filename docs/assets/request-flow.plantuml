@@ -12,13 +12,15 @@ end box
 EndUser -> MarketParty: Initiates transaction
 MarketParty -> GrantManager: POST /authorization-requests
 GrantManager -> MarketParty: 201 Created (authorizationRequestId)
-MarketParty -> MyPage: Redirect to https://mypage.elhub.no/authorization-request/{authorizationRequestId}
-MyPage -> MarketParty: Redirect to chosen MarketParty URI
+MarketParty -> MyPage: Redirect to https://mypage.elhub.no/authorization-requests/{authorizationRequestId}
 note right
 User accepts or rejects the request.
 end note
-MarketParty -> GrantManager: GET /authorization-request/{authorizationRequestId}
-GrantManager -> MarketParty: 200 OK (consentId)
+MyPage -> GrantManager: PATCH /authorization-requests/{authorizationRequestId} (status=approved)
+GrantManager -> MyPage: 200 OK
+MyPage -> MarketParty: Redirect to chosen MarketParty URI
+MarketParty -> GrantManager: GET /authorization-requests/{authorizationRequestId}
+GrantManager -> MarketParty: 200 OK (authorizationGrantId)
 note right
 Retrieves authorization request status and the authorizationGrantId
 end note
