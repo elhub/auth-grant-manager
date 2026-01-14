@@ -62,7 +62,7 @@ fun AuthorizationDocument.toGetSingleResponse() =
             attributes = GetDocumentSingleResponseAttributes(
                 status = this.status.name,
                 documentType = this.type.name,
-                validTo = this.validTo.toString(),
+                validTo = this.validTo.toTimeZoneOffsetString(),
             ),
             relationships = GetDocumentSingleResponseRelationship(
                 requestedBy = this.requestedBy.toJsonApiRelationship(),

@@ -4,7 +4,6 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
-import kotlinx.datetime.LocalDate
 import no.elhub.auth.features.common.PostgresTestContainer
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.currentTimeWithTimeZone
@@ -62,7 +61,7 @@ class ExposedDocumentPropertiesRepositoryTest : FunSpec({
                     requestedTo = AuthorizationParty(type = PartyType.Person, resourceId = "1234567890"),
                     signedBy = AuthorizationParty(type = PartyType.Person, resourceId = "1234567890"),
                     properties = emptyList(),
-                    validTo = LocalDate(2025, 1, 1),
+                    validTo = currentTimeWithTimeZone().plusDays(1),
                     createdAt = currentTimeWithTimeZone(),
                     updatedAt = currentTimeWithTimeZone()
                 )

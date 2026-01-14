@@ -14,6 +14,7 @@ import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
 import no.elhub.auth.features.common.party.PartyService
 import no.elhub.auth.features.common.party.PartyType
+import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.grants.common.GrantRepository
@@ -36,7 +37,7 @@ class HandlerTest : FunSpec({
                 requestedFrom = requestedFrom,
                 requestedTo = requestedTo,
                 properties = emptyList(),
-                validTo = defaultValidTo()
+                validTo = defaultValidTo().toTimeZoneOffsetDateTimeAtStartOfDay()
             ).copy(
                 id = documentId,
                 status = AuthorizationDocument.Status.Signed

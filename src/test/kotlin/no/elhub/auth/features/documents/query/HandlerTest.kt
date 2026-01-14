@@ -7,7 +7,6 @@ import io.kotest.core.spec.style.FunSpec
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.datetime.LocalDate
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.currentTimeWithTimeZone
 import no.elhub.auth.features.common.party.AuthorizationParty
@@ -24,7 +23,7 @@ class HandlerTest : FunSpec({
     val requestedBy = AuthorizationParty(resourceId = "org-entity-1", type = PartyType.OrganizationEntity)
     val requestedFrom = AuthorizationParty(resourceId = "person-1", type = PartyType.Person)
     val requestedTo = AuthorizationParty(resourceId = "person-2", type = PartyType.Person)
-    val validTo = LocalDate(2025, 1, 1)
+    val validTo = currentTimeWithTimeZone().plusDays(1)
 
     val firstDocumentId = UUID.randomUUID()
     val secondDocumentId = UUID.randomUUID()

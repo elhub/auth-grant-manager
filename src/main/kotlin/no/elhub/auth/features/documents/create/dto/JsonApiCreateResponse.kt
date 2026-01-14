@@ -59,7 +59,7 @@ fun AuthorizationDocument.toCreateDocumentResponse() = CreateDocumentResponse(
         attributes = CreateDocumentResponseAttributes(
             status = this.status.name,
             documentType = this.type.name,
-            validTo = this.validTo.toString(),
+            validTo = this.validTo.toTimeZoneOffsetString(),
         ),
         relationships = CreateDocumentResponseRelationships(
             requestedBy = JsonApiRelationshipToOne(

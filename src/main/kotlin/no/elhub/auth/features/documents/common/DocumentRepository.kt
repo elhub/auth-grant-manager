@@ -2,8 +2,6 @@ package no.elhub.auth.features.documents.common
 
 import arrow.core.Either
 import arrow.core.raise.either
-import kotlinx.datetime.toJavaLocalDate
-import kotlinx.datetime.toKotlinLocalDate
 import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.common.PGEnum
 import no.elhub.auth.features.common.RepositoryReadError
@@ -28,7 +26,6 @@ import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.batchInsert
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.insertReturning
-import org.jetbrains.exposed.sql.javatime.date
 import org.jetbrains.exposed.sql.javatime.timestamp
 import org.jetbrains.exposed.sql.javatime.timestampWithTimeZone
 import org.jetbrains.exposed.sql.or
@@ -82,7 +79,7 @@ class ExposedDocumentRepository(
                     it[requestedBy] = requestedByParty.id
                     it[requestedFrom] = requestedFromParty.id
                     it[requestedTo] = requestedToParty.id
-                    it[validTo] = doc.validTo.toJavaLocalDate()
+                    it[validTo] = doc.validTo
                     it[createdAt] = doc.createdAt
                     it[updatedAt] = doc.updatedAt
                 }.single()
@@ -276,7 +273,7 @@ object AuthorizationDocumentTable : UUIDTable("auth.authorization_document") {
     val requestedBy = uuid("requested_by").references(AuthorizationPartyTable.id)
     val requestedFrom = uuid("requested_from").references(AuthorizationPartyTable.id)
     val requestedTo = uuid("requested_to").references(AuthorizationPartyTable.id)
-    val validTo = date("valid_to")
+    val validTo = timestampWithTimeZone("valid_to")
     val createdAt = timestampWithTimeZone("created_at").default(OffsetDateTime.now(ZoneId.of("Europe/Oslo")))
     val updatedAt = timestampWithTimeZone("updated_at").default(OffsetDateTime.now(ZoneId.of("Europe/Oslo")))
 }
@@ -320,6 +317,6 @@ fun ResultRow.toAuthorizationDocument(
     signedBy = signedBy?.let { AuthorizationParty(resourceId = it.resourceId, type = it.type) },
     createdAt = this[AuthorizationDocumentTable.createdAt],
     updatedAt = this[AuthorizationDocumentTable.updatedAt],
-    validTo = this[AuthorizationDocumentTable.validTo].toKotlinLocalDate(),
+    validTo = this[AuthorizationDocumentTable.validTo],
     properties = properties
 )

@@ -9,7 +9,6 @@ import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import kotlinx.datetime.LocalDate
 import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.common.PostgresTestContainer
 import no.elhub.auth.features.common.PostgresTestContainerExtension
@@ -56,7 +55,7 @@ class ExposedDocumentRepositoryTest :
                         requestedTo = AuthorizationParty(type = PartyType.Person, resourceId = "1234567890"),
                         signedBy = AuthorizationParty(type = PartyType.Person, resourceId = "1234567890"),
                         properties = emptyList(),
-                        validTo = LocalDate(2025, 1, 1),
+                        validTo = currentTimeWithTimeZone().plusDays(1),
                         createdAt = currentTimeWithTimeZone(),
                         updatedAt = currentTimeWithTimeZone()
                     )
@@ -117,7 +116,7 @@ class ExposedDocumentRepositoryTest :
                     requestedTo = AuthorizationParty(type = PartyType.Person, resourceId = "to-1"),
                     signedBy = AuthorizationParty(type = PartyType.Person, resourceId = "signer-1"),
                     properties = emptyList(),
-                    validTo = LocalDate(2025, 1, 1),
+                    validTo = currentTimeWithTimeZone().plusDays(1),
                     createdAt = currentTimeWithTimeZone(),
                     updatedAt = currentTimeWithTimeZone()
                 )
@@ -134,7 +133,7 @@ class ExposedDocumentRepositoryTest :
                     signedBy = AuthorizationParty(type = PartyType.Person, resourceId = "signer-2"),
                     createdAt = currentTimeWithTimeZone(),
                     properties = emptyList(),
-                    validTo = LocalDate(2025, 1, 1),
+                    validTo = currentTimeWithTimeZone().plusDays(1),
                     updatedAt = currentTimeWithTimeZone()
                 )
 

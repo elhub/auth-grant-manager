@@ -1,6 +1,5 @@
 package no.elhub.auth.features.documents
 
-import kotlinx.datetime.LocalDate
 import no.elhub.auth.features.common.currentTimeWithTimeZone
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.documents.common.AuthorizationDocumentProperty
@@ -19,7 +18,7 @@ data class AuthorizationDocument(
     val signedBy: AuthorizationParty? = null,
     val grantId: UUID? = null,
     val properties: List<AuthorizationDocumentProperty>,
-    val validTo: LocalDate,
+    val validTo: OffsetDateTime,
     val createdAt: OffsetDateTime,
     val updatedAt: OffsetDateTime
 ) {
@@ -30,7 +29,7 @@ data class AuthorizationDocument(
             requestedBy: AuthorizationParty,
             requestedFrom: AuthorizationParty,
             requestedTo: AuthorizationParty,
-            validTo: LocalDate,
+            validTo: OffsetDateTime,
             properties: List<AuthorizationDocumentProperty>,
         ): AuthorizationDocument = AuthorizationDocument(
             id = UUID.randomUUID(),

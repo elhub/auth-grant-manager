@@ -161,7 +161,7 @@ class AuthorizationDocumentRouteTest :
                         attributes.shouldNotBeNull().apply {
                             documentType shouldBe AuthorizationDocument.Type.ChangeOfSupplierConfirmation.name
                             status shouldBe AuthorizationDocument.Status.Pending.name
-                            validTo shouldBe defaultValidTo().toString()
+                            validTo shouldBe "${defaultValidTo()}T00:00:00+01:00"
                         }
                         relationships.shouldNotBeNull().apply {
                             requestedBy.apply {
@@ -226,7 +226,7 @@ class AuthorizationDocumentRouteTest :
                             attributes.shouldNotBeNull().apply {
                                 status shouldBe AuthorizationDocument.Status.Pending.toString()
                                 documentType shouldBe AuthorizationDocument.Type.ChangeOfSupplierConfirmation.name
-                                validTo shouldBe defaultValidTo().toString()
+                                validTo shouldBe "${defaultValidTo()}T00:00:00+01:00"
                             }
                             relationships.apply {
                                 requestedBy.data.apply {
@@ -268,7 +268,7 @@ class AuthorizationDocumentRouteTest :
                     expectedSignatory = getDocumentResponse.data.relationships.requestedTo.data.id
 
                     getDocumentResponse.links.shouldNotBeNull().apply {
-                        self shouldBe "$DOCUMENTS_PATH"
+                        self shouldBe DOCUMENTS_PATH
                     }
 
                     // Verify that response is the same for authorized enduser
