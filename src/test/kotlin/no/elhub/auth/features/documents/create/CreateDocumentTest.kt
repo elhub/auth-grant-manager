@@ -146,6 +146,7 @@ class CreateDocumentTest :
                     single { PartyService(get()) }
                     singleOf(::ExposedDocumentPropertiesRepository) bind DocumentPropertiesRepository::class
                     singleOf(::ChangeOfSupplierBusinessHandler)
+                    singleOf(::MoveInBusinessHandler)
                     singleOf(::ProxyDocumentBusinessHandler)
 
                     singleOf(::Handler)
