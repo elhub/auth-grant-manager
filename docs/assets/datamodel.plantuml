@@ -49,12 +49,12 @@ enum PartyType {
 }
 
 enum DocumentType {
-  ChangeOfSupplier
+  ChangeOfSupplierConfirmation
   MoveIn
 }
 
 enum RequestType {
-  ChangeOfSupplier
+  ChangeOfSupplierConfirmation
   MoveIn
 }
 
