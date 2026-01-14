@@ -4,7 +4,9 @@ import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
+import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.plus
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
@@ -15,7 +17,7 @@ import no.elhub.auth.features.documents.create.model.CreateDocumentModel
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.create.model.CreateRequestMeta
 import no.elhub.auth.features.requests.create.model.CreateRequestModel
-import no.elhub.auth.features.requests.create.model.defaultRequestValidTo
+import no.elhub.auth.features.requests.create.model.today
 
 private val VALID_PARTY = PartyIdentifier(PartyIdentifierType.OrganizationNumber, "123456789")
 private val VALID_METERING_POINT = "123456789012345678"
@@ -93,8 +95,24 @@ class MoveInBusinessHandlerTest :
             val command = handler.validateAndReturnRequestCommand(model).shouldBeRight()
 
             command.type shouldBe AuthorizationRequest.Type.MoveIn
-            command.validTo shouldBe defaultRequestValidTo()
+            command.validTo shouldBe today().plus(DatePeriod(days = 28))
             command.meta.toMetaAttributes()["startDate"] shouldBe VALID_START_DATE.toString()
+        }
+
+        test("grant properties validTo is one year from acceptance") {
+            val party = AuthorizationParty(resourceId = "party-1", type = PartyType.Organization)
+            val request = AuthorizationRequest.create(
+                type = AuthorizationRequest.Type.MoveIn,
+                requestedBy = party,
+                requestedFrom = party,
+                requestedTo = party,
+                validTo = today(),
+            )
+
+            val properties = handler.getCreateGrantProperties(request)
+
+            properties.validFrom shouldBe today()
+            properties.validTo shouldBe today().plus(DatePeriod(years = 1))
         }
 
         test("document produces DocumentCommand for valid input") {

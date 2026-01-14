@@ -4,6 +4,8 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.raise.either
 import arrow.core.right
+import kotlinx.datetime.DatePeriod
+import kotlinx.datetime.plus
 import no.elhub.auth.features.businessprocesses.movein.domain.MoveInBusinessCommand
 import no.elhub.auth.features.businessprocesses.movein.domain.MoveInBusinessMeta
 import no.elhub.auth.features.businessprocesses.movein.domain.MoveInBusinessModel
@@ -22,13 +24,19 @@ import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.create.RequestBusinessHandler
 import no.elhub.auth.features.requests.create.command.RequestCommand
 import no.elhub.auth.features.requests.create.model.CreateRequestModel
-import no.elhub.auth.features.requests.create.model.defaultRequestValidTo
 import no.elhub.auth.features.requests.create.model.today
 
 private const val REGEX_NUMBERS_LETTERS_SYMBOLS = "^[a-zA-Z0-9_.-]*$"
 private const val REGEX_REQUESTED_FROM = REGEX_NUMBERS_LETTERS_SYMBOLS
 private const val REGEX_REQUESTED_BY = REGEX_NUMBERS_LETTERS_SYMBOLS
 private const val REGEX_METERING_POINT = "^\\d{18}$"
+
+private const val MOVE_IN_REQUEST_VALID_DAYS = 28
+private const val MOVE_IN_GRANT_VALID_YEARS = 1
+
+private fun moveInRequestValidTo() = today().plus(DatePeriod(days = MOVE_IN_REQUEST_VALID_DAYS))
+
+private fun moveInGrantValidTo() = today().plus(DatePeriod(years = MOVE_IN_GRANT_VALID_YEARS))
 
 class MoveInBusinessHandler :
     RequestBusinessHandler,
@@ -41,7 +49,7 @@ class MoveInBusinessHandler :
 
     override fun getCreateGrantProperties(request: AuthorizationRequest): CreateGrantProperties =
         CreateGrantProperties(
-            validTo = defaultRequestValidTo(),
+            validTo = moveInGrantValidTo(),
             validFrom = today(),
         )
 
@@ -56,7 +64,7 @@ class MoveInBusinessHandler :
 
     override fun getCreateGrantProperties(document: AuthorizationDocument): CreateGrantProperties =
         CreateGrantProperties(
-            validTo = defaultRequestValidTo(),
+            validTo = moveInGrantValidTo(),
             validFrom = today(),
         )
 
@@ -125,7 +133,7 @@ class MoveInBusinessHandler :
             requestedFrom = model.requestedFrom,
             requestedBy = model.requestedBy,
             requestedTo = model.requestedTo,
-            validTo = defaultRequestValidTo(),
+            validTo = moveInRequestValidTo(),
             scopes = scopes,
             meta = meta,
         ).right()
