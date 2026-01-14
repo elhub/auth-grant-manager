@@ -16,6 +16,7 @@ import no.elhub.auth.features.common.party.PartyIdentifierType
 import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.common.validateId
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
+import no.elhub.devxp.jsonapi.response.JsonApiErrorObject
 
 const val DOCUMENT_ID_PARAM = "id"
 
@@ -60,6 +61,16 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
                 ConfirmDocumentError.ScopeReadError,
                 ConfirmDocumentError.GrantCreationError,
                 ConfirmDocumentError.RequestedByResolutionError -> call.respond(HttpStatusCode.InternalServerError)
+
+                ConfirmDocumentError.IllegalStateError ->
+                    call.respond(
+                        HttpStatusCode.BadRequest,
+                        JsonApiErrorObject(
+                            status = "400",
+                            title = "Invalid Status State",
+                            detail = "Document must be in 'Pending' status to confirm."
+                        )
+                    )
             }
             return@put
         }

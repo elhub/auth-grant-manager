@@ -6,6 +6,7 @@ import arrow.core.raise.ensure
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.RepositoryWriteError
 import no.elhub.auth.features.common.party.PartyService
+import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.common.GrantRepository
@@ -30,6 +31,10 @@ class Handler(
 
         ensure(requestedBy == document.requestedBy) {
             ConfirmDocumentError.InvalidRequestedByError
+        }
+
+        ensure(document.status == AuthorizationDocument.Status.Pending) {
+            ConfirmDocumentError.IllegalStateError
         }
 
         // TODO: Implement validation of the signed file and find the signatory
@@ -80,4 +85,5 @@ sealed class ConfirmDocumentError {
     data object GrantCreationError : ConfirmDocumentError()
     data object RequestedByResolutionError : ConfirmDocumentError()
     data object InvalidRequestedByError : ConfirmDocumentError()
+    data object IllegalStateError : ConfirmDocumentError()
 }
