@@ -4,7 +4,6 @@ import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensure
 import io.ktor.http.HttpStatusCode
-import no.elhub.auth.features.businessprocesses.changeofsupplier.ChangeOfSupplierValidationError
 import no.elhub.auth.features.common.party.PartyService
 import no.elhub.auth.features.grants.common.CreateGrantProperties
 import no.elhub.auth.features.requests.AuthorizationRequest
@@ -115,6 +114,6 @@ fun CreateRequestError.ValidationError.toApiErrorResponse(): Pair<HttpStatusCode
         )
 
 interface RequestBusinessHandler {
-    fun validateAndReturnRequestCommand(createRequestModel: CreateRequestModel): Either<ChangeOfSupplierValidationError, RequestCommand>
+    fun validateAndReturnRequestCommand(createRequestModel: CreateRequestModel): Either<RequestTypeValidationError, RequestCommand>
     fun getCreateGrantProperties(request: AuthorizationRequest): CreateGrantProperties
 }

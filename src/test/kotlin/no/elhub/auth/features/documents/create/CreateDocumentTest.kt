@@ -12,6 +12,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldMatch
 import no.elhub.auth.features.businessprocesses.changeofsupplier.ChangeOfSupplierBusinessHandler
+import no.elhub.auth.features.businessprocesses.movein.MoveInBusinessHandler
 import no.elhub.auth.features.common.ApiPersonService
 import no.elhub.auth.features.common.AuthPersonsTestContainer
 import no.elhub.auth.features.common.AuthPersonsTestContainerExtension
@@ -89,7 +90,11 @@ private fun authorizedPartyFor(identifier: PartyIdentifier): AuthorizationParty 
             AuthorizationParty(resourceId = identifier.idValue, type = PartyType.OrganizationEntity)
     }
 
-private fun testDocumentOrchestrator(): ProxyDocumentBusinessHandler = ProxyDocumentBusinessHandler(ChangeOfSupplierBusinessHandler(), FakeFileGenerator())
+private fun testDocumentOrchestrator(): ProxyDocumentBusinessHandler = ProxyDocumentBusinessHandler(
+    ChangeOfSupplierBusinessHandler(),
+    MoveInBusinessHandler(),
+    FakeFileGenerator()
+)
 
 private class FakeFileGenerator : FileGenerator {
     override fun generate(
