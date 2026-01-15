@@ -3,6 +3,7 @@ package no.elhub.auth.features.businessprocesses.movein.domain
 import kotlinx.datetime.LocalDate
 import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.common.party.PartyIdentifier
+import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.create.command.DocumentCommand
 import no.elhub.auth.features.documents.create.command.DocumentMetaMarker
@@ -56,6 +57,6 @@ fun MoveInBusinessCommand.toDocumentCommand(): DocumentCommand =
         requestedTo = this.requestedTo,
         requestedBy = this.requestedBy,
         scopes = this.scopes,
-        validTo = this.validTo,
+        validTo = this.validTo.toTimeZoneOffsetDateTimeAtStartOfDay(),
         meta = this.meta,
     )
