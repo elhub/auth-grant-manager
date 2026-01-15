@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Authorization Request Post Request",
+  "description": "Schema for creating authorization requests in the Elhub authorization manager.",
+  "type": "object",
+  "properties": {
+    "data": {
+      "description": "The authorization request to be created.",
+      "type": "object",
+      "properties": {
+        "type": {
+          "$ref": "authorization-request-common.schema.json#/$defs/type"
+        },
+        "attributes": {
+          "type": "object",
+          "description": "The attributes of the authorization request.",
+          "properties": {
+            "requestType": {
+              "$ref": "authorization-request-common.schema.json#/$defs/requestType"
+            }
+          }
+        },
+        "meta": {
+          "type": "object",
+          "description": "Additional meta-information related to the resource. Most of this information is used for informational purposes.",
+          "properties": {
+            "requestedFromName": {
+              "$ref": "../authorization-common.schema.json#/$defs/requestedFromName"
+            },
+            "requestedForMeteringPointId": {
+              "$ref": "../authorization-common.schema.json#/$defs/requestedForMeteringPointId"
+            },
+            "requestedForMeteringPointAddress": {
+              "$ref": "../authorization-common.schema.json#/$defs/requestedForMeteringPointAddress"
+            },
+            "balanceSupplierName": {
+              "$ref": "../authorization-common.schema.json#/$defs/balanceSupplierName"
+            },
+            "balanceSupplierContractName": {
+              "$ref": "../authorization-common.schema.json#/$defs/balanceSupplierContractName"
+            },
+            "requestedBy": {
+              "$ref": "../authorization-common.schema.json#/$defs/requestedBy"
+            },
+            "requestedFrom": {
+              "$ref": "../authorization-common.schema.json#/$defs/requestedFrom"
+            },
+            "requestedTo": {
+              "$ref": "../authorization-common.schema.json#/$defs/requestedTo"
+            }
+          }
+        }
+      }
+    }
+  },
+  "required": ["data"]
+}

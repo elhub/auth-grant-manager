@@ -9,14 +9,14 @@
       "required": ["type", "attributes", "meta"],
       "properties": {
         "type": {
-          "$ref": "authorization-document-common.schema.json#/$defs/type"
+          "$refs": "authorization-document-common.schema.json#/$defs/type"
         },
         "attributes": {
           "type": "object",
           "required": ["documentType"],
           "properties": {
             "documentType": {
-              "$ref": "authorization-document-common.schema.json#/$defs/attributes/$defs/documentType"
+              "$ref": "authorization-document-common.schema.json#/$defs/documentType"
             }
           }
         },
@@ -25,28 +25,28 @@
           "description": "Contextual metadata required to initialize the document. The required metadata fields depend on the document type.",
           "properties": {
             "requestedBy": {
-              "$ref": "authorization-document-common.schema.json#/$defs/meta/$defs/requestedBy"
+              "$ref": "../authorization-common.schema.json#/$defs/requestedBy"
             },
             "requestedFrom": {
-              "$ref": "authorization-document-common.schema.json#/$defs/meta/$defs/requestedFrom"
+              "$ref": "../authorization-common.schema.json#/$defs/requestedFrom"
             },
             "requestedTo": {
-              "$ref": "authorization-document-common.schema.json#/$defs/meta/$defs/requestedTo"
+              "$ref": "../authorization-common.schema.json#/$defs/requestedTo"
             },
             "requestedFromName": {
-              "$ref": "authorization-document-common.schema.json#/$defs/meta/$defs/requestedFromName"
+              "$ref": "../authorization-common.schema.json#/$defs/requestedFromName"
             },
             "requestedForMeteringPointId": {
-              "$ref": "authorization-document-common.schema.json#/$defs/meta/$defs/requestedForMeteringPointId"
+              "$ref": "../authorization-common.schema.json#/$defs/requestedForMeteringPointId"
             },
             "requestedForMeteringPointAddress": {
-              "$ref": "authorization-document-common.schema.json#/$defs/meta/$defs/requestedForMeteringPointAddress"
+              "$ref": "../authorization-common.schema.json#/$defs/requestedForMeteringPointAddress"
             },
             "balanceSupplierName": {
-              "$ref": "authorization-document-common.schema.json#/$defs/meta/$defs/balanceSupplierName"
+              "$ref": "../authorization-common.schema.json#/$defs/balanceSupplierName"
             },
             "balanceSupplierContractName": {
-              "$ref": "authorization-document-common.schema.json#/$defs/meta/$defs/balanceSupplierContractName"
+              "$ref": "../authorization-common.schema.json#/$defs/balanceSupplierContractName"
             }
           }
         }

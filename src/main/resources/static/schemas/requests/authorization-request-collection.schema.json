@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Authorization Request Response Collection",
+  "description": "Schema for returning a collection of authorization requests.",
+  "type": "object",
+  "properties": {
+    "data": {
+      "description": "An array of authorization request resource objects.",
+      "type": "array",
+      "items": {
+        "$ref": "authorization-request-resource.schema.json#/properties/data"
+      },
+      "uniqueItems": true
+    },
+    "links": {
+      "description": "Link members related to the collection (e.g., pagination).",
+      "$ref": "../json-api-framework.schema.json#/$defs/topLevelLinks",
+      "examples": [
+        "/access/v0/authorization-requests"
+      ]
+    },
+    "meta": {
+      "$ref": "../json-api-framework.schema.json#/$defs/topLevelMeta"
+    }
+  },
+  "required": ["data", "links", "meta"],
+  "additionalProperties": false
+}
