@@ -33,7 +33,11 @@
         },
         "relationships": {
           "$ref": "authorization-document-common.schema.json#/$defs/relationships",
-          "required": ["requestedBy", "requestedFrom", "requestedTo"]
+          "required": [
+            "requestedBy",
+            "requestedFrom",
+            "requestedTo"
+          ]
         },
         "meta": {
           "type": "object",
@@ -59,7 +63,10 @@
         },
         "links": {
           "$ref": "authorization-document-common.schema.json#/$defs/links",
-          "required": ["self", "file"]
+          "required": [
+            "self",
+            "file"
+          ]
         }
       }
     },
