@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Authorization Grant",
+  "description": "Schema for returning a single authorization grant object in the Elhub authorization manager.",
+  "type": "object",
+  "properties": {
+    "data": {
+      "type": "object",
+      "required": [
+        "id",
+        "type",
+        "attributes",
+        "relationships",
+        "links"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "authorization-grant-common.schema.json#/$defs/id"
+        },
+        "type": {
+          "$ref": "authorization-grant-common.schema.json#/$defs/type"
+        },
+        "attributes": {
+          "$ref": "authorization-grant-common.schema.json#/$defs/attributes",
+          "required": [
+            "status",
+            "createdAt",
+            "updatedAt",
+            "validFrom",
+            "validTo"
+          ]
+        },
+        "relationships": {
+          "$ref": "authorization-grant-common.schema.json#/$defs/relationships",
+          "required": [
+            "grantedFor",
+            "grantedTo",
+            "source",
+            "scopes"
+          ]
+        },
+        "links": {
+          "$ref": "authorization-grant-common.schema.json#/$defs/links",
+          "required": [
+            "self"
+          ]
+        }
+      }
+    },
+    "links": {
+      "description": "Link members related to the primary data.",
+      "$ref": "../json-api-framework.schema.json#/$defs/topLevelLinks"
+    },
+    "meta": {
+      "$ref": "../json-api-framework.schema.json#/$defs/topLevelMeta"
+    }
+  },
+  "required": [
+    "data",
+    "links",
+    "meta"
+  ]
+}

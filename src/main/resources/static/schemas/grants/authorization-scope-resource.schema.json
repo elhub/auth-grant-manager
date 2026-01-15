@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Authorization Scope",
+  "description": "Schema for returning a single authorization scope object in the Elhub authorization manager.",
+  "type": "object",
+  "properties": {
+    "data": {
+      "type": "object",
+      "required": [
+        "id",
+        "type",
+        "attributes",
+        "relationships"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "authorization-grant-common.schema.json#/$defs/id"
+        },
+        "type": {
+          "$ref": "authorization-grant-common.schema.json#/$defs/scopeType"
+        },
+        "attributes": {
+          "type": "object",
+          "description": "Attributes of the AuthorizationScope resource.",
+          "properties": {
+            "permissionType": {
+              "$ref": "authorization-grant-common.schema.json#/$defs/permissionType"
+            },
+            "createdAt": {
+              "$ref": "../elhub-common.schema.json#/$defs/createdAt"
+            }
+          }
+        },
+        "relationships": {
+          "type": "object",
+          "properties": {
+            "authorizedResources": {
+              "$ref": "authorization-grant-common.schema.json#/$defs/authorizedResources"
+            }
+          }
+        }
+      }
+    },
+    "links": {
+      "description": "Link members related to the primary data.",
+      "$ref": "../json-api-framework.schema.json#/$defs/topLevelLinks"
+    },
+    "meta": {
+      "$ref": "../json-api-framework.schema.json#/$defs/topLevelMeta"
+    }
+  },
+  "required": [
+    "data",
+    "links",
+    "meta"
+  ]
+}

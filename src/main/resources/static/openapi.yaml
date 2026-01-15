@@ -35,6 +35,9 @@ tags:
   - name: TODO
     description: Endpoints under active development and not yet enabled in production.
 
+security:
+  - bearerAuth: []
+
 paths:
   "/authorization-documents":
     get:
@@ -246,7 +249,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "./schemas/grants/authorization-grant-get-list-response.schema.json"
+                $ref: "./schemas/grants/authorization-grant-collection.schema.json"
         "400":
           $ref: "#/components/responses/400BadRequestError"
         "401":
@@ -278,7 +281,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "./schemas/grants/authorization-grant-get-response.schema.json"
+                $ref: "./schemas/grants/authorization-grant-resource.schema.json"
         "400":
           $ref: "#/components/responses/400BadRequestError"
         "401":
@@ -307,14 +310,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "./schemas/grants/authorization-grant-patch-request.schema.json"
+              $ref: "./schemas/grants/authorization-grant-update.schema.json"
       responses:
         "200":
           description: The authorization grant was successfully updated.
           content:
             application/json:
               schema:
-                $ref: "./schemas/grants/authorization-grant-get-response.schema.json"
+                $ref: "./schemas/grants/authorization-grant-resource.schema.json"
         "400":
           $ref: "#/components/responses/400BadRequestError"
         "401":
@@ -348,7 +351,47 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "./schemas/grants/authorization-scope-get-list-response.schema.json"
+                $ref: "./schemas/grants/authorization-scope-collection.schema.json"
+        "400":
+          $ref: "#/components/responses/400BadRequestError"
+        "401":
+          $ref: "#/components/responses/401UnauthorizedError"
+        "404":
+          $ref: "#/components/responses/404NotFoundError"
+        "500":
+          $ref: "#/components/responses/500InternalServerError"
+
+  "/authorization-grants/{id}/scopes/{scopeId}":
+    get:
+      tags:
+        - Authorization Grants
+      summary: Retrieve a specific authorization grant scope
+      description: >
+        Retrieve a specific authorization scope associated with an authorization grant using its scopeId.
+      parameters:
+        - $ref: "#/components/parameters/UserAgent"
+        - $ref: "#/components/parameters/AuthorizationMaskinportenOrEndUser"
+        - $ref: "#/components/parameters/SenderGlnOptional"
+        - $ref: "#/components/parameters/OnBehalfOfGlnOptional"
+        - name: id
+          in: path
+          required: true
+          description: Unique identifier of the authorization grant whose scopes should be retrieved.
+          schema:
+            type: string
+        - name: scopeId
+          in: path
+          required: true
+          description: Unique identifier of the authorization scope that is being retrieved.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: An authorization scope associated with the grant.
+          content:
+            application/json:
+              schema:
+                $ref: "./schemas/grants/authorization-scope-resource.schema.json"
         "400":
           $ref: "#/components/responses/400BadRequestError"
         "401":
@@ -377,7 +420,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "./schemas/requests/authorization-request-get-list-response.schema.json"
+                $ref: "./schemas/requests/authorization-request-collection.schema.json"
         "401":
           $ref: "#/components/responses/401UnauthorizedError"
         "500":
@@ -399,7 +442,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "./schemas/requests/authorization-request-post-request.schema.json"
+              $ref: "./schemas/requests/authorization-request-submission.schema.json"
       responses:
         "201":
           description: >
@@ -408,7 +451,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "./schemas/requests/authorization-request-post-response.schema.json"
+                $ref: "./schemas/requests/authorization-request-resource.schema.json"
         "400":
           $ref: "#/components/responses/400BadRequestError"
         "401":
@@ -441,7 +484,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "./schemas/requests/authorization-request-get-response.schema.json"
+                $ref: "./schemas/requests/authorization-request-resource.schema.json"
         "401":
           $ref: "#/components/responses/401UnauthorizedError"
         "404":
@@ -474,14 +517,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "./schemas/requests/authorization-request-patch-request.schema.json"
+              $ref: "./schemas/requests/authorization-request-update.schema.json"
       responses:
         "200":
           description: The authorization request was successfully updated.
           content:
             application/json:
               schema:
-                $ref: "./schemas/requests/authorization-request-get-response.schema.json"
+                $ref: "./schemas/requests/authorization-request-resource.schema.json"
         "400":
           $ref: "#/components/responses/400BadRequestError"
         "401":

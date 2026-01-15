@@ -2,61 +2,54 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$defs": {
     "id": {
-      "$ref": "../base-definitions.schema.json#/definitions/resourceId"
+      "$ref": "../elhub-common.schema.json#/$defs/resourceUuid"
     },
     "type": {
       "type": "string",
       "description": "Identifies the resource as an 'AuthorizationDocument' in accordance with JSON:API standards.",
-      "const": "AuthorizationDocument"
+      "const": "AuthorizationDocument",
+      "examples": [
+        "AuthorizationDocument"
+      ]
+    },
+    "documentType": {
+      "type": "string",
+      "description": "Classifies the type of the authorization document being created or managed (e.g., supplier switch confirmation).",
+      "enum": [
+        "ChangeOfSupplierConfirmation"
+      ],
+      "examples": [
+        "ChangeOfSupplierConfirmation"
+      ]
     },
     "attributes": {
       "type": "object",
-      "description": "The core attributes of the authorization document.",
+      "description": "Attributes of the AuthorizationDocument resource.",
       "properties": {
         "documentType": {
-          "$ref": "#/$defs/attributes/$defs/documentType"
-        },
-        "status": {
-          "$ref": "#/$defs/attributes/$defs/status"
-        },
-        "validTo": {
-          "$ref": "#/$defs/attributes/$defs/validTo"
-        },
-        "createdAt": {
-          "$ref": "#/$defs/attributes/$defs/createdAt"
-        },
-        "updatedAt": {
-          "$ref": "#/$defs/attributes/$defs/updatedAt"
-        }
-      },
-      "$defs": {
-        "documentType": {
-          "type": "string",
-          "description": "Classifies the type of the authorization document being created or managed (e.g., supplier switch confirmation).",
-          "enum": ["ChangeOfSupplierConfirmation"]
+          "$ref": "#/$defs/documentType"
         },
         "status": {
           "type": "string",
           "description": "The current state of the document within the signature workflow (e.g., waiting for signature, signed, or expired).",
-          "enum": ["Expired", "Pending", "Rejected", "Signed"]
+          "enum": [
+            "Expired",
+            "Pending",
+            "Rejected",
+            "Signed"
+          ],
+          "examples": [
+            "Pending"
+          ]
         },
         "createdAt": {
-          "type": "string",
-          "format": "date-time",
-          "description": "Timestamp indicating when this authorization document was first created.",
-          "examples": ["2025-11-28T08:51:57+01:00"]
+          "$ref": "../elhub-common.schema.json#/$defs/createdAt"
         },
         "updatedAt": {
-          "type": "string",
-          "format": "date-time",
-          "description": "Timestamp indicating the last modification to the document (e.g., status change).",
-          "examples": ["2025-12-17T12:51:57+01:00"]
+          "$ref": "../elhub-common.schema.json#/$defs/updatedAt"
         },
         "validTo": {
-          "type": "string",
-          "format": "date-time",
-          "description": "Timestamp indicating when this authorization document is no longer valid and can thus no longer be signed.",
-          "examples": ["2025-12-31T23:59:59+01:00"]
+          "$ref": "../elhub-common.schema.json#/$defs/validTo"
         }
       }
     },
@@ -65,35 +58,22 @@
       "description": "References to related resources.",
       "properties": {
         "requestedBy": {
-          "$ref": "#/$defs/relationships/$defs/requestedBy"
+          "description": "Reference to the resource object representing the party that initiated the request for this authorization document.",
+          "$ref": "../elhub-common.schema.json#/$defs/relationshipParty"
         },
         "requestedFrom": {
-          "$ref": "#/$defs/relationships/$defs/requestedFrom"
+          "description": "Reference to the resource object representing the party who owns the access or rights being requested in this document.",
+          "$ref": "../elhub-common.schema.json#/$defs/relationshipParty"
         },
         "requestedTo": {
-          "$ref": "#/$defs/relationships/$defs/requestedTo"
+          "description": "Reference to the resource object representing the authorized representative expected to review and sign this document on behalf of the 'requested from' party.",
+          "$ref": "../elhub-common.schema.json#/$defs/relationshipParty"
         },
         "signedBy": {
-          "$ref": "#/$defs/relationships/$defs/signedBy"
+          "description": "Reference to the resource object representing the party who signed this authorization document (populated after signing).",
+          "$ref": "../elhub-common.schema.json#/$defs/relationshipParty"
         },
         "authorizationGrant": {
-          "$ref": "#/$defs/relationships/$defs/grant"
-        }
-      },
-      "$defs": {
-        "requestedBy": {
-          "$ref": "../base-definitions.schema.json#/definitions/relationshipParty"
-        },
-        "requestedFrom": {
-          "$ref": "../base-definitions.schema.json#/definitions/relationshipParty"
-        },
-        "requestedTo": {
-          "$ref": "../base-definitions.schema.json#/definitions/relationshipParty"
-        },
-        "signedBy": {
-          "$ref": "../base-definitions.schema.json#/definitions/relationshipParty"
-        },
-        "grant": {
           "type": "object",
           "properties": {
             "links": {
@@ -112,10 +92,10 @@
               "type": "object",
               "properties": {
                 "type": {
-                  "$ref": "../grants/authorization-grant-definitions.json#/$defs/type"
+                  "$ref": "../grants/authorization-grant-common.schema.json#/$defs/type"
                 },
                 "id": {
-                  "$ref": "../base-definitions.schema.json#/definitions/resourceId"
+                  "$ref": "../elhub-common.schema.json#/$defs/resourceUuid"
                 }
               }
             }
@@ -128,88 +108,41 @@
       "description": "Read-only context and human-readable metadata.",
       "properties": {
         "requestedFromName": {
-          "$ref": "#/$defs/meta/$defs/requestedFromName"
+          "$ref": "../authorization-common.schema.json#/$defs/requestedFromName"
         },
         "requestedForMeteringPointId": {
-          "$ref": "#/$defs/meta/$defs/requestedForMeteringPointId"
+          "$ref": "../authorization-common.schema.json#/$defs/requestedForMeteringPointId"
         },
         "requestedForMeteringPointAddress": {
-          "$ref": "#/$defs/meta/$defs/requestedForMeteringPointAddress"
+          "$ref": "../authorization-common.schema.json#/$defs/requestedForMeteringPointAddress"
         },
         "balanceSupplierName": {
-          "$ref": "#/$defs/meta/$defs/balanceSupplierName"
+          "$ref": "../authorization-common.schema.json#/$defs/balanceSupplierName"
         },
         "balanceSupplierContractName": {
-          "$ref": "#/$defs/meta/$defs/balanceSupplierContractName"
+          "$ref": "../authorization-common.schema.json#/$defs/balanceSupplierContractName"
         },
-        "requestedBy": {
-          "$ref": "#/$defs/meta/$defs/requestedBy"
-        },
-        "requestedFrom": {
-          "$ref": "#/$defs/meta/$defs/requestedFrom"
-        },
-        "requestedTo": {
-          "$ref": "#/$defs/meta/$defs/requestedTo"
-        },
-        "signedBy": {
-          "$ref": "#/$defs/meta/$defs/signedBy"
-        }
-      },
-      "$defs": {
         "requestedBy": {
           "description": "The party identifier of the actor who initiated the request (e.g., the GLN of the requesting balance supplier).",
-          "$ref": "../base-definitions.schema.json#/definitions/partyIdentifier"
+          "$ref": "../elhub-common.schema.json#/$defs/partyIdentifier"
         },
         "requestedFrom": {
           "description": "The party identifier of the resource owner (who must grant the access). This is typically the person or organization being requested to sign the document.",
-          "$ref": "../base-definitions.schema.json#/definitions/partyIdentifier"
+          "$ref": "../elhub-common.schema.json#/$defs/partyIdentifier"
         },
         "requestedTo": {
           "description": "The party identifier of the specific agent or person expected to review and sign the document on behalf of the 'requested from' party.",
-          "$ref": "../base-definitions.schema.json#/definitions/partyIdentifier"
+          "$ref": "../elhub-common.schema.json#/$defs/partyIdentifier"
         },
         "signedBy": {
           "description": "The party identifier of the actual signer (populated after the document is signed).",
-          "$ref": "../base-definitions.schema.json#/definitions/partyIdentifier"
-        },
-        "requestedFromName": {
-          "type": "string",
-          "description": "The registered name of the 'requested from' party.",
-          "examples": ["Ola Normann"]
-        },
-        "requestedForMeteringPointId": {
-          "type": "string",
-          "description": "The unique identifier of the metering point this authorization applies to.",
-          "examples": ["1234567890123"]
-        },
-        "requestedForMeteringPointAddress": {
-          "type": "string",
-          "description": "The physical address associated with the metering point.",
-          "examples": ["Example Street 1, 1234 Oslo"]
-        },
-        "balanceSupplierContractName": {
-          "type": "string",
-          "description": "The name of the contract with the balance supplier.",
-          "examples": ["ExampleSupplierContract"]
-        },
-        "balanceSupplierName": {
-          "type": "string",
-          "description": "The name of the balance supplier currently associated with the metering point.",
-          "examples": ["Example Supplier AS"]
+          "$ref": "../elhub-common.schema.json#/$defs/partyIdentifier"
         }
       }
     },
     "links": {
       "type": "object",
       "properties": {
-        "self": {
-          "$ref": "#/$defs/links/$defs/self"
-        },
-        "file": {
-          "$ref": "#/$defs/links/$defs/file"
-        }
-      },
-      "$defs": {
         "self": {
           "type": "string",
           "format": "uri",

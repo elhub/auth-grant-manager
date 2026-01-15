@@ -1,0 +1,119 @@
+{
+  "$defs": {
+    "relationshipParty": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "description": "A relationship to a party (person or organization).",
+              "enum": [
+                "Organization",
+                "OrganizationEntity",
+                "Person"
+              ]
+            },
+            "resourceId": {
+              "type": "string",
+              "description": "The unique identifier of the linked resource."
+            }
+          },
+          "examples": [
+            {
+              "type": "Person",
+              "resourceId": "56365eae-bc09-5c51-e063-9f768d0ac8cf"
+            }
+          ]
+        }
+      }
+    },
+    "partyIdentifier": {
+      "type": "object",
+      "properties": {
+        "idType": {
+          "type": "string",
+          "description": "Specify the type of identifier",
+          "enum": [
+            "NationalIdentityNumber",
+            "OrganizationNumber",
+            "GlobalLocationNumber"
+          ]
+        },
+        "idValue": {
+          "type": "string",
+          "description": "The actual value of the identifier corresponding to the specified idType."
+        }
+      }
+    },
+    "resourceUuid": {
+      "type": "string",
+      "format": "UUID",
+      "description": "A UUID identifier for a resource.",
+      "examples": [
+        "123e4567-e89b-12d3-a456-426614174000"
+      ]
+    },
+    "resourceReference": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "description": "A reference to an Elhub resource object.",
+              "enum": ["MeteringPoint"]
+            },
+            "id": {
+              "type": "string",
+              "description": "The unique identifier of the linked resource."
+            }
+          },
+          "examples": [
+            {
+              "data": {
+                "type": "MeteringPoint",
+                "id": "12345678901234"
+              }
+            }
+          ]
+        }
+      },
+      "required": ["data"]
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp indicating when this object was created.",
+      "examples": [
+        "2025-11-28T08:51:57+01:00"
+      ]
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp indicating the last modification to the object.",
+      "examples": [
+        "2025-12-17T12:51:57+01:00"
+      ]
+    },
+    "validFrom": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp indicating when this object is valid from. Used when this attribute is distinct from creation time.",
+      "examples": [
+        "2025-12-31T23:59:59+01:00"
+      ]
+    },
+    "validTo": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp indicating when this object is no longer valid (and can thus no longer be used or modified).",
+      "examples": [
+        "2025-12-31T23:59:59+01:00"
+      ]
+    }
+  }
+}

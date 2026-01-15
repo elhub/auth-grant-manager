@@ -1,0 +1,182 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "id": {
+      "$ref": "../elhub-common.schema.json#/$defs/resourceUuid"
+    },
+    "type": {
+      "type": "string",
+      "description": "Identifies the resource as an 'AuthorizationGrant' in accordance with JSON:API standards.",
+      "const": "AuthorizationGrant",
+      "examples": [
+        "AuthorizationGrant"
+      ]
+    },
+    "scopeType": {
+      "type": "string",
+      "description": "Identifies the resource as an 'AuthorizationScope' in accordance with JSON:API standards.",
+      "const": "AuthorizationScioe",
+      "examples": [
+        "AuthorizationScope"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "description": "The status of the authorization grant.",
+      "enum": [
+        "Active",
+        "Exhausted",
+        "Expired",
+        "Revoked"
+      ]
+    },
+    "attributes": {
+      "type": "object",
+      "description": "Attributes of the AuthorizationGrant resource.",
+      "properties": {
+        "status": {
+          "$ref": "#/$defs/status"
+        },
+        "createdAt": {
+          "$ref": "../elhub-common.schema.json#/$defs/createdAt"
+        },
+        "updatedAt": {
+          "$ref": "../elhub-common.schema.json#/$defs/updatedAt"
+        },
+        "grantedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp indication when this Authorization Grant was approved.",
+          "examples": [
+            "2025-12-29T10:13:18+01:00"
+          ]
+        },
+        "validFrom": {
+          "$ref": "../elhub-common.schema.json#/$defs/validTo"
+        },
+        "validTo": {
+          "$ref": "../elhub-common.schema.json#/$defs/validTo"
+        }
+      }
+    },
+    "relationships": {
+      "type": "object",
+      "description": "References to related resources.",
+      "properties": {
+        "grantedFor": {
+          "description": "Relationship to the resource object whose access or rights are being granted.",
+          "$ref": "../elhub-common.schema.json#/$defs/relationshipParty"
+        },
+        "grantedBy": {
+          "description": "Relationship to the resource object that approved this authorization grant.",
+          "$ref": "../elhub-common.schema.json#/$defs/relationshipParty"
+        },
+        "grantedTo": {
+          "description": "Relationship to the resource object receiving the granted access or rights.",
+          "$ref": "../elhub-common.schema.json#/$defs/relationshipParty"
+        },
+        "source": {
+          "type": "object",
+          "description": "The source that created this authorization grant. This is either an authorization request or an authorization document.",
+          "properties": {
+            "data": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "ID of the source (authorization request or document)."
+                },
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "AuthorizationRequest",
+                    "AuthorizationDocument"
+                  ]
+                }
+              },
+              "examples": [
+                {
+                  "id": "4f71d596-99e4-415e-946d-7252c1a40c5b",
+                  "type": "AuthorizationRequest"
+                }
+              ]
+            },
+            "links": {
+              "type": "object",
+              "properties": {
+                "self": {
+                  "type": "string",
+                  "format": "uri"
+                }
+              },
+              "examples": [
+                {
+                  "self": "/access/v0/authorization-requests/4f71d596-99e4-415e-946d-7252c1a40c5b"
+                }
+              ]
+            }
+          }
+        },
+        "scopes": {
+          "type": "object",
+          "description": "The scopes associated with this authorization grant.",
+          "properties": {
+            "data": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "description": "ID of the authorization scope."
+                  },
+                  "type": {
+                    "$ref": "#/$defs/scopeType"
+                  }
+                },
+                "examples": [
+                  {
+                    "id": "scope-12345",
+                    "type": "AuthorizationScope"
+                  }
+                ]
+              }
+            }
+          },
+          "required": ["data"]
+        }
+      }
+    },
+    "links": {
+      "type": "object",
+      "properties": {
+        "self": {
+          "type": "string",
+          "format": "uri",
+          "description": "The canonical URI for retrieving this specific authorization grant.",
+          "examples": [
+            "/access/v0/authorization-grants/123e4567-e89b-12d3-a456-426614174000"
+          ]
+        }
+      }
+    },
+    "permissionType": {
+      "type": "string",
+      "description": "The type of permission granted by the scope.",
+      "enum": ["ChangeOfSupplier", "ReadAccess"]
+    },
+    "authorizedResources": {
+      "type": "object",
+      "description": "The resources that this scope gives permissions for.",
+      "properties": {
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "../elhub-common.schema.json#/$defs/resourceReference"
+          }
+        }
+      },
+      "required": ["data"]
+    }
+  }
+}

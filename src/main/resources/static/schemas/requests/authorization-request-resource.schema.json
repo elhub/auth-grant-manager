@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Authorization Document",
-  "description": "Schema for returning a single authorization document object in the Elhub authorization manager.",
+  "title": "Authorization Request",
+  "description": "Schema for returning a single authorization request object in the Elhub authorization manager.",
   "type": "object",
   "properties": {
     "data": {
@@ -16,15 +16,15 @@
       ],
       "properties": {
         "id": {
-          "$ref": "authorization-document-common.schema.json#/$defs/id"
+          "$ref": "authorization-request-common.schema.json#/$defs/id"
         },
         "type": {
-          "$ref": "authorization-document-common.schema.json#/$defs/type"
+          "$ref": "authorization-request-common.schema.json#/$defs/type"
         },
         "attributes": {
-          "$ref": "authorization-document-common.schema.json#/$defs/attributes",
+          "$ref": "authorization-request-common.schema.json#/$defs/attributes",
           "required": [
-            "documentType",
+            "requestType",
             "status",
             "createdAt",
             "updatedAt",
@@ -32,8 +32,12 @@
           ]
         },
         "relationships": {
-          "$ref": "authorization-document-common.schema.json#/$defs/relationships",
-          "required": ["requestedBy", "requestedFrom", "requestedTo"]
+          "$ref": "authorization-request-common.schema.json#/$defs/relationships",
+          "required": [
+            "requestedBy",
+            "requestedFrom",
+            "requestedTo"
+          ]
         },
         "meta": {
           "type": "object",
@@ -58,14 +62,22 @@
           }
         },
         "links": {
-          "$ref": "authorization-document-common.schema.json#/$defs/links",
-          "required": ["self", "file"]
-        }
+          "$ref": "authorization-request-common.schema.json#/$defs/links",
+          "required": [
+            "self"
+          ]
+        },
+        "additionalProperties": false
       }
     },
     "links": {
-      "description": "Link members related to the primary data.",
-      "$ref": "../json-api-framework.schema.json#/$defs/topLevelLinks"
+      "description": "Links related to the primary data.",
+      "$ref": "../json-api-framework.schema.json#/$defs/topLevelLinks",
+      "examples": [
+        {
+          "self": "/access/v0/authorization-requests/123e4567-e89b-12d3-a456-426614174000"
+        }
+      ]
     },
     "meta": {
       "$ref": "../json-api-framework.schema.json#/$defs/topLevelMeta"
