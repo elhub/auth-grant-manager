@@ -26,6 +26,7 @@ import no.elhub.auth.features.filegenerator.PdfGeneratorConfig
 import no.elhub.auth.features.grants.common.ExposedGrantRepository
 import no.elhub.auth.features.grants.common.GrantRepository
 import org.koin.core.module.dsl.singleOf
+import org.koin.core.qualifier.named
 import org.koin.dsl.bind
 import org.koin.ktor.ext.get
 import org.koin.ktor.plugin.koinModule
@@ -62,7 +63,7 @@ fun Application.module() {
             )
         }
 
-        singleOf(::HashicorpVaultSignatureProvider) bind SignatureProvider::class
+        single { HashicorpVaultSignatureProvider(client = get(named("commonHttpClient")), cfg = get()) } bind SignatureProvider::class
 
         single {
             val cfg = get<ApplicationConfig>().config("pdfGenerator")

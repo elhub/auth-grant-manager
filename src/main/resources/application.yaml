@@ -7,6 +7,7 @@ ktor:
       - no.elhub.auth.features.grants.ModuleKt.module
       - no.elhub.auth.features.documents.ModuleKt.module
       - no.elhub.auth.features.requests.ModuleKt.module
+      - no.elhub.auth.features.businessprocesses.structuredata.MeteringPointsServiceModuleKt.meteringPointsServiceModule
   deployment:
     port: 8080
   database:
@@ -38,3 +39,11 @@ featureToggle:
 
 authPersons:
   baseUri: $AUTH_PERSONS_URL
+
+structureData:
+  meteringPointsService:
+    serviceUrl: $STRUCTURE_DATA_METERING_POINTS_SERVICE_URL
+    authentication:
+      basic:
+        username: $STRUCTURE_DATA_METERING_POINTS_SERVICE_API_USERNAME
+        password: $STRUCTURE_DATA_METERING_POINTS_SERVICE_API_PASSWORD
