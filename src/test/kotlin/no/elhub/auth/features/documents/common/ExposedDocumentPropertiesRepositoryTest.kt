@@ -61,6 +61,7 @@ class ExposedDocumentPropertiesRepositoryTest : FunSpec({
                     requestedTo = AuthorizationParty(type = PartyType.Person, resourceId = "1234567890"),
                     signedBy = AuthorizationParty(type = PartyType.Person, resourceId = "1234567890"),
                     properties = emptyList(),
+                    validTo = currentTimeWithTimeZone().plusDays(1),
                     createdAt = currentTimeWithTimeZone(),
                     updatedAt = currentTimeWithTimeZone()
                 )

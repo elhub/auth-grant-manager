@@ -4,6 +4,11 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.raise.either
 import arrow.core.right
+import kotlinx.datetime.DatePeriod
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.plus
+import kotlinx.datetime.toLocalDateTime
 import no.elhub.auth.features.businessprocesses.changeofsupplier.domain.ChangeOfSupplierBusinessCommand
 import no.elhub.auth.features.businessprocesses.changeofsupplier.domain.ChangeOfSupplierBusinessMeta
 import no.elhub.auth.features.businessprocesses.changeofsupplier.domain.ChangeOfSupplierBusinessModel
@@ -22,8 +27,8 @@ import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.create.RequestBusinessHandler
 import no.elhub.auth.features.requests.create.command.RequestCommand
 import no.elhub.auth.features.requests.create.model.CreateRequestModel
-import no.elhub.auth.features.requests.create.model.defaultRequestValidTo
-import no.elhub.auth.features.requests.create.model.today
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
 
 private const val REGEX_NUMBERS_LETTERS_SYMBOLS = "^[a-zA-Z0-9_.-]*$"
 private const val REGEX_REQUESTED_FROM = REGEX_NUMBERS_LETTERS_SYMBOLS
@@ -41,7 +46,7 @@ class ChangeOfSupplierBusinessHandler :
 
     override fun getCreateGrantProperties(request: AuthorizationRequest): CreateGrantProperties =
         CreateGrantProperties(
-            validTo = defaultRequestValidTo(),
+            validTo = defaultValidTo(),
             validFrom = today(),
         )
 
@@ -56,7 +61,7 @@ class ChangeOfSupplierBusinessHandler :
 
     override fun getCreateGrantProperties(document: AuthorizationDocument): CreateGrantProperties =
         CreateGrantProperties(
-            validTo = defaultRequestValidTo(),
+            validTo = defaultValidTo(),
             validFrom = today(),
         )
 
@@ -122,9 +127,21 @@ class ChangeOfSupplierBusinessHandler :
             requestedFrom = model.requestedFrom,
             requestedBy = model.requestedBy,
             requestedTo = model.requestedTo,
-            validTo = defaultRequestValidTo(),
+            validTo = defaultValidTo(),
             scopes = scopes,
             meta = meta,
         ).right()
     }
+}
+
+@OptIn(ExperimentalTime::class)
+fun defaultValidTo(): LocalDate {
+    val now = Clock.System.now().toLocalDateTime(TimeZone.UTC).date
+    return now.plus(DatePeriod(days = 30))
+}
+
+@OptIn(ExperimentalTime::class)
+fun today(): LocalDate {
+    val now = Clock.System.now().toLocalDateTime(TimeZone.UTC).date
+    return now
 }

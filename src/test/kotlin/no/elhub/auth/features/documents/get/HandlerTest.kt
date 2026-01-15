@@ -25,6 +25,7 @@ class HandlerTest : FunSpec({
     val requestedBy = AuthorizationParty(resourceId = "org-entity-1", type = PartyType.OrganizationEntity)
     val requestedFrom = AuthorizationParty(resourceId = "person-1", type = PartyType.Person)
     val requestedTo = AuthorizationParty(resourceId = "person-2", type = PartyType.Person)
+    val validTo = currentTimeWithTimeZone().plusDays(1)
 
     val documentId = UUID.randomUUID()
     val document = AuthorizationDocument(
@@ -37,6 +38,7 @@ class HandlerTest : FunSpec({
         requestedFrom = requestedFrom,
         requestedTo = requestedTo,
         properties = listOf(AuthorizationDocumentProperty(key = "k", value = "v")),
+        validTo = validTo,
         createdAt = currentTimeWithTimeZone(),
         updatedAt = currentTimeWithTimeZone()
     )

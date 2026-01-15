@@ -55,6 +55,7 @@ class ExposedDocumentRepositoryTest :
                         requestedTo = AuthorizationParty(type = PartyType.Person, resourceId = "1234567890"),
                         signedBy = AuthorizationParty(type = PartyType.Person, resourceId = "1234567890"),
                         properties = emptyList(),
+                        validTo = currentTimeWithTimeZone().plusDays(1),
                         createdAt = currentTimeWithTimeZone(),
                         updatedAt = currentTimeWithTimeZone()
                     )
@@ -115,6 +116,7 @@ class ExposedDocumentRepositoryTest :
                     requestedTo = AuthorizationParty(type = PartyType.Person, resourceId = "to-1"),
                     signedBy = AuthorizationParty(type = PartyType.Person, resourceId = "signer-1"),
                     properties = emptyList(),
+                    validTo = currentTimeWithTimeZone().plusDays(1),
                     createdAt = currentTimeWithTimeZone(),
                     updatedAt = currentTimeWithTimeZone()
                 )
@@ -131,6 +133,7 @@ class ExposedDocumentRepositoryTest :
                     signedBy = AuthorizationParty(type = PartyType.Person, resourceId = "signer-2"),
                     createdAt = currentTimeWithTimeZone(),
                     properties = emptyList(),
+                    validTo = currentTimeWithTimeZone().plusDays(1),
                     updatedAt = currentTimeWithTimeZone()
                 )
 

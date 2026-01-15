@@ -21,6 +21,7 @@ import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObjectWithRelation
 data class CreateDocumentResponseAttributes(
     val status: String,
     val documentType: String,
+    val validTo: String,
 ) : JsonApiAttributes
 
 @Serializable
@@ -58,6 +59,7 @@ fun AuthorizationDocument.toCreateDocumentResponse() = CreateDocumentResponse(
         attributes = CreateDocumentResponseAttributes(
             status = this.status.name,
             documentType = this.type.name,
+            validTo = this.validTo.toTimeZoneOffsetString(),
         ),
         relationships = CreateDocumentResponseRelationships(
             requestedBy = JsonApiRelationshipToOne(

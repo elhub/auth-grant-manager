@@ -67,6 +67,7 @@ class Handler(
                 requestedFrom = requestedFromParty,
                 requestedTo = requestedToParty,
                 properties = documentProperties,
+                validTo = command.validTo,
             )
 
         val savedDocument =

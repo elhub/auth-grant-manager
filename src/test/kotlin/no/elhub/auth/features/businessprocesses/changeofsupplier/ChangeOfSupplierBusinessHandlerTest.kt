@@ -14,7 +14,6 @@ import no.elhub.auth.features.documents.create.model.CreateDocumentModel
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.create.model.CreateRequestMeta
 import no.elhub.auth.features.requests.create.model.CreateRequestModel
-import no.elhub.auth.features.requests.create.model.defaultRequestValidTo
 
 private val VALID_PARTY = PartyIdentifier(PartyIdentifierType.OrganizationNumber, "123456789")
 private val VALID_METERING_POINT = "123456789012345678"
@@ -88,7 +87,7 @@ class ChangeOfSupplierBusinessHandlerTest :
             val command = handler.validateAndReturnRequestCommand(model).shouldBeRight()
 
             command.type shouldBe AuthorizationRequest.Type.ChangeOfSupplierConfirmation
-            command.validTo shouldBe defaultRequestValidTo()
+            command.validTo shouldBe defaultValidTo()
         }
 
         test("document produces DocumentCommand for valid input") {

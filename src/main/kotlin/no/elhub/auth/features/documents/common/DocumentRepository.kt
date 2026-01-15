@@ -79,6 +79,7 @@ class ExposedDocumentRepository(
                     it[requestedBy] = requestedByParty.id
                     it[requestedFrom] = requestedFromParty.id
                     it[requestedTo] = requestedToParty.id
+                    it[validTo] = doc.validTo
                     it[createdAt] = doc.createdAt
                     it[updatedAt] = doc.updatedAt
                 }.single()
@@ -272,6 +273,7 @@ object AuthorizationDocumentTable : UUIDTable("auth.authorization_document") {
     val requestedBy = uuid("requested_by").references(AuthorizationPartyTable.id)
     val requestedFrom = uuid("requested_from").references(AuthorizationPartyTable.id)
     val requestedTo = uuid("requested_to").references(AuthorizationPartyTable.id)
+    val validTo = timestampWithTimeZone("valid_to")
     val createdAt = timestampWithTimeZone("created_at").default(OffsetDateTime.now(ZoneId.of("Europe/Oslo")))
     val updatedAt = timestampWithTimeZone("updated_at").default(OffsetDateTime.now(ZoneId.of("Europe/Oslo")))
 }
@@ -315,5 +317,6 @@ fun ResultRow.toAuthorizationDocument(
     signedBy = signedBy?.let { AuthorizationParty(resourceId = it.resourceId, type = it.type) },
     createdAt = this[AuthorizationDocumentTable.createdAt],
     updatedAt = this[AuthorizationDocumentTable.updatedAt],
+    validTo = this[AuthorizationDocumentTable.validTo],
     properties = properties
 )
