@@ -86,6 +86,7 @@ fun Route.route(
                             detail = "Request validity period has passed"
                         )
                     )
+
                 UpdateError.NotAuthorizedError -> {
                     val (status, body) = AuthError.NotAuthorized.toApiErrorResponse()
                     call.respond(status, body)

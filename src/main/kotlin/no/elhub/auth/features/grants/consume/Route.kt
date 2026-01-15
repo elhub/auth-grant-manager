@@ -113,6 +113,7 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
                             )
                         )
                     )
+
                 ConsumeError.ExpiredError ->
                     call.respond(
                         HttpStatusCode.BadRequest,

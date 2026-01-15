@@ -3,15 +3,15 @@ package no.elhub.auth.features.requests.update
 import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensure
-import kotlinx.datetime.toLocalDateTime
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.grants.AuthorizationGrant
-import kotlin.time.Clock
 import no.elhub.auth.features.grants.common.GrantRepository
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.common.RequestRepository
 import org.slf4j.LoggerFactory
+import kotlin.time.Clock
 
 class Handler(
     private val requestRepository: RequestRepository,
@@ -34,7 +34,7 @@ class Handler(
             UpdateError.IllegalStateError
         }
 
-        val today = Clock.System.now().toLocalDateTime(TimeZone.UTC).date;
+        val today = Clock.System.now().toLocalDateTime(TimeZone.UTC).date
         ensure(originalRequest.validTo >= today) {
             UpdateError.ExpiredError
         }

@@ -12,7 +12,6 @@ import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
-import no.elhub.devxp.jsonapi.response.JsonApiErrorObject
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.config.MapApplicationConfig
@@ -34,6 +33,7 @@ import no.elhub.auth.features.grants.consume.dto.JsonApiConsumeRequest
 import no.elhub.auth.features.requests.REQUESTS_PATH
 import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObject
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
+import no.elhub.devxp.jsonapi.response.JsonApiErrorObject
 import no.elhub.auth.module as applicationModule
 
 class AuthorizationGrantRouteTest : FunSpec({
@@ -660,7 +660,6 @@ class AuthorizationGrantRouteTest : FunSpec({
                 body[0].status shouldBe "400 Bad Request"
                 body[0].title shouldBe "Request Has Expired"
                 body[0].detail shouldBe "Request validity period has passed"
-
             }
             test("Should reject invalid status transition") {
                 val response = client.patch("$GRANTS_PATH/2a28a9dd-d3b3-4dec-a420-3f7d0d0105b7") {
@@ -685,7 +684,6 @@ class AuthorizationGrantRouteTest : FunSpec({
                 body[0].title shouldBe "Invalid Status Transition"
                 body[0].detail shouldBe "Only 'Exhausted' status is allowed."
             }
-
         }
     }
 })

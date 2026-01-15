@@ -1,5 +1,6 @@
 package no.elhub.auth.features.grants.consume
 
+import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import io.kotest.assertions.arrow.core.shouldBeLeft
@@ -8,20 +9,19 @@ import io.kotest.core.spec.style.FunSpec
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import java.time.ZoneOffset
 import no.elhub.auth.features.common.AuthorizationParties
 import no.elhub.auth.features.common.RepositoryError
+import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.RepositoryWriteError
 import no.elhub.auth.features.common.currentTimeWithTimeZone
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.grants.AuthorizationGrant
-import java.time.OffsetDateTime
 import no.elhub.auth.features.grants.AuthorizationGrant.SourceType
 import no.elhub.auth.features.grants.AuthorizationGrant.Status
 import no.elhub.auth.features.grants.common.GrantRepository
-import arrow.core.Either
-import no.elhub.auth.features.common.RepositoryReadError
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import java.util.UUID
 
 class HandlerTest : FunSpec({
@@ -55,7 +55,6 @@ class HandlerTest : FunSpec({
         sourceType = SourceType.Document,
         sourceId = UUID.randomUUID(),
     )
-
 
     fun repoReturning(
         updateResult: Either<RepositoryError, AuthorizationGrant>,

@@ -501,7 +501,6 @@ class AuthorizationRequestRouteTest : FunSpec({
                 body.status shouldBe "400"
                 body.title shouldBe "Request Has Expired"
                 body.detail shouldBe "Request validity period has passed"
-
             }
             test("Should accept authorization request and persist grant relationship") {
                 val requestId = insertAuthorizationRequest(

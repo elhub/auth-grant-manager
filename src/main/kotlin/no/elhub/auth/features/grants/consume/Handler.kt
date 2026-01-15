@@ -2,12 +2,12 @@ package no.elhub.auth.features.grants.consume
 
 import arrow.core.Either
 import arrow.core.raise.either
-import java.time.OffsetDateTime
 import arrow.core.raise.ensure
 import no.elhub.auth.features.common.AuthorizationParties
 import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.AuthorizationGrant.Status
 import no.elhub.auth.features.grants.common.GrantRepository
+import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
 class Handler(
@@ -33,7 +33,6 @@ class Handler(
         ensure(originalGrant.grantStatus == Status.Active) {
             ConsumeError.IllegalStateError
         }
-
 
         val updated = repo.update(command.grantId, command.newStatus)
             .mapLeft { ConsumeError.PersistenceError }

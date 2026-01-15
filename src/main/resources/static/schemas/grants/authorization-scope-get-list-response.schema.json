@@ -18,7 +18,9 @@
       "properties": {
         "self": {
           "$ref": "../base-definitions.schema.json#/definitions/topLevelLinks/properties/self",
-          "examples": ["/access/v0/authorization-grants/d75522ba-0e62-449b-b1de-70b16f12ecaf/scopes"]
+          "examples": [
+            "/access/v0/authorization-grants/d75522ba-0e62-449b-b1de-70b16f12ecaf/scopes"
+          ]
         }
       }
     },
