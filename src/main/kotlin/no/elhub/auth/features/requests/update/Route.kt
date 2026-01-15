@@ -51,7 +51,6 @@ fun Route.route(
 
         val updated = handler(command).getOrElse { error ->
             when (error) {
-                is
                 UpdateError.PersistenceError,
                 UpdateError.RequestNotFound,
                 UpdateError.GrantCreationError,
@@ -78,6 +77,15 @@ fun Route.route(
                         )
                     )
 
+                UpdateError.ExpiredError ->
+                    call.respond(
+                        HttpStatusCode.BadRequest,
+                        JsonApiErrorObject(
+                            status = "400",
+                            title = "Request Has Expired",
+                            detail = "Request validity period has passed"
+                        )
+                    )
                 UpdateError.NotAuthorizedError -> {
                     val (status, body) = AuthError.NotAuthorized.toApiErrorResponse()
                     call.respond(status, body)

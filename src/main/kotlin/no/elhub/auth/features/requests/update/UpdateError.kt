@@ -8,4 +8,5 @@ sealed class UpdateError {
     data object GrantCreationError : UpdateError()
     data object IllegalTransitionError : UpdateError()
     data object IllegalStateError : UpdateError()
+    data object ExpiredError : UpdateError()
 }

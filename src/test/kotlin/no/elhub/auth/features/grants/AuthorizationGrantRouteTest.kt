@@ -12,6 +12,7 @@ import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
+import no.elhub.devxp.jsonapi.response.JsonApiErrorObject
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.config.MapApplicationConfig
@@ -465,7 +466,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                 response.status shouldBe HttpStatusCode.OK
                 val responseJson: CollectionGrantResponse = response.body()
                 responseJson.data.apply {
-                    size shouldBe 4
+                    size shouldBe 5
                     this[0].apply {
                         id.shouldNotBeNull()
                         type shouldBe "AuthorizationGrant"
@@ -596,7 +597,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                             data = JsonApiRequestResourceObject(
                                 type = "AuthorizationGrant",
                                 attributes = ConsumeRequestAttributes(
-                                    status = AuthorizationGrant.Status.Revoked
+                                    status = AuthorizationGrant.Status.Exhausted
                                 )
                             )
                         ),
@@ -610,10 +611,81 @@ class AuthorizationGrantRouteTest : FunSpec({
                     type shouldBe "AuthorizationGrant"
                     id.shouldNotBeNull()
                     attributes.shouldNotBeNull().apply {
-                        status shouldBe "Revoked"
+                        status shouldBe "Exhausted"
                     }
                 }
             }
+            test("Should reject update of non-'Active' grant") {
+                val response = client.patch("$GRANTS_PATH/123e4567-e89b-12d3-a456-426614174000") {
+                    header(HttpHeaders.Authorization, "Bearer elhub-service")
+                    contentType(ContentType.Application.Json)
+                    setBody(
+                        JsonApiConsumeRequest(
+                            data = JsonApiRequestResourceObject(
+                                type = "AuthorizationGrant",
+                                attributes = ConsumeRequestAttributes(
+                                    status = AuthorizationGrant.Status.Exhausted
+                                )
+                            )
+                        ),
+                    )
+                }
+
+                response.status shouldBe HttpStatusCode.BadRequest
+
+                val body = response.body<List<JsonApiErrorObject>>()
+                body[0].status shouldBe "400 Bad Request"
+                body[0].title shouldBe "Illegal Status State"
+                body[0].detail shouldBe "Grant must be 'Active' to get consumed"
+            }
+            test("Should reject update of expired grant") {
+                val response = client.patch("$GRANTS_PATH/2a28a9dd-d3b3-4dec-a420-3f7d0d0105b7") {
+                    header(HttpHeaders.Authorization, "Bearer elhub-service")
+                    contentType(ContentType.Application.Json)
+                    setBody(
+                        JsonApiConsumeRequest(
+                            data = JsonApiRequestResourceObject(
+                                type = "AuthorizationGrant",
+                                attributes = ConsumeRequestAttributes(
+                                    status = AuthorizationGrant.Status.Exhausted
+                                )
+                            )
+                        ),
+                    )
+                }
+
+                response.status shouldBe HttpStatusCode.BadRequest
+
+                val body = response.body<List<JsonApiErrorObject>>()
+                body[0].status shouldBe "400 Bad Request"
+                body[0].title shouldBe "Request Has Expired"
+                body[0].detail shouldBe "Request validity period has passed"
+
+            }
+            test("Should reject invalid status transition") {
+                val response = client.patch("$GRANTS_PATH/2a28a9dd-d3b3-4dec-a420-3f7d0d0105b7") {
+                    header(HttpHeaders.Authorization, "Bearer elhub-service")
+                    contentType(ContentType.Application.Json)
+                    setBody(
+                        JsonApiConsumeRequest(
+                            data = JsonApiRequestResourceObject(
+                                type = "AuthorizationGrant",
+                                attributes = ConsumeRequestAttributes(
+                                    status = AuthorizationGrant.Status.Active
+                                )
+                            )
+                        ),
+                    )
+                }
+
+                response.status shouldBe HttpStatusCode.BadRequest
+
+                val body = response.body<List<JsonApiErrorObject>>()
+                body[0].status shouldBe "400 Bad Request"
+                body[0].title shouldBe "Invalid Status Transition"
+                body[0].detail shouldBe "Only 'Exhausted' status is allowed."
+            }
+
         }
     }
 })

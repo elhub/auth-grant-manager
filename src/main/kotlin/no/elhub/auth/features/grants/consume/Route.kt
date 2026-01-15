@@ -55,7 +55,7 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
 
         val updated = handler(command).getOrElse { error ->
             when (error) {
-                is ConsumeError.PersistenceError ->
+                ConsumeError.PersistenceError ->
                     call.respond(
                         HttpStatusCode.InternalServerError,
                         message = listOf(
@@ -66,7 +66,7 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
                         )
                     )
 
-                is ConsumeError.GrantNotFound ->
+                ConsumeError.GrantNotFound ->
                     call.respond(
                         HttpStatusCode.NotFound,
                         message = listOf(
@@ -77,13 +77,50 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
                         )
                     )
 
-                is ConsumeError.NotAuthorized ->
+                ConsumeError.NotAuthorized ->
                     call.respond(
                         HttpStatusCode.Unauthorized,
                         message = listOf(
                             JsonApiErrorObject(
                                 status = HttpStatusCode.Unauthorized.toString(),
                                 code = "NOT_AUTHORIZED"
+                            )
+                        )
+                    )
+
+                ConsumeError.IllegalStateError ->
+                    call.respond(
+                        HttpStatusCode.BadRequest,
+                        message = listOf(
+                            JsonApiErrorObject(
+                                status = HttpStatusCode.BadRequest.toString(),
+                                code = "BAD_REQUEST",
+                                title = "Illegal Status State",
+                                detail = "Grant must be 'Active' to get consumed"
+                            )
+                        )
+                    )
+
+                ConsumeError.IllegalTransitionError ->
+                    call.respond(
+                        HttpStatusCode.BadRequest,
+                        message = listOf(
+                            JsonApiErrorObject(
+                                status = HttpStatusCode.BadRequest.toString(),
+                                code = "BAD_REQUEST",
+                                title = "Invalid Status Transition",
+                                detail = "Only 'Exhausted' status is allowed."
+                            )
+                        )
+                    )
+                ConsumeError.ExpiredError ->
+                    call.respond(
+                        HttpStatusCode.BadRequest,
+                        message = listOf(
+                            JsonApiErrorObject(
+                                status = HttpStatusCode.BadRequest.toString(),
+                                title = "Request Has Expired",
+                                detail = "Request validity period has passed"
                             )
                         )
                     )

@@ -101,7 +101,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                 val responseJson: GetRequestCollectionResponse = response.body()
 
                 responseJson.data.apply {
-                    size shouldBe 3
+                    size shouldBe 4
 
                     forEach { item ->
                         item.relationships.shouldNotBeNull().apply {
@@ -470,6 +470,39 @@ class AuthorizationRequestRouteTest : FunSpec({
         testApplication {
             setUpAuthorizationRequestTestApplication()
 
+            test("should not be accepted when validto has expired") {
+                val requestId = insertAuthorizationRequest(
+                    properties = mapOf(
+                        "requestedFromName" to "Kasper Lind",
+                        "requestedForMeteringPointId" to "1234567890555",
+                        "requestedForMeteringPointAddress" to "Example Street 2, 0654 Oslo",
+                        "balanceSupplierName" to "Power AS",
+                        "balanceSupplierContractName" to "ExampleSupplierContract"
+                    )
+                )
+                val patchResult =
+                    client.patch("${REQUESTS_PATH}/130b6bca-1e3a-4653-8a9b-ccc0dc4fe389") {
+                        header(HttpHeaders.Authorization, "Bearer enduser")
+                        contentType(ContentType.Application.Json)
+                        setBody(
+                            JsonApiUpdateRequest(
+                                data = JsonApiRequestResourceObject(
+                                    type = "AuthorizationRequest",
+                                    attributes = UpdateRequestAttributes(
+                                        status = AuthorizationRequest.Status.Accepted
+                                    )
+                                )
+                            ),
+                        )
+                    }
+
+                patchResult.status shouldBe HttpStatusCode.BadRequest
+                val body = patchResult.body<JsonApiErrorObject>()
+                body.status shouldBe "400"
+                body.title shouldBe "Request Has Expired"
+                body.detail shouldBe "Request validity period has passed"
+
+            }
             test("Should accept authorization request and persist grant relationship") {
                 val requestId = insertAuthorizationRequest(
                     properties = mapOf(
