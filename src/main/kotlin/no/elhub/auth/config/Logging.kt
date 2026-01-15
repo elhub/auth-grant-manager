@@ -7,10 +7,15 @@ import io.ktor.server.plugins.calllogging.CallLogging
 import io.ktor.server.plugins.calllogging.processingTimeMillis
 import io.ktor.server.request.httpMethod
 import io.ktor.server.request.path
+import no.elhub.auth.features.openapi.API_PATH_OPENAPI
 import org.slf4j.event.Level
 
 fun Application.configureLogging() {
-    val excludedPaths = listOf("/health", "/metrics")
+    val excludedPaths = listOf(
+        "/health",
+        "/metrics",
+        "/$API_PATH_OPENAPI",
+    )
     install(CallLogging) {
         level = Level.INFO
         callIdMdc("traceId")
