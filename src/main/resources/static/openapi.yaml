@@ -456,6 +456,8 @@ paths:
           $ref: "#/components/responses/400BadRequestError"
         "401":
           $ref: "#/components/responses/401UnauthorizedError"
+        "403":
+          $ref: "#/components/responses/403ForbiddenError"
         "500":
           $ref: "#/components/responses/500InternalServerError"
 
@@ -529,6 +531,8 @@ paths:
           $ref: "#/components/responses/400BadRequestError"
         "401":
           $ref: "#/components/responses/401UnauthorizedError"
+        "403":
+          $ref: "#/components/responses/403ForbiddenError"
         "404":
           $ref: "#/components/responses/404NotFoundError"
         "500":

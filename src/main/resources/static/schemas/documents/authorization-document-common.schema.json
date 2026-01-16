@@ -8,19 +8,13 @@
       "type": "string",
       "description": "Identifies the resource as an 'AuthorizationDocument' in accordance with JSON:API standards.",
       "const": "AuthorizationDocument",
-      "examples": [
-        "AuthorizationDocument"
-      ]
+      "examples": ["AuthorizationDocument"]
     },
     "documentType": {
       "type": "string",
       "description": "Classifies the type of the authorization document being created or managed (e.g., supplier switch confirmation).",
-      "enum": [
-        "ChangeOfSupplierConfirmation"
-      ],
-      "examples": [
-        "ChangeOfSupplierConfirmation"
-      ]
+      "enum": ["ChangeOfSupplierConfirmation"],
+      "examples": ["ChangeOfSupplierConfirmation"]
     },
     "attributes": {
       "type": "object",
@@ -32,15 +26,8 @@
         "status": {
           "type": "string",
           "description": "The current state of the document within the signature workflow (e.g., waiting for signature, signed, or expired).",
-          "enum": [
-            "Expired",
-            "Pending",
-            "Rejected",
-            "Signed"
-          ],
-          "examples": [
-            "Pending"
-          ]
+          "enum": ["Expired", "Pending", "Rejected", "Signed"],
+          "examples": ["Pending"]
         },
         "createdAt": {
           "$ref": "../elhub-common.schema.json#/$defs/createdAt"

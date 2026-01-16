@@ -56,6 +56,15 @@ class PdpTestContainerExtension() : BeforeSpecListener, AfterSpecListener {
         client.close()
     }
 
+    suspend fun registerGridOwnerMapping(token: String, actingGln: String, actingFunction: String) {
+        val client = HttpClient(CIO)
+        client.post("http://localhost:8085/__admin/mappings") {
+            contentType(ContentType.Application.Json)
+            setBody(gridOwnerMapping(token, actingGln, actingFunction))
+        }
+        client.close()
+    }
+
     override suspend fun beforeSpec(spec: Spec) {
         container.start()
     }
@@ -148,6 +157,37 @@ class PdpTestContainerExtension() : BeforeSpecListener, AfterSpecListener {
                     }
                   }
                 }
+            """.trimIndent()
+
+        private fun gridOwnerMapping(token: String, actingGln: String, actingFunction: String): String =
+            """
+            {
+              "priority": 1,
+              "request": {
+                "method": "POST",
+                "url": "/v1/data/v2/token/authinfo",
+                "bodyPatterns": [
+                  { "contains": "\"token\":\"$token\"" }
+                ]
+              },
+              "response": {
+                "status": 200,
+                "headers": { "Content-Type": "application/json" },
+                "jsonBody": {
+                  "result": {
+                    "tokenInfo": {
+                      "tokenStatus": "verified",
+                      "partyId": "maskinporten",
+                      "tokenType": "maskinporten"
+                    },
+                    "authInfo": {
+                      "actingFunction": "$actingFunction",
+                      "actingGLN": "$actingGln"
+                    }
+                  }
+                }
+              }
+            }
             """.trimIndent()
     }
 }
