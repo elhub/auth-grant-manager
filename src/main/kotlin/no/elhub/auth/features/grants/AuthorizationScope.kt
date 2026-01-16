@@ -36,6 +36,7 @@ data class AuthorizationScope(
 
     enum class PermissionType {
         ChangeOfSupplier,
+        MoveIn,
         FullDelegation,
         ReadAccess
     }

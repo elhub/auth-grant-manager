@@ -1,5 +1,6 @@
 package no.elhub.auth.features.documents.create.dto
 
+import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyIdentifier
@@ -23,7 +24,8 @@ data class CreateDocumentMeta(
     val requestedForMeteringPointId: String,
     val requestedForMeteringPointAddress: String,
     val balanceSupplierName: String,
-    val balanceSupplierContractName: String
+    val balanceSupplierContractName: String,
+    val startDate: LocalDate? = null,
 ) : JsonApiResourceMeta
 
 typealias JsonApiCreateDocumentRequest = JsonApiRequest.SingleDocumentWithMeta<CreateDocumentRequestAttributes, CreateDocumentMeta>

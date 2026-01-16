@@ -9,6 +9,7 @@ import com.openhtmltopdf.extend.FSSupplier
 import com.openhtmltopdf.outputdevice.helper.BaseRendererBuilder
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder
 import no.elhub.auth.features.businessprocesses.changeofsupplier.domain.ChangeOfSupplierBusinessMeta
+import no.elhub.auth.features.businessprocesses.movein.domain.MoveInBusinessMeta
 import no.elhub.auth.features.documents.create.DocumentGenerationError
 import no.elhub.auth.features.documents.create.FileGenerator
 import no.elhub.auth.features.documents.create.command.DocumentMetaMarker
@@ -113,6 +114,16 @@ class PdfGenerator(
     ): Either<DocumentGenerationError.ContentGenerationError, ByteArray> = either {
         val contractHtmlString = when (documentMeta) {
             is ChangeOfSupplierBusinessMeta -> generateChangeOfSupplierHtml(
+                customerNin = signerNin,
+                customerName = documentMeta.requestedFromName,
+                meteringPointAddress = documentMeta.requestedForMeteringPointAddress,
+                meteringPointId = documentMeta.requestedForMeteringPointId,
+                balanceSupplierName = documentMeta.balanceSupplierName,
+                balanceSupplierContractName = documentMeta.balanceSupplierContractName
+            )
+
+            // TODO add startDate and update PDF template when MoveIn PDF is needed
+            is MoveInBusinessMeta -> generateChangeOfSupplierHtml(
                 customerNin = signerNin,
                 customerName = documentMeta.requestedFromName,
                 meteringPointAddress = documentMeta.requestedForMeteringPointAddress,

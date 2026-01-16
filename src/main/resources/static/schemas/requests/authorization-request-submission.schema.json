@@ -39,6 +39,9 @@
             "balanceSupplierContractName": {
               "$ref": "../authorization-common.schema.json#/$defs/balanceSupplierContractName"
             },
+            "startDate": {
+              "$ref": "../authorization-common.schema.json#/$defs/startDate"
+            },
             "requestedBy": {
               "$ref": "../authorization-common.schema.json#/$defs/requestedBy"
             },

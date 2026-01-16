@@ -47,6 +47,9 @@
             },
             "balanceSupplierContractName": {
               "$ref": "../authorization-common.schema.json#/$defs/balanceSupplierContractName"
+            },
+            "startDate": {
+              "$ref": "../authorization-common.schema.json#/$defs/startDate"
             }
           }
         }
@@ -78,11 +81,41 @@
                   "balanceSupplierContractName"
                 ]
               }
+          }
+        }
+      },
+      {
+        "if": {
+          "properties": {
+            "attributes": {
+              "properties": {
+                "documentType": {
+                  "const": "MoveIn"
+                }
+              }
+            }
+          }
+        },
+        "then": {
+          "properties": {
+            "meta": {
+              "required": [
+                "requestedBy",
+                "requestedFrom",
+                "requestedTo",
+                "requestedFromName",
+                "requestedForMeteringPointId",
+                "requestedForMeteringPointAddress",
+                "balanceSupplierName",
+                "balanceSupplierContractName",
+                "startDate"
+              ]
             }
           }
         }
-      ]
-    }
+      }
+    ]
+  }
   },
   "required": ["data"]
 }

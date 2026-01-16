@@ -29,6 +29,14 @@
       "description": "The name of the contract with the balance supplier.",
       "examples": ["ExampleSupplierContract"]
     },
+    "startDate": {
+      "type": "string",
+      "format": "date",
+      "description": "The requested move-in start date.",
+      "examples": [
+        "2024-01-01"
+      ]
+    },
     "requestedBy": {
       "description": "The party identifier of the actor who initiated the request (e.g., the GLN of the requesting balance supplier).",
       "$ref": "elhub-common.schema.json#/$defs/partyIdentifier"
