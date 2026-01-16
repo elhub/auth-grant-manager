@@ -80,7 +80,7 @@ class PDPAuthorizationProvider(
             }
 
             TokenType.ENDUSER.value -> {
-                authorizePerson(pdpBody, traceId).bind()
+                autorizeEndUser(pdpBody, traceId).bind()
             }
 
             TokenType.ELHUB_SERVICE.value -> {
@@ -104,7 +104,7 @@ class PDPAuthorizationProvider(
             }
 
             TokenType.ENDUSER.value -> {
-                authorizePerson(pdpBody, traceId).bind()
+                autorizeEndUser(pdpBody, traceId).bind()
             }
 
             else -> {
@@ -125,7 +125,7 @@ class PDPAuthorizationProvider(
         val pdpBody: PdpResponse = pdpRequestAndValidate(call, traceId).bind()
 
         if (pdpBody.result.tokenInfo.tokenType == TokenType.ENDUSER.value) {
-            authorizePerson(pdpBody, traceId).bind()
+            autorizeEndUser(pdpBody, traceId).bind()
         } else {
             log.warn("Unexpected tokenType for traceId={} tokenType={}", traceId, pdpBody.result.tokenInfo.tokenType)
             raise(AuthError.ActingFunctionNotSupported)
@@ -224,7 +224,7 @@ class PDPAuthorizationProvider(
         authorizedParty
     }
 
-    private fun authorizePerson(
+    private fun autorizeEndUser(
         pdpBody: PdpResponse,
         traceId: UUID
     ): Either<AuthError, AuthorizedParty.Person> = either {
