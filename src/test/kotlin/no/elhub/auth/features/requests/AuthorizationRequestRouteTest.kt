@@ -74,7 +74,7 @@ class AuthorizationRequestRouteTest : FunSpec({
             token = "enduser",
             partyId = "17abdc56-8f6f-440a-9f00-b9bfbb22065e"
         )
-        pdpContainer.registerGridOwnerMapping(
+        pdpContainer.registerMaskinportenMapping(
             token = "gridowner",
             actingFunction = "GridOwner",
             actingGln = "0107000000038"
