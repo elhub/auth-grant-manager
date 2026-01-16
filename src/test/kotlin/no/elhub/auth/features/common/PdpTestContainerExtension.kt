@@ -65,6 +65,37 @@ class PdpTestContainerExtension() : BeforeSpecListener, AfterSpecListener {
         client.close()
     }
 
+    suspend fun registerInvalidTokenMapping() {
+        val client = HttpClient(CIO)
+        client.post("http://localhost:8085/__admin/mappings") {
+            contentType(ContentType.Application.Json)
+            setBody(
+                """
+                {
+                  "request": {
+                    "method": "POST",
+                    "url": "/v1/data/v2/token/authinfo",
+                    "bodyPatterns": [
+                      { "contains": "\"token\":\"invalid-token\"" }
+                    ]
+                  },
+                  "response": {
+                    "status": 200,
+                    "headers": { "Content-Type": "application/json" },
+                    "jsonBody": {
+                      "result": {
+                        "tokenInfo": {
+                          "tokenStatus": "invalid"
+                        }
+                      }
+                    }
+                  }
+                }
+                """.trimIndent()
+            )
+        }
+    }
+
     override suspend fun beforeSpec(spec: Spec) {
         container.start()
     }

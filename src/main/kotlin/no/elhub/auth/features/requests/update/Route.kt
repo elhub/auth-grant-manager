@@ -8,8 +8,6 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.patch
 import no.elhub.auth.features.common.auth.AuthError
 import no.elhub.auth.features.common.auth.AuthorizationProvider
-import no.elhub.auth.features.common.auth.AuthorizedParty
-import no.elhub.auth.features.common.auth.RoleType
 import no.elhub.auth.features.common.auth.toApiErrorResponse
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
@@ -27,7 +25,7 @@ fun Route.route(
     authProvider: AuthorizationProvider
 ) {
     patch("/{$REQUEST_ID_PARAM}") {
-        val resolvedActor = authProvider.authorizeEndUserOrMaskinporten(call)
+        val resolvedActor = authProvider.authorizeEndUser(call)
             .getOrElse {
                 val error = it.toApiErrorResponse()
                 call.respond(error.first, error.second)
@@ -42,23 +40,13 @@ fun Route.route(
             }
 
         val requestBody = call.receive<JsonApiUpdateRequest>()
-
-        val authorizedParty = when (resolvedActor) {
-            is AuthorizedParty.OrganizationEntity -> AuthorizationParty(
-                resourceId = resolvedActor.gln,
-                type = PartyType.OrganizationEntity
-            )
-
-            is AuthorizedParty.Person -> AuthorizationParty(
-                resourceId = resolvedActor.id.toString(),
-                type = PartyType.Person
-            )
-        }
-
         val command = UpdateCommand(
             requestId = requestId,
             newStatus = requestBody.data.attributes.status,
-            authorizedParty = authorizedParty
+            authorizedParty = AuthorizationParty(
+                resourceId = resolvedActor.id.toString(),
+                type = PartyType.Person
+            )
         )
 
         val updated = handler(command).getOrElse { error ->

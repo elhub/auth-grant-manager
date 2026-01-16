@@ -13,7 +13,7 @@ import io.ktor.http.isSuccess
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.plugins.callid.callId
 import org.slf4j.LoggerFactory
-import java.util.*
+import java.util.UUID
 
 enum class RoleType {
     BalanceSupplier
@@ -123,7 +123,13 @@ class PDPAuthorizationProvider(
     override suspend fun authorizeEndUser(call: ApplicationCall): Either<AuthError, AuthorizedParty.Person> = either {
         val traceId = resolveTraceId(call)
         val pdpBody: PdpResponse = pdpRequestAndValidate(call, traceId).bind()
-        authorizePerson(pdpBody, traceId).bind()
+
+        if (pdpBody.result.tokenInfo.tokenType == TokenType.ENDUSER.value) {
+            authorizePerson(pdpBody, traceId).bind()
+        } else {
+            log.warn("Unexpected tokenType for traceId={} tokenType={}", traceId, pdpBody.result.tokenInfo.tokenType)
+            raise(AuthError.ActingFunctionNotSupported)
+        }
     }
 
     override suspend fun authorizeElhubService(call: ApplicationCall): Either<AuthError, AuthorizedParty.System> = either {

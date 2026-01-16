@@ -79,6 +79,7 @@ class AuthorizationRequestRouteTest : FunSpec({
             actingFunction = "GridOwner",
             actingGln = "0107000000038"
         )
+        pdpContainer.registerInvalidTokenMapping()
     }
 
     context("GET /authorization-requests") {
@@ -469,7 +470,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                 body.detail shouldBe "Requested from name is missing"
             }
 
-            test("Should return 403 Forbidden") {
+            test("Should return 403 Forbidden when requestee has valid gridowner token") {
                 val response =
                     client.post(REQUESTS_PATH) {
                         header(HttpHeaders.Authorization, "Bearer gridowner")
@@ -767,7 +768,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                 body.detail shouldBe "Only 'Accepted' and 'Rejected' statuses are allowed."
             }
 
-            test("Should return 401 Unauthorized when requestee has maskinport token") {
+            test("Should return 403 Unauthorized when requestee has valid maskinport token") {
                 val response =
                     client.patch("${REQUESTS_PATH}/4f71d596-99e4-415e-946d-7352c1a40c53") {
                         contentType(ContentType.Application.Json)
@@ -785,14 +786,14 @@ class AuthorizationRequestRouteTest : FunSpec({
                         )
                     }
 
-                response.status shouldBe HttpStatusCode.Unauthorized
+                response.status shouldBe HttpStatusCode.Forbidden
                 val responseJson: JsonApiErrorCollection = response.body()
                 responseJson.errors.apply {
                     size shouldBe 1
                     this[0].apply {
-                        status shouldBe "401"
-                        title shouldBe "Not authorized"
-                        detail shouldBe "Not authorized for this endpoint."
+                        status shouldBe "403"
+                        title shouldBe "Unsupported party type"
+                        detail shouldBe "The party type you are authorized as is not supported for this endpoint."
                     }
                 }
             }
@@ -813,7 +814,24 @@ class AuthorizationRequestRouteTest : FunSpec({
                 }
             }
 
-            test("Should return 403 Forbidden when requestee has gridowner token") {
+            test("Should return 401 Unauthorized when requestee has invalid token") {
+                val response = client.get("$REQUESTS_PATH/4f71d596-99e4-415e-946d-7352c1a40c53") {
+                    header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                    header(HttpHeaders.Authorization, "Bearer invalid-token")
+                }
+                response.status shouldBe HttpStatusCode.Unauthorized
+                val responseJson: JsonApiErrorCollection = response.body()
+                responseJson.errors.apply {
+                    size shouldBe 1
+                    this[0].apply {
+                        status shouldBe "401"
+                        title shouldBe "Invalid token"
+                        detail shouldBe "Token could not be verified."
+                    }
+                }
+            }
+
+            test("Should return 403 Forbidden when requestee has valid gridowner token") {
 
                 val requestId = insertAuthorizationRequest(
                     properties = mapOf(
