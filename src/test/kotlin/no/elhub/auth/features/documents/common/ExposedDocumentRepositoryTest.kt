@@ -46,9 +46,8 @@ class ExposedDocumentRepositoryTest :
                 val document =
                     AuthorizationDocument(
                         id = UUID.randomUUID(),
-                        title = "Title",
                         file = byteArrayOf(),
-                        type = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                        type = AuthorizationDocument.Type.ChangeOfEnergySupplierForPerson,
                         status = AuthorizationDocument.Status.Pending,
                         requestedBy = AuthorizationParty(type = PartyType.Person, resourceId = "1234567890"),
                         requestedFrom = AuthorizationParty(type = PartyType.Person, resourceId = "1234567890"),
@@ -62,9 +61,9 @@ class ExposedDocumentRepositoryTest :
 
                 val scopes = listOf(
                     CreateScopeData(
-                        authorizedResourceType = AuthorizationScope.ElhubResource.MeteringPoint,
+                        authorizedResourceType = AuthorizationScope.AuthorizationResource.MeteringPoint,
                         authorizedResourceId = "1234",
-                        permissionType = AuthorizationScope.PermissionType.ChangeOfSupplier
+                        permissionType = AuthorizationScope.PermissionType.ChangeOfEnergySupplierForPerson
 
                     )
                 )
@@ -92,8 +91,8 @@ class ExposedDocumentRepositoryTest :
                             .singleOrNull()
                     authorizationScopeRow.shouldNotBeNull()
                     authorizationScopeRow[AuthorizationScopeTable.authorizedResourceId] shouldBe "1234"
-                    authorizationScopeRow[AuthorizationScopeTable.authorizedResourceType] shouldBe AuthorizationScope.ElhubResource.MeteringPoint
-                    authorizationScopeRow[AuthorizationScopeTable.permissionType] shouldBe AuthorizationScope.PermissionType.ChangeOfSupplier
+                    authorizationScopeRow[AuthorizationScopeTable.authorizedResourceType] shouldBe AuthorizationScope.AuthorizationResource.MeteringPoint
+                    authorizationScopeRow[AuthorizationScopeTable.permissionType] shouldBe AuthorizationScope.PermissionType.ChangeOfEnergySupplierForPerson
                 }
             }
         }
@@ -106,9 +105,8 @@ class ExposedDocumentRepositoryTest :
 
                 val matchingDocument = AuthorizationDocument(
                     id = UUID.randomUUID(),
-                    title = "Matching",
                     file = byteArrayOf(),
-                    type = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                    type = AuthorizationDocument.Type.ChangeOfEnergySupplierForPerson,
                     status = AuthorizationDocument.Status.Pending,
                     requestedBy = matchingRequestedBy,
                     requestedFrom = AuthorizationParty(type = PartyType.Person, resourceId = "from-1"),
@@ -122,9 +120,8 @@ class ExposedDocumentRepositoryTest :
 
                 val otherDocument = AuthorizationDocument(
                     id = UUID.randomUUID(),
-                    title = "Other",
                     file = byteArrayOf(),
-                    type = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                    type = AuthorizationDocument.Type.ChangeOfEnergySupplierForPerson,
                     status = AuthorizationDocument.Status.Pending,
                     requestedBy = otherRequestedBy,
                     requestedFrom = AuthorizationParty(type = PartyType.Person, resourceId = "from-2"),

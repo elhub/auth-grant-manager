@@ -1,4 +1,4 @@
---changeset elhub:30
+--changeset elhub:12
 CREATE TYPE auth.grant_source_type AS ENUM (
     'Document',
     'Request'

@@ -30,8 +30,7 @@ class HandlerTest : FunSpec({
     val documentId = UUID.randomUUID()
     val document = AuthorizationDocument(
         id = documentId,
-        title = "ChangeOfSupplierConfirmation",
-        type = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+        type = AuthorizationDocument.Type.ChangeOfEnergySupplierForPerson,
         status = AuthorizationDocument.Status.Pending,
         file = "file".toByteArray(),
         requestedBy = requestedBy,

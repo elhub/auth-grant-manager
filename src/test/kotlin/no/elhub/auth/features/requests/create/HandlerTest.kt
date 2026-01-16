@@ -54,7 +54,7 @@ class HandlerTest : FunSpec({
     val model =
         CreateRequestModel(
             authorizedParty = requestedByParty,
-            requestType = AuthorizationRequest.Type.ChangeOfSupplierConfirmation,
+            requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
             meta = meta,
         )
 
@@ -64,7 +64,7 @@ class HandlerTest : FunSpec({
 
     val command =
         RequestCommand(
-            type = AuthorizationRequest.Type.ChangeOfSupplierConfirmation,
+            type = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
             requestedFrom = requestedFromIdentifier,
             requestedBy = requestedByIdentifier,
             requestedTo = requestedToIdentifier,

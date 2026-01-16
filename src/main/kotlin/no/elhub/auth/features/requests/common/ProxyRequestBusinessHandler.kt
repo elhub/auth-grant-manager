@@ -16,13 +16,13 @@ class ProxyRequestBusinessHandler(
 ) : RequestBusinessHandler {
     override suspend fun validateAndReturnRequestCommand(createRequestModel: CreateRequestModel): Either<RequestTypeValidationError, RequestCommand> =
         when (createRequestModel.requestType) {
-            AuthorizationRequest.Type.ChangeOfSupplierConfirmation -> changeOfSupplierHandler.validateAndReturnRequestCommand(createRequestModel)
-            AuthorizationRequest.Type.MoveIn -> moveInHandler.validateAndReturnRequestCommand(createRequestModel)
+            AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson -> changeOfSupplierHandler.validateAndReturnRequestCommand(createRequestModel)
+            AuthorizationRequest.Type.MoveInAndChangeOfEnergySupplierForPerson -> moveInHandler.validateAndReturnRequestCommand(createRequestModel)
         }
 
     override fun getCreateGrantProperties(request: AuthorizationRequest): CreateGrantProperties =
         when (request.type) {
-            AuthorizationRequest.Type.ChangeOfSupplierConfirmation -> changeOfSupplierHandler.getCreateGrantProperties(request)
-            AuthorizationRequest.Type.MoveIn -> moveInHandler.getCreateGrantProperties(request)
+            AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson -> changeOfSupplierHandler.getCreateGrantProperties(request)
+            AuthorizationRequest.Type.MoveInAndChangeOfEnergySupplierForPerson -> moveInHandler.getCreateGrantProperties(request)
         }
 }

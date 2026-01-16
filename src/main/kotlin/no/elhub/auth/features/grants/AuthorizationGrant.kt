@@ -42,7 +42,6 @@ data class AuthorizationGrant(
     enum class Status {
         Active,
         Exhausted,
-        Expired,
         Revoked,
     }
 

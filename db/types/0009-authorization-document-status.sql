@@ -1,7 +1,5 @@
---changeset elhub:8
+--changeset elhub:9
 CREATE TYPE auth.authorization_document_status AS ENUM (
-    'Expired',
     'Pending',
-    'Rejected',
-    'Signed'
+    'Rejected'
 );

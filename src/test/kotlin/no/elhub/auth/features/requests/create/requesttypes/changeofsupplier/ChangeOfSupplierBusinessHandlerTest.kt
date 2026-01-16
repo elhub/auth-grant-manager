@@ -23,7 +23,7 @@ import java.util.UUID
 
 private const val VALID_METERING_POINT = "123456789012345678"
 
-class ChangeOfSupplierConfirmationRequestTypeHandlerTest :
+class ChangeOfSupplierBusinessHandlerTest :
     FunSpec({
 
         val authorizedParty = AuthorizationParty(resourceId = "987654321", type = PartyType.Organization)
@@ -35,7 +35,7 @@ class ChangeOfSupplierConfirmationRequestTypeHandlerTest :
             val model =
                 CreateRequestModel(
                     authorizedParty = authorizedParty,
-                    requestType = AuthorizationRequest.Type.ChangeOfSupplierConfirmation,
+                    requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
                     meta =
                     CreateRequestMeta(
                         requestedBy = PartyIdentifier(PartyIdentifierType.OrganizationNumber, "987654321"),
@@ -58,7 +58,7 @@ class ChangeOfSupplierConfirmationRequestTypeHandlerTest :
             val model =
                 CreateRequestModel(
                     authorizedParty = authorizedParty,
-                    requestType = AuthorizationRequest.Type.ChangeOfSupplierConfirmation,
+                    requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
                     meta =
                     CreateRequestMeta(
                         requestedBy = PartyIdentifier(PartyIdentifierType.OrganizationNumber, "987654321"),
@@ -74,7 +74,7 @@ class ChangeOfSupplierConfirmationRequestTypeHandlerTest :
 
             val command = handler.validateAndReturnRequestCommand(model).shouldBeRight()
 
-            command.type shouldBe AuthorizationRequest.Type.ChangeOfSupplierConfirmation
+            command.type shouldBe AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson
             command.requestedBy shouldBe model.meta.requestedBy
             command.requestedFrom shouldBe model.meta.requestedFrom
             command.requestedTo shouldBe model.meta.requestedTo

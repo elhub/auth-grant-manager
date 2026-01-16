@@ -40,7 +40,7 @@ interface RequestRepository {
     ): Either<RepositoryError, AuthorizationRequest>
 
     fun rejectAccept(requestId: UUID): Either<RepositoryError, AuthorizationRequest>
-    fun findScopeIds(requestId: UUID): Either<RepositoryReadError, List<Long>>
+    fun findScopeIds(requestId: UUID): Either<RepositoryReadError, List<UUID>>
 }
 
 class ExposedRequestRepository(
@@ -147,7 +147,7 @@ class ExposedRequestRepository(
         updateAndFetch(requestId, rowsUpdated).bind()
     }
 
-    override fun findScopeIds(requestId: UUID): Either<RepositoryReadError, List<Long>> =
+    override fun findScopeIds(requestId: UUID): Either<RepositoryReadError, List<UUID>> =
         either {
             AuthorizationRequestScopeTable
                 .selectAll()
@@ -222,7 +222,7 @@ class ExposedRequestRepository(
 object AuthorizationRequestScopeTable : Table("auth.authorization_request_scope") {
     val authorizationRequestId = uuid("authorization_request_id")
         .references(AuthorizationRequestTable.id, onDelete = ReferenceOption.CASCADE)
-    val authorizationScopeId = long("authorization_scope_id")
+    val authorizationScopeId = uuid("authorization_scope_id")
         .references(AuthorizationScopeTable.id, onDelete = ReferenceOption.CASCADE)
     val createdAt = timestamp("created_at").clientDefault { java.time.Instant.now() }
     override val primaryKey = PrimaryKey(authorizationRequestId, authorizationScopeId)

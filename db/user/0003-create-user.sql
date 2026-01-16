@@ -1,6 +1,6 @@
 --liquibase formatted sql
 
---changeset elhub:2
+--changeset elhub:3
 CREATE USER ${APP_USERNAME} WITH PASSWORD '${APP_PASSWORD}';
 
 -- Grant access to existing tables in schema 'auth'

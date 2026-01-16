@@ -56,7 +56,7 @@ class HandlerTest : FunSpec({
     val model =
         CreateDocumentModel(
             authorizedParty = requestedByParty,
-            documentType = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+            documentType = AuthorizationDocument.Type.ChangeOfEnergySupplierForPerson,
             meta = meta,
         )
 
@@ -66,16 +66,16 @@ class HandlerTest : FunSpec({
 
     val command =
         DocumentCommand(
-            type = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+            type = AuthorizationDocument.Type.ChangeOfEnergySupplierForPerson,
             requestedFrom = requestedFromIdentifier,
             requestedTo = requestedToIdentifier,
             requestedBy = requestedByIdentifier,
             validTo = defaultValidTo().toTimeZoneOffsetDateTimeAtStartOfDay(),
             scopes = listOf(
                 CreateScopeData(
-                    authorizedResourceType = AuthorizationScope.ElhubResource.MeteringPoint,
+                    authorizedResourceType = AuthorizationScope.AuthorizationResource.MeteringPoint,
                     authorizedResourceId = "123456789012345678",
-                    permissionType = AuthorizationScope.PermissionType.ChangeOfSupplier,
+                    permissionType = AuthorizationScope.PermissionType.ChangeOfEnergySupplierForPerson,
                 )
             ),
             meta = commandMeta,

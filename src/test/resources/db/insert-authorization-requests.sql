@@ -12,7 +12,7 @@ INSERT INTO auth.authorization_request (
 )
 VALUES (
   'd81e5bf2-8a0c-4348-a788-2a3fab4e77d6',
-  'ChangeOfSupplierConfirmation',
+  'ChangeOfEnergySupplierForPerson',
   'Pending',
   '22222222-2222-2222-2222-222222222222',
   '11111111-1111-1111-1111-111111111111',
@@ -37,7 +37,7 @@ INSERT INTO auth.authorization_request (
 )
 VALUES (
   '3f2c9e6b-7a4d-4f1a-9b6e-8c1d2a5e9f47',
-  'ChangeOfSupplierConfirmation',
+  'ChangeOfEnergySupplierForPerson',
   'Pending',
   '22222222-2222-2222-2222-222222222222',
   '11111111-1111-1111-1111-111111111111',
@@ -62,7 +62,7 @@ INSERT INTO auth.authorization_request (
 )
 VALUES (
   '4f71d596-99e4-415e-946d-7252c1a40c5b',
-  'ChangeOfSupplierConfirmation',
+  'ChangeOfEnergySupplierForPerson',
   'Accepted',
   '22222222-2222-2222-2222-222222222222',
   '11111111-1111-1111-1111-111111111111',
@@ -87,7 +87,7 @@ INSERT INTO auth.authorization_request (
 )
 VALUES (
   '4f71d596-99e4-415e-946d-7252c1a40c51',
-  'ChangeOfSupplierConfirmation',
+  'ChangeOfEnergySupplierForPerson',
   'Accepted',
   '22222222-2222-2222-2222-222222222222',
   '11111111-1111-1111-1111-111111111111',
@@ -112,7 +112,7 @@ INSERT INTO auth.authorization_request (
 )
 VALUES (
   '4f71d596-99e4-415e-946d-7252c1a40c52',
-  'ChangeOfSupplierConfirmation',
+  'ChangeOfEnergySupplierForPerson',
   'Accepted',
   '22222222-2222-2222-2222-222222222222',
   '11111111-1111-1111-1111-111111111111',
@@ -137,7 +137,7 @@ INSERT INTO auth.authorization_request (
 )
 VALUES (
   '4f71d596-99e4-415e-946d-7252c1a40c50',
-  'ChangeOfSupplierConfirmation',
+  'ChangeOfEnergySupplierForPerson',
   'Accepted',
   '22222222-2222-2222-2222-222222222222',
   '55555555-5555-5555-5555-555555555555',
@@ -162,7 +162,7 @@ INSERT INTO auth.authorization_request (
 )
 VALUES (
   '4f71d596-99e4-415e-946d-7352c1a40c53',
-  'ChangeOfSupplierConfirmation',
+  'ChangeOfEnergySupplierForPerson',
   'Pending',
   '22222222-2222-2222-2222-222222222222',
   '11111111-1111-1111-1111-111111111111',
@@ -187,7 +187,7 @@ INSERT INTO auth.authorization_request (
 )
 VALUES (
   '5f71d596-99e4-415e-946d-7352c1a40c53',
-  'ChangeOfSupplierConfirmation',
+  'ChangeOfEnergySupplierForPerson',
   'Accepted',
   '44444444-4444-4444-4444-444444444444',
   '11111111-1111-1111-1111-111111111111',
@@ -277,7 +277,7 @@ INSERT INTO auth.authorization_request (
 )
 VALUES (
   '130b6bca-1e3a-4653-8a9b-ccc0dc4fe389',
-  'ChangeOfSupplierConfirmation',
+  'ChangeOfEnergySupplierForPerson',
   'Pending',
   '22222222-2222-2222-2222-222222222222',
   '11111111-1111-1111-1111-111111111111',
@@ -293,6 +293,6 @@ INSERT INTO auth.authorization_request_scope(
   created_at
 )
 VALUES
-  ('3f2c9e6b-7a4d-4f1a-9b6e-8c1d2a5e9f47', 123, now()),
-  ('3f2c9e6b-7a4d-4f1a-9b6e-8c1d2a5e9f47', 345, now()),
-  ('4f71d596-99e4-415e-946d-7252c1a40c52', 123, now());
+  ('3f2c9e6b-7a4d-4f1a-9b6e-8c1d2a5e9f47', 'e705af95-571d-47ea-9b1b-742aa598c85c', now()),
+  ('3f2c9e6b-7a4d-4f1a-9b6e-8c1d2a5e9f47', 'c597482d-b013-400b-9362-35bb16724c8f', now()),
+  ('4f71d596-99e4-415e-946d-7252c1a40c52', 'e705af95-571d-47ea-9b1b-742aa598c85c', now());

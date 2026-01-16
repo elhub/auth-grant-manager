@@ -271,17 +271,17 @@ class AuthorizationGrantRouteTest : FunSpec({
                 responseJson.data.apply {
                     size shouldBe 1
                     this[0].apply {
-                        id shouldBe "123"
+                        id shouldBe "e705af95-571d-47ea-9b1b-742aa598c85c"
                         type shouldBe "AuthorizationScope"
                         attributes.shouldNotBeNull().apply {
-                            permissionType shouldBe AuthorizationScope.PermissionType.ReadAccess
+                            permissionType shouldBe AuthorizationScope.PermissionType.MoveInAndChangeOfEnergySupplierForPerson
                         }
                         relationships.shouldNotBeNull().apply {
                             authorizedResources.apply {
                                 data.size shouldBe 1
                                 data[0].apply {
                                     id shouldBe "b7f9c2e4"
-                                    type shouldBe AuthorizationScope.ElhubResource.MeteringPoint.name
+                                    type shouldBe AuthorizationScope.AuthorizationResource.MeteringPoint.name
                                 }
                             }
                         }
@@ -315,10 +315,10 @@ class AuthorizationGrantRouteTest : FunSpec({
                 responseJson.data.apply {
                     size shouldBe 2
                     this[0].apply {
-                        id shouldBe "345"
+                        id shouldBe "c597482d-b013-400b-9362-35bb16724c8f"
                         type shouldBe "AuthorizationScope"
                         attributes.shouldNotBeNull().apply {
-                            permissionType shouldBe AuthorizationScope.PermissionType.ChangeOfSupplier
+                            permissionType shouldBe AuthorizationScope.PermissionType.ChangeOfEnergySupplierForPerson
                         }
                         relationships.shouldNotBeNull().apply {
                             authorizedResources.apply {
@@ -331,10 +331,10 @@ class AuthorizationGrantRouteTest : FunSpec({
                         }
                     }
                     this[1].apply {
-                        id shouldBe "567"
+                        id shouldBe "75ad606f-4ac9-4d4f-acd5-20d6862ec198"
                         type shouldBe "AuthorizationScope"
                         attributes.shouldNotBeNull().apply {
-                            permissionType shouldBe AuthorizationScope.PermissionType.ChangeOfSupplier
+                            permissionType shouldBe AuthorizationScope.PermissionType.ChangeOfEnergySupplierForPerson
                         }
                         relationships.shouldNotBeNull().apply {
                             authorizedResources.apply {

@@ -8,34 +8,25 @@
       "type": "string",
       "description": "The type of the resource object. Always 'AuthorizationRequest'.",
       "const": "AuthorizationRequest",
-      "examples": [
-        "AuthorizationRequest"
-      ]
+      "examples": ["AuthorizationRequest"]
     },
     "requestType": {
       "type": "string",
       "description": "The type of the authorization request.",
       "enum": [
-        "ChangeOfSupplierConfirmation",
-        "MoveIn"
+        "ChangeOfEnergySupplierForPerson",
+        "MoveInAndChangeOfEnergySupplierForPerson"
       ],
       "examples": [
-        "ChangeOfSupplierConfirmation",
-        "MoveIn"
+        "ChangeOfEnergySupplierForPerson",
+        "MoveInAndChangeOfEnergySupplierForPerson"
       ]
     },
     "status": {
       "type": "string",
       "description": "The status of the authorization request.",
-      "enum": [
-        "Accepted",
-        "Expired",
-        "Pending",
-        "Rejected"
-      ],
-      "examples": [
-        "Accepted"
-      ]
+      "enum": ["Accepted", "Expired", "Pending", "Rejected"],
+      "examples": ["Accepted"]
     },
     "attributes": {
       "type": "object",
@@ -115,37 +106,27 @@
         "requestedFromName": {
           "type": "string",
           "description": "The name of the organization or person who the authorization request is requested from.",
-          "examples": [
-            "Ola Normann"
-          ]
+          "examples": ["Ola Normann"]
         },
         "requestedForMeteringPointId": {
           "type": "string",
           "description": "The unique identifier of the metering point associated with the authorization request.",
-          "examples": [
-            "1234567890123"
-          ]
+          "examples": ["1234567890123"]
         },
         "requestedForMeteringPointAddress": {
           "type": "string",
           "description": "The address of the metering point associated with the authorization request.",
-          "examples": [
-            "Example Street 1, 1234 Oslo"
-          ]
+          "examples": ["Example Street 1, 1234 Oslo"]
         },
         "balanceSupplierContractName": {
           "type": "string",
           "description": "The unique name of a supplier contract associated with the authorization request.",
-          "examples": [
-            "ExampleSupplierContract"
-          ]
+          "examples": ["ExampleSupplierContract"]
         },
         "balanceSupplierName": {
           "type": "string",
           "description": "The name of the balance supplier associated with the authorization document.",
-          "examples": [
-            "Example Supplier AS"
-          ]
+          "examples": ["Example Supplier AS"]
         },
         "startDate": {
           "$ref": "../authorization-common.schema.json#/$defs/startDate"
@@ -166,9 +147,7 @@
           ]
         }
       },
-      "required": [
-        "self"
-      ],
+      "required": ["self"],
       "additionalProperties": false
     }
   }

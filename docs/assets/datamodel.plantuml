@@ -14,7 +14,7 @@ enum AuthorizationGrantStatus {
 }
 
 enum PermissionType {
-  ChangeOfSupplier
+  ChangeOfEnergySupplierForPerson
   MoveIn
   FullDelegation
   ReadAccess

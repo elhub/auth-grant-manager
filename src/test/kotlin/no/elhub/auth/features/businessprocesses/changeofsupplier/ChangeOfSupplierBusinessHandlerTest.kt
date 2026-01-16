@@ -64,7 +64,7 @@ class ChangeOfSupplierBusinessHandlerTest :
             val model =
                 CreateRequestModel(
                     authorizedParty = AUTHORIZED_PARTY,
-                    requestType = AuthorizationRequest.Type.ChangeOfSupplierConfirmation,
+                    requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
                     meta =
                     CreateRequestMeta(
                         requestedBy = VALID_PARTY,
@@ -85,7 +85,7 @@ class ChangeOfSupplierBusinessHandlerTest :
             val model =
                 CreateRequestModel(
                     authorizedParty = AUTHORIZED_PARTY,
-                    requestType = AuthorizationRequest.Type.ChangeOfSupplierConfirmation,
+                    requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
                     meta =
                     CreateRequestMeta(
                         requestedBy = VALID_PARTY,
@@ -127,7 +127,7 @@ class ChangeOfSupplierBusinessHandlerTest :
             val model =
                 CreateRequestModel(
                     authorizedParty = AUTHORIZED_PARTY,
-                    requestType = AuthorizationRequest.Type.ChangeOfSupplierConfirmation,
+                    requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
                     meta =
                     CreateRequestMeta(
                         requestedBy = VALID_PARTY,
@@ -143,7 +143,7 @@ class ChangeOfSupplierBusinessHandlerTest :
 
             val command = handler.validateAndReturnRequestCommand(model).shouldBeRight()
 
-            command.type shouldBe AuthorizationRequest.Type.ChangeOfSupplierConfirmation
+            command.type shouldBe AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson
             command.validTo shouldBe defaultValidTo()
         }
 
@@ -151,7 +151,7 @@ class ChangeOfSupplierBusinessHandlerTest :
             val model =
                 CreateDocumentModel(
                     authorizedParty = AuthorizationParty(resourceId = VALID_PARTY.idValue, type = PartyType.Organization),
-                    documentType = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                    documentType = AuthorizationDocument.Type.ChangeOfEnergySupplierForPerson,
                     meta =
                     CreateDocumentMeta(
                         requestedBy = VALID_PARTY,

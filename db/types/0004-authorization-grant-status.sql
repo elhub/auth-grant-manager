@@ -1,7 +1,6 @@
---changeset elhub:3
+--changeset elhub:4
 CREATE TYPE auth.authorization_grant_status AS ENUM (
     'Active',
     'Revoked',
-    'Expired',
     'Exhausted'
 );

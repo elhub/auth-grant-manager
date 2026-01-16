@@ -163,7 +163,10 @@
     "permissionType": {
       "type": "string",
       "description": "The type of permission granted by the scope.",
-      "enum": ["ChangeOfSupplier", "ReadAccess"]
+      "enum": [
+        "ChangeOfEnergySupplierForPerson",
+        "MoveInAndChangeOfEnergySupplierForPerson"
+      ]
     },
     "authorizedResources": {
       "type": "object",

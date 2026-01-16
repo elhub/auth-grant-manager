@@ -61,7 +61,7 @@
               "attributes": {
                 "properties": {
                   "documentType": {
-                    "const": "ChangeOfSupplierConfirmation"
+                    "const": "ChangeOfSupplier"
                   }
                 }
               }

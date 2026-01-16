@@ -40,7 +40,7 @@ data class ChangeOfSupplierBusinessMeta(
 
 fun ChangeOfSupplierBusinessCommand.toRequestCommand(): RequestCommand =
     RequestCommand(
-        type = AuthorizationRequest.Type.ChangeOfSupplierConfirmation,
+        type = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
         requestedBy = this.requestedBy,
         requestedFrom = this.requestedFrom,
         requestedTo = this.requestedTo,
@@ -50,7 +50,7 @@ fun ChangeOfSupplierBusinessCommand.toRequestCommand(): RequestCommand =
 
 fun ChangeOfSupplierBusinessCommand.toDocumentCommand(): DocumentCommand =
     DocumentCommand(
-        type = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+        type = AuthorizationDocument.Type.ChangeOfEnergySupplierForPerson,
         requestedFrom = this.requestedFrom,
         requestedTo = this.requestedTo,
         requestedBy = this.requestedBy,

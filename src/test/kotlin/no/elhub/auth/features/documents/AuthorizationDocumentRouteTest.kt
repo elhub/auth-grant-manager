@@ -59,6 +59,7 @@ import no.elhub.auth.features.grants.GRANTS_PATH
 import no.elhub.auth.features.grants.common.CreateGrantProperties
 import no.elhub.auth.features.grants.common.dto.AuthorizationGrantScopesResponse
 import no.elhub.auth.features.grants.common.dto.SingleGrantResponse
+import no.elhub.auth.shouldBeValidUuid
 import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObjectWithMeta
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import org.koin.core.module.dsl.singleOf
@@ -161,7 +162,7 @@ class AuthorizationDocumentRouteTest :
                                         data = JsonApiRequestResourceObjectWithMeta(
                                             type = "AuthorizationDocument",
                                             attributes = CreateDocumentRequestAttributes(
-                                                documentType = AuthorizationDocument.Type.ChangeOfSupplierConfirmation
+                                                documentType = AuthorizationDocument.Type.ChangeOfEnergySupplierForPerson
                                             ),
                                             meta = CreateDocumentMeta(
                                                 requestedBy = PartyIdentifier(
@@ -191,9 +192,9 @@ class AuthorizationDocumentRouteTest :
                     val createDocumentResponse: CreateDocumentResponse = response.body()
                     createDocumentResponse.data.apply {
                         type shouldBe "AuthorizationDocument"
-                        id.shouldNotBeNull()
+                        id!!.shouldBeValidUuid()
                         attributes.shouldNotBeNull().apply {
-                            documentType shouldBe AuthorizationDocument.Type.ChangeOfSupplierConfirmation.name
+                            documentType shouldBe AuthorizationDocument.Type.ChangeOfEnergySupplierForPerson.name
                             status shouldBe AuthorizationDocument.Status.Pending.name
                             validTo shouldBe "${defaultValidTo()}T00:00:00+01:00"
 
@@ -256,10 +257,10 @@ class AuthorizationDocumentRouteTest :
                     getDocumentResponse
                         .data.apply {
                             type shouldBe "AuthorizationDocument"
-                            id.shouldNotBeNull()
+                            id!!.shouldBeValidUuid()
                             attributes.shouldNotBeNull().apply {
                                 status shouldBe AuthorizationDocument.Status.Pending.toString()
-                                documentType shouldBe AuthorizationDocument.Type.ChangeOfSupplierConfirmation.name
+                                documentType shouldBe AuthorizationDocument.Type.ChangeOfEnergySupplierForPerson.name
                                 validTo shouldBe "${defaultValidTo()}T00:00:00+01:00"
                                 val createdAt = OffsetDateTime.parse(createdAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
                                 val updatedAt = OffsetDateTime.parse(updatedAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
@@ -434,7 +435,7 @@ class AuthorizationDocumentRouteTest :
                     response.status shouldBe HttpStatusCode.OK
                     val responseJson: SingleGrantResponse = response.body()
                     responseJson.data.apply {
-                        id.shouldNotBeNull()
+                        id.shouldBeValidUuid()
                         type shouldBe "AuthorizationGrant"
                         attributes.shouldNotBeNull().apply {
                             status shouldBe "Active"
@@ -490,17 +491,17 @@ class AuthorizationDocumentRouteTest :
                     responseJson.data.apply {
                         size shouldBe 1
                         this[0].apply {
-                            id shouldBe "1"
+                            id.shouldBeValidUuid()
                             type shouldBe "AuthorizationScope"
                             attributes.shouldNotBeNull().apply {
-                                permissionType shouldBe AuthorizationScope.PermissionType.ChangeOfSupplier
+                                permissionType shouldBe AuthorizationScope.PermissionType.ChangeOfEnergySupplierForPerson
                             }
                             relationships.shouldNotBeNull().apply {
                                 authorizedResources.apply {
                                     data.size shouldBe 1
                                     data[0].apply {
                                         id shouldBe "123456789012345678"
-                                        type shouldBe AuthorizationScope.ElhubResource.MeteringPoint.name
+                                        type shouldBe AuthorizationScope.AuthorizationResource.MeteringPoint.name
                                     }
                                 }
                             }
@@ -585,19 +586,19 @@ private class TestDocumentBusinessHandler : DocumentBusinessHandler {
     override suspend fun validateAndReturnDocumentCommand(
         model: CreateDocumentModel
     ) = when (model.documentType) {
-        AuthorizationDocument.Type.ChangeOfSupplierConfirmation -> {
+        AuthorizationDocument.Type.ChangeOfEnergySupplierForPerson -> {
             val meta = model.meta
             DocumentCommand(
-                type = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                type = AuthorizationDocument.Type.ChangeOfEnergySupplierForPerson,
                 requestedFrom = meta.requestedFrom,
                 requestedTo = meta.requestedTo,
                 requestedBy = meta.requestedBy,
                 validTo = defaultValidTo().toTimeZoneOffsetDateTimeAtStartOfDay(),
                 scopes = listOf(
                     CreateScopeData(
-                        authorizedResourceType = AuthorizationScope.ElhubResource.MeteringPoint,
+                        authorizedResourceType = AuthorizationScope.AuthorizationResource.MeteringPoint,
                         authorizedResourceId = meta.requestedForMeteringPointId,
-                        permissionType = AuthorizationScope.PermissionType.ChangeOfSupplier
+                        permissionType = AuthorizationScope.PermissionType.ChangeOfEnergySupplierForPerson
                     )
                 ),
                 meta = ChangeOfSupplierBusinessMeta(
