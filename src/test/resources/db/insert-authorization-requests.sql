@@ -263,3 +263,27 @@ INSERT INTO auth.authorization_request_property(authorization_request_id, key, v
 VALUES ('3f2c9e6b-7a4d-4f1a-9b6e-8c1d2a5e9f47', 'balanceSupplierName', 'Test Energy Group');
 INSERT INTO auth.authorization_request_property(authorization_request_id, key, value)
 VALUES ('3f2c9e6b-7a4d-4f1a-9b6e-8c1d2a5e9f47', 'balanceSupplierContractName', 'NordicEnergyQ1-2026');
+INSERT INTO auth.authorization_request (
+  id,
+  request_type,
+  request_status,
+  requested_by,
+  requested_from,
+  requested_to,
+  approved_by,
+  created_at,
+  updated_at,
+  valid_to
+)
+VALUES (
+  '130b6bca-1e3a-4653-8a9b-ccc0dc4fe389',
+  'ChangeOfSupplierConfirmation',
+  'Pending',
+  '22222222-2222-2222-2222-222222222222',
+  '11111111-1111-1111-1111-111111111111',
+  '11111111-1111-1111-1111-111111111111',
+  null,
+  '2025-01-01T10:00:00Z',
+  '2025-01-01T10:00:00Z',
+  '2025-04-04'
+);

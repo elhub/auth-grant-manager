@@ -64,3 +64,16 @@ VALUES ('456e4567-e89b-12d3-a456-426614174000',
         '2026-04-04T02:00:00Z',
         'Request',
         '4f71d596-99e4-415e-946d-7252c1a40c50');
+
+INSERT INTO auth.authorization_grant (id, granted_for, granted_by, granted_to, granted_at, status, valid_from, valid_to,
+                                      source_type, source_id)
+VALUES ('2a28a9dd-d3b3-4dec-a420-3f7d0d0105b7',
+        '55555555-5555-5555-5555-555555555555',
+        '55555555-5555-5555-5555-555555555555',
+        '22222222-2222-2222-2222-222222222222',
+        '2025-04-04T02:00:00Z',
+        'Active',
+        '2025-04-04T02:00:00Z',
+        '2026-01-10T02:00:00Z',
+        'Request',
+        '71214c5a-a351-45c6-a231-79fa865acbb4');

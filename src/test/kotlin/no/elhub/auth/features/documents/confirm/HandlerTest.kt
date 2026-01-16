@@ -18,6 +18,8 @@ import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.grants.common.GrantRepository
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import java.util.UUID
 
 class HandlerTest : FunSpec({
@@ -61,6 +63,53 @@ class HandlerTest : FunSpec({
         )
 
         result.shouldBeLeft(ConfirmDocumentError.IllegalStateError)
+        coVerify(exactly = 1) { partyService.resolve(requestedByIdentifier) }
+        verify(exactly = 1) { documentRepository.find(documentId) }
+        verify(exactly = 0) { documentRepository.confirm(any(), any(), any(), any()) }
+        verify(exactly = 0) { documentRepository.findScopeIds(any()) }
+        verify(exactly = 0) { grantRepository.insert(any(), any()) }
+    }
+
+    test("returns ExpiredError when document validity period has passed") {
+        val documentId = UUID.randomUUID()
+        val requestedByIdentifier = PartyIdentifier(PartyIdentifierType.GlobalLocationNumber, "1234567890123")
+
+        val requestedBy = AuthorizationParty(resourceId = requestedByIdentifier.idValue, type = PartyType.OrganizationEntity)
+        val requestedFrom = AuthorizationParty(resourceId = "requested-from", type = PartyType.Person)
+        val requestedTo = AuthorizationParty(resourceId = "requested-to", type = PartyType.Person)
+
+        val document =
+            AuthorizationDocument.create(
+                type = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                file = "file".toByteArray(),
+                requestedBy = requestedBy,
+                requestedFrom = requestedFrom,
+                requestedTo = requestedTo,
+                properties = emptyList(),
+                validTo = OffsetDateTime.now(ZoneOffset.UTC).minusSeconds(10),
+            ).copy(
+                id = documentId,
+                status = AuthorizationDocument.Status.Pending
+            )
+
+        val documentRepository = mockk<DocumentRepository>()
+        val partyService = mockk<PartyService>()
+        val grantRepository = mockk<GrantRepository>(relaxed = true)
+
+        every { documentRepository.find(documentId) } returns document.right()
+        coEvery { partyService.resolve(requestedByIdentifier) } returns requestedBy.right()
+
+        val handler = Handler(documentRepository, partyService, grantRepository)
+
+        val result = handler(
+            Command(
+                documentId = documentId,
+                requestedByIdentifier = requestedByIdentifier,
+                signedFile = "signed".toByteArray()
+            )
+        )
+
+        result.shouldBeLeft(ConfirmDocumentError.ExpiredError)
         coVerify(exactly = 1) { partyService.resolve(requestedByIdentifier) }
         verify(exactly = 1) { documentRepository.find(documentId) }
         verify(exactly = 0) { documentRepository.confirm(any(), any(), any(), any()) }

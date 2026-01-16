@@ -71,6 +71,16 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
                             detail = "Document must be in 'Pending' status to confirm."
                         )
                     )
+
+                ConfirmDocumentError.ExpiredError ->
+                    call.respond(
+                        HttpStatusCode.BadRequest,
+                        JsonApiErrorObject(
+                            status = "400",
+                            title = "Request Has Expired",
+                            detail = "Request validity period has passed"
+                        )
+                    )
             }
             return@put
         }

@@ -3,12 +3,15 @@ package no.elhub.auth.features.requests.update
 import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensure
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.common.GrantRepository
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.common.RequestRepository
 import org.slf4j.LoggerFactory
+import kotlin.time.Clock
 
 class Handler(
     private val requestRepository: RequestRepository,
@@ -18,8 +21,6 @@ class Handler(
     private val logger = LoggerFactory.getLogger(Handler::class.java)
 
     operator fun invoke(command: UpdateCommand): Either<UpdateError, AuthorizationRequest> = either {
-        // TODO add handle illegal state: Accepted -> Rejected should not be possible
-
         val originalRequest = requestRepository.find(command.requestId)
             .mapLeft { UpdateError.RequestNotFound }
             .bind()
@@ -31,6 +32,11 @@ class Handler(
 
         ensure(originalRequest.status == AuthorizationRequest.Status.Pending) {
             UpdateError.IllegalStateError
+        }
+
+        val today = Clock.System.now().toLocalDateTime(TimeZone.UTC).date
+        ensure(originalRequest.validTo >= today) {
+            UpdateError.ExpiredError
         }
 
         val updatedRequest = when (command.newStatus) {

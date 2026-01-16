@@ -51,7 +51,6 @@ fun Route.route(
 
         val updated = handler(command).getOrElse { error ->
             when (error) {
-                is
                 UpdateError.PersistenceError,
                 UpdateError.RequestNotFound,
                 UpdateError.GrantCreationError,
@@ -75,6 +74,16 @@ fun Route.route(
                             status = "400",
                             title = "Invalid Status State",
                             detail = "Request must be in 'Pending' status to update."
+                        )
+                    )
+
+                UpdateError.ExpiredError ->
+                    call.respond(
+                        HttpStatusCode.BadRequest,
+                        JsonApiErrorObject(
+                            status = "400",
+                            title = "Request Has Expired",
+                            detail = "Request validity period has passed"
                         )
                     )
 

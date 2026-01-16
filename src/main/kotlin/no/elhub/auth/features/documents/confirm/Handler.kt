@@ -10,6 +10,8 @@ import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.common.GrantRepository
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 
 class Handler(
     private val documentRepository: DocumentRepository,
@@ -35,6 +37,10 @@ class Handler(
 
         ensure(document.status == AuthorizationDocument.Status.Pending) {
             ConfirmDocumentError.IllegalStateError
+        }
+
+        ensure(document.validTo >= OffsetDateTime.now(ZoneOffset.UTC)) {
+            ConfirmDocumentError.ExpiredError
         }
 
         // TODO: Implement validation of the signed file and find the signatory
@@ -86,4 +92,5 @@ sealed class ConfirmDocumentError {
     data object RequestedByResolutionError : ConfirmDocumentError()
     data object InvalidRequestedByError : ConfirmDocumentError()
     data object IllegalStateError : ConfirmDocumentError()
+    data object ExpiredError : ConfirmDocumentError()
 }
