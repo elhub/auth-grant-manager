@@ -17,13 +17,14 @@ import no.elhub.auth.features.common.party.ExposedPartyRepository
 import no.elhub.auth.features.common.party.PartyRepository
 import no.elhub.auth.features.common.party.PartyService
 import org.koin.core.module.dsl.singleOf
+import org.koin.core.qualifier.named
 import org.koin.dsl.bind
 import org.koin.ktor.plugin.koinModule
 
 fun Application.commonModule() {
     koinModule {
         single { environment.config }
-        single {
+        single(named("commonHttpClient")) {
             HttpClient(CIO) {
                 install(HttpTimeout) {
                     requestTimeoutMillis = 10_000
@@ -53,11 +54,11 @@ fun Application.commonModule() {
 
         single {
             val pdpBaseUrl = get<ApplicationConfig>().property("pdp.baseUrl").getString()
-            PDPAuthorizationProvider(httpClient = get(), pdpBaseUrl = pdpBaseUrl)
+            PDPAuthorizationProvider(httpClient = get(named("commonHttpClient")), pdpBaseUrl = pdpBaseUrl)
         } bind AuthorizationProvider::class
 
         singleOf(::ExposedPartyRepository) bind PartyRepository::class
-        singleOf(::ApiPersonService) bind PersonService::class
+        single { ApiPersonService(cfg = get(), client = get(named("commonHttpClient"))) } bind PersonService::class
         singleOf(::PartyService) bind PartyService::class
     }
 }
