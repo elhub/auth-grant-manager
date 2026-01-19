@@ -15,7 +15,6 @@ import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.common.validateId
 import no.elhub.auth.features.requests.update.dto.JsonApiUpdateRequest
 import no.elhub.auth.features.requests.update.dto.toUpdateResponse
-import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import no.elhub.devxp.jsonapi.response.JsonApiErrorObject
 
 const val REQUEST_ID_PARAM = "id"
@@ -35,7 +34,7 @@ fun Route.route(
         val requestId = validateId(call.parameters[REQUEST_ID_PARAM])
             .getOrElse { error ->
                 val (status, body) = error.toApiErrorResponse()
-                call.respond(status, JsonApiErrorCollection(listOf(body)))
+                call.respond(status, body)
                 return@patch
             }
 

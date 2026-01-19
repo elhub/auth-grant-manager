@@ -129,7 +129,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                     size shouldBe 1
                     this[0].apply {
                         status shouldBe "400"
-                        code shouldBe "INVALID_INPUT"
+                        code shouldBe "invalid_input"
                         title shouldBe "Invalid input"
                         detail shouldBe "The provided payload did not satisfy the expected format"
                     }
@@ -147,7 +147,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                     size shouldBe 1
                     this[0].apply {
                         status shouldBe "403"
-                        code shouldBe "NOT_AUTHORIZED"
+                        code shouldBe "not_authorized"
                         title shouldBe "Party Not Authorized"
                         detail shouldBe "The party is not allowed to access this resource"
                     }
@@ -230,7 +230,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                     size shouldBe 1
                     this[0].apply {
                         status shouldBe "403"
-                        code shouldBe "NOT_AUTHORIZED"
+                        code shouldBe "not_authorized"
                         title shouldBe "Party Not Authorized"
                         detail shouldBe "The party is not allowed to access this resource"
                     }
@@ -248,7 +248,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                     size shouldBe 1
                     this[0].apply {
                         status shouldBe "404"
-                        code shouldBe "NOT_FOUND"
+                        code shouldBe "not_found"
                         title shouldBe "Not Found"
                         detail shouldBe "The requested resource could not be found"
                     }
@@ -382,7 +382,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                     size shouldBe 1
                     this[0].apply {
                         status shouldBe "403"
-                        code shouldBe "NOT_AUTHORIZED"
+                        code shouldBe "not_authorized"
                         title shouldBe "Party Not Authorized"
                         detail shouldBe "The party is not allowed to access this resource"
                     }
@@ -410,7 +410,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                     size shouldBe 1
                     this[0].apply {
                         status shouldBe "403"
-                        code shouldBe "NOT_AUTHORIZED"
+                        code shouldBe "not_authorized"
                         title shouldBe "Party Not Authorized"
                         detail shouldBe "The party is not allowed to access this resource"
                     }
@@ -428,7 +428,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                     size shouldBe 1
                     this[0].apply {
                         status shouldBe "400"
-                        code shouldBe "INVALID_INPUT"
+                        code shouldBe "invalid_input"
                         title shouldBe "Invalid input"
                         detail shouldBe "The provided payload did not satisfy the expected format"
                     }
