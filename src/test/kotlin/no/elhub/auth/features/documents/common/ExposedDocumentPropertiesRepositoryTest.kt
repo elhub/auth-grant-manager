@@ -21,7 +21,8 @@ class ExposedDocumentPropertiesRepositoryTest : FunSpec({
     extensions(PostgresTestContainerExtension())
 
     val repository = ExposedDocumentPropertiesRepository()
-    val documentRepository = ExposedDocumentRepository(partyRepo = ExposedPartyRepository(), documentPropertiesRepository = repository)
+    val documentRepository =
+        ExposedDocumentRepository(partyRepo = ExposedPartyRepository(), documentPropertiesRepository = repository)
 
     beforeSpec {
         Database.connect(
@@ -66,14 +67,14 @@ class ExposedDocumentPropertiesRepositoryTest : FunSpec({
                     updatedAt = currentTimeWithTimeZone()
                 )
 
-            documentRepository.insert(document, listOf())
-
-            val properties = listOf(
-                AuthorizationDocumentProperty("requestedFromName", "Ola Normann"),
-                AuthorizationDocumentProperty("meteringPointId", "1234")
-            )
-
             transaction {
+                documentRepository.insert(document, listOf())
+
+                val properties = listOf(
+                    AuthorizationDocumentProperty("requestedFromName", "Ola Normann"),
+                    AuthorizationDocumentProperty("meteringPointId", "1234")
+                )
+
                 repository.insert(properties, document.id)
                 repository.find(document.id) shouldContainExactlyInAnyOrder properties
             }
