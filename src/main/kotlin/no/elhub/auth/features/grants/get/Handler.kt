@@ -3,13 +3,13 @@ package no.elhub.auth.features.grants.get
 import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensure
-import org.jetbrains.exposed.sql.transactions.transaction
 import no.elhub.auth.features.common.Constants
 import no.elhub.auth.features.common.QueryError
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.common.GrantRepository
+import org.jetbrains.exposed.sql.transactions.transaction
 
 class Handler(
     private val repo: GrantRepository
@@ -34,7 +34,7 @@ class Handler(
 
             else -> ensure(
                 authorizedParty == grant.grantedTo ||
-                        authorizedParty == grant.grantedFor
+                    authorizedParty == grant.grantedFor
             ) {
                 QueryError.NotAuthorizedError
             }

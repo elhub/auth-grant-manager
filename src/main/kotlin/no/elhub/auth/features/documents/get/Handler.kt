@@ -1,16 +1,16 @@
 package no.elhub.auth.features.documents.get
 
 import arrow.core.Either
+import arrow.core.left
 import arrow.core.raise.either
 import arrow.core.raise.ensure
-import arrow.core.left
 import no.elhub.auth.features.common.QueryError
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.grants.AuthorizationGrant
-import org.jetbrains.exposed.sql.transactions.transaction
 import no.elhub.auth.features.grants.common.GrantRepository
+import org.jetbrains.exposed.sql.transactions.transaction
 
 class Handler(
     private val documentRepo: DocumentRepository,
@@ -29,7 +29,7 @@ class Handler(
 
         ensure(
             query.authorizedParty == document.requestedBy ||
-                    query.authorizedParty == document.requestedFrom
+                query.authorizedParty == document.requestedFrom
         ) {
             QueryError.NotAuthorizedError
         }

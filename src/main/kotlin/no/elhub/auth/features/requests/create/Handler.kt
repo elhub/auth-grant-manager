@@ -8,7 +8,6 @@ import no.elhub.auth.features.common.party.PartyService
 import no.elhub.auth.features.grants.common.CreateGrantProperties
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.common.AuthorizationRequestProperty
-import org.jetbrains.exposed.sql.transactions.transaction
 import no.elhub.auth.features.requests.common.ProxyRequestBusinessHandler
 import no.elhub.auth.features.requests.common.RequestPropertiesRepository
 import no.elhub.auth.features.requests.common.RequestRepository
@@ -16,6 +15,7 @@ import no.elhub.auth.features.requests.create.command.RequestCommand
 import no.elhub.auth.features.requests.create.model.CreateRequestModel
 import no.elhub.auth.features.requests.create.requesttypes.RequestTypeValidationError
 import no.elhub.devxp.jsonapi.response.JsonApiErrorObject
+import org.jetbrains.exposed.sql.transactions.transaction
 
 class Handler(
     private val proxyRequestBusinessHandler: ProxyRequestBusinessHandler,
@@ -111,12 +111,12 @@ sealed class CreateRequestError {
  */
 fun CreateRequestError.ValidationError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorObject> =
     HttpStatusCode.BadRequest to
-            JsonApiErrorObject(
-                title = "Validation Error",
-                code = this.reason.code,
-                status = HttpStatusCode.BadRequest.value.toString(),
-                detail = this.reason.message,
-            )
+        JsonApiErrorObject(
+            title = "Validation Error",
+            code = this.reason.code,
+            status = HttpStatusCode.BadRequest.value.toString(),
+            detail = this.reason.message,
+        )
 
 interface RequestBusinessHandler {
     fun validateAndReturnRequestCommand(createRequestModel: CreateRequestModel): Either<RequestTypeValidationError, RequestCommand>

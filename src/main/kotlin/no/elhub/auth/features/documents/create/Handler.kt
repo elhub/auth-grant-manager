@@ -25,7 +25,6 @@ class Handler(
                     .mapLeft { CreateDocumentError.RequestedByPartyError }
                     .bind()
 
-
             ensure(model.authorizedParty == requestedByParty) {
                 CreateDocumentError.AuthorizationError
             }
@@ -36,13 +35,11 @@ class Handler(
                     .mapLeft { CreateDocumentError.RequestedFromPartyError }
                     .bind()
 
-
             val requestedToParty =
                 partyService
                     .resolve(model.meta.requestedTo)
                     .mapLeft { CreateDocumentError.RequestedToPartyError }
                     .bind()
-
 
             val command =
                 businessHandler
@@ -58,7 +55,6 @@ class Handler(
             val signedFile = signingService.sign(file)
                 .mapLeft { CreateDocumentError.SignFileError(cause = it) }
                 .bind()
-
 
             val documentProperties =
                 command.meta

@@ -54,7 +54,6 @@ class Handler(
                 // consumers can only send Accepted and Rejected statues
                 raise(UpdateError.IllegalTransitionError)
             }
-
         }
         updatedRequest
     }
