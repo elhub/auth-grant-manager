@@ -8,6 +8,7 @@ import no.elhub.auth.features.common.party.PartyService
 import no.elhub.auth.features.grants.common.CreateGrantProperties
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.common.AuthorizationRequestProperty
+import org.jetbrains.exposed.sql.transactions.transaction
 import no.elhub.auth.features.requests.common.ProxyRequestBusinessHandler
 import no.elhub.auth.features.requests.common.RequestPropertiesRepository
 import no.elhub.auth.features.requests.common.RequestRepository
@@ -62,26 +63,30 @@ class Handler(
                 validTo = businessCommand.validTo,
             )
 
-        val savedRequest =
-            requestRepo
-                .insert(requestToCreate)
+        val result = transaction {
+            val savedRequest =
+                requestRepo
+                    .insert(requestToCreate)
+                    .mapLeft { CreateRequestError.PersistenceError }
+                    .bind()
+
+            val requestProperties: List<AuthorizationRequestProperty> = metaAttributes.map {
+                AuthorizationRequestProperty(
+                    requestId = savedRequest.id,
+                    key = it.key,
+                    value = it.value,
+                )
+            }
+
+            requestPropertyRepo
+                .insert(requestProperties)
                 .mapLeft { CreateRequestError.PersistenceError }
                 .bind()
 
-        val requestProperties: List<AuthorizationRequestProperty> = metaAttributes.map {
-            AuthorizationRequestProperty(
-                requestId = savedRequest.id,
-                key = it.key,
-                value = it.value,
-            )
+            savedRequest.copy(properties = requestProperties)
         }
 
-        requestPropertyRepo
-            .insert(requestProperties)
-            .mapLeft { CreateRequestError.PersistenceError }
-            .bind()
-
-        savedRequest.copy(properties = requestProperties)
+        result
     }
 }
 
@@ -106,12 +111,12 @@ sealed class CreateRequestError {
  */
 fun CreateRequestError.ValidationError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorObject> =
     HttpStatusCode.BadRequest to
-        JsonApiErrorObject(
-            title = "Validation Error",
-            code = this.reason.code,
-            status = HttpStatusCode.BadRequest.value.toString(),
-            detail = this.reason.message,
-        )
+            JsonApiErrorObject(
+                title = "Validation Error",
+                code = this.reason.code,
+                status = HttpStatusCode.BadRequest.value.toString(),
+                detail = this.reason.message,
+            )
 
 interface RequestBusinessHandler {
     fun validateAndReturnRequestCommand(createRequestModel: CreateRequestModel): Either<RequestTypeValidationError, RequestCommand>

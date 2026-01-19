@@ -10,6 +10,7 @@ import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.common.GrantRepository
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.common.RequestRepository
+import org.jetbrains.exposed.sql.transactions.transaction
 import org.slf4j.LoggerFactory
 import kotlin.time.Clock
 
@@ -21,10 +22,11 @@ class Handler(
     private val logger = LoggerFactory.getLogger(Handler::class.java)
 
     operator fun invoke(command: UpdateCommand): Either<UpdateError, AuthorizationRequest> = either {
-        val originalRequest = requestRepository.find(command.requestId)
-            .mapLeft { UpdateError.RequestNotFound }
-            .bind()
-
+        val originalRequest = transaction {
+            requestRepository.find(command.requestId)
+                .mapLeft { UpdateError.RequestNotFound }
+                .bind()
+        }
         ensure(originalRequest.requestedTo == command.authorizedParty) {
             logger.error("Requestee is not authorized to get the request ${command.authorizedParty}")
             UpdateError.NotAuthorizedError
@@ -52,50 +54,57 @@ class Handler(
                 // consumers can only send Accepted and Rejected statues
                 raise(UpdateError.IllegalTransitionError)
             }
+
         }
         updatedRequest
     }
 
-    private fun handleAccepted(originalRequest: AuthorizationRequest): Either<UpdateError, AuthorizationRequest> = either {
-        // TODO this will be provided by value stream via tokens. Temporary setting this as requestedTo
-        val approval = originalRequest.requestedTo
+    private fun handleAccepted(originalRequest: AuthorizationRequest): Either<UpdateError, AuthorizationRequest> =
+        either {
+            // TODO this will be provided by value stream via tokens. Temporary setting this as requestedTo
+            val approval = originalRequest.requestedTo
 
-        val acceptedRequest = requestRepository.acceptRequest(
-            requestId = originalRequest.id,
-            approvedBy = approval
-        ).mapLeft {
-            UpdateError.PersistenceError
-        }.bind()
+            transaction {
+                val acceptedRequest = requestRepository.acceptRequest(
+                    requestId = originalRequest.id,
+                    approvedBy = approval
+                ).mapLeft {
+                    UpdateError.PersistenceError
+                }.bind()
 
-        val scopeIds = requestRepository
-            .findScopeIds(acceptedRequest.id)
-            .mapLeft { error ->
-                when (error) {
-                    is RepositoryReadError.NotFoundError -> UpdateError.RequestNotFound
-                    is RepositoryReadError.UnexpectedError -> UpdateError.ScopeReadError
-                }
-            }.bind()
+                val scopeIds = requestRepository
+                    .findScopeIds(acceptedRequest.id)
+                    .mapLeft { error ->
+                        when (error) {
+                            is RepositoryReadError.NotFoundError -> UpdateError.RequestNotFound
+                            is RepositoryReadError.UnexpectedError -> UpdateError.ScopeReadError
+                        }
+                    }.bind()
 
-        val grantToCreate = AuthorizationGrant.create(
-            grantedFor = acceptedRequest.requestedFrom,
-            grantedBy = approval,
-            grantedTo = acceptedRequest.requestedBy,
-            sourceType = AuthorizationGrant.SourceType.Request,
-            sourceId = acceptedRequest.id
-        )
+                val grantToCreate = AuthorizationGrant.create(
+                    grantedFor = acceptedRequest.requestedFrom,
+                    grantedBy = approval,
+                    grantedTo = acceptedRequest.requestedBy,
+                    sourceType = AuthorizationGrant.SourceType.Request,
+                    sourceId = acceptedRequest.id
+                )
 
-        val createdGrant = grantRepository.insert(grantToCreate, scopeIds)
-            .mapLeft { UpdateError.GrantCreationError }
-            .bind()
+                val createdGrant = grantRepository.insert(grantToCreate, scopeIds)
+                    .mapLeft { UpdateError.GrantCreationError }
+                    .bind()
 
-        acceptedRequest.copy(grantId = createdGrant.id)
-    }
+                acceptedRequest.copy(grantId = createdGrant.id)
+            }
+        }
 
-    private fun handleRejected(originalRequest: AuthorizationRequest): Either<UpdateError, AuthorizationRequest> = either {
-        val rejectedRequest = requestRepository.rejectAccept(
-            requestId = originalRequest.id,
-        ).mapLeft { UpdateError.PersistenceError }
-            .bind()
-        rejectedRequest
-    }
+    private fun handleRejected(originalRequest: AuthorizationRequest): Either<UpdateError, AuthorizationRequest> =
+        either {
+            val rejectedRequest = transaction {
+                requestRepository.rejectAccept(
+                    requestId = originalRequest.id,
+                ).mapLeft { UpdateError.PersistenceError }
+                    .bind()
+            }
+            rejectedRequest
+        }
 }
