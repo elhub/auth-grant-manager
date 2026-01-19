@@ -249,15 +249,25 @@ class PDPAuthorizationProviderTest : FunSpec({
         }
     }
 
-    context("authorizePerson") {
-        test("returns NotAuthorized when tokenType is not enduser") {
+    context("authorizeEndUser") {
+
+        test("returns ActingFunctionNotSupported when tokenType is not enduser and has a valid token") {
             val response = runProviderMethod(
                 method = PDPAuthorizationProvider::authorizeEndUser,
                 headers = authorizationOnlyHeaders(),
                 pdpResponse = maskinportenResponse()
             )
 
-            response.shouldBeLeft(AuthError.NotAuthorized)
+            response.shouldBeLeft(AuthError.ActingFunctionNotSupported)
+        }
+
+        test("returns InvalidToken when tokenType is not enduser and has a invalid tokenStatus") {
+            val response = runProviderMethod(
+                method = PDPAuthorizationProvider::authorizeEndUser,
+                headers = authorizationOnlyHeaders(),
+                pdpResponse = maskinportenResponse(tokenStatus = "wrong")
+            )
+            response.shouldBeLeft(AuthError.InvalidToken)
         }
 
         test("returns UnknownError when partyId is missing") {

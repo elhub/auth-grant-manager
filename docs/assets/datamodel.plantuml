@@ -15,6 +15,7 @@ enum AuthorizationGrantStatus {
 
 enum PermissionType {
   ChangeOfSupplier
+  MoveIn
   FullDelegation
   ReadAccess
 }
@@ -49,10 +50,12 @@ enum PartyType {
 
 enum DocumentType {
   ChangeOfSupplierConfirmation
+  MoveIn
 }
 
 enum RequestType {
   ChangeOfSupplierConfirmation
+  MoveIn
 }
 
 entity AuthorizationGrant {

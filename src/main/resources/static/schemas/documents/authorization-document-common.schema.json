@@ -16,10 +16,12 @@
       "type": "string",
       "description": "Classifies the type of the authorization document being created or managed (e.g., supplier switch confirmation).",
       "enum": [
-        "ChangeOfSupplierConfirmation"
+        "ChangeOfSupplierConfirmation",
+        "MoveIn"
       ],
       "examples": [
-        "ChangeOfSupplierConfirmation"
+        "ChangeOfSupplierConfirmation",
+        "MoveIn"
       ]
     },
     "attributes": {
@@ -121,6 +123,9 @@
         },
         "balanceSupplierContractName": {
           "$ref": "../authorization-common.schema.json#/$defs/balanceSupplierContractName"
+        },
+        "startDate": {
+          "$ref": "../authorization-common.schema.json#/$defs/startDate"
         },
         "requestedBy": {
           "description": "The party identifier of the actor who initiated the request (e.g., the GLN of the requesting balance supplier).",

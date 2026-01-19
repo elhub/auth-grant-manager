@@ -7,36 +7,34 @@
     "requestedFromName": {
       "type": "string",
       "description": "The registered name of the 'requested from' party.",
-      "examples": [
-        "Ola Normann"
-      ]
+      "examples": ["Ola Normann"]
     },
     "requestedForMeteringPointId": {
       "type": "string",
       "description": "The unique identifier of the metering point this authorization applies to.",
-      "examples": [
-        "1234567890123"
-      ]
+      "examples": ["1234567890123"]
     },
     "requestedForMeteringPointAddress": {
       "type": "string",
       "description": "The physical address associated with the metering point.",
-      "examples": [
-        "Example Street 1, 1234 Oslo"
-      ]
+      "examples": ["Example Street 1, 1234 Oslo"]
     },
     "balanceSupplierName": {
       "type": "string",
       "description": "The name of the balance supplier currently associated with the metering point.",
-      "examples": [
-        "Example Supplier AS"
-      ]
+      "examples": ["Example Supplier AS"]
     },
     "balanceSupplierContractName": {
       "type": "string",
       "description": "The name of the contract with the balance supplier.",
+      "examples": ["ExampleSupplierContract"]
+    },
+    "startDate": {
+      "type": "string",
+      "format": "date",
+      "description": "The requested move-in start date.",
       "examples": [
-        "ExampleSupplierContract"
+        "2024-01-01"
       ]
     },
     "requestedBy": {

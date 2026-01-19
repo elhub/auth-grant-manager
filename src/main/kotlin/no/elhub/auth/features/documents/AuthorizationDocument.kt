@@ -54,6 +54,7 @@ data class AuthorizationDocument(
     }
 
     enum class Type {
-        ChangeOfSupplierConfirmation
+        ChangeOfSupplierConfirmation,
+        MoveIn
     }
 }

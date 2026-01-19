@@ -1,5 +1,6 @@
 package no.elhub.auth.features.requests.create.dto
 
+import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyIdentifier
@@ -24,6 +25,7 @@ data class CreateRequestMeta(
     val requestedForMeteringPointAddress: String,
     val balanceSupplierName: String,
     val balanceSupplierContractName: String,
+    val startDate: LocalDate? = null,
 ) : JsonApiResourceMeta
 
 typealias JsonApiCreateRequest = JsonApiRequest.SingleDocumentWithMeta<CreateRequestAttributes, CreateRequestMeta>
@@ -45,4 +47,5 @@ fun CreateRequestMeta.toModel(): no.elhub.auth.features.requests.create.model.Cr
         requestedForMeteringPointAddress = this.requestedForMeteringPointAddress,
         balanceSupplierName = this.balanceSupplierName,
         balanceSupplierContractName = this.balanceSupplierContractName,
+        startDate = this.startDate,
     )

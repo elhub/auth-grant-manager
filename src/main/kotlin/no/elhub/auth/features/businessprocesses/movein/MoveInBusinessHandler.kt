@@ -1,4 +1,4 @@
-package no.elhub.auth.features.businessprocesses.changeofsupplier
+package no.elhub.auth.features.businessprocesses.movein
 
 import arrow.core.Either
 import arrow.core.left
@@ -9,12 +9,12 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
-import no.elhub.auth.features.businessprocesses.changeofsupplier.domain.ChangeOfSupplierBusinessCommand
-import no.elhub.auth.features.businessprocesses.changeofsupplier.domain.ChangeOfSupplierBusinessMeta
-import no.elhub.auth.features.businessprocesses.changeofsupplier.domain.ChangeOfSupplierBusinessModel
-import no.elhub.auth.features.businessprocesses.changeofsupplier.domain.toChangeOfSupplierBusinessModel
-import no.elhub.auth.features.businessprocesses.changeofsupplier.domain.toDocumentCommand
-import no.elhub.auth.features.businessprocesses.changeofsupplier.domain.toRequestCommand
+import no.elhub.auth.features.businessprocesses.movein.domain.MoveInBusinessCommand
+import no.elhub.auth.features.businessprocesses.movein.domain.MoveInBusinessMeta
+import no.elhub.auth.features.businessprocesses.movein.domain.MoveInBusinessModel
+import no.elhub.auth.features.businessprocesses.movein.domain.toDocumentCommand
+import no.elhub.auth.features.businessprocesses.movein.domain.toMoveInBusinessModel
+import no.elhub.auth.features.businessprocesses.movein.domain.toRequestCommand
 import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.DocumentBusinessHandler
@@ -35,24 +35,31 @@ private const val REGEX_REQUESTED_FROM = REGEX_NUMBERS_LETTERS_SYMBOLS
 private const val REGEX_REQUESTED_BY = REGEX_NUMBERS_LETTERS_SYMBOLS
 private const val REGEX_METERING_POINT = "^\\d{18}$"
 
-class ChangeOfSupplierBusinessHandler :
+private const val MOVE_IN_REQUEST_VALID_DAYS = 28
+private const val MOVE_IN_GRANT_VALID_YEARS = 1
+
+private fun moveInRequestValidTo() = today().plus(DatePeriod(days = MOVE_IN_REQUEST_VALID_DAYS))
+
+private fun moveInGrantValidTo() = today().plus(DatePeriod(years = MOVE_IN_GRANT_VALID_YEARS))
+
+class MoveInBusinessHandler :
     RequestBusinessHandler,
     DocumentBusinessHandler {
-    override fun validateAndReturnRequestCommand(createRequestModel: CreateRequestModel): Either<ChangeOfSupplierValidationError, RequestCommand> =
+    override fun validateAndReturnRequestCommand(createRequestModel: CreateRequestModel): Either<MoveInValidationError, RequestCommand> =
         either {
-            val model = createRequestModel.toChangeOfSupplierBusinessModel()
+            val model = createRequestModel.toMoveInBusinessModel()
             validate(model).bind().toRequestCommand()
         }
 
     override fun getCreateGrantProperties(request: AuthorizationRequest): CreateGrantProperties =
         CreateGrantProperties(
-            validTo = defaultValidTo(),
+            validTo = moveInGrantValidTo(),
             validFrom = today(),
         )
 
     override fun validateAndReturnDocumentCommand(model: CreateDocumentModel): Either<BusinessValidationError, DocumentCommand> =
         either {
-            val model = model.toChangeOfSupplierBusinessModel()
+            val model = model.toMoveInBusinessModel()
             validate(model)
                 .mapLeft { raise(BusinessValidationError(it.message)) }
                 .bind()
@@ -61,83 +68,80 @@ class ChangeOfSupplierBusinessHandler :
 
     override fun getCreateGrantProperties(document: AuthorizationDocument): CreateGrantProperties =
         CreateGrantProperties(
-            validTo = defaultValidTo(),
+            validTo = moveInGrantValidTo(),
             validFrom = today(),
         )
 
-    private fun validate(model: ChangeOfSupplierBusinessModel): Either<ChangeOfSupplierValidationError, ChangeOfSupplierBusinessCommand> {
+    private fun validate(model: MoveInBusinessModel): Either<MoveInValidationError, MoveInBusinessCommand> {
         if (model.requestedFromName.isBlank()) {
-            return ChangeOfSupplierValidationError.MissingRequestedFromName.left()
+            return MoveInValidationError.MissingRequestedFromName.left()
         }
 
         if (model.balanceSupplierName.isBlank()) {
-            return ChangeOfSupplierValidationError.MissingBalanceSupplierName.left()
+            return MoveInValidationError.MissingBalanceSupplierName.left()
         }
 
         if (model.balanceSupplierContractName.isBlank()) {
-            return ChangeOfSupplierValidationError.MissingBalanceSupplierContractName.left()
+            return MoveInValidationError.MissingBalanceSupplierContractName.left()
         }
 
+        val startDate = model.startDate ?: return MoveInValidationError.MissingStartDate.left()
+
         if (model.requestedForMeteringPointId.isBlank()) {
-            return ChangeOfSupplierValidationError.MissingMeteringPointId.left()
+            return MoveInValidationError.MissingMeteringPointId.left()
         }
 
         if (!model.requestedForMeteringPointId.matches(Regex(REGEX_METERING_POINT))) {
-            return ChangeOfSupplierValidationError.InvalidMeteringPointId.left()
+            return MoveInValidationError.InvalidMeteringPointId.left()
         }
 
         if (model.requestedForMeteringPointAddress.isBlank()) {
-            return ChangeOfSupplierValidationError.MissingMeteringPointAddress.left()
+            return MoveInValidationError.MissingMeteringPointAddress.left()
         }
 
         if (model.requestedBy.idValue.isBlank()) {
-            return ChangeOfSupplierValidationError.MissingRequestedBy.left()
+            return MoveInValidationError.MissingRequestedBy.left()
         }
 
         if (!model.requestedBy.idValue.matches(Regex(REGEX_REQUESTED_BY))) {
-            return ChangeOfSupplierValidationError.InvalidRequestedBy.left()
+            return MoveInValidationError.InvalidRequestedBy.left()
         }
 
         if (model.requestedFrom.idValue.isBlank()) {
-            return ChangeOfSupplierValidationError.MissingRequestedFrom.left()
+            return MoveInValidationError.MissingRequestedFrom.left()
         }
 
         if (!model.requestedFrom.idValue.matches(Regex(REGEX_REQUESTED_FROM))) {
-            return ChangeOfSupplierValidationError.InvalidRequestedFrom.left()
+            return MoveInValidationError.InvalidRequestedFrom.left()
         }
 
         val meta =
-            ChangeOfSupplierBusinessMeta(
+            MoveInBusinessMeta(
                 requestedFromName = model.requestedFromName,
                 requestedForMeteringPointId = model.requestedForMeteringPointId,
                 requestedForMeteringPointAddress = model.requestedForMeteringPointAddress,
                 balanceSupplierContractName = model.balanceSupplierContractName,
                 balanceSupplierName = model.balanceSupplierName,
+                startDate = startDate,
             )
 
         val scopes = listOf(
             CreateScopeData(
                 authorizedResourceType = AuthorizationScope.ElhubResource.MeteringPoint,
                 authorizedResourceId = model.requestedForMeteringPointId,
-                permissionType = AuthorizationScope.PermissionType.ChangeOfSupplier
+                permissionType = AuthorizationScope.PermissionType.MoveIn
             )
         )
 
-        return ChangeOfSupplierBusinessCommand(
+        return MoveInBusinessCommand(
             requestedFrom = model.requestedFrom,
             requestedBy = model.requestedBy,
             requestedTo = model.requestedTo,
-            validTo = defaultValidTo(),
+            validTo = moveInRequestValidTo(),
             scopes = scopes,
             meta = meta,
         ).right()
     }
-}
-
-@OptIn(ExperimentalTime::class)
-fun defaultValidTo(): LocalDate {
-    val now = Clock.System.now().toLocalDateTime(TimeZone.UTC).date
-    return now.plus(DatePeriod(days = 30))
 }
 
 @OptIn(ExperimentalTime::class)

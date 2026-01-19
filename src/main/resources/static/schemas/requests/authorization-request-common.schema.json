@@ -16,10 +16,12 @@
       "type": "string",
       "description": "The type of the authorization request.",
       "enum": [
-        "ChangeOfSupplierConfirmation"
+        "ChangeOfSupplierConfirmation",
+        "MoveIn"
       ],
       "examples": [
-        "ChangeOfSupplierConfirmation"
+        "ChangeOfSupplierConfirmation",
+        "MoveIn"
       ]
     },
     "status": {
@@ -144,6 +146,9 @@
           "examples": [
             "Example Supplier AS"
           ]
+        },
+        "startDate": {
+          "$ref": "../authorization-common.schema.json#/$defs/startDate"
         }
       },
       "additionalProperties": false
