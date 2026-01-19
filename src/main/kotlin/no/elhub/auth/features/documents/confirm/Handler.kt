@@ -1,7 +1,6 @@
 package no.elhub.auth.features.documents.confirm
 
 import arrow.core.Either
-import arrow.core.left
 import arrow.core.raise.either
 import arrow.core.raise.ensure
 import no.elhub.auth.features.common.RepositoryReadError

@@ -1,7 +1,6 @@
 package no.elhub.auth.features.documents.get
 
 import arrow.core.Either
-import arrow.core.left
 import arrow.core.raise.either
 import arrow.core.raise.ensure
 import no.elhub.auth.features.common.QueryError
@@ -29,7 +28,7 @@ class Handler(
 
         ensure(
             query.authorizedParty == document.requestedBy ||
-                query.authorizedParty == document.requestedFrom
+                    query.authorizedParty == document.requestedFrom
         ) {
             QueryError.NotAuthorizedError
         }
