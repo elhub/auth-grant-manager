@@ -298,18 +298,16 @@ class AuthorizationDocumentRouteTest :
 
                     response.status shouldBe HttpStatusCode.Forbidden
 
-                    val jsonApiError: JsonApiErrorCollection = response.body()
-
-                    jsonApiError shouldBe JsonApiErrorCollection(
-                        listOf(
-                            JsonApiErrorObject(
-                                status = HttpStatusCode.Forbidden.value.toString(),
-                                code = "not_authorized",
-                                title = "Party Not Authorized",
-                                detail = "The party is not allowed to access this resource",
-                            )
-                        )
-                    )
+                    val responseJson: JsonApiErrorCollection = response.body()
+                    responseJson.errors.apply {
+                        size shouldBe 1
+                        this[0].apply {
+                            status shouldBe HttpStatusCode.Forbidden.value.toString()
+                            code shouldBe "not_authorized"
+                            title shouldBe "Party Not Authorized"
+                            detail shouldBe "The party is not allowed to access this resource"
+                        }
+                    }
                 }
 
                 test("Get document list should give proper size given the authorized user") {
@@ -518,11 +516,14 @@ class AuthorizationDocumentRouteTest :
 
                     response.status shouldBe HttpStatusCode.BadRequest
                     val error: JsonApiErrorCollection = response.body()
-
-                    error.errors shouldHaveSize 1
-                    error.errors[0].apply {
-                        status shouldBe "400"
-                        detail shouldBe "Missing User-Agent header"
+                    error.errors.apply {
+                        size shouldBe 1
+                        this[0].apply {
+                            status shouldBe "400"
+                            code shouldBe "bad_request"
+                            title shouldBe "Bad Request"
+                            detail shouldBe "Missing User-Agent header"
+                        }
                     }
                 }
             }

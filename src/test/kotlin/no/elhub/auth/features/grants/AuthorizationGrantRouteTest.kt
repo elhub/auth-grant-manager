@@ -164,6 +164,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                     size shouldBe 1
                     this[0].apply {
                         status shouldBe "401"
+                        code shouldBe "missing_authorization"
                         title shouldBe "Missing authorization"
                         detail shouldBe "Bearer token is required in the Authorization header."
                     }
@@ -365,6 +366,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                     size shouldBe 1
                     this[0].apply {
                         status shouldBe "401"
+                        code shouldBe "missing_authorization"
                         title shouldBe "Missing authorization"
                         detail shouldBe "Bearer token is required in the Authorization header."
                     }
@@ -446,6 +448,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                     size shouldBe 1
                     this[0].apply {
                         status shouldBe "404"
+                        code shouldBe "not_found"
                         title shouldBe "Not Found"
                         detail shouldBe "The requested resource could not be found"
                     }
@@ -632,11 +635,16 @@ class AuthorizationGrantRouteTest : FunSpec({
                 }
 
                 response.status shouldBe HttpStatusCode.BadRequest
-
-                val body = response.body<List<JsonApiErrorObject>>()
-                body[0].status shouldBe "400 Bad Request"
-                body[0].title shouldBe "Illegal Status State"
-                body[0].detail shouldBe "Grant must be 'Active' to get consumed"
+                val responseJson: JsonApiErrorCollection = response.body()
+                responseJson.errors.apply {
+                    size shouldBe 1
+                    this[0].apply {
+                        status shouldBe "400"
+                        code shouldBe "illegal_status_state"
+                        title shouldBe "Illegal Status State"
+                        detail shouldBe "Grant must be 'Active' to get consumed"
+                    }
+                }
             }
             test("Should reject update of expired grant") {
                 val response = client.patch("$GRANTS_PATH/2a28a9dd-d3b3-4dec-a420-3f7d0d0105b7") {
@@ -656,10 +664,16 @@ class AuthorizationGrantRouteTest : FunSpec({
 
                 response.status shouldBe HttpStatusCode.BadRequest
 
-                val body = response.body<List<JsonApiErrorObject>>()
-                body[0].status shouldBe "400 Bad Request"
-                body[0].title shouldBe "Request Has Expired"
-                body[0].detail shouldBe "Request validity period has passed"
+                val responseJson: JsonApiErrorCollection = response.body()
+                responseJson.errors.apply {
+                    size shouldBe 1
+                    this[0].apply {
+                        status shouldBe "400"
+                        code shouldBe "expired_status_transition"
+                        title shouldBe "Request Has Expired"
+                        detail shouldBe "Request validity period has passed"
+                    }
+                }
             }
             test("Should reject invalid status transition") {
                 val response = client.patch("$GRANTS_PATH/2a28a9dd-d3b3-4dec-a420-3f7d0d0105b7") {
@@ -679,10 +693,16 @@ class AuthorizationGrantRouteTest : FunSpec({
 
                 response.status shouldBe HttpStatusCode.BadRequest
 
-                val body = response.body<List<JsonApiErrorObject>>()
-                body[0].status shouldBe "400 Bad Request"
-                body[0].title shouldBe "Invalid Status Transition"
-                body[0].detail shouldBe "Only 'Exhausted' status is allowed."
+                val responseJson: JsonApiErrorCollection = response.body()
+                responseJson.errors.apply {
+                    size shouldBe 1
+                    this[0].apply {
+                        status shouldBe "400"
+                        code shouldBe "invalid_status_transition"
+                        title shouldBe "Invalid Status Transition"
+                        detail shouldBe "Only 'Exhausted' status is allowed."
+                    }
+                }
             }
         }
     }

@@ -15,9 +15,10 @@ import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
 import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.common.validateId
-import no.elhub.devxp.jsonapi.response.JsonApiErrorObject
+import org.slf4j.LoggerFactory
 
 const val DOCUMENT_ID_PARAM = "id"
+private val logger = LoggerFactory.getLogger(Route::class.java)
 
 fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
     put("/{$DOCUMENT_ID_PARAM}.pdf") {
@@ -50,37 +51,9 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
                 signedFile = signedDocument
             )
         ).getOrElse { error ->
-            when (error) {
-                ConfirmDocumentError.DocumentNotFoundError -> call.respond(HttpStatusCode.NotFound)
-
-                ConfirmDocumentError.InvalidRequestedByError -> call.respond(HttpStatusCode.Forbidden)
-
-                ConfirmDocumentError.DocumentReadError,
-                ConfirmDocumentError.DocumentUpdateError,
-                ConfirmDocumentError.ScopeReadError,
-                ConfirmDocumentError.GrantCreationError,
-                ConfirmDocumentError.RequestedByResolutionError -> call.respond(HttpStatusCode.InternalServerError)
-
-                ConfirmDocumentError.IllegalStateError ->
-                    call.respond(
-                        HttpStatusCode.BadRequest,
-                        JsonApiErrorObject(
-                            status = "400",
-                            title = "Invalid Status State",
-                            detail = "Document must be in 'Pending' status to confirm."
-                        )
-                    )
-
-                ConfirmDocumentError.ExpiredError ->
-                    call.respond(
-                        HttpStatusCode.BadRequest,
-                        JsonApiErrorObject(
-                            status = "400",
-                            title = "Request Has Expired",
-                            detail = "Request validity period has passed"
-                        )
-                    )
-            }
+            logger.error("Failed to confirm authorization document: {}", error)
+            val (status, error) = error.toApiErrorResponse()
+            call.respond(status, error)
             return@put
         }
 

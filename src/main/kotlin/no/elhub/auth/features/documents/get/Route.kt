@@ -15,9 +15,11 @@ import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.common.validateId
 import no.elhub.auth.features.documents.get.dto.toGetSingleResponse
+import org.slf4j.LoggerFactory
 import java.util.UUID
 
 const val DOCUMENT_ID_PARAM = "id"
+private val logger = LoggerFactory.getLogger(Route::class.java)
 
 fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
     get("/{$DOCUMENT_ID_PARAM}") {
@@ -54,8 +56,9 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
         }
 
         val document = handler(query)
-            .getOrElse { err ->
-                val (status, body) = err.toApiErrorResponse()
+            .getOrElse { error ->
+                logger.error("Failed to get authorization document: {}", error)
+                val (status, body) = error.toApiErrorResponse()
                 call.respond(status, body)
                 return@get
             }
@@ -100,8 +103,9 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
         }
 
         val document = handler(query)
-            .getOrElse { err ->
-                val (status, body) = err.toApiErrorResponse()
+            .getOrElse { error ->
+                logger.error("Failed to get authorization document: {}", error)
+                val (status, body) = error.toApiErrorResponse()
                 call.respond(status, body)
                 return@get
             }

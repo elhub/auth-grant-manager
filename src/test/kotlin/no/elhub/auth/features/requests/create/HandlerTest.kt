@@ -132,7 +132,7 @@ class HandlerTest : FunSpec({
 
         val response = handler(model)
 
-        response.shouldBeLeft(CreateRequestError.RequestedByPartyError)
+        response.shouldBeLeft(CreateError.RequestedByPartyError)
         verify(exactly = 0) { businessHandler.validateAndReturnRequestCommand(any()) }
     }
 
@@ -149,7 +149,7 @@ class HandlerTest : FunSpec({
 
         val response = handler(model.copy(authorizedParty = otherAuthorizedParty))
 
-        response.shouldBeLeft(CreateRequestError.AuthorizationError)
+        response.shouldBeLeft(CreateError.AuthorizationError)
         coVerify(exactly = 0) { partyService.resolve(requestedFromIdentifier) }
         verify(exactly = 0) { businessHandler.validateAndReturnRequestCommand(any()) }
     }
@@ -167,7 +167,7 @@ class HandlerTest : FunSpec({
 
         val response = handler(model)
 
-        response.shouldBeLeft(CreateRequestError.RequestedFromPartyError)
+        response.shouldBeLeft(CreateError.RequestedFromPartyError)
         verify(exactly = 0) { businessHandler.validateAndReturnRequestCommand(any()) }
     }
 
@@ -185,7 +185,7 @@ class HandlerTest : FunSpec({
 
         val response = handler(model)
 
-        response.shouldBeLeft(CreateRequestError.RequestedByPartyError)
+        response.shouldBeLeft(CreateError.RequestedByPartyError)
         verify(exactly = 0) { businessHandler.validateAndReturnRequestCommand(any()) }
     }
 
@@ -204,7 +204,7 @@ class HandlerTest : FunSpec({
 
         val response = handler(model)
 
-        response.shouldBeLeft(CreateRequestError.ValidationError(ChangeOfSupplierValidationError.MissingRequestedFromName))
+        response.shouldBeLeft(CreateError.ValidationError(ChangeOfSupplierValidationError.MissingRequestedFromName))
         verify(exactly = 0) { requestRepo.insert(any()) }
     }
 
@@ -222,7 +222,7 @@ class HandlerTest : FunSpec({
 
         val response = handler(model)
 
-        response.shouldBeLeft(CreateRequestError.PersistenceError)
+        response.shouldBeLeft(CreateError.PersistenceError)
         verify(exactly = 0) { requestPropertyRepo.insert(any()) }
     }
 
@@ -251,6 +251,6 @@ class HandlerTest : FunSpec({
 
         val response = handler(model)
 
-        response.shouldBeLeft(CreateRequestError.PersistenceError)
+        response.shouldBeLeft(CreateError.PersistenceError)
     }
 })

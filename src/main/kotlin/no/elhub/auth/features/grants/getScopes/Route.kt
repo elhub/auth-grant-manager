@@ -13,8 +13,10 @@ import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.common.validateId
 import no.elhub.auth.features.grants.common.dto.toResponse
+import org.slf4j.LoggerFactory
 import java.util.UUID
 
+private val logger = LoggerFactory.getLogger(Route::class.java)
 const val GRANT_ID_PARAM = "id"
 
 fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
@@ -60,8 +62,9 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
         }
 
         val scopes = handler(query)
-            .getOrElse { err ->
-                val (status, body) = err.toApiErrorResponse()
+            .getOrElse { error ->
+                logger.error("Failed to get authorization grant scopes: {}", error)
+                val (status, body) = error.toApiErrorResponse()
                 call.respond(status, body)
                 return@get
             }

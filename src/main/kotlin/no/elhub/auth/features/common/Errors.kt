@@ -12,7 +12,6 @@ sealed class InputError : Error {
 }
 
 sealed class CommandError : Error {
-    data object ResourceAlreadyExistsError : CommandError()
     data object ResourceNotFoundError : CommandError()
     data object IOError : CommandError()
 }
@@ -62,6 +61,23 @@ fun InputError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection
             code = "invalid_input",
             title = "Invalid input",
             detail = "The provided payload did not satisfy the expected format"
+        )
+    }
+
+fun CommandError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> =
+    when (this) {
+        CommandError.IOError -> buildErrorResponse(
+            status = HttpStatusCode.InternalServerError,
+            code = "internal_error",
+            title = "Internal Server Error",
+            detail = "An error occurred while attempting to execute the command",
+        )
+
+        CommandError.ResourceNotFoundError -> buildErrorResponse(
+            status = HttpStatusCode.NotFound,
+            code = "not_found",
+            title = "Not Found",
+            detail = "The resource referenced by the command could not be found",
         )
     }
 

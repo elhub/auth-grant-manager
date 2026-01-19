@@ -463,11 +463,17 @@ class AuthorizationRequestRouteTest : FunSpec({
                     }
 
                 response.status shouldBe HttpStatusCode.BadRequest
-                val body = response.body<JsonApiErrorObject>()
-                body.status shouldBe "400"
-                body.code shouldBe "missing_requested_from_name"
-                body.title shouldBe "Validation Error"
-                body.detail shouldBe "Requested from name is missing"
+
+                val responseJson: JsonApiErrorCollection = response.body()
+                responseJson.errors.apply {
+                    size shouldBe 1
+                    this[0].apply {
+                        status shouldBe "400"
+                        code shouldBe "missing_requested_from_name"
+                        title shouldBe "Validation Error"
+                        detail shouldBe "Requested from name is missing"
+                    }
+                }
             }
 
             test("Should return 403 Forbidden when requestee has valid gridowner token") {
@@ -507,6 +513,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                     size shouldBe 1
                     this[0].apply {
                         status shouldBe "403"
+                        code shouldBe "unsupported_party_type"
                         title shouldBe "Unsupported party type"
                         detail shouldBe "The party type you are authorized as is not supported for this endpoint."
                     }
@@ -537,11 +544,18 @@ class AuthorizationRequestRouteTest : FunSpec({
                     }
 
                 patchResult.status shouldBe HttpStatusCode.BadRequest
-                val body = patchResult.body<JsonApiErrorObject>()
-                body.status shouldBe "400"
-                body.title shouldBe "Request Has Expired"
-                body.detail shouldBe "Request validity period has passed"
+                val responseJson: JsonApiErrorCollection = patchResult.body()
+                responseJson.errors.apply {
+                    size shouldBe 1
+                    this[0].apply {
+                        status shouldBe "400"
+                        code shouldBe "expired_status_transition"
+                        title shouldBe "Request Has Expired"
+                        detail shouldBe "Request validity period has passed"
+                    }
+                }
             }
+
             test("Should accept authorization request and persist grant relationship") {
                 val requestId = insertAuthorizationRequest(
                     properties = mapOf(
@@ -785,10 +799,16 @@ class AuthorizationRequestRouteTest : FunSpec({
                     }
 
                 response.status shouldBe HttpStatusCode.BadRequest
-                val body = response.body<JsonApiErrorObject>()
-                body.status shouldBe "400"
-                body.title shouldBe "Invalid Status Transition"
-                body.detail shouldBe "Only 'Accepted' and 'Rejected' statuses are allowed."
+                val responseJson: JsonApiErrorCollection = response.body()
+                responseJson.errors.apply {
+                    size shouldBe 1
+                    this[0].apply {
+                        status shouldBe "400"
+                        code shouldBe "invalid_status_transition"
+                        title shouldBe "Invalid Status Transition"
+                        detail shouldBe "Only 'Accepted' and 'Rejected' statuses are allowed."
+                    }
+                }
             }
 
             test("Should return 403 Unauthorized when requestee has valid maskinport token") {

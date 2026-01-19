@@ -62,7 +62,7 @@ class HandlerTest : FunSpec({
             )
         )
 
-        result.shouldBeLeft(ConfirmDocumentError.IllegalStateError)
+        result.shouldBeLeft(ConfirmError.IllegalStateError)
         coVerify(exactly = 1) { partyService.resolve(requestedByIdentifier) }
         verify(exactly = 1) { documentRepository.find(documentId) }
         verify(exactly = 0) { documentRepository.confirm(any(), any(), any(), any()) }
@@ -109,7 +109,7 @@ class HandlerTest : FunSpec({
             )
         )
 
-        result.shouldBeLeft(ConfirmDocumentError.ExpiredError)
+        result.shouldBeLeft(ConfirmError.ExpiredError)
         coVerify(exactly = 1) { partyService.resolve(requestedByIdentifier) }
         verify(exactly = 1) { documentRepository.find(documentId) }
         verify(exactly = 0) { documentRepository.confirm(any(), any(), any(), any()) }
