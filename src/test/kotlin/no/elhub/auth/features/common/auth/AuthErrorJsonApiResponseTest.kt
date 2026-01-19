@@ -1,7 +1,6 @@
 package no.elhub.auth.features.common.auth
 
 import io.kotest.core.spec.style.FunSpec
-import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.ktor.http.HttpStatusCode
 

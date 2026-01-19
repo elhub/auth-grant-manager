@@ -13,7 +13,6 @@ import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.common.validateId
 import no.elhub.auth.features.grants.common.dto.toResponse
-import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import java.util.UUID
 
 const val GRANT_ID_PARAM = "id"
