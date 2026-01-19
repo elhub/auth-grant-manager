@@ -5,7 +5,6 @@ import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import no.elhub.auth.features.businessprocesses.changeofsupplier.ChangeOfSupplierBusinessHandler
 import no.elhub.auth.features.businessprocesses.movein.MoveInBusinessHandler
-import no.elhub.auth.features.common.shouldRegisterEndpoint
 import no.elhub.auth.features.grants.common.ExposedGrantRepository
 import no.elhub.auth.features.grants.common.GrantRepository
 import no.elhub.auth.features.requests.common.ExposedRequestPropertiesRepository
@@ -45,12 +44,10 @@ fun Application.module() {
 
     routing {
         route(REQUESTS_PATH) {
-            shouldRegisterEndpoint {
-                updateRoute(get(), get())
-                createRoute(get(), get())
-                getRoute(get(), get())
-                queryRoute(get(), get())
-            }
+            updateRoute(get(), get())
+            createRoute(get(), get())
+            getRoute(get(), get())
+            queryRoute(get(), get())
         }
     }
 }

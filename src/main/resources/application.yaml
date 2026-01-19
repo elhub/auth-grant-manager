@@ -34,9 +34,6 @@ pdfSigner:
 pdp:
   baseUrl: ${PDP_BASE_URL}
 
-featureToggle:
-  enableEndpoints: ${ENABLE_ENDPOINTS:false}
-
 authPersons:
   baseUri: $AUTH_PERSONS_URL
 
