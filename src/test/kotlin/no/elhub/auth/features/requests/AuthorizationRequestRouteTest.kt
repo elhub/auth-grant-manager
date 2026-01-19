@@ -471,15 +471,6 @@ class AuthorizationRequestRouteTest : FunSpec({
             setUpAuthorizationRequestTestApplication()
 
             test("should not be accepted when validto has expired") {
-                val requestId = insertAuthorizationRequest(
-                    properties = mapOf(
-                        "requestedFromName" to "Kasper Lind",
-                        "requestedForMeteringPointId" to "1234567890555",
-                        "requestedForMeteringPointAddress" to "Example Street 2, 0654 Oslo",
-                        "balanceSupplierName" to "Power AS",
-                        "balanceSupplierContractName" to "ExampleSupplierContract"
-                    )
-                )
                 val patchResult =
                     client.patch("${REQUESTS_PATH}/130b6bca-1e3a-4653-8a9b-ccc0dc4fe389") {
                         header(HttpHeaders.Authorization, "Bearer enduser")
