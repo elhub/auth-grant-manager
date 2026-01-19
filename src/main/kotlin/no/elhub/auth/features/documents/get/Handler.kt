@@ -28,7 +28,7 @@ class Handler(
 
         ensure(
             query.authorizedParty == document.requestedBy ||
-                    query.authorizedParty == document.requestedFrom
+                query.authorizedParty == document.requestedFrom
         ) {
             QueryError.NotAuthorizedError
         }
