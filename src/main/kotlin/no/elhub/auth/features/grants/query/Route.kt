@@ -12,7 +12,6 @@ import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.grants.common.dto.toCollectionGrantResponse
-import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 
 fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
     get {
@@ -42,7 +41,7 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
         val grants = handler(query)
             .getOrElse { err ->
                 val (status, body) = err.toApiErrorResponse()
-                call.respond(status, JsonApiErrorCollection(listOf(body)))
+                call.respond(status, body)
                 return@get
             }
 

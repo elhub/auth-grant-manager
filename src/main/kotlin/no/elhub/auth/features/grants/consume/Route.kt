@@ -15,7 +15,6 @@ import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.common.validateId
 import no.elhub.auth.features.grants.common.dto.toSingleGrantResponse
 import no.elhub.auth.features.grants.consume.dto.JsonApiConsumeRequest
-import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import no.elhub.devxp.jsonapi.response.JsonApiErrorObject
 
 const val GRANT_ID_PARAM = "id"
@@ -32,7 +31,7 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
         val grantId = validateId(call.parameters[GRANT_ID_PARAM])
             .getOrElse { error ->
                 val (status, body) = error.toApiErrorResponse()
-                call.respond(status, JsonApiErrorCollection(listOf(body)))
+                call.respond(status, body)
                 return@patch
             }
 
@@ -40,7 +39,7 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
             call.receive<JsonApiConsumeRequest>()
         }.getOrElse {
             val (status, body) = InputError.MalformedInputError.toApiErrorResponse()
-            call.respond(status, JsonApiErrorCollection(listOf(body)))
+            call.respond(status, body)
             return@patch
         }
 
@@ -61,7 +60,7 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
                         message = listOf(
                             JsonApiErrorObject(
                                 status = HttpStatusCode.InternalServerError.toString(),
-                                code = "INTERNAL_SERVER_ERROR",
+                                code = "internal_error",
                             )
                         )
                     )
@@ -72,7 +71,7 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
                         message = listOf(
                             JsonApiErrorObject(
                                 status = HttpStatusCode.NotFound.toString(),
-                                code = "NOT_FOUND"
+                                code = "not_found"
                             )
                         )
                     )
@@ -83,7 +82,7 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
                         message = listOf(
                             JsonApiErrorObject(
                                 status = HttpStatusCode.Unauthorized.toString(),
-                                code = "NOT_AUTHORIZED"
+                                code = "not_authorized"
                             )
                         )
                     )

@@ -304,7 +304,7 @@ class AuthorizationDocumentRouteTest :
                         listOf(
                             JsonApiErrorObject(
                                 status = HttpStatusCode.Forbidden.value.toString(),
-                                code = "NOT_AUTHORIZED",
+                                code = "not_authorized",
                                 title = "Party Not Authorized",
                                 detail = "The party is not allowed to access this resource",
                             )

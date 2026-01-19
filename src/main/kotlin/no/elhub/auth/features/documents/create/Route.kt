@@ -71,7 +71,7 @@ fun Route.route(
                                 listOf(
                                     JsonApiErrorObject(
                                         status = HttpStatusCode.Forbidden.toString(),
-                                        code = "NOT_AUTHORIZED",
+                                        code = "not_authorized",
                                         title = "Party Not Authorized",
                                         detail = "RequestedBy must match the authorized party",
                                     )

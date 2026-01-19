@@ -30,7 +30,7 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
         val grantId: UUID = validateId(call.parameters[GRANT_ID_PARAM])
             .getOrElse { err ->
                 val (status, body) = err.toApiErrorResponse()
-                call.respond(status, JsonApiErrorCollection(listOf(body)))
+                call.respond(status, body)
                 return@get
             }
 
@@ -63,7 +63,7 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
         val scopes = handler(query)
             .getOrElse { err ->
                 val (status, body) = err.toApiErrorResponse()
-                call.respond(status, JsonApiErrorCollection(listOf(body)))
+                call.respond(status, body)
                 return@get
             }
 

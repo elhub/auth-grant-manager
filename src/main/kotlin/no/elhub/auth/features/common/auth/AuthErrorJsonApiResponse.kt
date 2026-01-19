@@ -1,48 +1,42 @@
 package no.elhub.auth.features.common.auth
 
 import io.ktor.http.HttpStatusCode
+import no.elhub.auth.features.common.buildErrorResponse
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
-import no.elhub.devxp.jsonapi.response.JsonApiErrorObject
 
-fun AuthError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> {
-    fun build(status: HttpStatusCode, title: String, detail: String) =
-        status to JsonApiErrorCollection(
-            listOf(
-                JsonApiErrorObject(
-                    status = status.value.toString(),
-                    title = title,
-                    detail = detail
-                )
-            )
-        )
-
-    return when (this) {
-        AuthError.MissingAuthorizationHeader -> build(
-            HttpStatusCode.Unauthorized,
+fun AuthError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> =
+    when (this) {
+        AuthError.MissingAuthorizationHeader -> buildErrorResponse(
+            status = HttpStatusCode.Unauthorized,
+            code = "missing_authorization",
             title = "Missing authorization",
             detail = "Bearer token is required in the Authorization header."
         )
 
-        AuthError.InvalidAuthorizationHeader -> build(
-            HttpStatusCode.Unauthorized,
+        AuthError.InvalidAuthorizationHeader -> buildErrorResponse(
+            status = HttpStatusCode.Unauthorized,
+            code = "invalid_authorization_header",
             title = "Invalid authorization header",
             detail = "Authorization header must use the Bearer scheme."
         )
 
-        AuthError.MissingSenderGlnHeader -> build(
-            HttpStatusCode.BadRequest,
+        AuthError.MissingSenderGlnHeader -> buildErrorResponse(
+            status = HttpStatusCode.BadRequest,
+            code = "missing_sender_gln",
             title = "Missing SenderGLN header",
             detail = "SenderGLN header is required for authorization."
         )
 
-        AuthError.InvalidToken -> build(
-            HttpStatusCode.Unauthorized,
+        AuthError.InvalidToken -> buildErrorResponse(
+            status = HttpStatusCode.Unauthorized,
+            code = "invalid_token",
             title = "Invalid token",
             detail = "Token could not be verified."
         )
 
-        AuthError.ActingFunctionNotSupported -> build(
-            HttpStatusCode.Forbidden,
+        AuthError.ActingFunctionNotSupported -> buildErrorResponse(
+            status = HttpStatusCode.Forbidden,
+            code = "unsupported_party_type",
             title = "Unsupported party type",
             detail = "The party type you are authorized as is not supported for this endpoint."
         )
@@ -51,16 +45,17 @@ fun AuthError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection>
         AuthError.ActingGlnMissing,
         AuthError.ActingFunctionMissing,
         AuthError.UnexpectedError,
-        AuthError.UnknownError -> build(
-            HttpStatusCode.InternalServerError,
+        AuthError.UnknownError -> buildErrorResponse(
+            status = HttpStatusCode.InternalServerError,
+            code = "internal_authorization_error",
             title = "Internal authorization error",
             detail = "An internal error occurred."
         )
 
-        AuthError.NotAuthorized -> build(
+        AuthError.NotAuthorized -> buildErrorResponse(
             status = HttpStatusCode.Unauthorized,
+            code = "not_authorized",
             title = "Not authorized",
             detail = "Not authorized for this endpoint."
         )
     }
-}

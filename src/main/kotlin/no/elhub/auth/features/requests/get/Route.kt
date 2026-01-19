@@ -13,7 +13,6 @@ import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.common.validateId
 import no.elhub.auth.features.requests.get.dto.toGetSingleResponse
-import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import java.util.UUID
 
 const val REQUEST_ID_PARAM = "id"
@@ -30,7 +29,7 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
         val id: UUID = validateId(call.parameters[REQUEST_ID_PARAM])
             .getOrElse { err ->
                 val (status, body) = err.toApiErrorResponse()
-                call.respond(status, JsonApiErrorCollection(listOf(body)))
+                call.respond(status, body)
                 return@get
             }
 
@@ -55,7 +54,7 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
         val request = handler(query)
             .getOrElse { err ->
                 val (status, body) = err.toApiErrorResponse()
-                call.respond(status, JsonApiErrorCollection(listOf(body)))
+                call.respond(status, body)
                 return@get
             }
 

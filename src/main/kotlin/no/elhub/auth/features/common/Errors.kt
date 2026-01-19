@@ -1,6 +1,7 @@
 package no.elhub.auth.features.common
 
 import io.ktor.http.HttpStatusCode
+import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import no.elhub.devxp.jsonapi.response.JsonApiErrorObject
 
 interface Error
@@ -35,41 +36,55 @@ sealed class RepositoryReadError : RepositoryError() {
     data object UnexpectedError : RepositoryReadError()
 }
 
-fun InputError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorObject> = when (this) {
-    InputError.MissingInputError -> HttpStatusCode.BadRequest to JsonApiErrorObject(
-        status = HttpStatusCode.BadRequest.value.toString(),
-        code = "MISSING_INPUT",
-        title = "Missing input",
-        detail = "Necessary information was not provided",
+fun buildErrorResponse(status: HttpStatusCode, code: String, title: String, detail: String) =
+    status to JsonApiErrorCollection(
+        listOf(
+            JsonApiErrorObject(
+                status = status.value.toString(),
+                code = code,
+                title = title,
+                detail = detail
+            )
+        )
     )
 
-    InputError.MalformedInputError -> HttpStatusCode.BadRequest to JsonApiErrorObject(
-        status = HttpStatusCode.BadRequest.value.toString(),
-        code = "INVALID_INPUT",
-        title = "Invalid input",
-        detail = "The provided payload did not satisfy the expected format"
-    )
-}
+fun InputError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> =
+    when (this) {
+        InputError.MissingInputError -> buildErrorResponse(
+            status = HttpStatusCode.BadRequest,
+            code = "missing_input",
+            title = "Missing input",
+            detail = "Necessary information was not provided",
+        )
 
-fun QueryError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorObject> = when (this) {
-    QueryError.ResourceNotFoundError -> HttpStatusCode.NotFound to JsonApiErrorObject(
-        status = HttpStatusCode.NotFound.value.toString(),
-        code = "NOT_FOUND",
-        title = "Not Found",
-        detail = "The requested resource could not be found",
-    )
+        InputError.MalformedInputError -> buildErrorResponse(
+            status = HttpStatusCode.BadRequest,
+            code = "invalid_input",
+            title = "Invalid input",
+            detail = "The provided payload did not satisfy the expected format"
+        )
+    }
 
-    QueryError.IOError -> HttpStatusCode.InternalServerError to JsonApiErrorObject(
-        status = HttpStatusCode.InternalServerError.value.toString(),
-        code = "INTERNAL_SERVER_ERROR",
-        title = "Internal Server Error",
-        detail = "An error occurred when attempted to perform the query",
-    )
+fun QueryError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> =
+    when (this) {
+        QueryError.ResourceNotFoundError -> buildErrorResponse(
+            status = HttpStatusCode.NotFound,
+            code = "not_found",
+            title = "Not Found",
+            detail = "The requested resource could not be found",
+        )
 
-    QueryError.NotAuthorizedError -> HttpStatusCode.Forbidden to JsonApiErrorObject(
-        status = HttpStatusCode.Forbidden.value.toString(),
-        code = "NOT_AUTHORIZED",
-        title = "Party Not Authorized",
-        detail = "The party is not allowed to access this resource",
-    )
-}
+        QueryError.IOError -> buildErrorResponse(
+            status = HttpStatusCode.InternalServerError,
+            code = "internal_error",
+            title = "Internal Server Error",
+            detail = "An error occurred when attempted to perform the query",
+        )
+
+        QueryError.NotAuthorizedError -> buildErrorResponse(
+            status = HttpStatusCode.Forbidden,
+            code = "not_authorized",
+            title = "Party Not Authorized",
+            detail = "The party is not allowed to access this resource",
+        )
+    }
