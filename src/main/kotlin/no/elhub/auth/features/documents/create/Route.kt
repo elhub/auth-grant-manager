@@ -9,10 +9,9 @@ import io.ktor.server.routing.post
 import no.elhub.auth.features.common.auth.AuthorizationProvider
 import no.elhub.auth.features.common.auth.RoleType
 import no.elhub.auth.features.common.auth.toAuthErrorResponse
-import no.elhub.auth.features.common.buildErrorResponse
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
-import no.elhub.auth.features.common.toDeserializationErrorResponse
+import no.elhub.auth.features.common.toForbiddenBalanceSupplierOnlyResponse
 import no.elhub.auth.features.documents.create.dto.JsonApiCreateDocumentRequest
 import no.elhub.auth.features.documents.create.dto.toCreateDocumentResponse
 import no.elhub.auth.features.documents.create.dto.toModel
@@ -35,14 +34,8 @@ fun Route.route(
         val requestBody = call.receive<JsonApiCreateDocumentRequest>()
 
         if (resolvedActor.role != RoleType.BalanceSupplier) {
-            call.respond(
-                buildErrorResponse(
-                    status = HttpStatusCode.BadRequest,
-                    code = "bad_request",
-                    title = "Bad Request",
-                    detail = "Only Balance Supplier can create authorization documents"
-                )
-            )
+            val (status, body) = toForbiddenBalanceSupplierOnlyResponse()
+            call.respond(status, body)
             return@post
         }
 

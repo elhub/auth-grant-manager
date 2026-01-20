@@ -11,7 +11,6 @@ import no.elhub.auth.features.common.auth.RoleType
 import no.elhub.auth.features.common.auth.toAuthErrorResponse
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
-import no.elhub.auth.features.common.toDeserializationErrorResponse
 import no.elhub.auth.features.common.toForbiddenBalanceSupplierOnlyResponse
 import no.elhub.auth.features.requests.create.dto.JsonApiCreateRequest
 import no.elhub.auth.features.requests.create.dto.toCreateResponse
