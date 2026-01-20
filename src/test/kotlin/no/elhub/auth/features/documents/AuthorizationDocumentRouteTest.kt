@@ -32,6 +32,7 @@ import kotlinx.datetime.toLocalDateTime
 import no.elhub.auth.features.businessprocesses.changeofsupplier.defaultValidTo
 import no.elhub.auth.features.businessprocesses.changeofsupplier.domain.ChangeOfSupplierBusinessMeta
 import no.elhub.auth.features.businessprocesses.changeofsupplier.today
+import no.elhub.auth.features.businessprocesses.structuredata.meteringPointsServiceModule
 import no.elhub.auth.features.common.AuthPersonsTestContainer
 import no.elhub.auth.features.common.AuthPersonsTestContainerExtension
 import no.elhub.auth.features.common.CreateScopeData
@@ -125,6 +126,7 @@ class AuthorizationDocumentRouteTest :
                     applicationModule()
                     testBusinessProcessesModule()
                     commonModule()
+                    meteringPointsServiceModule()
                     grantsModule()
                     module()
                 }
@@ -144,7 +146,10 @@ class AuthorizationDocumentRouteTest :
                         "pdfSigner.certificate.bankIdIdRoot" to TestCertificateUtil.Constants.BANKID_ROOT_CERTIFICATE_LOCATION,
                         "featureToggle.enableEndpoints" to "true",
                         "authPersons.baseUri" to AuthPersonsTestContainer.baseUri(),
-                        "pdp.baseUrl" to "http://localhost:8085"
+                        "pdp.baseUrl" to "http://localhost:8085",
+                        "structureData.meteringPointsService.serviceUrl" to "http://localhost:8086",
+                        "structureData.meteringPointsService.authentication.basic.username" to "user",
+                        "structureData.meteringPointsService.authentication.basic.password" to "password"
                     )
                 }
 
@@ -528,6 +533,7 @@ class AuthorizationDocumentRouteTest :
                     applicationModule()
                     testBusinessProcessesModule()
                     commonModule()
+                    meteringPointsServiceModule()
                     grantsModule()
                     module()
                 }
@@ -547,7 +553,10 @@ class AuthorizationDocumentRouteTest :
                         "pdfSigner.certificate.bankIdIdRoot" to TestCertificateUtil.Constants.BANKID_ROOT_CERTIFICATE_LOCATION,
                         "featureToggle.enableEndpoints" to "true",
                         "authPersons.baseUri" to AuthPersonsTestContainer.baseUri(),
-                        "pdp.baseUrl" to "http://localhost:8085"
+                        "pdp.baseUrl" to "http://localhost:8085",
+                        "structureData.meteringPointsService.serviceUrl" to "http://localhost:8086",
+                        "structureData.meteringPointsService.authentication.basic.username" to "user",
+                        "structureData.meteringPointsService.authentication.basic.password" to "password"
                     )
                 }
 

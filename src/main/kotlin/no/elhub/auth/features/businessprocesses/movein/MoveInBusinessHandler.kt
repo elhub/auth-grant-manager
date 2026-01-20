@@ -45,7 +45,7 @@ private fun moveInGrantValidTo() = today().plus(DatePeriod(years = MOVE_IN_GRANT
 class MoveInBusinessHandler :
     RequestBusinessHandler,
     DocumentBusinessHandler {
-    override fun validateAndReturnRequestCommand(createRequestModel: CreateRequestModel): Either<MoveInValidationError, RequestCommand> =
+    override suspend fun validateAndReturnRequestCommand(createRequestModel: CreateRequestModel): Either<MoveInValidationError, RequestCommand> =
         either {
             val model = createRequestModel.toMoveInBusinessModel()
             validate(model).bind().toRequestCommand()
@@ -57,7 +57,7 @@ class MoveInBusinessHandler :
             validFrom = today(),
         )
 
-    override fun validateAndReturnDocumentCommand(model: CreateDocumentModel): Either<CreateError.BusinessValidationError, DocumentCommand> =
+    override suspend fun validateAndReturnDocumentCommand(model: CreateDocumentModel): Either<CreateError.BusinessValidationError, DocumentCommand> =
         either {
             val model = model.toMoveInBusinessModel()
             validate(model)

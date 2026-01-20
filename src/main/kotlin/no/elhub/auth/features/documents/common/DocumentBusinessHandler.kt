@@ -13,7 +13,7 @@ class ProxyDocumentBusinessHandler(
     private val changeOfSupplierHandler: ChangeOfSupplierBusinessHandler,
     private val moveInHandler: MoveInBusinessHandler,
 ) : DocumentBusinessHandler {
-    override fun validateAndReturnDocumentCommand(model: CreateDocumentModel): Either<CreateError.BusinessValidationError, DocumentCommand> =
+    override suspend fun validateAndReturnDocumentCommand(model: CreateDocumentModel): Either<CreateError.BusinessValidationError, DocumentCommand> =
         when (model.documentType) {
             AuthorizationDocument.Type.ChangeOfSupplierConfirmation -> changeOfSupplierHandler.validateAndReturnDocumentCommand(model)
             AuthorizationDocument.Type.MoveIn -> moveInHandler.validateAndReturnDocumentCommand(model)
@@ -27,7 +27,7 @@ class ProxyDocumentBusinessHandler(
 }
 
 interface DocumentBusinessHandler {
-    fun validateAndReturnDocumentCommand(model: CreateDocumentModel): Either<CreateError.BusinessValidationError, DocumentCommand>
+   suspend fun validateAndReturnDocumentCommand(model: CreateDocumentModel): Either<CreateError.BusinessValidationError, DocumentCommand>
 
     fun getCreateGrantProperties(document: AuthorizationDocument): CreateGrantProperties
 }

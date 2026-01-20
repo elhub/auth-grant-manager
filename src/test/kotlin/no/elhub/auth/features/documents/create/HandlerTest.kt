@@ -98,7 +98,7 @@ class HandlerTest : FunSpec({
         val fileGenerator = mockk<FileGenerator>()
 
         stubPartyResolution(partyService)
-        every { businessHandler.validateAndReturnDocumentCommand(model) } returns command.right()
+        coEvery { businessHandler.validateAndReturnDocumentCommand(model) } returns command.right()
         every { fileGenerator.generate(requestedFromIdentifier.idValue, commandMeta) } returns unsignedFile.right()
         coEvery { signatureService.sign(unsignedFile) } returns signedFile.right()
 
@@ -135,7 +135,7 @@ class HandlerTest : FunSpec({
         val response = handler(model)
 
         response.shouldBeLeft(CreateError.RequestedByPartyError)
-        verify(exactly = 0) { businessHandler.validateAndReturnDocumentCommand(any()) }
+        coVerify(exactly = 0) { businessHandler.validateAndReturnDocumentCommand(any()) }
     }
 
     test("returns AuthorizationError when requestedBy does not match authorized party") {
@@ -154,7 +154,7 @@ class HandlerTest : FunSpec({
 
         response.shouldBeLeft(CreateError.AuthorizationError)
         coVerify(exactly = 0) { partyService.resolve(requestedFromIdentifier) }
-        verify(exactly = 0) { businessHandler.validateAndReturnDocumentCommand(any()) }
+        coVerify(exactly = 0) { businessHandler.validateAndReturnDocumentCommand(any()) }
     }
 
     test("returns RequestedFromPartyError when requestedFrom cannot be resolved") {
@@ -172,7 +172,7 @@ class HandlerTest : FunSpec({
         val response = handler(model)
 
         response.shouldBeLeft(CreateError.RequestedFromPartyError)
-        verify(exactly = 0) { businessHandler.validateAndReturnDocumentCommand(any()) }
+        coVerify(exactly = 0) { businessHandler.validateAndReturnDocumentCommand(any()) }
     }
 
     test("returns RequestedToPartyError when requestedTo cannot be resolved") {
@@ -191,7 +191,7 @@ class HandlerTest : FunSpec({
         val response = handler(model)
 
         response.shouldBeLeft(CreateError.RequestedToPartyError)
-        verify(exactly = 0) { businessHandler.validateAndReturnDocumentCommand(any()) }
+        coVerify(exactly = 0) { businessHandler.validateAndReturnDocumentCommand(any()) }
     }
 
     test("returns BusinessValidationError when validation fails") {
@@ -203,7 +203,7 @@ class HandlerTest : FunSpec({
 
         stubPartyResolution(partyService)
         val validationError = CreateError.BusinessValidationError("validation failed")
-        every { businessHandler.validateAndReturnDocumentCommand(model) } returns validationError.left()
+        coEvery { businessHandler.validateAndReturnDocumentCommand(model) } returns validationError.left()
 
         val handler = Handler(businessHandler, signatureService, documentRepository, partyService, fileGenerator)
 
@@ -221,7 +221,7 @@ class HandlerTest : FunSpec({
         val fileGenerator = mockk<FileGenerator>()
 
         stubPartyResolution(partyService)
-        every { businessHandler.validateAndReturnDocumentCommand(model) } returns command.right()
+        coEvery { businessHandler.validateAndReturnDocumentCommand(model) } returns command.right()
         every {
             fileGenerator.generate(requestedFromIdentifier.idValue, commandMeta)
         } returns DocumentGenerationError.ContentGenerationError.left()
@@ -242,7 +242,7 @@ class HandlerTest : FunSpec({
         val fileGenerator = mockk<FileGenerator>()
 
         stubPartyResolution(partyService)
-        every { businessHandler.validateAndReturnDocumentCommand(model) } returns command.right()
+        coEvery { businessHandler.validateAndReturnDocumentCommand(model) } returns command.right()
         every { fileGenerator.generate(requestedFromIdentifier.idValue, commandMeta) } returns unsignedFile.right()
         coEvery {
             signatureService.sign(unsignedFile)
@@ -264,7 +264,7 @@ class HandlerTest : FunSpec({
         val fileGenerator = mockk<FileGenerator>()
 
         stubPartyResolution(partyService)
-        every { businessHandler.validateAndReturnDocumentCommand(model) } returns command.right()
+        coEvery { businessHandler.validateAndReturnDocumentCommand(model) } returns command.right()
         every { fileGenerator.generate(requestedFromIdentifier.idValue, commandMeta) } returns unsignedFile.right()
         coEvery { signatureService.sign(unsignedFile) } returns signedFile.right()
         every {

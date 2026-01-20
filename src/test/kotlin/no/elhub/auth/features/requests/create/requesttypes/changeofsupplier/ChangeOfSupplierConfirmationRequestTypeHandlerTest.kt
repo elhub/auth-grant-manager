@@ -4,8 +4,10 @@ import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
+import io.mockk.mockk
 import no.elhub.auth.features.businessprocesses.changeofsupplier.ChangeOfSupplierBusinessHandler
 import no.elhub.auth.features.businessprocesses.changeofsupplier.ChangeOfSupplierValidationError
+import no.elhub.auth.features.businessprocesses.structuredata.MeteringPointsService
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
@@ -20,7 +22,7 @@ class ChangeOfSupplierConfirmationRequestTypeHandlerTest :
     FunSpec({
 
         val authorizedParty = AuthorizationParty(resourceId = "987654321", type = PartyType.Organization)
-        val handler = ChangeOfSupplierBusinessHandler()
+        val handler = ChangeOfSupplierBusinessHandler(mockk<MeteringPointsService>(relaxed = true))
 
         test("returns validation error when requestedFromName is blank") {
             val model =

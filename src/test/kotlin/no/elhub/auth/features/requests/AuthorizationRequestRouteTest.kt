@@ -22,6 +22,7 @@ import io.ktor.server.application.Application
 import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
+import no.elhub.auth.features.businessprocesses.structuredata.meteringPointsServiceModule
 import no.elhub.auth.features.common.AuthPersonsTestContainer
 import no.elhub.auth.features.common.AuthPersonsTestContainerExtension
 import no.elhub.auth.features.common.PdpTestContainerExtension
@@ -989,6 +990,7 @@ private fun ApplicationTestBuilder.setUpAuthorizationRequestTestApplication() {
     }
 
     application {
+        meteringPointsServiceModule()
         applicationModule()
         testRequestBusinessModule()
         commonModule()
@@ -1004,7 +1006,10 @@ private fun ApplicationTestBuilder.setUpAuthorizationRequestTestApplication() {
                 "ktor.database.driverClass" to "org.postgresql.Driver",
                 "featureToggle.enableEndpoints" to "true",
                 "authPersons.baseUri" to AuthPersonsTestContainer.baseUri(),
-                "pdp.baseUrl" to "http://localhost:8085"
+                "pdp.baseUrl" to "http://localhost:8085",
+                "structureData.meteringPointsService.serviceUrl" to "http://localhost:8086",
+                "structureData.meteringPointsService.authentication.basic.username" to "user",
+                "structureData.meteringPointsService.authentication.basic.password" to "password"
             )
     }
 }
