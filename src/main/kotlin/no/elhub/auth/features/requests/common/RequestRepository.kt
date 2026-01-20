@@ -166,23 +166,24 @@ class ExposedRequestRepository(
             }
         }
 
-    private fun updateAndFetch(requestId: UUID, rowsUpdated: Int): Either<RepositoryError, AuthorizationRequest> = either {
-        transaction {
-            if (rowsUpdated == 0) {
-                raise(RepositoryWriteError.UnexpectedError)
+    private fun updateAndFetch(requestId: UUID, rowsUpdated: Int): Either<RepositoryError, AuthorizationRequest> =
+        either {
+            transaction {
+                if (rowsUpdated == 0) {
+                    raise(RepositoryWriteError.UnexpectedError)
+                }
+
+                val request =
+                    AuthorizationRequestTable
+                        .selectAll()
+                        .where { AuthorizationRequestTable.id eq requestId }
+                        .singleOrNull() ?: raise(RepositoryReadError.NotFoundError)
+
+                findInternal(request)
+                    .mapLeft { RepositoryWriteError.UnexpectedError }
+                    .bind()
             }
-
-            val request =
-                AuthorizationRequestTable
-                    .selectAll()
-                    .where { AuthorizationRequestTable.id eq requestId }
-                    .singleOrNull() ?: raise(RepositoryReadError.NotFoundError)
-
-            findInternal(request)
-                .mapLeft { RepositoryWriteError.UnexpectedError }
-                .bind()
         }
-    }
 
     private fun findInternal(request: ResultRow): Either<RepositoryReadError, AuthorizationRequest> =
         either {
@@ -237,7 +238,7 @@ object AuthorizationRequestScopeTable : Table("auth.authorization_request_scope"
     override val primaryKey = PrimaryKey(authorizationRequestId, authorizationScopeId)
 }
 
-object AuthorizationRequestTable : UUIDTable("authorization_request") {
+object AuthorizationRequestTable : UUIDTable("auth.authorization_request") {
     val requestType =
         customEnumeration(
             name = "request_type",
