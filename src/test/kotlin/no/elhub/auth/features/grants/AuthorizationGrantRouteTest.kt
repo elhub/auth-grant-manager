@@ -361,17 +361,17 @@ class AuthorizationGrantRouteTest : FunSpec({
                 }
                 response.status shouldBe HttpStatusCode.Unauthorized
                 val responseJson: JsonApiErrorCollection = response.body()
-
-            }
-            responseJson.errors.apply {
-                size shouldBe 1
-                this[0].apply {
-                    status shouldBe "401"
-                    code shouldBe "missing_authorization"
-                    title shouldBe "Missing authorization"
-                    detail shouldBe "Bearer token is required in the Authorization header."
+                responseJson.errors.apply {
+                    size shouldBe 1
+                    this[0].apply {
+                        status shouldBe "401"
+                        code shouldBe "missing_authorization"
+                        title shouldBe "Missing authorization"
+                        detail shouldBe "Bearer token is required in the Authorization header."
+                    }
                 }
             }
+
             test("Should return 403 when the grant does not belong to the requester") {
                 val response = client.get("$GRANTS_PATH/b7f9c2e4-5a3d-4e2b-9c1a-8f6e2d3c4b5a/scopes") {
                     header(HttpHeaders.Authorization, "Bearer maskinporten")
