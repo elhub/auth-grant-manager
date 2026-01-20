@@ -85,7 +85,7 @@ class HandlerTest : FunSpec({
         val requestPropertyRepo = mockk<RequestPropertiesRepository>()
 
         stubPartyResolution(partyService)
-        every { businessHandler.validateAndReturnRequestCommand(model) } returns command.right()
+        coEvery { businessHandler.validateAndReturnRequestCommand(model) } returns command.right()
 
         val savedRequest =
             AuthorizationRequest.create(
@@ -133,7 +133,7 @@ class HandlerTest : FunSpec({
         val response = handler(model)
 
         response.shouldBeLeft(CreateRequestError.RequestedByPartyError)
-        verify(exactly = 0) { businessHandler.validateAndReturnRequestCommand(any()) }
+        coVerify(exactly = 0) { businessHandler.validateAndReturnRequestCommand(any()) }
     }
 
     test("returns AuthorizationError when requestedBy does not match authorized party") {
@@ -151,7 +151,7 @@ class HandlerTest : FunSpec({
 
         response.shouldBeLeft(CreateRequestError.AuthorizationError)
         coVerify(exactly = 0) { partyService.resolve(requestedFromIdentifier) }
-        verify(exactly = 0) { businessHandler.validateAndReturnRequestCommand(any()) }
+        coVerify(exactly = 0) { businessHandler.validateAndReturnRequestCommand(any()) }
     }
 
     test("returns RequestedFromPartyError when requestedFrom cannot be resolved") {
@@ -168,7 +168,7 @@ class HandlerTest : FunSpec({
         val response = handler(model)
 
         response.shouldBeLeft(CreateRequestError.RequestedFromPartyError)
-        verify(exactly = 0) { businessHandler.validateAndReturnRequestCommand(any()) }
+        coVerify(exactly = 0) { businessHandler.validateAndReturnRequestCommand(any()) }
     }
 
     test("returns RequestedByPartyError when requestedTo cannot be resolved") {
@@ -186,7 +186,7 @@ class HandlerTest : FunSpec({
         val response = handler(model)
 
         response.shouldBeLeft(CreateRequestError.RequestedByPartyError)
-        verify(exactly = 0) { businessHandler.validateAndReturnRequestCommand(any()) }
+        coVerify(exactly = 0) { businessHandler.validateAndReturnRequestCommand(any()) }
     }
 
     test("returns ValidationError when business validation fails") {
@@ -196,7 +196,7 @@ class HandlerTest : FunSpec({
         val requestPropertyRepo = mockk<RequestPropertiesRepository>(relaxed = true)
 
         stubPartyResolution(partyService)
-        every {
+        coEvery {
             businessHandler.validateAndReturnRequestCommand(model)
         } returns ChangeOfSupplierValidationError.MissingRequestedFromName.left()
 
@@ -215,7 +215,7 @@ class HandlerTest : FunSpec({
         val requestPropertyRepo = mockk<RequestPropertiesRepository>(relaxed = true)
 
         stubPartyResolution(partyService)
-        every { businessHandler.validateAndReturnRequestCommand(model) } returns command.right()
+        coEvery { businessHandler.validateAndReturnRequestCommand(model) } returns command.right()
         every { requestRepo.insert(any()) } returns RepositoryWriteError.UnexpectedError.left()
 
         val handler = Handler(businessHandler, partyService, requestRepo, requestPropertyRepo)
@@ -233,7 +233,7 @@ class HandlerTest : FunSpec({
         val requestPropertyRepo = mockk<RequestPropertiesRepository>()
 
         stubPartyResolution(partyService)
-        every { businessHandler.validateAndReturnRequestCommand(model) } returns command.right()
+        coEvery { businessHandler.validateAndReturnRequestCommand(model) } returns command.right()
 
         val savedRequest =
             AuthorizationRequest.create(

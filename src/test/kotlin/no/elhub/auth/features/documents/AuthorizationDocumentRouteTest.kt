@@ -25,6 +25,7 @@ import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.testing.testApplication
 import no.elhub.auth.features.businessprocesses.changeofsupplier.defaultValidTo
+import no.elhub.auth.features.businessprocesses.structuredata.meteringPointsServiceModule
 import no.elhub.auth.features.common.AuthPersonsTestContainer
 import no.elhub.auth.features.common.AuthPersonsTestContainerExtension
 import no.elhub.auth.features.common.PdpTestContainerExtension
@@ -90,6 +91,7 @@ class AuthorizationDocumentRouteTest :
                     }
                 }
                 application {
+                    meteringPointsServiceModule()
                     applicationModule()
                     commonModule()
                     grantsModule()
@@ -110,7 +112,10 @@ class AuthorizationDocumentRouteTest :
                         "pdfSigner.certificate.chain" to TestCertificateUtil.Constants.CERTIFICATE_LOCATION,
                         "featureToggle.enableEndpoints" to "true",
                         "authPersons.baseUri" to AuthPersonsTestContainer.baseUri(),
-                        "pdp.baseUrl" to "http://localhost:8085"
+                        "pdp.baseUrl" to "http://localhost:8085",
+                        "structureData.meteringPointsService.serviceUrl" to "http://localhost:8086",
+                        "structureData.meteringPointsService.authentication.basic.username" to "user",
+                        "structureData.meteringPointsService.authentication.basic.password" to "password"
                     )
                 }
 
@@ -483,6 +488,7 @@ class AuthorizationDocumentRouteTest :
                     }
                 }
                 application {
+                    meteringPointsServiceModule()
                     applicationModule()
                     commonModule()
                     grantsModule()
@@ -503,7 +509,10 @@ class AuthorizationDocumentRouteTest :
                         "pdfSigner.certificate.chain" to TestCertificateUtil.Constants.CERTIFICATE_LOCATION,
                         "featureToggle.enableEndpoints" to "true",
                         "authPersons.baseUri" to AuthPersonsTestContainer.baseUri(),
-                        "pdp.baseUrl" to "http://localhost:8085"
+                        "pdp.baseUrl" to "http://localhost:8085",
+                        "structureData.meteringPointsService.serviceUrl" to "http://localhost:8086",
+                        "structureData.meteringPointsService.authentication.basic.username" to "user",
+                        "structureData.meteringPointsService.authentication.basic.password" to "password"
                     )
                 }
 

@@ -77,7 +77,7 @@ fun Application.module() {
         singleOf(::ExposedDocumentRepository) bind DocumentRepository::class
         singleOf(::ExposedGrantRepository) bind GrantRepository::class
         singleOf(::ExposedDocumentPropertiesRepository) bind DocumentPropertiesRepository::class
-        singleOf(::ChangeOfSupplierBusinessHandler)
+        single { ChangeOfSupplierBusinessHandler(get()) }
         singleOf(::MoveInBusinessHandler)
         singleOf(::ProxyDocumentBusinessHandler)
         singleOf(::ConfirmHandler)

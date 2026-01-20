@@ -114,6 +114,6 @@ fun CreateRequestError.ValidationError.toApiErrorResponse(): Pair<HttpStatusCode
         )
 
 interface RequestBusinessHandler {
-    fun validateAndReturnRequestCommand(createRequestModel: CreateRequestModel): Either<RequestTypeValidationError, RequestCommand>
+    suspend fun validateAndReturnRequestCommand(createRequestModel: CreateRequestModel): Either<RequestTypeValidationError, RequestCommand>
     fun getCreateGrantProperties(request: AuthorizationRequest): CreateGrantProperties
 }

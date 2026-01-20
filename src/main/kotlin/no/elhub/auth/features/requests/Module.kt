@@ -33,7 +33,7 @@ fun Application.module() {
         singleOf(::ExposedRequestRepository) bind RequestRepository::class
         singleOf(::ExposedGrantRepository) bind GrantRepository::class
         singleOf(::ExposedRequestPropertiesRepository) bind RequestPropertiesRepository::class
-        singleOf(::ChangeOfSupplierBusinessHandler)
+        single { ChangeOfSupplierBusinessHandler(get()) }
         singleOf(::MoveInBusinessHandler)
         singleOf(::ProxyRequestBusinessHandler)
         singleOf(::UpdateHandler)

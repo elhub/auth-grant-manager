@@ -11,8 +11,10 @@ import io.kotest.koin.KoinLifecycleMode
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldMatch
+import io.mockk.mockk
 import no.elhub.auth.features.businessprocesses.changeofsupplier.ChangeOfSupplierBusinessHandler
 import no.elhub.auth.features.businessprocesses.movein.MoveInBusinessHandler
+import no.elhub.auth.features.businessprocesses.structuredata.MeteringPointsService
 import no.elhub.auth.features.common.ApiPersonService
 import no.elhub.auth.features.common.AuthPersonsTestContainer
 import no.elhub.auth.features.common.AuthPersonsTestContainerExtension
@@ -91,7 +93,7 @@ private fun authorizedPartyFor(identifier: PartyIdentifier): AuthorizationParty 
     }
 
 private fun testDocumentOrchestrator(): ProxyDocumentBusinessHandler = ProxyDocumentBusinessHandler(
-    ChangeOfSupplierBusinessHandler(),
+    ChangeOfSupplierBusinessHandler(mockk<MeteringPointsService>(relaxed = true)),
     MoveInBusinessHandler(),
     FakeFileGenerator()
 )
@@ -145,7 +147,7 @@ class CreateDocumentTest :
                     single { PersonApiConfig(baseUri = AuthPersonsTestContainer.baseUri()) }
                     single { PartyService(get()) }
                     singleOf(::ExposedDocumentPropertiesRepository) bind DocumentPropertiesRepository::class
-                    singleOf(::ChangeOfSupplierBusinessHandler)
+                    single { ChangeOfSupplierBusinessHandler(get()) }
                     singleOf(::MoveInBusinessHandler)
                     singleOf(::ProxyDocumentBusinessHandler)
 
