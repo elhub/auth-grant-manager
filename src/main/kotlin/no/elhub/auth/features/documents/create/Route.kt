@@ -8,10 +8,11 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
 import no.elhub.auth.features.common.auth.AuthorizationProvider
 import no.elhub.auth.features.common.auth.RoleType
-import no.elhub.auth.features.common.auth.toApiErrorResponse
+import no.elhub.auth.features.common.auth.toAuthErrorResponse
 import no.elhub.auth.features.common.buildErrorResponse
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
+import no.elhub.auth.features.common.toDeserializationErrorResponse
 import no.elhub.auth.features.documents.create.dto.JsonApiCreateDocumentRequest
 import no.elhub.auth.features.documents.create.dto.toCreateDocumentResponse
 import no.elhub.auth.features.documents.create.dto.toModel
@@ -26,7 +27,7 @@ fun Route.route(
     post {
         val resolvedActor = authProvider.authorizeMaskinporten(call)
             .getOrElse {
-                val error = it.toApiErrorResponse()
+                val error = it.toAuthErrorResponse()
                 call.respond(error.first, error.second)
                 return@post
             }
@@ -55,7 +56,7 @@ fun Route.route(
         val document = handler(model)
             .getOrElse { error ->
                 logger.error("Failed to create authorization document: {}", error)
-                val (status, validationError) = error.toApiErrorResponse()
+                val (status, validationError) = error.toCreateErrorResponse()
                 call.respond(status, validationError)
                 return@post
             }

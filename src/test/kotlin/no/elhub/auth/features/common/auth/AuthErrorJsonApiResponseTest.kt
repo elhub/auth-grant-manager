@@ -41,7 +41,7 @@ class AuthErrorJsonApiResponseTest : FunSpec({
         )
     ).forEach { (error, expected) ->
         test("toApiErrorResponse maps ${error::class.simpleName} to ${expected.status}") {
-            val (status, response) = error.toApiErrorResponse()
+            val (status, response) = error.toAuthErrorResponse()
 
             status shouldBe expected.status
             response.errors.size shouldBe 1
@@ -62,7 +62,7 @@ class AuthErrorJsonApiResponseTest : FunSpec({
         AuthError.UnknownError
     ).forEach { error ->
         test("toApiErrorResponse maps ${error::class.simpleName} to InternalServerError") {
-            val (status, response) = error.toApiErrorResponse()
+            val (status, response) = error.toAuthErrorResponse()
 
             status shouldBe HttpStatusCode.InternalServerError
             response.errors.size shouldBe 1

@@ -23,7 +23,7 @@ sealed class CreateDocumentError {
     data class BusinessValidationError(val message: String) : CreateDocumentError()
 }
 
-fun CreateDocumentError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> =
+fun CreateDocumentError.toCreateErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> =
     when (this) {
         is CreateDocumentError.BusinessValidationError -> buildErrorResponse(
             status = HttpStatusCode.BadRequest,

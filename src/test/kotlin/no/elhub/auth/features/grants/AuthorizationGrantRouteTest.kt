@@ -129,7 +129,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                     this[0].apply {
                         status shouldBe "400"
                         code shouldBe "invalid_input"
-                        title shouldBe "Invalid input"
+                        title shouldBe "Invalid Input"
                         detail shouldBe "The provided payload did not satisfy the expected format"
                     }
                 }
@@ -430,7 +430,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                     this[0].apply {
                         status shouldBe "400"
                         code shouldBe "invalid_input"
-                        title shouldBe "Invalid input"
+                        title shouldBe "Invalid Input"
                         detail shouldBe "The provided payload did not satisfy the expected format"
                     }
                 }

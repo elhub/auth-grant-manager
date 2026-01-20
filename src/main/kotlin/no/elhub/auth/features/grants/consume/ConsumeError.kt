@@ -13,7 +13,7 @@ sealed class ConsumeError {
     data object IllegalStateError : ConsumeError()
 }
 
-fun ConsumeError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> =
+fun ConsumeError.toConsumeErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> =
     when (this) {
         ConsumeError.GrantNotFound -> buildErrorResponse(
             status = HttpStatusCode.NotFound,

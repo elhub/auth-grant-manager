@@ -15,7 +15,7 @@ sealed class UpdateError {
     data object ExpiredError : UpdateError()
 }
 
-fun UpdateError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> =
+fun UpdateError.toUpdateErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> =
     when (this) {
         UpdateError.PersistenceError,
         UpdateError.RequestNotFound,

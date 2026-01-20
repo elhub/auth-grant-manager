@@ -7,10 +7,10 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import no.elhub.auth.features.common.auth.AuthorizationProvider
 import no.elhub.auth.features.common.auth.AuthorizedParty
-import no.elhub.auth.features.common.auth.toApiErrorResponse
+import no.elhub.auth.features.common.auth.toAuthErrorResponse
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
-import no.elhub.auth.features.common.toApiErrorResponse
+import no.elhub.auth.features.common.toQueryErrorResponse
 import no.elhub.auth.features.documents.query.dto.toGetCollectionResponse
 import org.slf4j.LoggerFactory
 
@@ -20,7 +20,7 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
     get {
         val authorizedParty = authProvider.authorizeEndUserOrMaskinporten(call)
             .getOrElse { err ->
-                val (status, body) = err.toApiErrorResponse()
+                val (status, body) = err.toAuthErrorResponse()
                 call.respond(status, body)
                 return@get
             }
@@ -44,7 +44,7 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
         val documents = handler(query)
             .getOrElse { error ->
                 logger.error("Failed to get authorization documents: {}", error)
-                val (status, body) = error.toApiErrorResponse()
+                val (status, body) = error.toQueryErrorResponse()
                 call.respond(status, body)
                 return@get
             }

@@ -21,7 +21,7 @@ sealed class CreateError {
     ) : CreateError()
 }
 
-fun CreateError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> =
+fun CreateError.toCreateErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> =
     when (this) {
         CreateError.AuthorizationError -> buildErrorResponse(
             status = HttpStatusCode.Forbidden,

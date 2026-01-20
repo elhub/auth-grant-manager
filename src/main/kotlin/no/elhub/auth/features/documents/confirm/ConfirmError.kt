@@ -16,7 +16,7 @@ sealed class ConfirmError {
     data object ExpiredError : ConfirmError()
 }
 
-fun ConfirmError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> =
+fun ConfirmError.toConfirmErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> =
     when (this) {
         ConfirmError.DocumentNotFoundError -> buildErrorResponse(
             status = HttpStatusCode.NotFound,

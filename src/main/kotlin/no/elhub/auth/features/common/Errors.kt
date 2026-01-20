@@ -47,7 +47,21 @@ fun buildErrorResponse(status: HttpStatusCode, code: String, title: String, deta
         )
     )
 
-fun InputError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> =
+fun toDeserializationErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> = buildErrorResponse(
+    status = HttpStatusCode.BadRequest,
+    code = "invalid_request_body",
+    title = "Invalid Request body",
+    detail = "Request body could not be parsed or did not match the expected schema"
+)
+
+fun toForbiddenBalanceSupplierOnlyResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> = buildErrorResponse(
+    status = HttpStatusCode.Forbidden,
+    code = "forbidden_request",
+    title = "Forbidden Request",
+    detail = "You do not have permission to create an authorization request"
+)
+
+fun InputError.toInputErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> =
     when (this) {
         InputError.MissingInputError -> buildErrorResponse(
             status = HttpStatusCode.BadRequest,
@@ -59,29 +73,12 @@ fun InputError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection
         InputError.MalformedInputError -> buildErrorResponse(
             status = HttpStatusCode.BadRequest,
             code = "invalid_input",
-            title = "Invalid input",
+            title = "Invalid Input",
             detail = "The provided payload did not satisfy the expected format"
         )
     }
 
-fun CommandError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> =
-    when (this) {
-        CommandError.IOError -> buildErrorResponse(
-            status = HttpStatusCode.InternalServerError,
-            code = "internal_error",
-            title = "Internal Server Error",
-            detail = "An error occurred while attempting to execute the command",
-        )
-
-        CommandError.ResourceNotFoundError -> buildErrorResponse(
-            status = HttpStatusCode.NotFound,
-            code = "not_found",
-            title = "Not Found",
-            detail = "The resource referenced by the command could not be found",
-        )
-    }
-
-fun QueryError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> =
+fun QueryError.toQueryErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> =
     when (this) {
         QueryError.ResourceNotFoundError -> buildErrorResponse(
             status = HttpStatusCode.NotFound,

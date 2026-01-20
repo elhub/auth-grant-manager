@@ -4,7 +4,7 @@ import io.ktor.http.HttpStatusCode
 import no.elhub.auth.features.common.buildErrorResponse
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 
-fun AuthError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> =
+fun AuthError.toAuthErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> =
     when (this) {
         AuthError.MissingAuthorizationHeader -> buildErrorResponse(
             status = HttpStatusCode.Unauthorized,

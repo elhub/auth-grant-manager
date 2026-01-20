@@ -8,10 +8,11 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
 import no.elhub.auth.features.common.auth.AuthorizationProvider
 import no.elhub.auth.features.common.auth.RoleType
-import no.elhub.auth.features.common.auth.toApiErrorResponse
-import no.elhub.auth.features.common.buildErrorResponse
+import no.elhub.auth.features.common.auth.toAuthErrorResponse
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
+import no.elhub.auth.features.common.toDeserializationErrorResponse
+import no.elhub.auth.features.common.toForbiddenBalanceSupplierOnlyResponse
 import no.elhub.auth.features.requests.create.dto.JsonApiCreateRequest
 import no.elhub.auth.features.requests.create.dto.toCreateResponse
 import no.elhub.auth.features.requests.create.dto.toModel
@@ -26,21 +27,16 @@ fun Route.route(
     post {
         val resolvedActor = authProvider.authorizeMaskinporten(call)
             .getOrElse {
-                val error = it.toApiErrorResponse()
+                logger.error("Failed to authorize Maskinporten token for POST /authorization-requests: {}", it)
+                val error = it.toAuthErrorResponse()
                 call.respond(error.first, error.second)
                 return@post
             }
 
         val requestBody = call.receive<JsonApiCreateRequest>()
         if (resolvedActor.role != RoleType.BalanceSupplier) {
-            call.respond(
-                buildErrorResponse(
-                    status = HttpStatusCode.BadRequest,
-                    code = "bad_request",
-                    title = "Bad Request",
-                    detail = "Only Balance Supplier can create authorization request"
-                )
-            )
+            val (status, body) = toForbiddenBalanceSupplierOnlyResponse()
+            call.respond(status, body)
             return@post
         }
 
@@ -53,7 +49,7 @@ fun Route.route(
             handler(requestBody.toModel(authorizedParty))
                 .getOrElse { error ->
                     logger.error("Failed to create authorization request: {}", error)
-                    val (status, error) = error.toApiErrorResponse()
+                    val (status, error) = error.toCreateErrorResponse()
                     call.respond(status, error)
                     return@post
                 }

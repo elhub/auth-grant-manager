@@ -7,10 +7,10 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.patch
 import no.elhub.auth.features.common.auth.AuthorizationProvider
-import no.elhub.auth.features.common.auth.toApiErrorResponse
+import no.elhub.auth.features.common.auth.toAuthErrorResponse
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
-import no.elhub.auth.features.common.toApiErrorResponse
+import no.elhub.auth.features.common.toInputErrorResponse
 import no.elhub.auth.features.common.validateId
 import no.elhub.auth.features.requests.update.dto.JsonApiUpdateRequest
 import no.elhub.auth.features.requests.update.dto.toUpdateResponse
@@ -26,14 +26,14 @@ fun Route.route(
     patch("/{$REQUEST_ID_PARAM}") {
         val resolvedActor = authProvider.authorizeEndUser(call)
             .getOrElse {
-                val error = it.toApiErrorResponse()
+                val error = it.toAuthErrorResponse()
                 call.respond(error.first, error.second)
                 return@patch
             }
 
         val requestId = validateId(call.parameters[REQUEST_ID_PARAM])
             .getOrElse { error ->
-                val (status, body) = error.toApiErrorResponse()
+                val (status, body) = error.toInputErrorResponse()
                 call.respond(status, body)
                 return@patch
             }
@@ -50,7 +50,7 @@ fun Route.route(
 
         val updated = handler(command).getOrElse { error ->
             logger.error("Failed to update authorization request: {}", error)
-            val (status, error) = error.toApiErrorResponse()
+            val (status, error) = error.toUpdateErrorResponse()
             call.respond(status, error)
             return@patch
         }
