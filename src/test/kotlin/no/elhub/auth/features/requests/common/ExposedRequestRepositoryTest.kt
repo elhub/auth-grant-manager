@@ -52,20 +52,173 @@ class ExposedRequestRepositoryTest : FunSpec({
         }
     }
 
-    xtest("findAll returns all requests") {
-        // / TODO implement
+    test("findAllBy returns all requests matching party") {
+        val targetParty1 = AuthorizationParty(type = PartyType.Person, resourceId = "67652749875413695986")
+        val targetParty2 = AuthorizationParty(type = PartyType.Person, resourceId = "17652749875413695986")
+        val otherParty = AuthorizationParty(type = PartyType.Person, resourceId = "413695986")
+        val numTargetRequests = 100
+        val numOtherRequests = 50
+        transaction {
+            AuthorizationRequestTable.deleteAll()
+            AuthorizationScopeTable.deleteAll()
+            AuthorizationPartyTable.deleteAll()
+
+            repeat(numTargetRequests) {
+                val request = AuthorizationRequest.create(
+                    type = AuthorizationRequest.Type.ChangeOfSupplierConfirmation,
+                    requestedBy = targetParty1,
+                    requestedFrom = targetParty2,
+                    requestedTo = targetParty2,
+                    validTo = Clock.System.now().toLocalDateTime(TimeZone.UTC).date.plus(DatePeriod(days = 30)),
+                )
+                requestRepo.insert(request)
+            }
+
+            repeat(numOtherRequests) {
+                val request = AuthorizationRequest.create(
+                    type = AuthorizationRequest.Type.ChangeOfSupplierConfirmation,
+                    requestedBy = otherParty,
+                    requestedFrom = otherParty,
+                    requestedTo = otherParty,
+                    validTo = Clock.System.now().toLocalDateTime(TimeZone.UTC).date.plus(DatePeriod(days = 30)),
+                )
+                requestRepo.insert(request)
+            }
+
+            val requestsOfTargetParty1 = requestRepo.findAllBy(targetParty1)
+                .getOrElse { error ->
+                    fail("findAllBy failed for target party 1")
+                }
+            requestsOfTargetParty1.size shouldBe numTargetRequests
+
+            val requestsOfTargetParty2 = requestRepo.findAllBy(targetParty2)
+                .getOrElse { error ->
+                    fail("findAllBy failed for target party 2")
+                }
+            requestsOfTargetParty1.size shouldBe numTargetRequests
+
+        }
     }
 
-    xtest("find returns correct request") {
-        // / TODO implement
+    test("find returns correct request") {
+        val party = AuthorizationParty(type = PartyType.Person, resourceId = "67652749875413695986")
+
+        val requests = List(10) {
+            AuthorizationRequest.create(
+                type = AuthorizationRequest.Type.ChangeOfSupplierConfirmation,
+                requestedBy = party,
+                requestedFrom = party,
+                requestedTo = party,
+                validTo = Clock.System.now().toLocalDateTime(TimeZone.UTC).date.plus(DatePeriod(days = 30)),
+            )
+        }
+
+        val targetId = requests[0].id;
+
+        val targetRequest = transaction {
+            requests.forEach { requestRepo.insert(it) }
+            requestRepo.find(targetId)
+        }.getOrElse { error ->
+            fail("find failed")
+        }
+
+        targetRequest.id shouldBe targetId
+    }
+
+    test("confirm authorization request with properties") {
+        val party = AuthorizationParty(type = PartyType.Person, resourceId = "12345")
+        val request = AuthorizationRequest.create(
+            type = AuthorizationRequest.Type.ChangeOfSupplierConfirmation,
+            requestedBy = party,
+            requestedFrom = party,
+            requestedTo = party,
+            validTo = Clock.System.now().toLocalDateTime(TimeZone.UTC).date.plus(DatePeriod(days = 30)),
+        )
+
+        val acceptedRequest = transaction {
+            val savedRequest = requestRepo
+                .insert(request)
+                .getOrElse {
+                    fail("insert failed")
+                }
+
+            val properties = listOf(
+                AuthorizationRequestProperty(savedRequest.id, "key1", "value1"),
+                AuthorizationRequestProperty(savedRequest.id, "key2", "value2"),
+                AuthorizationRequestProperty(savedRequest.id, "key3", "value3"),
+            )
+
+            requestPropertiesRepo.insert(properties)
+
+            requestRepo.acceptRequest(savedRequest.id, AuthorizationParty("resourceId1", PartyType.Organization))
+                .getOrElse {
+                    fail("acceptRequest failed")
+                }
+        }
+        acceptedRequest.properties.size shouldBe 3
+        acceptedRequest.status shouldBe AuthorizationRequest.Status.Accepted
     }
 
     xtest("findScopeIds returns correct scope list") {
-        // / TODO implement
+        // TODO implement
+    }
+    test("reject authorization request without properties") {
+        val party = AuthorizationParty(type = PartyType.Person, resourceId = "12345")
+        val request = AuthorizationRequest.create(
+            type = AuthorizationRequest.Type.ChangeOfSupplierConfirmation,
+            requestedBy = party,
+            requestedFrom = party,
+            requestedTo = party,
+            validTo = Clock.System.now().toLocalDateTime(TimeZone.UTC).date.plus(DatePeriod(days = 30)),
+        )
+
+        val rejectedRequest = transaction {
+            val savedRequest = requestRepo
+                .insert(request)
+                .getOrElse {
+                    fail("insert failed")
+                }
+            requestRepo.rejectAccept(savedRequest.id)
+                .getOrElse {
+                    fail("reject failed")
+                }
+        }
+        rejectedRequest.properties.size shouldBe 0
+        rejectedRequest.status shouldBe AuthorizationRequest.Status.Rejected
     }
 
-    xtest("confirm authorization request with properties") {
-        // / TODO implement
+    test("reject authorization request with properties") {
+        val party = AuthorizationParty(type = PartyType.Person, resourceId = "12345")
+        val request = AuthorizationRequest.create(
+            type = AuthorizationRequest.Type.ChangeOfSupplierConfirmation,
+            requestedBy = party,
+            requestedFrom = party,
+            requestedTo = party,
+            validTo = Clock.System.now().toLocalDateTime(TimeZone.UTC).date.plus(DatePeriod(days = 30)),
+        )
+
+        val rejectedRequest = transaction {
+            val savedRequest = requestRepo
+                .insert(request)
+                .getOrElse {
+                    fail("insert failed")
+                }
+
+            val properties = listOf(
+                AuthorizationRequestProperty(savedRequest.id, "key1", "value1"),
+                AuthorizationRequestProperty(savedRequest.id, "key2", "value2"),
+                AuthorizationRequestProperty(savedRequest.id, "key3", "value3"),
+            )
+
+            requestPropertiesRepo.insert(properties)
+
+            requestRepo.acceptRequest(savedRequest.id, AuthorizationParty("resourceId1", PartyType.Organization))
+                .getOrElse {
+                    fail("acceptRequest failed")
+                }
+        }
+        rejectedRequest.properties.size shouldBe 3
+        rejectedRequest.status shouldBe AuthorizationRequest.Status.Accepted
     }
 
     test("confirm authorization request without properties") {
