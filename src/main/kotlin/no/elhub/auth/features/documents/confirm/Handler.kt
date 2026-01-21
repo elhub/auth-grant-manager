@@ -20,7 +20,6 @@ class Handler(
     private val grantRepository: GrantRepository,
 ) {
     suspend operator fun invoke(command: Command): Either<ConfirmDocumentError, Unit> = either {
-
         val requestedBy = partyService.resolve(command.requestedByIdentifier)
             .mapLeft { ConfirmDocumentError.RequestedByResolutionError }
             .bind()
