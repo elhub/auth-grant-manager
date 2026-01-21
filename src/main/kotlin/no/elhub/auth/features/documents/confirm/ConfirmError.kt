@@ -53,7 +53,7 @@ fun ConfirmError.toConfirmErrorResponse(): Pair<HttpStatusCode, JsonApiErrorColl
         ConfirmError.ExpiredError -> buildErrorResponse(
             status = HttpStatusCode.BadRequest,
             code = "expired_status_transition",
-            title = "Request Has Expired",
-            detail = "Request validity period has passed"
+            title = "Document Has Expired",
+            detail = "Document validity period has passed"
         )
     }

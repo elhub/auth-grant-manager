@@ -53,7 +53,7 @@ fun ConsumeError.toConsumeErrorResponse(): Pair<HttpStatusCode, JsonApiErrorColl
         ConsumeError.ExpiredError -> buildErrorResponse(
             status = HttpStatusCode.BadRequest,
             code = "expired_status_transition",
-            title = "Request Has Expired",
-            detail = "Request validity period has passed"
+            title = "Grant Has Expired",
+            detail = "Grant validity period has passed"
         )
     }
