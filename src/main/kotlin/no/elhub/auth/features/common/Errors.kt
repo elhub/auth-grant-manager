@@ -56,9 +56,9 @@ fun toDeserializationErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollectio
 
 fun toForbiddenBalanceSupplierOnlyResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> = buildErrorResponse(
     status = HttpStatusCode.Forbidden,
-    code = "forbidden_request",
-    title = "Forbidden Request",
-    detail = "You do not have permission to create an authorization request"
+    code = "not_authorized",
+    title="Not Authorized",
+    detail = "Only balance suppliers are authorized to access this endpoint"
 )
 
 fun InputError.toInputErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> =

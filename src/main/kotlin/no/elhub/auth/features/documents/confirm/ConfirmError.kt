@@ -31,8 +31,8 @@ fun ConfirmError.toConfirmErrorResponse(): Pair<HttpStatusCode, JsonApiErrorColl
         ConfirmError.GrantCreationError,
         ConfirmError.RequestedByResolutionError -> buildErrorResponse(
             status = HttpStatusCode.InternalServerError,
-            code = "internal_authorization_error",
-            title = "Internal authorization error",
+            code="internal_server_error",
+            title= "Internal Server error",
             detail = "An internal error occurred."
         )
 
