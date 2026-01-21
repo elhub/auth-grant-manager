@@ -8,6 +8,7 @@ import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.common.GrantRepository
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.common.RequestRepository
+import org.jetbrains.exposed.sql.transactions.transaction
 import org.slf4j.LoggerFactory
 
 class Handler(
@@ -18,27 +19,29 @@ class Handler(
     private val logger = LoggerFactory.getLogger(Handler::class.java)
 
     operator fun invoke(query: Query): Either<QueryError, AuthorizationRequest> = either {
-        val request = requestRepository.find(query.id)
-            .mapLeft { QueryError.ResourceNotFoundError }
-            .bind()
+        val requestWithGrant = transaction {
+            val request = requestRepository.find(query.id)
+                .mapLeft { QueryError.ResourceNotFoundError }
+                .bind()
 
-        ensure((request.requestedTo == query.authorizedParty) or (request.requestedBy == query.authorizedParty)) {
-            logger.error("Requestee is not authorized to get the request ${query.authorizedParty}")
-            QueryError.NotAuthorizedError
+            ensure((request.requestedTo == query.authorizedParty) or (request.requestedBy == query.authorizedParty)) {
+                logger.error("Requestee is not authorized to get the request ${query.authorizedParty}")
+                QueryError.NotAuthorizedError
+            }
+
+            // grant can only exist if approvedBy is set
+            request.approvedBy?.let {
+                val grant = grantRepository.findBySource(
+                    AuthorizationGrant.SourceType.Request,
+                    request.id
+                ).mapLeft {
+                    logger.error("approvedBy is present but grant not found for request ${request.id}")
+                    QueryError.ResourceNotFoundError
+                }.bind()
+
+                grant?.let { request.copy(grantId = it.id) } ?: request
+            } ?: request
         }
-
-        // grant can only exist if approvedBy is set
-        val requestWithGrant = request.approvedBy?.let {
-            val grant = grantRepository.findBySource(
-                AuthorizationGrant.SourceType.Request,
-                request.id
-            ).mapLeft {
-                logger.error("approvedBy is present but grant not found for request ${request.id}")
-                QueryError.ResourceNotFoundError
-            }.bind()
-
-            grant?.let { request.copy(grantId = it.id) } ?: request
-        } ?: request
 
         requestWithGrant
     }

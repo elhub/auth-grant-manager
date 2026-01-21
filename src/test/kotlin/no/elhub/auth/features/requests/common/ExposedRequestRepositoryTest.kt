@@ -137,7 +137,9 @@ class ExposedRequestRepositoryTest : FunSpec({
 
     test("findScopeIds returns correct scope list") {
         val requestId = UUID.fromString("3f2c9e6b-7a4d-4f1a-9b6e-8c1d2a5e9f47")
-        val scopeIds = requestRepo.findScopeIds(requestId)
+        val scopeIds = transaction {
+            requestRepo.findScopeIds(requestId)
+        }
         scopeIds.shouldBeRight()
         scopeIds.value.size shouldBe 2
         scopeIds.value.shouldContainAll(listOf(123, 345))

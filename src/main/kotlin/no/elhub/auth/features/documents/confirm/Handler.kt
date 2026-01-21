@@ -10,6 +10,7 @@ import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.common.GrantRepository
+import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
@@ -19,67 +20,69 @@ class Handler(
     private val grantRepository: GrantRepository,
 ) {
     suspend operator fun invoke(command: Command): Either<ConfirmDocumentError, Unit> = either {
-        val document = documentRepository.find(command.documentId)
-            .mapLeft { error ->
-                when (error) {
-                    is RepositoryReadError.NotFoundError -> ConfirmDocumentError.DocumentNotFoundError
-                    is RepositoryReadError.UnexpectedError -> ConfirmDocumentError.DocumentReadError
-                }
-            }.bind()
-
         val requestedBy = partyService.resolve(command.requestedByIdentifier)
             .mapLeft { ConfirmDocumentError.RequestedByResolutionError }
             .bind()
 
-        ensure(requestedBy == document.requestedBy) {
-            ConfirmDocumentError.InvalidRequestedByError
-        }
+        transaction {
+            val document = documentRepository.find(command.documentId)
+                .mapLeft { error ->
+                    when (error) {
+                        is RepositoryReadError.NotFoundError -> ConfirmDocumentError.DocumentNotFoundError
+                        is RepositoryReadError.UnexpectedError -> ConfirmDocumentError.DocumentReadError
+                    }
+                }.bind()
 
-        ensure(document.status == AuthorizationDocument.Status.Pending) {
-            ConfirmDocumentError.IllegalStateError
-        }
+            ensure(requestedBy == document.requestedBy) {
+                ConfirmDocumentError.InvalidRequestedByError
+            }
 
-        ensure(document.validTo >= OffsetDateTime.now(ZoneOffset.UTC)) {
-            ConfirmDocumentError.ExpiredError
-        }
+            ensure(document.status == AuthorizationDocument.Status.Pending) {
+                ConfirmDocumentError.IllegalStateError
+            }
 
-        // TODO: Implement validation of the signed file and find the signatory
-        val signatory = document.requestedTo
+            ensure(document.validTo >= OffsetDateTime.now(ZoneOffset.UTC)) {
+                ConfirmDocumentError.ExpiredError
+            }
 
-        val confirmedDocument = documentRepository.confirm(
-            documentId = document.id,
-            signedFile = command.signedFile,
-            requestedFrom = document.requestedFrom,
-            signatory = document.requestedTo
-        )
-            .mapLeft { error ->
-                when (error) {
-                    is RepositoryWriteError.NotFoundError -> ConfirmDocumentError.DocumentNotFoundError
+            // TODO: Implement validation of the signed file and find the signatory
+            val signatory = document.requestedTo
 
-                    is RepositoryWriteError.ConflictError,
-                    is RepositoryWriteError.UnexpectedError -> ConfirmDocumentError.DocumentUpdateError
-                }
-            }.bind()
-
-        val scopeIds = documentRepository.findScopeIds(confirmedDocument.id)
-            .mapLeft { error ->
-                when (error) {
-                    is RepositoryReadError.NotFoundError -> ConfirmDocumentError.DocumentNotFoundError
-                    is RepositoryReadError.UnexpectedError -> ConfirmDocumentError.ScopeReadError
-                }
-            }.bind()
-
-        val grantToCreate =
-            AuthorizationGrant.create(
-                grantedFor = confirmedDocument.requestedFrom,
-                grantedBy = signatory,
-                grantedTo = confirmedDocument.requestedBy,
-                sourceType = AuthorizationGrant.SourceType.Document,
-                sourceId = confirmedDocument.id
+            val confirmedDocument = documentRepository.confirm(
+                documentId = document.id,
+                signedFile = command.signedFile,
+                requestedFrom = document.requestedFrom,
+                signatory = document.requestedTo
             )
+                .mapLeft { error ->
+                    when (error) {
+                        is RepositoryWriteError.NotFoundError -> ConfirmDocumentError.DocumentNotFoundError
 
-        grantRepository.insert(grantToCreate, scopeIds)
-            .mapLeft { ConfirmDocumentError.GrantCreationError }.bind()
+                        is RepositoryWriteError.ConflictError,
+                        is RepositoryWriteError.UnexpectedError -> ConfirmDocumentError.DocumentUpdateError
+                    }
+                }.bind()
+
+            val scopeIds = documentRepository.findScopeIds(confirmedDocument.id)
+                .mapLeft { error ->
+                    when (error) {
+                        is RepositoryReadError.NotFoundError -> ConfirmDocumentError.DocumentNotFoundError
+                        is RepositoryReadError.UnexpectedError -> ConfirmDocumentError.ScopeReadError
+                    }
+                }.bind()
+
+            val grantToCreate =
+                AuthorizationGrant.create(
+                    grantedFor = confirmedDocument.requestedFrom,
+                    grantedBy = signatory,
+                    grantedTo = confirmedDocument.requestedBy,
+                    sourceType = AuthorizationGrant.SourceType.Document,
+                    sourceId = confirmedDocument.id
+                )
+
+            grantRepository.insert(grantToCreate, scopeIds)
+                .mapLeft { ConfirmDocumentError.GrantCreationError }.bind()
+        }
     }
 }
 

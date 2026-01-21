@@ -9,7 +9,7 @@
       "required": ["type", "attributes", "meta"],
       "properties": {
         "type": {
-          "$refs": "authorization-document-common.schema.json#/$defs/type"
+          "$ref": "authorization-document-common.schema.json#/$defs/type"
         },
         "attributes": {
           "type": "object",
@@ -81,41 +81,41 @@
                   "balanceSupplierContractName"
                 ]
               }
-          }
-        }
-      },
-      {
-        "if": {
-          "properties": {
-            "attributes": {
-              "properties": {
-                "documentType": {
-                  "const": "MoveIn"
-                }
-              }
             }
           }
         },
-        "then": {
-          "properties": {
-            "meta": {
-              "required": [
-                "requestedBy",
-                "requestedFrom",
-                "requestedTo",
-                "requestedFromName",
-                "requestedForMeteringPointId",
-                "requestedForMeteringPointAddress",
-                "balanceSupplierName",
-                "balanceSupplierContractName",
-                "startDate"
-              ]
+        {
+          "if": {
+            "properties": {
+              "attributes": {
+                "properties": {
+                  "documentType": {
+                    "const": "MoveIn"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "meta": {
+                "required": [
+                  "requestedBy",
+                  "requestedFrom",
+                  "requestedTo",
+                  "requestedFromName",
+                  "requestedForMeteringPointId",
+                  "requestedForMeteringPointAddress",
+                  "balanceSupplierName",
+                  "balanceSupplierContractName",
+                  "startDate"
+                ]
+              }
             }
           }
         }
-      }
-    ]
-  }
+      ]
+    }
   },
   "required": ["data"]
 }
