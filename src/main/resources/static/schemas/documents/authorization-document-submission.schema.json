@@ -9,7 +9,7 @@
       "required": ["type", "attributes", "meta"],
       "properties": {
         "type": {
-          "$refs": "authorization-document-common.schema.json#/$defs/type"
+          "$ref": "authorization-document-common.schema.json#/$defs/type"
         },
         "attributes": {
           "type": "object",
