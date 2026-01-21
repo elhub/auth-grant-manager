@@ -17,14 +17,13 @@ class Handler(
 ) {
     operator fun invoke(query: Query): Either<QueryError, AuthorizationDocument> = either {
         transaction {
-            val document =
-                documentRepo.find(query.documentId)
-                    .mapLeft { error ->
-                        when (error) {
-                            is RepositoryReadError.NotFoundError -> QueryError.ResourceNotFoundError
-                            is RepositoryReadError.UnexpectedError -> QueryError.IOError
-                        }
-                    }.bind()
+            val document = documentRepo.find(query.documentId)
+                .mapLeft { error ->
+                    when (error) {
+                        is RepositoryReadError.NotFoundError -> QueryError.ResourceNotFoundError
+                        is RepositoryReadError.UnexpectedError -> QueryError.IOError
+                    }
+                }.bind()
 
             ensure(
                 query.authorizedParty == document.requestedBy ||
