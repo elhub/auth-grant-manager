@@ -109,9 +109,12 @@ class ExposedGrantRepository(
                 .where { AuthorizationGrantTable.id eq grantId }
                 .singleOrNull() ?: raise(RepositoryReadError.NotFoundError)
 
-            val grantedFor = partyRepository.find(grant[AuthorizationGrantTable.grantedFor]).getOrElse { error("Failed to get grantedFor: $it") }
-            val grantedBy = partyRepository.find(grant[AuthorizationGrantTable.grantedBy]).getOrElse { error("Failed to get grantedBy: $it") }
-            val grantedTo = partyRepository.find(grant[AuthorizationGrantTable.grantedTo]).getOrElse { error("Failed to get grantedTo: $it") }
+            val grantedFor = partyRepository.find(grant[AuthorizationGrantTable.grantedFor])
+                .getOrElse { error("Failed to get grantedFor: $it") }
+            val grantedBy = partyRepository.find(grant[AuthorizationGrantTable.grantedBy])
+                .getOrElse { error("Failed to get grantedBy: $it") }
+            val grantedTo = partyRepository.find(grant[AuthorizationGrantTable.grantedTo])
+                .getOrElse { error("Failed to get grantedTo: $it") }
 
             grant.toAuthorizationGrant(
                 grantedBy = grantedBy,
@@ -121,7 +124,10 @@ class ExposedGrantRepository(
         }
     }
 
-    override fun findBySource(sourceType: SourceType, sourceId: UUID): Either<RepositoryReadError, AuthorizationGrant?> =
+    override fun findBySource(
+        sourceType: SourceType,
+        sourceId: UUID
+    ): Either<RepositoryReadError, AuthorizationGrant?> =
         either {
             transaction {
                 val grant = AuthorizationGrantTable
@@ -297,7 +303,7 @@ object AuthorizationGrantScopeTable : Table("auth.authorization_grant_scope") {
     override val primaryKey = PrimaryKey(authorizationGrantId, authorizationScopeId)
 }
 
-object AuthorizationGrantTable : UUIDTable("authorization_grant") {
+object AuthorizationGrantTable : UUIDTable("auth.authorization_grant") {
     val grantStatus =
         customEnumeration(
             name = "status",

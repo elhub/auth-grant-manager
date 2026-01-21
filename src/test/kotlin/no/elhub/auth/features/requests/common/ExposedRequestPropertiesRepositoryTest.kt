@@ -16,6 +16,7 @@ class ExposedRequestPropertiesRepositoryTest : FunSpec({
 
     extensions(
         PostgresTestContainerExtension(),
+        RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-scopes.sql"),
         RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-requests.sql")
     )
 

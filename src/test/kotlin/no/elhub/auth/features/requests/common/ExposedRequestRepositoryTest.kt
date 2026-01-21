@@ -2,7 +2,10 @@ package no.elhub.auth.features.requests.common
 
 import arrow.core.getOrElse
 import io.kotest.core.spec.style.FunSpec
+import java.util.UUID
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.collections.shouldContainAll
+import io.kotest.assertions.arrow.core.shouldBeRight
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.plus
@@ -14,6 +17,7 @@ import no.elhub.auth.features.common.party.AuthorizationPartyTable
 import no.elhub.auth.features.common.party.ExposedPartyRepository
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.grants.common.AuthorizationScopeTable
+import no.elhub.auth.features.common.RunPostgresScriptExtension
 import no.elhub.auth.features.requests.AuthorizationRequest
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
@@ -24,7 +28,11 @@ import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
 class ExposedRequestRepositoryTest : FunSpec({
-    extensions(PostgresTestContainerExtension())
+    extensions(
+        PostgresTestContainerExtension(),
+        RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-scopes.sql"),
+        RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-requests.sql")
+    )
     val partyRepo = ExposedPartyRepository()
     val requestPropertiesRepo = ExposedRequestPropertiesRepository()
     val requestRepo = ExposedRequestRepository(partyRepo, requestPropertiesRepo)
@@ -44,14 +52,6 @@ class ExposedRequestRepositoryTest : FunSpec({
         }
     }
 
-    afterTest {
-        transaction {
-            AuthorizationRequestTable.deleteAll()
-            AuthorizationScopeTable.deleteAll()
-            AuthorizationPartyTable.deleteAll()
-        }
-    }
-
     test("findAllBy returns all requests matching party") {
         val targetParty1 = AuthorizationParty(type = PartyType.Person, resourceId = "67652749875413695986")
         val targetParty2 = AuthorizationParty(type = PartyType.Person, resourceId = "17652749875413695986")
@@ -59,10 +59,6 @@ class ExposedRequestRepositoryTest : FunSpec({
         val numTargetRequests = 100
         val numOtherRequests = 50
         transaction {
-            AuthorizationRequestTable.deleteAll()
-            AuthorizationScopeTable.deleteAll()
-            AuthorizationPartyTable.deleteAll()
-
             repeat(numTargetRequests) {
                 val request = AuthorizationRequest.create(
                     type = AuthorizationRequest.Type.ChangeOfSupplierConfirmation,
@@ -159,9 +155,16 @@ class ExposedRequestRepositoryTest : FunSpec({
         acceptedRequest.status shouldBe AuthorizationRequest.Status.Accepted
     }
 
-    xtest("findScopeIds returns correct scope list") {
-        // TODO implement
+    test("findScopeIds returns correct scope list") {
+        val requestId = UUID.fromString("3f2c9e6b-7a4d-4f1a-9b6e-8c1d2a5e9f47");
+
+        val scopeIds = requestRepo.findScopeIds(requestId)
+
+        scopeIds.shouldBeRight()
+        scopeIds.value.size shouldBe 2
+        scopeIds.value.shouldContainAll(listOf(123, 345))
     }
+
     test("reject authorization request without properties") {
         val party = AuthorizationParty(type = PartyType.Person, resourceId = "12345")
         val request = AuthorizationRequest.create(

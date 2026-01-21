@@ -42,7 +42,7 @@ class ExposedRequestPropertiesRepository : RequestPropertiesRepository {
 }
 
 object AuthorizationRequestPropertyTable : Table("auth.authorization_request_property") {
-    val requestId = uuid("authorization_request_id")
+    val requestId = uuid("authorization_request_id").references(AuthorizationRequestTable.id)
     val key = varchar("key", 64)
     val value = text("value")
     val createdAt = timestampWithTimeZone("created_at").default(OffsetDateTime.now(ZoneId.of("Europe/Oslo")))
