@@ -7,6 +7,7 @@ import no.elhub.auth.features.common.AuthorizationParties
 import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.AuthorizationGrant.Status
 import no.elhub.auth.features.grants.common.GrantRepository
+import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
@@ -22,21 +23,23 @@ class Handler(
             ConsumeError.IllegalTransitionError
         }
 
-        val originalGrant = repo.find(command.grantId)
-            .mapLeft { ConsumeError.GrantNotFound }
-            .bind()
+        val updated = transaction {
+            val originalGrant = repo.find(command.grantId)
+                .mapLeft { ConsumeError.GrantNotFound }
+                .bind()
 
-        ensure(originalGrant.validTo >= OffsetDateTime.now(ZoneOffset.UTC)) {
-            ConsumeError.ExpiredError
+            ensure(originalGrant.validTo >= OffsetDateTime.now(ZoneOffset.UTC)) {
+                ConsumeError.ExpiredError
+            }
+
+            ensure(originalGrant.grantStatus == Status.Active) {
+                ConsumeError.IllegalStateError
+            }
+
+            repo.update(command.grantId, command.newStatus)
+                .mapLeft { ConsumeError.PersistenceError }
+                .bind()
         }
-
-        ensure(originalGrant.grantStatus == Status.Active) {
-            ConsumeError.IllegalStateError
-        }
-
-        val updated = repo.update(command.grantId, command.newStatus)
-            .mapLeft { ConsumeError.PersistenceError }
-            .bind()
 
         updated
     }

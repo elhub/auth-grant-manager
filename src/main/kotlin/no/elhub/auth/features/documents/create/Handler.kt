@@ -9,6 +9,7 @@ import no.elhub.auth.features.documents.common.AuthorizationDocumentProperty
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.documents.common.ProxyDocumentBusinessHandler
 import no.elhub.auth.features.documents.create.model.CreateDocumentModel
+import org.jetbrains.exposed.sql.transactions.transaction
 
 class Handler(
     private val businessHandler: ProxyDocumentBusinessHandler,
@@ -16,68 +17,70 @@ class Handler(
     private val documentRepository: DocumentRepository,
     private val partyService: PartyService,
 ) {
-    suspend operator fun invoke(model: CreateDocumentModel): Either<CreateDocumentError, AuthorizationDocument> = either {
-        val requestedByParty =
-            partyService
-                .resolve(model.meta.requestedBy)
-                .mapLeft { CreateDocumentError.RequestedByPartyError }
+    suspend operator fun invoke(model: CreateDocumentModel): Either<CreateDocumentError, AuthorizationDocument> =
+        either {
+            val requestedByParty =
+                partyService
+                    .resolve(model.meta.requestedBy)
+                    .mapLeft { CreateDocumentError.RequestedByPartyError }
+                    .bind()
+
+            ensure(model.authorizedParty == requestedByParty) {
+                CreateDocumentError.AuthorizationError
+            }
+
+            val requestedFromParty =
+                partyService
+                    .resolve(model.meta.requestedFrom)
+                    .mapLeft { CreateDocumentError.RequestedFromPartyError }
+                    .bind()
+
+            val requestedToParty =
+                partyService
+                    .resolve(model.meta.requestedTo)
+                    .mapLeft { CreateDocumentError.RequestedToPartyError }
+                    .bind()
+
+            val command =
+                businessHandler
+                    .validateAndReturnDocumentCommand(model)
+                    .bind()
+
+            val file =
+                businessHandler
+                    .generateFile(command.requestedFrom.idValue, command.meta)
+                    .mapLeft { CreateDocumentError.FileGenerationError }
+                    .bind()
+
+            val signedFile = signingService.sign(file)
+                .mapLeft { CreateDocumentError.SignFileError(cause = it) }
                 .bind()
 
-        ensure(model.authorizedParty == requestedByParty) {
-            CreateDocumentError.AuthorizationError
+            val documentProperties =
+                command.meta
+                    .toMetaAttributes()
+                    .toDocumentProperties()
+
+            val documentToCreate =
+                AuthorizationDocument.create(
+                    type = command.type,
+                    file = signedFile,
+                    requestedBy = requestedByParty,
+                    requestedFrom = requestedFromParty,
+                    requestedTo = requestedToParty,
+                    properties = documentProperties,
+                    validTo = command.validTo,
+                )
+
+            val savedDocument = transaction {
+                documentRepository
+                    .insert(documentToCreate, command.scopes)
+                    .mapLeft { CreateDocumentError.PersistenceError }
+                    .bind()
+            }
+
+            savedDocument
         }
-
-        val requestedFromParty =
-            partyService
-                .resolve(model.meta.requestedFrom)
-                .mapLeft { CreateDocumentError.RequestedFromPartyError }
-                .bind()
-
-        val requestedToParty =
-            partyService
-                .resolve(model.meta.requestedTo)
-                .mapLeft { CreateDocumentError.RequestedToPartyError }
-                .bind()
-
-        val command =
-            businessHandler
-                .validateAndReturnDocumentCommand(model)
-                .bind()
-
-        val file =
-            businessHandler
-                .generateFile(command.requestedFrom.idValue, command.meta)
-                .mapLeft { CreateDocumentError.FileGenerationError }
-                .bind()
-
-        val signedFile = signingService.sign(file)
-            .mapLeft { CreateDocumentError.SignFileError(cause = it) }
-            .bind()
-
-        val documentProperties =
-            command.meta
-                .toMetaAttributes()
-                .toDocumentProperties()
-
-        val documentToCreate =
-            AuthorizationDocument.create(
-                type = command.type,
-                file = signedFile,
-                requestedBy = requestedByParty,
-                requestedFrom = requestedFromParty,
-                requestedTo = requestedToParty,
-                properties = documentProperties,
-                validTo = command.validTo,
-            )
-
-        val savedDocument =
-            documentRepository
-                .insert(documentToCreate, command.scopes)
-                .mapLeft { CreateDocumentError.PersistenceError }
-                .bind()
-
-        savedDocument
-    }
 }
 
 sealed class CreateDocumentError {

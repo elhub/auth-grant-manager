@@ -15,6 +15,7 @@ import no.elhub.auth.features.requests.create.command.RequestCommand
 import no.elhub.auth.features.requests.create.model.CreateRequestModel
 import no.elhub.auth.features.requests.create.requesttypes.RequestTypeValidationError
 import no.elhub.devxp.jsonapi.response.JsonApiErrorObject
+import org.jetbrains.exposed.sql.transactions.transaction
 
 class Handler(
     private val proxyRequestBusinessHandler: ProxyRequestBusinessHandler,
@@ -62,26 +63,30 @@ class Handler(
                 validTo = businessCommand.validTo,
             )
 
-        val savedRequest =
-            requestRepo
-                .insert(requestToCreate)
+        val result = transaction {
+            val savedRequest =
+                requestRepo
+                    .insert(requestToCreate)
+                    .mapLeft { CreateRequestError.PersistenceError }
+                    .bind()
+
+            val requestProperties: List<AuthorizationRequestProperty> = metaAttributes.map {
+                AuthorizationRequestProperty(
+                    requestId = savedRequest.id,
+                    key = it.key,
+                    value = it.value,
+                )
+            }
+
+            requestPropertyRepo
+                .insert(requestProperties)
                 .mapLeft { CreateRequestError.PersistenceError }
                 .bind()
 
-        val requestProperties: List<AuthorizationRequestProperty> = metaAttributes.map {
-            AuthorizationRequestProperty(
-                requestId = savedRequest.id,
-                key = it.key,
-                value = it.value,
-            )
+            savedRequest.copy(properties = requestProperties)
         }
 
-        requestPropertyRepo
-            .insert(requestProperties)
-            .mapLeft { CreateRequestError.PersistenceError }
-            .bind()
-
-        savedRequest.copy(properties = requestProperties)
+        result
     }
 }
 

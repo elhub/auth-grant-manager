@@ -9,7 +9,6 @@ import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.batchInsert
 import org.jetbrains.exposed.sql.javatime.timestampWithTimeZone
 import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.util.UUID
@@ -25,12 +24,10 @@ class ExposedRequestPropertiesRepository : RequestPropertiesRepository {
         either<RepositoryWriteError, Unit> {
             if (properties.isEmpty()) return@either
 
-            transaction {
-                AuthorizationRequestPropertyTable.batchInsert(properties) { property ->
-                    this[AuthorizationRequestPropertyTable.requestId] = property.requestId
-                    this[AuthorizationRequestPropertyTable.key] = property.key
-                    this[AuthorizationRequestPropertyTable.value] = property.value
-                }
+            AuthorizationRequestPropertyTable.batchInsert(properties) { property ->
+                this[AuthorizationRequestPropertyTable.requestId] = property.requestId
+                this[AuthorizationRequestPropertyTable.key] = property.key
+                this[AuthorizationRequestPropertyTable.value] = property.value
             }
         }.mapLeft { RepositoryWriteError.UnexpectedError }
 
