@@ -40,7 +40,6 @@ class ExposedRequestPropertiesRepositoryTest : FunSpec({
     beforeTest {
         transaction {
             AuthorizationRequestPropertyTable.deleteAll()
-            AuthorizationRequestTable.deleteAll()
         }
     }
 
@@ -60,11 +59,20 @@ class ExposedRequestPropertiesRepositoryTest : FunSpec({
             insertResult.isRight() shouldBe true
 
             transaction {
-                val count = AuthorizationRequestPropertyTable
+                val stored = AuthorizationRequestPropertyTable
                     .selectAll()
                     .where { AuthorizationRequestPropertyTable.requestId eq requestId }
-                    .count()
-                count shouldBe 2
+                    .map { resultRow ->
+                        AuthorizationRequestProperty(
+                            requestId = resultRow[AuthorizationRequestPropertyTable.requestId],
+                            key = resultRow[AuthorizationRequestPropertyTable.key],
+                            value = resultRow[AuthorizationRequestPropertyTable.value],
+                        )
+                    }
+                stored.size shouldBe 2
+                stored[0].value shouldBe "value1"
+                stored[1].value shouldBe "value2"
+
             }
         }
 
