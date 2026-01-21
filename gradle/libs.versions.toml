@@ -35,6 +35,7 @@ openhtmltopdf = "1.1.36"
 pdfbox = "3.0.6"
 dss = "6.3"
 verapdf = "1.28.2"
+bouncycastle = "1.83"
 
 
 [plugins]
@@ -112,6 +113,8 @@ dss-crl-parser-stream = { group = "eu.europa.ec.joinup.sd-dss", name = "dss-crl-
 dss-cms-stream = { group = "eu.europa.ec.joinup.sd-dss", name = "dss-cms-stream", version.ref = "dss" }
 dss-policy-jaxb = { group = "eu.europa.ec.joinup.sd-dss", name = "dss-policy-jaxb", version.ref = "dss" }
 test-verapdf-validation-model = { group = "org.verapdf", name = "validation-model", version.ref = "verapdf" }
+bouncycastle-bcprov = { group = "org.bouncycastle", name = "bcprov-jdk18on", version.ref = "bouncycastle" }
+bouncycastle-bcpkix = { group = "org.bouncycastle", name = "bcpkix-jdk18on", version.ref = "bouncycastle" }
 
 # Bundles should be used to group dependencies that are frequently used together.
 [bundles]

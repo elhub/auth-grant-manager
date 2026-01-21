@@ -11,8 +11,8 @@ import kotlinx.io.readByteArray
 import no.elhub.auth.features.common.InputError
 import no.elhub.auth.features.common.auth.AuthorizationProvider
 import no.elhub.auth.features.common.auth.toApiErrorResponse
-import no.elhub.auth.features.common.party.PartyIdentifier
-import no.elhub.auth.features.common.party.PartyIdentifierType
+import no.elhub.auth.features.common.party.AuthorizationParty
+import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.common.validateId
 import no.elhub.devxp.jsonapi.response.JsonApiErrorObject
@@ -42,11 +42,11 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
             return@put
         }
 
-        val requestedBy = PartyIdentifier(idType = PartyIdentifierType.GlobalLocationNumber, idValue = resolvedActor.gln)
+        val authorizedParty = AuthorizationParty(resourceId = resolvedActor.gln, type = PartyType.OrganizationEntity)
         handler(
             Command(
                 documentId = documentId,
-                requestedByIdentifier = requestedBy,
+                authorizedParty = authorizedParty,
                 signedFile = signedDocument
             )
         ).getOrElse { error ->
@@ -55,11 +55,13 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
 
                 ConfirmDocumentError.InvalidRequestedByError -> call.respond(HttpStatusCode.Forbidden)
 
+                is ConfirmDocumentError.ValidateSignaturesError,
                 ConfirmDocumentError.DocumentReadError,
                 ConfirmDocumentError.DocumentUpdateError,
                 ConfirmDocumentError.ScopeReadError,
                 ConfirmDocumentError.GrantCreationError,
-                ConfirmDocumentError.RequestedByResolutionError -> call.respond(HttpStatusCode.InternalServerError)
+                ConfirmDocumentError.SignatoryNotAllowedToSignDocument,
+                ConfirmDocumentError.SignatoryResolutionError -> call.respond(HttpStatusCode.InternalServerError)
 
                 ConfirmDocumentError.IllegalStateError ->
                     call.respond(

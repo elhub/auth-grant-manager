@@ -44,6 +44,20 @@ fun generateSelfSignedCertificate(baseDirLocation: String) {
     writePem(baseDir.resolve("self-signed-key.pem"), caKeyPair.private)
     writePem(baseDir.resolve("self-signed-cert.pem"), caCert)
 
+    val bankIdKeyPair = generateKeyPair()
+    val now = Date()
+    val yearMillis = 365L * 24 * 60 * 60 * 1000
+    val bankIdCert = generateSelfSignedCertWithDates(
+        subjectDn = "CN=Test BankID Root",
+        keyPair = bankIdKeyPair,
+        notBefore = Date(now.time - yearMillis),
+        notAfter = Date(now.time + yearMillis),
+        crlUri = crlUri
+    )
+
+    writePem(baseDir.resolve("bankid-root-key.pem"), bankIdKeyPair.private)
+    writePem(baseDir.resolve("bankid-root-cert.pem"), bankIdCert)
+
     println("PEM files and CRL written to: ${baseDir.absolutePath}")
 }
 
@@ -58,12 +72,21 @@ fun generateSelfSignedCert(
 ): X509Certificate {
     val now = Date()
     val until = Date(now.time + daysValid * 24L * 60 * 60 * 1000)
+    return generateSelfSignedCertWithDates(subjectDn, keyPair, now, until, crlUri)
+}
 
+fun generateSelfSignedCertWithDates(
+    subjectDn: String,
+    keyPair: KeyPair,
+    notBefore: Date,
+    notAfter: Date,
+    crlUri: String? = null
+): X509Certificate {
     val builder = JcaX509v3CertificateBuilder(
         X500Name(subjectDn),
         BigInteger.valueOf(System.currentTimeMillis()),
-        now,
-        until,
+        notBefore,
+        notAfter,
         X500Name(subjectDn),
         keyPair.public
     ).addExtension(

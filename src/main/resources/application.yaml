@@ -30,6 +30,7 @@ pdfSigner:
   certificate:
     signing: $PATH_TO_SIGNING_CERTIFICATE
     chain: $PATH_TO_SIGNING_CERTIFICATE_CHAIN
+    bankIdIdRoot: $PATH_TO_BANKID_ROOT_CERTIFICATE
 
 pdp:
   baseUrl: ${PDP_BASE_URL}
