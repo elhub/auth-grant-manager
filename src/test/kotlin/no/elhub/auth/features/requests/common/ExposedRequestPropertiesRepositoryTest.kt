@@ -73,7 +73,6 @@ class ExposedRequestPropertiesRepositoryTest : FunSpec({
                 stored.size shouldBe 2
                 stored[0].value shouldBe "value1"
                 stored[1].value shouldBe "value2"
-
             }
         }
 

@@ -1,27 +1,27 @@
 package no.elhub.auth.features.requests.common
 
 import arrow.core.getOrElse
-import io.kotest.core.spec.style.FunSpec
-import java.util.UUID
-import io.kotest.matchers.shouldBe
-import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.assertions.arrow.core.shouldBeRight
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.collections.shouldContainAll
+import io.kotest.matchers.shouldBe
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 import no.elhub.auth.features.common.PostgresTestContainer
 import no.elhub.auth.features.common.PostgresTestContainerExtension
+import no.elhub.auth.features.common.RunPostgresScriptExtension
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.AuthorizationPartyTable
 import no.elhub.auth.features.common.party.ExposedPartyRepository
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.grants.common.AuthorizationScopeTable
-import no.elhub.auth.features.common.RunPostgresScriptExtension
 import no.elhub.auth.features.requests.AuthorizationRequest
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.util.UUID
 import kotlin.test.fail
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
@@ -91,7 +91,6 @@ class ExposedRequestRepositoryTest : FunSpec({
                     fail("findAllBy failed for target party 2")
                 }
             requestsOfTargetParty1.size shouldBe numTargetRequests
-
         }
     }
 
@@ -108,7 +107,7 @@ class ExposedRequestRepositoryTest : FunSpec({
             )
         }
 
-        val targetId = requests[0].id;
+        val targetId = requests[0].id
 
         val targetRequest = transaction {
             requests.forEach { requestRepo.insert(it) }
@@ -155,7 +154,7 @@ class ExposedRequestRepositoryTest : FunSpec({
     }
 
     test("findScopeIds returns correct scope list") {
-        val requestId = UUID.fromString("3f2c9e6b-7a4d-4f1a-9b6e-8c1d2a5e9f47");
+        val requestId = UUID.fromString("3f2c9e6b-7a4d-4f1a-9b6e-8c1d2a5e9f47")
 
         val scopeIds = requestRepo.findScopeIds(requestId)
 
