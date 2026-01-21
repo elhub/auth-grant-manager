@@ -4,6 +4,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import no.elhub.auth.features.common.party.dto.toJsonApiRelationship
+import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
 import no.elhub.auth.features.common.toTimeZoneOffsetString
 import no.elhub.auth.features.grants.GRANTS_PATH
 import no.elhub.auth.features.requests.AuthorizationRequest
@@ -62,7 +63,7 @@ fun AuthorizationRequest.toGetSingleResponse() =
             attributes = GetRequestSingleResponseAttributes(
                 status = this.status.name,
                 requestType = this.type.name,
-                validTo = this.validTo.toString(),
+                validTo = this.validTo.toTimeZoneOffsetDateTimeAtStartOfDay().toString(),
             ),
             relationships = GetRequestSingleResponseRelationships(
                 requestedBy = this.requestedBy.toJsonApiRelationship(),
