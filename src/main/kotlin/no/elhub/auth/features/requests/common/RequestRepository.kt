@@ -34,7 +34,11 @@ interface RequestRepository {
     fun find(requestId: UUID): Either<RepositoryReadError, AuthorizationRequest>
     fun findAllBy(party: AuthorizationParty): Either<RepositoryReadError, List<AuthorizationRequest>>
     fun insert(request: AuthorizationRequest): Either<RepositoryWriteError, AuthorizationRequest>
-    fun acceptRequest(requestId: UUID, approvedBy: AuthorizationParty): Either<RepositoryError, AuthorizationRequest>
+    fun acceptRequest(
+        requestId: UUID,
+        approvedBy: AuthorizationParty
+    ): Either<RepositoryError, AuthorizationRequest>
+
     fun rejectAccept(requestId: UUID): Either<RepositoryError, AuthorizationRequest>
     fun findScopeIds(requestId: UUID): Either<RepositoryReadError, List<Long>>
 }
@@ -202,7 +206,8 @@ class ExposedRequestRepository(
                     .bind()
             }
 
-            val properties = requestPropertiesRepository.findBy(requestId = request[AuthorizationRequestTable.id].value)
+            val properties =
+                requestPropertiesRepository.findBy(requestId = request[AuthorizationRequestTable.id].value)
 
             request.toAuthorizationRequest(
                 requestedByParty,
@@ -223,7 +228,7 @@ object AuthorizationRequestScopeTable : Table("auth.authorization_request_scope"
     override val primaryKey = PrimaryKey(authorizationRequestId, authorizationScopeId)
 }
 
-object AuthorizationRequestTable : UUIDTable("authorization_request") {
+object AuthorizationRequestTable : UUIDTable("auth.authorization_request") {
     val requestType =
         customEnumeration(
             name = "request_type",

@@ -287,3 +287,12 @@ VALUES (
   '2025-01-01T10:00:00Z',
   '2025-04-04'
 );
+INSERT INTO auth.authorization_request_scope(
+  authorization_request_id,
+  authorization_scope_id,
+  created_at
+)
+VALUES
+  ('3f2c9e6b-7a4d-4f1a-9b6e-8c1d2a5e9f47', 123, now()),
+  ('3f2c9e6b-7a4d-4f1a-9b6e-8c1d2a5e9f47', 345, now()),
+  ('4f71d596-99e4-415e-946d-7252c1a40c52', 123, now());

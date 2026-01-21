@@ -16,6 +16,7 @@ class ExposedRequestPropertiesRepositoryTest : FunSpec({
 
     extensions(
         PostgresTestContainerExtension(),
+        RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-scopes.sql"),
         RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-requests.sql")
     )
 
@@ -40,7 +41,6 @@ class ExposedRequestPropertiesRepositoryTest : FunSpec({
     beforeTest {
         transaction {
             AuthorizationRequestPropertyTable.deleteAll()
-            AuthorizationRequestTable.deleteAll()
         }
     }
 
@@ -63,13 +63,21 @@ class ExposedRequestPropertiesRepositoryTest : FunSpec({
             }
             insertResult.isRight() shouldBe true
 
-            val count = transaction {
-                AuthorizationRequestPropertyTable
+            transaction {
+                val stored = AuthorizationRequestPropertyTable
                     .selectAll()
                     .where { AuthorizationRequestPropertyTable.requestId eq requestId }
-                    .count()
+                    .map { resultRow ->
+                        AuthorizationRequestProperty(
+                            requestId = resultRow[AuthorizationRequestPropertyTable.requestId],
+                            key = resultRow[AuthorizationRequestPropertyTable.key],
+                            value = resultRow[AuthorizationRequestPropertyTable.value],
+                        )
+                    }
+                stored.size shouldBe 2
+                stored[0].value shouldBe "value1"
+                stored[1].value shouldBe "value2"
             }
-            count shouldBe 2
         }
 
         test("insert properties with special characters should persist correctly") {

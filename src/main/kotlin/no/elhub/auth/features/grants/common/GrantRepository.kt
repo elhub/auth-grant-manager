@@ -288,7 +288,7 @@ object AuthorizationGrantScopeTable : Table("auth.authorization_grant_scope") {
     override val primaryKey = PrimaryKey(authorizationGrantId, authorizationScopeId)
 }
 
-object AuthorizationGrantTable : UUIDTable("authorization_grant") {
+object AuthorizationGrantTable : UUIDTable("auth.authorization_grant") {
     val grantStatus =
         customEnumeration(
             name = "status",
