@@ -95,20 +95,10 @@ class ExposedRequestRepositoryTest : FunSpec({
     }
 
     test("find returns correct request") {
-        val party = AuthorizationParty(type = PartyType.Person, resourceId = "67652749875413695986")
-
         val requests = List(10) {
-            AuthorizationRequest.create(
-                type = AuthorizationRequest.Type.ChangeOfSupplierConfirmation,
-                requestedBy = party,
-                requestedFrom = party,
-                requestedTo = party,
-                validTo = Clock.System.now().toLocalDateTime(TimeZone.UTC).date.plus(DatePeriod(days = 30)),
-            )
+            generateRequestWithoutProperties()
         }
-
         val targetId = requests[0].id
-
         val targetRequest = transaction {
             requests.forEach { requestRepo.insert(it) }
             requestRepo.find(targetId)
@@ -120,15 +110,7 @@ class ExposedRequestRepositoryTest : FunSpec({
     }
 
     test("confirm authorization request with properties") {
-        val party = AuthorizationParty(type = PartyType.Person, resourceId = "12345")
-        val request = AuthorizationRequest.create(
-            type = AuthorizationRequest.Type.ChangeOfSupplierConfirmation,
-            requestedBy = party,
-            requestedFrom = party,
-            requestedTo = party,
-            validTo = Clock.System.now().toLocalDateTime(TimeZone.UTC).date.plus(DatePeriod(days = 30)),
-        )
-
+        val request = generateRequestWithoutProperties()
         val acceptedRequest = transaction {
             val savedRequest = requestRepo
                 .insert(request)
@@ -155,24 +137,14 @@ class ExposedRequestRepositoryTest : FunSpec({
 
     test("findScopeIds returns correct scope list") {
         val requestId = UUID.fromString("3f2c9e6b-7a4d-4f1a-9b6e-8c1d2a5e9f47")
-
         val scopeIds = requestRepo.findScopeIds(requestId)
-
         scopeIds.shouldBeRight()
         scopeIds.value.size shouldBe 2
         scopeIds.value.shouldContainAll(listOf(123, 345))
     }
 
     test("reject authorization request without properties") {
-        val party = AuthorizationParty(type = PartyType.Person, resourceId = "12345")
-        val request = AuthorizationRequest.create(
-            type = AuthorizationRequest.Type.ChangeOfSupplierConfirmation,
-            requestedBy = party,
-            requestedFrom = party,
-            requestedTo = party,
-            validTo = Clock.System.now().toLocalDateTime(TimeZone.UTC).date.plus(DatePeriod(days = 30)),
-        )
-
+        val request = generateRequestWithoutProperties()
         val rejectedRequest = transaction {
             val savedRequest = requestRepo
                 .insert(request)
@@ -189,14 +161,7 @@ class ExposedRequestRepositoryTest : FunSpec({
     }
 
     test("reject authorization request with properties") {
-        val party = AuthorizationParty(type = PartyType.Person, resourceId = "12345")
-        val request = AuthorizationRequest.create(
-            type = AuthorizationRequest.Type.ChangeOfSupplierConfirmation,
-            requestedBy = party,
-            requestedFrom = party,
-            requestedTo = party,
-            validTo = Clock.System.now().toLocalDateTime(TimeZone.UTC).date.plus(DatePeriod(days = 30)),
-        )
+        val request = generateRequestWithoutProperties()
 
         val rejectedRequest = transaction {
             val savedRequest = requestRepo
