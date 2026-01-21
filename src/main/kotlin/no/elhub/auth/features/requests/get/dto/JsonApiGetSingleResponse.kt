@@ -24,7 +24,9 @@ import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObjectWithRelation
 data class GetRequestSingleResponseAttributes(
     val status: String,
     val requestType: String,
-    val validTo: String
+    val validTo: String,
+    val updatedAt: String,
+    val createdAt: String
 ) : JsonApiAttributes
 
 @Serializable
@@ -48,54 +50,55 @@ value class GetRequestSingleResponseMeta(
 ) : JsonApiResourceMeta
 
 typealias GetRequestSingleResponse = JsonApiResponse.SingleDocumentWithRelationshipsAndMetaAndLinks<
-    GetRequestSingleResponseAttributes,
-    GetRequestSingleResponseRelationships,
-    GetRequestSingleResponseMeta,
-    GetRequestSingleResponseLinks
-    >
+        GetRequestSingleResponseAttributes,
+        GetRequestSingleResponseRelationships,
+        GetRequestSingleResponseMeta,
+        GetRequestSingleResponseLinks
+        >
 
 fun AuthorizationRequest.toGetSingleResponse() =
     GetRequestSingleResponse(
         data =
-        JsonApiResponseResourceObjectWithRelationshipsAndMetaAndLinks(
-            type = "AuthorizationRequest",
-            id = this.id.toString(),
-            attributes = GetRequestSingleResponseAttributes(
-                status = this.status.name,
-                requestType = this.type.name,
-                validTo = this.validTo.toTimeZoneOffsetDateTimeAtStartOfDay().toString(),
-            ),
-            relationships = GetRequestSingleResponseRelationships(
-                requestedBy = this.requestedBy.toJsonApiRelationship(),
-                requestedFrom = this.requestedFrom.toJsonApiRelationship(),
-                requestedTo = this.requestedTo.toJsonApiRelationship(),
-                approvedBy = this.approvedBy?.toJsonApiRelationship(),
-                grant = this.grantId?.let { grantId ->
-                    JsonApiRelationshipToOne(
-                        data = JsonApiRelationshipData(
-                            id = grantId.toString(),
-                            type = "AuthorizationGrant"
-                        ),
-                        links = JsonApiLinks.RelationShipLink(
-                            self = "$GRANTS_PATH/$grantId"
+            JsonApiResponseResourceObjectWithRelationshipsAndMetaAndLinks(
+                type = "AuthorizationRequest",
+                id = this.id.toString(),
+                attributes = GetRequestSingleResponseAttributes(
+                    status = this.status.name,
+                    requestType = this.type.name,
+                    validTo = this.validTo.toTimeZoneOffsetDateTimeAtStartOfDay().toString(),
+                    updatedAt = this.updatedAt.toTimeZoneOffsetString(),
+                    createdAt = this.createdAt.toTimeZoneOffsetString(),
+
+                    ),
+                relationships = GetRequestSingleResponseRelationships(
+                    requestedBy = this.requestedBy.toJsonApiRelationship(),
+                    requestedFrom = this.requestedFrom.toJsonApiRelationship(),
+                    requestedTo = this.requestedTo.toJsonApiRelationship(),
+                    approvedBy = this.approvedBy?.toJsonApiRelationship(),
+                    grant = this.grantId?.let { grantId ->
+                        JsonApiRelationshipToOne(
+                            data = JsonApiRelationshipData(
+                                id = grantId.toString(),
+                                type = "AuthorizationGrant"
+                            ),
+                            links = JsonApiLinks.RelationShipLink(
+                                self = "$GRANTS_PATH/$grantId"
+                            )
                         )
-                    )
-                }
-            ),
-            meta = GetRequestSingleResponseMeta(
-                buildMap {
-                    put("createdAt", this@toGetSingleResponse.createdAt.toTimeZoneOffsetString())
-                    put("updatedAt", this@toGetSingleResponse.updatedAt.toTimeZoneOffsetString())
-                    this@toGetSingleResponse.properties.forEach { prop ->
-                        put(prop.key, prop.value)
                     }
-                }
+                ),
+                meta = GetRequestSingleResponseMeta(
+                    buildMap {
+                        this@toGetSingleResponse.properties.forEach { prop ->
+                            put(prop.key, prop.value)
+                        }
+                    }
+                ),
+                links =
+                    GetRequestSingleResponseLinks(
+                        self = "${REQUESTS_PATH}/${this.id}"
+                    ),
             ),
-            links =
-            GetRequestSingleResponseLinks(
-                self = "${REQUESTS_PATH}/${this.id}"
-            ),
-        ),
         links = JsonApiLinks.ResourceObjectLink("${REQUESTS_PATH}/${this.id}"),
         meta = JsonApiMeta(
             buildJsonObject {

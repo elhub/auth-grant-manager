@@ -1,4 +1,5 @@
 package no.elhub.auth.features.requests.update.dto
+
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -22,7 +23,9 @@ import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObjectWithRelation
 data class UpdateRequestResponseAttributes(
     val status: String,
     val requestType: String,
-    val validTo: String
+    val validTo: String,
+    val createdAt: String,
+    val updatedAt: String,
 ) : JsonApiAttributes
 
 @Serializable
@@ -46,23 +49,23 @@ data class UpdateRequestResponseLinks(
 ) : JsonApiResourceLinks
 
 typealias UpdateRequestResponse = JsonApiResponse.SingleDocumentWithRelationshipsAndMetaAndLinks<
-    UpdateRequestResponseAttributes,
-    UpdateRequestResponseRelationShips,
-    UpdateRequestResponseMeta,
-    UpdateRequestResponseLinks
-    >
+        UpdateRequestResponseAttributes,
+        UpdateRequestResponseRelationShips,
+        UpdateRequestResponseMeta,
+        UpdateRequestResponseLinks
+        >
 
-fun AuthorizationRequest.toUpdateResponse() =
-    UpdateRequestResponse(
-        data =
+fun AuthorizationRequest.toUpdateResponse() = UpdateRequestResponse(
+    data =
         JsonApiResponseResourceObjectWithRelationshipsAndMetaAndLinks(
             type = "AuthorizationRequest",
             id = this.id.toString(),
-            attributes =
-            UpdateRequestResponseAttributes(
+            attributes = UpdateRequestResponseAttributes(
                 status = this.status.name,
                 requestType = this.type.name,
-                validTo = this.validTo.toTimeZoneOffsetDateTimeAtStartOfDay().toString()
+                validTo = this.validTo.toTimeZoneOffsetDateTimeAtStartOfDay().toString(),
+                createdAt = this.createdAt.toTimeZoneOffsetString(),
+                updatedAt = this.updatedAt.toTimeZoneOffsetString(),
             ),
             relationships = UpdateRequestResponseRelationShips(
                 requestedBy = JsonApiRelationshipToOne(
@@ -105,22 +108,20 @@ fun AuthorizationRequest.toUpdateResponse() =
             ),
             meta = UpdateRequestResponseMeta(
                 buildMap {
-                    put("createdAt", this@toUpdateResponse.createdAt.toTimeZoneOffsetString())
-                    put("updatedAt", this@toUpdateResponse.updatedAt.toTimeZoneOffsetString())
                     this@toUpdateResponse.properties.forEach { prop ->
                         put(prop.key, prop.value)
                     }
                 }
             ),
             links =
-            UpdateRequestResponseLinks(
-                self = "${REQUESTS_PATH}/${this.id}"
-            ),
+                UpdateRequestResponseLinks(
+                    self = "${REQUESTS_PATH}/${this.id}"
+                ),
         ),
-        links = JsonApiLinks.ResourceObjectLink("${REQUESTS_PATH}/${this.id}"),
-        meta = JsonApiMeta(
-            buildJsonObject {
-                put("createdAt", this@toUpdateResponse.createdAt.toTimeZoneOffsetString())
-            }
-        )
+    links = JsonApiLinks.ResourceObjectLink("${REQUESTS_PATH}/${this.id}"),
+    meta = JsonApiMeta(
+        buildJsonObject {
+            put("createdAt", this@toUpdateResponse.createdAt.toTimeZoneOffsetString())
+        }
     )
+)
