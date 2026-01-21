@@ -95,6 +95,12 @@ class AuthorizationRequestRouteTest : FunSpec({
                 val responseJson: GetRequestCollectionResponse = response.body()
                 responseJson.data.apply {
                     size shouldBe 1
+                    forEach { item ->
+                        val validTo = item.attributes.validTo
+                        shouldNotThrowAny {
+                            OffsetDateTime.parse(validTo, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                        }
+                    }
                 }
             }
 
@@ -110,6 +116,10 @@ class AuthorizationRequestRouteTest : FunSpec({
                     size shouldBe 4
 
                     forEach { item ->
+                        val validTo = item.attributes.validTo
+                        shouldNotThrowAny {
+                            OffsetDateTime.parse(validTo, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                        }
                         item.relationships.shouldNotBeNull().apply {
                             requestedTo.data.apply {
                                 id shouldBe "17abdc56-8f6f-440a-9f00-b9bfbb22065e"
@@ -159,7 +169,10 @@ class AuthorizationRequestRouteTest : FunSpec({
                     attributes.shouldNotBeNull().apply {
                         requestType shouldBe "ChangeOfSupplierConfirmation"
                         status shouldBe "Accepted"
-                        validTo.shouldNotBeNull()
+                        val validTo = validTo.shouldNotBeNull()
+                        shouldNotThrowAny {
+                            OffsetDateTime.parse(validTo, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                        }
                     }
                     relationships.shouldNotBeNull().apply {
                         requestedBy.apply {
@@ -233,7 +246,10 @@ class AuthorizationRequestRouteTest : FunSpec({
                     attributes.shouldNotBeNull().apply {
                         requestType shouldBe "ChangeOfSupplierConfirmation"
                         status shouldBe "Pending"
-                        validTo.shouldNotBeNull()
+                        val validTo = validTo.shouldNotBeNull()
+                        shouldNotThrowAny {
+                            OffsetDateTime.parse(validTo, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                        }
                     }
                     relationships.shouldNotBeNull().apply {
                         requestedBy.apply {
@@ -382,7 +398,10 @@ class AuthorizationRequestRouteTest : FunSpec({
                     attributes.shouldNotBeNull().apply {
                         requestType shouldBe "ChangeOfSupplierConfirmation"
                         status shouldBe AuthorizationRequest.Status.Pending.name
-                        validTo.shouldNotBeNull()
+                        val validTo = validTo.shouldNotBeNull()
+                        shouldNotThrowAny {
+                            JavaLocalDate.parse(validTo, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                        }
                     }
                     relationships.shouldNotBeNull().apply {
                         requestedBy.apply {
@@ -576,6 +595,10 @@ class AuthorizationRequestRouteTest : FunSpec({
                     id.shouldNotBeNull()
                     attributes.shouldNotBeNull().apply {
                         status shouldBe "Accepted"
+                        val validTo = validTo.shouldNotBeNull()
+                        shouldNotThrowAny {
+                            JavaLocalDate.parse(validTo, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                        }
                     }
                     relationships.shouldNotBeNull().apply {
                         relationships.apply {
@@ -639,6 +662,10 @@ class AuthorizationRequestRouteTest : FunSpec({
                     id.shouldNotBeNull()
                     attributes.shouldNotBeNull().apply {
                         status shouldBe "Accepted"
+                        val validTo = validTo.shouldNotBeNull()
+                        shouldNotThrowAny {
+                            OffsetDateTime.parse(validTo, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                        }
                     }
                     relationships.shouldNotBeNull().apply {
                         relationships.apply {
