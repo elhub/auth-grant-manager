@@ -21,7 +21,6 @@ import no.elhub.auth.features.common.RunPostgresScriptExtension
 import no.elhub.auth.features.requests.AuthorizationRequest
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.deleteAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import kotlin.test.fail
 import kotlin.time.Clock
