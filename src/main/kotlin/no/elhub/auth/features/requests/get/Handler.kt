@@ -19,19 +19,17 @@ class Handler(
     private val logger = LoggerFactory.getLogger(Handler::class.java)
 
     operator fun invoke(query: Query): Either<QueryError, AuthorizationRequest> = either {
-        val request = transaction {
-            requestRepository.find(query.id)
+        val requestWithGrant = transaction {
+            val request = requestRepository.find(query.id)
                 .mapLeft { QueryError.ResourceNotFoundError }
                 .bind()
-        }
 
-        ensure((request.requestedTo == query.authorizedParty) or (request.requestedBy == query.authorizedParty)) {
-            logger.error("Requestee is not authorized to get the request ${query.authorizedParty}")
-            QueryError.NotAuthorizedError
-        }
+            ensure((request.requestedTo == query.authorizedParty) or (request.requestedBy == query.authorizedParty)) {
+                logger.error("Requestee is not authorized to get the request ${query.authorizedParty}")
+                QueryError.NotAuthorizedError
+            }
 
-        // grant can only exist if approvedBy is set
-        val requestWithGrant = transaction {
+            // grant can only exist if approvedBy is set
             request.approvedBy?.let {
                 val grant = grantRepository.findBySource(
                     AuthorizationGrant.SourceType.Request,

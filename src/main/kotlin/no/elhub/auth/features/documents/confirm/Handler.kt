@@ -20,36 +20,35 @@ class Handler(
     private val grantRepository: GrantRepository,
 ) {
     suspend operator fun invoke(command: Command): Either<ConfirmDocumentError, Unit> = either {
-        val document = transaction {
-            documentRepository.find(command.documentId)
+
+        val requestedBy = partyService.resolve(command.requestedByIdentifier)
+            .mapLeft { ConfirmDocumentError.RequestedByResolutionError }
+            .bind()
+
+        transaction {
+            val document = documentRepository.find(command.documentId)
                 .mapLeft { error ->
                     when (error) {
                         is RepositoryReadError.NotFoundError -> ConfirmDocumentError.DocumentNotFoundError
                         is RepositoryReadError.UnexpectedError -> ConfirmDocumentError.DocumentReadError
                     }
                 }.bind()
-        }
 
-        val requestedBy = partyService.resolve(command.requestedByIdentifier)
-            .mapLeft { ConfirmDocumentError.RequestedByResolutionError }
-            .bind()
+            ensure(requestedBy == document.requestedBy) {
+                ConfirmDocumentError.InvalidRequestedByError
+            }
 
-        ensure(requestedBy == document.requestedBy) {
-            ConfirmDocumentError.InvalidRequestedByError
-        }
+            ensure(document.status == AuthorizationDocument.Status.Pending) {
+                ConfirmDocumentError.IllegalStateError
+            }
 
-        ensure(document.status == AuthorizationDocument.Status.Pending) {
-            ConfirmDocumentError.IllegalStateError
-        }
+            ensure(document.validTo >= OffsetDateTime.now(ZoneOffset.UTC)) {
+                ConfirmDocumentError.ExpiredError
+            }
 
-        ensure(document.validTo >= OffsetDateTime.now(ZoneOffset.UTC)) {
-            ConfirmDocumentError.ExpiredError
-        }
+            // TODO: Implement validation of the signed file and find the signatory
+            val signatory = document.requestedTo
 
-        // TODO: Implement validation of the signed file and find the signatory
-        val signatory = document.requestedTo
-
-        transaction {
             val confirmedDocument = documentRepository.confirm(
                 documentId = document.id,
                 signedFile = command.signedFile,
