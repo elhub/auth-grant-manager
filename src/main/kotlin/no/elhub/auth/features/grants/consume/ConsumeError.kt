@@ -39,21 +39,21 @@ fun ConsumeError.toConsumeErrorResponse(): Pair<HttpStatusCode, JsonApiErrorColl
         ConsumeError.IllegalStateError -> buildErrorResponse(
             status = HttpStatusCode.BadRequest,
             code = "illegal_status_state",
-            title = "Illegal Status State",
+            title = "Illegal status state",
             detail = "Grant must be 'Active' to get consumed"
         )
 
         ConsumeError.IllegalTransitionError -> buildErrorResponse(
             status = HttpStatusCode.BadRequest,
             code = "invalid_status_transition",
-            title = "Invalid Status Transition",
+            title = "Invalid status transition",
             detail = "Only 'Exhausted' status is allowed."
         )
 
         ConsumeError.ExpiredError -> buildErrorResponse(
             status = HttpStatusCode.BadRequest,
             code = "expired_status_transition",
-            title = "Grant Has Expired",
+            title = "Grant has expired",
             detail = "Grant validity period has passed"
         )
     }

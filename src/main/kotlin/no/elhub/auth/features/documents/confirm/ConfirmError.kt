@@ -39,21 +39,21 @@ fun ConfirmError.toConfirmErrorResponse(): Pair<HttpStatusCode, JsonApiErrorColl
         ConfirmError.InvalidRequestedByError -> buildErrorResponse(
             status = HttpStatusCode.Forbidden,
             code = "not_authorized",
-            title = "Party Not Authorized",
+            title = "Party not authorized",
             detail = "RequestedBy must match the authorized party",
         )
 
         ConfirmError.IllegalStateError -> buildErrorResponse(
             status = HttpStatusCode.NotFound,
             code = "invalid_status_state",
-            title = "Invalid Status State",
+            title = "Invalid status state",
             detail = "Document must be in 'Pending' status to confirm."
         )
 
         ConfirmError.ExpiredError -> buildErrorResponse(
             status = HttpStatusCode.BadRequest,
             code = "expired_status_transition",
-            title = "Document Has Expired",
+            title = "Document has expired",
             detail = "Document validity period has passed"
         )
     }

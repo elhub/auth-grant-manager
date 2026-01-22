@@ -302,7 +302,7 @@ class AuthorizationDocumentRouteTest :
                         this[0].apply {
                             status shouldBe HttpStatusCode.Forbidden.value.toString()
                             code shouldBe "not_authorized"
-                            title shouldBe "Party Not Authorized"
+                            title shouldBe "Party not authorized"
                             detail shouldBe "The party is not allowed to access this resource"
                         }
                     }
@@ -519,7 +519,7 @@ class AuthorizationDocumentRouteTest :
                         this[0].apply {
                             status shouldBe "400"
                             code shouldBe "bad_request"
-                            title shouldBe "Bad Request"
+                            title shouldBe "Bad request"
                             detail shouldBe "Missing User-Agent header"
                         }
                     }

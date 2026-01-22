@@ -35,7 +35,7 @@ fun CreateDocumentError.toCreateErrorResponse(): Pair<HttpStatusCode, JsonApiErr
         is CreateDocumentError.AuthorizationError -> buildErrorResponse(
             status = HttpStatusCode.Forbidden,
             code = "not_authorized",
-            title = "Party Not Authorized",
+            title = "Party not authorized",
             detail = "RequestedBy must match the authorized party",
         )
 

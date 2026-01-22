@@ -30,7 +30,7 @@ fun Application.configureErrorHandling() {
                     val (status, body) = buildErrorResponse(
                         status = HttpStatusCode.InternalServerError,
                         code = "internal_error",
-                        title = "Internal Server Error",
+                        title = "Internal server error",
                         detail = "An unexpected error occurred"
                     )
                     call.respond(status, body)

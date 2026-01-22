@@ -294,7 +294,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                     this[0].apply {
                         status shouldBe "404"
                         code shouldBe "not_found"
-                        title shouldBe "Not Found"
+                        title shouldBe "Not found"
                         detail shouldBe "The requested resource could not be found"
                     }
                 }
@@ -312,7 +312,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                     this[0].apply {
                         status shouldBe "403"
                         code shouldBe "not_authorized"
-                        title shouldBe "Party Not Authorized"
+                        title shouldBe "Party not authorized"
                         detail shouldBe "The party is not allowed to access this resource"
                     }
                 }
@@ -329,7 +329,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                     this[0].apply {
                         status shouldBe "403"
                         code shouldBe "not_authorized"
-                        title shouldBe "Party Not Authorized"
+                        title shouldBe "Party not authorized"
                         detail shouldBe "The party is not allowed to access this resource"
                     }
                 }
@@ -469,7 +469,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                     this[0].apply {
                         status shouldBe "400"
                         code shouldBe "missing_requested_from_name"
-                        title shouldBe "Validation Error"
+                        title shouldBe "Validation error"
                         detail shouldBe "Requested from name is missing"
                     }
                 }
@@ -549,7 +549,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                     this[0].apply {
                         status shouldBe "400"
                         code shouldBe "expired_status_transition"
-                        title shouldBe "Request Has Expired"
+                        title shouldBe "Request has expired"
                         detail shouldBe "Request validity period has passed"
                     }
                 }
@@ -804,7 +804,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                     this[0].apply {
                         status shouldBe "400"
                         code shouldBe "invalid_status_transition"
-                        title shouldBe "Invalid Status Transition"
+                        title shouldBe "Invalid status transition"
                         detail shouldBe "Only 'Accepted' and 'Rejected' statuses are allowed."
                     }
                 }

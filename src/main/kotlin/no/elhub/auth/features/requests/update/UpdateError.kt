@@ -30,21 +30,21 @@ fun UpdateError.toUpdateErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollec
         UpdateError.IllegalTransitionError -> buildErrorResponse(
             status = HttpStatusCode.BadRequest,
             code = "invalid_status_transition",
-            title = "Invalid Status Transition",
+            title = "Invalid status transition",
             detail = "Only 'Accepted' and 'Rejected' statuses are allowed."
         )
 
         UpdateError.IllegalStateError -> buildErrorResponse(
             status = HttpStatusCode.BadRequest,
             code = "invalid_status_state",
-            title = "Invalid Status State",
+            title = "Invalid status state",
             detail = "Request must be in 'Pending' status to update."
         )
 
         UpdateError.ExpiredError -> buildErrorResponse(
             status = HttpStatusCode.BadRequest,
             code = "expired_status_transition",
-            title = "Request Has Expired",
+            title = "Request has expired",
             detail = "Request validity period has passed"
         )
 

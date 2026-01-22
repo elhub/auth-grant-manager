@@ -26,7 +26,7 @@ fun CreateError.toCreateErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollec
         CreateError.AuthorizationError -> buildErrorResponse(
             status = HttpStatusCode.Forbidden,
             code = "not_authorized",
-            title = "Party Not Authorized",
+            title = "Party not authorized",
             detail = "RequestedBy must match the authorized party",
         )
 
@@ -42,7 +42,7 @@ fun CreateError.toCreateErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollec
 
         is CreateError.ValidationError -> buildErrorResponse(
             status = HttpStatusCode.BadRequest,
-            title = "Validation Error",
+            title = "Validation error",
             code = this.reason.code,
             detail = this.reason.message,
         )

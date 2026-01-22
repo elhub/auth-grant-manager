@@ -24,7 +24,7 @@ class AuthErrorJsonApiResponseTest : FunSpec({
         AuthError.MissingSenderGlnHeader to Expectation(
             status = HttpStatusCode.BadRequest,
             code = "missing_sender_gln",
-            title = "Missing SenderGLN header",
+            title = "Missing senderGLN header",
             detail = "SenderGLN header is required for authorization."
         ),
         AuthError.InvalidToken to Expectation(

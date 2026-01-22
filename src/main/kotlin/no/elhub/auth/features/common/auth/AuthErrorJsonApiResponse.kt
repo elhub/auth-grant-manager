@@ -23,7 +23,7 @@ fun AuthError.toAuthErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection
         AuthError.MissingSenderGlnHeader -> buildErrorResponse(
             status = HttpStatusCode.BadRequest,
             code = "missing_sender_gln",
-            title = "Missing SenderGLN header",
+            title = "Missing senderGLN header",
             detail = "SenderGLN header is required for authorization."
         )
 

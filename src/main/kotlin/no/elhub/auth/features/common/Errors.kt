@@ -50,14 +50,14 @@ fun buildErrorResponse(status: HttpStatusCode, code: String, title: String, deta
 fun toDeserializationErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> = buildErrorResponse(
     status = HttpStatusCode.BadRequest,
     code = "invalid_request_body",
-    title = "Invalid Request body",
+    title = "Invalid request body",
     detail = "Request body could not be parsed or did not match the expected schema"
 )
 
-fun toForbiddenBalanceSupplierOnlyResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> = buildErrorResponse(
+fun toBalanceSupplierNotAuthorizedResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> = buildErrorResponse(
     status = HttpStatusCode.Forbidden,
     code = "not_authorized",
-    title="Not Authorized",
+    title="Not authorized",
     detail = "Only balance suppliers are authorized to access this endpoint"
 )
 
@@ -73,7 +73,7 @@ fun InputError.toInputErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollecti
         InputError.MalformedInputError -> buildErrorResponse(
             status = HttpStatusCode.BadRequest,
             code = "invalid_input",
-            title = "Invalid Input",
+            title = "Invalid input",
             detail = "The provided payload did not satisfy the expected format"
         )
     }
@@ -83,21 +83,21 @@ fun QueryError.toQueryErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollecti
         QueryError.ResourceNotFoundError -> buildErrorResponse(
             status = HttpStatusCode.NotFound,
             code = "not_found",
-            title = "Not Found",
+            title = "Not found",
             detail = "The requested resource could not be found",
         )
 
         QueryError.IOError -> buildErrorResponse(
             status = HttpStatusCode.InternalServerError,
             code = "internal_error",
-            title = "Internal Server Error",
+            title = "Internal server error",
             detail = "An error occurred when attempted to perform the query",
         )
 
         QueryError.NotAuthorizedError -> buildErrorResponse(
             status = HttpStatusCode.Forbidden,
             code = "not_authorized",
-            title = "Party Not Authorized",
+            title = "Party not authorized",
             detail = "The party is not allowed to access this resource",
         )
     }

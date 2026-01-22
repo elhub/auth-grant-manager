@@ -28,6 +28,6 @@ val MissingUserAgentHeder: JsonApiErrorObject =
     JsonApiErrorObject(
         status = "400",
         code = "bad_request",
-        title = "Bad Request",
+        title = "Bad request",
         detail = "Missing User-Agent header"
     )

@@ -11,7 +11,7 @@ import no.elhub.auth.features.common.auth.RoleType
 import no.elhub.auth.features.common.auth.toAuthErrorResponse
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
-import no.elhub.auth.features.common.toForbiddenBalanceSupplierOnlyResponse
+import no.elhub.auth.features.common.toBalanceSupplierNotAuthorizedResponse
 import no.elhub.auth.features.documents.create.dto.JsonApiCreateDocumentRequest
 import no.elhub.auth.features.documents.create.dto.toCreateDocumentResponse
 import no.elhub.auth.features.documents.create.dto.toModel
@@ -34,7 +34,7 @@ fun Route.route(
         val requestBody = call.receive<JsonApiCreateDocumentRequest>()
 
         if (resolvedActor.role != RoleType.BalanceSupplier) {
-            val (status, body) = toForbiddenBalanceSupplierOnlyResponse()
+            val (status, body) = toBalanceSupplierNotAuthorizedResponse()
             call.respond(status, body)
             return@post
         }
