@@ -31,8 +31,8 @@ fun ConfirmError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollecti
         ConfirmError.GrantCreationError,
         ConfirmError.RequestedByResolutionError -> buildApiErrorResponse(
             status = HttpStatusCode.InternalServerError,
-            code="internal_server_error",
-            title= "Internal Server error",
+            code = "internal_server_error",
+            title = "Internal Server error",
             detail = "An internal error occurred."
         )
 
