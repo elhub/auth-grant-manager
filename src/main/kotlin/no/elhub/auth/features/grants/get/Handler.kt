@@ -9,18 +9,21 @@ import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.common.GrantRepository
+import org.jetbrains.exposed.sql.transactions.transaction
 
 class Handler(
     private val repo: GrantRepository
 ) {
     operator fun invoke(query: Query): Either<QueryError, AuthorizationGrant> = either {
-        val grant = repo.find(query.id)
-            .mapLeft { error ->
-                when (error) {
-                    is RepositoryReadError.NotFoundError -> QueryError.ResourceNotFoundError
-                    is RepositoryReadError.UnexpectedError -> QueryError.IOError
-                }
-            }.bind()
+        val grant = transaction {
+            repo.find(query.id)
+                .mapLeft { error ->
+                    when (error) {
+                        RepositoryReadError.NotFoundError -> QueryError.ResourceNotFoundError
+                        RepositoryReadError.UnexpectedError -> QueryError.IOError
+                    }
+                }.bind()
+        }
 
         val authorizedParty = query.authorizedParty
 

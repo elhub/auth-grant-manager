@@ -69,40 +69,39 @@ class ExposedDocumentRepositoryTest :
                     )
                 )
 
-                // When
-                repository.insert(document, scopes)
+                transaction {
+                    // When
+                    repository.insert(document, scopes)
 
-                // Then
-                val documentExists = repository.find(document.id)
-                documentExists shouldNotBe null
+                    // Then
+                    val documentExists = repository.find(document.id)
+                    documentExists shouldNotBe null
 
-                val authorizationDocumentScopeRow =
-                    transaction {
+                    val authorizationDocumentScopeRow =
                         AuthorizationDocumentScopeTable
                             .selectAll()
                             .where { AuthorizationDocumentScopeTable.authorizationDocumentId eq document.id }
                             .map { it }
                             .singleOrNull()
-                    }
-                authorizationDocumentScopeRow.shouldNotBeNull()
+                    authorizationDocumentScopeRow.shouldNotBeNull()
 
-                val authorizationScopeRow =
-                    transaction {
+                    val authorizationScopeRow =
                         AuthorizationScopeTable
                             .selectAll()
                             .where { AuthorizationScopeTable.id eq (authorizationDocumentScopeRow[AuthorizationDocumentScopeTable.authorizationScopeId]) }
                             .singleOrNull()
-                    }
-                authorizationScopeRow.shouldNotBeNull()
-                authorizationScopeRow[AuthorizationScopeTable.authorizedResourceId] shouldBe "1234"
-                authorizationScopeRow[AuthorizationScopeTable.authorizedResourceType] shouldBe AuthorizationScope.ElhubResource.MeteringPoint
-                authorizationScopeRow[AuthorizationScopeTable.permissionType] shouldBe AuthorizationScope.PermissionType.ChangeOfSupplier
+                    authorizationScopeRow.shouldNotBeNull()
+                    authorizationScopeRow[AuthorizationScopeTable.authorizedResourceId] shouldBe "1234"
+                    authorizationScopeRow[AuthorizationScopeTable.authorizedResourceType] shouldBe AuthorizationScope.ElhubResource.MeteringPoint
+                    authorizationScopeRow[AuthorizationScopeTable.permissionType] shouldBe AuthorizationScope.PermissionType.ChangeOfSupplier
+                }
             }
         }
 
         context("Find all") {
             test("should return only documents requested by the given party") {
-                val matchingRequestedBy = AuthorizationParty(type = PartyType.Organization, resourceId = "matching-party")
+                val matchingRequestedBy =
+                    AuthorizationParty(type = PartyType.Organization, resourceId = "matching-party")
                 val otherRequestedBy = AuthorizationParty(type = PartyType.Organization, resourceId = "other-party")
 
                 val matchingDocument = AuthorizationDocument(
@@ -137,16 +136,19 @@ class ExposedDocumentRepositoryTest :
                     updatedAt = currentTimeWithTimeZone()
                 )
 
-                repository.insert(matchingDocument, listOf())
-                repository.insert(otherDocument, listOf())
+                transaction {
+                    repository.insert(matchingDocument, listOf())
+                    repository.insert(otherDocument, listOf())
 
-                val documents = repository.findAll(AuthorizationParty(matchingRequestedBy.resourceId, PartyType.Organization))
-                    .getOrElse { error -> fail("Failed to fetch documents: $error") }
-                val documentIds = documents.map { it.id }
+                    val documents =
+                        repository.findAll(AuthorizationParty(matchingRequestedBy.resourceId, PartyType.Organization))
+                            .getOrElse { error -> fail("Failed to fetch documents: $error") }
+                    val documentIds = documents.map { it.id }
 
-                documentIds.shouldHaveSize(1)
-                documentIds shouldContain matchingDocument.id
-                documentIds shouldNotContain otherDocument.id
+                    documentIds.shouldHaveSize(1)
+                    documentIds shouldContain matchingDocument.id
+                    documentIds shouldNotContain otherDocument.id
+                }
             }
         }
     })

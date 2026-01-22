@@ -16,6 +16,7 @@ class ExposedRequestPropertiesRepositoryTest : FunSpec({
 
     extensions(
         PostgresTestContainerExtension(),
+        RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-scopes.sql"),
         RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-requests.sql")
     )
 
@@ -40,13 +41,14 @@ class ExposedRequestPropertiesRepositoryTest : FunSpec({
     beforeTest {
         transaction {
             AuthorizationRequestPropertyTable.deleteAll()
-            AuthorizationRequestTable.deleteAll()
         }
     }
 
     context("Request properties repository") {
         test("insert empty list should return success ") {
-            val result = propertyRepo.insert(emptyList())
+            val result = transaction {
+                propertyRepo.insert(emptyList())
+            }
             result.isRight() shouldBe true
         }
 
@@ -56,25 +58,9 @@ class ExposedRequestPropertiesRepositoryTest : FunSpec({
                 AuthorizationRequestProperty(requestId, "key2", "value2"),
             )
 
-            val insertResult = propertyRepo.insert(properties)
-            insertResult.isRight() shouldBe true
-
-            transaction {
-                val count = AuthorizationRequestPropertyTable
-                    .selectAll()
-                    .where { AuthorizationRequestPropertyTable.requestId eq requestId }
-                    .count()
-                count shouldBe 2
+            val insertResult = transaction {
+                propertyRepo.insert(properties)
             }
-        }
-
-        test("insert properties with special characters should persist correctly") {
-            val properties = listOf(
-                AuthorizationRequestProperty(requestId, "address", "Main Street 42, 5000 Bergen"),
-                AuthorizationRequestProperty(requestId, "name", "Kari Normann AS"),
-            )
-
-            val insertResult = propertyRepo.insert(properties)
             insertResult.isRight() shouldBe true
 
             transaction {
@@ -88,11 +74,39 @@ class ExposedRequestPropertiesRepositoryTest : FunSpec({
                             value = resultRow[AuthorizationRequestPropertyTable.value],
                         )
                     }
-
                 stored.size shouldBe 2
-                stored[0].value shouldBe "Main Street 42, 5000 Bergen"
-                stored[1].value shouldBe "Kari Normann AS"
+                stored[0].value shouldBe "value1"
+                stored[1].value shouldBe "value2"
             }
+        }
+
+        test("insert properties with special characters should persist correctly") {
+            val properties = listOf(
+                AuthorizationRequestProperty(requestId, "address", "Main Street 42, 5000 Bergen"),
+                AuthorizationRequestProperty(requestId, "name", "Kari Normann AS"),
+            )
+
+            val insertResult = transaction {
+                propertyRepo.insert(properties)
+            }
+            insertResult.isRight() shouldBe true
+
+            val stored = transaction {
+                AuthorizationRequestPropertyTable
+                    .selectAll()
+                    .where { AuthorizationRequestPropertyTable.requestId eq requestId }
+                    .map { resultRow ->
+                        AuthorizationRequestProperty(
+                            requestId = resultRow[AuthorizationRequestPropertyTable.requestId],
+                            key = resultRow[AuthorizationRequestPropertyTable.key],
+                            value = resultRow[AuthorizationRequestPropertyTable.value],
+                        )
+                    }
+            }
+
+            stored.size shouldBe 2
+            stored[0].value shouldBe "Main Street 42, 5000 Bergen"
+            stored[1].value shouldBe "Kari Normann AS"
         }
     }
 })
