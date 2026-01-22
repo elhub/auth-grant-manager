@@ -7,13 +7,9 @@ import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 
 sealed class CreateError {
     data object MappingError : CreateError()
-
     data object AuthorizationError : CreateError()
-
     data object PersistenceError : CreateError()
-
     data object RequestedFromPartyError : CreateError()
-
     data object RequestedByPartyError : CreateError()
 
     data class ValidationError(

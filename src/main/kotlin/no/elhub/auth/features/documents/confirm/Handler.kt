@@ -8,51 +8,73 @@ import no.elhub.auth.features.common.RepositoryWriteError
 import no.elhub.auth.features.common.party.PartyService
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.DocumentRepository
+import no.elhub.auth.features.documents.common.SignatureService
 import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.common.GrantRepository
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.slf4j.LoggerFactory
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
 class Handler(
     private val documentRepository: DocumentRepository,
-    private val partyService: PartyService,
     private val grantRepository: GrantRepository,
+    private val partyService: PartyService,
+    private val signatureService: SignatureService
 ) {
-    suspend operator fun invoke(command: Command): Either<ConfirmError, Unit> = either {
-        val requestedBy = partyService.resolve(command.requestedByIdentifier)
-            .mapLeft { ConfirmError.RequestedByResolutionError }
-            .bind()
 
-        transaction {
-            val document = documentRepository.find(command.documentId)
+    private val log = LoggerFactory.getLogger(Handler::class.java)
+
+    suspend operator fun invoke(command: Command): Either<ConfirmError, Unit> = either {
+        val authorizationParty = command.authorizedParty
+
+        val document = transaction {
+            documentRepository.find(command.documentId)
                 .mapLeft { error ->
                     when (error) {
                         is RepositoryReadError.NotFoundError -> ConfirmError.DocumentNotFoundError
                         is RepositoryReadError.UnexpectedError -> ConfirmError.DocumentReadError
                     }
                 }.bind()
+        }
 
-            ensure(requestedBy == document.requestedBy) {
-                ConfirmError.InvalidRequestedByError
+        ensure(authorizationParty == document.requestedBy) {
+            ConfirmError.InvalidRequestedByError
+        }
+        ensure(command.authorizedParty == document.requestedBy) {
+            ConfirmError.InvalidRequestedByError
+        }
+
+        ensure(document.status == AuthorizationDocument.Status.Pending) {
+            ConfirmError.IllegalStateError
+        }
+
+        ensure(document.validTo >= OffsetDateTime.now(ZoneOffset.UTC)) {
+            ConfirmError.ExpiredError
+        }
+
+        val signatoryIdentifier = signatureService.validateSignaturesAndReturnSignatory(command.signedFile)
+            .mapLeft {
+                log.error("Validate signature error occurred: {}", it)
+                ConfirmError.ValidateSignaturesError(it)
             }
+            .bind()
 
-            ensure(document.status == AuthorizationDocument.Status.Pending) {
-                ConfirmError.IllegalStateError
-            }
+        val actualSignatoryParty = partyService.resolve(signatoryIdentifier)
+            .mapLeft { ConfirmError.SignatoryResolutionError }
+            .bind()
 
-            ensure(document.validTo >= OffsetDateTime.now(ZoneOffset.UTC)) {
-                ConfirmError.ExpiredError
-            }
+        val expectedSignatoryParty = document.requestedTo
+        ensure(actualSignatoryParty == expectedSignatoryParty) {
+            ConfirmError.SignatoryNotAllowedToSignDocument
+        }
 
-            // TODO: Implement validation of the signed file and find the signatory
-            val signatory = document.requestedTo
-
+        transaction {
             val confirmedDocument = documentRepository.confirm(
                 documentId = document.id,
                 signedFile = command.signedFile,
                 requestedFrom = document.requestedFrom,
-                signatory = document.requestedTo
+                signatory = expectedSignatoryParty
             )
                 .mapLeft { error ->
                     when (error) {
@@ -74,7 +96,7 @@ class Handler(
             val grantToCreate =
                 AuthorizationGrant.create(
                     grantedFor = confirmedDocument.requestedFrom,
-                    grantedBy = signatory,
+                    grantedBy = expectedSignatoryParty,
                     grantedTo = confirmedDocument.requestedBy,
                     sourceType = AuthorizationGrant.SourceType.Document,
                     sourceId = confirmedDocument.id

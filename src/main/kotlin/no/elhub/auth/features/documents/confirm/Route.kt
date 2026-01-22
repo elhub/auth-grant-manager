@@ -11,8 +11,8 @@ import kotlinx.io.readByteArray
 import no.elhub.auth.features.common.InputError
 import no.elhub.auth.features.common.auth.AuthorizationProvider
 import no.elhub.auth.features.common.auth.toApiErrorResponse
-import no.elhub.auth.features.common.party.PartyIdentifier
-import no.elhub.auth.features.common.party.PartyIdentifierType
+import no.elhub.auth.features.common.party.AuthorizationParty
+import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.common.validateId
 import org.slf4j.LoggerFactory
@@ -43,17 +43,17 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
             return@put
         }
 
-        val requestedBy = PartyIdentifier(idType = PartyIdentifierType.GlobalLocationNumber, idValue = resolvedActor.gln)
+        val authorizedParty = AuthorizationParty(resourceId = resolvedActor.gln, type = PartyType.OrganizationEntity)
         handler(
             Command(
                 documentId = documentId,
-                requestedByIdentifier = requestedBy,
+                authorizedParty = authorizedParty,
                 signedFile = signedDocument
             )
         ).getOrElse { error ->
             logger.error("Failed to confirm authorization document: {}", error)
-            val (status, error) = error.toApiErrorResponse()
-            call.respond(status, error)
+            val (status, validationError) = error.toApiErrorResponse()
+            call.respond(status, validationError)
             return@put
         }
 

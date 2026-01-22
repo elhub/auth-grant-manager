@@ -4,8 +4,7 @@ import arrow.core.Either
 import no.elhub.auth.features.businessprocesses.changeofsupplier.ChangeOfSupplierBusinessHandler
 import no.elhub.auth.features.businessprocesses.movein.MoveInBusinessHandler
 import no.elhub.auth.features.documents.AuthorizationDocument
-import no.elhub.auth.features.documents.create.CreateDocumentError
-import no.elhub.auth.features.documents.create.CreateDocumentError.BusinessValidationError
+import no.elhub.auth.features.documents.create.CreateError
 import no.elhub.auth.features.documents.create.DocumentGenerationError
 import no.elhub.auth.features.documents.create.FileGenerator
 import no.elhub.auth.features.documents.create.command.DocumentCommand
@@ -18,7 +17,7 @@ class ProxyDocumentBusinessHandler(
     private val moveInHandler: MoveInBusinessHandler,
     private val fileGenerator: FileGenerator,
 ) : DocumentBusinessHandler {
-    override fun validateAndReturnDocumentCommand(model: CreateDocumentModel): Either<BusinessValidationError, DocumentCommand> =
+    override fun validateAndReturnDocumentCommand(model: CreateDocumentModel): Either<CreateError.BusinessValidationError, DocumentCommand> =
         when (model.documentType) {
             AuthorizationDocument.Type.ChangeOfSupplierConfirmation -> changeOfSupplierHandler.validateAndReturnDocumentCommand(model)
             AuthorizationDocument.Type.MoveIn -> moveInHandler.validateAndReturnDocumentCommand(model)
@@ -37,7 +36,7 @@ class ProxyDocumentBusinessHandler(
 }
 
 interface DocumentBusinessHandler {
-    fun validateAndReturnDocumentCommand(model: CreateDocumentModel): Either<CreateDocumentError, DocumentCommand>
+    fun validateAndReturnDocumentCommand(model: CreateDocumentModel): Either<CreateError.BusinessValidationError, DocumentCommand>
 
     fun getCreateGrantProperties(document: AuthorizationDocument): CreateGrantProperties
 }

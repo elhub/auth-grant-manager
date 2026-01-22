@@ -12,15 +12,15 @@ import no.elhub.auth.features.documents.common.DocumentPropertiesRepository
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.documents.common.ExposedDocumentPropertiesRepository
 import no.elhub.auth.features.documents.common.ExposedDocumentRepository
+import no.elhub.auth.features.documents.common.PdfSignatureService
 import no.elhub.auth.features.documents.common.ProxyDocumentBusinessHandler
+import no.elhub.auth.features.documents.common.SignatureService
 import no.elhub.auth.features.documents.create.CertificateProvider
 import no.elhub.auth.features.documents.create.FileCertificateProvider
 import no.elhub.auth.features.documents.create.FileCertificateProviderConfig
 import no.elhub.auth.features.documents.create.FileGenerator
 import no.elhub.auth.features.documents.create.HashicorpVaultSignatureProvider
-import no.elhub.auth.features.documents.create.PdfSigningService
 import no.elhub.auth.features.documents.create.SignatureProvider
-import no.elhub.auth.features.documents.create.SigningService
 import no.elhub.auth.features.documents.create.VaultConfig
 import no.elhub.auth.features.filegenerator.PdfGenerator
 import no.elhub.auth.features.filegenerator.PdfGeneratorConfig
@@ -49,11 +49,12 @@ fun Application.module() {
             FileCertificateProviderConfig(
                 pathToCertificateChain = cfg.property("chain").getString(),
                 pathToSigningCertificate = cfg.property("signing").getString(),
+                pathToBankIdRootCertificate = cfg.property("bankIdIdRoot").getString(),
             )
         }
         singleOf(::FileCertificateProvider) bind CertificateProvider::class
         single { PAdESService(CommonCertificateVerifier()) }
-        singleOf(::PdfSigningService) bind SigningService::class
+        singleOf(::PdfSignatureService) bind SignatureService::class
 
         single {
             val cfg = get<ApplicationConfig>().config("pdfSigner.vault")

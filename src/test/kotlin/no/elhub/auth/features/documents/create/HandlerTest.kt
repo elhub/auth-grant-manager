@@ -23,6 +23,8 @@ import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.documents.common.ProxyDocumentBusinessHandler
+import no.elhub.auth.features.documents.common.SignatureService
+import no.elhub.auth.features.documents.common.SignatureSigningError
 import no.elhub.auth.features.documents.create.command.DocumentCommand
 import no.elhub.auth.features.documents.create.command.DocumentMetaMarker
 import no.elhub.auth.features.documents.create.dto.CreateDocumentMeta
@@ -90,14 +92,14 @@ class HandlerTest : FunSpec({
 
     test("returns saved document when dependencies succeed") {
         val businessHandler = mockk<ProxyDocumentBusinessHandler>()
-        val signingService = mockk<SigningService>()
+        val signatureService = mockk<SignatureService>()
         val documentRepository = mockk<DocumentRepository>()
         val partyService = mockk<PartyService>()
 
         stubPartyResolution(partyService)
         every { businessHandler.validateAndReturnDocumentCommand(model) } returns command.right()
         every { businessHandler.generateFile(requestedFromIdentifier.idValue, commandMeta) } returns unsignedFile.right()
-        coEvery { signingService.sign(unsignedFile) } returns signedFile.right()
+        coEvery { signatureService.sign(unsignedFile) } returns signedFile.right()
 
         val savedDocument = AuthorizationDocument.create(
             type = command.type,
@@ -110,7 +112,7 @@ class HandlerTest : FunSpec({
         )
         every { documentRepository.insert(any(), command.scopes) } returns savedDocument.right()
 
-        val handler = Handler(businessHandler, signingService, documentRepository, partyService)
+        val handler = Handler(businessHandler, signatureService, documentRepository, partyService)
 
         val response = handler(model)
 
@@ -120,58 +122,58 @@ class HandlerTest : FunSpec({
 
     test("returns RequestedByPartyError when requestedBy cannot be resolved") {
         val businessHandler = mockk<ProxyDocumentBusinessHandler>(relaxed = true)
-        val signingService = mockk<SigningService>(relaxed = true)
+        val signatureService = mockk<SignatureService>(relaxed = true)
         val documentRepository = mockk<DocumentRepository>(relaxed = true)
         val partyService = mockk<PartyService>()
 
         coEvery { partyService.resolve(requestedByIdentifier) } returns PartyError.PersonResolutionError.left()
 
-        val handler = Handler(businessHandler, signingService, documentRepository, partyService)
+        val handler = Handler(businessHandler, signatureService, documentRepository, partyService)
 
         val response = handler(model)
 
-        response.shouldBeLeft(CreateDocumentError.RequestedByPartyError)
+        response.shouldBeLeft(CreateError.RequestedByPartyError)
         verify(exactly = 0) { businessHandler.validateAndReturnDocumentCommand(any()) }
     }
 
     test("returns AuthorizationError when requestedBy does not match authorized party") {
         val businessHandler = mockk<ProxyDocumentBusinessHandler>(relaxed = true)
-        val signingService = mockk<SigningService>(relaxed = true)
+        val signatureService = mockk<SignatureService>(relaxed = true)
         val documentRepository = mockk<DocumentRepository>(relaxed = true)
         val partyService = mockk<PartyService>()
 
         coEvery { partyService.resolve(requestedByIdentifier) } returns requestedByParty.right()
 
-        val handler = Handler(businessHandler, signingService, documentRepository, partyService)
+        val handler = Handler(businessHandler, signatureService, documentRepository, partyService)
         val otherAuthorizedParty = AuthorizationParty(resourceId = "other", type = PartyType.OrganizationEntity)
 
         val response = handler(model.copy(authorizedParty = otherAuthorizedParty))
 
-        response.shouldBeLeft(CreateDocumentError.AuthorizationError)
+        response.shouldBeLeft(CreateError.AuthorizationError)
         coVerify(exactly = 0) { partyService.resolve(requestedFromIdentifier) }
         verify(exactly = 0) { businessHandler.validateAndReturnDocumentCommand(any()) }
     }
 
     test("returns RequestedFromPartyError when requestedFrom cannot be resolved") {
         val businessHandler = mockk<ProxyDocumentBusinessHandler>(relaxed = true)
-        val signingService = mockk<SigningService>(relaxed = true)
+        val signatureService = mockk<SignatureService>(relaxed = true)
         val documentRepository = mockk<DocumentRepository>(relaxed = true)
         val partyService = mockk<PartyService>()
 
         coEvery { partyService.resolve(requestedByIdentifier) } returns requestedByParty.right()
         coEvery { partyService.resolve(requestedFromIdentifier) } returns PartyError.PersonResolutionError.left()
 
-        val handler = Handler(businessHandler, signingService, documentRepository, partyService)
+        val handler = Handler(businessHandler, signatureService, documentRepository, partyService)
 
         val response = handler(model)
 
-        response.shouldBeLeft(CreateDocumentError.RequestedFromPartyError)
+        response.shouldBeLeft(CreateError.RequestedFromPartyError)
         verify(exactly = 0) { businessHandler.validateAndReturnDocumentCommand(any()) }
     }
 
     test("returns RequestedToPartyError when requestedTo cannot be resolved") {
         val businessHandler = mockk<ProxyDocumentBusinessHandler>(relaxed = true)
-        val signingService = mockk<SigningService>(relaxed = true)
+        val signatureService = mockk<SignatureService>(relaxed = true)
         val documentRepository = mockk<DocumentRepository>(relaxed = true)
         val partyService = mockk<PartyService>()
 
@@ -179,25 +181,25 @@ class HandlerTest : FunSpec({
         coEvery { partyService.resolve(requestedFromIdentifier) } returns requestedFromParty.right()
         coEvery { partyService.resolve(requestedToIdentifier) } returns PartyError.PersonResolutionError.left()
 
-        val handler = Handler(businessHandler, signingService, documentRepository, partyService)
+        val handler = Handler(businessHandler, signatureService, documentRepository, partyService)
 
         val response = handler(model)
 
-        response.shouldBeLeft(CreateDocumentError.RequestedToPartyError)
+        response.shouldBeLeft(CreateError.RequestedToPartyError)
         verify(exactly = 0) { businessHandler.validateAndReturnDocumentCommand(any()) }
     }
 
     test("returns BusinessValidationError when validation fails") {
         val businessHandler = mockk<ProxyDocumentBusinessHandler>()
-        val signingService = mockk<SigningService>(relaxed = true)
+        val signatureService = mockk<SignatureService>(relaxed = true)
         val documentRepository = mockk<DocumentRepository>(relaxed = true)
         val partyService = mockk<PartyService>()
 
         stubPartyResolution(partyService)
-        val validationError = CreateDocumentError.BusinessValidationError("validation failed")
+        val validationError = CreateError.BusinessValidationError("validation failed")
         every { businessHandler.validateAndReturnDocumentCommand(model) } returns validationError.left()
 
-        val handler = Handler(businessHandler, signingService, documentRepository, partyService)
+        val handler = Handler(businessHandler, signatureService, documentRepository, partyService)
 
         val response = handler(model)
 
@@ -207,7 +209,7 @@ class HandlerTest : FunSpec({
 
     test("returns FileGenerationError when file generation fails") {
         val businessHandler = mockk<ProxyDocumentBusinessHandler>()
-        val signingService = mockk<SigningService>(relaxed = true)
+        val signatureService = mockk<SignatureService>(relaxed = true)
         val documentRepository = mockk<DocumentRepository>(relaxed = true)
         val partyService = mockk<PartyService>()
 
@@ -217,17 +219,17 @@ class HandlerTest : FunSpec({
             businessHandler.generateFile(requestedFromIdentifier.idValue, commandMeta)
         } returns DocumentGenerationError.ContentGenerationError.left()
 
-        val handler = Handler(businessHandler, signingService, documentRepository, partyService)
+        val handler = Handler(businessHandler, signatureService, documentRepository, partyService)
 
         val response = handler(model)
 
-        response.shouldBeLeft(CreateDocumentError.FileGenerationError)
-        coVerify(exactly = 0) { signingService.sign(any()) }
+        response.shouldBeLeft(CreateError.FileGenerationError)
+        coVerify(exactly = 0) { signatureService.sign(any()) }
     }
 
     test("returns SignFileError when signing fails") {
         val businessHandler = mockk<ProxyDocumentBusinessHandler>()
-        val signingService = mockk<SigningService>()
+        val signatureService = mockk<SignatureService>()
         val documentRepository = mockk<DocumentRepository>(relaxed = true)
         val partyService = mockk<PartyService>()
 
@@ -235,35 +237,35 @@ class HandlerTest : FunSpec({
         every { businessHandler.validateAndReturnDocumentCommand(model) } returns command.right()
         every { businessHandler.generateFile(requestedFromIdentifier.idValue, commandMeta) } returns unsignedFile.right()
         coEvery {
-            signingService.sign(unsignedFile)
-        } returns FileSigningError.SignatureFetchingError.left()
+            signatureService.sign(unsignedFile)
+        } returns SignatureSigningError.SignatureFetchingError.left()
 
-        val handler = Handler(businessHandler, signingService, documentRepository, partyService)
+        val handler = Handler(businessHandler, signatureService, documentRepository, partyService)
 
         val response = handler(model)
 
-        response.shouldBeLeft(CreateDocumentError.SignFileError(FileSigningError.SignatureFetchingError))
+        response.shouldBeLeft(CreateError.SignFileError(SignatureSigningError.SignatureFetchingError))
         verify(exactly = 0) { documentRepository.insert(any(), any()) }
     }
 
     test("returns PersistenceError when repository insert fails") {
         val businessHandler = mockk<ProxyDocumentBusinessHandler>()
-        val signingService = mockk<SigningService>()
+        val signatureService = mockk<SignatureService>()
         val documentRepository = mockk<DocumentRepository>()
         val partyService = mockk<PartyService>()
 
         stubPartyResolution(partyService)
         every { businessHandler.validateAndReturnDocumentCommand(model) } returns command.right()
         every { businessHandler.generateFile(requestedFromIdentifier.idValue, commandMeta) } returns unsignedFile.right()
-        coEvery { signingService.sign(unsignedFile) } returns signedFile.right()
+        coEvery { signatureService.sign(unsignedFile) } returns signedFile.right()
         every {
             documentRepository.insert(any(), command.scopes)
         } returns RepositoryWriteError.UnexpectedError.left()
 
-        val handler = Handler(businessHandler, signingService, documentRepository, partyService)
+        val handler = Handler(businessHandler, signatureService, documentRepository, partyService)
 
         val response = handler(model)
 
-        response.shouldBeLeft(CreateDocumentError.PersistenceError)
+        response.shouldBeLeft(CreateError.PersistenceError)
     }
 })

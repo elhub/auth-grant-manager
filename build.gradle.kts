@@ -28,6 +28,8 @@ dependencies {
     // PDF generation and signing
     implementation(libs.bundles.pdf.generation)
     implementation(libs.bundles.dss)
+    implementation(libs.bouncycastle.bcprov)
+    implementation(libs.bouncycastle.bcpkix)
     // Observability
     implementation(libs.bundles.logging)
     implementation(libs.bundles.monitoring)
@@ -70,6 +72,7 @@ val dbPassword = System.getenv("DB_PASSWORD")?.takeIf { it.isNotBlank() } ?: "ad
 val certDir = layout.buildDirectory.dir("tmp/test-certs")
 val testCertPath = certDir.map { it.file("self-signed-cert.pem").asFile.path }
 val testKeyPath = certDir.map { it.file("self-signed-key.pem").asFile.path }
+val bankIdPath = certDir.map { it.file("bankid-root.pem").asFile.path }
 
 dockerCompose {
     createNested("services").apply {
