@@ -48,11 +48,11 @@ data class CreateDocumentResponseLinks(
 ) : JsonApiResourceLinks
 
 typealias CreateDocumentResponse = JsonApiResponse.SingleDocumentWithRelationshipsAndMetaAndLinks<
-        CreateDocumentResponseAttributes,
-        CreateDocumentResponseRelationships,
-        CreateDocumentResponseMeta,
-        CreateDocumentResponseLinks
-        >
+    CreateDocumentResponseAttributes,
+    CreateDocumentResponseRelationships,
+    CreateDocumentResponseMeta,
+    CreateDocumentResponseLinks
+    >
 
 fun AuthorizationDocument.toCreateDocumentResponse() = CreateDocumentResponse(
     data = JsonApiResponseResourceObjectWithRelationshipsAndMetaAndLinks(

@@ -50,11 +50,11 @@ data class GetDocumentSingleResponseLinks(
 ) : JsonApiResourceLinks
 
 typealias GetDocumentSingleResponse = JsonApiResponse.SingleDocumentWithRelationshipsAndMetaAndLinks<
-        GetDocumentSingleResponseAttributes,
-        GetDocumentSingleResponseRelationship,
-        GetDocumentSingleResponseMeta,
-        GetDocumentSingleResponseLinks
-        >
+    GetDocumentSingleResponseAttributes,
+    GetDocumentSingleResponseRelationship,
+    GetDocumentSingleResponseMeta,
+    GetDocumentSingleResponseLinks
+    >
 
 fun AuthorizationDocument.toGetSingleResponse() =
     GetDocumentSingleResponse(

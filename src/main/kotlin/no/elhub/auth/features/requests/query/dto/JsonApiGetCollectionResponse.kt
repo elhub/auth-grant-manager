@@ -51,11 +51,11 @@ value class GetRequestCollectionResponseMeta(
 ) : JsonApiResourceMeta
 
 typealias GetRequestCollectionResponse = JsonApiResponse.CollectionDocumentWithRelationshipsAndMetaAndLinks<
-        GetRequestCollectionResponseAttributes,
-        GetRequestCollectionResponseRelationships,
-        GetRequestCollectionResponseMeta,
-        GetRequestCollectionResponseLinks
-        >
+    GetRequestCollectionResponseAttributes,
+    GetRequestCollectionResponseRelationships,
+    GetRequestCollectionResponseMeta,
+    GetRequestCollectionResponseLinks
+    >
 
 fun List<AuthorizationRequest>.toGetCollectionResponse() =
     GetRequestCollectionResponse(
