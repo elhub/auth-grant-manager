@@ -9,11 +9,10 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import no.elhub.auth.features.common.auth.AuthorizationProvider
 import no.elhub.auth.features.common.auth.AuthorizedParty
-import no.elhub.auth.features.common.auth.toAuthErrorResponse
+import no.elhub.auth.features.common.auth.toApiErrorResponse
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
-import no.elhub.auth.features.common.toInputErrorResponse
-import no.elhub.auth.features.common.toQueryErrorResponse
+import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.common.validateId
 import no.elhub.auth.features.documents.get.dto.toGetSingleResponse
 import org.slf4j.LoggerFactory
@@ -26,14 +25,14 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
     get("/{$DOCUMENT_ID_PARAM}") {
         val authorizedParty = authProvider.authorizeEndUserOrMaskinporten(call)
             .getOrElse { err ->
-                val (status, body) = err.toAuthErrorResponse()
+                val (status, body) = err.toApiErrorResponse()
                 call.respond(status, body)
                 return@get
             }
 
         val id: UUID = validateId(call.parameters[DOCUMENT_ID_PARAM])
             .getOrElse { err ->
-                val (status, body) = err.toInputErrorResponse()
+                val (status, body) = err.toApiErrorResponse()
                 call.respond(status, body)
                 return@get
             }
@@ -59,7 +58,7 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
         val document = handler(query)
             .getOrElse { error ->
                 logger.error("Failed to get authorization document: {}", error)
-                val (status, body) = error.toQueryErrorResponse()
+                val (status, body) = error.toApiErrorResponse()
                 call.respond(status, body)
                 return@get
             }
@@ -73,14 +72,14 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
     get("/{$DOCUMENT_ID_PARAM}.pdf") {
         val authorizedParty = authProvider.authorizeEndUserOrMaskinporten(call)
             .getOrElse { err ->
-                val (status, body) = err.toAuthErrorResponse()
+                val (status, body) = err.toApiErrorResponse()
                 call.respond(status, body)
                 return@get
             }
 
         val id: UUID = validateId(call.parameters[DOCUMENT_ID_PARAM])
             .getOrElse { err ->
-                val (status, body) = err.toInputErrorResponse()
+                val (status, body) = err.toApiErrorResponse()
                 call.respond(status, body)
                 return@get
             }
@@ -106,7 +105,7 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
         val document = handler(query)
             .getOrElse { error ->
                 logger.error("Failed to get authorization document: {}", error)
-                val (status, body) = error.toQueryErrorResponse()
+                val (status, body) = error.toApiErrorResponse()
                 call.respond(status, body)
                 return@get
             }

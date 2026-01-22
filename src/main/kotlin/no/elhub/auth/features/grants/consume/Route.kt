@@ -8,10 +8,10 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.patch
 import no.elhub.auth.features.common.InputError
 import no.elhub.auth.features.common.auth.AuthorizationProvider
-import no.elhub.auth.features.common.auth.toAuthErrorResponse
+import no.elhub.auth.features.common.auth.toApiErrorResponse
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
-import no.elhub.auth.features.common.toInputErrorResponse
+import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.common.validateId
 import no.elhub.auth.features.grants.common.dto.toSingleGrantResponse
 import no.elhub.auth.features.grants.consume.dto.JsonApiConsumeRequest
@@ -25,14 +25,14 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
     patch("/{$GRANT_ID_PARAM}") {
         val authorizedSystem = authProvider.authorizeElhubService(call)
             .getOrElse { err ->
-                val (status, body) = err.toAuthErrorResponse()
+                val (status, body) = err.toApiErrorResponse()
                 call.respond(status, body)
                 return@patch
             }
 
         val grantId = validateId(call.parameters[GRANT_ID_PARAM])
             .getOrElse { error ->
-                val (status, body) = error.toInputErrorResponse()
+                val (status, body) = error.toApiErrorResponse()
                 call.respond(status, body)
                 return@patch
             }
@@ -40,7 +40,7 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
         val body = runCatching {
             call.receive<JsonApiConsumeRequest>()
         }.getOrElse {
-            val (status, body) = InputError.MalformedInputError.toInputErrorResponse()
+            val (status, body) = InputError.MalformedInputError.toApiErrorResponse()
             call.respond(status, body)
             return@patch
         }
@@ -56,7 +56,7 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
 
         val updated = handler(command).getOrElse { error ->
             logger.error("Failed to update authorization grant: {}", error)
-            val (status, error) = error.toConsumeErrorResponse()
+            val (status, error) = error.toApiErrorResponse()
             call.respond(status, error)
             return@patch
         }

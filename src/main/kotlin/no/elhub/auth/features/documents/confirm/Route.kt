@@ -10,10 +10,10 @@ import io.ktor.utils.io.readRemaining
 import kotlinx.io.readByteArray
 import no.elhub.auth.features.common.InputError
 import no.elhub.auth.features.common.auth.AuthorizationProvider
-import no.elhub.auth.features.common.auth.toAuthErrorResponse
+import no.elhub.auth.features.common.auth.toApiErrorResponse
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
-import no.elhub.auth.features.common.toInputErrorResponse
+import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.common.validateId
 import org.slf4j.LoggerFactory
 
@@ -24,21 +24,21 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
     put("/{$DOCUMENT_ID_PARAM}.pdf") {
         val resolvedActor = authProvider.authorizeMaskinporten(call)
             .getOrElse {
-                val error = it.toAuthErrorResponse()
+                val error = it.toApiErrorResponse()
                 call.respond(error.first, error.second)
                 return@put
             }
 
         val documentId = validateId(call.parameters[DOCUMENT_ID_PARAM])
             .getOrElse { error ->
-                val (status, body) = error.toInputErrorResponse()
+                val (status, body) = error.toApiErrorResponse()
                 call.respond(status, body)
                 return@put
             }
 
         val signedDocument = call.receiveChannel().readRemaining().readByteArray()
         if (signedDocument.isEmpty()) {
-            val (status, body) = InputError.MissingInputError.toInputErrorResponse()
+            val (status, body) = InputError.MissingInputError.toApiErrorResponse()
             call.respond(status, body)
             return@put
         }
@@ -52,7 +52,7 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
             )
         ).getOrElse { error ->
             logger.error("Failed to confirm authorization document: {}", error)
-            val (status, error) = error.toConfirmErrorResponse()
+            val (status, error) = error.toApiErrorResponse()
             call.respond(status, error)
             return@put
         }

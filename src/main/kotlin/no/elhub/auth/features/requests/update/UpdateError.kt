@@ -1,7 +1,7 @@
 package no.elhub.auth.features.requests.update
 
 import io.ktor.http.HttpStatusCode
-import no.elhub.auth.features.common.buildErrorResponse
+import no.elhub.auth.features.common.buildApiErrorResponse
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 
 sealed class UpdateError {
@@ -15,40 +15,40 @@ sealed class UpdateError {
     data object ExpiredError : UpdateError()
 }
 
-fun UpdateError.toUpdateErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> =
+fun UpdateError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> =
     when (this) {
         UpdateError.PersistenceError,
         UpdateError.RequestNotFound,
         UpdateError.GrantCreationError,
-        UpdateError.ScopeReadError, -> buildErrorResponse(
+        UpdateError.ScopeReadError, -> buildApiErrorResponse(
             status = HttpStatusCode.InternalServerError,
             code = "internal_authorization_error",
             title = "Internal authorization error",
             detail = "An internal error occurred."
         )
 
-        UpdateError.IllegalTransitionError -> buildErrorResponse(
+        UpdateError.IllegalTransitionError -> buildApiErrorResponse(
             status = HttpStatusCode.BadRequest,
             code = "invalid_status_transition",
             title = "Invalid status transition",
             detail = "Only 'Accepted' and 'Rejected' statuses are allowed."
         )
 
-        UpdateError.IllegalStateError -> buildErrorResponse(
+        UpdateError.IllegalStateError -> buildApiErrorResponse(
             status = HttpStatusCode.BadRequest,
             code = "invalid_status_state",
             title = "Invalid status state",
             detail = "Request must be in 'Pending' status to update."
         )
 
-        UpdateError.ExpiredError -> buildErrorResponse(
+        UpdateError.ExpiredError -> buildApiErrorResponse(
             status = HttpStatusCode.BadRequest,
             code = "expired_status_transition",
             title = "Request has expired",
             detail = "Request validity period has passed"
         )
 
-        UpdateError.NotAuthorizedError -> buildErrorResponse(
+        UpdateError.NotAuthorizedError -> buildApiErrorResponse(
             status = HttpStatusCode.Unauthorized,
             code = "not_authorized",
             title = "Not authorized",

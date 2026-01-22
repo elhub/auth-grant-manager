@@ -8,10 +8,10 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
 import no.elhub.auth.features.common.auth.AuthorizationProvider
 import no.elhub.auth.features.common.auth.RoleType
-import no.elhub.auth.features.common.auth.toAuthErrorResponse
+import no.elhub.auth.features.common.auth.toApiErrorResponse
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
-import no.elhub.auth.features.common.toBalanceSupplierNotAuthorizedResponse
+import no.elhub.auth.features.common.toBalanceSupplierNotApiAuthorizedResponse
 import no.elhub.auth.features.documents.create.dto.JsonApiCreateDocumentRequest
 import no.elhub.auth.features.documents.create.dto.toCreateDocumentResponse
 import no.elhub.auth.features.documents.create.dto.toModel
@@ -26,7 +26,7 @@ fun Route.route(
     post {
         val resolvedActor = authProvider.authorizeMaskinporten(call)
             .getOrElse {
-                val error = it.toAuthErrorResponse()
+                val error = it.toApiErrorResponse()
                 call.respond(error.first, error.second)
                 return@post
             }
@@ -34,7 +34,7 @@ fun Route.route(
         val requestBody = call.receive<JsonApiCreateDocumentRequest>()
 
         if (resolvedActor.role != RoleType.BalanceSupplier) {
-            val (status, body) = toBalanceSupplierNotAuthorizedResponse()
+            val (status, body) = toBalanceSupplierNotApiAuthorizedResponse()
             call.respond(status, body)
             return@post
         }
@@ -49,7 +49,7 @@ fun Route.route(
         val document = handler(model)
             .getOrElse { error ->
                 logger.error("Failed to create authorization document: {}", error)
-                val (status, validationError) = error.toCreateErrorResponse()
+                val (status, validationError) = error.toApiErrorResponse()
                 call.respond(status, validationError)
                 return@post
             }

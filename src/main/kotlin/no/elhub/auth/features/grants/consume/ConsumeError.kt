@@ -1,7 +1,7 @@
 package no.elhub.auth.features.grants.consume
 
 import io.ktor.http.HttpStatusCode
-import no.elhub.auth.features.common.buildErrorResponse
+import no.elhub.auth.features.common.buildApiErrorResponse
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 
 sealed class ConsumeError {
@@ -13,44 +13,44 @@ sealed class ConsumeError {
     data object IllegalStateError : ConsumeError()
 }
 
-fun ConsumeError.toConsumeErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> =
+fun ConsumeError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> =
     when (this) {
-        ConsumeError.GrantNotFound -> buildErrorResponse(
+        ConsumeError.GrantNotFound -> buildApiErrorResponse(
             status = HttpStatusCode.NotFound,
             code = "not_found",
             title = "Not found",
             detail = "Grant could not be found"
         )
 
-        ConsumeError.PersistenceError -> buildErrorResponse(
+        ConsumeError.PersistenceError -> buildApiErrorResponse(
             status = HttpStatusCode.InternalServerError,
             code = "internal_authorization_error",
             title = "Internal authorization error",
             detail = "An internal error occurred."
         )
 
-        ConsumeError.NotAuthorized -> buildErrorResponse(
+        ConsumeError.NotAuthorized -> buildApiErrorResponse(
             status = HttpStatusCode.Unauthorized,
             code = "not_authorized",
             title = "Not authorized",
             detail = "Not authorized for this endpoint."
         )
 
-        ConsumeError.IllegalStateError -> buildErrorResponse(
+        ConsumeError.IllegalStateError -> buildApiErrorResponse(
             status = HttpStatusCode.BadRequest,
             code = "illegal_status_state",
             title = "Illegal status state",
             detail = "Grant must be 'Active' to get consumed"
         )
 
-        ConsumeError.IllegalTransitionError -> buildErrorResponse(
+        ConsumeError.IllegalTransitionError -> buildApiErrorResponse(
             status = HttpStatusCode.BadRequest,
             code = "invalid_status_transition",
             title = "Invalid status transition",
             detail = "Only 'Exhausted' status is allowed."
         )
 
-        ConsumeError.ExpiredError -> buildErrorResponse(
+        ConsumeError.ExpiredError -> buildApiErrorResponse(
             status = HttpStatusCode.BadRequest,
             code = "expired_status_transition",
             title = "Grant has expired",

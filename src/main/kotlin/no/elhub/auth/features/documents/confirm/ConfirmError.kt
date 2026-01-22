@@ -1,7 +1,7 @@
 package no.elhub.auth.features.documents.confirm
 
 import io.ktor.http.HttpStatusCode
-import no.elhub.auth.features.common.buildErrorResponse
+import no.elhub.auth.features.common.buildApiErrorResponse
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 
 sealed class ConfirmError {
@@ -16,9 +16,9 @@ sealed class ConfirmError {
     data object ExpiredError : ConfirmError()
 }
 
-fun ConfirmError.toConfirmErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> =
+fun ConfirmError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> =
     when (this) {
-        ConfirmError.DocumentNotFoundError -> buildErrorResponse(
+        ConfirmError.DocumentNotFoundError -> buildApiErrorResponse(
             status = HttpStatusCode.NotFound,
             code = "not_found",
             title = "Not found",
@@ -29,28 +29,28 @@ fun ConfirmError.toConfirmErrorResponse(): Pair<HttpStatusCode, JsonApiErrorColl
         ConfirmError.DocumentUpdateError,
         ConfirmError.ScopeReadError,
         ConfirmError.GrantCreationError,
-        ConfirmError.RequestedByResolutionError -> buildErrorResponse(
+        ConfirmError.RequestedByResolutionError -> buildApiErrorResponse(
             status = HttpStatusCode.InternalServerError,
             code="internal_server_error",
             title= "Internal Server error",
             detail = "An internal error occurred."
         )
 
-        ConfirmError.InvalidRequestedByError -> buildErrorResponse(
+        ConfirmError.InvalidRequestedByError -> buildApiErrorResponse(
             status = HttpStatusCode.Forbidden,
             code = "not_authorized",
             title = "Party not authorized",
             detail = "RequestedBy must match the authorized party",
         )
 
-        ConfirmError.IllegalStateError -> buildErrorResponse(
+        ConfirmError.IllegalStateError -> buildApiErrorResponse(
             status = HttpStatusCode.NotFound,
             code = "invalid_status_state",
             title = "Invalid status state",
             detail = "Document must be in 'Pending' status to confirm."
         )
 
-        ConfirmError.ExpiredError -> buildErrorResponse(
+        ConfirmError.ExpiredError -> buildApiErrorResponse(
             status = HttpStatusCode.BadRequest,
             code = "expired_status_transition",
             title = "Document has expired",

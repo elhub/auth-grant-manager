@@ -1,7 +1,7 @@
 package no.elhub.auth.features.requests.create
 
 import io.ktor.http.HttpStatusCode
-import no.elhub.auth.features.common.buildErrorResponse
+import no.elhub.auth.features.common.buildApiErrorResponse
 import no.elhub.auth.features.requests.create.requesttypes.RequestTypeValidationError
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 
@@ -21,9 +21,9 @@ sealed class CreateError {
     ) : CreateError()
 }
 
-fun CreateError.toCreateErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> =
+fun CreateError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> =
     when (this) {
-        CreateError.AuthorizationError -> buildErrorResponse(
+        CreateError.AuthorizationError -> buildApiErrorResponse(
             status = HttpStatusCode.Forbidden,
             code = "not_authorized",
             title = "Party not authorized",
@@ -33,14 +33,14 @@ fun CreateError.toCreateErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollec
         CreateError.PersistenceError,
         CreateError.RequestedFromPartyError,
         CreateError.RequestedByPartyError,
-        CreateError.MappingError -> buildErrorResponse(
+        CreateError.MappingError -> buildApiErrorResponse(
             status = HttpStatusCode.InternalServerError,
             code = "internal_authorization_error",
             title = "Internal authorization error",
             detail = "An internal error occurred."
         )
 
-        is CreateError.ValidationError -> buildErrorResponse(
+        is CreateError.ValidationError -> buildApiErrorResponse(
             status = HttpStatusCode.BadRequest,
             title = "Validation error",
             code = this.reason.code,

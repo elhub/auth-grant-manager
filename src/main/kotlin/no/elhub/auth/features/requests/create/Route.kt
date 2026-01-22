@@ -8,10 +8,10 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
 import no.elhub.auth.features.common.auth.AuthorizationProvider
 import no.elhub.auth.features.common.auth.RoleType
-import no.elhub.auth.features.common.auth.toAuthErrorResponse
+import no.elhub.auth.features.common.auth.toApiErrorResponse
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
-import no.elhub.auth.features.common.toBalanceSupplierNotAuthorizedResponse
+import no.elhub.auth.features.common.toBalanceSupplierNotApiAuthorizedResponse
 import no.elhub.auth.features.requests.create.dto.JsonApiCreateRequest
 import no.elhub.auth.features.requests.create.dto.toCreateResponse
 import no.elhub.auth.features.requests.create.dto.toModel
@@ -27,14 +27,14 @@ fun Route.route(
         val resolvedActor = authProvider.authorizeMaskinporten(call)
             .getOrElse {
                 logger.error("Failed to authorize Maskinporten token for POST /authorization-requests: {}", it)
-                val error = it.toAuthErrorResponse()
+                val error = it.toApiErrorResponse()
                 call.respond(error.first, error.second)
                 return@post
             }
 
         val requestBody = call.receive<JsonApiCreateRequest>()
         if (resolvedActor.role != RoleType.BalanceSupplier) {
-            val (status, body) = toBalanceSupplierNotAuthorizedResponse()
+            val (status, body) = toBalanceSupplierNotApiAuthorizedResponse()
             call.respond(status, body)
             return@post
         }
@@ -48,7 +48,7 @@ fun Route.route(
             handler(requestBody.toModel(authorizedParty))
                 .getOrElse { error ->
                     logger.error("Failed to create authorization request: {}", error)
-                    val (status, error) = error.toCreateErrorResponse()
+                    val (status, error) = error.toApiErrorResponse()
                     call.respond(status, error)
                     return@post
                 }

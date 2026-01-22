@@ -1,7 +1,7 @@
 package no.elhub.auth.features.documents.create
 
 import io.ktor.http.HttpStatusCode
-import no.elhub.auth.features.common.buildErrorResponse
+import no.elhub.auth.features.common.buildApiErrorResponse
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 
 sealed class CreateDocumentError {
@@ -23,16 +23,16 @@ sealed class CreateDocumentError {
     data class BusinessValidationError(val message: String) : CreateDocumentError()
 }
 
-fun CreateDocumentError.toCreateErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> =
+fun CreateDocumentError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> =
     when (this) {
-        is CreateDocumentError.BusinessValidationError -> buildErrorResponse(
+        is CreateDocumentError.BusinessValidationError -> buildApiErrorResponse(
             status = HttpStatusCode.BadRequest,
             code = "business_validation_error",
             title = "Business validation error",
             detail = this.message
         )
 
-        is CreateDocumentError.AuthorizationError -> buildErrorResponse(
+        is CreateDocumentError.AuthorizationError -> buildApiErrorResponse(
             status = HttpStatusCode.Forbidden,
             code = "not_authorized",
             title = "Party not authorized",
@@ -44,7 +44,7 @@ fun CreateDocumentError.toCreateErrorResponse(): Pair<HttpStatusCode, JsonApiErr
         CreateDocumentError.PersistenceError,
         CreateDocumentError.RequestedByPartyError,
         CreateDocumentError.RequestedFromPartyError,
-        CreateDocumentError.RequestedToPartyError -> buildErrorResponse(
+        CreateDocumentError.RequestedToPartyError -> buildApiErrorResponse(
             status = HttpStatusCode.InternalServerError,
             code = "internal_authorization_error",
             title = "Internal authorization error",
