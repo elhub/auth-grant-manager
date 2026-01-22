@@ -1,6 +1,8 @@
-package no.elhub.auth.features.common
+package no.elhub.auth.features.common.person
 
 import arrow.core.Either
+import arrow.core.left
+import arrow.core.raise.context.ensure
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.ClientRequestException
@@ -27,6 +29,10 @@ class ApiPersonService(
 
     override suspend fun findOrCreateByNin(nin: String): Either<ClientError, Person> =
         Either.catch {
+            if (isNinValid(nin)) {
+                return ClientError.InvalidNin.left()
+            }
+
             val response = client.post("${cfg.baseUri}/persons") {
                 contentType(ContentType.Application.Json)
                 setBody(
@@ -54,6 +60,7 @@ class ApiPersonService(
 
 sealed class ClientError {
     data class UnexpectedError(val cause: Throwable) : ClientError()
+    data object InvalidNin : ClientError()
 }
 
 data class PersonApiConfig(
