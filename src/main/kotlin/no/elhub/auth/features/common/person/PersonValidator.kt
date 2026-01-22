@@ -20,12 +20,11 @@ val ninChecks = listOf(
  * - In the Mod11 algorithm a checksum result of 10 is considered invalid and will not match any digit (0-9)
  */
 fun isNinValid(nin: String?): Boolean {
-    if (nin == null) return false
+    if (nin.isNullOrBlank()) return false
     if (nin.length != NIN_LENGTH) return false
-    return isValidNinChecksum(nin, ninChecks[0]) ==
-        nin[NIN_CHECKSUM_POS_1].digitToInt() &&
-        isValidNinChecksum(nin, ninChecks[1]) ==
-        nin[NIN_CHECKSUM_POS_2].digitToInt()
+    if (!nin.all { it.isDigit() }) return false
+    return isValidNinChecksum(nin, ninChecks[0]) == nin[NIN_CHECKSUM_POS_1].digitToInt() &&
+        isValidNinChecksum(nin, ninChecks[1]) == nin[NIN_CHECKSUM_POS_2].digitToInt()
 }
 
 private fun isValidNinChecksum(nin: String, factors: IntArray): Int {

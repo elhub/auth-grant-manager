@@ -10,9 +10,7 @@ sealed class CreateError {
     data class SignFileError(val cause: SignatureSigningError) : CreateError()
     data object AuthorizationError : CreateError()
     data object PersistenceError : CreateError()
-    data object RequestedFromPartyError : CreateError()
-    data object RequestedByPartyError : CreateError()
-    data object RequestedToPartyError : CreateError()
+    data object RequestedPartyError : CreateError()
 
     // To be used by value streams in during the business validation process. Auth Grant will return this message back to the API consumer
     data class BusinessValidationError(val message: String) : CreateError()
@@ -37,9 +35,7 @@ fun CreateError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollectio
         CreateError.FileGenerationError,
         is CreateError.SignFileError,
         CreateError.PersistenceError,
-        CreateError.RequestedByPartyError,
-        CreateError.RequestedFromPartyError,
-        CreateError.RequestedToPartyError -> buildApiErrorResponse(
+        CreateError.RequestedPartyError -> buildApiErrorResponse(
             status = HttpStatusCode.InternalServerError,
             code = "internal_server_error",
             title = "Internal server error",

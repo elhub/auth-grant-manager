@@ -2,6 +2,7 @@ package no.elhub.auth.features.common.party
 
 import arrow.core.Either
 import arrow.core.right
+import no.elhub.auth.features.common.person.ClientError
 import no.elhub.auth.features.common.person.PersonService
 
 class PartyService(
@@ -12,7 +13,12 @@ class PartyService(
             PartyIdentifierType.NationalIdentityNumber ->
                 personService.findOrCreateByNin(partyIdentifier.idValue)
                     .map { AuthorizationParty(resourceId = it.internalId.toString(), type = PartyType.Person) }
-                    .mapLeft { PartyError.PersonResolutionError }
+                    .mapLeft { clientErr ->
+                        when (clientErr) {
+                            ClientError.InvalidNin -> PartyError.InvalidNin
+                            is ClientError.UnexpectedError -> PartyError.PersonResolutionError
+                        }
+                    }
 
             PartyIdentifierType.OrganizationNumber -> AuthorizationParty(
                 resourceId = partyIdentifier.idValue,
@@ -27,5 +33,6 @@ class PartyService(
 }
 
 sealed class PartyError {
+    data object InvalidNin : PartyError()
     data object PersonResolutionError : PartyError()
 }

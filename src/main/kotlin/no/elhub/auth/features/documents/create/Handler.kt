@@ -23,7 +23,7 @@ class Handler(
             val requestedByParty =
                 partyService
                     .resolve(model.meta.requestedBy)
-                    .mapLeft { CreateError.RequestedByPartyError }
+                    .mapLeft { CreateError.RequestedPartyError }
                     .bind()
 
             ensure(model.authorizedParty == requestedByParty) {
@@ -33,13 +33,13 @@ class Handler(
             val requestedFromParty =
                 partyService
                     .resolve(model.meta.requestedFrom)
-                    .mapLeft { CreateError.RequestedFromPartyError }
+                    .mapLeft { CreateError.RequestedPartyError }
                     .bind()
 
             val requestedToParty =
                 partyService
                     .resolve(model.meta.requestedTo)
-                    .mapLeft { CreateError.RequestedToPartyError }
+                    .mapLeft { CreateError.RequestedPartyError }
                     .bind()
 
             val command =

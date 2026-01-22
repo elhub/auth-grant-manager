@@ -11,6 +11,7 @@ import io.ktor.client.request.header
 import io.ktor.client.request.patch
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
@@ -375,9 +376,9 @@ class AuthorizationRequestRouteTest : FunSpec({
                                     meta =
                                     CreateRequestMeta(
                                         requestedBy = PartyIdentifier(PartyIdentifierType.GlobalLocationNumber, "0107000000021"),
-                                        requestedFrom = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "12345678901"),
+                                        requestedFrom = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "31129954380"),
                                         requestedFromName = "Hillary Orr",
-                                        requestedTo = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "12345678902"),
+                                        requestedTo = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "31129954380"),
                                         requestedForMeteringPointId = "123456789012345678",
                                         requestedForMeteringPointAddress = "quaerendum",
                                         balanceSupplierName = "Balance Supplier",
@@ -467,9 +468,9 @@ class AuthorizationRequestRouteTest : FunSpec({
                                     meta =
                                     CreateRequestMeta(
                                         requestedBy = PartyIdentifier(PartyIdentifierType.GlobalLocationNumber, "0107000000021"),
-                                        requestedFrom = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "12345678901"),
+                                        requestedFrom = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "31129954380"),
                                         requestedFromName = "",
-                                        requestedTo = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "12345678902"),
+                                        requestedTo = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "31129954380"),
                                         requestedForMeteringPointId = "123456789012345678",
                                         requestedForMeteringPointAddress = "quaerendum",
                                         balanceSupplierName = "Balance Supplier",
@@ -512,9 +513,9 @@ class AuthorizationRequestRouteTest : FunSpec({
                                     meta =
                                     CreateRequestMeta(
                                         requestedBy = PartyIdentifier(PartyIdentifierType.GlobalLocationNumber, "0107000000038"),
-                                        requestedFrom = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "12345678901"),
+                                        requestedFrom = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "31129954380"),
                                         requestedFromName = "Test Name",
-                                        requestedTo = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "12345678902"),
+                                        requestedTo = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "31129954380"),
                                         requestedForMeteringPointId = "123456789012345678",
                                         requestedForMeteringPointAddress = "quaerendum",
                                         balanceSupplierName = "Balance Supplier",
@@ -534,6 +535,51 @@ class AuthorizationRequestRouteTest : FunSpec({
                         code shouldBe "unsupported_party_type"
                         title shouldBe "Unsupported party type"
                         detail shouldBe "The party type you are authorized as is not supported for this endpoint."
+                    }
+                }
+            }
+
+            test("Should return 400 Bad Request when requestee has invalid nin in body") {
+                val response =
+                    client.post(REQUESTS_PATH) {
+                        header(HttpHeaders.Authorization, "Bearer maskinporten")
+                        header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                        contentType(ContentType.Application.Json)
+                        setBody(
+                            JsonApiCreateRequest(
+                                data =
+                                JsonApiRequestResourceObjectWithMeta(
+                                    type = "AuthorizationRequest",
+                                    attributes =
+                                    CreateRequestAttributes(
+                                        requestType = AuthorizationRequest.Type.ChangeOfSupplierConfirmation,
+                                    ),
+                                    meta =
+                                    CreateRequestMeta(
+                                        requestedBy = PartyIdentifier(PartyIdentifierType.GlobalLocationNumber, "0107000000021"),
+                                        requestedFrom = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "123"),
+                                        requestedFromName = "Hillary Orr",
+                                        requestedTo = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "31129954380"),
+                                        requestedForMeteringPointId = "123456789012345678",
+                                        requestedForMeteringPointAddress = "quaerendum",
+                                        balanceSupplierName = "Balance Supplier",
+                                        balanceSupplierContractName = "Selena Chandler",
+                                    ),
+                                ),
+                            ),
+                        )
+                    }
+
+                response.status shouldBe HttpStatusCode.BadRequest
+
+                val responseJson: JsonApiErrorCollection = response.body()
+                responseJson.errors.apply {
+                    size shouldBe 1
+                    this[0].apply {
+                        status shouldBe "400"
+                        code shouldBe "invalid_nin"
+                        title shouldBe "Party invalid"
+                        detail shouldBe "The nin in the request is invalid"
                     }
                 }
             }

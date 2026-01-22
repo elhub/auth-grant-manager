@@ -9,9 +9,12 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
+import no.elhub.auth.features.common.buildApiErrorResponse
 import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObject
+import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import org.slf4j.LoggerFactory
 import java.util.UUID
 
@@ -26,12 +29,13 @@ class ApiPersonService(
 
     private val logger = LoggerFactory.getLogger(PersonService::class.java)
 
-    override suspend fun findOrCreateByNin(nin: String): Either<ClientError, Person> =
-        Either.catch {
-            if (isNinValid(nin)) {
-                return ClientError.InvalidNin.left()
-            }
+    override suspend fun findOrCreateByNin(nin: String): Either<ClientError, Person> {
+        if (!isNinValid(nin)) {
+            println("tjohei")
+            return ClientError.InvalidNin.left()
+        }
 
+        return Either.catch {
             val response = client.post("${cfg.baseUri}/persons") {
                 contentType(ContentType.Application.Json)
                 setBody(
@@ -55,6 +59,7 @@ class ApiPersonService(
             logger.error("Failed to fetch person: {}", throwable.message)
             ClientError.UnexpectedError(throwable)
         }
+    }
 }
 
 sealed class ClientError {
@@ -65,3 +70,20 @@ sealed class ClientError {
 data class PersonApiConfig(
     val baseUri: String,
 )
+
+fun ClientError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> =
+    when (this) {
+        ClientError.InvalidNin -> buildApiErrorResponse(
+            status = HttpStatusCode.BadRequest,
+            code = "invalid_nin",
+            title = "Invalid national identity number",
+            detail = "Provided national identity number is invalid"
+        )
+
+        is ClientError.UnexpectedError -> buildApiErrorResponse(
+            status = HttpStatusCode.InternalServerError,
+            code = "internal_error",
+            title = "Internal Server Error",
+            detail = "An unexpected error occurred"
+        )
+    }
