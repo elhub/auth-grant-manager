@@ -1,16 +1,13 @@
 package no.elhub.auth.features.documents.create
 
-import arrow.core.Either
-import arrow.core.left
-import arrow.core.raise.catch
-import arrow.core.right
 import java.io.File
 import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
 
 interface CertificateProvider {
-    fun getCertificate(): Either<CertificateRetrievalError, X509Certificate>
-    fun getCertificateChain(): Either<CertificateRetrievalError, List<X509Certificate>>
+    fun getElhubSigningCertificate(): X509Certificate
+    fun getElhubCertificateChain(): List<X509Certificate>
+    fun getBankIdRootCertificate(): X509Certificate
 }
 
 sealed class CertificateRetrievalError {
@@ -22,30 +19,34 @@ const val CERT_TYPE = "X.509"
 class FileCertificateProviderConfig(
     val pathToCertificateChain: String,
     val pathToSigningCertificate: String,
+    val pathToBankIdRootCertificate: String,
 )
 
 class FileCertificateProvider(
-    private val cfg: FileCertificateProviderConfig
+    cfg: FileCertificateProviderConfig
 ) : CertificateProvider {
 
-    private fun getCertificateChain(path: String): Either<CertificateRetrievalError, List<X509Certificate>> =
-        Either.catch {
-            File(path)
-                .inputStream()
-                .use {
-                    CertificateFactory
-                        .getInstance(CERT_TYPE)
-                        .generateCertificates(it)
-                        .filterIsInstance<X509Certificate>()
-                }
-        }.mapLeft { CertificateRetrievalError.IOError }
+    private val elhubSigningCert: X509Certificate =
+        readSingleCert(cfg.pathToSigningCertificate)
 
-    override fun getCertificate(): Either<CertificateRetrievalError, X509Certificate> =
-        getCertificateChain(cfg.pathToSigningCertificate)
-            .fold(
-                { error -> error.left() },
-                { certificates -> certificates.single().right() }
-            )
+    private val elhubChain: List<X509Certificate> =
+        readChain(cfg.pathToCertificateChain)
 
-    override fun getCertificateChain() = getCertificateChain(cfg.pathToCertificateChain)
+    private val bankIdRootCert: X509Certificate =
+        readSingleCert(cfg.pathToBankIdRootCertificate)
+
+    override fun getElhubSigningCertificate() = elhubSigningCert
+    override fun getElhubCertificateChain() = elhubChain
+    override fun getBankIdRootCertificate() = bankIdRootCert
+
+    private fun readChain(path: String): List<X509Certificate> =
+        File(path).inputStream().use {
+            CertificateFactory.getInstance(CERT_TYPE)
+                .generateCertificates(it)
+                .filterIsInstance<X509Certificate>()
+                .also { require(it.isNotEmpty()) { "No certs found at $path" } }
+        }
+
+    private fun readSingleCert(path: String): X509Certificate =
+        readChain(path).single()
 }

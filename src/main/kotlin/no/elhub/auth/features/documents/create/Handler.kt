@@ -8,12 +8,14 @@ import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.AuthorizationDocumentProperty
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.documents.common.ProxyDocumentBusinessHandler
+import no.elhub.auth.features.documents.common.SignatureService
+import no.elhub.auth.features.documents.common.SignatureSigningError
 import no.elhub.auth.features.documents.create.model.CreateDocumentModel
 import org.jetbrains.exposed.sql.transactions.transaction
 
 class Handler(
     private val businessHandler: ProxyDocumentBusinessHandler,
-    private val signingService: SigningService,
+    private val signatureService: SignatureService,
     private val documentRepository: DocumentRepository,
     private val partyService: PartyService,
 ) {
@@ -52,7 +54,7 @@ class Handler(
                     .mapLeft { CreateDocumentError.FileGenerationError }
                     .bind()
 
-            val signedFile = signingService.sign(file)
+            val signedFile = signatureService.sign(file)
                 .mapLeft { CreateDocumentError.SignFileError(cause = it) }
                 .bind()
 
@@ -86,7 +88,7 @@ class Handler(
 sealed class CreateDocumentError {
     data object FileGenerationError : CreateDocumentError()
 
-    data class SignFileError(val cause: FileSigningError) : CreateDocumentError()
+    data class SignFileError(val cause: SignatureSigningError) : CreateDocumentError()
 
     data object AuthorizationError : CreateDocumentError()
 

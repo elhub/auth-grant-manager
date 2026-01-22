@@ -50,6 +50,7 @@ import no.elhub.devxp.jsonapi.response.JsonApiErrorObject
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
+import java.util.UUID
 import no.elhub.auth.features.grants.module as grantsModule
 import no.elhub.auth.module as applicationModule
 
@@ -57,6 +58,7 @@ import no.elhub.auth.module as applicationModule
 class AuthorizationDocumentRouteTest :
     FunSpec({
         val pdpContainer = PdpTestContainerExtension()
+
         extensions(
             PostgresTestContainerExtension(),
             RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-party.sql"),
@@ -70,6 +72,14 @@ class AuthorizationDocumentRouteTest :
                 token = "maskinporten",
                 actingGln = "0107000000021",
                 actingFunction = "BalanceSupplier"
+            )
+            AuthPersonsTestContainer.registerPersonMapping(
+                nin = REQUESTED_FROM_NIN,
+                personId = REQUESTED_FROM_ID
+            )
+            AuthPersonsTestContainer.registerPersonMapping(
+                nin = REQUESTED_TO_NIN,
+                personId = REQUESTED_TO_ID
             )
         }
 
@@ -108,6 +118,7 @@ class AuthorizationDocumentRouteTest :
                         "pdfSigner.vault.key" to "test-key",
                         "pdfSigner.certificate.signing" to TestCertificateUtil.Constants.CERTIFICATE_LOCATION,
                         "pdfSigner.certificate.chain" to TestCertificateUtil.Constants.CERTIFICATE_LOCATION,
+                        "pdfSigner.certificate.bankIdIdRoot" to TestCertificateUtil.Constants.BANKID_ROOT_CERTIFICATE_LOCATION,
                         "featureToggle.enableEndpoints" to "true",
                         "authPersons.baseUri" to AuthPersonsTestContainer.baseUri(),
                         "pdp.baseUrl" to "http://localhost:8085"
@@ -136,11 +147,11 @@ class AuthorizationDocumentRouteTest :
                                                 ),
                                                 requestedFrom = PartyIdentifier(
                                                     idType = PartyIdentifierType.NationalIdentityNumber,
-                                                    idValue = "98765432109"
+                                                    idValue = REQUESTED_FROM_NIN
                                                 ),
                                                 requestedTo = PartyIdentifier(
                                                     idType = PartyIdentifierType.NationalIdentityNumber,
-                                                    idValue = "00011122233"
+                                                    idValue = REQUESTED_TO_NIN
                                                 ),
                                                 requestedFromName = "Hillary Orr",
                                                 requestedForMeteringPointId = "123456789012345678",
@@ -348,9 +359,14 @@ class AuthorizationDocumentRouteTest :
                 }
 
                 test("Put signed file should return 204") {
+                    val documentSignedByPerson = EndUserSignatureTestHelper().sign(
+                        pdfBytes = signedFile,
+                        nationalIdentityNumber = REQUESTED_TO_NIN
+                    )
+
                     val response = client.put("$DOCUMENTS_PATH/$createdDocumentId.pdf") {
                         contentType(ContentType.Application.Pdf)
-                        setBody(signedFile)
+                        setBody(documentSignedByPerson)
                         header(HttpHeaders.Authorization, "Bearer maskinporten")
                         header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
                     }
@@ -501,6 +517,7 @@ class AuthorizationDocumentRouteTest :
                         "pdfSigner.vault.key" to "test-key",
                         "pdfSigner.certificate.signing" to TestCertificateUtil.Constants.CERTIFICATE_LOCATION,
                         "pdfSigner.certificate.chain" to TestCertificateUtil.Constants.CERTIFICATE_LOCATION,
+                        "pdfSigner.certificate.bankIdIdRoot" to TestCertificateUtil.Constants.BANKID_ROOT_CERTIFICATE_LOCATION,
                         "featureToggle.enableEndpoints" to "true",
                         "authPersons.baseUri" to AuthPersonsTestContainer.baseUri(),
                         "pdp.baseUrl" to "http://localhost:8085"
@@ -528,3 +545,8 @@ class AuthorizationDocumentRouteTest :
             }
         }
     })
+
+private const val REQUESTED_FROM_NIN = "98765432109"
+private const val REQUESTED_TO_NIN = "00011122233"
+private val REQUESTED_FROM_ID = UUID.fromString("5c9f5b1c-7a01-4d8d-9f27-9de7479adf52")
+private val REQUESTED_TO_ID = UUID.fromString("d6fe3b43-0d6b-4e7c-8bd1-12a2ed05a5f6")
