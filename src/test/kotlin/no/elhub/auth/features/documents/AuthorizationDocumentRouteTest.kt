@@ -26,14 +26,8 @@ import io.ktor.server.testing.testApplication
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.DateTimeUnit.TimeBased
-import kotlinx.datetime.plus
-import kotlinx.datetime.toLocalDateTime
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
-import java.time.Duration
-import kotlin.test.assertTrue
-import kotlin.time.Clock
-import kotlin.time.Instant
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 import no.elhub.auth.features.businessprocesses.changeofsupplier.defaultValidTo
@@ -59,9 +53,13 @@ import no.elhub.auth.features.grants.common.dto.AuthorizationGrantScopesResponse
 import no.elhub.auth.features.grants.common.dto.SingleGrantResponse
 import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObjectWithMeta
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
+import java.time.Duration
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
+import kotlin.test.assertTrue
+import kotlin.time.Clock
+import kotlin.time.Instant
 import no.elhub.auth.features.grants.module as grantsModule
 import no.elhub.auth.module as applicationModule
 
