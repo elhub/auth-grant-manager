@@ -25,7 +25,9 @@ import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObjectWithRelation
 data class GetRequestCollectionResponseAttributes(
     val status: String,
     val requestType: String,
-    val validTo: String
+    val validTo: String,
+    val createdAt: String,
+    val updatedAt: String,
 ) : JsonApiAttributes
 
 @Serializable
@@ -49,11 +51,11 @@ value class GetRequestCollectionResponseMeta(
 ) : JsonApiResourceMeta
 
 typealias GetRequestCollectionResponse = JsonApiResponse.CollectionDocumentWithRelationshipsAndMetaAndLinks<
-    GetRequestCollectionResponseAttributes,
-    GetRequestCollectionResponseRelationships,
-    GetRequestCollectionResponseMeta,
-    GetRequestCollectionResponseLinks
-    >
+        GetRequestCollectionResponseAttributes,
+        GetRequestCollectionResponseRelationships,
+        GetRequestCollectionResponseMeta,
+        GetRequestCollectionResponseLinks
+        >
 
 fun List<AuthorizationRequest>.toGetCollectionResponse() =
     GetRequestCollectionResponse(
@@ -64,7 +66,9 @@ fun List<AuthorizationRequest>.toGetCollectionResponse() =
                 attributes = GetRequestCollectionResponseAttributes(
                     status = request.status.toString(),
                     requestType = request.type.toString(),
-                    validTo = request.validTo.toTimeZoneOffsetDateTimeAtStartOfDay().toString()
+                    validTo = request.validTo.toTimeZoneOffsetDateTimeAtStartOfDay().toString(),
+                    createdAt = request.createdAt.toTimeZoneOffsetString(),
+                    updatedAt = request.updatedAt.toTimeZoneOffsetString(),
                 ),
                 relationships = GetRequestCollectionResponseRelationships(
                     requestedBy = request.requestedBy.toJsonApiRelationship(),
@@ -85,8 +89,6 @@ fun List<AuthorizationRequest>.toGetCollectionResponse() =
                 ),
                 meta = GetRequestCollectionResponseMeta(
                     buildMap {
-                        put("createdAt", request.createdAt.toTimeZoneOffsetString())
-                        put("updatedAt", request.updatedAt.toTimeZoneOffsetString())
                         request.properties.forEach { prop ->
                             put(prop.key, prop.value)
                         }

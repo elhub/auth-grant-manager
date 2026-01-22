@@ -26,7 +26,7 @@ data class GetRequestSingleResponseAttributes(
     val requestType: String,
     val validTo: String,
     val updatedAt: String,
-    val createdAt: String
+    val createdAt: String,
 ) : JsonApiAttributes
 
 @Serializable

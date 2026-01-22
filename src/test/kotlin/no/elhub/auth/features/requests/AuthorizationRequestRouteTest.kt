@@ -97,8 +97,12 @@ class AuthorizationRequestRouteTest : FunSpec({
                     size shouldBe 1
                     forEach { item ->
                         val validTo = item.attributes.validTo
+                        val createdAt = item.attributes.createdAt
+                        val updatedAt = item.attributes.updatedAt
                         shouldNotThrowAny {
                             OffsetDateTime.parse(validTo, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                            OffsetDateTime.parse(createdAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                            OffsetDateTime.parse(updatedAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
                         }
                     }
                 }
@@ -171,6 +175,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                         status shouldBe "Accepted"
                         val validTo = validTo.shouldNotBeNull()
                         val createdAt = createdAt.shouldNotBeNull()
+
                         val updatedAt = updatedAt.shouldNotBeNull()
 
                         shouldNotThrowAny {
