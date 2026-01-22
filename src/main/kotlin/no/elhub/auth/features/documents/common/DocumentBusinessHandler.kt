@@ -27,7 +27,7 @@ class ProxyDocumentBusinessHandler(
 }
 
 interface DocumentBusinessHandler {
-   suspend fun validateAndReturnDocumentCommand(model: CreateDocumentModel): Either<CreateError.BusinessValidationError, DocumentCommand>
+    suspend fun validateAndReturnDocumentCommand(model: CreateDocumentModel): Either<CreateError.BusinessValidationError, DocumentCommand>
 
     fun getCreateGrantProperties(document: AuthorizationDocument): CreateGrantProperties
 }
