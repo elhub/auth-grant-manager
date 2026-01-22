@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Avtalebekreftelse - Innflytting og leverandørskifte</title>
+    <style>
+        @page {
+            margin: 72pt;
+        }
+        html, body {
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background-color: transparent;
+            color: #1e1e1e;
+            font-family: LiberationSans;
+            font-size: 11pt;
+        }
+        .page-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ffffff;
+            z-index: -1;
+        }
+        .elhub-logo {
+            text-align: right;
+            font-size: 28px;
+            color: #5fb646;
+            font-family: LibreBodoni;
+            margin-bottom: 24px;
+        }
+        .meta {
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+        .meta .row {
+            margin-bottom: 4px;
+        }
+        .meta .label {
+            font-weight: 700;
+            color: #2a2a2a;
+        }
+        h1 {
+            color: #2e7d32;
+            font-size: 20px;
+            margin: 24px 0 12px;
+        }
+        p {
+            margin: 10px 0;
+        }
+        ul {
+            margin: 12px 0 12px 18px;
+        }
+        li {
+            margin: 6px 0;
+        }
+    </style>
+</head>
+<body>
+<div class="page-bg"></div>
+<div class="elhub-logo">elhub</div>
+
+<div class="meta">
+    <div class="row"><span class="label">Kunde:</span> {{customerName}}</div>
+    <div class="row"><span class="label">Adresse:</span> {{meteringPointAddress}}</div>
+    <div class="row"><span class="label">Målernummer:</span> {{meteringPointId}}</div>
+    <div class="row"><span class="label">MålepunktID:</span> {{meteringPointId}}</div>
+    <div class="row"><span class="label">Strømleverandør:</span> {{balanceSupplierName}}</div>
+    <div class="row"><span class="label">Strømavtale:</span> {{balanceSupplierContractName}}</div>
+    <div class="row"><span class="label">Innflyttingsdato:</span> {{moveInDate}}</div>
+</div>
+
+<h1>Avtalebekreftelse - Innflytting og leverandørskifte</h1>
+
+<p>Reguleringsmyndigheten for Energi (RME) har pålagt Elhub å kontrollere at det foreligger gyldig strømavtale for innflytting og skifte av strømleverandør (leverandørskifte).</p>
+
+<p>Ved å signere dette dokumentet bekrefter du at du har inngått strømavtalen som det vises til over.</p>
+
+<ul>
+    <li>For å få gjennomført innflytting og leverandørskifte må forespørselen bekreftes innen 4 uker.</li>
+    <li>Om du avslår eller ikke bekrefter forespørselen gjennomføres ikke innflytting og leverandørskifte.</li>
+    <li>Når innflytting og leverandørskifteprosessen er gjennomført kan ikke bekreftelsen benyttes flere ganger av strømleverandøren.</li>
+    <li>Dette dokumentet vil være tilgjengelig for strømkunder på Elhub Min Side.</li>
+</ul>
+
+<p>Mer informasjon om bekreftelse av strømavtale finner du på Elhub sin hjemmeside.</p>
+
+</body>
+</html>

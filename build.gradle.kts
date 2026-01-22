@@ -72,7 +72,7 @@ val dbPassword = System.getenv("DB_PASSWORD")?.takeIf { it.isNotBlank() } ?: "ad
 val certDir = layout.buildDirectory.dir("tmp/test-certs")
 val testCertPath = certDir.map { it.file("self-signed-cert.pem").asFile.path }
 val testKeyPath = certDir.map { it.file("self-signed-key.pem").asFile.path }
-val bankIdPath = certDir.map { it.file("bankid-root.pem").asFile.path }
+val bankIdPath = certDir.map { it.file("bankid-root-cert.pem").asFile.path }
 
 dockerCompose {
     createNested("services").apply {
@@ -152,6 +152,7 @@ val localEnvVars = mapOf(
     "VAULT_TOKEN_PATH" to "src/test/resources/vault_token_mock.txt",
     "PATH_TO_SIGNING_CERTIFICATE" to testCertPath.get(),
     "PATH_TO_SIGNING_CERTIFICATE_CHAIN" to testCertPath.get(),
+    "PATH_TO_BANKID_ROOT_CERTIFICATE" to bankIdPath.get(),
     "ENABLE_ENDPOINTS" to "true",
     "AUTH_PERSONS_URL" to "http://localhost:8081",
     "PDP_BASE_URL" to "https://auth-policy-decision-point-test9.elhub.cloud",
