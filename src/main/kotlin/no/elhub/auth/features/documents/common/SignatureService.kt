@@ -62,7 +62,7 @@ class PdfSignatureService(
         addCertificate(CertificateToken(certificateProvider.getBankIdRootCertificate()))
     }
 
-    private val verifier = CommonCertificateVerifier().apply {
+    private val verifier = CommonCertificateVerifier(true).apply {
         setTrustedCertSources(trustedSource)
         isCheckRevocationForUntrustedChains = false
         ocspSource = null
