@@ -11,14 +11,13 @@ import no.elhub.auth.features.common.auth.RoleType
 import no.elhub.auth.features.common.auth.toApiErrorResponse
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
+import no.elhub.auth.features.common.toBalanceSupplierNotApiAuthorizedResponse
 import no.elhub.auth.features.documents.create.dto.JsonApiCreateDocumentRequest
 import no.elhub.auth.features.documents.create.dto.toCreateDocumentResponse
 import no.elhub.auth.features.documents.create.dto.toModel
-import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
-import no.elhub.devxp.jsonapi.response.JsonApiErrorObject
 import org.slf4j.LoggerFactory
 
-private val log = LoggerFactory.getLogger(Route::class.java)
+private val logger = LoggerFactory.getLogger(Route::class.java)
 
 fun Route.route(
     handler: Handler,
@@ -35,7 +34,8 @@ fun Route.route(
         val requestBody = call.receive<JsonApiCreateDocumentRequest>()
 
         if (resolvedActor.role != RoleType.BalanceSupplier) {
-            call.respond(HttpStatusCode.BadRequest)
+            val (status, body) = toBalanceSupplierNotApiAuthorizedResponse()
+            call.respond(status, body)
             return@post
         }
 
@@ -48,50 +48,13 @@ fun Route.route(
 
         val document = handler(model)
             .getOrElse { error ->
-                log.error("Failed to create authorization document: {}", error)
-                when (error) {
-                    is CreateDocumentError.BusinessValidationError -> {
-                        call.respond(
-                            status = HttpStatusCode.BadRequest,
-                            message = JsonApiErrorCollection(
-                                listOf(
-                                    JsonApiErrorObject(
-                                        status = HttpStatusCode.BadRequest.toString(),
-                                        detail = error.message,
-                                    )
-                                )
-                            )
-                        )
-                    }
-
-                    CreateDocumentError.AuthorizationError -> {
-                        call.respond(
-                            status = HttpStatusCode.Forbidden,
-                            message = JsonApiErrorCollection(
-                                listOf(
-                                    JsonApiErrorObject(
-                                        status = HttpStatusCode.Forbidden.toString(),
-                                        code = "not_authorized",
-                                        title = "Party Not Authorized",
-                                        detail = "RequestedBy must match the authorized party",
-                                    )
-                                )
-                            )
-                        )
-                    }
-
-                    CreateDocumentError.FileGenerationError,
-                    is CreateDocumentError.SignFileError,
-                    CreateDocumentError.PersistenceError,
-                    CreateDocumentError.RequestedByPartyError,
-                    CreateDocumentError.RequestedFromPartyError,
-                    CreateDocumentError.RequestedToPartyError,
-                    -> call.respond(HttpStatusCode.InternalServerError)
-                }
+                logger.error("Failed to create authorization document: {}", error)
+                val (status, validationError) = error.toApiErrorResponse()
+                call.respond(status, validationError)
                 return@post
             }
 
-        log.debug("Successfully created document {}", document.id)
+        logger.debug("Successfully created document {}", document.id)
         call.respond(
             status = HttpStatusCode.Created,
             message = document.toCreateDocumentResponse()

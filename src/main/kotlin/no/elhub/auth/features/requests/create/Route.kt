@@ -11,11 +11,10 @@ import no.elhub.auth.features.common.auth.RoleType
 import no.elhub.auth.features.common.auth.toApiErrorResponse
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
+import no.elhub.auth.features.common.toBalanceSupplierNotApiAuthorizedResponse
 import no.elhub.auth.features.requests.create.dto.JsonApiCreateRequest
 import no.elhub.auth.features.requests.create.dto.toCreateResponse
 import no.elhub.auth.features.requests.create.dto.toModel
-import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
-import no.elhub.devxp.jsonapi.response.JsonApiErrorObject
 import org.slf4j.LoggerFactory
 
 private val logger = LoggerFactory.getLogger(Route::class.java)
@@ -27,6 +26,7 @@ fun Route.route(
     post {
         val resolvedActor = authProvider.authorizeMaskinporten(call)
             .getOrElse {
+                logger.error("Failed to authorize Maskinporten token for POST /authorization-requests: {}", it)
                 val error = it.toApiErrorResponse()
                 call.respond(error.first, error.second)
                 return@post
@@ -34,7 +34,8 @@ fun Route.route(
 
         val requestBody = call.receive<JsonApiCreateRequest>()
         if (resolvedActor.role != RoleType.BalanceSupplier) {
-            call.respond(HttpStatusCode.BadRequest)
+            val (status, body) = toBalanceSupplierNotApiAuthorizedResponse()
+            call.respond(status, body)
             return@post
         }
 
@@ -47,38 +48,14 @@ fun Route.route(
             handler(requestBody.toModel(authorizedParty))
                 .getOrElse { error ->
                     logger.error("Failed to create authorization request: {}", error)
-                    when (error) {
-                        is
-                        CreateRequestError.MappingError,
-                        CreateRequestError.PersistenceError,
-                        CreateRequestError.RequestedByPartyError,
-                        CreateRequestError.RequestedFromPartyError,
-                        -> call.respond(HttpStatusCode.InternalServerError)
-
-                        CreateRequestError.AuthorizationError -> {
-                            call.respond(
-                                status = HttpStatusCode.Forbidden,
-                                message = JsonApiErrorCollection(
-                                    listOf(
-                                        JsonApiErrorObject(
-                                            status = HttpStatusCode.Forbidden.toString(),
-                                            code = "not_authorized",
-                                            title = "Party Not Authorized",
-                                            detail = "RequestedBy must match the authorized party",
-                                        )
-                                    )
-                                )
-                            )
-                        }
-
-                        is CreateRequestError.ValidationError -> {
-                            val (status, validationError) = error.toApiErrorResponse()
-                            call.respond(status, validationError)
-                        }
-                    }
+                    val (status, error) = error.toApiErrorResponse()
+                    call.respond(status, error)
                     return@post
                 }
 
-        call.respond(HttpStatusCode.Created, request.toCreateResponse())
+        call.respond(
+            status = HttpStatusCode.Created,
+            message = request.toCreateResponse()
+        )
     }
 }

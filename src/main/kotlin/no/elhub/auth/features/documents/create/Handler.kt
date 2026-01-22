@@ -9,7 +9,6 @@ import no.elhub.auth.features.documents.common.AuthorizationDocumentProperty
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.documents.common.ProxyDocumentBusinessHandler
 import no.elhub.auth.features.documents.common.SignatureService
-import no.elhub.auth.features.documents.common.SignatureSigningError
 import no.elhub.auth.features.documents.create.model.CreateDocumentModel
 import org.jetbrains.exposed.sql.transactions.transaction
 
@@ -19,28 +18,28 @@ class Handler(
     private val documentRepository: DocumentRepository,
     private val partyService: PartyService,
 ) {
-    suspend operator fun invoke(model: CreateDocumentModel): Either<CreateDocumentError, AuthorizationDocument> =
+    suspend operator fun invoke(model: CreateDocumentModel): Either<CreateError, AuthorizationDocument> =
         either {
             val requestedByParty =
                 partyService
                     .resolve(model.meta.requestedBy)
-                    .mapLeft { CreateDocumentError.RequestedByPartyError }
+                    .mapLeft { CreateError.RequestedByPartyError }
                     .bind()
 
             ensure(model.authorizedParty == requestedByParty) {
-                CreateDocumentError.AuthorizationError
+                CreateError.AuthorizationError
             }
 
             val requestedFromParty =
                 partyService
                     .resolve(model.meta.requestedFrom)
-                    .mapLeft { CreateDocumentError.RequestedFromPartyError }
+                    .mapLeft { CreateError.RequestedFromPartyError }
                     .bind()
 
             val requestedToParty =
                 partyService
                     .resolve(model.meta.requestedTo)
-                    .mapLeft { CreateDocumentError.RequestedToPartyError }
+                    .mapLeft { CreateError.RequestedToPartyError }
                     .bind()
 
             val command =
@@ -51,11 +50,11 @@ class Handler(
             val file =
                 businessHandler
                     .generateFile(command.requestedFrom.idValue, command.meta)
-                    .mapLeft { CreateDocumentError.FileGenerationError }
+                    .mapLeft { CreateError.FileGenerationError }
                     .bind()
 
             val signedFile = signatureService.sign(file)
-                .mapLeft { CreateDocumentError.SignFileError(cause = it) }
+                .mapLeft { CreateError.SignFileError(cause = it) }
                 .bind()
 
             val documentProperties =
@@ -77,31 +76,12 @@ class Handler(
             val savedDocument = transaction {
                 documentRepository
                     .insert(documentToCreate, command.scopes)
-                    .mapLeft { CreateDocumentError.PersistenceError }
+                    .mapLeft { CreateError.PersistenceError }
                     .bind()
             }
 
             savedDocument
         }
-}
-
-sealed class CreateDocumentError {
-    data object FileGenerationError : CreateDocumentError()
-
-    data class SignFileError(val cause: SignatureSigningError) : CreateDocumentError()
-
-    data object AuthorizationError : CreateDocumentError()
-
-    data object PersistenceError : CreateDocumentError()
-
-    data object RequestedFromPartyError : CreateDocumentError()
-
-    data object RequestedByPartyError : CreateDocumentError()
-
-    data object RequestedToPartyError : CreateDocumentError()
-
-    // To be used by value streams in during the business validation process. Auth Grant will return this message back to the API consumer
-    data class BusinessValidationError(val message: String) : CreateDocumentError()
 }
 
 fun Map<String, String>.toDocumentProperties() =

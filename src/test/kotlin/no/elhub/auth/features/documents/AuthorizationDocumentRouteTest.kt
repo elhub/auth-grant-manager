@@ -2,7 +2,6 @@ package no.elhub.auth.features.documents
 
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.core.spec.style.FunSpec
-import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
@@ -46,7 +45,6 @@ import no.elhub.auth.features.grants.common.dto.AuthorizationGrantScopesResponse
 import no.elhub.auth.features.grants.common.dto.SingleGrantResponse
 import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObjectWithMeta
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
-import no.elhub.devxp.jsonapi.response.JsonApiErrorObject
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
@@ -309,18 +307,16 @@ class AuthorizationDocumentRouteTest :
 
                     response.status shouldBe HttpStatusCode.Forbidden
 
-                    val jsonApiError: JsonApiErrorCollection = response.body()
-
-                    jsonApiError shouldBe JsonApiErrorCollection(
-                        listOf(
-                            JsonApiErrorObject(
-                                status = HttpStatusCode.Forbidden.value.toString(),
-                                code = "not_authorized",
-                                title = "Party Not Authorized",
-                                detail = "The party is not allowed to access this resource",
-                            )
-                        )
-                    )
+                    val responseJson: JsonApiErrorCollection = response.body()
+                    responseJson.errors.apply {
+                        size shouldBe 1
+                        this[0].apply {
+                            status shouldBe HttpStatusCode.Forbidden.value.toString()
+                            code shouldBe "not_authorized"
+                            title shouldBe "Party not authorized"
+                            detail shouldBe "The party is not allowed to access this resource"
+                        }
+                    }
                 }
 
                 test("Get document list should give proper size given the authorized user") {
@@ -535,11 +531,14 @@ class AuthorizationDocumentRouteTest :
 
                     response.status shouldBe HttpStatusCode.BadRequest
                     val error: JsonApiErrorCollection = response.body()
-
-                    error.errors shouldHaveSize 1
-                    error.errors[0].apply {
-                        status shouldBe "400"
-                        detail shouldBe "Missing User-Agent header"
+                    error.errors.apply {
+                        size shouldBe 1
+                        this[0].apply {
+                            status shouldBe "400"
+                            code shouldBe "bad_request"
+                            title shouldBe "Bad request"
+                            detail shouldBe "Missing User-Agent header"
+                        }
                     }
                 }
             }

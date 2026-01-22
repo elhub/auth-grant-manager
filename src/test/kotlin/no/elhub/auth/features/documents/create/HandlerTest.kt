@@ -132,7 +132,7 @@ class HandlerTest : FunSpec({
 
         val response = handler(model)
 
-        response.shouldBeLeft(CreateDocumentError.RequestedByPartyError)
+        response.shouldBeLeft(CreateError.RequestedByPartyError)
         verify(exactly = 0) { businessHandler.validateAndReturnDocumentCommand(any()) }
     }
 
@@ -149,7 +149,7 @@ class HandlerTest : FunSpec({
 
         val response = handler(model.copy(authorizedParty = otherAuthorizedParty))
 
-        response.shouldBeLeft(CreateDocumentError.AuthorizationError)
+        response.shouldBeLeft(CreateError.AuthorizationError)
         coVerify(exactly = 0) { partyService.resolve(requestedFromIdentifier) }
         verify(exactly = 0) { businessHandler.validateAndReturnDocumentCommand(any()) }
     }
@@ -167,7 +167,7 @@ class HandlerTest : FunSpec({
 
         val response = handler(model)
 
-        response.shouldBeLeft(CreateDocumentError.RequestedFromPartyError)
+        response.shouldBeLeft(CreateError.RequestedFromPartyError)
         verify(exactly = 0) { businessHandler.validateAndReturnDocumentCommand(any()) }
     }
 
@@ -185,7 +185,7 @@ class HandlerTest : FunSpec({
 
         val response = handler(model)
 
-        response.shouldBeLeft(CreateDocumentError.RequestedToPartyError)
+        response.shouldBeLeft(CreateError.RequestedToPartyError)
         verify(exactly = 0) { businessHandler.validateAndReturnDocumentCommand(any()) }
     }
 
@@ -196,7 +196,7 @@ class HandlerTest : FunSpec({
         val partyService = mockk<PartyService>()
 
         stubPartyResolution(partyService)
-        val validationError = CreateDocumentError.BusinessValidationError("validation failed")
+        val validationError = CreateError.BusinessValidationError("validation failed")
         every { businessHandler.validateAndReturnDocumentCommand(model) } returns validationError.left()
 
         val handler = Handler(businessHandler, signatureService, documentRepository, partyService)
@@ -223,7 +223,7 @@ class HandlerTest : FunSpec({
 
         val response = handler(model)
 
-        response.shouldBeLeft(CreateDocumentError.FileGenerationError)
+        response.shouldBeLeft(CreateError.FileGenerationError)
         coVerify(exactly = 0) { signatureService.sign(any()) }
     }
 
@@ -244,7 +244,7 @@ class HandlerTest : FunSpec({
 
         val response = handler(model)
 
-        response.shouldBeLeft(CreateDocumentError.SignFileError(SignatureSigningError.SignatureFetchingError))
+        response.shouldBeLeft(CreateError.SignFileError(SignatureSigningError.SignatureFetchingError))
         verify(exactly = 0) { documentRepository.insert(any(), any()) }
     }
 
@@ -266,6 +266,6 @@ class HandlerTest : FunSpec({
 
         val response = handler(model)
 
-        response.shouldBeLeft(CreateDocumentError.PersistenceError)
+        response.shouldBeLeft(CreateError.PersistenceError)
     }
 })

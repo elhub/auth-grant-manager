@@ -33,7 +33,6 @@ import no.elhub.auth.features.grants.consume.dto.JsonApiConsumeRequest
 import no.elhub.auth.features.requests.REQUESTS_PATH
 import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObject
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
-import no.elhub.devxp.jsonapi.response.JsonApiErrorObject
 import no.elhub.auth.module as applicationModule
 
 class AuthorizationGrantRouteTest : FunSpec({
@@ -148,7 +147,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                     this[0].apply {
                         status shouldBe "403"
                         code shouldBe "not_authorized"
-                        title shouldBe "Party Not Authorized"
+                        title shouldBe "Party not authorized"
                         detail shouldBe "The party is not allowed to access this resource"
                     }
                 }
@@ -164,6 +163,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                     size shouldBe 1
                     this[0].apply {
                         status shouldBe "401"
+                        code shouldBe "missing_authorization"
                         title shouldBe "Missing authorization"
                         detail shouldBe "Bearer token is required in the Authorization header."
                     }
@@ -231,7 +231,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                     this[0].apply {
                         status shouldBe "403"
                         code shouldBe "not_authorized"
-                        title shouldBe "Party Not Authorized"
+                        title shouldBe "Party not authorized"
                         detail shouldBe "The party is not allowed to access this resource"
                     }
                 }
@@ -249,7 +249,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                     this[0].apply {
                         status shouldBe "404"
                         code shouldBe "not_found"
-                        title shouldBe "Not Found"
+                        title shouldBe "Not found"
                         detail shouldBe "The requested resource could not be found"
                     }
                 }
@@ -365,6 +365,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                     size shouldBe 1
                     this[0].apply {
                         status shouldBe "401"
+                        code shouldBe "missing_authorization"
                         title shouldBe "Missing authorization"
                         detail shouldBe "Bearer token is required in the Authorization header."
                     }
@@ -383,7 +384,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                     this[0].apply {
                         status shouldBe "403"
                         code shouldBe "not_authorized"
-                        title shouldBe "Party Not Authorized"
+                        title shouldBe "Party not authorized"
                         detail shouldBe "The party is not allowed to access this resource"
                     }
                 }
@@ -411,7 +412,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                     this[0].apply {
                         status shouldBe "403"
                         code shouldBe "not_authorized"
-                        title shouldBe "Party Not Authorized"
+                        title shouldBe "Party not authorized"
                         detail shouldBe "The party is not allowed to access this resource"
                     }
                 }
@@ -446,7 +447,8 @@ class AuthorizationGrantRouteTest : FunSpec({
                     size shouldBe 1
                     this[0].apply {
                         status shouldBe "404"
-                        title shouldBe "Not Found"
+                        code shouldBe "not_found"
+                        title shouldBe "Not found"
                         detail shouldBe "The requested resource could not be found"
                     }
                 }
@@ -632,11 +634,16 @@ class AuthorizationGrantRouteTest : FunSpec({
                 }
 
                 response.status shouldBe HttpStatusCode.BadRequest
-
-                val body = response.body<List<JsonApiErrorObject>>()
-                body[0].status shouldBe "400 Bad Request"
-                body[0].title shouldBe "Illegal Status State"
-                body[0].detail shouldBe "Grant must be 'Active' to get consumed"
+                val responseJson: JsonApiErrorCollection = response.body()
+                responseJson.errors.apply {
+                    size shouldBe 1
+                    this[0].apply {
+                        status shouldBe "400"
+                        code shouldBe "illegal_status_state"
+                        title shouldBe "Illegal status state"
+                        detail shouldBe "Grant must be 'Active' to get consumed"
+                    }
+                }
             }
             test("Should reject update of expired grant") {
                 val response = client.patch("$GRANTS_PATH/2a28a9dd-d3b3-4dec-a420-3f7d0d0105b7") {
@@ -656,10 +663,16 @@ class AuthorizationGrantRouteTest : FunSpec({
 
                 response.status shouldBe HttpStatusCode.BadRequest
 
-                val body = response.body<List<JsonApiErrorObject>>()
-                body[0].status shouldBe "400 Bad Request"
-                body[0].title shouldBe "Request Has Expired"
-                body[0].detail shouldBe "Request validity period has passed"
+                val responseJson: JsonApiErrorCollection = response.body()
+                responseJson.errors.apply {
+                    size shouldBe 1
+                    this[0].apply {
+                        status shouldBe "400"
+                        code shouldBe "expired_status_transition"
+                        title shouldBe "Grant has expired"
+                        detail shouldBe "Grant validity period has passed"
+                    }
+                }
             }
             test("Should reject invalid status transition") {
                 val response = client.patch("$GRANTS_PATH/2a28a9dd-d3b3-4dec-a420-3f7d0d0105b7") {
@@ -679,10 +692,16 @@ class AuthorizationGrantRouteTest : FunSpec({
 
                 response.status shouldBe HttpStatusCode.BadRequest
 
-                val body = response.body<List<JsonApiErrorObject>>()
-                body[0].status shouldBe "400 Bad Request"
-                body[0].title shouldBe "Invalid Status Transition"
-                body[0].detail shouldBe "Only 'Exhausted' status is allowed."
+                val responseJson: JsonApiErrorCollection = response.body()
+                responseJson.errors.apply {
+                    size shouldBe 1
+                    this[0].apply {
+                        status shouldBe "400"
+                        code shouldBe "invalid_status_transition"
+                        title shouldBe "Invalid status transition"
+                        detail shouldBe "Only 'Exhausted' status is allowed."
+                    }
+                }
             }
         }
     }

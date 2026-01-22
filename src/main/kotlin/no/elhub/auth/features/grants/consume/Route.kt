@@ -15,7 +15,9 @@ import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.common.validateId
 import no.elhub.auth.features.grants.common.dto.toSingleGrantResponse
 import no.elhub.auth.features.grants.consume.dto.JsonApiConsumeRequest
-import no.elhub.devxp.jsonapi.response.JsonApiErrorObject
+import org.slf4j.LoggerFactory
+
+private val logger = LoggerFactory.getLogger(Route::class.java)
 
 const val GRANT_ID_PARAM = "id"
 
@@ -53,78 +55,9 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
         )
 
         val updated = handler(command).getOrElse { error ->
-            when (error) {
-                ConsumeError.PersistenceError ->
-                    call.respond(
-                        HttpStatusCode.InternalServerError,
-                        message = listOf(
-                            JsonApiErrorObject(
-                                status = HttpStatusCode.InternalServerError.toString(),
-                                code = "internal_error",
-                            )
-                        )
-                    )
-
-                ConsumeError.GrantNotFound ->
-                    call.respond(
-                        HttpStatusCode.NotFound,
-                        message = listOf(
-                            JsonApiErrorObject(
-                                status = HttpStatusCode.NotFound.toString(),
-                                code = "not_found"
-                            )
-                        )
-                    )
-
-                ConsumeError.NotAuthorized ->
-                    call.respond(
-                        HttpStatusCode.Unauthorized,
-                        message = listOf(
-                            JsonApiErrorObject(
-                                status = HttpStatusCode.Unauthorized.toString(),
-                                code = "not_authorized"
-                            )
-                        )
-                    )
-
-                ConsumeError.IllegalStateError ->
-                    call.respond(
-                        HttpStatusCode.BadRequest,
-                        message = listOf(
-                            JsonApiErrorObject(
-                                status = HttpStatusCode.BadRequest.toString(),
-                                code = "BAD_REQUEST",
-                                title = "Illegal Status State",
-                                detail = "Grant must be 'Active' to get consumed"
-                            )
-                        )
-                    )
-
-                ConsumeError.IllegalTransitionError ->
-                    call.respond(
-                        HttpStatusCode.BadRequest,
-                        message = listOf(
-                            JsonApiErrorObject(
-                                status = HttpStatusCode.BadRequest.toString(),
-                                code = "BAD_REQUEST",
-                                title = "Invalid Status Transition",
-                                detail = "Only 'Exhausted' status is allowed."
-                            )
-                        )
-                    )
-
-                ConsumeError.ExpiredError ->
-                    call.respond(
-                        HttpStatusCode.BadRequest,
-                        message = listOf(
-                            JsonApiErrorObject(
-                                status = HttpStatusCode.BadRequest.toString(),
-                                title = "Request Has Expired",
-                                detail = "Request validity period has passed"
-                            )
-                        )
-                    )
-            }
+            logger.error("Failed to update authorization grant: {}", error)
+            val (status, error) = error.toApiErrorResponse()
+            call.respond(status, error)
             return@patch
         }
 

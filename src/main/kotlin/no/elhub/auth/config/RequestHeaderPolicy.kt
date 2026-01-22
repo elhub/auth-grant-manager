@@ -27,5 +27,7 @@ val HeaderPolicy = createApplicationPlugin(
 val MissingUserAgentHeder: JsonApiErrorObject =
     JsonApiErrorObject(
         status = "400",
+        code = "bad_request",
+        title = "Bad request",
         detail = "Missing User-Agent header"
     )

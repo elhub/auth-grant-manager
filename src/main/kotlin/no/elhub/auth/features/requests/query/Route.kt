@@ -12,6 +12,9 @@ import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.requests.query.dto.toGetCollectionResponse
+import org.slf4j.LoggerFactory
+
+private val logger = LoggerFactory.getLogger(Route::class.java)
 
 fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
     get {
@@ -39,8 +42,9 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
         }
 
         val requests = handler(query)
-            .getOrElse { err ->
-                val (status, body) = err.toApiErrorResponse()
+            .getOrElse { error ->
+                logger.error("Failed to get authorization requests: {}", error)
+                val (status, body) = error.toApiErrorResponse()
                 call.respond(status, body)
                 return@get
             }

@@ -9,10 +9,10 @@ import no.elhub.auth.features.common.party.PartyService
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.documents.common.SignatureService
-import no.elhub.auth.features.documents.common.SignatureValidationError
 import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.common.GrantRepository
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.slf4j.LoggerFactory
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
@@ -22,45 +22,51 @@ class Handler(
     private val partyService: PartyService,
     private val signatureService: SignatureService
 ) {
-    suspend operator fun invoke(command: Command): Either<ConfirmDocumentError, Unit> = either {
+
+    private val log = LoggerFactory.getLogger(Handler::class.java)
+
+    suspend operator fun invoke(command: Command): Either<ConfirmError, Unit> = either {
         val authorizationParty = command.authorizedParty
 
         val document = transaction {
             documentRepository.find(command.documentId)
                 .mapLeft { error ->
                     when (error) {
-                        is RepositoryReadError.NotFoundError -> ConfirmDocumentError.DocumentNotFoundError
-                        is RepositoryReadError.UnexpectedError -> ConfirmDocumentError.DocumentReadError
+                        is RepositoryReadError.NotFoundError -> ConfirmError.DocumentNotFoundError
+                        is RepositoryReadError.UnexpectedError -> ConfirmError.DocumentReadError
                     }
                 }.bind()
         }
 
         ensure(authorizationParty == document.requestedBy) {
-            ConfirmDocumentError.InvalidRequestedByError
+            ConfirmError.InvalidRequestedByError
         }
         ensure(command.authorizedParty == document.requestedBy) {
-            ConfirmDocumentError.InvalidRequestedByError
+            ConfirmError.InvalidRequestedByError
         }
 
         ensure(document.status == AuthorizationDocument.Status.Pending) {
-            ConfirmDocumentError.IllegalStateError
+            ConfirmError.IllegalStateError
         }
 
         ensure(document.validTo >= OffsetDateTime.now(ZoneOffset.UTC)) {
-            ConfirmDocumentError.ExpiredError
+            ConfirmError.ExpiredError
         }
 
         val signatoryIdentifier = signatureService.validateSignaturesAndReturnSignatory(command.signedFile)
-            .mapLeft { ConfirmDocumentError.ValidateSignaturesError(it) }
+            .mapLeft {
+                log.error("Validate signature error occurred: {}", it)
+                ConfirmError.ValidateSignaturesError(it)
+            }
             .bind()
 
         val actualSignatoryParty = partyService.resolve(signatoryIdentifier)
-            .mapLeft { ConfirmDocumentError.SignatoryResolutionError }
+            .mapLeft { ConfirmError.SignatoryResolutionError }
             .bind()
 
         val expectedSignatoryParty = document.requestedTo
         ensure(actualSignatoryParty == expectedSignatoryParty) {
-            ConfirmDocumentError.SignatoryNotAllowedToSignDocument
+            ConfirmError.SignatoryNotAllowedToSignDocument
         }
 
         transaction {
@@ -72,18 +78,18 @@ class Handler(
             )
                 .mapLeft { error ->
                     when (error) {
-                        is RepositoryWriteError.NotFoundError -> ConfirmDocumentError.DocumentNotFoundError
+                        is RepositoryWriteError.NotFoundError -> ConfirmError.DocumentNotFoundError
 
                         is RepositoryWriteError.ConflictError,
-                        is RepositoryWriteError.UnexpectedError -> ConfirmDocumentError.DocumentUpdateError
+                        is RepositoryWriteError.UnexpectedError -> ConfirmError.DocumentUpdateError
                     }
                 }.bind()
 
             val scopeIds = documentRepository.findScopeIds(confirmedDocument.id)
                 .mapLeft { error ->
                     when (error) {
-                        is RepositoryReadError.NotFoundError -> ConfirmDocumentError.DocumentNotFoundError
-                        is RepositoryReadError.UnexpectedError -> ConfirmDocumentError.ScopeReadError
+                        is RepositoryReadError.NotFoundError -> ConfirmError.DocumentNotFoundError
+                        is RepositoryReadError.UnexpectedError -> ConfirmError.ScopeReadError
                     }
                 }.bind()
 
@@ -97,21 +103,7 @@ class Handler(
                 )
 
             grantRepository.insert(grantToCreate, scopeIds)
-                .mapLeft { ConfirmDocumentError.GrantCreationError }.bind()
+                .mapLeft { ConfirmError.GrantCreationError }.bind()
         }
     }
-}
-
-sealed class ConfirmDocumentError {
-    data object DocumentNotFoundError : ConfirmDocumentError()
-    data object DocumentReadError : ConfirmDocumentError()
-    data object DocumentUpdateError : ConfirmDocumentError()
-    data object ScopeReadError : ConfirmDocumentError()
-    data object GrantCreationError : ConfirmDocumentError()
-    data object SignatoryResolutionError : ConfirmDocumentError()
-    data object InvalidRequestedByError : ConfirmDocumentError()
-    data object IllegalStateError : ConfirmDocumentError()
-    data object ExpiredError : ConfirmDocumentError()
-    data object SignatoryNotAllowedToSignDocument : ConfirmDocumentError()
-    data class ValidateSignaturesError(val cause: SignatureValidationError) : ConfirmDocumentError()
 }

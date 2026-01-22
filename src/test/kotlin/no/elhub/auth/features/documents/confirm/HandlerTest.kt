@@ -89,7 +89,7 @@ class HandlerTest : FunSpec({
             )
         )
 
-        result.shouldBeLeft(ConfirmDocumentError.DocumentNotFoundError)
+        result.shouldBeLeft(ConfirmError.DocumentNotFoundError)
         verify(exactly = 1) { documentRepository.find(documentId) }
         verify(exactly = 0) { signatureService.validateSignaturesAndReturnSignatory(any()) }
         coVerify(exactly = 0) { partyService.resolve(any()) }
@@ -115,7 +115,7 @@ class HandlerTest : FunSpec({
             )
         )
 
-        result.shouldBeLeft(ConfirmDocumentError.DocumentReadError)
+        result.shouldBeLeft(ConfirmError.DocumentReadError)
         verify(exactly = 1) { documentRepository.find(documentId) }
         verify(exactly = 0) { signatureService.validateSignaturesAndReturnSignatory(any()) }
         coVerify(exactly = 0) { partyService.resolve(any()) }
@@ -142,7 +142,7 @@ class HandlerTest : FunSpec({
             )
         )
 
-        result.shouldBeLeft(ConfirmDocumentError.InvalidRequestedByError)
+        result.shouldBeLeft(ConfirmError.InvalidRequestedByError)
         verify(exactly = 1) { documentRepository.find(documentId) }
         verify(exactly = 0) { signatureService.validateSignaturesAndReturnSignatory(any()) }
         coVerify(exactly = 0) { partyService.resolve(any()) }
@@ -173,7 +173,7 @@ class HandlerTest : FunSpec({
             )
         )
 
-        result.shouldBeLeft(ConfirmDocumentError.IllegalStateError)
+        result.shouldBeLeft(ConfirmError.IllegalStateError)
         verify(exactly = 1) { documentRepository.find(documentId) }
         verify(exactly = 0) { documentRepository.confirm(any(), any(), any(), any()) }
         verify(exactly = 0) { signatureService.validateSignaturesAndReturnSignatory(any()) }
@@ -204,7 +204,7 @@ class HandlerTest : FunSpec({
             )
         )
 
-        result.shouldBeLeft(ConfirmDocumentError.ExpiredError)
+        result.shouldBeLeft(ConfirmError.ExpiredError)
         verify(exactly = 1) { documentRepository.find(documentId) }
         verify(exactly = 0) { documentRepository.confirm(any(), any(), any(), any()) }
         verify(exactly = 0) { signatureService.validateSignaturesAndReturnSignatory(any()) }
@@ -233,7 +233,7 @@ class HandlerTest : FunSpec({
         )
 
         result.shouldBeLeft(
-            ConfirmDocumentError.ValidateSignaturesError(SignatureValidationError.MissingElhubSignature)
+            ConfirmError.ValidateSignaturesError(SignatureValidationError.MissingElhubSignature)
         )
         verify(exactly = 1) { documentRepository.find(documentId) }
         verify(exactly = 1) { signatureService.validateSignaturesAndReturnSignatory(signedFile) }
@@ -264,7 +264,7 @@ class HandlerTest : FunSpec({
             )
         )
 
-        result.shouldBeLeft(ConfirmDocumentError.SignatoryResolutionError)
+        result.shouldBeLeft(ConfirmError.SignatoryResolutionError)
         verify(exactly = 1) { documentRepository.find(documentId) }
         verify(exactly = 1) { signatureService.validateSignaturesAndReturnSignatory(signedFile) }
         coVerify(exactly = 1) { partyService.resolve(signatoryIdentifier) }
@@ -297,7 +297,7 @@ class HandlerTest : FunSpec({
             )
         )
 
-        result.shouldBeLeft(ConfirmDocumentError.SignatoryNotAllowedToSignDocument)
+        result.shouldBeLeft(ConfirmError.SignatoryNotAllowedToSignDocument)
         verify(exactly = 1) { documentRepository.find(documentId) }
         verify(exactly = 1) { signatureService.validateSignaturesAndReturnSignatory(signedFile) }
         coVerify(exactly = 1) { partyService.resolve(signatoryIdentifier) }
@@ -330,7 +330,7 @@ class HandlerTest : FunSpec({
             )
         )
 
-        result.shouldBeLeft(ConfirmDocumentError.DocumentNotFoundError)
+        result.shouldBeLeft(ConfirmError.DocumentNotFoundError)
         verify(exactly = 1) { documentRepository.confirm(documentId, signedFile, requestedFrom, requestedTo) }
         verify(exactly = 0) { documentRepository.findScopeIds(any()) }
         verify(exactly = 0) { grantRepository.insert(any(), any()) }
@@ -360,7 +360,7 @@ class HandlerTest : FunSpec({
             )
         )
 
-        result.shouldBeLeft(ConfirmDocumentError.DocumentUpdateError)
+        result.shouldBeLeft(ConfirmError.DocumentUpdateError)
         verify(exactly = 1) { documentRepository.confirm(documentId, signedFile, requestedFrom, requestedTo) }
         verify(exactly = 0) { documentRepository.findScopeIds(any()) }
         verify(exactly = 0) { grantRepository.insert(any(), any()) }
@@ -393,7 +393,7 @@ class HandlerTest : FunSpec({
             )
         )
 
-        result.shouldBeLeft(ConfirmDocumentError.ScopeReadError)
+        result.shouldBeLeft(ConfirmError.ScopeReadError)
         verify(exactly = 1) { documentRepository.findScopeIds(confirmedDocument.id) }
         verify(exactly = 0) { grantRepository.insert(any(), any()) }
     }
@@ -425,7 +425,7 @@ class HandlerTest : FunSpec({
             )
         )
 
-        result.shouldBeLeft(ConfirmDocumentError.GrantCreationError)
+        result.shouldBeLeft(ConfirmError.GrantCreationError)
         verify(exactly = 1) { grantRepository.insert(any(), listOf(1L)) }
     }
 
