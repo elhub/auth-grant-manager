@@ -2,93 +2,91 @@
 <html lang="no">
 <head>
     <meta charset="UTF-8"/>
-    <title>Samtykke til leverandørskifte og/eller anleggsovertagelse</title>
+    <title>Bekreft strømavtale - Leverandørskifte</title>
     <style>
+        @page {
+            margin: 72pt;
+        }
+        html, body {
+            margin: 0;
+            padding: 0;
+        }
         body {
+            background-color: transparent;
+            color: #1e1e1e;
             font-family: LiberationSans;
-            margin: 40px;
+            font-size: 11pt;
         }
-        h1 {
-            color: #2e7d32;
+        .page-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ffffff;
+            z-index: -1;
         }
-        h2 {
-            color: #2e7d32;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        table, th, td {
-            border: 1px solid #888;
-        }
-        th, td {
-            padding: 10px;
-            text-align: left;
-        }
-        a {
-            color: #1a0dab;
-        }
-
         .elhub-logo {
             text-align: right;
             font-size: 28px;
             color: #2e7d32;
             font-family: LibreBodoni;
+            margin-bottom: 24px;
+        }
+        .meta {
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+        .meta .row {
+            margin-bottom: 4px;
+        }
+        .meta .label {
+            font-weight: 700;
+            color: #2a2a2a;
+        }
+        h1 {
+            color: #2e7d32;
+            font-size: 20px;
+            margin: 24px 0 12px;
+        }
+        p {
+            margin: 10px 0;
+        }
+        ul {
+            margin: 12px 0 12px 18px;
+        }
+        li {
+            margin: 6px 0;
         }
     </style>
 </head>
 <body>
-
+<div class="page-bg"></div>
 <div class="elhub-logo">elhub</div>
 
-<h1>Samtykke til leverandørskifte og/eller anleggsovertagelse</h1>
+<div class="meta">
+    <div class="row"><span class="label">Kunde:</span> {{customerName}}</div>
+    <div class="row"><span class="label">Adresse:</span> {{meteringPointAddress}}</div>
+    <div class="row"><span class="label">Målernummer:</span> {{meteringPointId}}</div>
+    <div class="row"><span class="label">MålepunktID:</span> {{meteringPointId}}</div>
+    <div class="row"><span class="label">Strømleverandør:</span> {{balanceSupplierName}}</div>
+    <div class="row"><span class="label">Strømavtale:</span> {{balanceSupplierContractName}}</div>
+</div>
 
-<p>Alle strømleverandører skal innhente elektronisk dokumenterbart samtykke fra strømkunder ved leverandørskifte og anleggsovertagelse. Det vil ikke være mulig å gjennomføre leverandørskifte uten samtykke fra strømkunden.</p>
+<h1>Bekreft strømavtale - Leverandørskifte</h1>
 
-<p>Samtykke til leverandørskifte og/eller anleggsovertagelse skal gis i tillegg til strømavtalen. Om strømkunden er misfornøyd med sin strømavtale kan man enkelt bytte til en ny avtale. Alle strømtilbud for privatkunder er tilgjengelig på Forbrukerrådets portal <a href="https://www.strompris.no" target="_blank">strømpris.no</a>.</p>
+<p>Reguleringsmyndigheten for Energi (RME) har pålagt Elhub å kontrollere at det foreligger gyldig strømavtale før innflytting og skifte av strømleverandør (leverandørskifte).</p>
 
-<h2>Samtykkekontroll i Elhub</h2>
+<p>Ved å signere dette dokumentet bekrefter du at du har inngått strømavtalen som det vises til over.</p>
 
-<p>Regulatormyndigheten for Energi (RME) har bestemt at Elhub skal kontrollere at strømkunder har gitt samtykke ved leverandørskifte og flytting. Elhub AS er et 100 % eid selskap under Statnett SF, og er regulert i forskrift om kraftomsetning og nettjenester og konsesjon for Avregningsansvar som er tildelt Statnett av RME.</p>
+<ul>
+    <li>For å få gjennomført leverandørskifte må strømavtalen bekreftes innen 4 uker.</li>
+    <li>Om du avslår forespørselen eller ikke bekrefter strømavtalen gjennomføres ikke leverandørskifte.</li>
+    <li>Når innflytting og leverandørskifteprosessen er gjennomført kan ikke bekreftelsen benyttes flere ganger av strømleverandøren.</li>
+    <li>Dette dokumentet vil være tilgjengelig for strømkunder på Elhub Min Side.</li>
+</ul>
 
-<p>Elhub er en IT-løsning utviklet for distribusjon av strømdata mellom partene i strømmarkedet og registrering av leverandørskifter og kunder som flytter til ny bolig (dette gjelder også ved overtagelse av fritids- eller sekundærbolig eller annen type strøm­anlegg). Alle endringer i kundeforhold i strømmarkedet må registreres i Elhub for at strømleverandør skal få tilgang til kundens strømdata og benytte disse til fakturering.</p>
+<p>Mer informasjon om bekreftelse av strømavtale finnes på Elhub sin hjemmeside.</p>
 
-<h2>Samtykke til leverandørskifte og/eller flytting</h2>
-
-<p>Ved å signere dette skjemaet gir du som strømkunde samtykke til at Elhub gjennomfører leverandørskifte og/eller flytting (anleggsovertagelse).</p>
-
-<p>Dette samtykket gjelder i 4 uker fra dette skjemaet blir signert og kan ikke trekkes tilbake. Når leverandørskifte- eller flytteprosessen er gjennomført kan ikke samtykket benyttes flere ganger av strømleverandøren. Strømkunden må gi samtykke på nytt hver gang man skifter leverandør eller flytter. Samtykket blir lagret i Elhub i 3 år og er tilgjengelig for strømkunder på <a href="https://www.elhub.no" target="_blank">Elhub Min Side</a>.</p>
-
-<p>Dokumentet signeres digitalt med eSignatur fra leverandør godkjent at Nasjonal kommunikasjonsmyndighet.</p>
-
-<p><em>Samtykket gjelder følgende parter, målepunkt og strømavtale:</em></p>
-
-<table>
-    <tr>
-        <td>Kunde</td>
-        <td>{{customerName}}</td>
-    </tr>
-    <tr>
-        <td>Fødselsnummer</td>
-        <td>{{customerNin}}</td>
-    </tr>
-    <tr>
-        <td>Adresse</td>
-        <td>{{meteringPointAddress}}</td>
-    </tr>
-    <tr>
-        <td>MålepunktID</td>
-        <td>{{meteringPointId}}</td>
-    </tr>
-    <tr>
-        <td>Strømleverandør</td>
-        <td>{{balanceSupplierName}}</td>
-    </tr>
-    <tr>
-        <td>Strømavtale</td>
-        <td>{{balanceSupplierContractName}}</td>
-    </tr>
-</table>
 </body>
 </html>
