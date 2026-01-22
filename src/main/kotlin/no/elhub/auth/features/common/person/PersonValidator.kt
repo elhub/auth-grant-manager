@@ -1,14 +1,12 @@
 package no.elhub.auth.features.common.person
 
 const val NIN_LENGTH = 11
-
-// weights for the two Mod‑11 checksum calculations used to validate nin
-val ninChecks = listOf(
-    intArrayOf(3, 7, 6, 1, 8, 9, 4, 5, 2), // first checksum factors
-    intArrayOf(5, 4, 3, 2, 7, 6, 5, 4, 3, 2) // second checksum factors
-)
 const val NIN_CHECKSUM_POS_1 = 9
 const val NIN_CHECKSUM_POS_2 = 10
+val ninChecks = listOf(
+    intArrayOf(3, 7, 6, 1, 8, 9, 4, 5, 2),
+    intArrayOf(5, 4, 3, 2, 7, 6, 5, 4, 3, 2)
+)
 
 /**
  * isNinValid validates strictly the incoming nin
