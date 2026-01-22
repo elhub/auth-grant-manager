@@ -22,6 +22,8 @@ data class CreateDocumentResponseAttributes(
     val status: String,
     val documentType: String,
     val validTo: String,
+    val createdAt: String,
+    val updatedAt: String,
 ) : JsonApiAttributes
 
 @Serializable
@@ -46,11 +48,11 @@ data class CreateDocumentResponseLinks(
 ) : JsonApiResourceLinks
 
 typealias CreateDocumentResponse = JsonApiResponse.SingleDocumentWithRelationshipsAndMetaAndLinks<
-    CreateDocumentResponseAttributes,
-    CreateDocumentResponseRelationships,
-    CreateDocumentResponseMeta,
-    CreateDocumentResponseLinks
-    >
+        CreateDocumentResponseAttributes,
+        CreateDocumentResponseRelationships,
+        CreateDocumentResponseMeta,
+        CreateDocumentResponseLinks
+        >
 
 fun AuthorizationDocument.toCreateDocumentResponse() = CreateDocumentResponse(
     data = JsonApiResponseResourceObjectWithRelationshipsAndMetaAndLinks(
@@ -60,6 +62,8 @@ fun AuthorizationDocument.toCreateDocumentResponse() = CreateDocumentResponse(
             status = this.status.name,
             documentType = this.type.name,
             validTo = this.validTo.toTimeZoneOffsetString(),
+            createdAt = this.createdAt.toTimeZoneOffsetString(),
+            updatedAt = this.updatedAt.toTimeZoneOffsetString(),
         ),
         relationships = CreateDocumentResponseRelationships(
             requestedBy = JsonApiRelationshipToOne(
@@ -83,8 +87,6 @@ fun AuthorizationDocument.toCreateDocumentResponse() = CreateDocumentResponse(
         ),
         meta = CreateDocumentResponseMeta(
             buildMap {
-                put("createdAt", this@toCreateDocumentResponse.createdAt.toTimeZoneOffsetString())
-                put("updatedAt", this@toCreateDocumentResponse.updatedAt.toTimeZoneOffsetString())
                 this@toCreateDocumentResponse.properties.forEach { properties ->
                     put(properties.key, properties.value)
                 }

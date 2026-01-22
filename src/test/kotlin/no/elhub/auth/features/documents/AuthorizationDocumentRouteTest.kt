@@ -8,9 +8,11 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldBeEmpty
 import io.ktor.client.call.body
+import java.time.Duration
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.accept
 import io.ktor.client.request.get
+import kotlin.time.Instant
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.put
@@ -22,8 +24,12 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
+import kotlinx.datetime.DateTimeUnit.TimeBased
 import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.testing.testApplication
+import kotlinx.datetime.DatePeriod
+import kotlinx.datetime.plus
+import kotlinx.datetime.DateTimeUnit
 import no.elhub.auth.features.businessprocesses.changeofsupplier.defaultValidTo
 import no.elhub.auth.features.common.AuthPersonsTestContainer
 import no.elhub.auth.features.common.AuthPersonsTestContainerExtension
@@ -32,6 +38,7 @@ import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.RunPostgresScriptExtension
 import no.elhub.auth.features.common.auth.PDPAuthorizationProvider
 import no.elhub.auth.features.common.commonModule
+import no.elhub.auth.features.common.currentTimeWithTimeZone
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
 import no.elhub.auth.features.documents.create.dto.CreateDocumentMeta
@@ -47,9 +54,13 @@ import no.elhub.auth.features.grants.common.dto.SingleGrantResponse
 import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObjectWithMeta
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import no.elhub.devxp.jsonapi.response.JsonApiErrorObject
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
+import kotlin.time.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
+import kotlin.test.assertTrue
 import no.elhub.auth.features.grants.module as grantsModule
 import no.elhub.auth.module as applicationModule
 
@@ -81,6 +92,8 @@ class AuthorizationDocumentRouteTest :
         lateinit var grantId: String
         lateinit var requestedFromId: String
         lateinit var requestedToId: String
+
+        val nowTolerance = Duration.ofSeconds(5)
 
         context("Run document happy flow") {
             testApplication {
@@ -162,6 +175,14 @@ class AuthorizationDocumentRouteTest :
                             documentType shouldBe AuthorizationDocument.Type.ChangeOfSupplierConfirmation.name
                             status shouldBe AuthorizationDocument.Status.Pending.name
                             validTo shouldBe "${defaultValidTo()}T00:00:00+01:00"
+
+                            val createdAt = OffsetDateTime.parse(createdAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                            val updatedAt = OffsetDateTime.parse(updatedAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                            val validTo = Instant.parse(validTo).toLocalDateTime(TimeZone.of("+01:00")).date
+
+                            assertTrue(validTo == defaultValidTo())
+                            assertTrue(Duration.between(createdAt, currentTimeWithTimeZone()) < nowTolerance)
+                            assertTrue(Duration.between(updatedAt, currentTimeWithTimeZone()) < nowTolerance)
                         }
                         relationships.shouldNotBeNull().apply {
                             requestedBy.apply {
@@ -184,14 +205,6 @@ class AuthorizationDocumentRouteTest :
                             }
                         }
                         meta.shouldNotBeNull().apply {
-                            val createdAt = values["createdAt"].shouldNotBeNull()
-                            val updatedAt = values["updatedAt"].shouldNotBeNull()
-
-                            shouldNotThrowAny {
-                                OffsetDateTime.parse(createdAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
-                                OffsetDateTime.parse(updatedAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
-                            }
-
                             values["requestedFromName"] shouldBe "Hillary Orr"
                             values["requestedForMeteringPointId"] shouldBe "123456789012345678"
                             values["requestedForMeteringPointAddress"] shouldBe "quaerendum"
@@ -227,6 +240,13 @@ class AuthorizationDocumentRouteTest :
                                 status shouldBe AuthorizationDocument.Status.Pending.toString()
                                 documentType shouldBe AuthorizationDocument.Type.ChangeOfSupplierConfirmation.name
                                 validTo shouldBe "${defaultValidTo()}T00:00:00+01:00"
+                                val createdAt = OffsetDateTime.parse(createdAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                                val updatedAt = OffsetDateTime.parse(updatedAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                                val validTo = Instant.parse(validTo).toLocalDateTime(TimeZone.of("+01:00")).date
+
+                                assertTrue(validTo == defaultValidTo())
+                                assertTrue(Duration.between(createdAt, currentTimeWithTimeZone()) < nowTolerance)
+                                assertTrue(Duration.between(updatedAt, currentTimeWithTimeZone()) < nowTolerance)
                             }
                             relationships.apply {
                                 requestedBy.data.apply {
@@ -247,14 +267,6 @@ class AuthorizationDocumentRouteTest :
                                 authorizationGrant.shouldBeNull()
                             }
                             meta.shouldNotBeNull().apply {
-                                val createdAt = values["createdAt"].shouldNotBeNull()
-                                val updatedAt = values["updatedAt"].shouldNotBeNull()
-
-                                shouldNotThrowAny {
-                                    OffsetDateTime.parse(createdAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
-                                    OffsetDateTime.parse(updatedAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
-                                }
-
                                 values["requestedFromName"] shouldBe "Hillary Orr"
                                 values["requestedForMeteringPointId"] shouldBe "123456789012345678"
                                 values["requestedForMeteringPointAddress"] shouldBe "quaerendum"
@@ -402,9 +414,15 @@ class AuthorizationDocumentRouteTest :
                         type shouldBe "AuthorizationGrant"
                         attributes.shouldNotBeNull().apply {
                             status shouldBe "Active"
-                            OffsetDateTime.parse(grantedAt).toLocalDate() shouldBe LocalDate.now()
-                            OffsetDateTime.parse(validFrom).toLocalDate() shouldBe LocalDate.now()
-                            OffsetDateTime.parse(validTo).toLocalDate() shouldBe LocalDate.now().plusYears(1)
+                            Instant.parse(grantedAt)
+                                .toLocalDateTime(TimeZone.of("Europe/Oslo")).date shouldBe Clock.System.now()
+                                .toLocalDateTime(TimeZone.UTC).date
+                            Instant.parse(validFrom)
+                                .toLocalDateTime(TimeZone.of("Europe/Oslo")).date shouldBe Clock.System.now()
+                                .toLocalDateTime(TimeZone.UTC).date
+                            Instant.parse(validTo)
+                                .toLocalDateTime(TimeZone.of("Europe/Oslo")).date shouldBe Clock.System.now()
+                                .toLocalDateTime(TimeZone.UTC).date.plus(1, DateTimeUnit.YEAR)
                         }
                         relationships.apply {
                             grantedFor.apply {
@@ -528,3 +546,4 @@ class AuthorizationDocumentRouteTest :
             }
         }
     })
+
