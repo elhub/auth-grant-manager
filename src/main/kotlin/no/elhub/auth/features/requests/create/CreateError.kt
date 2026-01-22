@@ -35,8 +35,8 @@ fun CreateError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollectio
         CreateError.RequestedByPartyError,
         CreateError.MappingError -> buildApiErrorResponse(
             status = HttpStatusCode.InternalServerError,
-            code = "internal_authorization_error",
-            title = "Internal authorization error",
+            code = "internal_server_error",
+            title = "Internal server error",
             detail = "An internal error occurred."
         )
 
