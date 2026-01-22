@@ -253,7 +253,6 @@ class AuthorizationRequestRouteTest : FunSpec({
                             OffsetDateTime.parse(updatedAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
                             OffsetDateTime.parse(validTo, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
                         }
-
                     }
                     relationships.shouldNotBeNull().apply {
                         requestedBy.apply {
@@ -409,6 +408,13 @@ class AuthorizationRequestRouteTest : FunSpec({
                         shouldNotThrowAny {
                             JavaLocalDate.parse(validTo, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
                         }
+                        val createdAt = createdAt.shouldNotBeNull()
+                        val updatedAt = updatedAt.shouldNotBeNull()
+
+                        shouldNotThrowAny {
+                            OffsetDateTime.parse(createdAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                            OffsetDateTime.parse(updatedAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                        }
                     }
                     relationships.shouldNotBeNull().apply {
                         requestedBy.apply {
@@ -431,14 +437,6 @@ class AuthorizationRequestRouteTest : FunSpec({
                         }
                     }
                     meta.shouldNotBeNull().apply {
-                        val createdAt = values["createdAt"].shouldNotBeNull()
-                        val updatedAt = values["updatedAt"].shouldNotBeNull()
-
-                        shouldNotThrowAny {
-                            OffsetDateTime.parse(createdAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
-                            OffsetDateTime.parse(updatedAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
-                        }
-
                         values["requestedFromName"] shouldBe "Hillary Orr"
                         values["requestedForMeteringPointId"] shouldBe "123456789012345678"
                         values["requestedForMeteringPointAddress"] shouldBe "quaerendum"

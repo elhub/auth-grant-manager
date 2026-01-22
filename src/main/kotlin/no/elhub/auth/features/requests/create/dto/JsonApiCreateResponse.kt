@@ -22,7 +22,9 @@ import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObjectWithRelation
 data class CreateRequestResponseAttributes(
     val status: String,
     val requestType: String,
-    val validTo: String
+    val validTo: String,
+    val createdAt: String,
+    val updatedAt: String,
 ) : JsonApiAttributes
 
 @Serializable
@@ -44,58 +46,58 @@ data class CreateRequestResponseLinks(
 ) : JsonApiResourceLinks
 
 typealias CreateRequestResponse = JsonApiResponse.SingleDocumentWithRelationshipsAndMetaAndLinks<
-    CreateRequestResponseAttributes,
-    CreateRequestResponseRelationShips,
-    CreateRequestResponseMeta,
-    CreateRequestResponseLinks
-    >
+        CreateRequestResponseAttributes,
+        CreateRequestResponseRelationShips,
+        CreateRequestResponseMeta,
+        CreateRequestResponseLinks
+        >
 
 fun AuthorizationRequest.toCreateResponse() =
     CreateRequestResponse(
         data =
-        JsonApiResponseResourceObjectWithRelationshipsAndMetaAndLinks(
-            type = "AuthorizationRequest",
-            id = this.id.toString(),
-            attributes =
-            CreateRequestResponseAttributes(
-                status = this.status.name,
-                requestType = this.type.name,
-                validTo = this.validTo.toTimeZoneOffsetDateTimeAtStartOfDay().toString()
-            ),
-            relationships = CreateRequestResponseRelationShips(
-                requestedBy = JsonApiRelationshipToOne(
-                    data = JsonApiRelationshipData(
-                        type = this.requestedBy.type.name,
-                        id = this.requestedBy.resourceId
-                    )
+            JsonApiResponseResourceObjectWithRelationshipsAndMetaAndLinks(
+                type = "AuthorizationRequest",
+                id = this.id.toString(),
+                attributes =
+                    CreateRequestResponseAttributes(
+                        status = this.status.name,
+                        requestType = this.type.name,
+                        validTo = this.validTo.toTimeZoneOffsetDateTimeAtStartOfDay().toString(),
+                        createdAt = this.createdAt.toTimeZoneOffsetString(),
+                        updatedAt = this.updatedAt.toTimeZoneOffsetString(),
+                    ),
+                relationships = CreateRequestResponseRelationShips(
+                    requestedBy = JsonApiRelationshipToOne(
+                        data = JsonApiRelationshipData(
+                            type = this.requestedBy.type.name,
+                            id = this.requestedBy.resourceId
+                        )
+                    ),
+                    requestedFrom = JsonApiRelationshipToOne(
+                        data = JsonApiRelationshipData(
+                            type = this.requestedFrom.type.name,
+                            id = this.requestedFrom.resourceId
+                        )
+                    ),
+                    requestedTo = JsonApiRelationshipToOne(
+                        data = JsonApiRelationshipData(
+                            type = this.requestedTo.type.name,
+                            id = this.requestedTo.resourceId
+                        )
+                    ),
                 ),
-                requestedFrom = JsonApiRelationshipToOne(
-                    data = JsonApiRelationshipData(
-                        type = this.requestedFrom.type.name,
-                        id = this.requestedFrom.resourceId
-                    )
-                ),
-                requestedTo = JsonApiRelationshipToOne(
-                    data = JsonApiRelationshipData(
-                        type = this.requestedTo.type.name,
-                        id = this.requestedTo.resourceId
-                    )
-                ),
-            ),
-            meta = CreateRequestResponseMeta(
-                buildMap {
-                    put("createdAt", this@toCreateResponse.createdAt.toTimeZoneOffsetString())
-                    put("updatedAt", this@toCreateResponse.updatedAt.toTimeZoneOffsetString())
-                    this@toCreateResponse.properties.forEach { prop ->
-                        put(prop.key, prop.value)
+                meta = CreateRequestResponseMeta(
+                    buildMap {
+                        this@toCreateResponse.properties.forEach { prop ->
+                            put(prop.key, prop.value)
+                        }
                     }
-                }
+                ),
+                links =
+                    CreateRequestResponseLinks(
+                        self = "${REQUESTS_PATH}/${this.id}"
+                    ),
             ),
-            links =
-            CreateRequestResponseLinks(
-                self = "${REQUESTS_PATH}/${this.id}"
-            ),
-        ),
         links = JsonApiLinks.ResourceObjectLink(REQUESTS_PATH),
         meta = JsonApiMeta(
             buildJsonObject {
