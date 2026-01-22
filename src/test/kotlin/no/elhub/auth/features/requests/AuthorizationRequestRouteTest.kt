@@ -615,7 +615,6 @@ class AuthorizationRequestRouteTest : FunSpec({
                         )
                     }
 
-                println("HEIHEIHEIHEI")
                 patchResult.status shouldBe HttpStatusCode.OK
                 val patchResponse: UpdateRequestResponse = patchResult.body()
 
@@ -623,15 +622,10 @@ class AuthorizationRequestRouteTest : FunSpec({
                     type shouldBe "AuthorizationRequest"
                     id.shouldNotBeNull()
                     attributes.shouldNotBeNull().apply {
-                        println("validto, createdat, updatedat $validTo, $createdAt, $updatedAt")
                         status shouldBe "Accepted"
-
                         val validTo = validTo.shouldNotBeNull()
-                        println("REACHED validto")
                         val createdAt = createdAt.shouldNotBeNull()
-                        println("REACHED createdat")
                         val updatedAt = updatedAt.shouldNotBeNull()
-                        println("REACHED upd")
 
                         shouldNotThrowAny {
                             OffsetDateTime.parse(createdAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
@@ -681,7 +675,6 @@ class AuthorizationRequestRouteTest : FunSpec({
                             }
                         }
                     }
-                    println("REACHED rels")
                 }
 
                 // verify that a subsequent GET of this resource reflects the updated state persisted in the database
