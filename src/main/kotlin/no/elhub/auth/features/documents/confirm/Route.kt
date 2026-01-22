@@ -11,13 +11,14 @@ import kotlinx.io.readByteArray
 import no.elhub.auth.features.common.InputError
 import no.elhub.auth.features.common.auth.AuthorizationProvider
 import no.elhub.auth.features.common.auth.toApiErrorResponse
-import no.elhub.auth.features.common.party.PartyIdentifier
-import no.elhub.auth.features.common.party.PartyIdentifierType
+import no.elhub.auth.features.common.party.AuthorizationParty
+import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.common.validateId
-import no.elhub.devxp.jsonapi.response.JsonApiErrorObject
+import org.slf4j.LoggerFactory
 
 const val DOCUMENT_ID_PARAM = "id"
+private val logger = LoggerFactory.getLogger(Route::class.java)
 
 fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
     put("/{$DOCUMENT_ID_PARAM}.pdf") {
@@ -42,45 +43,17 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
             return@put
         }
 
-        val requestedBy = PartyIdentifier(idType = PartyIdentifierType.GlobalLocationNumber, idValue = resolvedActor.gln)
+        val authorizedParty = AuthorizationParty(resourceId = resolvedActor.gln, type = PartyType.OrganizationEntity)
         handler(
             Command(
                 documentId = documentId,
-                requestedByIdentifier = requestedBy,
+                authorizedParty = authorizedParty,
                 signedFile = signedDocument
             )
         ).getOrElse { error ->
-            when (error) {
-                ConfirmDocumentError.DocumentNotFoundError -> call.respond(HttpStatusCode.NotFound)
-
-                ConfirmDocumentError.InvalidRequestedByError -> call.respond(HttpStatusCode.Forbidden)
-
-                ConfirmDocumentError.DocumentReadError,
-                ConfirmDocumentError.DocumentUpdateError,
-                ConfirmDocumentError.ScopeReadError,
-                ConfirmDocumentError.GrantCreationError,
-                ConfirmDocumentError.RequestedByResolutionError -> call.respond(HttpStatusCode.InternalServerError)
-
-                ConfirmDocumentError.IllegalStateError ->
-                    call.respond(
-                        HttpStatusCode.BadRequest,
-                        JsonApiErrorObject(
-                            status = "400",
-                            title = "Invalid Status State",
-                            detail = "Document must be in 'Pending' status to confirm."
-                        )
-                    )
-
-                ConfirmDocumentError.ExpiredError ->
-                    call.respond(
-                        HttpStatusCode.BadRequest,
-                        JsonApiErrorObject(
-                            status = "400",
-                            title = "Request Has Expired",
-                            detail = "Request validity period has passed"
-                        )
-                    )
-            }
+            logger.error("Failed to confirm authorization document: {}", error)
+            val (status, validationError) = error.toApiErrorResponse()
+            call.respond(status, validationError)
             return@put
         }
 

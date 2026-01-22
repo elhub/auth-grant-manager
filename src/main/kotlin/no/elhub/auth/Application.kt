@@ -5,6 +5,7 @@ import io.ktor.server.application.install
 import io.ktor.server.netty.EngineMain
 import no.elhub.auth.config.HeaderPolicy
 import no.elhub.auth.config.configureDatabase
+import no.elhub.auth.config.configureErrorHandling
 import no.elhub.auth.config.configureLogging
 import no.elhub.auth.config.configureMonitoring
 import no.elhub.auth.config.configureRequestTracing
@@ -23,4 +24,5 @@ fun Application.module() {
     configureMonitoring(dataSource)
     configureSerialization()
     install(HeaderPolicy)
+    configureErrorHandling()
 }

@@ -13,9 +13,11 @@ import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.common.validateId
 import no.elhub.auth.features.requests.get.dto.toGetSingleResponse
+import org.slf4j.LoggerFactory
 import java.util.UUID
 
 const val REQUEST_ID_PARAM = "id"
+private val logger = LoggerFactory.getLogger(Route::class.java)
 
 fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
     get("/{$REQUEST_ID_PARAM}") {
@@ -52,8 +54,9 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
         }
 
         val request = handler(query)
-            .getOrElse { err ->
-                val (status, body) = err.toApiErrorResponse()
+            .getOrElse { error ->
+                logger.error("Failed to get authorization request: {}", error)
+                val (status, body) = error.toApiErrorResponse()
                 call.respond(status, body)
                 return@get
             }

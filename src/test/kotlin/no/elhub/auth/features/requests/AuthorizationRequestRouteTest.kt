@@ -42,7 +42,6 @@ import no.elhub.auth.features.requests.update.dto.UpdateRequestResponse
 import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObject
 import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObjectWithMeta
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
-import no.elhub.devxp.jsonapi.response.JsonApiErrorObject
 import org.jetbrains.exposed.sql.batchInsert
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -313,7 +312,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                     this[0].apply {
                         status shouldBe "404"
                         code shouldBe "not_found"
-                        title shouldBe "Not Found"
+                        title shouldBe "Not found"
                         detail shouldBe "The requested resource could not be found"
                     }
                 }
@@ -331,7 +330,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                     this[0].apply {
                         status shouldBe "403"
                         code shouldBe "not_authorized"
-                        title shouldBe "Party Not Authorized"
+                        title shouldBe "Party not authorized"
                         detail shouldBe "The party is not allowed to access this resource"
                     }
                 }
@@ -348,7 +347,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                     this[0].apply {
                         status shouldBe "403"
                         code shouldBe "not_authorized"
-                        title shouldBe "Party Not Authorized"
+                        title shouldBe "Party not authorized"
                         detail shouldBe "The party is not allowed to access this resource"
                     }
                 }
@@ -501,11 +500,17 @@ class AuthorizationRequestRouteTest : FunSpec({
                     }
 
                 response.status shouldBe HttpStatusCode.BadRequest
-                val body = response.body<JsonApiErrorObject>()
-                body.status shouldBe "400"
-                body.code shouldBe "missing_requested_from_name"
-                body.title shouldBe "Validation Error"
-                body.detail shouldBe "Requested from name is missing"
+
+                val responseJson: JsonApiErrorCollection = response.body()
+                responseJson.errors.apply {
+                    size shouldBe 1
+                    this[0].apply {
+                        status shouldBe "400"
+                        code shouldBe "missing_requested_from_name"
+                        title shouldBe "Validation error"
+                        detail shouldBe "Requested from name is missing"
+                    }
+                }
             }
 
             test("Should return 403 Forbidden when requestee has valid gridowner token") {
@@ -554,6 +559,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                     size shouldBe 1
                     this[0].apply {
                         status shouldBe "403"
+                        code shouldBe "unsupported_party_type"
                         title shouldBe "Unsupported party type"
                         detail shouldBe "The party type you are authorized as is not supported for this endpoint."
                     }
@@ -584,11 +590,18 @@ class AuthorizationRequestRouteTest : FunSpec({
                     }
 
                 patchResult.status shouldBe HttpStatusCode.BadRequest
-                val body = patchResult.body<JsonApiErrorObject>()
-                body.status shouldBe "400"
-                body.title shouldBe "Request Has Expired"
-                body.detail shouldBe "Request validity period has passed"
+                val responseJson: JsonApiErrorCollection = patchResult.body()
+                responseJson.errors.apply {
+                    size shouldBe 1
+                    this[0].apply {
+                        status shouldBe "400"
+                        code shouldBe "expired_status_transition"
+                        title shouldBe "Request has expired"
+                        detail shouldBe "Request validity period has passed"
+                    }
+                }
             }
+
             test("Should accept authorization request and persist grant relationship") {
                 val requestId = insertAuthorizationRequest(
                     properties = mapOf(
@@ -838,10 +851,16 @@ class AuthorizationRequestRouteTest : FunSpec({
                     }
 
                 response.status shouldBe HttpStatusCode.BadRequest
-                val body = response.body<JsonApiErrorObject>()
-                body.status shouldBe "400"
-                body.title shouldBe "Invalid Status Transition"
-                body.detail shouldBe "Only 'Accepted' and 'Rejected' statuses are allowed."
+                val responseJson: JsonApiErrorCollection = response.body()
+                responseJson.errors.apply {
+                    size shouldBe 1
+                    this[0].apply {
+                        status shouldBe "400"
+                        code shouldBe "invalid_status_transition"
+                        title shouldBe "Invalid status transition"
+                        detail shouldBe "Only 'Accepted' and 'Rejected' statuses are allowed."
+                    }
+                }
             }
 
             test("Should return 403 Unauthorized when requestee has valid maskinport token") {

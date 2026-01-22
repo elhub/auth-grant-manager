@@ -2,7 +2,6 @@ package no.elhub.auth.features.documents
 
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.core.spec.style.FunSpec
-import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
@@ -27,8 +26,14 @@ import io.ktor.server.testing.testApplication
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.DateTimeUnit.TimeBased
+import kotlinx.datetime.plus
+import kotlinx.datetime.toLocalDateTime
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
+import java.time.Duration
+import kotlin.test.assertTrue
+import kotlin.time.Clock
+import kotlin.time.Instant
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 import no.elhub.auth.features.businessprocesses.changeofsupplier.defaultValidTo
@@ -54,13 +59,9 @@ import no.elhub.auth.features.grants.common.dto.AuthorizationGrantScopesResponse
 import no.elhub.auth.features.grants.common.dto.SingleGrantResponse
 import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObjectWithMeta
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
-import no.elhub.devxp.jsonapi.response.JsonApiErrorObject
-import java.time.Duration
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
-import kotlin.test.assertTrue
-import kotlin.time.Clock
-import kotlin.time.Instant
+import java.util.UUID
 import no.elhub.auth.features.grants.module as grantsModule
 import no.elhub.auth.module as applicationModule
 
@@ -68,6 +69,7 @@ import no.elhub.auth.module as applicationModule
 class AuthorizationDocumentRouteTest :
     FunSpec({
         val pdpContainer = PdpTestContainerExtension()
+
         extensions(
             PostgresTestContainerExtension(),
             RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-party.sql"),
@@ -81,6 +83,14 @@ class AuthorizationDocumentRouteTest :
                 token = "maskinporten",
                 actingGln = "0107000000021",
                 actingFunction = "BalanceSupplier"
+            )
+            AuthPersonsTestContainer.registerPersonMapping(
+                nin = REQUESTED_FROM_NIN,
+                personId = REQUESTED_FROM_ID
+            )
+            AuthPersonsTestContainer.registerPersonMapping(
+                nin = REQUESTED_TO_NIN,
+                personId = REQUESTED_TO_ID
             )
         }
 
@@ -121,6 +131,7 @@ class AuthorizationDocumentRouteTest :
                         "pdfSigner.vault.key" to "test-key",
                         "pdfSigner.certificate.signing" to TestCertificateUtil.Constants.CERTIFICATE_LOCATION,
                         "pdfSigner.certificate.chain" to TestCertificateUtil.Constants.CERTIFICATE_LOCATION,
+                        "pdfSigner.certificate.bankIdIdRoot" to TestCertificateUtil.Constants.BANKID_ROOT_CERTIFICATE_LOCATION,
                         "featureToggle.enableEndpoints" to "true",
                         "authPersons.baseUri" to AuthPersonsTestContainer.baseUri(),
                         "pdp.baseUrl" to "http://localhost:8085"
@@ -149,11 +160,11 @@ class AuthorizationDocumentRouteTest :
                                                 ),
                                                 requestedFrom = PartyIdentifier(
                                                     idType = PartyIdentifierType.NationalIdentityNumber,
-                                                    idValue = "98765432109"
+                                                    idValue = REQUESTED_FROM_NIN
                                                 ),
                                                 requestedTo = PartyIdentifier(
                                                     idType = PartyIdentifierType.NationalIdentityNumber,
-                                                    idValue = "00011122233"
+                                                    idValue = REQUESTED_TO_NIN
                                                 ),
                                                 requestedFromName = "Hillary Orr",
                                                 requestedForMeteringPointId = "123456789012345678",
@@ -310,18 +321,16 @@ class AuthorizationDocumentRouteTest :
 
                     response.status shouldBe HttpStatusCode.Forbidden
 
-                    val jsonApiError: JsonApiErrorCollection = response.body()
-
-                    jsonApiError shouldBe JsonApiErrorCollection(
-                        listOf(
-                            JsonApiErrorObject(
-                                status = HttpStatusCode.Forbidden.value.toString(),
-                                code = "not_authorized",
-                                title = "Party Not Authorized",
-                                detail = "The party is not allowed to access this resource",
-                            )
-                        )
-                    )
+                    val responseJson: JsonApiErrorCollection = response.body()
+                    responseJson.errors.apply {
+                        size shouldBe 1
+                        this[0].apply {
+                            status shouldBe HttpStatusCode.Forbidden.value.toString()
+                            code shouldBe "not_authorized"
+                            title shouldBe "Party not authorized"
+                            detail shouldBe "The party is not allowed to access this resource"
+                        }
+                    }
                 }
 
                 test("Get document list should give proper size given the authorized user") {
@@ -360,9 +369,14 @@ class AuthorizationDocumentRouteTest :
                 }
 
                 test("Put signed file should return 204") {
+                    val documentSignedByPerson = EndUserSignatureTestHelper().sign(
+                        pdfBytes = signedFile,
+                        nationalIdentityNumber = REQUESTED_TO_NIN
+                    )
+
                     val response = client.put("$DOCUMENTS_PATH/$createdDocumentId.pdf") {
                         contentType(ContentType.Application.Pdf)
-                        setBody(signedFile)
+                        setBody(documentSignedByPerson)
                         header(HttpHeaders.Authorization, "Bearer maskinporten")
                         header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
                     }
@@ -519,6 +533,7 @@ class AuthorizationDocumentRouteTest :
                         "pdfSigner.vault.key" to "test-key",
                         "pdfSigner.certificate.signing" to TestCertificateUtil.Constants.CERTIFICATE_LOCATION,
                         "pdfSigner.certificate.chain" to TestCertificateUtil.Constants.CERTIFICATE_LOCATION,
+                        "pdfSigner.certificate.bankIdIdRoot" to TestCertificateUtil.Constants.BANKID_ROOT_CERTIFICATE_LOCATION,
                         "featureToggle.enableEndpoints" to "true",
                         "authPersons.baseUri" to AuthPersonsTestContainer.baseUri(),
                         "pdp.baseUrl" to "http://localhost:8085"
@@ -536,13 +551,21 @@ class AuthorizationDocumentRouteTest :
 
                     response.status shouldBe HttpStatusCode.BadRequest
                     val error: JsonApiErrorCollection = response.body()
-
-                    error.errors shouldHaveSize 1
-                    error.errors[0].apply {
-                        status shouldBe "400"
-                        detail shouldBe "Missing User-Agent header"
+                    error.errors.apply {
+                        size shouldBe 1
+                        this[0].apply {
+                            status shouldBe "400"
+                            code shouldBe "bad_request"
+                            title shouldBe "Bad request"
+                            detail shouldBe "Missing User-Agent header"
+                        }
                     }
                 }
             }
         }
     })
+
+private const val REQUESTED_FROM_NIN = "98765432109"
+private const val REQUESTED_TO_NIN = "00011122233"
+private val REQUESTED_FROM_ID = UUID.fromString("5c9f5b1c-7a01-4d8d-9f27-9de7479adf52")
+private val REQUESTED_TO_ID = UUID.fromString("d6fe3b43-0d6b-4e7c-8bd1-12a2ed05a5f6")

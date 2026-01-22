@@ -24,7 +24,7 @@ class AuthErrorJsonApiResponseTest : FunSpec({
         AuthError.MissingSenderGlnHeader to Expectation(
             status = HttpStatusCode.BadRequest,
             code = "missing_sender_gln",
-            title = "Missing SenderGLN header",
+            title = "Missing senderGLN header",
             detail = "SenderGLN header is required for authorization."
         ),
         AuthError.InvalidToken to Expectation(
@@ -68,9 +68,9 @@ class AuthErrorJsonApiResponseTest : FunSpec({
             response.errors.size shouldBe 1
             response.errors.first().apply {
                 this.status shouldBe HttpStatusCode.InternalServerError.value.toString()
-                title shouldBe "Internal authorization error"
+                title shouldBe "Internal server error"
                 detail shouldBe "An internal error occurred."
-                code shouldBe "internal_authorization_error"
+                code shouldBe "internal_server_error"
             }
         }
     }

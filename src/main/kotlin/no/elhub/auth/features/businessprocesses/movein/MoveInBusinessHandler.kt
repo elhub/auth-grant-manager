@@ -18,7 +18,7 @@ import no.elhub.auth.features.businessprocesses.movein.domain.toRequestCommand
 import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.DocumentBusinessHandler
-import no.elhub.auth.features.documents.create.CreateDocumentError.BusinessValidationError
+import no.elhub.auth.features.documents.create.CreateError
 import no.elhub.auth.features.documents.create.command.DocumentCommand
 import no.elhub.auth.features.documents.create.model.CreateDocumentModel
 import no.elhub.auth.features.grants.AuthorizationScope
@@ -57,11 +57,11 @@ class MoveInBusinessHandler :
             validFrom = today(),
         )
 
-    override fun validateAndReturnDocumentCommand(model: CreateDocumentModel): Either<BusinessValidationError, DocumentCommand> =
+    override fun validateAndReturnDocumentCommand(model: CreateDocumentModel): Either<CreateError.BusinessValidationError, DocumentCommand> =
         either {
             val model = model.toMoveInBusinessModel()
             validate(model)
-                .mapLeft { raise(BusinessValidationError(it.message)) }
+                .mapLeft { raise(CreateError.BusinessValidationError(it.message)) }
                 .bind()
                 .toDocumentCommand()
         }
