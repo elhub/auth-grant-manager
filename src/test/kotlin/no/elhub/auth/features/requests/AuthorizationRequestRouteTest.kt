@@ -22,6 +22,8 @@ import io.ktor.server.application.Application
 import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
+import no.elhub.auth.features.businessprocesses.structuredata.MeteringPointsServiceTestContainer
+import no.elhub.auth.features.businessprocesses.structuredata.StopMeteringPointsServiceTestContainerExtension
 import no.elhub.auth.features.businessprocesses.structuredata.meteringPointsServiceModule
 import no.elhub.auth.features.common.AuthPersonsTestContainer
 import no.elhub.auth.features.common.AuthPersonsTestContainerExtension
@@ -72,7 +74,8 @@ class AuthorizationRequestRouteTest : FunSpec({
         RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-scopes.sql"),
         RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-requests.sql"),
         RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-grants.sql"),
-        pdpContainer
+        pdpContainer,
+        StopMeteringPointsServiceTestContainerExtension
     )
 
     beforeSpec {
@@ -1007,7 +1010,7 @@ private fun ApplicationTestBuilder.setUpAuthorizationRequestTestApplication() {
                 "featureToggle.enableEndpoints" to "true",
                 "authPersons.baseUri" to AuthPersonsTestContainer.baseUri(),
                 "pdp.baseUrl" to "http://localhost:8085",
-                "structureData.meteringPointsService.serviceUrl" to "http://localhost:8086",
+                "structureData.meteringPointsService.serviceUrl" to MeteringPointsServiceTestContainer.serviceUrl(),
                 "structureData.meteringPointsService.authentication.basic.username" to "user",
                 "structureData.meteringPointsService.authentication.basic.password" to "password"
             )

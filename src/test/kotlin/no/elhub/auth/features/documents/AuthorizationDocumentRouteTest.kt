@@ -32,6 +32,8 @@ import kotlinx.datetime.toLocalDateTime
 import no.elhub.auth.features.businessprocesses.changeofsupplier.defaultValidTo
 import no.elhub.auth.features.businessprocesses.changeofsupplier.domain.ChangeOfSupplierBusinessMeta
 import no.elhub.auth.features.businessprocesses.changeofsupplier.today
+import no.elhub.auth.features.businessprocesses.structuredata.MeteringPointsServiceTestContainer
+import no.elhub.auth.features.businessprocesses.structuredata.MeteringPointsServiceTestContainerExtension
 import no.elhub.auth.features.businessprocesses.structuredata.meteringPointsServiceModule
 import no.elhub.auth.features.common.AuthPersonsTestContainer
 import no.elhub.auth.features.common.AuthPersonsTestContainerExtension
@@ -85,7 +87,8 @@ class AuthorizationDocumentRouteTest :
             RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-party.sql"),
             VaultTransitTestContainerExtension,
             AuthPersonsTestContainerExtension,
-            pdpContainer
+            pdpContainer,
+            MeteringPointsServiceTestContainerExtension
         )
 
         beforeSpec {
@@ -147,7 +150,7 @@ class AuthorizationDocumentRouteTest :
                         "featureToggle.enableEndpoints" to "true",
                         "authPersons.baseUri" to AuthPersonsTestContainer.baseUri(),
                         "pdp.baseUrl" to "http://localhost:8085",
-                        "structureData.meteringPointsService.serviceUrl" to "http://localhost:8086",
+                        "structureData.meteringPointsService.serviceUrl" to MeteringPointsServiceTestContainer.serviceUrl(),
                         "structureData.meteringPointsService.authentication.basic.username" to "user",
                         "structureData.meteringPointsService.authentication.basic.password" to "password"
                     )
@@ -182,7 +185,7 @@ class AuthorizationDocumentRouteTest :
                                                     idValue = REQUESTED_TO_NIN
                                                 ),
                                                 requestedFromName = "Hillary Orr",
-                                                requestedForMeteringPointId = "123456789012345678",
+                                                requestedForMeteringPointId = "300362000000000008",
                                                 requestedForMeteringPointAddress = "quaerendum",
                                                 balanceSupplierName = "Jami Wade",
                                                 balanceSupplierContractName = "Selena Chandler"
@@ -232,7 +235,7 @@ class AuthorizationDocumentRouteTest :
                         }
                         meta.shouldNotBeNull().apply {
                             values["requestedFromName"] shouldBe "Hillary Orr"
-                            values["requestedForMeteringPointId"] shouldBe "123456789012345678"
+                            values["requestedForMeteringPointId"] shouldBe "300362000000000008"
                             values["requestedForMeteringPointAddress"] shouldBe "quaerendum"
                             values["balanceSupplierName"] shouldBe "Jami Wade"
                             values["balanceSupplierContractName"] shouldBe "Selena Chandler"
@@ -294,7 +297,7 @@ class AuthorizationDocumentRouteTest :
                             }
                             meta.shouldNotBeNull().apply {
                                 values["requestedFromName"] shouldBe "Hillary Orr"
-                                values["requestedForMeteringPointId"] shouldBe "123456789012345678"
+                                values["requestedForMeteringPointId"] shouldBe "300362000000000008"
                                 values["requestedForMeteringPointAddress"] shouldBe "quaerendum"
                                 values["balanceSupplierName"] shouldBe "Jami Wade"
                                 values["balanceSupplierContractName"] shouldBe "Selena Chandler"
