@@ -181,8 +181,8 @@ class AuthorizationDocumentRouteTest :
                             val validTo = Instant.parse(validTo).toLocalDateTime(TimeZone.of("+01:00")).date
 
                             assertTrue(validTo == defaultValidTo())
-                            assertTrue(Duration.between(createdAt, currentTimeWithTimeZone()) < nowTolerance)
-                            assertTrue(Duration.between(updatedAt, currentTimeWithTimeZone()) < nowTolerance)
+                            assertTrue(Duration.between(createdAt, currentTimeWithTimeZone()).abs() < nowTolerance)
+                            assertTrue(Duration.between(updatedAt, currentTimeWithTimeZone()).abs() < nowTolerance)
                         }
                         relationships.shouldNotBeNull().apply {
                             requestedBy.apply {
