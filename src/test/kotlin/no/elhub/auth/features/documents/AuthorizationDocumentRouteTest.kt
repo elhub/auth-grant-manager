@@ -91,9 +91,9 @@ class AuthorizationDocumentRouteTest :
                     }
                 }
                 application {
-                    meteringPointsServiceModule()
                     applicationModule()
                     commonModule()
+                    meteringPointsServiceModule()
                     grantsModule()
                     module()
                 }
@@ -488,10 +488,10 @@ class AuthorizationDocumentRouteTest :
                     }
                 }
                 application {
-                    meteringPointsServiceModule()
                     applicationModule()
                     commonModule()
                     grantsModule()
+                    meteringPointsServiceModule()
                     module()
                 }
 

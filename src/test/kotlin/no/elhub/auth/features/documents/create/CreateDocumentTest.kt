@@ -14,6 +14,9 @@ import io.kotest.matchers.string.shouldMatch
 import io.mockk.mockk
 import no.elhub.auth.features.businessprocesses.changeofsupplier.ChangeOfSupplierBusinessHandler
 import no.elhub.auth.features.businessprocesses.movein.MoveInBusinessHandler
+import no.elhub.auth.features.businessprocesses.structuredata.BasicAuthConfig
+import no.elhub.auth.features.businessprocesses.structuredata.MeteringPointsApi
+import no.elhub.auth.features.businessprocesses.structuredata.MeteringPointsApiConfig
 import no.elhub.auth.features.businessprocesses.structuredata.MeteringPointsService
 import no.elhub.auth.features.common.ApiPersonService
 import no.elhub.auth.features.common.AuthPersonsTestContainer
@@ -152,6 +155,13 @@ class CreateDocumentTest :
                     singleOf(::ProxyDocumentBusinessHandler)
 
                     singleOf(::Handler)
+                    single {
+                        MeteringPointsApiConfig(
+                            serviceUrl = "http://localhost:8080",
+                            basicAuthConfig = BasicAuthConfig(username = "user", password = "pass")
+                        )
+                    }
+                    singleOf(::MeteringPointsApi) bind MeteringPointsService::class
                 },
                 mode = KoinLifecycleMode.Root,
             ),

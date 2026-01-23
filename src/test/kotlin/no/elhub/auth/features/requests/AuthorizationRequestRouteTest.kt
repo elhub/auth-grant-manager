@@ -907,9 +907,9 @@ private fun ApplicationTestBuilder.setUpAuthorizationRequestTestApplication() {
     }
 
     application {
-        meteringPointsServiceModule()
         applicationModule()
         commonModule()
+        meteringPointsServiceModule()
         module()
     }
 
