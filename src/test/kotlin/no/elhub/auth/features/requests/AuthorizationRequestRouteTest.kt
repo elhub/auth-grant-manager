@@ -96,8 +96,12 @@ class AuthorizationRequestRouteTest : FunSpec({
                     size shouldBe 1
                     forEach { item ->
                         val validTo = item.attributes.validTo
+                        val createdAt = item.attributes.createdAt
+                        val updatedAt = item.attributes.updatedAt
                         shouldNotThrowAny {
                             OffsetDateTime.parse(validTo, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                            OffsetDateTime.parse(createdAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                            OffsetDateTime.parse(updatedAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
                         }
                     }
                 }
@@ -169,7 +173,13 @@ class AuthorizationRequestRouteTest : FunSpec({
                         requestType shouldBe "ChangeOfSupplierConfirmation"
                         status shouldBe "Accepted"
                         val validTo = validTo.shouldNotBeNull()
+                        val createdAt = createdAt.shouldNotBeNull()
+
+                        val updatedAt = updatedAt.shouldNotBeNull()
+
                         shouldNotThrowAny {
+                            OffsetDateTime.parse(createdAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                            OffsetDateTime.parse(updatedAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
                             OffsetDateTime.parse(validTo, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
                         }
                     }
@@ -210,14 +220,6 @@ class AuthorizationRequestRouteTest : FunSpec({
                         self.shouldNotBeNull()
                     }
                     meta.shouldNotBeNull().apply {
-                        val createdAt = values["createdAt"].shouldNotBeNull()
-                        val updatedAt = values["updatedAt"].shouldNotBeNull()
-
-                        shouldNotThrowAny {
-                            OffsetDateTime.parse(createdAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
-                            OffsetDateTime.parse(updatedAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
-                        }
-
                         values["requestedFromName"] shouldBe "Kari Normann"
                         values["requestedForMeteringPointId"] shouldBe "1234567890123"
                         values["requestedForMeteringPointAddress"] shouldBe "Example Street 1, 1234 Oslo"
@@ -245,8 +247,14 @@ class AuthorizationRequestRouteTest : FunSpec({
                     attributes.shouldNotBeNull().apply {
                         requestType shouldBe "ChangeOfSupplierConfirmation"
                         status shouldBe "Pending"
+
                         val validTo = validTo.shouldNotBeNull()
+                        val createdAt = createdAt.shouldNotBeNull()
+                        val updatedAt = updatedAt.shouldNotBeNull()
+
                         shouldNotThrowAny {
+                            OffsetDateTime.parse(createdAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                            OffsetDateTime.parse(updatedAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
                             OffsetDateTime.parse(validTo, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
                         }
                     }
@@ -274,12 +282,6 @@ class AuthorizationRequestRouteTest : FunSpec({
                         self.shouldNotBeNull()
                     }
                     meta.shouldNotBeNull().apply {
-                        val createdAt = values["createdAt"].shouldNotBeNull()
-                        val updatedAt = values["updatedAt"].shouldNotBeNull()
-                        shouldNotThrowAny {
-                            OffsetDateTime.parse(createdAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
-                            OffsetDateTime.parse(updatedAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
-                        }
                         values["requestedFromName"] shouldBe "Ola Normann"
                         values["requestedForMeteringPointId"] shouldBe "1234567890123"
                         values["requestedForMeteringPointAddress"] shouldBe "Example Street 1, 1234 Oslo"
@@ -374,10 +376,19 @@ class AuthorizationRequestRouteTest : FunSpec({
                                     ),
                                     meta =
                                     CreateRequestMeta(
-                                        requestedBy = PartyIdentifier(PartyIdentifierType.GlobalLocationNumber, "0107000000021"),
-                                        requestedFrom = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "12345678901"),
+                                        requestedBy = PartyIdentifier(
+                                            PartyIdentifierType.GlobalLocationNumber,
+                                            "0107000000021"
+                                        ),
+                                        requestedFrom = PartyIdentifier(
+                                            PartyIdentifierType.NationalIdentityNumber,
+                                            "12345678901"
+                                        ),
                                         requestedFromName = "Hillary Orr",
-                                        requestedTo = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "12345678902"),
+                                        requestedTo = PartyIdentifier(
+                                            PartyIdentifierType.NationalIdentityNumber,
+                                            "12345678902"
+                                        ),
                                         requestedForMeteringPointId = "123456789012345678",
                                         requestedForMeteringPointAddress = "quaerendum",
                                         balanceSupplierName = "Balance Supplier",
@@ -401,6 +412,13 @@ class AuthorizationRequestRouteTest : FunSpec({
                         shouldNotThrowAny {
                             JavaLocalDate.parse(validTo, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
                         }
+                        val createdAt = createdAt.shouldNotBeNull()
+                        val updatedAt = updatedAt.shouldNotBeNull()
+
+                        shouldNotThrowAny {
+                            OffsetDateTime.parse(createdAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                            OffsetDateTime.parse(updatedAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                        }
                     }
                     relationships.shouldNotBeNull().apply {
                         requestedBy.apply {
@@ -423,14 +441,6 @@ class AuthorizationRequestRouteTest : FunSpec({
                         }
                     }
                     meta.shouldNotBeNull().apply {
-                        val createdAt = values["createdAt"].shouldNotBeNull()
-                        val updatedAt = values["updatedAt"].shouldNotBeNull()
-
-                        shouldNotThrowAny {
-                            OffsetDateTime.parse(createdAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
-                            OffsetDateTime.parse(updatedAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
-                        }
-
                         values["requestedFromName"] shouldBe "Hillary Orr"
                         values["requestedForMeteringPointId"] shouldBe "123456789012345678"
                         values["requestedForMeteringPointAddress"] shouldBe "quaerendum"
@@ -466,10 +476,19 @@ class AuthorizationRequestRouteTest : FunSpec({
                                     ),
                                     meta =
                                     CreateRequestMeta(
-                                        requestedBy = PartyIdentifier(PartyIdentifierType.GlobalLocationNumber, "0107000000021"),
-                                        requestedFrom = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "12345678901"),
+                                        requestedBy = PartyIdentifier(
+                                            PartyIdentifierType.GlobalLocationNumber,
+                                            "0107000000021"
+                                        ),
+                                        requestedFrom = PartyIdentifier(
+                                            PartyIdentifierType.NationalIdentityNumber,
+                                            "12345678901"
+                                        ),
                                         requestedFromName = "",
-                                        requestedTo = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "12345678902"),
+                                        requestedTo = PartyIdentifier(
+                                            PartyIdentifierType.NationalIdentityNumber,
+                                            "12345678902"
+                                        ),
                                         requestedForMeteringPointId = "123456789012345678",
                                         requestedForMeteringPointAddress = "quaerendum",
                                         balanceSupplierName = "Balance Supplier",
@@ -511,10 +530,19 @@ class AuthorizationRequestRouteTest : FunSpec({
                                     ),
                                     meta =
                                     CreateRequestMeta(
-                                        requestedBy = PartyIdentifier(PartyIdentifierType.GlobalLocationNumber, "0107000000038"),
-                                        requestedFrom = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "12345678901"),
+                                        requestedBy = PartyIdentifier(
+                                            PartyIdentifierType.GlobalLocationNumber,
+                                            "0107000000038"
+                                        ),
+                                        requestedFrom = PartyIdentifier(
+                                            PartyIdentifierType.NationalIdentityNumber,
+                                            "12345678901"
+                                        ),
                                         requestedFromName = "Test Name",
-                                        requestedTo = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "12345678902"),
+                                        requestedTo = PartyIdentifier(
+                                            PartyIdentifierType.NationalIdentityNumber,
+                                            "12345678902"
+                                        ),
                                         requestedForMeteringPointId = "123456789012345678",
                                         requestedForMeteringPointAddress = "quaerendum",
                                         balanceSupplierName = "Balance Supplier",
@@ -609,74 +637,12 @@ class AuthorizationRequestRouteTest : FunSpec({
                     attributes.shouldNotBeNull().apply {
                         status shouldBe "Accepted"
                         val validTo = validTo.shouldNotBeNull()
+                        val createdAt = createdAt.shouldNotBeNull()
+                        val updatedAt = updatedAt.shouldNotBeNull()
+
                         shouldNotThrowAny {
-                            JavaLocalDate.parse(validTo, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
-                        }
-                    }
-                    relationships.shouldNotBeNull().apply {
-                        relationships.apply {
-                            requestedBy.apply {
-                                data.apply {
-                                    id shouldBe "987654321"
-                                    type shouldBe "Organization"
-                                }
-                            }
-                            requestedFrom.apply {
-                                data.apply {
-                                    id shouldBe "17abdc56-8f6f-440a-9f00-b9bfbb22065e"
-                                    type shouldBe "Person"
-                                }
-                            }
-                            requestedTo.apply {
-                                data.apply {
-                                    id shouldBe "17abdc56-8f6f-440a-9f00-b9bfbb22065e"
-                                    type shouldBe "Person"
-                                }
-                            }
-                            approvedBy.shouldNotBeNull().apply {
-                                data.apply {
-                                    id shouldBe "17abdc56-8f6f-440a-9f00-b9bfbb22065e"
-                                    type shouldBe "Person"
-                                }
-                            }
-                            grant.shouldNotBeNull().apply {
-                                data.apply {
-                                    id.shouldNotBeNull()
-                                    type shouldBe "AuthorizationGrant"
-                                }
-                                links.shouldNotBeNull()
-                            }
-                            meta.shouldNotBeNull().apply {
-                                val createdAt = values["createdAt"].shouldNotBeNull()
-                                val updatedAt = values["updatedAt"].shouldNotBeNull()
-
-                                shouldNotThrowAny {
-                                    OffsetDateTime.parse(createdAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
-                                    OffsetDateTime.parse(updatedAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
-                                }
-                                values["requestedFromName"] shouldBe "Kasper Lind"
-                                values["requestedForMeteringPointId"] shouldBe "1234567890555"
-                                values["requestedForMeteringPointAddress"] shouldBe "Example Street 2, 0654 Oslo"
-                                values["balanceSupplierName"] shouldBe "Power AS"
-                                values["balanceSupplierContractName"] shouldBe "ExampleSupplierContract"
-                            }
-                        }
-                    }
-                }
-
-                // verify that a subsequent GET of this resource reflects the updated state persisted in the database
-                val getResult = client.get("${REQUESTS_PATH}/${patchResponse.data.id}") {
-                    header(HttpHeaders.Authorization, "Bearer enduser")
-                }
-                val getResponse: GetRequestSingleResponse = getResult.body()
-
-                getResponse.data.apply {
-                    type shouldBe "AuthorizationRequest"
-                    id.shouldNotBeNull()
-                    attributes.shouldNotBeNull().apply {
-                        status shouldBe "Accepted"
-                        val validTo = validTo.shouldNotBeNull()
-                        shouldNotThrowAny {
+                            OffsetDateTime.parse(createdAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                            OffsetDateTime.parse(updatedAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
                             OffsetDateTime.parse(validTo, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
                         }
                     }
@@ -714,13 +680,71 @@ class AuthorizationRequestRouteTest : FunSpec({
                                 links.shouldNotBeNull()
                             }
                             meta.shouldNotBeNull().apply {
-                                val createdAt = values["createdAt"].shouldNotBeNull()
-                                val updatedAt = values["updatedAt"].shouldNotBeNull()
+                                values["requestedFromName"] shouldBe "Kasper Lind"
+                                values["requestedForMeteringPointId"] shouldBe "1234567890555"
+                                values["requestedForMeteringPointAddress"] shouldBe "Example Street 2, 0654 Oslo"
+                                values["balanceSupplierName"] shouldBe "Power AS"
+                                values["balanceSupplierContractName"] shouldBe "ExampleSupplierContract"
+                            }
+                        }
+                    }
+                }
 
-                                shouldNotThrowAny {
-                                    OffsetDateTime.parse(createdAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
-                                    OffsetDateTime.parse(updatedAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                // verify that a subsequent GET of this resource reflects the updated state persisted in the database
+                val getResult = client.get("${REQUESTS_PATH}/${patchResponse.data.id}") {
+                    header(HttpHeaders.Authorization, "Bearer enduser")
+                }
+                val getResponse: GetRequestSingleResponse = getResult.body()
+
+                getResponse.data.apply {
+                    type shouldBe "AuthorizationRequest"
+                    id.shouldNotBeNull()
+                    attributes.shouldNotBeNull().apply {
+                        status shouldBe "Accepted"
+                        val validTo = validTo.shouldNotBeNull()
+                        val createdAt = createdAt.shouldNotBeNull()
+                        val updatedAt = updatedAt.shouldNotBeNull()
+
+                        shouldNotThrowAny {
+                            OffsetDateTime.parse(createdAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                            OffsetDateTime.parse(updatedAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                            OffsetDateTime.parse(validTo, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                        }
+                    }
+                    relationships.shouldNotBeNull().apply {
+                        relationships.apply {
+                            requestedBy.apply {
+                                data.apply {
+                                    id shouldBe "987654321"
+                                    type shouldBe "Organization"
                                 }
+                            }
+                            requestedFrom.apply {
+                                data.apply {
+                                    id shouldBe "17abdc56-8f6f-440a-9f00-b9bfbb22065e"
+                                    type shouldBe "Person"
+                                }
+                            }
+                            requestedTo.apply {
+                                data.apply {
+                                    id shouldBe "17abdc56-8f6f-440a-9f00-b9bfbb22065e"
+                                    type shouldBe "Person"
+                                }
+                            }
+                            approvedBy.shouldNotBeNull().apply {
+                                data.apply {
+                                    id shouldBe "17abdc56-8f6f-440a-9f00-b9bfbb22065e"
+                                    type shouldBe "Person"
+                                }
+                            }
+                            grant.shouldNotBeNull().apply {
+                                data.apply {
+                                    id.shouldNotBeNull()
+                                    type shouldBe "AuthorizationGrant"
+                                }
+                                links.shouldNotBeNull()
+                            }
+                            meta.shouldNotBeNull().apply {
                                 values["requestedFromName"] shouldBe "Kasper Lind"
                                 values["requestedForMeteringPointId"] shouldBe "1234567890555"
                                 values["requestedForMeteringPointAddress"] shouldBe "Example Street 2, 0654 Oslo"
@@ -766,6 +790,15 @@ class AuthorizationRequestRouteTest : FunSpec({
                     id.shouldNotBeNull()
                     attributes.shouldNotBeNull().apply {
                         status shouldBe "Rejected"
+                        val validTo = validTo.shouldNotBeNull()
+                        val createdAt = createdAt.shouldNotBeNull()
+                        val updatedAt = updatedAt.shouldNotBeNull()
+
+                        shouldNotThrowAny {
+                            OffsetDateTime.parse(createdAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                            OffsetDateTime.parse(updatedAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                            OffsetDateTime.parse(validTo, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                        }
                     }
                     relationships.shouldNotBeNull().apply {
                         relationships.apply {
@@ -788,13 +821,6 @@ class AuthorizationRequestRouteTest : FunSpec({
                                 }
                             }
                             meta.shouldNotBeNull().apply {
-                                val createdAt = values["createdAt"].shouldNotBeNull()
-                                val updatedAt = values["updatedAt"].shouldNotBeNull()
-
-                                shouldNotThrowAny {
-                                    OffsetDateTime.parse(createdAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
-                                    OffsetDateTime.parse(updatedAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
-                                }
                                 values["requestedFromName"] shouldBe "Ola Normann"
                                 values["requestedForMeteringPointId"] shouldBe "1234567890123"
                                 values["requestedForMeteringPointAddress"] shouldBe "Example Street 1, 1234 Oslo"

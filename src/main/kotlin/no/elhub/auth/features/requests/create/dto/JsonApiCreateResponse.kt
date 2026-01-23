@@ -22,7 +22,9 @@ import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObjectWithRelation
 data class CreateRequestResponseAttributes(
     val status: String,
     val requestType: String,
-    val validTo: String
+    val validTo: String,
+    val createdAt: String,
+    val updatedAt: String,
 ) : JsonApiAttributes
 
 @Serializable
@@ -60,7 +62,9 @@ fun AuthorizationRequest.toCreateResponse() =
             CreateRequestResponseAttributes(
                 status = this.status.name,
                 requestType = this.type.name,
-                validTo = this.validTo.toTimeZoneOffsetDateTimeAtStartOfDay().toString()
+                validTo = this.validTo.toTimeZoneOffsetDateTimeAtStartOfDay().toString(),
+                createdAt = this.createdAt.toTimeZoneOffsetString(),
+                updatedAt = this.updatedAt.toTimeZoneOffsetString(),
             ),
             relationships = CreateRequestResponseRelationShips(
                 requestedBy = JsonApiRelationshipToOne(
@@ -84,8 +88,6 @@ fun AuthorizationRequest.toCreateResponse() =
             ),
             meta = CreateRequestResponseMeta(
                 buildMap {
-                    put("createdAt", this@toCreateResponse.createdAt.toTimeZoneOffsetString())
-                    put("updatedAt", this@toCreateResponse.updatedAt.toTimeZoneOffsetString())
                     this@toCreateResponse.properties.forEach { prop ->
                         put(prop.key, prop.value)
                     }
