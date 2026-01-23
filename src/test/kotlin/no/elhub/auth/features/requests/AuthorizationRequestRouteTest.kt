@@ -375,9 +375,9 @@ class AuthorizationRequestRouteTest : FunSpec({
                                     meta =
                                     CreateRequestMeta(
                                         requestedBy = PartyIdentifier(PartyIdentifierType.GlobalLocationNumber, "0107000000021"),
-                                        requestedFrom = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "31129954380"),
+                                        requestedFrom = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "01019012480"),
                                         requestedFromName = "Hillary Orr",
-                                        requestedTo = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "31129954380"),
+                                        requestedTo = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "01019012480"),
                                         requestedForMeteringPointId = "123456789012345678",
                                         requestedForMeteringPointAddress = "quaerendum",
                                         balanceSupplierName = "Balance Supplier",
@@ -467,9 +467,9 @@ class AuthorizationRequestRouteTest : FunSpec({
                                     meta =
                                     CreateRequestMeta(
                                         requestedBy = PartyIdentifier(PartyIdentifierType.GlobalLocationNumber, "0107000000021"),
-                                        requestedFrom = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "31129954380"),
+                                        requestedFrom = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "01019012480"),
                                         requestedFromName = "",
-                                        requestedTo = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "31129954380"),
+                                        requestedTo = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "01019012480"),
                                         requestedForMeteringPointId = "123456789012345678",
                                         requestedForMeteringPointAddress = "quaerendum",
                                         balanceSupplierName = "Balance Supplier",
@@ -512,9 +512,9 @@ class AuthorizationRequestRouteTest : FunSpec({
                                     meta =
                                     CreateRequestMeta(
                                         requestedBy = PartyIdentifier(PartyIdentifierType.GlobalLocationNumber, "0107000000038"),
-                                        requestedFrom = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "31129954380"),
+                                        requestedFrom = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "01019012480"),
                                         requestedFromName = "Test Name",
-                                        requestedTo = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "31129954380"),
+                                        requestedTo = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "01019012480"),
                                         requestedForMeteringPointId = "123456789012345678",
                                         requestedForMeteringPointAddress = "quaerendum",
                                         balanceSupplierName = "Balance Supplier",
@@ -558,7 +558,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                                         requestedBy = PartyIdentifier(PartyIdentifierType.GlobalLocationNumber, "0107000000021"),
                                         requestedFrom = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "123"),
                                         requestedFromName = "Hillary Orr",
-                                        requestedTo = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "31129954380"),
+                                        requestedTo = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "01019012480"),
                                         requestedForMeteringPointId = "123456789012345678",
                                         requestedForMeteringPointAddress = "quaerendum",
                                         balanceSupplierName = "Balance Supplier",

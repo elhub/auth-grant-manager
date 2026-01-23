@@ -11,6 +11,7 @@ sealed class CreateError {
     data object AuthorizationError : CreateError()
     data object PersistenceError : CreateError()
     data object RequestedPartyError : CreateError()
+    data object InvalidNinError : CreateError()
 
     // To be used by value streams in during the business validation process. Auth Grant will return this message back to the API consumer
     data class BusinessValidationError(val message: String) : CreateError()
@@ -23,6 +24,13 @@ fun CreateError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollectio
             code = "business_validation_error",
             title = "Business validation error",
             detail = this.message
+        )
+
+        CreateError.InvalidNinError -> buildApiErrorResponse(
+            status = HttpStatusCode.BadRequest,
+            code = "invalid_nin",
+            title = "Party invalid",
+            detail = "The nin in the request is invalid",
         )
 
         is CreateError.AuthorizationError -> buildApiErrorResponse(

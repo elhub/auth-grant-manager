@@ -31,7 +31,6 @@ class ApiPersonService(
 
     override suspend fun findOrCreateByNin(nin: String): Either<ClientError, Person> {
         if (!isNinValid(nin)) {
-            println("tjohei")
             return ClientError.InvalidNin.left()
         }
 
@@ -83,7 +82,7 @@ fun ClientError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollectio
         is ClientError.UnexpectedError -> buildApiErrorResponse(
             status = HttpStatusCode.InternalServerError,
             code = "internal_error",
-            title = "Internal Server Error",
+            title = "Internal server error",
             detail = "An unexpected error occurred"
         )
     }

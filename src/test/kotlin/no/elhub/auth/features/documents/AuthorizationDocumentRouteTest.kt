@@ -545,7 +545,7 @@ class AuthorizationDocumentRouteTest :
         }
     })
 
-private const val REQUESTED_FROM_NIN = "98765432109"
-private const val REQUESTED_TO_NIN = "00011122233"
+private const val REQUESTED_FROM_NIN = "01019012480"
+private const val REQUESTED_TO_NIN = "01018849980"
 private val REQUESTED_FROM_ID = UUID.fromString("5c9f5b1c-7a01-4d8d-9f27-9de7479adf52")
 private val REQUESTED_TO_ID = UUID.fromString("d6fe3b43-0d6b-4e7c-8bd1-12a2ed05a5f6")
