@@ -1052,7 +1052,7 @@ private fun insertAuthorizationRequest(
 }
 
 private class TestRequestBusinessHandler : RequestBusinessHandler {
-    override fun validateAndReturnRequestCommand(createRequestModel: CreateRequestModel) = when (createRequestModel.requestType) {
+    override suspend fun validateAndReturnRequestCommand(createRequestModel: CreateRequestModel) = when (createRequestModel.requestType) {
         AuthorizationRequest.Type.ChangeOfSupplierConfirmation -> {
             val meta = createRequestModel.meta
             if (meta.requestedFromName.isBlank()) {

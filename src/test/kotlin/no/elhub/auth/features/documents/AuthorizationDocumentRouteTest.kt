@@ -595,7 +595,7 @@ private val REQUESTED_FROM_ID = UUID.fromString("5c9f5b1c-7a01-4d8d-9f27-9de7479
 private val REQUESTED_TO_ID = UUID.fromString("d6fe3b43-0d6b-4e7c-8bd1-12a2ed05a5f6")
 
 private class TestDocumentBusinessHandler : DocumentBusinessHandler {
-    override fun validateAndReturnDocumentCommand(
+    override suspend fun validateAndReturnDocumentCommand(
         model: CreateDocumentModel
     ) = when (model.documentType) {
         AuthorizationDocument.Type.ChangeOfSupplierConfirmation -> {
