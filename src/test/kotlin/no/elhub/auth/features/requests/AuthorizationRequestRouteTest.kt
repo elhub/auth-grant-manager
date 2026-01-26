@@ -404,7 +404,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                                             PartyIdentifierType.NationalIdentityNumber,
                                             "12345678902"
                                         ),
-                                        requestedForMeteringPointId = "123456789012345678",
+                                        requestedForMeteringPointId = "300362000000000008",
                                         requestedForMeteringPointAddress = "quaerendum",
                                         balanceSupplierName = "Balance Supplier",
                                         balanceSupplierContractName = "Selena Chandler",
@@ -457,7 +457,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                     }
                     meta.shouldNotBeNull().apply {
                         values["requestedFromName"] shouldBe "Hillary Orr"
-                        values["requestedForMeteringPointId"] shouldBe "123456789012345678"
+                        values["requestedForMeteringPointId"] shouldBe "300362000000000008"
                         values["requestedForMeteringPointAddress"] shouldBe "quaerendum"
                         values["balanceSupplierName"] shouldBe "Balance Supplier"
                         values["balanceSupplierContractName"] shouldBe "Selena Chandler"
@@ -504,7 +504,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                                             PartyIdentifierType.NationalIdentityNumber,
                                             "12345678902"
                                         ),
-                                        requestedForMeteringPointId = "123456789012345678",
+                                        requestedForMeteringPointId = "300362000000000008",
                                         requestedForMeteringPointAddress = "quaerendum",
                                         balanceSupplierName = "Balance Supplier",
                                         balanceSupplierContractName = "Selena Chandler",
@@ -558,7 +558,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                                             PartyIdentifierType.NationalIdentityNumber,
                                             "12345678902"
                                         ),
-                                        requestedForMeteringPointId = "123456789012345678",
+                                        requestedForMeteringPointId = "300362000000000008",
                                         requestedForMeteringPointAddress = "quaerendum",
                                         balanceSupplierName = "Balance Supplier",
                                         balanceSupplierContractName = "Selena Chandler",

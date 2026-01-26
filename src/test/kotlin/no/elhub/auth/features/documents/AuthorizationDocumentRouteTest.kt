@@ -508,7 +508,7 @@ class AuthorizationDocumentRouteTest :
                                 authorizedResources.apply {
                                     data.size shouldBe 1
                                     data[0].apply {
-                                        id shouldBe "123456789012345678"
+                                        id shouldBe "300362000000000008"
                                         type shouldBe AuthorizationScope.ElhubResource.MeteringPoint.name
                                     }
                                 }
