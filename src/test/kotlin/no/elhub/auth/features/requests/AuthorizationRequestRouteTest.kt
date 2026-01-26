@@ -22,9 +22,6 @@ import io.ktor.server.application.Application
 import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
-import no.elhub.auth.features.businessprocesses.structuredata.MeteringPointsServiceTestContainer
-import no.elhub.auth.features.businessprocesses.structuredata.MeteringPointsServiceTestContainerExtension
-import no.elhub.auth.features.businessprocesses.structuredata.meteringPointsServiceModule
 import no.elhub.auth.features.common.AuthPersonsTestContainer
 import no.elhub.auth.features.common.AuthPersonsTestContainerExtension
 import no.elhub.auth.features.common.PdpTestContainerExtension
@@ -74,8 +71,7 @@ class AuthorizationRequestRouteTest : FunSpec({
         RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-scopes.sql"),
         RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-requests.sql"),
         RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-grants.sql"),
-        pdpContainer,
-        MeteringPointsServiceTestContainerExtension
+        pdpContainer
     )
 
     beforeSpec {
@@ -404,7 +400,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                                             PartyIdentifierType.NationalIdentityNumber,
                                             "12345678902"
                                         ),
-                                        requestedForMeteringPointId = "300362000000000008",
+                                        requestedForMeteringPointId = "123456789012345678",
                                         requestedForMeteringPointAddress = "quaerendum",
                                         balanceSupplierName = "Balance Supplier",
                                         balanceSupplierContractName = "Selena Chandler",
@@ -457,7 +453,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                     }
                     meta.shouldNotBeNull().apply {
                         values["requestedFromName"] shouldBe "Hillary Orr"
-                        values["requestedForMeteringPointId"] shouldBe "300362000000000008"
+                        values["requestedForMeteringPointId"] shouldBe "123456789012345678"
                         values["requestedForMeteringPointAddress"] shouldBe "quaerendum"
                         values["balanceSupplierName"] shouldBe "Balance Supplier"
                         values["balanceSupplierContractName"] shouldBe "Selena Chandler"
@@ -504,7 +500,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                                             PartyIdentifierType.NationalIdentityNumber,
                                             "12345678902"
                                         ),
-                                        requestedForMeteringPointId = "300362000000000008",
+                                        requestedForMeteringPointId = "123456789012345678",
                                         requestedForMeteringPointAddress = "quaerendum",
                                         balanceSupplierName = "Balance Supplier",
                                         balanceSupplierContractName = "Selena Chandler",
@@ -558,7 +554,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                                             PartyIdentifierType.NationalIdentityNumber,
                                             "12345678902"
                                         ),
-                                        requestedForMeteringPointId = "300362000000000008",
+                                        requestedForMeteringPointId = "123456789012345678",
                                         requestedForMeteringPointAddress = "quaerendum",
                                         balanceSupplierName = "Balance Supplier",
                                         balanceSupplierContractName = "Selena Chandler",
@@ -996,7 +992,6 @@ private fun ApplicationTestBuilder.setUpAuthorizationRequestTestApplication() {
         applicationModule()
         testRequestBusinessModule()
         commonModule()
-        meteringPointsServiceModule()
         module()
     }
 
@@ -1009,10 +1004,7 @@ private fun ApplicationTestBuilder.setUpAuthorizationRequestTestApplication() {
                 "ktor.database.driverClass" to "org.postgresql.Driver",
                 "featureToggle.enableEndpoints" to "true",
                 "authPersons.baseUri" to AuthPersonsTestContainer.baseUri(),
-                "pdp.baseUrl" to "http://localhost:8085",
-                "structureData.meteringPointsService.serviceUrl" to MeteringPointsServiceTestContainer.serviceUrl(),
-                "structureData.meteringPointsService.authentication.basic.username" to "user",
-                "structureData.meteringPointsService.authentication.basic.password" to "password"
+                "pdp.baseUrl" to "http://localhost:8085"
             )
     }
 }
