@@ -21,8 +21,8 @@ import no.elhub.auth.features.common.party.PartyService
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
 import no.elhub.auth.features.documents.AuthorizationDocument
+import no.elhub.auth.features.documents.common.DocumentBusinessHandler
 import no.elhub.auth.features.documents.common.DocumentRepository
-import no.elhub.auth.features.documents.common.ProxyDocumentBusinessHandler
 import no.elhub.auth.features.documents.common.SignatureService
 import no.elhub.auth.features.documents.common.SignatureSigningError
 import no.elhub.auth.features.documents.create.command.DocumentCommand
@@ -91,14 +91,15 @@ class HandlerTest : FunSpec({
     }
 
     test("returns saved document when dependencies succeed") {
-        val businessHandler = mockk<ProxyDocumentBusinessHandler>()
+        val businessHandler = mockk<DocumentBusinessHandler>()
         val signatureService = mockk<SignatureService>()
         val documentRepository = mockk<DocumentRepository>()
         val partyService = mockk<PartyService>()
+        val fileGenerator = mockk<FileGenerator>()
 
         stubPartyResolution(partyService)
         every { businessHandler.validateAndReturnDocumentCommand(model) } returns command.right()
-        every { businessHandler.generateFile(requestedFromIdentifier.idValue, commandMeta) } returns unsignedFile.right()
+        every { fileGenerator.generate(requestedFromIdentifier.idValue, commandMeta) } returns unsignedFile.right()
         coEvery { signatureService.sign(unsignedFile) } returns signedFile.right()
 
         val savedDocument = AuthorizationDocument.create(
@@ -112,7 +113,7 @@ class HandlerTest : FunSpec({
         )
         every { documentRepository.insert(any(), command.scopes) } returns savedDocument.right()
 
-        val handler = Handler(businessHandler, signatureService, documentRepository, partyService)
+        val handler = Handler(businessHandler, signatureService, documentRepository, partyService, fileGenerator)
 
         val response = handler(model)
 
@@ -121,14 +122,15 @@ class HandlerTest : FunSpec({
     }
 
     test("returns RequestedByPartyError when requestedBy cannot be resolved") {
-        val businessHandler = mockk<ProxyDocumentBusinessHandler>(relaxed = true)
+        val businessHandler = mockk<DocumentBusinessHandler>(relaxed = true)
         val signatureService = mockk<SignatureService>(relaxed = true)
         val documentRepository = mockk<DocumentRepository>(relaxed = true)
         val partyService = mockk<PartyService>()
+        val fileGenerator = mockk<FileGenerator>()
 
         coEvery { partyService.resolve(requestedByIdentifier) } returns PartyError.PersonResolutionError.left()
 
-        val handler = Handler(businessHandler, signatureService, documentRepository, partyService)
+        val handler = Handler(businessHandler, signatureService, documentRepository, partyService, fileGenerator)
 
         val response = handler(model)
 
@@ -137,14 +139,15 @@ class HandlerTest : FunSpec({
     }
 
     test("returns AuthorizationError when requestedBy does not match authorized party") {
-        val businessHandler = mockk<ProxyDocumentBusinessHandler>(relaxed = true)
+        val businessHandler = mockk<DocumentBusinessHandler>(relaxed = true)
         val signatureService = mockk<SignatureService>(relaxed = true)
         val documentRepository = mockk<DocumentRepository>(relaxed = true)
         val partyService = mockk<PartyService>()
+        val fileGenerator = mockk<FileGenerator>()
 
         coEvery { partyService.resolve(requestedByIdentifier) } returns requestedByParty.right()
 
-        val handler = Handler(businessHandler, signatureService, documentRepository, partyService)
+        val handler = Handler(businessHandler, signatureService, documentRepository, partyService, fileGenerator)
         val otherAuthorizedParty = AuthorizationParty(resourceId = "other", type = PartyType.OrganizationEntity)
 
         val response = handler(model.copy(authorizedParty = otherAuthorizedParty))
@@ -155,15 +158,16 @@ class HandlerTest : FunSpec({
     }
 
     test("returns RequestedFromPartyError when requestedFrom cannot be resolved") {
-        val businessHandler = mockk<ProxyDocumentBusinessHandler>(relaxed = true)
+        val businessHandler = mockk<DocumentBusinessHandler>(relaxed = true)
         val signatureService = mockk<SignatureService>(relaxed = true)
         val documentRepository = mockk<DocumentRepository>(relaxed = true)
         val partyService = mockk<PartyService>()
+        val fileGenerator = mockk<FileGenerator>()
 
         coEvery { partyService.resolve(requestedByIdentifier) } returns requestedByParty.right()
         coEvery { partyService.resolve(requestedFromIdentifier) } returns PartyError.PersonResolutionError.left()
 
-        val handler = Handler(businessHandler, signatureService, documentRepository, partyService)
+        val handler = Handler(businessHandler, signatureService, documentRepository, partyService, fileGenerator)
 
         val response = handler(model)
 
@@ -172,16 +176,17 @@ class HandlerTest : FunSpec({
     }
 
     test("returns RequestedToPartyError when requestedTo cannot be resolved") {
-        val businessHandler = mockk<ProxyDocumentBusinessHandler>(relaxed = true)
+        val businessHandler = mockk<DocumentBusinessHandler>(relaxed = true)
         val signatureService = mockk<SignatureService>(relaxed = true)
         val documentRepository = mockk<DocumentRepository>(relaxed = true)
         val partyService = mockk<PartyService>()
+        val fileGenerator = mockk<FileGenerator>()
 
         coEvery { partyService.resolve(requestedByIdentifier) } returns requestedByParty.right()
         coEvery { partyService.resolve(requestedFromIdentifier) } returns requestedFromParty.right()
         coEvery { partyService.resolve(requestedToIdentifier) } returns PartyError.PersonResolutionError.left()
 
-        val handler = Handler(businessHandler, signatureService, documentRepository, partyService)
+        val handler = Handler(businessHandler, signatureService, documentRepository, partyService, fileGenerator)
 
         val response = handler(model)
 
@@ -190,36 +195,38 @@ class HandlerTest : FunSpec({
     }
 
     test("returns BusinessValidationError when validation fails") {
-        val businessHandler = mockk<ProxyDocumentBusinessHandler>()
+        val businessHandler = mockk<DocumentBusinessHandler>()
         val signatureService = mockk<SignatureService>(relaxed = true)
         val documentRepository = mockk<DocumentRepository>(relaxed = true)
         val partyService = mockk<PartyService>()
+        val fileGenerator = mockk<FileGenerator>()
 
         stubPartyResolution(partyService)
         val validationError = CreateError.BusinessValidationError("validation failed")
         every { businessHandler.validateAndReturnDocumentCommand(model) } returns validationError.left()
 
-        val handler = Handler(businessHandler, signatureService, documentRepository, partyService)
+        val handler = Handler(businessHandler, signatureService, documentRepository, partyService, fileGenerator)
 
         val response = handler(model)
 
         response.shouldBeLeft(validationError)
-        verify(exactly = 0) { businessHandler.generateFile(any(), any()) }
+        verify(exactly = 0) { fileGenerator.generate(any(), any()) }
     }
 
     test("returns FileGenerationError when file generation fails") {
-        val businessHandler = mockk<ProxyDocumentBusinessHandler>()
+        val businessHandler = mockk<DocumentBusinessHandler>()
         val signatureService = mockk<SignatureService>(relaxed = true)
         val documentRepository = mockk<DocumentRepository>(relaxed = true)
         val partyService = mockk<PartyService>()
+        val fileGenerator = mockk<FileGenerator>()
 
         stubPartyResolution(partyService)
         every { businessHandler.validateAndReturnDocumentCommand(model) } returns command.right()
         every {
-            businessHandler.generateFile(requestedFromIdentifier.idValue, commandMeta)
+            fileGenerator.generate(requestedFromIdentifier.idValue, commandMeta)
         } returns DocumentGenerationError.ContentGenerationError.left()
 
-        val handler = Handler(businessHandler, signatureService, documentRepository, partyService)
+        val handler = Handler(businessHandler, signatureService, documentRepository, partyService, fileGenerator)
 
         val response = handler(model)
 
@@ -228,19 +235,20 @@ class HandlerTest : FunSpec({
     }
 
     test("returns SignFileError when signing fails") {
-        val businessHandler = mockk<ProxyDocumentBusinessHandler>()
+        val businessHandler = mockk<DocumentBusinessHandler>()
         val signatureService = mockk<SignatureService>()
         val documentRepository = mockk<DocumentRepository>(relaxed = true)
         val partyService = mockk<PartyService>()
+        val fileGenerator = mockk<FileGenerator>()
 
         stubPartyResolution(partyService)
         every { businessHandler.validateAndReturnDocumentCommand(model) } returns command.right()
-        every { businessHandler.generateFile(requestedFromIdentifier.idValue, commandMeta) } returns unsignedFile.right()
+        every { fileGenerator.generate(requestedFromIdentifier.idValue, commandMeta) } returns unsignedFile.right()
         coEvery {
             signatureService.sign(unsignedFile)
         } returns SignatureSigningError.SignatureFetchingError.left()
 
-        val handler = Handler(businessHandler, signatureService, documentRepository, partyService)
+        val handler = Handler(businessHandler, signatureService, documentRepository, partyService, fileGenerator)
 
         val response = handler(model)
 
@@ -249,20 +257,21 @@ class HandlerTest : FunSpec({
     }
 
     test("returns PersistenceError when repository insert fails") {
-        val businessHandler = mockk<ProxyDocumentBusinessHandler>()
+        val businessHandler = mockk<DocumentBusinessHandler>()
         val signatureService = mockk<SignatureService>()
         val documentRepository = mockk<DocumentRepository>()
         val partyService = mockk<PartyService>()
+        val fileGenerator = mockk<FileGenerator>()
 
         stubPartyResolution(partyService)
         every { businessHandler.validateAndReturnDocumentCommand(model) } returns command.right()
-        every { businessHandler.generateFile(requestedFromIdentifier.idValue, commandMeta) } returns unsignedFile.right()
+        every { fileGenerator.generate(requestedFromIdentifier.idValue, commandMeta) } returns unsignedFile.right()
         coEvery { signatureService.sign(unsignedFile) } returns signedFile.right()
         every {
             documentRepository.insert(any(), command.scopes)
         } returns RepositoryWriteError.UnexpectedError.left()
 
-        val handler = Handler(businessHandler, signatureService, documentRepository, partyService)
+        val handler = Handler(businessHandler, signatureService, documentRepository, partyService, fileGenerator)
 
         val response = handler(model)
 

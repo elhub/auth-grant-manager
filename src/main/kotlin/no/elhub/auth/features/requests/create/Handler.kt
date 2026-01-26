@@ -7,7 +7,6 @@ import no.elhub.auth.features.common.party.PartyService
 import no.elhub.auth.features.grants.common.CreateGrantProperties
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.common.AuthorizationRequestProperty
-import no.elhub.auth.features.requests.common.ProxyRequestBusinessHandler
 import no.elhub.auth.features.requests.common.RequestPropertiesRepository
 import no.elhub.auth.features.requests.common.RequestRepository
 import no.elhub.auth.features.requests.create.command.RequestCommand
@@ -16,7 +15,7 @@ import no.elhub.auth.features.requests.create.requesttypes.RequestTypeValidation
 import org.jetbrains.exposed.sql.transactions.transaction
 
 class Handler(
-    private val proxyRequestBusinessHandler: ProxyRequestBusinessHandler,
+    private val businessHandler: RequestBusinessHandler,
     private val partyService: PartyService,
     private val requestRepo: RequestRepository,
     private val requestPropertyRepo: RequestPropertiesRepository,
@@ -45,7 +44,7 @@ class Handler(
                 .bind()
 
         val businessCommand =
-            proxyRequestBusinessHandler
+            businessHandler
                 .validateAndReturnRequestCommand(model)
                 .mapLeft { validationError -> CreateError.ValidationError(validationError) }
                 .bind()

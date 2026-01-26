@@ -6,17 +6,18 @@ import arrow.core.raise.ensure
 import no.elhub.auth.features.common.party.PartyService
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.AuthorizationDocumentProperty
+import no.elhub.auth.features.documents.common.DocumentBusinessHandler
 import no.elhub.auth.features.documents.common.DocumentRepository
-import no.elhub.auth.features.documents.common.ProxyDocumentBusinessHandler
 import no.elhub.auth.features.documents.common.SignatureService
 import no.elhub.auth.features.documents.create.model.CreateDocumentModel
 import org.jetbrains.exposed.sql.transactions.transaction
 
 class Handler(
-    private val businessHandler: ProxyDocumentBusinessHandler,
+    private val businessHandler: DocumentBusinessHandler,
     private val signatureService: SignatureService,
     private val documentRepository: DocumentRepository,
     private val partyService: PartyService,
+    private val fileGenerator: FileGenerator
 ) {
     suspend operator fun invoke(model: CreateDocumentModel): Either<CreateError, AuthorizationDocument> =
         either {
@@ -48,9 +49,11 @@ class Handler(
                     .bind()
 
             val file =
-                businessHandler
-                    .generateFile(command.requestedFrom.idValue, command.meta)
-                    .mapLeft { CreateError.FileGenerationError }
+                fileGenerator
+                    .generate(command.requestedFrom.idValue, command.meta)
+                    .mapLeft {
+                        CreateError.FileGenerationError
+                    }
                     .bind()
 
             val signedFile = signatureService.sign(file)

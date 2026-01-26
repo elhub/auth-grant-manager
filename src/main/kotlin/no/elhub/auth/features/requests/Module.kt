@@ -3,8 +3,6 @@ package no.elhub.auth.features.requests
 import io.ktor.server.application.Application
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
-import no.elhub.auth.features.businessprocesses.changeofsupplier.ChangeOfSupplierBusinessHandler
-import no.elhub.auth.features.businessprocesses.movein.MoveInBusinessHandler
 import no.elhub.auth.features.grants.common.ExposedGrantRepository
 import no.elhub.auth.features.grants.common.GrantRepository
 import no.elhub.auth.features.requests.common.ExposedRequestPropertiesRepository
@@ -33,8 +31,6 @@ fun Application.module() {
         singleOf(::ExposedRequestRepository) bind RequestRepository::class
         singleOf(::ExposedGrantRepository) bind GrantRepository::class
         singleOf(::ExposedRequestPropertiesRepository) bind RequestPropertiesRepository::class
-        singleOf(::ChangeOfSupplierBusinessHandler)
-        singleOf(::MoveInBusinessHandler)
         singleOf(::ProxyRequestBusinessHandler)
         singleOf(::UpdateHandler)
         singleOf(::CreateHandler)

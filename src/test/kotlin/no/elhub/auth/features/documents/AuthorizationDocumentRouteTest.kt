@@ -1,5 +1,7 @@
 package no.elhub.auth.features.documents
 
+import arrow.core.left
+import arrow.core.right
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
@@ -20,6 +22,7 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
+import io.ktor.server.application.Application
 import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.testing.testApplication
 import kotlinx.datetime.DateTimeUnit
@@ -27,8 +30,11 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 import no.elhub.auth.features.businessprocesses.changeofsupplier.defaultValidTo
+import no.elhub.auth.features.businessprocesses.changeofsupplier.domain.ChangeOfSupplierBusinessMeta
+import no.elhub.auth.features.businessprocesses.changeofsupplier.today
 import no.elhub.auth.features.common.AuthPersonsTestContainer
 import no.elhub.auth.features.common.AuthPersonsTestContainerExtension
+import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.common.PdpTestContainerExtension
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.RunPostgresScriptExtension
@@ -37,18 +43,27 @@ import no.elhub.auth.features.common.commonModule
 import no.elhub.auth.features.common.currentTimeWithTimeZone
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
+import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
+import no.elhub.auth.features.documents.common.DocumentBusinessHandler
+import no.elhub.auth.features.documents.create.CreateError
+import no.elhub.auth.features.documents.create.command.DocumentCommand
 import no.elhub.auth.features.documents.create.dto.CreateDocumentMeta
 import no.elhub.auth.features.documents.create.dto.CreateDocumentRequestAttributes
 import no.elhub.auth.features.documents.create.dto.CreateDocumentResponse
 import no.elhub.auth.features.documents.create.dto.JsonApiCreateDocumentRequest
+import no.elhub.auth.features.documents.create.model.CreateDocumentModel
 import no.elhub.auth.features.documents.get.dto.GetDocumentSingleResponse
 import no.elhub.auth.features.documents.query.dto.GetDocumentCollectionResponse
 import no.elhub.auth.features.grants.AuthorizationScope
 import no.elhub.auth.features.grants.GRANTS_PATH
+import no.elhub.auth.features.grants.common.CreateGrantProperties
 import no.elhub.auth.features.grants.common.dto.AuthorizationGrantScopesResponse
 import no.elhub.auth.features.grants.common.dto.SingleGrantResponse
 import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObjectWithMeta
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
+import org.koin.core.module.dsl.singleOf
+import org.koin.dsl.bind
+import org.koin.ktor.plugin.koinModule
 import java.time.Duration
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
@@ -108,6 +123,7 @@ class AuthorizationDocumentRouteTest :
                 }
                 application {
                     applicationModule()
+                    testBusinessProcessesModule()
                     commonModule()
                     grantsModule()
                     module()
@@ -510,6 +526,7 @@ class AuthorizationDocumentRouteTest :
                 }
                 application {
                     applicationModule()
+                    testBusinessProcessesModule()
                     commonModule()
                     grantsModule()
                     module()
@@ -563,3 +580,48 @@ private const val REQUESTED_FROM_NIN = "98765432109"
 private const val REQUESTED_TO_NIN = "00011122233"
 private val REQUESTED_FROM_ID = UUID.fromString("5c9f5b1c-7a01-4d8d-9f27-9de7479adf52")
 private val REQUESTED_TO_ID = UUID.fromString("d6fe3b43-0d6b-4e7c-8bd1-12a2ed05a5f6")
+
+private class TestDocumentBusinessHandler : DocumentBusinessHandler {
+    override fun validateAndReturnDocumentCommand(
+        model: CreateDocumentModel
+    ) = when (model.documentType) {
+        AuthorizationDocument.Type.ChangeOfSupplierConfirmation -> {
+            val meta = model.meta
+            DocumentCommand(
+                type = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                requestedFrom = meta.requestedFrom,
+                requestedTo = meta.requestedTo,
+                requestedBy = meta.requestedBy,
+                validTo = defaultValidTo().toTimeZoneOffsetDateTimeAtStartOfDay(),
+                scopes = listOf(
+                    CreateScopeData(
+                        authorizedResourceType = AuthorizationScope.ElhubResource.MeteringPoint,
+                        authorizedResourceId = meta.requestedForMeteringPointId,
+                        permissionType = AuthorizationScope.PermissionType.ChangeOfSupplier
+                    )
+                ),
+                meta = ChangeOfSupplierBusinessMeta(
+                    requestedFromName = meta.requestedFromName,
+                    requestedForMeteringPointId = meta.requestedForMeteringPointId,
+                    requestedForMeteringPointAddress = meta.requestedForMeteringPointAddress,
+                    balanceSupplierName = meta.balanceSupplierName,
+                    balanceSupplierContractName = meta.balanceSupplierContractName
+                )
+            ).right()
+        }
+
+        else -> CreateError.BusinessValidationError("Unsupported document type").left()
+    }
+
+    override fun getCreateGrantProperties(document: AuthorizationDocument): CreateGrantProperties =
+        CreateGrantProperties(
+            validFrom = today(),
+            validTo = defaultValidTo()
+        )
+}
+
+fun Application.testBusinessProcessesModule() {
+    koinModule {
+        singleOf(::TestDocumentBusinessHandler) bind DocumentBusinessHandler::class
+    }
+}
