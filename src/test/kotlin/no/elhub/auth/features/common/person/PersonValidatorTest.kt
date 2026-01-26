@@ -3,32 +3,36 @@ package no.elhub.auth.features.common.person
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
+/*
+ * NOTE: All NIN values used in these tests are fictitious and used solely for testing purposes.
+ * They do not correspond to real individuals and should not be used for identification.
+ */
 class PersonValidatorTest : FunSpec({
 
     test("Should return true when person is born between 1900 and 1999") {
-        val bornIn1990 = "01019012480"
-        val check = isNinValid(bornIn1990)
+        val bornIn1981 = "21038140997"
+        val check = isNinValid(bornIn1981)
         check shouldBe true
     }
 
     test("Should return true when person is born between 2000 and 2039") {
-        val bornIn2005 = "15080550186"
-        val check = isNinValid(bornIn2005)
+        val bornIn2001 = "12010180315"
+        val check = isNinValid(bornIn2001)
         check shouldBe true
     }
 
     test("Should return true when person is born in leap year") {
-        val bornInLeapYear = "29020450051"
+        val bornInLeapYear = "02012916593"
         val check = isNinValid(bornInLeapYear)
         check shouldBe true
     }
 
     test("Should return true when person is born at the edge of the valid ranges for individual numbers") {
         val list = listOf(
-            "01017500011", // individualNumber 000
-            "01018849980", // individualNumber 499
-            "01010150074", // individual number 500
-            "01019999943" // individual number 999
+            "20068200130", // individualNumber 000
+            "22011649266", // individualNumber 499
+            "04050150122", // individual number 500
+            "19106799434" // individual number 999
         )
 
         for (nin in list) {
@@ -53,22 +57,22 @@ class PersonValidatorTest : FunSpec({
     }
 
     test("Should return false when nin is too long") {
-        val check = isNinValid("1508055018612")
+        val check = isNinValid("200682001302")
         check shouldBe false
     }
 
     test("Should return false when nin is not numeric") {
-        val check = isNinValid("15080550B86")
+        val check = isNinValid("2006A200130")
         check shouldBe false
     }
 
     test("Should return false when day in date is invalid") {
-        val check = isNinValid("00099331444")
+        val check = isNinValid("30028140997")
         check shouldBe false
     }
 
     test("Should return false when month in date is invalid") {
-        val check = isNinValid("12139331444")
+        val check = isNinValid("21998140997")
         check shouldBe false
     }
 

@@ -382,12 +382,12 @@ class AuthorizationRequestRouteTest : FunSpec({
                                         ),
                                         requestedFrom = PartyIdentifier(
                                             PartyIdentifierType.NationalIdentityNumber,
-                                            "01019012480"
+                                            REQUESTED_FROM_NIN
                                         ),
                                         requestedFromName = "Hillary Orr",
                                         requestedTo = PartyIdentifier(
                                             PartyIdentifierType.NationalIdentityNumber,
-                                            "01019012480"
+                                            REQUESTED_TO_NIN
                                         ),
                                         requestedForMeteringPointId = "123456789012345678",
                                         requestedForMeteringPointAddress = "quaerendum",
@@ -482,12 +482,12 @@ class AuthorizationRequestRouteTest : FunSpec({
                                         ),
                                         requestedFrom = PartyIdentifier(
                                             PartyIdentifierType.NationalIdentityNumber,
-                                            "01019012480"
+                                            REQUESTED_FROM_NIN
                                         ),
                                         requestedFromName = "",
                                         requestedTo = PartyIdentifier(
                                             PartyIdentifierType.NationalIdentityNumber,
-                                            "01019012480"
+                                            REQUESTED_TO_NIN
                                         ),
                                         requestedForMeteringPointId = "123456789012345678",
                                         requestedForMeteringPointAddress = "quaerendum",
@@ -536,12 +536,12 @@ class AuthorizationRequestRouteTest : FunSpec({
                                         ),
                                         requestedFrom = PartyIdentifier(
                                             PartyIdentifierType.NationalIdentityNumber,
-                                            "01019012480"
+                                            REQUESTED_FROM_NIN
                                         ),
                                         requestedFromName = "Test Name",
                                         requestedTo = PartyIdentifier(
                                             PartyIdentifierType.NationalIdentityNumber,
-                                            "01019012480"
+                                            REQUESTED_TO_NIN
                                         ),
                                         requestedForMeteringPointId = "123456789012345678",
                                         requestedForMeteringPointAddress = "quaerendum",
@@ -583,10 +583,19 @@ class AuthorizationRequestRouteTest : FunSpec({
                                     ),
                                     meta =
                                     CreateRequestMeta(
-                                        requestedBy = PartyIdentifier(PartyIdentifierType.GlobalLocationNumber, "0107000000021"),
-                                        requestedFrom = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "123"),
+                                        requestedBy = PartyIdentifier(
+                                            PartyIdentifierType.GlobalLocationNumber,
+                                            "0107000000021"
+                                        ),
+                                        requestedFrom = PartyIdentifier(
+                                            PartyIdentifierType.NationalIdentityNumber,
+                                            "123"
+                                        ),
                                         requestedFromName = "Hillary Orr",
-                                        requestedTo = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "01019012480"),
+                                        requestedTo = PartyIdentifier(
+                                            PartyIdentifierType.NationalIdentityNumber,
+                                            REQUESTED_TO_NIN
+                                        ),
                                         requestedForMeteringPointId = "123456789012345678",
                                         requestedForMeteringPointAddress = "quaerendum",
                                         balanceSupplierName = "Balance Supplier",
@@ -1075,3 +1084,6 @@ private fun insertAuthorizationRequest(
 
     return requestId
 }
+
+private const val REQUESTED_FROM_NIN = "21038140997"
+private const val REQUESTED_TO_NIN = "12010180315"

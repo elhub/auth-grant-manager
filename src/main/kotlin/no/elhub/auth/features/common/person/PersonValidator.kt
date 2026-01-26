@@ -26,15 +26,15 @@ fun isNinValid(nin: String?): Boolean {
     if (nin.isNullOrBlank() || nin.length != 11) return false
     if (!nin.all { it.isDigit() }) return false
 
-    // 1) validate birthdate (day, month, year inferred from individual number)
+    // validate birthdate (day, month, year inferred from individual number)
     val birthYear = resolveYear(nin) ?: return false
     if (!isValidDate(nin, birthYear)) return false
 
-    // validate control digits (modulus-11)
+    // validate control digit K1 (modulus-11)
     val k1 = calculateK1(nin) ?: return false
     if (k1 != nin[9].digitToInt()) return false
 
-    // validate control digits (modulus-11)
+    // validate control digit K2 (modulus-11)
     val k2 = calculateK2(nin, k1) ?: return false
     return k2 == nin[10].digitToInt()
 }
