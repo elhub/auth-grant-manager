@@ -24,7 +24,9 @@ import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObjectWithRelation
 data class GetRequestSingleResponseAttributes(
     val status: String,
     val requestType: String,
-    val validTo: String
+    val validTo: String,
+    val updatedAt: String,
+    val createdAt: String,
 ) : JsonApiAttributes
 
 @Serializable
@@ -64,6 +66,9 @@ fun AuthorizationRequest.toGetSingleResponse() =
                 status = this.status.name,
                 requestType = this.type.name,
                 validTo = this.validTo.toTimeZoneOffsetDateTimeAtStartOfDay().toString(),
+                updatedAt = this.updatedAt.toTimeZoneOffsetString(),
+                createdAt = this.createdAt.toTimeZoneOffsetString(),
+
             ),
             relationships = GetRequestSingleResponseRelationships(
                 requestedBy = this.requestedBy.toJsonApiRelationship(),
@@ -84,8 +89,6 @@ fun AuthorizationRequest.toGetSingleResponse() =
             ),
             meta = GetRequestSingleResponseMeta(
                 buildMap {
-                    put("createdAt", this@toGetSingleResponse.createdAt.toTimeZoneOffsetString())
-                    put("updatedAt", this@toGetSingleResponse.updatedAt.toTimeZoneOffsetString())
                     this@toGetSingleResponse.properties.forEach { prop ->
                         put(prop.key, prop.value)
                     }
