@@ -17,6 +17,7 @@ import no.elhub.auth.features.businessprocesses.changeofsupplier.domain.toDocume
 import no.elhub.auth.features.businessprocesses.changeofsupplier.domain.toRequestCommand
 import no.elhub.auth.features.businessprocesses.structuredata.MeteringPointsService
 import no.elhub.auth.features.common.CreateScopeData
+import no.elhub.auth.features.common.PersonService
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.DocumentBusinessHandler
 import no.elhub.auth.features.documents.create.CreateError
@@ -37,7 +38,8 @@ private const val REGEX_REQUESTED_BY = REGEX_NUMBERS_LETTERS_SYMBOLS
 private const val REGEX_METERING_POINT = "^\\d{18}$"
 
 class ChangeOfSupplierBusinessHandler(
-    private val meteringPointsService: MeteringPointsService
+    private val meteringPointsService: MeteringPointsService,
+    private val personService: PersonService
 ) : RequestBusinessHandler, DocumentBusinessHandler {
     override suspend fun validateAndReturnRequestCommand(createRequestModel: CreateRequestModel): Either<ChangeOfSupplierValidationError, RequestCommand> =
         either {
@@ -87,9 +89,13 @@ class ChangeOfSupplierBusinessHandler(
             return ChangeOfSupplierValidationError.InvalidMeteringPointId.left()
         }
 
+        // temporary mapping until model has elhubInternalId instead of NIN
+        val endUserElhubInternalId = personService.findOrCreateByNin(model.requestedTo.idValue).getOrNull()?.internalId
+            ?: return ChangeOfSupplierValidationError.RequestedToNotFound.left()
+
         val meteringPoint = meteringPointsService.getMeteringPointByIdAndElhubInternalId(
             meteringPointId = model.requestedForMeteringPointId,
-            elhubInternalId = model.requestedTo.idValue
+            elhubInternalId = endUserElhubInternalId.toString()
         )
 
         if (meteringPoint.isLeft()) {

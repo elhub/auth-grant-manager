@@ -51,4 +51,8 @@ sealed class ChangeOfSupplierValidationError(
     @Serializable
     data object InvalidRequestedFrom :
         ChangeOfSupplierValidationError("invalid_requested_from", "Requested from has invalid format")
+
+    @Serializable
+    data object RequestedToNotFound :
+        ChangeOfSupplierValidationError("requested_to_not_found", "Requested to id not found")
 }

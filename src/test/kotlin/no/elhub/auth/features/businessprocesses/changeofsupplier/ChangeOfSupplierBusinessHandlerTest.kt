@@ -13,6 +13,8 @@ import no.elhub.auth.features.businessprocesses.structuredata.ClientError
 import no.elhub.auth.features.businessprocesses.structuredata.MeteringPointsService
 import no.elhub.auth.features.businessprocesses.structuredata.domain.Attributes
 import no.elhub.auth.features.businessprocesses.structuredata.domain.Relationships
+import no.elhub.auth.features.common.Person
+import no.elhub.auth.features.common.PersonService
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
@@ -25,16 +27,19 @@ import no.elhub.auth.features.requests.create.model.CreateRequestMeta
 import no.elhub.auth.features.requests.create.model.CreateRequestModel
 import no.elhub.devxp.jsonapi.response.JsonApiResponse.SingleDocumentWithRelationships
 import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObjectWithRelationships
+import java.util.UUID
 
 private val VALID_PARTY = PartyIdentifier(PartyIdentifierType.OrganizationNumber, "123456789")
 private val VALID_METERING_POINT = "123456789012345678"
 private val VALID_UNEXISTING_METERING_POINT = "876543210987654321"
 private val AUTHORIZED_PARTY = AuthorizationParty(resourceId = VALID_PARTY.idValue, type = PartyType.Organization)
+private val END_USER_INTERNAL_ID = "d6784082-8344-e733-e053-02058d0a6752"
 
 class ChangeOfSupplierBusinessHandlerTest :
     FunSpec({
 
         val meteringPointsService = mockk<MeteringPointsService>()
+        val personService = mockk<PersonService>()
         val mockResponse = mockk<HttpResponse>(relaxed = true)
         coEvery { meteringPointsService.getMeteringPointByIdAndElhubInternalId(VALID_METERING_POINT, any<String>()) } returns
             Either.Right(
@@ -51,7 +56,9 @@ class ChangeOfSupplierBusinessHandlerTest :
             meteringPointsService.getMeteringPointByIdAndElhubInternalId(VALID_UNEXISTING_METERING_POINT, any<String>())
         } returns Either.Left(ClientError.UnexpectedError(ClientRequestException(response = mockResponse, "Metering Point not Found")))
 
-        val handler = ChangeOfSupplierBusinessHandler(meteringPointsService = meteringPointsService)
+        coEvery { personService.findOrCreateByNin(VALID_PARTY.idValue) } returns Either.Right(Person(UUID.fromString(END_USER_INTERNAL_ID)))
+
+        val handler = ChangeOfSupplierBusinessHandler(meteringPointsService = meteringPointsService, personService = personService)
 
         test("request validation fails on missing requestedFromName") {
             val model =
