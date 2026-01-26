@@ -120,7 +120,7 @@ class HandlerTest : FunSpec({
         verify(exactly = 1) { requestPropertyRepo.insert(expectedProperties) }
     }
 
-    test("returns RequestedByPartyError when requestedBy cannot be resolved") {
+    test("returns RequestedPartyError when requestedBy cannot be resolved") {
         val businessHandler = mockk<ProxyRequestBusinessHandler>(relaxed = true)
         val partyService = mockk<PartyService>()
         val requestRepo = mockk<RequestRepository>(relaxed = true)
@@ -132,7 +132,7 @@ class HandlerTest : FunSpec({
 
         val response = handler(model)
 
-        response.shouldBeLeft(CreateError.RequestedByPartyError)
+        response.shouldBeLeft(CreateError.RequestedPartyError)
         verify(exactly = 0) { businessHandler.validateAndReturnRequestCommand(any()) }
     }
 
@@ -167,11 +167,11 @@ class HandlerTest : FunSpec({
 
         val response = handler(model)
 
-        response.shouldBeLeft(CreateError.RequestedFromPartyError)
+        response.shouldBeLeft(CreateError.RequestedPartyError)
         verify(exactly = 0) { businessHandler.validateAndReturnRequestCommand(any()) }
     }
 
-    test("returns RequestedByPartyError when requestedTo cannot be resolved") {
+    test("returns RequestedPartyError when requestedTo cannot be resolved") {
         val businessHandler = mockk<ProxyRequestBusinessHandler>(relaxed = true)
         val partyService = mockk<PartyService>()
         val requestRepo = mockk<RequestRepository>(relaxed = true)
@@ -185,7 +185,7 @@ class HandlerTest : FunSpec({
 
         val response = handler(model)
 
-        response.shouldBeLeft(CreateError.RequestedByPartyError)
+        response.shouldBeLeft(CreateError.RequestedPartyError)
         verify(exactly = 0) { businessHandler.validateAndReturnRequestCommand(any()) }
     }
 

@@ -9,8 +9,8 @@ sealed class CreateError {
     data object MappingError : CreateError()
     data object AuthorizationError : CreateError()
     data object PersistenceError : CreateError()
-    data object RequestedFromPartyError : CreateError()
-    data object RequestedByPartyError : CreateError()
+    data object RequestedPartyError : CreateError()
+    data object InvalidNinError : CreateError()
 
     data class ValidationError(
         val reason: RequestTypeValidationError,
@@ -26,9 +26,15 @@ fun CreateError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollectio
             detail = "RequestedBy must match the authorized party",
         )
 
+        CreateError.InvalidNinError -> buildApiErrorResponse(
+            status = HttpStatusCode.BadRequest,
+            code = "invalid_nin",
+            title = "Party invalid",
+            detail = "The nin in the request is invalid",
+        )
+
         CreateError.PersistenceError,
-        CreateError.RequestedFromPartyError,
-        CreateError.RequestedByPartyError,
+        CreateError.RequestedPartyError,
         CreateError.MappingError -> buildApiErrorResponse(
             status = HttpStatusCode.InternalServerError,
             code = "internal_server_error",

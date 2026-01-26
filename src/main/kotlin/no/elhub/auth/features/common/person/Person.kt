@@ -1,4 +1,4 @@
-package no.elhub.auth.features.common
+package no.elhub.auth.features.common.person
 
 import kotlinx.serialization.Serializable
 import no.elhub.devxp.jsonapi.model.JsonApiAttributes

@@ -3,6 +3,7 @@ package no.elhub.auth.features.requests.create
 import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensure
+import no.elhub.auth.features.common.party.PartyError
 import no.elhub.auth.features.common.party.PartyService
 import no.elhub.auth.features.grants.common.CreateGrantProperties
 import no.elhub.auth.features.requests.AuthorizationRequest
@@ -25,7 +26,12 @@ class Handler(
         val requestedByParty =
             partyService
                 .resolve(model.meta.requestedBy)
-                .mapLeft { CreateError.RequestedByPartyError }
+                .mapLeft { error ->
+                    when (error) {
+                        PartyError.InvalidNin -> CreateError.InvalidNinError
+                        is PartyError.PersonResolutionError -> CreateError.RequestedPartyError
+                    }
+                }
                 .bind()
 
         ensure(model.authorizedParty == requestedByParty) {
@@ -35,13 +41,23 @@ class Handler(
         val requestedFromParty =
             partyService
                 .resolve(model.meta.requestedFrom)
-                .mapLeft { CreateError.RequestedFromPartyError }
+                .mapLeft { error ->
+                    when (error) {
+                        PartyError.InvalidNin -> CreateError.InvalidNinError
+                        is PartyError.PersonResolutionError -> CreateError.RequestedPartyError
+                    }
+                }
                 .bind()
 
         val requestedToParty =
             partyService
                 .resolve(model.meta.requestedTo)
-                .mapLeft { CreateError.RequestedByPartyError }
+                .mapLeft { error ->
+                    when (error) {
+                        PartyError.InvalidNin -> CreateError.InvalidNinError
+                        is PartyError.PersonResolutionError -> CreateError.RequestedPartyError
+                    }
+                }
                 .bind()
 
         val businessCommand =

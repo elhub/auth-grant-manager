@@ -120,7 +120,7 @@ class HandlerTest : FunSpec({
         verify(exactly = 1) { documentRepository.insert(any(), command.scopes) }
     }
 
-    test("returns RequestedByPartyError when requestedBy cannot be resolved") {
+    test("returns RequestedPartyError when requestedBy cannot be resolved") {
         val businessHandler = mockk<ProxyDocumentBusinessHandler>(relaxed = true)
         val signatureService = mockk<SignatureService>(relaxed = true)
         val documentRepository = mockk<DocumentRepository>(relaxed = true)
@@ -132,7 +132,7 @@ class HandlerTest : FunSpec({
 
         val response = handler(model)
 
-        response.shouldBeLeft(CreateError.RequestedByPartyError)
+        response.shouldBeLeft(CreateError.RequestedPartyError)
         verify(exactly = 0) { businessHandler.validateAndReturnDocumentCommand(any()) }
     }
 
@@ -167,7 +167,7 @@ class HandlerTest : FunSpec({
 
         val response = handler(model)
 
-        response.shouldBeLeft(CreateError.RequestedFromPartyError)
+        response.shouldBeLeft(CreateError.RequestedPartyError)
         verify(exactly = 0) { businessHandler.validateAndReturnDocumentCommand(any()) }
     }
 
@@ -185,7 +185,7 @@ class HandlerTest : FunSpec({
 
         val response = handler(model)
 
-        response.shouldBeLeft(CreateError.RequestedToPartyError)
+        response.shouldBeLeft(CreateError.RequestedPartyError)
         verify(exactly = 0) { businessHandler.validateAndReturnDocumentCommand(any()) }
     }
 
