@@ -14,7 +14,6 @@ import io.ktor.server.application.Application
 import io.ktor.server.config.ApplicationConfig
 import kotlinx.serialization.json.Json
 import org.koin.core.qualifier.named
-import org.koin.dsl.bind
 import org.koin.ktor.plugin.koinModule
 
 fun Application.meteringPointsServiceModule() {
