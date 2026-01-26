@@ -64,7 +64,7 @@ fun Application.meteringPointsServiceModule() {
             }
         }
 
-        single {
+        single<MeteringPointsService> {
             MeteringPointsApi(
                 meteringPointsApiConfig = get(),
                 client = get(named("meteringPointsHttpClient"))

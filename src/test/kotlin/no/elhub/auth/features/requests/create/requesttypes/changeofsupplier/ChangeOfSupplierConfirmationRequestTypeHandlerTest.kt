@@ -1,11 +1,17 @@
 package no.elhub.auth.features.requests.create.requesttypes.changeofsupplier
 
+import arrow.core.Either
 import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
+import io.mockk.coEvery
+import io.mockk.mockk
 import no.elhub.auth.features.businessprocesses.changeofsupplier.ChangeOfSupplierBusinessHandler
 import no.elhub.auth.features.businessprocesses.changeofsupplier.ChangeOfSupplierValidationError
+import no.elhub.auth.features.businessprocesses.structuredata.MeteringPointsService
+import no.elhub.auth.features.common.Person
+import no.elhub.auth.features.common.PersonService
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
@@ -13,6 +19,7 @@ import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.create.model.CreateRequestMeta
 import no.elhub.auth.features.requests.create.model.CreateRequestModel
+import java.util.UUID
 
 private const val VALID_METERING_POINT = "123456789012345678"
 
@@ -20,7 +27,9 @@ class ChangeOfSupplierConfirmationRequestTypeHandlerTest :
     FunSpec({
 
         val authorizedParty = AuthorizationParty(resourceId = "987654321", type = PartyType.Organization)
-        val handler = ChangeOfSupplierBusinessHandler()
+        val personService = mockk<PersonService>()
+        coEvery { personService.findOrCreateByNin("12345678902") } returns Either.Right(Person(UUID.randomUUID()))
+        val handler = ChangeOfSupplierBusinessHandler(mockk<MeteringPointsService>(relaxed = true), personService)
 
         test("returns validation error when requestedFromName is blank") {
             val model =

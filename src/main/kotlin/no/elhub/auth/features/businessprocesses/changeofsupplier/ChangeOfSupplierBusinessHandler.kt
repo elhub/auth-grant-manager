@@ -15,7 +15,9 @@ import no.elhub.auth.features.businessprocesses.changeofsupplier.domain.ChangeOf
 import no.elhub.auth.features.businessprocesses.changeofsupplier.domain.toChangeOfSupplierBusinessModel
 import no.elhub.auth.features.businessprocesses.changeofsupplier.domain.toDocumentCommand
 import no.elhub.auth.features.businessprocesses.changeofsupplier.domain.toRequestCommand
+import no.elhub.auth.features.businessprocesses.structuredata.MeteringPointsService
 import no.elhub.auth.features.common.CreateScopeData
+import no.elhub.auth.features.common.PersonService
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.DocumentBusinessHandler
 import no.elhub.auth.features.documents.create.CreateError
@@ -35,10 +37,11 @@ private const val REGEX_REQUESTED_FROM = REGEX_NUMBERS_LETTERS_SYMBOLS
 private const val REGEX_REQUESTED_BY = REGEX_NUMBERS_LETTERS_SYMBOLS
 private const val REGEX_METERING_POINT = "^\\d{18}$"
 
-class ChangeOfSupplierBusinessHandler :
-    RequestBusinessHandler,
-    DocumentBusinessHandler {
-    override fun validateAndReturnRequestCommand(createRequestModel: CreateRequestModel): Either<ChangeOfSupplierValidationError, RequestCommand> =
+class ChangeOfSupplierBusinessHandler(
+    private val meteringPointsService: MeteringPointsService,
+    private val personService: PersonService
+) : RequestBusinessHandler, DocumentBusinessHandler {
+    override suspend fun validateAndReturnRequestCommand(createRequestModel: CreateRequestModel): Either<ChangeOfSupplierValidationError, RequestCommand> =
         either {
             val model = createRequestModel.toChangeOfSupplierBusinessModel()
             validate(model).bind().toRequestCommand()
@@ -50,7 +53,7 @@ class ChangeOfSupplierBusinessHandler :
             validFrom = today(),
         )
 
-    override fun validateAndReturnDocumentCommand(model: CreateDocumentModel): Either<CreateError.BusinessValidationError, DocumentCommand> =
+    override suspend fun validateAndReturnDocumentCommand(model: CreateDocumentModel): Either<CreateError.BusinessValidationError, DocumentCommand> =
         either {
             val model = model.toChangeOfSupplierBusinessModel()
             validate(model)
@@ -65,7 +68,7 @@ class ChangeOfSupplierBusinessHandler :
             validFrom = today(),
         )
 
-    private fun validate(model: ChangeOfSupplierBusinessModel): Either<ChangeOfSupplierValidationError, ChangeOfSupplierBusinessCommand> {
+    private suspend fun validate(model: ChangeOfSupplierBusinessModel): Either<ChangeOfSupplierValidationError, ChangeOfSupplierBusinessCommand> {
         if (model.requestedFromName.isBlank()) {
             return ChangeOfSupplierValidationError.MissingRequestedFromName.left()
         }
@@ -84,6 +87,19 @@ class ChangeOfSupplierBusinessHandler :
 
         if (!model.requestedForMeteringPointId.matches(Regex(REGEX_METERING_POINT))) {
             return ChangeOfSupplierValidationError.InvalidMeteringPointId.left()
+        }
+
+        // temporary mapping until model has elhubInternalId instead of NIN
+        val endUserElhubInternalId = personService.findOrCreateByNin(model.requestedTo.idValue).getOrNull()?.internalId
+            ?: return ChangeOfSupplierValidationError.RequestedToNotFound.left()
+
+        val meteringPoint = meteringPointsService.getMeteringPointByIdAndElhubInternalId(
+            meteringPointId = model.requestedForMeteringPointId,
+            elhubInternalId = endUserElhubInternalId.toString()
+        )
+
+        if (meteringPoint.isLeft()) {
+            return ChangeOfSupplierValidationError.MeteringPointNotFound.left()
         }
 
         if (model.requestedForMeteringPointAddress.isBlank()) {

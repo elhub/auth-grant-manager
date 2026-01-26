@@ -29,6 +29,10 @@ sealed class ChangeOfSupplierValidationError(
         ChangeOfSupplierValidationError("invalid_metering_point_id", "Metering point id is invalid")
 
     @Serializable
+    data object MeteringPointNotFound :
+        ChangeOfSupplierValidationError("metering_point_not_found", "Metering point not found")
+
+    @Serializable
     data object MissingMeteringPointAddress :
         ChangeOfSupplierValidationError("missing_metering_point_address", "Metering point address is missing")
 
@@ -47,4 +51,8 @@ sealed class ChangeOfSupplierValidationError(
     @Serializable
     data object InvalidRequestedFrom :
         ChangeOfSupplierValidationError("invalid_requested_from", "Requested from has invalid format")
+
+    @Serializable
+    data object RequestedToNotFound :
+        ChangeOfSupplierValidationError("requested_to_not_found", "Requested to id not found")
 }

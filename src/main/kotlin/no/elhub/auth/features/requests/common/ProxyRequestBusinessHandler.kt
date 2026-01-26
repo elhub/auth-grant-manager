@@ -14,7 +14,7 @@ class ProxyRequestBusinessHandler(
     private val changeOfSupplierHandler: ChangeOfSupplierBusinessHandler,
     private val moveInHandler: MoveInBusinessHandler,
 ) : RequestBusinessHandler {
-    override fun validateAndReturnRequestCommand(createRequestModel: CreateRequestModel): Either<RequestTypeValidationError, RequestCommand> =
+    override suspend fun validateAndReturnRequestCommand(createRequestModel: CreateRequestModel): Either<RequestTypeValidationError, RequestCommand> =
         when (createRequestModel.requestType) {
             AuthorizationRequest.Type.ChangeOfSupplierConfirmation -> changeOfSupplierHandler.validateAndReturnRequestCommand(createRequestModel)
             AuthorizationRequest.Type.MoveIn -> moveInHandler.validateAndReturnRequestCommand(createRequestModel)
