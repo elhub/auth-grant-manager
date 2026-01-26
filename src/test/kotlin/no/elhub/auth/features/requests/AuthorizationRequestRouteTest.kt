@@ -993,10 +993,10 @@ private fun ApplicationTestBuilder.setUpAuthorizationRequestTestApplication() {
     }
 
     application {
-        meteringPointsServiceModule()
         applicationModule()
         testRequestBusinessModule()
         commonModule()
+        meteringPointsServiceModule()
         module()
     }
 

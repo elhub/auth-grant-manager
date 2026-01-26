@@ -12,29 +12,28 @@ import io.ktor.http.ContentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 
-fun meteringPointsServiceHttpClient(basicAuthUsername: String, basicAuthPassword: String) = HttpClient(CIO)
-    {
-        install(HttpTimeout) {
-            connectTimeoutMillis = 30_000
-            requestTimeoutMillis = 40_000
-        }
-        install(Auth) {
-            basic {
-                credentials {
-                    BasicAuthCredentials(basicAuthUsername, basicAuthPassword)
-                }
-                sendWithoutRequest { true }
-                realm = "Access to the '/' path"
-            }
-        }
-        install(ContentNegotiation) {
-            json(
-                Json {
-                    ignoreUnknownKeys = true
-                    prettyPrint = true
-                },
-                contentType = ContentType.Application.Json,
-            )
-        }
-        install(UserAgent) { agent = "test-auth-grant-manager" }
+fun meteringPointsServiceHttpClient(basicAuthUsername: String, basicAuthPassword: String) = HttpClient(CIO) {
+    install(HttpTimeout) {
+        connectTimeoutMillis = 30_000
+        requestTimeoutMillis = 40_000
     }
+    install(Auth) {
+        basic {
+            credentials {
+                BasicAuthCredentials(basicAuthUsername, basicAuthPassword)
+            }
+            sendWithoutRequest { true }
+            realm = "Access to the '/' path"
+        }
+    }
+    install(ContentNegotiation) {
+        json(
+            Json {
+                ignoreUnknownKeys = true
+                prettyPrint = true
+            },
+            contentType = ContentType.Application.Json,
+        )
+    }
+    install(UserAgent) { agent = "test-auth-grant-manager" }
+}

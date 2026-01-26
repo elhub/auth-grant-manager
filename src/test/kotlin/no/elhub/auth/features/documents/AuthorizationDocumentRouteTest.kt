@@ -131,6 +131,7 @@ class AuthorizationDocumentRouteTest :
                     commonModule()
                     meteringPointsServiceModule()
                     grantsModule()
+                    meteringPointsServiceModule()
                     module()
                 }
 
