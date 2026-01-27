@@ -37,12 +37,12 @@ pdp:
   baseUrl: ${PDP_BASE_URL}
 
 authPersons:
-  baseUri: https://auth-persons-test9.elhub.cloud
+  baseUri: ${AUTH_PERSONS_URL}
 
 structureData:
   meteringPointsService:
-    serviceUrl: something
+    serviceUrl: ${STRUCTURE_DATA_METERING_POINTS_SERVICE_URL}
     authentication:
       basic:
-        username: something
-        password: something
+        username: ${STRUCTURE_DATA_METERING_POINTS_SERVICE_API_USERNAME}
+        password: ${STRUCTURE_DATA_METERING_POINTS_SERVICE_API_PASSWORD}
