@@ -55,4 +55,8 @@ sealed class ChangeOfSupplierValidationError(
     @Serializable
     data object RequestedToNotFound :
         ChangeOfSupplierValidationError("requested_to_not_found", "Requested to id not found")
+
+    @Serializable
+    data object NotCorrespondingEndUser :
+        ChangeOfSupplierValidationError("not_corresponding_end_user", "Metering point does not correspond to end user")
 }

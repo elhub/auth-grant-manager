@@ -1,5 +1,6 @@
 package no.elhub.auth.features.businessprocesses.structuredata
 
+import io.kotest.core.listeners.AfterProjectListener
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.HttpTimeout
@@ -12,7 +13,7 @@ import io.ktor.http.ContentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 
-fun meteringPointsServiceHttpClient(basicAuthUsername: String, basicAuthPassword: String) = HttpClient(CIO) {
+val meteringPointsServiceHttpClient = HttpClient(CIO) {
     install(HttpTimeout) {
         connectTimeoutMillis = 30_000
         requestTimeoutMillis = 40_000
@@ -20,7 +21,7 @@ fun meteringPointsServiceHttpClient(basicAuthUsername: String, basicAuthPassword
     install(Auth) {
         basic {
             credentials {
-                BasicAuthCredentials(basicAuthUsername, basicAuthPassword)
+                BasicAuthCredentials("user", "pass")
             }
             sendWithoutRequest { true }
             realm = "Access to the '/' path"
@@ -36,4 +37,10 @@ fun meteringPointsServiceHttpClient(basicAuthUsername: String, basicAuthPassword
         )
     }
     install(UserAgent) { agent = "test-auth-grant-manager" }
+}
+
+object CloseMeteringPointsServiceHttpClient : AfterProjectListener {
+    override suspend fun afterProject() {
+        meteringPointsServiceHttpClient.close()
+    }
 }

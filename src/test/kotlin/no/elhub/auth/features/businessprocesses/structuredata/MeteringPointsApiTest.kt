@@ -3,6 +3,8 @@ package no.elhub.auth.features.businessprocesses.structuredata
 import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.ktor.client.HttpClient
@@ -20,6 +22,7 @@ class MeteringPointsApiTest : FunSpec({
 
     val validMeteringPointId = "300362000000000008"
     val endUserId = "d6784082-8344-e733-e053-02058d0a6752"
+    val otherEndUserId = "00662e04-2fd6-3b06-b672-3965abe7b7c5"
     val serviceUrl = "http://localhost:8080/service"
     val config = MeteringPointsApiConfig(
         serviceUrl = serviceUrl,
@@ -45,6 +48,22 @@ class MeteringPointsApiTest : FunSpec({
                 when (request.url.fullPath) {
                     "/service/metering-points/$validMeteringPointId?endUserId=$endUserId" -> {
                         respond(
+                            content = """
+                                {
+                                    "data":{
+                                        "id":"$validMeteringPointId",
+                                        "type":"metering-point",
+                                        "attributes":{"accessType": "OWNED"},
+                                        "relationships":{"endUser":{"data":{"id":"end-user-unique-id","type":"end-user"}}}}
+                                    }
+                            """.trimMargin(),
+                            status = HttpStatusCode.OK,
+                            headers = headersOf(HttpHeaders.ContentType, "application/json")
+                        )
+                    }
+
+                    "/service/metering-points/$validMeteringPointId?endUserId=$otherEndUserId" -> {
+                        respond(
                             content = """{"data":{"id":"$validMeteringPointId","type":"metering-point","relationships":{}}}""".trimMargin(),
                             status = HttpStatusCode.OK,
                             headers = headersOf(HttpHeaders.ContentType, "application/json")
@@ -59,18 +78,25 @@ class MeteringPointsApiTest : FunSpec({
             }
         }
     }
+    val service = MeteringPointsApi(config, client)
 
-    test("Valid metering point") {
-        val service = MeteringPointsApi(config, client)
+    test("Valid metering point id and end user id") {
         val response = service.getMeteringPointByIdAndElhubInternalId(validMeteringPointId, endUserId)
         response.shouldBeRight()
         response.value.data.id shouldBe validMeteringPointId
+        response.value.data.relationships.endUser.shouldNotBeNull()
     }
 
-    test("Invalid metering point") {
-        val service = MeteringPointsApi(config, client)
-        val response = service.getMeteringPointByIdAndElhubInternalId("invalid-id", "some-end-user-id")
+    test("Valid metering point id and not corresponding end user id") {
+        val response = service.getMeteringPointByIdAndElhubInternalId(validMeteringPointId, otherEndUserId)
+        response.shouldBeRight()
+        response.value.data.id shouldBe validMeteringPointId
+        response.value.data.relationships.endUser.shouldBeNull()
+    }
+
+    test("Non existing metering point") {
+        val response = service.getMeteringPointByIdAndElhubInternalId("300362000000000000", "some-end-user-id")
         response.shouldBeLeft()
-        response.value.toString() shouldContain "No metering point found"
+        response.value.toString() shouldContain "MeteringPoint not found"
     }
 })
