@@ -8,7 +8,6 @@ import java.util.UUID
 
 data class AuthorizationDocument(
     val id: UUID,
-    val title: String,
     val type: Type,
     val status: Status,
     val file: ByteArray,
@@ -33,7 +32,6 @@ data class AuthorizationDocument(
             properties: List<AuthorizationDocumentProperty>,
         ): AuthorizationDocument = AuthorizationDocument(
             id = UUID.randomUUID(),
-            title = type.name,
             type = type,
             status = Status.Pending,
             file = file,
@@ -54,7 +52,7 @@ data class AuthorizationDocument(
     }
 
     enum class Type {
-        ChangeOfSupplierConfirmation,
-        MoveIn
+        ChangeOfEnergySupplierForPerson,
+        MoveInAndChangeOfEnergySupplierForPerson
     }
 }

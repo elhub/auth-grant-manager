@@ -2,23 +2,23 @@ package no.elhub.auth.features.grants
 
 import no.elhub.auth.features.common.currentTimeWithTimeZone
 import java.time.OffsetDateTime
+import java.util.UUID
 
 data class AuthorizationScope(
-    val id: Long,
-    val authorizedResourceType: ElhubResource,
+    val id: UUID,
+    val authorizedResourceType: AuthorizationResource,
     val authorizedResourceId: String,
     val permissionType: PermissionType,
     val createdAt: OffsetDateTime
 ) {
     companion object {
         fun create(
-            id: Long,
-            authorizationResourceType: ElhubResource,
+            authorizationResourceType: AuthorizationResource,
             authorizedResourceId: String,
             permissionType: PermissionType,
         ): AuthorizationScope =
             AuthorizationScope(
-                id = id,
+                id = UUID.randomUUID(),
                 authorizedResourceType = authorizationResourceType,
                 authorizedResourceId = authorizedResourceId,
                 permissionType = permissionType,
@@ -26,7 +26,7 @@ data class AuthorizationScope(
             )
     }
 
-    enum class ElhubResource {
+    enum class AuthorizationResource {
         MeteringPoint,
         Organization,
         OrganizationEntity,
@@ -35,9 +35,7 @@ data class AuthorizationScope(
     }
 
     enum class PermissionType {
-        ChangeOfSupplier,
-        MoveIn,
-        FullDelegation,
-        ReadAccess
+        ChangeOfEnergySupplierForPerson,
+        MoveInAndChangeOfEnergySupplierForPerson
     }
 }

@@ -15,7 +15,7 @@ import java.time.Instant
 import java.util.UUID
 
 interface PartyRepository {
-    fun findOrInsert(type: PartyType, resourceId: String): Either<RepositoryWriteError, AuthorizationPartyRecord>
+    fun findOrInsert(type: PartyType, partyId: String): Either<RepositoryWriteError, AuthorizationPartyRecord>
     fun find(id: UUID): Either<RepositoryReadError, AuthorizationPartyRecord>
 }
 
@@ -23,19 +23,19 @@ class ExposedPartyRepository : PartyRepository {
 
     private val logger = LoggerFactory.getLogger(ExposedPartyRepository::class.java)
 
-    override fun findOrInsert(type: PartyType, resourceId: String): Either<RepositoryWriteError, AuthorizationPartyRecord> =
+    override fun findOrInsert(type: PartyType, partyId: String): Either<RepositoryWriteError, AuthorizationPartyRecord> =
         Either.catch {
             AuthorizationPartyTable
                 // look in the table where type == given AND resource_id = given
                 .selectAll()
-                .where { (AuthorizationPartyTable.type eq type) and (AuthorizationPartyTable.resourceId eq resourceId) }
+                .where { (AuthorizationPartyTable.type eq type) and (AuthorizationPartyTable.partyId eq partyId) }
                 .singleOrNull()
                 ?.toAuthorizationParty() // return if found
                 ?: run {
                     // try to insert a new row -> ignore if someone else is inserting the same type
                     val ins = AuthorizationPartyTable.insertIgnore {
                         it[AuthorizationPartyTable.type] = type
-                        it[AuthorizationPartyTable.resourceId] = resourceId
+                        it[AuthorizationPartyTable.partyId] = partyId
                     }
                     if (ins.resultedValues?.isNotEmpty() == true) {
                         ins.resultedValues!!.first().toAuthorizationParty() // return if created
@@ -43,7 +43,7 @@ class ExposedPartyRepository : PartyRepository {
                         // run the same select again if the insert was ignored
                         AuthorizationPartyTable
                             .selectAll()
-                            .where { (AuthorizationPartyTable.type eq type) and (AuthorizationPartyTable.resourceId eq resourceId) }
+                            .where { (AuthorizationPartyTable.type eq type) and (AuthorizationPartyTable.partyId eq partyId) }
                             .single()
                             .toAuthorizationParty()
                     }
@@ -76,16 +76,16 @@ class ExposedPartyRepository : PartyRepository {
 object AuthorizationPartyTable : UUIDTable("auth.authorization_party") {
     val type = customEnumeration(
         name = "type",
-        sql = "party_type",
+        sql = "authorization_party_type",
         fromDb = { value -> PartyType.valueOf(value as String) },
-        toDb = { enumValue -> PGEnum("party_type", enumValue) }
+        toDb = { enumValue -> PGEnum("authorization_party_type", enumValue) }
     )
 
-    val resourceId = varchar("resource_id", 255)
+    val partyId = varchar("party_id", 255)
     val createdAt = timestamp("created_at").clientDefault { Instant.now() }
 
     init {
-        index(isUnique = true, columns = arrayOf(type, resourceId))
+        index(isUnique = true, columns = arrayOf(type, partyId))
     }
 }
 
@@ -99,6 +99,6 @@ data class AuthorizationPartyRecord(
 fun ResultRow.toAuthorizationParty() = AuthorizationPartyRecord(
     id = this[AuthorizationPartyTable.id].value,
     type = this[AuthorizationPartyTable.type],
-    resourceId = this[AuthorizationPartyTable.resourceId],
+    resourceId = this[AuthorizationPartyTable.partyId],
     createdAt = this[AuthorizationPartyTable.createdAt]
 )

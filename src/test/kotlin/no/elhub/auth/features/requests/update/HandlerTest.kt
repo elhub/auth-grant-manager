@@ -23,7 +23,7 @@ class HandlerTest : FunSpec({
 
         val existingRequest =
             AuthorizationRequest.create(
-                type = AuthorizationRequest.Type.ChangeOfSupplierConfirmation,
+                type = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
                 requestedFrom = requestedFrom,
                 requestedBy = requestedBy,
                 requestedTo = requestedTo,

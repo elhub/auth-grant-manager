@@ -60,7 +60,7 @@ class ExposedRequestRepositoryTest : FunSpec({
         transaction {
             repeat(numTargetRequests) {
                 val request = AuthorizationRequest.create(
-                    type = AuthorizationRequest.Type.ChangeOfSupplierConfirmation,
+                    type = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
                     requestedBy = targetParty1,
                     requestedFrom = targetParty2,
                     requestedTo = targetParty2,
@@ -71,7 +71,7 @@ class ExposedRequestRepositoryTest : FunSpec({
 
             repeat(numOtherRequests) {
                 val request = AuthorizationRequest.create(
-                    type = AuthorizationRequest.Type.ChangeOfSupplierConfirmation,
+                    type = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
                     requestedBy = otherParty,
                     requestedFrom = otherParty,
                     requestedTo = otherParty,
@@ -142,7 +142,9 @@ class ExposedRequestRepositoryTest : FunSpec({
         }
         scopeIds.shouldBeRight()
         scopeIds.value.size shouldBe 2
-        scopeIds.value.shouldContainAll(listOf(123, 345))
+        scopeIds.value.shouldContainAll(
+            listOf(UUID.fromString("e705af95-571d-47ea-9b1b-742aa598c85c"), UUID.fromString("c597482d-b013-400b-9362-35bb16724c8f"))
+        )
     }
 
     test("reject authorization request without properties") {
@@ -219,7 +221,7 @@ class ExposedRequestRepositoryTest : FunSpec({
 
 @OptIn(ExperimentalTime::class)
 private fun generateRequestWithoutProperties(): AuthorizationRequest = AuthorizationRequest.create(
-    type = AuthorizationRequest.Type.ChangeOfSupplierConfirmation,
+    type = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
     requestedBy = AuthorizationParty(type = PartyType.Person, resourceId = "12345"),
     requestedFrom = AuthorizationParty(type = PartyType.Person, resourceId = "56789"),
     requestedTo = AuthorizationParty(type = PartyType.Person, resourceId = "45567"),

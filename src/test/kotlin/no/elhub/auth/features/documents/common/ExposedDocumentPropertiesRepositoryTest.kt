@@ -53,9 +53,8 @@ class ExposedDocumentPropertiesRepositoryTest : FunSpec({
             val document =
                 AuthorizationDocument(
                     id = UUID.randomUUID(),
-                    title = "Title",
                     file = byteArrayOf(),
-                    type = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+                    type = AuthorizationDocument.Type.ChangeOfEnergySupplierForPerson,
                     status = AuthorizationDocument.Status.Pending,
                     requestedBy = AuthorizationParty(type = PartyType.Person, resourceId = "1234567890"),
                     requestedFrom = AuthorizationParty(type = PartyType.Person, resourceId = "1234567890"),

@@ -181,7 +181,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                     id.shouldNotBeNull()
                     type shouldBe "AuthorizationRequest"
                     attributes.shouldNotBeNull().apply {
-                        requestType shouldBe "ChangeOfSupplierConfirmation"
+                        requestType shouldBe "ChangeOfEnergySupplierForPerson"
                         status shouldBe "Accepted"
                         val validTo = validTo.shouldNotBeNull()
                         val createdAt = createdAt.shouldNotBeNull()
@@ -256,7 +256,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                     id.shouldNotBeNull()
                     type shouldBe "AuthorizationRequest"
                     attributes.shouldNotBeNull().apply {
-                        requestType shouldBe "ChangeOfSupplierConfirmation"
+                        requestType shouldBe "ChangeOfEnergySupplierForPerson"
                         status shouldBe "Pending"
 
                         val validTo = validTo.shouldNotBeNull()
@@ -383,7 +383,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                                     type = "AuthorizationRequest",
                                     attributes =
                                     CreateRequestAttributes(
-                                        requestType = AuthorizationRequest.Type.ChangeOfSupplierConfirmation,
+                                        requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
                                     ),
                                     meta =
                                     CreateRequestMeta(
@@ -417,7 +417,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                     id.shouldNotBeNull()
                     type shouldBe "AuthorizationRequest"
                     attributes.shouldNotBeNull().apply {
-                        requestType shouldBe "ChangeOfSupplierConfirmation"
+                        requestType shouldBe "ChangeOfEnergySupplierForPerson"
                         status shouldBe AuthorizationRequest.Status.Pending.name
                         val validTo = validTo.shouldNotBeNull()
                         shouldNotThrowAny {
@@ -483,7 +483,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                                     type = "AuthorizationRequest",
                                     attributes =
                                     CreateRequestAttributes(
-                                        requestType = AuthorizationRequest.Type.ChangeOfSupplierConfirmation,
+                                        requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
                                     ),
                                     meta =
                                     CreateRequestMeta(
@@ -537,7 +537,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                                     type = "AuthorizationRequest",
                                     attributes =
                                     CreateRequestAttributes(
-                                        requestType = AuthorizationRequest.Type.ChangeOfSupplierConfirmation,
+                                        requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
                                     ),
                                     meta =
                                     CreateRequestMeta(
@@ -1022,7 +1022,7 @@ private fun insertAuthorizationRequest(
     transaction {
         AuthorizationRequestTable.insert {
             it[id] = requestId
-            it[requestType] = AuthorizationRequest.Type.ChangeOfSupplierConfirmation
+            it[requestType] = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson
             it[requestStatus] = status
             it[requestedBy] = requestedById
             it[requestedFrom] = requestedFromId
@@ -1045,13 +1045,13 @@ private fun insertAuthorizationRequest(
 
 private class TestRequestBusinessHandler : RequestBusinessHandler {
     override suspend fun validateAndReturnRequestCommand(createRequestModel: CreateRequestModel) = when (createRequestModel.requestType) {
-        AuthorizationRequest.Type.ChangeOfSupplierConfirmation -> {
+        AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson -> {
             val meta = createRequestModel.meta
             if (meta.requestedFromName.isBlank()) {
                 TestRequestValidationError.MissingRequestedFromName.left()
             } else {
                 RequestCommand(
-                    type = AuthorizationRequest.Type.ChangeOfSupplierConfirmation,
+                    type = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
                     requestedFrom = meta.requestedFrom,
                     requestedBy = meta.requestedBy,
                     requestedTo = meta.requestedTo,

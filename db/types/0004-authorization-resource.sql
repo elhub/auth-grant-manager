@@ -2,5 +2,7 @@
 CREATE TYPE auth.authorization_resource AS ENUM (
     'MeteringPoint',
     'Organization',
-    'Person'
+    'OrganizationEntity',
+    'Person',
+    'System'
 );

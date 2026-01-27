@@ -33,7 +33,7 @@ class MoveInBusinessHandlerTest :
             val model =
                 CreateRequestModel(
                     authorizedParty = AUTHORIZED_PARTY,
-                    requestType = AuthorizationRequest.Type.MoveIn,
+                    requestType = AuthorizationRequest.Type.MoveInAndChangeOfEnergySupplierForPerson,
                     meta =
                     CreateRequestMeta(
                         requestedBy = VALID_PARTY,
@@ -55,7 +55,7 @@ class MoveInBusinessHandlerTest :
             val model =
                 CreateRequestModel(
                     authorizedParty = AUTHORIZED_PARTY,
-                    requestType = AuthorizationRequest.Type.MoveIn,
+                    requestType = AuthorizationRequest.Type.MoveInAndChangeOfEnergySupplierForPerson,
                     meta =
                     CreateRequestMeta(
                         requestedBy = VALID_PARTY,
@@ -77,7 +77,7 @@ class MoveInBusinessHandlerTest :
             val model =
                 CreateRequestModel(
                     authorizedParty = AUTHORIZED_PARTY,
-                    requestType = AuthorizationRequest.Type.MoveIn,
+                    requestType = AuthorizationRequest.Type.MoveInAndChangeOfEnergySupplierForPerson,
                     meta =
                     CreateRequestMeta(
                         requestedBy = VALID_PARTY,
@@ -94,7 +94,7 @@ class MoveInBusinessHandlerTest :
 
             val command = handler.validateAndReturnRequestCommand(model).shouldBeRight()
 
-            command.type shouldBe AuthorizationRequest.Type.MoveIn
+            command.type shouldBe AuthorizationRequest.Type.MoveInAndChangeOfEnergySupplierForPerson
             command.validTo shouldBe today().plus(DatePeriod(days = 28))
             command.meta.toMetaAttributes()["startDate"] shouldBe VALID_START_DATE.toString()
         }
@@ -102,7 +102,7 @@ class MoveInBusinessHandlerTest :
         test("grant properties validTo is one year from acceptance") {
             val party = AuthorizationParty(resourceId = "party-1", type = PartyType.Organization)
             val request = AuthorizationRequest.create(
-                type = AuthorizationRequest.Type.MoveIn,
+                type = AuthorizationRequest.Type.MoveInAndChangeOfEnergySupplierForPerson,
                 requestedBy = party,
                 requestedFrom = party,
                 requestedTo = party,
@@ -119,7 +119,7 @@ class MoveInBusinessHandlerTest :
             val model =
                 CreateDocumentModel(
                     authorizedParty = AuthorizationParty(resourceId = VALID_PARTY.idValue, type = PartyType.Organization),
-                    documentType = AuthorizationDocument.Type.MoveIn,
+                    documentType = AuthorizationDocument.Type.MoveInAndChangeOfEnergySupplierForPerson,
                     meta =
                     CreateDocumentMeta(
                         requestedBy = VALID_PARTY,

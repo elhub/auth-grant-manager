@@ -1,5 +1,5 @@
--- Test data for authorization_party (natural key = type + resource_id)
-INSERT INTO auth.authorization_party (id, type, resource_id, created_at) VALUES
+-- Test data for authorization_party (natural key = type + party_id)
+INSERT INTO auth.authorization_party (id, type, party_id, created_at) VALUES
 ('11111111-1111-1111-1111-111111111111', 'Person',              '17abdc56-8f6f-440a-9f00-b9bfbb22065e',    '2024-06-27 13:00:00+00'),
 ('22222222-2222-2222-2222-222222222222', 'Organization',          '987654321',    '2024-06-27 11:05:00+00'),
 ('33333333-3333-3333-3333-333333333333', 'Person',              '6e88f1e2-e576-44ab-80d3-c70a6fe354c0',    '2024-06-27 11:10:00+00'),

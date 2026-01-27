@@ -44,10 +44,10 @@ class HandlerTest : FunSpec({
     val scopes =
         listOf(
             AuthorizationScope(
-                id = 1,
-                authorizedResourceType = AuthorizationScope.ElhubResource.MeteringPoint,
+                id = UUID.randomUUID(),
+                authorizedResourceType = AuthorizationScope.AuthorizationResource.MeteringPoint,
                 authorizedResourceId = "mp-1",
-                permissionType = AuthorizationScope.PermissionType.ReadAccess,
+                permissionType = AuthorizationScope.PermissionType.ChangeOfEnergySupplierForPerson,
                 createdAt = currentTimeWithTimeZone(),
             )
         )

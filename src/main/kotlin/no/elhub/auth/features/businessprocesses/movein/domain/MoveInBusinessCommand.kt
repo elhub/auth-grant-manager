@@ -42,7 +42,7 @@ data class MoveInBusinessMeta(
 
 fun MoveInBusinessCommand.toRequestCommand(): RequestCommand =
     RequestCommand(
-        type = AuthorizationRequest.Type.MoveIn,
+        type = AuthorizationRequest.Type.MoveInAndChangeOfEnergySupplierForPerson,
         requestedBy = this.requestedBy,
         requestedFrom = this.requestedFrom,
         requestedTo = this.requestedTo,
@@ -52,7 +52,7 @@ fun MoveInBusinessCommand.toRequestCommand(): RequestCommand =
 
 fun MoveInBusinessCommand.toDocumentCommand(): DocumentCommand =
     DocumentCommand(
-        type = AuthorizationDocument.Type.MoveIn,
+        type = AuthorizationDocument.Type.MoveInAndChangeOfEnergySupplierForPerson,
         requestedFrom = this.requestedFrom,
         requestedTo = this.requestedTo,
         requestedBy = this.requestedBy,

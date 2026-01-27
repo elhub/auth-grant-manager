@@ -15,7 +15,6 @@ import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.AuthorizationGrant.SourceType
 import no.elhub.auth.features.grants.AuthorizationGrant.Status
 import no.elhub.auth.features.grants.AuthorizationScope
-import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.ResultRow
@@ -38,7 +37,7 @@ interface GrantRepository {
     fun findBySource(sourceType: SourceType, sourceId: UUID): Either<RepositoryReadError, AuthorizationGrant?>
     fun findScopes(grantId: UUID): Either<RepositoryReadError, List<AuthorizationScope>>
     fun findAll(party: AuthorizationParty): Either<RepositoryReadError, List<AuthorizationGrant>>
-    fun insert(grant: AuthorizationGrant, scopeIds: List<Long>): Either<RepositoryWriteError, AuthorizationGrant>
+    fun insert(grant: AuthorizationGrant, scopeIds: List<UUID>): Either<RepositoryWriteError, AuthorizationGrant>
     fun update(grantId: UUID, newStatus: Status): Either<RepositoryError, AuthorizationGrant>
 }
 
@@ -49,7 +48,7 @@ class ExposedGrantRepository(
     private val logger = LoggerFactory.getLogger(ExposedGrantRepository::class.java)
 
     override fun findAll(party: AuthorizationParty): Either<RepositoryReadError, List<AuthorizationGrant>> = either {
-        val partyId = partyRepository.findOrInsert(type = party.type, resourceId = party.resourceId)
+        val partyId = partyRepository.findOrInsert(type = party.type, partyId = party.resourceId)
             .mapLeft { RepositoryReadError.UnexpectedError }
             .bind()
             .id
@@ -169,7 +168,7 @@ class ExposedGrantRepository(
 
     override fun insert(
         grant: AuthorizationGrant,
-        scopeIds: List<Long>,
+        scopeIds: List<UUID>,
     ): Either<RepositoryWriteError, AuthorizationGrant> =
         either {
             val grantedByParty =
@@ -282,7 +281,7 @@ class ExposedGrantRepository(
 object AuthorizationGrantScopeTable : Table("auth.authorization_grant_scope") {
     val authorizationGrantId = uuid("authorization_grant_id")
         .references(AuthorizationGrantTable.id, onDelete = ReferenceOption.CASCADE)
-    val authorizationScopeId = long("authorization_scope_id")
+    val authorizationScopeId = uuid("authorization_scope_id")
         .references(AuthorizationScopeTable.id, onDelete = ReferenceOption.CASCADE)
     val createdAt = timestamp("created_at").clientDefault { java.time.Instant.now() }
     override val primaryKey = PrimaryKey(authorizationGrantId, authorizationScopeId)
@@ -305,26 +304,26 @@ object AuthorizationGrantTable : UUIDTable("auth.authorization_grant") {
     val sourceType =
         customEnumeration(
             name = "source_type",
-            sql = "auth.grant_source_type",
+            sql = "auth.authorization_grant_source_type",
             fromDb = { value -> SourceType.valueOf(value as String) },
-            toDb = { PGEnum("grant_source_type", it) },
+            toDb = { PGEnum("authorization_grant_source_type", it) },
         )
     val sourceId = uuid("source_id")
 }
 
-object AuthorizationScopeTable : LongIdTable(name = "auth.authorization_scope") {
+object AuthorizationScopeTable : UUIDTable(name = "auth.authorization_scope") {
     val authorizedResourceType = customEnumeration(
         name = "authorized_resource_type",
         sql = "authorization_resource",
-        fromDb = { AuthorizationScope.ElhubResource.valueOf(it as String) },
+        fromDb = { AuthorizationScope.AuthorizationResource.valueOf(it as String) },
         toDb = { PGEnum("authorization_resource", it) }
     )
     val authorizedResourceId = varchar("authorized_resource_id", length = 64)
     val permissionType = customEnumeration(
         name = "permission_type",
-        sql = "permission_type",
+        sql = "authorization_permission_type",
         fromDb = { AuthorizationScope.PermissionType.valueOf(it as String) },
-        toDb = { PGEnum("permission_type", it) }
+        toDb = { PGEnum("authorization_permission_type", it) }
     )
     val createdAt = timestampWithTimeZone("created_at").default(OffsetDateTime.now(ZoneId.of("Europe/Oslo")))
 }

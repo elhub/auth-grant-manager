@@ -127,9 +127,9 @@ class MoveInBusinessHandler :
 
         val scopes = listOf(
             CreateScopeData(
-                authorizedResourceType = AuthorizationScope.ElhubResource.MeteringPoint,
+                authorizedResourceType = AuthorizationScope.AuthorizationResource.MeteringPoint,
                 authorizedResourceId = model.requestedForMeteringPointId,
-                permissionType = AuthorizationScope.PermissionType.MoveIn
+                permissionType = AuthorizationScope.PermissionType.MoveInAndChangeOfEnergySupplierForPerson
             )
         )
 

@@ -48,7 +48,7 @@ class HandlerTest : FunSpec({
         requestedToParty: AuthorizationParty = requestedTo
     ): AuthorizationDocument =
         AuthorizationDocument.create(
-            type = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+            type = AuthorizationDocument.Type.ChangeOfEnergySupplierForPerson,
             file = "file".toByteArray(),
             requestedBy = requestedBy,
             requestedFrom = requestedFromParty,
@@ -406,6 +406,7 @@ class HandlerTest : FunSpec({
         val partyService = mockk<PartyService>()
         val signatureService = mockk<SignatureService>()
         val grantRepository = mockk<GrantRepository>(relaxed = true)
+        val scopeId = UUID.randomUUID()
 
         every { documentRepository.find(documentId) } returns document.right()
         every { signatureService.validateSignaturesAndReturnSignatory(signedFile, document.file) } returns
@@ -414,7 +415,7 @@ class HandlerTest : FunSpec({
         every {
             documentRepository.confirm(documentId, signedFile, requestedFrom, requestedTo)
         } returns confirmedDocument.right()
-        every { documentRepository.findScopeIds(confirmedDocument.id) } returns listOf(1L).right()
+        every { documentRepository.findScopeIds(confirmedDocument.id) } returns listOf(scopeId).right()
         every { grantRepository.insert(any(), any()) } returns RepositoryWriteError.UnexpectedError.left()
 
         val result = handler(documentRepository, partyService, signatureService, grantRepository)(
@@ -426,14 +427,14 @@ class HandlerTest : FunSpec({
         )
 
         result.shouldBeLeft(ConfirmError.GrantCreationError)
-        verify(exactly = 1) { grantRepository.insert(any(), listOf(1L)) }
+        verify(exactly = 1) { grantRepository.insert(any(), listOf(scopeId)) }
     }
 
     test("confirms document and creates grant on success") {
         val documentId = UUID.randomUUID()
         val document = createDocument(documentId)
         val confirmedDocument = document.copy(status = AuthorizationDocument.Status.Signed)
-        val scopeIds = listOf(1L, 2L)
+        val scopeIds = listOf(UUID.randomUUID(), UUID.randomUUID())
         val documentRepository = mockk<DocumentRepository>()
         val partyService = mockk<PartyService>()
         val signatureService = mockk<SignatureService>()

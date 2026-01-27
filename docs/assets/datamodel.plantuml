@@ -14,10 +14,8 @@ enum AuthorizationGrantStatus {
 }
 
 enum PermissionType {
-  ChangeOfSupplier
-  MoveIn
-  FullDelegation
-  ReadAccess
+  ChangeOfEnergySupplierForPerson
+  MoveInAndChangeOfEnergySupplierForPerson
 }
 
 enum AuthorizationDocumentStatus {
@@ -34,7 +32,7 @@ enum RequestStatus {
   Rejected
 }
 
-enum ElhubResource {
+enum AuthorizationResource {
   MeteringPoint
   Organization
   OrganizationEntity
@@ -49,13 +47,13 @@ enum PartyType {
 }
 
 enum DocumentType {
-  ChangeOfSupplierConfirmation
-  MoveIn
+  ChangeOfEnergySupplierForPerson
+  MoveInAndChangeOfEnergySupplierForPerson
 }
 
 enum RequestType {
-  ChangeOfSupplierConfirmation
-  MoveIn
+  ChangeOfEnergySupplierForPerson
+  MoveInAndChangeOfEnergySupplierForPerson
 }
 
 entity AuthorizationGrant {
@@ -164,8 +162,8 @@ entity AuthorizationRequestScope {
 }
 
 entity AuthorizationScope {
-  id: BigSerial
-  authorizedResourceType: ElhubResource
+  id: UUID
+  authorizedResourceType: AuthorizationResource
   authorizedResourceId: String
   permissionType: PermissionType
   --
@@ -186,7 +184,7 @@ AuthorizationGrant "0..1" *-- "1..*" AuthorizationGrantScope
 AuthorizationGrant "1" *-- "0..*" AuthorizationAuditLog
 AuthorizationGrant --> AuthorizationGrantStatus
 AuthorizationGrant --> AuthorizationParty
-AuthorizationScope --> ElhubResource
+AuthorizationScope --> AuthorizationResource
 AuthorizationScope --> PermissionType
 AuthorizationScope "1" *-- "0..*" AuthorizationGrantScope
 AuthorizationScope "1" *-- "0..*" AuthorizationRequestScope

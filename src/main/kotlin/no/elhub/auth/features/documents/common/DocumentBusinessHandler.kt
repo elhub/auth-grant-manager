@@ -15,14 +15,14 @@ class ProxyDocumentBusinessHandler(
 ) : DocumentBusinessHandler {
     override suspend fun validateAndReturnDocumentCommand(model: CreateDocumentModel): Either<CreateError.BusinessValidationError, DocumentCommand> =
         when (model.documentType) {
-            AuthorizationDocument.Type.ChangeOfSupplierConfirmation -> changeOfSupplierHandler.validateAndReturnDocumentCommand(model)
-            AuthorizationDocument.Type.MoveIn -> moveInHandler.validateAndReturnDocumentCommand(model)
+            AuthorizationDocument.Type.ChangeOfEnergySupplierForPerson -> changeOfSupplierHandler.validateAndReturnDocumentCommand(model)
+            AuthorizationDocument.Type.MoveInAndChangeOfEnergySupplierForPerson -> moveInHandler.validateAndReturnDocumentCommand(model)
         }
 
     override fun getCreateGrantProperties(document: AuthorizationDocument): CreateGrantProperties =
         when (document.type) {
-            AuthorizationDocument.Type.ChangeOfSupplierConfirmation -> changeOfSupplierHandler.getCreateGrantProperties(document)
-            AuthorizationDocument.Type.MoveIn -> moveInHandler.getCreateGrantProperties(document)
+            AuthorizationDocument.Type.ChangeOfEnergySupplierForPerson -> changeOfSupplierHandler.getCreateGrantProperties(document)
+            AuthorizationDocument.Type.MoveInAndChangeOfEnergySupplierForPerson -> moveInHandler.getCreateGrantProperties(document)
         }
 }
 

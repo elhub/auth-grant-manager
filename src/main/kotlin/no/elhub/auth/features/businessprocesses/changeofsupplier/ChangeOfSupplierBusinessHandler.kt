@@ -133,9 +133,9 @@ class ChangeOfSupplierBusinessHandler(
 
         val scopes = listOf(
             CreateScopeData(
-                authorizedResourceType = AuthorizationScope.ElhubResource.MeteringPoint,
+                authorizedResourceType = AuthorizationScope.AuthorizationResource.MeteringPoint,
                 authorizedResourceId = model.requestedForMeteringPointId,
-                permissionType = AuthorizationScope.PermissionType.ChangeOfSupplier
+                permissionType = AuthorizationScope.PermissionType.ChangeOfEnergySupplierForPerson
             )
         )
 

@@ -30,8 +30,7 @@ class HandlerTest : FunSpec({
 
     val firstDocument = AuthorizationDocument(
         id = firstDocumentId,
-        title = "ChangeOfSupplierConfirmation",
-        type = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+        type = AuthorizationDocument.Type.ChangeOfEnergySupplierForPerson,
         status = AuthorizationDocument.Status.Pending,
         file = "file-1".toByteArray(),
         requestedBy = requestedBy,
@@ -45,8 +44,7 @@ class HandlerTest : FunSpec({
 
     val secondDocument = AuthorizationDocument(
         id = secondDocumentId,
-        title = "ChangeOfSupplierConfirmation",
-        type = AuthorizationDocument.Type.ChangeOfSupplierConfirmation,
+        type = AuthorizationDocument.Type.ChangeOfEnergySupplierForPerson,
         status = AuthorizationDocument.Status.Pending,
         file = "file-2".toByteArray(),
         requestedBy = requestedBy,
