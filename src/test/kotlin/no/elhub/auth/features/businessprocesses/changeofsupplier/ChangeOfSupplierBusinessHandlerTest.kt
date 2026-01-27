@@ -80,7 +80,7 @@ class ChangeOfSupplierBusinessHandlerTest :
             handler.validateAndReturnRequestCommand(model).shouldBeLeft(ChangeOfSupplierValidationError.MissingRequestedFromName)
         }
 
-        test("request validation fails on not corresponding requestedTo when user is not related to metering point") {
+        test("request validation fails when requestedTo is not related to metering point") {
             val model =
                 CreateRequestModel(
                     authorizedParty = AUTHORIZED_PARTY,
@@ -98,10 +98,10 @@ class ChangeOfSupplierBusinessHandlerTest :
                     ),
                 )
 
-            handler.validateAndReturnRequestCommand(model).shouldBeLeft(ChangeOfSupplierValidationError.NotCorrespondingEndUser)
+            handler.validateAndReturnRequestCommand(model).shouldBeLeft(ChangeOfSupplierValidationError.RequestedToNotMeteringPointEndUser)
         }
 
-        test("request validation fails on not corresponding requestedTo when is shared metering point") {
+        test("request validation fails when requestedTo is has access to metering point but is not end user") {
             val model =
                 CreateRequestModel(
                     authorizedParty = AUTHORIZED_PARTY,
@@ -119,7 +119,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                     ),
                 )
 
-            handler.validateAndReturnRequestCommand(model).shouldBeLeft(ChangeOfSupplierValidationError.NotCorrespondingEndUser)
+            handler.validateAndReturnRequestCommand(model).shouldBeLeft(ChangeOfSupplierValidationError.RequestedToNotMeteringPointEndUser)
         }
 
         test("request validation fails on invalid metering point") {

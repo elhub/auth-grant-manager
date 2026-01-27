@@ -100,7 +100,7 @@ class ChangeOfSupplierBusinessHandlerTest :
 
             val result = handler.validateAndReturnRequestCommand(model)
 
-            result.shouldBeLeft(ChangeOfSupplierValidationError.NotCorrespondingEndUser)
+            result.shouldBeLeft(ChangeOfSupplierValidationError.RequestedToNotMeteringPointEndUser)
         }
 
         test("returns validation error when requestedTo is user who has access to the metering point") {
@@ -123,7 +123,7 @@ class ChangeOfSupplierBusinessHandlerTest :
 
             val result = handler.validateAndReturnRequestCommand(model)
 
-            result.shouldBeLeft(ChangeOfSupplierValidationError.NotCorrespondingEndUser)
+            result.shouldBeLeft(ChangeOfSupplierValidationError.RequestedToNotMeteringPointEndUser)
         }
 
         test("builds RequestCommand for valid input") {

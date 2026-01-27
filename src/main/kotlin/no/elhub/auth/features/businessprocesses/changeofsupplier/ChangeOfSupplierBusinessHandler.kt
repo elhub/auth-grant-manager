@@ -105,7 +105,7 @@ class ChangeOfSupplierBusinessHandler(
         val meteringPointResponse = meteringPoint.getOrNull()!!
 
         if (meteringPointResponse.data.relationships.endUser == null || meteringPointResponse.data.attributes?.accessType == SHARED) {
-            return ChangeOfSupplierValidationError.NotCorrespondingEndUser.left()
+            return ChangeOfSupplierValidationError.RequestedToNotMeteringPointEndUser.left()
         }
 
         if (model.requestedForMeteringPointAddress.isBlank()) {
