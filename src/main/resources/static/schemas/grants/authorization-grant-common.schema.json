@@ -15,7 +15,7 @@
     "scopeType": {
       "type": "string",
       "description": "Identifies the resource as an 'AuthorizationScope' in accordance with JSON:API standards.",
-      "const": "AuthorizationScioe",
+      "const": "AuthorizationScope",
       "examples": [
         "AuthorizationScope"
       ]
