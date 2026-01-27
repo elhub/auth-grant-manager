@@ -1,4 +1,4 @@
---changeset elhub:22
+--changeset elhub:21
 CREATE TABLE auth.authorization_request_scope
 (
   authorization_request_id UUID                                   NOT NULL REFERENCES auth.authorization_request (id) ON DELETE CASCADE,

@@ -1,4 +1,4 @@
---changeset elhub:24
+--changeset elhub:23
 CREATE TABLE auth.authorization_audit_log
 (
   authorization_grant_id UUID                     NOT NULL REFERENCES auth.authorization_grant (id) ON DELETE CASCADE,

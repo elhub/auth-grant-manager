@@ -1,8 +1,8 @@
---changeset elhub:13
+--changeset elhub:12
 CREATE TABLE auth.authorization_grant
 (
   id          UUID                                   NOT NULL,
-  source_type auth.grant_source_type                 NOT NULL,
+  source_type auth.authorization_grant_source_type   NOT NULL,
   source_id   UUID                                   NOT NULL,
   granted_for UUID                                   NOT NULL,
   granted_by  UUID                                   NOT NULL,

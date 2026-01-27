@@ -1,4 +1,4 @@
---changeset elhub:21
+--changeset elhub:20
 CREATE TABLE auth.authorization_request_property
 (
   authorization_request_id UUID                                   NOT NULL REFERENCES auth.authorization_request (id) ON DELETE CASCADE,

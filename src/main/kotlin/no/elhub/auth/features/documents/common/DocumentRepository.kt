@@ -93,6 +93,7 @@ class ExposedDocumentRepository(
 
             val scopeIds: List<UUID> = AuthorizationScopeTable
                 .batchInsert(scopes) { scope ->
+                    this[AuthorizationScopeTable.id] = UUID.randomUUID()
                     this[authorizedResourceType] = scope.authorizedResourceType
                     this[authorizedResourceId] = scope.authorizedResourceId
                     this[permissionType] = scope.permissionType
@@ -105,7 +106,7 @@ class ExposedDocumentRepository(
             }
 
             documentRow.toAuthorizationDocument(requestedByParty, requestedFromParty, requestedToParty, doc.properties)
-        }.mapLeft { RepositoryWriteError.UnexpectedError }
+        }
 
     override fun find(id: UUID): Either<RepositoryReadError, AuthorizationDocument> =
         either {
@@ -201,7 +202,7 @@ class ExposedDocumentRepository(
 
     override fun findAll(requestedBy: AuthorizationParty): Either<RepositoryReadError, List<AuthorizationDocument>> =
         either {
-            val partyRecord = partyRepo.findOrInsert(type = requestedBy.type, resourceId = requestedBy.resourceId)
+            val partyRecord = partyRepo.findOrInsert(type = requestedBy.type, partyId = requestedBy.resourceId)
                 .mapLeft { RepositoryReadError.UnexpectedError }
                 .bind()
 
@@ -275,9 +276,9 @@ fun DatabaseStatus.toDocumentStatus() =
 object AuthorizationDocumentTable : UUIDTable("auth.authorization_document") {
     val type = customEnumeration(
         name = "type",
-        sql = "document_type",
+        sql = "authorization_document_type",
         fromDb = { AuthorizationDocument.Type.valueOf(it as String) },
-        toDb = { PGEnum("document_type", it) },
+        toDb = { PGEnum("authorization_document_type", it) },
     )
     val file = binary("file")
     val status = customEnumeration(

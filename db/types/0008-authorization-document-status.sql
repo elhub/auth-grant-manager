@@ -1,4 +1,4 @@
---changeset elhub:9
+--changeset elhub:8
 CREATE TYPE auth.authorization_document_status AS ENUM (
     'Pending',
     'Rejected'

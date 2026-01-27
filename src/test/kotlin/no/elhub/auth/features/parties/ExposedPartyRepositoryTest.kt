@@ -86,7 +86,7 @@ class ExposedPartyRepositoryTest : FunSpec({
         transaction {
             AuthorizationPartyTable
                 .selectAll()
-                .where { (AuthorizationPartyTable.type eq PartyType.Person) and (AuthorizationPartyTable.resourceId eq rid) }
+                .where { (AuthorizationPartyTable.type eq PartyType.Person) and (AuthorizationPartyTable.partyId eq rid) }
                 .count() shouldBe 1
         }
     }

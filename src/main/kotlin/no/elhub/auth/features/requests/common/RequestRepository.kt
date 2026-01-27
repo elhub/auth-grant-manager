@@ -50,7 +50,7 @@ class ExposedRequestRepository(
 
     override fun findAllBy(party: AuthorizationParty): Either<RepositoryReadError, List<AuthorizationRequest>> =
         either {
-            val partyId = partyRepo.findOrInsert(type = party.type, resourceId = party.resourceId)
+            val partyId = partyRepo.findOrInsert(type = party.type, partyId = party.resourceId)
                 .mapLeft { RepositoryReadError.UnexpectedError }
                 .bind()
                 .id

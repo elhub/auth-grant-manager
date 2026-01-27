@@ -48,7 +48,7 @@ class ExposedGrantRepository(
     private val logger = LoggerFactory.getLogger(ExposedGrantRepository::class.java)
 
     override fun findAll(party: AuthorizationParty): Either<RepositoryReadError, List<AuthorizationGrant>> = either {
-        val partyId = partyRepository.findOrInsert(type = party.type, resourceId = party.resourceId)
+        val partyId = partyRepository.findOrInsert(type = party.type, partyId = party.resourceId)
             .mapLeft { RepositoryReadError.UnexpectedError }
             .bind()
             .id
@@ -304,9 +304,9 @@ object AuthorizationGrantTable : UUIDTable("auth.authorization_grant") {
     val sourceType =
         customEnumeration(
             name = "source_type",
-            sql = "auth.grant_source_type",
+            sql = "auth.authorization_grant_source_type",
             fromDb = { value -> SourceType.valueOf(value as String) },
-            toDb = { PGEnum("grant_source_type", it) },
+            toDb = { PGEnum("authorization_grant_source_type", it) },
         )
     val sourceId = uuid("source_id")
 }
@@ -321,9 +321,9 @@ object AuthorizationScopeTable : UUIDTable(name = "auth.authorization_scope") {
     val authorizedResourceId = varchar("authorized_resource_id", length = 64)
     val permissionType = customEnumeration(
         name = "permission_type",
-        sql = "permission_type",
+        sql = "authorization_permission_type",
         fromDb = { AuthorizationScope.PermissionType.valueOf(it as String) },
-        toDb = { PGEnum("permission_type", it) }
+        toDb = { PGEnum("authorization_permission_type", it) }
     )
     val createdAt = timestampWithTimeZone("created_at").default(OffsetDateTime.now(ZoneId.of("Europe/Oslo")))
 }

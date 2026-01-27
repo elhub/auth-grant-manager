@@ -1,5 +1,5 @@
---changeset elhub:10
-CREATE TYPE auth.document_type AS ENUM (
+--changeset elhub:9
+CREATE TYPE auth.authorization_document_type AS ENUM (
     'ChangeOfEnergySupplierForPerson',
     'MoveInAndChangeOfEnergySupplierForPerson'
 );
