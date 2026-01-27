@@ -16,6 +16,7 @@ import no.elhub.auth.features.businessprocesses.changeofsupplier.domain.toChange
 import no.elhub.auth.features.businessprocesses.changeofsupplier.domain.toDocumentCommand
 import no.elhub.auth.features.businessprocesses.changeofsupplier.domain.toRequestCommand
 import no.elhub.auth.features.businessprocesses.structuredata.MeteringPointsService
+import no.elhub.auth.features.businessprocesses.structuredata.domain.Attributes.AccessType.SHARED
 import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.common.PersonService
 import no.elhub.auth.features.documents.AuthorizationDocument
@@ -100,6 +101,11 @@ class ChangeOfSupplierBusinessHandler(
 
         if (meteringPoint.isLeft()) {
             return ChangeOfSupplierValidationError.MeteringPointNotFound.left()
+        }
+        val meteringPointResponse = meteringPoint.getOrNull()!!
+
+        if (meteringPointResponse.data.relationships.endUser == null || meteringPointResponse.data.attributes?.accessType == SHARED) {
+            return ChangeOfSupplierValidationError.RequestedToNotMeteringPointEndUser.left()
         }
 
         if (model.requestedForMeteringPointAddress.isBlank()) {

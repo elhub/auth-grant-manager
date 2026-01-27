@@ -5,14 +5,20 @@ import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
-import io.ktor.client.plugins.ClientRequestException
-import io.ktor.client.statement.HttpResponse
 import io.mockk.coEvery
 import io.mockk.mockk
-import no.elhub.auth.features.businessprocesses.structuredata.ClientError
+import no.elhub.auth.features.businessprocesses.structuredata.BasicAuthConfig
+import no.elhub.auth.features.businessprocesses.structuredata.MeteringPointsApi
+import no.elhub.auth.features.businessprocesses.structuredata.MeteringPointsApiConfig
 import no.elhub.auth.features.businessprocesses.structuredata.MeteringPointsService
-import no.elhub.auth.features.businessprocesses.structuredata.domain.Attributes
-import no.elhub.auth.features.businessprocesses.structuredata.domain.Relationships
+import no.elhub.auth.features.businessprocesses.structuredata.MeteringPointsServiceTestContainer
+import no.elhub.auth.features.businessprocesses.structuredata.MeteringPointsServiceTestContainerExtension
+import no.elhub.auth.features.businessprocesses.structuredata.MeteringPointsServiceTestData.ANOTHER_END_USER_ID
+import no.elhub.auth.features.businessprocesses.structuredata.MeteringPointsServiceTestData.END_USER_ID
+import no.elhub.auth.features.businessprocesses.structuredata.MeteringPointsServiceTestData.NON_EXISTING_METERING_POINT
+import no.elhub.auth.features.businessprocesses.structuredata.MeteringPointsServiceTestData.SHARED_END_USER_ID
+import no.elhub.auth.features.businessprocesses.structuredata.MeteringPointsServiceTestData.VALID_METERING_POINT
+import no.elhub.auth.features.businessprocesses.structuredata.meteringPointsServiceHttpClient
 import no.elhub.auth.features.common.Person
 import no.elhub.auth.features.common.PersonService
 import no.elhub.auth.features.common.party.AuthorizationParty
@@ -25,40 +31,33 @@ import no.elhub.auth.features.documents.create.model.CreateDocumentModel
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.create.model.CreateRequestMeta
 import no.elhub.auth.features.requests.create.model.CreateRequestModel
-import no.elhub.devxp.jsonapi.response.JsonApiResponse.SingleDocumentWithRelationships
-import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObjectWithRelationships
 import java.util.UUID
 
 private val VALID_PARTY = PartyIdentifier(PartyIdentifierType.OrganizationNumber, "123456789")
-private val VALID_METERING_POINT = "123456789012345678"
-private val VALID_UNEXISTING_METERING_POINT = "876543210987654321"
 private val AUTHORIZED_PARTY = AuthorizationParty(resourceId = VALID_PARTY.idValue, type = PartyType.Organization)
-private val END_USER_INTERNAL_ID = "d6784082-8344-e733-e053-02058d0a6752"
+private val END_USER = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "123456789")
+private val ANOTHER_END_USER = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "987654321")
+private val SHARED_END_USER = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "11223344556")
 
 class ChangeOfSupplierBusinessHandlerTest :
     FunSpec({
 
-        val meteringPointsService = mockk<MeteringPointsService>()
+        extension(MeteringPointsServiceTestContainerExtension)
+        lateinit var meteringPointsService: MeteringPointsService
+        lateinit var handler: ChangeOfSupplierBusinessHandler
         val personService = mockk<PersonService>()
-        val mockResponse = mockk<HttpResponse>(relaxed = true)
-        coEvery { meteringPointsService.getMeteringPointByIdAndElhubInternalId(VALID_METERING_POINT, any<String>()) } returns
-            Either.Right(
-                SingleDocumentWithRelationships(
-                    data = JsonApiResponseResourceObjectWithRelationships(
-                        id = VALID_METERING_POINT,
-                        type = "metering-point",
-                        attributes = Attributes(),
-                        relationships = Relationships()
-                    )
-                )
+
+        beforeSpec {
+            meteringPointsService = MeteringPointsApi(
+                MeteringPointsApiConfig(serviceUrl = MeteringPointsServiceTestContainer.serviceUrl(), basicAuthConfig = BasicAuthConfig("user", "pass")),
+                meteringPointsServiceHttpClient
             )
-        coEvery {
-            meteringPointsService.getMeteringPointByIdAndElhubInternalId(VALID_UNEXISTING_METERING_POINT, any<String>())
-        } returns Either.Left(ClientError.UnexpectedError(ClientRequestException(response = mockResponse, "Metering Point not Found")))
+            handler = ChangeOfSupplierBusinessHandler(meteringPointsService = meteringPointsService, personService = personService)
+        }
 
-        coEvery { personService.findOrCreateByNin(VALID_PARTY.idValue) } returns Either.Right(Person(UUID.fromString(END_USER_INTERNAL_ID)))
-
-        val handler = ChangeOfSupplierBusinessHandler(meteringPointsService = meteringPointsService, personService = personService)
+        coEvery { personService.findOrCreateByNin(END_USER.idValue) } returns Either.Right(Person(UUID.fromString(END_USER_ID)))
+        coEvery { personService.findOrCreateByNin(ANOTHER_END_USER.idValue) } returns Either.Right(Person(UUID.fromString(ANOTHER_END_USER_ID)))
+        coEvery { personService.findOrCreateByNin(SHARED_END_USER.idValue) } returns Either.Right(Person(UUID.fromString(SHARED_END_USER_ID)))
 
         test("request validation fails on missing requestedFromName") {
             val model =
@@ -70,7 +69,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                         requestedBy = VALID_PARTY,
                         requestedFrom = VALID_PARTY,
                         requestedFromName = "",
-                        requestedTo = VALID_PARTY,
+                        requestedTo = END_USER,
                         requestedForMeteringPointId = VALID_METERING_POINT,
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
@@ -79,6 +78,48 @@ class ChangeOfSupplierBusinessHandlerTest :
                 )
 
             handler.validateAndReturnRequestCommand(model).shouldBeLeft(ChangeOfSupplierValidationError.MissingRequestedFromName)
+        }
+
+        test("request validation fails when requestedTo is not related to metering point") {
+            val model =
+                CreateRequestModel(
+                    authorizedParty = AUTHORIZED_PARTY,
+                    requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
+                    meta =
+                    CreateRequestMeta(
+                        requestedBy = VALID_PARTY,
+                        requestedFrom = VALID_PARTY,
+                        requestedFromName = "From",
+                        requestedTo = ANOTHER_END_USER,
+                        requestedForMeteringPointId = VALID_METERING_POINT,
+                        requestedForMeteringPointAddress = "addr",
+                        balanceSupplierName = "Supplier",
+                        balanceSupplierContractName = "Contract",
+                    ),
+                )
+
+            handler.validateAndReturnRequestCommand(model).shouldBeLeft(ChangeOfSupplierValidationError.RequestedToNotMeteringPointEndUser)
+        }
+
+        test("request validation fails when requestedTo is has access to metering point but is not end user") {
+            val model =
+                CreateRequestModel(
+                    authorizedParty = AUTHORIZED_PARTY,
+                    requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
+                    meta =
+                    CreateRequestMeta(
+                        requestedBy = VALID_PARTY,
+                        requestedFrom = VALID_PARTY,
+                        requestedFromName = "From",
+                        requestedTo = SHARED_END_USER,
+                        requestedForMeteringPointId = VALID_METERING_POINT,
+                        requestedForMeteringPointAddress = "addr",
+                        balanceSupplierName = "Supplier",
+                        balanceSupplierContractName = "Contract",
+                    ),
+                )
+
+            handler.validateAndReturnRequestCommand(model).shouldBeLeft(ChangeOfSupplierValidationError.RequestedToNotMeteringPointEndUser)
         }
 
         test("request validation fails on invalid metering point") {
@@ -91,7 +132,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                         requestedBy = VALID_PARTY,
                         requestedFrom = VALID_PARTY,
                         requestedFromName = "From",
-                        requestedTo = VALID_PARTY,
+                        requestedTo = END_USER,
                         requestedForMeteringPointId = "123",
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
@@ -113,7 +154,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                         requestedFrom = VALID_PARTY,
                         requestedFromName = "From",
                         requestedTo = VALID_PARTY,
-                        requestedForMeteringPointId = VALID_UNEXISTING_METERING_POINT,
+                        requestedForMeteringPointId = NON_EXISTING_METERING_POINT,
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",

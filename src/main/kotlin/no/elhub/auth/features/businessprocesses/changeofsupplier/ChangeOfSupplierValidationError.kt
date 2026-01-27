@@ -55,4 +55,8 @@ sealed class ChangeOfSupplierValidationError(
     @Serializable
     data object RequestedToNotFound :
         ChangeOfSupplierValidationError("requested_to_not_found", "Requested to id not found")
+
+    @Serializable
+    data object RequestedToNotMeteringPointEndUser :
+        ChangeOfSupplierValidationError("requested_to_not_metering_point_end_user", "Requested to is not registered as end user of the metering point")
 }

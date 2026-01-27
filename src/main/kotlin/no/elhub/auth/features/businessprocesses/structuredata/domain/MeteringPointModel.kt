@@ -10,7 +10,7 @@ import no.elhub.devxp.jsonapi.response.JsonApiResponse
 data class Attributes(
     val gridAccessContract: GridAccessContract? = null,
     val balanceSupplierContract: BalanceSupplierContract? = null,
-    val isOwnMeteringPoint: Boolean? = null,
+    val accessType: AccessType? = null,
     val isHistoricMeteringPoint: Boolean? = null
 ) : JsonApiAttributes {
     @Serializable
@@ -33,6 +33,12 @@ data class Attributes(
         val name: String,
         val partyId: String,
     )
+
+    @Serializable
+    enum class AccessType {
+        OWNED,
+        SHARED
+    }
 }
 
 @Serializable
