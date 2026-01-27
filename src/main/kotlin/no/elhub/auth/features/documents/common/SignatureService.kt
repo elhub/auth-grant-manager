@@ -25,11 +25,12 @@ import no.elhub.auth.features.documents.create.SignatureProvider
 import org.bouncycastle.asn1.ASN1OctetString
 import org.bouncycastle.asn1.ASN1Primitive
 import org.bouncycastle.asn1.ASN1String
+import java.math.BigInteger
 import java.security.cert.X509Certificate
 
 interface SignatureService {
     suspend fun sign(fileByteArray: ByteArray): Either<SignatureSigningError, ByteArray>
-    fun validateSignaturesAndReturnSignatory(file: ByteArray): Either<SignatureValidationError, PartyIdentifier>
+    fun validateSignaturesAndReturnSignatory(file: ByteArray, originalFile: ByteArray): Either<SignatureValidationError, PartyIdentifier>
 }
 
 sealed class SignatureSigningError {
@@ -46,6 +47,7 @@ sealed class SignatureValidationError {
     data object InvalidBankIdSignature : SignatureValidationError()
     data object BankIdSigningCertNotFromExpectedRoot : SignatureValidationError()
     data object MissingNationalId : SignatureValidationError()
+    data object OriginalDocumentMismatch : SignatureValidationError()
 }
 
 class PdfSignatureService(
@@ -105,7 +107,7 @@ class PdfSignatureService(
         }.mapLeft { SignatureSigningError.AddSignatureToSignatureError }.bind()
     }
 
-    override fun validateSignaturesAndReturnSignatory(file: ByteArray): Either<SignatureValidationError, PartyIdentifier> = either {
+    override fun validateSignaturesAndReturnSignatory(file: ByteArray, originalFile: ByteArray): Either<SignatureValidationError, PartyIdentifier> = either {
         val document = InMemoryDocument(file)
 
         val validator = SignedDocumentValidator.fromDocument(document).apply {
@@ -128,6 +130,7 @@ class PdfSignatureService(
             SignatureValidationError.MissingElhubSignature
         }
         validateElhubSignature(elhubSignature).bind()
+        verifyNewMatchesOriginalByByteRange(elhubSignature, originalFile, file).bind()
 
         val bankIdSignature = ensureNotNull(
             signatures.firstOrNull { signature ->
@@ -138,6 +141,25 @@ class PdfSignatureService(
             SignatureValidationError.MissingBankIdSignature
         }
         validateBankIdSignatureAndReturnSignatory(bankIdSignature).bind()
+    }
+
+    private fun verifyNewMatchesOriginalByByteRange(
+        signature: SignatureWrapper,
+        originalElhubSignedPdf: ByteArray,
+        newPdf: ByteArray
+    ): Either<SignatureValidationError, Unit> = either {
+        val byteRange = signature.signatureByteRange
+        ensure(byteRange.size == 4) { SignatureValidationError.OriginalDocumentMismatch }
+
+        val algo = signature.digestAlgorithm
+            ?: raise(SignatureValidationError.OriginalDocumentMismatch)
+
+        val originalDigest = digestOverByteRange(originalElhubSignedPdf, byteRange, algo)
+        val newDigest = digestOverByteRange(newPdf, byteRange, algo)
+
+        ensure(originalDigest.contentEquals(newDigest)) {
+            SignatureValidationError.OriginalDocumentMismatch
+        }
     }
 
     private fun validateElhubSignature(signature: SignatureWrapper): Either<SignatureValidationError, Unit> = either {
@@ -198,5 +220,22 @@ class PdfSignatureService(
         if (cert == null) return false
         return expected.issuerX500Principal.name == cert.certificateIssuerDN &&
             expected.serialNumber.toString() == cert.serialNumber
+    }
+
+    private fun digestOverByteRange(
+        pdf: ByteArray,
+        byteRange: List<BigInteger>,
+        digestAlgorithm: DigestAlgorithm
+    ): ByteArray {
+        val md = digestAlgorithm.messageDigest
+
+        val firstStart = byteRange[0].toInt()
+        val firstLen = byteRange[1].toInt()
+        val secondStart = byteRange[2].toInt()
+        val secondLen = byteRange[3].toInt()
+
+        md.update(pdf, firstStart, firstLen)
+        md.update(pdf, secondStart, secondLen)
+        return md.digest()
     }
 }

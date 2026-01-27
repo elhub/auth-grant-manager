@@ -41,9 +41,6 @@ class Handler(
         ensure(authorizationParty == document.requestedBy) {
             ConfirmError.InvalidRequestedByError
         }
-        ensure(command.authorizedParty == document.requestedBy) {
-            ConfirmError.InvalidRequestedByError
-        }
 
         ensure(document.status == AuthorizationDocument.Status.Pending) {
             ConfirmError.IllegalStateError
@@ -53,7 +50,7 @@ class Handler(
             ConfirmError.ExpiredError
         }
 
-        val signatoryIdentifier = signatureService.validateSignaturesAndReturnSignatory(command.signedFile)
+        val signatoryIdentifier = signatureService.validateSignaturesAndReturnSignatory(command.signedFile, document.file)
             .mapLeft {
                 log.error("Validate signature error occurred: {}", it)
                 ConfirmError.ValidateSignaturesError(it)

@@ -145,7 +145,7 @@ class SignatureServiceTest : FunSpec({
                 nationalIdentityNumber = nationalIdentityNumber
             )
 
-            val pdfValidationResult = signingService.validateSignaturesAndReturnSignatory(bankIdSignedPdfBytes)
+            val pdfValidationResult = signingService.validateSignaturesAndReturnSignatory(bankIdSignedPdfBytes, elhubSignedPdfBytes)
 
             pdfValidationResult.shouldBeRight(PartyIdentifier(idType = PartyIdentifierType.NationalIdentityNumber, idValue = nationalIdentityNumber))
         }
@@ -156,7 +156,7 @@ class SignatureServiceTest : FunSpec({
                 nationalIdentityNumber = nationalIdentityNumber
             )
 
-            val pdfValidationResult = signingService.validateSignaturesAndReturnSignatory(bankIdSignedPdfBytes)
+            val pdfValidationResult = signingService.validateSignaturesAndReturnSignatory(bankIdSignedPdfBytes, bankIdSignedPdfBytes)
 
             pdfValidationResult.shouldBeLeft(SignatureValidationError.MissingElhubSignature)
         }
@@ -165,14 +165,14 @@ class SignatureServiceTest : FunSpec({
             val elhubSignedPdfBytes = signingService.sign(unsignedPdfBytes).shouldBeRight()
             val tamperedPdfBytes = TestPdfSigner.tamperPdf(elhubSignedPdfBytes)
             val bankIdSignedPdf = endUserSignatureTestHelper.sign(tamperedPdfBytes, nationalIdentityNumber = nationalIdentityNumber)
-            val pdfValidationResult = signingService.validateSignaturesAndReturnSignatory(bankIdSignedPdf)
+            val pdfValidationResult = signingService.validateSignaturesAndReturnSignatory(bankIdSignedPdf, elhubSignedPdfBytes)
 
             pdfValidationResult.shouldBeLeft(SignatureValidationError.InvalidElhubSignature)
         }
 
         test("Should return MissingBankIdSignature when pdf doesn't have a bankId signature") {
             val elhubSignedPdfBytes = signingService.sign(unsignedPdfBytes).shouldBeRight()
-            val pdfValidationResult = signingService.validateSignaturesAndReturnSignatory(elhubSignedPdfBytes)
+            val pdfValidationResult = signingService.validateSignaturesAndReturnSignatory(elhubSignedPdfBytes, elhubSignedPdfBytes)
 
             pdfValidationResult.shouldBeLeft(SignatureValidationError.MissingBankIdSignature)
         }
@@ -185,7 +185,7 @@ class SignatureServiceTest : FunSpec({
             )
             val tamperedBankIdSignature = TestPdfSigner.tamperLatestSignature(bankIdSignedPdfBytes)
 
-            val pdfValidationResult = signingService.validateSignaturesAndReturnSignatory(tamperedBankIdSignature)
+            val pdfValidationResult = signingService.validateSignaturesAndReturnSignatory(tamperedBankIdSignature, elhubSignedPdfBytes)
 
             pdfValidationResult.shouldBeLeft(SignatureValidationError.InvalidBankIdSignature)
         }
@@ -197,7 +197,7 @@ class SignatureServiceTest : FunSpec({
                 nationalIdentityNumber = nationalIdentityNumber
             )
 
-            val pdfValidationResult = signingService.validateSignaturesAndReturnSignatory(untrustedSignedPdfBytes)
+            val pdfValidationResult = signingService.validateSignaturesAndReturnSignatory(untrustedSignedPdfBytes, elhubSignedPdfBytes)
 
             pdfValidationResult.shouldBeLeft(SignatureValidationError.BankIdSigningCertNotFromExpectedRoot)
         }
@@ -208,7 +208,7 @@ class SignatureServiceTest : FunSpec({
                 pdfBytes = elhubSignedPdfBytes
             )
 
-            val pdfValidationResult = signingService.validateSignaturesAndReturnSignatory(bankIdSignedPdfBytes)
+            val pdfValidationResult = signingService.validateSignaturesAndReturnSignatory(bankIdSignedPdfBytes, elhubSignedPdfBytes)
 
             pdfValidationResult.shouldBeLeft(SignatureValidationError.MissingNationalId)
         }
@@ -226,9 +226,23 @@ class SignatureServiceTest : FunSpec({
                 nationalIdentityNumber = nationalIdentityNumber
             )
 
-            val pdfValidationResult = signingService.validateSignaturesAndReturnSignatory(bankIdSignedPdfBytes)
+            val pdfValidationResult = signingService.validateSignaturesAndReturnSignatory(bankIdSignedPdfBytes, elhubSignedPdfBytes)
 
             pdfValidationResult.shouldBeLeft(SignatureValidationError.ElhubSigningCertNotTrusted)
+        }
+
+        test("Should return OriginalDocumentMismatch when signed PDF does not match stored Elhub-signed PDF") {
+            val elhubSignedPdfBytes = signingService.sign(unsignedPdfBytes).shouldBeRight()
+            val bankIdSignedPdfBytes = endUserSignatureTestHelper.sign(
+                pdfBytes = elhubSignedPdfBytes,
+                nationalIdentityNumber = nationalIdentityNumber
+            )
+
+            val originalElhubSignedPdfBytes = signingService.sign(unsignedPdfBytes).shouldBeRight()
+
+            val pdfValidationResult = signingService.validateSignaturesAndReturnSignatory(bankIdSignedPdfBytes, originalElhubSignedPdfBytes)
+
+            pdfValidationResult.shouldBeLeft(SignatureValidationError.OriginalDocumentMismatch)
         }
     }
 })
