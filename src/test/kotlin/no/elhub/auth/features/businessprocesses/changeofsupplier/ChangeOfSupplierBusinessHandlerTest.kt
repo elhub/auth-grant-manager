@@ -84,7 +84,7 @@ class ChangeOfSupplierBusinessHandlerTest :
             val model =
                 CreateRequestModel(
                     authorizedParty = AUTHORIZED_PARTY,
-                    requestType = AuthorizationRequest.Type.ChangeOfSupplierConfirmation,
+                    requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
                     meta =
                     CreateRequestMeta(
                         requestedBy = VALID_PARTY,
@@ -105,7 +105,7 @@ class ChangeOfSupplierBusinessHandlerTest :
             val model =
                 CreateRequestModel(
                     authorizedParty = AUTHORIZED_PARTY,
-                    requestType = AuthorizationRequest.Type.ChangeOfSupplierConfirmation,
+                    requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
                     meta =
                     CreateRequestMeta(
                         requestedBy = VALID_PARTY,
