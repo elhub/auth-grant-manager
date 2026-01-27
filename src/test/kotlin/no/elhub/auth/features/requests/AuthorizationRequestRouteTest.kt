@@ -1045,7 +1045,7 @@ private fun insertAuthorizationRequest(
 
 private class TestRequestBusinessHandler : RequestBusinessHandler {
     override suspend fun validateAndReturnRequestCommand(createRequestModel: CreateRequestModel) = when (createRequestModel.requestType) {
-        AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson  -> {
+        AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson -> {
             val meta = createRequestModel.meta
             if (meta.requestedFromName.isBlank()) {
                 TestRequestValidationError.MissingRequestedFromName.left()

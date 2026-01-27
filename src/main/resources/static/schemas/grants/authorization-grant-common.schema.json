@@ -8,27 +8,18 @@
       "type": "string",
       "description": "Identifies the resource as an 'AuthorizationGrant' in accordance with JSON:API standards.",
       "const": "AuthorizationGrant",
-      "examples": [
-        "AuthorizationGrant"
-      ]
+      "examples": ["AuthorizationGrant"]
     },
     "scopeType": {
       "type": "string",
       "description": "Identifies the resource as an 'AuthorizationScope' in accordance with JSON:API standards.",
       "const": "AuthorizationScope",
-      "examples": [
-        "AuthorizationScope"
-      ]
+      "examples": ["AuthorizationScope"]
     },
     "status": {
       "type": "string",
       "description": "The status of the authorization grant.",
-      "enum": [
-        "Active",
-        "Exhausted",
-        "Expired",
-        "Revoked"
-      ]
+      "enum": ["Active", "Exhausted", "Expired", "Revoked"]
     },
     "attributes": {
       "type": "object",
@@ -47,9 +38,7 @@
           "type": "string",
           "format": "date-time",
           "description": "Timestamp indication when this Authorization Grant was approved.",
-          "examples": [
-            "2025-12-29T10:13:18+01:00"
-          ]
+          "examples": ["2025-12-29T10:13:18+01:00"]
         },
         "validFrom": {
           "$ref": "../elhub-common.schema.json#/$defs/validTo"
@@ -88,10 +77,7 @@
                 },
                 "type": {
                   "type": "string",
-                  "enum": [
-                    "AuthorizationRequest",
-                    "AuthorizationDocument"
-                  ]
+                  "enum": ["AuthorizationRequest", "AuthorizationDocument"]
                 }
               },
               "examples": [
