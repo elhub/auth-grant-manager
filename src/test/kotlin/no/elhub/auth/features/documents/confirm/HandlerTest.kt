@@ -91,7 +91,7 @@ class HandlerTest : FunSpec({
 
         result.shouldBeLeft(ConfirmError.DocumentNotFoundError)
         verify(exactly = 1) { documentRepository.find(documentId) }
-        verify(exactly = 0) { signatureService.validateSignaturesAndReturnSignatory(any()) }
+        verify(exactly = 0) { signatureService.validateSignaturesAndReturnSignatory(any(), any()) }
         coVerify(exactly = 0) { partyService.resolve(any()) }
         verify(exactly = 0) { documentRepository.confirm(any(), any(), any(), any()) }
         verify(exactly = 0) { documentRepository.findScopeIds(any()) }
@@ -117,7 +117,7 @@ class HandlerTest : FunSpec({
 
         result.shouldBeLeft(ConfirmError.DocumentReadError)
         verify(exactly = 1) { documentRepository.find(documentId) }
-        verify(exactly = 0) { signatureService.validateSignaturesAndReturnSignatory(any()) }
+        verify(exactly = 0) { signatureService.validateSignaturesAndReturnSignatory(any(), any()) }
         coVerify(exactly = 0) { partyService.resolve(any()) }
         verify(exactly = 0) { documentRepository.confirm(any(), any(), any(), any()) }
         verify(exactly = 0) { documentRepository.findScopeIds(any()) }
@@ -144,7 +144,7 @@ class HandlerTest : FunSpec({
 
         result.shouldBeLeft(ConfirmError.InvalidRequestedByError)
         verify(exactly = 1) { documentRepository.find(documentId) }
-        verify(exactly = 0) { signatureService.validateSignaturesAndReturnSignatory(any()) }
+        verify(exactly = 0) { signatureService.validateSignaturesAndReturnSignatory(any(), any()) }
         coVerify(exactly = 0) { partyService.resolve(any()) }
         verify(exactly = 0) { documentRepository.confirm(any(), any(), any(), any()) }
         verify(exactly = 0) { documentRepository.findScopeIds(any()) }
@@ -176,7 +176,7 @@ class HandlerTest : FunSpec({
         result.shouldBeLeft(ConfirmError.IllegalStateError)
         verify(exactly = 1) { documentRepository.find(documentId) }
         verify(exactly = 0) { documentRepository.confirm(any(), any(), any(), any()) }
-        verify(exactly = 0) { signatureService.validateSignaturesAndReturnSignatory(any()) }
+        verify(exactly = 0) { signatureService.validateSignaturesAndReturnSignatory(any(), any()) }
         verify(exactly = 0) { documentRepository.findScopeIds(any()) }
         verify(exactly = 0) { grantRepository.insert(any(), any()) }
     }
@@ -207,7 +207,7 @@ class HandlerTest : FunSpec({
         result.shouldBeLeft(ConfirmError.ExpiredError)
         verify(exactly = 1) { documentRepository.find(documentId) }
         verify(exactly = 0) { documentRepository.confirm(any(), any(), any(), any()) }
-        verify(exactly = 0) { signatureService.validateSignaturesAndReturnSignatory(any()) }
+        verify(exactly = 0) { signatureService.validateSignaturesAndReturnSignatory(any(), any()) }
         verify(exactly = 0) { documentRepository.findScopeIds(any()) }
         verify(exactly = 0) { grantRepository.insert(any(), any()) }
     }
@@ -221,7 +221,7 @@ class HandlerTest : FunSpec({
         val grantRepository = mockk<GrantRepository>(relaxed = true)
 
         every { documentRepository.find(documentId) } returns document.right()
-        every { signatureService.validateSignaturesAndReturnSignatory(signedFile) } returns
+        every { signatureService.validateSignaturesAndReturnSignatory(signedFile, document.file) } returns
             SignatureValidationError.MissingElhubSignature.left()
 
         val result = handler(documentRepository, partyService, signatureService, grantRepository)(
@@ -236,7 +236,7 @@ class HandlerTest : FunSpec({
             ConfirmError.ValidateSignaturesError(SignatureValidationError.MissingElhubSignature)
         )
         verify(exactly = 1) { documentRepository.find(documentId) }
-        verify(exactly = 1) { signatureService.validateSignaturesAndReturnSignatory(signedFile) }
+        verify(exactly = 1) { signatureService.validateSignaturesAndReturnSignatory(signedFile, document.file) }
         coVerify(exactly = 0) { partyService.resolve(any()) }
         verify(exactly = 0) { documentRepository.confirm(any(), any(), any(), any()) }
         verify(exactly = 0) { documentRepository.findScopeIds(any()) }
@@ -252,7 +252,7 @@ class HandlerTest : FunSpec({
         val grantRepository = mockk<GrantRepository>(relaxed = true)
 
         every { documentRepository.find(documentId) } returns document.right()
-        every { signatureService.validateSignaturesAndReturnSignatory(signedFile) } returns
+        every { signatureService.validateSignaturesAndReturnSignatory(signedFile, document.file) } returns
             signatoryIdentifier.right()
         coEvery { partyService.resolve(signatoryIdentifier) } returns PartyError.PersonResolutionError.left()
 
@@ -266,7 +266,7 @@ class HandlerTest : FunSpec({
 
         result.shouldBeLeft(ConfirmError.SignatoryResolutionError)
         verify(exactly = 1) { documentRepository.find(documentId) }
-        verify(exactly = 1) { signatureService.validateSignaturesAndReturnSignatory(signedFile) }
+        verify(exactly = 1) { signatureService.validateSignaturesAndReturnSignatory(signedFile, document.file) }
         coVerify(exactly = 1) { partyService.resolve(signatoryIdentifier) }
         verify(exactly = 0) { documentRepository.confirm(any(), any(), any(), any()) }
         verify(exactly = 0) { documentRepository.findScopeIds(any()) }
@@ -282,7 +282,7 @@ class HandlerTest : FunSpec({
         val grantRepository = mockk<GrantRepository>(relaxed = true)
 
         every { documentRepository.find(documentId) } returns document.right()
-        every { signatureService.validateSignaturesAndReturnSignatory(signedFile) } returns
+        every { signatureService.validateSignaturesAndReturnSignatory(signedFile, document.file) } returns
             signatoryIdentifier.right()
         coEvery { partyService.resolve(signatoryIdentifier) } returns AuthorizationParty(
             resourceId = "another",
@@ -299,7 +299,7 @@ class HandlerTest : FunSpec({
 
         result.shouldBeLeft(ConfirmError.SignatoryNotAllowedToSignDocument)
         verify(exactly = 1) { documentRepository.find(documentId) }
-        verify(exactly = 1) { signatureService.validateSignaturesAndReturnSignatory(signedFile) }
+        verify(exactly = 1) { signatureService.validateSignaturesAndReturnSignatory(signedFile, document.file) }
         coVerify(exactly = 1) { partyService.resolve(signatoryIdentifier) }
         verify(exactly = 0) { documentRepository.confirm(any(), any(), any(), any()) }
         verify(exactly = 0) { documentRepository.findScopeIds(any()) }
@@ -315,7 +315,7 @@ class HandlerTest : FunSpec({
         val grantRepository = mockk<GrantRepository>(relaxed = true)
 
         every { documentRepository.find(documentId) } returns document.right()
-        every { signatureService.validateSignaturesAndReturnSignatory(signedFile) } returns
+        every { signatureService.validateSignaturesAndReturnSignatory(signedFile, document.file) } returns
             signatoryIdentifier.right()
         coEvery { partyService.resolve(signatoryIdentifier) } returns requestedTo.right()
         every {
@@ -345,7 +345,7 @@ class HandlerTest : FunSpec({
         val grantRepository = mockk<GrantRepository>(relaxed = true)
 
         every { documentRepository.find(documentId) } returns document.right()
-        every { signatureService.validateSignaturesAndReturnSignatory(signedFile) } returns
+        every { signatureService.validateSignaturesAndReturnSignatory(signedFile, document.file) } returns
             signatoryIdentifier.right()
         coEvery { partyService.resolve(signatoryIdentifier) } returns requestedTo.right()
         every {
@@ -376,7 +376,7 @@ class HandlerTest : FunSpec({
         val grantRepository = mockk<GrantRepository>(relaxed = true)
 
         every { documentRepository.find(documentId) } returns document.right()
-        every { signatureService.validateSignaturesAndReturnSignatory(signedFile) } returns
+        every { signatureService.validateSignaturesAndReturnSignatory(signedFile, document.file) } returns
             signatoryIdentifier.right()
         coEvery { partyService.resolve(signatoryIdentifier) } returns requestedTo.right()
         every {
@@ -408,7 +408,7 @@ class HandlerTest : FunSpec({
         val grantRepository = mockk<GrantRepository>(relaxed = true)
 
         every { documentRepository.find(documentId) } returns document.right()
-        every { signatureService.validateSignaturesAndReturnSignatory(signedFile) } returns
+        every { signatureService.validateSignaturesAndReturnSignatory(signedFile, document.file) } returns
             signatoryIdentifier.right()
         coEvery { partyService.resolve(signatoryIdentifier) } returns requestedTo.right()
         every {
@@ -448,7 +448,7 @@ class HandlerTest : FunSpec({
         )
 
         every { documentRepository.find(documentId) } returns document.right()
-        every { signatureService.validateSignaturesAndReturnSignatory(signedFile) } returns
+        every { signatureService.validateSignaturesAndReturnSignatory(signedFile, document.file) } returns
             signatoryIdentifier.right()
         coEvery { partyService.resolve(signatoryIdentifier) } returns requestedTo.right()
         every {
