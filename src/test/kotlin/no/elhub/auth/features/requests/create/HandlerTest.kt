@@ -12,6 +12,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.datetime.LocalDate
 import no.elhub.auth.features.businessprocesses.changeofsupplier.ChangeOfSupplierValidationError
+import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.common.RepositoryWriteError
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyError
@@ -20,6 +21,7 @@ import no.elhub.auth.features.common.party.PartyIdentifierType
 import no.elhub.auth.features.common.party.PartyService
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
+import no.elhub.auth.features.grants.AuthorizationScope
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.common.AuthorizationRequestProperty
 import no.elhub.auth.features.requests.common.ProxyRequestBusinessHandler
@@ -70,6 +72,13 @@ class HandlerTest : FunSpec({
             requestedBy = requestedByIdentifier,
             requestedTo = requestedToIdentifier,
             validTo = LocalDate(2025, 1, 1).toTimeZoneOffsetDateTimeAtStartOfDay(),
+            scopes = listOf(
+                CreateScopeData(
+                    authorizedResourceType = AuthorizationScope.AuthorizationResource.MeteringPoint,
+                    authorizedResourceId = "123456789012345678",
+                    permissionType = AuthorizationScope.PermissionType.ChangeOfEnergySupplierForPerson,
+                )
+            ),
             meta = commandMeta,
         )
 
@@ -97,7 +106,7 @@ class HandlerTest : FunSpec({
                 validTo = command.validTo,
             )
 
-        every { requestRepo.insert(any()) } returns savedRequest.right()
+        every { requestRepo.insert(any(), any()) } returns savedRequest.right()
         every { requestPropertyRepo.insert(any()) } returns Unit.right()
 
         val handler = Handler(businessHandler, partyService, requestRepo, requestPropertyRepo)
@@ -117,7 +126,7 @@ class HandlerTest : FunSpec({
         val expectedRequest = savedRequest.copy(properties = expectedProperties)
 
         response.shouldBeRight(expectedRequest)
-        verify(exactly = 1) { requestRepo.insert(any()) }
+        verify(exactly = 1) { requestRepo.insert(any(), any()) }
         verify(exactly = 1) { requestPropertyRepo.insert(expectedProperties) }
     }
 
@@ -206,7 +215,7 @@ class HandlerTest : FunSpec({
         val response = handler(model)
 
         response.shouldBeLeft(CreateError.ValidationError(ChangeOfSupplierValidationError.MissingRequestedFromName))
-        verify(exactly = 0) { requestRepo.insert(any()) }
+        verify(exactly = 0) { requestRepo.insert(any(), any()) }
     }
 
     test("returns PersistenceError when repository insert fails") {
@@ -217,7 +226,7 @@ class HandlerTest : FunSpec({
 
         stubPartyResolution(partyService)
         coEvery { businessHandler.validateAndReturnRequestCommand(model) } returns command.right()
-        every { requestRepo.insert(any()) } returns RepositoryWriteError.UnexpectedError.left()
+        every { requestRepo.insert(any(), any()) } returns RepositoryWriteError.UnexpectedError.left()
 
         val handler = Handler(businessHandler, partyService, requestRepo, requestPropertyRepo)
 
@@ -245,7 +254,7 @@ class HandlerTest : FunSpec({
                 validTo = command.validTo,
             )
 
-        every { requestRepo.insert(any()) } returns savedRequest.right()
+        every { requestRepo.insert(any(), any()) } returns savedRequest.right()
         every { requestPropertyRepo.insert(any()) } returns RepositoryWriteError.UnexpectedError.left()
 
         val handler = Handler(businessHandler, partyService, requestRepo, requestPropertyRepo)

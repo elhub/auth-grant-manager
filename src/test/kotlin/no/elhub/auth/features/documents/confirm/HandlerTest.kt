@@ -445,7 +445,8 @@ class HandlerTest : FunSpec({
             grantedBy = requestedTo,
             grantedTo = confirmedDocument.requestedBy,
             sourceType = AuthorizationGrant.SourceType.Document,
-            sourceId = confirmedDocument.id
+            sourceId = confirmedDocument.id,
+            scopeIds = scopeIds
         )
 
         every { documentRepository.find(documentId) } returns document.right()

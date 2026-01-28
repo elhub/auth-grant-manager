@@ -2,6 +2,7 @@ package no.elhub.auth.features.requests.common
 
 import arrow.core.Either
 import arrow.core.raise.either
+import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.common.PGEnum
 import no.elhub.auth.features.common.RepositoryError
 import no.elhub.auth.features.common.RepositoryReadError
@@ -11,12 +12,17 @@ import no.elhub.auth.features.common.party.AuthorizationPartyRecord
 import no.elhub.auth.features.common.party.AuthorizationPartyTable
 import no.elhub.auth.features.common.party.PartyRepository
 import no.elhub.auth.features.grants.common.AuthorizationScopeTable
+import no.elhub.auth.features.grants.common.AuthorizationScopeTable.authorizedResourceId
+import no.elhub.auth.features.grants.common.AuthorizationScopeTable.authorizedResourceType
+import no.elhub.auth.features.grants.common.AuthorizationScopeTable.permissionType
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.common.AuthorizationRequestScopeTable.authorizationRequestId
+import no.elhub.auth.features.requests.common.AuthorizationRequestScopeTable.authorizationScopeId
 import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.batchInsert
 import org.jetbrains.exposed.sql.insertReturning
 import org.jetbrains.exposed.sql.javatime.timestamp
 import org.jetbrains.exposed.sql.javatime.timestampWithTimeZone
@@ -31,7 +37,10 @@ import java.util.UUID
 interface RequestRepository {
     fun find(requestId: UUID): Either<RepositoryReadError, AuthorizationRequest>
     fun findAllBy(party: AuthorizationParty): Either<RepositoryReadError, List<AuthorizationRequest>>
-    fun insert(request: AuthorizationRequest): Either<RepositoryWriteError, AuthorizationRequest>
+    fun insert(
+        request: AuthorizationRequest,
+        scopes: List<CreateScopeData>
+    ): Either<RepositoryWriteError, AuthorizationRequest>
     fun acceptRequest(
         requestId: UUID,
         approvedBy: AuthorizationParty
@@ -75,7 +84,10 @@ class ExposedRequestRepository(
             findInternal(request).bind()
         }
 
-    override fun insert(request: AuthorizationRequest): Either<RepositoryWriteError, AuthorizationRequest> =
+    override fun insert(
+        request: AuthorizationRequest,
+        scopes: List<CreateScopeData>
+    ): Either<RepositoryWriteError, AuthorizationRequest> =
         either {
             val requestedByParty =
                 partyRepo
@@ -106,17 +118,16 @@ class ExposedRequestRepository(
                         it[requestedTo] = requestedToParty.id
                         it[validTo] = request.validTo
                         it[createdAt] = request.createdAt
-                    }
-                    .map {
-                        it.toAuthorizationRequest(
-                            requestedByParty,
-                            requestedFromParty,
-                            requestedToParty,
-                            request.properties
-                        )
                     }.single()
 
-            insertedRequest
+            handleScopes(scopes, insertedRequest)
+
+            insertedRequest.toAuthorizationRequest(
+                requestedBy = requestedByParty,
+                requestedFrom = requestedFromParty,
+                requestedTo = requestedToParty,
+                properties = request.properties,
+            )
         }.mapLeft { RepositoryWriteError.UnexpectedError }
 
     override fun acceptRequest(requestId: UUID, approvedBy: AuthorizationParty) = either {
@@ -154,6 +165,26 @@ class ExposedRequestRepository(
                     row[AuthorizationRequestScopeTable.authorizationScopeId]
                 }
         }
+
+    private fun handleScopes(scopes: List<CreateScopeData>, insertedRequest: ResultRow) {
+        // upsert scopes
+        val scopeIds: List<UUID> = AuthorizationScopeTable
+            .batchInsert(scopes) { scope ->
+                this[authorizedResourceType] = scope.authorizedResourceType
+                this[authorizedResourceId] = scope.authorizedResourceId
+                this[permissionType] = scope.permissionType
+            }
+            .map { it[AuthorizationScopeTable.id].value }
+            .distinct()
+
+        // insert request-scope links
+        if (scopeIds.isNotEmpty()) {
+            AuthorizationRequestScopeTable.batchInsert(scopeIds) { id ->
+                this[authorizationRequestId] = insertedRequest[AuthorizationRequestTable.id].value
+                this[authorizationScopeId] = id
+            }
+        }
+    }
 
     private fun updateAndFetch(requestId: UUID, rowsUpdated: Int): Either<RepositoryError, AuthorizationRequest> =
         either {
