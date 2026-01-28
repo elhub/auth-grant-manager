@@ -31,9 +31,11 @@ import no.elhub.auth.features.common.auth.PDPAuthorizationProvider
 import no.elhub.auth.features.common.commonModule
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
+import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
 import no.elhub.auth.features.grants.common.CreateGrantProperties
 import no.elhub.auth.features.requests.common.AuthorizationRequestPropertyTable
 import no.elhub.auth.features.requests.common.AuthorizationRequestTable
+import no.elhub.auth.features.requests.common.DatabaseRequestStatus
 import no.elhub.auth.features.requests.create.RequestBusinessHandler
 import no.elhub.auth.features.requests.create.command.RequestCommand
 import no.elhub.auth.features.requests.create.command.RequestMetaMarker
@@ -57,6 +59,7 @@ import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.koin.ktor.plugin.koinModule
 import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 import java.time.LocalDate as JavaLocalDate
@@ -257,7 +260,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                     type shouldBe "AuthorizationRequest"
                     attributes.shouldNotBeNull().apply {
                         requestType shouldBe "ChangeOfEnergySupplierForPerson"
-                        status shouldBe "Pending"
+                        status shouldBe "Expired"
 
                         val validTo = validTo.shouldNotBeNull()
                         val createdAt = createdAt.shouldNotBeNull()
@@ -1010,8 +1013,8 @@ private fun ApplicationTestBuilder.setUpAuthorizationRequestTestApplication() {
 }
 
 private fun insertAuthorizationRequest(
-    status: AuthorizationRequest.Status = AuthorizationRequest.Status.Pending,
-    validToDate: JavaLocalDate = JavaLocalDate.now().plusDays(10),
+    status: DatabaseRequestStatus = DatabaseRequestStatus.Pending,
+    validToDate: OffsetDateTime = OffsetDateTime.now(ZoneOffset.UTC).plusDays(10),
     properties: Map<String, String> = emptyMap()
 ): UUID {
     val requestId = UUID.randomUUID()
@@ -1055,7 +1058,7 @@ private class TestRequestBusinessHandler : RequestBusinessHandler {
                     requestedFrom = meta.requestedFrom,
                     requestedBy = meta.requestedBy,
                     requestedTo = meta.requestedTo,
-                    validTo = defaultRequestValidTo(),
+                    validTo = defaultRequestValidTo().toTimeZoneOffsetDateTimeAtStartOfDay(),
                     meta = TestRequestMeta(
                         requestedFromName = meta.requestedFromName,
                         requestedForMeteringPointId = meta.requestedForMeteringPointId,

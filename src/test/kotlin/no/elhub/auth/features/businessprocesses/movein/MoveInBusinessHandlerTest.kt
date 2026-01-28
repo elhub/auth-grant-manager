@@ -11,6 +11,7 @@ import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
 import no.elhub.auth.features.common.party.PartyType
+import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.create.dto.CreateDocumentMeta
 import no.elhub.auth.features.documents.create.model.CreateDocumentModel
@@ -95,7 +96,7 @@ class MoveInBusinessHandlerTest :
             val command = handler.validateAndReturnRequestCommand(model).shouldBeRight()
 
             command.type shouldBe AuthorizationRequest.Type.MoveInAndChangeOfEnergySupplierForPerson
-            command.validTo shouldBe today().plus(DatePeriod(days = 28))
+            command.validTo shouldBe today().plus(DatePeriod(days = 28)).toTimeZoneOffsetDateTimeAtStartOfDay()
             command.meta.toMetaAttributes()["startDate"] shouldBe VALID_START_DATE.toString()
         }
 
@@ -106,7 +107,7 @@ class MoveInBusinessHandlerTest :
                 requestedBy = party,
                 requestedFrom = party,
                 requestedTo = party,
-                validTo = today(),
+                validTo = today().toTimeZoneOffsetDateTimeAtStartOfDay(),
             )
 
             val properties = handler.getCreateGrantProperties(request)

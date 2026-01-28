@@ -3,16 +3,14 @@ package no.elhub.auth.features.requests.update
 import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensure
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
 import no.elhub.auth.features.common.RepositoryReadError
+import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.common.GrantRepository
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.common.RequestRepository
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.slf4j.LoggerFactory
-import kotlin.time.Clock
 
 class Handler(
     private val requestRepository: RequestRepository,
@@ -23,30 +21,28 @@ class Handler(
 
     operator fun invoke(command: UpdateCommand): Either<UpdateError, AuthorizationRequest> = either {
         transaction {
-            val originalRequest = requestRepository.find(command.requestId)
+            val request = requestRepository.find(command.requestId)
                 .mapLeft { UpdateError.RequestNotFound }
                 .bind()
-            ensure(originalRequest.requestedTo == command.authorizedParty) {
+
+            ensure(request.requestedTo == command.authorizedParty) {
                 logger.error("Requestee is not authorized to get the request ${command.authorizedParty}")
                 UpdateError.NotAuthorizedError
             }
 
-            ensure(originalRequest.status == AuthorizationRequest.Status.Pending) {
-                UpdateError.IllegalStateError
-            }
-
-            val today = Clock.System.now().toLocalDateTime(TimeZone.UTC).date
-            ensure(originalRequest.validTo >= today) {
-                UpdateError.ExpiredError
+            when (request.status) {
+                AuthorizationRequest.Status.Accepted, AuthorizationRequest.Status.Rejected -> raise(UpdateError.AlreadyProcessed)
+                AuthorizationRequest.Status.Expired -> raise(UpdateError.Expired)
+                AuthorizationRequest.Status.Pending -> Unit
             }
 
             val updatedRequest = when (command.newStatus) {
                 AuthorizationRequest.Status.Accepted -> {
-                    handleAccepted(originalRequest).bind()
+                    handleAccepted(request, command.authorizedParty).bind()
                 }
 
                 AuthorizationRequest.Status.Rejected -> {
-                    handleRejected(originalRequest).bind()
+                    handleRejected(request).bind()
                 }
 
                 else -> {
@@ -58,14 +54,11 @@ class Handler(
         }
     }
 
-    private fun handleAccepted(originalRequest: AuthorizationRequest): Either<UpdateError, AuthorizationRequest> =
+    private fun handleAccepted(originalRequest: AuthorizationRequest, acceptedBy: AuthorizationParty): Either<UpdateError, AuthorizationRequest> =
         either {
-            // TODO this will be provided by value stream via tokens. Temporary setting this as requestedTo
-            val approval = originalRequest.requestedTo
-
             val acceptedRequest = requestRepository.acceptRequest(
                 requestId = originalRequest.id,
-                approvedBy = approval
+                approvedBy = acceptedBy
             ).mapLeft {
                 UpdateError.PersistenceError
             }.bind()
@@ -81,7 +74,7 @@ class Handler(
 
             val grantToCreate = AuthorizationGrant.create(
                 grantedFor = acceptedRequest.requestedFrom,
-                grantedBy = approval,
+                grantedBy = acceptedBy,
                 grantedTo = acceptedRequest.requestedBy,
                 sourceType = AuthorizationGrant.SourceType.Request,
                 sourceId = acceptedRequest.id
@@ -96,7 +89,7 @@ class Handler(
 
     private fun handleRejected(originalRequest: AuthorizationRequest): Either<UpdateError, AuthorizationRequest> =
         either {
-            val rejectedRequest = requestRepository.rejectAccept(
+            val rejectedRequest = requestRepository.rejectRequest(
                 requestId = originalRequest.id,
             ).mapLeft { UpdateError.PersistenceError }
                 .bind()

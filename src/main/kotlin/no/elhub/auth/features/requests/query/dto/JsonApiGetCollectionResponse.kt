@@ -5,7 +5,6 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import no.elhub.auth.features.common.currentTimeWithTimeZone
 import no.elhub.auth.features.common.party.dto.toJsonApiRelationship
-import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
 import no.elhub.auth.features.common.toTimeZoneOffsetString
 import no.elhub.auth.features.grants.GRANTS_PATH
 import no.elhub.auth.features.requests.AuthorizationRequest
@@ -66,7 +65,7 @@ fun List<AuthorizationRequest>.toGetCollectionResponse() =
                 attributes = GetRequestCollectionResponseAttributes(
                     status = request.status.toString(),
                     requestType = request.type.toString(),
-                    validTo = request.validTo.toTimeZoneOffsetDateTimeAtStartOfDay().toString(),
+                    validTo = request.validTo.toString(),
                     createdAt = request.createdAt.toTimeZoneOffsetString(),
                     updatedAt = request.updatedAt.toTimeZoneOffsetString(),
                 ),
