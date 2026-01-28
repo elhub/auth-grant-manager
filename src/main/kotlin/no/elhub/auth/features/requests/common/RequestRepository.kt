@@ -256,15 +256,12 @@ enum class DatabaseRequestStatus {
     Rejected
 }
 
-fun AuthorizationRequest.Status.toDataBaseRequestStatus(): DatabaseRequestStatus {
-    return when (this) {
-        AuthorizationRequest.Status.Accepted -> DatabaseRequestStatus.Accepted
-        AuthorizationRequest.Status.Expired -> DatabaseRequestStatus.Pending
-        AuthorizationRequest.Status.Pending -> DatabaseRequestStatus.Pending
-        AuthorizationRequest.Status.Rejected -> DatabaseRequestStatus.Rejected
-    }
+fun AuthorizationRequest.Status.toDataBaseRequestStatus(): DatabaseRequestStatus = when (this) {
+    AuthorizationRequest.Status.Accepted -> DatabaseRequestStatus.Accepted
+    AuthorizationRequest.Status.Expired -> DatabaseRequestStatus.Pending
+    AuthorizationRequest.Status.Pending -> DatabaseRequestStatus.Pending
+    AuthorizationRequest.Status.Rejected -> DatabaseRequestStatus.Rejected
 }
-
 
 fun ResultRow.toAuthorizationRequest(
     requestedBy: AuthorizationPartyRecord,
@@ -276,7 +273,7 @@ fun ResultRow.toAuthorizationRequest(
     val dbStatus = this[AuthorizationRequestTable.requestStatus]
     val validTo = this[AuthorizationRequestTable.validTo]
 
-    val status : AuthorizationRequest.Status = when (dbStatus) {
+    val status: AuthorizationRequest.Status = when (dbStatus) {
         DatabaseRequestStatus.Accepted -> AuthorizationRequest.Status.Accepted
         DatabaseRequestStatus.Rejected -> AuthorizationRequest.Status.Rejected
         DatabaseRequestStatus.Pending if validTo <= OffsetDateTime.now(ZoneOffset.UTC) -> AuthorizationRequest.Status.Expired

@@ -56,7 +56,6 @@ class Handler(
 
     private fun handleAccepted(originalRequest: AuthorizationRequest, acceptedBy: AuthorizationParty): Either<UpdateError, AuthorizationRequest> =
         either {
-
             val acceptedRequest = requestRepository.acceptRequest(
                 requestId = originalRequest.id,
                 approvedBy = acceptedBy
