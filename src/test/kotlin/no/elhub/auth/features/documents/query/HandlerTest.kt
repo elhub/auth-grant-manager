@@ -24,6 +24,7 @@ class HandlerTest : FunSpec({
     val requestedFrom = AuthorizationParty(resourceId = "person-1", type = PartyType.Person)
     val requestedTo = AuthorizationParty(resourceId = "person-2", type = PartyType.Person)
     val validTo = currentTimeWithTimeZone().plusDays(1)
+    val scopeIds = listOf(UUID.randomUUID(), UUID.randomUUID())
 
     val firstDocumentId = UUID.randomUUID()
     val secondDocumentId = UUID.randomUUID()
@@ -61,7 +62,8 @@ class HandlerTest : FunSpec({
         grantedBy = requestedTo,
         grantedTo = requestedBy,
         sourceType = AuthorizationGrant.SourceType.Document,
-        sourceId = firstDocumentId
+        sourceId = firstDocumentId,
+        scopeIds = scopeIds
     )
 
     fun documentRepoReturning(result: Either<RepositoryReadError, List<AuthorizationDocument>>): DocumentRepository =

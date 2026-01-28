@@ -295,4 +295,5 @@ INSERT INTO auth.authorization_request_scope(
 VALUES
   ('3f2c9e6b-7a4d-4f1a-9b6e-8c1d2a5e9f47', 'e705af95-571d-47ea-9b1b-742aa598c85c', now()),
   ('3f2c9e6b-7a4d-4f1a-9b6e-8c1d2a5e9f47', 'c597482d-b013-400b-9362-35bb16724c8f', now()),
+  ('4f71d596-99e4-415e-946d-7252c1a40c50', 'c597482d-b013-400b-9362-35bb16724c8f', now()),
   ('4f71d596-99e4-415e-946d-7252c1a40c52', 'e705af95-571d-47ea-9b1b-742aa598c85c', now());

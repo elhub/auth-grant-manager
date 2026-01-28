@@ -13,6 +13,7 @@ import no.elhub.devxp.jsonapi.model.JsonApiAttributes
 import no.elhub.devxp.jsonapi.model.JsonApiLinks
 import no.elhub.devxp.jsonapi.model.JsonApiMeta
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipData
+import no.elhub.devxp.jsonapi.model.JsonApiRelationshipToMany
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipToOne
 import no.elhub.devxp.jsonapi.model.JsonApiRelationships
 import no.elhub.devxp.jsonapi.response.JsonApiResponse
@@ -32,6 +33,7 @@ data class GrantResponseRelationShips(
     val grantedBy: JsonApiRelationshipToOne,
     val grantedTo: JsonApiRelationshipToOne,
     val source: JsonApiRelationshipToOne,
+    val scopes: JsonApiRelationshipToMany
 ) : JsonApiRelationships
 
 typealias SingleGrantResponse = JsonApiResponse.SingleDocumentWithRelationships<
@@ -89,6 +91,14 @@ fun AuthorizationGrant.toSingleGrantResponse() =
                         }
                     )
                 ),
+                scopes = JsonApiRelationshipToMany(
+                    data = this.scopeIds.map { scope ->
+                        JsonApiRelationshipData(
+                            id = scope.toString(),
+                            type = "AuthorizationScope"
+                        )
+                    }
+                )
             ),
             links = JsonApiLinks.ResourceObjectLink("$GRANTS_PATH/${this.id}"),
         ),
@@ -146,6 +156,14 @@ fun List<AuthorizationGrant>.toCollectionGrantResponse() =
                             }
                         )
                     ),
+                    scopes = JsonApiRelationshipToMany(
+                        data = grant.scopeIds.map { scope ->
+                            JsonApiRelationshipData(
+                                id = scope.toString(),
+                                type = "AuthorizationScope"
+                            )
+                        }
+                    )
                 ),
                 links = JsonApiLinks.ResourceObjectLink("$GRANTS_PATH/${grant.id}"),
             )

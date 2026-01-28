@@ -89,11 +89,13 @@ class ExposedGrantRepository(
                 ?: raise(RepositoryReadError.NotFoundError)
             val grantedTo = partiesById[g[AuthorizationGrantTable.grantedTo]]
                 ?: raise(RepositoryReadError.NotFoundError)
+            val scopes = findScopeIds(g[AuthorizationGrantTable.id].value).bind()
 
             g.toAuthorizationGrant(
                 grantedBy = grantedBy,
                 grantedFor = grantedFor,
-                grantedTo = grantedTo
+                grantedTo = grantedTo,
+                scopeIds = scopes
             )
         }
     }
@@ -110,11 +112,13 @@ class ExposedGrantRepository(
             .getOrElse { error("Failed to get grantedBy: $it") }
         val grantedTo = partyRepository.find(grant[AuthorizationGrantTable.grantedTo])
             .getOrElse { error("Failed to get grantedTo: $it") }
+        val scopes = findScopeIds(grantId).bind()
 
         grant.toAuthorizationGrant(
             grantedBy = grantedBy,
             grantedFor = grantedFor,
-            grantedTo = grantedTo
+            grantedTo = grantedTo,
+            scopeIds = scopes
         )
     }
 
@@ -134,13 +138,30 @@ class ExposedGrantRepository(
             val grantedFor = partyRepository.find(grant[AuthorizationGrantTable.grantedFor]).bind()
             val grantedBy = partyRepository.find(grant[AuthorizationGrantTable.grantedBy]).bind()
             val grantedTo = partyRepository.find(grant[AuthorizationGrantTable.grantedTo]).bind()
+            val scopes = findScopeIds(grant[AuthorizationGrantTable.id].value).bind()
 
             grant.toAuthorizationGrant(
                 grantedBy = grantedBy,
                 grantedFor = grantedFor,
-                grantedTo = grantedTo
+                grantedTo = grantedTo,
+                scopeIds = scopes
             )
         }
+
+    fun findScopeIds(grantId: UUID): Either<RepositoryReadError, List<UUID>> = either {
+        AuthorizationGrantTable
+            .selectAll()
+            .where { AuthorizationGrantTable.id eq grantId }
+            .singleOrNull() ?: run {
+            logger.error("Grant not found")
+            raise(RepositoryReadError.NotFoundError)
+        }
+
+        (AuthorizationGrantScopeTable innerJoin AuthorizationScopeTable)
+            .selectAll()
+            .where { AuthorizationGrantScopeTable.authorizationGrantId eq grantId }
+            .map { row -> row[AuthorizationScopeTable.id].value }
+    }
 
     override fun findScopes(grantId: UUID): Either<RepositoryReadError, List<AuthorizationScope>> = either {
         AuthorizationGrantTable
@@ -206,7 +227,8 @@ class ExposedGrantRepository(
                         it.toAuthorizationGrant(
                             grantedBy = grantedByParty,
                             grantedFor = grantedForParty,
-                            grantedTo = grantedToParty
+                            grantedTo = grantedToParty,
+                            scopeIds = scopeIds
                         )
                     }.single()
 
@@ -237,7 +259,9 @@ class ExposedGrantRepository(
             .where { AuthorizationGrantTable.id eq grantId }
             .singleOrNull() ?: raise(RepositoryReadError.NotFoundError)
 
-        findInternalGrant(grant)
+        val scopes = findScopeIds(grantId).bind()
+
+        findInternalGrant(grant, scopes)
             .mapLeft { readError ->
                 when (readError) {
                     is RepositoryReadError.NotFoundError, RepositoryReadError.UnexpectedError -> RepositoryReadError.UnexpectedError
@@ -246,7 +270,7 @@ class ExposedGrantRepository(
     }
 
     // TODO use this method in find() and findAll() as well to avoid duplicates
-    private fun findInternalGrant(grant: ResultRow): Either<RepositoryReadError, AuthorizationGrant> =
+    private fun findInternalGrant(grant: ResultRow, scopeIds: List<UUID>): Either<RepositoryReadError, AuthorizationGrant> =
         either {
             val grantedByDbId = grant[AuthorizationGrantTable.grantedBy]
             val grantedForDbId = grant[AuthorizationGrantTable.grantedFor]
@@ -273,7 +297,8 @@ class ExposedGrantRepository(
             grant.toAuthorizationGrant(
                 grantedBy = grantedByParty,
                 grantedFor = grantedForParty,
-                grantedTo = grantedToParty
+                grantedTo = grantedToParty,
+                scopeIds = scopeIds
             )
         }
 }
@@ -331,7 +356,8 @@ object AuthorizationScopeTable : UUIDTable(name = "auth.authorization_scope") {
 fun ResultRow.toAuthorizationGrant(
     grantedBy: AuthorizationPartyRecord,
     grantedFor: AuthorizationPartyRecord,
-    grantedTo: AuthorizationPartyRecord
+    grantedTo: AuthorizationPartyRecord,
+    scopeIds: List<UUID>
 ) = AuthorizationGrant(
     id = this[AuthorizationGrantTable.id].value,
     grantStatus = this[AuthorizationGrantTable.grantStatus],
@@ -343,6 +369,7 @@ fun ResultRow.toAuthorizationGrant(
     validTo = this[AuthorizationGrantTable.validTo],
     sourceType = this[AuthorizationGrantTable.sourceType],
     sourceId = this[AuthorizationGrantTable.sourceId],
+    scopeIds = scopeIds
 )
 
 fun AuthorizationPartyRecord.toAuthorizationParty() = AuthorizationParty(resourceId = this.resourceId, type = this.type)

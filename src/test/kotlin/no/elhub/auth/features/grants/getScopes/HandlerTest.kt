@@ -28,6 +28,8 @@ class HandlerTest : FunSpec({
     val grantedBy = AuthorizationParty(resourceId = "issuer-1", type = PartyType.Organization)
     val grantedTo = AuthorizationParty(resourceId = "org-entity-1", type = PartyType.OrganizationEntity)
     val grantId = UUID.randomUUID()
+    val scopeIds = listOf(UUID.randomUUID(), UUID.randomUUID())
+
     val grant =
         AuthorizationGrant(
             id = grantId,
@@ -40,6 +42,7 @@ class HandlerTest : FunSpec({
             validTo = currentTimeWithTimeZone().plusYears(1),
             sourceType = SourceType.Document,
             sourceId = UUID.randomUUID(),
+            scopeIds = scopeIds
         )
     val scopes =
         listOf(

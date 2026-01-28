@@ -113,6 +113,15 @@ class AuthorizationGrantRouteTest : FunSpec({
                                 self shouldBe "$REQUESTS_PATH/4f71d596-99e4-415e-946d-7252c1a40c5b"
                             }
                         }
+                        scopes.apply {
+                            data.apply {
+                                size shouldBe 1
+                                this[0].apply {
+                                    id shouldBe "e705af95-571d-47ea-9b1b-742aa598c85c"
+                                    type shouldBe "AuthorizationScope"
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -213,6 +222,15 @@ class AuthorizationGrantRouteTest : FunSpec({
                             }
                             links.shouldNotBeNull().apply {
                                 self shouldBe "$REQUESTS_PATH/4f71d596-99e4-415e-946d-7252c1a40c5b"
+                            }
+                        }
+                        scopes.apply {
+                            data.apply {
+                                size shouldBe 1
+                                this[0].apply {
+                                    id shouldBe "e705af95-571d-47ea-9b1b-742aa598c85c"
+                                    type shouldBe "AuthorizationScope"
+                                }
                             }
                         }
                     }
@@ -505,6 +523,15 @@ class AuthorizationGrantRouteTest : FunSpec({
                                 }
                                 links.shouldNotBeNull().apply {
                                     self shouldBe "$REQUESTS_PATH/4f71d596-99e4-415e-946d-7252c1a40c5b"
+                                }
+                            }
+                            scopes.apply {
+                                data.apply {
+                                    size shouldBe 1
+                                    this[0].apply {
+                                        id shouldBe "e705af95-571d-47ea-9b1b-742aa598c85c"
+                                        type shouldBe "AuthorizationScope"
+                                    }
                                 }
                             }
                         }

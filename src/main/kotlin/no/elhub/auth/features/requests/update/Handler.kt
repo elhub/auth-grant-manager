@@ -77,7 +77,8 @@ class Handler(
                 grantedBy = acceptedBy,
                 grantedTo = acceptedRequest.requestedBy,
                 sourceType = AuthorizationGrant.SourceType.Request,
-                sourceId = acceptedRequest.id
+                sourceId = acceptedRequest.id,
+                scopeIds = scopeIds
             )
 
             val createdGrant = grantRepository.insert(grantToCreate, scopeIds)

@@ -24,6 +24,7 @@ import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import no.elhub.auth.features.common.AuthPersonsTestContainer
 import no.elhub.auth.features.common.AuthPersonsTestContainerExtension
+import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.common.PdpTestContainerExtension
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.RunPostgresScriptExtension
@@ -32,6 +33,7 @@ import no.elhub.auth.features.common.commonModule
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
 import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
+import no.elhub.auth.features.grants.AuthorizationScope
 import no.elhub.auth.features.grants.common.CreateGrantProperties
 import no.elhub.auth.features.requests.common.AuthorizationRequestPropertyTable
 import no.elhub.auth.features.requests.common.AuthorizationRequestTable
@@ -1059,6 +1061,13 @@ private class TestRequestBusinessHandler : RequestBusinessHandler {
                     requestedBy = meta.requestedBy,
                     requestedTo = meta.requestedTo,
                     validTo = defaultRequestValidTo().toTimeZoneOffsetDateTimeAtStartOfDay(),
+                    scopes = listOf(
+                        CreateScopeData(
+                            authorizedResourceType = AuthorizationScope.AuthorizationResource.MeteringPoint,
+                            authorizedResourceId = meta.requestedForMeteringPointId,
+                            permissionType = AuthorizationScope.PermissionType.ChangeOfEnergySupplierForPerson
+                        )
+                    ),
                     meta = TestRequestMeta(
                         requestedFromName = meta.requestedFromName,
                         requestedForMeteringPointId = meta.requestedForMeteringPointId,

@@ -5,6 +5,7 @@ import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
+import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.common.PostgresTestContainer
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.RunPostgresScriptExtension
@@ -12,6 +13,7 @@ import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.AuthorizationPartyTable
 import no.elhub.auth.features.common.party.ExposedPartyRepository
 import no.elhub.auth.features.common.party.PartyType
+import no.elhub.auth.features.grants.AuthorizationScope
 import no.elhub.auth.features.grants.common.AuthorizationScopeTable
 import no.elhub.auth.features.requests.AuthorizationRequest
 import org.jetbrains.exposed.sql.Database
@@ -32,6 +34,14 @@ class ExposedRequestRepositoryTest : FunSpec({
     val partyRepo = ExposedPartyRepository()
     val requestPropertiesRepo = ExposedRequestPropertiesRepository()
     val requestRepo = ExposedRequestRepository(partyRepo, requestPropertiesRepo)
+
+    val scopes = listOf(
+        CreateScopeData(
+            authorizedResourceType = AuthorizationScope.AuthorizationResource.MeteringPoint,
+            authorizedResourceId = "1234",
+            permissionType = AuthorizationScope.PermissionType.ChangeOfEnergySupplierForPerson
+        )
+    )
 
     beforeSpec {
         Database.connect(
@@ -63,7 +73,7 @@ class ExposedRequestRepositoryTest : FunSpec({
                     requestedTo = targetParty2,
                     validTo = OffsetDateTime.now(ZoneOffset.UTC).plusDays(30),
                 )
-                requestRepo.insert(request)
+                requestRepo.insert(request, scopes)
             }
 
             repeat(numOtherRequests) {
@@ -74,17 +84,17 @@ class ExposedRequestRepositoryTest : FunSpec({
                     requestedTo = otherParty,
                     validTo = OffsetDateTime.now(ZoneOffset.UTC).plusDays(30),
                 )
-                requestRepo.insert(request)
+                requestRepo.insert(request, scopes)
             }
 
             val requestsOfTargetParty1 = requestRepo.findAllBy(targetParty1)
-                .getOrElse { error ->
+                .getOrElse { _ ->
                     fail("findAllBy failed for target party 1")
                 }
             requestsOfTargetParty1.size shouldBe numTargetRequests
 
-            val requestsOfTargetParty2 = requestRepo.findAllBy(targetParty2)
-                .getOrElse { error ->
+            requestRepo.findAllBy(targetParty2)
+                .getOrElse { _ ->
                     fail("findAllBy failed for target party 2")
                 }
             requestsOfTargetParty1.size shouldBe numTargetRequests
@@ -97,9 +107,9 @@ class ExposedRequestRepositoryTest : FunSpec({
         }
         val targetId = requests[0].id
         val targetRequest = transaction {
-            requests.forEach { requestRepo.insert(it) }
+            requests.forEach { requestRepo.insert(it, scopes) }
             requestRepo.find(targetId)
-        }.getOrElse { error ->
+        }.getOrElse { _ ->
             fail("find failed")
         }
 
@@ -110,7 +120,7 @@ class ExposedRequestRepositoryTest : FunSpec({
         val request = generateRequestWithoutProperties()
         val acceptedRequest = transaction {
             val savedRequest = requestRepo
-                .insert(request)
+                .insert(request, scopes)
                 .getOrElse {
                     fail("insert failed")
                 }
@@ -148,7 +158,7 @@ class ExposedRequestRepositoryTest : FunSpec({
         val request = generateRequestWithoutProperties()
         val rejectedRequest = transaction {
             val savedRequest = requestRepo
-                .insert(request)
+                .insert(request, scopes)
                 .getOrElse {
                     fail("insert failed")
                 }
@@ -166,7 +176,7 @@ class ExposedRequestRepositoryTest : FunSpec({
 
         val rejectedRequest = transaction {
             val savedRequest = requestRepo
-                .insert(request)
+                .insert(request, scopes)
                 .getOrElse {
                     fail("insert failed")
                 }
@@ -192,7 +202,7 @@ class ExposedRequestRepositoryTest : FunSpec({
         val requestToConfirm = generateRequestWithoutProperties()
 
         transaction {
-            val insertedRequest = requestRepo.insert(requestToConfirm)
+            val insertedRequest = requestRepo.insert(requestToConfirm, scopes)
                 .getOrElse { error ->
                     fail("Inserted failed :$error")
                 }

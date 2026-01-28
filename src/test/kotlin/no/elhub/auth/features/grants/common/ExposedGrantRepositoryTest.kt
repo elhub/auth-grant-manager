@@ -21,6 +21,7 @@ class ExposedGrantRepositoryTest : FunSpec({
     extensions(PostgresTestContainerExtension())
     val partyRepo = ExposedPartyRepository()
     val grantRepo = ExposedGrantRepository(partyRepo)
+    val scopeIds = listOf(UUID.randomUUID(), UUID.randomUUID())
 
     beforeSpec {
         Database.connect(
@@ -53,6 +54,7 @@ class ExposedGrantRepositoryTest : FunSpec({
                 grantedTo = AuthorizationParty(type = PartyType.Person, resourceId = "45567"),
                 sourceType = AuthorizationGrant.SourceType.Request,
                 sourceId = UUID.randomUUID(),
+                scopeIds = scopeIds
             )
 
             grantRepo.insert(grant, emptyList()).getOrElse { error((it)) }
@@ -71,6 +73,7 @@ class ExposedGrantRepositoryTest : FunSpec({
                 grantedTo = AuthorizationParty(type = PartyType.Person, resourceId = "45567"),
                 sourceType = AuthorizationGrant.SourceType.Request,
                 sourceId = UUID.randomUUID(),
+                scopeIds = scopeIds
             )
 
             grantRepo.insert(grant, emptyList()).getOrElse { error((it)) }
