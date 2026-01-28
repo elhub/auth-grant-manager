@@ -9,6 +9,7 @@ import io.mockk.verify
 import kotlinx.datetime.LocalDate
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
+import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
 import no.elhub.auth.features.grants.common.GrantRepository
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.common.RequestRepository
@@ -27,7 +28,7 @@ class HandlerTest : FunSpec({
                 requestedFrom = requestedFrom,
                 requestedBy = requestedBy,
                 requestedTo = requestedTo,
-                validTo = LocalDate(2025, 1, 1)
+                validTo = LocalDate(2025, 1, 1).toTimeZoneOffsetDateTimeAtStartOfDay()
             ).copy(
                 id = requestId,
                 status = AuthorizationRequest.Status.Accepted
@@ -48,10 +49,10 @@ class HandlerTest : FunSpec({
             )
         )
 
-        result.shouldBeLeft(UpdateError.IllegalStateError)
+        result.shouldBeLeft(UpdateError.AlreadyProcessed)
         verify(exactly = 1) { requestRepository.find(requestId) }
         verify(exactly = 0) { requestRepository.acceptRequest(any(), any()) }
-        verify(exactly = 0) { requestRepository.rejectAccept(any()) }
+        verify(exactly = 0) { requestRepository.rejectRequest(any()) }
         verify(exactly = 0) { requestRepository.findScopeIds(any()) }
         verify(exactly = 0) { grantRepository.insert(any(), any()) }
     }

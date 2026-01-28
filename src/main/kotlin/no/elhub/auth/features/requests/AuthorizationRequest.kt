@@ -1,6 +1,5 @@
 package no.elhub.auth.features.requests
 
-import kotlinx.datetime.LocalDate
 import no.elhub.auth.features.common.currentTimeWithTimeZone
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.requests.common.AuthorizationRequestProperty
@@ -18,7 +17,7 @@ data class AuthorizationRequest(
     var grantId: UUID? = null,
     val createdAt: OffsetDateTime,
     val updatedAt: OffsetDateTime,
-    val validTo: LocalDate,
+    val validTo: OffsetDateTime,
     val properties: List<AuthorizationRequestProperty>,
 ) {
     companion object {
@@ -27,7 +26,7 @@ data class AuthorizationRequest(
             requestedBy: AuthorizationParty,
             requestedFrom: AuthorizationParty,
             requestedTo: AuthorizationParty,
-            validTo: LocalDate,
+            validTo: OffsetDateTime,
         ): AuthorizationRequest =
             AuthorizationRequest(
                 id = UUID.randomUUID(),

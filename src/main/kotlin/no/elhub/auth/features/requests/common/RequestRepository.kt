@@ -2,8 +2,6 @@ package no.elhub.auth.features.requests.common
 
 import arrow.core.Either
 import arrow.core.raise.either
-import kotlinx.datetime.toJavaLocalDate
-import kotlinx.datetime.toKotlinLocalDate
 import no.elhub.auth.features.common.PGEnum
 import no.elhub.auth.features.common.RepositoryError
 import no.elhub.auth.features.common.RepositoryReadError
@@ -20,7 +18,6 @@ import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.insertReturning
-import org.jetbrains.exposed.sql.javatime.date
 import org.jetbrains.exposed.sql.javatime.timestamp
 import org.jetbrains.exposed.sql.javatime.timestampWithTimeZone
 import org.jetbrains.exposed.sql.or
@@ -28,6 +25,7 @@ import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.update
 import java.time.OffsetDateTime
 import java.time.ZoneId
+import java.time.ZoneOffset
 import java.util.UUID
 
 interface RequestRepository {
@@ -39,7 +37,7 @@ interface RequestRepository {
         approvedBy: AuthorizationParty
     ): Either<RepositoryError, AuthorizationRequest>
 
-    fun rejectAccept(requestId: UUID): Either<RepositoryError, AuthorizationRequest>
+    fun rejectRequest(requestId: UUID): Either<RepositoryError, AuthorizationRequest>
     fun findScopeIds(requestId: UUID): Either<RepositoryReadError, List<UUID>>
 }
 
@@ -102,11 +100,11 @@ class ExposedRequestRepository(
                     .insertReturning {
                         it[id] = request.id
                         it[requestType] = request.type
-                        it[requestStatus] = request.status
+                        it[requestStatus] = request.status.toDataBaseRequestStatus()
                         it[requestedBy] = requestedByParty.id
                         it[requestedFrom] = requestedFromParty.id
                         it[requestedTo] = requestedToParty.id
-                        it[validTo] = request.validTo.toJavaLocalDate()
+                        it[validTo] = request.validTo
                         it[createdAt] = request.createdAt
                     }
                     .map {
@@ -128,7 +126,7 @@ class ExposedRequestRepository(
             AuthorizationRequestTable.update(
                 where = { AuthorizationRequestTable.id eq requestId }
             ) {
-                it[requestStatus] = AuthorizationRequest.Status.Accepted
+                it[requestStatus] = DatabaseRequestStatus.Accepted
                 it[updatedAt] = OffsetDateTime.now(ZoneId.of("Europe/Oslo"))
                 it[this.approvedBy] = approvedByRecord.id
             }
@@ -136,11 +134,11 @@ class ExposedRequestRepository(
         updateAndFetch(requestId, rowsUpdated).bind()
     }
 
-    override fun rejectAccept(requestId: UUID): Either<RepositoryError, AuthorizationRequest> = either {
+    override fun rejectRequest(requestId: UUID): Either<RepositoryError, AuthorizationRequest> = either {
         val rowsUpdated = AuthorizationRequestTable.update(
             where = { AuthorizationRequestTable.id eq requestId }
         ) {
-            it[requestStatus] = AuthorizationRequest.Status.Rejected
+            it[requestStatus] = DatabaseRequestStatus.Rejected
             it[updatedAt] = OffsetDateTime.now(ZoneId.of("Europe/Oslo"))
         }
 
@@ -240,7 +238,7 @@ object AuthorizationRequestTable : UUIDTable("auth.authorization_request") {
         customEnumeration(
             name = "request_status",
             sql = "auth.authorization_request_status",
-            fromDb = { value -> AuthorizationRequest.Status.valueOf(value as String) },
+            fromDb = { value -> DatabaseRequestStatus.valueOf(value as String) },
             toDb = { PGEnum("authorization_request_status", it) },
         )
     val requestedBy = uuid("requested_by").references(AuthorizationPartyTable.id)
@@ -249,8 +247,24 @@ object AuthorizationRequestTable : UUIDTable("auth.authorization_request") {
     val approvedBy = uuid("approved_by").references(AuthorizationPartyTable.id).nullable()
     val createdAt = timestampWithTimeZone("created_at").default(OffsetDateTime.now(ZoneId.of("Europe/Oslo")))
     val updatedAt = timestampWithTimeZone("updated_at").default(OffsetDateTime.now(ZoneId.of("Europe/Oslo")))
-    val validTo = date("valid_to")
+    val validTo = timestampWithTimeZone("valid_to")
 }
+
+enum class DatabaseRequestStatus {
+    Pending,
+    Accepted,
+    Rejected
+}
+
+fun AuthorizationRequest.Status.toDataBaseRequestStatus(): DatabaseRequestStatus {
+    return when (this) {
+        AuthorizationRequest.Status.Accepted -> DatabaseRequestStatus.Accepted
+        AuthorizationRequest.Status.Expired -> DatabaseRequestStatus.Pending
+        AuthorizationRequest.Status.Pending -> DatabaseRequestStatus.Pending
+        AuthorizationRequest.Status.Rejected -> DatabaseRequestStatus.Rejected
+    }
+}
+
 
 fun ResultRow.toAuthorizationRequest(
     requestedBy: AuthorizationPartyRecord,
@@ -258,16 +272,27 @@ fun ResultRow.toAuthorizationRequest(
     requestedTo: AuthorizationPartyRecord,
     properties: List<AuthorizationRequestProperty>,
     approvedBy: AuthorizationPartyRecord? = null
-) = AuthorizationRequest(
-    id = this[AuthorizationRequestTable.id].value,
-    type = this[AuthorizationRequestTable.requestType],
-    status = this[AuthorizationRequestTable.requestStatus],
-    requestedBy = AuthorizationParty(resourceId = requestedBy.resourceId, type = requestedBy.type),
-    requestedFrom = AuthorizationParty(resourceId = requestedFrom.resourceId, type = requestedFrom.type),
-    requestedTo = AuthorizationParty(resourceId = requestedTo.resourceId, type = requestedTo.type),
-    approvedBy = approvedBy?.let { AuthorizationParty(resourceId = it.resourceId, type = it.type) },
-    createdAt = this[AuthorizationRequestTable.createdAt],
-    updatedAt = this[AuthorizationRequestTable.updatedAt],
-    validTo = this[AuthorizationRequestTable.validTo].toKotlinLocalDate(),
-    properties = properties
-)
+): AuthorizationRequest {
+    val dbStatus = this[AuthorizationRequestTable.requestStatus]
+    val validTo = this[AuthorizationRequestTable.validTo]
+
+    val status : AuthorizationRequest.Status = when (dbStatus) {
+        DatabaseRequestStatus.Accepted -> AuthorizationRequest.Status.Accepted
+        DatabaseRequestStatus.Rejected -> AuthorizationRequest.Status.Rejected
+        DatabaseRequestStatus.Pending if validTo <= OffsetDateTime.now(ZoneOffset.UTC) -> AuthorizationRequest.Status.Expired
+        else -> AuthorizationRequest.Status.Pending
+    }
+    return AuthorizationRequest(
+        id = this[AuthorizationRequestTable.id].value,
+        type = this[AuthorizationRequestTable.requestType],
+        status = status,
+        requestedBy = AuthorizationParty(resourceId = requestedBy.resourceId, type = requestedBy.type),
+        requestedFrom = AuthorizationParty(resourceId = requestedFrom.resourceId, type = requestedFrom.type),
+        requestedTo = AuthorizationParty(resourceId = requestedTo.resourceId, type = requestedTo.type),
+        approvedBy = approvedBy?.let { AuthorizationParty(resourceId = it.resourceId, type = it.type) },
+        createdAt = this[AuthorizationRequestTable.createdAt],
+        updatedAt = this[AuthorizationRequestTable.updatedAt],
+        validTo = validTo,
+        properties = properties
+    )
+}

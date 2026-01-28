@@ -44,7 +44,7 @@ fun ChangeOfSupplierBusinessCommand.toRequestCommand(): RequestCommand =
         requestedBy = this.requestedBy,
         requestedFrom = this.requestedFrom,
         requestedTo = this.requestedTo,
-        validTo = this.validTo,
+        validTo = this.validTo.toTimeZoneOffsetDateTimeAtStartOfDay(),
         meta = this.meta,
     )
 

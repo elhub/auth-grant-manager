@@ -11,8 +11,8 @@ sealed class UpdateError {
     data object ScopeReadError : UpdateError()
     data object GrantCreationError : UpdateError()
     data object IllegalTransitionError : UpdateError()
-    data object IllegalStateError : UpdateError()
-    data object ExpiredError : UpdateError()
+    data object AlreadyProcessed : UpdateError()
+    data object Expired : UpdateError()
 }
 
 fun UpdateError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> =
@@ -34,14 +34,14 @@ fun UpdateError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollectio
             detail = "Only 'Accepted' and 'Rejected' statuses are allowed."
         )
 
-        UpdateError.IllegalStateError -> buildApiErrorResponse(
+        UpdateError.AlreadyProcessed -> buildApiErrorResponse(
             status = HttpStatusCode.BadRequest,
             code = "invalid_status_state",
             title = "Invalid status state",
             detail = "Request must be in 'Pending' status to update."
         )
 
-        UpdateError.ExpiredError -> buildApiErrorResponse(
+        UpdateError.Expired -> buildApiErrorResponse(
             status = HttpStatusCode.BadRequest,
             code = "expired_status_transition",
             title = "Request has expired",

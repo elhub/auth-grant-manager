@@ -19,6 +19,7 @@ import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
 import no.elhub.auth.features.common.party.PartyService
 import no.elhub.auth.features.common.party.PartyType
+import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.common.AuthorizationRequestProperty
 import no.elhub.auth.features.requests.common.ProxyRequestBusinessHandler
@@ -68,7 +69,7 @@ class HandlerTest : FunSpec({
             requestedFrom = requestedFromIdentifier,
             requestedBy = requestedByIdentifier,
             requestedTo = requestedToIdentifier,
-            validTo = LocalDate(2025, 1, 1),
+            validTo = LocalDate(2025, 1, 1).toTimeZoneOffsetDateTimeAtStartOfDay(),
             meta = commandMeta,
         )
 

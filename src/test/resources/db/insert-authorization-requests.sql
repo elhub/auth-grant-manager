@@ -285,7 +285,7 @@ VALUES (
   null,
   '2025-01-01T10:00:00Z',
   '2025-01-01T10:00:00Z',
-  '2025-04-04'
+  '2025-04-04T10:00:00Z'
 );
 INSERT INTO auth.authorization_request_scope(
   authorization_request_id,

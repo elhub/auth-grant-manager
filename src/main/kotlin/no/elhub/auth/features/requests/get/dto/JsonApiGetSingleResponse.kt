@@ -65,7 +65,7 @@ fun AuthorizationRequest.toGetSingleResponse() =
             attributes = GetRequestSingleResponseAttributes(
                 status = this.status.name,
                 requestType = this.type.name,
-                validTo = this.validTo.toTimeZoneOffsetDateTimeAtStartOfDay().toString(),
+                validTo = this.validTo.toString(),
                 updatedAt = this.updatedAt.toTimeZoneOffsetString(),
                 createdAt = this.createdAt.toTimeZoneOffsetString(),
 

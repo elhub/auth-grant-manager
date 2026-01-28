@@ -5,10 +5,6 @@ import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
-import kotlinx.datetime.DatePeriod
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.plus
-import kotlinx.datetime.toLocalDateTime
 import no.elhub.auth.features.common.PostgresTestContainer
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.RunPostgresScriptExtension
@@ -21,9 +17,10 @@ import no.elhub.auth.features.requests.AuthorizationRequest
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import java.util.UUID
 import kotlin.test.fail
-import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
 class ExposedRequestRepositoryTest : FunSpec({
@@ -64,7 +61,7 @@ class ExposedRequestRepositoryTest : FunSpec({
                     requestedBy = targetParty1,
                     requestedFrom = targetParty2,
                     requestedTo = targetParty2,
-                    validTo = Clock.System.now().toLocalDateTime(TimeZone.UTC).date.plus(DatePeriod(days = 30)),
+                    validTo = OffsetDateTime.now(ZoneOffset.UTC).plusDays(30),
                 )
                 requestRepo.insert(request)
             }
@@ -75,7 +72,7 @@ class ExposedRequestRepositoryTest : FunSpec({
                     requestedBy = otherParty,
                     requestedFrom = otherParty,
                     requestedTo = otherParty,
-                    validTo = Clock.System.now().toLocalDateTime(TimeZone.UTC).date.plus(DatePeriod(days = 30)),
+                    validTo = OffsetDateTime.now(ZoneOffset.UTC).plusDays(30),
                 )
                 requestRepo.insert(request)
             }
@@ -155,7 +152,7 @@ class ExposedRequestRepositoryTest : FunSpec({
                 .getOrElse {
                     fail("insert failed")
                 }
-            requestRepo.rejectAccept(savedRequest.id)
+            requestRepo.rejectRequest(savedRequest.id)
                 .getOrElse {
                     fail("reject failed")
                 }
@@ -227,5 +224,5 @@ private fun generateRequestWithoutProperties(): AuthorizationRequest = Authoriza
     requestedTo = AuthorizationParty(type = PartyType.Person, resourceId = "45567"),
     // validTo is set by the value stream team in production,
     // but we set it here for testing purposes
-    validTo = Clock.System.now().toLocalDateTime(TimeZone.UTC).date.plus(DatePeriod(days = 30)),
+    validTo = OffsetDateTime.now(ZoneOffset.UTC).plusDays(30),
 )

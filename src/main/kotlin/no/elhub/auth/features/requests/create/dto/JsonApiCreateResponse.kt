@@ -62,7 +62,7 @@ fun AuthorizationRequest.toCreateResponse() =
             CreateRequestResponseAttributes(
                 status = this.status.name,
                 requestType = this.type.name,
-                validTo = this.validTo.toTimeZoneOffsetDateTimeAtStartOfDay().toString(),
+                validTo = this.validTo.toString(),
                 createdAt = this.createdAt.toTimeZoneOffsetString(),
                 updatedAt = this.updatedAt.toTimeZoneOffsetString(),
             ),
