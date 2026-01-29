@@ -63,7 +63,7 @@ class Handler(
         val result = transaction {
             val savedRequest =
                 requestRepo
-                    .insert(requestToCreate)
+                    .insert(requestToCreate, businessCommand.scopes)
                     .mapLeft { CreateError.PersistenceError }
                     .bind()
 

@@ -82,7 +82,7 @@ class Handler(
                     }
                 }.bind()
 
-            val scopeIds = documentRepository.findScopeIds(confirmedDocument.id)
+            val scopeIds = documentRepository.findScopeIds(command.documentId)
                 .mapLeft { error ->
                     when (error) {
                         is RepositoryReadError.NotFoundError -> ConfirmError.DocumentNotFoundError
@@ -96,7 +96,8 @@ class Handler(
                     grantedBy = expectedSignatoryParty,
                     grantedTo = confirmedDocument.requestedBy,
                     sourceType = AuthorizationGrant.SourceType.Document,
-                    sourceId = confirmedDocument.id
+                    sourceId = confirmedDocument.id,
+                    scopeIds = scopeIds
                 )
 
             grantRepository.insert(grantToCreate, scopeIds)

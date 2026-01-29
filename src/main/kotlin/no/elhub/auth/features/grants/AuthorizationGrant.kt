@@ -15,7 +15,8 @@ data class AuthorizationGrant(
     val validFrom: OffsetDateTime,
     val validTo: OffsetDateTime,
     val sourceType: SourceType,
-    val sourceId: UUID
+    val sourceId: UUID,
+    val scopeIds: List<UUID>,
 ) {
     companion object {
         fun create(
@@ -23,7 +24,8 @@ data class AuthorizationGrant(
             grantedBy: AuthorizationParty,
             grantedTo: AuthorizationParty,
             sourceType: SourceType,
-            sourceId: UUID
+            sourceId: UUID,
+            scopeIds: List<UUID>,
         ): AuthorizationGrant =
             AuthorizationGrant(
                 id = UUID.randomUUID(),
@@ -36,6 +38,7 @@ data class AuthorizationGrant(
                 validTo = currentTimeWithTimeZone().plusYears(1), // TODO this will be handled by the value stream
                 sourceId = sourceId,
                 sourceType = sourceType,
+                scopeIds = scopeIds
             )
     }
 
