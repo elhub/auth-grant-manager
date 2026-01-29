@@ -35,7 +35,7 @@ data class GetRequestCollectionResponseRelationships(
     val requestedFrom: JsonApiRelationshipToOne,
     val requestedTo: JsonApiRelationshipToOne,
     val approvedBy: JsonApiRelationshipToOne? = null,
-    val grant: JsonApiRelationshipToOne? = null
+    val authorizationGrant: JsonApiRelationshipToOne? = null
 ) : JsonApiRelationships
 
 @Serializable
@@ -74,7 +74,7 @@ fun List<AuthorizationRequest>.toGetCollectionResponse() =
                     requestedFrom = request.requestedFrom.toJsonApiRelationship(),
                     requestedTo = request.requestedTo.toJsonApiRelationship(),
                     approvedBy = request.approvedBy?.toJsonApiRelationship(),
-                    grant = request.grantId?.let { grantId ->
+                    authorizationGrant = request.grantId?.let { grantId ->
                         JsonApiRelationshipToOne(
                             data = JsonApiRelationshipData(
                                 id = grantId.toString(),
