@@ -22,14 +22,12 @@ fun CreateError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollectio
     when (this) {
         is CreateError.BusinessValidationError -> buildApiErrorResponse(
             status = HttpStatusCode.BadRequest,
-            code = "business_validation_error",
             title = "Business validation error",
             detail = this.message
         )
 
         is CreateError.AuthorizationError -> buildApiErrorResponse(
             status = HttpStatusCode.Forbidden,
-            code = "not_authorized",
             title = "Party not authorized",
             detail = "RequestedBy must match the authorized party",
         )
@@ -41,7 +39,6 @@ fun CreateError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollectio
         CreateError.RequestedFromPartyError,
         CreateError.RequestedToPartyError -> buildApiErrorResponse(
             status = HttpStatusCode.InternalServerError,
-            code = "internal_server_error",
             title = "Internal server error",
             detail = "An internal error occurred."
         )

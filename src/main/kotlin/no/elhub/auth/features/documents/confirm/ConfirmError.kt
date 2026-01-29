@@ -24,7 +24,6 @@ fun ConfirmError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollecti
     when (this) {
         ConfirmError.DocumentNotFoundError -> buildApiErrorResponse(
             status = HttpStatusCode.NotFound,
-            code = "not_found",
             title = "Not found",
             detail = "Document could not be found"
         )
@@ -38,28 +37,24 @@ fun ConfirmError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollecti
         ConfirmError.GrantCreationError,
         ConfirmError.RequestedByResolutionError, -> buildApiErrorResponse(
             status = HttpStatusCode.InternalServerError,
-            code = "internal_server_error",
             title = "Internal Server error",
             detail = "An internal error occurred."
         )
 
         ConfirmError.InvalidRequestedByError -> buildApiErrorResponse(
             status = HttpStatusCode.Forbidden,
-            code = "not_authorized",
             title = "Party not authorized",
             detail = "RequestedBy must match the authorized party",
         )
 
         ConfirmError.IllegalStateError -> buildApiErrorResponse(
             status = HttpStatusCode.NotFound,
-            code = "invalid_status_state",
             title = "Invalid status state",
             detail = "Document must be in 'Pending' status to confirm."
         )
 
         ConfirmError.ExpiredError -> buildApiErrorResponse(
             status = HttpStatusCode.BadRequest,
-            code = "expired_status_transition",
             title = "Document has expired",
             detail = "Document validity period has passed"
         )

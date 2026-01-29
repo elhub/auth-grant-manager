@@ -6,36 +6,31 @@ import io.ktor.http.HttpStatusCode
 
 class AuthErrorJsonApiResponseTest : FunSpec({
 
-    data class Expectation(val status: HttpStatusCode, val code: String, val title: String, val detail: String)
+    data class Expectation(val status: HttpStatusCode, val title: String, val detail: String)
 
     listOf(
         AuthError.MissingAuthorizationHeader to Expectation(
             status = HttpStatusCode.Unauthorized,
-            code = "missing_authorization",
             title = "Missing authorization",
             detail = "Bearer token is required in the Authorization header."
         ),
         AuthError.InvalidAuthorizationHeader to Expectation(
             status = HttpStatusCode.Unauthorized,
-            code = "invalid_authorization_header",
             title = "Invalid authorization header",
             detail = "Authorization header must use the Bearer scheme."
         ),
         AuthError.MissingSenderGlnHeader to Expectation(
             status = HttpStatusCode.BadRequest,
-            code = "missing_sender_gln",
             title = "Missing senderGLN header",
             detail = "SenderGLN header is required for authorization."
         ),
         AuthError.InvalidToken to Expectation(
             status = HttpStatusCode.Unauthorized,
-            code = "invalid_token",
             title = "Invalid token",
             detail = "Token could not be verified."
         ),
         AuthError.ActingFunctionNotSupported to Expectation(
             status = HttpStatusCode.Forbidden,
-            code = "unsupported_party_type",
             title = "Unsupported party type",
             detail = "The party type you are authorized as is not supported for this endpoint."
         )
@@ -49,7 +44,6 @@ class AuthErrorJsonApiResponseTest : FunSpec({
                 this.status shouldBe expected.status.value.toString()
                 title shouldBe expected.title
                 detail shouldBe expected.detail
-                code shouldBe expected.code
             }
         }
     }
@@ -70,7 +64,6 @@ class AuthErrorJsonApiResponseTest : FunSpec({
                 this.status shouldBe HttpStatusCode.InternalServerError.value.toString()
                 title shouldBe "Internal server error"
                 detail shouldBe "An internal error occurred."
-                code shouldBe "internal_server_error"
             }
         }
     }

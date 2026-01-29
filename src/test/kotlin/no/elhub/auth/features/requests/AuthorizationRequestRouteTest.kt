@@ -327,7 +327,6 @@ class AuthorizationRequestRouteTest : FunSpec({
                     size shouldBe 1
                     this[0].apply {
                         status shouldBe "404"
-                        code shouldBe "not_found"
                         title shouldBe "Not found"
                         detail shouldBe "The requested resource could not be found"
                     }
@@ -345,7 +344,6 @@ class AuthorizationRequestRouteTest : FunSpec({
                     size shouldBe 1
                     this[0].apply {
                         status shouldBe "403"
-                        code shouldBe "not_authorized"
                         title shouldBe "Party not authorized"
                         detail shouldBe "The party is not allowed to access this resource"
                     }
@@ -362,7 +360,6 @@ class AuthorizationRequestRouteTest : FunSpec({
                     size shouldBe 1
                     this[0].apply {
                         status shouldBe "403"
-                        code shouldBe "not_authorized"
                         title shouldBe "Party not authorized"
                         detail shouldBe "The party is not allowed to access this resource"
                     }
@@ -522,7 +519,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                     size shouldBe 1
                     this[0].apply {
                         status shouldBe "400"
-                        code shouldBe "missing_requested_from_name"
+
                         title shouldBe "Validation error"
                         detail shouldBe "Requested from name is missing"
                     }
@@ -575,7 +572,6 @@ class AuthorizationRequestRouteTest : FunSpec({
                     size shouldBe 1
                     this[0].apply {
                         status shouldBe "403"
-                        code shouldBe "unsupported_party_type"
                         title shouldBe "Unsupported party type"
                         detail shouldBe "The party type you are authorized as is not supported for this endpoint."
                     }
@@ -611,7 +607,6 @@ class AuthorizationRequestRouteTest : FunSpec({
                     size shouldBe 1
                     this[0].apply {
                         status shouldBe "400"
-                        code shouldBe "expired_status_transition"
                         title shouldBe "Request has expired"
                         detail shouldBe "Request validity period has passed"
                     }
@@ -872,7 +867,6 @@ class AuthorizationRequestRouteTest : FunSpec({
                     size shouldBe 1
                     this[0].apply {
                         status shouldBe "400"
-                        code shouldBe "invalid_status_transition"
                         title shouldBe "Invalid status transition"
                         detail shouldBe "Only 'Accepted' and 'Rejected' statuses are allowed."
                     }
