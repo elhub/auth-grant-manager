@@ -29,7 +29,6 @@ fun Application.configureErrorHandling() {
                     logger.error("Unhandled exception", cause)
                     val (status, body) = buildApiErrorResponse(
                         status = HttpStatusCode.InternalServerError,
-                        code = "internal_error",
                         title = "Internal server error",
                         detail = "An unexpected error occurred"
                     )

@@ -17,42 +17,36 @@ fun ConsumeError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollecti
     when (this) {
         ConsumeError.GrantNotFound -> buildApiErrorResponse(
             status = HttpStatusCode.NotFound,
-            code = "not_found",
             title = "Not found",
             detail = "Grant could not be found"
         )
 
         ConsumeError.PersistenceError -> buildApiErrorResponse(
             status = HttpStatusCode.InternalServerError,
-            code = "internal_server_error",
             title = "Internal server error",
             detail = "An internal error occurred."
         )
 
         ConsumeError.NotAuthorized -> buildApiErrorResponse(
             status = HttpStatusCode.Unauthorized,
-            code = "not_authorized",
             title = "Not authorized",
             detail = "Not authorized for this endpoint."
         )
 
         ConsumeError.IllegalStateError -> buildApiErrorResponse(
             status = HttpStatusCode.BadRequest,
-            code = "illegal_status_state",
             title = "Illegal status state",
             detail = "Grant must be 'Active' to get consumed"
         )
 
         ConsumeError.IllegalTransitionError -> buildApiErrorResponse(
             status = HttpStatusCode.BadRequest,
-            code = "invalid_status_transition",
             title = "Invalid status transition",
             detail = "Only 'Exhausted' status is allowed."
         )
 
         ConsumeError.ExpiredError -> buildApiErrorResponse(
             status = HttpStatusCode.BadRequest,
-            code = "expired_status_transition",
             title = "Grant has expired",
             detail = "Grant validity period has passed"
         )

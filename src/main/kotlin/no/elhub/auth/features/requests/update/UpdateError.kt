@@ -22,35 +22,30 @@ fun UpdateError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollectio
         UpdateError.GrantCreationError,
         UpdateError.ScopeReadError, -> buildApiErrorResponse(
             status = HttpStatusCode.InternalServerError,
-            code = "internal_server_error",
             title = "Internal server error",
             detail = "An internal error occurred."
         )
 
         UpdateError.IllegalTransitionError -> buildApiErrorResponse(
             status = HttpStatusCode.BadRequest,
-            code = "invalid_status_transition",
             title = "Invalid status transition",
             detail = "Only 'Accepted' and 'Rejected' statuses are allowed."
         )
 
         UpdateError.AlreadyProcessed -> buildApiErrorResponse(
             status = HttpStatusCode.BadRequest,
-            code = "invalid_status_state",
             title = "Invalid status state",
             detail = "Request must be in 'Pending' status to update."
         )
 
         UpdateError.Expired -> buildApiErrorResponse(
             status = HttpStatusCode.BadRequest,
-            code = "expired_status_transition",
             title = "Request has expired",
             detail = "Request validity period has passed"
         )
 
         UpdateError.NotAuthorizedError -> buildApiErrorResponse(
             status = HttpStatusCode.Unauthorized,
-            code = "not_authorized",
             title = "Not authorized",
             detail = "Not authorized for this endpoint."
         )
