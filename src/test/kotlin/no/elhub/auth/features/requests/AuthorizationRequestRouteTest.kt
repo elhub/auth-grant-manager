@@ -224,7 +224,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                                 type shouldBe "OrganizationEntity"
                             }
                         }
-                        grant.shouldNotBeNull().apply {
+                        authorizationGrant.shouldNotBeNull().apply {
                             data.apply {
                                 id.shouldNotBeNull()
                                 type shouldBe "AuthorizationGrant"
@@ -683,7 +683,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                                     type shouldBe "Person"
                                 }
                             }
-                            grant.shouldNotBeNull().apply {
+                            authorizationGrant.shouldNotBeNull().apply {
                                 data.apply {
                                     id.shouldNotBeNull()
                                     type shouldBe "AuthorizationGrant"
@@ -748,7 +748,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                                     type shouldBe "Person"
                                 }
                             }
-                            grant.shouldNotBeNull().apply {
+                            authorizationGrant.shouldNotBeNull().apply {
                                 data.apply {
                                     id.shouldNotBeNull()
                                     type shouldBe "AuthorizationGrant"

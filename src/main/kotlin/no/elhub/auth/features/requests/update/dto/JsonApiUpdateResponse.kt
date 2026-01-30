@@ -33,7 +33,7 @@ data class UpdateRequestResponseRelationShips(
     val requestedFrom: JsonApiRelationshipToOne,
     val requestedTo: JsonApiRelationshipToOne,
     val approvedBy: JsonApiRelationshipToOne? = null,
-    val grant: JsonApiRelationshipToOne? = null,
+    val authorizationGrant: JsonApiRelationshipToOne? = null,
 ) : JsonApiRelationships
 
 @Serializable
@@ -93,7 +93,7 @@ fun AuthorizationRequest.toUpdateResponse() = UpdateRequestResponse(
                     )
                 )
             },
-            grant = this.grantId?.let {
+            authorizationGrant = this.grantId?.let {
                 JsonApiRelationshipToOne(
                     data = JsonApiRelationshipData(
                         id = it.toString(),
