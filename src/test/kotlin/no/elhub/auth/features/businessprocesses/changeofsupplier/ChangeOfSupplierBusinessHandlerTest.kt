@@ -19,12 +19,12 @@ import no.elhub.auth.features.businessprocesses.structuredata.MeteringPointsServ
 import no.elhub.auth.features.businessprocesses.structuredata.MeteringPointsServiceTestData.SHARED_END_USER_ID
 import no.elhub.auth.features.businessprocesses.structuredata.MeteringPointsServiceTestData.VALID_METERING_POINT
 import no.elhub.auth.features.businessprocesses.structuredata.meteringPointsServiceHttpClient
-import no.elhub.auth.features.common.Person
-import no.elhub.auth.features.common.PersonService
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
 import no.elhub.auth.features.common.party.PartyType
+import no.elhub.auth.features.common.person.Person
+import no.elhub.auth.features.common.person.PersonService
 import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.create.dto.CreateDocumentMeta

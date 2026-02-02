@@ -18,7 +18,7 @@ import no.elhub.auth.features.businessprocesses.changeofsupplier.domain.toReques
 import no.elhub.auth.features.businessprocesses.structuredata.MeteringPointsService
 import no.elhub.auth.features.businessprocesses.structuredata.domain.Attributes.AccessType.SHARED
 import no.elhub.auth.features.common.CreateScopeData
-import no.elhub.auth.features.common.PersonService
+import no.elhub.auth.features.common.person.PersonService
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.DocumentBusinessHandler
 import no.elhub.auth.features.documents.create.CreateError
