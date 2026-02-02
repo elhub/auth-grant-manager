@@ -12,11 +12,9 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.contentOrNull
-import kotlinx.serialization.json.jsonArray
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
 import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObject
+import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
+import no.elhub.devxp.jsonapi.response.JsonApiErrorObject
 import org.slf4j.LoggerFactory
 import java.util.UUID
 
@@ -47,11 +45,11 @@ class ApiPersonService(
                 )
             }
             if (!response.status.isSuccess()) {
-                val err = getError(response)
-                return if (err?.code == "invalid_national_identity_number") {
+                val parsed = parseError(response)
+                return if (parsed?.code == "invalid_national_identity_number") {
                     ClientError.InvalidNin.left()
                 } else {
-                    logger.error("Request to auth-persons was rejected: {}", err?.title ?: "unknown")
+                    logger.error("Request to auth-persons was rejected: {}", parsed?.title ?: "unknown")
                     ClientError.RequestRejected.left()
                 }
             }
@@ -74,24 +72,13 @@ data class PersonApiConfig(
     val baseUri: String,
 )
 
-private data class UpstreamError(
-    val code: String? = null,
-    val title: String? = null,
-    val detail: String? = null,
-)
+private val json = Json {
+    ignoreUnknownKeys = true
+    explicitNulls = false
+}
 
-private suspend fun getError(response: HttpResponse): UpstreamError? {
-    val bodyText = response.bodyAsText()
-    return runCatching {
-        Json.parseToJsonElement(bodyText)
-            .jsonObject["errors"]?.jsonArray
-            ?.getOrNull(0)?.jsonObject
-            ?.let { o ->
-                UpstreamError(
-                    code = o["code"]?.jsonPrimitive?.contentOrNull,
-                    title = o["title"]?.jsonPrimitive?.contentOrNull,
-                    detail = o["detail"]?.jsonPrimitive?.contentOrNull
-                )
-            }
-    }.getOrNull()
+private suspend fun parseError(response: HttpResponse): JsonApiErrorObject? {
+    val text = response.bodyAsText()
+    val doc = json.decodeFromString<JsonApiErrorCollection>(text)
+    return doc.errors.firstOrNull()
 }
