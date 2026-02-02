@@ -395,12 +395,12 @@ class AuthorizationRequestRouteTest : FunSpec({
                                         ),
                                         requestedFrom = PartyIdentifier(
                                             PartyIdentifierType.NationalIdentityNumber,
-                                            "12345678901"
+                                            REQUESTED_FROM_NIN,
                                         ),
                                         requestedFromName = "Hillary Orr",
                                         requestedTo = PartyIdentifier(
                                             PartyIdentifierType.NationalIdentityNumber,
-                                            "12345678902"
+                                            REQUESTED_TO_NIN
                                         ),
                                         requestedForMeteringPointId = "123456789012345678",
                                         requestedForMeteringPointAddress = "quaerendum",
@@ -495,12 +495,12 @@ class AuthorizationRequestRouteTest : FunSpec({
                                         ),
                                         requestedFrom = PartyIdentifier(
                                             PartyIdentifierType.NationalIdentityNumber,
-                                            "12345678901"
+                                            REQUESTED_FROM_NIN
                                         ),
                                         requestedFromName = "",
                                         requestedTo = PartyIdentifier(
                                             PartyIdentifierType.NationalIdentityNumber,
-                                            "12345678902"
+                                            REQUESTED_TO_NIN
                                         ),
                                         requestedForMeteringPointId = "123456789012345678",
                                         requestedForMeteringPointAddress = "quaerendum",
@@ -549,12 +549,12 @@ class AuthorizationRequestRouteTest : FunSpec({
                                         ),
                                         requestedFrom = PartyIdentifier(
                                             PartyIdentifierType.NationalIdentityNumber,
-                                            "12345678901"
+                                            REQUESTED_FROM_NIN
                                         ),
                                         requestedFromName = "Test Name",
                                         requestedTo = PartyIdentifier(
                                             PartyIdentifierType.NationalIdentityNumber,
-                                            "12345678902"
+                                            REQUESTED_TO_NIN
                                         ),
                                         requestedForMeteringPointId = "123456789012345678",
                                         requestedForMeteringPointAddress = "quaerendum",
@@ -574,6 +574,59 @@ class AuthorizationRequestRouteTest : FunSpec({
                         status shouldBe "403"
                         title shouldBe "Unsupported party type"
                         detail shouldBe "The party type you are authorized as is not supported for this endpoint."
+                    }
+                }
+            }
+
+            test("Should return 400 Bad Request when requestee has invalid nin in body") {
+                val response =
+                    client.post(REQUESTS_PATH) {
+                        header(HttpHeaders.Authorization, "Bearer maskinporten")
+                        header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                        contentType(ContentType.Application.Json)
+                        setBody(
+                            JsonApiCreateRequest(
+                                data =
+                                JsonApiRequestResourceObjectWithMeta(
+                                    type = "AuthorizationRequest",
+                                    attributes =
+                                    CreateRequestAttributes(
+                                        requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
+                                    ),
+                                    meta =
+                                    CreateRequestMeta(
+                                        requestedBy = PartyIdentifier(
+                                            PartyIdentifierType.GlobalLocationNumber,
+                                            "0107000000021"
+                                        ),
+                                        requestedFrom = PartyIdentifier(
+                                            PartyIdentifierType.NationalIdentityNumber,
+                                            "123"
+                                        ),
+                                        requestedFromName = "Hillary Orr",
+                                        requestedTo = PartyIdentifier(
+                                            PartyIdentifierType.NationalIdentityNumber,
+                                            REQUESTED_TO_NIN
+                                        ),
+                                        requestedForMeteringPointId = "123456789012345678",
+                                        requestedForMeteringPointAddress = "quaerendum",
+                                        balanceSupplierName = "Balance Supplier",
+                                        balanceSupplierContractName = "Selena Chandler",
+                                    ),
+                                ),
+                            ),
+                        )
+                    }
+
+                response.status shouldBe HttpStatusCode.BadRequest
+
+                val responseJson: JsonApiErrorCollection = response.body()
+                responseJson.errors.apply {
+                    size shouldBe 1
+                    this[0].apply {
+                        status shouldBe "400"
+                        title shouldBe "Invalid national identity number"
+                        detail shouldBe "Provided national identity number is invalid"
                     }
                 }
             }
@@ -1117,3 +1170,6 @@ private fun Application.testRequestBusinessModule() {
         single<RequestBusinessHandler> { TestRequestBusinessHandler() }
     }
 }
+
+private const val REQUESTED_FROM_NIN = "12010180315"
+private const val REQUESTED_TO_NIN = "21038140997"

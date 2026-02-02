@@ -1,8 +1,10 @@
 package no.elhub.auth.features.common.party
 
 import arrow.core.Either
+import arrow.core.left
 import arrow.core.right
-import no.elhub.auth.features.common.PersonService
+import no.elhub.auth.features.common.person.ClientError
+import no.elhub.auth.features.common.person.PersonService
 
 class PartyService(
     private val personService: PersonService,
@@ -12,7 +14,14 @@ class PartyService(
             PartyIdentifierType.NationalIdentityNumber ->
                 personService.findOrCreateByNin(partyIdentifier.idValue)
                     .map { AuthorizationParty(resourceId = it.internalId.toString(), type = PartyType.Person) }
-                    .mapLeft { PartyError.PersonResolutionError }
+                    .mapLeft { error ->
+                        when (error) {
+                            ClientError.InvalidNin -> PartyError.InvalidNin
+
+                            is ClientError.UnexpectedError, ClientError.RequestRejected
+                            -> PartyError.PersonResolutionError
+                        }
+                    }
 
             PartyIdentifierType.OrganizationNumber -> AuthorizationParty(
                 resourceId = partyIdentifier.idValue,
@@ -28,4 +37,5 @@ class PartyService(
 
 sealed class PartyError {
     data object PersonResolutionError : PartyError()
+    data object InvalidNin : PartyError()
 }

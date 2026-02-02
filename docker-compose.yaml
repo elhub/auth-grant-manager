@@ -16,6 +16,6 @@ services:
       - "${PRIVATE_KEY_PATH}:/key/private.pem:ro"
 
   auth-persons-mock:
-    image: docker.jfrog.elhub.cloud/frzq0sxltynr/auth/auth-persons-mock:0.1.17-29
+    image: docker.jfrog.elhub.cloud/frzq0sxltynr/auth/auth-persons-mock:0.1.28-52
     ports:
       - "8081:8080"
