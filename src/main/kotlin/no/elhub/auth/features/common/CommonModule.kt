@@ -16,6 +16,9 @@ import no.elhub.auth.features.common.auth.PDPAuthorizationProvider
 import no.elhub.auth.features.common.party.ExposedPartyRepository
 import no.elhub.auth.features.common.party.PartyRepository
 import no.elhub.auth.features.common.party.PartyService
+import no.elhub.auth.features.common.person.ApiPersonService
+import no.elhub.auth.features.common.person.PersonApiConfig
+import no.elhub.auth.features.common.person.PersonService
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.qualifier.named
 import org.koin.dsl.bind
