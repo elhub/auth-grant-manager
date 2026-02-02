@@ -1,7 +1,6 @@
 package no.elhub.auth.features.common.party
 
 import arrow.core.Either
-import arrow.core.left
 import arrow.core.right
 import no.elhub.auth.features.common.person.ClientError
 import no.elhub.auth.features.common.person.PersonService
