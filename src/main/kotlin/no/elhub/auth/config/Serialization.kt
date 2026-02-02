@@ -11,16 +11,17 @@ import kotlinx.serialization.json.Json
  * Uses the Ktor ContentNegotiation plugin
  */
 fun Application.configureSerialization() {
-    val defaultJson = Json {
-        encodeDefaults = true
-        explicitNulls = false
-        isLenient = true
-        allowSpecialFloatingPointValues = true
-        allowStructuredMapKeys = true
-        prettyPrint = false
-        useArrayPolymorphism = true
-        ignoreUnknownKeys = true
-    }
+    val defaultJson =
+        Json {
+            encodeDefaults = true
+            explicitNulls = false
+            isLenient = true
+            allowSpecialFloatingPointValues = true
+            allowStructuredMapKeys = true
+            prettyPrint = false
+            useArrayPolymorphism = true
+            ignoreUnknownKeys = true
+        }
     install(ContentNegotiation) {
         json(json = defaultJson)
     }

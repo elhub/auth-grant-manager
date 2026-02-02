@@ -19,137 +19,146 @@ import no.elhub.auth.features.grants.AuthorizationGrant.Status
 import no.elhub.auth.features.grants.common.GrantRepository
 import java.util.UUID
 
-class HandlerTest : FunSpec({
+class HandlerTest :
+    FunSpec({
 
-    val authorizedSystem = AuthorizationParty(resourceId = Constants.CONSENT_MANAGEMENT_OSB_ID, type = PartyType.System)
-    val unAuthorizedSystem = AuthorizationParty(resourceId = "invalid-system", type = PartyType.System)
-    val grantedFor = AuthorizationParty(resourceId = "person-1", type = PartyType.Person)
-    val grantedBy = AuthorizationParty(resourceId = "issuer-1", type = PartyType.Organization)
-    val grantedTo = AuthorizationParty(resourceId = "org-entity-1", type = PartyType.OrganizationEntity)
-    val grantId = UUID.randomUUID()
-    val scopeIds = listOf(UUID.randomUUID(), UUID.randomUUID())
+        val authorizedSystem = AuthorizationParty(resourceId = Constants.CONSENT_MANAGEMENT_OSB_ID, type = PartyType.System)
+        val unAuthorizedSystem = AuthorizationParty(resourceId = "invalid-system", type = PartyType.System)
+        val grantedFor = AuthorizationParty(resourceId = "person-1", type = PartyType.Person)
+        val grantedBy = AuthorizationParty(resourceId = "issuer-1", type = PartyType.Organization)
+        val grantedTo = AuthorizationParty(resourceId = "org-entity-1", type = PartyType.OrganizationEntity)
+        val grantId = UUID.randomUUID()
+        val scopeIds = listOf(UUID.randomUUID(), UUID.randomUUID())
 
-    val grant =
-        AuthorizationGrant(
-            id = grantId,
-            grantStatus = Status.Active,
-            grantedFor = grantedFor,
-            grantedBy = grantedBy,
-            grantedTo = grantedTo,
-            grantedAt = currentTimeWithTimeZone(),
-            validFrom = currentTimeWithTimeZone(),
-            validTo = currentTimeWithTimeZone().plusYears(1),
-            sourceType = SourceType.Document,
-            sourceId = UUID.randomUUID(),
-            scopeIds = scopeIds
-        )
+        val grant =
+            AuthorizationGrant(
+                id = grantId,
+                grantStatus = Status.Active,
+                grantedFor = grantedFor,
+                grantedBy = grantedBy,
+                grantedTo = grantedTo,
+                grantedAt = currentTimeWithTimeZone(),
+                validFrom = currentTimeWithTimeZone(),
+                validTo = currentTimeWithTimeZone().plusYears(1),
+                sourceType = SourceType.Document,
+                sourceId = UUID.randomUUID(),
+                scopeIds = scopeIds,
+            )
 
-    fun repoReturning(result: arrow.core.Either<RepositoryReadError, AuthorizationGrant>): GrantRepository =
-        mockk<GrantRepository> {
-            every { find(grantId) } returns result
+        fun repoReturning(result: arrow.core.Either<RepositoryReadError, AuthorizationGrant>): GrantRepository =
+            mockk<GrantRepository> {
+                every { find(grantId) } returns result
+            }
+
+        test("returns grant when authorized party is valid System") {
+            val handler = Handler(repoReturning(result = grant.right()))
+
+            val response =
+                handler(
+                    Query(
+                        id = grantId,
+                        authorizedParty = authorizedSystem,
+                    ),
+                )
+
+            response.shouldBeRight(grant)
         }
 
-    test("returns grant when authorized party is valid System") {
-        val handler = Handler(repoReturning(result = grant.right()))
+        test("returns NotAuthorized when authorized party is unauthorized System") {
+            val handler = Handler(repoReturning(result = grant.right()))
 
-        val response = handler(
-            Query(
-                id = grantId,
-                authorizedParty = authorizedSystem,
-            )
-        )
+            val response =
+                handler(
+                    Query(
+                        id = grantId,
+                        authorizedParty = unAuthorizedSystem,
+                    ),
+                )
 
-        response.shouldBeRight(grant)
-    }
+            response.shouldBeLeft(QueryError.NotAuthorizedError)
+        }
 
-    test("returns NotAuthorized when authorized party is unauthorized System") {
-        val handler = Handler(repoReturning(result = grant.right()))
+        test("returns grant when authorized party matches grantedFor") {
+            val handler = Handler(repoReturning(result = grant.right()))
 
-        val response = handler(
-            Query(
-                id = grantId,
-                authorizedParty = unAuthorizedSystem,
-            )
-        )
+            val response =
+                handler(
+                    Query(
+                        id = grantId,
+                        authorizedParty = grantedFor,
+                    ),
+                )
 
-        response.shouldBeLeft(QueryError.NotAuthorizedError)
-    }
+            response.shouldBeRight(grant)
+        }
 
-    test("returns grant when authorized party matches grantedFor") {
-        val handler = Handler(repoReturning(result = grant.right()))
+        test("returns grant when authorized party matches grantedTo") {
+            val handler = Handler(repoReturning(result = grant.right()))
 
-        val response = handler(
-            Query(
-                id = grantId,
-                authorizedParty = grantedFor,
-            )
-        )
+            val response =
+                handler(
+                    Query(
+                        id = grantId,
+                        authorizedParty = grantedTo,
+                    ),
+                )
 
-        response.shouldBeRight(grant)
-    }
+            response.shouldBeRight(grant)
+        }
 
-    test("returns grant when authorized party matches grantedTo") {
-        val handler = Handler(repoReturning(result = grant.right()))
+        test("returns NotAuthorized when authorized party does not match grant") {
+            val handler = Handler(repoReturning(result = grant.right()))
 
-        val response = handler(
-            Query(
-                id = grantId,
-                authorizedParty = grantedTo,
-            )
-        )
+            val response =
+                handler(
+                    Query(
+                        id = grantId,
+                        authorizedParty = grantedFor.copy(resourceId = "other-person"),
+                    ),
+                )
 
-        response.shouldBeRight(grant)
-    }
+            response.shouldBeLeft(QueryError.NotAuthorizedError)
+        }
 
-    test("returns NotAuthorized when authorized party does not match grant") {
-        val handler = Handler(repoReturning(result = grant.right()))
+        test("returns NotAuthorized when authorized party does not match grantedTo") {
+            val handler = Handler(repoReturning(result = grant.right()))
 
-        val response = handler(
-            Query(
-                id = grantId,
-                authorizedParty = grantedFor.copy(resourceId = "other-person"),
-            )
-        )
+            val response =
+                handler(
+                    Query(
+                        id = grantId,
+                        authorizedParty = grantedTo.copy(resourceId = "other-org"),
+                    ),
+                )
 
-        response.shouldBeLeft(QueryError.NotAuthorizedError)
-    }
+            response.shouldBeLeft(QueryError.NotAuthorizedError)
+        }
 
-    test("returns NotAuthorized when authorized party does not match grantedTo") {
-        val handler = Handler(repoReturning(result = grant.right()))
+        test("maps grant repository not found to QueryError.ResourceNotFoundError") {
+            val handler = Handler(repoReturning(result = RepositoryReadError.NotFoundError.left()))
 
-        val response = handler(
-            Query(
-                id = grantId,
-                authorizedParty = grantedTo.copy(resourceId = "other-org"),
-            )
-        )
+            val response =
+                handler(
+                    Query(
+                        id = grantId,
+                        authorizedParty = grantedFor,
+                    ),
+                )
 
-        response.shouldBeLeft(QueryError.NotAuthorizedError)
-    }
+            response.shouldBeLeft(QueryError.ResourceNotFoundError)
+        }
 
-    test("maps grant repository not found to QueryError.ResourceNotFoundError") {
-        val handler = Handler(repoReturning(result = RepositoryReadError.NotFoundError.left()))
+        test("maps unexpected grant repository error to QueryError.IOError") {
+            val handler = Handler(repoReturning(result = RepositoryReadError.UnexpectedError.left()))
 
-        val response = handler(
-            Query(
-                id = grantId,
-                authorizedParty = grantedFor,
-            )
-        )
+            val response =
+                handler(
+                    Query(
+                        id = grantId,
+                        authorizedParty = grantedTo,
+                    ),
+                )
 
-        response.shouldBeLeft(QueryError.ResourceNotFoundError)
-    }
-
-    test("maps unexpected grant repository error to QueryError.IOError") {
-        val handler = Handler(repoReturning(result = RepositoryReadError.UnexpectedError.left()))
-
-        val response = handler(
-            Query(
-                id = grantId,
-                authorizedParty = grantedTo,
-            )
-        )
-
-        response.shouldBeLeft(QueryError.IOError)
-    }
-})
+            response.shouldBeLeft(QueryError.IOError)
+        }
+    })

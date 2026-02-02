@@ -21,89 +21,90 @@ class Handler(
     private val requestRepo: RequestRepository,
     private val requestPropertyRepo: RequestPropertiesRepository,
 ) {
-    suspend operator fun invoke(model: CreateRequestModel): Either<CreateError, AuthorizationRequest> = either {
-        val requestedByParty =
-            partyService
-                .resolve(model.meta.requestedBy)
-                .mapLeft { error ->
-                    when (error) {
-                        PartyError.InvalidNin -> CreateError.InvalidNinError
-                        is PartyError.PersonResolutionError -> CreateError.RequestedPartyError
-                    }
-                }
-                .bind()
+    suspend operator fun invoke(model: CreateRequestModel): Either<CreateError, AuthorizationRequest> =
+        either {
+            val requestedByParty =
+                partyService
+                    .resolve(model.meta.requestedBy)
+                    .mapLeft { error ->
+                        when (error) {
+                            PartyError.InvalidNin -> CreateError.InvalidNinError
+                            is PartyError.PersonResolutionError -> CreateError.RequestedPartyError
+                        }
+                    }.bind()
 
-        ensure(model.authorizedParty == requestedByParty) {
-            CreateError.AuthorizationError
-        }
-
-        val requestedFromParty =
-            partyService
-                .resolve(model.meta.requestedFrom)
-                .mapLeft { error ->
-                    when (error) {
-                        PartyError.InvalidNin -> CreateError.InvalidNinError
-                        is PartyError.PersonResolutionError -> CreateError.RequestedPartyError
-                    }
-                }
-                .bind()
-
-        val requestedToParty =
-            partyService
-                .resolve(model.meta.requestedTo)
-                .mapLeft { error ->
-                    when (error) {
-                        PartyError.InvalidNin -> CreateError.InvalidNinError
-                        is PartyError.PersonResolutionError -> CreateError.RequestedPartyError
-                    }
-                }
-                .bind()
-
-        val businessCommand =
-            businessHandler
-                .validateAndReturnRequestCommand(model)
-                .mapLeft { validationError -> CreateError.ValidationError(validationError) }
-                .bind()
-
-        val metaAttributes = businessCommand.meta.toMetaAttributes()
-
-        val requestToCreate =
-            AuthorizationRequest.create(
-                type = businessCommand.type,
-                requestedFrom = requestedFromParty,
-                requestedBy = requestedByParty,
-                requestedTo = requestedToParty,
-                validTo = businessCommand.validTo,
-            )
-
-        val result = transaction {
-            val savedRequest =
-                requestRepo
-                    .insert(requestToCreate, businessCommand.scopes)
-                    .mapLeft { CreateError.PersistenceError }
-                    .bind()
-
-            val requestProperties: List<AuthorizationRequestProperty> = metaAttributes.map {
-                AuthorizationRequestProperty(
-                    requestId = savedRequest.id,
-                    key = it.key,
-                    value = it.value,
-                )
+            ensure(model.authorizedParty == requestedByParty) {
+                CreateError.AuthorizationError
             }
 
-            requestPropertyRepo
-                .insert(requestProperties)
-                .mapLeft { CreateError.PersistenceError }
-                .bind()
+            val requestedFromParty =
+                partyService
+                    .resolve(model.meta.requestedFrom)
+                    .mapLeft { error ->
+                        when (error) {
+                            PartyError.InvalidNin -> CreateError.InvalidNinError
+                            is PartyError.PersonResolutionError -> CreateError.RequestedPartyError
+                        }
+                    }.bind()
 
-            savedRequest.copy(properties = requestProperties)
+            val requestedToParty =
+                partyService
+                    .resolve(model.meta.requestedTo)
+                    .mapLeft { error ->
+                        when (error) {
+                            PartyError.InvalidNin -> CreateError.InvalidNinError
+                            is PartyError.PersonResolutionError -> CreateError.RequestedPartyError
+                        }
+                    }.bind()
+
+            val businessCommand =
+                businessHandler
+                    .validateAndReturnRequestCommand(model)
+                    .mapLeft { validationError -> CreateError.ValidationError(validationError) }
+                    .bind()
+
+            val metaAttributes = businessCommand.meta.toMetaAttributes()
+
+            val requestToCreate =
+                AuthorizationRequest.create(
+                    type = businessCommand.type,
+                    requestedFrom = requestedFromParty,
+                    requestedBy = requestedByParty,
+                    requestedTo = requestedToParty,
+                    validTo = businessCommand.validTo,
+                )
+
+            val result =
+                transaction {
+                    val savedRequest =
+                        requestRepo
+                            .insert(requestToCreate, businessCommand.scopes)
+                            .mapLeft { CreateError.PersistenceError }
+                            .bind()
+
+                    val requestProperties: List<AuthorizationRequestProperty> =
+                        metaAttributes.map {
+                            AuthorizationRequestProperty(
+                                requestId = savedRequest.id,
+                                key = it.key,
+                                value = it.value,
+                            )
+                        }
+
+                    requestPropertyRepo
+                        .insert(requestProperties)
+                        .mapLeft { CreateError.PersistenceError }
+                        .bind()
+
+                    savedRequest.copy(properties = requestProperties)
+                }
+
+            result
         }
-
-        result
-    }
 }
 
 interface RequestBusinessHandler {
     suspend fun validateAndReturnRequestCommand(createRequestModel: CreateRequestModel): Either<RequestTypeValidationError, RequestCommand>
+
     fun getCreateGrantProperties(request: AuthorizationRequest): CreateGrantProperties
 }

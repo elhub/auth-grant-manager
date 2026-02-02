@@ -6,7 +6,9 @@ import java.security.cert.X509Certificate
 
 interface CertificateProvider {
     fun getElhubSigningCertificate(): X509Certificate
+
     fun getElhubCertificateChain(): List<X509Certificate>
+
     fun getBankIdRootCertificate(): X509Certificate
 }
 
@@ -23,9 +25,8 @@ class FileCertificateProviderConfig(
 )
 
 class FileCertificateProvider(
-    cfg: FileCertificateProviderConfig
+    cfg: FileCertificateProviderConfig,
 ) : CertificateProvider {
-
     private val elhubSigningCert: X509Certificate =
         readSingleCert(cfg.pathToSigningCertificate)
 
@@ -36,17 +37,19 @@ class FileCertificateProvider(
         readSingleCert(cfg.pathToBankIdRootCertificate)
 
     override fun getElhubSigningCertificate() = elhubSigningCert
+
     override fun getElhubCertificateChain() = elhubChain
+
     override fun getBankIdRootCertificate() = bankIdRootCert
 
     private fun readChain(path: String): List<X509Certificate> =
         File(path).inputStream().use {
-            CertificateFactory.getInstance(CERT_TYPE)
+            CertificateFactory
+                .getInstance(CERT_TYPE)
                 .generateCertificates(it)
                 .filterIsInstance<X509Certificate>()
                 .also { require(it.isNotEmpty()) { "No certs found at $path" } }
         }
 
-    private fun readSingleCert(path: String): X509Certificate =
-        readChain(path).single()
+    private fun readSingleCert(path: String): X509Certificate = readChain(path).single()
 }

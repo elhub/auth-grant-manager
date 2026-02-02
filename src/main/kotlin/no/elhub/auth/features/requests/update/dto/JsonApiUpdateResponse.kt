@@ -39,7 +39,7 @@ data class UpdateRequestResponseRelationShips(
 @Serializable
 @JvmInline
 value class UpdateRequestResponseMeta(
-    val values: Map<String, String>
+    val values: Map<String, String>,
 ) : JsonApiResourceMeta
 
 @Serializable
@@ -51,76 +51,92 @@ typealias UpdateRequestResponse = JsonApiResponse.SingleDocumentWithRelationship
     UpdateRequestResponseAttributes,
     UpdateRequestResponseRelationShips,
     UpdateRequestResponseMeta,
-    UpdateRequestResponseLinks
-    >
+    UpdateRequestResponseLinks,
+>
 
-fun AuthorizationRequest.toUpdateResponse() = UpdateRequestResponse(
-    data =
-    JsonApiResponseResourceObjectWithRelationshipsAndMetaAndLinks(
-        type = "AuthorizationRequest",
-        id = this.id.toString(),
-        attributes = UpdateRequestResponseAttributes(
-            status = this.status.name,
-            requestType = this.type.name,
-            validTo = this.validTo.toString(),
-            createdAt = this.createdAt.toTimeZoneOffsetString(),
-            updatedAt = this.updatedAt.toTimeZoneOffsetString(),
-        ),
-        relationships = UpdateRequestResponseRelationShips(
-            requestedBy = JsonApiRelationshipToOne(
-                data = JsonApiRelationshipData(
-                    type = this.requestedBy.type.name,
-                    id = this.requestedBy.resourceId
-                )
-            ),
-            requestedFrom = JsonApiRelationshipToOne(
-                data = JsonApiRelationshipData(
-                    type = this.requestedFrom.type.name,
-                    id = this.requestedFrom.resourceId
-                )
-            ),
-            requestedTo = JsonApiRelationshipToOne(
-                data = JsonApiRelationshipData(
-                    type = this.requestedTo.type.name,
-                    id = this.requestedTo.resourceId
-                )
-            ),
-            approvedBy = this.approvedBy?.let {
-                JsonApiRelationshipToOne(
-                    data = JsonApiRelationshipData(
-                        type = it.type.name,
-                        id = it.resourceId
-                    )
-                )
-            },
-            authorizationGrant = this.grantId?.let {
-                JsonApiRelationshipToOne(
-                    data = JsonApiRelationshipData(
-                        id = it.toString(),
-                        type = "AuthorizationGrant"
+fun AuthorizationRequest.toUpdateResponse() =
+    UpdateRequestResponse(
+        data =
+            JsonApiResponseResourceObjectWithRelationshipsAndMetaAndLinks(
+                type = "AuthorizationRequest",
+                id = this.id.toString(),
+                attributes =
+                    UpdateRequestResponseAttributes(
+                        status = this.status.name,
+                        requestType = this.type.name,
+                        validTo = this.validTo.toString(),
+                        createdAt = this.createdAt.toTimeZoneOffsetString(),
+                        updatedAt = this.updatedAt.toTimeZoneOffsetString(),
                     ),
-                    links = JsonApiLinks.RelationShipLink(
-                        self = "$GRANTS_PATH/$it"
-                    )
-                )
-            },
-        ),
-        meta = UpdateRequestResponseMeta(
-            buildMap {
-                this@toUpdateResponse.properties.forEach { prop ->
-                    put(prop.key, prop.value)
-                }
-            }
-        ),
-        links =
-        UpdateRequestResponseLinks(
-            self = "${REQUESTS_PATH}/${this.id}"
-        ),
-    ),
-    links = JsonApiLinks.ResourceObjectLink("${REQUESTS_PATH}/${this.id}"),
-    meta = JsonApiMeta(
-        buildJsonObject {
-            put("createdAt", this@toUpdateResponse.createdAt.toTimeZoneOffsetString())
-        }
+                relationships =
+                    UpdateRequestResponseRelationShips(
+                        requestedBy =
+                            JsonApiRelationshipToOne(
+                                data =
+                                    JsonApiRelationshipData(
+                                        type = this.requestedBy.type.name,
+                                        id = this.requestedBy.resourceId,
+                                    ),
+                            ),
+                        requestedFrom =
+                            JsonApiRelationshipToOne(
+                                data =
+                                    JsonApiRelationshipData(
+                                        type = this.requestedFrom.type.name,
+                                        id = this.requestedFrom.resourceId,
+                                    ),
+                            ),
+                        requestedTo =
+                            JsonApiRelationshipToOne(
+                                data =
+                                    JsonApiRelationshipData(
+                                        type = this.requestedTo.type.name,
+                                        id = this.requestedTo.resourceId,
+                                    ),
+                            ),
+                        approvedBy =
+                            this.approvedBy?.let {
+                                JsonApiRelationshipToOne(
+                                    data =
+                                        JsonApiRelationshipData(
+                                            type = it.type.name,
+                                            id = it.resourceId,
+                                        ),
+                                )
+                            },
+                        authorizationGrant =
+                            this.grantId?.let {
+                                JsonApiRelationshipToOne(
+                                    data =
+                                        JsonApiRelationshipData(
+                                            id = it.toString(),
+                                            type = "AuthorizationGrant",
+                                        ),
+                                    links =
+                                        JsonApiLinks.RelationShipLink(
+                                            self = "$GRANTS_PATH/$it",
+                                        ),
+                                )
+                            },
+                    ),
+                meta =
+                    UpdateRequestResponseMeta(
+                        buildMap {
+                            this@toUpdateResponse.properties.forEach { prop ->
+                                put(prop.key, prop.value)
+                            }
+                        },
+                    ),
+                links =
+                    UpdateRequestResponseLinks(
+                        self = "${REQUESTS_PATH}/${this.id}",
+                    ),
+            ),
+        links = JsonApiLinks.ResourceObjectLink("${REQUESTS_PATH}/${this.id}"),
+        meta =
+            JsonApiMeta(
+                buildJsonObject {
+                    put("createdAt", this@toUpdateResponse.createdAt.toTimeZoneOffsetString())
+                },
+            ),
     )
-)

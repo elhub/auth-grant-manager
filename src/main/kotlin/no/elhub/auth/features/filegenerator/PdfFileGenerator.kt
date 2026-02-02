@@ -112,37 +112,45 @@ class PdfGenerator(
 
     override fun generate(
         signerNin: String,
-        documentMeta: DocumentMetaMarker
-    ): Either<DocumentGenerationError.ContentGenerationError, ByteArray> = either {
-        val contractHtmlString = when (documentMeta) {
-            is ChangeOfSupplierBusinessMeta -> generateChangeOfSupplierHtml(
-                customerNin = signerNin,
-                customerName = documentMeta.requestedFromName,
-                meteringPointAddress = documentMeta.requestedForMeteringPointAddress,
-                meteringPointId = documentMeta.requestedForMeteringPointId,
-                balanceSupplierName = documentMeta.balanceSupplierName,
-                balanceSupplierContractName = documentMeta.balanceSupplierContractName
+        documentMeta: DocumentMetaMarker,
+    ): Either<DocumentGenerationError.ContentGenerationError, ByteArray> =
+        either {
+            val contractHtmlString =
+                when (documentMeta) {
+                    is ChangeOfSupplierBusinessMeta -> {
+                        generateChangeOfSupplierHtml(
+                            customerNin = signerNin,
+                            customerName = documentMeta.requestedFromName,
+                            meteringPointAddress = documentMeta.requestedForMeteringPointAddress,
+                            meteringPointId = documentMeta.requestedForMeteringPointId,
+                            balanceSupplierName = documentMeta.balanceSupplierName,
+                            balanceSupplierContractName = documentMeta.balanceSupplierContractName,
+                        )
+                    }
+
+                    is MoveInBusinessMeta -> {
+                        generateMoveInHtml(
+                            customerName = documentMeta.requestedFromName,
+                            meteringPointAddress = documentMeta.requestedForMeteringPointAddress,
+                            meteringPointId = documentMeta.requestedForMeteringPointId,
+                            balanceSupplierName = documentMeta.balanceSupplierName,
+                            balanceSupplierContractName = documentMeta.balanceSupplierContractName,
+                            startDate = documentMeta.startDate.toString(),
+                        )
+                    }
+
+                    else -> {
+                        return DocumentGenerationError.ContentGenerationError.left()
+                    }
+                }.getOrElse { return DocumentGenerationError.ContentGenerationError.left() }
+
+            val pdfBytes =
+                generatePdfFromHtml(contractHtmlString).getOrElse { return DocumentGenerationError.ContentGenerationError.left() }
+
+            return pdfBytes.addMetadataToPdf(
+                mapOf(PdfConstants.PDF_METADATA_KEY_NIN to signerNin),
             )
-
-            is MoveInBusinessMeta -> generateMoveInHtml(
-                customerName = documentMeta.requestedFromName,
-                meteringPointAddress = documentMeta.requestedForMeteringPointAddress,
-                meteringPointId = documentMeta.requestedForMeteringPointId,
-                balanceSupplierName = documentMeta.balanceSupplierName,
-                balanceSupplierContractName = documentMeta.balanceSupplierContractName,
-                startDate = documentMeta.startDate.toString()
-            )
-
-            else -> return DocumentGenerationError.ContentGenerationError.left()
-        }.getOrElse { return DocumentGenerationError.ContentGenerationError.left() }
-
-        val pdfBytes =
-            generatePdfFromHtml(contractHtmlString).getOrElse { return DocumentGenerationError.ContentGenerationError.left() }
-
-        return pdfBytes.addMetadataToPdf(
-            mapOf(PdfConstants.PDF_METADATA_KEY_NIN to signerNin)
-        )
-    }
+        }
 
     private fun generateChangeOfSupplierHtml(
         customerNin: String,
@@ -151,23 +159,26 @@ class PdfGenerator(
         meteringPointId: String,
         balanceSupplierName: String,
         balanceSupplierContractName: String,
-    ): Either<DocumentGenerationError.ContentGenerationError, String> = Either.catch {
-        StringWriter().apply {
-            mustacheFactory
-                .compile(MustacheConstants.TEMPLATE_CHANGE_SUPPLIER_CONTRACT)
-                .execute(
-                    this,
-                    mapOf(
-                        MustacheConstants.VARIABLE_KEY_CUSTOMER_NIN to customerNin,
-                        MustacheConstants.VARIABLE_KEY_CUSTOMER_NAME to customerName,
-                        MustacheConstants.VARIABLE_KEY_METERING_POINT_ID to meteringPointId,
-                        MustacheConstants.VARIABLE_KEY_METERING_POINT_ADDRESS to meteringPointAddress,
-                        MustacheConstants.VARIABLE_KEY_BALANCE_SUPPLIER_NAME to balanceSupplierName,
-                        MustacheConstants.VARIABLE_KEY_BALANCE_SUPPLIER_CONTRACT_NAME to balanceSupplierContractName
-                    )
-                ).flush()
-        }.toString()
-    }.mapLeft { DocumentGenerationError.ContentGenerationError }
+    ): Either<DocumentGenerationError.ContentGenerationError, String> =
+        Either
+            .catch {
+                StringWriter()
+                    .apply {
+                        mustacheFactory
+                            .compile(MustacheConstants.TEMPLATE_CHANGE_SUPPLIER_CONTRACT)
+                            .execute(
+                                this,
+                                mapOf(
+                                    MustacheConstants.VARIABLE_KEY_CUSTOMER_NIN to customerNin,
+                                    MustacheConstants.VARIABLE_KEY_CUSTOMER_NAME to customerName,
+                                    MustacheConstants.VARIABLE_KEY_METERING_POINT_ID to meteringPointId,
+                                    MustacheConstants.VARIABLE_KEY_METERING_POINT_ADDRESS to meteringPointAddress,
+                                    MustacheConstants.VARIABLE_KEY_BALANCE_SUPPLIER_NAME to balanceSupplierName,
+                                    MustacheConstants.VARIABLE_KEY_BALANCE_SUPPLIER_CONTRACT_NAME to balanceSupplierContractName,
+                                ),
+                            ).flush()
+                    }.toString()
+            }.mapLeft { DocumentGenerationError.ContentGenerationError }
 
     private fun generateMoveInHtml(
         customerName: String,
@@ -175,56 +186,61 @@ class PdfGenerator(
         meteringPointId: String,
         balanceSupplierName: String,
         balanceSupplierContractName: String,
-        startDate: String
-    ): Either<DocumentGenerationError.ContentGenerationError, String> = Either.catch {
-        StringWriter().apply {
-            mustacheFactory
-                .compile(MustacheConstants.TEMPLATE_MOVE_IN)
-                .execute(
-                    this,
-                    mapOf(
-                        MustacheConstants.VARIABLE_KEY_CUSTOMER_NAME to customerName,
-                        MustacheConstants.VARIABLE_KEY_METERING_POINT_ID to meteringPointId,
-                        MustacheConstants.VARIABLE_KEY_METERING_POINT_ADDRESS to meteringPointAddress,
-                        MustacheConstants.VARIABLE_KEY_BALANCE_SUPPLIER_NAME to balanceSupplierName,
-                        MustacheConstants.VARIABLE_KEY_BALANCE_SUPPLIER_CONTRACT_NAME to balanceSupplierContractName,
-                        MustacheConstants.VARIABLE_KEY_MOVE_IN_DATE to startDate
-                    )
-                ).flush()
-        }.toString()
-    }.mapLeft { DocumentGenerationError.ContentGenerationError }
+        startDate: String,
+    ): Either<DocumentGenerationError.ContentGenerationError, String> =
+        Either
+            .catch {
+                StringWriter()
+                    .apply {
+                        mustacheFactory
+                            .compile(MustacheConstants.TEMPLATE_MOVE_IN)
+                            .execute(
+                                this,
+                                mapOf(
+                                    MustacheConstants.VARIABLE_KEY_CUSTOMER_NAME to customerName,
+                                    MustacheConstants.VARIABLE_KEY_METERING_POINT_ID to meteringPointId,
+                                    MustacheConstants.VARIABLE_KEY_METERING_POINT_ADDRESS to meteringPointAddress,
+                                    MustacheConstants.VARIABLE_KEY_BALANCE_SUPPLIER_NAME to balanceSupplierName,
+                                    MustacheConstants.VARIABLE_KEY_BALANCE_SUPPLIER_CONTRACT_NAME to balanceSupplierContractName,
+                                    MustacheConstants.VARIABLE_KEY_MOVE_IN_DATE to startDate,
+                                ),
+                            ).flush()
+                    }.toString()
+            }.mapLeft { DocumentGenerationError.ContentGenerationError }
 
-    private fun generatePdfFromHtml(htmlString: String) = Either.catch {
-        ByteArrayOutputStream().use { out ->
-            PdfRendererBuilder()
-                .withHtmlContent(htmlString, null)
-                .usePdfAConformance(PdfRendererBuilder.PdfAConformance.PDFA_2_B)
-                .useColorProfile(colorProfile)
-                .useFonts(fonts)
-                .toStream(out)
-                .run()
-            out.toByteArray()
-        }
-    }.mapLeft { DocumentGenerationError.ContentGenerationError }
-
-    private fun ByteArray.addMetadataToPdf(
-        metadata: Map<String, String>
-    ) = Either.catch {
-        ByteArrayOutputStream().use { out ->
-            Loader.loadPDF(this).use { doc ->
-                doc.documentInformation = PDDocumentInformation().apply {
-                    for (metadataPair in metadata) {
-                        setCustomMetadataValue(metadataPair.key, metadataPair.value)
-                    }
+    private fun generatePdfFromHtml(htmlString: String) =
+        Either
+            .catch {
+                ByteArrayOutputStream().use { out ->
+                    PdfRendererBuilder()
+                        .withHtmlContent(htmlString, null)
+                        .usePdfAConformance(PdfRendererBuilder.PdfAConformance.PDFA_2_B)
+                        .useColorProfile(colorProfile)
+                        .useFonts(fonts)
+                        .toStream(out)
+                        .run()
+                    out.toByteArray()
                 }
-                doc.save(out)
-            }
-            out.toByteArray()
-        }
-    }.mapLeft { DocumentGenerationError.ContentGenerationError }
+            }.mapLeft { DocumentGenerationError.ContentGenerationError }
 
-    private fun fontSupplier(bytes: ByteArray): FSSupplier<InputStream> =
-        FSSupplier { ByteArrayInputStream(bytes) }
+    private fun ByteArray.addMetadataToPdf(metadata: Map<String, String>) =
+        Either
+            .catch {
+                ByteArrayOutputStream().use { out ->
+                    Loader.loadPDF(this).use { doc ->
+                        doc.documentInformation =
+                            PDDocumentInformation().apply {
+                                for (metadataPair in metadata) {
+                                    setCustomMetadataValue(metadataPair.key, metadataPair.value)
+                                }
+                            }
+                        doc.save(out)
+                    }
+                    out.toByteArray()
+                }
+            }.mapLeft { DocumentGenerationError.ContentGenerationError }
+
+    private fun fontSupplier(bytes: ByteArray): FSSupplier<InputStream> = FSSupplier { ByteArrayInputStream(bytes) }
 
     private fun PdfRendererBuilder.useFonts(fonts: List<Font>): PdfRendererBuilder {
         fonts.forEach { font ->

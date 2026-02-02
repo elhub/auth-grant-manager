@@ -38,7 +38,7 @@ data class AuthorizationGrant(
                 validTo = currentTimeWithTimeZone().plusYears(1), // TODO this will be handled by the value stream
                 sourceId = sourceId,
                 sourceType = sourceType,
-                scopeIds = scopeIds
+                scopeIds = scopeIds,
             )
     }
 
@@ -50,6 +50,6 @@ data class AuthorizationGrant(
 
     enum class SourceType {
         Document,
-        Request
+        Request,
     }
 }

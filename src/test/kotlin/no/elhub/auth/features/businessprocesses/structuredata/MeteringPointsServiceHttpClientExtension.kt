@@ -13,31 +13,32 @@ import io.ktor.http.ContentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 
-val meteringPointsServiceHttpClient = HttpClient(CIO) {
-    install(HttpTimeout) {
-        connectTimeoutMillis = 30_000
-        requestTimeoutMillis = 40_000
-    }
-    install(Auth) {
-        basic {
-            credentials {
-                BasicAuthCredentials("user", "pass")
-            }
-            sendWithoutRequest { true }
-            realm = "Access to the '/' path"
+val meteringPointsServiceHttpClient =
+    HttpClient(CIO) {
+        install(HttpTimeout) {
+            connectTimeoutMillis = 30_000
+            requestTimeoutMillis = 40_000
         }
+        install(Auth) {
+            basic {
+                credentials {
+                    BasicAuthCredentials("user", "pass")
+                }
+                sendWithoutRequest { true }
+                realm = "Access to the '/' path"
+            }
+        }
+        install(ContentNegotiation) {
+            json(
+                Json {
+                    ignoreUnknownKeys = true
+                    prettyPrint = true
+                },
+                contentType = ContentType.Application.Json,
+            )
+        }
+        install(UserAgent) { agent = "test-auth-grant-manager" }
     }
-    install(ContentNegotiation) {
-        json(
-            Json {
-                ignoreUnknownKeys = true
-                prettyPrint = true
-            },
-            contentType = ContentType.Application.Json,
-        )
-    }
-    install(UserAgent) { agent = "test-auth-grant-manager" }
-}
 
 object CloseMeteringPointsServiceHttpClient : AfterProjectListener {
     override suspend fun afterProject() {

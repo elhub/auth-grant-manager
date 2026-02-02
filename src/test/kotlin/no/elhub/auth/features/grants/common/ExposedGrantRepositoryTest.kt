@@ -17,73 +17,76 @@ import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.UUID
 
-class ExposedGrantRepositoryTest : FunSpec({
-    extensions(PostgresTestContainerExtension())
-    val partyRepo = ExposedPartyRepository()
-    val grantRepo = ExposedGrantRepository(partyRepo)
-    val scopeIds = listOf(UUID.randomUUID(), UUID.randomUUID())
+class ExposedGrantRepositoryTest :
+    FunSpec({
+        extensions(PostgresTestContainerExtension())
+        val partyRepo = ExposedPartyRepository()
+        val grantRepo = ExposedGrantRepository(partyRepo)
+        val scopeIds = listOf(UUID.randomUUID(), UUID.randomUUID())
 
-    beforeSpec {
-        Database.connect(
-            url = PostgresTestContainer.JDBC_URL,
-            driver = PostgresTestContainer.DRIVER,
-            user = PostgresTestContainer.USERNAME,
-            password = PostgresTestContainer.PASSWORD,
-        )
-
-        transaction {
-            SchemaUtils.create(AuthorizationPartyTable)
-            SchemaUtils.create(AuthorizationGrantTable)
-            SchemaUtils.create(AuthorizationScopeTable)
-        }
-    }
-
-    afterTest {
-        transaction {
-            AuthorizationGrantTable.deleteAll()
-            AuthorizationScopeTable.deleteAll()
-            AuthorizationPartyTable.deleteAll()
-        }
-    }
-
-    test("insert without scopes") {
-        transaction {
-            val grant = AuthorizationGrant.create(
-                grantedBy = AuthorizationParty(type = PartyType.Person, resourceId = "12345"),
-                grantedFor = AuthorizationParty(type = PartyType.Person, resourceId = "56789"),
-                grantedTo = AuthorizationParty(type = PartyType.Person, resourceId = "45567"),
-                sourceType = AuthorizationGrant.SourceType.Request,
-                sourceId = UUID.randomUUID(),
-                scopeIds = scopeIds
+        beforeSpec {
+            Database.connect(
+                url = PostgresTestContainer.JDBC_URL,
+                driver = PostgresTestContainer.DRIVER,
+                user = PostgresTestContainer.USERNAME,
+                password = PostgresTestContainer.PASSWORD,
             )
 
-            grantRepo.insert(grant, emptyList()).getOrElse { error((it)) }
-
-            // Should only have 1 grant in database
-            AuthorizationGrantTable.selectAll().count() shouldBe 1
+            transaction {
+                SchemaUtils.create(AuthorizationPartyTable)
+                SchemaUtils.create(AuthorizationGrantTable)
+                SchemaUtils.create(AuthorizationScopeTable)
+            }
         }
-    }
 
-    test("update grant status") {
-        transaction {
-            // insert a grant
-            val grant = AuthorizationGrant.create(
-                grantedBy = AuthorizationParty(type = PartyType.Person, resourceId = "12345"),
-                grantedFor = AuthorizationParty(type = PartyType.Person, resourceId = "56789"),
-                grantedTo = AuthorizationParty(type = PartyType.Person, resourceId = "45567"),
-                sourceType = AuthorizationGrant.SourceType.Request,
-                sourceId = UUID.randomUUID(),
-                scopeIds = scopeIds
-            )
-
-            grantRepo.insert(grant, emptyList()).getOrElse { error((it)) }
-
-            // update the grant
-            val updated = grantRepo.update(grant.id, AuthorizationGrant.Status.Revoked).getOrElse { error(it) }
-
-            updated.grantStatus shouldBe AuthorizationGrant.Status.Revoked
+        afterTest {
+            transaction {
+                AuthorizationGrantTable.deleteAll()
+                AuthorizationScopeTable.deleteAll()
+                AuthorizationPartyTable.deleteAll()
+            }
         }
-    }
+
+        test("insert without scopes") {
+            transaction {
+                val grant =
+                    AuthorizationGrant.create(
+                        grantedBy = AuthorizationParty(type = PartyType.Person, resourceId = "12345"),
+                        grantedFor = AuthorizationParty(type = PartyType.Person, resourceId = "56789"),
+                        grantedTo = AuthorizationParty(type = PartyType.Person, resourceId = "45567"),
+                        sourceType = AuthorizationGrant.SourceType.Request,
+                        sourceId = UUID.randomUUID(),
+                        scopeIds = scopeIds,
+                    )
+
+                grantRepo.insert(grant, emptyList()).getOrElse { error((it)) }
+
+                // Should only have 1 grant in database
+                AuthorizationGrantTable.selectAll().count() shouldBe 1
+            }
+        }
+
+        test("update grant status") {
+            transaction {
+                // insert a grant
+                val grant =
+                    AuthorizationGrant.create(
+                        grantedBy = AuthorizationParty(type = PartyType.Person, resourceId = "12345"),
+                        grantedFor = AuthorizationParty(type = PartyType.Person, resourceId = "56789"),
+                        grantedTo = AuthorizationParty(type = PartyType.Person, resourceId = "45567"),
+                        sourceType = AuthorizationGrant.SourceType.Request,
+                        sourceId = UUID.randomUUID(),
+                        scopeIds = scopeIds,
+                    )
+
+                grantRepo.insert(grant, emptyList()).getOrElse { error((it)) }
+
+                // update the grant
+                val updated = grantRepo.update(grant.id, AuthorizationGrant.Status.Revoked).getOrElse { error(it) }
+
+                updated.grantStatus shouldBe AuthorizationGrant.Status.Revoked
+            }
+        }
 
     /*
     TODO write these tests
@@ -91,4 +94,4 @@ class ExposedGrantRepositoryTest : FunSpec({
     - findAll returns all grants for a specific sourceId
     - findById should return a specific scope
      */
-})
+    })

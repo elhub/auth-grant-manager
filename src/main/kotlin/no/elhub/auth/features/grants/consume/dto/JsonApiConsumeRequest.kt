@@ -7,7 +7,7 @@ import no.elhub.devxp.jsonapi.request.JsonApiRequest
 
 @Serializable
 data class ConsumeRequestAttributes(
-    val status: AuthorizationGrant.Status
+    val status: AuthorizationGrant.Status,
 ) : JsonApiAttributes
 
 typealias JsonApiConsumeRequest = JsonApiRequest.SingleDocument<ConsumeRequestAttributes>

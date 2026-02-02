@@ -6,12 +6,19 @@ import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 
 sealed class UpdateError {
     data object NotAuthorizedError : UpdateError()
+
     data object RequestNotFound : UpdateError()
+
     data object PersistenceError : UpdateError()
+
     data object ScopeReadError : UpdateError()
+
     data object GrantCreationError : UpdateError()
+
     data object IllegalTransitionError : UpdateError()
+
     data object AlreadyProcessed : UpdateError()
+
     data object Expired : UpdateError()
 }
 
@@ -20,33 +27,44 @@ fun UpdateError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollectio
         UpdateError.PersistenceError,
         UpdateError.RequestNotFound,
         UpdateError.GrantCreationError,
-        UpdateError.ScopeReadError, -> buildApiErrorResponse(
-            status = HttpStatusCode.InternalServerError,
-            title = "Internal server error",
-            detail = "An internal error occurred."
-        )
+        UpdateError.ScopeReadError,
+        -> {
+            buildApiErrorResponse(
+                status = HttpStatusCode.InternalServerError,
+                title = "Internal server error",
+                detail = "An internal error occurred.",
+            )
+        }
 
-        UpdateError.IllegalTransitionError -> buildApiErrorResponse(
-            status = HttpStatusCode.BadRequest,
-            title = "Invalid status transition",
-            detail = "Only 'Accepted' and 'Rejected' statuses are allowed."
-        )
+        UpdateError.IllegalTransitionError -> {
+            buildApiErrorResponse(
+                status = HttpStatusCode.BadRequest,
+                title = "Invalid status transition",
+                detail = "Only 'Accepted' and 'Rejected' statuses are allowed.",
+            )
+        }
 
-        UpdateError.AlreadyProcessed -> buildApiErrorResponse(
-            status = HttpStatusCode.BadRequest,
-            title = "Invalid status state",
-            detail = "Request must be in 'Pending' status to update."
-        )
+        UpdateError.AlreadyProcessed -> {
+            buildApiErrorResponse(
+                status = HttpStatusCode.BadRequest,
+                title = "Invalid status state",
+                detail = "Request must be in 'Pending' status to update.",
+            )
+        }
 
-        UpdateError.Expired -> buildApiErrorResponse(
-            status = HttpStatusCode.BadRequest,
-            title = "Request has expired",
-            detail = "Request validity period has passed"
-        )
+        UpdateError.Expired -> {
+            buildApiErrorResponse(
+                status = HttpStatusCode.BadRequest,
+                title = "Request has expired",
+                detail = "Request validity period has passed",
+            )
+        }
 
-        UpdateError.NotAuthorizedError -> buildApiErrorResponse(
-            status = HttpStatusCode.Unauthorized,
-            title = "Not authorized",
-            detail = "Not authorized for this endpoint."
-        )
+        UpdateError.NotAuthorizedError -> {
+            buildApiErrorResponse(
+                status = HttpStatusCode.Unauthorized,
+                title = "Not authorized",
+                detail = "Not authorized for this endpoint.",
+            )
+        }
     }

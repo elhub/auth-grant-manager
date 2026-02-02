@@ -12,35 +12,40 @@ import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
 class Handler(
-    private val repo: GrantRepository
+    private val repo: GrantRepository,
 ) {
-    operator fun invoke(command: ConsumeCommand): Either<ConsumeError, AuthorizationGrant> = either {
-        ensure(command.authorizedParty == AuthorizationParties.ConsentManagementSystem) {
-            ConsumeError.NotAuthorized
-        }
-
-        ensure(command.newStatus == Status.Exhausted) {
-            ConsumeError.IllegalTransitionError
-        }
-
-        val updated = transaction {
-            val originalGrant = repo.find(command.grantId)
-                .mapLeft { ConsumeError.GrantNotFound }
-                .bind()
-
-            ensure(originalGrant.validTo >= OffsetDateTime.now(ZoneOffset.UTC)) {
-                ConsumeError.ExpiredError
+    operator fun invoke(command: ConsumeCommand): Either<ConsumeError, AuthorizationGrant> =
+        either {
+            ensure(command.authorizedParty == AuthorizationParties.ConsentManagementSystem) {
+                ConsumeError.NotAuthorized
             }
 
-            ensure(originalGrant.grantStatus == Status.Active) {
-                ConsumeError.IllegalStateError
+            ensure(command.newStatus == Status.Exhausted) {
+                ConsumeError.IllegalTransitionError
             }
 
-            repo.update(command.grantId, command.newStatus)
-                .mapLeft { ConsumeError.PersistenceError }
-                .bind()
-        }
+            val updated =
+                transaction {
+                    val originalGrant =
+                        repo
+                            .find(command.grantId)
+                            .mapLeft { ConsumeError.GrantNotFound }
+                            .bind()
 
-        updated
-    }
+                    ensure(originalGrant.validTo >= OffsetDateTime.now(ZoneOffset.UTC)) {
+                        ConsumeError.ExpiredError
+                    }
+
+                    ensure(originalGrant.grantStatus == Status.Active) {
+                        ConsumeError.IllegalStateError
+                    }
+
+                    repo
+                        .update(command.grantId, command.newStatus)
+                        .mapLeft { ConsumeError.PersistenceError }
+                        .bind()
+                }
+
+            updated
+        }
 }

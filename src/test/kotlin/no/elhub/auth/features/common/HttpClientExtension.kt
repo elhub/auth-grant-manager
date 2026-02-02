@@ -15,7 +15,7 @@ val httpTestClient =
                     prettyPrint = true
                     isLenient = true
                     ignoreUnknownKeys = true
-                }
+                },
             )
         }
     }

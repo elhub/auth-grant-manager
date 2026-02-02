@@ -17,7 +17,6 @@ import java.nio.file.Paths
 internal const val VAULT_PORT = 8200
 
 object VaultTransitTestContainer {
-
     var started = false
         private set
 
@@ -28,20 +27,19 @@ object VaultTransitTestContainer {
             .withExposedPorts(VAULT_PORT)
             .withCopyFileToContainer(
                 MountableFile.forHostPath(
-                    hostKeyFile.toString()
+                    hostKeyFile.toString(),
                 ),
-                "key/private.pem"
-            )
-            .withCreateContainerCmdModifier { cmd ->
+                "key/private.pem",
+            ).withCreateContainerCmdModifier { cmd ->
                 cmd.withHostConfig(
                     HostConfig().withPortBindings(
-                        PortBinding(Ports.Binding.bindPort(VAULT_PORT), ExposedPort(VAULT_PORT))
-                    )
+                        PortBinding(Ports.Binding.bindPort(VAULT_PORT), ExposedPort(VAULT_PORT)),
+                    ),
                 )
-            }
-            .waitingFor(
-                Wait.forHttp("/ping")
-                    .forStatusCode(200)
+            }.waitingFor(
+                Wait
+                    .forHttp("/ping")
+                    .forStatusCode(200),
             )
     }
 
@@ -71,8 +69,9 @@ object StopVaultTransitTestContainer : AfterProjectListener {
     }
 }
 
-val localVaultConfig = VaultConfig(
-    url = "http://localhost:$VAULT_PORT/v1/transit",
-    key = "test-key",
-    tokenPath = "src/test/resources/vault_token_mock.txt",
-)
+val localVaultConfig =
+    VaultConfig(
+        url = "http://localhost:$VAULT_PORT/v1/transit",
+        key = "test-key",
+        tokenPath = "src/test/resources/vault_token_mock.txt",
+    )

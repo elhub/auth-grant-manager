@@ -38,17 +38,19 @@ import java.util.UUID
 
 interface DocumentRepository {
     fun find(id: UUID): Either<RepositoryReadError, AuthorizationDocument>
+
     fun insert(
         doc: AuthorizationDocument,
-        scopes: List<CreateScopeData>
+        scopes: List<CreateScopeData>,
     ): Either<RepositoryWriteError, AuthorizationDocument>
 
     fun findAll(requestedBy: AuthorizationParty): Either<RepositoryReadError, List<AuthorizationDocument>>
+
     fun confirm(
         documentId: UUID,
         signedFile: ByteArray,
         requestedFrom: AuthorizationParty,
-        signatory: AuthorizationParty
+        signatory: AuthorizationParty,
     ): Either<RepositoryWriteError, AuthorizationDocument>
 
     fun findScopeIds(documentId: UUID): Either<RepositoryReadError, List<UUID>>
@@ -58,47 +60,54 @@ class ExposedDocumentRepository(
     private val partyRepo: PartyRepository,
     private val documentPropertiesRepository: DocumentPropertiesRepository,
 ) : DocumentRepository {
-
     override fun insert(
         doc: AuthorizationDocument,
-        scopes: List<CreateScopeData>
+        scopes: List<CreateScopeData>,
     ): Either<RepositoryWriteError, AuthorizationDocument> =
         either {
-            val requestedByParty = partyRepo.findOrInsert(doc.requestedBy.type, doc.requestedBy.resourceId)
-                .mapLeft { RepositoryWriteError.UnexpectedError }
-                .bind()
+            val requestedByParty =
+                partyRepo
+                    .findOrInsert(doc.requestedBy.type, doc.requestedBy.resourceId)
+                    .mapLeft { RepositoryWriteError.UnexpectedError }
+                    .bind()
 
-            val requestedFromParty = partyRepo.findOrInsert(doc.requestedFrom.type, doc.requestedFrom.resourceId)
-                .mapLeft { RepositoryWriteError.UnexpectedError }
-                .bind()
+            val requestedFromParty =
+                partyRepo
+                    .findOrInsert(doc.requestedFrom.type, doc.requestedFrom.resourceId)
+                    .mapLeft { RepositoryWriteError.UnexpectedError }
+                    .bind()
 
-            val requestedToParty = partyRepo.findOrInsert(doc.requestedTo.type, doc.requestedTo.resourceId)
-                .mapLeft { RepositoryWriteError.UnexpectedError }
-                .bind()
+            val requestedToParty =
+                partyRepo
+                    .findOrInsert(doc.requestedTo.type, doc.requestedTo.resourceId)
+                    .mapLeft { RepositoryWriteError.UnexpectedError }
+                    .bind()
 
-            val documentRow = AuthorizationDocumentTable.insertReturning {
-                it[id] = doc.id
-                it[type] = doc.type
-                it[status] = DatabaseStatus.Pending
-                it[file] = doc.file
-                it[requestedBy] = requestedByParty.id
-                it[requestedFrom] = requestedFromParty.id
-                it[requestedTo] = requestedToParty.id
-                it[validTo] = doc.validTo
-                it[createdAt] = doc.createdAt
-                it[updatedAt] = doc.updatedAt
-            }.single()
+            val documentRow =
+                AuthorizationDocumentTable
+                    .insertReturning {
+                        it[id] = doc.id
+                        it[type] = doc.type
+                        it[status] = DatabaseStatus.Pending
+                        it[file] = doc.file
+                        it[requestedBy] = requestedByParty.id
+                        it[requestedFrom] = requestedFromParty.id
+                        it[requestedTo] = requestedToParty.id
+                        it[validTo] = doc.validTo
+                        it[createdAt] = doc.createdAt
+                        it[updatedAt] = doc.updatedAt
+                    }.single()
 
             documentPropertiesRepository.insert(doc.properties, doc.id)
 
-            val scopeIds: List<UUID> = AuthorizationScopeTable
-                .batchInsert(scopes) { scope ->
-                    this[AuthorizationScopeTable.id] = UUID.randomUUID()
-                    this[authorizedResourceType] = scope.authorizedResourceType
-                    this[authorizedResourceId] = scope.authorizedResourceId
-                    this[permissionType] = scope.permissionType
-                }
-                .map { it[AuthorizationScopeTable.id].value }
+            val scopeIds: List<UUID> =
+                AuthorizationScopeTable
+                    .batchInsert(scopes) { scope ->
+                        this[AuthorizationScopeTable.id] = UUID.randomUUID()
+                        this[authorizedResourceType] = scope.authorizedResourceType
+                        this[authorizedResourceId] = scope.authorizedResourceId
+                        this[permissionType] = scope.permissionType
+                    }.map { it[AuthorizationScopeTable.id].value }
 
             AuthorizationDocumentScopeTable.batchInsert(scopeIds) { scopeId ->
                 this[authorizationDocumentId] = documentRow[AuthorizationDocumentTable.id].value
@@ -110,11 +119,12 @@ class ExposedDocumentRepository(
 
     override fun find(id: UUID): Either<RepositoryReadError, AuthorizationDocument> =
         either {
-            val documentRow = AuthorizationDocumentTable
-                .selectAll()
-                .where { AuthorizationDocumentTable.id eq id }
-                .map { it }
-                .singleOrNull() ?: raise(RepositoryReadError.NotFoundError)
+            val documentRow =
+                AuthorizationDocumentTable
+                    .selectAll()
+                    .where { AuthorizationDocumentTable.id eq id }
+                    .map { it }
+                    .singleOrNull() ?: raise(RepositoryReadError.NotFoundError)
 
             val requestedByDbId = documentRow[AuthorizationDocumentTable.requestedBy]
             val requestedByParty = resolveParty(requestedByDbId).bind()
@@ -133,8 +143,7 @@ class ExposedDocumentRepository(
                     .where {
                         (SignatoriesTable.authorizationDocumentId eq id) and
                             (SignatoriesTable.requestedFrom eq documentRow[AuthorizationDocumentTable.requestedFrom])
-                    }
-                    .singleOrNull()
+                    }.singleOrNull()
                     ?.let {
                         resolveParty(it[SignatoriesTable.signedBy]).bind()
                     }
@@ -144,7 +153,7 @@ class ExposedDocumentRepository(
                 requestedFrom = requestedFromParty,
                 requestedTo = requestedToParty,
                 properties = properties,
-                signedBy = signatory
+                signedBy = signatory,
             )
         }
 
@@ -152,7 +161,7 @@ class ExposedDocumentRepository(
         documentId: UUID,
         signedFile: ByteArray,
         requestedFrom: AuthorizationParty,
-        signatory: AuthorizationParty
+        signatory: AuthorizationParty,
     ): Either<RepositoryWriteError, AuthorizationDocument> =
         either {
             val updatedCount =
@@ -169,7 +178,7 @@ class ExposedDocumentRepository(
                         }
 
                         AuthorizationDocumentTable.update(
-                            where = { AuthorizationDocumentTable.id eq documentId }
+                            where = { AuthorizationDocumentTable.id eq documentId },
                         ) {
                             it[file] = signedFile
                             it[updatedAt] = OffsetDateTime.now(ZoneId.of("Europe/Oslo"))
@@ -191,46 +200,53 @@ class ExposedDocumentRepository(
         }
 
     override fun findScopeIds(documentId: UUID): Either<RepositoryReadError, List<UUID>> =
-        Either.catch {
-            (AuthorizationDocumentScopeTable innerJoin AuthorizationScopeTable)
-                .select(AuthorizationScopeTable.id)
-                .where { authorizationDocumentId eq documentId }
-                .map { row ->
-                    row[AuthorizationScopeTable.id].value
-                }
-        }.mapLeft { RepositoryReadError.UnexpectedError }
+        Either
+            .catch {
+                (AuthorizationDocumentScopeTable innerJoin AuthorizationScopeTable)
+                    .select(AuthorizationScopeTable.id)
+                    .where { authorizationDocumentId eq documentId }
+                    .map { row ->
+                        row[AuthorizationScopeTable.id].value
+                    }
+            }.mapLeft { RepositoryReadError.UnexpectedError }
 
     override fun findAll(requestedBy: AuthorizationParty): Either<RepositoryReadError, List<AuthorizationDocument>> =
         either {
-            val partyRecord = partyRepo.findOrInsert(type = requestedBy.type, partyId = requestedBy.resourceId)
-                .mapLeft { RepositoryReadError.UnexpectedError }
-                .bind()
+            val partyRecord =
+                partyRepo
+                    .findOrInsert(type = requestedBy.type, partyId = requestedBy.resourceId)
+                    .mapLeft { RepositoryReadError.UnexpectedError }
+                    .bind()
 
-            val documentWithSignatoryRecords = (AuthorizationDocumentTable leftJoin SignatoriesTable)
-                .select(AuthorizationDocumentTable.columns + SignatoriesTable.signedBy)
-                .where { (AuthorizationDocumentTable.requestedBy eq partyRecord.id) or (AuthorizationDocumentTable.requestedFrom eq partyRecord.id) }
-                .toList()
+            val documentWithSignatoryRecords =
+                (AuthorizationDocumentTable leftJoin SignatoriesTable)
+                    .select(AuthorizationDocumentTable.columns + SignatoriesTable.signedBy)
+                    .where { (AuthorizationDocumentTable.requestedBy eq partyRecord.id) or (AuthorizationDocumentTable.requestedFrom eq partyRecord.id) }
+                    .toList()
 
             if (documentWithSignatoryRecords.isEmpty()) {
                 return@either emptyList()
             }
 
-            val partyIds = documentWithSignatoryRecords.flatMap { row ->
-                setOfNotNull(
-                    row[AuthorizationDocumentTable.requestedBy],
-                    row[AuthorizationDocumentTable.requestedFrom],
-                    row[AuthorizationDocumentTable.requestedTo],
-                    row[SignatoriesTable.signedBy]
-                )
-            }.toSet()
+            val partyIds =
+                documentWithSignatoryRecords
+                    .flatMap { row ->
+                        setOfNotNull(
+                            row[AuthorizationDocumentTable.requestedBy],
+                            row[AuthorizationDocumentTable.requestedFrom],
+                            row[AuthorizationDocumentTable.requestedTo],
+                            row[SignatoriesTable.signedBy],
+                        )
+                    }.toSet()
 
-            val partiesById = AuthorizationPartyTable
-                .selectAll()
-                .where { AuthorizationPartyTable.id inList partyIds }
-                .associate { row ->
-                    val party = row.toAuthorizationParty()
-                    party.id to party
-                }
+            val partiesById =
+                AuthorizationPartyTable
+                    .selectAll()
+                    .where { AuthorizationPartyTable.id inList partyIds }
+                    .associate { row ->
+                        val party = row.toAuthorizationParty()
+                        party.id to party
+                    }
 
             documentWithSignatoryRecords.map { row ->
                 val requestedByParty =
@@ -250,21 +266,20 @@ class ExposedDocumentRepository(
                     requestedFromParty,
                     requestedToParty,
                     properties,
-                    signedByParty
+                    signedByParty,
                 )
             }
         }
 
-    private fun resolveParty(
-        partyId: UUID
-    ): Either<RepositoryReadError.UnexpectedError, AuthorizationPartyRecord> =
-        partyRepo.find(partyId)
+    private fun resolveParty(partyId: UUID): Either<RepositoryReadError.UnexpectedError, AuthorizationPartyRecord> =
+        partyRepo
+            .find(partyId)
             .mapLeft { RepositoryReadError.UnexpectedError }
 }
 
 enum class DatabaseStatus {
     Pending,
-    Rejected
+    Rejected,
 }
 
 fun DatabaseStatus.toDocumentStatus() =
@@ -274,19 +289,21 @@ fun DatabaseStatus.toDocumentStatus() =
     }
 
 object AuthorizationDocumentTable : UUIDTable("auth.authorization_document") {
-    val type = customEnumeration(
-        name = "type",
-        sql = "authorization_document_type",
-        fromDb = { AuthorizationDocument.Type.valueOf(it as String) },
-        toDb = { PGEnum("authorization_document_type", it) },
-    )
+    val type =
+        customEnumeration(
+            name = "type",
+            sql = "authorization_document_type",
+            fromDb = { AuthorizationDocument.Type.valueOf(it as String) },
+            toDb = { PGEnum("authorization_document_type", it) },
+        )
     val file = binary("file")
-    val status = customEnumeration(
-        name = "status",
-        sql = "authorization_document_status",
-        fromDb = { DatabaseStatus.valueOf(it as String) },
-        toDb = { PGEnum("authorization_document_status", it) },
-    )
+    val status =
+        customEnumeration(
+            name = "status",
+            sql = "authorization_document_status",
+            fromDb = { DatabaseStatus.valueOf(it as String) },
+            toDb = { PGEnum("authorization_document_status", it) },
+        )
     val requestedBy = uuid("requested_by").references(AuthorizationPartyTable.id)
     val requestedFrom = uuid("requested_from").references(AuthorizationPartyTable.id)
     val requestedTo = uuid("requested_to").references(AuthorizationPartyTable.id)
@@ -296,21 +313,26 @@ object AuthorizationDocumentTable : UUIDTable("auth.authorization_document") {
 }
 
 object AuthorizationDocumentScopeTable : Table("auth.authorization_document_scope") {
-    val authorizationDocumentId = uuid("authorization_document_id")
-        .references(AuthorizationDocumentTable.id, onDelete = ReferenceOption.CASCADE)
-    val authorizationScopeId = uuid("authorization_scope_id")
-        .references(AuthorizationScopeTable.id, onDelete = ReferenceOption.CASCADE)
+    val authorizationDocumentId =
+        uuid("authorization_document_id")
+            .references(AuthorizationDocumentTable.id, onDelete = ReferenceOption.CASCADE)
+    val authorizationScopeId =
+        uuid("authorization_scope_id")
+            .references(AuthorizationScopeTable.id, onDelete = ReferenceOption.CASCADE)
     val createdAt = timestamp("created_at").clientDefault { java.time.Instant.now() }
     override val primaryKey = PrimaryKey(authorizationDocumentId, authorizationScopeId)
 }
 
 object SignatoriesTable : Table("auth.authorization_document_signatories") {
-    val authorizationDocumentId = uuid("authorization_document_id")
-        .references(AuthorizationDocumentTable.id, onDelete = ReferenceOption.CASCADE)
-    val requestedFrom = uuid("requested_from")
-        .references(AuthorizationPartyTable.id)
-    val signedBy = uuid("signed_by")
-        .references(AuthorizationPartyTable.id)
+    val authorizationDocumentId =
+        uuid("authorization_document_id")
+            .references(AuthorizationDocumentTable.id, onDelete = ReferenceOption.CASCADE)
+    val requestedFrom =
+        uuid("requested_from")
+            .references(AuthorizationPartyTable.id)
+    val signedBy =
+        uuid("signed_by")
+            .references(AuthorizationPartyTable.id)
     val signedAt = timestamp("signed_at").clientDefault { java.time.Instant.now() }
 
     override val primaryKey = PrimaryKey(authorizationDocumentId, requestedFrom)
@@ -321,17 +343,18 @@ fun ResultRow.toAuthorizationDocument(
     requestedFrom: AuthorizationPartyRecord,
     requestedTo: AuthorizationPartyRecord,
     properties: List<AuthorizationDocumentProperty>,
-    signedBy: AuthorizationPartyRecord? = null
+    signedBy: AuthorizationPartyRecord? = null,
 ): AuthorizationDocument {
     val dbStatus = this[AuthorizationDocumentTable.status]
     val validTo = this[AuthorizationDocumentTable.validTo]
 
-    val status: AuthorizationDocument.Status = when {
-        signedBy != null -> AuthorizationDocument.Status.Signed
-        dbStatus == DatabaseStatus.Rejected -> AuthorizationDocument.Status.Rejected
-        dbStatus == DatabaseStatus.Pending && validTo <= OffsetDateTime.now(ZoneOffset.UTC) -> AuthorizationDocument.Status.Expired
-        else -> dbStatus.toDocumentStatus()
-    }
+    val status: AuthorizationDocument.Status =
+        when {
+            signedBy != null -> AuthorizationDocument.Status.Signed
+            dbStatus == DatabaseStatus.Rejected -> AuthorizationDocument.Status.Rejected
+            dbStatus == DatabaseStatus.Pending && validTo <= OffsetDateTime.now(ZoneOffset.UTC) -> AuthorizationDocument.Status.Expired
+            else -> dbStatus.toDocumentStatus()
+        }
 
     return AuthorizationDocument(
         id = this[AuthorizationDocumentTable.id].value,
@@ -345,6 +368,6 @@ fun ResultRow.toAuthorizationDocument(
         createdAt = this[AuthorizationDocumentTable.createdAt],
         updatedAt = this[AuthorizationDocumentTable.updatedAt],
         validTo = validTo,
-        properties = properties
+        properties = properties,
     )
 }

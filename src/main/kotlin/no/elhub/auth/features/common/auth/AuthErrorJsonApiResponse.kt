@@ -6,49 +6,64 @@ import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 
 fun AuthError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> =
     when (this) {
-        AuthError.MissingAuthorizationHeader -> buildApiErrorResponse(
-            status = HttpStatusCode.Unauthorized,
-            title = "Missing authorization",
-            detail = "Bearer token is required in the Authorization header."
-        )
+        AuthError.MissingAuthorizationHeader -> {
+            buildApiErrorResponse(
+                status = HttpStatusCode.Unauthorized,
+                title = "Missing authorization",
+                detail = "Bearer token is required in the Authorization header.",
+            )
+        }
 
-        AuthError.InvalidAuthorizationHeader -> buildApiErrorResponse(
-            status = HttpStatusCode.Unauthorized,
-            title = "Invalid authorization header",
-            detail = "Authorization header must use the Bearer scheme."
-        )
+        AuthError.InvalidAuthorizationHeader -> {
+            buildApiErrorResponse(
+                status = HttpStatusCode.Unauthorized,
+                title = "Invalid authorization header",
+                detail = "Authorization header must use the Bearer scheme.",
+            )
+        }
 
-        AuthError.MissingSenderGlnHeader -> buildApiErrorResponse(
-            status = HttpStatusCode.BadRequest,
-            title = "Missing senderGLN header",
-            detail = "SenderGLN header is required for authorization."
-        )
+        AuthError.MissingSenderGlnHeader -> {
+            buildApiErrorResponse(
+                status = HttpStatusCode.BadRequest,
+                title = "Missing senderGLN header",
+                detail = "SenderGLN header is required for authorization.",
+            )
+        }
 
-        AuthError.InvalidToken -> buildApiErrorResponse(
-            status = HttpStatusCode.Unauthorized,
-            title = "Invalid token",
-            detail = "Token could not be verified."
-        )
+        AuthError.InvalidToken -> {
+            buildApiErrorResponse(
+                status = HttpStatusCode.Unauthorized,
+                title = "Invalid token",
+                detail = "Token could not be verified.",
+            )
+        }
 
-        AuthError.ActingFunctionNotSupported -> buildApiErrorResponse(
-            status = HttpStatusCode.Forbidden,
-            title = "Unsupported party type",
-            detail = "The party type you are authorized as is not supported for this endpoint."
-        )
+        AuthError.ActingFunctionNotSupported -> {
+            buildApiErrorResponse(
+                status = HttpStatusCode.Forbidden,
+                title = "Unsupported party type",
+                detail = "The party type you are authorized as is not supported for this endpoint.",
+            )
+        }
 
         AuthError.ValidationInfoMissing,
         AuthError.ActingGlnMissing,
         AuthError.ActingFunctionMissing,
         AuthError.UnexpectedError,
-        AuthError.UnknownError -> buildApiErrorResponse(
-            status = HttpStatusCode.InternalServerError,
-            title = "Internal server error",
-            detail = "An internal error occurred."
-        )
+        AuthError.UnknownError,
+        -> {
+            buildApiErrorResponse(
+                status = HttpStatusCode.InternalServerError,
+                title = "Internal server error",
+                detail = "An internal error occurred.",
+            )
+        }
 
-        AuthError.NotAuthorized -> buildApiErrorResponse(
-            status = HttpStatusCode.Unauthorized,
-            title = "Not authorized",
-            detail = "Not authorized for this endpoint."
-        )
+        AuthError.NotAuthorized -> {
+            buildApiErrorResponse(
+                status = HttpStatusCode.Unauthorized,
+                title = "Not authorized",
+                detail = "Not authorized for this endpoint.",
+            )
+        }
     }

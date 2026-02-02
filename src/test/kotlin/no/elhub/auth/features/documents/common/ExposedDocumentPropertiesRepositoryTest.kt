@@ -17,72 +17,74 @@ import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.UUID
 
-class ExposedDocumentPropertiesRepositoryTest : FunSpec({
-    extensions(PostgresTestContainerExtension())
+class ExposedDocumentPropertiesRepositoryTest :
+    FunSpec({
+        extensions(PostgresTestContainerExtension())
 
-    val repository = ExposedDocumentPropertiesRepository()
-    val documentRepository =
-        ExposedDocumentRepository(partyRepo = ExposedPartyRepository(), documentPropertiesRepository = repository)
+        val repository = ExposedDocumentPropertiesRepository()
+        val documentRepository =
+            ExposedDocumentRepository(partyRepo = ExposedPartyRepository(), documentPropertiesRepository = repository)
 
-    beforeSpec {
-        Database.connect(
-            url = PostgresTestContainer.JDBC_URL,
-            driver = PostgresTestContainer.DRIVER,
-            user = PostgresTestContainer.USERNAME,
-            password = PostgresTestContainer.PASSWORD,
-        )
-    }
-
-    beforeTest {
-        transaction {
-            AuthorizationDocumentPropertyTable.deleteAll()
+        beforeSpec {
+            Database.connect(
+                url = PostgresTestContainer.JDBC_URL,
+                driver = PostgresTestContainer.DRIVER,
+                user = PostgresTestContainer.USERNAME,
+                password = PostgresTestContainer.PASSWORD,
+            )
         }
-    }
 
-    val documentId = UUID.randomUUID()
-    context("Document properties repository") {
-        test("insert empty list should not create rows") {
-            val properties = emptyList<AuthorizationDocumentProperty>()
+        beforeTest {
             transaction {
-                repository.insert(properties, documentId)
-                AuthorizationDocumentPropertyTable.selectAll().count().shouldBe(0)
+                AuthorizationDocumentPropertyTable.deleteAll()
             }
         }
 
-        test("insert persists all provided properties and find returns them") {
-            val document =
-                AuthorizationDocument(
-                    id = UUID.randomUUID(),
-                    file = byteArrayOf(),
-                    type = AuthorizationDocument.Type.ChangeOfEnergySupplierForPerson,
-                    status = AuthorizationDocument.Status.Pending,
-                    requestedBy = AuthorizationParty(type = PartyType.Person, resourceId = "1234567890"),
-                    requestedFrom = AuthorizationParty(type = PartyType.Person, resourceId = "1234567890"),
-                    requestedTo = AuthorizationParty(type = PartyType.Person, resourceId = "1234567890"),
-                    signedBy = AuthorizationParty(type = PartyType.Person, resourceId = "1234567890"),
-                    properties = emptyList(),
-                    validTo = currentTimeWithTimeZone().plusDays(1),
-                    createdAt = currentTimeWithTimeZone(),
-                    updatedAt = currentTimeWithTimeZone()
-                )
+        val documentId = UUID.randomUUID()
+        context("Document properties repository") {
+            test("insert empty list should not create rows") {
+                val properties = emptyList<AuthorizationDocumentProperty>()
+                transaction {
+                    repository.insert(properties, documentId)
+                    AuthorizationDocumentPropertyTable.selectAll().count().shouldBe(0)
+                }
+            }
 
-            transaction {
-                documentRepository.insert(document, listOf())
+            test("insert persists all provided properties and find returns them") {
+                val document =
+                    AuthorizationDocument(
+                        id = UUID.randomUUID(),
+                        file = byteArrayOf(),
+                        type = AuthorizationDocument.Type.ChangeOfEnergySupplierForPerson,
+                        status = AuthorizationDocument.Status.Pending,
+                        requestedBy = AuthorizationParty(type = PartyType.Person, resourceId = "1234567890"),
+                        requestedFrom = AuthorizationParty(type = PartyType.Person, resourceId = "1234567890"),
+                        requestedTo = AuthorizationParty(type = PartyType.Person, resourceId = "1234567890"),
+                        signedBy = AuthorizationParty(type = PartyType.Person, resourceId = "1234567890"),
+                        properties = emptyList(),
+                        validTo = currentTimeWithTimeZone().plusDays(1),
+                        createdAt = currentTimeWithTimeZone(),
+                        updatedAt = currentTimeWithTimeZone(),
+                    )
 
-                val properties = listOf(
-                    AuthorizationDocumentProperty("requestedFromName", "Ola Normann"),
-                    AuthorizationDocumentProperty("meteringPointId", "1234")
-                )
+                transaction {
+                    documentRepository.insert(document, listOf())
 
-                repository.insert(properties, document.id)
-                repository.find(document.id) shouldContainExactlyInAnyOrder properties
+                    val properties =
+                        listOf(
+                            AuthorizationDocumentProperty("requestedFromName", "Ola Normann"),
+                            AuthorizationDocumentProperty("meteringPointId", "1234"),
+                        )
+
+                    repository.insert(properties, document.id)
+                    repository.find(document.id) shouldContainExactlyInAnyOrder properties
+                }
+            }
+
+            test("find returns empty list when no properties exist for document") {
+                transaction {
+                    repository.find(UUID.randomUUID()).shouldBeEmpty()
+                }
             }
         }
-
-        test("find returns empty list when no properties exist for document") {
-            transaction {
-                repository.find(UUID.randomUUID()).shouldBeEmpty()
-            }
-        }
-    }
-})
+    })

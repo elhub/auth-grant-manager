@@ -8,13 +8,13 @@ import java.util.UUID
 
 @Serializable
 data class PersonRequestAttributes(
-    val nationalIdentityNumber: String
+    val nationalIdentityNumber: String,
 ) : JsonApiAttributes
 
 @Serializable
 data class PersonResponseAttributes(
     val type: String,
-    val id: String
+    val id: String,
 ) : JsonApiAttributes
 
 typealias PersonRequest = JsonApiRequest.SingleDocument<PersonRequestAttributes>

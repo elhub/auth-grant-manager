@@ -11,13 +11,13 @@ data class Attributes(
     val gridAccessContract: GridAccessContract? = null,
     val balanceSupplierContract: BalanceSupplierContract? = null,
     val accessType: AccessType? = null,
-    val isHistoricMeteringPoint: Boolean? = null
+    val isHistoricMeteringPoint: Boolean? = null,
 ) : JsonApiAttributes {
     @Serializable
     data class GridAccessContract(
         val start: String,
         val end: String? = null,
-        val partyFunction: PartyFunction
+        val partyFunction: PartyFunction,
     )
 
     @Serializable
@@ -25,7 +25,7 @@ data class Attributes(
         val start: String,
         val end: String? = null,
         val partyFunction: PartyFunction,
-        val contractOfLastResort: Boolean
+        val contractOfLastResort: Boolean,
     )
 
     @Serializable
@@ -37,13 +37,13 @@ data class Attributes(
     @Serializable
     enum class AccessType {
         OWNED,
-        SHARED
+        SHARED,
     }
 }
 
 @Serializable
 data class Relationships(
-    val endUser: JsonApiRelationshipToOne? = null
+    val endUser: JsonApiRelationshipToOne? = null,
 ) : JsonApiRelationships {
     companion object {
         const val END_USER = "end-user"

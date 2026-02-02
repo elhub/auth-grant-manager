@@ -14,31 +14,35 @@ class Handler(
     private val requestRepository: RequestRepository,
     private val grantRepository: GrantRepository,
 ) {
-
     private val logger = LoggerFactory.getLogger(Handler::class.java)
 
-    operator fun invoke(query: Query): Either<QueryError, List<AuthorizationRequest>> = either {
-        transaction {
-            val list = requestRepository.findAllBy(query.authorizedParty)
-                .mapLeft { QueryError.ResourceNotFoundError }
-                .bind()
+    operator fun invoke(query: Query): Either<QueryError, List<AuthorizationRequest>> =
+        either {
+            transaction {
+                val list =
+                    requestRepository
+                        .findAllBy(query.authorizedParty)
+                        .mapLeft { QueryError.ResourceNotFoundError }
+                        .bind()
 
-            list.map { request ->
-                if (request.approvedBy == null) {
-                    return@map request
-                } else {
-                    // grant can only exist if approvedBy is set
-                    val grant = grantRepository.findBySource(
-                        AuthorizationGrant.SourceType.Request,
-                        request.id
-                    ).mapLeft {
-                        logger.error("approvedBy is present but grant not found for request ${request.id}")
-                        QueryError.ResourceNotFoundError
-                    }.bind()
+                list.map { request ->
+                    if (request.approvedBy == null) {
+                        return@map request
+                    } else {
+                        // grant can only exist if approvedBy is set
+                        val grant =
+                            grantRepository
+                                .findBySource(
+                                    AuthorizationGrant.SourceType.Request,
+                                    request.id,
+                                ).mapLeft {
+                                    logger.error("approvedBy is present but grant not found for request ${request.id}")
+                                    QueryError.ResourceNotFoundError
+                                }.bind()
 
-                    grant?.let { request.copy(grantId = it.id) } ?: request
+                        grant?.let { request.copy(grantId = it.id) } ?: request
+                    }
                 }
             }
         }
-    }
 }

@@ -6,7 +6,7 @@ import no.elhub.auth.features.common.auth.PDPAuthorizationProvider.Companion.Hea
 
 @Serializable
 data class PdpRequest(
-    val input: Input
+    val input: Input,
 )
 
 @Serializable
@@ -14,7 +14,7 @@ data class Input(
     @SerialName("ElhubTraceId")
     val elhubTraceId: String,
     val token: String,
-    val payload: PdpPayload? = null
+    val payload: PdpPayload? = null,
 )
 
 @Serializable
@@ -22,7 +22,7 @@ sealed interface PdpPayload {
     @Serializable
     data class Self(
         @SerialName(Headers.SENDER_GLN)
-        val senderGLN: String
+        val senderGLN: String,
     ) : PdpPayload
 
     @Serializable
@@ -30,6 +30,6 @@ sealed interface PdpPayload {
         @SerialName(Headers.SENDER_GLN)
         val senderGLN: String,
         @SerialName(Headers.ON_BEHALF_OF_GLN)
-        val onBehalfOfGLN: String
+        val onBehalfOfGLN: String,
     ) : PdpPayload
 }

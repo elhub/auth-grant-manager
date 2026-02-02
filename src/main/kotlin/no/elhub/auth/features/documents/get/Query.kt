@@ -5,5 +5,5 @@ import java.util.UUID
 
 data class Query(
     val documentId: UUID,
-    val authorizedParty: AuthorizationParty
+    val authorizedParty: AuthorizationParty,
 )

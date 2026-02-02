@@ -10,12 +10,19 @@ import java.time.Instant
 import java.util.UUID
 
 interface DocumentPropertiesRepository {
-    fun insert(properties: List<AuthorizationDocumentProperty>, documentId: UUID)
+    fun insert(
+        properties: List<AuthorizationDocumentProperty>,
+        documentId: UUID,
+    )
+
     fun find(documentId: UUID): List<AuthorizationDocumentProperty>
 }
 
 class ExposedDocumentPropertiesRepository : DocumentPropertiesRepository {
-    override fun insert(properties: List<AuthorizationDocumentProperty>, documentId: UUID) {
+    override fun insert(
+        properties: List<AuthorizationDocumentProperty>,
+        documentId: UUID,
+    ) {
         if (properties.isEmpty()) return
         AuthorizationDocumentPropertyTable.batchInsert(properties) { property ->
             this[AuthorizationDocumentPropertyTable.documentId] = documentId
@@ -32,8 +39,9 @@ class ExposedDocumentPropertiesRepository : DocumentPropertiesRepository {
 }
 
 object AuthorizationDocumentPropertyTable : Table("auth.authorization_document_property") {
-    val documentId = uuid("authorization_document_id")
-        .references(AuthorizationDocumentTable.id, onDelete = ReferenceOption.CASCADE)
+    val documentId =
+        uuid("authorization_document_id")
+            .references(AuthorizationDocumentTable.id, onDelete = ReferenceOption.CASCADE)
     val key = varchar("key", length = 64)
     val value = text("value")
     val createdAt = timestamp("created_at").clientDefault { Instant.now() }
@@ -41,7 +49,8 @@ object AuthorizationDocumentPropertyTable : Table("auth.authorization_document_p
     override val primaryKey = PrimaryKey(documentId, key)
 }
 
-private fun ResultRow.toAuthorizationDocumentProperty() = AuthorizationDocumentProperty(
-    key = this[AuthorizationDocumentPropertyTable.key],
-    value = this[AuthorizationDocumentPropertyTable.value]
-)
+private fun ResultRow.toAuthorizationDocumentProperty() =
+    AuthorizationDocumentProperty(
+        key = this[AuthorizationDocumentPropertyTable.key],
+        value = this[AuthorizationDocumentPropertyTable.value],
+    )

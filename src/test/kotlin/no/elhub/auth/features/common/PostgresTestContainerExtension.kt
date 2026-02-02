@@ -35,8 +35,8 @@ class PostgresTestContainer {
             .withCreateContainerCmdModifier { cmd ->
                 cmd.withHostConfig(
                     HostConfig().withPortBindings(
-                        PortBinding(Ports.Binding.bindPort(POSTGRES_PORT), ExposedPort(POSTGRES_PORT))
-                    )
+                        PortBinding(Ports.Binding.bindPort(POSTGRES_PORT), ExposedPort(POSTGRES_PORT)),
+                    ),
                 )
             }
     }
@@ -55,13 +55,14 @@ class PostgresTestContainer {
         val user = pg.username
         val password = pg.password
         DriverManager.getConnection(url, user, password).use { conn ->
-            val db = DatabaseFactory
-                .getInstance()
-                .findCorrectDatabaseImplementation(JdbcConnection(conn))
+            val db =
+                DatabaseFactory
+                    .getInstance()
+                    .findCorrectDatabaseImplementation(JdbcConnection(conn))
             Liquibase(
                 "db/db-changelog.yaml",
                 DirectoryResourceAccessor(Paths.get(System.getProperty("user.dir"))),
-                db
+                db,
             ).apply {
                 setChangeLogParameter("APP_USERNAME", "app")
                 setChangeLogParameter("APP_PASSWORD", "app")
@@ -71,8 +72,11 @@ class PostgresTestContainer {
     }
 }
 
-class PostgresTestContainerExtension : BeforeSpecListener, AfterSpecListener {
+class PostgresTestContainerExtension :
+    BeforeSpecListener,
+    AfterSpecListener {
     val postgres = PostgresTestContainer()
+
     override suspend fun beforeSpec(spec: Spec) {
         postgres.start()
     }

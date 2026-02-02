@@ -8,11 +8,12 @@ import no.elhub.auth.features.common.StopAuthPersonsTestContainerExtension
 import no.elhub.auth.features.documents.StopVaultTransitTestContainer
 
 object ProjectConfig : AbstractProjectConfig() {
-    override val extensions = listOf(
-        CloseHttpClient,
-        StopVaultTransitTestContainer,
-        StopAuthPersonsTestContainerExtension,
-        StopMeteringPointsServiceTestContainerExtension,
-        CloseMeteringPointsServiceHttpClient
-    )
+    override val extensions =
+        listOf(
+            CloseHttpClient,
+            StopVaultTransitTestContainer,
+            StopAuthPersonsTestContainerExtension,
+            StopMeteringPointsServiceTestContainerExtension,
+            CloseMeteringPointsServiceHttpClient,
+        )
 }

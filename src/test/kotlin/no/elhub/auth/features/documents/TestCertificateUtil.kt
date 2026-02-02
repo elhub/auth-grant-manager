@@ -3,7 +3,6 @@ package no.elhub.auth.features.documents
 import java.io.File
 
 object TestCertificateUtil {
-
     object Constants {
         private const val LOCATION = "build/tmp/test-certs"
         const val CERTIFICATE_LOCATION = "$LOCATION/self-signed-cert.pem"

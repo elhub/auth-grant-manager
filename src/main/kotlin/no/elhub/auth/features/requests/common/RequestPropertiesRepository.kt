@@ -15,11 +15,11 @@ import java.util.UUID
 
 interface RequestPropertiesRepository {
     fun insert(properties: List<AuthorizationRequestProperty>): Either<RepositoryError, Unit>
+
     fun findBy(requestId: UUID): List<AuthorizationRequestProperty>
 }
 
 class ExposedRequestPropertiesRepository : RequestPropertiesRepository {
-
     override fun insert(properties: List<AuthorizationRequestProperty>): Either<RepositoryError, Unit> =
         either<RepositoryWriteError, Unit> {
             if (properties.isEmpty()) return@either
@@ -45,8 +45,9 @@ object AuthorizationRequestPropertyTable : Table("auth.authorization_request_pro
     val createdAt = timestampWithTimeZone("created_at").default(OffsetDateTime.now(ZoneId.of("Europe/Oslo")))
 }
 
-private fun ResultRow.toAuthorizationRequestProperty() = AuthorizationRequestProperty(
-    requestId = this[AuthorizationRequestPropertyTable.requestId],
-    key = this[AuthorizationRequestPropertyTable.key],
-    value = this[AuthorizationRequestPropertyTable.value]
-)
+private fun ResultRow.toAuthorizationRequestProperty() =
+    AuthorizationRequestProperty(
+        requestId = this[AuthorizationRequestPropertyTable.requestId],
+        key = this[AuthorizationRequestPropertyTable.key],
+        value = this[AuthorizationRequestPropertyTable.value],
+    )

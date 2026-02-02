@@ -84,14 +84,14 @@ class AuthorizationDocumentRouteTest :
             RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-party.sql"),
             VaultTransitTestContainerExtension,
             AuthPersonsTestContainerExtension,
-            pdpContainer
+            pdpContainer,
         )
 
         beforeSpec {
             pdpContainer.registerMaskinportenMapping(
                 token = "maskinporten",
                 actingGln = "0107000000021",
-                actingFunction = "BalanceSupplier"
+                actingFunction = "BalanceSupplier",
             )
         }
 
@@ -108,11 +108,12 @@ class AuthorizationDocumentRouteTest :
 
         context("Run document happy flow") {
             testApplication {
-                client = createClient {
-                    install(ContentNegotiation) {
-                        json()
+                client =
+                    createClient {
+                        install(ContentNegotiation) {
+                            json()
+                        }
                     }
-                }
                 application {
                     applicationModule()
                     testBusinessProcessesModule()
@@ -122,22 +123,23 @@ class AuthorizationDocumentRouteTest :
                 }
 
                 environment {
-                    config = MapApplicationConfig(
-                        "ktor.database.username" to "app",
-                        "ktor.database.password" to "app",
-                        "ktor.database.url" to "jdbc:postgresql://localhost:5432/auth",
-                        "ktor.database.driverClass" to "org.postgresql.Driver",
-                        "pdfGenerator.mustacheResourcePath" to "templates",
-                        "pdfSigner.vault.url" to "http://localhost:8200/v1/transit",
-                        "pdfSigner.vault.tokenPath" to "src/test/resources/vault_token_mock.txt",
-                        "pdfSigner.vault.key" to "test-key",
-                        "pdfSigner.certificate.signing" to TestCertificateUtil.Constants.CERTIFICATE_LOCATION,
-                        "pdfSigner.certificate.chain" to TestCertificateUtil.Constants.CERTIFICATE_LOCATION,
-                        "pdfSigner.certificate.bankIdIdRoot" to TestCertificateUtil.Constants.BANKID_ROOT_CERTIFICATE_LOCATION,
-                        "featureToggle.enableEndpoints" to "true",
-                        "authPersons.baseUri" to AuthPersonsTestContainer.baseUri(),
-                        "pdp.baseUrl" to "http://localhost:8085"
-                    )
+                    config =
+                        MapApplicationConfig(
+                            "ktor.database.username" to "app",
+                            "ktor.database.password" to "app",
+                            "ktor.database.url" to "jdbc:postgresql://localhost:5432/auth",
+                            "ktor.database.driverClass" to "org.postgresql.Driver",
+                            "pdfGenerator.mustacheResourcePath" to "templates",
+                            "pdfSigner.vault.url" to "http://localhost:8200/v1/transit",
+                            "pdfSigner.vault.tokenPath" to "src/test/resources/vault_token_mock.txt",
+                            "pdfSigner.vault.key" to "test-key",
+                            "pdfSigner.certificate.signing" to TestCertificateUtil.Constants.CERTIFICATE_LOCATION,
+                            "pdfSigner.certificate.chain" to TestCertificateUtil.Constants.CERTIFICATE_LOCATION,
+                            "pdfSigner.certificate.bankIdIdRoot" to TestCertificateUtil.Constants.BANKID_ROOT_CERTIFICATE_LOCATION,
+                            "featureToggle.enableEndpoints" to "true",
+                            "authPersons.baseUri" to AuthPersonsTestContainer.baseUri(),
+                            "pdp.baseUrl" to "http://localhost:8085",
+                        )
                 }
 
                 test("Should create a document and return correct response") {
@@ -150,32 +152,38 @@ class AuthorizationDocumentRouteTest :
                                 header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
                                 setBody(
                                     JsonApiCreateDocumentRequest(
-                                        data = JsonApiRequestResourceObjectWithMeta(
-                                            type = "AuthorizationDocument",
-                                            attributes = CreateDocumentRequestAttributes(
-                                                documentType = AuthorizationDocument.Type.ChangeOfEnergySupplierForPerson
+                                        data =
+                                            JsonApiRequestResourceObjectWithMeta(
+                                                type = "AuthorizationDocument",
+                                                attributes =
+                                                    CreateDocumentRequestAttributes(
+                                                        documentType = AuthorizationDocument.Type.ChangeOfEnergySupplierForPerson,
+                                                    ),
+                                                meta =
+                                                    CreateDocumentMeta(
+                                                        requestedBy =
+                                                            PartyIdentifier(
+                                                                idType = PartyIdentifierType.GlobalLocationNumber,
+                                                                idValue = "0107000000021",
+                                                            ),
+                                                        requestedFrom =
+                                                            PartyIdentifier(
+                                                                idType = PartyIdentifierType.NationalIdentityNumber,
+                                                                idValue = REQUESTED_FROM_NIN,
+                                                            ),
+                                                        requestedTo =
+                                                            PartyIdentifier(
+                                                                idType = PartyIdentifierType.NationalIdentityNumber,
+                                                                idValue = REQUESTED_TO_NIN,
+                                                            ),
+                                                        requestedFromName = "Hillary Orr",
+                                                        requestedForMeteringPointId = "123456789012345678",
+                                                        requestedForMeteringPointAddress = "quaerendum",
+                                                        balanceSupplierName = "Jami Wade",
+                                                        balanceSupplierContractName = "Selena Chandler",
+                                                    ),
                                             ),
-                                            meta = CreateDocumentMeta(
-                                                requestedBy = PartyIdentifier(
-                                                    idType = PartyIdentifierType.GlobalLocationNumber,
-                                                    idValue = "0107000000021"
-                                                ),
-                                                requestedFrom = PartyIdentifier(
-                                                    idType = PartyIdentifierType.NationalIdentityNumber,
-                                                    idValue = REQUESTED_FROM_NIN
-                                                ),
-                                                requestedTo = PartyIdentifier(
-                                                    idType = PartyIdentifierType.NationalIdentityNumber,
-                                                    idValue = REQUESTED_TO_NIN
-                                                ),
-                                                requestedFromName = "Hillary Orr",
-                                                requestedForMeteringPointId = "123456789012345678",
-                                                requestedForMeteringPointAddress = "quaerendum",
-                                                balanceSupplierName = "Jami Wade",
-                                                balanceSupplierContractName = "Selena Chandler"
-                                            )
-                                        )
-                                    )
+                                    ),
                                 )
                             }
 
@@ -239,14 +247,16 @@ class AuthorizationDocumentRouteTest :
                 }
 
                 test("Get created document should return correct response when authorized party is requestedBy and requestedFrom") {
-                    val response = client.get(linkToDocument) {
-                        header(HttpHeaders.Authorization, "Bearer maskinporten")
-                        header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
-                    }
+                    val response =
+                        client.get(linkToDocument) {
+                            header(HttpHeaders.Authorization, "Bearer maskinporten")
+                            header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                        }
                     response.status shouldBe HttpStatusCode.OK
                     val getDocumentResponse: GetDocumentSingleResponse = response.body()
                     getDocumentResponse
-                        .data.apply {
+                        .data
+                        .apply {
                             type shouldBe "AuthorizationDocument"
                             id!!.shouldBeValidUuid()
                             attributes.shouldNotBeNull().apply {
@@ -299,12 +309,13 @@ class AuthorizationDocumentRouteTest :
                     // Verify that response is the same for authorized enduser
                     pdpContainer.registerEnduserMapping(
                         token = "enduser",
-                        partyId = requestedFromId
+                        partyId = requestedFromId,
                     )
 
-                    val enduserResponse = client.get(linkToDocument) {
-                        header(HttpHeaders.Authorization, "Bearer enduser")
-                    }
+                    val enduserResponse =
+                        client.get(linkToDocument) {
+                            header(HttpHeaders.Authorization, "Bearer enduser")
+                        }
 
                     enduserResponse.status shouldBe HttpStatusCode.OK
                     val enduserDocumentResponse: GetDocumentSingleResponse = enduserResponse.body()
@@ -314,12 +325,13 @@ class AuthorizationDocumentRouteTest :
                 test("Get created document should return 403 Not Authorized when authorized party is requestedTo") {
                     pdpContainer.registerEnduserMapping(
                         token = "not-authorized",
-                        partyId = requestedToId
+                        partyId = requestedToId,
                     )
 
-                    val response = client.get(linkToDocument) {
-                        header(HttpHeaders.Authorization, "Bearer not-authorized")
-                    }
+                    val response =
+                        client.get(linkToDocument) {
+                            header(HttpHeaders.Authorization, "Bearer not-authorized")
+                        }
 
                     response.status shouldBe HttpStatusCode.Forbidden
 
@@ -337,66 +349,79 @@ class AuthorizationDocumentRouteTest :
                 test("Get document list should give proper size given the authorized user") {
 
                     // When authorized party is the requestedBy number of documents returned should be 1
-                    val requestedByResponse: GetDocumentCollectionResponse = client.get(DOCUMENTS_PATH) {
-                        header(HttpHeaders.Authorization, "Bearer maskinporten")
-                        header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
-                    }.body()
+                    val requestedByResponse: GetDocumentCollectionResponse =
+                        client
+                            .get(DOCUMENTS_PATH) {
+                                header(HttpHeaders.Authorization, "Bearer maskinporten")
+                                header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                            }.body()
 
                     requestedByResponse.data.size shouldBe 1
 
                     // When authorized party is the requestedFrom number of documents returned should be 1
-                    val requestedFromResponse: GetDocumentCollectionResponse = client.get(DOCUMENTS_PATH) {
-                        header(HttpHeaders.Authorization, "Bearer enduser")
-                        header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
-                    }.body()
+                    val requestedFromResponse: GetDocumentCollectionResponse =
+                        client
+                            .get(DOCUMENTS_PATH) {
+                                header(HttpHeaders.Authorization, "Bearer enduser")
+                                header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                            }.body()
 
                     requestedFromResponse.data.size shouldBe 1
 
                     // When authorized party is the requestedTo number of documents returned should be 0
-                    val requestedToResponse: GetDocumentCollectionResponse = client.get(DOCUMENTS_PATH) {
-                        header(HttpHeaders.Authorization, "Bearer not-authorized")
-                        header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
-                    }.body()
+                    val requestedToResponse: GetDocumentCollectionResponse =
+                        client
+                            .get(DOCUMENTS_PATH) {
+                                header(HttpHeaders.Authorization, "Bearer not-authorized")
+                                header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                            }.body()
 
                     requestedToResponse.data.size shouldBe 0
                 }
 
                 test("Get pdf file should have proper signature") {
-                    signedFile = client.get(linkToDocumentFile) {
-                        header(HttpHeaders.Authorization, "Bearer maskinporten")
-                        header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
-                    }.bodyAsBytes()
+                    signedFile =
+                        client
+                            .get(linkToDocumentFile) {
+                                header(HttpHeaders.Authorization, "Bearer maskinporten")
+                                header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                            }.bodyAsBytes()
                     signedFile.validateFileIsSignedByUs()
                 }
 
                 test("Put signed file should return 204") {
-                    val documentSignedByPerson = EndUserSignatureTestHelper().sign(
-                        pdfBytes = signedFile,
-                        nationalIdentityNumber = REQUESTED_TO_NIN
-                    )
+                    val documentSignedByPerson =
+                        EndUserSignatureTestHelper().sign(
+                            pdfBytes = signedFile,
+                            nationalIdentityNumber = REQUESTED_TO_NIN,
+                        )
 
-                    val response = client.put("$DOCUMENTS_PATH/$createdDocumentId.pdf") {
-                        contentType(ContentType.Application.Pdf)
-                        setBody(documentSignedByPerson)
-                        header(HttpHeaders.Authorization, "Bearer maskinporten")
-                        header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
-                    }
+                    val response =
+                        client.put("$DOCUMENTS_PATH/$createdDocumentId.pdf") {
+                            contentType(ContentType.Application.Pdf)
+                            setBody(documentSignedByPerson)
+                            header(HttpHeaders.Authorization, "Bearer maskinporten")
+                            header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                        }
                     response.status shouldBe HttpStatusCode.NoContent
                     response.bodyAsText().shouldBeEmpty()
                 }
 
                 test("Get document should give status Signed and reference to created grant") {
-                    val response = client.get(linkToDocument) {
-                        header(HttpHeaders.Authorization, "Bearer maskinporten")
-                        header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
-                    }
+                    val response =
+                        client.get(linkToDocument) {
+                            header(HttpHeaders.Authorization, "Bearer maskinporten")
+                            header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                        }
                     response.status shouldBe HttpStatusCode.OK
                     val getDocumentResponse: GetDocumentSingleResponse = response.body()
                     getDocumentResponse.data.attributes.shouldNotBeNull().apply {
                         status shouldBe AuthorizationDocument.Status.Signed.toString()
                     }
 
-                    val grantRelationship = getDocumentResponse.data.relationships.authorizationGrant.shouldNotBeNull()
+                    val grantRelationship =
+                        getDocumentResponse.data.relationships.authorizationGrant
+                            .shouldNotBeNull()
                     grantId = grantRelationship.data.id
                     grantRelationship.apply {
                         data.apply {
@@ -408,7 +433,9 @@ class AuthorizationDocumentRouteTest :
                         }
                     }
 
-                    val signedByRelationship = getDocumentResponse.data.relationships.signedBy.shouldNotBeNull()
+                    val signedByRelationship =
+                        getDocumentResponse.data.relationships.signedBy
+                            .shouldNotBeNull()
                     signedByRelationship.apply {
                         data.apply {
                             type shouldBe "Person"
@@ -418,10 +445,11 @@ class AuthorizationDocumentRouteTest :
                 }
 
                 test("Get grant by id should return proper response") {
-                    val response = client.get("$GRANTS_PATH/$grantId") {
-                        header(HttpHeaders.Authorization, "Bearer maskinporten")
-                        header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
-                    }
+                    val response =
+                        client.get("$GRANTS_PATH/$grantId") {
+                            header(HttpHeaders.Authorization, "Bearer maskinporten")
+                            header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                        }
                     response.status shouldBe HttpStatusCode.OK
                     val responseJson: SingleGrantResponse = response.body()
                     responseJson.data.apply {
@@ -429,15 +457,31 @@ class AuthorizationDocumentRouteTest :
                         type shouldBe "AuthorizationGrant"
                         attributes.shouldNotBeNull().apply {
                             status shouldBe "Active"
-                            Instant.parse(grantedAt)
-                                .toLocalDateTime(TimeZone.of("Europe/Oslo")).date shouldBe Clock.System.now()
-                                .toLocalDateTime(TimeZone.UTC).date
-                            Instant.parse(validFrom)
-                                .toLocalDateTime(TimeZone.of("Europe/Oslo")).date shouldBe Clock.System.now()
-                                .toLocalDateTime(TimeZone.UTC).date
-                            Instant.parse(validTo)
-                                .toLocalDateTime(TimeZone.of("Europe/Oslo")).date shouldBe Clock.System.now()
-                                .toLocalDateTime(TimeZone.UTC).date.plus(1, DateTimeUnit.YEAR)
+                            Instant
+                                .parse(grantedAt)
+                                .toLocalDateTime(TimeZone.of("Europe/Oslo"))
+                                .date shouldBe
+                                Clock.System
+                                    .now()
+                                    .toLocalDateTime(TimeZone.UTC)
+                                    .date
+                            Instant
+                                .parse(validFrom)
+                                .toLocalDateTime(TimeZone.of("Europe/Oslo"))
+                                .date shouldBe
+                                Clock.System
+                                    .now()
+                                    .toLocalDateTime(TimeZone.UTC)
+                                    .date
+                            Instant
+                                .parse(validTo)
+                                .toLocalDateTime(TimeZone.of("Europe/Oslo"))
+                                .date shouldBe
+                                Clock.System
+                                    .now()
+                                    .toLocalDateTime(TimeZone.UTC)
+                                    .date
+                                    .plus(1, DateTimeUnit.YEAR)
                         }
                         relationships.apply {
                             grantedFor.apply {
@@ -472,10 +516,11 @@ class AuthorizationDocumentRouteTest :
                 }
 
                 test("Get grant scopes by id should return proper response") {
-                    val response = client.get("$GRANTS_PATH/$grantId/scopes") {
-                        header(HttpHeaders.Authorization, "Bearer maskinporten")
-                        header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
-                    }
+                    val response =
+                        client.get("$GRANTS_PATH/$grantId/scopes") {
+                            header(HttpHeaders.Authorization, "Bearer maskinporten")
+                            header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                        }
                     response.status shouldBe HttpStatusCode.OK
                     val responseJson: AuthorizationGrantScopesResponse = response.body()
                     responseJson.data.apply {
@@ -510,11 +555,12 @@ class AuthorizationDocumentRouteTest :
         // TODO this should be moved to a proper place, but for that, we need to revisit the test setup
         context("Invalid User-Agent header") {
             testApplication {
-                client = createClient {
-                    install(ContentNegotiation) {
-                        json()
+                client =
+                    createClient {
+                        install(ContentNegotiation) {
+                            json()
+                        }
                     }
-                }
                 application {
                     applicationModule()
                     testBusinessProcessesModule()
@@ -524,22 +570,23 @@ class AuthorizationDocumentRouteTest :
                 }
 
                 environment {
-                    config = MapApplicationConfig(
-                        "ktor.database.username" to "app",
-                        "ktor.database.password" to "app",
-                        "ktor.database.url" to "jdbc:postgresql://localhost:5432/auth",
-                        "ktor.database.driverClass" to "org.postgresql.Driver",
-                        "pdfGenerator.mustacheResourcePath" to "templates",
-                        "pdfSigner.vault.url" to "http://localhost:8200/v1/transit",
-                        "pdfSigner.vault.tokenPath" to "src/test/resources/vault_token_mock.txt",
-                        "pdfSigner.vault.key" to "test-key",
-                        "pdfSigner.certificate.signing" to TestCertificateUtil.Constants.CERTIFICATE_LOCATION,
-                        "pdfSigner.certificate.chain" to TestCertificateUtil.Constants.CERTIFICATE_LOCATION,
-                        "pdfSigner.certificate.bankIdIdRoot" to TestCertificateUtil.Constants.BANKID_ROOT_CERTIFICATE_LOCATION,
-                        "featureToggle.enableEndpoints" to "true",
-                        "authPersons.baseUri" to AuthPersonsTestContainer.baseUri(),
-                        "pdp.baseUrl" to "http://localhost:8085"
-                    )
+                    config =
+                        MapApplicationConfig(
+                            "ktor.database.username" to "app",
+                            "ktor.database.password" to "app",
+                            "ktor.database.url" to "jdbc:postgresql://localhost:5432/auth",
+                            "ktor.database.driverClass" to "org.postgresql.Driver",
+                            "pdfGenerator.mustacheResourcePath" to "templates",
+                            "pdfSigner.vault.url" to "http://localhost:8200/v1/transit",
+                            "pdfSigner.vault.tokenPath" to "src/test/resources/vault_token_mock.txt",
+                            "pdfSigner.vault.key" to "test-key",
+                            "pdfSigner.certificate.signing" to TestCertificateUtil.Constants.CERTIFICATE_LOCATION,
+                            "pdfSigner.certificate.chain" to TestCertificateUtil.Constants.CERTIFICATE_LOCATION,
+                            "pdfSigner.certificate.bankIdIdRoot" to TestCertificateUtil.Constants.BANKID_ROOT_CERTIFICATE_LOCATION,
+                            "featureToggle.enableEndpoints" to "true",
+                            "authPersons.baseUri" to AuthPersonsTestContainer.baseUri(),
+                            "pdp.baseUrl" to "http://localhost:8085",
+                        )
                 }
 
                 test("Empty User-Agent header should return 400") {
@@ -570,41 +617,44 @@ private const val REQUESTED_FROM_NIN = "12010180315"
 private const val REQUESTED_TO_NIN = "21038140997"
 
 private class TestDocumentBusinessHandler : DocumentBusinessHandler {
-    override suspend fun validateAndReturnDocumentCommand(
-        model: CreateDocumentModel
-    ) = when (model.documentType) {
-        AuthorizationDocument.Type.ChangeOfEnergySupplierForPerson -> {
-            val meta = model.meta
-            DocumentCommand(
-                type = AuthorizationDocument.Type.ChangeOfEnergySupplierForPerson,
-                requestedFrom = meta.requestedFrom,
-                requestedTo = meta.requestedTo,
-                requestedBy = meta.requestedBy,
-                validTo = defaultValidTo().toTimeZoneOffsetDateTimeAtStartOfDay(),
-                scopes = listOf(
-                    CreateScopeData(
-                        authorizedResourceType = AuthorizationScope.AuthorizationResource.MeteringPoint,
-                        authorizedResourceId = meta.requestedForMeteringPointId,
-                        permissionType = AuthorizationScope.PermissionType.ChangeOfEnergySupplierForPerson
-                    )
-                ),
-                meta = ChangeOfSupplierBusinessMeta(
-                    requestedFromName = meta.requestedFromName,
-                    requestedForMeteringPointId = meta.requestedForMeteringPointId,
-                    requestedForMeteringPointAddress = meta.requestedForMeteringPointAddress,
-                    balanceSupplierName = meta.balanceSupplierName,
-                    balanceSupplierContractName = meta.balanceSupplierContractName
-                )
-            ).right()
-        }
+    override suspend fun validateAndReturnDocumentCommand(model: CreateDocumentModel) =
+        when (model.documentType) {
+            AuthorizationDocument.Type.ChangeOfEnergySupplierForPerson -> {
+                val meta = model.meta
+                DocumentCommand(
+                    type = AuthorizationDocument.Type.ChangeOfEnergySupplierForPerson,
+                    requestedFrom = meta.requestedFrom,
+                    requestedTo = meta.requestedTo,
+                    requestedBy = meta.requestedBy,
+                    validTo = defaultValidTo().toTimeZoneOffsetDateTimeAtStartOfDay(),
+                    scopes =
+                        listOf(
+                            CreateScopeData(
+                                authorizedResourceType = AuthorizationScope.AuthorizationResource.MeteringPoint,
+                                authorizedResourceId = meta.requestedForMeteringPointId,
+                                permissionType = AuthorizationScope.PermissionType.ChangeOfEnergySupplierForPerson,
+                            ),
+                        ),
+                    meta =
+                        ChangeOfSupplierBusinessMeta(
+                            requestedFromName = meta.requestedFromName,
+                            requestedForMeteringPointId = meta.requestedForMeteringPointId,
+                            requestedForMeteringPointAddress = meta.requestedForMeteringPointAddress,
+                            balanceSupplierName = meta.balanceSupplierName,
+                            balanceSupplierContractName = meta.balanceSupplierContractName,
+                        ),
+                ).right()
+            }
 
-        else -> CreateError.BusinessValidationError("Unsupported document type").left()
-    }
+            else -> {
+                CreateError.BusinessValidationError("Unsupported document type").left()
+            }
+        }
 
     override fun getCreateGrantProperties(document: AuthorizationDocument): CreateGrantProperties =
         CreateGrantProperties(
             validFrom = today(),
-            validTo = defaultValidTo()
+            validTo = defaultValidTo(),
         )
 }
 

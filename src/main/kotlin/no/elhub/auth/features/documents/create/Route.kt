@@ -24,12 +24,14 @@ fun Route.route(
     authProvider: AuthorizationProvider,
 ) {
     post {
-        val resolvedActor = authProvider.authorizeMaskinporten(call)
-            .getOrElse {
-                val error = it.toApiErrorResponse()
-                call.respond(error.first, error.second)
-                return@post
-            }
+        val resolvedActor =
+            authProvider
+                .authorizeMaskinporten(call)
+                .getOrElse {
+                    val error = it.toApiErrorResponse()
+                    call.respond(error.first, error.second)
+                    return@post
+                }
 
         val requestBody = call.receive<JsonApiCreateDocumentRequest>()
 
@@ -39,25 +41,27 @@ fun Route.route(
             return@post
         }
 
-        val authorizedParty = AuthorizationParty(
-            resourceId = resolvedActor.gln,
-            type = PartyType.OrganizationEntity
-        )
+        val authorizedParty =
+            AuthorizationParty(
+                resourceId = resolvedActor.gln,
+                type = PartyType.OrganizationEntity,
+            )
 
         val model = requestBody.toModel(authorizedParty)
 
-        val document = handler(model)
-            .getOrElse { error ->
-                logger.error("Failed to create authorization document: {}", error)
-                val (status, validationError) = error.toApiErrorResponse()
-                call.respond(status, validationError)
-                return@post
-            }
+        val document =
+            handler(model)
+                .getOrElse { error ->
+                    logger.error("Failed to create authorization document: {}", error)
+                    val (status, validationError) = error.toApiErrorResponse()
+                    call.respond(status, validationError)
+                    return@post
+                }
 
         logger.debug("Successfully created document {}", document.id)
         call.respond(
             status = HttpStatusCode.Created,
-            message = document.toCreateDocumentResponse()
+            message = document.toCreateDocumentResponse(),
         )
     }
 }

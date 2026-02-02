@@ -20,174 +20,193 @@ import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.common.GrantRepository
 import java.util.UUID
 
-class HandlerTest : FunSpec({
+class HandlerTest :
+    FunSpec({
 
-    val requestedBy = AuthorizationParty(resourceId = "org-entity-1", type = PartyType.OrganizationEntity)
-    val requestedFrom = AuthorizationParty(resourceId = "person-1", type = PartyType.Person)
-    val requestedTo = AuthorizationParty(resourceId = "person-2", type = PartyType.Person)
-    val validTo = currentTimeWithTimeZone().plusDays(1)
-    val scopeIds = listOf(UUID.randomUUID(), UUID.randomUUID())
+        val requestedBy = AuthorizationParty(resourceId = "org-entity-1", type = PartyType.OrganizationEntity)
+        val requestedFrom = AuthorizationParty(resourceId = "person-1", type = PartyType.Person)
+        val requestedTo = AuthorizationParty(resourceId = "person-2", type = PartyType.Person)
+        val validTo = currentTimeWithTimeZone().plusDays(1)
+        val scopeIds = listOf(UUID.randomUUID(), UUID.randomUUID())
 
-    val documentId = UUID.randomUUID()
-    val document = AuthorizationDocument(
-        id = documentId,
-        type = AuthorizationDocument.Type.ChangeOfEnergySupplierForPerson,
-        status = AuthorizationDocument.Status.Pending,
-        file = "file".toByteArray(),
-        requestedBy = requestedBy,
-        requestedFrom = requestedFrom,
-        requestedTo = requestedTo,
-        properties = listOf(AuthorizationDocumentProperty(key = "k", value = "v")),
-        validTo = validTo,
-        createdAt = currentTimeWithTimeZone(),
-        updatedAt = currentTimeWithTimeZone()
-    )
+        val documentId = UUID.randomUUID()
+        val document =
+            AuthorizationDocument(
+                id = documentId,
+                type = AuthorizationDocument.Type.ChangeOfEnergySupplierForPerson,
+                status = AuthorizationDocument.Status.Pending,
+                file = "file".toByteArray(),
+                requestedBy = requestedBy,
+                requestedFrom = requestedFrom,
+                requestedTo = requestedTo,
+                properties = listOf(AuthorizationDocumentProperty(key = "k", value = "v")),
+                validTo = validTo,
+                createdAt = currentTimeWithTimeZone(),
+                updatedAt = currentTimeWithTimeZone(),
+            )
 
-    val grant = AuthorizationGrant.create(
-        grantedFor = requestedFrom,
-        grantedBy = requestedBy,
-        grantedTo = requestedTo,
-        sourceType = AuthorizationGrant.SourceType.Document,
-        sourceId = documentId,
-        scopeIds = scopeIds
-    )
+        val grant =
+            AuthorizationGrant.create(
+                grantedFor = requestedFrom,
+                grantedBy = requestedBy,
+                grantedTo = requestedTo,
+                sourceType = AuthorizationGrant.SourceType.Document,
+                sourceId = documentId,
+                scopeIds = scopeIds,
+            )
 
-    fun documentRepoReturning(result: Either<RepositoryReadError, AuthorizationDocument>): DocumentRepository =
-        mockk<DocumentRepository> {
-            every { find(documentId) } returns result
+        fun documentRepoReturning(result: Either<RepositoryReadError, AuthorizationDocument>): DocumentRepository =
+            mockk<DocumentRepository> {
+                every { find(documentId) } returns result
+            }
+
+        fun grantRepoReturning(result: Either<RepositoryReadError, AuthorizationGrant?>): GrantRepository =
+            mockk<GrantRepository> {
+                every { findBySource(AuthorizationGrant.SourceType.Document, documentId) } returns result
+            }
+
+        test("returns document with grant id when authorized party matches requestedBy") {
+            val handler =
+                Handler(
+                    documentRepoReturning(document.right()),
+                    grantRepoReturning(grant.right()),
+                )
+
+            val response =
+                handler(
+                    Query(
+                        documentId = documentId,
+                        authorizedParty = requestedBy,
+                    ),
+                )
+
+            response.shouldBeRight(document.copy(grantId = grant.id))
         }
 
-    fun grantRepoReturning(result: Either<RepositoryReadError, AuthorizationGrant?>): GrantRepository =
-        mockk<GrantRepository> {
-            every { findBySource(AuthorizationGrant.SourceType.Document, documentId) } returns result
+        test("returns document with grant id when authorized party matches requestedFrom") {
+            val handler =
+                Handler(
+                    documentRepoReturning(document.right()),
+                    grantRepoReturning(grant.right()),
+                )
+
+            val response =
+                handler(
+                    Query(
+                        documentId = documentId,
+                        authorizedParty = requestedFrom,
+                    ),
+                )
+
+            response.shouldBeRight(document.copy(grantId = grant.id))
         }
 
-    test("returns document with grant id when authorized party matches requestedBy") {
-        val handler = Handler(
-            documentRepoReturning(document.right()),
-            grantRepoReturning(grant.right())
-        )
+        test("returns NotAuthorized when authorized party matches requestedTo") {
+            val handler =
+                Handler(
+                    documentRepoReturning(document.right()),
+                    grantRepoReturning(grant.right()),
+                )
 
-        val response = handler(
-            Query(
-                documentId = documentId,
-                authorizedParty = requestedBy
-            )
-        )
+            val response =
+                handler(
+                    Query(
+                        documentId = documentId,
+                        authorizedParty = requestedTo,
+                    ),
+                )
 
-        response.shouldBeRight(document.copy(grantId = grant.id))
-    }
+            response.shouldBeLeft(QueryError.NotAuthorizedError)
+        }
 
-    test("returns document with grant id when authorized party matches requestedFrom") {
-        val handler = Handler(
-            documentRepoReturning(document.right()),
-            grantRepoReturning(grant.right())
-        )
+        test("returns document with null grant id when grant is missing") {
+            val noGrant: Either<RepositoryReadError, AuthorizationGrant?> = null.right()
+            val handler =
+                Handler(
+                    documentRepoReturning(document.right()),
+                    grantRepoReturning(noGrant),
+                )
 
-        val response = handler(
-            Query(
-                documentId = documentId,
-                authorizedParty = requestedFrom
-            )
-        )
+            val response =
+                handler(
+                    Query(
+                        documentId = documentId,
+                        authorizedParty = requestedFrom,
+                    ),
+                )
 
-        response.shouldBeRight(document.copy(grantId = grant.id))
-    }
+            response.shouldBeRight(document.copy(grantId = null))
+        }
 
-    test("returns NotAuthorized when authorized party matches requestedTo") {
-        val handler = Handler(
-            documentRepoReturning(document.right()),
-            grantRepoReturning(grant.right())
-        )
+        test("maps document repository not found to QueryError.ResourceNotFoundError") {
+            val handler =
+                Handler(
+                    documentRepoReturning(RepositoryReadError.NotFoundError.left()),
+                    grantRepoReturning(grant.right()),
+                )
 
-        val response = handler(
-            Query(
-                documentId = documentId,
-                authorizedParty = requestedTo
-            )
-        )
+            val response =
+                handler(
+                    Query(
+                        documentId = documentId,
+                        authorizedParty = requestedBy,
+                    ),
+                )
 
-        response.shouldBeLeft(QueryError.NotAuthorizedError)
-    }
+            response.shouldBeLeft(QueryError.ResourceNotFoundError)
+        }
 
-    test("returns document with null grant id when grant is missing") {
-        val noGrant: Either<RepositoryReadError, AuthorizationGrant?> = null.right()
-        val handler = Handler(
-            documentRepoReturning(document.right()),
-            grantRepoReturning(noGrant)
-        )
+        test("maps document repository unexpected error to QueryError.IOError") {
+            val handler =
+                Handler(
+                    documentRepoReturning(RepositoryReadError.UnexpectedError.left()),
+                    grantRepoReturning(grant.right()),
+                )
 
-        val response = handler(
-            Query(
-                documentId = documentId,
-                authorizedParty = requestedFrom
-            )
-        )
+            val response =
+                handler(
+                    Query(
+                        documentId = documentId,
+                        authorizedParty = requestedFrom,
+                    ),
+                )
 
-        response.shouldBeRight(document.copy(grantId = null))
-    }
+            response.shouldBeLeft(QueryError.IOError)
+        }
 
-    test("maps document repository not found to QueryError.ResourceNotFoundError") {
-        val handler = Handler(
-            documentRepoReturning(RepositoryReadError.NotFoundError.left()),
-            grantRepoReturning(grant.right())
-        )
+        test("maps grant repository not found to QueryError.ResourceNotFoundError") {
+            val handler =
+                Handler(
+                    documentRepoReturning(document.right()),
+                    grantRepoReturning(RepositoryReadError.NotFoundError.left()),
+                )
 
-        val response = handler(
-            Query(
-                documentId = documentId,
-                authorizedParty = requestedBy
-            )
-        )
+            val response =
+                handler(
+                    Query(
+                        documentId = documentId,
+                        authorizedParty = requestedBy,
+                    ),
+                )
 
-        response.shouldBeLeft(QueryError.ResourceNotFoundError)
-    }
+            response.shouldBeLeft(QueryError.ResourceNotFoundError)
+        }
 
-    test("maps document repository unexpected error to QueryError.IOError") {
-        val handler = Handler(
-            documentRepoReturning(RepositoryReadError.UnexpectedError.left()),
-            grantRepoReturning(grant.right())
-        )
+        test("maps grant repository unexpected error to QueryError.IOError") {
+            val handler =
+                Handler(
+                    documentRepoReturning(document.right()),
+                    grantRepoReturning(RepositoryReadError.UnexpectedError.left()),
+                )
 
-        val response = handler(
-            Query(
-                documentId = documentId,
-                authorizedParty = requestedFrom
-            )
-        )
+            val response =
+                handler(
+                    Query(
+                        documentId = documentId,
+                        authorizedParty = requestedFrom,
+                    ),
+                )
 
-        response.shouldBeLeft(QueryError.IOError)
-    }
-
-    test("maps grant repository not found to QueryError.ResourceNotFoundError") {
-        val handler = Handler(
-            documentRepoReturning(document.right()),
-            grantRepoReturning(RepositoryReadError.NotFoundError.left())
-        )
-
-        val response = handler(
-            Query(
-                documentId = documentId,
-                authorizedParty = requestedBy
-            )
-        )
-
-        response.shouldBeLeft(QueryError.ResourceNotFoundError)
-    }
-
-    test("maps grant repository unexpected error to QueryError.IOError") {
-        val handler = Handler(
-            documentRepoReturning(document.right()),
-            grantRepoReturning(RepositoryReadError.UnexpectedError.left())
-        )
-
-        val response = handler(
-            Query(
-                documentId = documentId,
-                authorizedParty = requestedFrom
-            )
-        )
-
-        response.shouldBeLeft(QueryError.IOError)
-    }
-})
+            response.shouldBeLeft(QueryError.IOError)
+        }
+    })

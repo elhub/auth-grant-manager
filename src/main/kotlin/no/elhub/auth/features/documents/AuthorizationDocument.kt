@@ -19,7 +19,7 @@ data class AuthorizationDocument(
     val properties: List<AuthorizationDocumentProperty>,
     val validTo: OffsetDateTime,
     val createdAt: OffsetDateTime,
-    val updatedAt: OffsetDateTime
+    val updatedAt: OffsetDateTime,
 ) {
     companion object {
         fun create(
@@ -30,29 +30,31 @@ data class AuthorizationDocument(
             requestedTo: AuthorizationParty,
             validTo: OffsetDateTime,
             properties: List<AuthorizationDocumentProperty>,
-        ): AuthorizationDocument = AuthorizationDocument(
-            id = UUID.randomUUID(),
-            type = type,
-            status = Status.Pending,
-            file = file,
-            requestedBy = requestedBy,
-            requestedFrom = requestedFrom,
-            requestedTo = requestedTo,
-            properties = properties,
-            validTo = validTo,
-            createdAt = currentTimeWithTimeZone(),
-            updatedAt = currentTimeWithTimeZone()
-        )
+        ): AuthorizationDocument =
+            AuthorizationDocument(
+                id = UUID.randomUUID(),
+                type = type,
+                status = Status.Pending,
+                file = file,
+                requestedBy = requestedBy,
+                requestedFrom = requestedFrom,
+                requestedTo = requestedTo,
+                properties = properties,
+                validTo = validTo,
+                createdAt = currentTimeWithTimeZone(),
+                updatedAt = currentTimeWithTimeZone(),
+            )
     }
+
     enum class Status {
         Expired,
         Pending,
         Rejected,
-        Signed
+        Signed,
     }
 
     enum class Type {
         ChangeOfEnergySupplierForPerson,
-        MoveInAndChangeOfEnergySupplierForPerson
+        MoveInAndChangeOfEnergySupplierForPerson,
     }
 }

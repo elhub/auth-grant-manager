@@ -9,7 +9,7 @@ data class AuthorizationScope(
     val authorizedResourceType: AuthorizationResource,
     val authorizedResourceId: String,
     val permissionType: PermissionType,
-    val createdAt: OffsetDateTime
+    val createdAt: OffsetDateTime,
 ) {
     companion object {
         fun create(
@@ -22,7 +22,7 @@ data class AuthorizationScope(
                 authorizedResourceType = authorizationResourceType,
                 authorizedResourceId = authorizedResourceId,
                 permissionType = permissionType,
-                createdAt = currentTimeWithTimeZone()
+                createdAt = currentTimeWithTimeZone(),
             )
     }
 
@@ -31,11 +31,11 @@ data class AuthorizationScope(
         Organization,
         OrganizationEntity,
         Person,
-        System
+        System,
     }
 
     enum class PermissionType {
         ChangeOfEnergySupplierForPerson,
-        MoveInAndChangeOfEnergySupplierForPerson
+        MoveInAndChangeOfEnergySupplierForPerson,
     }
 }

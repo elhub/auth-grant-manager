@@ -125,13 +125,14 @@ class MoveInBusinessHandler :
                 startDate = startDate,
             )
 
-        val scopes = listOf(
-            CreateScopeData(
-                authorizedResourceType = AuthorizationScope.AuthorizationResource.MeteringPoint,
-                authorizedResourceId = model.requestedForMeteringPointId,
-                permissionType = AuthorizationScope.PermissionType.MoveInAndChangeOfEnergySupplierForPerson
+        val scopes =
+            listOf(
+                CreateScopeData(
+                    authorizedResourceType = AuthorizationScope.AuthorizationResource.MeteringPoint,
+                    authorizedResourceId = model.requestedForMeteringPointId,
+                    permissionType = AuthorizationScope.PermissionType.MoveInAndChangeOfEnergySupplierForPerson,
+                ),
             )
-        )
 
         return MoveInBusinessCommand(
             requestedFrom = model.requestedFrom,
@@ -146,6 +147,10 @@ class MoveInBusinessHandler :
 
 @OptIn(ExperimentalTime::class)
 fun today(): LocalDate {
-    val now = Clock.System.now().toLocalDateTime(TimeZone.UTC).date
+    val now =
+        Clock.System
+            .now()
+            .toLocalDateTime(TimeZone.UTC)
+            .date
     return now
 }

@@ -31,12 +31,20 @@ data class CreateRequestMeta(
 
 @OptIn(ExperimentalTime::class)
 fun defaultRequestValidTo(): LocalDate {
-    val now = Clock.System.now().toLocalDateTime(TimeZone.UTC).date
+    val now =
+        Clock.System
+            .now()
+            .toLocalDateTime(TimeZone.UTC)
+            .date
     return now.plus(DatePeriod(days = 30))
 }
 
 @OptIn(ExperimentalTime::class)
 fun today(): LocalDate {
-    val now = Clock.System.now().toLocalDateTime(TimeZone.UTC).date
+    val now =
+        Clock.System
+            .now()
+            .toLocalDateTime(TimeZone.UTC)
+            .date
     return now
 }

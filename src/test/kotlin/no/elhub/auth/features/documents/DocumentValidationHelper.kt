@@ -36,17 +36,20 @@ fun ByteArray.validateFileIsSignedByUs() {
                         .generateCertificates(it)
                         .filterIsInstance<X509Certificate>()
                         .single()
-                }
+                },
         )
 
-    val verifier = CommonCertificateVerifier().apply {
-        setTrustedCertSources(CommonTrustedCertificateSource().also { it.addCertificate(testCertificate) })
-    }
+    val verifier =
+        CommonCertificateVerifier().apply {
+            setTrustedCertSources(CommonTrustedCertificateSource().also { it.addCertificate(testCertificate) })
+        }
 
-    val reports = PDFDocumentValidator(document).apply {
-        setCertificateVerifier(verifier)
-        setValidationLevel(ValidationLevel.BASIC_SIGNATURES)
-    }.validateDocument()
+    val reports =
+        PDFDocumentValidator(document)
+            .apply {
+                setCertificateVerifier(verifier)
+                setValidationLevel(ValidationLevel.BASIC_SIGNATURES)
+            }.validateDocument()
 
     val simpleReport = reports.simpleReport
 
@@ -88,9 +91,8 @@ fun ByteArray.validateFileIsPDFA2BCompliant(): Boolean {
     }
 }
 
-fun ByteArray.getCustomMetaDataValue(
-    key: String
-): String? = Loader.loadPDF(this).use { doc ->
-    val info = doc.documentInformation
-    return info.getCustomMetadataValue(key)
-}
+fun ByteArray.getCustomMetaDataValue(key: String): String? =
+    Loader.loadPDF(this).use { doc ->
+        val info = doc.documentInformation
+        return info.getCustomMetadataValue(key)
+    }

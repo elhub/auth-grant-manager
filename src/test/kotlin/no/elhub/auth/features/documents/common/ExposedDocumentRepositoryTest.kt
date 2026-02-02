@@ -56,17 +56,17 @@ class ExposedDocumentRepositoryTest :
                         properties = emptyList(),
                         validTo = currentTimeWithTimeZone().plusDays(1),
                         createdAt = currentTimeWithTimeZone(),
-                        updatedAt = currentTimeWithTimeZone()
+                        updatedAt = currentTimeWithTimeZone(),
                     )
 
-                val scopes = listOf(
-                    CreateScopeData(
-                        authorizedResourceType = AuthorizationScope.AuthorizationResource.MeteringPoint,
-                        authorizedResourceId = "1234",
-                        permissionType = AuthorizationScope.PermissionType.ChangeOfEnergySupplierForPerson
-
+                val scopes =
+                    listOf(
+                        CreateScopeData(
+                            authorizedResourceType = AuthorizationScope.AuthorizationResource.MeteringPoint,
+                            authorizedResourceId = "1234",
+                            permissionType = AuthorizationScope.PermissionType.ChangeOfEnergySupplierForPerson,
+                        ),
                     )
-                )
 
                 transaction {
                     // When
@@ -103,42 +103,45 @@ class ExposedDocumentRepositoryTest :
                     AuthorizationParty(type = PartyType.Organization, resourceId = "matching-party")
                 val otherRequestedBy = AuthorizationParty(type = PartyType.Organization, resourceId = "other-party")
 
-                val matchingDocument = AuthorizationDocument(
-                    id = UUID.randomUUID(),
-                    file = byteArrayOf(),
-                    type = AuthorizationDocument.Type.ChangeOfEnergySupplierForPerson,
-                    status = AuthorizationDocument.Status.Pending,
-                    requestedBy = matchingRequestedBy,
-                    requestedFrom = AuthorizationParty(type = PartyType.Person, resourceId = "from-1"),
-                    requestedTo = AuthorizationParty(type = PartyType.Person, resourceId = "to-1"),
-                    signedBy = AuthorizationParty(type = PartyType.Person, resourceId = "signer-1"),
-                    properties = emptyList(),
-                    validTo = currentTimeWithTimeZone().plusDays(1),
-                    createdAt = currentTimeWithTimeZone(),
-                    updatedAt = currentTimeWithTimeZone()
-                )
+                val matchingDocument =
+                    AuthorizationDocument(
+                        id = UUID.randomUUID(),
+                        file = byteArrayOf(),
+                        type = AuthorizationDocument.Type.ChangeOfEnergySupplierForPerson,
+                        status = AuthorizationDocument.Status.Pending,
+                        requestedBy = matchingRequestedBy,
+                        requestedFrom = AuthorizationParty(type = PartyType.Person, resourceId = "from-1"),
+                        requestedTo = AuthorizationParty(type = PartyType.Person, resourceId = "to-1"),
+                        signedBy = AuthorizationParty(type = PartyType.Person, resourceId = "signer-1"),
+                        properties = emptyList(),
+                        validTo = currentTimeWithTimeZone().plusDays(1),
+                        createdAt = currentTimeWithTimeZone(),
+                        updatedAt = currentTimeWithTimeZone(),
+                    )
 
-                val otherDocument = AuthorizationDocument(
-                    id = UUID.randomUUID(),
-                    file = byteArrayOf(),
-                    type = AuthorizationDocument.Type.ChangeOfEnergySupplierForPerson,
-                    status = AuthorizationDocument.Status.Pending,
-                    requestedBy = otherRequestedBy,
-                    requestedFrom = AuthorizationParty(type = PartyType.Person, resourceId = "from-2"),
-                    requestedTo = AuthorizationParty(type = PartyType.Person, resourceId = "to-2"),
-                    signedBy = AuthorizationParty(type = PartyType.Person, resourceId = "signer-2"),
-                    createdAt = currentTimeWithTimeZone(),
-                    properties = emptyList(),
-                    validTo = currentTimeWithTimeZone().plusDays(1),
-                    updatedAt = currentTimeWithTimeZone()
-                )
+                val otherDocument =
+                    AuthorizationDocument(
+                        id = UUID.randomUUID(),
+                        file = byteArrayOf(),
+                        type = AuthorizationDocument.Type.ChangeOfEnergySupplierForPerson,
+                        status = AuthorizationDocument.Status.Pending,
+                        requestedBy = otherRequestedBy,
+                        requestedFrom = AuthorizationParty(type = PartyType.Person, resourceId = "from-2"),
+                        requestedTo = AuthorizationParty(type = PartyType.Person, resourceId = "to-2"),
+                        signedBy = AuthorizationParty(type = PartyType.Person, resourceId = "signer-2"),
+                        createdAt = currentTimeWithTimeZone(),
+                        properties = emptyList(),
+                        validTo = currentTimeWithTimeZone().plusDays(1),
+                        updatedAt = currentTimeWithTimeZone(),
+                    )
 
                 transaction {
                     repository.insert(matchingDocument, listOf())
                     repository.insert(otherDocument, listOf())
 
                     val documents =
-                        repository.findAll(AuthorizationParty(matchingRequestedBy.resourceId, PartyType.Organization))
+                        repository
+                            .findAll(AuthorizationParty(matchingRequestedBy.resourceId, PartyType.Organization))
                             .getOrElse { error -> fail("Failed to fetch documents: $error") }
                     val documentIds = documents.map { it.id }
 

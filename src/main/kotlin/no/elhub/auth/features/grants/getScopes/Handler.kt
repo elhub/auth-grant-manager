@@ -14,38 +14,44 @@ import org.jetbrains.exposed.sql.transactions.transaction
 class Handler(
     private val repo: GrantRepository,
 ) {
-    operator fun invoke(query: Query): Either<QueryError, List<AuthorizationScope>> = either {
-        transaction {
-            val grant = repo.find(query.id)
-                .mapLeft { error ->
-                    when (error) {
-                        is RepositoryReadError.NotFoundError -> QueryError.ResourceNotFoundError
-                        is RepositoryReadError.UnexpectedError -> QueryError.IOError
+    operator fun invoke(query: Query): Either<QueryError, List<AuthorizationScope>> =
+        either {
+            transaction {
+                val grant =
+                    repo
+                        .find(query.id)
+                        .mapLeft { error ->
+                            when (error) {
+                                is RepositoryReadError.NotFoundError -> QueryError.ResourceNotFoundError
+                                is RepositoryReadError.UnexpectedError -> QueryError.IOError
+                            }
+                        }.bind()
+
+                val authorizedParty = query.authorizedParty
+                when (authorizedParty.type) {
+                    PartyType.System -> {
+                        ensure(authorizedParty.resourceId == Constants.CONSENT_MANAGEMENT_OSB_ID) {
+                            QueryError.NotAuthorizedError
+                        }
                     }
-                }.bind()
 
-            val authorizedParty = query.authorizedParty
-            when (authorizedParty.type) {
-                PartyType.System -> ensure(authorizedParty.resourceId == Constants.CONSENT_MANAGEMENT_OSB_ID) {
-                    QueryError.NotAuthorizedError
+                    else -> {
+                        ensure(
+                            grant.grantedTo == authorizedParty || grant.grantedFor == authorizedParty,
+                        ) {
+                            QueryError.NotAuthorizedError
+                        }
+                    }
                 }
 
-                else -> ensure(
-                    grant.grantedTo == authorizedParty || grant.grantedFor == authorizedParty
-                ) {
-                    QueryError.NotAuthorizedError
-                }
+                repo
+                    .findScopes(query.id)
+                    .mapLeft { error ->
+                        when (error) {
+                            RepositoryReadError.NotFoundError -> QueryError.ResourceNotFoundError
+                            RepositoryReadError.UnexpectedError -> QueryError.IOError
+                        }
+                    }.bind()
             }
-
-            repo
-                .findScopes(query.id)
-                .mapLeft { error ->
-                    when (error) {
-                        RepositoryReadError.NotFoundError -> QueryError.ResourceNotFoundError
-                        RepositoryReadError.UnexpectedError -> QueryError.IOError
-                    }
-                }
-                .bind()
         }
-    }
 }

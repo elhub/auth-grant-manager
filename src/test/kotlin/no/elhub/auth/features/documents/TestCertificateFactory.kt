@@ -30,7 +30,7 @@ import java.time.temporal.ChronoUnit
 import java.util.Date
 
 class TestCertificateFactory(
-    private val defaultValidity: Duration = Duration.ofMinutes(30)
+    private val defaultValidity: Duration = Duration.ofMinutes(30),
 ) {
     val trustedBankIdRootCertificate: X509Certificate = readRootCertificate()
     val trustedBankIdRootKeyPair: KeyPair = readRootKeyPair(trustedBankIdRootCertificate)
@@ -38,11 +38,10 @@ class TestCertificateFactory(
     data class FakeElhubCerts(
         val signingKey: KeyPair,
         val signingCert: X509Certificate,
-        val chain: List<X509Certificate>
+        val chain: List<X509Certificate>,
     )
 
-    fun generateKeyPair(): KeyPair =
-        KeyPairGenerator.getInstance("RSA").apply { initialize(2048) }.generateKeyPair()
+    fun generateKeyPair(): KeyPair = KeyPairGenerator.getInstance("RSA").apply { initialize(2048) }.generateKeyPair()
 
     fun generateLeafCertificateWithNationalId(
         keyPair: KeyPair,
@@ -50,7 +49,7 @@ class TestCertificateFactory(
         issuerCertificate: X509Certificate,
         nationalIdentityNumber: String,
         notBeforeOverride: Instant?,
-        notAfterOverride: Instant?
+        notAfterOverride: Instant?,
     ): X509Certificate {
         ensureBouncyCastle()
         val now = Instant.now()
@@ -62,22 +61,23 @@ class TestCertificateFactory(
         val subject = X500Name("CN=Test Signer")
         val issuer = X500Name(issuerCertificate.subjectX500Principal.name)
 
-        val builder = JcaX509v3CertificateBuilder(
-            issuer,
-            serial,
-            notBefore,
-            notAfter,
-            subject,
-            keyPair.public
-        ).apply {
-            addExtension(Extension.basicConstraints, true, BasicConstraints(false))
-            addExtension(Extension.keyUsage, true, KeyUsage(KeyUsage.digitalSignature))
-            addExtension(
-                ASN1ObjectIdentifier(NATIONAL_ID_OID),
-                false,
-                DERPrintableString(nationalIdentityNumber)
-            )
-        }
+        val builder =
+            JcaX509v3CertificateBuilder(
+                issuer,
+                serial,
+                notBefore,
+                notAfter,
+                subject,
+                keyPair.public,
+            ).apply {
+                addExtension(Extension.basicConstraints, true, BasicConstraints(false))
+                addExtension(Extension.keyUsage, true, KeyUsage(KeyUsage.digitalSignature))
+                addExtension(
+                    ASN1ObjectIdentifier(NATIONAL_ID_OID),
+                    false,
+                    DERPrintableString(nationalIdentityNumber),
+                )
+            }
 
         val signer = JcaContentSignerBuilder("SHA256withRSA").setProvider("BC").build(issuerKeyPair.private)
         return JcaX509CertificateConverter().setProvider("BC").getCertificate(builder.build(signer))
@@ -86,7 +86,7 @@ class TestCertificateFactory(
     fun generateLeafCertificateWithoutNationalId(
         keyPair: KeyPair,
         issuerKeyPair: KeyPair,
-        issuerCertificate: X509Certificate
+        issuerCertificate: X509Certificate,
     ): X509Certificate {
         ensureBouncyCastle()
         val now = Instant.now()
@@ -98,23 +98,27 @@ class TestCertificateFactory(
         val subject = X500Name("CN=Test Signer")
         val issuer = X500Name(issuerCertificate.subjectX500Principal.name)
 
-        val builder = JcaX509v3CertificateBuilder(
-            issuer,
-            serial,
-            notBefore,
-            notAfter,
-            subject,
-            keyPair.public
-        ).apply {
-            addExtension(Extension.basicConstraints, true, BasicConstraints(false))
-            addExtension(Extension.keyUsage, true, KeyUsage(KeyUsage.digitalSignature))
-        }
+        val builder =
+            JcaX509v3CertificateBuilder(
+                issuer,
+                serial,
+                notBefore,
+                notAfter,
+                subject,
+                keyPair.public,
+            ).apply {
+                addExtension(Extension.basicConstraints, true, BasicConstraints(false))
+                addExtension(Extension.keyUsage, true, KeyUsage(KeyUsage.digitalSignature))
+            }
 
         val signer = JcaContentSignerBuilder("SHA256withRSA").setProvider("BC").build(issuerKeyPair.private)
         return JcaX509CertificateConverter().setProvider("BC").getCertificate(builder.build(signer))
     }
 
-    fun generateSelfSignedRootCertificate(keyPair: KeyPair, templateCertificate: X509Certificate): X509Certificate {
+    fun generateSelfSignedRootCertificate(
+        keyPair: KeyPair,
+        templateCertificate: X509Certificate,
+    ): X509Certificate {
         val subject = X500Name(templateCertificate.subjectX500Principal.name)
         val serial = templateCertificate.serialNumber
         return generateSelfSignedRootCertificate(keyPair, subject, serial)
@@ -126,44 +130,46 @@ class TestCertificateFactory(
         val issuerSubject = X500Name(expectedElhubCert.issuerX500Principal.name)
         val rootCert = generateSelfSignedRootCertificate(issuerKeyPair, issuerSubject, BigInteger.valueOf(Instant.now().toEpochMilli()))
         val signingKeyPair = generateKeyPair()
-        val leafCert = generateLeafCertificateWithNationalId(
-            keyPair = signingKeyPair,
-            issuerKeyPair = issuerKeyPair,
-            issuerSubject = issuerSubject,
-            serial = expectedElhubCert.serialNumber
-        )
+        val leafCert =
+            generateLeafCertificateWithNationalId(
+                keyPair = signingKeyPair,
+                issuerKeyPair = issuerKeyPair,
+                issuerSubject = issuerSubject,
+                serial = expectedElhubCert.serialNumber,
+            )
         return FakeElhubCerts(
             signingKey = signingKeyPair,
             signingCert = leafCert,
-            chain = listOf(leafCert, rootCert)
+            chain = listOf(leafCert, rootCert),
         )
     }
 
     private fun generateSelfSignedRootCertificate(
         keyPair: KeyPair,
         subject: X500Name,
-        serial: BigInteger
+        serial: BigInteger,
     ): X509Certificate {
         ensureBouncyCastle()
         val now = Instant.now()
         val notBefore = Date.from(now.minus(1, ChronoUnit.MINUTES))
         val notAfter = Date.from(now.plus(defaultValidity))
 
-        val builder = JcaX509v3CertificateBuilder(
-            subject,
-            serial,
-            notBefore,
-            notAfter,
-            subject,
-            keyPair.public
-        ).apply {
-            addExtension(Extension.basicConstraints, true, BasicConstraints(true))
-            addExtension(
-                Extension.keyUsage,
-                true,
-                KeyUsage(KeyUsage.keyCertSign or KeyUsage.cRLSign)
-            )
-        }
+        val builder =
+            JcaX509v3CertificateBuilder(
+                subject,
+                serial,
+                notBefore,
+                notAfter,
+                subject,
+                keyPair.public,
+            ).apply {
+                addExtension(Extension.basicConstraints, true, BasicConstraints(true))
+                addExtension(
+                    Extension.keyUsage,
+                    true,
+                    KeyUsage(KeyUsage.keyCertSign or KeyUsage.cRLSign),
+                )
+            }
 
         val signer = JcaContentSignerBuilder("SHA256withRSA").setProvider("BC").build(keyPair.private)
         return JcaX509CertificateConverter().setProvider("BC").getCertificate(builder.build(signer))
@@ -173,7 +179,7 @@ class TestCertificateFactory(
         keyPair: KeyPair,
         issuerKeyPair: KeyPair,
         issuerSubject: X500Name,
-        serial: BigInteger
+        serial: BigInteger,
     ): X509Certificate {
         ensureBouncyCastle()
         val now = Instant.now()
@@ -181,24 +187,24 @@ class TestCertificateFactory(
         val notAfter = Date.from(now.plus(defaultValidity))
         val subject = X500Name("CN=Fake Elhub Signer")
 
-        val builder = JcaX509v3CertificateBuilder(
-            issuerSubject,
-            serial,
-            notBefore,
-            notAfter,
-            subject,
-            keyPair.public
-        ).apply {
-            addExtension(Extension.basicConstraints, true, BasicConstraints(false))
-            addExtension(Extension.keyUsage, true, KeyUsage(KeyUsage.digitalSignature))
-        }
+        val builder =
+            JcaX509v3CertificateBuilder(
+                issuerSubject,
+                serial,
+                notBefore,
+                notAfter,
+                subject,
+                keyPair.public,
+            ).apply {
+                addExtension(Extension.basicConstraints, true, BasicConstraints(false))
+                addExtension(Extension.keyUsage, true, KeyUsage(KeyUsage.digitalSignature))
+            }
 
         val signer = JcaContentSignerBuilder("SHA256withRSA").setProvider("BC").build(issuerKeyPair.private)
         return JcaX509CertificateConverter().setProvider("BC").getCertificate(builder.build(signer))
     }
 
-    private fun readRootCertificate(): X509Certificate =
-        readSingleCert(TestCertificateUtil.Constants.BANKID_ROOT_CERTIFICATE_LOCATION)
+    private fun readRootCertificate(): X509Certificate = readSingleCert(TestCertificateUtil.Constants.BANKID_ROOT_CERTIFICATE_LOCATION)
 
     private fun readRootKeyPair(rootCert: X509Certificate): KeyPair {
         val privateKey = readPrivateKey(TestCertificateUtil.Constants.BANKID_ROOT_PRIVATE_KEY_LOCATION)
@@ -207,7 +213,8 @@ class TestCertificateFactory(
 
     private fun readSingleCert(path: String): X509Certificate =
         File(path).inputStream().use {
-            CertificateFactory.getInstance(CERT_TYPE)
+            CertificateFactory
+                .getInstance(CERT_TYPE)
                 .generateCertificates(it)
                 .filterIsInstance<X509Certificate>()
                 .single()

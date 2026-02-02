@@ -11,15 +11,17 @@ import org.jetbrains.exposed.sql.transactions.transaction
 class Handler(
     private val repo: GrantRepository,
 ) {
-    operator fun invoke(query: Query): Either<QueryError, List<AuthorizationGrant>> = either {
-        transaction {
-            repo.findAll(query.authorizedParty)
-                .mapLeft {
-                    when (it) {
-                        RepositoryReadError.NotFoundError -> QueryError.ResourceNotFoundError
-                        RepositoryReadError.UnexpectedError -> QueryError.IOError
-                    }
-                }.bind()
+    operator fun invoke(query: Query): Either<QueryError, List<AuthorizationGrant>> =
+        either {
+            transaction {
+                repo
+                    .findAll(query.authorizedParty)
+                    .mapLeft {
+                        when (it) {
+                            RepositoryReadError.NotFoundError -> QueryError.ResourceNotFoundError
+                            RepositoryReadError.UnexpectedError -> QueryError.IOError
+                        }
+                    }.bind()
+            }
         }
-    }
 }

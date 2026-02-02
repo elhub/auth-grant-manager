@@ -18,49 +18,56 @@ import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObjectWithRelation
 
 @Serializable
 data class ScopeResponseAttributes(
-    val permissionType: AuthorizationScope.PermissionType
+    val permissionType: AuthorizationScope.PermissionType,
 ) : JsonApiAttributes
 
 @Serializable
 data class ScopeResponseRelationships(
-    val authorizedResources: JsonApiRelationshipToMany
+    val authorizedResources: JsonApiRelationshipToMany,
 ) : JsonApiRelationships
 
 typealias AuthorizationGrantScopesResponse = JsonApiResponse.CollectionDocumentWithRelationships<
     ScopeResponseAttributes,
     ScopeResponseRelationships,
-    >
+>
 
 fun List<AuthorizationScope>.toResponse(grantId: String) =
     AuthorizationGrantScopesResponse(
-        data = this.map { authorizationScope ->
-            JsonApiResponseResourceObjectWithRelationships(
-                id = authorizationScope.id.toString(),
-                type = (AuthorizationScope::class).simpleName ?: "AuthorizationScope",
-                attributes = ScopeResponseAttributes(
-                    permissionType = authorizationScope.permissionType
-                ),
-                relationships = ScopeResponseRelationships(
-                    authorizedResources = JsonApiRelationshipToMany(
-                        data = listOf(
-                            JsonApiRelationshipData(
-                                id = authorizationScope.authorizedResourceId,
-                                type = authorizationScope.authorizedResourceType.name
-                            )
-                        )
-                    )
-                ),
-                meta = JsonApiMeta(
-                    buildJsonObject {
-                        put("createdAt", authorizationScope.createdAt.toTimeZoneOffsetString())
-                    }
+        data =
+            this.map { authorizationScope ->
+                JsonApiResponseResourceObjectWithRelationships(
+                    id = authorizationScope.id.toString(),
+                    type = (AuthorizationScope::class).simpleName ?: "AuthorizationScope",
+                    attributes =
+                        ScopeResponseAttributes(
+                            permissionType = authorizationScope.permissionType,
+                        ),
+                    relationships =
+                        ScopeResponseRelationships(
+                            authorizedResources =
+                                JsonApiRelationshipToMany(
+                                    data =
+                                        listOf(
+                                            JsonApiRelationshipData(
+                                                id = authorizationScope.authorizedResourceId,
+                                                type = authorizationScope.authorizedResourceType.name,
+                                            ),
+                                        ),
+                                ),
+                        ),
+                    meta =
+                        JsonApiMeta(
+                            buildJsonObject {
+                                put("createdAt", authorizationScope.createdAt.toTimeZoneOffsetString())
+                            },
+                        ),
                 )
-            )
-        },
+            },
         links = JsonApiLinks.ResourceObjectLink("$GRANTS_PATH/$grantId/scopes"),
-        meta = JsonApiMeta(
-            buildJsonObject {
-                put("createdAt", currentTimeWithTimeZone().toTimeZoneOffsetString())
-            }
-        )
+        meta =
+            JsonApiMeta(
+                buildJsonObject {
+                    put("createdAt", currentTimeWithTimeZone().toTimeZoneOffsetString())
+                },
+            ),
     )

@@ -20,21 +20,27 @@ import org.slf4j.LoggerFactory
 const val DOCUMENT_ID_PARAM = "id"
 private val logger = LoggerFactory.getLogger(Route::class.java)
 
-fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
+fun Route.route(
+    handler: Handler,
+    authProvider: AuthorizationProvider,
+) {
     put("/{$DOCUMENT_ID_PARAM}.pdf") {
-        val resolvedActor = authProvider.authorizeMaskinporten(call)
-            .getOrElse {
-                val error = it.toApiErrorResponse()
-                call.respond(error.first, error.second)
-                return@put
-            }
+        val resolvedActor =
+            authProvider
+                .authorizeMaskinporten(call)
+                .getOrElse {
+                    val error = it.toApiErrorResponse()
+                    call.respond(error.first, error.second)
+                    return@put
+                }
 
-        val documentId = validateId(call.parameters[DOCUMENT_ID_PARAM])
-            .getOrElse { error ->
-                val (status, body) = error.toApiErrorResponse()
-                call.respond(status, body)
-                return@put
-            }
+        val documentId =
+            validateId(call.parameters[DOCUMENT_ID_PARAM])
+                .getOrElse { error ->
+                    val (status, body) = error.toApiErrorResponse()
+                    call.respond(status, body)
+                    return@put
+                }
 
         val signedDocument = call.receiveChannel().readRemaining().readByteArray()
         if (signedDocument.isEmpty()) {
@@ -48,8 +54,8 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
             Command(
                 documentId = documentId,
                 authorizedParty = authorizedParty,
-                signedFile = signedDocument
-            )
+                signedFile = signedDocument,
+            ),
         ).getOrElse { error ->
             logger.error("Failed to confirm authorization document: {}", error)
             val (status, validationError) = error.toApiErrorResponse()

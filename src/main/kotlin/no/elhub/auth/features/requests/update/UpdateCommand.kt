@@ -7,5 +7,5 @@ import java.util.UUID
 class UpdateCommand(
     val requestId: UUID,
     val newStatus: AuthorizationRequest.Status,
-    val authorizedParty: AuthorizationParty
+    val authorizedParty: AuthorizationParty,
 )

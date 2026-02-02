@@ -36,17 +36,17 @@ class MoveInBusinessHandlerTest :
                     authorizedParty = AUTHORIZED_PARTY,
                     requestType = AuthorizationRequest.Type.MoveInAndChangeOfEnergySupplierForPerson,
                     meta =
-                    CreateRequestMeta(
-                        requestedBy = VALID_PARTY,
-                        requestedFrom = VALID_PARTY,
-                        requestedFromName = "From",
-                        requestedTo = VALID_PARTY,
-                        requestedForMeteringPointId = VALID_METERING_POINT,
-                        requestedForMeteringPointAddress = "addr",
-                        balanceSupplierName = "Supplier",
-                        balanceSupplierContractName = "Contract",
-                        startDate = null,
-                    ),
+                        CreateRequestMeta(
+                            requestedBy = VALID_PARTY,
+                            requestedFrom = VALID_PARTY,
+                            requestedFromName = "From",
+                            requestedTo = VALID_PARTY,
+                            requestedForMeteringPointId = VALID_METERING_POINT,
+                            requestedForMeteringPointAddress = "addr",
+                            balanceSupplierName = "Supplier",
+                            balanceSupplierContractName = "Contract",
+                            startDate = null,
+                        ),
                 )
 
             handler.validateAndReturnRequestCommand(model).shouldBeLeft(MoveInValidationError.MissingStartDate)
@@ -58,17 +58,17 @@ class MoveInBusinessHandlerTest :
                     authorizedParty = AUTHORIZED_PARTY,
                     requestType = AuthorizationRequest.Type.MoveInAndChangeOfEnergySupplierForPerson,
                     meta =
-                    CreateRequestMeta(
-                        requestedBy = VALID_PARTY,
-                        requestedFrom = VALID_PARTY,
-                        requestedFromName = "From",
-                        requestedTo = VALID_PARTY,
-                        requestedForMeteringPointId = "123",
-                        requestedForMeteringPointAddress = "addr",
-                        balanceSupplierName = "Supplier",
-                        balanceSupplierContractName = "Contract",
-                        startDate = VALID_START_DATE,
-                    ),
+                        CreateRequestMeta(
+                            requestedBy = VALID_PARTY,
+                            requestedFrom = VALID_PARTY,
+                            requestedFromName = "From",
+                            requestedTo = VALID_PARTY,
+                            requestedForMeteringPointId = "123",
+                            requestedForMeteringPointAddress = "addr",
+                            balanceSupplierName = "Supplier",
+                            balanceSupplierContractName = "Contract",
+                            startDate = VALID_START_DATE,
+                        ),
                 )
 
             handler.validateAndReturnRequestCommand(model).shouldBeLeft(MoveInValidationError.InvalidMeteringPointId)
@@ -80,17 +80,17 @@ class MoveInBusinessHandlerTest :
                     authorizedParty = AUTHORIZED_PARTY,
                     requestType = AuthorizationRequest.Type.MoveInAndChangeOfEnergySupplierForPerson,
                     meta =
-                    CreateRequestMeta(
-                        requestedBy = VALID_PARTY,
-                        requestedFrom = VALID_PARTY,
-                        requestedFromName = "From",
-                        requestedTo = VALID_PARTY,
-                        requestedForMeteringPointId = VALID_METERING_POINT,
-                        requestedForMeteringPointAddress = "addr",
-                        balanceSupplierName = "Supplier",
-                        balanceSupplierContractName = "Contract",
-                        startDate = VALID_START_DATE,
-                    ),
+                        CreateRequestMeta(
+                            requestedBy = VALID_PARTY,
+                            requestedFrom = VALID_PARTY,
+                            requestedFromName = "From",
+                            requestedTo = VALID_PARTY,
+                            requestedForMeteringPointId = VALID_METERING_POINT,
+                            requestedForMeteringPointAddress = "addr",
+                            balanceSupplierName = "Supplier",
+                            balanceSupplierContractName = "Contract",
+                            startDate = VALID_START_DATE,
+                        ),
                 )
 
             val command = handler.validateAndReturnRequestCommand(model).shouldBeRight()
@@ -102,13 +102,14 @@ class MoveInBusinessHandlerTest :
 
         test("grant properties validTo is one year from acceptance") {
             val party = AuthorizationParty(resourceId = "party-1", type = PartyType.Organization)
-            val request = AuthorizationRequest.create(
-                type = AuthorizationRequest.Type.MoveInAndChangeOfEnergySupplierForPerson,
-                requestedBy = party,
-                requestedFrom = party,
-                requestedTo = party,
-                validTo = today().toTimeZoneOffsetDateTimeAtStartOfDay(),
-            )
+            val request =
+                AuthorizationRequest.create(
+                    type = AuthorizationRequest.Type.MoveInAndChangeOfEnergySupplierForPerson,
+                    requestedBy = party,
+                    requestedFrom = party,
+                    requestedTo = party,
+                    validTo = today().toTimeZoneOffsetDateTimeAtStartOfDay(),
+                )
 
             val properties = handler.getCreateGrantProperties(request)
 
@@ -122,17 +123,17 @@ class MoveInBusinessHandlerTest :
                     authorizedParty = AuthorizationParty(resourceId = VALID_PARTY.idValue, type = PartyType.Organization),
                     documentType = AuthorizationDocument.Type.MoveInAndChangeOfEnergySupplierForPerson,
                     meta =
-                    CreateDocumentMeta(
-                        requestedBy = VALID_PARTY,
-                        requestedFrom = VALID_PARTY,
-                        requestedTo = VALID_PARTY,
-                        requestedFromName = "From",
-                        requestedForMeteringPointId = VALID_METERING_POINT,
-                        requestedForMeteringPointAddress = "addr",
-                        balanceSupplierName = "Supplier",
-                        balanceSupplierContractName = "Contract",
-                        startDate = VALID_START_DATE,
-                    ),
+                        CreateDocumentMeta(
+                            requestedBy = VALID_PARTY,
+                            requestedFrom = VALID_PARTY,
+                            requestedTo = VALID_PARTY,
+                            requestedFromName = "From",
+                            requestedForMeteringPointId = VALID_METERING_POINT,
+                            requestedForMeteringPointAddress = "addr",
+                            balanceSupplierName = "Supplier",
+                            balanceSupplierContractName = "Contract",
+                            startDate = VALID_START_DATE,
+                        ),
                 )
 
             val command = handler.validateAndReturnDocumentCommand(model).shouldBeRight()

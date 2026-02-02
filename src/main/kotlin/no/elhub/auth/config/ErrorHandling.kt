@@ -27,11 +27,12 @@ fun Application.configureErrorHandling() {
                     // domain/expected errors are handled via Arrow with Either, so reaching this block
                     // means an unexpected failure, and we return a generic 500 internal server error
                     logger.error("Unhandled exception", cause)
-                    val (status, body) = buildApiErrorResponse(
-                        status = HttpStatusCode.InternalServerError,
-                        title = "Internal server error",
-                        detail = "An unexpected error occurred"
-                    )
+                    val (status, body) =
+                        buildApiErrorResponse(
+                            status = HttpStatusCode.InternalServerError,
+                            title = "Internal server error",
+                            detail = "An unexpected error occurred",
+                        )
                     call.respond(status, body)
                 }
             }

@@ -21,16 +21,18 @@ private val logger = LoggerFactory.getLogger(Route::class.java)
 
 fun Route.route(
     handler: Handler,
-    authProvider: AuthorizationProvider
+    authProvider: AuthorizationProvider,
 ) {
     post {
-        val resolvedActor = authProvider.authorizeMaskinporten(call)
-            .getOrElse {
-                logger.error("Failed to authorize Maskinporten token for POST /authorization-requests: {}", it)
-                val error = it.toApiErrorResponse()
-                call.respond(error.first, error.second)
-                return@post
-            }
+        val resolvedActor =
+            authProvider
+                .authorizeMaskinporten(call)
+                .getOrElse {
+                    logger.error("Failed to authorize Maskinporten token for POST /authorization-requests: {}", it)
+                    val error = it.toApiErrorResponse()
+                    call.respond(error.first, error.second)
+                    return@post
+                }
 
         val requestBody = call.receive<JsonApiCreateRequest>()
         if (resolvedActor.role != RoleType.BalanceSupplier) {
@@ -39,10 +41,11 @@ fun Route.route(
             return@post
         }
 
-        val authorizedParty = AuthorizationParty(
-            resourceId = resolvedActor.gln,
-            type = PartyType.OrganizationEntity
-        )
+        val authorizedParty =
+            AuthorizationParty(
+                resourceId = resolvedActor.gln,
+                type = PartyType.OrganizationEntity,
+            )
 
         val request =
             handler(requestBody.toModel(authorizedParty))
@@ -55,7 +58,7 @@ fun Route.route(
 
         call.respond(
             status = HttpStatusCode.Created,
-            message = request.toCreateResponse()
+            message = request.toCreateResponse(),
         )
     }
 }

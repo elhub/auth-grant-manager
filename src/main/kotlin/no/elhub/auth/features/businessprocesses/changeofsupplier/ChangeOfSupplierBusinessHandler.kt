@@ -40,8 +40,9 @@ private const val REGEX_METERING_POINT = "^\\d{18}$"
 
 class ChangeOfSupplierBusinessHandler(
     private val meteringPointsService: MeteringPointsService,
-    private val personService: PersonService
-) : RequestBusinessHandler, DocumentBusinessHandler {
+    private val personService: PersonService,
+) : RequestBusinessHandler,
+    DocumentBusinessHandler {
     override suspend fun validateAndReturnRequestCommand(createRequestModel: CreateRequestModel): Either<ChangeOfSupplierValidationError, RequestCommand> =
         either {
             val model = createRequestModel.toChangeOfSupplierBusinessModel()
@@ -91,13 +92,15 @@ class ChangeOfSupplierBusinessHandler(
         }
 
         // temporary mapping until model has elhubInternalId instead of NIN
-        val endUserElhubInternalId = personService.findOrCreateByNin(model.requestedTo.idValue).getOrNull()?.internalId
-            ?: return ChangeOfSupplierValidationError.RequestedToNotFound.left()
+        val endUserElhubInternalId =
+            personService.findOrCreateByNin(model.requestedTo.idValue).getOrNull()?.internalId
+                ?: return ChangeOfSupplierValidationError.RequestedToNotFound.left()
 
-        val meteringPoint = meteringPointsService.getMeteringPointByIdAndElhubInternalId(
-            meteringPointId = model.requestedForMeteringPointId,
-            elhubInternalId = endUserElhubInternalId.toString()
-        )
+        val meteringPoint =
+            meteringPointsService.getMeteringPointByIdAndElhubInternalId(
+                meteringPointId = model.requestedForMeteringPointId,
+                elhubInternalId = endUserElhubInternalId.toString(),
+            )
 
         if (meteringPoint.isLeft()) {
             return ChangeOfSupplierValidationError.MeteringPointNotFound.left()
@@ -137,13 +140,14 @@ class ChangeOfSupplierBusinessHandler(
                 balanceSupplierName = model.balanceSupplierName,
             )
 
-        val scopes = listOf(
-            CreateScopeData(
-                authorizedResourceType = AuthorizationScope.AuthorizationResource.MeteringPoint,
-                authorizedResourceId = model.requestedForMeteringPointId,
-                permissionType = AuthorizationScope.PermissionType.ChangeOfEnergySupplierForPerson
+        val scopes =
+            listOf(
+                CreateScopeData(
+                    authorizedResourceType = AuthorizationScope.AuthorizationResource.MeteringPoint,
+                    authorizedResourceId = model.requestedForMeteringPointId,
+                    permissionType = AuthorizationScope.PermissionType.ChangeOfEnergySupplierForPerson,
+                ),
             )
-        )
 
         return ChangeOfSupplierBusinessCommand(
             requestedFrom = model.requestedFrom,
@@ -158,12 +162,20 @@ class ChangeOfSupplierBusinessHandler(
 
 @OptIn(ExperimentalTime::class)
 fun defaultValidTo(): LocalDate {
-    val now = Clock.System.now().toLocalDateTime(TimeZone.UTC).date
+    val now =
+        Clock.System
+            .now()
+            .toLocalDateTime(TimeZone.UTC)
+            .date
     return now.plus(DatePeriod(days = 30))
 }
 
 @OptIn(ExperimentalTime::class)
 fun today(): LocalDate {
-    val now = Clock.System.now().toLocalDateTime(TimeZone.UTC).date
+    val now =
+        Clock.System
+            .now()
+            .toLocalDateTime(TimeZone.UTC)
+            .date
     return now
 }

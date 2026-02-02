@@ -7,26 +7,27 @@ import io.ktor.server.response.respond
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import no.elhub.devxp.jsonapi.response.JsonApiErrorObject
 
-val HeaderPolicy = createApplicationPlugin(
-    name = "HeaderPolicy",
-) {
-    onCall { call ->
-        val userAgent = call.request.headers[HttpHeaders.UserAgent]
-        if (userAgent.isNullOrBlank()) {
-            call.respond(
-                HttpStatusCode.BadRequest,
-                JsonApiErrorCollection(
-                    listOf(MissingUserAgentHeder)
+val HeaderPolicy =
+    createApplicationPlugin(
+        name = "HeaderPolicy",
+    ) {
+        onCall { call ->
+            val userAgent = call.request.headers[HttpHeaders.UserAgent]
+            if (userAgent.isNullOrBlank()) {
+                call.respond(
+                    HttpStatusCode.BadRequest,
+                    JsonApiErrorCollection(
+                        listOf(MissingUserAgentHeder),
+                    ),
                 )
-            )
-            return@onCall
+                return@onCall
+            }
         }
     }
-}
 
 val MissingUserAgentHeder: JsonApiErrorObject =
     JsonApiErrorObject(
         status = "400",
         title = "Bad request",
-        detail = "Missing User-Agent header"
+        detail = "Missing User-Agent header",
     )

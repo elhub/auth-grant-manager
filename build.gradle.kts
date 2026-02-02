@@ -81,7 +81,7 @@ dockerCompose {
             mapOf(
                 "DB_USERNAME" to dbUsername,
                 "DB_PASSWORD" to dbPassword,
-                "PRIVATE_KEY_PATH" to testKeyPath.get()
+                "PRIVATE_KEY_PATH" to testKeyPath.get(),
             ),
         )
     }
@@ -142,28 +142,35 @@ tasks.named("liquibaseUpdate").configure {
     dependsOn(tasks.named("servicesComposeUp"))
 }
 
-val localEnvVars = mapOf(
-    "JDBC_URL" to "jdbc:postgresql://localhost:5432/auth",
-    "APP_USERNAME" to "app",
-    "APP_PASSWORD" to "app",
-    "MUSTACHE_RESOURCE_PATH" to "templates",
-    "VAULT_URL" to "http://localhost:8200/v1/transit",
-    "VAULT_KEY" to "test-key",
-    "VAULT_TOKEN_PATH" to "src/test/resources/vault_token_mock.txt",
-    "PATH_TO_SIGNING_CERTIFICATE" to testCertPath.get(),
-    "PATH_TO_SIGNING_CERTIFICATE_CHAIN" to testCertPath.get(),
-    "PATH_TO_BANKID_ROOT_CERTIFICATE" to bankIdPath.get(),
-    "ENABLE_ENDPOINTS" to "true",
-    "AUTH_PERSONS_URL" to "http://localhost:8081",
-    "PDP_BASE_URL" to "https://auth-policy-decision-point-test9.elhub.cloud",
-    "STRUCTURE_DATA_METERING_POINTS_SERVICE_URL" to "http://localhost:8080",
-    "STRUCTURE_DATA_METERING_POINTS_SERVICE_API_USERNAME" to "user",
-    "STRUCTURE_DATA_METERING_POINTS_SERVICE_API_PASSWORD" to "pass",
-)
+val localEnvVars =
+    mapOf(
+        "JDBC_URL" to "jdbc:postgresql://localhost:5432/auth",
+        "APP_USERNAME" to "app",
+        "APP_PASSWORD" to "app",
+        "MUSTACHE_RESOURCE_PATH" to "templates",
+        "VAULT_URL" to "http://localhost:8200/v1/transit",
+        "VAULT_KEY" to "test-key",
+        "VAULT_TOKEN_PATH" to "src/test/resources/vault_token_mock.txt",
+        "PATH_TO_SIGNING_CERTIFICATE" to testCertPath.get(),
+        "PATH_TO_SIGNING_CERTIFICATE_CHAIN" to testCertPath.get(),
+        "PATH_TO_BANKID_ROOT_CERTIFICATE" to bankIdPath.get(),
+        "ENABLE_ENDPOINTS" to "true",
+        "AUTH_PERSONS_URL" to "http://localhost:8081",
+        "PDP_BASE_URL" to "https://auth-policy-decision-point-test9.elhub.cloud",
+        "STRUCTURE_DATA_METERING_POINTS_SERVICE_URL" to "http://localhost:8080",
+        "STRUCTURE_DATA_METERING_POINTS_SERVICE_API_USERNAME" to "user",
+        "STRUCTURE_DATA_METERING_POINTS_SERVICE_API_PASSWORD" to "pass",
+    )
 
 tasks.named<JavaExec>("run").configure {
-    dependsOn("generateTestCerts", "servicesComposeUp", "liquibaseUpdate")
-    localEnvVars.forEach { (key, value) -> environment(key, value) }
+    dependsOn(
+        "generateTestCerts",
+        "servicesComposeUp",
+        "liquibaseUpdate",
+    )
+    localEnvVars.forEach { (key, value) ->
+        environment(key, value)
+    }
 }
 
 dependencyCheck {

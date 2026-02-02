@@ -16,38 +16,51 @@ import org.slf4j.LoggerFactory
 
 private val logger = LoggerFactory.getLogger(Route::class.java)
 
-fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
+fun Route.route(
+    handler: Handler,
+    authProvider: AuthorizationProvider,
+) {
     get {
-        val authorizedParty = authProvider.authorizeEndUserOrMaskinporten(call)
-            .getOrElse { err ->
-                val (status, body) = err.toApiErrorResponse()
-                call.respond(status, body)
-                return@get
+        val authorizedParty =
+            authProvider
+                .authorizeEndUserOrMaskinporten(call)
+                .getOrElse { err ->
+                    val (status, body) = err.toApiErrorResponse()
+                    call.respond(status, body)
+                    return@get
+                }
+
+        val query =
+            when (authorizedParty) {
+                is AuthorizedParty.OrganizationEntity -> {
+                    Query(
+                        authorizedParty =
+                            AuthorizationParty(
+                                resourceId = authorizedParty.gln,
+                                type = PartyType.OrganizationEntity,
+                            ),
+                    )
+                }
+
+                is AuthorizedParty.Person -> {
+                    Query(
+                        authorizedParty =
+                            AuthorizationParty(
+                                resourceId = authorizedParty.id.toString(),
+                                type = PartyType.Person,
+                            ),
+                    )
+                }
             }
 
-        val query = when (authorizedParty) {
-            is AuthorizedParty.OrganizationEntity -> Query(
-                authorizedParty = AuthorizationParty(
-                    resourceId = authorizedParty.gln,
-                    type = PartyType.OrganizationEntity
-                )
-            )
-
-            is AuthorizedParty.Person -> Query(
-                authorizedParty = AuthorizationParty(
-                    resourceId = authorizedParty.id.toString(),
-                    type = PartyType.Person
-                )
-            )
-        }
-
-        val documents = handler(query)
-            .getOrElse { error ->
-                logger.error("Failed to get authorization documents: {}", error)
-                val (status, body) = error.toApiErrorResponse()
-                call.respond(status, body)
-                return@get
-            }
+        val documents =
+            handler(query)
+                .getOrElse { error ->
+                    logger.error("Failed to get authorization documents: {}", error)
+                    val (status, body) = error.toApiErrorResponse()
+                    call.respond(status, body)
+                    return@get
+                }
 
         call.respond(HttpStatusCode.OK, documents.toGetCollectionResponse())
     }

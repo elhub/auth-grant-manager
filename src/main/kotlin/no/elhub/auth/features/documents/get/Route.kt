@@ -21,98 +21,123 @@ import java.util.UUID
 const val DOCUMENT_ID_PARAM = "id"
 private val logger = LoggerFactory.getLogger(Route::class.java)
 
-fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
+fun Route.route(
+    handler: Handler,
+    authProvider: AuthorizationProvider,
+) {
     get("/{$DOCUMENT_ID_PARAM}") {
-        val authorizedParty = authProvider.authorizeEndUserOrMaskinporten(call)
-            .getOrElse { err ->
-                val (status, body) = err.toApiErrorResponse()
-                call.respond(status, body)
-                return@get
+        val authorizedParty =
+            authProvider
+                .authorizeEndUserOrMaskinporten(call)
+                .getOrElse { err ->
+                    val (status, body) = err.toApiErrorResponse()
+                    call.respond(status, body)
+                    return@get
+                }
+
+        val id: UUID =
+            validateId(call.parameters[DOCUMENT_ID_PARAM])
+                .getOrElse { err ->
+                    val (status, body) = err.toApiErrorResponse()
+                    call.respond(status, body)
+                    return@get
+                }
+
+        val query =
+            when (authorizedParty) {
+                is AuthorizedParty.OrganizationEntity -> {
+                    Query(
+                        documentId = id,
+                        authorizedParty =
+                            AuthorizationParty(
+                                resourceId = authorizedParty.gln,
+                                type = PartyType.OrganizationEntity,
+                            ),
+                    )
+                }
+
+                is AuthorizedParty.Person -> {
+                    Query(
+                        documentId = id,
+                        authorizedParty =
+                            AuthorizationParty(
+                                resourceId = authorizedParty.id.toString(),
+                                type = PartyType.Person,
+                            ),
+                    )
+                }
             }
 
-        val id: UUID = validateId(call.parameters[DOCUMENT_ID_PARAM])
-            .getOrElse { err ->
-                val (status, body) = err.toApiErrorResponse()
-                call.respond(status, body)
-                return@get
-            }
-
-        val query = when (authorizedParty) {
-            is AuthorizedParty.OrganizationEntity -> Query(
-                documentId = id,
-                authorizedParty = AuthorizationParty(
-                    resourceId = authorizedParty.gln,
-                    type = PartyType.OrganizationEntity
-                )
-            )
-
-            is AuthorizedParty.Person -> Query(
-                documentId = id,
-                authorizedParty = AuthorizationParty(
-                    resourceId = authorizedParty.id.toString(),
-                    type = PartyType.Person
-                )
-            )
-        }
-
-        val document = handler(query)
-            .getOrElse { error ->
-                logger.error("Failed to get authorization document: {}", error)
-                val (status, body) = error.toApiErrorResponse()
-                call.respond(status, body)
-                return@get
-            }
+        val document =
+            handler(query)
+                .getOrElse { error ->
+                    logger.error("Failed to get authorization document: {}", error)
+                    val (status, body) = error.toApiErrorResponse()
+                    call.respond(status, body)
+                    return@get
+                }
 
         call.respond(
             status = HttpStatusCode.OK,
-            message = document.toGetSingleResponse()
+            message = document.toGetSingleResponse(),
         )
     }
 
     get("/{$DOCUMENT_ID_PARAM}.pdf") {
-        val authorizedParty = authProvider.authorizeEndUserOrMaskinporten(call)
-            .getOrElse { err ->
-                val (status, body) = err.toApiErrorResponse()
-                call.respond(status, body)
-                return@get
+        val authorizedParty =
+            authProvider
+                .authorizeEndUserOrMaskinporten(call)
+                .getOrElse { err ->
+                    val (status, body) = err.toApiErrorResponse()
+                    call.respond(status, body)
+                    return@get
+                }
+
+        val id: UUID =
+            validateId(call.parameters[DOCUMENT_ID_PARAM])
+                .getOrElse { err ->
+                    val (status, body) = err.toApiErrorResponse()
+                    call.respond(status, body)
+                    return@get
+                }
+
+        val query =
+            when (authorizedParty) {
+                is AuthorizedParty.OrganizationEntity -> {
+                    Query(
+                        documentId = id,
+                        authorizedParty =
+                            AuthorizationParty(
+                                resourceId = authorizedParty.gln,
+                                type = PartyType.OrganizationEntity,
+                            ),
+                    )
+                }
+
+                is AuthorizedParty.Person -> {
+                    Query(
+                        documentId = id,
+                        authorizedParty =
+                            AuthorizationParty(
+                                resourceId = authorizedParty.id.toString(),
+                                type = PartyType.Person,
+                            ),
+                    )
+                }
             }
 
-        val id: UUID = validateId(call.parameters[DOCUMENT_ID_PARAM])
-            .getOrElse { err ->
-                val (status, body) = err.toApiErrorResponse()
-                call.respond(status, body)
-                return@get
-            }
-
-        val query = when (authorizedParty) {
-            is AuthorizedParty.OrganizationEntity -> Query(
-                documentId = id,
-                authorizedParty = AuthorizationParty(
-                    resourceId = authorizedParty.gln,
-                    type = PartyType.OrganizationEntity
-                )
-            )
-
-            is AuthorizedParty.Person -> Query(
-                documentId = id,
-                authorizedParty = AuthorizationParty(
-                    resourceId = authorizedParty.id.toString(),
-                    type = PartyType.Person
-                )
-            )
-        }
-
-        val document = handler(query)
-            .getOrElse { error ->
-                logger.error("Failed to get authorization document: {}", error)
-                val (status, body) = error.toApiErrorResponse()
-                call.respond(status, body)
-                return@get
-            }
+        val document =
+            handler(query)
+                .getOrElse { error ->
+                    logger.error("Failed to get authorization document: {}", error)
+                    val (status, body) = error.toApiErrorResponse()
+                    call.respond(status, body)
+                    return@get
+                }
 
         call.respondBytes(
             bytes = document.file,
-            contentType = ContentType.Application.Pdf
+            contentType = ContentType.Application.Pdf,
         )
     }
 }

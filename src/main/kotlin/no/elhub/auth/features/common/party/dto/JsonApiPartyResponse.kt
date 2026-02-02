@@ -6,8 +6,9 @@ import no.elhub.devxp.jsonapi.model.JsonApiRelationshipToOne
 
 fun AuthorizationParty.toJsonApiRelationship() =
     JsonApiRelationshipToOne(
-        data = JsonApiRelationshipData(
-            type = this.type.name,
-            id = this.resourceId
-        )
+        data =
+            JsonApiRelationshipData(
+                type = this.type.name,
+                id = this.resourceId,
+            ),
     )

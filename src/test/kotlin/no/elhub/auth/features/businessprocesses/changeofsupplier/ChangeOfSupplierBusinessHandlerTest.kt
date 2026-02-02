@@ -49,10 +49,11 @@ class ChangeOfSupplierBusinessHandlerTest :
         val personService = mockk<PersonService>()
 
         beforeSpec {
-            meteringPointsService = MeteringPointsApi(
-                MeteringPointsApiConfig(serviceUrl = MeteringPointsServiceTestContainer.serviceUrl(), basicAuthConfig = BasicAuthConfig("user", "pass")),
-                meteringPointsServiceHttpClient
-            )
+            meteringPointsService =
+                MeteringPointsApi(
+                    MeteringPointsApiConfig(serviceUrl = MeteringPointsServiceTestContainer.serviceUrl(), basicAuthConfig = BasicAuthConfig("user", "pass")),
+                    meteringPointsServiceHttpClient,
+                )
             handler = ChangeOfSupplierBusinessHandler(meteringPointsService = meteringPointsService, personService = personService)
         }
 
@@ -66,16 +67,16 @@ class ChangeOfSupplierBusinessHandlerTest :
                     authorizedParty = AUTHORIZED_PARTY,
                     requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
                     meta =
-                    CreateRequestMeta(
-                        requestedBy = VALID_PARTY,
-                        requestedFrom = VALID_PARTY,
-                        requestedFromName = "",
-                        requestedTo = END_USER,
-                        requestedForMeteringPointId = VALID_METERING_POINT,
-                        requestedForMeteringPointAddress = "addr",
-                        balanceSupplierName = "Supplier",
-                        balanceSupplierContractName = "Contract",
-                    ),
+                        CreateRequestMeta(
+                            requestedBy = VALID_PARTY,
+                            requestedFrom = VALID_PARTY,
+                            requestedFromName = "",
+                            requestedTo = END_USER,
+                            requestedForMeteringPointId = VALID_METERING_POINT,
+                            requestedForMeteringPointAddress = "addr",
+                            balanceSupplierName = "Supplier",
+                            balanceSupplierContractName = "Contract",
+                        ),
                 )
 
             handler.validateAndReturnRequestCommand(model).shouldBeLeft(ChangeOfSupplierValidationError.MissingRequestedFromName)
@@ -87,16 +88,16 @@ class ChangeOfSupplierBusinessHandlerTest :
                     authorizedParty = AUTHORIZED_PARTY,
                     requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
                     meta =
-                    CreateRequestMeta(
-                        requestedBy = VALID_PARTY,
-                        requestedFrom = VALID_PARTY,
-                        requestedFromName = "From",
-                        requestedTo = ANOTHER_END_USER,
-                        requestedForMeteringPointId = VALID_METERING_POINT,
-                        requestedForMeteringPointAddress = "addr",
-                        balanceSupplierName = "Supplier",
-                        balanceSupplierContractName = "Contract",
-                    ),
+                        CreateRequestMeta(
+                            requestedBy = VALID_PARTY,
+                            requestedFrom = VALID_PARTY,
+                            requestedFromName = "From",
+                            requestedTo = ANOTHER_END_USER,
+                            requestedForMeteringPointId = VALID_METERING_POINT,
+                            requestedForMeteringPointAddress = "addr",
+                            balanceSupplierName = "Supplier",
+                            balanceSupplierContractName = "Contract",
+                        ),
                 )
 
             handler.validateAndReturnRequestCommand(model).shouldBeLeft(ChangeOfSupplierValidationError.RequestedToNotMeteringPointEndUser)
@@ -108,16 +109,16 @@ class ChangeOfSupplierBusinessHandlerTest :
                     authorizedParty = AUTHORIZED_PARTY,
                     requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
                     meta =
-                    CreateRequestMeta(
-                        requestedBy = VALID_PARTY,
-                        requestedFrom = VALID_PARTY,
-                        requestedFromName = "From",
-                        requestedTo = SHARED_END_USER,
-                        requestedForMeteringPointId = VALID_METERING_POINT,
-                        requestedForMeteringPointAddress = "addr",
-                        balanceSupplierName = "Supplier",
-                        balanceSupplierContractName = "Contract",
-                    ),
+                        CreateRequestMeta(
+                            requestedBy = VALID_PARTY,
+                            requestedFrom = VALID_PARTY,
+                            requestedFromName = "From",
+                            requestedTo = SHARED_END_USER,
+                            requestedForMeteringPointId = VALID_METERING_POINT,
+                            requestedForMeteringPointAddress = "addr",
+                            balanceSupplierName = "Supplier",
+                            balanceSupplierContractName = "Contract",
+                        ),
                 )
 
             handler.validateAndReturnRequestCommand(model).shouldBeLeft(ChangeOfSupplierValidationError.RequestedToNotMeteringPointEndUser)
@@ -129,16 +130,16 @@ class ChangeOfSupplierBusinessHandlerTest :
                     authorizedParty = AUTHORIZED_PARTY,
                     requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
                     meta =
-                    CreateRequestMeta(
-                        requestedBy = VALID_PARTY,
-                        requestedFrom = VALID_PARTY,
-                        requestedFromName = "From",
-                        requestedTo = END_USER,
-                        requestedForMeteringPointId = "123",
-                        requestedForMeteringPointAddress = "addr",
-                        balanceSupplierName = "Supplier",
-                        balanceSupplierContractName = "Contract",
-                    ),
+                        CreateRequestMeta(
+                            requestedBy = VALID_PARTY,
+                            requestedFrom = VALID_PARTY,
+                            requestedFromName = "From",
+                            requestedTo = END_USER,
+                            requestedForMeteringPointId = "123",
+                            requestedForMeteringPointAddress = "addr",
+                            balanceSupplierName = "Supplier",
+                            balanceSupplierContractName = "Contract",
+                        ),
                 )
 
             handler.validateAndReturnRequestCommand(model).shouldBeLeft(ChangeOfSupplierValidationError.InvalidMeteringPointId)
@@ -150,16 +151,16 @@ class ChangeOfSupplierBusinessHandlerTest :
                     authorizedParty = AUTHORIZED_PARTY,
                     requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
                     meta =
-                    CreateRequestMeta(
-                        requestedBy = VALID_PARTY,
-                        requestedFrom = VALID_PARTY,
-                        requestedFromName = "From",
-                        requestedTo = VALID_PARTY,
-                        requestedForMeteringPointId = NON_EXISTING_METERING_POINT,
-                        requestedForMeteringPointAddress = "addr",
-                        balanceSupplierName = "Supplier",
-                        balanceSupplierContractName = "Contract",
-                    ),
+                        CreateRequestMeta(
+                            requestedBy = VALID_PARTY,
+                            requestedFrom = VALID_PARTY,
+                            requestedFromName = "From",
+                            requestedTo = VALID_PARTY,
+                            requestedForMeteringPointId = NON_EXISTING_METERING_POINT,
+                            requestedForMeteringPointAddress = "addr",
+                            balanceSupplierName = "Supplier",
+                            balanceSupplierContractName = "Contract",
+                        ),
                 )
 
             handler.validateAndReturnRequestCommand(model).shouldBeLeft(ChangeOfSupplierValidationError.MeteringPointNotFound)
@@ -171,16 +172,16 @@ class ChangeOfSupplierBusinessHandlerTest :
                     authorizedParty = AUTHORIZED_PARTY,
                     requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
                     meta =
-                    CreateRequestMeta(
-                        requestedBy = VALID_PARTY,
-                        requestedFrom = VALID_PARTY,
-                        requestedFromName = "From",
-                        requestedTo = VALID_PARTY,
-                        requestedForMeteringPointId = VALID_METERING_POINT,
-                        requestedForMeteringPointAddress = "addr",
-                        balanceSupplierName = "Supplier",
-                        balanceSupplierContractName = "Contract",
-                    ),
+                        CreateRequestMeta(
+                            requestedBy = VALID_PARTY,
+                            requestedFrom = VALID_PARTY,
+                            requestedFromName = "From",
+                            requestedTo = VALID_PARTY,
+                            requestedForMeteringPointId = VALID_METERING_POINT,
+                            requestedForMeteringPointAddress = "addr",
+                            balanceSupplierName = "Supplier",
+                            balanceSupplierContractName = "Contract",
+                        ),
                 )
 
             val command = handler.validateAndReturnRequestCommand(model).shouldBeRight()
@@ -195,16 +196,16 @@ class ChangeOfSupplierBusinessHandlerTest :
                     authorizedParty = AuthorizationParty(resourceId = VALID_PARTY.idValue, type = PartyType.Organization),
                     documentType = AuthorizationDocument.Type.ChangeOfEnergySupplierForPerson,
                     meta =
-                    CreateDocumentMeta(
-                        requestedBy = VALID_PARTY,
-                        requestedFrom = VALID_PARTY,
-                        requestedTo = VALID_PARTY,
-                        requestedFromName = "From",
-                        requestedForMeteringPointId = VALID_METERING_POINT,
-                        requestedForMeteringPointAddress = "addr",
-                        balanceSupplierName = "Supplier",
-                        balanceSupplierContractName = "Contract",
-                    ),
+                        CreateDocumentMeta(
+                            requestedBy = VALID_PARTY,
+                            requestedFrom = VALID_PARTY,
+                            requestedTo = VALID_PARTY,
+                            requestedFromName = "From",
+                            requestedForMeteringPointId = VALID_METERING_POINT,
+                            requestedForMeteringPointAddress = "addr",
+                            balanceSupplierName = "Supplier",
+                            balanceSupplierContractName = "Contract",
+                        ),
                 )
 
             val command = handler.validateAndReturnDocumentCommand(model).shouldBeRight()

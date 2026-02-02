@@ -7,5 +7,5 @@ import java.util.UUID
 data class ConsumeCommand(
     val grantId: UUID,
     val newStatus: AuthorizationGrant.Status,
-    val authorizedParty: AuthorizationParty
+    val authorizedParty: AuthorizationParty,
 )

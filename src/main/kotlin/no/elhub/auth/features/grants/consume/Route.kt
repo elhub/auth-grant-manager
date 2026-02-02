@@ -21,45 +21,55 @@ private val logger = LoggerFactory.getLogger(Route::class.java)
 
 const val GRANT_ID_PARAM = "id"
 
-fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
+fun Route.route(
+    handler: Handler,
+    authProvider: AuthorizationProvider,
+) {
     patch("/{$GRANT_ID_PARAM}") {
-        val authorizedSystem = authProvider.authorizeElhubService(call)
-            .getOrElse { err ->
-                val (status, body) = err.toApiErrorResponse()
+        val authorizedSystem =
+            authProvider
+                .authorizeElhubService(call)
+                .getOrElse { err ->
+                    val (status, body) = err.toApiErrorResponse()
+                    call.respond(status, body)
+                    return@patch
+                }
+
+        val grantId =
+            validateId(call.parameters[GRANT_ID_PARAM])
+                .getOrElse { error ->
+                    val (status, body) = error.toApiErrorResponse()
+                    call.respond(status, body)
+                    return@patch
+                }
+
+        val body =
+            runCatching {
+                call.receive<JsonApiConsumeRequest>()
+            }.getOrElse {
+                val (status, body) = InputError.MalformedInputError.toApiErrorResponse()
                 call.respond(status, body)
                 return@patch
             }
 
-        val grantId = validateId(call.parameters[GRANT_ID_PARAM])
-            .getOrElse { error ->
-                val (status, body) = error.toApiErrorResponse()
-                call.respond(status, body)
-                return@patch
-            }
-
-        val body = runCatching {
-            call.receive<JsonApiConsumeRequest>()
-        }.getOrElse {
-            val (status, body) = InputError.MalformedInputError.toApiErrorResponse()
-            call.respond(status, body)
-            return@patch
-        }
-
-        val command = ConsumeCommand(
-            grantId = grantId,
-            newStatus = body.data.attributes.status,
-            authorizedParty = AuthorizationParty(
-                resourceId = authorizedSystem.id,
-                type = PartyType.System
+        val command =
+            ConsumeCommand(
+                grantId = grantId,
+                newStatus = body.data.attributes.status,
+                authorizedParty =
+                    AuthorizationParty(
+                        resourceId = authorizedSystem.id,
+                        type = PartyType.System,
+                    ),
             )
-        )
 
-        val updated = handler(command).getOrElse { error ->
-            logger.error("Failed to update authorization grant: {}", error)
-            val (status, error) = error.toApiErrorResponse()
-            call.respond(status, error)
-            return@patch
-        }
+        val updated =
+            handler(command).getOrElse { error ->
+                logger.error("Failed to update authorization grant: {}", error)
+                val (status, error) = error.toApiErrorResponse()
+                call.respond(status, error)
+                return@patch
+            }
 
         call.respond(HttpStatusCode.OK, updated.toSingleGrantResponse())
     }

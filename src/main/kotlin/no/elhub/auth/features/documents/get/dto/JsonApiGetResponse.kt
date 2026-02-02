@@ -25,7 +25,7 @@ data class GetDocumentSingleResponseAttributes(
     val documentType: String,
     val validTo: String,
     val createdAt: String,
-    val updatedAt: String
+    val updatedAt: String,
 ) : JsonApiAttributes
 
 @Serializable
@@ -34,13 +34,13 @@ data class GetDocumentSingleResponseRelationship(
     val requestedFrom: JsonApiRelationshipToOne,
     val requestedTo: JsonApiRelationshipToOne,
     val signedBy: JsonApiRelationshipToOne? = null,
-    val authorizationGrant: JsonApiRelationshipToOne? = null
+    val authorizationGrant: JsonApiRelationshipToOne? = null,
 ) : JsonApiRelationships
 
 @Serializable
 @JvmInline
 value class GetDocumentSingleResponseMeta(
-    val values: Map<String, String>
+    val values: Map<String, String>,
 ) : JsonApiResourceMeta
 
 @Serializable
@@ -53,61 +53,72 @@ typealias GetDocumentSingleResponse = JsonApiResponse.SingleDocumentWithRelation
     GetDocumentSingleResponseAttributes,
     GetDocumentSingleResponseRelationship,
     GetDocumentSingleResponseMeta,
-    GetDocumentSingleResponseLinks
-    >
+    GetDocumentSingleResponseLinks,
+>
 
 fun AuthorizationDocument.toGetSingleResponse() =
     GetDocumentSingleResponse(
-        data = JsonApiResponseResourceObjectWithRelationshipsAndMetaAndLinks(
-            type = "AuthorizationDocument",
-            id = this.id.toString(),
-            attributes = GetDocumentSingleResponseAttributes(
-                status = this.status.name,
-                documentType = this.type.name,
-                validTo = this.validTo.toTimeZoneOffsetString(),
-                createdAt = this.createdAt.toTimeZoneOffsetString(),
-                updatedAt = this.createdAt.toTimeZoneOffsetString(),
+        data =
+            JsonApiResponseResourceObjectWithRelationshipsAndMetaAndLinks(
+                type = "AuthorizationDocument",
+                id = this.id.toString(),
+                attributes =
+                    GetDocumentSingleResponseAttributes(
+                        status = this.status.name,
+                        documentType = this.type.name,
+                        validTo = this.validTo.toTimeZoneOffsetString(),
+                        createdAt = this.createdAt.toTimeZoneOffsetString(),
+                        updatedAt = this.createdAt.toTimeZoneOffsetString(),
+                    ),
+                relationships =
+                    GetDocumentSingleResponseRelationship(
+                        requestedBy = this.requestedBy.toJsonApiRelationship(),
+                        requestedFrom = this.requestedFrom.toJsonApiRelationship(),
+                        requestedTo = this.requestedTo.toJsonApiRelationship(),
+                        signedBy =
+                            this.signedBy?.let {
+                                JsonApiRelationshipToOne(
+                                    data =
+                                        JsonApiRelationshipData(
+                                            type = it.type.name,
+                                            id = it.resourceId,
+                                        ),
+                                )
+                            },
+                        authorizationGrant =
+                            this.grantId?.let {
+                                JsonApiRelationshipToOne(
+                                    data =
+                                        JsonApiRelationshipData(
+                                            id = it.toString(),
+                                            type = "AuthorizationGrant",
+                                        ),
+                                    links =
+                                        JsonApiLinks.RelationShipLink(
+                                            self = "$GRANTS_PATH/$it",
+                                        ),
+                                )
+                            },
+                    ),
+                meta =
+                    GetDocumentSingleResponseMeta(
+                        buildMap {
+                            this@toGetSingleResponse.properties.forEach {
+                                put(it.key, (it.value))
+                            }
+                        },
+                    ),
+                links =
+                    GetDocumentSingleResponseLinks(
+                        self = "${DOCUMENTS_PATH}/${this.id}",
+                        file = "${DOCUMENTS_PATH}/${this.id}.pdf",
+                    ),
             ),
-            relationships = GetDocumentSingleResponseRelationship(
-                requestedBy = this.requestedBy.toJsonApiRelationship(),
-                requestedFrom = this.requestedFrom.toJsonApiRelationship(),
-                requestedTo = this.requestedTo.toJsonApiRelationship(),
-                signedBy = this.signedBy?.let {
-                    JsonApiRelationshipToOne(
-                        data = JsonApiRelationshipData(
-                            type = it.type.name,
-                            id = it.resourceId
-                        )
-                    )
-                },
-                authorizationGrant = this.grantId?.let {
-                    JsonApiRelationshipToOne(
-                        data = JsonApiRelationshipData(
-                            id = it.toString(),
-                            type = "AuthorizationGrant"
-                        ),
-                        links = JsonApiLinks.RelationShipLink(
-                            self = "$GRANTS_PATH/$it"
-                        )
-                    )
-                },
-            ),
-            meta = GetDocumentSingleResponseMeta(
-                buildMap {
-                    this@toGetSingleResponse.properties.forEach {
-                        put(it.key, (it.value))
-                    }
-                }
-            ),
-            links = GetDocumentSingleResponseLinks(
-                self = "${DOCUMENTS_PATH}/${this.id}",
-                file = "${DOCUMENTS_PATH}/${this.id}.pdf"
-            )
-        ),
         links = JsonApiLinks.ResourceObjectLink(DOCUMENTS_PATH),
-        meta = JsonApiMeta(
-            buildJsonObject {
-                put("createdAt", this@toGetSingleResponse.createdAt.toTimeZoneOffsetString())
-            }
-        )
+        meta =
+            JsonApiMeta(
+                buildJsonObject {
+                    put("createdAt", this@toGetSingleResponse.createdAt.toTimeZoneOffsetString())
+                },
+            ),
     )

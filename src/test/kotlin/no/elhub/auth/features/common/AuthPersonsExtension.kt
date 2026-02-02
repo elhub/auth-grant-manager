@@ -9,21 +9,22 @@ import org.testcontainers.utility.DockerImageName
 import java.time.Duration
 
 object AuthPersonsTestContainer {
-
     private val image = DockerImageName.parse("docker.jfrog.elhub.cloud/frzq0sxltynr/auth/auth-persons-mock:0.1.28-52")
     private var container: GenericContainer<*>? = null
 
     fun start() {
         if (container != null) return
-        container = GenericContainer(image).apply {
-            withExposedPorts(8080)
-            waitingFor(
-                Wait.forHttp("/__admin/health")
-                    .forStatusCodeMatching { it == 200 }
-                    .withStartupTimeout(Duration.ofSeconds(60)) // increased timeout
-            )
-            start()
-        }
+        container =
+            GenericContainer(image).apply {
+                withExposedPorts(8080)
+                waitingFor(
+                    Wait
+                        .forHttp("/__admin/health")
+                        .forStatusCodeMatching { it == 200 }
+                        .withStartupTimeout(Duration.ofSeconds(60)), // increased timeout
+                )
+                start()
+            }
     }
 
     fun stop() {

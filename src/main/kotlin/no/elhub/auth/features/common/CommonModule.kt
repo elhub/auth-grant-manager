@@ -38,7 +38,7 @@ fun Application.commonModule() {
                     json(
                         Json {
                             ignoreUnknownKeys = true
-                        }
+                        },
                     )
                 }
                 install(Logging) {
@@ -51,7 +51,7 @@ fun Application.commonModule() {
         single {
             val cfg = get<ApplicationConfig>().config("authPersons")
             PersonApiConfig(
-                baseUri = cfg.property("baseUri").getString()
+                baseUri = cfg.property("baseUri").getString(),
             )
         }
 

@@ -15,21 +15,26 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import org.testcontainers.containers.GenericContainer
 
-class PdpTestContainerExtension() : BeforeSpecListener, AfterSpecListener {
-
-    private val container = GenericContainer("wiremock/wiremock:3.13.2").apply {
-        withExposedPorts(8080)
-        withCommand("--verbose")
-        withCreateContainerCmdModifier { cmd ->
-            cmd.withHostConfig(
-                HostConfig().withPortBindings(
-                    PortBinding(Ports.Binding.bindPort(8085), ExposedPort(8080))
+class PdpTestContainerExtension :
+    BeforeSpecListener,
+    AfterSpecListener {
+    private val container =
+        GenericContainer("wiremock/wiremock:3.13.2").apply {
+            withExposedPorts(8080)
+            withCommand("--verbose")
+            withCreateContainerCmdModifier { cmd ->
+                cmd.withHostConfig(
+                    HostConfig().withPortBindings(
+                        PortBinding(Ports.Binding.bindPort(8085), ExposedPort(8080)),
+                    ),
                 )
-            )
+            }
         }
-    }
 
-    suspend fun registerEnduserMapping(token: String, partyId: String) {
+    suspend fun registerEnduserMapping(
+        token: String,
+        partyId: String,
+    ) {
         val client = HttpClient(CIO)
         client.post("http://localhost:8085/__admin/mappings") {
             contentType(ContentType.Application.Json)
@@ -38,7 +43,11 @@ class PdpTestContainerExtension() : BeforeSpecListener, AfterSpecListener {
         client.close()
     }
 
-    suspend fun registerMaskinportenMapping(token: String, actingGln: String, actingFunction: String) {
+    suspend fun registerMaskinportenMapping(
+        token: String,
+        actingGln: String,
+        actingFunction: String,
+    ) {
         val client = HttpClient(CIO)
         client.post("http://localhost:8085/__admin/mappings") {
             contentType(ContentType.Application.Json)
@@ -47,7 +56,10 @@ class PdpTestContainerExtension() : BeforeSpecListener, AfterSpecListener {
         client.close()
     }
 
-    suspend fun registerElhubServiceTokenMapping(token: String, partyId: String) {
+    suspend fun registerElhubServiceTokenMapping(
+        token: String,
+        partyId: String,
+    ) {
         val client = HttpClient(CIO)
         client.post("http://localhost:8085/__admin/mappings") {
             contentType(ContentType.Application.Json)
@@ -82,7 +94,7 @@ class PdpTestContainerExtension() : BeforeSpecListener, AfterSpecListener {
                     }
                   }
                 }
-                """.trimIndent()
+                """.trimIndent(),
             )
         }
     }
@@ -96,89 +108,99 @@ class PdpTestContainerExtension() : BeforeSpecListener, AfterSpecListener {
     }
 
     companion object {
-        private fun maskinportenMapping(token: String, actingGln: String, actingFunction: String): String =
+        private fun maskinportenMapping(
+            token: String,
+            actingGln: String,
+            actingFunction: String,
+        ): String =
             """
-        {
-          "priority": 1,
-          "request": {
-            "method": "POST",
-            "url": "/v1/data/v2/token/authinfo",
-            "bodyPatterns": [
-              { "contains": "\"token\":\"$token\"" }
-            ]
-          },
-          "response": {
-            "status": 200,
-            "headers": { "Content-Type": "application/json" },
-            "jsonBody": {
-              "result": {
-                "tokenInfo": {
-                  "tokenStatus": "verified",
-                  "partyId": "maskinporten",
-                  "tokenType": "maskinporten"
-                },
-                "authInfo": {
-                  "actingFunction": "$actingFunction",
-                  "actingGLN": "$actingGln"
+            {
+              "priority": 1,
+              "request": {
+                "method": "POST",
+                "url": "/v1/data/v2/token/authinfo",
+                "bodyPatterns": [
+                  { "contains": "\"token\":\"$token\"" }
+                ]
+              },
+              "response": {
+                "status": 200,
+                "headers": { "Content-Type": "application/json" },
+                "jsonBody": {
+                  "result": {
+                    "tokenInfo": {
+                      "tokenStatus": "verified",
+                      "partyId": "maskinporten",
+                      "tokenType": "maskinporten"
+                    },
+                    "authInfo": {
+                      "actingFunction": "$actingFunction",
+                      "actingGLN": "$actingGln"
+                    }
+                  }
                 }
               }
             }
-          }
-        }
             """.trimIndent()
 
-        private fun enduserMapping(token: String, partyId: String): String =
+        private fun enduserMapping(
+            token: String,
+            partyId: String,
+        ): String =
             """
-                {
-                  "priority": 1,
-                  "request": {
-                    "method": "POST",
-                    "url": "/v1/data/v2/token/authinfo",
-                    "bodyPatterns": [
-                      { "contains": "\"token\":\"$token\"" }
-                    ]
-                  },
-                  "response": {
-                    "status": 200,
-                    "headers": { "Content-Type": "application/json" },
-                    "jsonBody": {
-                     "result": {
-                      "tokenInfo": {
-                       "tokenStatus": "verified",
-                       "partyId": "$partyId",
-                       "tokenType": "enduser"
-                      }
-                     }
-                    }
+            {
+              "priority": 1,
+              "request": {
+                "method": "POST",
+                "url": "/v1/data/v2/token/authinfo",
+                "bodyPatterns": [
+                  { "contains": "\"token\":\"$token\"" }
+                ]
+              },
+              "response": {
+                "status": 200,
+                "headers": { "Content-Type": "application/json" },
+                "jsonBody": {
+                 "result": {
+                  "tokenInfo": {
+                   "tokenStatus": "verified",
+                   "partyId": "$partyId",
+                   "tokenType": "enduser"
                   }
+                 }
                 }
+              }
+            }
             """.trimIndent()
 
-        private fun elhubServiceMapping(token: String, partyId: String): String =
+        private fun elhubServiceMapping(
+            token: String,
+            partyId: String,
+        ): String =
             """
-                {
-                  "priority": 1,
-                  "request": {
-                    "method": "POST",
-                    "url": "/v1/data/v2/token/authinfo",
-                    "bodyPatterns": [
-                      { "contains": "\"token\":\"$token\"" }
-                    ]
-                  },
-                  "response": {
-                    "status": 200,
-                    "headers": { "Content-Type": "application/json" },
-                    "jsonBody": {
-                     "result": {
-                      "tokenInfo": {
-                       "tokenStatus": "verified",
-                       "partyId": "$partyId",
-                       "tokenType": "elhub-service"
-                      }
-                     }
-                    }
+            {
+              "priority": 1,
+              "request": {
+                "method": "POST",
+                "url": "/v1/data/v2/token/authinfo",
+                "bodyPatterns": [
+                  { "contains": "\"token\":\"$token\"" }
+                ]
+              },
+              "response": {
+                "status": 200,
+                "headers": { "Content-Type": "application/json" },
+                "jsonBody": {
+                 "result": {
+                  "tokenInfo": {
+                   "tokenStatus": "verified",
+                   "partyId": "$partyId",
+                   "tokenType": "elhub-service"
                   }
+                 }
                 }
+              }
+            }
             """.trimIndent()
     }
 }

@@ -9,12 +9,14 @@ fun String.shouldBeValidUuid() {
     this should beValidUuid()
 }
 
-private fun beValidUuid() = Matcher<String> { s ->
-    val ok = try {
-        UUID.fromString(s)
-        true
-    } catch (_: IllegalArgumentException) {
-        false
+private fun beValidUuid() =
+    Matcher<String> { s ->
+        val ok =
+            try {
+                UUID.fromString(s)
+                true
+            } catch (_: IllegalArgumentException) {
+                false
+            }
+        MatcherResult(ok, { "Expected a valid UUID but got '$s'" }, { "Expected not to be a valid UUID" })
     }
-    MatcherResult(ok, { "Expected a valid UUID but got '$s'" }, { "Expected not to be a valid UUID" })
-}

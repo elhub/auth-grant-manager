@@ -12,7 +12,7 @@ import no.elhub.devxp.jsonapi.request.JsonApiRequest
 
 @Serializable
 data class CreateDocumentRequestAttributes(
-    val documentType: AuthorizationDocument.Type
+    val documentType: AuthorizationDocument.Type,
 ) : JsonApiAttributes
 
 @Serializable

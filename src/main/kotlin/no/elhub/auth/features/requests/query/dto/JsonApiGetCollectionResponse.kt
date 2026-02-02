@@ -35,73 +35,82 @@ data class GetRequestCollectionResponseRelationships(
     val requestedFrom: JsonApiRelationshipToOne,
     val requestedTo: JsonApiRelationshipToOne,
     val approvedBy: JsonApiRelationshipToOne? = null,
-    val authorizationGrant: JsonApiRelationshipToOne? = null
+    val authorizationGrant: JsonApiRelationshipToOne? = null,
 ) : JsonApiRelationships
 
 @Serializable
 data class GetRequestCollectionResponseLinks(
-    val self: String
+    val self: String,
 ) : JsonApiResourceLinks
 
 @Serializable
 @JvmInline
 value class GetRequestCollectionResponseMeta(
-    val values: Map<String, String>
+    val values: Map<String, String>,
 ) : JsonApiResourceMeta
 
 typealias GetRequestCollectionResponse = JsonApiResponse.CollectionDocumentWithRelationshipsAndMetaAndLinks<
     GetRequestCollectionResponseAttributes,
     GetRequestCollectionResponseRelationships,
     GetRequestCollectionResponseMeta,
-    GetRequestCollectionResponseLinks
-    >
+    GetRequestCollectionResponseLinks,
+>
 
 fun List<AuthorizationRequest>.toGetCollectionResponse() =
     GetRequestCollectionResponse(
-        data = this.map { request ->
-            JsonApiResponseResourceObjectWithRelationshipsAndMetaAndLinks(
-                id = request.id.toString(),
-                type = "AuthorizationRequest",
-                attributes = GetRequestCollectionResponseAttributes(
-                    status = request.status.toString(),
-                    requestType = request.type.toString(),
-                    validTo = request.validTo.toString(),
-                    createdAt = request.createdAt.toTimeZoneOffsetString(),
-                    updatedAt = request.updatedAt.toTimeZoneOffsetString(),
-                ),
-                relationships = GetRequestCollectionResponseRelationships(
-                    requestedBy = request.requestedBy.toJsonApiRelationship(),
-                    requestedFrom = request.requestedFrom.toJsonApiRelationship(),
-                    requestedTo = request.requestedTo.toJsonApiRelationship(),
-                    approvedBy = request.approvedBy?.toJsonApiRelationship(),
-                    authorizationGrant = request.grantId?.let { grantId ->
-                        JsonApiRelationshipToOne(
-                            data = JsonApiRelationshipData(
-                                id = grantId.toString(),
-                                type = "AuthorizationGrant"
-                            ),
-                            links = JsonApiLinks.RelationShipLink(
-                                self = "$GRANTS_PATH/$grantId"
-                            )
-                        )
-                    }
-                ),
-                meta = GetRequestCollectionResponseMeta(
-                    buildMap {
-                        request.properties.forEach { prop ->
-                            put(prop.key, prop.value)
-                        }
-                    }
-                ),
-                links = GetRequestCollectionResponseLinks(
-                    self = "${REQUESTS_PATH}/${request.id}",
+        data =
+            this.map { request ->
+                JsonApiResponseResourceObjectWithRelationshipsAndMetaAndLinks(
+                    id = request.id.toString(),
+                    type = "AuthorizationRequest",
+                    attributes =
+                        GetRequestCollectionResponseAttributes(
+                            status = request.status.toString(),
+                            requestType = request.type.toString(),
+                            validTo = request.validTo.toString(),
+                            createdAt = request.createdAt.toTimeZoneOffsetString(),
+                            updatedAt = request.updatedAt.toTimeZoneOffsetString(),
+                        ),
+                    relationships =
+                        GetRequestCollectionResponseRelationships(
+                            requestedBy = request.requestedBy.toJsonApiRelationship(),
+                            requestedFrom = request.requestedFrom.toJsonApiRelationship(),
+                            requestedTo = request.requestedTo.toJsonApiRelationship(),
+                            approvedBy = request.approvedBy?.toJsonApiRelationship(),
+                            authorizationGrant =
+                                request.grantId?.let { grantId ->
+                                    JsonApiRelationshipToOne(
+                                        data =
+                                            JsonApiRelationshipData(
+                                                id = grantId.toString(),
+                                                type = "AuthorizationGrant",
+                                            ),
+                                        links =
+                                            JsonApiLinks.RelationShipLink(
+                                                self = "$GRANTS_PATH/$grantId",
+                                            ),
+                                    )
+                                },
+                        ),
+                    meta =
+                        GetRequestCollectionResponseMeta(
+                            buildMap {
+                                request.properties.forEach { prop ->
+                                    put(prop.key, prop.value)
+                                }
+                            },
+                        ),
+                    links =
+                        GetRequestCollectionResponseLinks(
+                            self = "${REQUESTS_PATH}/${request.id}",
+                        ),
                 )
-            )
-        },
+            },
         links = JsonApiLinks.ResourceObjectLink(REQUESTS_PATH),
-        meta = JsonApiMeta(
-            buildJsonObject {
-                put("createdAt", currentTimeWithTimeZone().toTimeZoneOffsetString())
-            }
-        )
+        meta =
+            JsonApiMeta(
+                buildJsonObject {
+                    put("createdAt", currentTimeWithTimeZone().toTimeZoneOffsetString())
+                },
+            ),
     )

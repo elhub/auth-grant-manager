@@ -34,7 +34,7 @@ fun JsonApiCreateRequest.toModel(authorizedParty: AuthorizationParty): CreateReq
     CreateRequestModel(
         authorizedParty = authorizedParty,
         requestType = this.data.attributes.requestType,
-        meta = this.data.meta.toModel()
+        meta = this.data.meta.toModel(),
     )
 
 fun CreateRequestMeta.toModel(): no.elhub.auth.features.requests.create.model.CreateRequestMeta =

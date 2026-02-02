@@ -12,34 +12,41 @@ import no.elhub.auth.features.grants.common.GrantRepository
 import org.jetbrains.exposed.sql.transactions.transaction
 
 class Handler(
-    private val repo: GrantRepository
+    private val repo: GrantRepository,
 ) {
-    operator fun invoke(query: Query): Either<QueryError, AuthorizationGrant> = either {
-        val grant = transaction {
-            repo.find(query.id)
-                .mapLeft { error ->
-                    when (error) {
-                        RepositoryReadError.NotFoundError -> QueryError.ResourceNotFoundError
-                        RepositoryReadError.UnexpectedError -> QueryError.IOError
+    operator fun invoke(query: Query): Either<QueryError, AuthorizationGrant> =
+        either {
+            val grant =
+                transaction {
+                    repo
+                        .find(query.id)
+                        .mapLeft { error ->
+                            when (error) {
+                                RepositoryReadError.NotFoundError -> QueryError.ResourceNotFoundError
+                                RepositoryReadError.UnexpectedError -> QueryError.IOError
+                            }
+                        }.bind()
+                }
+
+            val authorizedParty = query.authorizedParty
+
+            when (authorizedParty.type) {
+                PartyType.System -> {
+                    ensure(authorizedParty.resourceId == Constants.CONSENT_MANAGEMENT_OSB_ID) {
+                        QueryError.NotAuthorizedError
                     }
-                }.bind()
-        }
+                }
 
-        val authorizedParty = query.authorizedParty
-
-        when (authorizedParty.type) {
-            PartyType.System -> ensure(authorizedParty.resourceId == Constants.CONSENT_MANAGEMENT_OSB_ID) {
-                QueryError.NotAuthorizedError
+                else -> {
+                    ensure(
+                        authorizedParty == grant.grantedTo ||
+                            authorizedParty == grant.grantedFor,
+                    ) {
+                        QueryError.NotAuthorizedError
+                    }
+                }
             }
 
-            else -> ensure(
-                authorizedParty == grant.grantedTo ||
-                    authorizedParty == grant.grantedFor
-            ) {
-                QueryError.NotAuthorizedError
-            }
+            grant
         }
-
-        grant
-    }
 }

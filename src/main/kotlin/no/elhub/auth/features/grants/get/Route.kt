@@ -19,55 +19,72 @@ import java.util.UUID
 const val GRANT_ID_PARAM = "id"
 private val logger = LoggerFactory.getLogger(Route::class.java)
 
-fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
+fun Route.route(
+    handler: Handler,
+    authProvider: AuthorizationProvider,
+) {
     get("/{$GRANT_ID_PARAM}") {
-        val authorizedParty = authProvider.authorizeAll(call)
-            .getOrElse { err ->
-                val (status, body) = err.toApiErrorResponse()
-                call.respond(status, body)
-                return@get
+        val authorizedParty =
+            authProvider
+                .authorizeAll(call)
+                .getOrElse { err ->
+                    val (status, body) = err.toApiErrorResponse()
+                    call.respond(status, body)
+                    return@get
+                }
+
+        val id: UUID =
+            validateId(call.parameters[GRANT_ID_PARAM])
+                .getOrElse { err ->
+                    val (status, body) = err.toApiErrorResponse()
+                    call.respond(status, body)
+                    return@get
+                }
+
+        val query =
+            when (authorizedParty) {
+                is AuthorizedParty.OrganizationEntity -> {
+                    Query(
+                        id = id,
+                        authorizedParty =
+                            AuthorizationParty(
+                                resourceId = authorizedParty.gln,
+                                type = PartyType.OrganizationEntity,
+                            ),
+                    )
+                }
+
+                is AuthorizedParty.Person -> {
+                    Query(
+                        id = id,
+                        authorizedParty =
+                            AuthorizationParty(
+                                resourceId = authorizedParty.id.toString(),
+                                type = PartyType.Person,
+                            ),
+                    )
+                }
+
+                is AuthorizedParty.System -> {
+                    Query(
+                        id = id,
+                        authorizedParty =
+                            AuthorizationParty(
+                                resourceId = authorizedParty.id,
+                                type = PartyType.System,
+                            ),
+                    )
+                }
             }
 
-        val id: UUID = validateId(call.parameters[GRANT_ID_PARAM])
-            .getOrElse { err ->
-                val (status, body) = err.toApiErrorResponse()
-                call.respond(status, body)
-                return@get
-            }
-
-        val query = when (authorizedParty) {
-            is AuthorizedParty.OrganizationEntity -> Query(
-                id = id,
-                authorizedParty = AuthorizationParty(
-                    resourceId = authorizedParty.gln,
-                    type = PartyType.OrganizationEntity
-                )
-            )
-
-            is AuthorizedParty.Person -> Query(
-                id = id,
-                authorizedParty = AuthorizationParty(
-                    resourceId = authorizedParty.id.toString(),
-                    type = PartyType.Person
-                )
-            )
-
-            is AuthorizedParty.System -> Query(
-                id = id,
-                authorizedParty = AuthorizationParty(
-                    resourceId = authorizedParty.id,
-                    type = PartyType.System
-                )
-            )
-        }
-
-        val grant = handler(query)
-            .getOrElse { error ->
-                logger.error("Failed to get authorization grant: {}", error)
-                val (status, body) = error.toApiErrorResponse()
-                call.respond(status, body)
-                return@get
-            }
+        val grant =
+            handler(query)
+                .getOrElse { error ->
+                    logger.error("Failed to get authorization grant: {}", error)
+                    val (status, body) = error.toApiErrorResponse()
+                    call.respond(status, body)
+                    return@get
+                }
 
         call.respond(HttpStatusCode.OK, grant.toSingleGrantResponse())
     }

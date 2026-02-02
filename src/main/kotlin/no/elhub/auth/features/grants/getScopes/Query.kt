@@ -5,5 +5,5 @@ import java.util.UUID
 
 data class Query(
     val id: UUID,
-    val authorizedParty: AuthorizationParty
+    val authorizedParty: AuthorizationParty,
 )

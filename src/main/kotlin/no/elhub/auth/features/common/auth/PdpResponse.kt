@@ -5,13 +5,13 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class PdpResponse(
-    val result: Result
+    val result: Result,
 )
 
 @Serializable
 data class Result(
     val tokenInfo: TokenInfo,
-    val authInfo: AuthInfo? = null
+    val authInfo: AuthInfo? = null,
 )
 
 @Serializable
@@ -19,7 +19,7 @@ data class TokenInfo(
     val tokenStatus: String,
     val partyId: String? = null,
     val tokenType: String? = null,
-    val tokenScope: String? = null
+    val tokenScope: String? = null,
 )
 
 @Serializable
@@ -31,5 +31,5 @@ data class AuthInfo(
     val originalOnBehalfOfFunction: String? = null,
     val originalOnBehalfOfGLN: String? = null,
     val originalSenderFunction: String? = null,
-    val originalSenderGLN: String? = null
+    val originalSenderGLN: String? = null,
 )

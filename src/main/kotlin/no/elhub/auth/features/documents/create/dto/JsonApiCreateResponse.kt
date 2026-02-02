@@ -38,7 +38,7 @@ data class CreateDocumentResponseRelationships(
 @Serializable
 @JvmInline
 value class CreateDocumentResponseMeta(
-    val values: Map<String, String>
+    val values: Map<String, String>,
 ) : JsonApiResourceMeta
 
 @Serializable
@@ -51,56 +51,69 @@ typealias CreateDocumentResponse = JsonApiResponse.SingleDocumentWithRelationshi
     CreateDocumentResponseAttributes,
     CreateDocumentResponseRelationships,
     CreateDocumentResponseMeta,
-    CreateDocumentResponseLinks
-    >
+    CreateDocumentResponseLinks,
+>
 
-fun AuthorizationDocument.toCreateDocumentResponse() = CreateDocumentResponse(
-    data = JsonApiResponseResourceObjectWithRelationshipsAndMetaAndLinks(
-        type = "AuthorizationDocument",
-        id = this.id.toString(),
-        attributes = CreateDocumentResponseAttributes(
-            status = this.status.name,
-            documentType = this.type.name,
-            validTo = this.validTo.toTimeZoneOffsetString(),
-            createdAt = this.createdAt.toTimeZoneOffsetString(),
-            updatedAt = this.updatedAt.toTimeZoneOffsetString(),
-        ),
-        relationships = CreateDocumentResponseRelationships(
-            requestedBy = JsonApiRelationshipToOne(
-                data = JsonApiRelationshipData(
-                    type = this.requestedBy.type.name,
-                    id = this.requestedBy.resourceId,
-                )
+fun AuthorizationDocument.toCreateDocumentResponse() =
+    CreateDocumentResponse(
+        data =
+            JsonApiResponseResourceObjectWithRelationshipsAndMetaAndLinks(
+                type = "AuthorizationDocument",
+                id = this.id.toString(),
+                attributes =
+                    CreateDocumentResponseAttributes(
+                        status = this.status.name,
+                        documentType = this.type.name,
+                        validTo = this.validTo.toTimeZoneOffsetString(),
+                        createdAt = this.createdAt.toTimeZoneOffsetString(),
+                        updatedAt = this.updatedAt.toTimeZoneOffsetString(),
+                    ),
+                relationships =
+                    CreateDocumentResponseRelationships(
+                        requestedBy =
+                            JsonApiRelationshipToOne(
+                                data =
+                                    JsonApiRelationshipData(
+                                        type = this.requestedBy.type.name,
+                                        id = this.requestedBy.resourceId,
+                                    ),
+                            ),
+                        requestedFrom =
+                            JsonApiRelationshipToOne(
+                                data =
+                                    JsonApiRelationshipData(
+                                        type = this.requestedFrom.type.name,
+                                        id = this.requestedFrom.resourceId,
+                                    ),
+                            ),
+                        requestedTo =
+                            JsonApiRelationshipToOne(
+                                data =
+                                    JsonApiRelationshipData(
+                                        type = this.requestedTo.type.name,
+                                        id = this.requestedTo.resourceId,
+                                    ),
+                            ),
+                    ),
+                meta =
+                    CreateDocumentResponseMeta(
+                        buildMap {
+                            this@toCreateDocumentResponse.properties.forEach { properties ->
+                                put(properties.key, properties.value)
+                            }
+                        },
+                    ),
+                links =
+                    CreateDocumentResponseLinks(
+                        self = "${DOCUMENTS_PATH}/${this.id}",
+                        file = "${DOCUMENTS_PATH}/${this.id}.pdf",
+                    ),
             ),
-            requestedFrom = JsonApiRelationshipToOne(
-                data = JsonApiRelationshipData(
-                    type = this.requestedFrom.type.name,
-                    id = this.requestedFrom.resourceId,
-                )
+        links = JsonApiLinks.ResourceObjectLink(DOCUMENTS_PATH),
+        meta =
+            JsonApiMeta(
+                buildJsonObject {
+                    put("createdAt", this@toCreateDocumentResponse.createdAt.toTimeZoneOffsetString())
+                },
             ),
-            requestedTo = JsonApiRelationshipToOne(
-                data = JsonApiRelationshipData(
-                    type = this.requestedTo.type.name,
-                    id = this.requestedTo.resourceId,
-                )
-            )
-        ),
-        meta = CreateDocumentResponseMeta(
-            buildMap {
-                this@toCreateDocumentResponse.properties.forEach { properties ->
-                    put(properties.key, properties.value)
-                }
-            }
-        ),
-        links = CreateDocumentResponseLinks(
-            self = "${DOCUMENTS_PATH}/${this.id}",
-            file = "${DOCUMENTS_PATH}/${this.id}.pdf"
-        )
-    ),
-    links = JsonApiLinks.ResourceObjectLink(DOCUMENTS_PATH),
-    meta = JsonApiMeta(
-        buildJsonObject {
-            put("createdAt", this@toCreateDocumentResponse.createdAt.toTimeZoneOffsetString())
-        }
     )
-)

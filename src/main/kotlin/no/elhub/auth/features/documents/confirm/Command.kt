@@ -6,5 +6,5 @@ import java.util.UUID
 data class Command(
     val documentId: UUID,
     val authorizedParty: AuthorizationParty,
-    val signedFile: ByteArray
+    val signedFile: ByteArray,
 )

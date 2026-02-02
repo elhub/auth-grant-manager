@@ -13,37 +13,41 @@ import org.jetbrains.exposed.sql.transactions.transaction
 
 class Handler(
     private val documentRepo: DocumentRepository,
-    private val grantRepository: GrantRepository
+    private val grantRepository: GrantRepository,
 ) {
-    operator fun invoke(query: Query): Either<QueryError, AuthorizationDocument> = either {
-        transaction {
-            val document = documentRepo.find(query.documentId)
-                .mapLeft { error ->
-                    when (error) {
-                        is RepositoryReadError.NotFoundError -> QueryError.ResourceNotFoundError
-                        is RepositoryReadError.UnexpectedError -> QueryError.IOError
-                    }
-                }.bind()
+    operator fun invoke(query: Query): Either<QueryError, AuthorizationDocument> =
+        either {
+            transaction {
+                val document =
+                    documentRepo
+                        .find(query.documentId)
+                        .mapLeft { error ->
+                            when (error) {
+                                is RepositoryReadError.NotFoundError -> QueryError.ResourceNotFoundError
+                                is RepositoryReadError.UnexpectedError -> QueryError.IOError
+                            }
+                        }.bind()
 
-            ensure(
-                query.authorizedParty == document.requestedBy ||
-                    query.authorizedParty == document.requestedFrom
-            ) {
-                QueryError.NotAuthorizedError
+                ensure(
+                    query.authorizedParty == document.requestedBy ||
+                        query.authorizedParty == document.requestedFrom,
+                ) {
+                    QueryError.NotAuthorizedError
+                }
+
+                val grant =
+                    grantRepository
+                        .findBySource(AuthorizationGrant.SourceType.Document, document.id)
+                        .mapLeft { error ->
+                            when (error) {
+                                RepositoryReadError.NotFoundError -> QueryError.ResourceNotFoundError
+                                RepositoryReadError.UnexpectedError -> QueryError.IOError
+                            }
+                        }.bind()
+
+                document.copy(
+                    grantId = grant?.id,
+                )
             }
-
-            val grant =
-                grantRepository.findBySource(AuthorizationGrant.SourceType.Document, document.id)
-                    .mapLeft { error ->
-                        when (error) {
-                            RepositoryReadError.NotFoundError -> QueryError.ResourceNotFoundError
-                            RepositoryReadError.UnexpectedError -> QueryError.IOError
-                        }
-                    }.bind()
-
-            document.copy(
-                grantId = grant?.id,
-            )
         }
-    }
 }

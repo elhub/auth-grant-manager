@@ -21,39 +21,45 @@ private val logger = LoggerFactory.getLogger(Route::class.java)
 
 fun Route.route(
     handler: Handler,
-    authProvider: AuthorizationProvider
+    authProvider: AuthorizationProvider,
 ) {
     patch("/{$REQUEST_ID_PARAM}") {
-        val resolvedActor = authProvider.authorizeEndUser(call)
-            .getOrElse {
-                val error = it.toApiErrorResponse()
-                call.respond(error.first, error.second)
-                return@patch
-            }
+        val resolvedActor =
+            authProvider
+                .authorizeEndUser(call)
+                .getOrElse {
+                    val error = it.toApiErrorResponse()
+                    call.respond(error.first, error.second)
+                    return@patch
+                }
 
-        val requestId = validateId(call.parameters[REQUEST_ID_PARAM])
-            .getOrElse { error ->
-                val (status, body) = error.toApiErrorResponse()
-                call.respond(status, body)
-                return@patch
-            }
+        val requestId =
+            validateId(call.parameters[REQUEST_ID_PARAM])
+                .getOrElse { error ->
+                    val (status, body) = error.toApiErrorResponse()
+                    call.respond(status, body)
+                    return@patch
+                }
 
         val requestBody = call.receive<JsonApiUpdateRequest>()
-        val command = UpdateCommand(
-            requestId = requestId,
-            newStatus = requestBody.data.attributes.status,
-            authorizedParty = AuthorizationParty(
-                resourceId = resolvedActor.id.toString(),
-                type = PartyType.Person
+        val command =
+            UpdateCommand(
+                requestId = requestId,
+                newStatus = requestBody.data.attributes.status,
+                authorizedParty =
+                    AuthorizationParty(
+                        resourceId = resolvedActor.id.toString(),
+                        type = PartyType.Person,
+                    ),
             )
-        )
 
-        val updated = handler(command).getOrElse { error ->
-            logger.error("Failed to update authorization request: {}", error)
-            val (status, error) = error.toApiErrorResponse()
-            call.respond(status, error)
-            return@patch
-        }
+        val updated =
+            handler(command).getOrElse { error ->
+                logger.error("Failed to update authorization request: {}", error)
+                val (status, error) = error.toApiErrorResponse()
+                call.respond(status, error)
+                return@patch
+            }
 
         call.respond(HttpStatusCode.OK, updated.toUpdateResponse())
     }

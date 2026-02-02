@@ -14,15 +14,17 @@ object MeteringPointsServiceTestContainer {
 
     fun start() {
         if (container != null) return
-        container = GenericContainer(image).apply {
-            withExposedPorts(8080)
-            waitingFor(
-                Wait.forHttp("/__admin/health")
-                    .forStatusCodeMatching { it == 200 }
-                    .withStartupTimeout(Duration.ofSeconds(30))
-            )
-            start()
-        }
+        container =
+            GenericContainer(image).apply {
+                withExposedPorts(8080)
+                waitingFor(
+                    Wait
+                        .forHttp("/__admin/health")
+                        .forStatusCodeMatching { it == 200 }
+                        .withStartupTimeout(Duration.ofSeconds(30)),
+                )
+                start()
+            }
     }
 
     fun stop() {

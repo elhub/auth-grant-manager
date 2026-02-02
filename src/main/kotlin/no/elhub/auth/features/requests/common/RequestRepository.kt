@@ -36,38 +36,43 @@ import java.util.UUID
 
 interface RequestRepository {
     fun find(requestId: UUID): Either<RepositoryReadError, AuthorizationRequest>
+
     fun findAllBy(party: AuthorizationParty): Either<RepositoryReadError, List<AuthorizationRequest>>
+
     fun insert(
         request: AuthorizationRequest,
-        scopes: List<CreateScopeData>
+        scopes: List<CreateScopeData>,
     ): Either<RepositoryWriteError, AuthorizationRequest>
+
     fun acceptRequest(
         requestId: UUID,
-        approvedBy: AuthorizationParty
+        approvedBy: AuthorizationParty,
     ): Either<RepositoryError, AuthorizationRequest>
 
     fun rejectRequest(requestId: UUID): Either<RepositoryError, AuthorizationRequest>
+
     fun findScopeIds(requestId: UUID): Either<RepositoryReadError, List<UUID>>
 }
 
 class ExposedRequestRepository(
     private val partyRepo: PartyRepository,
-    private val requestPropertiesRepository: RequestPropertiesRepository
+    private val requestPropertiesRepository: RequestPropertiesRepository,
 ) : RequestRepository {
-
     override fun findAllBy(party: AuthorizationParty): Either<RepositoryReadError, List<AuthorizationRequest>> =
         either {
-            val partyId = partyRepo.findOrInsert(type = party.type, partyId = party.resourceId)
-                .mapLeft { RepositoryReadError.UnexpectedError }
-                .bind()
-                .id
+            val partyId =
+                partyRepo
+                    .findOrInsert(type = party.type, partyId = party.resourceId)
+                    .mapLeft { RepositoryReadError.UnexpectedError }
+                    .bind()
+                    .id
 
-            val rows = AuthorizationRequestTable
-                .selectAll()
-                .where {
-                    (AuthorizationRequestTable.requestedTo eq partyId) or (AuthorizationRequestTable.requestedBy eq partyId)
-                }
-                .toList()
+            val rows =
+                AuthorizationRequestTable
+                    .selectAll()
+                    .where {
+                        (AuthorizationRequestTable.requestedTo eq partyId) or (AuthorizationRequestTable.requestedBy eq partyId)
+                    }.toList()
 
             rows.map { row ->
                 findInternal(row).bind()
@@ -86,7 +91,7 @@ class ExposedRequestRepository(
 
     override fun insert(
         request: AuthorizationRequest,
-        scopes: List<CreateScopeData>
+        scopes: List<CreateScopeData>,
     ): Either<RepositoryWriteError, AuthorizationRequest> =
         either {
             val requestedByParty =
@@ -130,12 +135,15 @@ class ExposedRequestRepository(
             )
         }.mapLeft { RepositoryWriteError.UnexpectedError }
 
-    override fun acceptRequest(requestId: UUID, approvedBy: AuthorizationParty) = either {
+    override fun acceptRequest(
+        requestId: UUID,
+        approvedBy: AuthorizationParty,
+    ) = either {
         val approvedByRecord = partyRepo.findOrInsert(approvedBy.type, approvedBy.resourceId).bind()
 
         val rowsUpdated =
             AuthorizationRequestTable.update(
-                where = { AuthorizationRequestTable.id eq requestId }
+                where = { AuthorizationRequestTable.id eq requestId },
             ) {
                 it[requestStatus] = DatabaseRequestStatus.Accepted
                 it[updatedAt] = OffsetDateTime.now(ZoneId.of("Europe/Oslo"))
@@ -145,16 +153,18 @@ class ExposedRequestRepository(
         updateAndFetch(requestId, rowsUpdated).bind()
     }
 
-    override fun rejectRequest(requestId: UUID): Either<RepositoryError, AuthorizationRequest> = either {
-        val rowsUpdated = AuthorizationRequestTable.update(
-            where = { AuthorizationRequestTable.id eq requestId }
-        ) {
-            it[requestStatus] = DatabaseRequestStatus.Rejected
-            it[updatedAt] = OffsetDateTime.now(ZoneId.of("Europe/Oslo"))
-        }
+    override fun rejectRequest(requestId: UUID): Either<RepositoryError, AuthorizationRequest> =
+        either {
+            val rowsUpdated =
+                AuthorizationRequestTable.update(
+                    where = { AuthorizationRequestTable.id eq requestId },
+                ) {
+                    it[requestStatus] = DatabaseRequestStatus.Rejected
+                    it[updatedAt] = OffsetDateTime.now(ZoneId.of("Europe/Oslo"))
+                }
 
-        updateAndFetch(requestId, rowsUpdated).bind()
-    }
+            updateAndFetch(requestId, rowsUpdated).bind()
+        }
 
     override fun findScopeIds(requestId: UUID): Either<RepositoryReadError, List<UUID>> =
         either {
@@ -166,16 +176,19 @@ class ExposedRequestRepository(
                 }
         }
 
-    private fun handleScopes(scopes: List<CreateScopeData>, insertedRequest: ResultRow) {
+    private fun handleScopes(
+        scopes: List<CreateScopeData>,
+        insertedRequest: ResultRow,
+    ) {
         // upsert scopes
-        val scopeIds: List<UUID> = AuthorizationScopeTable
-            .batchInsert(scopes) { scope ->
-                this[authorizedResourceType] = scope.authorizedResourceType
-                this[authorizedResourceId] = scope.authorizedResourceId
-                this[permissionType] = scope.permissionType
-            }
-            .map { it[AuthorizationScopeTable.id].value }
-            .distinct()
+        val scopeIds: List<UUID> =
+            AuthorizationScopeTable
+                .batchInsert(scopes) { scope ->
+                    this[authorizedResourceType] = scope.authorizedResourceType
+                    this[authorizedResourceId] = scope.authorizedResourceId
+                    this[permissionType] = scope.permissionType
+                }.map { it[AuthorizationScopeTable.id].value }
+                .distinct()
 
         // insert request-scope links
         if (scopeIds.isNotEmpty()) {
@@ -186,7 +199,10 @@ class ExposedRequestRepository(
         }
     }
 
-    private fun updateAndFetch(requestId: UUID, rowsUpdated: Int): Either<RepositoryError, AuthorizationRequest> =
+    private fun updateAndFetch(
+        requestId: UUID,
+        rowsUpdated: Int,
+    ): Either<RepositoryError, AuthorizationRequest> =
         either {
             if (rowsUpdated == 0) {
                 raise(RepositoryWriteError.UnexpectedError)
@@ -229,11 +245,13 @@ class ExposedRequestRepository(
                     .bind()
 
             // fetch approvedBy only if it exists. It should exist in the database after a request has been accepted
-            val approvedByParty = approvedById?.let { id ->
-                partyRepo.find(id)
-                    .mapLeft { RepositoryReadError.UnexpectedError }
-                    .bind()
-            }
+            val approvedByParty =
+                approvedById?.let { id ->
+                    partyRepo
+                        .find(id)
+                        .mapLeft { RepositoryReadError.UnexpectedError }
+                        .bind()
+                }
 
             val properties =
                 requestPropertiesRepository.findBy(requestId = request[AuthorizationRequestTable.id].value)
@@ -243,16 +261,18 @@ class ExposedRequestRepository(
                 requestedFromParty,
                 requestedToParty,
                 properties,
-                approvedByParty
+                approvedByParty,
             )
         }
 }
 
 object AuthorizationRequestScopeTable : Table("auth.authorization_request_scope") {
-    val authorizationRequestId = uuid("authorization_request_id")
-        .references(AuthorizationRequestTable.id, onDelete = ReferenceOption.CASCADE)
-    val authorizationScopeId = uuid("authorization_scope_id")
-        .references(AuthorizationScopeTable.id, onDelete = ReferenceOption.CASCADE)
+    val authorizationRequestId =
+        uuid("authorization_request_id")
+            .references(AuthorizationRequestTable.id, onDelete = ReferenceOption.CASCADE)
+    val authorizationScopeId =
+        uuid("authorization_scope_id")
+            .references(AuthorizationScopeTable.id, onDelete = ReferenceOption.CASCADE)
     val createdAt = timestamp("created_at").clientDefault { java.time.Instant.now() }
     override val primaryKey = PrimaryKey(authorizationRequestId, authorizationScopeId)
 }
@@ -284,32 +304,34 @@ object AuthorizationRequestTable : UUIDTable("auth.authorization_request") {
 enum class DatabaseRequestStatus {
     Pending,
     Accepted,
-    Rejected
+    Rejected,
 }
 
-fun AuthorizationRequest.Status.toDataBaseRequestStatus(): DatabaseRequestStatus = when (this) {
-    AuthorizationRequest.Status.Accepted -> DatabaseRequestStatus.Accepted
-    AuthorizationRequest.Status.Expired -> DatabaseRequestStatus.Pending
-    AuthorizationRequest.Status.Pending -> DatabaseRequestStatus.Pending
-    AuthorizationRequest.Status.Rejected -> DatabaseRequestStatus.Rejected
-}
+fun AuthorizationRequest.Status.toDataBaseRequestStatus(): DatabaseRequestStatus =
+    when (this) {
+        AuthorizationRequest.Status.Accepted -> DatabaseRequestStatus.Accepted
+        AuthorizationRequest.Status.Expired -> DatabaseRequestStatus.Pending
+        AuthorizationRequest.Status.Pending -> DatabaseRequestStatus.Pending
+        AuthorizationRequest.Status.Rejected -> DatabaseRequestStatus.Rejected
+    }
 
 fun ResultRow.toAuthorizationRequest(
     requestedBy: AuthorizationPartyRecord,
     requestedFrom: AuthorizationPartyRecord,
     requestedTo: AuthorizationPartyRecord,
     properties: List<AuthorizationRequestProperty>,
-    approvedBy: AuthorizationPartyRecord? = null
+    approvedBy: AuthorizationPartyRecord? = null,
 ): AuthorizationRequest {
     val dbStatus = this[AuthorizationRequestTable.requestStatus]
     val validTo = this[AuthorizationRequestTable.validTo]
 
-    val status: AuthorizationRequest.Status = when (dbStatus) {
-        DatabaseRequestStatus.Accepted -> AuthorizationRequest.Status.Accepted
-        DatabaseRequestStatus.Rejected -> AuthorizationRequest.Status.Rejected
-        DatabaseRequestStatus.Pending if validTo <= OffsetDateTime.now(ZoneOffset.UTC) -> AuthorizationRequest.Status.Expired
-        else -> AuthorizationRequest.Status.Pending
-    }
+    val status: AuthorizationRequest.Status =
+        when (dbStatus) {
+            DatabaseRequestStatus.Accepted -> AuthorizationRequest.Status.Accepted
+            DatabaseRequestStatus.Rejected -> AuthorizationRequest.Status.Rejected
+            DatabaseRequestStatus.Pending if validTo <= OffsetDateTime.now(ZoneOffset.UTC) -> AuthorizationRequest.Status.Expired
+            else -> AuthorizationRequest.Status.Pending
+        }
     return AuthorizationRequest(
         id = this[AuthorizationRequestTable.id].value,
         type = this[AuthorizationRequestTable.requestType],
@@ -321,6 +343,6 @@ fun ResultRow.toAuthorizationRequest(
         createdAt = this[AuthorizationRequestTable.createdAt],
         updatedAt = this[AuthorizationRequestTable.updatedAt],
         validTo = validTo,
-        properties = properties
+        properties = properties,
     )
 }

@@ -36,7 +36,7 @@ data class CreateRequestResponseRelationShips(
 @Serializable
 @JvmInline
 value class CreateRequestResponseMeta(
-    val values: Map<String, String>
+    val values: Map<String, String>,
 ) : JsonApiResourceMeta
 
 @Serializable
@@ -48,59 +48,68 @@ typealias CreateRequestResponse = JsonApiResponse.SingleDocumentWithRelationship
     CreateRequestResponseAttributes,
     CreateRequestResponseRelationShips,
     CreateRequestResponseMeta,
-    CreateRequestResponseLinks
-    >
+    CreateRequestResponseLinks,
+>
 
 fun AuthorizationRequest.toCreateResponse() =
     CreateRequestResponse(
         data =
-        JsonApiResponseResourceObjectWithRelationshipsAndMetaAndLinks(
-            type = "AuthorizationRequest",
-            id = this.id.toString(),
-            attributes =
-            CreateRequestResponseAttributes(
-                status = this.status.name,
-                requestType = this.type.name,
-                validTo = this.validTo.toString(),
-                createdAt = this.createdAt.toTimeZoneOffsetString(),
-                updatedAt = this.updatedAt.toTimeZoneOffsetString(),
+            JsonApiResponseResourceObjectWithRelationshipsAndMetaAndLinks(
+                type = "AuthorizationRequest",
+                id = this.id.toString(),
+                attributes =
+                    CreateRequestResponseAttributes(
+                        status = this.status.name,
+                        requestType = this.type.name,
+                        validTo = this.validTo.toString(),
+                        createdAt = this.createdAt.toTimeZoneOffsetString(),
+                        updatedAt = this.updatedAt.toTimeZoneOffsetString(),
+                    ),
+                relationships =
+                    CreateRequestResponseRelationShips(
+                        requestedBy =
+                            JsonApiRelationshipToOne(
+                                data =
+                                    JsonApiRelationshipData(
+                                        type = this.requestedBy.type.name,
+                                        id = this.requestedBy.resourceId,
+                                    ),
+                            ),
+                        requestedFrom =
+                            JsonApiRelationshipToOne(
+                                data =
+                                    JsonApiRelationshipData(
+                                        type = this.requestedFrom.type.name,
+                                        id = this.requestedFrom.resourceId,
+                                    ),
+                            ),
+                        requestedTo =
+                            JsonApiRelationshipToOne(
+                                data =
+                                    JsonApiRelationshipData(
+                                        type = this.requestedTo.type.name,
+                                        id = this.requestedTo.resourceId,
+                                    ),
+                            ),
+                    ),
+                meta =
+                    CreateRequestResponseMeta(
+                        buildMap {
+                            this@toCreateResponse.properties.forEach { prop ->
+                                put(prop.key, prop.value)
+                            }
+                        },
+                    ),
+                links =
+                    CreateRequestResponseLinks(
+                        self = "${REQUESTS_PATH}/${this.id}",
+                    ),
             ),
-            relationships = CreateRequestResponseRelationShips(
-                requestedBy = JsonApiRelationshipToOne(
-                    data = JsonApiRelationshipData(
-                        type = this.requestedBy.type.name,
-                        id = this.requestedBy.resourceId
-                    )
-                ),
-                requestedFrom = JsonApiRelationshipToOne(
-                    data = JsonApiRelationshipData(
-                        type = this.requestedFrom.type.name,
-                        id = this.requestedFrom.resourceId
-                    )
-                ),
-                requestedTo = JsonApiRelationshipToOne(
-                    data = JsonApiRelationshipData(
-                        type = this.requestedTo.type.name,
-                        id = this.requestedTo.resourceId
-                    )
-                ),
-            ),
-            meta = CreateRequestResponseMeta(
-                buildMap {
-                    this@toCreateResponse.properties.forEach { prop ->
-                        put(prop.key, prop.value)
-                    }
-                }
-            ),
-            links =
-            CreateRequestResponseLinks(
-                self = "${REQUESTS_PATH}/${this.id}"
-            ),
-        ),
         links = JsonApiLinks.ResourceObjectLink(REQUESTS_PATH),
-        meta = JsonApiMeta(
-            buildJsonObject {
-                put("createdAt", this@toCreateResponse.createdAt.toTimeZoneOffsetString())
-            }
-        )
+        meta =
+            JsonApiMeta(
+                buildJsonObject {
+                    put("createdAt", this@toCreateResponse.createdAt.toTimeZoneOffsetString())
+                },
+            ),
     )

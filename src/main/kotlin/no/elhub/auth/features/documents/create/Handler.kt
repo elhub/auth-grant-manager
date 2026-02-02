@@ -18,7 +18,7 @@ class Handler(
     private val signatureService: SignatureService,
     private val documentRepository: DocumentRepository,
     private val partyService: PartyService,
-    private val fileGenerator: FileGenerator
+    private val fileGenerator: FileGenerator,
 ) {
     suspend operator fun invoke(model: CreateDocumentModel): Either<CreateError, AuthorizationDocument> =
         either {
@@ -30,8 +30,7 @@ class Handler(
                             PartyError.InvalidNin -> CreateError.InvalidNinError
                             is PartyError.PersonResolutionError -> CreateError.RequestedPartyError
                         }
-                    }
-                    .bind()
+                    }.bind()
 
             ensure(model.authorizedParty == requestedByParty) {
                 CreateError.AuthorizationError
@@ -45,8 +44,7 @@ class Handler(
                             PartyError.InvalidNin -> CreateError.InvalidNinError
                             is PartyError.PersonResolutionError -> CreateError.RequestedPartyError
                         }
-                    }
-                    .bind()
+                    }.bind()
 
             val requestedToParty =
                 partyService
@@ -56,8 +54,7 @@ class Handler(
                             PartyError.InvalidNin -> CreateError.InvalidNinError
                             is PartyError.PersonResolutionError -> CreateError.RequestedPartyError
                         }
-                    }
-                    .bind()
+                    }.bind()
 
             val command =
                 businessHandler
@@ -69,12 +66,13 @@ class Handler(
                     .generate(command.requestedFrom.idValue, command.meta)
                     .mapLeft {
                         CreateError.FileGenerationError
-                    }
-                    .bind()
+                    }.bind()
 
-            val signedFile = signatureService.sign(file)
-                .mapLeft { CreateError.SignFileError(cause = it) }
-                .bind()
+            val signedFile =
+                signatureService
+                    .sign(file)
+                    .mapLeft { CreateError.SignFileError(cause = it) }
+                    .bind()
 
             val documentProperties =
                 command.meta
@@ -92,12 +90,13 @@ class Handler(
                     validTo = command.validTo,
                 )
 
-            val savedDocument = transaction {
-                documentRepository
-                    .insert(documentToCreate, command.scopes)
-                    .mapLeft { CreateError.PersistenceError }
-                    .bind()
-            }
+            val savedDocument =
+                transaction {
+                    documentRepository
+                        .insert(documentToCreate, command.scopes)
+                        .mapLeft { CreateError.PersistenceError }
+                        .bind()
+                }
 
             savedDocument
         }

@@ -10,12 +10,14 @@ import java.util.UUID
  * @param id The id string to validate.
  * @return Either an ApiError.BadRequest or a valid UUID.
  */
-fun validateId(id: String?): Either<InputError, UUID> = Either.catch {
-    if (id.isNullOrBlank()) {
-        return InputError.MissingInputError.left()
-    }
+fun validateId(id: String?): Either<InputError, UUID> =
+    Either
+        .catch {
+            if (id.isNullOrBlank()) {
+                return InputError.MissingInputError.left()
+            }
 
-    UUID.fromString(id)
-}.mapLeft {
-    return InputError.MalformedInputError.left()
-}
+            UUID.fromString(id)
+        }.mapLeft {
+            return InputError.MalformedInputError.left()
+        }

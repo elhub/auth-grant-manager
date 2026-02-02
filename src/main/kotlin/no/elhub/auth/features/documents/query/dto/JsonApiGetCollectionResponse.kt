@@ -19,17 +19,20 @@ typealias GetDocumentCollectionResponse = JsonApiResponse.CollectionDocumentWith
     GetDocumentSingleResponseAttributes,
     GetDocumentSingleResponseRelationship,
     GetDocumentSingleResponseMeta,
-    GetDocumentSingleResponseLinks
-    >
+    GetDocumentSingleResponseLinks,
+>
 
-fun List<AuthorizationDocument>.toGetCollectionResponse() = GetDocumentCollectionResponse(
-    data = this.map {
-        it.toGetSingleResponse().data
-    },
-    links = JsonApiLinks.ResourceObjectLink(DOCUMENTS_PATH),
-    meta = JsonApiMeta(
-        buildJsonObject {
-            put("createdAt", currentTimeWithTimeZone().toTimeZoneOffsetString())
-        }
+fun List<AuthorizationDocument>.toGetCollectionResponse() =
+    GetDocumentCollectionResponse(
+        data =
+            this.map {
+                it.toGetSingleResponse().data
+            },
+        links = JsonApiLinks.ResourceObjectLink(DOCUMENTS_PATH),
+        meta =
+            JsonApiMeta(
+                buildJsonObject {
+                    put("createdAt", currentTimeWithTimeZone().toTimeZoneOffsetString())
+                },
+            ),
     )
-)

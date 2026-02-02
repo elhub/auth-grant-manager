@@ -27,7 +27,7 @@ sealed class SignatureFetchingError {
 data class VaultConfig(
     val url: String,
     val key: String,
-    val tokenPath: String
+    val tokenPath: String,
 )
 
 class HashicorpVaultSignatureProvider(
@@ -57,37 +57,45 @@ class HashicorpVaultSignatureProvider(
     )
 
     @Serializable
-    private data class SignResponse(val data: Data) {
+    private data class SignResponse(
+        val data: Data,
+    ) {
         @Serializable
-        data class Data(val signature: String)
+        data class Data(
+            val signature: String,
+        )
     }
 
     private fun readVaultToken() =
-        Files.readString(
-            Paths.get(cfg.tokenPath)
-        ).trim()
+        Files
+            .readString(
+                Paths.get(cfg.tokenPath),
+            ).trim()
 
     override suspend fun fetchSignature(digest: ByteArray): Either<SignatureFetchingError, ByteArray> =
-        Either.catch {
-            val b64 = Base64.getEncoder().encodeToString(digest)
+        Either
+            .catch {
+                val b64 = Base64.getEncoder().encodeToString(digest)
 
-            val resp = client.post("${cfg.url}/sign/${cfg.key}") {
-                contentType(ContentType.Application.Json)
-                header("X-Vault-Token", readVaultToken())
-                setBody(
-                    SignRequest(
-                        input = b64,
-                        hash_algorithm = HashAlgorithm.SHA2_256,
-                        signature_algorithm = SignatureAlgorithm.PKCS1V15,
-                        prehashed = false,
-                    )
-                )
-            }.body<SignResponse>()
+                val resp =
+                    client
+                        .post("${cfg.url}/sign/${cfg.key}") {
+                            contentType(ContentType.Application.Json)
+                            header("X-Vault-Token", readVaultToken())
+                            setBody(
+                                SignRequest(
+                                    input = b64,
+                                    hash_algorithm = HashAlgorithm.SHA2_256,
+                                    signature_algorithm = SignatureAlgorithm.PKCS1V15,
+                                    prehashed = false,
+                                ),
+                            )
+                        }.body<SignResponse>()
 
-            val raw = resp.data.signature.removePrefix("vault:v1:")
-            return Base64.getDecoder().decode(raw).right()
-        }.mapLeft {
-            logger.error("Failed to fetch signature from Vault", it)
-            SignatureFetchingError.UnexpectedError
-        }
+                val raw = resp.data.signature.removePrefix("vault:v1:")
+                return Base64.getDecoder().decode(raw).right()
+            }.mapLeft {
+                logger.error("Failed to fetch signature from Vault", it)
+                SignatureFetchingError.UnexpectedError
+            }
 }
