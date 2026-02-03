@@ -1,4 +1,4 @@
-package no.elhub.auth.features.businessprocesses.structuredata.domain
+package no.elhub.auth.features.businessprocesses.structuredata.meteringpoints
 
 import kotlinx.serialization.Serializable
 import no.elhub.devxp.jsonapi.model.JsonApiAttributes

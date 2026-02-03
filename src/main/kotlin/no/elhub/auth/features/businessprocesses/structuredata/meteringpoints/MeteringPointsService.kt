@@ -1,4 +1,4 @@
-package no.elhub.auth.features.businessprocesses.structuredata
+package no.elhub.auth.features.businessprocesses.structuredata.meteringpoints
 
 import arrow.core.Either
 import io.ktor.client.HttpClient
@@ -7,7 +7,6 @@ import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.isSuccess
-import no.elhub.auth.features.businessprocesses.structuredata.domain.MeteringPointResponse
 import org.slf4j.LoggerFactory
 
 interface MeteringPointsService {

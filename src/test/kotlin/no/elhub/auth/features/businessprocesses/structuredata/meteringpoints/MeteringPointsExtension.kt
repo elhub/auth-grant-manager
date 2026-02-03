@@ -1,4 +1,4 @@
-package no.elhub.auth.features.businessprocesses.structuredata
+package no.elhub.auth.features.businessprocesses.structuredata.meteringpoints
 
 import io.kotest.core.listeners.AfterProjectListener
 import io.kotest.core.listeners.BeforeSpecListener

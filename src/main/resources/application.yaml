@@ -3,7 +3,8 @@ ktor:
     modules:
       - no.elhub.auth.ApplicationKt.module
       - no.elhub.auth.features.common.CommonModuleKt.commonModule
-      - no.elhub.auth.features.businessprocesses.structuredata.MeteringPointsServiceModuleKt.meteringPointsServiceModule
+      - no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceModuleKt.meteringPointsServiceModule
+      - no.elhub.auth.features.businessprocesses.structuredata.organisations.OrganisationsServiceModuleKt.organisationsServiceModule
       - no.elhub.auth.features.businessprocesses.BusinessProcessesModuleKt.businessProcessesModule
       - no.elhub.auth.features.openapi.ModuleKt.module
       - no.elhub.auth.features.grants.ModuleKt.module
@@ -46,3 +47,9 @@ structureData:
       basic:
         username: ${STRUCTURE_DATA_METERING_POINTS_SERVICE_API_USERNAME}
         password: ${STRUCTURE_DATA_METERING_POINTS_SERVICE_API_PASSWORD}
+  organisationsService:
+    serviceUrl: ${STRUCTURE_DATA_ORGANISATIONS_SERVICE_URL}
+    authentication:
+      basic:
+        username: ${STRUCTURE_DATA_ORGANISATIONS_SERVICE_API_USERNAME}
+        password: ${STRUCTURE_DATA_ORGANISATIONS_SERVICE_API_PASSWORD}
