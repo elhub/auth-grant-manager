@@ -36,19 +36,18 @@ fun AuthError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection>
             detail = "The party type you are authorized as is not supported for this endpoint."
         )
 
-        AuthError.ValidationInfoMissing,
-        AuthError.ActingGlnMissing,
-        AuthError.ActingFunctionMissing,
-        AuthError.UnexpectedError,
-        AuthError.UnknownError -> buildApiErrorResponse(
-            status = HttpStatusCode.InternalServerError,
-            title = "Internal server error",
-            detail = "An internal error occurred."
-        )
-
         AuthError.NotAuthorized -> buildApiErrorResponse(
             status = HttpStatusCode.Unauthorized,
             title = "Not authorized",
             detail = "Not authorized for this endpoint."
+        )
+
+        AuthError.InvalidPdpResponseAuthInfoMissing,
+        AuthError.InvalidPdpResponseActingGlnMissing,
+        AuthError.InvalidPdpResponseActingFunctionMissing,
+        AuthError.UnknownError -> buildApiErrorResponse(
+            status = HttpStatusCode.InternalServerError,
+            title = "Internal server error",
+            detail = "An internal error occurred."
         )
     }

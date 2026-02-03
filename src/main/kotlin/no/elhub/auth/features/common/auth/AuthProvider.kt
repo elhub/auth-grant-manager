@@ -30,11 +30,10 @@ sealed interface AuthError {
     object MissingAuthorizationHeader : AuthError
     object InvalidAuthorizationHeader : AuthError
     object MissingSenderGlnHeader : AuthError
-    object UnexpectedError : AuthError
     object InvalidToken : AuthError
-    object ValidationInfoMissing : AuthError
-    object ActingGlnMissing : AuthError
-    object ActingFunctionMissing : AuthError
+    object InvalidPdpResponseAuthInfoMissing : AuthError
+    object InvalidPdpResponseActingGlnMissing : AuthError
+    object InvalidPdpResponseActingFunctionMissing : AuthError
     object ActingFunctionNotSupported : AuthError
     object UnknownError : AuthError
     object NotAuthorized : AuthError
@@ -172,7 +171,7 @@ class PDPAuthorizationProvider(
             }
         }.mapLeft {
             log.error("PDP request failed for traceId={}", traceId, it)
-            raise(AuthError.UnexpectedError)
+            raise(AuthError.UnknownError)
         }.bind()
 
         val pdpBody: PdpResponse = when {
@@ -181,7 +180,7 @@ class PDPAuthorizationProvider(
             else -> {
                 val err = response.bodyAsText()
                 log.warn("PDP non-2xx for traceId={} status={} body={}", traceId, response.status, err)
-                raise(AuthError.UnexpectedError)
+                raise(AuthError.UnknownError)
             }
         }
 
@@ -204,13 +203,13 @@ class PDPAuthorizationProvider(
             raise(AuthError.NotAuthorized)
         }
         call.request.headers[Headers.SENDER_GLN] ?: raise(AuthError.MissingSenderGlnHeader)
-        val authInfo = pdpBody.result.authInfo ?: raise(AuthError.ValidationInfoMissing)
+        val authInfo = pdpBody.result.authInfo ?: raise(AuthError.InvalidPdpResponseAuthInfoMissing)
         if (authInfo.inputFailed != null) {
             log.error("PDP input validation failed for traceId={} msg={}", traceId, authInfo.inputFailed)
-            raise(AuthError.UnknownError)
+            raise(AuthError.NotAuthorized)
         }
-        val actingGLN = authInfo.actingGLN ?: raise(AuthError.ActingGlnMissing)
-        val actingFunction = authInfo.actingFunction ?: raise(AuthError.ActingFunctionMissing)
+        val actingGLN = authInfo.actingGLN ?: raise(AuthError.InvalidPdpResponseActingGlnMissing)
+        val actingFunction = authInfo.actingFunction ?: raise(AuthError.InvalidPdpResponseActingFunctionMissing)
         val roleType = Either.catch {
             enumValueOf<RoleType>(actingFunction)
         }
