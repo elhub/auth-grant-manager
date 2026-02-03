@@ -28,17 +28,13 @@ fun ConfirmError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollecti
             detail = "Document could not be found"
         )
 
-        is ConfirmError.ValidateSignaturesError,
-        ConfirmError.SignatoryNotAllowedToSignDocument,
-        ConfirmError.SignatoryResolutionError,
-        ConfirmError.DocumentReadError,
-        ConfirmError.DocumentUpdateError,
-        ConfirmError.ScopeReadError,
-        ConfirmError.GrantCreationError,
-        ConfirmError.RequestedByResolutionError, -> buildApiErrorResponse(
-            status = HttpStatusCode.InternalServerError,
-            title = "Internal Server error",
-            detail = "An internal error occurred."
+        is ConfirmError.ValidateSignaturesError -> handleValidateSignatureError(this)
+
+        ConfirmError.SignatoryNotAllowedToSignDocument -> buildApiErrorResponse(
+            status = HttpStatusCode.Forbidden,
+            title = "Signatory is not allowed to sign this document",
+            detail = "The signer is not authorized for this document"
+
         )
 
         ConfirmError.InvalidRequestedByError -> buildApiErrorResponse(
@@ -58,4 +54,60 @@ fun ConfirmError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollecti
             title = "Document has expired",
             detail = "Document validity period has passed"
         )
+
+        ConfirmError.SignatoryResolutionError,
+        ConfirmError.DocumentReadError,
+        ConfirmError.DocumentUpdateError,
+        ConfirmError.ScopeReadError,
+        ConfirmError.GrantCreationError,
+        ConfirmError.RequestedByResolutionError, -> buildApiErrorResponse(
+            status = HttpStatusCode.InternalServerError,
+            title = "Internal Server error",
+            detail = "An internal error occurred."
+        )
     }
+
+fun handleValidateSignatureError(error: ConfirmError.ValidateSignaturesError): Pair<HttpStatusCode, JsonApiErrorCollection> = when (error.cause) {
+    SignatureValidationError.ElhubSigningCertNotTrusted,
+    SignatureValidationError.InvalidElhubSignature,
+    SignatureValidationError.MissingElhubSignature -> buildApiErrorResponse(
+        status = HttpStatusCode.BadRequest,
+        title = "Elhub signature is not valid",
+        detail = "The Elhub signature could not be validated. The document may have been tampered with"
+    )
+
+    SignatureValidationError.BankIdSigningCertNotFromExpectedRoot ->
+        buildApiErrorResponse(
+            status = HttpStatusCode.BadRequest,
+            title = "End user signature validation failed",
+            detail = "The end user signing certificate is not trusted."
+        )
+
+    SignatureValidationError.InvalidBankIdSignature ->
+        buildApiErrorResponse(
+            status = HttpStatusCode.BadRequest,
+            title = "End user signature validation failed",
+            detail = "The end user signature is invalid."
+        )
+
+    SignatureValidationError.MissingBankIdSignature ->
+        buildApiErrorResponse(
+            status = HttpStatusCode.BadRequest,
+            title = "End user signature validation failed",
+            detail = "The document is missing the end user signature."
+        )
+
+    SignatureValidationError.MissingNationalId ->
+        buildApiErrorResponse(
+            status = HttpStatusCode.BadRequest,
+            title = "End user signature validation failed",
+            detail = "Could not extract the Norwegian national identity number from the end user signing certificate."
+        )
+
+    SignatureValidationError.OriginalDocumentMismatch ->
+        buildApiErrorResponse(
+            status = HttpStatusCode.BadRequest,
+            title = "Original document mismatch",
+            detail = "The document provided for confirmation differs from the original generated document."
+        )
+}
