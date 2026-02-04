@@ -16,7 +16,9 @@
       "description": "Link members related to the collection (e.g., pagination).",
       "$ref": "../json-api-framework.schema.json#/$defs/topLevelLinks",
       "examples": [
-        "/access/v0/authorization-requests"
+        {
+          "self": "/access/v0/authorization-requests"
+        }
       ]
     },
     "meta": {
