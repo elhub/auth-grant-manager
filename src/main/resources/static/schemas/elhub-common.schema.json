@@ -69,7 +69,7 @@
       },
       "examples": [
         {
-          "type": "metering-points",
+          "type": "MeteringPoint",
           "id": "12345678901234"
         }
       ],

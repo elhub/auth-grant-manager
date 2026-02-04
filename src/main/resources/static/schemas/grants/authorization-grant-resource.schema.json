@@ -49,7 +49,12 @@
     },
     "links": {
       "description": "Link members related to the primary data.",
-      "$ref": "../json-api-framework.schema.json#/$defs/topLevelLinks"
+      "$ref": "../json-api-framework.schema.json#/$defs/topLevelLinks",
+      "examples": [
+        {
+          "self": "/access/v0/authorization-grants/123e4567-e89b-12d3-a456-426614174000"
+        }
+      ]
     },
     "meta": {
       "$ref": "../json-api-framework.schema.json#/$defs/topLevelMeta"
