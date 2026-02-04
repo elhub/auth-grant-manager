@@ -39,6 +39,7 @@ class OrganisationsApi(
                 return when (errorResponse?.status) {
                     "404" -> ClientError.NotFound.left()
                     "401" -> ClientError.Unauthorized.left()
+                    "400" -> ClientError.BadRequest.left()
                     "500" -> ClientError.ServerError.left()
                     else -> ClientError.UnexpectedError(ClientRequestException(response, response.bodyAsText())).left()
                 }
@@ -64,6 +65,7 @@ sealed class ClientError {
     data object NotFound : ClientError()
     data object Unauthorized : ClientError()
     data object ServerError : ClientError()
+    data object BadRequest : ClientError()
 }
 
 private val json = Json {
