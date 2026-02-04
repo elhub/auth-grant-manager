@@ -58,30 +58,22 @@
     "resourceReference": {
       "type": "object",
       "properties": {
-        "data": {
-          "type": "object",
-          "properties": {
-            "type": {
-              "type": "string",
-              "description": "A reference to an Elhub resource object.",
-              "enum": ["MeteringPoint"]
-            },
-            "id": {
-              "type": "string",
-              "description": "The unique identifier of the linked resource."
-            }
-          },
-          "examples": [
-            {
-              "data": {
-                "type": "MeteringPoint",
-                "id": "12345678901234"
-              }
-            }
-          ]
+        "type": {
+          "description": "A reference to an Elhub resource object.",
+          "enum": ["MeteringPoint"]
+        },
+        "id": {
+          "type": "string",
+          "description": "The unique identifier of the linked resource."
         }
       },
-      "required": ["data"]
+      "examples": [
+        {
+          "type": "metering-points",
+          "id": "12345678901234"
+        }
+      ],
+      "required": ["type", "id"]
     },
     "createdAt": {
       "type": "string",
