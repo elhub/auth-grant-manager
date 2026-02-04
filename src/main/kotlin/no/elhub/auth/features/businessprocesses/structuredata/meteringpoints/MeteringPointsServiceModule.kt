@@ -1,4 +1,4 @@
-package no.elhub.auth.features.businessprocesses.structuredata
+package no.elhub.auth.features.businessprocesses.structuredata.meteringpoints
 
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
