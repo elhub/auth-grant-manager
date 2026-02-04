@@ -17,7 +17,7 @@
       "$ref": "../json-api-framework.schema.json#/$defs/topLevelLinks",
       "examples": [
         {
-          "self": "/access/v0/authorization-documents"
+          "self": "/access/v0/authorization-grants"
         }
       ]
     },

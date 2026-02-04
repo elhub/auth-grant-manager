@@ -4,77 +4,66 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.ktor.http.HttpStatusCode
 
-class AuthErrorJsonApiResponseTest :
-    FunSpec({
+class AuthErrorJsonApiResponseTest : FunSpec({
 
-        data class Expectation(
-            val status: HttpStatusCode,
-            val title: String,
-            val detail: String,
+    data class Expectation(val status: HttpStatusCode, val title: String, val detail: String)
+
+    listOf(
+        AuthError.MissingAuthorizationHeader to Expectation(
+            status = HttpStatusCode.Unauthorized,
+            title = "Missing authorization",
+            detail = "Bearer token is required in the Authorization header."
+        ),
+        AuthError.InvalidAuthorizationHeader to Expectation(
+            status = HttpStatusCode.Unauthorized,
+            title = "Invalid authorization header",
+            detail = "Authorization header must use the Bearer scheme."
+        ),
+        AuthError.MissingSenderGlnHeader to Expectation(
+            status = HttpStatusCode.BadRequest,
+            title = "Missing senderGLN header",
+            detail = "SenderGLN header is required for authorization."
+        ),
+        AuthError.InvalidToken to Expectation(
+            status = HttpStatusCode.Unauthorized,
+            title = "Invalid token",
+            detail = "Token could not be verified."
+        ),
+        AuthError.ActingFunctionNotSupported to Expectation(
+            status = HttpStatusCode.Forbidden,
+            title = "Unsupported party type",
+            detail = "The party type you are authorized as is not supported for this endpoint."
         )
+    ).forEach { (error, expected) ->
+        test("toApiErrorResponse maps ${error::class.simpleName} to ${expected.status}") {
+            val (status, response) = error.toApiErrorResponse()
 
-        listOf(
-            AuthError.MissingAuthorizationHeader to
-                Expectation(
-                    status = HttpStatusCode.Unauthorized,
-                    title = "Missing authorization",
-                    detail = "Bearer token is required in the Authorization header.",
-                ),
-            AuthError.InvalidAuthorizationHeader to
-                Expectation(
-                    status = HttpStatusCode.Unauthorized,
-                    title = "Invalid authorization header",
-                    detail = "Authorization header must use the Bearer scheme.",
-                ),
-            AuthError.MissingSenderGlnHeader to
-                Expectation(
-                    status = HttpStatusCode.BadRequest,
-                    title = "Missing senderGLN header",
-                    detail = "SenderGLN header is required for authorization.",
-                ),
-            AuthError.InvalidToken to
-                Expectation(
-                    status = HttpStatusCode.Unauthorized,
-                    title = "Invalid token",
-                    detail = "Token could not be verified.",
-                ),
-            AuthError.ActingFunctionNotSupported to
-                Expectation(
-                    status = HttpStatusCode.Forbidden,
-                    title = "Unsupported party type",
-                    detail = "The party type you are authorized as is not supported for this endpoint.",
-                ),
-        ).forEach { (error, expected) ->
-            test("toApiErrorResponse maps ${error::class.simpleName} to ${expected.status}") {
-                val (status, response) = error.toApiErrorResponse()
-
-                status shouldBe expected.status
-                response.errors.size shouldBe 1
-                response.errors.first().apply {
-                    this.status shouldBe expected.status.value.toString()
-                    title shouldBe expected.title
-                    detail shouldBe expected.detail
-                }
+            status shouldBe expected.status
+            response.errors.size shouldBe 1
+            response.errors.first().apply {
+                this.status shouldBe expected.status.value.toString()
+                title shouldBe expected.title
+                detail shouldBe expected.detail
             }
         }
+    }
 
-        listOf(
-            AuthError.ValidationInfoMissing,
-            AuthError.ActingGlnMissing,
-            AuthError.ActingFunctionMissing,
-            AuthError.UnexpectedError,
-            AuthError.UnknownError,
-        ).forEach { error ->
-            test("toApiErrorResponse maps ${error::class.simpleName} to InternalServerError") {
-                val (status, response) = error.toApiErrorResponse()
+    listOf(
+        AuthError.InvalidPdpResponseAuthInfoMissing,
+        AuthError.InvalidPdpResponseActingGlnMissing,
+        AuthError.InvalidPdpResponseActingFunctionMissing,
+        AuthError.UnknownError
+    ).forEach { error ->
+        test("toApiErrorResponse maps ${error::class.simpleName} to InternalServerError") {
+            val (status, response) = error.toApiErrorResponse()
 
-                status shouldBe HttpStatusCode.InternalServerError
-                response.errors.size shouldBe 1
-                response.errors.first().apply {
-                    this.status shouldBe HttpStatusCode.InternalServerError.value.toString()
-                    title shouldBe "Internal server error"
-                    detail shouldBe "An internal error occurred."
-                }
+            status shouldBe HttpStatusCode.InternalServerError
+            response.errors.size shouldBe 1
+            response.errors.first().apply {
+                this.status shouldBe HttpStatusCode.InternalServerError.value.toString()
+                title shouldBe "Internal server error"
+                detail shouldBe "An internal error occurred."
             }
         }
-    })
+    }
+})
