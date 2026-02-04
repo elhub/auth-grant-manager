@@ -49,10 +49,9 @@ class AuthErrorJsonApiResponseTest : FunSpec({
     }
 
     listOf(
-        AuthError.ValidationInfoMissing,
-        AuthError.ActingGlnMissing,
-        AuthError.ActingFunctionMissing,
-        AuthError.UnexpectedError,
+        AuthError.InvalidPdpResponseAuthInfoMissing,
+        AuthError.InvalidPdpResponseActingGlnMissing,
+        AuthError.InvalidPdpResponseActingFunctionMissing,
         AuthError.UnknownError
     ).forEach { error ->
         test("toApiErrorResponse maps ${error::class.simpleName} to InternalServerError") {
