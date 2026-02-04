@@ -12,26 +12,22 @@ data class Attributes(
     val partyId: String,
     val name: String,
     val status: PartyStatus
-) : JsonApiAttributes {
-    @Serializable
-    enum class PartyType {
-        BALANCE_SUPPLIER
-    }
+) : JsonApiAttributes
 
-    @Serializable
-    enum class PartyStatus {
-        ACTIVE,
-        INACTIVE
-    }
+@Serializable
+enum class PartyType {
+    BALANCE_SUPPLIER
+}
+
+@Serializable
+enum class PartyStatus {
+    ACTIVE,
+    INACTIVE
 }
 
 @Serializable
 data class Relationships(
     val organizationNumber: JsonApiRelationshipToOne? = null
-) : JsonApiRelationships {
-    companion object {
-        const val ORGANIZATION = "organization"
-    }
-}
+) : JsonApiRelationships
 
 typealias PartyResponse = JsonApiResponse.SingleDocumentWithRelationships<Attributes, Relationships>

@@ -12,42 +12,38 @@ data class Attributes(
     val balanceSupplierContract: BalanceSupplierContract? = null,
     val accessType: AccessType? = null,
     val isHistoricMeteringPoint: Boolean? = null
-) : JsonApiAttributes {
-    @Serializable
-    data class GridAccessContract(
-        val start: String,
-        val end: String? = null,
-        val partyFunction: PartyFunction
-    )
+) : JsonApiAttributes
 
-    @Serializable
-    data class BalanceSupplierContract(
-        val start: String,
-        val end: String? = null,
-        val partyFunction: PartyFunction,
-        val contractOfLastResort: Boolean
-    )
+@Serializable
+data class GridAccessContract(
+    val start: String,
+    val end: String? = null,
+    val partyFunction: PartyFunction
+)
 
-    @Serializable
-    data class PartyFunction(
-        val name: String,
-        val partyId: String,
-    )
+@Serializable
+data class BalanceSupplierContract(
+    val start: String,
+    val end: String? = null,
+    val partyFunction: PartyFunction,
+    val contractOfLastResort: Boolean
+)
 
-    @Serializable
-    enum class AccessType {
-        OWNED,
-        SHARED
-    }
+@Serializable
+data class PartyFunction(
+    val name: String,
+    val partyId: String,
+)
+
+@Serializable
+enum class AccessType {
+    OWNED,
+    SHARED
 }
 
 @Serializable
 data class Relationships(
     val endUser: JsonApiRelationshipToOne? = null
-) : JsonApiRelationships {
-    companion object {
-        const val END_USER = "end-user"
-    }
-}
+) : JsonApiRelationships
 
 typealias MeteringPointResponse = JsonApiResponse.SingleDocumentWithRelationships<Attributes, Relationships>
