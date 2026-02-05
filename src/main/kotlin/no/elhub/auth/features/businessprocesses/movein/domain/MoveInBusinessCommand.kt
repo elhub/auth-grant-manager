@@ -31,14 +31,15 @@ data class MoveInBusinessMeta(
 ) : RequestMetaMarker,
     DocumentMetaMarker {
     override fun toMetaAttributes(): Map<String, String> =
-        mapOf(
-            "requestedFromName" to requestedFromName,
-            "requestedForMeteringPointId" to requestedForMeteringPointId,
-            "requestedForMeteringPointAddress" to requestedForMeteringPointAddress,
-            "balanceSupplierContractName" to balanceSupplierContractName,
-            "balanceSupplierName" to balanceSupplierName,
-            "startDate" to startDate.toString(),
-        ).plus(listOfNotNull(redirectURI?.let { "redirectURI" to it }))
+        buildMap {
+            put("requestedFromName", requestedFromName)
+            put("requestedForMeteringPointId", requestedForMeteringPointId)
+            put("requestedForMeteringPointAddress", requestedForMeteringPointAddress)
+            put("balanceSupplierContractName", balanceSupplierContractName)
+            put("balanceSupplierName", balanceSupplierName)
+            put("startDate", startDate.toString())
+            redirectURI?.let { put("redirectURI", it) }
+        }
 }
 
 fun MoveInBusinessCommand.toRequestCommand(): RequestCommand =

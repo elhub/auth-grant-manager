@@ -135,17 +135,17 @@ class ChangeOfSupplierBusinessHandlerTest :
                     authorizedParty = authorizedParty,
                     requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
                     meta =
-                        CreateRequestMeta(
-                            requestedBy = PartyIdentifier(PartyIdentifierType.OrganizationNumber, "987654321"),
-                            requestedFrom = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "12345678901"),
-                            requestedFromName = "Supplier AS",
-                            requestedTo = endUser,
-                            requestedForMeteringPointId = VALID_METERING_POINT,
-                            requestedForMeteringPointAddress = "Some address",
-                            balanceSupplierName = "Supplier",
-                            balanceSupplierContractName = "Contract",
-                            redirectURI = "example.com",
-                        ),
+                    CreateRequestMeta(
+                        requestedBy = PartyIdentifier(PartyIdentifierType.OrganizationNumber, "987654321"),
+                        requestedFrom = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "12345678901"),
+                        requestedFromName = "Supplier AS",
+                        requestedTo = endUser,
+                        requestedForMeteringPointId = VALID_METERING_POINT,
+                        requestedForMeteringPointAddress = "Some address",
+                        balanceSupplierName = "Supplier",
+                        balanceSupplierContractName = "Contract",
+                        redirectURI = "example.com",
+                    ),
                 )
 
             val result = handler.validateAndReturnRequestCommand(model)

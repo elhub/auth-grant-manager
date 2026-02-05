@@ -176,17 +176,17 @@ class ChangeOfSupplierBusinessHandlerTest :
                     authorizedParty = AUTHORIZED_PARTY,
                     requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
                     meta =
-                        CreateRequestMeta(
-                            requestedBy = VALID_PARTY,
-                            requestedFrom = VALID_PARTY,
-                            requestedFromName = "From",
-                            requestedTo = VALID_PARTY,
-                            requestedForMeteringPointId = VALID_METERING_POINT,
-                            requestedForMeteringPointAddress = "addr",
-                            balanceSupplierName = "Supplier",
-                            balanceSupplierContractName = "Contract",
-                            redirectURI = "example.com",
-                        ),
+                    CreateRequestMeta(
+                        requestedBy = VALID_PARTY,
+                        requestedFrom = VALID_PARTY,
+                        requestedFromName = "From",
+                        requestedTo = VALID_PARTY,
+                        requestedForMeteringPointId = VALID_METERING_POINT,
+                        requestedForMeteringPointAddress = "addr",
+                        balanceSupplierName = "Supplier",
+                        balanceSupplierContractName = "Contract",
+                        redirectURI = "example.com",
+                    ),
                 )
 
             handler.validateAndReturnRequestCommand(model).shouldBeLeft(ChangeOfSupplierValidationError.InvalidRedirectURI)
