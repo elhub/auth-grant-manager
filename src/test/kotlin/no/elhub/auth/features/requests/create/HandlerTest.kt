@@ -52,6 +52,7 @@ class HandlerTest : FunSpec({
             requestedForMeteringPointAddress = "Address",
             balanceSupplierName = "Supplier",
             balanceSupplierContractName = "Contract",
+            redirectURI = "https://example.com",
         )
 
     val model =

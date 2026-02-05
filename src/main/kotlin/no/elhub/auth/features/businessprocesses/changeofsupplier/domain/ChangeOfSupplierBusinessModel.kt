@@ -13,6 +13,7 @@ data class ChangeOfSupplierBusinessModel(
     val requestedForMeteringPointAddress: String,
     val balanceSupplierName: String,
     val balanceSupplierContractName: String,
+    val redirectURI: String? = null,
 )
 
 fun CreateRequestModel.toChangeOfSupplierBusinessModel(): ChangeOfSupplierBusinessModel =
@@ -25,6 +26,7 @@ fun CreateRequestModel.toChangeOfSupplierBusinessModel(): ChangeOfSupplierBusine
         requestedForMeteringPointAddress = this.meta.requestedForMeteringPointAddress,
         balanceSupplierName = this.meta.balanceSupplierName,
         balanceSupplierContractName = this.meta.balanceSupplierContractName,
+        redirectURI = this.meta.redirectURI,
     )
 
 fun CreateDocumentModel.toChangeOfSupplierBusinessModel(): ChangeOfSupplierBusinessModel =

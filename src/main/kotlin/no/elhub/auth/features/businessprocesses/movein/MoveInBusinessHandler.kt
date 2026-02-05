@@ -123,6 +123,7 @@ class MoveInBusinessHandler :
                 balanceSupplierContractName = model.balanceSupplierContractName,
                 balanceSupplierName = model.balanceSupplierName,
                 startDate = startDate,
+                redirectURI = model.redirectURI,
             )
 
         val scopes = listOf(

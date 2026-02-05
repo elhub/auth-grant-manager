@@ -90,7 +90,6 @@ class Handler(
                     value = it.value,
                 )
             }
-
             requestPropertyRepo
                 .insert(requestProperties)
                 .mapLeft { CreateError.PersistenceError }

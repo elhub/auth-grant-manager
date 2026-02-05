@@ -75,6 +75,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
+                        redirectURI = "https://example.com",
                     ),
                 )
 
@@ -96,6 +97,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
+                        redirectURI = "https://example.com",
                     ),
                 )
 
@@ -117,6 +119,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
+                        redirectURI = "https://example.com",
                     ),
                 )
 
@@ -138,6 +141,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
+                        redirectURI = "https://example.com",
                     ),
                 )
 
@@ -159,6 +163,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
+                        redirectURI = "https://example.com",
                     ),
                 )
 
@@ -180,6 +185,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
+                        redirectURI = "https://example.com",
                     ),
                 )
 
@@ -187,6 +193,7 @@ class ChangeOfSupplierBusinessHandlerTest :
 
             command.type shouldBe AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson
             command.validTo shouldBe defaultValidTo().toTimeZoneOffsetDateTimeAtStartOfDay()
+            command.meta.toMetaAttributes()["redirectURI"] shouldBe "https://example.com"
         }
 
         test("document produces DocumentCommand for valid input") {

@@ -46,6 +46,7 @@ class MoveInBusinessHandlerTest :
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
                         startDate = null,
+                        redirectURI = "https://example.com",
                     ),
                 )
 
@@ -68,6 +69,7 @@ class MoveInBusinessHandlerTest :
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
                         startDate = VALID_START_DATE,
+                        redirectURI = "https://example.com",
                     ),
                 )
 
@@ -90,6 +92,7 @@ class MoveInBusinessHandlerTest :
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
                         startDate = VALID_START_DATE,
+                        redirectURI = "https://example.com",
                     ),
                 )
 
@@ -98,6 +101,7 @@ class MoveInBusinessHandlerTest :
             command.type shouldBe AuthorizationRequest.Type.MoveInAndChangeOfEnergySupplierForPerson
             command.validTo shouldBe today().plus(DatePeriod(days = 28)).toTimeZoneOffsetDateTimeAtStartOfDay()
             command.meta.toMetaAttributes()["startDate"] shouldBe VALID_START_DATE.toString()
+            command.meta.toMetaAttributes()["redirectURI"] shouldBe "https://example.com"
         }
 
         test("grant properties validTo is one year from acceptance") {

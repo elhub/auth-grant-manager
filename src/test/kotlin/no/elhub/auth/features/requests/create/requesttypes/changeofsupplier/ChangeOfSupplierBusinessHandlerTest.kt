@@ -72,6 +72,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                         requestedForMeteringPointAddress = "Some address",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
+                        redirectURI = "https://example.com",
                     ),
                 )
 
@@ -95,6 +96,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                         requestedForMeteringPointAddress = "Some address",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
+                        redirectURI = "https://example.com",
                     ),
                 )
 
@@ -118,6 +120,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                         requestedForMeteringPointAddress = "Some address",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
+                        redirectURI = "https://example.com",
                     ),
                 )
 
@@ -141,6 +144,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                         requestedForMeteringPointAddress = "Some address",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
+                        redirectURI = "https://example.com",
                     ),
                 )
 
@@ -156,5 +160,6 @@ class ChangeOfSupplierBusinessHandlerTest :
             metaAttributes["requestedForMeteringPointId"] shouldBe VALID_METERING_POINT
             metaAttributes["requestedForMeteringPointAddress"] shouldBe "Some address"
             metaAttributes["balanceSupplierContractName"] shouldBe "Contract"
+            metaAttributes["redirectURI"] shouldBe "https://example.com"
         }
     })

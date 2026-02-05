@@ -26,6 +26,7 @@ data class ChangeOfSupplierBusinessMeta(
     val requestedForMeteringPointAddress: String,
     val balanceSupplierName: String,
     val balanceSupplierContractName: String,
+    val redirectURI: String? = null,
 ) : RequestMetaMarker,
     DocumentMetaMarker {
     override fun toMetaAttributes(): Map<String, String> =
@@ -35,7 +36,7 @@ data class ChangeOfSupplierBusinessMeta(
             "requestedForMeteringPointAddress" to requestedForMeteringPointAddress,
             "balanceSupplierContractName" to balanceSupplierContractName,
             "balanceSupplierName" to balanceSupplierName,
-        )
+        ).plus(listOfNotNull(redirectURI?.let { "redirectURI" to it }))
 }
 
 fun ChangeOfSupplierBusinessCommand.toRequestCommand(): RequestCommand =

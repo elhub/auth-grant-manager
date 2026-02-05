@@ -108,6 +108,11 @@ class ChangeOfSupplierBusinessHandler(
             return ChangeOfSupplierValidationError.RequestedToNotMeteringPointEndUser.left()
         }
 
+        // temporary validation for URI until it is fetched from EDIEL and validated against that value instead
+        if (model.redirectURI != null && !model.redirectURI.contains("http")) {
+            return ChangeOfSupplierValidationError.InvalidRedirectURI.left()
+        }
+
         if (model.requestedForMeteringPointAddress.isBlank()) {
             return ChangeOfSupplierValidationError.MissingMeteringPointAddress.left()
         }
@@ -135,6 +140,7 @@ class ChangeOfSupplierBusinessHandler(
                 requestedForMeteringPointAddress = model.requestedForMeteringPointAddress,
                 balanceSupplierContractName = model.balanceSupplierContractName,
                 balanceSupplierName = model.balanceSupplierName,
+                redirectURI = model.redirectURI,
             )
 
         val scopes = listOf(

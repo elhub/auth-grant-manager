@@ -26,6 +26,7 @@ data class CreateRequestMeta(
     val balanceSupplierName: String,
     val balanceSupplierContractName: String,
     val startDate: LocalDate? = null,
+    val redirectURI: String,
 ) : JsonApiResourceMeta
 
 typealias JsonApiCreateRequest = JsonApiRequest.SingleDocumentWithMeta<CreateRequestAttributes, CreateRequestMeta>
@@ -48,4 +49,5 @@ fun CreateRequestMeta.toModel(): no.elhub.auth.features.requests.create.model.Cr
         balanceSupplierName = this.balanceSupplierName,
         balanceSupplierContractName = this.balanceSupplierContractName,
         startDate = this.startDate,
+        redirectURI = this.redirectURI,
     )

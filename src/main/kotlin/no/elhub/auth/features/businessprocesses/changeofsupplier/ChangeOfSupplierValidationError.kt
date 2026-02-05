@@ -59,4 +59,8 @@ sealed class ChangeOfSupplierValidationError(
     @Serializable
     data object RequestedToNotMeteringPointEndUser :
         ChangeOfSupplierValidationError("requested_to_not_metering_point_end_user", "Requested to is not registered as end user of the metering point")
+
+    @Serializable
+    data object InvalidRedirectURI :
+        ChangeOfSupplierValidationError("invalid_redirect_uri", "Redirect URI has invalid format")
 }

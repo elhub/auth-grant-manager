@@ -15,6 +15,7 @@ data class MoveInBusinessModel(
     val balanceSupplierName: String,
     val balanceSupplierContractName: String,
     val startDate: LocalDate?,
+    val redirectURI: String? = null,
 )
 
 fun CreateRequestModel.toMoveInBusinessModel(): MoveInBusinessModel =
@@ -28,6 +29,7 @@ fun CreateRequestModel.toMoveInBusinessModel(): MoveInBusinessModel =
         balanceSupplierName = this.meta.balanceSupplierName,
         balanceSupplierContractName = this.meta.balanceSupplierContractName,
         startDate = this.meta.startDate,
+        redirectURI = this.meta.redirectURI,
     )
 
 fun CreateDocumentModel.toMoveInBusinessModel(): MoveInBusinessModel =
