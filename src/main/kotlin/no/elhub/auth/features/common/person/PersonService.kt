@@ -2,6 +2,7 @@ package no.elhub.auth.features.common.person
 
 import arrow.core.Either
 import arrow.core.left
+import arrow.core.raise.context.raise
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.post
@@ -16,6 +17,7 @@ import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObject
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import no.elhub.devxp.jsonapi.response.JsonApiErrorObject
 import org.slf4j.LoggerFactory
+import org.slf4j.MDC
 import java.util.UUID
 
 interface PersonService {
@@ -29,9 +31,18 @@ class ApiPersonService(
 
     private val logger = LoggerFactory.getLogger(PersonService::class.java)
 
+    private companion object {
+        const val TRACE_HEADER = "Elhub-Trace-Id"
+        const val CALL_ID_MDC_KEY = "traceId"
+    }
+
     override suspend fun findOrCreateByNin(nin: String): Either<ClientError, Person> =
         Either.catch {
+            val traceId = MDC.get(CALL_ID_MDC_KEY)
             val response = client.post("${cfg.baseUri}/persons") {
+                if (!traceId.isNullOrBlank()) {
+                    headers[TRACE_HEADER] = traceId
+                }
                 contentType(ContentType.Application.Json)
                 setBody(
                     PersonRequest(
