@@ -303,6 +303,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                         values["requestedForMeteringPointAddress"] shouldBe "Example Street 1, 1234 Oslo"
                         values["balanceSupplierName"] shouldBe "Example Energy AS"
                         values["balanceSupplierContractName"] shouldBe "ExampleSupplierContract"
+                        values["redirectURI"] shouldBe "https://example.com/redirect"
                     }
                     links.shouldNotBeNull().apply {
                         self.shouldNotBeNull()
@@ -406,6 +407,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                                         requestedForMeteringPointAddress = "quaerendum",
                                         balanceSupplierName = "Balance Supplier",
                                         balanceSupplierContractName = "Selena Chandler",
+                                        redirectURI = "https://example.com/redirect",
                                     ),
                                 ),
                             ),
@@ -459,6 +461,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                         values["requestedForMeteringPointAddress"] shouldBe "quaerendum"
                         values["balanceSupplierName"] shouldBe "Balance Supplier"
                         values["balanceSupplierContractName"] shouldBe "Selena Chandler"
+                        values["redirectURI"] shouldBe "https://example.com/redirect"
                     }
                     links.shouldNotBeNull().apply {
                         self.shouldNotBeNull()
@@ -506,6 +509,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                                         requestedForMeteringPointAddress = "quaerendum",
                                         balanceSupplierName = "Balance Supplier",
                                         balanceSupplierContractName = "Selena Chandler",
+                                        redirectURI = "https://example.com",
                                     ),
                                 ),
                             ),
@@ -560,6 +564,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                                         requestedForMeteringPointAddress = "quaerendum",
                                         balanceSupplierName = "Balance Supplier",
                                         balanceSupplierContractName = "Selena Chandler",
+                                        redirectURI = "https://example.com",
                                     ),
                                 ),
                             ),
@@ -612,6 +617,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                                         requestedForMeteringPointAddress = "quaerendum",
                                         balanceSupplierName = "Balance Supplier",
                                         balanceSupplierContractName = "Selena Chandler",
+                                        redirectURI = "https://example.com",
                                     ),
                                 ),
                             ),
@@ -1121,6 +1127,7 @@ private class TestRequestBusinessHandler : RequestBusinessHandler {
                         requestedForMeteringPointAddress = meta.requestedForMeteringPointAddress,
                         balanceSupplierName = meta.balanceSupplierName,
                         balanceSupplierContractName = meta.balanceSupplierContractName,
+                        redirectURI = meta.redirectURI,
                     ),
                 ).right()
             }
@@ -1142,6 +1149,7 @@ private data class TestRequestMeta(
     val requestedForMeteringPointAddress: String,
     val balanceSupplierName: String,
     val balanceSupplierContractName: String,
+    val redirectURI: String,
 ) : RequestMetaMarker {
     override fun toMetaAttributes(): Map<String, String> =
         mapOf(
@@ -1150,6 +1158,7 @@ private data class TestRequestMeta(
             "requestedForMeteringPointAddress" to requestedForMeteringPointAddress,
             "balanceSupplierName" to balanceSupplierName,
             "balanceSupplierContractName" to balanceSupplierContractName,
+            "redirectURI" to redirectURI,
         )
 }
 

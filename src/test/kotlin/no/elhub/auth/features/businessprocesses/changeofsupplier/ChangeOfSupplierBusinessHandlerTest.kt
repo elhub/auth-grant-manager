@@ -75,6 +75,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
+                        redirectURI = "https://example.com",
                     ),
                 )
 
@@ -96,6 +97,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
+                        redirectURI = "https://example.com",
                     ),
                 )
 
@@ -117,6 +119,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
+                        redirectURI = "https://example.com",
                     ),
                 )
 
@@ -138,6 +141,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
+                        redirectURI = "https://example.com",
                     ),
                 )
 
@@ -159,10 +163,33 @@ class ChangeOfSupplierBusinessHandlerTest :
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
+                        redirectURI = "https://example.com",
                     ),
                 )
 
             handler.validateAndReturnRequestCommand(model).shouldBeLeft(ChangeOfSupplierValidationError.MeteringPointNotFound)
+        }
+
+        test("request validation fails on not valid redirect URI") {
+            val model =
+                CreateRequestModel(
+                    authorizedParty = AUTHORIZED_PARTY,
+                    requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
+                    meta =
+                    CreateRequestMeta(
+                        requestedBy = VALID_PARTY,
+                        requestedFrom = VALID_PARTY,
+                        requestedFromName = "From",
+                        requestedTo = VALID_PARTY,
+                        requestedForMeteringPointId = VALID_METERING_POINT,
+                        requestedForMeteringPointAddress = "addr",
+                        balanceSupplierName = "Supplier",
+                        balanceSupplierContractName = "Contract",
+                        redirectURI = "example.com",
+                    ),
+                )
+
+            handler.validateAndReturnRequestCommand(model).shouldBeLeft(ChangeOfSupplierValidationError.InvalidRedirectURI)
         }
 
         test("request produces RequestCommand for valid input") {
@@ -180,6 +207,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
+                        redirectURI = "https://example.com",
                     ),
                 )
 
@@ -187,6 +215,7 @@ class ChangeOfSupplierBusinessHandlerTest :
 
             command.type shouldBe AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson
             command.validTo shouldBe defaultValidTo().toTimeZoneOffsetDateTimeAtStartOfDay()
+            command.meta.toMetaAttributes()["redirectURI"] shouldBe "https://example.com"
         }
 
         test("document produces DocumentCommand for valid input") {

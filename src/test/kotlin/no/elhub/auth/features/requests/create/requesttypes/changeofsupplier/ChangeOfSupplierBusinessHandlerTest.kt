@@ -72,6 +72,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                         requestedForMeteringPointAddress = "Some address",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
+                        redirectURI = "https://example.com",
                     ),
                 )
 
@@ -95,6 +96,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                         requestedForMeteringPointAddress = "Some address",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
+                        redirectURI = "https://example.com",
                     ),
                 )
 
@@ -118,12 +120,37 @@ class ChangeOfSupplierBusinessHandlerTest :
                         requestedForMeteringPointAddress = "Some address",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
+                        redirectURI = "https://example.com",
                     ),
                 )
 
             val result = handler.validateAndReturnRequestCommand(model)
 
             result.shouldBeLeft(ChangeOfSupplierValidationError.RequestedToNotMeteringPointEndUser)
+        }
+
+        test("returns validation error when redirectURI fails in validation") {
+            val model =
+                CreateRequestModel(
+                    authorizedParty = authorizedParty,
+                    requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
+                    meta =
+                    CreateRequestMeta(
+                        requestedBy = PartyIdentifier(PartyIdentifierType.OrganizationNumber, "987654321"),
+                        requestedFrom = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "12345678901"),
+                        requestedFromName = "Supplier AS",
+                        requestedTo = endUser,
+                        requestedForMeteringPointId = VALID_METERING_POINT,
+                        requestedForMeteringPointAddress = "Some address",
+                        balanceSupplierName = "Supplier",
+                        balanceSupplierContractName = "Contract",
+                        redirectURI = "example.com",
+                    ),
+                )
+
+            val result = handler.validateAndReturnRequestCommand(model)
+
+            result.shouldBeLeft(ChangeOfSupplierValidationError.InvalidRedirectURI)
         }
 
         test("builds RequestCommand for valid input") {
@@ -141,6 +168,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                         requestedForMeteringPointAddress = "Some address",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
+                        redirectURI = "https://example.com",
                     ),
                 )
 
@@ -156,5 +184,6 @@ class ChangeOfSupplierBusinessHandlerTest :
             metaAttributes["requestedForMeteringPointId"] shouldBe VALID_METERING_POINT
             metaAttributes["requestedForMeteringPointAddress"] shouldBe "Some address"
             metaAttributes["balanceSupplierContractName"] shouldBe "Contract"
+            metaAttributes["redirectURI"] shouldBe "https://example.com"
         }
     })

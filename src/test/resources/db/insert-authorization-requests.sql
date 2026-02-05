@@ -218,7 +218,8 @@ VALUES ('4f71d596-99e4-415e-946d-7352c1a40c53', 'requestedForMeteringPointAddres
 INSERT INTO auth.authorization_request_property(authorization_request_id, key, value)
 VALUES ('4f71d596-99e4-415e-946d-7352c1a40c53', 'balanceSupplierName', 'Example Energy AS');
 INSERT INTO auth.authorization_request_property(authorization_request_id, key, value)
-VALUES ('4f71d596-99e4-415e-946d-7352c1a40c53', 'balanceSupplierContractName', 'ExampleSupplierContract');
+VALUES ('4f71d596-99e4-415e-946d-7352c1a40c53', 'balanceSupplierContractName', 'ExampleSupplierContract'),
+      ('4f71d596-99e4-415e-946d-7352c1a40c53', 'redirectURI', 'https://example.com/redirect');
 
 INSERT INTO auth.authorization_request_property(authorization_request_id, key, value)
 VALUES ('4f71d596-99e4-415e-946d-7252c1a40c50', 'requestedFromName', 'Kari Normann');

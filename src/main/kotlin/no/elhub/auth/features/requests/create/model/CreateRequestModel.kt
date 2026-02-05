@@ -27,6 +27,7 @@ data class CreateRequestMeta(
     val balanceSupplierName: String,
     val balanceSupplierContractName: String,
     val startDate: LocalDate? = null,
+    val redirectURI: String,
 )
 
 @OptIn(ExperimentalTime::class)

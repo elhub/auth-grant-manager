@@ -50,6 +50,9 @@
             },
             "requestedTo": {
               "$ref": "../authorization-common.schema.json#/$defs/requestedTo"
+            },
+            "redirectURI": {
+              "$ref": "../authorization-common.schema.json#/$defs/redirectURI"
             }
           }
         }
