@@ -566,8 +566,8 @@ class AuthorizationDocumentRouteTest :
         }
     })
 
-private const val REQUESTED_FROM_NIN = "12010180315"
-private const val REQUESTED_TO_NIN = "21038140997"
+private const val REQUESTED_FROM_NIN = "02916297702"
+private const val REQUESTED_TO_NIN = "14810797496"
 
 private class TestDocumentBusinessHandler : DocumentBusinessHandler {
     override suspend fun validateAndReturnDocumentCommand(
