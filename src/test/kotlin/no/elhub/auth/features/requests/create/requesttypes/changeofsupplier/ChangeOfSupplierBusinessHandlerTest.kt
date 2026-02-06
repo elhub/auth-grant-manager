@@ -9,22 +9,22 @@ import io.mockk.coEvery
 import io.mockk.mockk
 import no.elhub.auth.features.businessprocesses.changeofsupplier.ChangeOfSupplierBusinessHandler
 import no.elhub.auth.features.businessprocesses.changeofsupplier.ChangeOfSupplierValidationError
-import no.elhub.auth.features.businessprocesses.structuredata.BasicAuthConfig
-import no.elhub.auth.features.businessprocesses.structuredata.MeteringPointsApi
-import no.elhub.auth.features.businessprocesses.structuredata.MeteringPointsApiConfig
-import no.elhub.auth.features.businessprocesses.structuredata.MeteringPointsServiceTestContainer
-import no.elhub.auth.features.businessprocesses.structuredata.MeteringPointsServiceTestContainerExtension
-import no.elhub.auth.features.businessprocesses.structuredata.MeteringPointsServiceTestData.ANOTHER_END_USER_ID
-import no.elhub.auth.features.businessprocesses.structuredata.MeteringPointsServiceTestData.END_USER_ID
-import no.elhub.auth.features.businessprocesses.structuredata.MeteringPointsServiceTestData.SHARED_END_USER_ID
-import no.elhub.auth.features.businessprocesses.structuredata.MeteringPointsServiceTestData.VALID_METERING_POINT
-import no.elhub.auth.features.businessprocesses.structuredata.meteringPointsServiceHttpClient
-import no.elhub.auth.features.common.Person
-import no.elhub.auth.features.common.PersonService
+import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.BasicAuthConfig
+import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsApi
+import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsApiConfig
+import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceTestContainer
+import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceTestContainerExtension
+import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceTestData.ANOTHER_END_USER_ID
+import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceTestData.END_USER_ID
+import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceTestData.SHARED_END_USER_ID
+import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceTestData.VALID_METERING_POINT
+import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.meteringPointsServiceHttpClient
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
 import no.elhub.auth.features.common.party.PartyType
+import no.elhub.auth.features.common.person.Person
+import no.elhub.auth.features.common.person.PersonService
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.create.model.CreateRequestMeta
 import no.elhub.auth.features.requests.create.model.CreateRequestModel
@@ -65,13 +65,14 @@ class ChangeOfSupplierBusinessHandlerTest :
                     meta =
                     CreateRequestMeta(
                         requestedBy = PartyIdentifier(PartyIdentifierType.OrganizationNumber, "987654321"),
-                        requestedFrom = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "12345678901"),
+                        requestedFrom = endUser,
                         requestedFromName = "",
                         requestedTo = endUser,
                         requestedForMeteringPointId = VALID_METERING_POINT,
                         requestedForMeteringPointAddress = "Some address",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
+                        redirectURI = "https://example.com",
                     ),
                 )
 
@@ -80,7 +81,7 @@ class ChangeOfSupplierBusinessHandlerTest :
             result.shouldBeLeft(ChangeOfSupplierValidationError.MissingRequestedFromName)
         }
 
-        test("returns validation error when requestedTo is not related to the metering point") {
+        test("returns validation error when requestedFrom is not related to the metering point") {
             val model =
                 CreateRequestModel(
                     authorizedParty = authorizedParty,
@@ -88,22 +89,23 @@ class ChangeOfSupplierBusinessHandlerTest :
                     meta =
                     CreateRequestMeta(
                         requestedBy = PartyIdentifier(PartyIdentifierType.OrganizationNumber, "987654321"),
-                        requestedFrom = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "12345678901"),
+                        requestedFrom = anotherEndUser,
                         requestedFromName = "Supplier AS",
                         requestedTo = anotherEndUser,
                         requestedForMeteringPointId = VALID_METERING_POINT,
                         requestedForMeteringPointAddress = "Some address",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
+                        redirectURI = "https://example.com",
                     ),
                 )
 
             val result = handler.validateAndReturnRequestCommand(model)
 
-            result.shouldBeLeft(ChangeOfSupplierValidationError.RequestedToNotMeteringPointEndUser)
+            result.shouldBeLeft(ChangeOfSupplierValidationError.RequestedFromNotMeteringPointEndUser)
         }
 
-        test("returns validation error when requestedTo is user who has access to the metering point") {
+        test("returns validation error when requestedFrom is user who has access to the metering point") {
             val model =
                 CreateRequestModel(
                     authorizedParty = authorizedParty,
@@ -111,19 +113,44 @@ class ChangeOfSupplierBusinessHandlerTest :
                     meta =
                     CreateRequestMeta(
                         requestedBy = PartyIdentifier(PartyIdentifierType.OrganizationNumber, "987654321"),
-                        requestedFrom = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "12345678901"),
+                        requestedFrom = sharedEndUser,
                         requestedFromName = "Supplier AS",
                         requestedTo = sharedEndUser,
                         requestedForMeteringPointId = VALID_METERING_POINT,
                         requestedForMeteringPointAddress = "Some address",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
+                        redirectURI = "https://example.com",
                     ),
                 )
 
             val result = handler.validateAndReturnRequestCommand(model)
 
-            result.shouldBeLeft(ChangeOfSupplierValidationError.RequestedToNotMeteringPointEndUser)
+            result.shouldBeLeft(ChangeOfSupplierValidationError.RequestedFromNotMeteringPointEndUser)
+        }
+
+        test("returns validation error when redirectURI fails in validation") {
+            val model =
+                CreateRequestModel(
+                    authorizedParty = authorizedParty,
+                    requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
+                    meta =
+                    CreateRequestMeta(
+                        requestedBy = PartyIdentifier(PartyIdentifierType.OrganizationNumber, "987654321"),
+                        requestedFrom = endUser,
+                        requestedFromName = "Supplier AS",
+                        requestedTo = endUser,
+                        requestedForMeteringPointId = VALID_METERING_POINT,
+                        requestedForMeteringPointAddress = "Some address",
+                        balanceSupplierName = "Supplier",
+                        balanceSupplierContractName = "Contract",
+                        redirectURI = "example.com",
+                    ),
+                )
+
+            val result = handler.validateAndReturnRequestCommand(model)
+
+            result.shouldBeLeft(ChangeOfSupplierValidationError.InvalidRedirectURI)
         }
 
         test("builds RequestCommand for valid input") {
@@ -134,13 +161,14 @@ class ChangeOfSupplierBusinessHandlerTest :
                     meta =
                     CreateRequestMeta(
                         requestedBy = PartyIdentifier(PartyIdentifierType.OrganizationNumber, "987654321"),
-                        requestedFrom = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "12345678901"),
+                        requestedFrom = endUser,
                         requestedFromName = "Supplier AS",
                         requestedTo = endUser,
                         requestedForMeteringPointId = VALID_METERING_POINT,
                         requestedForMeteringPointAddress = "Some address",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
+                        redirectURI = "https://example.com",
                     ),
                 )
 
@@ -156,5 +184,6 @@ class ChangeOfSupplierBusinessHandlerTest :
             metaAttributes["requestedForMeteringPointId"] shouldBe VALID_METERING_POINT
             metaAttributes["requestedForMeteringPointAddress"] shouldBe "Some address"
             metaAttributes["balanceSupplierContractName"] shouldBe "Contract"
+            metaAttributes["redirectURI"] shouldBe "https://example.com"
         }
     })

@@ -33,11 +33,7 @@
         },
         "relationships": {
           "$ref": "authorization-request-common.schema.json#/$defs/relationships",
-          "required": [
-            "requestedBy",
-            "requestedFrom",
-            "requestedTo"
-          ]
+          "required": ["requestedBy", "requestedFrom", "requestedTo"]
         },
         "meta": {
           "type": "object",
@@ -58,17 +54,23 @@
             },
             "balanceSupplierContractName": {
               "$ref": "../authorization-common.schema.json#/$defs/balanceSupplierContractName"
+            },
+            "redirectURI": {
+              "$ref": "../authorization-common.schema.json#/$defs/redirectURI"
             }
           }
         },
         "links": {
-          "$ref": "authorization-request-common.schema.json#/$defs/links",
-          "required": [
-            "self"
+          "description": "Links related to the primary data.",
+          "$ref": "../json-api-framework.schema.json#/$defs/topLevelLinks",
+          "examples": [
+            {
+              "self": "/access/v0/authorization-requests/123e4567-e89b-12d3-a456-426614174000"
+            }
           ]
-        },
-        "additionalProperties": false
-      }
+        }
+      },
+      "additionalProperties": false
     },
     "links": {
       "description": "Links related to the primary data.",
@@ -83,9 +85,5 @@
       "$ref": "../json-api-framework.schema.json#/$defs/topLevelMeta"
     }
   },
-  "required": [
-    "data",
-    "links",
-    "meta"
-  ]
+  "required": ["data", "links", "meta"]
 }

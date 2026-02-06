@@ -27,17 +27,19 @@ data class MoveInBusinessMeta(
     val balanceSupplierName: String,
     val balanceSupplierContractName: String,
     val startDate: LocalDate,
+    val redirectURI: String? = null,
 ) : RequestMetaMarker,
     DocumentMetaMarker {
     override fun toMetaAttributes(): Map<String, String> =
-        mapOf(
-            "requestedFromName" to requestedFromName,
-            "requestedForMeteringPointId" to requestedForMeteringPointId,
-            "requestedForMeteringPointAddress" to requestedForMeteringPointAddress,
-            "balanceSupplierContractName" to balanceSupplierContractName,
-            "balanceSupplierName" to balanceSupplierName,
-            "startDate" to startDate.toString(),
-        )
+        buildMap {
+            put("requestedFromName", requestedFromName)
+            put("requestedForMeteringPointId", requestedForMeteringPointId)
+            put("requestedForMeteringPointAddress", requestedForMeteringPointAddress)
+            put("balanceSupplierContractName", balanceSupplierContractName)
+            put("balanceSupplierName", balanceSupplierName)
+            put("startDate", startDate.toString())
+            redirectURI?.let { put("redirectURI", it) }
+        }
 }
 
 fun MoveInBusinessCommand.toRequestCommand(): RequestCommand =

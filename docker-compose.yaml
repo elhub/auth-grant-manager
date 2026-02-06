@@ -2,7 +2,7 @@ services:
   db:
     image: postgres:18
     ports:
-      - "5432:5432"
+      - '5432:5432'
     environment:
       POSTGRES_DB: auth
       POSTGRES_USER: $DB_USERNAME
@@ -11,11 +11,11 @@ services:
   vault-transit-mock:
     image: docker.jfrog.elhub.cloud/frzq0sxltynr/auth/vault-transit-secrets-engine-mock:0.1.0-2
     ports:
-      - "8200:8200"
+      - '8200:8200'
     volumes:
-      - "${PRIVATE_KEY_PATH}:/key/private.pem:ro"
+      - '${PRIVATE_KEY_PATH}:/key/private.pem:ro'
 
   auth-persons-mock:
-    image: docker.jfrog.elhub.cloud/frzq0sxltynr/auth/auth-persons-mock:0.1.17-29
+    image: docker.jfrog.elhub.cloud/frzq0sxltynr/auth/auth-persons-mock:0.1.37-64
     ports:
-      - "8081:8080"
+      - '8081:8080'

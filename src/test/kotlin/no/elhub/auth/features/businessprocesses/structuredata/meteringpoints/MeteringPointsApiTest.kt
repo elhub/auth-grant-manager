@@ -1,4 +1,4 @@
-package no.elhub.auth.features.businessprocesses.structuredata
+package no.elhub.auth.features.businessprocesses.structuredata.meteringpoints
 
 import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight

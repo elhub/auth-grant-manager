@@ -192,7 +192,7 @@ class PDPAuthorizationProviderTest : FunSpec({
             )
         }
 
-        test("returns ActingFunctionMissing when PDP response lacks actingFunction") {
+        test("returns InvalidPdpResponseActingFunctionMissing when PDP response lacks actingFunction") {
             val response = runProviderMethod(
                 method = PDPAuthorizationProvider::authorizeMaskinporten,
                 headers = validHeadersForMaskinporten,
@@ -203,9 +203,9 @@ class PDPAuthorizationProviderTest : FunSpec({
                     )
                 )
             )
-            response.shouldBeLeft(AuthError.ActingFunctionMissing)
+            response.shouldBeLeft(AuthError.InvalidPdpResponseActingFunctionMissing)
         }
-        test("returns ActingGlnMissing when PDP response lacks actingGln") {
+        test("returns InvalidPdpResponseActingGlnMissing when PDP response lacks actingGln") {
             val response = runProviderMethod(
                 method = PDPAuthorizationProvider::authorizeMaskinporten,
                 headers = validHeadersForMaskinporten,
@@ -216,7 +216,7 @@ class PDPAuthorizationProviderTest : FunSpec({
                     )
                 )
             )
-            response.shouldBeLeft(AuthError.ActingGlnMissing)
+            response.shouldBeLeft(AuthError.InvalidPdpResponseActingGlnMissing)
         }
 
         test("returns UnknownError when PDP response includes input failed") {
@@ -230,7 +230,7 @@ class PDPAuthorizationProviderTest : FunSpec({
                     )
                 )
             )
-            response.shouldBeLeft(AuthError.UnknownError)
+            response.shouldBeLeft(AuthError.NotAuthorized)
         }
 
         test("returns ActingFunctionNotSupported when PDP response includes unsupported actingFunction") {

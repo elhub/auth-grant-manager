@@ -15,10 +15,10 @@ import no.elhub.auth.features.businessprocesses.changeofsupplier.domain.ChangeOf
 import no.elhub.auth.features.businessprocesses.changeofsupplier.domain.toChangeOfSupplierBusinessModel
 import no.elhub.auth.features.businessprocesses.changeofsupplier.domain.toDocumentCommand
 import no.elhub.auth.features.businessprocesses.changeofsupplier.domain.toRequestCommand
-import no.elhub.auth.features.businessprocesses.structuredata.MeteringPointsService
-import no.elhub.auth.features.businessprocesses.structuredata.domain.Attributes.AccessType.SHARED
+import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.AccessType.SHARED
+import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsService
 import no.elhub.auth.features.common.CreateScopeData
-import no.elhub.auth.features.common.PersonService
+import no.elhub.auth.features.common.person.PersonService
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.DocumentBusinessHandler
 import no.elhub.auth.features.documents.create.CreateError
@@ -91,8 +91,8 @@ class ChangeOfSupplierBusinessHandler(
         }
 
         // temporary mapping until model has elhubInternalId instead of NIN
-        val endUserElhubInternalId = personService.findOrCreateByNin(model.requestedTo.idValue).getOrNull()?.internalId
-            ?: return ChangeOfSupplierValidationError.RequestedToNotFound.left()
+        val endUserElhubInternalId = personService.findOrCreateByNin(model.requestedFrom.idValue).getOrNull()?.internalId
+            ?: return ChangeOfSupplierValidationError.RequestedFromNotFound.left()
 
         val meteringPoint = meteringPointsService.getMeteringPointByIdAndElhubInternalId(
             meteringPointId = model.requestedForMeteringPointId,
@@ -105,7 +105,12 @@ class ChangeOfSupplierBusinessHandler(
         val meteringPointResponse = meteringPoint.getOrNull()!!
 
         if (meteringPointResponse.data.relationships.endUser == null || meteringPointResponse.data.attributes?.accessType == SHARED) {
-            return ChangeOfSupplierValidationError.RequestedToNotMeteringPointEndUser.left()
+            return ChangeOfSupplierValidationError.RequestedFromNotMeteringPointEndUser.left()
+        }
+
+        // temporary validation for URI until it is fetched from EDIEL and validated against that value instead
+        if (model.redirectURI != null && !model.redirectURI.contains("http")) {
+            return ChangeOfSupplierValidationError.InvalidRedirectURI.left()
         }
 
         if (model.requestedForMeteringPointAddress.isBlank()) {
@@ -135,6 +140,7 @@ class ChangeOfSupplierBusinessHandler(
                 requestedForMeteringPointAddress = model.requestedForMeteringPointAddress,
                 balanceSupplierContractName = model.balanceSupplierContractName,
                 balanceSupplierName = model.balanceSupplierName,
+                redirectURI = model.redirectURI,
             )
 
         val scopes = listOf(

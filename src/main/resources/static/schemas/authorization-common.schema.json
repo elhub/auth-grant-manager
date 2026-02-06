@@ -21,7 +21,7 @@
     },
     "balanceSupplierName": {
       "type": "string",
-      "description": "The name of the balance supplier currently associated with the metering point.",
+      "description": "The name of the balance supplier.",
       "examples": ["Example Supplier AS"]
     },
     "balanceSupplierContractName": {
@@ -33,9 +33,7 @@
       "type": "string",
       "format": "date",
       "description": "The requested move-in start date.",
-      "examples": [
-        "2024-01-01"
-      ]
+      "examples": ["2024-01-01"]
     },
     "requestedBy": {
       "description": "The party identifier of the actor who initiated the request (e.g., the GLN of the requesting balance supplier).",
@@ -52,6 +50,12 @@
     "signedBy": {
       "description": "The party identifier of the actual signer (populated after the document is signed).",
       "$ref": "elhub-common.schema.json#/$defs/partyIdentifier"
+    },
+    "redirectURI": {
+      "type": "string",
+      "format": "uri",
+      "description": "The URI to which the user should be redirected after performing an action in minside.",
+      "examples": ["https://example.com/redirect"]
     }
   }
 }

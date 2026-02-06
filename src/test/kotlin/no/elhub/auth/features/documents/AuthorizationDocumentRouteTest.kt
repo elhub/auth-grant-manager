@@ -68,7 +68,6 @@ import org.koin.ktor.plugin.koinModule
 import java.time.Duration
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
-import java.util.UUID
 import kotlin.test.assertTrue
 import kotlin.time.Clock
 import kotlin.time.Instant
@@ -93,14 +92,6 @@ class AuthorizationDocumentRouteTest :
                 token = "maskinporten",
                 actingGln = "0107000000021",
                 actingFunction = "BalanceSupplier"
-            )
-            AuthPersonsTestContainer.registerPersonMapping(
-                nin = REQUESTED_FROM_NIN,
-                personId = REQUESTED_FROM_ID
-            )
-            AuthPersonsTestContainer.registerPersonMapping(
-                nin = REQUESTED_TO_NIN,
-                personId = REQUESTED_TO_ID
             )
         }
 
@@ -575,10 +566,8 @@ class AuthorizationDocumentRouteTest :
         }
     })
 
-private const val REQUESTED_FROM_NIN = "98765432109"
-private const val REQUESTED_TO_NIN = "00011122233"
-private val REQUESTED_FROM_ID = UUID.fromString("5c9f5b1c-7a01-4d8d-9f27-9de7479adf52")
-private val REQUESTED_TO_ID = UUID.fromString("d6fe3b43-0d6b-4e7c-8bd1-12a2ed05a5f6")
+private const val REQUESTED_FROM_NIN = "02916297702"
+private const val REQUESTED_TO_NIN = "14810797496"
 
 private class TestDocumentBusinessHandler : DocumentBusinessHandler {
     override suspend fun validateAndReturnDocumentCommand(
