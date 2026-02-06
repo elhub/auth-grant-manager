@@ -53,12 +53,12 @@ sealed class ChangeOfSupplierValidationError(
         ChangeOfSupplierValidationError("invalid_requested_from", "Requested from has invalid format")
 
     @Serializable
-    data object RequestedToNotFound :
-        ChangeOfSupplierValidationError("requested_to_not_found", "Requested to id not found")
+    data object RequestedFromNotFound :
+        ChangeOfSupplierValidationError("requested_from_not_found", "Requested from id not found")
 
     @Serializable
-    data object RequestedToNotMeteringPointEndUser :
-        ChangeOfSupplierValidationError("requested_to_not_metering_point_end_user", "Requested to is not registered as end user of the metering point")
+    data object RequestedFromNotMeteringPointEndUser :
+        ChangeOfSupplierValidationError("requested_from_not_metering_point_end_user", "Requested from is not registered as end user of the metering point")
 
     @Serializable
     data object InvalidRedirectURI :
