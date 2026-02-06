@@ -65,7 +65,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                     meta =
                     CreateRequestMeta(
                         requestedBy = PartyIdentifier(PartyIdentifierType.OrganizationNumber, "987654321"),
-                        requestedFrom = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "12345678901"),
+                        requestedFrom = endUser,
                         requestedFromName = "",
                         requestedTo = endUser,
                         requestedForMeteringPointId = VALID_METERING_POINT,
@@ -81,7 +81,7 @@ class ChangeOfSupplierBusinessHandlerTest :
             result.shouldBeLeft(ChangeOfSupplierValidationError.MissingRequestedFromName)
         }
 
-        test("returns validation error when requestedTo is not related to the metering point") {
+        test("returns validation error when requestedFrom is not related to the metering point") {
             val model =
                 CreateRequestModel(
                     authorizedParty = authorizedParty,
@@ -89,7 +89,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                     meta =
                     CreateRequestMeta(
                         requestedBy = PartyIdentifier(PartyIdentifierType.OrganizationNumber, "987654321"),
-                        requestedFrom = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "12345678901"),
+                        requestedFrom = anotherEndUser,
                         requestedFromName = "Supplier AS",
                         requestedTo = anotherEndUser,
                         requestedForMeteringPointId = VALID_METERING_POINT,
@@ -102,10 +102,10 @@ class ChangeOfSupplierBusinessHandlerTest :
 
             val result = handler.validateAndReturnRequestCommand(model)
 
-            result.shouldBeLeft(ChangeOfSupplierValidationError.RequestedToNotMeteringPointEndUser)
+            result.shouldBeLeft(ChangeOfSupplierValidationError.RequestedFromNotMeteringPointEndUser)
         }
 
-        test("returns validation error when requestedTo is user who has access to the metering point") {
+        test("returns validation error when requestedFrom is user who has access to the metering point") {
             val model =
                 CreateRequestModel(
                     authorizedParty = authorizedParty,
@@ -113,7 +113,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                     meta =
                     CreateRequestMeta(
                         requestedBy = PartyIdentifier(PartyIdentifierType.OrganizationNumber, "987654321"),
-                        requestedFrom = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "12345678901"),
+                        requestedFrom = sharedEndUser,
                         requestedFromName = "Supplier AS",
                         requestedTo = sharedEndUser,
                         requestedForMeteringPointId = VALID_METERING_POINT,
@@ -126,7 +126,7 @@ class ChangeOfSupplierBusinessHandlerTest :
 
             val result = handler.validateAndReturnRequestCommand(model)
 
-            result.shouldBeLeft(ChangeOfSupplierValidationError.RequestedToNotMeteringPointEndUser)
+            result.shouldBeLeft(ChangeOfSupplierValidationError.RequestedFromNotMeteringPointEndUser)
         }
 
         test("returns validation error when redirectURI fails in validation") {
@@ -137,7 +137,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                     meta =
                     CreateRequestMeta(
                         requestedBy = PartyIdentifier(PartyIdentifierType.OrganizationNumber, "987654321"),
-                        requestedFrom = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "12345678901"),
+                        requestedFrom = endUser,
                         requestedFromName = "Supplier AS",
                         requestedTo = endUser,
                         requestedForMeteringPointId = VALID_METERING_POINT,
@@ -161,7 +161,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                     meta =
                     CreateRequestMeta(
                         requestedBy = PartyIdentifier(PartyIdentifierType.OrganizationNumber, "987654321"),
-                        requestedFrom = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "12345678901"),
+                        requestedFrom = endUser,
                         requestedFromName = "Supplier AS",
                         requestedTo = endUser,
                         requestedForMeteringPointId = VALID_METERING_POINT,
