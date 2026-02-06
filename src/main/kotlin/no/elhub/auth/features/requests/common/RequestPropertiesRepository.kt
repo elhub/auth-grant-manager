@@ -4,11 +4,13 @@ import arrow.core.Either
 import arrow.core.raise.either
 import no.elhub.auth.features.common.RepositoryError
 import no.elhub.auth.features.common.RepositoryWriteError
-import org.jetbrains.exposed.sql.ResultRow
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.batchInsert
-import org.jetbrains.exposed.sql.javatime.timestampWithTimeZone
-import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.v1.core.ResultRow
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.java.javaUUID
+import org.jetbrains.exposed.v1.javatime.timestampWithTimeZone
+import org.jetbrains.exposed.v1.jdbc.batchInsert
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.util.UUID
@@ -39,7 +41,7 @@ class ExposedRequestPropertiesRepository : RequestPropertiesRepository {
 }
 
 object AuthorizationRequestPropertyTable : Table("auth.authorization_request_property") {
-    val requestId = uuid("authorization_request_id").references(AuthorizationRequestTable.id)
+    val requestId = javaUUID("authorization_request_id").references(AuthorizationRequestTable.id)
     val key = varchar("key", 64)
     val value = text("value")
     val createdAt = timestampWithTimeZone("created_at").default(OffsetDateTime.now(ZoneId.of("Europe/Oslo")))

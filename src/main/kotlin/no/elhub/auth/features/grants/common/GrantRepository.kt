@@ -15,22 +15,25 @@ import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.AuthorizationGrant.SourceType
 import no.elhub.auth.features.grants.AuthorizationGrant.Status
 import no.elhub.auth.features.grants.AuthorizationScope
-import org.jetbrains.exposed.dao.id.UUIDTable
-import org.jetbrains.exposed.sql.ReferenceOption
-import org.jetbrains.exposed.sql.ResultRow
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.batchInsert
-import org.jetbrains.exposed.sql.insertReturning
-import org.jetbrains.exposed.sql.javatime.timestamp
-import org.jetbrains.exposed.sql.javatime.timestampWithTimeZone
-import org.jetbrains.exposed.sql.or
-import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.update
+import org.jetbrains.exposed.v1.core.ReferenceOption
+import org.jetbrains.exposed.v1.core.ResultRow
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.java.javaUUID
+import org.jetbrains.exposed.v1.core.or
+import org.jetbrains.exposed.v1.javatime.timestamp
+import org.jetbrains.exposed.v1.javatime.timestampWithTimeZone
+import org.jetbrains.exposed.v1.jdbc.batchInsert
+import org.jetbrains.exposed.v1.jdbc.insertReturning
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.update
 import org.slf4j.LoggerFactory
 import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.util.UUID
+import kotlin.collections.listOf
 
 interface GrantRepository {
     fun find(grantId: UUID): Either<RepositoryReadError, AuthorizationGrant>
@@ -304,9 +307,9 @@ class ExposedGrantRepository(
 }
 
 object AuthorizationGrantScopeTable : Table("auth.authorization_grant_scope") {
-    val authorizationGrantId = uuid("authorization_grant_id")
+    val authorizationGrantId = javaUUID("authorization_grant_id")
         .references(AuthorizationGrantTable.id, onDelete = ReferenceOption.CASCADE)
-    val authorizationScopeId = uuid("authorization_scope_id")
+    val authorizationScopeId = javaUUID("authorization_scope_id")
         .references(AuthorizationScopeTable.id, onDelete = ReferenceOption.CASCADE)
     val createdAt = timestamp("created_at").clientDefault { java.time.Instant.now() }
     override val primaryKey = PrimaryKey(authorizationGrantId, authorizationScopeId)
@@ -320,9 +323,9 @@ object AuthorizationGrantTable : UUIDTable("auth.authorization_grant") {
             fromDb = { value -> Status.valueOf(value as String) },
             toDb = { PGEnum("authorization_grant_status", it) },
         )
-    val grantedFor = uuid("granted_for").references(AuthorizationPartyTable.id)
-    val grantedBy = uuid("granted_by").references(AuthorizationPartyTable.id)
-    val grantedTo = uuid("granted_to").references(AuthorizationPartyTable.id)
+    val grantedFor = javaUUID("granted_for").references(AuthorizationPartyTable.id)
+    val grantedBy = javaUUID("granted_by").references(AuthorizationPartyTable.id)
+    val grantedTo = javaUUID("granted_to").references(AuthorizationPartyTable.id)
     val grantedAt = timestampWithTimeZone("granted_at").default(OffsetDateTime.now(ZoneId.of("Europe/Oslo")))
     val validFrom = timestampWithTimeZone("valid_from").default(OffsetDateTime.now(ZoneId.of("Europe/Oslo")))
     val validTo = timestampWithTimeZone("valid_to").default(OffsetDateTime.now(ZoneId.of("Europe/Oslo")))
@@ -333,7 +336,7 @@ object AuthorizationGrantTable : UUIDTable("auth.authorization_grant") {
             fromDb = { value -> SourceType.valueOf(value as String) },
             toDb = { PGEnum("authorization_grant_source_type", it) },
         )
-    val sourceId = uuid("source_id")
+    val sourceId = javaUUID("source_id")
 }
 
 object AuthorizationScopeTable : UUIDTable(name = "auth.authorization_scope") {

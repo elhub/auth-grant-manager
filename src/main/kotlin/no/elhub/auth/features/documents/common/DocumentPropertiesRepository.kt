@@ -1,11 +1,13 @@
 package no.elhub.auth.features.documents.common
 
-import org.jetbrains.exposed.sql.ReferenceOption
-import org.jetbrains.exposed.sql.ResultRow
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.batchInsert
-import org.jetbrains.exposed.sql.javatime.timestamp
-import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.v1.core.ReferenceOption
+import org.jetbrains.exposed.v1.core.ResultRow
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.java.javaUUID
+import org.jetbrains.exposed.v1.javatime.timestamp
+import org.jetbrains.exposed.v1.jdbc.batchInsert
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import java.time.Instant
 import java.util.UUID
 
@@ -32,7 +34,7 @@ class ExposedDocumentPropertiesRepository : DocumentPropertiesRepository {
 }
 
 object AuthorizationDocumentPropertyTable : Table("auth.authorization_document_property") {
-    val documentId = uuid("authorization_document_id")
+    val documentId = javaUUID("authorization_document_id")
         .references(AuthorizationDocumentTable.id, onDelete = ReferenceOption.CASCADE)
     val key = varchar("key", length = 64)
     val value = text("value")

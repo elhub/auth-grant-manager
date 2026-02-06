@@ -18,17 +18,19 @@ import no.elhub.auth.features.grants.common.AuthorizationScopeTable.permissionTy
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.common.AuthorizationRequestScopeTable.authorizationRequestId
 import no.elhub.auth.features.requests.common.AuthorizationRequestScopeTable.authorizationScopeId
-import org.jetbrains.exposed.dao.id.UUIDTable
-import org.jetbrains.exposed.sql.ReferenceOption
-import org.jetbrains.exposed.sql.ResultRow
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.batchInsert
-import org.jetbrains.exposed.sql.insertReturning
-import org.jetbrains.exposed.sql.javatime.timestamp
-import org.jetbrains.exposed.sql.javatime.timestampWithTimeZone
-import org.jetbrains.exposed.sql.or
-import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.update
+import org.jetbrains.exposed.v1.core.ReferenceOption
+import org.jetbrains.exposed.v1.core.ResultRow
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.java.javaUUID
+import org.jetbrains.exposed.v1.core.or
+import org.jetbrains.exposed.v1.javatime.timestamp
+import org.jetbrains.exposed.v1.javatime.timestampWithTimeZone
+import org.jetbrains.exposed.v1.jdbc.batchInsert
+import org.jetbrains.exposed.v1.jdbc.insertReturning
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.update
 import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset
@@ -249,9 +251,9 @@ class ExposedRequestRepository(
 }
 
 object AuthorizationRequestScopeTable : Table("auth.authorization_request_scope") {
-    val authorizationRequestId = uuid("authorization_request_id")
+    val authorizationRequestId = javaUUID("authorization_request_id")
         .references(AuthorizationRequestTable.id, onDelete = ReferenceOption.CASCADE)
-    val authorizationScopeId = uuid("authorization_scope_id")
+    val authorizationScopeId = javaUUID("authorization_scope_id")
         .references(AuthorizationScopeTable.id, onDelete = ReferenceOption.CASCADE)
     val createdAt = timestamp("created_at").clientDefault { java.time.Instant.now() }
     override val primaryKey = PrimaryKey(authorizationRequestId, authorizationScopeId)
@@ -272,10 +274,10 @@ object AuthorizationRequestTable : UUIDTable("auth.authorization_request") {
             fromDb = { value -> DatabaseRequestStatus.valueOf(value as String) },
             toDb = { PGEnum("authorization_request_status", it) },
         )
-    val requestedBy = uuid("requested_by").references(AuthorizationPartyTable.id)
-    val requestedFrom = uuid("requested_from").references(AuthorizationPartyTable.id)
-    val requestedTo = uuid("requested_to").references(AuthorizationPartyTable.id)
-    val approvedBy = uuid("approved_by").references(AuthorizationPartyTable.id).nullable()
+    val requestedBy = javaUUID("requested_by").references(AuthorizationPartyTable.id)
+    val requestedFrom = javaUUID("requested_from").references(AuthorizationPartyTable.id)
+    val requestedTo = javaUUID("requested_to").references(AuthorizationPartyTable.id)
+    val approvedBy = javaUUID("approved_by").references(AuthorizationPartyTable.id).nullable()
     val createdAt = timestampWithTimeZone("created_at").default(OffsetDateTime.now(ZoneId.of("Europe/Oslo")))
     val updatedAt = timestampWithTimeZone("updated_at").default(OffsetDateTime.now(ZoneId.of("Europe/Oslo")))
     val validTo = timestampWithTimeZone("valid_to")
