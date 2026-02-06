@@ -9,8 +9,7 @@ import org.testcontainers.utility.DockerImageName
 import java.time.Duration
 
 object AuthPersonsTestContainer {
-
-    private val image = DockerImageName.parse("docker.jfrog.elhub.cloud/frzq0sxltynr/auth/auth-persons-mock:0.1.28-52")
+    private val image = DockerImageName.parse("docker.jfrog.elhub.cloud/frzq0sxltynr/auth/auth-persons-mock:0.1.37-64")
     private var container: GenericContainer<*>? = null
 
     fun start() {
