@@ -25,6 +25,10 @@ sealed class MoveInValidationError(
         MoveInValidationError("missing_start_date", "Start date is missing")
 
     @Serializable
+    data object StartDateNotBackInTime :
+        MoveInValidationError("start_date_not_back_in_time", "Start date must be today or back in time")
+
+    @Serializable
     data object MissingMeteringPointId :
         MoveInValidationError("missing_metering_point_id", "Metering point id is missing")
 

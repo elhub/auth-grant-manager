@@ -32,7 +32,7 @@
     "startDate": {
       "type": "string",
       "format": "date",
-      "description": "The requested move-in start date.",
+      "description": "The requested move-in start date. If set, must be today or earlier.",
       "examples": ["2024-01-01"]
     },
     "requestedBy": {
