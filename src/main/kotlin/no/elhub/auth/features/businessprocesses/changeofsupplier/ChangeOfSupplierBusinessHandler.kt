@@ -91,8 +91,8 @@ class ChangeOfSupplierBusinessHandler(
         }
 
         // temporary mapping until model has elhubInternalId instead of NIN
-        val endUserElhubInternalId = personService.findOrCreateByNin(model.requestedTo.idValue).getOrNull()?.internalId
-            ?: return ChangeOfSupplierValidationError.RequestedToNotFound.left()
+        val endUserElhubInternalId = personService.findOrCreateByNin(model.requestedFrom.idValue).getOrNull()?.internalId
+            ?: return ChangeOfSupplierValidationError.RequestedFromNotFound.left()
 
         val meteringPoint = meteringPointsService.getMeteringPointByIdAndElhubInternalId(
             meteringPointId = model.requestedForMeteringPointId,
@@ -105,7 +105,7 @@ class ChangeOfSupplierBusinessHandler(
         val meteringPointResponse = meteringPoint.getOrNull()!!
 
         if (meteringPointResponse.data.relationships.endUser == null || meteringPointResponse.data.attributes?.accessType == SHARED) {
-            return ChangeOfSupplierValidationError.RequestedToNotMeteringPointEndUser.left()
+            return ChangeOfSupplierValidationError.RequestedFromNotMeteringPointEndUser.left()
         }
 
         // temporary validation for URI until it is fetched from EDIEL and validated against that value instead

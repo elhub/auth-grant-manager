@@ -68,7 +68,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                     meta =
                     CreateRequestMeta(
                         requestedBy = VALID_PARTY,
-                        requestedFrom = VALID_PARTY,
+                        requestedFrom = END_USER,
                         requestedFromName = "",
                         requestedTo = END_USER,
                         requestedForMeteringPointId = VALID_METERING_POINT,
@@ -82,7 +82,7 @@ class ChangeOfSupplierBusinessHandlerTest :
             handler.validateAndReturnRequestCommand(model).shouldBeLeft(ChangeOfSupplierValidationError.MissingRequestedFromName)
         }
 
-        test("request validation fails when requestedTo is not related to metering point") {
+        test("request validation fails when requestedFrom is not related to metering point") {
             val model =
                 CreateRequestModel(
                     authorizedParty = AUTHORIZED_PARTY,
@@ -90,7 +90,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                     meta =
                     CreateRequestMeta(
                         requestedBy = VALID_PARTY,
-                        requestedFrom = VALID_PARTY,
+                        requestedFrom = ANOTHER_END_USER,
                         requestedFromName = "From",
                         requestedTo = ANOTHER_END_USER,
                         requestedForMeteringPointId = VALID_METERING_POINT,
@@ -101,10 +101,10 @@ class ChangeOfSupplierBusinessHandlerTest :
                     ),
                 )
 
-            handler.validateAndReturnRequestCommand(model).shouldBeLeft(ChangeOfSupplierValidationError.RequestedToNotMeteringPointEndUser)
+            handler.validateAndReturnRequestCommand(model).shouldBeLeft(ChangeOfSupplierValidationError.RequestedFromNotMeteringPointEndUser)
         }
 
-        test("request validation fails when requestedTo is has access to metering point but is not end user") {
+        test("request validation fails when requestedFrom has access to metering point but is not end user") {
             val model =
                 CreateRequestModel(
                     authorizedParty = AUTHORIZED_PARTY,
@@ -112,7 +112,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                     meta =
                     CreateRequestMeta(
                         requestedBy = VALID_PARTY,
-                        requestedFrom = VALID_PARTY,
+                        requestedFrom = SHARED_END_USER,
                         requestedFromName = "From",
                         requestedTo = SHARED_END_USER,
                         requestedForMeteringPointId = VALID_METERING_POINT,
@@ -123,7 +123,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                     ),
                 )
 
-            handler.validateAndReturnRequestCommand(model).shouldBeLeft(ChangeOfSupplierValidationError.RequestedToNotMeteringPointEndUser)
+            handler.validateAndReturnRequestCommand(model).shouldBeLeft(ChangeOfSupplierValidationError.RequestedFromNotMeteringPointEndUser)
         }
 
         test("request validation fails on invalid metering point") {
@@ -134,7 +134,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                     meta =
                     CreateRequestMeta(
                         requestedBy = VALID_PARTY,
-                        requestedFrom = VALID_PARTY,
+                        requestedFrom = END_USER,
                         requestedFromName = "From",
                         requestedTo = END_USER,
                         requestedForMeteringPointId = "123",
@@ -156,9 +156,9 @@ class ChangeOfSupplierBusinessHandlerTest :
                     meta =
                     CreateRequestMeta(
                         requestedBy = VALID_PARTY,
-                        requestedFrom = VALID_PARTY,
+                        requestedFrom = END_USER,
                         requestedFromName = "From",
-                        requestedTo = VALID_PARTY,
+                        requestedTo = END_USER,
                         requestedForMeteringPointId = NON_EXISTING_METERING_POINT,
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
@@ -178,9 +178,9 @@ class ChangeOfSupplierBusinessHandlerTest :
                     meta =
                     CreateRequestMeta(
                         requestedBy = VALID_PARTY,
-                        requestedFrom = VALID_PARTY,
+                        requestedFrom = END_USER,
                         requestedFromName = "From",
-                        requestedTo = VALID_PARTY,
+                        requestedTo = END_USER,
                         requestedForMeteringPointId = VALID_METERING_POINT,
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
@@ -200,9 +200,9 @@ class ChangeOfSupplierBusinessHandlerTest :
                     meta =
                     CreateRequestMeta(
                         requestedBy = VALID_PARTY,
-                        requestedFrom = VALID_PARTY,
+                        requestedFrom = END_USER,
                         requestedFromName = "From",
-                        requestedTo = VALID_PARTY,
+                        requestedTo = END_USER,
                         requestedForMeteringPointId = VALID_METERING_POINT,
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
