@@ -85,8 +85,6 @@ class MoveInBusinessHandler :
             return MoveInValidationError.MissingBalanceSupplierContractName.left()
         }
 
-        val startDate = model.startDate ?: return MoveInValidationError.MissingStartDate.left()
-
         if (model.requestedForMeteringPointId.isBlank()) {
             return MoveInValidationError.MissingMeteringPointId.left()
         }
@@ -113,6 +111,11 @@ class MoveInBusinessHandler :
 
         if (!model.requestedFrom.idValue.matches(Regex(REGEX_REQUESTED_FROM))) {
             return MoveInValidationError.InvalidRequestedFrom.left()
+        }
+
+        val startDate = model.startDate ?: return MoveInValidationError.MissingStartDate.left()
+        if (startDate >= today()) {
+            return MoveInValidationError.StartDateNotBackInTime.left()
         }
 
         val meta =

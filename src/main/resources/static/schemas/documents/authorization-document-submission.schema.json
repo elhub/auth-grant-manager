@@ -107,8 +107,7 @@
                   "requestedForMeteringPointId",
                   "requestedForMeteringPointAddress",
                   "balanceSupplierName",
-                  "balanceSupplierContractName",
-                  "startDate"
+                  "balanceSupplierContractName"
                 ]
               }
             }
