@@ -54,7 +54,7 @@ sealed class ChangeOfSupplierValidationError(
 
     @Serializable
     data object RequestedFromNotFound :
-        ChangeOfSupplierValidationError("requested_to_not_found", "Requested to id not found")
+        ChangeOfSupplierValidationError("requested_from_not_found", "Requested from id not found")
 
     @Serializable
     data object RequestedFromNotMeteringPointEndUser :
