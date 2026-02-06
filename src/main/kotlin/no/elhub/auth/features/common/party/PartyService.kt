@@ -17,7 +17,7 @@ class PartyService(
                         when (error) {
                             ClientError.InvalidNin -> PartyError.InvalidNin
 
-                            is ClientError.UnexpectedError, ClientError.RequestRejected
+                            is ClientError.UnexpectedError, ClientError.RequestRejected, ClientError.HeaderMissing
                             -> PartyError.PersonResolutionError
                         }
                     }
