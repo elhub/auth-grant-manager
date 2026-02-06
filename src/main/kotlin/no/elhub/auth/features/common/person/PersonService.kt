@@ -41,7 +41,7 @@ class ApiPersonService(
         val traceId = MDC.get(CALL_ID_MDC_KEY)
         val traceHeader = traceIdIsValid(traceId).getOrElse {
             logger.error("The required request header to auth-persons is missing! ")
-            return ClientError.HeaderMissing.left()
+            return ClientError.MissingHeader.left()
         }
 
         return Either.catch {
@@ -82,7 +82,7 @@ sealed class ClientError {
     data class UnexpectedError(val cause: Throwable) : ClientError()
     data object InvalidNin : ClientError()
     data object RequestRejected : ClientError()
-    data object HeaderMissing : ClientError()
+    data object MissingHeader : ClientError()
 }
 
 data class PersonApiConfig(
@@ -102,11 +102,11 @@ private suspend fun parseError(response: HttpResponse): JsonApiErrorObject? {
 
 private fun traceIdIsValid(traceId: String?): Either<ClientError, UUID> =
     if (traceId.isNullOrBlank()) {
-        ClientError.HeaderMissing.left()
+        ClientError.MissingHeader.left()
     } else {
         try {
             UUID.fromString(traceId).right()
         } catch (_: IllegalArgumentException) {
-            ClientError.HeaderMissing.left()
+            ClientError.MissingHeader.left()
         }
     }
