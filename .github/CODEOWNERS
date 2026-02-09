@@ -6,3 +6,9 @@
 
 # Default Repository Owner
 * @elhub/devxp @elhub/auth
+
+# Business process modules
+/src/main/kotlin/no/elhub/auth/features/businessprocesses/changeofsupplier/ @elhub/wow
+/src/test/kotlin/no/elhub/auth/features/businessprocesses/changeofsupplier/ @elhub/wow
+/src/main/kotlin/no/elhub/auth/features/businessprocesses/movein/ @elhub/wow
+/src/test/kotlin/no/elhub/auth/features/businessprocesses/movein/ @elhub/wow
