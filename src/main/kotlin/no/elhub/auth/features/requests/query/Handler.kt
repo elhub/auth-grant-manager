@@ -19,7 +19,7 @@ class Handler(
 
     operator fun invoke(query: Query): Either<QueryError, List<AuthorizationRequest>> = either {
         transaction {
-            val list = requestRepository.findAllBy(query.authorizedParty)
+            val list = requestRepository.findAllAndSortByCreatedAt(query.authorizedParty)
                 .mapLeft { QueryError.ResourceNotFoundError }
                 .bind()
 

@@ -20,6 +20,7 @@ import no.elhub.auth.features.requests.common.AuthorizationRequestScopeTable.aut
 import no.elhub.auth.features.requests.common.AuthorizationRequestScopeTable.authorizationScopeId
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.ResultRow
+import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.core.eq
@@ -38,7 +39,7 @@ import java.util.UUID
 
 interface RequestRepository {
     fun find(requestId: UUID): Either<RepositoryReadError, AuthorizationRequest>
-    fun findAllBy(party: AuthorizationParty): Either<RepositoryReadError, List<AuthorizationRequest>>
+    fun findAllAndSortByCreatedAt(party: AuthorizationParty): Either<RepositoryReadError, List<AuthorizationRequest>>
     fun insert(
         request: AuthorizationRequest,
         scopes: List<CreateScopeData>
@@ -57,7 +58,7 @@ class ExposedRequestRepository(
     private val requestPropertiesRepository: RequestPropertiesRepository
 ) : RequestRepository {
 
-    override fun findAllBy(party: AuthorizationParty): Either<RepositoryReadError, List<AuthorizationRequest>> =
+    override fun findAllAndSortByCreatedAt(party: AuthorizationParty): Either<RepositoryReadError, List<AuthorizationRequest>> =
         either {
             val partyId = partyRepo.findOrInsert(type = party.type, partyId = party.resourceId)
                 .mapLeft { RepositoryReadError.UnexpectedError }
@@ -69,6 +70,7 @@ class ExposedRequestRepository(
                 .where {
                     (AuthorizationRequestTable.requestedTo eq partyId) or (AuthorizationRequestTable.requestedBy eq partyId)
                 }
+                .orderBy(AuthorizationRequestTable.createdAt to SortOrder.DESC)
                 .toList()
 
             rows.map { row ->
@@ -164,7 +166,7 @@ class ExposedRequestRepository(
                 .selectAll()
                 .where { authorizationRequestId eq requestId }
                 .map { row ->
-                    row[AuthorizationRequestScopeTable.authorizationScopeId]
+                    row[authorizationScopeId]
                 }
         }
 

@@ -408,7 +408,7 @@ paths:
       summary: List authorization requests
       description: >
         Retrieve a list of authorization requests. The result is constrained by the caller's
-        token and, where applicable, GLN context.
+        token and, where applicable, GLN context. Results are returned ordered by createdAt DESC (newest first).
       parameters:
         - $ref: "#/components/parameters/UserAgent"
         - $ref: "#/components/parameters/AuthorizationMaskinportenOrEndUser"

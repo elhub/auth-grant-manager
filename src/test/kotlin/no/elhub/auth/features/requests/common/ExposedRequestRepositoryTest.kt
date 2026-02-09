@@ -87,13 +87,13 @@ class ExposedRequestRepositoryTest : FunSpec({
                 requestRepo.insert(request, scopes)
             }
 
-            val requestsOfTargetParty1 = requestRepo.findAllBy(targetParty1)
+            val requestsOfTargetParty1 = requestRepo.findAllAndSortByCreatedAt(targetParty1)
                 .getOrElse { _ ->
                     fail("findAllBy failed for target party 1")
                 }
             requestsOfTargetParty1.size shouldBe numTargetRequests
 
-            requestRepo.findAllBy(targetParty2)
+            requestRepo.findAllAndSortByCreatedAt(targetParty2)
                 .getOrElse { _ ->
                     fail("findAllBy failed for target party 2")
                 }
