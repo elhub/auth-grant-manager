@@ -114,7 +114,7 @@ class ChangeOfSupplierBusinessHandler(
         if (meteringPoint.isLeft()) {
             return ChangeOfSupplierValidationError.MeteringPointNotFound.left()
         }
-        val meteringPointResponse = meteringPoint.getOrNull()!!
+        val meteringPointResponse = meteringPoint.getOrNull() ?: return ChangeOfSupplierValidationError.MeteringPointNotFound.left()
 
         if (meteringPointResponse.data.relationships.endUser == null || meteringPointResponse.data.attributes?.accessType == SHARED) {
             return ChangeOfSupplierValidationError.RequestedFromNotMeteringPointEndUser.left()
@@ -141,7 +141,7 @@ class ChangeOfSupplierBusinessHandler(
         if (party.isLeft()) {
             return ChangeOfSupplierValidationError.RequestedByNotFound.left()
         }
-        val partyResponse = party.getOrNull()!!
+        val partyResponse = party.getOrNull() ?: return ChangeOfSupplierValidationError.RequestedByNotFound.left()
         if (partyResponse.data.attributes?.status != PartyStatus.ACTIVE) {
             return ChangeOfSupplierValidationError.NotActiveRequestedBy.left()
         }
