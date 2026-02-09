@@ -17,6 +17,9 @@ import no.elhub.auth.features.businessprocesses.changeofsupplier.domain.toDocume
 import no.elhub.auth.features.businessprocesses.changeofsupplier.domain.toRequestCommand
 import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.AccessType.SHARED
 import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsService
+import no.elhub.auth.features.businessprocesses.structuredata.organisations.OrganisationsService
+import no.elhub.auth.features.businessprocesses.structuredata.organisations.PartyStatus
+import no.elhub.auth.features.businessprocesses.structuredata.organisations.PartyType
 import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.common.person.PersonService
 import no.elhub.auth.features.documents.AuthorizationDocument
@@ -35,12 +38,13 @@ import kotlin.time.ExperimentalTime
 
 private const val REGEX_NUMBERS_LETTERS_SYMBOLS = "^[a-zA-Z0-9_.-]*$"
 private const val REGEX_REQUESTED_FROM = REGEX_NUMBERS_LETTERS_SYMBOLS
-private const val REGEX_REQUESTED_BY = REGEX_NUMBERS_LETTERS_SYMBOLS
+private const val REGEX_REQUESTED_BY = "^\\d{13}$"
 private const val REGEX_METERING_POINT = "^\\d{18}$"
 
 class ChangeOfSupplierBusinessHandler(
     private val meteringPointsService: MeteringPointsService,
-    private val personService: PersonService
+    private val personService: PersonService,
+    private val organisationsService: OrganisationsService
 ) : RequestBusinessHandler, DocumentBusinessHandler {
     override suspend fun validateAndReturnRequestCommand(createRequestModel: CreateRequestModel): Either<ChangeOfSupplierValidationError, RequestCommand> =
         either {
@@ -90,6 +94,14 @@ class ChangeOfSupplierBusinessHandler(
             return ChangeOfSupplierValidationError.InvalidMeteringPointId.left()
         }
 
+        if (model.requestedFrom.idValue.isBlank()) {
+            return ChangeOfSupplierValidationError.MissingRequestedFrom.left()
+        }
+
+        if (!model.requestedFrom.idValue.matches(Regex(REGEX_REQUESTED_FROM))) {
+            return ChangeOfSupplierValidationError.InvalidRequestedFrom.left()
+        }
+
         // temporary mapping until model has elhubInternalId instead of NIN
         val endUserElhubInternalId = personService.findOrCreateByNin(model.requestedFrom.idValue).getOrNull()?.internalId
             ?: return ChangeOfSupplierValidationError.RequestedFromNotFound.left()
@@ -102,7 +114,7 @@ class ChangeOfSupplierBusinessHandler(
         if (meteringPoint.isLeft()) {
             return ChangeOfSupplierValidationError.MeteringPointNotFound.left()
         }
-        val meteringPointResponse = meteringPoint.getOrNull()!!
+        val meteringPointResponse = meteringPoint.getOrNull() ?: return ChangeOfSupplierValidationError.MeteringPointNotFound.left()
 
         if (meteringPointResponse.data.relationships.endUser == null || meteringPointResponse.data.attributes?.accessType == SHARED) {
             return ChangeOfSupplierValidationError.RequestedFromNotMeteringPointEndUser.left()
@@ -125,12 +137,18 @@ class ChangeOfSupplierBusinessHandler(
             return ChangeOfSupplierValidationError.InvalidRequestedBy.left()
         }
 
-        if (model.requestedFrom.idValue.isBlank()) {
-            return ChangeOfSupplierValidationError.MissingRequestedFrom.left()
+        val party = organisationsService.getPartyByIdAndPartyType(model.requestedBy.idValue, PartyType.BalanceSupplier)
+        if (party.isLeft()) {
+            return ChangeOfSupplierValidationError.RequestedByNotFound.left()
+        }
+        val partyResponse = party.getOrNull() ?: return ChangeOfSupplierValidationError.RequestedByNotFound.left()
+        if (partyResponse.data.attributes?.status != PartyStatus.ACTIVE) {
+            return ChangeOfSupplierValidationError.NotActiveRequestedBy.left()
         }
 
-        if (!model.requestedFrom.idValue.matches(Regex(REGEX_REQUESTED_FROM))) {
-            return ChangeOfSupplierValidationError.InvalidRequestedFrom.left()
+        val currentBalanceSupplier = meteringPointResponse.data.attributes?.balanceSupplierContract?.partyFunction
+        if (model.requestedBy.idValue == currentBalanceSupplier?.partyId) {
+            return ChangeOfSupplierValidationError.MatchingRequestedBy.left()
         }
 
         val meta =

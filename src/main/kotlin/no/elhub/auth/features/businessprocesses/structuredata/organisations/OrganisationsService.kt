@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory
 interface OrganisationsService {
     suspend fun getPartyByIdAndPartyType(
         partyId: String,
-        partyType: String
+        partyType: PartyType
     ): Either<ClientError, PartyResponse>
 }
 
@@ -27,7 +27,7 @@ class OrganisationsApi(
 ) : OrganisationsService {
     private val logger = LoggerFactory.getLogger(OrganisationsService::class.java)
 
-    override suspend fun getPartyByIdAndPartyType(partyId: String, partyType: String): Either<ClientError, PartyResponse> =
+    override suspend fun getPartyByIdAndPartyType(partyId: String, partyType: PartyType): Either<ClientError, PartyResponse> =
         Either.catch {
             val response = client.get("${organisationsApiConfig.serviceUrl}/parties/$partyId?partyType=$partyType")
             if (response.status.isSuccess()) {

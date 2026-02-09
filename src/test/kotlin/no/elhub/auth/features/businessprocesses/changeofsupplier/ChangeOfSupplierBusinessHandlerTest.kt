@@ -19,10 +19,20 @@ import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.Met
 import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceTestData.SHARED_END_USER_ID
 import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceTestData.VALID_METERING_POINT
 import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.meteringPointsServiceHttpClient
+import no.elhub.auth.features.businessprocesses.structuredata.organisations.OrganisationsApi
+import no.elhub.auth.features.businessprocesses.structuredata.organisations.OrganisationsApiConfig
+import no.elhub.auth.features.businessprocesses.structuredata.organisations.OrganisationsService
+import no.elhub.auth.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestContainer
+import no.elhub.auth.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestContainerExtension
+import no.elhub.auth.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.CURRENT_PARTY_ID
+import no.elhub.auth.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.INACTIVE_PARTY_ID
+import no.elhub.auth.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.NOT_BALANCE_SUPPLIER_PARTY_ID
+import no.elhub.auth.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.VALID_PARTY_ID
+import no.elhub.auth.features.businessprocesses.structuredata.organisations.organisationsServiceHttpClient
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
-import no.elhub.auth.features.common.party.PartyType
+import no.elhub.auth.features.common.party.PartyType.Organization
 import no.elhub.auth.features.common.person.Person
 import no.elhub.auth.features.common.person.PersonService
 import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
@@ -34,8 +44,12 @@ import no.elhub.auth.features.requests.create.model.CreateRequestMeta
 import no.elhub.auth.features.requests.create.model.CreateRequestModel
 import java.util.UUID
 
-private val VALID_PARTY = PartyIdentifier(PartyIdentifierType.OrganizationNumber, "123456789")
-private val AUTHORIZED_PARTY = AuthorizationParty(resourceId = VALID_PARTY.idValue, type = PartyType.Organization)
+private val VALID_PARTY = PartyIdentifier(PartyIdentifierType.OrganizationNumber, VALID_PARTY_ID)
+private val AUTHORIZED_PARTY = AuthorizationParty(resourceId = VALID_PARTY_ID, type = Organization)
+private val NOT_VALID_PARTY = PartyIdentifier(PartyIdentifierType.OrganizationNumber, "0000")
+private val NON_EXISTING_PARTY = PartyIdentifier(PartyIdentifierType.OrganizationNumber, NOT_BALANCE_SUPPLIER_PARTY_ID)
+private val INACTIVE_PARTY = PartyIdentifier(PartyIdentifierType.OrganizationNumber, INACTIVE_PARTY_ID)
+private val MATCHING_PARTY = PartyIdentifier(PartyIdentifierType.OrganizationNumber, CURRENT_PARTY_ID)
 private val END_USER = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "123456789")
 private val ANOTHER_END_USER = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "987654321")
 private val SHARED_END_USER = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "11223344556")
@@ -43,9 +57,11 @@ private val SHARED_END_USER = PartyIdentifier(PartyIdentifierType.NationalIdenti
 class ChangeOfSupplierBusinessHandlerTest :
     FunSpec({
 
-        extension(MeteringPointsServiceTestContainerExtension)
+        extensions(MeteringPointsServiceTestContainerExtension, OrganisationsServiceTestContainerExtension)
         lateinit var meteringPointsService: MeteringPointsService
         lateinit var handler: ChangeOfSupplierBusinessHandler
+        lateinit var organisationsService: OrganisationsService
+
         val personService = mockk<PersonService>()
 
         beforeSpec {
@@ -53,7 +69,14 @@ class ChangeOfSupplierBusinessHandlerTest :
                 MeteringPointsApiConfig(serviceUrl = MeteringPointsServiceTestContainer.serviceUrl(), basicAuthConfig = BasicAuthConfig("user", "pass")),
                 meteringPointsServiceHttpClient
             )
-            handler = ChangeOfSupplierBusinessHandler(meteringPointsService = meteringPointsService, personService = personService)
+            organisationsService = OrganisationsApi(
+                OrganisationsApiConfig(
+                    serviceUrl = OrganisationsServiceTestContainer.serviceUrl(),
+                    basicAuthConfig = no.elhub.auth.features.businessprocesses.structuredata.organisations.BasicAuthConfig("user", "pass")
+                ),
+                organisationsServiceHttpClient
+            )
+            handler = ChangeOfSupplierBusinessHandler(meteringPointsService, personService, organisationsService)
         }
 
         coEvery { personService.findOrCreateByNin(END_USER.idValue) } returns Either.Right(Person(UUID.fromString(END_USER_ID)))
@@ -192,6 +215,94 @@ class ChangeOfSupplierBusinessHandlerTest :
             handler.validateAndReturnRequestCommand(model).shouldBeLeft(ChangeOfSupplierValidationError.InvalidRedirectURI)
         }
 
+        test("request validation fails on not valid requested by") {
+            val model =
+                CreateRequestModel(
+                    authorizedParty = AUTHORIZED_PARTY,
+                    requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
+                    meta =
+                    CreateRequestMeta(
+                        requestedBy = NOT_VALID_PARTY,
+                        requestedFrom = END_USER,
+                        requestedFromName = "From",
+                        requestedTo = END_USER,
+                        requestedForMeteringPointId = VALID_METERING_POINT,
+                        requestedForMeteringPointAddress = "addr",
+                        balanceSupplierName = "Supplier",
+                        balanceSupplierContractName = "Contract",
+                        redirectURI = "https://example.com",
+                    ),
+                )
+
+            handler.validateAndReturnRequestCommand(model).shouldBeLeft(ChangeOfSupplierValidationError.InvalidRequestedBy)
+        }
+
+        test("request validation fails on non existing requested by") {
+            val model =
+                CreateRequestModel(
+                    authorizedParty = AUTHORIZED_PARTY,
+                    requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
+                    meta =
+                    CreateRequestMeta(
+                        requestedBy = NON_EXISTING_PARTY,
+                        requestedFrom = END_USER,
+                        requestedFromName = "From",
+                        requestedTo = END_USER,
+                        requestedForMeteringPointId = VALID_METERING_POINT,
+                        requestedForMeteringPointAddress = "addr",
+                        balanceSupplierName = "Supplier",
+                        balanceSupplierContractName = "Contract",
+                        redirectURI = "https://example.com",
+                    ),
+                )
+
+            handler.validateAndReturnRequestCommand(model).shouldBeLeft(ChangeOfSupplierValidationError.RequestedByNotFound)
+        }
+
+        test("request validation fails on not active requested by") {
+            val model =
+                CreateRequestModel(
+                    authorizedParty = AUTHORIZED_PARTY,
+                    requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
+                    meta =
+                    CreateRequestMeta(
+                        requestedBy = INACTIVE_PARTY,
+                        requestedFrom = END_USER,
+                        requestedFromName = "From",
+                        requestedTo = END_USER,
+                        requestedForMeteringPointId = VALID_METERING_POINT,
+                        requestedForMeteringPointAddress = "addr",
+                        balanceSupplierName = "Supplier",
+                        balanceSupplierContractName = "Contract",
+                        redirectURI = "https://example.com",
+                    ),
+                )
+
+            handler.validateAndReturnRequestCommand(model).shouldBeLeft(ChangeOfSupplierValidationError.NotActiveRequestedBy)
+        }
+
+        test("request validation fails on requested by matching current balance supplier") {
+            val model =
+                CreateRequestModel(
+                    authorizedParty = AUTHORIZED_PARTY,
+                    requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
+                    meta =
+                    CreateRequestMeta(
+                        requestedBy = MATCHING_PARTY,
+                        requestedFrom = END_USER,
+                        requestedFromName = "From",
+                        requestedTo = END_USER,
+                        requestedForMeteringPointId = VALID_METERING_POINT,
+                        requestedForMeteringPointAddress = "addr",
+                        balanceSupplierName = "Supplier",
+                        balanceSupplierContractName = "Contract",
+                        redirectURI = "https://example.com",
+                    ),
+                )
+
+            handler.validateAndReturnRequestCommand(model).shouldBeLeft(ChangeOfSupplierValidationError.MatchingRequestedBy)
+        }
+
         test("request produces RequestCommand for valid input") {
             val model =
                 CreateRequestModel(
@@ -221,12 +332,12 @@ class ChangeOfSupplierBusinessHandlerTest :
         test("document produces DocumentCommand for valid input") {
             val model =
                 CreateDocumentModel(
-                    authorizedParty = AuthorizationParty(resourceId = VALID_PARTY.idValue, type = PartyType.Organization),
+                    authorizedParty = AuthorizationParty(resourceId = VALID_PARTY.idValue, type = Organization),
                     documentType = AuthorizationDocument.Type.ChangeOfEnergySupplierForPerson,
                     meta =
                     CreateDocumentMeta(
                         requestedBy = VALID_PARTY,
-                        requestedFrom = VALID_PARTY,
+                        requestedFrom = END_USER,
                         requestedTo = VALID_PARTY,
                         requestedFromName = "From",
                         requestedForMeteringPointId = VALID_METERING_POINT,
