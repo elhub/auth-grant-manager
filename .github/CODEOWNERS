@@ -12,3 +12,5 @@
 /src/test/kotlin/no/elhub/auth/features/businessprocesses/changeofsupplier/ @elhub/wow
 /src/main/kotlin/no/elhub/auth/features/businessprocesses/movein/ @elhub/wow
 /src/test/kotlin/no/elhub/auth/features/businessprocesses/movein/ @elhub/wow
+/src/main/kotlin/no/elhub/auth/features/businessprocesses/structuredata/ @elhub/wow
+/src/test/kotlin/no/elhub/auth/features/businessprocesses/structuredata/ @elhub/wow
