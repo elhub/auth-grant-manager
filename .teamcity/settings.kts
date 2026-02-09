@@ -55,7 +55,7 @@ elhubProject(group = Group.AUTH, name = "auth-grant-manager") {
                 gitOps {
                     clusters = setOf(KubeCluster.MARKET_TRIAL_1)
                     gitOpsRepository = gitOpsRepo
-                }.triggerOnVcsChange()
+                }
 
                 gitOps {
                     clusters = setOf(KubeCluster.TEST13)
