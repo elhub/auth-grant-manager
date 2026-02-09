@@ -1,5 +1,6 @@
 package no.elhub.auth.features.businessprocesses.structuredata.organisations
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import no.elhub.devxp.jsonapi.model.JsonApiAttributes
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipToOne
@@ -16,7 +17,8 @@ data class Attributes(
 
 @Serializable
 enum class PartyType {
-    BALANCE_SUPPLIER
+    @SerialName("BALANCE_SUPPLIER")
+    BalanceSupplier
 }
 
 @Serializable

@@ -45,6 +45,18 @@ sealed class ChangeOfSupplierValidationError(
         ChangeOfSupplierValidationError("invalid_requested_by", "Requested by has invalid format")
 
     @Serializable
+    data object RequestedByNotFound :
+        ChangeOfSupplierValidationError("requested_by_not_found", "Requested by not found")
+
+    @Serializable
+    data object NotActiveRequestedBy :
+        ChangeOfSupplierValidationError("not_active_requested_by", "Requested by is not an active party in Elhub")
+
+    @Serializable
+    data object MatchingRequestedBy :
+        ChangeOfSupplierValidationError("matching_requested_by", "Requested by matches the current balance supplier of the metering point")
+
+    @Serializable
     data object MissingRequestedFrom :
         ChangeOfSupplierValidationError("missing_requested_from", "Requested from is missing")
 

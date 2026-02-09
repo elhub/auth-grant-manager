@@ -19,6 +19,13 @@ import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.Met
 import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceTestData.SHARED_END_USER_ID
 import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceTestData.VALID_METERING_POINT
 import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.meteringPointsServiceHttpClient
+import no.elhub.auth.features.businessprocesses.structuredata.organisations.OrganisationsApi
+import no.elhub.auth.features.businessprocesses.structuredata.organisations.OrganisationsApiConfig
+import no.elhub.auth.features.businessprocesses.structuredata.organisations.OrganisationsService
+import no.elhub.auth.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestContainer
+import no.elhub.auth.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestContainerExtension
+import no.elhub.auth.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.VALID_PARTY_ID
+import no.elhub.auth.features.businessprocesses.structuredata.organisations.organisationsServiceHttpClient
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
@@ -32,8 +39,9 @@ import java.util.UUID
 
 class ChangeOfSupplierBusinessHandlerTest :
     FunSpec({
-        extension(MeteringPointsServiceTestContainerExtension)
+        extensions(MeteringPointsServiceTestContainerExtension, OrganisationsServiceTestContainerExtension)
         lateinit var meteringPointsService: MeteringPointsApi
+        lateinit var organisationsService: OrganisationsService
         lateinit var handler: ChangeOfSupplierBusinessHandler
         val personService = mockk<PersonService>()
 
@@ -45,10 +53,18 @@ class ChangeOfSupplierBusinessHandlerTest :
                 ),
                 meteringPointsServiceHttpClient
             )
-            handler = ChangeOfSupplierBusinessHandler(meteringPointsService, personService)
+            organisationsService = OrganisationsApi(
+                OrganisationsApiConfig(
+                    serviceUrl = OrganisationsServiceTestContainer.serviceUrl(),
+                    basicAuthConfig = no.elhub.auth.features.businessprocesses.structuredata.organisations.BasicAuthConfig("user", "pass")
+                ),
+                organisationsServiceHttpClient
+            )
+            handler = ChangeOfSupplierBusinessHandler(meteringPointsService, personService, organisationsService)
         }
 
         val authorizedParty = AuthorizationParty(resourceId = "987654321", type = PartyType.Organization)
+        val validParty = PartyIdentifier(PartyIdentifierType.OrganizationNumber, VALID_PARTY_ID)
         val endUser = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "12345678902")
         val anotherEndUser = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "20987654321")
         val sharedEndUser = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "10987654321")
@@ -64,7 +80,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                     requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
                     meta =
                     CreateRequestMeta(
-                        requestedBy = PartyIdentifier(PartyIdentifierType.OrganizationNumber, "987654321"),
+                        requestedBy = validParty,
                         requestedFrom = endUser,
                         requestedFromName = "",
                         requestedTo = endUser,
@@ -88,7 +104,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                     requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
                     meta =
                     CreateRequestMeta(
-                        requestedBy = PartyIdentifier(PartyIdentifierType.OrganizationNumber, "987654321"),
+                        requestedBy = validParty,
                         requestedFrom = anotherEndUser,
                         requestedFromName = "Supplier AS",
                         requestedTo = anotherEndUser,
@@ -112,7 +128,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                     requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
                     meta =
                     CreateRequestMeta(
-                        requestedBy = PartyIdentifier(PartyIdentifierType.OrganizationNumber, "987654321"),
+                        requestedBy = validParty,
                         requestedFrom = sharedEndUser,
                         requestedFromName = "Supplier AS",
                         requestedTo = sharedEndUser,
@@ -136,7 +152,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                     requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
                     meta =
                     CreateRequestMeta(
-                        requestedBy = PartyIdentifier(PartyIdentifierType.OrganizationNumber, "987654321"),
+                        requestedBy = validParty,
                         requestedFrom = endUser,
                         requestedFromName = "Supplier AS",
                         requestedTo = endUser,
@@ -160,7 +176,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                     requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
                     meta =
                     CreateRequestMeta(
-                        requestedBy = PartyIdentifier(PartyIdentifierType.OrganizationNumber, "987654321"),
+                        requestedBy = validParty,
                         requestedFrom = endUser,
                         requestedFromName = "Supplier AS",
                         requestedTo = endUser,

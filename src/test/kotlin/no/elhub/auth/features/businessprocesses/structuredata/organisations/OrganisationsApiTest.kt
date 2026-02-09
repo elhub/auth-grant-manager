@@ -96,19 +96,19 @@ class OrganisationsApiTest : FunSpec({
     val service = OrganisationsApi(config, client)
 
     test("Valid partyId and corresponding partyType") {
-        val response = service.getPartyByIdAndPartyType(validPartyId, "BalanceSupplier")
+        val response = service.getPartyByIdAndPartyType(validPartyId, PartyType.BalanceSupplier)
         response.shouldBeRight()
         response.value.data.id shouldBe validPartyId
     }
 
     test("Valid partyId and not corresponding partyType") {
-        val response = service.getPartyByIdAndPartyType(notBalanceSupplierPartyId, "BalanceSupplier")
+        val response = service.getPartyByIdAndPartyType(notBalanceSupplierPartyId, PartyType.BalanceSupplier)
         response.shouldBeLeft()
         response.value shouldBe ClientError.NotFound
     }
 
     test("Not valid partyId value") {
-        val response = service.getPartyByIdAndPartyType(notValidPartyId, "BalanceSupplier")
+        val response = service.getPartyByIdAndPartyType(notValidPartyId, PartyType.BalanceSupplier)
         response.shouldBeLeft()
         response.value shouldBe ClientError.BadRequest
     }
