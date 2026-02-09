@@ -18,19 +18,23 @@ import no.elhub.auth.features.grants.common.AuthorizationScopeTable
 import no.elhub.auth.features.grants.common.AuthorizationScopeTable.authorizedResourceId
 import no.elhub.auth.features.grants.common.AuthorizationScopeTable.authorizedResourceType
 import no.elhub.auth.features.grants.common.AuthorizationScopeTable.permissionType
-import org.jetbrains.exposed.dao.id.UUIDTable
-import org.jetbrains.exposed.sql.ReferenceOption
-import org.jetbrains.exposed.sql.ResultRow
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.batchInsert
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.insertReturning
-import org.jetbrains.exposed.sql.javatime.timestamp
-import org.jetbrains.exposed.sql.javatime.timestampWithTimeZone
-import org.jetbrains.exposed.sql.or
-import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.update
+import org.jetbrains.exposed.v1.core.ReferenceOption
+import org.jetbrains.exposed.v1.core.ResultRow
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.inList
+import org.jetbrains.exposed.v1.core.java.javaUUID
+import org.jetbrains.exposed.v1.core.or
+import org.jetbrains.exposed.v1.javatime.timestamp
+import org.jetbrains.exposed.v1.javatime.timestampWithTimeZone
+import org.jetbrains.exposed.v1.jdbc.batchInsert
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.insertReturning
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.update
 import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset
@@ -287,29 +291,29 @@ object AuthorizationDocumentTable : UUIDTable("auth.authorization_document") {
         fromDb = { DatabaseStatus.valueOf(it as String) },
         toDb = { PGEnum("authorization_document_status", it) },
     )
-    val requestedBy = uuid("requested_by").references(AuthorizationPartyTable.id)
-    val requestedFrom = uuid("requested_from").references(AuthorizationPartyTable.id)
-    val requestedTo = uuid("requested_to").references(AuthorizationPartyTable.id)
+    val requestedBy = javaUUID("requested_by").references(AuthorizationPartyTable.id)
+    val requestedFrom = javaUUID("requested_from").references(AuthorizationPartyTable.id)
+    val requestedTo = javaUUID("requested_to").references(AuthorizationPartyTable.id)
     val validTo = timestampWithTimeZone("valid_to")
     val createdAt = timestampWithTimeZone("created_at").default(OffsetDateTime.now(ZoneId.of("Europe/Oslo")))
     val updatedAt = timestampWithTimeZone("updated_at").default(OffsetDateTime.now(ZoneId.of("Europe/Oslo")))
 }
 
 object AuthorizationDocumentScopeTable : Table("auth.authorization_document_scope") {
-    val authorizationDocumentId = uuid("authorization_document_id")
+    val authorizationDocumentId = javaUUID("authorization_document_id")
         .references(AuthorizationDocumentTable.id, onDelete = ReferenceOption.CASCADE)
-    val authorizationScopeId = uuid("authorization_scope_id")
+    val authorizationScopeId = javaUUID("authorization_scope_id")
         .references(AuthorizationScopeTable.id, onDelete = ReferenceOption.CASCADE)
     val createdAt = timestamp("created_at").clientDefault { java.time.Instant.now() }
     override val primaryKey = PrimaryKey(authorizationDocumentId, authorizationScopeId)
 }
 
 object SignatoriesTable : Table("auth.authorization_document_signatories") {
-    val authorizationDocumentId = uuid("authorization_document_id")
+    val authorizationDocumentId = javaUUID("authorization_document_id")
         .references(AuthorizationDocumentTable.id, onDelete = ReferenceOption.CASCADE)
-    val requestedFrom = uuid("requested_from")
+    val requestedFrom = javaUUID("requested_from")
         .references(AuthorizationPartyTable.id)
-    val signedBy = uuid("signed_by")
+    val signedBy = javaUUID("signed_by")
         .references(AuthorizationPartyTable.id)
     val signedAt = timestamp("signed_at").clientDefault { java.time.Instant.now() }
 
