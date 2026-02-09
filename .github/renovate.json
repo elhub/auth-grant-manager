@@ -1,16 +1,4 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "github>elhub/devxp-renovate"
-  ],
-  "packageRules": [
-    {
-      "description": "Hold Kotest upgrades until Koin 4.2.0 stable is available",
-      "versioning": "semver",
-      "allowedVersions": "<6.0.5",
-      "matchPackageNames": [
-        "/^io\\.kotest:/"
-      ]
-    }
-  ]
+  "extends": ["github>elhub/devxp-renovate"]
 }
