@@ -14,7 +14,6 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.slf4j.LoggerFactory
 import java.time.Instant
 import java.util.UUID
-import kotlin.uuid.ExperimentalUuidApi
 
 interface PartyRepository {
     fun findOrInsert(type: PartyType, partyId: String): Either<RepositoryWriteError, AuthorizationPartyRecord>
@@ -91,16 +90,13 @@ object AuthorizationPartyTable : UUIDTable("auth.authorization_party") {
     }
 }
 
-data class AuthorizationPartyRecord
-@OptIn(ExperimentalUuidApi::class)
-constructor(
+data class AuthorizationPartyRecord(
     val id: UUID,
     val type: PartyType,
     val resourceId: String,
     val createdAt: Instant,
 )
 
-@OptIn(ExperimentalUuidApi::class)
 fun ResultRow.toAuthorizationParty() = AuthorizationPartyRecord(
     id = this[AuthorizationPartyTable.id].value,
     type = this[AuthorizationPartyTable.type],
