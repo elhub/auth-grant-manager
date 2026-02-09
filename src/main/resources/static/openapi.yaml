@@ -39,7 +39,7 @@ security:
   - bearerAuth: []
 
 paths:
-  "/authorization-documents":
+  '/authorization-documents':
     get:
       tags:
         - Authorization Documents
@@ -48,21 +48,21 @@ paths:
         Retrieve a list of authorization document objects available to the calling party.
         The result is constrained by the caller's authorization context.
       parameters:
-        - $ref: "#/components/parameters/UserAgent"
-        - $ref: "#/components/parameters/AuthorizationMaskinporten"
-        - $ref: "#/components/parameters/SenderGlnRequired"
-        - $ref: "#/components/parameters/OnBehalfOfGlnOptional"
+        - $ref: '#/components/parameters/UserAgent'
+        - $ref: '#/components/parameters/AuthorizationMaskinporten'
+        - $ref: '#/components/parameters/SenderGlnRequired'
+        - $ref: '#/components/parameters/OnBehalfOfGlnOptional'
       responses:
-        "200":
+        '200':
           description: A list of authorization document objects.
           content:
             application/json:
               schema:
-                $ref: "./schemas/documents/authorization-document-collection.schema.json"
-        "401":
-          $ref: "#/components/responses/401UnauthorizedError"
-        "500":
-          $ref: "#/components/responses/500InternalServerError"
+                $ref: './schemas/documents/authorization-document-collection.schema.json'
+        '401':
+          $ref: '#/components/responses/401UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
     post:
       tags:
         - Authorization Documents
@@ -72,33 +72,33 @@ paths:
         The response includes the identifier of the document and links to the document resource
         and its generated PDF file.
       parameters:
-        - $ref: "#/components/parameters/UserAgent"
-        - $ref: "#/components/parameters/AuthorizationMaskinporten"
-        - $ref: "#/components/parameters/SenderGlnRequired"
-        - $ref: "#/components/parameters/OnBehalfOfGlnOptional"
+        - $ref: '#/components/parameters/UserAgent'
+        - $ref: '#/components/parameters/AuthorizationMaskinporten'
+        - $ref: '#/components/parameters/SenderGlnRequired'
+        - $ref: '#/components/parameters/OnBehalfOfGlnOptional'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "./schemas/documents/authorization-document-submission.schema.json"
+              $ref: './schemas/documents/authorization-document-submission.schema.json'
       responses:
-        "201":
+        '201':
           description: >
             The authorization document was created successfully. The response includes the
             identifier of the new document and links to the resource and its PDF representation.
           content:
             application/json:
               schema:
-                $ref: "./schemas/documents/authorization-document-resource.schema.json"
-        "400":
-          $ref: "#/components/responses/400BadRequestError"
-        "401":
-          $ref: "#/components/responses/401UnauthorizedError"
-        "500":
-          $ref: "#/components/responses/500InternalServerError"
+                $ref: './schemas/documents/authorization-document-resource.schema.json'
+        '400':
+          $ref: '#/components/responses/400BadRequestError'
+        '401':
+          $ref: '#/components/responses/401UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
 
-  "/authorization-documents/{id}":
+  '/authorization-documents/{id}':
     get:
       tags:
         - Authorization Documents
@@ -107,10 +107,10 @@ paths:
         Retrieve information about a specific authorization document. This can be used to
         check the document status and other attributes such as involved parties and validity.
       parameters:
-        - $ref: "#/components/parameters/UserAgent"
-        - $ref: "#/components/parameters/AuthorizationMaskinporten"
-        - $ref: "#/components/parameters/SenderGlnRequired"
-        - $ref: "#/components/parameters/OnBehalfOfGlnOptional"
+        - $ref: '#/components/parameters/UserAgent'
+        - $ref: '#/components/parameters/AuthorizationMaskinporten'
+        - $ref: '#/components/parameters/SenderGlnRequired'
+        - $ref: '#/components/parameters/OnBehalfOfGlnOptional'
         - name: id
           in: path
           required: true
@@ -118,18 +118,18 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: Details of the requested authorization document.
           content:
             application/json:
               schema:
-                $ref: "./schemas/documents/authorization-document-resource.schema.json"
-        "401":
-          $ref: "#/components/responses/401UnauthorizedError"
-        "404":
-          $ref: "#/components/responses/404NotFoundError"
-        "500":
-          $ref: "#/components/responses/500InternalServerError"
+                $ref: './schemas/documents/authorization-document-resource.schema.json'
+        '401':
+          $ref: '#/components/responses/401UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/404NotFoundError'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
     delete:
       tags:
         - TODO
@@ -138,10 +138,10 @@ paths:
         Cancel an authorization document. This operation is only allowed if the document
         has not yet been signed. Once signed, the document can no longer be cancelled through this API.
       parameters:
-        - $ref: "#/components/parameters/UserAgent"
-        - $ref: "#/components/parameters/AuthorizationMaskinporten"
-        - $ref: "#/components/parameters/SenderGlnRequired"
-        - $ref: "#/components/parameters/OnBehalfOfGlnOptional"
+        - $ref: '#/components/parameters/UserAgent'
+        - $ref: '#/components/parameters/AuthorizationMaskinporten'
+        - $ref: '#/components/parameters/SenderGlnRequired'
+        - $ref: '#/components/parameters/OnBehalfOfGlnOptional'
         - name: id
           in: path
           required: true
@@ -149,18 +149,18 @@ paths:
           schema:
             type: string
       responses:
-        "200":
-          $ref: "#/components/responses/MetaResponse"
-        "401":
-          $ref: "#/components/responses/401UnauthorizedError"
-        "403":
-          $ref: "#/components/responses/403ForbiddenError"
-        "404":
-          $ref: "#/components/responses/404NotFoundError"
-        "500":
-          $ref: "#/components/responses/500InternalServerError"
+        '200':
+          $ref: '#/components/responses/MetaResponse'
+        '401':
+          $ref: '#/components/responses/401UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/403ForbiddenError'
+        '404':
+          $ref: '#/components/responses/404NotFoundError'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
 
-  "/authorization-documents/{id}.pdf":
+  '/authorization-documents/{id}.pdf':
     get:
       tags:
         - Authorization Documents
@@ -169,10 +169,10 @@ paths:
         Retrieve the PDF representation of an authorization document. The PDF reflects the
         current state of the document at the time of retrieval.
       parameters:
-        - $ref: "#/components/parameters/UserAgent"
-        - $ref: "#/components/parameters/AuthorizationMaskinporten"
-        - $ref: "#/components/parameters/SenderGlnRequired"
-        - $ref: "#/components/parameters/OnBehalfOfGlnOptional"
+        - $ref: '#/components/parameters/UserAgent'
+        - $ref: '#/components/parameters/AuthorizationMaskinporten'
+        - $ref: '#/components/parameters/SenderGlnRequired'
+        - $ref: '#/components/parameters/OnBehalfOfGlnOptional'
         - name: id
           in: path
           required: true
@@ -180,19 +180,19 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: The PDF file representing the authorization document.
           content:
             application/pdf:
               schema:
                 type: string
                 format: binary
-        "401":
-          $ref: "#/components/responses/401UnauthorizedError"
-        "404":
-          $ref: "#/components/responses/404NotFoundError"
-        "500":
-          $ref: "#/components/responses/500InternalServerError"
+        '401':
+          $ref: '#/components/responses/401UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/404NotFoundError'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
     put:
       tags:
         - Authorization Documents
@@ -201,10 +201,10 @@ paths:
         Submit a signed authorization document as a PDF file. Elhub validates the signature,
         generates any required authorization grants, and stores the document if the validation succeeds.
       parameters:
-        - $ref: "#/components/parameters/UserAgent"
-        - $ref: "#/components/parameters/AuthorizationMaskinporten"
-        - $ref: "#/components/parameters/SenderGlnRequired"
-        - $ref: "#/components/parameters/OnBehalfOfGlnOptional"
+        - $ref: '#/components/parameters/UserAgent'
+        - $ref: '#/components/parameters/AuthorizationMaskinporten'
+        - $ref: '#/components/parameters/SenderGlnRequired'
+        - $ref: '#/components/parameters/OnBehalfOfGlnOptional'
         - name: id
           in: path
           required: true
@@ -219,18 +219,18 @@ paths:
               type: string
               format: binary
       responses:
-        "204":
+        '204':
           description: >
             The signature was successfully validated and the document was registered and accepted.
             No content is returned in the response body.
-        "400":
-          $ref: "#/components/responses/400BadRequestError"
-        "401":
-          $ref: "#/components/responses/401UnauthorizedError"
-        "500":
-          $ref: "#/components/responses/500InternalServerError"
+        '400':
+          $ref: '#/components/responses/400BadRequestError'
+        '401':
+          $ref: '#/components/responses/401UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
 
-  "/authorization-grants":
+  '/authorization-grants':
     get:
       tags:
         - Authorization Grants
@@ -239,25 +239,25 @@ paths:
         Retrieve a list of authorization grants available to the caller. The result is constrained
         by the caller's token and GLN context.
       parameters:
-        - $ref: "#/components/parameters/UserAgent"
-        - $ref: "#/components/parameters/AuthorizationMaskinportenOrEndUser"
-        - $ref: "#/components/parameters/SenderGlnOptional"
-        - $ref: "#/components/parameters/OnBehalfOfGlnOptional"
+        - $ref: '#/components/parameters/UserAgent'
+        - $ref: '#/components/parameters/AuthorizationMaskinportenOrEndUser'
+        - $ref: '#/components/parameters/SenderGlnOptional'
+        - $ref: '#/components/parameters/OnBehalfOfGlnOptional'
       responses:
-        "200":
+        '200':
           description: A list of authorization grants.
           content:
             application/json:
               schema:
-                $ref: "./schemas/grants/authorization-grant-collection.schema.json"
-        "400":
-          $ref: "#/components/responses/400BadRequestError"
-        "401":
-          $ref: "#/components/responses/401UnauthorizedError"
-        "500":
-          $ref: "#/components/responses/500InternalServerError"
+                $ref: './schemas/grants/authorization-grant-collection.schema.json'
+        '400':
+          $ref: '#/components/responses/400BadRequestError'
+        '401':
+          $ref: '#/components/responses/401UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
 
-  "/authorization-grants/{id}":
+  '/authorization-grants/{id}':
     get:
       tags:
         - Authorization Grants
@@ -265,10 +265,10 @@ paths:
       description: >
         Retrieve a specific authorization grant by its identifier.
       parameters:
-        - $ref: "#/components/parameters/UserAgent"
-        - $ref: "#/components/parameters/AuthorizationMaskinportenOrEndUserOptional"
-        - $ref: "#/components/parameters/SenderGlnOptional"
-        - $ref: "#/components/parameters/OnBehalfOfGlnOptional"
+        - $ref: '#/components/parameters/UserAgent'
+        - $ref: '#/components/parameters/AuthorizationMaskinportenOrEndUserOptional'
+        - $ref: '#/components/parameters/SenderGlnOptional'
+        - $ref: '#/components/parameters/OnBehalfOfGlnOptional'
         - name: id
           in: path
           required: true
@@ -276,20 +276,20 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: The requested authorization grant.
           content:
             application/json:
               schema:
-                $ref: "./schemas/grants/authorization-grant-resource.schema.json"
-        "400":
-          $ref: "#/components/responses/400BadRequestError"
-        "401":
-          $ref: "#/components/responses/401UnauthorizedError"
-        "404":
-          $ref: "#/components/responses/404NotFoundError"
-        "500":
-          $ref: "#/components/responses/500InternalServerError"
+                $ref: './schemas/grants/authorization-grant-resource.schema.json'
+        '400':
+          $ref: '#/components/responses/400BadRequestError'
+        '401':
+          $ref: '#/components/responses/401UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/404NotFoundError'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
     patch:
       tags:
         - Authorization Grants
@@ -298,7 +298,7 @@ paths:
         Update the status of an authorization grant. This endpoint is intended for internal
         Elhub systems (BRS) and is not available to external integrators.
       parameters:
-        - $ref: "#/components/parameters/UserAgent"
+        - $ref: '#/components/parameters/UserAgent'
         - name: id
           in: path
           required: true
@@ -310,24 +310,24 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "./schemas/grants/authorization-grant-update.schema.json"
+              $ref: './schemas/grants/authorization-grant-update.schema.json'
       responses:
-        "200":
+        '200':
           description: The authorization grant was successfully updated.
           content:
             application/json:
               schema:
-                $ref: "./schemas/grants/authorization-grant-resource.schema.json"
-        "400":
-          $ref: "#/components/responses/400BadRequestError"
-        "401":
-          $ref: "#/components/responses/401UnauthorizedError"
-        "404":
-          $ref: "#/components/responses/404NotFoundError"
-        "500":
-          $ref: "#/components/responses/500InternalServerError"
+                $ref: './schemas/grants/authorization-grant-resource.schema.json'
+        '400':
+          $ref: '#/components/responses/400BadRequestError'
+        '401':
+          $ref: '#/components/responses/401UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/404NotFoundError'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
 
-  "/authorization-grants/{id}/scopes":
+  '/authorization-grants/{id}/scopes':
     get:
       tags:
         - Authorization Grants
@@ -335,10 +335,10 @@ paths:
       description: >
         Retrieve all scopes associated with a specific authorization grant.
       parameters:
-        - $ref: "#/components/parameters/UserAgent"
-        - $ref: "#/components/parameters/AuthorizationMaskinportenOrEndUser"
-        - $ref: "#/components/parameters/SenderGlnOptional"
-        - $ref: "#/components/parameters/OnBehalfOfGlnOptional"
+        - $ref: '#/components/parameters/UserAgent'
+        - $ref: '#/components/parameters/AuthorizationMaskinportenOrEndUser'
+        - $ref: '#/components/parameters/SenderGlnOptional'
+        - $ref: '#/components/parameters/OnBehalfOfGlnOptional'
         - name: id
           in: path
           required: true
@@ -346,22 +346,22 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: A list of authorization scopes associated with the grant.
           content:
             application/json:
               schema:
-                $ref: "./schemas/grants/authorization-scope-collection.schema.json"
-        "400":
-          $ref: "#/components/responses/400BadRequestError"
-        "401":
-          $ref: "#/components/responses/401UnauthorizedError"
-        "404":
-          $ref: "#/components/responses/404NotFoundError"
-        "500":
-          $ref: "#/components/responses/500InternalServerError"
+                $ref: './schemas/grants/authorization-scope-collection.schema.json'
+        '400':
+          $ref: '#/components/responses/400BadRequestError'
+        '401':
+          $ref: '#/components/responses/401UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/404NotFoundError'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
 
-  "/authorization-grants/{id}/scopes/{scopeId}":
+  '/authorization-grants/{id}/scopes/{scopeId}':
     get:
       tags:
         - Authorization Grants
@@ -369,10 +369,10 @@ paths:
       description: >
         Retrieve a specific authorization scope associated with an authorization grant using its scopeId.
       parameters:
-        - $ref: "#/components/parameters/UserAgent"
-        - $ref: "#/components/parameters/AuthorizationMaskinportenOrEndUser"
-        - $ref: "#/components/parameters/SenderGlnOptional"
-        - $ref: "#/components/parameters/OnBehalfOfGlnOptional"
+        - $ref: '#/components/parameters/UserAgent'
+        - $ref: '#/components/parameters/AuthorizationMaskinportenOrEndUser'
+        - $ref: '#/components/parameters/SenderGlnOptional'
+        - $ref: '#/components/parameters/OnBehalfOfGlnOptional'
         - name: id
           in: path
           required: true
@@ -386,45 +386,45 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: An authorization scope associated with the grant.
           content:
             application/json:
               schema:
-                $ref: "./schemas/grants/authorization-scope-resource.schema.json"
-        "400":
-          $ref: "#/components/responses/400BadRequestError"
-        "401":
-          $ref: "#/components/responses/401UnauthorizedError"
-        "404":
-          $ref: "#/components/responses/404NotFoundError"
-        "500":
-          $ref: "#/components/responses/500InternalServerError"
+                $ref: './schemas/grants/authorization-scope-resource.schema.json'
+        '400':
+          $ref: '#/components/responses/400BadRequestError'
+        '401':
+          $ref: '#/components/responses/401UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/404NotFoundError'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
 
-  "/authorization-requests":
+  '/authorization-requests':
     get:
       tags:
         - Authorization Requests
       summary: List authorization requests
       description: >
         Retrieve a list of authorization requests. The result is constrained by the caller's
-        token and, where applicable, GLN context.
+        token and, where applicable, GLN context. Results are returned ordered by createdAt DESC (newest first).
       parameters:
-        - $ref: "#/components/parameters/UserAgent"
-        - $ref: "#/components/parameters/AuthorizationMaskinportenOrEndUser"
-        - $ref: "#/components/parameters/SenderGlnOptional"
-        - $ref: "#/components/parameters/OnBehalfOfGlnOptional"
+        - $ref: '#/components/parameters/UserAgent'
+        - $ref: '#/components/parameters/AuthorizationMaskinportenOrEndUser'
+        - $ref: '#/components/parameters/SenderGlnOptional'
+        - $ref: '#/components/parameters/OnBehalfOfGlnOptional'
       responses:
-        "200":
+        '200':
           description: A list of authorization requests.
           content:
             application/json:
               schema:
-                $ref: "./schemas/requests/authorization-request-collection.schema.json"
-        "401":
-          $ref: "#/components/responses/401UnauthorizedError"
-        "500":
-          $ref: "#/components/responses/500InternalServerError"
+                $ref: './schemas/requests/authorization-request-collection.schema.json'
+        '401':
+          $ref: '#/components/responses/401UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
     post:
       tags:
         - Authorization Requests
@@ -433,35 +433,35 @@ paths:
         Initiate a new authorization request flow. This creates an authorization request that
         is associated with a user in MinSide and returns details including a link to the MinSide flow.
       parameters:
-        - $ref: "#/components/parameters/UserAgent"
-        - $ref: "#/components/parameters/AuthorizationMaskinporten"
-        - $ref: "#/components/parameters/SenderGlnRequired"
-        - $ref: "#/components/parameters/OnBehalfOfGlnOptional"
+        - $ref: '#/components/parameters/UserAgent'
+        - $ref: '#/components/parameters/AuthorizationMaskinporten'
+        - $ref: '#/components/parameters/SenderGlnRequired'
+        - $ref: '#/components/parameters/OnBehalfOfGlnOptional'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "./schemas/requests/authorization-request-submission.schema.json"
+              $ref: './schemas/requests/authorization-request-submission.schema.json'
       responses:
-        "201":
+        '201':
           description: >
             The authorization request was created and the response contains details of the
             request, including the URL for the MinSide authorization flow.
           content:
             application/json:
               schema:
-                $ref: "./schemas/requests/authorization-request-resource.schema.json"
-        "400":
-          $ref: "#/components/responses/400BadRequestError"
-        "401":
-          $ref: "#/components/responses/401UnauthorizedError"
-        "403":
-          $ref: "#/components/responses/403ForbiddenError"
-        "500":
-          $ref: "#/components/responses/500InternalServerError"
+                $ref: './schemas/requests/authorization-request-resource.schema.json'
+        '400':
+          $ref: '#/components/responses/400BadRequestError'
+        '401':
+          $ref: '#/components/responses/401UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/403ForbiddenError'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
 
-  "/authorization-requests/{id}":
+  '/authorization-requests/{id}':
     get:
       tags:
         - Authorization Requests
@@ -470,10 +470,10 @@ paths:
         Retrieve information about a specific authorization request. This can be used to
         check the status of the request.
       parameters:
-        - $ref: "#/components/parameters/UserAgent"
-        - $ref: "#/components/parameters/AuthorizationMaskinportenOrEndUser"
-        - $ref: "#/components/parameters/SenderGlnOptional"
-        - $ref: "#/components/parameters/OnBehalfOfGlnOptional"
+        - $ref: '#/components/parameters/UserAgent'
+        - $ref: '#/components/parameters/AuthorizationMaskinportenOrEndUser'
+        - $ref: '#/components/parameters/SenderGlnOptional'
+        - $ref: '#/components/parameters/OnBehalfOfGlnOptional'
         - name: id
           in: path
           required: true
@@ -481,18 +481,18 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: Details of the requested authorization request.
           content:
             application/json:
               schema:
-                $ref: "./schemas/requests/authorization-request-resource.schema.json"
-        "401":
-          $ref: "#/components/responses/401UnauthorizedError"
-        "404":
-          $ref: "#/components/responses/404NotFoundError"
-        "500":
-          $ref: "#/components/responses/500InternalServerError"
+                $ref: './schemas/requests/authorization-request-resource.schema.json'
+        '401':
+          $ref: '#/components/responses/401UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/404NotFoundError'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
     patch:
       tags:
         - Authorization Requests
@@ -501,7 +501,7 @@ paths:
         Update an authorization request. This endpoint is intended for internal MinSide usage
         with an end-user token and is not available to external integrators.
       parameters:
-        - $ref: "#/components/parameters/UserAgent"
+        - $ref: '#/components/parameters/UserAgent'
         - name: Authorization
           in: header
           required: true
@@ -519,24 +519,24 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "./schemas/requests/authorization-request-update.schema.json"
+              $ref: './schemas/requests/authorization-request-update.schema.json'
       responses:
-        "200":
+        '200':
           description: The authorization request was successfully updated.
           content:
             application/json:
               schema:
-                $ref: "./schemas/requests/authorization-request-resource.schema.json"
-        "400":
-          $ref: "#/components/responses/400BadRequestError"
-        "401":
-          $ref: "#/components/responses/401UnauthorizedError"
-        "403":
-          $ref: "#/components/responses/403ForbiddenError"
-        "404":
-          $ref: "#/components/responses/404NotFoundError"
-        "500":
-          $ref: "#/components/responses/500InternalServerError"
+                $ref: './schemas/requests/authorization-request-resource.schema.json'
+        '400':
+          $ref: '#/components/responses/400BadRequestError'
+        '401':
+          $ref: '#/components/responses/401UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/403ForbiddenError'
+        '404':
+          $ref: '#/components/responses/404NotFoundError'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
     delete:
       tags:
         - TODO
@@ -545,10 +545,10 @@ paths:
         Cancel an authorization request. This operation is only allowed if the request has
         not yet been authorized.
       parameters:
-        - $ref: "#/components/parameters/UserAgent"
-        - $ref: "#/components/parameters/AuthorizationMaskinporten"
-        - $ref: "#/components/parameters/SenderGlnRequired"
-        - $ref: "#/components/parameters/OnBehalfOfGlnOptional"
+        - $ref: '#/components/parameters/UserAgent'
+        - $ref: '#/components/parameters/AuthorizationMaskinporten'
+        - $ref: '#/components/parameters/SenderGlnRequired'
+        - $ref: '#/components/parameters/OnBehalfOfGlnOptional'
         - name: id
           in: path
           required: true
@@ -556,16 +556,16 @@ paths:
           schema:
             type: string
       responses:
-        "200":
-          $ref: "#/components/responses/MetaResponse"
-        "401":
-          $ref: "#/components/responses/401UnauthorizedError"
-        "403":
-          $ref: "#/components/responses/403ForbiddenError"
-        "404":
-          $ref: "#/components/responses/404NotFoundError"
-        "500":
-          $ref: "#/components/responses/500InternalServerError"
+        '200':
+          $ref: '#/components/responses/MetaResponse'
+        '401':
+          $ref: '#/components/responses/401UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/403ForbiddenError'
+        '404':
+          $ref: '#/components/responses/404NotFoundError'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
 
 components:
   parameters:
@@ -640,35 +640,35 @@ components:
       content:
         application/json:
           schema:
-            $ref: "./schemas/json-api-error.schema.json"
+            $ref: './schemas/json-api-error.schema.json'
     401UnauthorizedError:
       description: >
         Unauthorized. The caller is not authenticated or the provided token is invalid or expired.
       content:
         application/json:
           schema:
-            $ref: "./schemas/json-api-error.schema.json"
+            $ref: './schemas/json-api-error.schema.json'
     403ForbiddenError:
       description: >
         Forbidden. The caller is authenticated but does not have permission to perform this operation.
       content:
         application/json:
           schema:
-            $ref: "./schemas/json-api-error.schema.json"
+            $ref: './schemas/json-api-error.schema.json'
     404NotFoundError:
       description: >
         Not found. The requested resource does not exist or is not accessible to the caller.
       content:
         application/json:
           schema:
-            $ref: "./schemas/json-api-error.schema.json"
+            $ref: './schemas/json-api-error.schema.json'
     500InternalServerError:
       description: >
         Internal server error. An unexpected error occurred while processing the request.
       content:
         application/json:
           schema:
-            $ref: "./schemas/json-api-error.schema.json"
+            $ref: './schemas/json-api-error.schema.json'
     MetaResponse:
       description: >
         Metadata response for informational purposes, typically returned from successful
@@ -676,7 +676,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: "./schemas/json-api-meta.schema.json"
+            $ref: './schemas/json-api-meta.schema.json'
 
   securitySchemes:
     bearerAuth:

@@ -101,6 +101,20 @@ class AuthorizationRequestRouteTest : FunSpec({
         testApplication {
             setUpAuthorizationRequestTestApplication()
 
+            test("Should return requests sorted by createdAt datetime timestamp") {
+                val response = client.get(REQUESTS_PATH) {
+                    header(HttpHeaders.Authorization, "Bearer enduser")
+                }
+
+                response.status shouldBe HttpStatusCode.OK
+                val responseJson: GetRequestCollectionResponse = response.body()
+
+                val createdAtList = responseJson.data
+                    .map { OffsetDateTime.parse(it.attributes.createdAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME) }
+
+                createdAtList shouldBe createdAtList.sortedDescending()
+            }
+
             test("Should return only requests for authenticated organization when using Maskinporten token") {
                 val response = client.get(REQUESTS_PATH) {
                     header(HttpHeaders.Authorization, "Bearer maskinporten")
@@ -643,7 +657,7 @@ class AuthorizationRequestRouteTest : FunSpec({
         testApplication {
             setUpAuthorizationRequestTestApplication()
 
-            test("should not be accepted when validto has expired") {
+            test("should not be accepted when validTo has expired") {
                 val patchResult =
                     client.patch("${REQUESTS_PATH}/130b6bca-1e3a-4653-8a9b-ccc0dc4fe389") {
                         header(HttpHeaders.Authorization, "Bearer enduser")

@@ -58,7 +58,7 @@ class ExposedRequestRepositoryTest : FunSpec({
         }
     }
 
-    test("findAllBy returns all requests matching party") {
+    test("findAllAndSortByCreatedAt returns all requests matching party") {
         val targetParty1 = AuthorizationParty(type = PartyType.Person, resourceId = "67652749875413695986")
         val targetParty2 = AuthorizationParty(type = PartyType.Person, resourceId = "17652749875413695986")
         val otherParty = AuthorizationParty(type = PartyType.Person, resourceId = "413695986")
@@ -87,17 +87,42 @@ class ExposedRequestRepositoryTest : FunSpec({
                 requestRepo.insert(request, scopes)
             }
 
-            val requestsOfTargetParty1 = requestRepo.findAllBy(targetParty1)
+            val requestsOfTargetParty1 = requestRepo.findAllAndSortByCreatedAt(targetParty1)
                 .getOrElse { _ ->
-                    fail("findAllBy failed for target party 1")
+                    fail("findAllAndSortByCreatedAt failed for target party 1")
                 }
             requestsOfTargetParty1.size shouldBe numTargetRequests
 
-            requestRepo.findAllBy(targetParty2)
+            requestRepo.findAllAndSortByCreatedAt(targetParty2)
                 .getOrElse { _ ->
-                    fail("findAllBy failed for target party 2")
+                    fail("findAllAndSortByCreatedAt failed for target party 2")
                 }
             requestsOfTargetParty1.size shouldBe numTargetRequests
+        }
+    }
+
+    test("findAllAndSortByCreatedAt returns requests by createdAt DESC") {
+        val party = AuthorizationParty(type = PartyType.Person, resourceId = UUID.randomUUID().toString())
+        val numRequests = 10
+
+        transaction {
+            repeat(numRequests) {
+                val request = AuthorizationRequest.create(
+                    type = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
+                    requestedBy = party,
+                    requestedFrom = party,
+                    requestedTo = party,
+                    validTo = OffsetDateTime.now(ZoneOffset.UTC).plusDays(30),
+                )
+                requestRepo.insert(request, scopes)
+            }
+
+            val result = requestRepo.findAllAndSortByCreatedAt(party)
+                .getOrElse { throw AssertionError("Repository read failed: $it") }
+
+            val createdAtList = result.map { it.createdAt }
+
+            createdAtList shouldBe createdAtList.sortedDescending()
         }
     }
 
