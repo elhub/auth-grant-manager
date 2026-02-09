@@ -30,7 +30,7 @@ class MoveInBusinessHandlerTest :
 
         val handler = MoveInBusinessHandler()
 
-        test("request validation fails on missing startDate") {
+        test("request validation allows missing startDate") {
             val model =
                 CreateRequestModel(
                     authorizedParty = AUTHORIZED_PARTY,
@@ -50,7 +50,54 @@ class MoveInBusinessHandlerTest :
                     ),
                 )
 
-            handler.validateAndReturnRequestCommand(model).shouldBeLeft(MoveInValidationError.MissingStartDate)
+            val command = handler.validateAndReturnRequestCommand(model).shouldBeRight()
+            command.meta.toMetaAttributes()["startDate"] shouldBe null
+        }
+
+        test("request validation fails on future startDate") {
+            val model =
+                CreateRequestModel(
+                    authorizedParty = AUTHORIZED_PARTY,
+                    requestType = AuthorizationRequest.Type.MoveInAndChangeOfEnergySupplierForPerson,
+                    meta =
+                    CreateRequestMeta(
+                        requestedBy = VALID_PARTY,
+                        requestedFrom = VALID_PARTY,
+                        requestedFromName = "From",
+                        requestedTo = VALID_PARTY,
+                        requestedForMeteringPointId = VALID_METERING_POINT,
+                        requestedForMeteringPointAddress = "addr",
+                        balanceSupplierName = "Supplier",
+                        balanceSupplierContractName = "Contract",
+                        startDate = today().plus(DatePeriod(days = 1)),
+                        redirectURI = "https://example.com",
+                    ),
+                )
+
+            handler.validateAndReturnRequestCommand(model).shouldBeLeft(MoveInValidationError.StartDateNotBackInTime)
+        }
+
+        test("request validation allows startDate today") {
+            val model =
+                CreateRequestModel(
+                    authorizedParty = AUTHORIZED_PARTY,
+                    requestType = AuthorizationRequest.Type.MoveInAndChangeOfEnergySupplierForPerson,
+                    meta =
+                    CreateRequestMeta(
+                        requestedBy = VALID_PARTY,
+                        requestedFrom = VALID_PARTY,
+                        requestedFromName = "From",
+                        requestedTo = VALID_PARTY,
+                        requestedForMeteringPointId = VALID_METERING_POINT,
+                        requestedForMeteringPointAddress = "addr",
+                        balanceSupplierName = "Supplier",
+                        balanceSupplierContractName = "Contract",
+                        startDate = today(),
+                        redirectURI = "https://example.com",
+                    ),
+                )
+
+            handler.validateAndReturnRequestCommand(model).shouldBeRight()
         }
 
         test("request validation fails on invalid metering point") {

@@ -26,7 +26,7 @@ data class MoveInBusinessMeta(
     val requestedForMeteringPointAddress: String,
     val balanceSupplierName: String,
     val balanceSupplierContractName: String,
-    val startDate: LocalDate,
+    val startDate: LocalDate?,
     val redirectURI: String? = null,
 ) : RequestMetaMarker,
     DocumentMetaMarker {
@@ -37,7 +37,7 @@ data class MoveInBusinessMeta(
             put("requestedForMeteringPointAddress", requestedForMeteringPointAddress)
             put("balanceSupplierContractName", balanceSupplierContractName)
             put("balanceSupplierName", balanceSupplierName)
-            put("startDate", startDate.toString())
+            startDate?.let { put("startDate", it.toString()) }
             redirectURI?.let { put("redirectURI", it) }
         }
 }

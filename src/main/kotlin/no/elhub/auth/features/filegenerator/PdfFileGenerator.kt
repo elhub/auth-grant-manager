@@ -130,7 +130,7 @@ class PdfGenerator(
                 meteringPointId = documentMeta.requestedForMeteringPointId,
                 balanceSupplierName = documentMeta.balanceSupplierName,
                 balanceSupplierContractName = documentMeta.balanceSupplierContractName,
-                startDate = documentMeta.startDate.toString()
+                startDate = documentMeta.startDate?.toString()
             )
 
             else -> return DocumentGenerationError.ContentGenerationError.left()
@@ -175,7 +175,7 @@ class PdfGenerator(
         meteringPointId: String,
         balanceSupplierName: String,
         balanceSupplierContractName: String,
-        startDate: String
+        startDate: String?
     ): Either<DocumentGenerationError.ContentGenerationError, String> = Either.catch {
         StringWriter().apply {
             mustacheFactory
@@ -187,9 +187,15 @@ class PdfGenerator(
                         MustacheConstants.VARIABLE_KEY_METERING_POINT_ID to meteringPointId,
                         MustacheConstants.VARIABLE_KEY_METERING_POINT_ADDRESS to meteringPointAddress,
                         MustacheConstants.VARIABLE_KEY_BALANCE_SUPPLIER_NAME to balanceSupplierName,
-                        MustacheConstants.VARIABLE_KEY_BALANCE_SUPPLIER_CONTRACT_NAME to balanceSupplierContractName,
-                        MustacheConstants.VARIABLE_KEY_MOVE_IN_DATE to startDate
+                        MustacheConstants.VARIABLE_KEY_BALANCE_SUPPLIER_CONTRACT_NAME to balanceSupplierContractName
                     )
+                        .let { base ->
+                            if (startDate == null) {
+                                base
+                            } else {
+                                base + (MustacheConstants.VARIABLE_KEY_MOVE_IN_DATE to startDate)
+                            }
+                        }
                 ).flush()
         }.toString()
     }.mapLeft { DocumentGenerationError.ContentGenerationError }
