@@ -61,7 +61,7 @@
               "attributes": {
                 "properties": {
                   "documentType": {
-                    "const": "ChangeOfSupplier"
+                    "const": "ChangeOfEnergySupplierForPerson"
                   }
                 }
               }
@@ -90,7 +90,7 @@
               "attributes": {
                 "properties": {
                   "documentType": {
-                    "const": "MoveIn"
+                    "const": "MoveInAndChangeOfEnergySupplierForPerson"
                   }
                 }
               }
