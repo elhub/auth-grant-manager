@@ -169,6 +169,30 @@ class ChangeOfSupplierBusinessHandlerTest :
             result.shouldBeLeft(ChangeOfSupplierValidationError.InvalidRedirectURI)
         }
 
+        test("returns validation error when requestedFrom and requestedTo do not match") {
+            val model =
+                CreateRequestModel(
+                    authorizedParty = authorizedParty,
+                    requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
+                    meta =
+                    CreateRequestMeta(
+                        requestedBy = validParty,
+                        requestedFrom = endUser,
+                        requestedFromName = "Supplier AS",
+                        requestedTo = anotherEndUser,
+                        requestedForMeteringPointId = VALID_METERING_POINT,
+                        requestedForMeteringPointAddress = "Some address",
+                        balanceSupplierName = "Supplier",
+                        balanceSupplierContractName = "Contract",
+                        redirectURI = "https://example.com",
+                    ),
+                )
+
+            val result = handler.validateAndReturnRequestCommand(model)
+
+            result.shouldBeLeft(ChangeOfSupplierValidationError.RequestedToRequestedFromMismatch)
+        }
+
         test("builds RequestCommand for valid input") {
             val model =
                 CreateRequestModel(

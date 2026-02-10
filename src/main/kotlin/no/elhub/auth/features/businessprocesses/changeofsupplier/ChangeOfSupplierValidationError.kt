@@ -75,4 +75,8 @@ sealed class ChangeOfSupplierValidationError(
     @Serializable
     data object InvalidRedirectURI :
         ChangeOfSupplierValidationError("invalid_redirect_uri", "Redirect URI has invalid format")
+
+    @Serializable
+    data object RequestedToRequestedFromMismatch :
+        ChangeOfSupplierValidationError("requested_to_requested_from_mismatch", "Requested to and requested from are not the same party")
 }
