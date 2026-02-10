@@ -51,8 +51,12 @@ class HashicorpVaultSignatureProvider(
     @Serializable
     private data class SignRequest(
         val input: String,
-        val hash_algorithm: HashAlgorithm,
-        val signature_algorithm: SignatureAlgorithm,
+        @SerialName("hash_algorithm")
+        val hashAlgorithm: HashAlgorithm,
+        @SerialName("signature_algorithm")
+        val signatureAlgorithm: SignatureAlgorithm,
+        @SerialName("key_version")
+        val keyVersion: Int,
         val prehashed: Boolean,
     )
 
@@ -77,8 +81,9 @@ class HashicorpVaultSignatureProvider(
                 setBody(
                     SignRequest(
                         input = b64,
-                        hash_algorithm = HashAlgorithm.SHA2_256,
-                        signature_algorithm = SignatureAlgorithm.PKCS1V15,
+                        hashAlgorithm = HashAlgorithm.SHA2_256,
+                        signatureAlgorithm = SignatureAlgorithm.PKCS1V15,
+                        keyVersion = 1,
                         prehashed = false,
                     )
                 )
