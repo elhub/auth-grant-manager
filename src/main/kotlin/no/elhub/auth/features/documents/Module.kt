@@ -4,7 +4,6 @@ import eu.europa.esig.dss.pades.signature.PAdESService
 import eu.europa.esig.dss.spi.validation.CommonCertificateVerifier
 import io.ktor.server.application.Application
 import io.ktor.server.config.ApplicationConfig
-import io.ktor.server.config.getAs
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import io.ktor.util.reflect.TypeInfo
