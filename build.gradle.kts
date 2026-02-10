@@ -162,6 +162,7 @@ val localEnvVars = mapOf(
     "STRUCTURE_DATA_ORGANISATIONS_SERVICE_URL" to "http://localhost:8082",
     "STRUCTURE_DATA_ORGANISATIONS_SERVICE_API_USERNAME" to "user",
     "STRUCTURE_DATA_ORGANISATIONS_SERVICE_API_PASSWORD" to "pass",
+    "USE_PDF_TEST_NOTICE" to "true",
 )
 
 tasks.named<JavaExec>("run").configure {

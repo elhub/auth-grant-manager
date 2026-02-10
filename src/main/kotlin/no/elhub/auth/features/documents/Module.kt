@@ -4,8 +4,10 @@ import eu.europa.esig.dss.pades.signature.PAdESService
 import eu.europa.esig.dss.spi.validation.CommonCertificateVerifier
 import io.ktor.server.application.Application
 import io.ktor.server.config.ApplicationConfig
+import io.ktor.server.config.getAs
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
+import io.ktor.util.reflect.TypeInfo
 import no.elhub.auth.features.documents.common.DocumentPropertiesRepository
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.documents.common.ExposedDocumentPropertiesRepository
@@ -62,12 +64,18 @@ fun Application.module() {
             )
         }
 
-        single { HashicorpVaultSignatureProvider(client = get(named("commonHttpClient")), cfg = get()) } bind SignatureProvider::class
+        single {
+            HashicorpVaultSignatureProvider(
+                client = get(named("commonHttpClient")),
+                cfg = get()
+            )
+        } bind SignatureProvider::class
 
         single {
             val cfg = get<ApplicationConfig>().config("pdfGenerator")
             PdfGeneratorConfig(
                 mustacheResourcePath = cfg.property("mustacheResourcePath").getString(),
+                useTestPdfNotice = cfg.property("useTestPdfNotice").getString() == "true",
             )
         }
 
