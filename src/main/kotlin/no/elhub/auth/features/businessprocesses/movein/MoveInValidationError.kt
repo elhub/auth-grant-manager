@@ -51,4 +51,12 @@ sealed class MoveInValidationError(
     @Serializable
     data object InvalidRequestedFrom :
         MoveInValidationError("invalid_requested_from", "Requested from has invalid format")
+
+    @Serializable
+    data object RequestedByNotFound :
+        MoveInValidationError("requested_by_not_found", "Requested by not found")
+
+    @Serializable
+    data object NotActiveRequestedBy :
+        MoveInValidationError("not_active_requested_by", "Requested by is not an active party in Elhub")
 }
