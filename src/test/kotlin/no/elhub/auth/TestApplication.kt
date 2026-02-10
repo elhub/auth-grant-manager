@@ -24,6 +24,7 @@ fun defaultTestApplication(): TestApplication = TestApplication {
             "ktor.database.url" to "jdbc:postgresql://localhost:5432/auth",
             "ktor.database.driverClass" to "org.postgresql.Driver",
             "pdfGenerator.mustacheResourcePath" to "templates",
+            "pdfGenerator.useTestPdfNotice" to "true",
             "pdfSigner.vault.url" to "http://localhost:8200/v1/transit",
             "pdfSigner.vault.tokenPath" to "src/test/resources/vault_token_mock.txt",
             "pdfSigner.vault.key" to "test-key",
