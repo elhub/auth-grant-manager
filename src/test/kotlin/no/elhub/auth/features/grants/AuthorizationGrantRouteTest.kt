@@ -141,6 +141,9 @@ class AuthorizationGrantRouteTest : FunSpec({
                         detail shouldBe "The provided payload did not satisfy the expected format"
                     }
                 }
+                responseJson.meta.apply {
+                    "createdAt".shouldNotBeNull()
+                }
             }
 
             test("Should return 403 when the grant does not belong to the requester") {
@@ -158,6 +161,9 @@ class AuthorizationGrantRouteTest : FunSpec({
                         detail shouldBe "The party is not allowed to access this resource"
                     }
                 }
+                responseJson.meta.apply {
+                    "createdAt".shouldNotBeNull()
+                }
             }
 
             test("Should return 401 when authorization header not set") {
@@ -173,6 +179,9 @@ class AuthorizationGrantRouteTest : FunSpec({
                         title shouldBe "Missing authorization"
                         detail shouldBe "Bearer token is required in the Authorization header."
                     }
+                }
+                responseJson.meta.apply {
+                    "createdAt".shouldNotBeNull()
                 }
             }
 
@@ -249,6 +258,9 @@ class AuthorizationGrantRouteTest : FunSpec({
                         detail shouldBe "The party is not allowed to access this resource"
                     }
                 }
+                responseJson.meta.apply {
+                    "createdAt".shouldNotBeNull()
+                }
             }
 
             test("Should return 404 on a nonexistent ID") {
@@ -265,6 +277,9 @@ class AuthorizationGrantRouteTest : FunSpec({
                         title shouldBe "Not found"
                         detail shouldBe "The requested resource could not be found"
                     }
+                }
+                responseJson.meta.apply {
+                    "createdAt".shouldNotBeNull()
                 }
             }
         }
@@ -382,6 +397,9 @@ class AuthorizationGrantRouteTest : FunSpec({
                         detail shouldBe "Bearer token is required in the Authorization header."
                     }
                 }
+                responseJson.meta.apply {
+                    "createdAt".shouldNotBeNull()
+                }
             }
 
             test("Should return 403 when the grant does not belong to the requester") {
@@ -398,6 +416,9 @@ class AuthorizationGrantRouteTest : FunSpec({
                         title shouldBe "Party not authorized"
                         detail shouldBe "The party is not allowed to access this resource"
                     }
+                }
+                responseJson.meta.apply {
+                    "createdAt".shouldNotBeNull()
                 }
             }
 
@@ -426,6 +447,9 @@ class AuthorizationGrantRouteTest : FunSpec({
                         detail shouldBe "The party is not allowed to access this resource"
                     }
                 }
+                responseJson.meta.apply {
+                    "createdAt".shouldNotBeNull()
+                }
             }
 
             test("Should return 400 on an invalid ID") {
@@ -443,6 +467,9 @@ class AuthorizationGrantRouteTest : FunSpec({
                         detail shouldBe "The provided payload did not satisfy the expected format"
                     }
                 }
+                responseJson.meta.apply {
+                    "createdAt".shouldNotBeNull()
+                }
             }
 
             test("Should return 404 on a nonexistent ID") {
@@ -459,6 +486,9 @@ class AuthorizationGrantRouteTest : FunSpec({
                         title shouldBe "Not found"
                         detail shouldBe "The requested resource could not be found"
                     }
+                }
+                responseJson.meta.apply {
+                    "createdAt".shouldNotBeNull()
                 }
             }
         }
@@ -660,6 +690,9 @@ class AuthorizationGrantRouteTest : FunSpec({
                         detail shouldBe "Grant must be 'Active' to get consumed"
                     }
                 }
+                responseJson.meta.apply {
+                    "createdAt".shouldNotBeNull()
+                }
             }
             test("Should reject update of expired grant") {
                 val response = client.patch("$GRANTS_PATH/2a28a9dd-d3b3-4dec-a420-3f7d0d0105b7") {
@@ -688,6 +721,9 @@ class AuthorizationGrantRouteTest : FunSpec({
                         detail shouldBe "Grant validity period has passed"
                     }
                 }
+                responseJson.meta.apply {
+                    "createdAt".shouldNotBeNull()
+                }
             }
             test("Should reject invalid status transition") {
                 val response = client.patch("$GRANTS_PATH/2a28a9dd-d3b3-4dec-a420-3f7d0d0105b7") {
@@ -715,6 +751,9 @@ class AuthorizationGrantRouteTest : FunSpec({
                         title shouldBe "Invalid status transition"
                         detail shouldBe "Only 'Exhausted' status is allowed."
                     }
+                }
+                responseJson.meta.apply {
+                    "createdAt".shouldNotBeNull()
                 }
             }
         }

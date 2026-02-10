@@ -346,6 +346,9 @@ class AuthorizationRequestRouteTest : FunSpec({
                         detail shouldBe "The requested resource could not be found"
                     }
                 }
+                responseJson.meta.apply {
+                    "createdAt".shouldNotBeNull()
+                }
             }
 
             test("Should return 403 when the request does not belong to the requester using maskinporten token") {
@@ -363,6 +366,9 @@ class AuthorizationRequestRouteTest : FunSpec({
                         detail shouldBe "The party is not allowed to access this resource"
                     }
                 }
+                responseJson.meta.apply {
+                    "createdAt".shouldNotBeNull()
+                }
             }
 
             test("Should return 403 when the request does not belong to the requester using end user token") {
@@ -378,6 +384,9 @@ class AuthorizationRequestRouteTest : FunSpec({
                         title shouldBe "Party not authorized"
                         detail shouldBe "The party is not allowed to access this resource"
                     }
+                }
+                responseJson.meta.apply {
+                    "createdAt".shouldNotBeNull()
                 }
             }
         }
@@ -542,6 +551,9 @@ class AuthorizationRequestRouteTest : FunSpec({
                         detail shouldBe "Requested from name is missing"
                     }
                 }
+                responseJson.meta.apply {
+                    "createdAt".shouldNotBeNull()
+                }
             }
 
             test("Should return 403 Forbidden when requestee has valid gridowner token") {
@@ -594,6 +606,9 @@ class AuthorizationRequestRouteTest : FunSpec({
                         title shouldBe "Unsupported party type"
                         detail shouldBe "The party type you are authorized as is not supported for this endpoint."
                     }
+                }
+                responseJson.meta.apply {
+                    "createdAt".shouldNotBeNull()
                 }
             }
 
@@ -649,6 +664,9 @@ class AuthorizationRequestRouteTest : FunSpec({
                         detail shouldBe "Provided national identity number is invalid"
                     }
                 }
+                responseJson.meta.apply {
+                    "createdAt".shouldNotBeNull()
+                }
             }
         }
     }
@@ -683,6 +701,9 @@ class AuthorizationRequestRouteTest : FunSpec({
                         title shouldBe "Request has expired"
                         detail shouldBe "Request validity period has passed"
                     }
+                }
+                responseJson.meta.apply {
+                    "createdAt".shouldNotBeNull()
                 }
             }
 
@@ -944,6 +965,9 @@ class AuthorizationRequestRouteTest : FunSpec({
                         detail shouldBe "Only 'Accepted' and 'Rejected' statuses are allowed."
                     }
                 }
+                responseJson.meta.apply {
+                    "createdAt".shouldNotBeNull()
+                }
             }
 
             test("Should return 403 Unauthorized when requestee has valid maskinport token") {
@@ -974,6 +998,9 @@ class AuthorizationRequestRouteTest : FunSpec({
                         detail shouldBe "The party type you are authorized as is not supported for this endpoint."
                     }
                 }
+                responseJson.meta.apply {
+                    "createdAt".shouldNotBeNull()
+                }
             }
 
             test("Should return 401 Unauthorized when requestee has no token") {
@@ -989,6 +1016,9 @@ class AuthorizationRequestRouteTest : FunSpec({
                         title shouldBe "Missing authorization"
                         detail shouldBe "Bearer token is required in the Authorization header."
                     }
+                }
+                responseJson.meta.apply {
+                    "createdAt".shouldNotBeNull()
                 }
             }
 
@@ -1006,6 +1036,9 @@ class AuthorizationRequestRouteTest : FunSpec({
                         title shouldBe "Invalid token"
                         detail shouldBe "Token could not be verified."
                     }
+                }
+                responseJson.meta.apply {
+                    "createdAt".shouldNotBeNull()
                 }
             }
 
@@ -1047,6 +1080,9 @@ class AuthorizationRequestRouteTest : FunSpec({
                         title shouldBe "Unsupported party type"
                         detail shouldBe "The party type you are authorized as is not supported for this endpoint."
                     }
+                }
+                responseJson.meta.apply {
+                    "createdAt".shouldNotBeNull()
                 }
             }
         }
