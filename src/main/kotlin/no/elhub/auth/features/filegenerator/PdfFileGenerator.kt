@@ -14,11 +14,8 @@ import no.elhub.auth.features.documents.create.DocumentGenerationError
 import no.elhub.auth.features.documents.create.FileGenerator
 import no.elhub.auth.features.documents.create.command.DocumentMetaMarker
 import org.apache.pdfbox.Loader
-import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.pdmodel.PDDocumentInformation
 import org.apache.pdfbox.pdmodel.PDPageContentStream
-import org.apache.pdfbox.pdmodel.PDPageContentStream.AppendMode
-import org.apache.pdfbox.pdmodel.font.PDFont
 import org.apache.pdfbox.pdmodel.font.PDType1Font
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts
 import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState
