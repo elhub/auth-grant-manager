@@ -14,19 +14,19 @@ import no.elhub.auth.features.documents.create.DocumentGenerationError
 import no.elhub.auth.features.documents.create.FileGenerator
 import no.elhub.auth.features.documents.create.command.DocumentMetaMarker
 import org.apache.pdfbox.Loader
-import org.apache.pdfbox.pdmodel.PDDocumentInformation
 import org.apache.pdfbox.pdmodel.PDDocument
-import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState
-import java.io.ByteArrayInputStream
-import java.io.InputStream
-import java.io.StringWriter
+import org.apache.pdfbox.pdmodel.PDDocumentInformation
 import org.apache.pdfbox.pdmodel.PDPageContentStream
 import org.apache.pdfbox.pdmodel.PDPageContentStream.AppendMode
 import org.apache.pdfbox.pdmodel.font.PDFont
 import org.apache.pdfbox.pdmodel.font.PDType1Font
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts
+import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState
 import org.apache.pdfbox.util.Matrix
+import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
+import java.io.InputStream
+import java.io.StringWriter
 import kotlin.math.PI
 
 data class Font(
@@ -158,7 +158,6 @@ class PdfGenerator(
                     PdfConstants.PDF_METADATA_KEY_TESTDOCUMENT to "true"
                 )
             )
-
         }
         return pdfBytes.addMetadataToPdf(
             mapOf(PdfConstants.PDF_METADATA_KEY_NIN to signerNin)
