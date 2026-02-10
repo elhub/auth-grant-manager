@@ -30,7 +30,7 @@ import no.elhub.auth.features.requests.create.model.CreateRequestModel
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
-private const val REGEX_NUMBERS_LETTERS_SYMBOLS = "^[a-zA-Z0-9_.-]*$"
+private const val REGEX_NUMBERS_LETTERS_SYMBOLS = "^[a-zA-Z0-9.-]*$"
 private const val REGEX_REQUESTED_FROM = REGEX_NUMBERS_LETTERS_SYMBOLS
 private const val REGEX_REQUESTED_BY = REGEX_NUMBERS_LETTERS_SYMBOLS
 private const val REGEX_METERING_POINT = "^\\d{18}$"
