@@ -7,20 +7,11 @@
     "errors": {
       "$ref": "#/$defs/errors"
     },
-    "links": {
-      "description": "Link members related to the primary data.",
-      "$ref": "json-api-framework.schema.json#/$defs/topLevelLinks",
-      "examples": [
-        "https://api.elhub.no/example-endpoint/"
-      ]
-    },
     "meta": {
       "$ref": "json-api-framework.schema.json#/$defs/topLevelMeta"
     }
   },
-  "required": [
-    "errors"
-  ],
+  "required": ["errors"],
   "additionalProperties": false,
   "$defs": {
     "error": {
@@ -29,23 +20,17 @@
         "status": {
           "description": "The HTTP status code applicable to this problem, expressed as a string value.",
           "type": "string",
-          "examples": [
-            "400"
-          ]
+          "examples": ["400"]
         },
         "code": {
           "description": "An application-specific error code, expressed as a string value.",
           "type": "string",
-          "examples": [
-            "invalid_input"
-          ]
+          "examples": ["invalid_input"]
         },
         "title": {
           "description": "A short, human-readable summary of the problem. It **SHOULD NOT** change from occurrence to occurrence of the problem.",
           "type": "string",
-          "examples": [
-            "Invalid input"
-          ]
+          "examples": ["Invalid input"]
         },
         "detail": {
           "description": "A human-readable explanation specific to this occurrence of the problem.",
@@ -55,10 +40,7 @@
           ]
         }
       },
-      "required": [
-        "title",
-        "detail"
-      ]
+      "required": ["title", "detail"]
     },
     "errors": {
       "type": "array",

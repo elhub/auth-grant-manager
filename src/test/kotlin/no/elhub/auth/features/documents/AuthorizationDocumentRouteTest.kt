@@ -332,6 +332,9 @@ class AuthorizationDocumentRouteTest :
                             detail shouldBe "The party is not allowed to access this resource"
                         }
                     }
+                    responseJson.meta.apply {
+                        "createdAt".shouldNotBeNull()
+                    }
                 }
 
                 test("Get document list should give proper size given the authorized user") {
@@ -560,6 +563,9 @@ class AuthorizationDocumentRouteTest :
                             title shouldBe "Bad request"
                             detail shouldBe "Missing User-Agent header"
                         }
+                    }
+                    error.meta.apply {
+                        "createdAt".shouldNotBeNull()
                     }
                 }
             }

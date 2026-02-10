@@ -1,6 +1,11 @@
 package no.elhub.auth.features.common
 
 import io.ktor.http.HttpStatusCode
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
+import no.elhub.devxp.jsonapi.model.JsonApiLinks
+import no.elhub.devxp.jsonapi.model.JsonApiMeta
+import no.elhub.devxp.jsonapi.model.JsonApiResourceLinks
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import no.elhub.devxp.jsonapi.response.JsonApiErrorObject
 
@@ -37,11 +42,16 @@ sealed class RepositoryReadError : RepositoryError() {
 
 fun buildApiErrorResponse(status: HttpStatusCode, title: String, detail: String) =
     status to JsonApiErrorCollection(
-        listOf(
+        errors = listOf(
             JsonApiErrorObject(
                 status = status.value.toString(),
                 title = title,
                 detail = detail
+            )
+        ),
+        meta = JsonApiMeta(
+            mapOf(
+                "createdAt" to JsonPrimitive(currentTimeWithTimeZone().toString())
             )
         )
     )
