@@ -151,6 +151,10 @@ class ChangeOfSupplierBusinessHandler(
             return ChangeOfSupplierValidationError.MatchingRequestedBy.left()
         }
 
+        if (model.requestedTo.idValue != model.requestedFrom.idValue) {
+            return ChangeOfSupplierValidationError.RequestedToRequestedFromMismatch.left()
+        }
+
         val meta =
             ChangeOfSupplierBusinessMeta(
                 requestedFromName = model.requestedFromName,

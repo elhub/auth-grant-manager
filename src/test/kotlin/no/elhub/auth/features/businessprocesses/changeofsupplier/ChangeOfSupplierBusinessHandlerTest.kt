@@ -303,6 +303,28 @@ class ChangeOfSupplierBusinessHandlerTest :
             handler.validateAndReturnRequestCommand(model).shouldBeLeft(ChangeOfSupplierValidationError.MatchingRequestedBy)
         }
 
+        test("request validation fails on requested to not matching requested from") {
+            val model =
+                CreateRequestModel(
+                    authorizedParty = AUTHORIZED_PARTY,
+                    requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
+                    meta =
+                    CreateRequestMeta(
+                        requestedBy = VALID_PARTY,
+                        requestedFrom = END_USER,
+                        requestedFromName = "From",
+                        requestedTo = ANOTHER_END_USER,
+                        requestedForMeteringPointId = VALID_METERING_POINT,
+                        requestedForMeteringPointAddress = "addr",
+                        balanceSupplierName = "Supplier",
+                        balanceSupplierContractName = "Contract",
+                        redirectURI = "https://example.com",
+                    ),
+                )
+
+            handler.validateAndReturnRequestCommand(model).shouldBeLeft(ChangeOfSupplierValidationError.RequestedToRequestedFromMismatch)
+        }
+
         test("request produces RequestCommand for valid input") {
             val model =
                 CreateRequestModel(
@@ -338,7 +360,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                     CreateDocumentMeta(
                         requestedBy = VALID_PARTY,
                         requestedFrom = END_USER,
-                        requestedTo = VALID_PARTY,
+                        requestedTo = END_USER,
                         requestedFromName = "From",
                         requestedForMeteringPointId = VALID_METERING_POINT,
                         requestedForMeteringPointAddress = "addr",
