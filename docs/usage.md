@@ -113,7 +113,7 @@ compliant with the PAdES B-LT standard.
 In addition, we require a mechanism to allow the Authorization Grant Manager to obtain the signer’s Norwegian
 national identity number (fødselsnummer). This is necessary in order to verify the identity of the person who signed the document.
 
-In [assets/elhub-signed.pdf](./assets/elhub-signed.pdf), there is an example of a document signed with Elhub's test business certificate.
+In [assets/elhub-signed.pdf](./assets/elhub-signed.pdf), there is an example of a document signed with Elhub's production enterprise certificate.
 The document is included for inspection of the signatures and for possible testing of adding a new signature using the preferred signing solution.
 
 
