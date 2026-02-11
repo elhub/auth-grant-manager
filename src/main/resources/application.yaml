@@ -13,15 +13,16 @@ ktor:
   deployment:
     port: 8080
   database:
-    url: "$JDBC_URL"
-    driverClass: "org.postgresql.Driver"
-    username: "$APP_USERNAME"
-    password: "$APP_PASSWORD"
+    url: '$JDBC_URL'
+    driverClass: 'org.postgresql.Driver'
+    username: '$APP_USERNAME'
+    password: '$APP_PASSWORD'
     hikari:
       maximumPoolSize: 3
 
 pdfGenerator:
-  mustacheResourcePath: "templates"
+  mustacheResourcePath: 'templates'
+  useTestPdfNotice: ${USE_PDF_TEST_NOTICE:false}
 
 pdfSigner:
   # HashiCorp Vault settings

@@ -15,10 +15,16 @@ import no.elhub.auth.features.documents.create.FileGenerator
 import no.elhub.auth.features.documents.create.command.DocumentMetaMarker
 import org.apache.pdfbox.Loader
 import org.apache.pdfbox.pdmodel.PDDocumentInformation
+import org.apache.pdfbox.pdmodel.PDPageContentStream
+import org.apache.pdfbox.pdmodel.font.PDType1Font
+import org.apache.pdfbox.pdmodel.font.Standard14Fonts
+import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState
+import org.apache.pdfbox.util.Matrix
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.io.StringWriter
+import kotlin.math.PI
 
 data class Font(
     val fontBytes: ByteArray,
@@ -29,12 +35,14 @@ data class Font(
 
 data class PdfGeneratorConfig(
     val mustacheResourcePath: String,
+    val useTestPdfNotice: Boolean,
 )
 
 class PdfGenerator(
     cfg: PdfGeneratorConfig,
 ) : FileGenerator {
     private val mustacheFactory: DefaultMustacheFactory = DefaultMustacheFactory(cfg.mustacheResourcePath)
+    private val useTestPdfNotice = cfg.useTestPdfNotice
 
     object MustacheConstants {
         internal const val TEMPLATE_CHANGE_SUPPLIER_CONTRACT = "change_of_supplier.mustache"
@@ -108,6 +116,7 @@ class PdfGenerator(
 
     object PdfConstants {
         internal const val PDF_METADATA_KEY_NIN = "signerNin"
+        internal const val PDF_METADATA_KEY_TESTDOCUMENT = "testDocument"
     }
 
     override fun generate(
@@ -121,7 +130,7 @@ class PdfGenerator(
                 meteringPointAddress = documentMeta.requestedForMeteringPointAddress,
                 meteringPointId = documentMeta.requestedForMeteringPointId,
                 balanceSupplierName = documentMeta.balanceSupplierName,
-                balanceSupplierContractName = documentMeta.balanceSupplierContractName
+                balanceSupplierContractName = documentMeta.balanceSupplierContractName,
             )
 
             is MoveInBusinessMeta -> generateMoveInHtml(
@@ -139,6 +148,14 @@ class PdfGenerator(
         val pdfBytes =
             generatePdfFromHtml(contractHtmlString).getOrElse { return DocumentGenerationError.ContentGenerationError.left() }
 
+        if (useTestPdfNotice) {
+            return pdfBytes.addTestWatermark().addMetadataToPdf(
+                mapOf(
+                    PdfConstants.PDF_METADATA_KEY_NIN to signerNin,
+                    PdfConstants.PDF_METADATA_KEY_TESTDOCUMENT to "true"
+                )
+            )
+        }
         return pdfBytes.addMetadataToPdf(
             mapOf(PdfConstants.PDF_METADATA_KEY_NIN to signerNin)
         )
@@ -163,7 +180,7 @@ class PdfGenerator(
                         MustacheConstants.VARIABLE_KEY_METERING_POINT_ID to meteringPointId,
                         MustacheConstants.VARIABLE_KEY_METERING_POINT_ADDRESS to meteringPointAddress,
                         MustacheConstants.VARIABLE_KEY_BALANCE_SUPPLIER_NAME to balanceSupplierName,
-                        MustacheConstants.VARIABLE_KEY_BALANCE_SUPPLIER_CONTRACT_NAME to balanceSupplierContractName
+                        MustacheConstants.VARIABLE_KEY_BALANCE_SUPPLIER_CONTRACT_NAME to balanceSupplierContractName,
                     )
                 ).flush()
         }.toString()
@@ -187,7 +204,7 @@ class PdfGenerator(
                         MustacheConstants.VARIABLE_KEY_METERING_POINT_ID to meteringPointId,
                         MustacheConstants.VARIABLE_KEY_METERING_POINT_ADDRESS to meteringPointAddress,
                         MustacheConstants.VARIABLE_KEY_BALANCE_SUPPLIER_NAME to balanceSupplierName,
-                        MustacheConstants.VARIABLE_KEY_BALANCE_SUPPLIER_CONTRACT_NAME to balanceSupplierContractName
+                        MustacheConstants.VARIABLE_KEY_BALANCE_SUPPLIER_CONTRACT_NAME to balanceSupplierContractName,
                     )
                         .let { base ->
                             if (startDate == null) {
@@ -237,5 +254,48 @@ class PdfGenerator(
             this.useFont(fontSupplier(font.fontBytes), font.family, font.weight, font.style, true)
         }
         return this
+    }
+
+    private fun ByteArray.addTestWatermark(): ByteArray {
+        val document = Loader.loadPDF(this)
+
+        val graphicsState = PDExtendedGraphicsState().apply {
+            nonStrokingAlphaConstant = 0.4f
+        }
+
+        val text = "TESTDOKUMENT - IKKE JURIDISK BINDENDE"
+        document.pages.forEach { page ->
+            val box = page.mediaBox
+            val centerX = box.width / 2
+            val centerY = box.height / 2
+
+            PDPageContentStream(
+                document,
+                page,
+                PDPageContentStream.AppendMode.APPEND,
+                true,
+                true
+            ).use { content ->
+                content.setGraphicsStateParameters(graphicsState)
+                content.setFont(PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD), 20f)
+                content.setNonStrokingColor(1f, 0f, 0f)
+                content.beginText()
+                content.setTextMatrix(
+                    Matrix.getRotateInstance(
+                        PI / 6, // 30°
+                        centerX - 200,
+                        centerY
+                    )
+                )
+                content.showText(text)
+                content.endText()
+            }
+        }
+
+        return ByteArrayOutputStream().use { out ->
+            document.save(out)
+            document.close()
+            out.toByteArray()
+        }
     }
 }
