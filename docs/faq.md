@@ -10,7 +10,7 @@
 * The IPs of your test environments need to be whitelisted by Elhub.
   * See [elhub.no](https://elhub.no/fagomrader/markedsprosesser/samtykkekontroll?article=test-av-samtykkekontroll)
 
-### How do I test the authorization flows with business processes
+### How do I test the authorization flows with business processes?
 
 The recommended way to test the business processes for ChangeOfEnergySupplier and MoveIn is
 [documented here](https://elhub.no/fagomrader/markedsprosesser/samtykkekontroll?article=test-av-samtykkekontroll).
