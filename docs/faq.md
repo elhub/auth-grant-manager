@@ -12,7 +12,7 @@
 
 ### How do I test the authorization flows with business processes?
 
-The recommended way to test the business processes for ChangeOfEnergySupplier and MoveIn is
+The recommended way to test the business processes for ChangeOfEnergySupplierForPerson and MoveInAndChangeOfEnergySupplierForPerson is
 [documented here](https://elhub.no/fagomrader/markedsprosesser/samtykkekontroll?article=test-av-samtykkekontroll).
 
 ### Are there any costs with associated with using the auth-grant-manager API?
