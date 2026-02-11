@@ -73,7 +73,7 @@ fun Application.module() {
             val cfg = get<ApplicationConfig>().config("pdfGenerator")
             PdfGeneratorConfig(
                 mustacheResourcePath = cfg.property("mustacheResourcePath").getString(),
-                useTestPdfNotice = cfg.property("useTestPdfNotice").getString() == "true",
+                useTestPdfNotice = cfg.property("useTestPdfNotice").getString().toBoolean(),
             )
         }
 

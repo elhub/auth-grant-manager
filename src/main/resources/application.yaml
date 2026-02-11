@@ -22,7 +22,7 @@ ktor:
 
 pdfGenerator:
   mustacheResourcePath: 'templates'
-  useTestPdfNotice: $USE_PDF_TEST_NOTICE
+  useTestPdfNotice: ${USE_PDF_TEST_NOTICE:false}
 
 pdfSigner:
   # HashiCorp Vault settings
