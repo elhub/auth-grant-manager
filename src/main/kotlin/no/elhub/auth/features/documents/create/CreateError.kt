@@ -39,6 +39,7 @@ fun CreateError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollectio
         is CreateError.BusinessError -> {
             when (error.kind) {
                 BusinessProcessError.Kind.UNEXPECTED_ERROR -> toInternalServerApiErrorResponse()
+
                 BusinessProcessError.Kind.VALIDATION -> {
                     buildApiErrorResponse(
                         status = HttpStatusCode.BadRequest,
