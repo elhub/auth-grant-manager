@@ -67,7 +67,7 @@ The following fields are validated when the authorization request/document is pr
 * **redirectURI**: For Authorization Request flow, it must be a valid URI, and we validate that the redirectURI is
     regirstered in the Ediel portal for the requesting Market Participant. If not, the request will be rejected.
     For Authorization Document flow, this field is not used.
-* **requestedBy**: We validate that the GLN is an active Market Participant in Elhub and (for ChangeOfEnergySupplier)
+* **requestedBy**: We validate that the GLN is an active Market Participant in Elhub and (for ChangeOfEnergySupplierForPerson)
     that it is not the current supplier in the metering point.
 
 ### What do I do if I need help setting up test data?
