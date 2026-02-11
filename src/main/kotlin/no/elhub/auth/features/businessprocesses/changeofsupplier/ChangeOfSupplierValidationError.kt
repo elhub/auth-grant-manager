@@ -34,7 +34,7 @@ sealed class ChangeOfSupplierValidationError(
 
     @Serializable
     data object MeteringPointBlockedForSwitching :
-        ChangeOfSupplierValidationError("metering_point_blocked_for_switching", "Metering point is blocked for switching")
+        ChangeOfSupplierValidationError("metering_point_blocked_for_switching", "Metering point is blocked for switching energy supplier")
 
     @Serializable
     data object MissingMeteringPointAddress :
