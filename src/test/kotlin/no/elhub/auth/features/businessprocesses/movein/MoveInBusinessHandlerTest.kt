@@ -228,6 +228,29 @@ class MoveInBusinessHandlerTest :
             handler.validateAndReturnRequestCommand(model).shouldBeLeft(MoveInValidationError.RequestedFromIsMeteringPointEndUser)
         }
 
+        test("request validation allows on requestedFrom having access to metering point") {
+            val model =
+                CreateRequestModel(
+                    authorizedParty = AUTHORIZED_PARTY,
+                    requestType = AuthorizationRequest.Type.MoveInAndChangeOfEnergySupplierForPerson,
+                    meta =
+                    CreateRequestMeta(
+                        requestedBy = VALID_PARTY,
+                        requestedFrom = SHARED_END_USER,
+                        requestedFromName = "From",
+                        requestedTo = SHARED_END_USER,
+                        requestedForMeteringPointId = VALID_METERING_POINT_1,
+                        requestedForMeteringPointAddress = "addr",
+                        balanceSupplierName = "Supplier",
+                        balanceSupplierContractName = "Contract",
+                        startDate = VALID_START_DATE,
+                        redirectURI = "https://example.com",
+                    ),
+                )
+
+            handler.validateAndReturnRequestCommand(model).shouldBeRight()
+        }
+
         test("request validation fails on not valid requested by") {
             val model =
                 CreateRequestModel(
