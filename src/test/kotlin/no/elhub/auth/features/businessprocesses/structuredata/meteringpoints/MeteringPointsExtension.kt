@@ -9,7 +9,7 @@ import org.testcontainers.utility.DockerImageName
 import java.time.Duration
 
 object MeteringPointsServiceTestContainer {
-    private val image = DockerImageName.parse("docker.jfrog.elhub.cloud/frzq0sxltynr/elhub/structure-data-metering-points-service-mock:0.1.38-201")
+    private val image = DockerImageName.parse("docker.jfrog.elhub.cloud/frzq0sxltynr/elhub/structure-data-metering-points-service-mock:0.1.38-203")
     private var container: GenericContainer<*>? = null
 
     fun start() {
@@ -45,9 +45,11 @@ object StopMeteringPointsServiceTestContainerExtension : AfterProjectListener {
 }
 
 object MeteringPointsServiceTestData {
-    const val VALID_METERING_POINT = "300362000000000008"
-    const val END_USER_ID = "d6784082-8344-e733-e053-02058d0a6752"
-    const val ANOTHER_END_USER_ID = "00662e04-2fd6-3b06-b672-3965abe7b7c5"
-    const val SHARED_END_USER_ID = "384c71a3-4db6-2171-e063-04058d0a09b2"
+    const val VALID_METERING_POINT_1 = "300362000000000008"
+    const val END_USER_ID_1 = "d6784082-8344-e733-e053-02058d0a6752"
+    const val END_USER_ID_2 = "00662e04-2fd6-3b06-b672-3965abe7b7c5"
+    const val SHARED_END_USER_ID_1 = "384c71a3-4db6-2171-e063-04058d0a09b2"
     const val NON_EXISTING_METERING_POINT = "300362000000000000"
+    const val BLOCKED_FOR_SWITCHING_METERING_POINT_1 = "707856200000000058"
+    const val BLOCKED_FOR_SWITCHING_METERING_POINT_2 = "333362000000000006"
 }
