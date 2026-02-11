@@ -70,7 +70,7 @@ The following fields are validated when the authorization request/document is pr
 * **requestedBy**: We validate that the GLN is an active Market Participant in Elhub and (for ChangeOfEnergySupplier)
     that it is not the current supplier in the metering point.
 
-### I need help setting up test data?
+### What do I do if I need help setting up test data?
 
 * See information and contact details [here](https://elhub.no/fagomrader/markedsprosesser/samtykkekontroll?article=test-av-samtykkekontroll).
 
