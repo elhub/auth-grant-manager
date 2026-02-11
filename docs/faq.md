@@ -38,7 +38,7 @@ in [the API documentation](https://api.elhub.no).
 ### What are the two different document/request types for?
 
 The two different types of documents/requests correspond to the different market processes (BRS-NO-101, BRS-NO-102,
-and BRS-NO-103). ChangeOfEnergySupplier is used for BRS-NO-101, while MoveInAndChangeOfEnergySupplierForPerson is
+and BRS-NO-103). ChangeOfEnergySupplierForPerson is used for BRS-NO-101, while MoveInAndChangeOfEnergySupplierForPerson is
 used for BRS-NO-102 and BRS-NO-103.
 
 ### What do the different meta fields mean in the request/document?
