@@ -7,6 +7,15 @@ import io.kotest.matchers.shouldBe
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.plus
+import no.elhub.auth.features.businessprocesses.structuredata.organisations.OrganisationsApi
+import no.elhub.auth.features.businessprocesses.structuredata.organisations.OrganisationsApiConfig
+import no.elhub.auth.features.businessprocesses.structuredata.organisations.OrganisationsService
+import no.elhub.auth.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestContainer
+import no.elhub.auth.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestContainerExtension
+import no.elhub.auth.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.INACTIVE_PARTY_ID
+import no.elhub.auth.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.NOT_BALANCE_SUPPLIER_PARTY_ID
+import no.elhub.auth.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.VALID_PARTY_ID
+import no.elhub.auth.features.businessprocesses.structuredata.organisations.organisationsServiceHttpClient
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
@@ -20,15 +29,30 @@ import no.elhub.auth.features.requests.create.model.CreateRequestMeta
 import no.elhub.auth.features.requests.create.model.CreateRequestModel
 import no.elhub.auth.features.requests.create.model.today
 
-private val VALID_PARTY = PartyIdentifier(PartyIdentifierType.OrganizationNumber, "123456789")
+private val VALID_PARTY = PartyIdentifier(PartyIdentifierType.OrganizationNumber, VALID_PARTY_ID)
+private val NOT_VALID_PARTY = PartyIdentifier(PartyIdentifierType.OrganizationNumber, "0000")
+private val NON_EXISTING_PARTY = PartyIdentifier(PartyIdentifierType.OrganizationNumber, NOT_BALANCE_SUPPLIER_PARTY_ID)
+private val INACTIVE_PARTY = PartyIdentifier(PartyIdentifierType.OrganizationNumber, INACTIVE_PARTY_ID)
 private val VALID_METERING_POINT = "123456789012345678"
-private val AUTHORIZED_PARTY = AuthorizationParty(resourceId = VALID_PARTY.idValue, type = PartyType.Organization)
+private val AUTHORIZED_PARTY = AuthorizationParty(resourceId = VALID_PARTY_ID, type = PartyType.Organization)
 private val VALID_START_DATE = LocalDate(2025, 1, 1)
 
 class MoveInBusinessHandlerTest :
     FunSpec({
 
-        val handler = MoveInBusinessHandler()
+        extension(OrganisationsServiceTestContainerExtension)
+        lateinit var organisationsService: OrganisationsService
+        lateinit var handler: MoveInBusinessHandler
+        beforeSpec {
+            organisationsService = OrganisationsApi(
+                OrganisationsApiConfig(
+                    serviceUrl = OrganisationsServiceTestContainer.serviceUrl(),
+                    basicAuthConfig = no.elhub.auth.features.businessprocesses.structuredata.organisations.BasicAuthConfig("user", "pass")
+                ),
+                organisationsServiceHttpClient
+            )
+            handler = MoveInBusinessHandler(organisationsService)
+        }
 
         test("request validation allows missing startDate") {
             val model =
@@ -121,6 +145,75 @@ class MoveInBusinessHandlerTest :
                 )
 
             handler.validateAndReturnRequestCommand(model).shouldBeLeft(MoveInValidationError.InvalidMeteringPointId)
+        }
+
+        test("request validation fails on not valid requested by") {
+            val model =
+                CreateRequestModel(
+                    authorizedParty = AUTHORIZED_PARTY,
+                    requestType = AuthorizationRequest.Type.MoveInAndChangeOfEnergySupplierForPerson,
+                    meta =
+                    CreateRequestMeta(
+                        requestedBy = NOT_VALID_PARTY,
+                        requestedFrom = VALID_PARTY,
+                        requestedFromName = "From",
+                        requestedTo = VALID_PARTY,
+                        requestedForMeteringPointId = VALID_METERING_POINT,
+                        requestedForMeteringPointAddress = "addr",
+                        balanceSupplierName = "Supplier",
+                        balanceSupplierContractName = "Contract",
+                        startDate = VALID_START_DATE,
+                        redirectURI = "https://example.com",
+                    ),
+                )
+
+            handler.validateAndReturnRequestCommand(model).shouldBeLeft(MoveInValidationError.InvalidRequestedBy)
+        }
+
+        test("request validation fails on non existing requested by") {
+            val model =
+                CreateRequestModel(
+                    authorizedParty = AUTHORIZED_PARTY,
+                    requestType = AuthorizationRequest.Type.MoveInAndChangeOfEnergySupplierForPerson,
+                    meta =
+                    CreateRequestMeta(
+                        requestedBy = NON_EXISTING_PARTY,
+                        requestedFrom = VALID_PARTY,
+                        requestedFromName = "From",
+                        requestedTo = VALID_PARTY,
+                        requestedForMeteringPointId = VALID_METERING_POINT,
+                        requestedForMeteringPointAddress = "addr",
+                        balanceSupplierName = "Supplier",
+                        balanceSupplierContractName = "Contract",
+                        startDate = VALID_START_DATE,
+                        redirectURI = "https://example.com",
+                    ),
+                )
+
+            handler.validateAndReturnRequestCommand(model).shouldBeLeft(MoveInValidationError.RequestedByNotFound)
+        }
+
+        test("request validation fails on non Active requested by") {
+            val model =
+                CreateRequestModel(
+                    authorizedParty = AUTHORIZED_PARTY,
+                    requestType = AuthorizationRequest.Type.MoveInAndChangeOfEnergySupplierForPerson,
+                    meta =
+                    CreateRequestMeta(
+                        requestedBy = INACTIVE_PARTY,
+                        requestedFrom = VALID_PARTY,
+                        requestedFromName = "From",
+                        requestedTo = VALID_PARTY,
+                        requestedForMeteringPointId = VALID_METERING_POINT,
+                        requestedForMeteringPointAddress = "addr",
+                        balanceSupplierName = "Supplier",
+                        balanceSupplierContractName = "Contract",
+                        startDate = VALID_START_DATE,
+                        redirectURI = "https://example.com",
+                    ),
+                )
+
+            handler.validateAndReturnRequestCommand(model).shouldBeLeft(MoveInValidationError.NotActiveRequestedBy)
         }
 
         test("request produces RequestCommand for valid input") {
