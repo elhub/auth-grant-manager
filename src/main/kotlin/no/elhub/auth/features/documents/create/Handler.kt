@@ -12,6 +12,7 @@ import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.documents.common.SignatureService
 import no.elhub.auth.features.documents.create.model.CreateDocumentModel
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.slf4j.LoggerFactory
 
 class Handler(
     private val businessHandler: DocumentBusinessHandler,
@@ -20,6 +21,8 @@ class Handler(
     private val partyService: PartyService,
     private val fileGenerator: FileGenerator
 ) {
+    private val logger = LoggerFactory.getLogger(Handler::class.java)
+
     suspend operator fun invoke(model: CreateDocumentModel): Either<CreateError, AuthorizationDocument> =
         either {
             val requestedByParty =
@@ -62,7 +65,9 @@ class Handler(
             val command =
                 businessHandler
                     .validateAndReturnDocumentCommand(model)
-                    .mapLeft { err -> CreateError.BusinessError(err) }
+                    .mapLeft { err ->
+                        logger.error("Error during business process: kind=${err.kind} detail=${err.detail}")
+                        CreateError.BusinessError(err) }
                     .bind()
 
             val file =

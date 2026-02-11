@@ -219,7 +219,8 @@ class ChangeOfSupplierBusinessHandlerTest :
                     ),
                 )
 
-            handler.validateAndReturnRequestCommand(model).shouldBeLeft(ChangeOfSupplierValidationError.MeteringPointBlockedForSwitching)
+            handler.validateAndReturnRequestCommand(model)
+                .shouldBeLeft(BusinessProcessError.Validation(ChangeOfSupplierValidationError.MeteringPointBlockedForSwitching.message))
         }
 
         test("request validation fails on not valid redirect URI") {

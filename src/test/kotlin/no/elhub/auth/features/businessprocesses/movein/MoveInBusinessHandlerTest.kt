@@ -205,7 +205,8 @@ class MoveInBusinessHandlerTest :
                     ),
                 )
 
-            handler.validateAndReturnRequestCommand(model).shouldBeLeft(MoveInValidationError.MeteringPointNotFound)
+            handler.validateAndReturnRequestCommand(model)
+                .shouldBeLeft(BusinessProcessError.Validation(MoveInValidationError.MeteringPointNotFound.message))
         }
 
         test("request validation fails on requestedFrom being owner of metering point") {

@@ -14,6 +14,7 @@ import no.elhub.auth.features.requests.common.RequestRepository
 import no.elhub.auth.features.requests.create.command.RequestCommand
 import no.elhub.auth.features.requests.create.model.CreateRequestModel
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.slf4j.LoggerFactory
 
 class Handler(
     private val businessHandler: RequestBusinessHandler,
@@ -21,6 +22,8 @@ class Handler(
     private val requestRepo: RequestRepository,
     private val requestPropertyRepo: RequestPropertiesRepository,
 ) {
+    private val logger = LoggerFactory.getLogger(Handler::class.java)
+
     suspend operator fun invoke(model: CreateRequestModel): Either<CreateError, AuthorizationRequest> = either {
         val requestedByParty =
             partyService
@@ -62,7 +65,10 @@ class Handler(
         val businessCommand =
             businessHandler
                 .validateAndReturnRequestCommand(model)
-                .mapLeft { err -> CreateError.BusinessError(err) }
+                .mapLeft { err ->
+                    logger.error("Error during business process: kind=${err.kind} detail=${err.detail}")
+                    CreateError.BusinessError(err)
+                }
                 .bind()
 
         val metaAttributes = businessCommand.meta.toMetaAttributes()
