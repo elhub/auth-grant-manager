@@ -24,7 +24,9 @@ enum class PartyType {
 @Serializable
 enum class PartyStatus {
     ACTIVE,
-    INACTIVE
+    INACTIVE,
+    NEW,
+    TERMINATED
 }
 
 @Serializable
