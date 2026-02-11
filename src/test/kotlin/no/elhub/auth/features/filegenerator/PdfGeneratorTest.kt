@@ -108,7 +108,7 @@ class PdfGeneratorTest :
                 testDocument shouldBe "true"
             }
         }
-        test("Generates PDF without watermark and correct metadata for change of supplier metadata") {
+        test("Generates PDF without watermark and correct metadata for move in and change of supplier meta") {
             val cfg = PdfGeneratorConfig(
                 mustacheResourcePath = "templates",
                 useTestPdfNotice = false
