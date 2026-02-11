@@ -60,7 +60,7 @@ The following fields are validated when the authorization request/document is pr
 * **balanceSupplierContractName**: We validate that the contract name exists in [strompris.no](https://strompris.no/) (same data in test and
     production), but the request will not be rejected if there is no match.
 * **requestedFrom**: We validate that the entity is the end user of the metering point when the message type is
-    "ChangeOfEnergySupplier". The opposite is checked for "MoveInAndChangeOfEnergySupplierForPerson".
+    "ChangeOfEnergySupplierForPerson". The opposite is checked for "MoveInAndChangeOfEnergySupplierForPerson".
 * **requestedFromName**: Must be defined.
 * **requestedForMeteringPointId**: We validate that the metering point exists in Elhub.
 * **requestedForMeteringPointAddress**: Must be defined.
