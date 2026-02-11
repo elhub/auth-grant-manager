@@ -45,7 +45,7 @@ used for BRS-NO-102 and BRS-NO-103.
 
 * **requestedBy**: This is the entity that is requesting the authorization. In this context, it is always the a
     Market Participant (GLN).
-* **requestFrom**: This is the entity that the authorization request/document is being sent requested from. In this
+* **requestedFrom**: This is the entity that the authorization request/document is being sent requested from. In this
     context, it is always the end user (identified by their national ID number).
 * **requestedTo**: This is the entity that the authorization request/document is being sent to (for approval). In
     the current implementation, this is always the same as requestedFrom. However, in the future, we may support
