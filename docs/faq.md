@@ -33,7 +33,7 @@ in [the API documentation](https://api.elhub.no).
 
 ---
 
-## Market Process Specific Questions: ChangeOfEnergySupplier and MoveInAndChangeOfEnergySupplierForPerson
+## Market Process Specific Questions: ChangeOfEnergySupplierForPerson and MoveInAndChangeOfEnergySupplierForPerson
 
 ### What are the two different document/request types for?
 
