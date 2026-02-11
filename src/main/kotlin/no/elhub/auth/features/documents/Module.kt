@@ -62,12 +62,18 @@ fun Application.module() {
             )
         }
 
-        single { HashicorpVaultSignatureProvider(client = get(named("commonHttpClient")), cfg = get()) } bind SignatureProvider::class
+        single {
+            HashicorpVaultSignatureProvider(
+                client = get(named("commonHttpClient")),
+                cfg = get()
+            )
+        } bind SignatureProvider::class
 
         single {
             val cfg = get<ApplicationConfig>().config("pdfGenerator")
             PdfGeneratorConfig(
                 mustacheResourcePath = cfg.property("mustacheResourcePath").getString(),
+                useTestPdfNotice = cfg.property("useTestPdfNotice").getString().toBoolean(),
             )
         }
 

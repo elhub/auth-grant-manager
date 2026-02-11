@@ -16,6 +16,9 @@ import no.elhub.auth.features.businessprocesses.movein.domain.MoveInBusinessMode
 import no.elhub.auth.features.businessprocesses.movein.domain.toDocumentCommand
 import no.elhub.auth.features.businessprocesses.movein.domain.toMoveInBusinessModel
 import no.elhub.auth.features.businessprocesses.movein.domain.toRequestCommand
+import no.elhub.auth.features.businessprocesses.structuredata.organisations.OrganisationsService
+import no.elhub.auth.features.businessprocesses.structuredata.organisations.PartyStatus
+import no.elhub.auth.features.businessprocesses.structuredata.organisations.PartyType
 import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.DocumentBusinessHandler
@@ -32,7 +35,7 @@ import kotlin.time.ExperimentalTime
 
 private const val REGEX_NUMBERS_LETTERS_SYMBOLS = "^[a-zA-Z0-9_.-]*$"
 private const val REGEX_REQUESTED_FROM = REGEX_NUMBERS_LETTERS_SYMBOLS
-private const val REGEX_REQUESTED_BY = REGEX_NUMBERS_LETTERS_SYMBOLS
+private const val REGEX_REQUESTED_BY = "^\\d{13}$"
 private const val REGEX_METERING_POINT = "^\\d{18}$"
 
 private const val MOVE_IN_REQUEST_VALID_DAYS = 28
@@ -42,8 +45,9 @@ private fun moveInRequestValidTo() = today().plus(DatePeriod(days = MOVE_IN_REQU
 
 private fun moveInGrantValidTo() = today().plus(DatePeriod(years = MOVE_IN_GRANT_VALID_YEARS))
 
-class MoveInBusinessHandler :
-    RequestBusinessHandler,
+class MoveInBusinessHandler(
+    private val organisationsService: OrganisationsService
+) : RequestBusinessHandler,
     DocumentBusinessHandler {
     override suspend fun validateAndReturnRequestCommand(createRequestModel: CreateRequestModel): Either<BusinessProcessError, RequestCommand> =
         either {
@@ -69,7 +73,7 @@ class MoveInBusinessHandler :
             validFrom = today(),
         )
 
-    private fun validate(model: MoveInBusinessModel): Either<MoveInValidationError, MoveInBusinessCommand> {
+    private suspend fun validate(model: MoveInBusinessModel): Either<MoveInValidationError, MoveInBusinessCommand> {
         if (model.requestedFromName.isBlank()) {
             return MoveInValidationError.MissingRequestedFromName.left()
         }
@@ -94,14 +98,6 @@ class MoveInBusinessHandler :
             return MoveInValidationError.MissingMeteringPointAddress.left()
         }
 
-        if (model.requestedBy.idValue.isBlank()) {
-            return MoveInValidationError.MissingRequestedBy.left()
-        }
-
-        if (!model.requestedBy.idValue.matches(Regex(REGEX_REQUESTED_BY))) {
-            return MoveInValidationError.InvalidRequestedBy.left()
-        }
-
         if (model.requestedFrom.idValue.isBlank()) {
             return MoveInValidationError.MissingRequestedFrom.left()
         }
@@ -115,6 +111,23 @@ class MoveInBusinessHandler :
             if (it > today()) {
                 return MoveInValidationError.StartDateNotBackInTime.left()
             }
+        }
+
+        if (model.requestedBy.idValue.isBlank()) {
+            return MoveInValidationError.MissingRequestedBy.left()
+        }
+
+        if (!model.requestedBy.idValue.matches(Regex(REGEX_REQUESTED_BY))) {
+            return MoveInValidationError.InvalidRequestedBy.left()
+        }
+
+        val party = organisationsService.getPartyByIdAndPartyType(model.requestedBy.idValue, PartyType.BalanceSupplier)
+        if (party.isLeft()) {
+            return MoveInValidationError.RequestedByNotFound.left()
+        }
+        val partyResponse = party.getOrNull() ?: return MoveInValidationError.RequestedByNotFound.left()
+        if (partyResponse.data.attributes?.status != PartyStatus.ACTIVE) {
+            return MoveInValidationError.NotActiveRequestedBy.left()
         }
 
         val meta =

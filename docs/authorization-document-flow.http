@@ -1,0 +1,215 @@
+# Demo document flow client script
+# This is an IntelliJ HTTP client script for running a successful document flow in MT1.
+#
+# Quick start:
+# 1. Open this file in IntelliJ and use the built-in HTTP client.
+# 2. Fill in the required variables below.
+# 3. Execute the requests top-to-bottom.
+#
+# Expected outputs:
+# - documentId (created after "Create authorization document")
+# - signOrderId (created after "Upload Sign order to BankID")
+# - grantId (created after fetching the document after upload)
+
+# Prerequisites:
+# 1. You need to be able to fetch Maskinporten test tokens. The scope must be
+#    either elhub:balancesupplier or elhub:serviceprovider depending on the role:
+#    - elhub:balancesupplier: set SenderGln to the GLN of the balance supplier
+#      you operate as.
+#    - elhub:serviceprovider: set SenderGln to the GLN of the service provider
+#      you operate as, and OnBehalfOfGln to the GLN of the balance supplier you
+#      operate on behalf of.
+# 2. This script uses BankId's WYSIWYS API to obtain the end users signature.
+#    - This API is documented here: https://developer.bankid.no/bankid-esign-provider/apis/signdoc/signdoc-intro/
+#    - Currently, Elhub's MT1 environment only supports signatures made by a BankID production qualified certificate,
+#      but we will later add support for BankID test qualified certificates
+
+# This script is hardcoded for the case where the token scope is "elhub:balancesupplier" and doing a MoveInAndChangeOfEnergySupplier
+
+# Required variables:
+# userAgent: Header used by Auth Grant Manager to identify the requesting balance supplier (used for logging purposes).
+# senderGln: GLN of the party you act as in this flow (balance supplier or service provider).
+# maskinPortenToken: Maskinporten access token with the correct scope for the role used in this flow.
+# nationalIdentityNumber: National identity number of the person you want an authorization from.
+# bankIdClientId: Client ID for BankID signing.
+# bankIdClientSecret: Client secret for BankID signing.
+# meteringPointId: Metering point you want to switch energy supplier on.
+@userAgent =
+@senderGln =
+@maskinPortenToken =
+@nationalIdentityNumber =
+@bankIdClientId =
+@bankIdClientSecret =
+@meteringPointId =
+
+# Environment specific variables (MT1 + BankID production test environment)
+@elhubEnv = mt1
+@bankIdSigningApi = https://api.esign-stoetest.cloud/v1/signdoc/pades
+@bankIdTokenApi = https://auth.bankid.no/auth/realms/current/protocol/openid-connect/token
+
+# To test against WYSIWYS in BankID preprod (BankID test environment):
+#@bankIdSigningApi = https://api.preprod.esign-stoetest.cloud/v1/signdoc/pades
+#@bankIdTokenApi = https://auth.current.bankid.no/auth/realms/current/protocol/openid-connect/token
+
+
+### Create authorization document for move-in and change of energy supplier
+POST https://auth-grant-manager-{{elhubEnv}}.elhub.cloud/access/v0/authorization-documents
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {{maskinPortenToken}}
+SenderGln: {{senderGln}}
+User-Agent: {{userAgent}}
+
+{
+  "data": {
+    "type": "AuthorizationDocument",
+    "attributes": {
+      "documentType": "MoveInAndChangeOfEnergySupplierForPerson"
+    },
+    "meta": {
+      "requestedBy": {
+        "idType": "GlobalLocationNumber",
+        "idValue": "{{senderGln}}"
+      },
+      "requestedFrom": {
+        "idType": "NationalIdentityNumber",
+        "idValue": "{{nationalIdentityNumber}}"
+      },
+      "requestedTo": {
+        "idType": "NationalIdentityNumber",
+        "idValue": "{{nationalIdentityNumber}}"
+      },
+      "requestedFromName": "Ola Normann",
+      "requestedForMeteringPointId": "{{meteringPointId}}",
+      "requestedForMeteringPointAddress": "Dream Address 123",
+      "balanceSupplierName": "Greatest Balance Supplier of All",
+      "balanceSupplierContractName": "Spot price plus some hidden cost"
+    }
+  }
+}
+
+> {%
+    const created = typeof response.body === "string" ? JSON.parse(response.body) : response.body;
+    client.global.set("documentId", created.data.id);
+%}
+
+
+
+### Download the PDF authorization document for signing (national identity {{nationalIdentityNumber}})
+GET https://auth-grant-manager-{{elhubEnv}}.elhub.cloud/access/v0/authorization-documents/{{documentId}}.pdf
+Authorization: Bearer {{maskinPortenToken}}
+SenderGln: {{senderGln}}
+
+> elhub-signed.pdf
+# you can verify that the document has a valid Elhub signature by running:  pdfsig -nocert elhub-signed.pdf
+
+
+### As a Balance supplier I need to hand over the signature process to a signature provider
+POST {{bankIdTokenApi}}
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=client_credentials&client_id={{bankIdClientId}}&client_secret={{bankIdClientSecret}}&scope=esign/nnin esign esign/qtsa
+
+> {%
+    const tokenResponse = typeof response.body === "string" ? JSON.parse(response.body) : response.body;
+    client.global.set("signaturesToken", tokenResponse.access_token);
+    client.global.set("signaturesTokenType", tokenResponse.token_type || "Bearer");
+%}
+
+### Upload Sign order to BankID
+# First have to base64 encode the PDF because that is what the BankID API expects
+# can run "base64 -w 0 elhub-signed.pdf | xclip -selection clipboard" and paste it into the base64EncodedPdf attribute
+
+@base64EncodedPdf =
+
+POST {{bankIdSigningApi}}
+Accept: application/json
+Content-Type: application/json
+Authorization: {{signaturesTokenType}} {{signaturesToken}}
+
+{
+  "signProperties": {
+    "orderName": "Authorization document",
+    "timeoutSeconds": 1800,
+    "redirectUrl": "https://example.test/signing/return"
+  },
+  "padesSignProperties": {
+    "addVisualSeals": false,
+    "extendToLTA": true,
+    "useConversion": false
+  },
+  "documents": [
+    {
+      "description": "Authorization document",
+      "pdf": "{{base64EncodedPdf}}"
+    }
+  ],
+  "resultContent": {
+    "requestSignerInfo": false
+  }
+}
+
+> {%
+    const signJob = typeof response.body === "string" ? JSON.parse(response.body) : response.body;
+    client.global.set("signOrderId", signJob.sign_id);
+
+    // Url that directs you to BankIDs signature page
+    const approveUrlProd = `https://web.esign-stoetest.cloud/${client.global.get("signOrderId")}`;
+    const approveUrlTest = `https://web.preprod.esign-stoetest.cloud/${client.global.get("signOrderId")}`;
+    client.log("Approve URL for BankId Prod: " + approveUrlProd);
+    client.log("Approve URL for BankId Test: " + approveUrlTest);
+%}
+
+
+### As a Balance Supplier, I want to check the status of the Sign Order
+GET {{bankIdSigningApi}}?sign_id={{signOrderId}}
+Accept: application/json
+Authorization: {{signaturesTokenType}} {{signaturesToken}}
+
+
+
+
+
+### As a Balance Supplier I want to download the signed document
+DELETE {{bankIdSigningApi}}?sign_id={{signOrderId}}
+Accept: application/json
+Authorization: {{signaturesTokenType}} {{signaturesToken}}
+
+>>! sign-order-response.json
+
+## Manual steps: decode the base64 encoded pdf
+##  jq -r '.signingResults[0].padesSignedPdf' sign-order-response.json | base64 --decode > bankid-signed.pdf
+## Inspect signature: pdfsig -nocert bankid-signed.pdf
+
+
+### As a Balance Supplier I now need to send the signed document back to Auth Grant Manager to generate the grant
+PUT https://auth-grant-manager-{{elhubEnv}}.elhub.cloud/access/v0/authorization-documents/{{documentId}}.pdf
+Authorization: Bearer {{maskinPortenToken}}
+SenderGln: {{senderGln}}
+Content-Type: application/pdf
+
+< bankid-signed.pdf
+
+
+
+### As a Balance Supplier I want to fetch the document to find the created AuthorizationGrant
+GET https://auth-grant-manager-{{elhubEnv}}.elhub.cloud/access/v0/authorization-documents/{{documentId}}
+Authorization: Bearer {{maskinPortenToken}}
+SenderGln: {{senderGln}}
+
+
+> {%
+    const document = typeof response.body === "string" ? JSON.parse(response.body) : response.body;
+    client.global.set("grantId", document.data.relationships.authorizationGrant.data.id);
+%}
+
+### Fetch the grant
+GET https://auth-grant-manager-{{elhubEnv}}.elhub.cloud/access/v0/authorization-grants/{{grantId}}
+Authorization: Bearer {{maskinPortenToken}}
+SenderGln: {{senderGln}}
+
+
+### Fetch the grant scopes to se what permissions being granted
+GET https://auth-grant-manager-{{elhubEnv}}.elhub.cloud/access/v0/authorization-grants/{{grantId}}/scopes
+Authorization: Bearer {{maskinPortenToken}}
+SenderGln: {{senderGln}}

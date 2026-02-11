@@ -84,6 +84,9 @@ signer's identity before the signature is applied. This ensures that only the in
 document, providing Elhub with a tamper-proof, verified, and compliant digital record. The result is a signed
 PDF document that meets legal and regulatory standards.
 
+> There is an IntelliJ HTTP client request file that runs the full flow in MT1:
+> `authorization-document-flow.http`. Market parties can use this to test the flow end-to-end.
+
 ### Authenticating via Maskinporten
 
 * The Market Party MUST be registered in Maskinporten with assigned scoped for access to Elhub.
@@ -91,7 +94,7 @@ PDF document that meets legal and regulatory standards.
 * The Market Party MUST use a Maskinporten approved business certificate ("virksomhetssertifikat") for
   identification with Maskinporten.
 * All API requests to Elhub MUST include the Maskinporten access token in the Authorization header:
-    ```
+    ```text
     Authorization: Bearer {token}
     ```
 
@@ -100,7 +103,7 @@ PDF document that meets legal and regulatory standards.
 * If a Service Provider performs the operation on behalf of another party, the party the operation is performed
     on behalf of MUST be identified using the party’s GLN. The GLN is attached to the call to the Elhub API in the
     Authorization header:
-    ```
+    ```text
     On-Behalf-Of: {GLN}
     ```
 * The Service Provider MUST be registered in Ediel as a Service Provider for the Market Party.
@@ -113,7 +116,7 @@ compliant with the PAdES B-LT standard.
 In addition, we require a mechanism to allow the Authorization Grant Manager to obtain the signer’s Norwegian
 national identity number (fødselsnummer). This is necessary in order to verify the identity of the person who signed the document.
 
-In [assets/elhub-signed.pdf](./assets/elhub-signed.pdf), there is an example of a document signed with Elhub's test business certificate.
+In [assets/elhub-signed.pdf](./assets/elhub-signed.pdf), there is an example of a document signed with Elhub's production enterprise certificate.
 The document is included for inspection of the signatures and for possible testing of adding a new signature using the preferred signing solution.
 
 
