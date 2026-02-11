@@ -129,9 +129,6 @@ class MoveInBusinessHandler(
         if (meteringPointResponse.data.relationships.endUser != null && meteringPointResponse.data.attributes?.accessType == OWNED) {
             return MoveInValidationError.RequestedFromIsMeteringPointEndUser.left()
         }
-        if (meteringPointResponse.data.attributes?.accountingPoint?.blockedForSwitching == true) {
-            return MoveInValidationError.MeteringPointBlockedForSwitching.left()
-        }
 
         val startDate = model.startDate
         startDate?.let {

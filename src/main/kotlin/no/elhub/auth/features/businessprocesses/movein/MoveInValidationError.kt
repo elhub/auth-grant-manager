@@ -41,10 +41,6 @@ sealed class MoveInValidationError(
         MoveInValidationError("requested_from_is_metering_point_end_user", "Requested from is already registered as end user of the metering point")
 
     @Serializable
-    data object MeteringPointBlockedForSwitching :
-        MoveInValidationError("metering_point_blocked_for_switching", "Metering point is blocked for switching")
-
-    @Serializable
     data object MissingMeteringPointAddress :
         MoveInValidationError("missing_metering_point_address", "Metering point address is missing")
 

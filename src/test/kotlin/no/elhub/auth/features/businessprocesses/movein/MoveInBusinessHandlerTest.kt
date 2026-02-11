@@ -15,7 +15,6 @@ import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.Met
 import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsService
 import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceTestContainer
 import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceTestContainerExtension
-import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceTestData.BLOCKED_FOR_SWITCHING_METERING_POINT_2
 import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceTestData.END_USER_ID_1
 import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceTestData.END_USER_ID_2
 import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceTestData.NON_EXISTING_METERING_POINT
@@ -204,29 +203,6 @@ class MoveInBusinessHandlerTest :
                 )
 
             handler.validateAndReturnRequestCommand(model).shouldBeLeft(MoveInValidationError.MeteringPointNotFound)
-        }
-
-        test("request validation fails on metering point is blocked for switching") {
-            val model =
-                CreateRequestModel(
-                    authorizedParty = AUTHORIZED_PARTY,
-                    requestType = AuthorizationRequest.Type.MoveInAndChangeOfEnergySupplierForPerson,
-                    meta =
-                    CreateRequestMeta(
-                        requestedBy = VALID_PARTY,
-                        requestedFrom = ANOTHER_END_USER,
-                        requestedFromName = "From",
-                        requestedTo = ANOTHER_END_USER,
-                        requestedForMeteringPointId = BLOCKED_FOR_SWITCHING_METERING_POINT_2,
-                        requestedForMeteringPointAddress = "addr",
-                        balanceSupplierName = "Supplier",
-                        balanceSupplierContractName = "Contract",
-                        startDate = VALID_START_DATE,
-                        redirectURI = "https://example.com",
-                    ),
-                )
-
-            handler.validateAndReturnRequestCommand(model).shouldBeLeft(MoveInValidationError.MeteringPointBlockedForSwitching)
         }
 
         test("request validation fails on requestedFrom being owner of metering point") {
