@@ -9,6 +9,7 @@ import eu.europa.esig.dss.model.x509.CertificateToken
 import eu.europa.esig.dss.pades.PAdESSignatureParameters
 import eu.europa.esig.dss.pades.signature.PAdESService
 import eu.europa.esig.dss.spi.validation.CommonCertificateVerifier
+import eu.europa.esig.dss.spi.x509.tsp.TSPSource
 import org.apache.pdfbox.Loader
 import java.io.ByteArrayOutputStream
 import java.security.PrivateKey
@@ -19,9 +20,13 @@ object TestPdfSigner {
         signingCert: java.security.cert.X509Certificate,
         chain: List<java.security.cert.X509Certificate>,
         signingKey: PrivateKey,
-        signatureLevel: SignatureLevel = SignatureLevel.PAdES_BASELINE_B
+        signatureLevel: SignatureLevel = SignatureLevel.PAdES_BASELINE_B,
+        tspSource: TSPSource? = null
     ): ByteArray {
         val padesService = PAdESService(CommonCertificateVerifier())
+        if (tspSource != null) {
+            padesService.setTspSource(tspSource)
+        }
         val signatureParameters = PAdESSignatureParameters().apply {
             this.signatureLevel = signatureLevel
             digestAlgorithm = DigestAlgorithm.SHA256
