@@ -6,7 +6,6 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldContain
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
@@ -97,6 +96,6 @@ class MeteringPointsApiTest : FunSpec({
     test("Non existing metering point") {
         val response = service.getMeteringPointByIdAndElhubInternalId("300362000000000000", "some-end-user-id")
         response.shouldBeLeft()
-        response.value.toString() shouldContain "MeteringPoint not found"
+        response.value shouldBe ClientError.RequestRejected
     }
 })

@@ -2,6 +2,7 @@ package no.elhub.auth.features.grants.consume
 
 import io.ktor.http.HttpStatusCode
 import no.elhub.auth.features.common.buildApiErrorResponse
+import no.elhub.auth.features.common.toInternalServerApiErrorResponse
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 
 sealed class ConsumeError {
@@ -21,11 +22,7 @@ fun ConsumeError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollecti
             detail = "Grant could not be found"
         )
 
-        ConsumeError.PersistenceError -> buildApiErrorResponse(
-            status = HttpStatusCode.InternalServerError,
-            title = "Internal server error",
-            detail = "An internal error occurred."
-        )
+        ConsumeError.PersistenceError -> toInternalServerApiErrorResponse()
 
         ConsumeError.NotAuthorized -> buildApiErrorResponse(
             status = HttpStatusCode.Unauthorized,

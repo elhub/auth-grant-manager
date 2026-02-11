@@ -11,6 +11,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.datetime.LocalDate
+import no.elhub.auth.features.businessprocesses.BusinessProcessError
 import no.elhub.auth.features.businessprocesses.changeofsupplier.ChangeOfSupplierValidationError
 import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.common.RepositoryWriteError
@@ -209,13 +210,13 @@ class HandlerTest : FunSpec({
         stubPartyResolution(partyService)
         coEvery {
             businessHandler.validateAndReturnRequestCommand(model)
-        } returns ChangeOfSupplierValidationError.MissingRequestedFromName.left()
+        } returns BusinessProcessError.Validation(ChangeOfSupplierValidationError.MissingRequestedFromName.message).left()
 
         val handler = Handler(businessHandler, partyService, requestRepo, requestPropertyRepo)
 
         val response = handler(model)
 
-        response.shouldBeLeft(CreateError.ValidationError(ChangeOfSupplierValidationError.MissingRequestedFromName))
+        response.shouldBeLeft(CreateError.BusinessError(BusinessProcessError.Validation(ChangeOfSupplierValidationError.MissingRequestedFromName.message)))
         verify(exactly = 0) { requestRepo.insert(any(), any()) }
     }
 

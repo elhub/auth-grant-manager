@@ -66,8 +66,8 @@ class ConfirmErrorJsonApiResponseTest : FunSpec({
                 error,
                 Expectation(
                     status = HttpStatusCode.InternalServerError,
-                    title = "Internal Server error",
-                    detail = "An internal error occurred."
+                    title = "Internal server error",
+                    detail = "An internal server error occurred"
                 )
             )
         }

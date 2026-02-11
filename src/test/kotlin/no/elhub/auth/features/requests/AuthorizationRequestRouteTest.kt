@@ -1,5 +1,6 @@
 package no.elhub.auth.features.requests
 
+import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import io.kotest.assertions.throwables.shouldNotThrowAny
@@ -22,6 +23,7 @@ import io.ktor.server.application.Application
 import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
+import no.elhub.auth.features.businessprocesses.BusinessProcessError
 import no.elhub.auth.features.common.AuthPersonsTestContainer
 import no.elhub.auth.features.common.AuthPersonsTestContainerExtension
 import no.elhub.auth.features.common.CreateScopeData
@@ -1152,11 +1154,13 @@ private fun insertAuthorizationRequest(
 }
 
 private class TestRequestBusinessHandler : RequestBusinessHandler {
-    override suspend fun validateAndReturnRequestCommand(createRequestModel: CreateRequestModel) = when (createRequestModel.requestType) {
+    override suspend fun validateAndReturnRequestCommand(
+        createRequestModel: CreateRequestModel
+    ): Either<BusinessProcessError, RequestCommand> = when (createRequestModel.requestType) {
         AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson -> {
             val meta = createRequestModel.meta
             if (meta.requestedFromName.isBlank()) {
-                TestRequestValidationError.MissingRequestedFromName.left()
+                BusinessProcessError.Validation(TestRequestValidationError.MissingRequestedFromName.message).left()
             } else {
                 RequestCommand(
                     type = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
@@ -1183,7 +1187,7 @@ private class TestRequestBusinessHandler : RequestBusinessHandler {
             }
         }
 
-        else -> TestRequestValidationError.UnsupportedRequestType.left()
+        else -> BusinessProcessError.Validation(TestRequestValidationError.UnsupportedRequestType.message).left()
     }
 
     override fun getCreateGrantProperties(request: AuthorizationRequest): CreateGrantProperties =

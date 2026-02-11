@@ -1,8 +1,9 @@
 package no.elhub.auth.features.requests.create
 
 import io.ktor.http.HttpStatusCode
+import no.elhub.auth.features.businessprocesses.BusinessProcessError
 import no.elhub.auth.features.common.buildApiErrorResponse
-import no.elhub.auth.features.requests.create.requesttypes.RequestTypeValidationError
+import no.elhub.auth.features.common.toInternalServerApiErrorResponse
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 
 sealed class CreateError {
@@ -11,10 +12,7 @@ sealed class CreateError {
     data object PersistenceError : CreateError()
     data object RequestedPartyError : CreateError()
     data object InvalidNinError : CreateError()
-
-    data class ValidationError(
-        val reason: RequestTypeValidationError,
-    ) : CreateError()
+    data class BusinessError(val error: BusinessProcessError) : CreateError()
 }
 
 fun CreateError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> =
@@ -33,15 +31,18 @@ fun CreateError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollectio
 
         CreateError.PersistenceError,
         CreateError.RequestedPartyError,
-        CreateError.MappingError -> buildApiErrorResponse(
-            status = HttpStatusCode.InternalServerError,
-            title = "Internal server error",
-            detail = "An internal error occurred."
-        )
+        CreateError.MappingError -> toInternalServerApiErrorResponse()
 
-        is CreateError.ValidationError -> buildApiErrorResponse(
-            status = HttpStatusCode.BadRequest,
-            title = "Validation error",
-            detail = this.reason.message,
-        )
+        is CreateError.BusinessError -> {
+            when (error.kind) {
+                BusinessProcessError.Kind.UNEXPECTED_ERROR -> toInternalServerApiErrorResponse()
+                BusinessProcessError.Kind.VALIDATION -> {
+                    buildApiErrorResponse(
+                        status = HttpStatusCode.BadRequest,
+                        title = "Validation error",
+                        detail = error.detail
+                    )
+                }
+            }
+        }
     }

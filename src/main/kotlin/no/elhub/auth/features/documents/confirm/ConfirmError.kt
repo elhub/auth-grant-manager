@@ -2,6 +2,7 @@ package no.elhub.auth.features.documents.confirm
 
 import io.ktor.http.HttpStatusCode
 import no.elhub.auth.features.common.buildApiErrorResponse
+import no.elhub.auth.features.common.toInternalServerApiErrorResponse
 import no.elhub.auth.features.documents.common.SignatureValidationError
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 
@@ -60,11 +61,7 @@ fun ConfirmError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollecti
         ConfirmError.DocumentUpdateError,
         ConfirmError.ScopeReadError,
         ConfirmError.GrantCreationError,
-        ConfirmError.RequestedByResolutionError, -> buildApiErrorResponse(
-            status = HttpStatusCode.InternalServerError,
-            title = "Internal Server error",
-            detail = "An internal error occurred."
-        )
+        ConfirmError.RequestedByResolutionError, -> toInternalServerApiErrorResponse()
     }
 
 fun handleValidateSignatureError(error: ConfirmError.ValidateSignaturesError): Pair<HttpStatusCode, JsonApiErrorCollection> = when (error.cause) {

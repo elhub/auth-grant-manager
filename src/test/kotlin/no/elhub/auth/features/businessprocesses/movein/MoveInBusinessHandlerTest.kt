@@ -7,6 +7,7 @@ import io.kotest.matchers.shouldBe
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.plus
+import no.elhub.auth.features.businessprocesses.BusinessProcessError
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
@@ -74,7 +75,8 @@ class MoveInBusinessHandlerTest :
                     ),
                 )
 
-            handler.validateAndReturnRequestCommand(model).shouldBeLeft(MoveInValidationError.StartDateNotBackInTime)
+            handler.validateAndReturnRequestCommand(model)
+                .shouldBeLeft(BusinessProcessError.Validation(MoveInValidationError.StartDateNotBackInTime.message))
         }
 
         test("request validation allows startDate today") {
@@ -120,7 +122,8 @@ class MoveInBusinessHandlerTest :
                     ),
                 )
 
-            handler.validateAndReturnRequestCommand(model).shouldBeLeft(MoveInValidationError.InvalidMeteringPointId)
+            handler.validateAndReturnRequestCommand(model)
+                .shouldBeLeft(BusinessProcessError.Validation(MoveInValidationError.InvalidMeteringPointId.message))
         }
 
         test("request produces RequestCommand for valid input") {

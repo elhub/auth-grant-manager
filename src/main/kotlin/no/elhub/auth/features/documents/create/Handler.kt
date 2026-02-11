@@ -62,6 +62,7 @@ class Handler(
             val command =
                 businessHandler
                     .validateAndReturnDocumentCommand(model)
+                    .mapLeft { err -> CreateError.BusinessError(err) }
                     .bind()
 
             val file =

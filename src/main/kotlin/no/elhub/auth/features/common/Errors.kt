@@ -53,6 +53,12 @@ fun buildApiErrorResponse(status: HttpStatusCode, title: String, detail: String)
         )
     )
 
+fun toInternalServerApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> = buildApiErrorResponse(
+    status = HttpStatusCode.InternalServerError,
+    title = "Internal server error",
+    detail = "An internal server error occurred",
+)
+
 fun toDeserializationApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> = buildApiErrorResponse(
     status = HttpStatusCode.BadRequest,
     title = "Invalid request body",
@@ -88,11 +94,7 @@ fun QueryError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection
             detail = "The requested resource could not be found",
         )
 
-        QueryError.IOError -> buildApiErrorResponse(
-            status = HttpStatusCode.InternalServerError,
-            title = "Internal server error",
-            detail = "An error occurred when attempted to perform the query",
-        )
+        QueryError.IOError -> toInternalServerApiErrorResponse()
 
         QueryError.NotAuthorizedError -> buildApiErrorResponse(
             status = HttpStatusCode.Forbidden,

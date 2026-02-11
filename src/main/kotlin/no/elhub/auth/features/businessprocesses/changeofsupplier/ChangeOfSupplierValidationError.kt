@@ -1,7 +1,11 @@
 package no.elhub.auth.features.businessprocesses.changeofsupplier
 
 import kotlinx.serialization.Serializable
+import no.elhub.auth.features.businessprocesses.BusinessProcessError
 import no.elhub.auth.features.requests.create.requesttypes.RequestTypeValidationError
+
+fun ChangeOfSupplierValidationError.toBusinessValidationError(): BusinessProcessError = BusinessProcessError.Validation(detail = this.message)
+fun ChangeOfSupplierValidationError.toBusinessUnexpectedError(): BusinessProcessError = BusinessProcessError.Unexpected(detail = this.message)
 
 @Serializable
 sealed class ChangeOfSupplierValidationError(
@@ -79,4 +83,8 @@ sealed class ChangeOfSupplierValidationError(
     @Serializable
     data object RequestedToRequestedFromMismatch :
         ChangeOfSupplierValidationError("requested_to_requested_from_mismatch", "Requested to and requested from are not the same party")
+
+    @Serializable
+    data object UnexpectedError :
+        ChangeOfSupplierValidationError("unexpected_error", "Unexpected error occurred")
 }

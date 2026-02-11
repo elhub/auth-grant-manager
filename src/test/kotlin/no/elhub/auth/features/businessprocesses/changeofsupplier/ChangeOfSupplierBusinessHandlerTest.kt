@@ -7,6 +7,7 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.mockk
+import no.elhub.auth.features.businessprocesses.BusinessProcessError
 import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.BasicAuthConfig
 import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsApi
 import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsApiConfig
@@ -102,7 +103,8 @@ class ChangeOfSupplierBusinessHandlerTest :
                     ),
                 )
 
-            handler.validateAndReturnRequestCommand(model).shouldBeLeft(ChangeOfSupplierValidationError.MissingRequestedFromName)
+            handler.validateAndReturnRequestCommand(model)
+                .shouldBeLeft(BusinessProcessError.Validation(ChangeOfSupplierValidationError.MissingRequestedFromName.message))
         }
 
         test("request validation fails when requestedFrom is not related to metering point") {
@@ -124,7 +126,8 @@ class ChangeOfSupplierBusinessHandlerTest :
                     ),
                 )
 
-            handler.validateAndReturnRequestCommand(model).shouldBeLeft(ChangeOfSupplierValidationError.RequestedFromNotMeteringPointEndUser)
+            handler.validateAndReturnRequestCommand(model)
+                .shouldBeLeft(BusinessProcessError.Validation(ChangeOfSupplierValidationError.RequestedFromNotMeteringPointEndUser.message))
         }
 
         test("request validation fails when requestedFrom has access to metering point but is not end user") {
@@ -146,7 +149,8 @@ class ChangeOfSupplierBusinessHandlerTest :
                     ),
                 )
 
-            handler.validateAndReturnRequestCommand(model).shouldBeLeft(ChangeOfSupplierValidationError.RequestedFromNotMeteringPointEndUser)
+            handler.validateAndReturnRequestCommand(model)
+                .shouldBeLeft(BusinessProcessError.Validation(ChangeOfSupplierValidationError.RequestedFromNotMeteringPointEndUser.message))
         }
 
         test("request validation fails on invalid metering point") {
@@ -168,7 +172,8 @@ class ChangeOfSupplierBusinessHandlerTest :
                     ),
                 )
 
-            handler.validateAndReturnRequestCommand(model).shouldBeLeft(ChangeOfSupplierValidationError.InvalidMeteringPointId)
+            handler.validateAndReturnRequestCommand(model)
+                .shouldBeLeft(BusinessProcessError.Validation(ChangeOfSupplierValidationError.InvalidMeteringPointId.message))
         }
 
         test("request validation fails on unexisting metering point") {
@@ -190,7 +195,8 @@ class ChangeOfSupplierBusinessHandlerTest :
                     ),
                 )
 
-            handler.validateAndReturnRequestCommand(model).shouldBeLeft(ChangeOfSupplierValidationError.MeteringPointNotFound)
+            handler.validateAndReturnRequestCommand(model)
+                .shouldBeLeft(BusinessProcessError.Unexpected(ChangeOfSupplierValidationError.MeteringPointNotFound.message))
         }
 
         test("request validation fails on not valid redirect URI") {
@@ -212,7 +218,8 @@ class ChangeOfSupplierBusinessHandlerTest :
                     ),
                 )
 
-            handler.validateAndReturnRequestCommand(model).shouldBeLeft(ChangeOfSupplierValidationError.InvalidRedirectURI)
+            handler.validateAndReturnRequestCommand(model)
+                .shouldBeLeft(BusinessProcessError.Validation(ChangeOfSupplierValidationError.InvalidRedirectURI.message))
         }
 
         test("request validation fails on not valid requested by") {
@@ -234,7 +241,8 @@ class ChangeOfSupplierBusinessHandlerTest :
                     ),
                 )
 
-            handler.validateAndReturnRequestCommand(model).shouldBeLeft(ChangeOfSupplierValidationError.InvalidRequestedBy)
+            handler.validateAndReturnRequestCommand(model)
+                .shouldBeLeft(BusinessProcessError.Validation(ChangeOfSupplierValidationError.InvalidRequestedBy.message))
         }
 
         test("request validation fails on non existing requested by") {
@@ -256,7 +264,8 @@ class ChangeOfSupplierBusinessHandlerTest :
                     ),
                 )
 
-            handler.validateAndReturnRequestCommand(model).shouldBeLeft(ChangeOfSupplierValidationError.RequestedByNotFound)
+            handler.validateAndReturnRequestCommand(model)
+                .shouldBeLeft(BusinessProcessError.Validation(ChangeOfSupplierValidationError.RequestedByNotFound.message))
         }
 
         test("request validation fails on not active requested by") {
@@ -278,7 +287,8 @@ class ChangeOfSupplierBusinessHandlerTest :
                     ),
                 )
 
-            handler.validateAndReturnRequestCommand(model).shouldBeLeft(ChangeOfSupplierValidationError.NotActiveRequestedBy)
+            handler.validateAndReturnRequestCommand(model)
+                .shouldBeLeft(BusinessProcessError.Validation(ChangeOfSupplierValidationError.NotActiveRequestedBy.message))
         }
 
         test("request validation fails on requested by matching current balance supplier") {
@@ -300,7 +310,8 @@ class ChangeOfSupplierBusinessHandlerTest :
                     ),
                 )
 
-            handler.validateAndReturnRequestCommand(model).shouldBeLeft(ChangeOfSupplierValidationError.MatchingRequestedBy)
+            handler.validateAndReturnRequestCommand(model)
+                .shouldBeLeft(BusinessProcessError.Validation(ChangeOfSupplierValidationError.MatchingRequestedBy.message))
         }
 
         test("request validation fails on requested to not matching requested from") {
@@ -322,7 +333,8 @@ class ChangeOfSupplierBusinessHandlerTest :
                     ),
                 )
 
-            handler.validateAndReturnRequestCommand(model).shouldBeLeft(ChangeOfSupplierValidationError.RequestedToRequestedFromMismatch)
+            handler.validateAndReturnRequestCommand(model)
+                .shouldBeLeft(BusinessProcessError.Validation(ChangeOfSupplierValidationError.RequestedToRequestedFromMismatch.message))
         }
 
         test("request produces RequestCommand for valid input") {

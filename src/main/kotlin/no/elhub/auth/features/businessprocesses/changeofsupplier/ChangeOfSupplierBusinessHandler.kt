@@ -9,6 +9,7 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
+import no.elhub.auth.features.businessprocesses.BusinessProcessError
 import no.elhub.auth.features.businessprocesses.changeofsupplier.domain.ChangeOfSupplierBusinessCommand
 import no.elhub.auth.features.businessprocesses.changeofsupplier.domain.ChangeOfSupplierBusinessMeta
 import no.elhub.auth.features.businessprocesses.changeofsupplier.domain.ChangeOfSupplierBusinessModel
@@ -16,6 +17,7 @@ import no.elhub.auth.features.businessprocesses.changeofsupplier.domain.toChange
 import no.elhub.auth.features.businessprocesses.changeofsupplier.domain.toDocumentCommand
 import no.elhub.auth.features.businessprocesses.changeofsupplier.domain.toRequestCommand
 import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.AccessType.SHARED
+import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.ClientError
 import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsService
 import no.elhub.auth.features.businessprocesses.structuredata.organisations.OrganisationsService
 import no.elhub.auth.features.businessprocesses.structuredata.organisations.PartyStatus
@@ -24,7 +26,6 @@ import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.common.person.PersonService
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.DocumentBusinessHandler
-import no.elhub.auth.features.documents.create.CreateError
 import no.elhub.auth.features.documents.create.command.DocumentCommand
 import no.elhub.auth.features.documents.create.model.CreateDocumentModel
 import no.elhub.auth.features.grants.AuthorizationScope
@@ -46,10 +47,17 @@ class ChangeOfSupplierBusinessHandler(
     private val personService: PersonService,
     private val organisationsService: OrganisationsService
 ) : RequestBusinessHandler, DocumentBusinessHandler {
-    override suspend fun validateAndReturnRequestCommand(createRequestModel: CreateRequestModel): Either<ChangeOfSupplierValidationError, RequestCommand> =
+    override suspend fun validateAndReturnRequestCommand(createRequestModel: CreateRequestModel): Either<BusinessProcessError, RequestCommand> =
         either {
             val model = createRequestModel.toChangeOfSupplierBusinessModel()
-            validate(model).bind().toRequestCommand()
+            validate(model).mapLeft {
+                when (it) {
+                    is ChangeOfSupplierValidationError.UnexpectedError,
+                    ChangeOfSupplierValidationError.MeteringPointNotFound -> it.toBusinessUnexpectedError()
+
+                    else -> it.toBusinessValidationError()
+                }
+            }.bind().toRequestCommand()
         }
 
     override fun getCreateGrantProperties(request: AuthorizationRequest): CreateGrantProperties =
@@ -58,13 +66,10 @@ class ChangeOfSupplierBusinessHandler(
             validFrom = today(),
         )
 
-    override suspend fun validateAndReturnDocumentCommand(model: CreateDocumentModel): Either<CreateError.BusinessValidationError, DocumentCommand> =
+    override suspend fun validateAndReturnDocumentCommand(model: CreateDocumentModel): Either<BusinessProcessError, DocumentCommand> =
         either {
             val model = model.toChangeOfSupplierBusinessModel()
-            validate(model)
-                .mapLeft { raise(CreateError.BusinessValidationError(it.message)) }
-                .bind()
-                .toDocumentCommand()
+            validate(model).mapLeft { it.toBusinessValidationError() }.bind().toDocumentCommand()
         }
 
     override fun getCreateGrantProperties(document: AuthorizationDocument): CreateGrantProperties =
@@ -109,11 +114,13 @@ class ChangeOfSupplierBusinessHandler(
         val meteringPoint = meteringPointsService.getMeteringPointByIdAndElhubInternalId(
             meteringPointId = model.requestedForMeteringPointId,
             elhubInternalId = endUserElhubInternalId.toString()
-        )
-
-        if (meteringPoint.isLeft()) {
-            return ChangeOfSupplierValidationError.MeteringPointNotFound.left()
+        ).mapLeft { err ->
+            when (err) {
+                ClientError.RequestRejected -> ChangeOfSupplierValidationError.MeteringPointNotFound.left()
+                is ClientError.UnexpectedError -> ChangeOfSupplierValidationError.UnexpectedError.left()
+            }
         }
+
         val meteringPointResponse = meteringPoint.getOrNull() ?: return ChangeOfSupplierValidationError.MeteringPointNotFound.left()
 
         if (meteringPointResponse.data.relationships.endUser == null || meteringPointResponse.data.attributes?.accessType == SHARED) {

@@ -1,11 +1,10 @@
 package no.elhub.auth.features.businessprocesses.structuredata.meteringpoints
 
 import arrow.core.Either
+import arrow.core.left
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
-import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.request.get
-import io.ktor.client.statement.bodyAsText
 import io.ktor.http.isSuccess
 import org.slf4j.LoggerFactory
 
@@ -25,13 +24,13 @@ class MeteringPointsApi(
     override suspend fun getMeteringPointByIdAndElhubInternalId(meteringPointId: String, elhubInternalId: String): Either<ClientError, MeteringPointResponse> =
         Either.catch {
             val response = client.get("${meteringPointsApiConfig.serviceUrl}/metering-points/$meteringPointId?endUserId=$elhubInternalId")
-            if (response.status.isSuccess()) {
-                val responseBody: MeteringPointResponse = response.body()
-                responseBody
-            } else {
-                logger.error("Failed to fetch metering point with status: ${response.status.value}")
-                throw ClientRequestException(response, response.bodyAsText())
+            if (!response.status.isSuccess()) {
+                logger.error("Request to metering points service was rejected with status: ${response.status}")
+                return ClientError.RequestRejected.left()
             }
+
+            val responseBody: MeteringPointResponse = response.body()
+            responseBody
         }.mapLeft { throwable ->
             logger.error("Failed to fetch metering point: {}", throwable.message)
             ClientError.UnexpectedError(throwable)
@@ -49,5 +48,6 @@ data class BasicAuthConfig(
 )
 
 sealed class ClientError {
+    data object RequestRejected : ClientError()
     data class UnexpectedError(val cause: Throwable) : ClientError()
 }

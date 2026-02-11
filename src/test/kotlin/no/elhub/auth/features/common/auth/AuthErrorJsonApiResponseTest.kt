@@ -62,7 +62,7 @@ class AuthErrorJsonApiResponseTest : FunSpec({
             response.errors.first().apply {
                 this.status shouldBe HttpStatusCode.InternalServerError.value.toString()
                 title shouldBe "Internal server error"
-                detail shouldBe "An internal error occurred."
+                detail shouldBe "An internal server error occurred"
             }
         }
     }

@@ -10,6 +10,8 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import no.elhub.auth.features.businessprocesses.BusinessProcessError
+import no.elhub.auth.features.businessprocesses.changeofsupplier.ChangeOfSupplierValidationError
 import no.elhub.auth.features.businessprocesses.changeofsupplier.defaultValidTo
 import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.common.RepositoryWriteError
@@ -202,14 +204,17 @@ class HandlerTest : FunSpec({
         val fileGenerator = mockk<FileGenerator>()
 
         stubPartyResolution(partyService)
-        val validationError = CreateError.BusinessValidationError("validation failed")
-        coEvery { businessHandler.validateAndReturnDocumentCommand(model) } returns validationError.left()
+//        val validationError = BusinessError.Validation("Validation failed")
+        coEvery {
+            businessHandler.validateAndReturnDocumentCommand(model)
+        } returns BusinessProcessError.Validation(ChangeOfSupplierValidationError.MissingRequestedFromName.message).left()
 
         val handler = Handler(businessHandler, signatureService, documentRepository, partyService, fileGenerator)
 
         val response = handler(model)
 
-        response.shouldBeLeft(validationError)
+        response.shouldBeLeft(CreateError.BusinessError(BusinessProcessError.Validation(ChangeOfSupplierValidationError.MissingRequestedFromName.message)))
+
         verify(exactly = 0) { fileGenerator.generate(any(), any()) }
     }
 
