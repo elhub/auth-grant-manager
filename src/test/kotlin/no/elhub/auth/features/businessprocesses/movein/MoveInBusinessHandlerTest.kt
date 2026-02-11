@@ -10,6 +10,7 @@ import io.mockk.mockk
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.plus
+import no.elhub.auth.features.businessprocesses.BusinessProcessError
 import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsApi
 import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsApiConfig
 import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsService
@@ -22,7 +23,6 @@ import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.Met
 import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceTestData.VALID_METERING_POINT_1
 import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.meteringPointsServiceHttpClient
 import no.elhub.auth.features.businessprocesses.structuredata.organisations.BasicAuthConfig
-import no.elhub.auth.features.businessprocesses.BusinessProcessError
 import no.elhub.auth.features.businessprocesses.structuredata.organisations.OrganisationsApi
 import no.elhub.auth.features.businessprocesses.structuredata.organisations.OrganisationsApiConfig
 import no.elhub.auth.features.businessprocesses.structuredata.organisations.OrganisationsService
