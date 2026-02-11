@@ -57,7 +57,7 @@ used for BRS-NO-102 and BRS-NO-103.
 The following fields are validated when the authorization request/document is processed:
 
 * **balanceSupplierName**: Must be defined.
-* **balanceSupplierContractName**: We validate that the contract name exist in strompris.no (same data in test and
+* **balanceSupplierContractName**: We validate that the contract name exists in [strompris.no](https://strompris.no/) (same data in test and
     production), but the request will not be rejected if there is no match.
 * **requestedFrom**: We validate that the entity is the end user of the metering point when the message type is
     "ChangeOfEnergySupplier". The opposite is checked for "MoveInAndChangeOfEnergySupplierForPerson".
