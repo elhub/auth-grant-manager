@@ -16,10 +16,13 @@ import no.elhub.auth.features.businessprocesses.movein.domain.MoveInBusinessMode
 import no.elhub.auth.features.businessprocesses.movein.domain.toDocumentCommand
 import no.elhub.auth.features.businessprocesses.movein.domain.toMoveInBusinessModel
 import no.elhub.auth.features.businessprocesses.movein.domain.toRequestCommand
+import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.AccessType.OWNED
+import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsService
 import no.elhub.auth.features.businessprocesses.structuredata.organisations.OrganisationsService
 import no.elhub.auth.features.businessprocesses.structuredata.organisations.PartyStatus
 import no.elhub.auth.features.businessprocesses.structuredata.organisations.PartyType
 import no.elhub.auth.features.common.CreateScopeData
+import no.elhub.auth.features.common.person.PersonService
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.DocumentBusinessHandler
 import no.elhub.auth.features.documents.create.command.DocumentCommand
@@ -46,7 +49,9 @@ private fun moveInRequestValidTo() = today().plus(DatePeriod(days = MOVE_IN_REQU
 private fun moveInGrantValidTo() = today().plus(DatePeriod(years = MOVE_IN_GRANT_VALID_YEARS))
 
 class MoveInBusinessHandler(
-    private val organisationsService: OrganisationsService
+    private val organisationsService: OrganisationsService,
+    private val meteringPointsService: MeteringPointsService,
+    private val personService: PersonService
 ) : RequestBusinessHandler,
     DocumentBusinessHandler {
     override suspend fun validateAndReturnRequestCommand(createRequestModel: CreateRequestModel): Either<BusinessProcessError, RequestCommand> =
@@ -104,6 +109,22 @@ class MoveInBusinessHandler(
 
         if (!model.requestedFrom.idValue.matches(Regex(REGEX_REQUESTED_FROM))) {
             return MoveInValidationError.InvalidRequestedFrom.left()
+        }
+
+        // temporary mapping until model has elhubInternalId instead of NIN
+        val endUserElhubInternalId = personService.findOrCreateByNin(model.requestedFrom.idValue).getOrNull()?.internalId
+            ?: return MoveInValidationError.RequestedFromNotFound.left()
+
+        val meteringPoint = meteringPointsService.getMeteringPointByIdAndElhubInternalId(
+            meteringPointId = model.requestedForMeteringPointId,
+            elhubInternalId = endUserElhubInternalId.toString()
+        )
+        if (meteringPoint.isLeft()) {
+            return MoveInValidationError.MeteringPointNotFound.left()
+        }
+        val meteringPointResponse = meteringPoint.getOrNull() ?: return MoveInValidationError.MeteringPointNotFound.left()
+        if (meteringPointResponse.data.relationships.endUser != null && meteringPointResponse.data.attributes?.accessType == OWNED) {
+            return MoveInValidationError.RequestedFromIsMeteringPointEndUser.left()
         }
 
         val startDate = model.startDate

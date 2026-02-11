@@ -126,6 +126,9 @@ class ChangeOfSupplierBusinessHandler(
         if (meteringPointResponse.data.relationships.endUser == null || meteringPointResponse.data.attributes?.accessType == SHARED) {
             return ChangeOfSupplierValidationError.RequestedFromNotMeteringPointEndUser.left()
         }
+        if (meteringPointResponse.data.attributes?.accountingPoint?.blockedForSwitching == true) {
+            return ChangeOfSupplierValidationError.MeteringPointBlockedForSwitching.left()
+        }
 
         // temporary validation for URI until it is fetched from EDIEL and validated against that value instead
         if (model.redirectURI != null && !model.redirectURI.contains("http")) {

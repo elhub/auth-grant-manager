@@ -1,12 +1,27 @@
 package no.elhub.auth.features.businessprocesses.movein
 
+import arrow.core.Either
 import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
+import io.mockk.coEvery
+import io.mockk.mockk
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.plus
+import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsApi
+import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsApiConfig
+import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsService
+import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceTestContainer
+import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceTestContainerExtension
+import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceTestData.END_USER_ID_1
+import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceTestData.END_USER_ID_2
+import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceTestData.NON_EXISTING_METERING_POINT
+import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceTestData.SHARED_END_USER_ID_1
+import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceTestData.VALID_METERING_POINT_1
+import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.meteringPointsServiceHttpClient
+import no.elhub.auth.features.businessprocesses.structuredata.organisations.BasicAuthConfig
 import no.elhub.auth.features.businessprocesses.BusinessProcessError
 import no.elhub.auth.features.businessprocesses.structuredata.organisations.OrganisationsApi
 import no.elhub.auth.features.businessprocesses.structuredata.organisations.OrganisationsApiConfig
@@ -21,6 +36,8 @@ import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
 import no.elhub.auth.features.common.party.PartyType
+import no.elhub.auth.features.common.person.Person
+import no.elhub.auth.features.common.person.PersonService
 import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.create.dto.CreateDocumentMeta
@@ -29,31 +46,49 @@ import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.create.model.CreateRequestMeta
 import no.elhub.auth.features.requests.create.model.CreateRequestModel
 import no.elhub.auth.features.requests.create.model.today
+import java.util.UUID
 
 private val VALID_PARTY = PartyIdentifier(PartyIdentifierType.OrganizationNumber, VALID_PARTY_ID)
 private val NOT_VALID_PARTY = PartyIdentifier(PartyIdentifierType.OrganizationNumber, "0000")
 private val NON_EXISTING_PARTY = PartyIdentifier(PartyIdentifierType.OrganizationNumber, NOT_BALANCE_SUPPLIER_PARTY_ID)
 private val INACTIVE_PARTY = PartyIdentifier(PartyIdentifierType.OrganizationNumber, INACTIVE_PARTY_ID)
-private val VALID_METERING_POINT = "123456789012345678"
 private val AUTHORIZED_PARTY = AuthorizationParty(resourceId = VALID_PARTY_ID, type = PartyType.Organization)
 private val VALID_START_DATE = LocalDate(2025, 1, 1)
+private val END_USER = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "123456789")
+private val ANOTHER_END_USER = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "987654321")
+private val SHARED_END_USER = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "11223344556")
 
 class MoveInBusinessHandlerTest :
     FunSpec({
 
-        extension(OrganisationsServiceTestContainerExtension)
+        extensions(OrganisationsServiceTestContainerExtension, MeteringPointsServiceTestContainerExtension)
         lateinit var organisationsService: OrganisationsService
+        lateinit var meteringPointsService: MeteringPointsService
         lateinit var handler: MoveInBusinessHandler
+
+        val personService = mockk<PersonService>()
+
         beforeSpec {
             organisationsService = OrganisationsApi(
                 OrganisationsApiConfig(
                     serviceUrl = OrganisationsServiceTestContainer.serviceUrl(),
-                    basicAuthConfig = no.elhub.auth.features.businessprocesses.structuredata.organisations.BasicAuthConfig("user", "pass")
+                    basicAuthConfig = BasicAuthConfig("user", "pass")
                 ),
                 organisationsServiceHttpClient
             )
-            handler = MoveInBusinessHandler(organisationsService)
+            meteringPointsService = MeteringPointsApi(
+                MeteringPointsApiConfig(
+                    serviceUrl = MeteringPointsServiceTestContainer.serviceUrl(),
+                    basicAuthConfig = no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.BasicAuthConfig("user", "pass")
+                ),
+                meteringPointsServiceHttpClient
+            )
+            handler = MoveInBusinessHandler(organisationsService, meteringPointsService, personService)
         }
+
+        coEvery { personService.findOrCreateByNin(END_USER.idValue) } returns Either.Right(Person(UUID.fromString(END_USER_ID_1)))
+        coEvery { personService.findOrCreateByNin(ANOTHER_END_USER.idValue) } returns Either.Right(Person(UUID.fromString(END_USER_ID_2)))
+        coEvery { personService.findOrCreateByNin(SHARED_END_USER.idValue) } returns Either.Right(Person(UUID.fromString(SHARED_END_USER_ID_1)))
 
         test("request validation allows missing startDate") {
             val model =
@@ -63,10 +98,10 @@ class MoveInBusinessHandlerTest :
                     meta =
                     CreateRequestMeta(
                         requestedBy = VALID_PARTY,
-                        requestedFrom = VALID_PARTY,
+                        requestedFrom = ANOTHER_END_USER,
                         requestedFromName = "From",
-                        requestedTo = VALID_PARTY,
-                        requestedForMeteringPointId = VALID_METERING_POINT,
+                        requestedTo = ANOTHER_END_USER,
+                        requestedForMeteringPointId = VALID_METERING_POINT_1,
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
@@ -87,10 +122,10 @@ class MoveInBusinessHandlerTest :
                     meta =
                     CreateRequestMeta(
                         requestedBy = VALID_PARTY,
-                        requestedFrom = VALID_PARTY,
+                        requestedFrom = ANOTHER_END_USER,
                         requestedFromName = "From",
-                        requestedTo = VALID_PARTY,
-                        requestedForMeteringPointId = VALID_METERING_POINT,
+                        requestedTo = ANOTHER_END_USER,
+                        requestedForMeteringPointId = VALID_METERING_POINT_1,
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
@@ -111,10 +146,10 @@ class MoveInBusinessHandlerTest :
                     meta =
                     CreateRequestMeta(
                         requestedBy = VALID_PARTY,
-                        requestedFrom = VALID_PARTY,
+                        requestedFrom = ANOTHER_END_USER,
                         requestedFromName = "From",
-                        requestedTo = VALID_PARTY,
-                        requestedForMeteringPointId = VALID_METERING_POINT,
+                        requestedTo = ANOTHER_END_USER,
+                        requestedForMeteringPointId = VALID_METERING_POINT_1,
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
@@ -134,9 +169,9 @@ class MoveInBusinessHandlerTest :
                     meta =
                     CreateRequestMeta(
                         requestedBy = VALID_PARTY,
-                        requestedFrom = VALID_PARTY,
+                        requestedFrom = ANOTHER_END_USER,
                         requestedFromName = "From",
-                        requestedTo = VALID_PARTY,
+                        requestedTo = ANOTHER_END_USER,
                         requestedForMeteringPointId = "123",
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
@@ -150,6 +185,76 @@ class MoveInBusinessHandlerTest :
                 .shouldBeLeft(BusinessProcessError.Validation(MoveInValidationError.InvalidMeteringPointId.message))
         }
 
+        test("request validation fails on non existing metering point") {
+            val model =
+                CreateRequestModel(
+                    authorizedParty = AUTHORIZED_PARTY,
+                    requestType = AuthorizationRequest.Type.MoveInAndChangeOfEnergySupplierForPerson,
+                    meta =
+                    CreateRequestMeta(
+                        requestedBy = VALID_PARTY,
+                        requestedFrom = ANOTHER_END_USER,
+                        requestedFromName = "From",
+                        requestedTo = ANOTHER_END_USER,
+                        requestedForMeteringPointId = NON_EXISTING_METERING_POINT,
+                        requestedForMeteringPointAddress = "addr",
+                        balanceSupplierName = "Supplier",
+                        balanceSupplierContractName = "Contract",
+                        startDate = VALID_START_DATE,
+                        redirectURI = "https://example.com",
+                    ),
+                )
+
+            handler.validateAndReturnRequestCommand(model).shouldBeLeft(MoveInValidationError.MeteringPointNotFound)
+        }
+
+        test("request validation fails on requestedFrom being owner of metering point") {
+            val model =
+                CreateRequestModel(
+                    authorizedParty = AUTHORIZED_PARTY,
+                    requestType = AuthorizationRequest.Type.MoveInAndChangeOfEnergySupplierForPerson,
+                    meta =
+                    CreateRequestMeta(
+                        requestedBy = VALID_PARTY,
+                        requestedFrom = END_USER,
+                        requestedFromName = "From",
+                        requestedTo = END_USER,
+                        requestedForMeteringPointId = VALID_METERING_POINT_1,
+                        requestedForMeteringPointAddress = "addr",
+                        balanceSupplierName = "Supplier",
+                        balanceSupplierContractName = "Contract",
+                        startDate = VALID_START_DATE,
+                        redirectURI = "https://example.com",
+                    ),
+                )
+
+            handler.validateAndReturnRequestCommand(model)
+                .shouldBeLeft(BusinessProcessError.Validation(MoveInValidationError.RequestedFromIsMeteringPointEndUser.message))
+        }
+
+        test("request validation allows on requestedFrom having access to metering point") {
+            val model =
+                CreateRequestModel(
+                    authorizedParty = AUTHORIZED_PARTY,
+                    requestType = AuthorizationRequest.Type.MoveInAndChangeOfEnergySupplierForPerson,
+                    meta =
+                    CreateRequestMeta(
+                        requestedBy = VALID_PARTY,
+                        requestedFrom = SHARED_END_USER,
+                        requestedFromName = "From",
+                        requestedTo = SHARED_END_USER,
+                        requestedForMeteringPointId = VALID_METERING_POINT_1,
+                        requestedForMeteringPointAddress = "addr",
+                        balanceSupplierName = "Supplier",
+                        balanceSupplierContractName = "Contract",
+                        startDate = VALID_START_DATE,
+                        redirectURI = "https://example.com",
+                    ),
+                )
+
+            handler.validateAndReturnRequestCommand(model).shouldBeRight()
+        }
+
         test("request validation fails on not valid requested by") {
             val model =
                 CreateRequestModel(
@@ -158,10 +263,10 @@ class MoveInBusinessHandlerTest :
                     meta =
                     CreateRequestMeta(
                         requestedBy = NOT_VALID_PARTY,
-                        requestedFrom = VALID_PARTY,
+                        requestedFrom = ANOTHER_END_USER,
                         requestedFromName = "From",
-                        requestedTo = VALID_PARTY,
-                        requestedForMeteringPointId = VALID_METERING_POINT,
+                        requestedTo = ANOTHER_END_USER,
+                        requestedForMeteringPointId = VALID_METERING_POINT_1,
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
@@ -182,10 +287,10 @@ class MoveInBusinessHandlerTest :
                     meta =
                     CreateRequestMeta(
                         requestedBy = NON_EXISTING_PARTY,
-                        requestedFrom = VALID_PARTY,
+                        requestedFrom = ANOTHER_END_USER,
                         requestedFromName = "From",
-                        requestedTo = VALID_PARTY,
-                        requestedForMeteringPointId = VALID_METERING_POINT,
+                        requestedTo = ANOTHER_END_USER,
+                        requestedForMeteringPointId = VALID_METERING_POINT_1,
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
@@ -206,10 +311,10 @@ class MoveInBusinessHandlerTest :
                     meta =
                     CreateRequestMeta(
                         requestedBy = INACTIVE_PARTY,
-                        requestedFrom = VALID_PARTY,
+                        requestedFrom = ANOTHER_END_USER,
                         requestedFromName = "From",
-                        requestedTo = VALID_PARTY,
-                        requestedForMeteringPointId = VALID_METERING_POINT,
+                        requestedTo = ANOTHER_END_USER,
+                        requestedForMeteringPointId = VALID_METERING_POINT_1,
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
@@ -230,10 +335,10 @@ class MoveInBusinessHandlerTest :
                     meta =
                     CreateRequestMeta(
                         requestedBy = VALID_PARTY,
-                        requestedFrom = VALID_PARTY,
+                        requestedFrom = ANOTHER_END_USER,
                         requestedFromName = "From",
-                        requestedTo = VALID_PARTY,
-                        requestedForMeteringPointId = VALID_METERING_POINT,
+                        requestedTo = ANOTHER_END_USER,
+                        requestedForMeteringPointId = VALID_METERING_POINT_1,
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
@@ -274,10 +379,10 @@ class MoveInBusinessHandlerTest :
                     meta =
                     CreateDocumentMeta(
                         requestedBy = VALID_PARTY,
-                        requestedFrom = VALID_PARTY,
-                        requestedTo = VALID_PARTY,
+                        requestedFrom = ANOTHER_END_USER,
+                        requestedTo = ANOTHER_END_USER,
                         requestedFromName = "From",
-                        requestedForMeteringPointId = VALID_METERING_POINT,
+                        requestedForMeteringPointId = VALID_METERING_POINT_1,
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",

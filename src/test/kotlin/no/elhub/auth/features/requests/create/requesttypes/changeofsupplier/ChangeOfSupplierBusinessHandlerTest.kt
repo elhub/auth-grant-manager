@@ -7,7 +7,6 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.mockk
-import no.elhub.auth.features.businessprocesses.BusinessProcessError
 import no.elhub.auth.features.businessprocesses.changeofsupplier.ChangeOfSupplierBusinessHandler
 import no.elhub.auth.features.businessprocesses.changeofsupplier.ChangeOfSupplierValidationError
 import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.BasicAuthConfig
@@ -95,7 +94,7 @@ class ChangeOfSupplierBusinessHandlerTest :
 
             val result = handler.validateAndReturnRequestCommand(model)
 
-            result.shouldBeLeft(BusinessProcessError.Validation(ChangeOfSupplierValidationError.MissingRequestedFromName.message))
+            result.shouldBeLeft(ChangeOfSupplierValidationError.MissingRequestedFromName)
         }
 
         test("returns validation error when requestedFrom is not related to the metering point") {
@@ -119,7 +118,7 @@ class ChangeOfSupplierBusinessHandlerTest :
 
             val result = handler.validateAndReturnRequestCommand(model)
 
-            result.shouldBeLeft(BusinessProcessError.Validation(ChangeOfSupplierValidationError.RequestedFromNotMeteringPointEndUser.message))
+            result.shouldBeLeft(ChangeOfSupplierValidationError.RequestedFromNotMeteringPointEndUser)
         }
 
         test("returns validation error when requestedFrom is user who has access to the metering point") {
@@ -143,7 +142,7 @@ class ChangeOfSupplierBusinessHandlerTest :
 
             val result = handler.validateAndReturnRequestCommand(model)
 
-            result.shouldBeLeft(BusinessProcessError.Validation(ChangeOfSupplierValidationError.RequestedFromNotMeteringPointEndUser.message))
+            result.shouldBeLeft(ChangeOfSupplierValidationError.RequestedFromNotMeteringPointEndUser)
         }
 
         test("returns validation error when redirectURI fails in validation") {
@@ -167,7 +166,7 @@ class ChangeOfSupplierBusinessHandlerTest :
 
             val result = handler.validateAndReturnRequestCommand(model)
 
-            result.shouldBeLeft(BusinessProcessError.Validation(ChangeOfSupplierValidationError.InvalidRedirectURI.message))
+            result.shouldBeLeft(ChangeOfSupplierValidationError.InvalidRedirectURI)
         }
 
         test("returns validation error when requestedFrom and requestedTo do not match") {
@@ -191,7 +190,7 @@ class ChangeOfSupplierBusinessHandlerTest :
 
             val result = handler.validateAndReturnRequestCommand(model)
 
-            result.shouldBeLeft(BusinessProcessError.Validation(ChangeOfSupplierValidationError.RequestedToRequestedFromMismatch.message))
+            result.shouldBeLeft(ChangeOfSupplierValidationError.RequestedToRequestedFromMismatch)
         }
 
         test("builds RequestCommand for valid input") {

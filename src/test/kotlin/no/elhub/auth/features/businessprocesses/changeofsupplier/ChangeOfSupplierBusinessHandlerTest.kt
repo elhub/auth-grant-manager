@@ -14,11 +14,12 @@ import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.Met
 import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsService
 import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceTestContainer
 import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceTestContainerExtension
-import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceTestData.ANOTHER_END_USER_ID
-import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceTestData.END_USER_ID
+import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceTestData.BLOCKED_FOR_SWITCHING_METERING_POINT_1
+import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceTestData.END_USER_ID_1
+import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceTestData.END_USER_ID_2
 import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceTestData.NON_EXISTING_METERING_POINT
-import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceTestData.SHARED_END_USER_ID
-import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceTestData.VALID_METERING_POINT
+import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceTestData.SHARED_END_USER_ID_1
+import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceTestData.VALID_METERING_POINT_1
 import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.meteringPointsServiceHttpClient
 import no.elhub.auth.features.businessprocesses.structuredata.organisations.OrganisationsApi
 import no.elhub.auth.features.businessprocesses.structuredata.organisations.OrganisationsApiConfig
@@ -80,9 +81,9 @@ class ChangeOfSupplierBusinessHandlerTest :
             handler = ChangeOfSupplierBusinessHandler(meteringPointsService, personService, organisationsService)
         }
 
-        coEvery { personService.findOrCreateByNin(END_USER.idValue) } returns Either.Right(Person(UUID.fromString(END_USER_ID)))
-        coEvery { personService.findOrCreateByNin(ANOTHER_END_USER.idValue) } returns Either.Right(Person(UUID.fromString(ANOTHER_END_USER_ID)))
-        coEvery { personService.findOrCreateByNin(SHARED_END_USER.idValue) } returns Either.Right(Person(UUID.fromString(SHARED_END_USER_ID)))
+        coEvery { personService.findOrCreateByNin(END_USER.idValue) } returns Either.Right(Person(UUID.fromString(END_USER_ID_1)))
+        coEvery { personService.findOrCreateByNin(ANOTHER_END_USER.idValue) } returns Either.Right(Person(UUID.fromString(END_USER_ID_2)))
+        coEvery { personService.findOrCreateByNin(SHARED_END_USER.idValue) } returns Either.Right(Person(UUID.fromString(SHARED_END_USER_ID_1)))
 
         test("request validation fails on missing requestedFromName") {
             val model =
@@ -95,7 +96,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                         requestedFrom = END_USER,
                         requestedFromName = "",
                         requestedTo = END_USER,
-                        requestedForMeteringPointId = VALID_METERING_POINT,
+                        requestedForMeteringPointId = VALID_METERING_POINT_1,
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
@@ -118,7 +119,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                         requestedFrom = ANOTHER_END_USER,
                         requestedFromName = "From",
                         requestedTo = ANOTHER_END_USER,
-                        requestedForMeteringPointId = VALID_METERING_POINT,
+                        requestedForMeteringPointId = VALID_METERING_POINT_1,
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
@@ -141,7 +142,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                         requestedFrom = SHARED_END_USER,
                         requestedFromName = "From",
                         requestedTo = SHARED_END_USER,
-                        requestedForMeteringPointId = VALID_METERING_POINT,
+                        requestedForMeteringPointId = VALID_METERING_POINT_1,
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
@@ -199,6 +200,28 @@ class ChangeOfSupplierBusinessHandlerTest :
                 .shouldBeLeft(BusinessProcessError.Unexpected(ChangeOfSupplierValidationError.MeteringPointNotFound.message))
         }
 
+        test("request validation fails on metering point blocked for switching") {
+            val model =
+                CreateRequestModel(
+                    authorizedParty = AUTHORIZED_PARTY,
+                    requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
+                    meta =
+                    CreateRequestMeta(
+                        requestedBy = VALID_PARTY,
+                        requestedFrom = END_USER,
+                        requestedFromName = "From",
+                        requestedTo = END_USER,
+                        requestedForMeteringPointId = BLOCKED_FOR_SWITCHING_METERING_POINT_1,
+                        requestedForMeteringPointAddress = "addr",
+                        balanceSupplierName = "Supplier",
+                        balanceSupplierContractName = "Contract",
+                        redirectURI = "https://example.com",
+                    ),
+                )
+
+            handler.validateAndReturnRequestCommand(model).shouldBeLeft(ChangeOfSupplierValidationError.MeteringPointBlockedForSwitching)
+        }
+
         test("request validation fails on not valid redirect URI") {
             val model =
                 CreateRequestModel(
@@ -210,7 +233,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                         requestedFrom = END_USER,
                         requestedFromName = "From",
                         requestedTo = END_USER,
-                        requestedForMeteringPointId = VALID_METERING_POINT,
+                        requestedForMeteringPointId = VALID_METERING_POINT_1,
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
@@ -233,7 +256,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                         requestedFrom = END_USER,
                         requestedFromName = "From",
                         requestedTo = END_USER,
-                        requestedForMeteringPointId = VALID_METERING_POINT,
+                        requestedForMeteringPointId = VALID_METERING_POINT_1,
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
@@ -256,7 +279,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                         requestedFrom = END_USER,
                         requestedFromName = "From",
                         requestedTo = END_USER,
-                        requestedForMeteringPointId = VALID_METERING_POINT,
+                        requestedForMeteringPointId = VALID_METERING_POINT_1,
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
@@ -279,7 +302,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                         requestedFrom = END_USER,
                         requestedFromName = "From",
                         requestedTo = END_USER,
-                        requestedForMeteringPointId = VALID_METERING_POINT,
+                        requestedForMeteringPointId = VALID_METERING_POINT_1,
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
@@ -302,7 +325,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                         requestedFrom = END_USER,
                         requestedFromName = "From",
                         requestedTo = END_USER,
-                        requestedForMeteringPointId = VALID_METERING_POINT,
+                        requestedForMeteringPointId = VALID_METERING_POINT_1,
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
@@ -325,7 +348,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                         requestedFrom = END_USER,
                         requestedFromName = "From",
                         requestedTo = ANOTHER_END_USER,
-                        requestedForMeteringPointId = VALID_METERING_POINT,
+                        requestedForMeteringPointId = VALID_METERING_POINT_1,
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
@@ -348,7 +371,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                         requestedFrom = END_USER,
                         requestedFromName = "From",
                         requestedTo = END_USER,
-                        requestedForMeteringPointId = VALID_METERING_POINT,
+                        requestedForMeteringPointId = VALID_METERING_POINT_1,
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
@@ -374,7 +397,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                         requestedFrom = END_USER,
                         requestedTo = END_USER,
                         requestedFromName = "From",
-                        requestedForMeteringPointId = VALID_METERING_POINT,
+                        requestedForMeteringPointId = VALID_METERING_POINT_1,
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",

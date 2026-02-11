@@ -36,6 +36,14 @@ sealed class MoveInValidationError(
         MoveInValidationError("invalid_metering_point_id", "Metering point id is invalid")
 
     @Serializable
+    data object MeteringPointNotFound :
+        MoveInValidationError("metering_point_not_found", "Metering point not found")
+
+    @Serializable
+    data object RequestedFromIsMeteringPointEndUser :
+        MoveInValidationError("requested_from_is_metering_point_end_user", "Requested from is already registered as end user of the metering point")
+
+    @Serializable
     data object MissingMeteringPointAddress :
         MoveInValidationError("missing_metering_point_address", "Metering point address is missing")
 
@@ -54,6 +62,10 @@ sealed class MoveInValidationError(
     @Serializable
     data object InvalidRequestedFrom :
         MoveInValidationError("invalid_requested_from", "Requested from has invalid format")
+
+    @Serializable
+    data object RequestedFromNotFound :
+        MoveInValidationError("requested_from_not_found", "Requested from id not found")
 
     @Serializable
     data object RequestedByNotFound :
