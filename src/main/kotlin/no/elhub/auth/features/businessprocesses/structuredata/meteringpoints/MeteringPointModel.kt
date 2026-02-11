@@ -5,13 +5,14 @@ import no.elhub.devxp.jsonapi.model.JsonApiAttributes
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipToOne
 import no.elhub.devxp.jsonapi.model.JsonApiRelationships
 import no.elhub.devxp.jsonapi.response.JsonApiResponse
+import kotlin.Boolean
 
 @Serializable
 data class Attributes(
     val gridAccessContract: GridAccessContract? = null,
     val balanceSupplierContract: BalanceSupplierContract? = null,
     val accessType: AccessType? = null,
-    val isHistoricMeteringPoint: Boolean? = null
+    val accountingPoint: AccountingPoint
 ) : JsonApiAttributes
 
 @Serializable
@@ -45,5 +46,10 @@ enum class AccessType {
 data class Relationships(
     val endUser: JsonApiRelationshipToOne? = null
 ) : JsonApiRelationships
+
+@Serializable
+data class AccountingPoint(
+    val blockedForSwitching: Boolean? = null
+)
 
 typealias MeteringPointResponse = JsonApiResponse.SingleDocumentWithRelationships<Attributes, Relationships>

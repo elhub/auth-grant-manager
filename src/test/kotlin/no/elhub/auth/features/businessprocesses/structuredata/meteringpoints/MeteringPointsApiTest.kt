@@ -53,7 +53,7 @@ class MeteringPointsApiTest : FunSpec({
                                     "data":{
                                         "id":"$validMeteringPointId",
                                         "type":"metering-point",
-                                        "attributes":{"accessType": "OWNED"},
+                                        "attributes":{"accountingPoint":{},"accessType": "OWNED"},
                                         "relationships":{"endUser":{"data":{"id":"end-user-unique-id","type":"end-user"}}}}
                                     }
                             """.trimMargin(),
