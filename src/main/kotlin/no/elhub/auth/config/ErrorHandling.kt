@@ -18,7 +18,7 @@ fun Application.configureErrorHandling() {
             when (root) {
                 is SerializationException -> {
                     logger.error("Failed to deserialize request body", root)
-                    val (status, body) = toDeserializationApiErrorResponse()
+                    val (status, body) = toDeserializationApiErrorResponse(root.localizedMessage)
                     call.respond(status, body)
                 }
 
