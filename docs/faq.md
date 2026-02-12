@@ -68,7 +68,8 @@ The following fields are validated when the authorization request/document is pr
     For Authorization Document flow, this field is not used.
 * **requestedBy**: We validate that the GLN is an active Market Participant in Elhub and (for ChangeOfEnergySupplierForPerson)
     that it is not the current supplier in the metering point.
-* **startDate**: For `documentType: MoveInAndChangeOfEnergySupplierForPerson`, omit `startDate` when the move-in is in the future (BRS-102). If the move-in is today or in the past (BRS-103), you must set `startDate`.
+* **startDate**: For `documentType: MoveInAndChangeOfEnergySupplierForPerson`, omit `startDate` when the move-in is in the future (BRS-102).
+    If the move-in is today or in the past (BRS-103), you must set `startDate`.
 
 ### Move-in in the future vs today/past (BRS-102 vs BRS-103)
 
