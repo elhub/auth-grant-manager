@@ -204,7 +204,6 @@ class HandlerTest : FunSpec({
         val fileGenerator = mockk<FileGenerator>()
 
         stubPartyResolution(partyService)
-//        val validationError = BusinessError.Validation("Validation failed")
         coEvery {
             businessHandler.validateAndReturnDocumentCommand(model)
         } returns BusinessProcessError.Validation(ChangeOfSupplierValidationError.MissingRequestedFromName.message).left()

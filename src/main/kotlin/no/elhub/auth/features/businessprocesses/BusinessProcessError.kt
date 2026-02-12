@@ -7,12 +7,19 @@ sealed interface BusinessProcessError {
     enum class Kind {
         VALIDATION,
         UNEXPECTED_ERROR,
+        NOT_FOUND
     }
 
     data class Validation(
         override val detail: String,
     ) : BusinessProcessError {
         override val kind = Kind.VALIDATION
+    }
+
+    data class NotFound(
+        override val detail: String,
+    ) : BusinessProcessError {
+        override val kind = Kind.NOT_FOUND
     }
 
     data class Unexpected(

@@ -16,6 +16,7 @@ import io.ktor.http.fullPath
 import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
+import no.elhub.auth.features.businessprocesses.structuredata.common.ClientError
 
 class MeteringPointsApiTest : FunSpec({
 
@@ -96,6 +97,6 @@ class MeteringPointsApiTest : FunSpec({
     test("Non existing metering point") {
         val response = service.getMeteringPointByIdAndElhubInternalId("300362000000000000", "some-end-user-id")
         response.shouldBeLeft()
-        response.value shouldBe ClientError.RequestRejected
+        response.value shouldBe ClientError.NotFound
     }
 })

@@ -67,7 +67,8 @@ class Handler(
                     .validateAndReturnDocumentCommand(model)
                     .mapLeft { err ->
                         logger.error("Error during business process: kind=${err.kind} detail=${err.detail}")
-                        CreateError.BusinessError(err) }
+                        CreateError.BusinessError(err)
+                    }
                     .bind()
 
             val file =

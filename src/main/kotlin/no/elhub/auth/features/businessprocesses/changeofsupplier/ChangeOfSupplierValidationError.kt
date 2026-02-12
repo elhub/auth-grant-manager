@@ -4,8 +4,12 @@ import kotlinx.serialization.Serializable
 import no.elhub.auth.features.businessprocesses.BusinessProcessError
 import no.elhub.auth.features.requests.create.requesttypes.RequestTypeValidationError
 
-fun ChangeOfSupplierValidationError.toBusinessValidationError(): BusinessProcessError = BusinessProcessError.Validation(detail = this.message)
-fun ChangeOfSupplierValidationError.toBusinessUnexpectedError(): BusinessProcessError = BusinessProcessError.Unexpected(detail = this.message)
+fun ChangeOfSupplierValidationError.toBusinessError(): BusinessProcessError =
+    when (this) {
+        is ChangeOfSupplierValidationError.UnexpectedError -> BusinessProcessError.Unexpected(detail = this.message)
+        ChangeOfSupplierValidationError.MeteringPointNotFound -> BusinessProcessError.NotFound(detail = this.message)
+        else -> BusinessProcessError.Validation(detail = this.message)
+    }
 
 @Serializable
 sealed class ChangeOfSupplierValidationError(

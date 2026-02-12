@@ -197,7 +197,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                 )
 
             handler.validateAndReturnRequestCommand(model)
-                .shouldBeLeft(BusinessProcessError.Unexpected(ChangeOfSupplierValidationError.MeteringPointNotFound.message))
+                .shouldBeLeft(BusinessProcessError.NotFound(ChangeOfSupplierValidationError.MeteringPointNotFound.message))
         }
 
         test("request validation fails on metering point blocked for switching") {

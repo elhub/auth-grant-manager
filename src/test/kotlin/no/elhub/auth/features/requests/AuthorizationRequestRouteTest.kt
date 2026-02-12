@@ -344,7 +344,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                     size shouldBe 1
                     this[0].apply {
                         status shouldBe "404"
-                        title shouldBe "Not found"
+                        title shouldBe "Not found error"
                         detail shouldBe "The requested resource could not be found"
                     }
                 }

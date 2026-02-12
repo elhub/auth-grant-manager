@@ -3,6 +3,7 @@ package no.elhub.auth.features.documents.confirm
 import io.ktor.http.HttpStatusCode
 import no.elhub.auth.features.common.buildApiErrorResponse
 import no.elhub.auth.features.common.toInternalServerApiErrorResponse
+import no.elhub.auth.features.common.toNotFoundApiErrorResponse
 import no.elhub.auth.features.documents.common.SignatureValidationError
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 
@@ -23,11 +24,7 @@ sealed class ConfirmError {
 
 fun ConfirmError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> =
     when (this) {
-        ConfirmError.DocumentNotFoundError -> buildApiErrorResponse(
-            status = HttpStatusCode.NotFound,
-            title = "Not found",
-            detail = "Document could not be found"
-        )
+        ConfirmError.DocumentNotFoundError -> toNotFoundApiErrorResponse("Document could not be found")
 
         is ConfirmError.ValidateSignaturesError -> handleValidateSignatureError(this)
 
@@ -45,7 +42,7 @@ fun ConfirmError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollecti
         )
 
         ConfirmError.IllegalStateError -> buildApiErrorResponse(
-            status = HttpStatusCode.NotFound,
+            status = HttpStatusCode.BadRequest,
             title = "Invalid status state",
             detail = "Document must be in 'Pending' status to confirm."
         )
