@@ -6,7 +6,9 @@ import org.bouncycastle.asn1.DERPrintableString
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo
 import org.bouncycastle.asn1.x500.X500Name
 import org.bouncycastle.asn1.x509.BasicConstraints
+import org.bouncycastle.asn1.x509.ExtendedKeyUsage
 import org.bouncycastle.asn1.x509.Extension
+import org.bouncycastle.asn1.x509.KeyPurposeId
 import org.bouncycastle.asn1.x509.KeyUsage
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter
 import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder
@@ -108,6 +110,36 @@ class TestCertificateFactory(
         ).apply {
             addExtension(Extension.basicConstraints, true, BasicConstraints(false))
             addExtension(Extension.keyUsage, true, KeyUsage(KeyUsage.digitalSignature))
+        }
+
+        val signer = JcaContentSignerBuilder("SHA256withRSA").setProvider("BC").build(issuerKeyPair.private)
+        return JcaX509CertificateConverter().setProvider("BC").getCertificate(builder.build(signer))
+    }
+
+    fun generateTsaCertificate(
+        keyPair: KeyPair,
+        issuerKeyPair: KeyPair,
+        issuerCertificate: X509Certificate
+    ): X509Certificate {
+        ensureBouncyCastle()
+        val now = Instant.now()
+        val notBefore = Date.from(now.minus(1, ChronoUnit.MINUTES))
+        val notAfter = Date.from(now.plus(defaultValidity))
+        val serial = BigInteger.valueOf(now.toEpochMilli())
+        val subject = X500Name("CN=Test TSA")
+        val issuer = X500Name(issuerCertificate.subjectX500Principal.name)
+
+        val builder = JcaX509v3CertificateBuilder(
+            issuer,
+            serial,
+            notBefore,
+            notAfter,
+            subject,
+            keyPair.public
+        ).apply {
+            addExtension(Extension.basicConstraints, true, BasicConstraints(false))
+            addExtension(Extension.keyUsage, true, KeyUsage(KeyUsage.digitalSignature))
+            addExtension(Extension.extendedKeyUsage, true, ExtendedKeyUsage(KeyPurposeId.id_kp_timeStamping))
         }
 
         val signer = JcaContentSignerBuilder("SHA256withRSA").setProvider("BC").build(issuerKeyPair.private)

@@ -77,6 +77,8 @@ fun handleValidateSignatureError(error: ConfirmError.ValidateSignaturesError): P
             detail = "The end user signing certificate is not trusted."
         )
 
+    SignatureValidationError.MissingBankIdTrustedTimestamp,
+    SignatureValidationError.BankIdSigningCertNotValidAtTimestamp,
     SignatureValidationError.InvalidBankIdSignature ->
         buildApiErrorResponse(
             status = HttpStatusCode.BadRequest,
