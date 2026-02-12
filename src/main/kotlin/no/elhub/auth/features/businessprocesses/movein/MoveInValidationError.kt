@@ -1,7 +1,10 @@
 package no.elhub.auth.features.businessprocesses.movein
 
 import kotlinx.serialization.Serializable
+import no.elhub.auth.features.businessprocesses.BusinessProcessError
 import no.elhub.auth.features.requests.create.requesttypes.RequestTypeValidationError
+
+fun MoveInValidationError.toBusinessError(): BusinessProcessError = BusinessProcessError.Validation(detail = this.message)
 
 @Serializable
 sealed class MoveInValidationError(

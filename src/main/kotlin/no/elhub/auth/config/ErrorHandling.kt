@@ -1,13 +1,12 @@
 package no.elhub.auth.config
 
-import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.response.respond
 import kotlinx.serialization.SerializationException
-import no.elhub.auth.features.common.buildApiErrorResponse
 import no.elhub.auth.features.common.toDeserializationApiErrorResponse
+import no.elhub.auth.features.common.toInternalServerApiErrorResponse
 import org.slf4j.LoggerFactory
 
 private val logger = LoggerFactory.getLogger("ErrorHandling")
@@ -27,11 +26,7 @@ fun Application.configureErrorHandling() {
                     // domain/expected errors are handled via Arrow with Either, so reaching this block
                     // means an unexpected failure, and we return a generic 500 internal server error
                     logger.error("Unhandled exception", cause)
-                    val (status, body) = buildApiErrorResponse(
-                        status = HttpStatusCode.InternalServerError,
-                        title = "Internal server error",
-                        detail = "An unexpected error occurred"
-                    )
+                    val (status, body) = toInternalServerApiErrorResponse()
                     call.respond(status, body)
                 }
             }

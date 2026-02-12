@@ -53,6 +53,24 @@ fun buildApiErrorResponse(status: HttpStatusCode, title: String, detail: String)
         )
     )
 
+fun toInternalServerApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> = buildApiErrorResponse(
+    status = HttpStatusCode.InternalServerError,
+    title = "Internal server error",
+    detail = "An internal server error occurred",
+)
+
+fun toValidationApiErrorResponse(detail: String? = null): Pair<HttpStatusCode, JsonApiErrorCollection> = buildApiErrorResponse(
+    status = HttpStatusCode.BadRequest,
+    title = "Validation error",
+    detail = detail.orEmpty().ifEmpty({ "The requested resource could not be found" })
+)
+
+fun toNotFoundApiErrorResponse(detail: String? = null): Pair<HttpStatusCode, JsonApiErrorCollection> = buildApiErrorResponse(
+    status = HttpStatusCode.NotFound,
+    title = "Not found error",
+    detail = detail.orEmpty().ifEmpty({ "The requested resource could not be found" })
+)
+
 fun toDeserializationApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> = buildApiErrorResponse(
     status = HttpStatusCode.BadRequest,
     title = "Invalid request body",
@@ -82,17 +100,9 @@ fun InputError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection
 
 fun QueryError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> =
     when (this) {
-        QueryError.ResourceNotFoundError -> buildApiErrorResponse(
-            status = HttpStatusCode.NotFound,
-            title = "Not found",
-            detail = "The requested resource could not be found",
-        )
+        QueryError.ResourceNotFoundError -> toNotFoundApiErrorResponse()
 
-        QueryError.IOError -> buildApiErrorResponse(
-            status = HttpStatusCode.InternalServerError,
-            title = "Internal server error",
-            detail = "An error occurred when attempted to perform the query",
-        )
+        QueryError.IOError -> toInternalServerApiErrorResponse()
 
         QueryError.NotAuthorizedError -> buildApiErrorResponse(
             status = HttpStatusCode.Forbidden,

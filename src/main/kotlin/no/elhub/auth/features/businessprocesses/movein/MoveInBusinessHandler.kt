@@ -9,6 +9,7 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
+import no.elhub.auth.features.businessprocesses.BusinessProcessError
 import no.elhub.auth.features.businessprocesses.movein.domain.MoveInBusinessCommand
 import no.elhub.auth.features.businessprocesses.movein.domain.MoveInBusinessMeta
 import no.elhub.auth.features.businessprocesses.movein.domain.MoveInBusinessModel
@@ -24,7 +25,6 @@ import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.common.person.PersonService
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.DocumentBusinessHandler
-import no.elhub.auth.features.documents.create.CreateError
 import no.elhub.auth.features.documents.create.command.DocumentCommand
 import no.elhub.auth.features.documents.create.model.CreateDocumentModel
 import no.elhub.auth.features.grants.AuthorizationScope
@@ -54,10 +54,10 @@ class MoveInBusinessHandler(
     private val personService: PersonService
 ) : RequestBusinessHandler,
     DocumentBusinessHandler {
-    override suspend fun validateAndReturnRequestCommand(createRequestModel: CreateRequestModel): Either<MoveInValidationError, RequestCommand> =
+    override suspend fun validateAndReturnRequestCommand(createRequestModel: CreateRequestModel): Either<BusinessProcessError, RequestCommand> =
         either {
             val model = createRequestModel.toMoveInBusinessModel()
-            validate(model).bind().toRequestCommand()
+            validate(model).mapLeft { it.toBusinessError() }.bind().toRequestCommand()
         }
 
     override fun getCreateGrantProperties(request: AuthorizationRequest): CreateGrantProperties =
@@ -66,13 +66,10 @@ class MoveInBusinessHandler(
             validFrom = today(),
         )
 
-    override suspend fun validateAndReturnDocumentCommand(model: CreateDocumentModel): Either<CreateError.BusinessValidationError, DocumentCommand> =
+    override suspend fun validateAndReturnDocumentCommand(model: CreateDocumentModel): Either<BusinessProcessError, DocumentCommand> =
         either {
             val model = model.toMoveInBusinessModel()
-            validate(model)
-                .mapLeft { raise(CreateError.BusinessValidationError(it.message)) }
-                .bind()
-                .toDocumentCommand()
+            validate(model).mapLeft { it.toBusinessError() }.bind().toDocumentCommand()
         }
 
     override fun getCreateGrantProperties(document: AuthorizationDocument): CreateGrantProperties =

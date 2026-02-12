@@ -6,7 +6,6 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldContain
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
@@ -17,6 +16,7 @@ import io.ktor.http.fullPath
 import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
+import no.elhub.auth.features.businessprocesses.structuredata.common.ClientError
 
 class MeteringPointsApiTest : FunSpec({
 
@@ -97,6 +97,6 @@ class MeteringPointsApiTest : FunSpec({
     test("Non existing metering point") {
         val response = service.getMeteringPointByIdAndElhubInternalId("300362000000000000", "some-end-user-id")
         response.shouldBeLeft()
-        response.value.toString() shouldContain "MeteringPoint not found"
+        response.value shouldBe ClientError.NotFound
     }
 })

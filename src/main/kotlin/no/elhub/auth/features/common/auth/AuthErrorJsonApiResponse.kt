@@ -2,6 +2,7 @@ package no.elhub.auth.features.common.auth
 
 import io.ktor.http.HttpStatusCode
 import no.elhub.auth.features.common.buildApiErrorResponse
+import no.elhub.auth.features.common.toInternalServerApiErrorResponse
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 
 fun AuthError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> =
@@ -45,9 +46,5 @@ fun AuthError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection>
         AuthError.InvalidPdpResponseAuthInfoMissing,
         AuthError.InvalidPdpResponseActingGlnMissing,
         AuthError.InvalidPdpResponseActingFunctionMissing,
-        AuthError.UnknownError -> buildApiErrorResponse(
-            status = HttpStatusCode.InternalServerError,
-            title = "Internal server error",
-            detail = "An internal error occurred."
-        )
+        AuthError.UnknownError -> toInternalServerApiErrorResponse()
     }

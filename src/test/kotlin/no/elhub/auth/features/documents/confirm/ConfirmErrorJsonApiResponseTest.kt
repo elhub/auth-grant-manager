@@ -24,7 +24,7 @@ class ConfirmErrorJsonApiResponseTest : FunSpec({
     listOf(
         ConfirmError.DocumentNotFoundError to Expectation(
             status = HttpStatusCode.NotFound,
-            title = "Not found",
+            title = "Not found error",
             detail = "Document could not be found"
         ),
         ConfirmError.SignatoryNotAllowedToSignDocument to Expectation(
@@ -38,7 +38,7 @@ class ConfirmErrorJsonApiResponseTest : FunSpec({
             detail = "RequestedBy must match the authorized party"
         ),
         ConfirmError.IllegalStateError to Expectation(
-            status = HttpStatusCode.NotFound,
+            status = HttpStatusCode.BadRequest,
             title = "Invalid status state",
             detail = "Document must be in 'Pending' status to confirm."
         ),
@@ -66,8 +66,8 @@ class ConfirmErrorJsonApiResponseTest : FunSpec({
                 error,
                 Expectation(
                     status = HttpStatusCode.InternalServerError,
-                    title = "Internal Server error",
-                    detail = "An internal error occurred."
+                    title = "Internal server error",
+                    detail = "An internal server error occurred"
                 )
             )
         }

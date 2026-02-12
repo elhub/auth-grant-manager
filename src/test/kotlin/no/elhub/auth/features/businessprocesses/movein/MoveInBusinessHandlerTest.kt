@@ -10,6 +10,7 @@ import io.mockk.mockk
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.plus
+import no.elhub.auth.features.businessprocesses.BusinessProcessError
 import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsApi
 import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsApiConfig
 import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsService
@@ -133,7 +134,8 @@ class MoveInBusinessHandlerTest :
                     ),
                 )
 
-            handler.validateAndReturnRequestCommand(model).shouldBeLeft(MoveInValidationError.StartDateNotBackInTime)
+            handler.validateAndReturnRequestCommand(model)
+                .shouldBeLeft(BusinessProcessError.Validation(MoveInValidationError.StartDateNotBackInTime.message))
         }
 
         test("request validation allows startDate today") {
@@ -179,7 +181,8 @@ class MoveInBusinessHandlerTest :
                     ),
                 )
 
-            handler.validateAndReturnRequestCommand(model).shouldBeLeft(MoveInValidationError.InvalidMeteringPointId)
+            handler.validateAndReturnRequestCommand(model)
+                .shouldBeLeft(BusinessProcessError.Validation(MoveInValidationError.InvalidMeteringPointId.message))
         }
 
         test("request validation fails on non existing metering point") {
@@ -202,7 +205,8 @@ class MoveInBusinessHandlerTest :
                     ),
                 )
 
-            handler.validateAndReturnRequestCommand(model).shouldBeLeft(MoveInValidationError.MeteringPointNotFound)
+            handler.validateAndReturnRequestCommand(model)
+                .shouldBeLeft(BusinessProcessError.Validation(MoveInValidationError.MeteringPointNotFound.message))
         }
 
         test("request validation fails on requestedFrom being owner of metering point") {
@@ -225,7 +229,8 @@ class MoveInBusinessHandlerTest :
                     ),
                 )
 
-            handler.validateAndReturnRequestCommand(model).shouldBeLeft(MoveInValidationError.RequestedFromIsMeteringPointEndUser)
+            handler.validateAndReturnRequestCommand(model)
+                .shouldBeLeft(BusinessProcessError.Validation(MoveInValidationError.RequestedFromIsMeteringPointEndUser.message))
         }
 
         test("request validation allows on requestedFrom having access to metering point") {
@@ -271,7 +276,8 @@ class MoveInBusinessHandlerTest :
                     ),
                 )
 
-            handler.validateAndReturnRequestCommand(model).shouldBeLeft(MoveInValidationError.InvalidRequestedBy)
+            handler.validateAndReturnRequestCommand(model)
+                .shouldBeLeft(BusinessProcessError.Validation(MoveInValidationError.InvalidRequestedBy.message))
         }
 
         test("request validation fails on non existing requested by") {
@@ -294,7 +300,8 @@ class MoveInBusinessHandlerTest :
                     ),
                 )
 
-            handler.validateAndReturnRequestCommand(model).shouldBeLeft(MoveInValidationError.RequestedByNotFound)
+            handler.validateAndReturnRequestCommand(model)
+                .shouldBeLeft(BusinessProcessError.Validation(MoveInValidationError.RequestedByNotFound.message))
         }
 
         test("request validation fails on non Active requested by") {
@@ -317,7 +324,8 @@ class MoveInBusinessHandlerTest :
                     ),
                 )
 
-            handler.validateAndReturnRequestCommand(model).shouldBeLeft(MoveInValidationError.NotActiveRequestedBy)
+            handler.validateAndReturnRequestCommand(model)
+                .shouldBeLeft(BusinessProcessError.Validation(MoveInValidationError.NotActiveRequestedBy.message))
         }
 
         test("request produces RequestCommand for valid input") {

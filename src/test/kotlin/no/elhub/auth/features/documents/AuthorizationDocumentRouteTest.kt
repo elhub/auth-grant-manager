@@ -29,6 +29,7 @@ import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
+import no.elhub.auth.features.businessprocesses.BusinessProcessError
 import no.elhub.auth.features.businessprocesses.changeofsupplier.defaultValidTo
 import no.elhub.auth.features.businessprocesses.changeofsupplier.domain.ChangeOfSupplierBusinessMeta
 import no.elhub.auth.features.businessprocesses.changeofsupplier.today
@@ -45,7 +46,6 @@ import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
 import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
 import no.elhub.auth.features.documents.common.DocumentBusinessHandler
-import no.elhub.auth.features.documents.create.CreateError
 import no.elhub.auth.features.documents.create.command.DocumentCommand
 import no.elhub.auth.features.documents.create.dto.CreateDocumentMeta
 import no.elhub.auth.features.documents.create.dto.CreateDocumentRequestAttributes
@@ -606,7 +606,7 @@ private class TestDocumentBusinessHandler : DocumentBusinessHandler {
             ).right()
         }
 
-        else -> CreateError.BusinessValidationError("Unsupported document type").left()
+        else -> BusinessProcessError.Validation(detail = "Unsupported document type").left()
     }
 
     override fun getCreateGrantProperties(document: AuthorizationDocument): CreateGrantProperties =

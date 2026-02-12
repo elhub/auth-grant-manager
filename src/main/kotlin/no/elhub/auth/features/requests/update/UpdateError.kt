@@ -2,6 +2,7 @@ package no.elhub.auth.features.requests.update
 
 import io.ktor.http.HttpStatusCode
 import no.elhub.auth.features.common.buildApiErrorResponse
+import no.elhub.auth.features.common.toInternalServerApiErrorResponse
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 
 sealed class UpdateError {
@@ -20,11 +21,7 @@ fun UpdateError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollectio
         UpdateError.PersistenceError,
         UpdateError.RequestNotFound,
         UpdateError.GrantCreationError,
-        UpdateError.ScopeReadError, -> buildApiErrorResponse(
-            status = HttpStatusCode.InternalServerError,
-            title = "Internal server error",
-            detail = "An internal error occurred."
-        )
+        UpdateError.ScopeReadError, -> toInternalServerApiErrorResponse()
 
         UpdateError.IllegalTransitionError -> buildApiErrorResponse(
             status = HttpStatusCode.BadRequest,

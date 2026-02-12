@@ -1,6 +1,7 @@
 package no.elhub.auth.features.businessprocesses.changeofsupplier
 
 import arrow.core.Either
+import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.raise.either
 import arrow.core.right
@@ -9,12 +10,14 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
+import no.elhub.auth.features.businessprocesses.BusinessProcessError
 import no.elhub.auth.features.businessprocesses.changeofsupplier.domain.ChangeOfSupplierBusinessCommand
 import no.elhub.auth.features.businessprocesses.changeofsupplier.domain.ChangeOfSupplierBusinessMeta
 import no.elhub.auth.features.businessprocesses.changeofsupplier.domain.ChangeOfSupplierBusinessModel
 import no.elhub.auth.features.businessprocesses.changeofsupplier.domain.toChangeOfSupplierBusinessModel
 import no.elhub.auth.features.businessprocesses.changeofsupplier.domain.toDocumentCommand
 import no.elhub.auth.features.businessprocesses.changeofsupplier.domain.toRequestCommand
+import no.elhub.auth.features.businessprocesses.structuredata.common.ClientError
 import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.AccessType.SHARED
 import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsService
 import no.elhub.auth.features.businessprocesses.structuredata.organisations.OrganisationsService
@@ -24,7 +27,6 @@ import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.common.person.PersonService
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.DocumentBusinessHandler
-import no.elhub.auth.features.documents.create.CreateError
 import no.elhub.auth.features.documents.create.command.DocumentCommand
 import no.elhub.auth.features.documents.create.model.CreateDocumentModel
 import no.elhub.auth.features.grants.AuthorizationScope
@@ -46,23 +48,26 @@ class ChangeOfSupplierBusinessHandler(
     private val personService: PersonService,
     private val organisationsService: OrganisationsService
 ) : RequestBusinessHandler, DocumentBusinessHandler {
-    override suspend fun validateAndReturnRequestCommand(createRequestModel: CreateRequestModel): Either<ChangeOfSupplierValidationError, RequestCommand> =
+    override suspend fun validateAndReturnRequestCommand(createRequestModel: CreateRequestModel): Either<BusinessProcessError, RequestCommand> =
         either {
             val model = createRequestModel.toChangeOfSupplierBusinessModel()
-            validate(model).bind().toRequestCommand()
+            validate(model)
+                .mapLeft { it.toBusinessError() }
+                .bind()
+                .toRequestCommand()
         }
 
     override fun getCreateGrantProperties(request: AuthorizationRequest): CreateGrantProperties =
         CreateGrantProperties(
             validTo = defaultValidTo(),
-            validFrom = today(),
+            validFrom = today()
         )
 
-    override suspend fun validateAndReturnDocumentCommand(model: CreateDocumentModel): Either<CreateError.BusinessValidationError, DocumentCommand> =
+    override suspend fun validateAndReturnDocumentCommand(model: CreateDocumentModel): Either<BusinessProcessError, DocumentCommand> =
         either {
             val model = model.toChangeOfSupplierBusinessModel()
             validate(model)
-                .mapLeft { raise(CreateError.BusinessValidationError(it.message)) }
+                .mapLeft { it.toBusinessError() }
                 .bind()
                 .toDocumentCommand()
         }
@@ -109,17 +114,22 @@ class ChangeOfSupplierBusinessHandler(
         val meteringPoint = meteringPointsService.getMeteringPointByIdAndElhubInternalId(
             meteringPointId = model.requestedForMeteringPointId,
             elhubInternalId = endUserElhubInternalId.toString()
-        )
+        ).mapLeft { err ->
+            return when (err) {
+                ClientError.NotFound -> ChangeOfSupplierValidationError.MeteringPointNotFound.left()
 
-        if (meteringPoint.isLeft()) {
-            return ChangeOfSupplierValidationError.MeteringPointNotFound.left()
-        }
-        val meteringPointResponse = meteringPoint.getOrNull() ?: return ChangeOfSupplierValidationError.MeteringPointNotFound.left()
+                ClientError.BadRequest,
+                ClientError.Unauthorized,
+                ClientError.ServerError,
+                is ClientError.UnexpectedError -> ChangeOfSupplierValidationError.UnexpectedError.left()
+            }
+        }.getOrElse { return ChangeOfSupplierValidationError.MeteringPointNotFound.left() }
 
-        if (meteringPointResponse.data.relationships.endUser == null || meteringPointResponse.data.attributes?.accessType == SHARED) {
+        if (meteringPoint.data.relationships.endUser == null || meteringPoint.data.attributes?.accessType == SHARED) {
             return ChangeOfSupplierValidationError.RequestedFromNotMeteringPointEndUser.left()
         }
-        if (meteringPointResponse.data.attributes?.accountingPoint?.blockedForSwitching == true) {
+
+        if (meteringPoint.data.attributes?.accountingPoint?.blockedForSwitching == true) {
             return ChangeOfSupplierValidationError.MeteringPointBlockedForSwitching.left()
         }
 
@@ -140,7 +150,20 @@ class ChangeOfSupplierBusinessHandler(
             return ChangeOfSupplierValidationError.InvalidRequestedBy.left()
         }
 
-        val party = organisationsService.getPartyByIdAndPartyType(model.requestedBy.idValue, PartyType.BalanceSupplier)
+        val party = organisationsService.getPartyByIdAndPartyType(
+            partyId = model.requestedBy.idValue,
+            partyType = PartyType.BalanceSupplier
+        ).mapLeft { err ->
+            return when (err) {
+                ClientError.NotFound -> ChangeOfSupplierValidationError.RequestedByNotFound.left()
+
+                ClientError.BadRequest,
+                ClientError.Unauthorized,
+                ClientError.ServerError,
+                is ClientError.UnexpectedError -> ChangeOfSupplierValidationError.UnexpectedError.left()
+            }
+        }
+
         if (party.isLeft()) {
             return ChangeOfSupplierValidationError.RequestedByNotFound.left()
         }
@@ -149,7 +172,7 @@ class ChangeOfSupplierBusinessHandler(
             return ChangeOfSupplierValidationError.NotActiveRequestedBy.left()
         }
 
-        val currentBalanceSupplier = meteringPointResponse.data.attributes?.balanceSupplierContract?.partyFunction
+        val currentBalanceSupplier = meteringPoint.data.attributes?.balanceSupplierContract?.partyFunction
         if (model.requestedBy.idValue == currentBalanceSupplier?.partyId) {
             return ChangeOfSupplierValidationError.MatchingRequestedBy.left()
         }
