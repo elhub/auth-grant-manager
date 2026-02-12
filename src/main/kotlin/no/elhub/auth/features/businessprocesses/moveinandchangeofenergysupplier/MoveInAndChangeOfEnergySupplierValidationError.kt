@@ -77,4 +77,8 @@ sealed class MoveInAndChangeOfEnergySupplierValidationError(
     @Serializable
     data object NotActiveRequestedBy :
         MoveInAndChangeOfEnergySupplierValidationError("not_active_requested_by", "Requested by is not an active party in Elhub")
+
+    @Serializable
+    data object UnexpectedError :
+        MoveInAndChangeOfEnergySupplierValidationError("unexpected_error", "Unexpected error occurred")
 }

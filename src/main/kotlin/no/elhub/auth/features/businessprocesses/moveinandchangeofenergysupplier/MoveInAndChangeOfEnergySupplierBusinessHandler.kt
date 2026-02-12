@@ -1,6 +1,7 @@
 package no.elhub.auth.features.businessprocesses.moveinandchangeofenergysupplier
 
 import arrow.core.Either
+import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.raise.either
 import arrow.core.right
@@ -16,6 +17,7 @@ import no.elhub.auth.features.businessprocesses.moveinandchangeofenergysupplier.
 import no.elhub.auth.features.businessprocesses.moveinandchangeofenergysupplier.domain.toDocumentCommand
 import no.elhub.auth.features.businessprocesses.moveinandchangeofenergysupplier.domain.toMoveInAndChangeOfEnergySupplierBusinessModel
 import no.elhub.auth.features.businessprocesses.moveinandchangeofenergysupplier.domain.toRequestCommand
+import no.elhub.auth.features.businessprocesses.structuredata.common.ClientError
 import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.AccessType.OWNED
 import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsService
 import no.elhub.auth.features.businessprocesses.structuredata.organisations.OrganisationsService
@@ -120,12 +122,18 @@ class MoveInAndChangeOfEnergySupplierBusinessHandler(
         val meteringPoint = meteringPointsService.getMeteringPointByIdAndElhubInternalId(
             meteringPointId = model.requestedForMeteringPointId,
             elhubInternalId = endUserElhubInternalId.toString()
-        )
-        if (meteringPoint.isLeft()) {
-            return MoveInAndChangeOfEnergySupplierValidationError.MeteringPointNotFound.left()
-        }
-        val meteringPointResponse = meteringPoint.getOrNull() ?: return MoveInAndChangeOfEnergySupplierValidationError.MeteringPointNotFound.left()
-        if (meteringPointResponse.data.relationships.endUser != null && meteringPointResponse.data.attributes?.accessType == OWNED) {
+        ).mapLeft { err ->
+            return when (err) {
+                ClientError.NotFound -> MoveInAndChangeOfEnergySupplierValidationError.MeteringPointNotFound.left()
+
+                ClientError.BadRequest,
+                ClientError.Unauthorized,
+                ClientError.ServerError,
+                is ClientError.UnexpectedError -> MoveInAndChangeOfEnergySupplierValidationError.UnexpectedError.left()
+            }
+        }.getOrElse { return MoveInAndChangeOfEnergySupplierValidationError.MeteringPointNotFound.left() }
+
+        if (meteringPoint.data.relationships.endUser != null && meteringPoint.data.attributes?.accessType == OWNED) {
             return MoveInAndChangeOfEnergySupplierValidationError.RequestedFromIsMeteringPointEndUser.left()
         }
 
@@ -145,11 +153,18 @@ class MoveInAndChangeOfEnergySupplierBusinessHandler(
         }
 
         val party = organisationsService.getPartyByIdAndPartyType(model.requestedBy.idValue, PartyType.BalanceSupplier)
-        if (party.isLeft()) {
-            return MoveInAndChangeOfEnergySupplierValidationError.RequestedByNotFound.left()
-        }
-        val partyResponse = party.getOrNull() ?: return MoveInAndChangeOfEnergySupplierValidationError.RequestedByNotFound.left()
-        if (partyResponse.data.attributes?.status != PartyStatus.ACTIVE) {
+            .mapLeft { err ->
+                return when (err) {
+                    ClientError.NotFound -> MoveInAndChangeOfEnergySupplierValidationError.RequestedByNotFound.left()
+
+                    ClientError.BadRequest,
+                    ClientError.Unauthorized,
+                    ClientError.ServerError,
+                    is ClientError.UnexpectedError -> MoveInAndChangeOfEnergySupplierValidationError.UnexpectedError.left()
+                }
+            }.getOrElse { return MoveInAndChangeOfEnergySupplierValidationError.RequestedByNotFound.left() }
+
+        if (party.data.attributes?.status != PartyStatus.ACTIVE) {
             return MoveInAndChangeOfEnergySupplierValidationError.NotActiveRequestedBy.left()
         }
 

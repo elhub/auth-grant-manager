@@ -164,13 +164,9 @@ class ChangeOfEnergySupplierBusinessHandler(
                 ClientError.ServerError,
                 is ClientError.UnexpectedError -> ChangeOfEnergySupplierValidationError.UnexpectedError.left()
             }
-        }
+        }.getOrElse { return ChangeOfEnergySupplierValidationError.RequestedByNotFound.left() }
 
-        if (party.isLeft()) {
-            return ChangeOfEnergySupplierValidationError.RequestedByNotFound.left()
-        }
-        val partyResponse = party.getOrNull() ?: return ChangeOfEnergySupplierValidationError.RequestedByNotFound.left()
-        if (partyResponse.data.attributes?.status != PartyStatus.ACTIVE) {
+        if (party.data.attributes?.status != PartyStatus.ACTIVE) {
             return ChangeOfEnergySupplierValidationError.NotActiveRequestedBy.left()
         }
 
