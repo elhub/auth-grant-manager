@@ -71,31 +71,6 @@ fun toNotFoundApiErrorResponse(detail: String? = null): Pair<HttpStatusCode, Jso
     detail = detail.orEmpty().ifEmpty({ "The requested resource could not be found" })
 )
 
-fun toDeserializationApiErrorResponse(detail: String): Pair<HttpStatusCode, JsonApiErrorCollection> = buildApiErrorResponse(
-    status = HttpStatusCode.BadRequest,
-    title = "Invalid request body",
-    detail = formatDeserializationDetail(detail)
-)
-
-private fun formatDeserializationDetail(raw: String): String {
-    val singleLine = raw.replace(Regex("\\s+"), " ").trim()
-
-    val missingField = Regex("""Field '([^']+)' is required""").find(singleLine)?.groupValues?.get(1)
-    val path = Regex("""at path (\S+)""").find(singleLine)?.groupValues?.get(1)
-
-    return when {
-        missingField != null && path != null ->
-            "Field '$missingField' is missing or invalid at $path."
-
-        missingField != null ->
-            "Field '$missingField' is missing or invalid."
-
-        else ->
-            singleLine
-                .replace(Regex("""\bno\.elhub\.[\w.]+\.(\w+\.\w+)\b"""), "$1")
-    }
-}
-
 fun toBalanceSupplierNotApiAuthorizedResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> = buildApiErrorResponse(
     status = HttpStatusCode.Forbidden,
     title = "Not authorized",

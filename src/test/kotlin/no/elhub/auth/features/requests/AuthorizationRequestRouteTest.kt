@@ -49,6 +49,7 @@ import no.elhub.auth.features.requests.create.dto.CreateRequestResponse
 import no.elhub.auth.features.requests.create.dto.JsonApiCreateRequest
 import no.elhub.auth.features.requests.create.model.CreateRequestModel
 import no.elhub.auth.features.requests.create.model.defaultRequestValidTo
+import no.elhub.auth.features.requests.create.model.today
 import no.elhub.auth.features.requests.create.requesttypes.RequestTypeValidationError
 import no.elhub.auth.features.requests.get.dto.GetRequestSingleResponse
 import no.elhub.auth.features.requests.query.dto.GetRequestCollectionResponse
@@ -499,6 +500,65 @@ class AuthorizationRequestRouteTest : FunSpec({
                     "createdAt".shouldNotBeNull()
                 }
             }
+
+//            test("Should return 400 Bad Request on invalid request body") {
+//                val response =
+//                    client.post(REQUESTS_PATH) {
+//                        header(HttpHeaders.Authorization, "Bearer maskinporten")
+//                        header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+//                        contentType(ContentType.Application.Json)
+//                        setBody(
+//                            JsonApiCreateRequest(
+//                                data =
+//                                    JsonApiRequestResourceObjectWithMeta(
+//                                        type = "AuthorizationRequest",
+//                                        attributes =
+//                                            CreateRequestAttributes(
+//                                                requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
+//                                            ),
+//                                        meta =
+//                                            CreateRequestMeta(
+//                                                requestedBy = PartyIdentifier(
+//                                                    PartyIdentifierType.GlobalLocationNumber,
+//                                                    "0107000000021"
+//                                                ),
+//                                                requestedFrom = PartyIdentifier(
+//                                                    PartyIdentifierType.NationalIdentityNumber,
+//                                                    REQUESTED_FROM_NIN
+//                                                ),
+//                                                requestedTo = PartyIdentifier(
+//                                                    PartyIdentifierType.NationalIdentityNumber,
+//                                                    REQUESTED_TO_NIN
+//                                                ),
+//                                                requestedForMeteringPointId = "123456789012345678",
+//                                                requestedForMeteringPointAddress = "quaerendum",
+//                                                balanceSupplierName = "Balance Supplier",
+//                                                balanceSupplierContractName = "Selena Chandler",
+//                                                redirectURI = "https://example.com",
+//                                                requestedFromName = "Test",
+//                                                startDate = "test",
+//                                            ),
+//                                    ),
+//                            ),
+//                        )
+//                    }
+//
+//                response.status shouldBe HttpStatusCode.BadRequest
+//
+//                val responseJson: JsonApiErrorCollection = response.body()
+//                responseJson.errors.apply {
+//                    size shouldBe 1
+//                    this[0].apply {
+//                        status shouldBe "400"
+//
+//                        title shouldBe "Validation error"
+//                        detail shouldBe "Requested from name is missing"
+//                    }
+//                }
+//                responseJson.meta.apply {
+//                    "createdAt".shouldNotBeNull()
+//                }
+//            }
 
             test("Should return 400 Bad Request on validation error with error payload") {
                 val response =
@@ -1192,7 +1252,7 @@ private class TestRequestBusinessHandler : RequestBusinessHandler {
 
     override fun getCreateGrantProperties(request: AuthorizationRequest): CreateGrantProperties =
         CreateGrantProperties(
-            validFrom = no.elhub.auth.features.requests.create.model.today(),
+            validFrom = today(),
             validTo = defaultRequestValidTo(),
         )
 }
