@@ -1,4 +1,4 @@
-package no.elhub.auth.features.businessprocesses.changeofsupplier
+package no.elhub.auth.features.businessprocesses.changeofenergysupplier
 
 import arrow.core.Either
 import io.kotest.assertions.arrow.core.shouldBeLeft
@@ -56,12 +56,12 @@ private val END_USER = PartyIdentifier(PartyIdentifierType.NationalIdentityNumbe
 private val ANOTHER_END_USER = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "987654321")
 private val SHARED_END_USER = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "11223344556")
 
-class ChangeOfSupplierBusinessHandlerTest :
+class ChangeOfEnergySupplierBusinessHandlerTest :
     FunSpec({
 
         extensions(MeteringPointsServiceTestContainerExtension, OrganisationsServiceTestContainerExtension)
         lateinit var meteringPointsService: MeteringPointsService
-        lateinit var handler: ChangeOfSupplierBusinessHandler
+        lateinit var handler: ChangeOfEnergySupplierBusinessHandler
         lateinit var organisationsService: OrganisationsService
 
         val personService = mockk<PersonService>()
@@ -78,7 +78,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                 ),
                 organisationsServiceHttpClient
             )
-            handler = ChangeOfSupplierBusinessHandler(meteringPointsService, personService, organisationsService)
+            handler = ChangeOfEnergySupplierBusinessHandler(meteringPointsService, personService, organisationsService)
         }
 
         coEvery { personService.findOrCreateByNin(END_USER.idValue) } returns Either.Right(Person(UUID.fromString(END_USER_ID_1)))
@@ -105,7 +105,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                 )
 
             handler.validateAndReturnRequestCommand(model)
-                .shouldBeLeft(BusinessProcessError.Validation(ChangeOfSupplierValidationError.MissingRequestedFromName.message))
+                .shouldBeLeft(BusinessProcessError.Validation(ChangeOfEnergySupplierValidationError.MissingRequestedFromName.message))
         }
 
         test("request validation fails when requestedFrom is not related to metering point") {
@@ -128,7 +128,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                 )
 
             handler.validateAndReturnRequestCommand(model)
-                .shouldBeLeft(BusinessProcessError.Validation(ChangeOfSupplierValidationError.RequestedFromNotMeteringPointEndUser.message))
+                .shouldBeLeft(BusinessProcessError.Validation(ChangeOfEnergySupplierValidationError.RequestedFromNotMeteringPointEndUser.message))
         }
 
         test("request validation fails when requestedFrom has access to metering point but is not end user") {
@@ -151,7 +151,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                 )
 
             handler.validateAndReturnRequestCommand(model)
-                .shouldBeLeft(BusinessProcessError.Validation(ChangeOfSupplierValidationError.RequestedFromNotMeteringPointEndUser.message))
+                .shouldBeLeft(BusinessProcessError.Validation(ChangeOfEnergySupplierValidationError.RequestedFromNotMeteringPointEndUser.message))
         }
 
         test("request validation fails on invalid metering point") {
@@ -174,7 +174,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                 )
 
             handler.validateAndReturnRequestCommand(model)
-                .shouldBeLeft(BusinessProcessError.Validation(ChangeOfSupplierValidationError.InvalidMeteringPointId.message))
+                .shouldBeLeft(BusinessProcessError.Validation(ChangeOfEnergySupplierValidationError.InvalidMeteringPointId.message))
         }
 
         test("request validation fails on unexisting metering point") {
@@ -197,7 +197,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                 )
 
             handler.validateAndReturnRequestCommand(model)
-                .shouldBeLeft(BusinessProcessError.NotFound(ChangeOfSupplierValidationError.MeteringPointNotFound.message))
+                .shouldBeLeft(BusinessProcessError.NotFound(ChangeOfEnergySupplierValidationError.MeteringPointNotFound.message))
         }
 
         test("request validation fails on metering point blocked for switching") {
@@ -220,7 +220,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                 )
 
             handler.validateAndReturnRequestCommand(model)
-                .shouldBeLeft(BusinessProcessError.Validation(ChangeOfSupplierValidationError.MeteringPointBlockedForSwitching.message))
+                .shouldBeLeft(BusinessProcessError.Validation(ChangeOfEnergySupplierValidationError.MeteringPointBlockedForSwitching.message))
         }
 
         test("request validation fails on not valid redirect URI") {
@@ -243,7 +243,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                 )
 
             handler.validateAndReturnRequestCommand(model)
-                .shouldBeLeft(BusinessProcessError.Validation(ChangeOfSupplierValidationError.InvalidRedirectURI.message))
+                .shouldBeLeft(BusinessProcessError.Validation(ChangeOfEnergySupplierValidationError.InvalidRedirectURI.message))
         }
 
         test("request validation fails on not valid requested by") {
@@ -266,7 +266,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                 )
 
             handler.validateAndReturnRequestCommand(model)
-                .shouldBeLeft(BusinessProcessError.Validation(ChangeOfSupplierValidationError.InvalidRequestedBy.message))
+                .shouldBeLeft(BusinessProcessError.Validation(ChangeOfEnergySupplierValidationError.InvalidRequestedBy.message))
         }
 
         test("request validation fails on non existing requested by") {
@@ -289,7 +289,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                 )
 
             handler.validateAndReturnRequestCommand(model)
-                .shouldBeLeft(BusinessProcessError.Validation(ChangeOfSupplierValidationError.RequestedByNotFound.message))
+                .shouldBeLeft(BusinessProcessError.Validation(ChangeOfEnergySupplierValidationError.RequestedByNotFound.message))
         }
 
         test("request validation fails on not active requested by") {
@@ -312,7 +312,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                 )
 
             handler.validateAndReturnRequestCommand(model)
-                .shouldBeLeft(BusinessProcessError.Validation(ChangeOfSupplierValidationError.NotActiveRequestedBy.message))
+                .shouldBeLeft(BusinessProcessError.Validation(ChangeOfEnergySupplierValidationError.NotActiveRequestedBy.message))
         }
 
         test("request validation fails on requested by matching current balance supplier") {
@@ -335,7 +335,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                 )
 
             handler.validateAndReturnRequestCommand(model)
-                .shouldBeLeft(BusinessProcessError.Validation(ChangeOfSupplierValidationError.MatchingRequestedBy.message))
+                .shouldBeLeft(BusinessProcessError.Validation(ChangeOfEnergySupplierValidationError.MatchingRequestedBy.message))
         }
 
         test("request validation fails on requested to not matching requested from") {
@@ -358,7 +358,7 @@ class ChangeOfSupplierBusinessHandlerTest :
                 )
 
             handler.validateAndReturnRequestCommand(model)
-                .shouldBeLeft(BusinessProcessError.Validation(ChangeOfSupplierValidationError.RequestedToRequestedFromMismatch.message))
+                .shouldBeLeft(BusinessProcessError.Validation(ChangeOfEnergySupplierValidationError.RequestedToRequestedFromMismatch.message))
         }
 
         test("request produces RequestCommand for valid input") {

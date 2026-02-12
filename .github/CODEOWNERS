@@ -8,9 +8,9 @@
 * @elhub/devxp @elhub/auth
 
 # Business process modules
-/src/main/kotlin/no/elhub/auth/features/businessprocesses/changeofsupplier/ @elhub/wow
-/src/test/kotlin/no/elhub/auth/features/businessprocesses/changeofsupplier/ @elhub/wow
-/src/main/kotlin/no/elhub/auth/features/businessprocesses/movein/ @elhub/wow
-/src/test/kotlin/no/elhub/auth/features/businessprocesses/movein/ @elhub/wow
+/src/main/kotlin/no/elhub/auth/features/businessprocesses/changeofenergysupplier/ @elhub/wow
+/src/test/kotlin/no/elhub/auth/features/businessprocesses/changeofenergysupplier/ @elhub/wow
+/src/main/kotlin/no/elhub/auth/features/businessprocesses/moveinandchangeofenergysupplier/ @elhub/wow
+/src/test/kotlin/no/elhub/auth/features/businessprocesses/moveinandchangeofenergysupplier/ @elhub/wow
 /src/main/kotlin/no/elhub/auth/features/businessprocesses/structuredata/ @elhub/wow
 /src/test/kotlin/no/elhub/auth/features/businessprocesses/structuredata/ @elhub/wow

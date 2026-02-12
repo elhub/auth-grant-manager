@@ -30,9 +30,9 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 import no.elhub.auth.features.businessprocesses.BusinessProcessError
-import no.elhub.auth.features.businessprocesses.changeofsupplier.defaultValidTo
-import no.elhub.auth.features.businessprocesses.changeofsupplier.domain.ChangeOfSupplierBusinessMeta
-import no.elhub.auth.features.businessprocesses.changeofsupplier.today
+import no.elhub.auth.features.businessprocesses.changeofenergysupplier.defaultValidTo
+import no.elhub.auth.features.businessprocesses.changeofenergysupplier.domain.ChangeOfEnergySupplierBusinessMeta
+import no.elhub.auth.features.businessprocesses.changeofenergysupplier.today
 import no.elhub.auth.features.common.AuthPersonsTestContainer
 import no.elhub.auth.features.common.AuthPersonsTestContainerExtension
 import no.elhub.auth.features.common.CreateScopeData
@@ -596,7 +596,7 @@ private class TestDocumentBusinessHandler : DocumentBusinessHandler {
                         permissionType = AuthorizationScope.PermissionType.ChangeOfEnergySupplierForPerson
                     )
                 ),
-                meta = ChangeOfSupplierBusinessMeta(
+                meta = ChangeOfEnergySupplierBusinessMeta(
                     requestedFromName = meta.requestedFromName,
                     requestedForMeteringPointId = meta.requestedForMeteringPointId,
                     requestedForMeteringPointAddress = meta.requestedForMeteringPointAddress,

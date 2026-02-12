@@ -7,21 +7,21 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
 import kotlinx.datetime.LocalDate
-import no.elhub.auth.features.businessprocesses.changeofsupplier.domain.ChangeOfSupplierBusinessMeta
-import no.elhub.auth.features.businessprocesses.movein.domain.MoveInBusinessMeta
+import no.elhub.auth.features.businessprocesses.changeofenergysupplier.domain.ChangeOfEnergySupplierBusinessMeta
+import no.elhub.auth.features.businessprocesses.moveinandchangeofenergysupplier.domain.MoveInAndChangeOfEnergySupplierBusinessMeta
 import org.apache.pdfbox.Loader
 import org.apache.pdfbox.text.PDFTextStripper
 
 class PdfGeneratorTest :
     FunSpec({
-        val cosMeta = ChangeOfSupplierBusinessMeta(
+        val cosMeta = ChangeOfEnergySupplierBusinessMeta(
             balanceSupplierName = "Balance Supplier",
             balanceSupplierContractName = "Contract Name",
             requestedForMeteringPointId = "Meter123",
             requestedForMeteringPointAddress = "Address 1",
             requestedFromName = "Requester"
         )
-        val moveInMeta = MoveInBusinessMeta(
+        val moveInMeta = MoveInAndChangeOfEnergySupplierBusinessMeta(
             requestedFromName = "Alberto Balsalm",
             requestedForMeteringPointId = "Meter123",
             requestedForMeteringPointAddress = "Address 1",

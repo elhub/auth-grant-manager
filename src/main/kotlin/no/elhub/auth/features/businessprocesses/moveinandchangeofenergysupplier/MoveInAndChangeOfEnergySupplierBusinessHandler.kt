@@ -1,4 +1,4 @@
-package no.elhub.auth.features.businessprocesses.movein
+package no.elhub.auth.features.businessprocesses.moveinandchangeofenergysupplier
 
 import arrow.core.Either
 import arrow.core.left
@@ -10,12 +10,12 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 import no.elhub.auth.features.businessprocesses.BusinessProcessError
-import no.elhub.auth.features.businessprocesses.movein.domain.MoveInBusinessCommand
-import no.elhub.auth.features.businessprocesses.movein.domain.MoveInBusinessMeta
-import no.elhub.auth.features.businessprocesses.movein.domain.MoveInBusinessModel
-import no.elhub.auth.features.businessprocesses.movein.domain.toDocumentCommand
-import no.elhub.auth.features.businessprocesses.movein.domain.toMoveInBusinessModel
-import no.elhub.auth.features.businessprocesses.movein.domain.toRequestCommand
+import no.elhub.auth.features.businessprocesses.moveinandchangeofenergysupplier.domain.MoveInAndChangeOfEnergySupplierBusinessCommand
+import no.elhub.auth.features.businessprocesses.moveinandchangeofenergysupplier.domain.MoveInAndChangeOfEnergySupplierBusinessMeta
+import no.elhub.auth.features.businessprocesses.moveinandchangeofenergysupplier.domain.MoveInAndChangeOfEnergySupplierBusinessModel
+import no.elhub.auth.features.businessprocesses.moveinandchangeofenergysupplier.domain.toDocumentCommand
+import no.elhub.auth.features.businessprocesses.moveinandchangeofenergysupplier.domain.toMoveInAndChangeOfEnergySupplierBusinessModel
+import no.elhub.auth.features.businessprocesses.moveinandchangeofenergysupplier.domain.toRequestCommand
 import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.AccessType.OWNED
 import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsService
 import no.elhub.auth.features.businessprocesses.structuredata.organisations.OrganisationsService
@@ -48,7 +48,7 @@ private fun moveInRequestValidTo() = today().plus(DatePeriod(days = MOVE_IN_REQU
 
 private fun moveInGrantValidTo() = today().plus(DatePeriod(years = MOVE_IN_GRANT_VALID_YEARS))
 
-class MoveInBusinessHandler(
+class MoveInAndChangeOfEnergySupplierBusinessHandler(
     private val organisationsService: OrganisationsService,
     private val meteringPointsService: MeteringPointsService,
     private val personService: PersonService
@@ -56,7 +56,7 @@ class MoveInBusinessHandler(
     DocumentBusinessHandler {
     override suspend fun validateAndReturnRequestCommand(createRequestModel: CreateRequestModel): Either<BusinessProcessError, RequestCommand> =
         either {
-            val model = createRequestModel.toMoveInBusinessModel()
+            val model = createRequestModel.toMoveInAndChangeOfEnergySupplierBusinessModel()
             validate(model).mapLeft { it.toBusinessError() }.bind().toRequestCommand()
         }
 
@@ -68,7 +68,7 @@ class MoveInBusinessHandler(
 
     override suspend fun validateAndReturnDocumentCommand(model: CreateDocumentModel): Either<BusinessProcessError, DocumentCommand> =
         either {
-            val model = model.toMoveInBusinessModel()
+            val model = model.toMoveInAndChangeOfEnergySupplierBusinessModel()
             validate(model).mapLeft { it.toBusinessError() }.bind().toDocumentCommand()
         }
 
@@ -78,81 +78,83 @@ class MoveInBusinessHandler(
             validFrom = today(),
         )
 
-    private suspend fun validate(model: MoveInBusinessModel): Either<MoveInValidationError, MoveInBusinessCommand> {
+    private suspend fun validate(
+        model: MoveInAndChangeOfEnergySupplierBusinessModel
+    ): Either<MoveInAndChangeOfEnergySupplierValidationError, MoveInAndChangeOfEnergySupplierBusinessCommand> {
         if (model.requestedFromName.isBlank()) {
-            return MoveInValidationError.MissingRequestedFromName.left()
+            return MoveInAndChangeOfEnergySupplierValidationError.MissingRequestedFromName.left()
         }
 
         if (model.balanceSupplierName.isBlank()) {
-            return MoveInValidationError.MissingBalanceSupplierName.left()
+            return MoveInAndChangeOfEnergySupplierValidationError.MissingBalanceSupplierName.left()
         }
 
         if (model.balanceSupplierContractName.isBlank()) {
-            return MoveInValidationError.MissingBalanceSupplierContractName.left()
+            return MoveInAndChangeOfEnergySupplierValidationError.MissingBalanceSupplierContractName.left()
         }
 
         if (model.requestedForMeteringPointId.isBlank()) {
-            return MoveInValidationError.MissingMeteringPointId.left()
+            return MoveInAndChangeOfEnergySupplierValidationError.MissingMeteringPointId.left()
         }
 
         if (!model.requestedForMeteringPointId.matches(Regex(REGEX_METERING_POINT))) {
-            return MoveInValidationError.InvalidMeteringPointId.left()
+            return MoveInAndChangeOfEnergySupplierValidationError.InvalidMeteringPointId.left()
         }
 
         if (model.requestedForMeteringPointAddress.isBlank()) {
-            return MoveInValidationError.MissingMeteringPointAddress.left()
+            return MoveInAndChangeOfEnergySupplierValidationError.MissingMeteringPointAddress.left()
         }
 
         if (model.requestedFrom.idValue.isBlank()) {
-            return MoveInValidationError.MissingRequestedFrom.left()
+            return MoveInAndChangeOfEnergySupplierValidationError.MissingRequestedFrom.left()
         }
 
         if (!model.requestedFrom.idValue.matches(Regex(REGEX_REQUESTED_FROM))) {
-            return MoveInValidationError.InvalidRequestedFrom.left()
+            return MoveInAndChangeOfEnergySupplierValidationError.InvalidRequestedFrom.left()
         }
 
         // temporary mapping until model has elhubInternalId instead of NIN
         val endUserElhubInternalId = personService.findOrCreateByNin(model.requestedFrom.idValue).getOrNull()?.internalId
-            ?: return MoveInValidationError.RequestedFromNotFound.left()
+            ?: return MoveInAndChangeOfEnergySupplierValidationError.RequestedFromNotFound.left()
 
         val meteringPoint = meteringPointsService.getMeteringPointByIdAndElhubInternalId(
             meteringPointId = model.requestedForMeteringPointId,
             elhubInternalId = endUserElhubInternalId.toString()
         )
         if (meteringPoint.isLeft()) {
-            return MoveInValidationError.MeteringPointNotFound.left()
+            return MoveInAndChangeOfEnergySupplierValidationError.MeteringPointNotFound.left()
         }
-        val meteringPointResponse = meteringPoint.getOrNull() ?: return MoveInValidationError.MeteringPointNotFound.left()
+        val meteringPointResponse = meteringPoint.getOrNull() ?: return MoveInAndChangeOfEnergySupplierValidationError.MeteringPointNotFound.left()
         if (meteringPointResponse.data.relationships.endUser != null && meteringPointResponse.data.attributes?.accessType == OWNED) {
-            return MoveInValidationError.RequestedFromIsMeteringPointEndUser.left()
+            return MoveInAndChangeOfEnergySupplierValidationError.RequestedFromIsMeteringPointEndUser.left()
         }
 
         val startDate = model.startDate
         startDate?.let {
             if (it > today()) {
-                return MoveInValidationError.StartDateNotBackInTime.left()
+                return MoveInAndChangeOfEnergySupplierValidationError.StartDateNotBackInTime.left()
             }
         }
 
         if (model.requestedBy.idValue.isBlank()) {
-            return MoveInValidationError.MissingRequestedBy.left()
+            return MoveInAndChangeOfEnergySupplierValidationError.MissingRequestedBy.left()
         }
 
         if (!model.requestedBy.idValue.matches(Regex(REGEX_REQUESTED_BY))) {
-            return MoveInValidationError.InvalidRequestedBy.left()
+            return MoveInAndChangeOfEnergySupplierValidationError.InvalidRequestedBy.left()
         }
 
         val party = organisationsService.getPartyByIdAndPartyType(model.requestedBy.idValue, PartyType.BalanceSupplier)
         if (party.isLeft()) {
-            return MoveInValidationError.RequestedByNotFound.left()
+            return MoveInAndChangeOfEnergySupplierValidationError.RequestedByNotFound.left()
         }
-        val partyResponse = party.getOrNull() ?: return MoveInValidationError.RequestedByNotFound.left()
+        val partyResponse = party.getOrNull() ?: return MoveInAndChangeOfEnergySupplierValidationError.RequestedByNotFound.left()
         if (partyResponse.data.attributes?.status != PartyStatus.ACTIVE) {
-            return MoveInValidationError.NotActiveRequestedBy.left()
+            return MoveInAndChangeOfEnergySupplierValidationError.NotActiveRequestedBy.left()
         }
 
         val meta =
-            MoveInBusinessMeta(
+            MoveInAndChangeOfEnergySupplierBusinessMeta(
                 requestedFromName = model.requestedFromName,
                 requestedForMeteringPointId = model.requestedForMeteringPointId,
                 requestedForMeteringPointAddress = model.requestedForMeteringPointAddress,
@@ -170,7 +172,7 @@ class MoveInBusinessHandler(
             )
         )
 
-        return MoveInBusinessCommand(
+        return MoveInAndChangeOfEnergySupplierBusinessCommand(
             requestedFrom = model.requestedFrom,
             requestedBy = model.requestedBy,
             requestedTo = model.requestedTo,

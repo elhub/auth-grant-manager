@@ -11,8 +11,8 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import no.elhub.auth.features.businessprocesses.BusinessProcessError
-import no.elhub.auth.features.businessprocesses.changeofsupplier.ChangeOfSupplierValidationError
-import no.elhub.auth.features.businessprocesses.changeofsupplier.defaultValidTo
+import no.elhub.auth.features.businessprocesses.changeofenergysupplier.ChangeOfEnergySupplierValidationError
+import no.elhub.auth.features.businessprocesses.changeofenergysupplier.defaultValidTo
 import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.common.RepositoryWriteError
 import no.elhub.auth.features.common.party.AuthorizationParty
@@ -206,13 +206,15 @@ class HandlerTest : FunSpec({
         stubPartyResolution(partyService)
         coEvery {
             businessHandler.validateAndReturnDocumentCommand(model)
-        } returns BusinessProcessError.Validation(ChangeOfSupplierValidationError.MissingRequestedFromName.message).left()
+        } returns BusinessProcessError.Validation(ChangeOfEnergySupplierValidationError.MissingRequestedFromName.message).left()
 
         val handler = Handler(businessHandler, signatureService, documentRepository, partyService, fileGenerator)
 
         val response = handler(model)
 
-        response.shouldBeLeft(CreateError.BusinessError(BusinessProcessError.Validation(ChangeOfSupplierValidationError.MissingRequestedFromName.message)))
+        response.shouldBeLeft(
+            CreateError.BusinessError(BusinessProcessError.Validation(ChangeOfEnergySupplierValidationError.MissingRequestedFromName.message))
+        )
 
         verify(exactly = 0) { fileGenerator.generate(any(), any()) }
     }
