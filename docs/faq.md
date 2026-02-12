@@ -74,7 +74,7 @@ The following fields are validated when the authorization request/document is pr
 
 For move-in scenarios you should use `documentType: MoveInAndChangeOfEnergySupplierForPerson`. The difference is how you handle `startDate`:
 
-* **Future move-in (BRS-102):** Do not include `startDate` in the request.
+* **Future move-in (BRS-102):** Do not include `startDate` in the request. We will validate that the date is not set to a date in the future if present.
 * **Today or past move-in (BRS-103):** You must include `startDate`.
 
 `documentType: ChangeOfEnergySupplierForPerson` applies only to the current end user on the metering point and is not used for move-in cases.
