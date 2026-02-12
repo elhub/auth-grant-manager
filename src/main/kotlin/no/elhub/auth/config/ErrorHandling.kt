@@ -62,7 +62,7 @@ private fun formatDeserializationDetail(raw: String): String {
 
     return when {
         enumField != null && path != null && enumValue != null ->
-            "Invalid value '$enumValue' for field '$enumField' at $path."
+            "Invalid value '$enumValue' for field '$enumField' at $path"
 
         else ->
             singleLine

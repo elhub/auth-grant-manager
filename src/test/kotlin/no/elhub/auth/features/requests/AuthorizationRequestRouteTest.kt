@@ -501,64 +501,98 @@ class AuthorizationRequestRouteTest : FunSpec({
                 }
             }
 
-//            test("Should return 400 Bad Request on invalid request body") {
-//                val response =
-//                    client.post(REQUESTS_PATH) {
-//                        header(HttpHeaders.Authorization, "Bearer maskinporten")
-//                        header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
-//                        contentType(ContentType.Application.Json)
-//                        setBody(
-//                            JsonApiCreateRequest(
-//                                data =
-//                                    JsonApiRequestResourceObjectWithMeta(
-//                                        type = "AuthorizationRequest",
-//                                        attributes =
-//                                            CreateRequestAttributes(
-//                                                requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
-//                                            ),
-//                                        meta =
-//                                            CreateRequestMeta(
-//                                                requestedBy = PartyIdentifier(
-//                                                    PartyIdentifierType.GlobalLocationNumber,
-//                                                    "0107000000021"
-//                                                ),
-//                                                requestedFrom = PartyIdentifier(
-//                                                    PartyIdentifierType.NationalIdentityNumber,
-//                                                    REQUESTED_FROM_NIN
-//                                                ),
-//                                                requestedTo = PartyIdentifier(
-//                                                    PartyIdentifierType.NationalIdentityNumber,
-//                                                    REQUESTED_TO_NIN
-//                                                ),
-//                                                requestedForMeteringPointId = "123456789012345678",
-//                                                requestedForMeteringPointAddress = "quaerendum",
-//                                                balanceSupplierName = "Balance Supplier",
-//                                                balanceSupplierContractName = "Selena Chandler",
-//                                                redirectURI = "https://example.com",
-//                                                requestedFromName = "Test",
-//                                                startDate = "test",
-//                                            ),
-//                                    ),
-//                            ),
-//                        )
-//                    }
-//
-//                response.status shouldBe HttpStatusCode.BadRequest
-//
-//                val responseJson: JsonApiErrorCollection = response.body()
-//                responseJson.errors.apply {
-//                    size shouldBe 1
-//                    this[0].apply {
-//                        status shouldBe "400"
-//
-//                        title shouldBe "Validation error"
-//                        detail shouldBe "Requested from name is missing"
-//                    }
-//                }
-//                responseJson.meta.apply {
-//                    "createdAt".shouldNotBeNull()
-//                }
-//            }
+            test("Should return 400 Bad Request on missing field in request body") {
+                val response =
+                    client.post(REQUESTS_PATH) {
+                        header(HttpHeaders.Authorization, "Bearer maskinporten")
+                        header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                        contentType(ContentType.Application.Json)
+                        setBody(
+                            """
+                {
+                  "data": {
+                    "attributes": {
+                      "requestType": "ChangeOfEnergySupplierForPerson"
+                    },
+                    "meta": {
+                      "requestedBy": { "idType": "GlobalLocationNumber", "id": "0107000000021" },
+                      "requestedFrom": { "idType": "NationalIdentityNumber", "id": "$REQUESTED_FROM_NIN" },
+                      "requestedTo": { "idType": "NationalIdentityNumber", "id": "$REQUESTED_TO_NIN" },
+                      "requestedFromName": "Hillary Orr",
+                      "requestedForMeteringPointId": "123456789012345678",
+                      "requestedForMeteringPointAddress": "quaerendum",
+                      "balanceSupplierName": "Balance Supplier",
+                      "balanceSupplierContractName": "Selena Chandler",
+                      "redirectURI": "https://example.com/redirect"
+                    }
+                  }
+                }
+                            """.trimIndent()
+                        )
+                    }
+
+                response.status shouldBe HttpStatusCode.BadRequest
+
+                val responseJson: JsonApiErrorCollection = response.body()
+                responseJson.errors.apply {
+                    size shouldBe 1
+                    this[0].apply {
+                        status shouldBe "400"
+                        title shouldBe "Missing required field in request body"
+                        detail shouldBe "Field '[idValue]' is missing or invalid"
+                    }
+                }
+                responseJson.meta.apply {
+                    "createdAt".shouldNotBeNull()
+                }
+            }
+
+            test("Should return 400 Bad Request on invalid field value in request body") {
+                val response =
+                    client.post(REQUESTS_PATH) {
+                        header(HttpHeaders.Authorization, "Bearer maskinporten")
+                        header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                        contentType(ContentType.Application.Json)
+                        setBody(
+                            """
+                {
+                  "data": {
+                    "type": "AuthorizationRequest",
+                    "attributes": {
+                      "requestType": "ChangeOfEnergySupplierForPerson"
+                    },
+                    "meta": {
+                      "requestedBy": { "idType": "TEST", "id": "0107000000021" },
+                      "requestedFrom": { "idType": "NationalIdentityNumber", "id": "$REQUESTED_FROM_NIN" },
+                      "requestedTo": { "idType": "NationalIdentityNumber", "id": "$REQUESTED_TO_NIN" },
+                      "requestedFromName": "Hillary Orr",
+                      "requestedForMeteringPointId": "123456789012345678",
+                      "requestedForMeteringPointAddress": "quaerendum",
+                      "balanceSupplierName": "Balance Supplier",
+                      "balanceSupplierContractName": "Selena Chandler",
+                      "redirectURI": "https://example.com/redirect"
+                    }
+                  }
+                }
+                            """.trimIndent()
+                        )
+                    }
+
+                response.status shouldBe HttpStatusCode.BadRequest
+
+                val responseJson: JsonApiErrorCollection = response.body()
+                responseJson.errors.apply {
+                    size shouldBe 1
+                    this[0].apply {
+                        status shouldBe "400"
+                        title shouldBe "Invalid field value in request body"
+                        detail shouldBe "Invalid value 'TEST' for field 'data' at $.data.meta.requestedBy.idType"
+                    }
+                }
+                responseJson.meta.apply {
+                    "createdAt".shouldNotBeNull()
+                }
+            }
 
             test("Should return 400 Bad Request on validation error with error payload") {
                 val response =
@@ -736,6 +770,71 @@ class AuthorizationRequestRouteTest : FunSpec({
     context("PATCH /authorization-requests/{ID}") {
         testApplication {
             setUpAuthorizationRequestTestApplication()
+
+            test("Should return 400 Bad Request on missing field in request body") {
+                val response = client.patch("${REQUESTS_PATH}/130b6bca-1e3a-4653-8a9b-ccc0dc4fe389") {
+                    header(HttpHeaders.Authorization, "Bearer enduser")
+                    contentType(ContentType.Application.Json)
+                    setBody(
+                        """
+                {
+                  "data": {
+                    "type": "AuthorizationRequest",
+                    "attributes": {
+                    }
+                  }
+                }
+                        """.trimIndent()
+                    )
+                }
+
+                response.status shouldBe HttpStatusCode.BadRequest
+
+                val responseJson: JsonApiErrorCollection = response.body()
+                responseJson.errors.apply {
+                    size shouldBe 1
+                    this[0].apply {
+                        status shouldBe "400"
+                        title shouldBe "Missing required field in request body"
+                        detail shouldBe "Field '[status]' is missing or invalid"
+                    }
+                }
+                responseJson.meta.apply {
+                    "createdAt".shouldNotBeNull()
+                }
+            }
+
+            test("Should return 400 Bad Request on invalid field value in request body") {
+                val response = client.patch("${REQUESTS_PATH}/130b6bca-1e3a-4653-8a9b-ccc0dc4fe389") {
+                    header(HttpHeaders.Authorization, "Bearer enduser")
+                    contentType(ContentType.Application.Json)
+                    setBody(
+                        """
+                {
+                  "data": {
+                    "type": "AuthorizationRequest",
+                    "attributes": { "status" : "TEST" }
+                  }
+                }
+                        """.trimIndent()
+                    )
+                }
+
+                response.status shouldBe HttpStatusCode.BadRequest
+
+                val responseJson: JsonApiErrorCollection = response.body()
+                responseJson.errors.apply {
+                    size shouldBe 1
+                    this[0].apply {
+                        status shouldBe "400"
+                        title shouldBe "Invalid field value in request body"
+                        detail shouldBe "Invalid value 'TEST' for field 'data' at $.data.attributes.status"
+                    }
+                }
+                responseJson.meta.apply {
+                    "createdAt".shouldNotBeNull()
+                }
+            }
 
             test("should not be accepted when validTo has expired") {
                 val patchResult =
