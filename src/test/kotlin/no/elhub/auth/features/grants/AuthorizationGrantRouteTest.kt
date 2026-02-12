@@ -65,7 +65,7 @@ class AuthorizationGrantRouteTest : FunSpec({
         )
     }
 
-    context("GET /authorization-grants/{id}") {
+    context("Some context") {
         testApplication {
             setupAuthorizationGrantTestApplication()
 
@@ -282,12 +282,6 @@ class AuthorizationGrantRouteTest : FunSpec({
                     "createdAt".shouldNotBeNull()
                 }
             }
-        }
-    }
-
-    context("GET /authorization-grants/{id}/scopes") {
-        testApplication {
-            setupAuthorizationGrantTestApplication()
 
             test("Should return 200 OK on a valid ID and a single authorization scope") {
                 val response = client.get("$GRANTS_PATH/123e4567-e89b-12d3-a456-426614174000/scopes") {
@@ -491,12 +485,6 @@ class AuthorizationGrantRouteTest : FunSpec({
                     "createdAt".shouldNotBeNull()
                 }
             }
-        }
-    }
-
-    context("GET /authorization-grants") {
-        testApplication {
-            setupAuthorizationGrantTestApplication()
 
             test("Should return 200 OK") {
                 val response = client.get(GRANTS_PATH) {
@@ -630,12 +618,6 @@ class AuthorizationGrantRouteTest : FunSpec({
                 val responseJson: CollectionGrantResponse = response.body()
                 responseJson.data.size shouldBe 0
             }
-        }
-    }
-
-    context("PATCH /authorization-grants/{id}") {
-        testApplication {
-            setupAuthorizationGrantTestApplication()
 
             test("Should update status and return updated object as response") {
                 val response = client.patch("$GRANTS_PATH/123e4567-e89b-12d3-a456-426614174000") {
