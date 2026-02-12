@@ -8,90 +8,65 @@
             max-width: 600px;
         }
         body {
-            font: 14px/1.5 Roboto, sans-serif;
-            color: #222;
-            background: #fff;
+            font: 1rem/1.5 Roboto, sans-serif;
+            color: rgba(42, 43, 45, 1);
+            background: rgba(255, 255, 255, 1);
             margin: 20px auto;
             padding: 20px;
         }
 
-        img {
+        .logo-image {
             display: block;
-            width: 83px;
+            width: 84px;
             height: 32px;
             margin: 0 0 24px auto;
         }
 
-        .meta {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
+        .meta-row {
+            margin: 0 0 6px;
+            white-space: nowrap;
         }
 
-        .meta .row {
-            display: flex;
-        }
-
-        .meta dt {
-            margin: 0;
-            flex-shrink: 0;
+        .meta-label {
             font-weight: 700;
             color: #2a2a2a;
         }
 
-        .meta dd {
-            margin: 0;
-        }
-
         .title {
-            color: rgba(56, 96, 67);
+            color: rgb(56, 96, 67);
             font-size: 20px;
             margin: 60px 0 12px;
         }
 
-        p,
-        ul {
-            margin: 0 0 1em;
-        }
+p,
+ul {
+    margin: 0 0 1em;
+}
 
-        li {
-            margin-bottom: 0.5em;
-        }
-
+li {
+    margin-bottom: 0.5em;
+}
     </style>
 </head>
 <body>
 <img src="https://frzq0sxltynr.objectstorage.eu-frankfurt-1.oci.customer-oci.com/n/frzq0sxltynr/b/insight-prod-open-data-osb/o/download/media/elhub-logo-veldig-liten.png"
+     class="logo-image"
      alt=""
      role="presentation"
      aria-hidden="true"
 />
 
-<dl class="meta">
-    <div class="row">
-        <dt>Kunde:</dt><dd>&nbsp;{{customerName}}</dd>
-    </div>
-    <div class="row">
-        <dt>Adresse:</dt><dd>&nbsp;{{meteringPointAddress}}</dd>
-    </div>
-    <div class="row">
-        <dt>Målernummer:</dt><dd>&nbsp;{{meteringPointId}}</dd>
-    </div>
-    <div class="row">
-        <dt>MålepunktID:</dt><dd>&nbsp;{{meteringPointId}}</dd>
-    </div>
-    <div class="row">
-        <dt>Strømleverandør:</dt><dd>&nbsp;{{balanceSupplierName}}</dd>
-    </div>
-    <div class="row">
-        <dt>Strømavtale:</dt><dd>&nbsp;{{balanceSupplierContractName}}</dd>
-    </div>
+<div class="meta">
+    <p class="meta-row"><span class="meta-label">Kunde:</span> {{customerName}}</p>
+    <p class="meta-row"><span class="meta-label">Adresse:</span> {{meteringPointAddress}}</p>
+    <p class="meta-row"><span class="meta-label">Målernummer:</span> {{meteringPointId}}</p>
+    <p class="meta-row"><span class="meta-label">MålepunktID:</span> {{meteringPointId}}</p>
+    <p class="meta-row"><span class="meta-label">Strømleverandør:</span> {{balanceSupplierName}}</p>
+    <p class="meta-row"><span class="meta-label">Strømavtale:</span> {{balanceSupplierContractName}}</p>
     {{#moveInDate}}
-        <div class="row">
-            <dt>Innflyttingsdato:</dt><dd>&nbsp;{{moveInDate}}</dd>
-        </div>
+        <p class="meta-row"><span class="meta-label">Innflyttingsdato:</span> {{moveInDate}}</p>
     {{/moveInDate}}
-</dl>
+</div>
 
 <h1 class="title">Avtalebekreftelse - Innflytting og leverandørskifte</h1>
 
