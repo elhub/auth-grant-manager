@@ -2,12 +2,12 @@ package no.elhub.auth.features.documents.create.command
 
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
-import no.elhub.auth.features.businessprocesses.changeofsupplier.domain.ChangeOfSupplierBusinessMeta
+import no.elhub.auth.features.businessprocesses.changeofenergysupplier.domain.ChangeOfEnergySupplierBusinessMeta
 
 class DocumentMetaMarkerTest : FunSpec({
 
-    test("ChangeOfSupplierBusinessMeta produces the expected attribute map") {
-        val meta = ChangeOfSupplierBusinessMeta(
+    test("ChangeOfEnergySupplierBusinessMeta produces the expected attribute map") {
+        val meta = ChangeOfEnergySupplierBusinessMeta(
             balanceSupplierName = "Balance Supplier",
             balanceSupplierContractName = "Contract Name",
             requestedForMeteringPointId = "Meter123",

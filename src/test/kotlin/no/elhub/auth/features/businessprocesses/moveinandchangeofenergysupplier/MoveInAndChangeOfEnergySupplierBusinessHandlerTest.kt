@@ -1,4 +1,4 @@
-package no.elhub.auth.features.businessprocesses.movein
+package no.elhub.auth.features.businessprocesses.moveinandchangeofenergysupplier
 
 import arrow.core.Either
 import io.kotest.assertions.arrow.core.shouldBeLeft
@@ -58,13 +58,13 @@ private val END_USER = PartyIdentifier(PartyIdentifierType.NationalIdentityNumbe
 private val ANOTHER_END_USER = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "987654321")
 private val SHARED_END_USER = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "11223344556")
 
-class MoveInBusinessHandlerTest :
+class MoveInAndChangeOfEnergySupplierBusinessHandlerTest :
     FunSpec({
 
         extensions(OrganisationsServiceTestContainerExtension, MeteringPointsServiceTestContainerExtension)
         lateinit var organisationsService: OrganisationsService
         lateinit var meteringPointsService: MeteringPointsService
-        lateinit var handler: MoveInBusinessHandler
+        lateinit var handler: MoveInAndChangeOfEnergySupplierBusinessHandler
 
         val personService = mockk<PersonService>()
 
@@ -83,7 +83,7 @@ class MoveInBusinessHandlerTest :
                 ),
                 meteringPointsServiceHttpClient
             )
-            handler = MoveInBusinessHandler(organisationsService, meteringPointsService, personService)
+            handler = MoveInAndChangeOfEnergySupplierBusinessHandler(organisationsService, meteringPointsService, personService)
         }
 
         coEvery { personService.findOrCreateByNin(END_USER.idValue) } returns Either.Right(Person(UUID.fromString(END_USER_ID_1)))
@@ -135,7 +135,7 @@ class MoveInBusinessHandlerTest :
                 )
 
             handler.validateAndReturnRequestCommand(model)
-                .shouldBeLeft(BusinessProcessError.Validation(MoveInValidationError.StartDateNotBackInTime.message))
+                .shouldBeLeft(BusinessProcessError.Validation(MoveInAndChangeOfEnergySupplierValidationError.StartDateNotBackInTime.message))
         }
 
         test("request validation allows startDate today") {
@@ -182,7 +182,7 @@ class MoveInBusinessHandlerTest :
                 )
 
             handler.validateAndReturnRequestCommand(model)
-                .shouldBeLeft(BusinessProcessError.Validation(MoveInValidationError.InvalidMeteringPointId.message))
+                .shouldBeLeft(BusinessProcessError.Validation(MoveInAndChangeOfEnergySupplierValidationError.InvalidMeteringPointId.message))
         }
 
         test("request validation fails on non existing metering point") {
@@ -206,7 +206,7 @@ class MoveInBusinessHandlerTest :
                 )
 
             handler.validateAndReturnRequestCommand(model)
-                .shouldBeLeft(BusinessProcessError.Validation(MoveInValidationError.MeteringPointNotFound.message))
+                .shouldBeLeft(BusinessProcessError.Validation(MoveInAndChangeOfEnergySupplierValidationError.MeteringPointNotFound.message))
         }
 
         test("request validation fails on requestedFrom being owner of metering point") {
@@ -230,7 +230,7 @@ class MoveInBusinessHandlerTest :
                 )
 
             handler.validateAndReturnRequestCommand(model)
-                .shouldBeLeft(BusinessProcessError.Validation(MoveInValidationError.RequestedFromIsMeteringPointEndUser.message))
+                .shouldBeLeft(BusinessProcessError.Validation(MoveInAndChangeOfEnergySupplierValidationError.RequestedFromIsMeteringPointEndUser.message))
         }
 
         test("request validation allows on requestedFrom having access to metering point") {
@@ -277,7 +277,7 @@ class MoveInBusinessHandlerTest :
                 )
 
             handler.validateAndReturnRequestCommand(model)
-                .shouldBeLeft(BusinessProcessError.Validation(MoveInValidationError.InvalidRequestedBy.message))
+                .shouldBeLeft(BusinessProcessError.Validation(MoveInAndChangeOfEnergySupplierValidationError.InvalidRequestedBy.message))
         }
 
         test("request validation fails on non existing requested by") {
@@ -301,7 +301,7 @@ class MoveInBusinessHandlerTest :
                 )
 
             handler.validateAndReturnRequestCommand(model)
-                .shouldBeLeft(BusinessProcessError.Validation(MoveInValidationError.RequestedByNotFound.message))
+                .shouldBeLeft(BusinessProcessError.Validation(MoveInAndChangeOfEnergySupplierValidationError.RequestedByNotFound.message))
         }
 
         test("request validation fails on non Active requested by") {
@@ -325,7 +325,7 @@ class MoveInBusinessHandlerTest :
                 )
 
             handler.validateAndReturnRequestCommand(model)
-                .shouldBeLeft(BusinessProcessError.Validation(MoveInValidationError.NotActiveRequestedBy.message))
+                .shouldBeLeft(BusinessProcessError.Validation(MoveInAndChangeOfEnergySupplierValidationError.NotActiveRequestedBy.message))
         }
 
         test("request produces RequestCommand for valid input") {

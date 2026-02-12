@@ -1,4 +1,4 @@
-package no.elhub.auth.features.businessprocesses.movein.domain
+package no.elhub.auth.features.businessprocesses.changeofenergysupplier.domain
 
 import kotlinx.datetime.LocalDate
 import no.elhub.auth.features.common.CreateScopeData
@@ -11,22 +11,21 @@ import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.create.command.RequestCommand
 import no.elhub.auth.features.requests.create.command.RequestMetaMarker
 
-data class MoveInBusinessCommand(
+data class ChangeOfEnergySupplierBusinessCommand(
     val requestedFrom: PartyIdentifier,
     val requestedBy: PartyIdentifier,
     val requestedTo: PartyIdentifier,
     val validTo: LocalDate,
     val scopes: List<CreateScopeData>,
-    val meta: MoveInBusinessMeta,
+    val meta: ChangeOfEnergySupplierBusinessMeta,
 )
 
-data class MoveInBusinessMeta(
+data class ChangeOfEnergySupplierBusinessMeta(
     val requestedFromName: String,
     val requestedForMeteringPointId: String,
     val requestedForMeteringPointAddress: String,
     val balanceSupplierName: String,
     val balanceSupplierContractName: String,
-    val startDate: LocalDate?,
     val redirectURI: String? = null,
 ) : RequestMetaMarker,
     DocumentMetaMarker {
@@ -37,14 +36,13 @@ data class MoveInBusinessMeta(
             put("requestedForMeteringPointAddress", requestedForMeteringPointAddress)
             put("balanceSupplierContractName", balanceSupplierContractName)
             put("balanceSupplierName", balanceSupplierName)
-            startDate?.let { put("startDate", it.toString()) }
             redirectURI?.let { put("redirectURI", it) }
         }
 }
 
-fun MoveInBusinessCommand.toRequestCommand(): RequestCommand =
+fun ChangeOfEnergySupplierBusinessCommand.toRequestCommand(): RequestCommand =
     RequestCommand(
-        type = AuthorizationRequest.Type.MoveInAndChangeOfEnergySupplierForPerson,
+        type = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
         requestedBy = this.requestedBy,
         requestedFrom = this.requestedFrom,
         requestedTo = this.requestedTo,
@@ -53,9 +51,9 @@ fun MoveInBusinessCommand.toRequestCommand(): RequestCommand =
         meta = this.meta,
     )
 
-fun MoveInBusinessCommand.toDocumentCommand(): DocumentCommand =
+fun ChangeOfEnergySupplierBusinessCommand.toDocumentCommand(): DocumentCommand =
     DocumentCommand(
-        type = AuthorizationDocument.Type.MoveInAndChangeOfEnergySupplierForPerson,
+        type = AuthorizationDocument.Type.ChangeOfEnergySupplierForPerson,
         requestedFrom = this.requestedFrom,
         requestedTo = this.requestedTo,
         requestedBy = this.requestedBy,

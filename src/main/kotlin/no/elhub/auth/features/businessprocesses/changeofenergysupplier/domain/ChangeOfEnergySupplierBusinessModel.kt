@@ -1,10 +1,10 @@
-package no.elhub.auth.features.businessprocesses.changeofsupplier.domain
+package no.elhub.auth.features.businessprocesses.changeofenergysupplier.domain
 
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.documents.create.model.CreateDocumentModel
 import no.elhub.auth.features.requests.create.model.CreateRequestModel
 
-data class ChangeOfSupplierBusinessModel(
+data class ChangeOfEnergySupplierBusinessModel(
     val requestedBy: PartyIdentifier,
     val requestedFrom: PartyIdentifier,
     val requestedTo: PartyIdentifier,
@@ -16,8 +16,8 @@ data class ChangeOfSupplierBusinessModel(
     val redirectURI: String? = null,
 )
 
-fun CreateRequestModel.toChangeOfSupplierBusinessModel(): ChangeOfSupplierBusinessModel =
-    ChangeOfSupplierBusinessModel(
+fun CreateRequestModel.toChangeOfEnergySupplierBusinessModel(): ChangeOfEnergySupplierBusinessModel =
+    ChangeOfEnergySupplierBusinessModel(
         requestedBy = this.meta.requestedBy,
         requestedFrom = this.meta.requestedFrom,
         requestedTo = this.meta.requestedTo,
@@ -29,8 +29,8 @@ fun CreateRequestModel.toChangeOfSupplierBusinessModel(): ChangeOfSupplierBusine
         redirectURI = this.meta.redirectURI,
     )
 
-fun CreateDocumentModel.toChangeOfSupplierBusinessModel(): ChangeOfSupplierBusinessModel =
-    ChangeOfSupplierBusinessModel(
+fun CreateDocumentModel.toChangeOfEnergySupplierBusinessModel(): ChangeOfEnergySupplierBusinessModel =
+    ChangeOfEnergySupplierBusinessModel(
         requestedBy = this.meta.requestedBy,
         requestedFrom = this.meta.requestedFrom,
         requestedTo = this.meta.requestedTo,

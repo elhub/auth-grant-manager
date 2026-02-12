@@ -1,11 +1,11 @@
-package no.elhub.auth.features.businessprocesses.movein.domain
+package no.elhub.auth.features.businessprocesses.moveinandchangeofenergysupplier.domain
 
 import kotlinx.datetime.LocalDate
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.documents.create.model.CreateDocumentModel
 import no.elhub.auth.features.requests.create.model.CreateRequestModel
 
-data class MoveInBusinessModel(
+data class MoveInAndChangeOfEnergySupplierBusinessModel(
     val requestedBy: PartyIdentifier,
     val requestedFrom: PartyIdentifier,
     val requestedTo: PartyIdentifier,
@@ -18,8 +18,8 @@ data class MoveInBusinessModel(
     val redirectURI: String? = null,
 )
 
-fun CreateRequestModel.toMoveInBusinessModel(): MoveInBusinessModel =
-    MoveInBusinessModel(
+fun CreateRequestModel.toMoveInAndChangeOfEnergySupplierBusinessModel(): MoveInAndChangeOfEnergySupplierBusinessModel =
+    MoveInAndChangeOfEnergySupplierBusinessModel(
         requestedBy = this.meta.requestedBy,
         requestedFrom = this.meta.requestedFrom,
         requestedTo = this.meta.requestedTo,
@@ -32,8 +32,8 @@ fun CreateRequestModel.toMoveInBusinessModel(): MoveInBusinessModel =
         redirectURI = this.meta.redirectURI,
     )
 
-fun CreateDocumentModel.toMoveInBusinessModel(): MoveInBusinessModel =
-    MoveInBusinessModel(
+fun CreateDocumentModel.toMoveInAndChangeOfEnergySupplierBusinessModel(): MoveInAndChangeOfEnergySupplierBusinessModel =
+    MoveInAndChangeOfEnergySupplierBusinessModel(
         requestedBy = this.meta.requestedBy,
         requestedFrom = this.meta.requestedFrom,
         requestedTo = this.meta.requestedTo,
