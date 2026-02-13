@@ -4,7 +4,16 @@ import kotlinx.serialization.Serializable
 import no.elhub.auth.features.businessprocesses.BusinessProcessError
 import no.elhub.auth.features.requests.create.requesttypes.RequestTypeValidationError
 
-fun MoveInAndChangeOfEnergySupplierValidationError.toBusinessError(): BusinessProcessError = BusinessProcessError.Validation(detail = this.message)
+fun MoveInAndChangeOfEnergySupplierValidationError.toBusinessError(): BusinessProcessError =
+    when (this) {
+        is MoveInAndChangeOfEnergySupplierValidationError.UnexpectedError -> BusinessProcessError.Unexpected(detail = this.message)
+
+        MoveInAndChangeOfEnergySupplierValidationError.MeteringPointNotFound,
+        MoveInAndChangeOfEnergySupplierValidationError.RequestedByNotFound,
+        MoveInAndChangeOfEnergySupplierValidationError.RequestedFromNotFound -> BusinessProcessError.NotFound(detail = this.message)
+
+        else -> BusinessProcessError.Validation(detail = this.message)
+    }
 
 @Serializable
 sealed class MoveInAndChangeOfEnergySupplierValidationError(
@@ -77,4 +86,8 @@ sealed class MoveInAndChangeOfEnergySupplierValidationError(
     @Serializable
     data object NotActiveRequestedBy :
         MoveInAndChangeOfEnergySupplierValidationError("not_active_requested_by", "Requested by is not an active party in Elhub")
+
+    @Serializable
+    data object UnexpectedError :
+        MoveInAndChangeOfEnergySupplierValidationError("unexpected_error", "Unexpected error occurred")
 }
