@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="no">
+<html lang="{{htmlLang}}">
 <head>
     <meta charset="UTF-8"/>
-    <title>Avtalebekreftelse - Innflytting og leverandørskifte</title>
+    <title>{{#i18n}}move_in.document_title{{/i18n}}</title>
     <style>
         @page {
             max-width: 600px;
@@ -57,31 +57,31 @@ li {
 />
 
 <div class="meta">
-    <p class="meta-row"><span class="meta-label">Kunde:</span> {{customerName}}</p>
-    <p class="meta-row"><span class="meta-label">Adresse:</span> {{meteringPointAddress}}</p>
-    <p class="meta-row"><span class="meta-label">Målernummer:</span> {{meteringPointId}}</p>
-    <p class="meta-row"><span class="meta-label">MålepunktID:</span> {{meteringPointId}}</p>
-    <p class="meta-row"><span class="meta-label">Strømleverandør:</span> {{balanceSupplierName}}</p>
-    <p class="meta-row"><span class="meta-label">Strømavtale:</span> {{balanceSupplierContractName}}</p>
+    <p class="meta-row"><span class="meta-label">{{#i18n}}labels.customer{{/i18n}}:</span> {{customerName}}</p>
+    <p class="meta-row"><span class="meta-label">{{#i18n}}labels.address{{/i18n}}:</span> {{meteringPointAddress}}</p>
+    <p class="meta-row"><span class="meta-label">{{#i18n}}labels.meter_number{{/i18n}}:</span> {{meteringPointId}}</p>
+    <p class="meta-row"><span class="meta-label">{{#i18n}}labels.metering_point_id{{/i18n}}:</span> {{meteringPointId}}</p>
+    <p class="meta-row"><span class="meta-label">{{#i18n}}labels.supplier{{/i18n}}:</span> {{balanceSupplierName}}</p>
+    <p class="meta-row"><span class="meta-label">{{#i18n}}labels.contract{{/i18n}}:</span> {{balanceSupplierContractName}}</p>
     {{#moveInDate}}
-        <p class="meta-row"><span class="meta-label">Innflyttingsdato:</span> {{moveInDate}}</p>
+        <p class="meta-row"><span class="meta-label">{{#i18n}}labels.move_in_date{{/i18n}}:</span> {{moveInDate}}</p>
     {{/moveInDate}}
 </div>
 
-<h1 class="title">Avtalebekreftelse - Innflytting og leverandørskifte</h1>
+<h1 class="title">{{#i18n}}move_in.document_title{{/i18n}}</h1>
 
-<p>Reguleringsmyndigheten for Energi (RME) har pålagt Elhub å kontrollere at det foreligger gyldig strømavtale for innflytting og skifte av strømleverandør (leverandørskifte).</p>
+<p>{{#i18n}}move_in.intro_1{{/i18n}}</p>
 
-<p>Ved å signere dette dokumentet bekrefter du at du har inngått strømavtalen som det vises til over.</p>
+<p>{{#i18n}}common.intro_signing_confirmation{{/i18n}}</p>
 
 <ul>
-    <li>For å få gjennomført innflytting og leverandørskifte må forespørselen bekreftes innen 4 uker.</li>
-    <li>Om du avslår eller ikke bekrefter forespørselen gjennomføres ikke innflytting og leverandørskifte.</li>
-    <li>Når innflytting og leverandørskifteprosessen er gjennomført kan ikke bekreftelsen benyttes flere ganger av strømleverandøren.</li>
-    <li>Dette dokumentet vil være tilgjengelig for strømkunder på Elhub Min Side.</li>
+    <li>{{#i18n}}move_in.bullet_1{{/i18n}}</li>
+    <li>{{#i18n}}move_in.bullet_2{{/i18n}}</li>
+    <li>{{#i18n}}move_in.bullet_3{{/i18n}}</li>
+    <li>{{#i18n}}common.bullet_elhub_minside{{/i18n}}</li>
 </ul>
 
-<p>Mer informasjon om bekreftelse av strømavtale finner du på Elhub sin hjemmeside.</p>
+<p>{{#i18n}}common.more_information{{/i18n}}</p>
 
 </body>
 </html>
