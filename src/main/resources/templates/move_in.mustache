@@ -5,78 +5,70 @@
     <title>Avtalebekreftelse - Innflytting og leverandørskifte</title>
     <style>
         @page {
-            margin: 72pt;
-        }
-        html, body {
-            margin: 0;
-            padding: 0;
+            max-width: 600px;
         }
         body {
-            background-color: transparent;
-            color: #1e1e1e;
-            font-family: LiberationSans;
-            font-size: 11pt;
+            font: 1rem/1.5 Roboto, sans-serif;
+            color: rgba(42, 43, 45, 1);
+            background: rgba(255, 255, 255, 1);
+            margin: 20px auto;
+            padding: 20px;
         }
-        .page-bg {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #ffffff;
-            z-index: -1;
+
+        .logo-image {
+            display: block;
+            width: 84px;
+            height: 32px;
+            margin: 0 0 24px auto;
         }
-        .elhub-logo {
-            text-align: right;
-            font-size: 28px;
-            color: #5fb646;
-            font-family: LibreBodoni;
-            margin-bottom: 24px;
+
+        .meta-row {
+            margin: 0 0 6px;
+            white-space: nowrap;
         }
-        .meta {
-            margin-bottom: 24px;
-            line-height: 1.5;
-        }
-        .meta .row {
-            margin-bottom: 4px;
-        }
-        .meta .label {
+
+        .meta-label {
             font-weight: 700;
             color: #2a2a2a;
         }
-        h1 {
-            color: #2e7d32;
+
+        .title {
+            color: rgb(56, 96, 67);
             font-size: 20px;
-            margin: 24px 0 12px;
+            margin: 60px 0 12px;
         }
-        p {
-            margin: 10px 0;
-        }
-        ul {
-            margin: 12px 0 12px 18px;
-        }
-        li {
-            margin: 6px 0;
-        }
+
+p,
+ul {
+    margin: 0 0 1em;
+}
+
+li {
+    margin-bottom: 0.5em;
+}
     </style>
 </head>
 <body>
-<div class="page-bg"></div>
-<div class="elhub-logo">elhub</div>
+<img src="https://frzq0sxltynr.objectstorage.eu-frankfurt-1.oci.customer-oci.com/n/frzq0sxltynr/b/insight-prod-open-data-osb/o/download/media/elhub-logo-veldig-liten.png"
+     class="logo-image"
+     alt=""
+     role="presentation"
+     aria-hidden="true"
+/>
 
 <div class="meta">
-    <div class="row"><span class="label">Kunde:</span> {{customerName}}</div>
-    <div class="row"><span class="label">Adresse:</span> {{meteringPointAddress}}</div>
-    <div class="row"><span class="label">Målernummer:</span> {{meteringPointId}}</div>
-    <div class="row"><span class="label">MålepunktID:</span> {{meteringPointId}}</div>
-    <div class="row"><span class="label">Strømleverandør:</span> {{balanceSupplierName}}</div>
-    <div class="row"><span class="label">Strømavtale:</span> {{balanceSupplierContractName}}</div>
+    <p class="meta-row"><span class="meta-label">Kunde:</span> {{customerName}}</p>
+    <p class="meta-row"><span class="meta-label">Adresse:</span> {{meteringPointAddress}}</p>
+    <p class="meta-row"><span class="meta-label">Målernummer:</span> {{meteringPointId}}</p>
+    <p class="meta-row"><span class="meta-label">MålepunktID:</span> {{meteringPointId}}</p>
+    <p class="meta-row"><span class="meta-label">Strømleverandør:</span> {{balanceSupplierName}}</p>
+    <p class="meta-row"><span class="meta-label">Strømavtale:</span> {{balanceSupplierContractName}}</p>
     {{#moveInDate}}
-    <div class="row"><span class="label">Innflyttingsdato:</span> {{moveInDate}}</div>
+        <p class="meta-row"><span class="meta-label">Innflyttingsdato:</span> {{moveInDate}}</p>
     {{/moveInDate}}
 </div>
 
-<h1>Avtalebekreftelse - Innflytting og leverandørskifte</h1>
+<h1 class="title">Avtalebekreftelse - Innflytting og leverandørskifte</h1>
 
 <p>Reguleringsmyndigheten for Energi (RME) har pålagt Elhub å kontrollere at det foreligger gyldig strømavtale for innflytting og skifte av strømleverandør (leverandørskifte).</p>
 

@@ -24,6 +24,7 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.io.StringWriter
+import java.util.Locale
 import kotlin.math.PI
 
 data class Font(
@@ -63,53 +64,23 @@ class PdfGenerator(
     val fonts =
         listOf(
             Font(
-                loadClasspathResource("/fonts/liberation-sans/LiberationSans-Regular.ttf"),
-                "LiberationSans",
+                loadClasspathResource("/fonts/roboto/Roboto-Regular.ttf"),
+                "Roboto",
                 400,
                 BaseRendererBuilder.FontStyle.NORMAL,
             ),
             Font(
-                loadClasspathResource("/fonts/liberation-sans/LiberationSans-Bold.ttf"),
-                "LiberationSans",
-                700,
+                loadClasspathResource("/fonts/roboto/Roboto-Medium.ttf"),
+                "Roboto",
+                500,
                 BaseRendererBuilder.FontStyle.NORMAL,
             ),
             Font(
-                loadClasspathResource("/fonts/liberation-sans/LiberationSans-Italic.ttf"),
-                "LiberationSans",
-                400,
-                BaseRendererBuilder.FontStyle.ITALIC,
-            ),
-            Font(
-                loadClasspathResource("/fonts/liberation-sans/LiberationSans-BoldItalic.ttf"),
-                "LiberationSans",
-                700,
-                BaseRendererBuilder.FontStyle.ITALIC,
-            ),
-            Font(
-                loadClasspathResource("/fonts/libre-bodoni/LibreBodoni-Regular.ttf"),
-                "LibreBodoni",
-                400,
-                BaseRendererBuilder.FontStyle.NORMAL,
-            ),
-            Font(
-                loadClasspathResource("/fonts/libre-bodoni/LibreBodoni-Bold.ttf"),
-                "LibreBodoni",
+                loadClasspathResource("/fonts/roboto/Roboto-Bold.ttf"),
+                "Roboto",
                 700,
                 BaseRendererBuilder.FontStyle.NORMAL,
-            ),
-            Font(
-                loadClasspathResource("/fonts/libre-bodoni/LibreBodoni-Italic.ttf"),
-                "LibreBodoni",
-                400,
-                BaseRendererBuilder.FontStyle.ITALIC,
-            ),
-            Font(
-                loadClasspathResource("/fonts/libre-bodoni/LibreBodoni-BoldItalic.ttf"),
-                "LibreBodoni",
-                700,
-                BaseRendererBuilder.FontStyle.ITALIC,
-            ),
+            )
         )
 
     val colorProfile = loadClasspathResource("/fonts/sRGB.icc")
@@ -139,7 +110,7 @@ class PdfGenerator(
                 meteringPointId = documentMeta.requestedForMeteringPointId,
                 balanceSupplierName = documentMeta.balanceSupplierName,
                 balanceSupplierContractName = documentMeta.balanceSupplierContractName,
-                startDate = documentMeta.startDate?.toString()
+                startDate = documentMeta.startDate?.let { formatNorwegianDate(it.year, it.monthNumber, it.dayOfMonth) }
             )
 
             else -> return DocumentGenerationError.ContentGenerationError.left()
@@ -216,6 +187,9 @@ class PdfGenerator(
                 ).flush()
         }.toString()
     }.mapLeft { DocumentGenerationError.ContentGenerationError }
+
+    private fun formatNorwegianDate(year: Int, month: Int, day: Int): String =
+        String.format(Locale.ROOT, "%02d.%02d.%04d", day, month, year)
 
     private fun generatePdfFromHtml(htmlString: String) = Either.catch {
         ByteArrayOutputStream().use { out ->
