@@ -53,7 +53,7 @@ private val VALID_PARTY = PartyIdentifier(PartyIdentifierType.OrganizationNumber
 private val NOT_VALID_PARTY = PartyIdentifier(PartyIdentifierType.OrganizationNumber, "0000")
 private val NON_EXISTING_PARTY = PartyIdentifier(PartyIdentifierType.OrganizationNumber, NOT_BALANCE_SUPPLIER_PARTY_ID)
 private val INACTIVE_PARTY = PartyIdentifier(PartyIdentifierType.OrganizationNumber, INACTIVE_PARTY_ID)
-private val AUTHORIZED_PARTY = AuthorizationParty(resourceId = VALID_PARTY_ID, type = PartyType.Organization)
+private val AUTHORIZED_PARTY = AuthorizationParty(id = VALID_PARTY_ID, type = PartyType.Organization)
 private val VALID_START_DATE = LocalDate(2025, 1, 1)
 private val END_USER = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "123456789")
 private val ANOTHER_END_USER = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "987654321")
@@ -424,7 +424,7 @@ class MoveInAndChangeOfEnergySupplierBusinessHandlerTest :
         }
 
         test("grant properties validTo is one year from acceptance") {
-            val party = AuthorizationParty(resourceId = "party-1", type = PartyType.Organization)
+            val party = AuthorizationParty(id = "party-1", type = PartyType.Organization)
             val request = AuthorizationRequest.create(
                 type = AuthorizationRequest.Type.MoveInAndChangeOfEnergySupplierForPerson,
                 requestedBy = party,
@@ -442,7 +442,7 @@ class MoveInAndChangeOfEnergySupplierBusinessHandlerTest :
         test("document produces DocumentCommand for valid input") {
             val model =
                 CreateDocumentModel(
-                    authorizedParty = AuthorizationParty(resourceId = VALID_PARTY.idValue, type = PartyType.Organization),
+                    authorizedParty = AuthorizationParty(id = VALID_PARTY.idValue, type = PartyType.Organization),
                     documentType = AuthorizationDocument.Type.MoveInAndChangeOfEnergySupplierForPerson,
                     meta =
                     CreateDocumentMeta(

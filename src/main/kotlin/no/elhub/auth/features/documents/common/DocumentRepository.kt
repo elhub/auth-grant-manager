@@ -68,15 +68,15 @@ class ExposedDocumentRepository(
         scopes: List<CreateScopeData>
     ): Either<RepositoryWriteError, AuthorizationDocument> =
         either {
-            val requestedByParty = partyRepo.findOrInsert(doc.requestedBy.type, doc.requestedBy.resourceId)
+            val requestedByParty = partyRepo.findOrInsert(doc.requestedBy.type, doc.requestedBy.id)
                 .mapLeft { RepositoryWriteError.UnexpectedError }
                 .bind()
 
-            val requestedFromParty = partyRepo.findOrInsert(doc.requestedFrom.type, doc.requestedFrom.resourceId)
+            val requestedFromParty = partyRepo.findOrInsert(doc.requestedFrom.type, doc.requestedFrom.id)
                 .mapLeft { RepositoryWriteError.UnexpectedError }
                 .bind()
 
-            val requestedToParty = partyRepo.findOrInsert(doc.requestedTo.type, doc.requestedTo.resourceId)
+            val requestedToParty = partyRepo.findOrInsert(doc.requestedTo.type, doc.requestedTo.id)
                 .mapLeft { RepositoryWriteError.UnexpectedError }
                 .bind()
 
@@ -162,9 +162,9 @@ class ExposedDocumentRepository(
             val updatedCount =
                 Either
                     .catch {
-                        val signatoryRecord = partyRepo.findOrInsert(signatory.type, signatory.resourceId).bind()
+                        val signatoryRecord = partyRepo.findOrInsert(signatory.type, signatory.id).bind()
                         val requestedFromRecord =
-                            partyRepo.findOrInsert(requestedFrom.type, requestedFrom.resourceId).bind()
+                            partyRepo.findOrInsert(requestedFrom.type, requestedFrom.id).bind()
 
                         SignatoriesTable.insert {
                             it[authorizationDocumentId] = documentId
@@ -206,7 +206,7 @@ class ExposedDocumentRepository(
 
     override fun findAll(requestedBy: AuthorizationParty): Either<RepositoryReadError, List<AuthorizationDocument>> =
         either {
-            val partyRecord = partyRepo.findOrInsert(type = requestedBy.type, partyId = requestedBy.resourceId)
+            val partyRecord = partyRepo.findOrInsert(type = requestedBy.type, partyId = requestedBy.id)
                 .mapLeft { RepositoryReadError.UnexpectedError }
                 .bind()
 
@@ -342,10 +342,10 @@ fun ResultRow.toAuthorizationDocument(
         type = this[AuthorizationDocumentTable.type],
         status = status,
         file = this[AuthorizationDocumentTable.file],
-        requestedBy = AuthorizationParty(resourceId = requestedBy.resourceId, type = requestedBy.type),
-        requestedFrom = AuthorizationParty(resourceId = requestedFrom.resourceId, type = requestedFrom.type),
-        requestedTo = AuthorizationParty(resourceId = requestedTo.resourceId, type = requestedTo.type),
-        signedBy = signedBy?.let { AuthorizationParty(resourceId = it.resourceId, type = it.type) },
+        requestedBy = AuthorizationParty(id = requestedBy.resourceId, type = requestedBy.type),
+        requestedFrom = AuthorizationParty(id = requestedFrom.resourceId, type = requestedFrom.type),
+        requestedTo = AuthorizationParty(id = requestedTo.resourceId, type = requestedTo.type),
+        signedBy = signedBy?.let { AuthorizationParty(id = it.resourceId, type = it.type) },
         createdAt = this[AuthorizationDocumentTable.createdAt],
         updatedAt = this[AuthorizationDocumentTable.updatedAt],
         validTo = validTo,

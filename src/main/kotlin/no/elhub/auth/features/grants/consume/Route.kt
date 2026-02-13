@@ -49,7 +49,7 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
             grantId = grantId,
             newStatus = body.data.attributes.status,
             authorizedParty = AuthorizationParty(
-                resourceId = authorizedSystem.id,
+                id = authorizedSystem.id,
                 type = PartyType.System
             )
         )

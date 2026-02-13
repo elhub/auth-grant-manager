@@ -43,7 +43,7 @@ fun Route.route(
             requestId = requestId,
             newStatus = requestBody.data.attributes.status,
             authorizedParty = AuthorizationParty(
-                resourceId = resolvedActor.id.toString(),
+                id = resolvedActor.id.toString(),
                 type = PartyType.Person
             )
         )

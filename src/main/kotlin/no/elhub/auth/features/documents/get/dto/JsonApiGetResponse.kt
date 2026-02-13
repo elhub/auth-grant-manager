@@ -76,7 +76,7 @@ fun AuthorizationDocument.toGetSingleResponse() =
                     JsonApiRelationshipToOne(
                         data = JsonApiRelationshipData(
                             type = it.type.name,
-                            id = it.resourceId
+                            id = it.id
                         )
                     )
                 },

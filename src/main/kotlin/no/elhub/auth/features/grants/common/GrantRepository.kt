@@ -51,7 +51,7 @@ class ExposedGrantRepository(
     private val logger = LoggerFactory.getLogger(ExposedGrantRepository::class.java)
 
     override fun findAll(party: AuthorizationParty): Either<RepositoryReadError, List<AuthorizationGrant>> = either {
-        val partyId = partyRepository.findOrInsert(type = party.type, partyId = party.resourceId)
+        val partyId = partyRepository.findOrInsert(type = party.type, partyId = party.id)
             .mapLeft { RepositoryReadError.UnexpectedError }
             .bind()
             .id
@@ -197,19 +197,19 @@ class ExposedGrantRepository(
         either {
             val grantedByParty =
                 partyRepository
-                    .findOrInsert(grant.grantedBy.type, grant.grantedBy.resourceId)
+                    .findOrInsert(grant.grantedBy.type, grant.grantedBy.id)
                     .mapLeft { RepositoryWriteError.UnexpectedError }
                     .bind()
 
             val grantedForParty =
                 partyRepository
-                    .findOrInsert(grant.grantedFor.type, grant.grantedFor.resourceId)
+                    .findOrInsert(grant.grantedFor.type, grant.grantedFor.id)
                     .mapLeft { RepositoryWriteError.UnexpectedError }
                     .bind()
 
             val grantedToParty =
                 partyRepository
-                    .findOrInsert(grant.grantedTo.type, grant.grantedTo.resourceId)
+                    .findOrInsert(grant.grantedTo.type, grant.grantedTo.id)
                     .mapLeft { RepositoryWriteError.UnexpectedError }
                     .bind()
 
@@ -375,4 +375,4 @@ fun ResultRow.toAuthorizationGrant(
     scopeIds = scopeIds
 )
 
-fun AuthorizationPartyRecord.toAuthorizationParty() = AuthorizationParty(resourceId = this.resourceId, type = this.type)
+fun AuthorizationPartyRecord.toAuthorizationParty() = AuthorizationParty(id = this.resourceId, type = this.type)

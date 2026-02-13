@@ -39,9 +39,9 @@ class HandlerTest : FunSpec({
     val requestedFromIdentifier = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "01010112345")
     val requestedToIdentifier = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "02020212345")
 
-    val requestedByParty = AuthorizationParty(resourceId = requestedByIdentifier.idValue, type = PartyType.Organization)
-    val requestedFromParty = AuthorizationParty(resourceId = "person-1", type = PartyType.Person)
-    val requestedToParty = AuthorizationParty(resourceId = "person-2", type = PartyType.Person)
+    val requestedByParty = AuthorizationParty(id = requestedByIdentifier.idValue, type = PartyType.Organization)
+    val requestedFromParty = AuthorizationParty(id = "person-1", type = PartyType.Person)
+    val requestedToParty = AuthorizationParty(id = "person-2", type = PartyType.Person)
 
     val meta =
         CreateRequestMeta(
@@ -157,7 +157,7 @@ class HandlerTest : FunSpec({
         coEvery { partyService.resolve(requestedByIdentifier) } returns requestedByParty.right()
 
         val handler = Handler(businessHandler, partyService, requestRepo, requestPropertyRepo)
-        val otherAuthorizedParty = AuthorizationParty(resourceId = "other", type = PartyType.Organization)
+        val otherAuthorizedParty = AuthorizationParty(id = "other", type = PartyType.Organization)
 
         val response = handler(model.copy(authorizedParty = otherAuthorizedParty))
 

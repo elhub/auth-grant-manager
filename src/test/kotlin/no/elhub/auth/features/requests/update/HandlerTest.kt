@@ -18,9 +18,9 @@ import java.util.UUID
 class HandlerTest : FunSpec({
     test("returns IllegalStateError when request is not pending") {
         val requestId = UUID.randomUUID()
-        val requestedBy = AuthorizationParty(resourceId = "requested-by", type = PartyType.Person)
-        val requestedFrom = AuthorizationParty(resourceId = "requested-from", type = PartyType.Person)
-        val requestedTo = AuthorizationParty(resourceId = "requested-to", type = PartyType.Person)
+        val requestedBy = AuthorizationParty(id = "requested-by", type = PartyType.Person)
+        val requestedFrom = AuthorizationParty(id = "requested-from", type = PartyType.Person)
+        val requestedTo = AuthorizationParty(id = "requested-to", type = PartyType.Person)
 
         val existingRequest =
             AuthorizationRequest.create(

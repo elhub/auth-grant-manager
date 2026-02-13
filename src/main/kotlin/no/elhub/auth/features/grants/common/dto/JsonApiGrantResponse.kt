@@ -61,19 +61,19 @@ fun AuthorizationGrant.toSingleGrantResponse() =
                 grantedFor = JsonApiRelationshipToOne(
                     data = JsonApiRelationshipData(
                         type = this.grantedFor.type.name,
-                        id = this.grantedFor.resourceId
+                        id = this.grantedFor.id
                     )
                 ),
                 grantedBy = JsonApiRelationshipToOne(
                     data = JsonApiRelationshipData(
                         type = this.grantedBy.type.name,
-                        id = this.grantedBy.resourceId
+                        id = this.grantedBy.id
                     )
                 ),
                 grantedTo = JsonApiRelationshipToOne(
                     data = JsonApiRelationshipData(
                         type = this.grantedTo.type.name,
-                        id = this.grantedTo.resourceId
+                        id = this.grantedTo.id
                     )
                 ),
                 source = JsonApiRelationshipToOne(
@@ -126,19 +126,19 @@ fun List<AuthorizationGrant>.toCollectionGrantResponse() =
                     grantedFor = JsonApiRelationshipToOne(
                         data = JsonApiRelationshipData(
                             type = grant.grantedFor.type.name,
-                            id = grant.grantedFor.resourceId
+                            id = grant.grantedFor.id
                         )
                     ),
                     grantedBy = JsonApiRelationshipToOne(
                         data = JsonApiRelationshipData(
                             type = grant.grantedBy.type.name,
-                            id = grant.grantedBy.resourceId
+                            id = grant.grantedBy.id
                         )
                     ),
                     grantedTo = JsonApiRelationshipToOne(
                         data = JsonApiRelationshipData(
                             type = grant.grantedTo.type.name,
-                            id = grant.grantedTo.resourceId
+                            id = grant.grantedTo.id
                         )
                     ),
                     source = JsonApiRelationshipToOne(
