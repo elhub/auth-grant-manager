@@ -71,12 +71,6 @@ fun toNotFoundApiErrorResponse(detail: String? = null): Pair<HttpStatusCode, Jso
     detail = detail.orEmpty().ifEmpty({ "The requested resource could not be found" })
 )
 
-fun toDeserializationApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> = buildApiErrorResponse(
-    status = HttpStatusCode.BadRequest,
-    title = "Invalid request body",
-    detail = "Request body could not be parsed or did not match the expected schema"
-)
-
 fun toBalanceSupplierNotApiAuthorizedResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> = buildApiErrorResponse(
     status = HttpStatusCode.Forbidden,
     title = "Not authorized",
