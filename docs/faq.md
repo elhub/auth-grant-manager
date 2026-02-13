@@ -43,8 +43,7 @@ used for BRS-NO-102 and BRS-NO-103.
 
 ### What do the different meta fields mean in the request/document?
 
-* **requestedBy**: This is the entity that is requesting the authorization. In this context, it is always the a
-    Market Participant (GLN).
+* **requestedBy**: This is the entity that is requesting the authorization. In this context, it is always the Market Participant (GLN).
 * **requestedFrom**: This is the entity that the authorization request/document is being sent requested from. In this
     context, it is always the end user (identified by their national ID number).
 * **requestedTo**: This is the entity that the authorization request/document is being sent to (for approval). In
@@ -65,10 +64,21 @@ The following fields are validated when the authorization request/document is pr
 * **requestedForMeteringPointId**: We validate that the metering point exists in Elhub.
 * **requestedForMeteringPointAddress**: Must be defined.
 * **redirectURI**: For Authorization Request flow, it must be a valid URI, and we validate that the redirectURI is
-    regirstered in the Ediel portal for the requesting Market Participant. If not, the request will be rejected.
+    registered in the Ediel portal for the requesting Market Participant. If not, the request will be rejected.
     For Authorization Document flow, this field is not used.
 * **requestedBy**: We validate that the GLN is an active Market Participant in Elhub and (for ChangeOfEnergySupplierForPerson)
     that it is not the current supplier in the metering point.
+* **startDate**: For `documentType: MoveInAndChangeOfEnergySupplierForPerson`, omit `startDate` when the move-in is in the future (BRS-102).
+    If the move-in is today or in the past (BRS-103), you must set `startDate`.
+
+### Move-in in the future vs today/past (BRS-102 vs BRS-103)
+
+For move-in scenarios you should use `documentType: MoveInAndChangeOfEnergySupplierForPerson`. The difference is how you handle `startDate`:
+
+* **Future move-in (BRS-102):** Do not include `startDate` in the request. We will validate that the date is not set to a date in the future if present.
+* **Today or past move-in (BRS-103):** You must include `startDate`.
+
+`documentType: ChangeOfEnergySupplierForPerson` applies only to the current end user on the metering point and is not used for move-in cases.
 
 ### What do I do if I need help setting up test data?
 
