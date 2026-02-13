@@ -22,11 +22,11 @@ import java.util.UUID
 
 class HandlerTest : FunSpec({
 
-    val authorizedSystem = AuthorizationParty(resourceId = Constants.CONSENT_MANAGEMENT_OSB_ID, type = PartyType.System)
-    val unAuthorizedSystem = AuthorizationParty(resourceId = "invalid-system", type = PartyType.System)
-    val grantedFor = AuthorizationParty(resourceId = "person-1", type = PartyType.Person)
-    val grantedBy = AuthorizationParty(resourceId = "issuer-1", type = PartyType.Organization)
-    val grantedTo = AuthorizationParty(resourceId = "org-entity-1", type = PartyType.OrganizationEntity)
+    val authorizedSystem = AuthorizationParty(id = Constants.CONSENT_MANAGEMENT_OSB_ID, type = PartyType.System)
+    val unAuthorizedSystem = AuthorizationParty(id = "invalid-system", type = PartyType.System)
+    val grantedFor = AuthorizationParty(id = "person-1", type = PartyType.Person)
+    val grantedBy = AuthorizationParty(id = "issuer-1", type = PartyType.Organization)
+    val grantedTo = AuthorizationParty(id = "org-entity-1", type = PartyType.OrganizationEntity)
     val grantId = UUID.randomUUID()
     val scopeIds = listOf(UUID.randomUUID(), UUID.randomUUID())
 
@@ -122,7 +122,7 @@ class HandlerTest : FunSpec({
         val response = handler(
             Query(
                 id = grantId,
-                authorizedParty = grantedFor.copy(resourceId = "other-person"),
+                authorizedParty = grantedFor.copy(id = "other-person"),
             )
         )
 
@@ -135,7 +135,7 @@ class HandlerTest : FunSpec({
         val response = handler(
             Query(
                 id = grantId,
-                authorizedParty = grantedTo.copy(resourceId = "other-org"),
+                authorizedParty = grantedTo.copy(id = "other-org"),
             )
         )
 

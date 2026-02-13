@@ -22,9 +22,9 @@ import java.util.UUID
 
 class HandlerTest : FunSpec({
 
-    val requestedBy = AuthorizationParty(resourceId = "org-entity-1", type = PartyType.OrganizationEntity)
-    val requestedFrom = AuthorizationParty(resourceId = "person-1", type = PartyType.Person)
-    val requestedTo = AuthorizationParty(resourceId = "person-2", type = PartyType.Person)
+    val requestedBy = AuthorizationParty(id = "org-entity-1", type = PartyType.OrganizationEntity)
+    val requestedFrom = AuthorizationParty(id = "person-1", type = PartyType.Person)
+    val requestedTo = AuthorizationParty(id = "person-2", type = PartyType.Person)
     val validTo = currentTimeWithTimeZone().plusDays(1)
     val scopeIds = listOf(UUID.randomUUID(), UUID.randomUUID())
 

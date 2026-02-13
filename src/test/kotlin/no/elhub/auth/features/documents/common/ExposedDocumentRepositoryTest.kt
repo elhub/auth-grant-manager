@@ -50,10 +50,10 @@ class ExposedDocumentRepositoryTest :
                         file = byteArrayOf(),
                         type = AuthorizationDocument.Type.ChangeOfEnergySupplierForPerson,
                         status = AuthorizationDocument.Status.Pending,
-                        requestedBy = AuthorizationParty(type = PartyType.Person, resourceId = "1234567890"),
-                        requestedFrom = AuthorizationParty(type = PartyType.Person, resourceId = "1234567890"),
-                        requestedTo = AuthorizationParty(type = PartyType.Person, resourceId = "1234567890"),
-                        signedBy = AuthorizationParty(type = PartyType.Person, resourceId = "1234567890"),
+                        requestedBy = AuthorizationParty(type = PartyType.Person, id = "1234567890"),
+                        requestedFrom = AuthorizationParty(type = PartyType.Person, id = "1234567890"),
+                        requestedTo = AuthorizationParty(type = PartyType.Person, id = "1234567890"),
+                        signedBy = AuthorizationParty(type = PartyType.Person, id = "1234567890"),
                         properties = emptyList(),
                         validTo = currentTimeWithTimeZone().plusDays(1),
                         createdAt = currentTimeWithTimeZone(),
@@ -101,8 +101,8 @@ class ExposedDocumentRepositoryTest :
         context("Find all") {
             test("should return only documents requested by the given party") {
                 val matchingRequestedBy =
-                    AuthorizationParty(type = PartyType.Organization, resourceId = "matching-party")
-                val otherRequestedBy = AuthorizationParty(type = PartyType.Organization, resourceId = "other-party")
+                    AuthorizationParty(type = PartyType.Organization, id = "matching-party")
+                val otherRequestedBy = AuthorizationParty(type = PartyType.Organization, id = "other-party")
 
                 val matchingDocument = AuthorizationDocument(
                     id = UUID.randomUUID(),
@@ -110,9 +110,9 @@ class ExposedDocumentRepositoryTest :
                     type = AuthorizationDocument.Type.ChangeOfEnergySupplierForPerson,
                     status = AuthorizationDocument.Status.Pending,
                     requestedBy = matchingRequestedBy,
-                    requestedFrom = AuthorizationParty(type = PartyType.Person, resourceId = "from-1"),
-                    requestedTo = AuthorizationParty(type = PartyType.Person, resourceId = "to-1"),
-                    signedBy = AuthorizationParty(type = PartyType.Person, resourceId = "signer-1"),
+                    requestedFrom = AuthorizationParty(type = PartyType.Person, id = "from-1"),
+                    requestedTo = AuthorizationParty(type = PartyType.Person, id = "to-1"),
+                    signedBy = AuthorizationParty(type = PartyType.Person, id = "signer-1"),
                     properties = emptyList(),
                     validTo = currentTimeWithTimeZone().plusDays(1),
                     createdAt = currentTimeWithTimeZone(),
@@ -125,9 +125,9 @@ class ExposedDocumentRepositoryTest :
                     type = AuthorizationDocument.Type.ChangeOfEnergySupplierForPerson,
                     status = AuthorizationDocument.Status.Pending,
                     requestedBy = otherRequestedBy,
-                    requestedFrom = AuthorizationParty(type = PartyType.Person, resourceId = "from-2"),
-                    requestedTo = AuthorizationParty(type = PartyType.Person, resourceId = "to-2"),
-                    signedBy = AuthorizationParty(type = PartyType.Person, resourceId = "signer-2"),
+                    requestedFrom = AuthorizationParty(type = PartyType.Person, id = "from-2"),
+                    requestedTo = AuthorizationParty(type = PartyType.Person, id = "to-2"),
+                    signedBy = AuthorizationParty(type = PartyType.Person, id = "signer-2"),
                     createdAt = currentTimeWithTimeZone(),
                     properties = emptyList(),
                     validTo = currentTimeWithTimeZone().plusDays(1),
@@ -139,7 +139,7 @@ class ExposedDocumentRepositoryTest :
                     repository.insert(otherDocument, listOf())
 
                     val documents =
-                        repository.findAll(AuthorizationParty(matchingRequestedBy.resourceId, PartyType.Organization))
+                        repository.findAll(AuthorizationParty(matchingRequestedBy.id, PartyType.Organization))
                             .getOrElse { error -> fail("Failed to fetch documents: $error") }
                     val documentIds = documents.map { it.id }
 

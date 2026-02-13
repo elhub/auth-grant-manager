@@ -49,9 +49,9 @@ class ExposedGrantRepositoryTest : FunSpec({
     test("insert without scopes") {
         transaction {
             val grant = AuthorizationGrant.create(
-                grantedBy = AuthorizationParty(type = PartyType.Person, resourceId = "12345"),
-                grantedFor = AuthorizationParty(type = PartyType.Person, resourceId = "56789"),
-                grantedTo = AuthorizationParty(type = PartyType.Person, resourceId = "45567"),
+                grantedBy = AuthorizationParty(type = PartyType.Person, id = "12345"),
+                grantedFor = AuthorizationParty(type = PartyType.Person, id = "56789"),
+                grantedTo = AuthorizationParty(type = PartyType.Person, id = "45567"),
                 sourceType = AuthorizationGrant.SourceType.Request,
                 sourceId = UUID.randomUUID(),
                 scopeIds = scopeIds
@@ -68,9 +68,9 @@ class ExposedGrantRepositoryTest : FunSpec({
         transaction {
             // insert a grant
             val grant = AuthorizationGrant.create(
-                grantedBy = AuthorizationParty(type = PartyType.Person, resourceId = "12345"),
-                grantedFor = AuthorizationParty(type = PartyType.Person, resourceId = "56789"),
-                grantedTo = AuthorizationParty(type = PartyType.Person, resourceId = "45567"),
+                grantedBy = AuthorizationParty(type = PartyType.Person, id = "12345"),
+                grantedFor = AuthorizationParty(type = PartyType.Person, id = "56789"),
+                grantedTo = AuthorizationParty(type = PartyType.Person, id = "45567"),
                 sourceType = AuthorizationGrant.SourceType.Request,
                 sourceId = UUID.randomUUID(),
                 scopeIds = scopeIds

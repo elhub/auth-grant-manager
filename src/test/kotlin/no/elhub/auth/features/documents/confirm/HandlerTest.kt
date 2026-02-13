@@ -32,9 +32,9 @@ import java.util.UUID
 
 class HandlerTest : FunSpec({
 
-    val authorizationParty = AuthorizationParty(resourceId = "1234567890123", type = PartyType.OrganizationEntity)
-    val requestedFrom = AuthorizationParty(resourceId = "requested-from", type = PartyType.Person)
-    val requestedTo = AuthorizationParty(resourceId = "requested-to", type = PartyType.Person)
+    val authorizationParty = AuthorizationParty(id = "1234567890123", type = PartyType.OrganizationEntity)
+    val requestedFrom = AuthorizationParty(id = "requested-from", type = PartyType.Person)
+    val requestedTo = AuthorizationParty(id = "requested-to", type = PartyType.Person)
     val signedFile = "signed".toByteArray()
     val signatoryIdentifier =
         PartyIdentifier(idType = PartyIdentifierType.NationalIdentityNumber, idValue = "01019012345")
@@ -137,7 +137,7 @@ class HandlerTest : FunSpec({
         val result = handler(documentRepository, partyService, signatureService, grantRepository)(
             Command(
                 documentId = documentId,
-                authorizedParty = AuthorizationParty(resourceId = "different", type = PartyType.Person),
+                authorizedParty = AuthorizationParty(id = "different", type = PartyType.Person),
                 signedFile = signedFile
             )
         )
@@ -285,7 +285,7 @@ class HandlerTest : FunSpec({
         every { signatureService.validateSignaturesAndReturnSignatory(signedFile, document.file) } returns
             signatoryIdentifier.right()
         coEvery { partyService.resolve(signatoryIdentifier) } returns AuthorizationParty(
-            resourceId = "another",
+            id = "another",
             type = PartyType.Person
         ).right()
 

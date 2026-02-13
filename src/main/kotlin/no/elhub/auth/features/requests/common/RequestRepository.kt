@@ -60,7 +60,7 @@ class ExposedRequestRepository(
 
     override fun findAllAndSortByCreatedAt(party: AuthorizationParty): Either<RepositoryReadError, List<AuthorizationRequest>> =
         either {
-            val partyId = partyRepo.findOrInsert(type = party.type, partyId = party.resourceId)
+            val partyId = partyRepo.findOrInsert(type = party.type, partyId = party.id)
                 .mapLeft { RepositoryReadError.UnexpectedError }
                 .bind()
                 .id
@@ -95,19 +95,19 @@ class ExposedRequestRepository(
         either {
             val requestedByParty =
                 partyRepo
-                    .findOrInsert(request.requestedBy.type, request.requestedBy.resourceId)
+                    .findOrInsert(request.requestedBy.type, request.requestedBy.id)
                     .mapLeft { RepositoryWriteError.UnexpectedError }
                     .bind()
 
             val requestedFromParty =
                 partyRepo
-                    .findOrInsert(request.requestedFrom.type, request.requestedFrom.resourceId)
+                    .findOrInsert(request.requestedFrom.type, request.requestedFrom.id)
                     .mapLeft { RepositoryWriteError.UnexpectedError }
                     .bind()
 
             val requestedToParty =
                 partyRepo
-                    .findOrInsert(request.requestedTo.type, request.requestedTo.resourceId)
+                    .findOrInsert(request.requestedTo.type, request.requestedTo.id)
                     .mapLeft { RepositoryWriteError.UnexpectedError }
                     .bind()
 
@@ -135,7 +135,7 @@ class ExposedRequestRepository(
         }.mapLeft { RepositoryWriteError.UnexpectedError }
 
     override fun acceptRequest(requestId: UUID, approvedBy: AuthorizationParty) = either {
-        val approvedByRecord = partyRepo.findOrInsert(approvedBy.type, approvedBy.resourceId).bind()
+        val approvedByRecord = partyRepo.findOrInsert(approvedBy.type, approvedBy.id).bind()
 
         val rowsUpdated =
             AuthorizationRequestTable.update(
@@ -318,10 +318,10 @@ fun ResultRow.toAuthorizationRequest(
         id = this[AuthorizationRequestTable.id].value,
         type = this[AuthorizationRequestTable.requestType],
         status = status,
-        requestedBy = AuthorizationParty(resourceId = requestedBy.resourceId, type = requestedBy.type),
-        requestedFrom = AuthorizationParty(resourceId = requestedFrom.resourceId, type = requestedFrom.type),
-        requestedTo = AuthorizationParty(resourceId = requestedTo.resourceId, type = requestedTo.type),
-        approvedBy = approvedBy?.let { AuthorizationParty(resourceId = it.resourceId, type = it.type) },
+        requestedBy = AuthorizationParty(id = requestedBy.resourceId, type = requestedBy.type),
+        requestedFrom = AuthorizationParty(id = requestedFrom.resourceId, type = requestedFrom.type),
+        requestedTo = AuthorizationParty(id = requestedTo.resourceId, type = requestedTo.type),
+        approvedBy = approvedBy?.let { AuthorizationParty(id = it.resourceId, type = it.type) },
         createdAt = this[AuthorizationRequestTable.createdAt],
         updatedAt = this[AuthorizationRequestTable.updatedAt],
         validTo = validTo,

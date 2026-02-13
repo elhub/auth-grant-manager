@@ -174,7 +174,7 @@ entity AuthorizationParty {
   id: UUID
   --
   type: PartyType
-  resourceId: String
+  partyId: String
   createdAt: DateTime
 }
 

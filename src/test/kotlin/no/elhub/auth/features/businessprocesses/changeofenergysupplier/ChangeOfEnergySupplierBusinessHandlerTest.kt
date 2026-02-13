@@ -48,7 +48,7 @@ import no.elhub.auth.features.requests.create.model.CreateRequestModel
 import java.util.UUID
 
 private val VALID_PARTY = PartyIdentifier(PartyIdentifierType.OrganizationNumber, VALID_PARTY_ID)
-private val AUTHORIZED_PARTY = AuthorizationParty(resourceId = VALID_PARTY_ID, type = Organization)
+private val AUTHORIZED_PARTY = AuthorizationParty(id = VALID_PARTY_ID, type = Organization)
 private val NOT_VALID_PARTY = PartyIdentifier(PartyIdentifierType.OrganizationNumber, "0000")
 private val NON_EXISTING_PARTY = PartyIdentifier(PartyIdentifierType.OrganizationNumber, NOT_BALANCE_SUPPLIER_PARTY_ID)
 private val INACTIVE_PARTY = PartyIdentifier(PartyIdentifierType.OrganizationNumber, INACTIVE_PARTY_ID)
@@ -455,7 +455,7 @@ class ChangeOfEnergySupplierBusinessHandlerTest :
         test("document produces DocumentCommand for valid input") {
             val model =
                 CreateDocumentModel(
-                    authorizedParty = AuthorizationParty(resourceId = VALID_PARTY.idValue, type = Organization),
+                    authorizedParty = AuthorizationParty(id = VALID_PARTY.idValue, type = Organization),
                     documentType = AuthorizationDocument.Type.ChangeOfEnergySupplierForPerson,
                     meta =
                     CreateDocumentMeta(
