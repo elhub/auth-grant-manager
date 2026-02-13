@@ -26,7 +26,7 @@ class StromprisApi(
 
     override suspend fun getProductsByOrganizationNumber(organizationNumber: String): Either<ClientError, ProductsResponse> =
         Either.catch {
-            val jwtToken = tokenProvider.getToken() // retrieve the token
+            val jwtToken = tokenProvider.getToken()
             val response = client.get("${stromprisApiConfig.serviceUrl}/products?organizationNumber=$organizationNumber") {
                 header("Authorization", "Bearer $jwtToken")
                 header("User-Agent", "auth-grant-manager")

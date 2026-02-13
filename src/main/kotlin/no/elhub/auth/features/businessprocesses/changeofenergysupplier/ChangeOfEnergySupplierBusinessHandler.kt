@@ -49,7 +49,7 @@ class ChangeOfEnergySupplierBusinessHandler(
     private val personService: PersonService,
     private val organisationsService: OrganisationsService,
     private val stromprisService: StromprisService,
-    private val stromprisValidation: Boolean
+    private val validateBalanceSupplierContractName: Boolean
 ) : RequestBusinessHandler, DocumentBusinessHandler {
     override suspend fun validateAndReturnRequestCommand(createRequestModel: CreateRequestModel): Either<BusinessProcessError, RequestCommand> =
         either {
@@ -182,12 +182,12 @@ class ChangeOfEnergySupplierBusinessHandler(
             return ChangeOfEnergySupplierValidationError.RequestedToRequestedFromMismatch.left()
         }
 
-        if (stromprisValidation) {
+        if (validateBalanceSupplierContractName) {
             val organizationNumber =
                 party.data.relationships.organizationNumber?.data?.id ?: return ChangeOfEnergySupplierValidationError.UnexpectedError.left()
             val products = stromprisService.getProductsByOrganizationNumber(organizationNumber).mapLeft { err ->
                 return when (err) {
-                    ClientError.NotFound -> ChangeOfEnergySupplierValidationError.ProductsNotFound.left()
+                    ClientError.NotFound -> ChangeOfEnergySupplierValidationError.ContractsNotFound.left()
 
                     ClientError.BadRequest,
                     ClientError.Unauthorized,
@@ -195,7 +195,10 @@ class ChangeOfEnergySupplierBusinessHandler(
                     is ClientError.UnexpectedError -> ChangeOfEnergySupplierValidationError.UnexpectedError.left()
                 }
             }.getOrElse { return ChangeOfEnergySupplierValidationError.UnexpectedError.left() }
-            if (products.data.firstOrNull { it.attributes?.name?.trim()?.equals(model.balanceSupplierContractName, ignoreCase = true) == true } == null) {
+            if (products.data.none { product ->
+                    model.balanceSupplierContractName.equals(product.attributes?.name?.trim(), ignoreCase = true)
+                }
+            ) {
                 return ChangeOfEnergySupplierValidationError.InvalidBalanceSupplierContractName.left()
             }
         }

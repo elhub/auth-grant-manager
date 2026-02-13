@@ -100,8 +100,8 @@ sealed class ChangeOfEnergySupplierValidationError(
         ChangeOfEnergySupplierValidationError("requested_to_requested_from_mismatch", "Requested to and requested from are not the same party")
 
     @Serializable
-    data object ProductsNotFound :
-        ChangeOfEnergySupplierValidationError("products_not_found", "Data not found in strømpris.no for provided organization number")
+    data object ContractsNotFound :
+        ChangeOfEnergySupplierValidationError("contracts_not_found", "Contracts not found in strømpris.no for provided organization number")
 
     @Serializable
     data object InvalidBalanceSupplierContractName :

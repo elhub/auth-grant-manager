@@ -8,7 +8,7 @@ import org.koin.ktor.plugin.koinModule
 fun Application.stromprisServiceModule() {
     koinModule {
         single { environment.config }
-        single(named("stromprisValidation")) {
+        single(named("validateBalanceSupplierContractName")) {
             environment.config.propertyOrNull("dataSharing.stromprisValidationFeature")?.getString()?.toBoolean() ?: false
         }
         single<JwtTokenProvider> {

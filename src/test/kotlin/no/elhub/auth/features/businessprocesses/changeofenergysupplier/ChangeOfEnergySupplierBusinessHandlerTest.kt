@@ -89,7 +89,7 @@ class ChangeOfEnergySupplierBusinessHandlerTest :
                 personService = personService,
                 organisationsService = organisationsService,
                 stromprisService = stromprisService,
-                stromprisValidation = false
+                validateBalanceSupplierContractName = false
             )
         }
 
@@ -386,7 +386,7 @@ class ChangeOfEnergySupplierBusinessHandlerTest :
                 personService = personService,
                 organisationsService = organisationsService,
                 stromprisService = stromprisService,
-                stromprisValidation = false
+                validateBalanceSupplierContractName = false
             )
 
             val model =
@@ -424,7 +424,7 @@ class ChangeOfEnergySupplierBusinessHandlerTest :
                 personService = personService,
                 organisationsService = mockOrganisationsService,
                 stromprisService = stromprisService,
-                stromprisValidation = false
+                validateBalanceSupplierContractName = false
             )
 
             val model =
@@ -495,7 +495,7 @@ class ChangeOfEnergySupplierBusinessHandlerTest :
                 personService = personService,
                 organisationsService = organisationsService,
                 stromprisService = mockStromprisService,
-                stromprisValidation = true
+                validateBalanceSupplierContractName = true
             )
             val model =
                 CreateRequestModel(
