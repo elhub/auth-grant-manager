@@ -7,7 +7,11 @@ import no.elhub.auth.features.requests.create.requesttypes.RequestTypeValidation
 fun ChangeOfEnergySupplierValidationError.toBusinessError(): BusinessProcessError =
     when (this) {
         is ChangeOfEnergySupplierValidationError.UnexpectedError -> BusinessProcessError.Unexpected(detail = this.message)
-        ChangeOfEnergySupplierValidationError.MeteringPointNotFound -> BusinessProcessError.NotFound(detail = this.message)
+
+        ChangeOfEnergySupplierValidationError.MeteringPointNotFound,
+        ChangeOfEnergySupplierValidationError.RequestedByNotFound,
+        ChangeOfEnergySupplierValidationError.RequestedFromNotFound -> BusinessProcessError.NotFound(detail = this.message)
+
         else -> BusinessProcessError.Validation(detail = this.message)
     }
 

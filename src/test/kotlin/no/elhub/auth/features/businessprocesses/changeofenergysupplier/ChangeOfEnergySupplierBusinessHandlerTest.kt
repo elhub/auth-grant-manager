@@ -8,6 +8,7 @@ import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.mockk
 import no.elhub.auth.features.businessprocesses.BusinessProcessError
+import no.elhub.auth.features.businessprocesses.structuredata.common.ClientError
 import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.BasicAuthConfig
 import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsApi
 import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsApiConfig
@@ -289,7 +290,7 @@ class ChangeOfEnergySupplierBusinessHandlerTest :
                 )
 
             handler.validateAndReturnRequestCommand(model)
-                .shouldBeLeft(BusinessProcessError.Validation(ChangeOfEnergySupplierValidationError.RequestedByNotFound.message))
+                .shouldBeLeft(BusinessProcessError.NotFound(ChangeOfEnergySupplierValidationError.RequestedByNotFound.message))
         }
 
         test("request validation fails on not active requested by") {
@@ -359,6 +360,70 @@ class ChangeOfEnergySupplierBusinessHandlerTest :
 
             handler.validateAndReturnRequestCommand(model)
                 .shouldBeLeft(BusinessProcessError.Validation(ChangeOfEnergySupplierValidationError.RequestedToRequestedFromMismatch.message))
+        }
+
+        test("request validation fails with UnexpectedError when a non-validation-specific error happens in metering points service") {
+            val mockMeteringPointsService = mockk<MeteringPointsService>()
+            coEvery {
+                mockMeteringPointsService.getMeteringPointByIdAndElhubInternalId(
+                    any(),
+                    any()
+                )
+            } returns Either.Left(ClientError.BadRequest)
+            val handlerWithMockedService = ChangeOfEnergySupplierBusinessHandler(mockMeteringPointsService, personService, organisationsService)
+
+            val model =
+                CreateRequestModel(
+                    authorizedParty = AUTHORIZED_PARTY,
+                    requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
+                    meta =
+                    CreateRequestMeta(
+                        requestedBy = VALID_PARTY,
+                        requestedFrom = END_USER,
+                        requestedFromName = "From",
+                        requestedTo = END_USER,
+                        requestedForMeteringPointId = VALID_METERING_POINT_1,
+                        requestedForMeteringPointAddress = "addr",
+                        balanceSupplierName = "Supplier",
+                        balanceSupplierContractName = "Contract",
+                        redirectURI = "https://example.com",
+                    ),
+                )
+
+            handlerWithMockedService.validateAndReturnRequestCommand(model)
+                .shouldBeLeft(BusinessProcessError.Unexpected(ChangeOfEnergySupplierValidationError.UnexpectedError.message))
+        }
+
+        test("request validation fails with UnexpectedError when a non-validation-specific error happens in organisations service") {
+            val mockOrganisationsService = mockk<OrganisationsService>()
+            coEvery {
+                mockOrganisationsService.getPartyByIdAndPartyType(
+                    any(),
+                    any()
+                )
+            } returns Either.Left(ClientError.ServerError)
+            val handlerWithMockedService = ChangeOfEnergySupplierBusinessHandler(meteringPointsService, personService, mockOrganisationsService)
+
+            val model =
+                CreateRequestModel(
+                    authorizedParty = AUTHORIZED_PARTY,
+                    requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
+                    meta =
+                    CreateRequestMeta(
+                        requestedBy = VALID_PARTY,
+                        requestedFrom = END_USER,
+                        requestedFromName = "From",
+                        requestedTo = END_USER,
+                        requestedForMeteringPointId = VALID_METERING_POINT_1,
+                        requestedForMeteringPointAddress = "addr",
+                        balanceSupplierName = "Supplier",
+                        balanceSupplierContractName = "Contract",
+                        redirectURI = "https://example.com",
+                    ),
+                )
+
+            handlerWithMockedService.validateAndReturnRequestCommand(model)
+                .shouldBeLeft(BusinessProcessError.Unexpected(ChangeOfEnergySupplierValidationError.UnexpectedError.message))
         }
 
         test("request produces RequestCommand for valid input") {
