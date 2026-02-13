@@ -40,7 +40,13 @@ fun AuthError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection>
         AuthError.NotAuthorized -> buildApiErrorResponse(
             status = HttpStatusCode.Unauthorized,
             title = "Not authorized",
-            detail = "Not authorized for this endpoint."
+            detail = "Authentication is required or invalid."
+        )
+
+        AuthError.AccessDenied -> buildApiErrorResponse(
+            status = HttpStatusCode.Forbidden,
+            title = "Forbidden",
+            detail = "Access is denied for this endpoint."
         )
 
         AuthError.InvalidPdpResponseAuthInfoMissing,
