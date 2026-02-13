@@ -17,6 +17,7 @@ import no.elhub.auth.features.businessprocesses.changeofenergysupplier.domain.Ch
 import no.elhub.auth.features.businessprocesses.changeofenergysupplier.domain.toChangeOfEnergySupplierBusinessModel
 import no.elhub.auth.features.businessprocesses.changeofenergysupplier.domain.toDocumentCommand
 import no.elhub.auth.features.businessprocesses.changeofenergysupplier.domain.toRequestCommand
+import no.elhub.auth.features.businessprocesses.datasharing.StromprisService
 import no.elhub.auth.features.businessprocesses.structuredata.common.ClientError
 import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.AccessType.SHARED
 import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsService
@@ -46,7 +47,9 @@ private const val REGEX_METERING_POINT = "^\\d{18}$"
 class ChangeOfEnergySupplierBusinessHandler(
     private val meteringPointsService: MeteringPointsService,
     private val personService: PersonService,
-    private val organisationsService: OrganisationsService
+    private val organisationsService: OrganisationsService,
+    private val stromprisService: StromprisService,
+    private val validateBalanceSupplierContractName: Boolean
 ) : RequestBusinessHandler, DocumentBusinessHandler {
     override suspend fun validateAndReturnRequestCommand(createRequestModel: CreateRequestModel): Either<BusinessProcessError, RequestCommand> =
         either {
@@ -177,6 +180,27 @@ class ChangeOfEnergySupplierBusinessHandler(
 
         if (model.requestedTo.idValue != model.requestedFrom.idValue) {
             return ChangeOfEnergySupplierValidationError.RequestedToRequestedFromMismatch.left()
+        }
+
+        if (validateBalanceSupplierContractName) {
+            val organizationNumber =
+                party.data.relationships.organizationNumber?.data?.id ?: return ChangeOfEnergySupplierValidationError.UnexpectedError.left()
+            val products = stromprisService.getProductsByOrganizationNumber(organizationNumber).mapLeft { err ->
+                return when (err) {
+                    ClientError.NotFound -> ChangeOfEnergySupplierValidationError.ContractsNotFound.left()
+
+                    ClientError.BadRequest,
+                    ClientError.Unauthorized,
+                    ClientError.ServerError,
+                    is ClientError.UnexpectedError -> ChangeOfEnergySupplierValidationError.UnexpectedError.left()
+                }
+            }.getOrElse { return ChangeOfEnergySupplierValidationError.UnexpectedError.left() }
+            if (products.data.none { product ->
+                    model.balanceSupplierContractName.equals(product.attributes?.name?.trim(), ignoreCase = true)
+                }
+            ) {
+                return ChangeOfEnergySupplierValidationError.InvalidBalanceSupplierContractName.left()
+            }
         }
 
         val meta =
