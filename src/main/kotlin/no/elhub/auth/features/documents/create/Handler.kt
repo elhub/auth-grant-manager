@@ -73,7 +73,7 @@ class Handler(
 
             val file =
                 fileGenerator
-                    .generate(command.requestedFrom.idValue, command.meta)
+                    .generate(command.requestedFrom.idValue, command.meta, command.language)
                     .mapLeft {
                         CreateError.FileGenerationError
                     }
@@ -86,6 +86,7 @@ class Handler(
             val documentProperties =
                 command.meta
                     .toMetaAttributes()
+                    .plus("language" to command.language.code)
                     .toDocumentProperties()
 
             val documentToCreate =

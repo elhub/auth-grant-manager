@@ -43,6 +43,7 @@ import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.create.dto.CreateDocumentMeta
 import no.elhub.auth.features.documents.create.model.CreateDocumentModel
+import no.elhub.auth.features.filegenerator.SupportedLanguage
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.create.model.CreateRequestMeta
 import no.elhub.auth.features.requests.create.model.CreateRequestModel
@@ -460,5 +461,6 @@ class MoveInAndChangeOfEnergySupplierBusinessHandlerTest :
 
             val command = handler.validateAndReturnDocumentCommand(model).shouldBeRight()
             command.meta.toMetaAttributes()["startDate"] shouldBe VALID_START_DATE.toString()
+            command.language shouldBe SupportedLanguage.DEFAULT
         }
     })

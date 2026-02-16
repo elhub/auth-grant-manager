@@ -96,7 +96,8 @@ class PdfGenerator(
 
     override fun generate(
         signerNin: String,
-        documentMeta: DocumentMetaMarker
+        documentMeta: DocumentMetaMarker,
+        language: SupportedLanguage,
     ): Either<DocumentGenerationError.ContentGenerationError, ByteArray> = either {
         val contractHtmlString = when (documentMeta) {
             is ChangeOfEnergySupplierBusinessMeta -> generateChangeOfEnergySupplierHtml(
@@ -106,7 +107,7 @@ class PdfGenerator(
                 meteringPointId = documentMeta.requestedForMeteringPointId,
                 balanceSupplierName = documentMeta.balanceSupplierName,
                 balanceSupplierContractName = documentMeta.balanceSupplierContractName,
-                language = SupportedLanguage.DEFAULT
+                language = language
             )
 
             is MoveInAndChangeOfEnergySupplierBusinessMeta -> generateMoveInAndChangeOfEnergySupplierHtml(
@@ -116,7 +117,7 @@ class PdfGenerator(
                 balanceSupplierName = documentMeta.balanceSupplierName,
                 balanceSupplierContractName = documentMeta.balanceSupplierContractName,
                 startDate = documentMeta.startDate?.let { formatNorwegianDate(it.year, it.monthNumber, it.dayOfMonth) },
-                language = SupportedLanguage.DEFAULT
+                language = language
             )
 
             else -> return DocumentGenerationError.ContentGenerationError.left()

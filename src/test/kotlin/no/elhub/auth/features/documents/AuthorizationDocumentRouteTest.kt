@@ -54,6 +54,7 @@ import no.elhub.auth.features.documents.create.dto.JsonApiCreateDocumentRequest
 import no.elhub.auth.features.documents.create.model.CreateDocumentModel
 import no.elhub.auth.features.documents.get.dto.GetDocumentSingleResponse
 import no.elhub.auth.features.documents.query.dto.GetDocumentCollectionResponse
+import no.elhub.auth.features.filegenerator.SupportedLanguage
 import no.elhub.auth.features.grants.AuthorizationScope
 import no.elhub.auth.features.grants.GRANTS_PATH
 import no.elhub.auth.features.grants.common.CreateGrantProperties
@@ -681,6 +682,7 @@ private class TestDocumentBusinessHandler : DocumentBusinessHandler {
                 requestedFrom = meta.requestedFrom,
                 requestedTo = meta.requestedTo,
                 requestedBy = meta.requestedBy,
+                language = SupportedLanguage.DEFAULT,
                 validTo = defaultValidTo().toTimeZoneOffsetDateTimeAtStartOfDay(),
                 scopes = listOf(
                     CreateScopeData(

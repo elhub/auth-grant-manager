@@ -40,7 +40,8 @@ class PdfGeneratorTest :
 
             val result = pdfGenerator.generate(
                 signerNin = "123",
-                documentMeta = cosMeta
+                documentMeta = cosMeta,
+                language = SupportedLanguage.DEFAULT,
             )
             result.shouldBeRight()
 
@@ -66,7 +67,8 @@ class PdfGeneratorTest :
 
             val result = pdfGenerator.generate(
                 signerNin = "123",
-                documentMeta = cosMeta
+                documentMeta = cosMeta,
+                language = SupportedLanguage.DEFAULT,
             )
             result.shouldBeRight()
 
@@ -92,7 +94,8 @@ class PdfGeneratorTest :
 
             val result = pdfGenerator.generate(
                 signerNin = "123",
-                documentMeta = moveInMeta
+                documentMeta = moveInMeta,
+                language = SupportedLanguage.DEFAULT,
             )
 
             result.shouldBeRight()
@@ -118,7 +121,8 @@ class PdfGeneratorTest :
 
             val result = pdfGenerator.generate(
                 signerNin = "123",
-                documentMeta = moveInMeta
+                documentMeta = moveInMeta,
+                language = SupportedLanguage.DEFAULT,
             )
 
             result.shouldBeRight()

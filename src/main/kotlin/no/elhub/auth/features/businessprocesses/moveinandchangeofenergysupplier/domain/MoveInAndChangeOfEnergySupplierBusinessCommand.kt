@@ -7,6 +7,7 @@ import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.create.command.DocumentCommand
 import no.elhub.auth.features.documents.create.command.DocumentMetaMarker
+import no.elhub.auth.features.filegenerator.SupportedLanguage
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.create.command.RequestCommand
 import no.elhub.auth.features.requests.create.command.RequestMetaMarker
@@ -53,12 +54,13 @@ fun MoveInAndChangeOfEnergySupplierBusinessCommand.toRequestCommand(): RequestCo
         meta = this.meta,
     )
 
-fun MoveInAndChangeOfEnergySupplierBusinessCommand.toDocumentCommand(): DocumentCommand =
+fun MoveInAndChangeOfEnergySupplierBusinessCommand.toDocumentCommand(language: SupportedLanguage): DocumentCommand =
     DocumentCommand(
         type = AuthorizationDocument.Type.MoveInAndChangeOfEnergySupplierForPerson,
         requestedFrom = this.requestedFrom,
         requestedTo = this.requestedTo,
         requestedBy = this.requestedBy,
+        language = language,
         scopes = this.scopes,
         validTo = this.validTo.toTimeZoneOffsetDateTimeAtStartOfDay(),
         meta = this.meta,

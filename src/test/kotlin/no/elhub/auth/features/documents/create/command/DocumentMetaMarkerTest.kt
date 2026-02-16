@@ -12,7 +12,7 @@ class DocumentMetaMarkerTest : FunSpec({
             balanceSupplierContractName = "Contract Name",
             requestedForMeteringPointId = "Meter123",
             requestedForMeteringPointAddress = "Address 1",
-            requestedFromName = "Requester"
+            requestedFromName = "Requester",
         )
 
         meta.toMetaAttributes() shouldBe mapOf(
@@ -20,7 +20,7 @@ class DocumentMetaMarkerTest : FunSpec({
             "balanceSupplierContractName" to "Contract Name",
             "requestedForMeteringPointId" to "Meter123",
             "requestedForMeteringPointAddress" to "Address 1",
-            "requestedFromName" to "Requester"
+            "requestedFromName" to "Requester",
         )
     }
 })

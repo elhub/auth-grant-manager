@@ -24,7 +24,8 @@ class PdfGeneratorI18nTest : FunSpec({
 
         val pdfResult = generator.generate(
             signerNin = "01017012345",
-            documentMeta = meta
+            documentMeta = meta,
+            language = SupportedLanguage.DEFAULT,
         )
         val pdfBytes = when (pdfResult) {
             is Either.Left -> error("PDF generation failed for default language")
