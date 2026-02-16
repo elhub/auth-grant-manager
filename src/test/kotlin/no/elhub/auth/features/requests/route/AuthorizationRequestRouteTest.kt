@@ -99,11 +99,11 @@ class AuthorizationRequestRouteTest : FunSpec({
         pdpContainer.registerInvalidTokenMapping()
     }
 
-    context("GET /authorization-requests") {
+    context("Happy path") {
         testApplication {
             setUpAuthorizationRequestTestApplication()
 
-            test("Should return requests sorted by createdAt datetime timestamp") {
+            test("GET /authorization-requests/ should return requests sorted by createdAt datetime timestamp") {
                 val response = client.get(REQUESTS_PATH) {
                     header(HttpHeaders.Authorization, "Bearer enduser")
                 }
@@ -117,7 +117,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                 createdAtList shouldBe createdAtList.sortedDescending()
             }
 
-            test("Should return only requests for authenticated organization when using Maskinporten token") {
+            test("GET /authorization-requests/ should return only requests for authenticated organization when using Maskinporten token") {
                 val response = client.get(REQUESTS_PATH) {
                     header(HttpHeaders.Authorization, "Bearer maskinporten")
                     header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
@@ -139,7 +139,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                 }
             }
 
-            test("Should return only requests for authenticated end user when using end-user token") {
+            test("GET /authorization-requests/ should return only requests for authenticated end user when using end-user token") {
                 val response = client.get(REQUESTS_PATH) {
                     header(HttpHeaders.Authorization, "Bearer enduser")
                 }
@@ -165,7 +165,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                 }
             }
 
-            test("Should return empty list when authorized organization has no requests") {
+            test("GET /authorization-requests/ should return empty list when authorized organization has no requests") {
                 pdpContainer.registerMaskinportenMapping(
                     token = "no-requests",
                     actingGln = "0107000000022",
@@ -184,14 +184,8 @@ class AuthorizationRequestRouteTest : FunSpec({
                     size shouldBe 0
                 }
             }
-        }
-    }
 
-    context("GET /authorization-requests/{id}") {
-        testApplication {
-            setUpAuthorizationRequestTestApplication()
-
-            test("Should return the request for authenticated organization when using Maskinporten token") {
+            test("GET /authorization-requests/{id} should return the request for authenticated organization when using Maskinporten token") {
                 val response = client.get("$REQUESTS_PATH/4f71d596-99e4-415e-946d-7252c1a40c50") {
                     header(HttpHeaders.Authorization, "Bearer maskinporten")
                     header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
@@ -267,7 +261,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                 }
             }
 
-            test("Should return the request for authenticated end user when using end-user token") {
+            test("GET /authorization-requests/{id} should return the request for authenticated end user when using end-user token") {
                 val response = client.get("$REQUESTS_PATH/4f71d596-99e4-415e-946d-7352c1a40c53") {
                     header(HttpHeaders.Authorization, "Bearer enduser")
                 }
@@ -333,111 +327,14 @@ class AuthorizationRequestRouteTest : FunSpec({
                 }
             }
 
-            test("Should return 404 on a nonexistent ID") {
-                val response = client.get("$REQUESTS_PATH/167b1be9-f563-4b31-af1a-50439d567ee5") {
+
+            test("POST /authorization-requests/ should return 201 Created") {
+                val response = client.post(REQUESTS_PATH) {
                     header(HttpHeaders.Authorization, "Bearer maskinporten")
                     header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                    contentType(ContentType.Application.Json)
+                    setBody(examplePostBody)
                 }
-                response.status shouldBe HttpStatusCode.NotFound
-                val responseJson: JsonApiErrorCollection = response.body()
-                responseJson.errors.apply {
-                    size shouldBe 1
-                    this[0].apply {
-                        status shouldBe "404"
-                        title shouldBe "Not found"
-                        detail shouldBe "The requested resource could not be found"
-                    }
-                }
-                responseJson.meta.apply {
-                    "createdAt".shouldNotBeNull()
-                }
-            }
-
-            test("Should return 403 when the request does not belong to the requester using maskinporten token") {
-                val response = client.get("$REQUESTS_PATH/4f71d596-99e4-415e-946d-7352c1a40c53") {
-                    header(HttpHeaders.Authorization, "Bearer maskinporten")
-                    header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
-                }
-                response.status shouldBe HttpStatusCode.Forbidden
-                val responseJson: JsonApiErrorCollection = response.body()
-                responseJson.errors.apply {
-                    size shouldBe 1
-                    this[0].apply {
-                        status shouldBe "403"
-                        title shouldBe "Party not authorized"
-                        detail shouldBe "The party is not allowed to access this resource"
-                    }
-                }
-                responseJson.meta.apply {
-                    "createdAt".shouldNotBeNull()
-                }
-            }
-
-            test("Should return 403 when the request does not belong to the requester using end user token") {
-                val response = client.get("$REQUESTS_PATH/3f2c9e6b-7a4d-4f1a-9b6e-8c1d2a5e9f47") {
-                    header(HttpHeaders.Authorization, "Bearer enduser")
-                }
-                response.status shouldBe HttpStatusCode.Forbidden
-                val responseJson: JsonApiErrorCollection = response.body()
-                responseJson.errors.apply {
-                    size shouldBe 1
-                    this[0].apply {
-                        status shouldBe "403"
-                        title shouldBe "Party not authorized"
-                        detail shouldBe "The party is not allowed to access this resource"
-                    }
-                }
-                responseJson.meta.apply {
-                    "createdAt".shouldNotBeNull()
-                }
-            }
-        }
-    }
-
-    context("POST /authorization-requests") {
-        testApplication {
-            setUpAuthorizationRequestTestApplication()
-
-            test("Should return 201 Created") {
-                val response =
-                    client.post(REQUESTS_PATH) {
-                        header(HttpHeaders.Authorization, "Bearer maskinporten")
-                        header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
-                        contentType(ContentType.Application.Json)
-                        setBody(
-                            JsonApiCreateRequest(
-                                data =
-                                    JsonApiRequestResourceObjectWithMeta(
-                                        type = "AuthorizationRequest",
-                                        attributes =
-                                            CreateRequestAttributes(
-                                                requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
-                                            ),
-                                        meta =
-                                            CreateRequestMeta(
-                                                requestedBy = PartyIdentifier(
-                                                    PartyIdentifierType.GlobalLocationNumber,
-                                                    "0107000000021"
-                                                ),
-                                                requestedFrom = PartyIdentifier(
-                                                    PartyIdentifierType.NationalIdentityNumber,
-                                                    REQUESTED_FROM_NIN,
-                                                ),
-                                                requestedFromName = "Hillary Orr",
-                                                requestedTo = PartyIdentifier(
-                                                    PartyIdentifierType.NationalIdentityNumber,
-                                                    REQUESTED_TO_NIN
-                                                ),
-                                                requestedForMeteringPointId = "123456789012345678",
-                                                requestedForMeteringPointAddress = "quaerendum",
-                                                balanceSupplierName = "Balance Supplier",
-                                                balanceSupplierContractName = "Selena Chandler",
-                                                redirectURI = "https://example.com/redirect",
-                                            ),
-                                    ),
-                            ),
-                        )
-                    }
 
                 response.status shouldBe HttpStatusCode.Created
 
@@ -500,216 +397,8 @@ class AuthorizationRequestRouteTest : FunSpec({
                 }
             }
 
-            test("Should return 400 Bad Request on validation error with error payload") {
-                val response =
-                    client.post(REQUESTS_PATH) {
-                        header(HttpHeaders.Authorization, "Bearer maskinporten")
-                        header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
-                        contentType(ContentType.Application.Json)
-                        setBody(
-                            JsonApiCreateRequest(
-                                data =
-                                    JsonApiRequestResourceObjectWithMeta(
-                                        type = "AuthorizationRequest",
-                                        attributes =
-                                            CreateRequestAttributes(
-                                                requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
-                                            ),
-                                        meta =
-                                            CreateRequestMeta(
-                                                requestedBy = PartyIdentifier(
-                                                    PartyIdentifierType.GlobalLocationNumber,
-                                                    "0107000000021"
-                                                ),
-                                                requestedFrom = PartyIdentifier(
-                                                    PartyIdentifierType.NationalIdentityNumber,
-                                                    REQUESTED_FROM_NIN
-                                                ),
-                                                requestedFromName = "",
-                                                requestedTo = PartyIdentifier(
-                                                    PartyIdentifierType.NationalIdentityNumber,
-                                                    REQUESTED_TO_NIN
-                                                ),
-                                                requestedForMeteringPointId = "123456789012345678",
-                                                requestedForMeteringPointAddress = "quaerendum",
-                                                balanceSupplierName = "Balance Supplier",
-                                                balanceSupplierContractName = "Selena Chandler",
-                                                redirectURI = "https://example.com",
-                                            ),
-                                    ),
-                            ),
-                        )
-                    }
 
-                response.status shouldBe HttpStatusCode.BadRequest
-
-                val responseJson: JsonApiErrorCollection = response.body()
-                responseJson.errors.apply {
-                    size shouldBe 1
-                    this[0].apply {
-                        status shouldBe "400"
-
-                        title shouldBe "Validation error"
-                        detail shouldBe "Requested from name is missing"
-                    }
-                }
-                responseJson.meta.apply {
-                    "createdAt".shouldNotBeNull()
-                }
-            }
-
-            test("Should return 403 Forbidden when requestee has valid gridowner token") {
-                val response =
-                    client.post(REQUESTS_PATH) {
-                        header(HttpHeaders.Authorization, "Bearer gridowner")
-                        header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000038")
-                        contentType(ContentType.Application.Json)
-                        setBody(
-                            JsonApiCreateRequest(
-                                data =
-                                    JsonApiRequestResourceObjectWithMeta(
-                                        type = "AuthorizationRequest",
-                                        attributes =
-                                            CreateRequestAttributes(
-                                                requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
-                                            ),
-                                        meta =
-                                            CreateRequestMeta(
-                                                requestedBy = PartyIdentifier(
-                                                    PartyIdentifierType.GlobalLocationNumber,
-                                                    "0107000000038"
-                                                ),
-                                                requestedFrom = PartyIdentifier(
-                                                    PartyIdentifierType.NationalIdentityNumber,
-                                                    REQUESTED_FROM_NIN
-                                                ),
-                                                requestedFromName = "Test Name",
-                                                requestedTo = PartyIdentifier(
-                                                    PartyIdentifierType.NationalIdentityNumber,
-                                                    REQUESTED_TO_NIN
-                                                ),
-                                                requestedForMeteringPointId = "123456789012345678",
-                                                requestedForMeteringPointAddress = "quaerendum",
-                                                balanceSupplierName = "Balance Supplier",
-                                                balanceSupplierContractName = "Selena Chandler",
-                                                redirectURI = "https://example.com",
-                                            ),
-                                    ),
-                            ),
-                        )
-                    }
-                response.status shouldBe HttpStatusCode.Forbidden
-
-                val responseJson: JsonApiErrorCollection = response.body()
-                responseJson.errors.apply {
-                    size shouldBe 1
-                    this[0].apply {
-                        status shouldBe "403"
-                        title shouldBe "Unsupported party type"
-                        detail shouldBe "The party type you are authorized as is not supported for this endpoint."
-                    }
-                }
-                responseJson.meta.apply {
-                    "createdAt".shouldNotBeNull()
-                }
-            }
-
-            test("Should return 400 Bad Request when requestee has invalid nin in body") {
-                val response =
-                    client.post(REQUESTS_PATH) {
-                        header(HttpHeaders.Authorization, "Bearer maskinporten")
-                        header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
-                        contentType(ContentType.Application.Json)
-                        setBody(
-                            JsonApiCreateRequest(
-                                data =
-                                    JsonApiRequestResourceObjectWithMeta(
-                                        type = "AuthorizationRequest",
-                                        attributes =
-                                            CreateRequestAttributes(
-                                                requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
-                                            ),
-                                        meta =
-                                            CreateRequestMeta(
-                                                requestedBy = PartyIdentifier(
-                                                    PartyIdentifierType.GlobalLocationNumber,
-                                                    "0107000000021"
-                                                ),
-                                                requestedFrom = PartyIdentifier(
-                                                    PartyIdentifierType.NationalIdentityNumber,
-                                                    "123"
-                                                ),
-                                                requestedFromName = "Hillary Orr",
-                                                requestedTo = PartyIdentifier(
-                                                    PartyIdentifierType.NationalIdentityNumber,
-                                                    REQUESTED_TO_NIN
-                                                ),
-                                                requestedForMeteringPointId = "123456789012345678",
-                                                requestedForMeteringPointAddress = "quaerendum",
-                                                balanceSupplierName = "Balance Supplier",
-                                                balanceSupplierContractName = "Selena Chandler",
-                                                redirectURI = "https://example.com",
-                                            ),
-                                    ),
-                            ),
-                        )
-                    }
-
-                response.status shouldBe HttpStatusCode.BadRequest
-
-                val responseJson: JsonApiErrorCollection = response.body()
-                responseJson.errors.apply {
-                    size shouldBe 1
-                    this[0].apply {
-                        status shouldBe "400"
-                        title shouldBe "Invalid national identity number"
-                        detail shouldBe "Provided national identity number is invalid"
-                    }
-                }
-                responseJson.meta.apply {
-                    "createdAt".shouldNotBeNull()
-                }
-            }
-        }
-    }
-
-    context("PATCH /authorization-requests/{ID}") {
-        testApplication {
-            setUpAuthorizationRequestTestApplication()
-
-            test("should not be accepted when validTo has expired") {
-                val patchResult =
-                    client.patch("${REQUESTS_PATH}/130b6bca-1e3a-4653-8a9b-ccc0dc4fe389") {
-                        header(HttpHeaders.Authorization, "Bearer enduser")
-                        contentType(ContentType.Application.Json)
-                        setBody(
-                            JsonApiUpdateRequest(
-                                data = JsonApiRequestResourceObject(
-                                    type = "AuthorizationRequest",
-                                    attributes = UpdateRequestAttributes(
-                                        status = AuthorizationRequest.Status.Accepted
-                                    )
-                                )
-                            ),
-                        )
-                    }
-
-                patchResult.status shouldBe HttpStatusCode.BadRequest
-                val responseJson: JsonApiErrorCollection = patchResult.body()
-                responseJson.errors.apply {
-                    size shouldBe 1
-                    this[0].apply {
-                        status shouldBe "400"
-                        title shouldBe "Request has expired"
-                        detail shouldBe "Request validity period has passed"
-                    }
-                }
-                responseJson.meta.apply {
-                    "createdAt".shouldNotBeNull()
-                }
-            }
-
-            test("Should accept authorization request and persist grant relationship") {
+            test("PATCH /authorization-requests/ should accept authorization request and persist grant relationship") {
                 val requestId = insertAuthorizationRequest(
                     properties = mapOf(
                         "requestedFromName" to "Kasper Lind",
@@ -719,21 +408,11 @@ class AuthorizationRequestRouteTest : FunSpec({
                         "balanceSupplierContractName" to "ExampleSupplierContract"
                     )
                 )
-                val patchResult =
-                    client.patch("${REQUESTS_PATH}/$requestId") {
-                        header(HttpHeaders.Authorization, "Bearer enduser")
-                        contentType(ContentType.Application.Json)
-                        setBody(
-                            JsonApiUpdateRequest(
-                                data = JsonApiRequestResourceObject(
-                                    type = "AuthorizationRequest",
-                                    attributes = UpdateRequestAttributes(
-                                        status = AuthorizationRequest.Status.Accepted
-                                    )
-                                )
-                            ),
-                        )
-                    }
+                val patchResult = client.patch("${REQUESTS_PATH}/$requestId") {
+                    header(HttpHeaders.Authorization, "Bearer enduser")
+                    contentType(ContentType.Application.Json)
+                    setBody(examplePatchBody)
+                }
 
                 patchResult.status shouldBe HttpStatusCode.OK
                 val patchResponse: UpdateRequestResponse = patchResult.body()
@@ -863,7 +542,8 @@ class AuthorizationRequestRouteTest : FunSpec({
                 }
             }
 
-            test("Should reject authorization-request") {
+
+            test("PATCH /authorization-requests/{id} should correctly return new status Rejected") {
                 val requestId = insertAuthorizationRequest(
                     properties = mapOf(
                         "requestedFromName" to "Ola Normann",
@@ -938,8 +618,32 @@ class AuthorizationRequestRouteTest : FunSpec({
                     }
                 }
             }
+        }
+    }
 
-            test("Should return 400 Bad Request on illegal transaction") {
+    context("Edge cases and incorrect inputs") {
+        testApplication {
+            setUpAuthorizationRequestTestApplication()
+            test("GET /authorization-requests/{id} should return 404 on a nonexistent ID") {
+                val response = client.get("$REQUESTS_PATH/167b1be9-f563-4b31-af1a-50439d567ee5") {
+                    header(HttpHeaders.Authorization, "Bearer maskinporten")
+                    header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                }
+                response.status shouldBe HttpStatusCode.NotFound
+                val responseJson: JsonApiErrorCollection = response.body()
+                responseJson.errors.apply {
+                    size shouldBe 1
+                    this[0].apply {
+                        status shouldBe "404"
+                        title shouldBe "Not found"
+                        detail shouldBe "The requested resource could not be found"
+                    }
+                }
+                responseJson.meta.apply {
+                    "createdAt".shouldNotBeNull()
+                }
+            }
+            test("PATCH /authorization-requests/{id} should return 400 Bad Request on illegal transaction") {
                 val requestId = insertAuthorizationRequest()
                 val response =
                     client.patch("${REQUESTS_PATH}/$requestId") {
@@ -971,94 +675,10 @@ class AuthorizationRequestRouteTest : FunSpec({
                     "createdAt".shouldNotBeNull()
                 }
             }
-
-            test("Should return 403 Unauthorized when requestee has valid maskinport token") {
-                val response =
-                    client.patch("${REQUESTS_PATH}/4f71d596-99e4-415e-946d-7352c1a40c53") {
-                        contentType(ContentType.Application.Json)
-                        header(HttpHeaders.Authorization, "Bearer maskinporten")
-                        header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
-                        setBody(
-                            JsonApiUpdateRequest(
-                                data = JsonApiRequestResourceObject(
-                                    type = "AuthorizationRequest",
-                                    attributes = UpdateRequestAttributes(
-                                        status = AuthorizationRequest.Status.Expired
-                                    )
-                                )
-                            ),
-                        )
-                    }
-
-                response.status shouldBe HttpStatusCode.Forbidden
-                val responseJson: JsonApiErrorCollection = response.body()
-                responseJson.errors.apply {
-                    size shouldBe 1
-                    this[0].apply {
-                        status shouldBe "403"
-                        title shouldBe "Unsupported party type"
-                        detail shouldBe "The party type you are authorized as is not supported for this endpoint."
-                    }
-                }
-                responseJson.meta.apply {
-                    "createdAt".shouldNotBeNull()
-                }
-            }
-
-            test("Should return 401 Unauthorized when requestee has no token") {
-                val response = client.get("$REQUESTS_PATH/4f71d596-99e4-415e-946d-7352c1a40c53") {
-                    header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
-                }
-                response.status shouldBe HttpStatusCode.Unauthorized
-                val responseJson: JsonApiErrorCollection = response.body()
-                responseJson.errors.apply {
-                    size shouldBe 1
-                    this[0].apply {
-                        status shouldBe "401"
-                        title shouldBe "Missing authorization"
-                        detail shouldBe "Bearer token is required in the Authorization header."
-                    }
-                }
-                responseJson.meta.apply {
-                    "createdAt".shouldNotBeNull()
-                }
-            }
-
-            test("Should return 401 Unauthorized when requestee has invalid token") {
-                val response = client.get("$REQUESTS_PATH/4f71d596-99e4-415e-946d-7352c1a40c53") {
-                    header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
-                    header(HttpHeaders.Authorization, "Bearer invalid-token")
-                }
-                response.status shouldBe HttpStatusCode.Unauthorized
-                val responseJson: JsonApiErrorCollection = response.body()
-                responseJson.errors.apply {
-                    size shouldBe 1
-                    this[0].apply {
-                        status shouldBe "401"
-                        title shouldBe "Invalid token"
-                        detail shouldBe "Token could not be verified."
-                    }
-                }
-                responseJson.meta.apply {
-                    "createdAt".shouldNotBeNull()
-                }
-            }
-
-            test("Should return 403 Forbidden when requestee has valid gridowner token") {
-
-                val requestId = insertAuthorizationRequest(
-                    properties = mapOf(
-                        "requestedFromName" to "Kasper Lind",
-                        "requestedForMeteringPointId" to "1234567890555",
-                        "requestedForMeteringPointAddress" to "Example Street 2, 0654 Oslo",
-                        "balanceSupplierName" to "Power AS",
-                        "balanceSupplierContractName" to "ExampleSupplierContract"
-                    )
-                )
-                val patchResponse =
-                    client.patch("${REQUESTS_PATH}/$requestId") {
-                        header(HttpHeaders.Authorization, "Bearer gridowner")
-                        header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000038")
+            test("PATCH /authorization-requests/{id} should not be accepted when validTo has expired") {
+                val patchResult =
+                    client.patch("${REQUESTS_PATH}/130b6bca-1e3a-4653-8a9b-ccc0dc4fe389") {
+                        header(HttpHeaders.Authorization, "Bearer enduser")
                         contentType(ContentType.Application.Json)
                         setBody(
                             JsonApiUpdateRequest(
@@ -1072,15 +692,127 @@ class AuthorizationRequestRouteTest : FunSpec({
                         )
                     }
 
-                patchResponse.status shouldBe HttpStatusCode.Forbidden
-
-                val responseJson: JsonApiErrorCollection = patchResponse.body()
+                patchResult.status shouldBe HttpStatusCode.BadRequest
+                val responseJson: JsonApiErrorCollection = patchResult.body()
                 responseJson.errors.apply {
                     size shouldBe 1
                     this[0].apply {
-                        status shouldBe "403"
-                        title shouldBe "Unsupported party type"
-                        detail shouldBe "The party type you are authorized as is not supported for this endpoint."
+                        status shouldBe "400"
+                        title shouldBe "Request has expired"
+                        detail shouldBe "Request validity period has passed"
+                    }
+                }
+                responseJson.meta.apply {
+                    "createdAt".shouldNotBeNull()
+                }
+            }
+
+            test("POST /authorization-requests/ should return 400 Bad Request on validation error with error payload") {
+                val response =
+                    client.post(REQUESTS_PATH) {
+                        header(HttpHeaders.Authorization, "Bearer maskinporten")
+                        header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                        contentType(ContentType.Application.Json)
+                        setBody(
+                            JsonApiCreateRequest(
+                                data =
+                                    JsonApiRequestResourceObjectWithMeta(
+                                        type = "AuthorizationRequest",
+                                        attributes =
+                                            CreateRequestAttributes(
+                                                requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
+                                            ),
+                                        meta =
+                                            CreateRequestMeta(
+                                                requestedBy = PartyIdentifier(
+                                                    PartyIdentifierType.GlobalLocationNumber,
+                                                    "0107000000021"
+                                                ),
+                                                requestedFrom = PartyIdentifier(
+                                                    PartyIdentifierType.NationalIdentityNumber,
+                                                    REQUESTED_FROM_NIN
+                                                ),
+                                                requestedFromName = "",
+                                                requestedTo = PartyIdentifier(
+                                                    PartyIdentifierType.NationalIdentityNumber,
+                                                    REQUESTED_TO_NIN
+                                                ),
+                                                requestedForMeteringPointId = "123456789012345678",
+                                                requestedForMeteringPointAddress = "quaerendum",
+                                                balanceSupplierName = "Balance Supplier",
+                                                balanceSupplierContractName = "Selena Chandler",
+                                                redirectURI = "https://example.com",
+                                            ),
+                                    ),
+                            ),
+                        )
+                    }
+
+                response.status shouldBe HttpStatusCode.BadRequest
+
+                val responseJson: JsonApiErrorCollection = response.body()
+                responseJson.errors.apply {
+                    size shouldBe 1
+                    this[0].apply {
+                        status shouldBe "400"
+
+                        title shouldBe "Validation error"
+                        detail shouldBe "Requested from name is missing"
+                    }
+                }
+                responseJson.meta.apply {
+                    "createdAt".shouldNotBeNull()
+                }
+            }
+            test("POST /authorization-requests/ should return 400 Bad Request when requestee has invalid nin in body") {
+                val response = client.post(REQUESTS_PATH) {
+                    header(HttpHeaders.Authorization, "Bearer maskinporten")
+                    header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                    contentType(ContentType.Application.Json)
+                    setBody(
+                        JsonApiCreateRequest(
+                            data =
+                                JsonApiRequestResourceObjectWithMeta(
+                                    type = "AuthorizationRequest",
+                                    attributes =
+                                        CreateRequestAttributes(
+                                            requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
+                                        ),
+                                    meta =
+                                        CreateRequestMeta(
+                                            requestedBy = PartyIdentifier(
+                                                PartyIdentifierType.GlobalLocationNumber,
+                                                "0107000000021"
+                                            ),
+                                            requestedFrom = PartyIdentifier(
+                                                PartyIdentifierType.NationalIdentityNumber,
+                                                "123"
+                                            ),
+                                            requestedFromName = "Hillary Orr",
+                                            requestedTo = PartyIdentifier(
+                                                PartyIdentifierType.NationalIdentityNumber,
+                                                REQUESTED_TO_NIN
+                                            ),
+                                            requestedForMeteringPointId = "123456789012345678",
+                                            requestedForMeteringPointAddress = "quaerendum",
+                                            balanceSupplierName = "Balance Supplier",
+                                            balanceSupplierContractName = "Selena Chandler",
+                                            redirectURI = "https://example.com",
+                                        ),
+                                ),
+                        ),
+                    )
+                }
+
+                response.status shouldBe HttpStatusCode.BadRequest
+
+                val responseJson: JsonApiErrorCollection = response.body()
+                responseJson.errors.apply {
+                    size shouldBe 1
+                    this[0].apply {
+                        status shouldBe "400"
+                        title shouldBe "Invalid national identity number"
+                        detail shouldBe "Provided national identity number is invalid"
                     }
                 }
                 responseJson.meta.apply {

@@ -20,6 +20,9 @@ import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.REQUESTS_PATH
+import no.elhub.auth.features.requests.route.examplePatchBody
+import no.elhub.auth.features.requests.route.examplePostBody
+
 import no.elhub.auth.features.requests.create.dto.CreateRequestAttributes
 import no.elhub.auth.features.requests.create.dto.CreateRequestMeta
 import no.elhub.auth.features.requests.create.dto.JsonApiCreateRequest
@@ -35,6 +38,9 @@ class AuthorizationRequestRouteSecurityTest : FunSpec({
         AuthPersonsTestContainerExtension,
         PostgresTestContainerExtension(),
         RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-party.sql"),
+        RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-scopes.sql"),
+        RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-requests.sql"),
+        RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-grants.sql"),
         pdpContainer
     )
 
@@ -156,7 +162,7 @@ class AuthorizationRequestRouteSecurityTest : FunSpec({
             }
         }
     }
-    context("Incorrect role") {
+    context("Incorrect role or resource ownership") {
         testApplication {
             setUpAuthorizationRequestTestApplication()
 
@@ -184,44 +190,46 @@ class AuthorizationRequestRouteSecurityTest : FunSpec({
                 }
                 validateUnsupportedPartyResponse(response)
             }
+            test("GET /authorization-requests/{id} should return 403 when the request does not belong to the requester using maskinporten token") {
+                val response = client.get("$REQUESTS_PATH/4f71d596-99e4-415e-946d-7352c1a40c53") {
+                    header(HttpHeaders.Authorization, "Bearer maskinporten")
+                    header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                }
+                response.status shouldBe HttpStatusCode.Forbidden
+                val responseJson: JsonApiErrorCollection = response.body()
+                responseJson.errors.apply {
+                    size shouldBe 1
+                    this[0].apply {
+                        status shouldBe "403"
+                        title shouldBe "Party not authorized"
+                        detail shouldBe "The party is not allowed to access this resource"
+                    }
+                }
+                responseJson.meta.apply {
+                    "createdAt".shouldNotBeNull()
+                }
+            }
+
+            test("GET /authorization-requests/{id} should return 403 when the request does not belong to the requester using end user token") {
+                val response = client.get("$REQUESTS_PATH/3f2c9e6b-7a4d-4f1a-9b6e-8c1d2a5e9f47") {
+                    header(HttpHeaders.Authorization, "Bearer enduser")
+                }
+                response.status shouldBe HttpStatusCode.Forbidden
+                val responseJson: JsonApiErrorCollection = response.body()
+                responseJson.errors.apply {
+                    size shouldBe 1
+                    this[0].apply {
+                        status shouldBe "403"
+                        title shouldBe "Party not authorized"
+                        detail shouldBe "The party is not allowed to access this resource"
+                    }
+                }
+                responseJson.meta.apply {
+                    "createdAt".shouldNotBeNull()
+                }
+            }
         }
     }
 })
 
-private val examplePostBody = JsonApiCreateRequest(
-    data = JsonApiRequestResourceObjectWithMeta(
-        type = "AuthorizationRequest",
-        attributes =
-            CreateRequestAttributes(requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson),
-        meta = CreateRequestMeta(
-            requestedBy = PartyIdentifier(
-                PartyIdentifierType.GlobalLocationNumber,
-                "0107000000021"
-            ),
-            requestedFrom = PartyIdentifier(
-                PartyIdentifierType.NationalIdentityNumber,
-                REQUESTED_FROM_NIN,
-            ),
-            requestedFromName = "Hillary Orr",
-            requestedTo = PartyIdentifier(
-                PartyIdentifierType.NationalIdentityNumber,
-                REQUESTED_TO_NIN
-            ),
-            requestedForMeteringPointId = "123456789012345678",
-            requestedForMeteringPointAddress = "quaerendum",
-            balanceSupplierName = "Balance Supplier",
-            balanceSupplierContractName = "Selena Chandler",
-            redirectURI = "https://example.com/redirect",
-        ),
-    ),
-)
-
-private val examplePatchBody = JsonApiUpdateRequest(
-    data = JsonApiRequestResourceObject(
-        type = "AuthorizationRequest",
-        attributes = UpdateRequestAttributes(
-            status = AuthorizationRequest.Status.Accepted
-        )
-    )
-)
 

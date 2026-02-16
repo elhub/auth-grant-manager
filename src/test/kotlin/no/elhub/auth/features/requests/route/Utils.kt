@@ -1,5 +1,17 @@
 package no.elhub.auth.features.requests.route
 
+import no.elhub.auth.features.common.party.PartyIdentifier
+import no.elhub.auth.features.common.party.PartyIdentifierType
+import no.elhub.auth.features.requests.create.dto.CreateRequestMeta
+import no.elhub.auth.features.requests.create.dto.CreateRequestAttributes
+import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObjectWithMeta
+
+import no.elhub.auth.features.requests.create.dto.JsonApiCreateRequest
+
+import no.elhub.auth.features.requests.update.dto.UpdateRequestAttributes
+import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObject
+import no.elhub.auth.features.requests.update.dto.JsonApiUpdateRequest
+
 import org.jetbrains.exposed.v1.jdbc.batchInsert
 import no.elhub.auth.features.requests.common.AuthorizationRequestPropertyTable
 import org.jetbrains.exposed.v1.jdbc.insert
@@ -168,6 +180,7 @@ sealed class TestRequestValidationError : RequestTypeValidationError {
         override val message: String = "Unsupported request type"
     }
 }
+
 data class TestRequestMeta(
     val requestedFromName: String,
     val requestedForMeteringPointId: String,
@@ -187,3 +200,39 @@ data class TestRequestMeta(
         )
 }
 
+val examplePostBody = JsonApiCreateRequest(
+    data = JsonApiRequestResourceObjectWithMeta(
+        type = "AuthorizationRequest",
+        attributes =
+            CreateRequestAttributes(requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson),
+        meta = CreateRequestMeta(
+            requestedBy = PartyIdentifier(
+                PartyIdentifierType.GlobalLocationNumber,
+                "0107000000021"
+            ),
+            requestedFrom = PartyIdentifier(
+                PartyIdentifierType.NationalIdentityNumber,
+                REQUESTED_FROM_NIN,
+            ),
+            requestedFromName = "Hillary Orr",
+            requestedTo = PartyIdentifier(
+                PartyIdentifierType.NationalIdentityNumber,
+                REQUESTED_TO_NIN
+            ),
+            requestedForMeteringPointId = "123456789012345678",
+            requestedForMeteringPointAddress = "quaerendum",
+            balanceSupplierName = "Balance Supplier",
+            balanceSupplierContractName = "Selena Chandler",
+            redirectURI = "https://example.com/redirect",
+        ),
+    ),
+)
+
+val examplePatchBody = JsonApiUpdateRequest(
+    data = JsonApiRequestResourceObject(
+        type = "AuthorizationRequest",
+        attributes = UpdateRequestAttributes(
+            status = AuthorizationRequest.Status.Accepted
+        )
+    )
+)
