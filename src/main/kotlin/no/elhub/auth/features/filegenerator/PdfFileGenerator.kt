@@ -5,6 +5,7 @@ import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.raise.either
 import com.github.mustachejava.DefaultMustacheFactory
+import com.github.mustachejava.TemplateFunction
 import com.openhtmltopdf.extend.FSSupplier
 import com.openhtmltopdf.outputdevice.helper.BaseRendererBuilder
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder
@@ -25,6 +26,7 @@ import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.io.StringWriter
 import java.util.Locale
+import java.util.ResourceBundle
 import kotlin.math.PI
 
 data class Font(
@@ -55,6 +57,8 @@ class PdfGenerator(
         internal const val VARIABLE_KEY_BALANCE_SUPPLIER_NAME = "balanceSupplierName"
         internal const val VARIABLE_KEY_BALANCE_SUPPLIER_CONTRACT_NAME = "balanceSupplierContractName"
         internal const val VARIABLE_KEY_MOVE_IN_DATE = "moveInDate"
+        internal const val VARIABLE_KEY_HTML_LANG = "htmlLang"
+        internal const val VARIABLE_KEY_I18N = "i18n"
     }
 
     private fun loadClasspathResource(path: String): ByteArray =
@@ -80,7 +84,7 @@ class PdfGenerator(
                 "Roboto",
                 700,
                 BaseRendererBuilder.FontStyle.NORMAL,
-            )
+            ),
         )
 
     val colorProfile = loadClasspathResource("/fonts/sRGB.icc")
@@ -102,6 +106,7 @@ class PdfGenerator(
                 meteringPointId = documentMeta.requestedForMeteringPointId,
                 balanceSupplierName = documentMeta.balanceSupplierName,
                 balanceSupplierContractName = documentMeta.balanceSupplierContractName,
+                language = SupportedLanguage.DEFAULT
             )
 
             is MoveInAndChangeOfEnergySupplierBusinessMeta -> generateMoveInAndChangeOfEnergySupplierHtml(
@@ -110,7 +115,8 @@ class PdfGenerator(
                 meteringPointId = documentMeta.requestedForMeteringPointId,
                 balanceSupplierName = documentMeta.balanceSupplierName,
                 balanceSupplierContractName = documentMeta.balanceSupplierContractName,
-                startDate = documentMeta.startDate?.let { formatNorwegianDate(it.year, it.monthNumber, it.dayOfMonth) }
+                startDate = documentMeta.startDate?.let { formatNorwegianDate(it.year, it.monthNumber, it.dayOfMonth) },
+                language = SupportedLanguage.DEFAULT
             )
 
             else -> return DocumentGenerationError.ContentGenerationError.left()
@@ -139,7 +145,9 @@ class PdfGenerator(
         meteringPointId: String,
         balanceSupplierName: String,
         balanceSupplierContractName: String,
+        language: SupportedLanguage,
     ): Either<DocumentGenerationError.ContentGenerationError, String> = Either.catch {
+        val i18n = i18nTemplateFunction(language)
         StringWriter().apply {
             mustacheFactory
                 .compile(MustacheConstants.TEMPLATE_CHANGE_SUPPLIER_CONTRACT)
@@ -152,6 +160,8 @@ class PdfGenerator(
                         MustacheConstants.VARIABLE_KEY_METERING_POINT_ADDRESS to meteringPointAddress,
                         MustacheConstants.VARIABLE_KEY_BALANCE_SUPPLIER_NAME to balanceSupplierName,
                         MustacheConstants.VARIABLE_KEY_BALANCE_SUPPLIER_CONTRACT_NAME to balanceSupplierContractName,
+                        MustacheConstants.VARIABLE_KEY_HTML_LANG to language.code,
+                        MustacheConstants.VARIABLE_KEY_I18N to i18n,
                     )
                 ).flush()
         }.toString()
@@ -163,8 +173,10 @@ class PdfGenerator(
         meteringPointId: String,
         balanceSupplierName: String,
         balanceSupplierContractName: String,
-        startDate: String?
+        startDate: String?,
+        language: SupportedLanguage,
     ): Either<DocumentGenerationError.ContentGenerationError, String> = Either.catch {
+        val i18n = i18nTemplateFunction(language)
         StringWriter().apply {
             mustacheFactory
                 .compile(MustacheConstants.TEMPLATE_MOVE_IN)
@@ -176,6 +188,8 @@ class PdfGenerator(
                         MustacheConstants.VARIABLE_KEY_METERING_POINT_ADDRESS to meteringPointAddress,
                         MustacheConstants.VARIABLE_KEY_BALANCE_SUPPLIER_NAME to balanceSupplierName,
                         MustacheConstants.VARIABLE_KEY_BALANCE_SUPPLIER_CONTRACT_NAME to balanceSupplierContractName,
+                        MustacheConstants.VARIABLE_KEY_HTML_LANG to language.code,
+                        MustacheConstants.VARIABLE_KEY_I18N to i18n,
                     )
                         .let { base ->
                             if (startDate == null) {
@@ -222,6 +236,18 @@ class PdfGenerator(
 
     private fun fontSupplier(bytes: ByteArray): FSSupplier<InputStream> =
         FSSupplier { ByteArrayInputStream(bytes) }
+
+    private fun i18nTemplateFunction(language: SupportedLanguage): TemplateFunction {
+        val bundle = ResourceBundle.getBundle("templates.i18n.messages", Locale.forLanguageTag(language.code))
+        return TemplateFunction { key ->
+            val normalizedKey = key.trim()
+            if (bundle.containsKey(normalizedKey)) {
+                bundle.getString(normalizedKey)
+            } else {
+                normalizedKey
+            }
+        }
+    }
 
     private fun PdfRendererBuilder.useFonts(fonts: List<Font>): PdfRendererBuilder {
         fonts.forEach { font ->
