@@ -13,12 +13,13 @@ fun Application.stromprisServiceModule() {
         }
         single<JwtTokenProvider> {
             val stromprisServiceConfig = get<ApplicationConfig>().config("dataSharing.stromprisService")
+            val idpTokenUrl = get<ApplicationConfig>().config("idp").property("tokenUrl").getString()
             JwtTokenProviderImpl(
                 httpClient = get(named("commonHttpClient")),
                 authConfig = AuthConfig(
                     clientId = stromprisServiceConfig.property("idp.clientId").getString(),
                     clientSecret = stromprisServiceConfig.property("idp.clientSecret").getString(),
-                    tokenUrl = stromprisServiceConfig.property("idp.tokenUrl").getString()
+                    tokenUrl = idpTokenUrl
                 )
             )
         }

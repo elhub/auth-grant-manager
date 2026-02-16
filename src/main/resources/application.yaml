@@ -62,5 +62,7 @@ dataSharing:
     idp:
       clientId: ${STROMPRIS_SERVICE_IDP_CLIENT_ID}
       clientSecret: ${STROMPRIS_SERVICE_IDP_CLIENT_SECRET}
-      tokenUrl: ${STROMPRIS_SERVICE_IDP_TOKEN_URL}
   validateContractNameFeature: ${VALIDATE_CONTRACT_NAME_FEATURE}
+
+idp:
+  tokenUrl: ${IDP_TOKEN_URL}
