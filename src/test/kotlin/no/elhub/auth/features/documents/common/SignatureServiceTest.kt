@@ -213,6 +213,19 @@ class SignatureServiceTest : FunSpec({
             pdfValidationResult.shouldBeLeft(SignatureValidationError.MissingNationalId)
         }
 
+        test("Should return MissingBankIdTrustedTimestamp when bankId signature has untrusted timestamp") {
+            val elhubSignedPdfBytes = signingService.sign(unsignedPdfBytes).shouldBeRight()
+
+            val bankIdSignedPdfBytes = endUserSignatureTestHelper.signWithUntrustedTimestamp(
+                pdfBytes = elhubSignedPdfBytes,
+                nationalIdentityNumber = nationalIdentityNumber
+            )
+
+            val pdfValidationResult = signingService.validateSignaturesAndReturnSignatory(bankIdSignedPdfBytes, elhubSignedPdfBytes)
+
+            pdfValidationResult.shouldBeLeft(SignatureValidationError.MissingBankIdTrustedTimestamp)
+        }
+
         test("Should return ElhubSigningCertNotTrusted when Elhub signing cert isn't trusted") {
             val fakeElhubCerts = certFactory.generateFakeElhubCertificates(certProvider.getElhubSigningCertificate())
             val elhubSignedPdfBytes = TestPdfSigner.signWithCertificate(
