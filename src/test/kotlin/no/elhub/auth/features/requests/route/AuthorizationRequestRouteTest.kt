@@ -2,9 +2,6 @@ package no.elhub.auth.features.requests.route
 
 import arrow.core.left
 import arrow.core.right
-import no.elhub.auth.features.requests.REQUESTS_PATH
-import no.elhub.auth.features.requests.AuthorizationRequest
-import no.elhub.auth.features.requests.module
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.nulls.shouldNotBeNull
@@ -28,6 +25,8 @@ import io.ktor.server.testing.testApplication
 import no.elhub.auth.features.common.AuthPersonsTestContainer
 import no.elhub.auth.features.common.AuthPersonsTestContainerExtension
 import no.elhub.auth.features.common.CreateScopeData
+import no.elhub.auth.features.requests.AuthorizationRequest
+import no.elhub.auth.features.requests.REQUESTS_PATH
 import no.elhub.auth.features.common.PdpTestContainerExtension
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.RunPostgresScriptExtension
@@ -70,7 +69,7 @@ import java.util.UUID
 import java.time.LocalDate as JavaLocalDate
 import no.elhub.auth.module as applicationModule
 
-class AuthorizationRequestStateTest : FunSpec({
+class AuthorizationRequestRouteTest : FunSpec({
     val pdpContainer = PdpTestContainerExtension()
     extensions(
         AuthPersonsTestContainerExtension,
@@ -1006,10 +1005,89 @@ class AuthorizationRequestStateTest : FunSpec({
                 }
             }
 
+            test("Should return 401 Unauthorized when requestee has no token") {
+                val response = client.get("$REQUESTS_PATH/4f71d596-99e4-415e-946d-7352c1a40c53") {
+                    header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                }
+                response.status shouldBe HttpStatusCode.Unauthorized
+                val responseJson: JsonApiErrorCollection = response.body()
+                responseJson.errors.apply {
+                    size shouldBe 1
+                    this[0].apply {
+                        status shouldBe "401"
+                        title shouldBe "Missing authorization"
+                        detail shouldBe "Bearer token is required in the Authorization header."
+                    }
+                }
+                responseJson.meta.apply {
+                    "createdAt".shouldNotBeNull()
+                }
+            }
+
+            test("Should return 401 Unauthorized when requestee has invalid token") {
+                val response = client.get("$REQUESTS_PATH/4f71d596-99e4-415e-946d-7352c1a40c53") {
+                    header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                    header(HttpHeaders.Authorization, "Bearer invalid-token")
+                }
+                response.status shouldBe HttpStatusCode.Unauthorized
+                val responseJson: JsonApiErrorCollection = response.body()
+                responseJson.errors.apply {
+                    size shouldBe 1
+                    this[0].apply {
+                        status shouldBe "401"
+                        title shouldBe "Invalid token"
+                        detail shouldBe "Token could not be verified."
+                    }
+                }
+                responseJson.meta.apply {
+                    "createdAt".shouldNotBeNull()
+                }
+            }
+
+            test("Should return 403 Forbidden when requestee has valid gridowner token") {
+
+                val requestId = insertAuthorizationRequest(
+                    properties = mapOf(
+                        "requestedFromName" to "Kasper Lind",
+                        "requestedForMeteringPointId" to "1234567890555",
+                        "requestedForMeteringPointAddress" to "Example Street 2, 0654 Oslo",
+                        "balanceSupplierName" to "Power AS",
+                        "balanceSupplierContractName" to "ExampleSupplierContract"
+                    )
+                )
+                val patchResponse =
+                    client.patch("${REQUESTS_PATH}/$requestId") {
+                        header(HttpHeaders.Authorization, "Bearer gridowner")
+                        header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000038")
+                        contentType(ContentType.Application.Json)
+                        setBody(
+                            JsonApiUpdateRequest(
+                                data = JsonApiRequestResourceObject(
+                                    type = "AuthorizationRequest",
+                                    attributes = UpdateRequestAttributes(
+                                        status = AuthorizationRequest.Status.Accepted
+                                    )
+                                )
+                            ),
+                        )
+                    }
+
+                patchResponse.status shouldBe HttpStatusCode.Forbidden
+
+                val responseJson: JsonApiErrorCollection = patchResponse.body()
+                responseJson.errors.apply {
+                    size shouldBe 1
+                    this[0].apply {
+                        status shouldBe "403"
+                        title shouldBe "Unsupported party type"
+                        detail shouldBe "The party type you are authorized as is not supported for this endpoint."
+                    }
+                }
+                responseJson.meta.apply {
+                    "createdAt".shouldNotBeNull()
+                }
+            }
         }
     }
 })
 
-
-private const val REQUESTED_FROM_NIN = "02916297702"
-private const val REQUESTED_TO_NIN = "14810797496"

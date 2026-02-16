@@ -42,6 +42,9 @@ import no.elhub.auth.features.requests.module
 import no.elhub.auth.module as applicationModule
 import io.ktor.server.config.MapApplicationConfig
 
+const val REQUESTED_FROM_NIN = "02916297702"
+const val REQUESTED_TO_NIN = "14810797496"
+
 fun ApplicationTestBuilder.setUpAuthorizationRequestTestApplication() {
     client = createClient {
         install(ContentNegotiation) {
@@ -119,37 +122,6 @@ class TestRequestBusinessHandler : RequestBusinessHandler {
         )
 }
 
-data class TestRequestMeta(
-    val requestedFromName: String,
-    val requestedForMeteringPointId: String,
-    val requestedForMeteringPointAddress: String,
-    val balanceSupplierName: String,
-    val balanceSupplierContractName: String,
-    val redirectURI: String,
-) : RequestMetaMarker {
-    override fun toMetaAttributes(): Map<String, String> =
-        mapOf(
-            "requestedFromName" to requestedFromName,
-            "requestedForMeteringPointId" to requestedForMeteringPointId,
-            "requestedForMeteringPointAddress" to requestedForMeteringPointAddress,
-            "balanceSupplierName" to balanceSupplierName,
-            "balanceSupplierContractName" to balanceSupplierContractName,
-            "redirectURI" to redirectURI,
-        )
-}
-
-sealed class TestRequestValidationError : RequestTypeValidationError {
-    data object MissingRequestedFromName : TestRequestValidationError() {
-        override val code: String = "missing_requested_from_name"
-        override val message: String = "Requested from name is missing"
-    }
-
-    data object UnsupportedRequestType : TestRequestValidationError() {
-        override val code: String = "unsupported_request_type"
-        override val message: String = "Unsupported request type"
-    }
-}
-
 
 fun insertAuthorizationRequest(
     status: DatabaseRequestStatus = DatabaseRequestStatus.Pending,
@@ -184,3 +156,34 @@ fun insertAuthorizationRequest(
 
     return requestId
 }
+
+sealed class TestRequestValidationError : RequestTypeValidationError {
+    data object MissingRequestedFromName : TestRequestValidationError() {
+        override val code: String = "missing_requested_from_name"
+        override val message: String = "Requested from name is missing"
+    }
+
+    data object UnsupportedRequestType : TestRequestValidationError() {
+        override val code: String = "unsupported_request_type"
+        override val message: String = "Unsupported request type"
+    }
+}
+data class TestRequestMeta(
+    val requestedFromName: String,
+    val requestedForMeteringPointId: String,
+    val requestedForMeteringPointAddress: String,
+    val balanceSupplierName: String,
+    val balanceSupplierContractName: String,
+    val redirectURI: String,
+) : RequestMetaMarker {
+    override fun toMetaAttributes(): Map<String, String> =
+        mapOf(
+            "requestedFromName" to requestedFromName,
+            "requestedForMeteringPointId" to requestedForMeteringPointId,
+            "requestedForMeteringPointAddress" to requestedForMeteringPointAddress,
+            "balanceSupplierName" to balanceSupplierName,
+            "balanceSupplierContractName" to balanceSupplierContractName,
+            "redirectURI" to redirectURI,
+        )
+}
+
