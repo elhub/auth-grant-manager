@@ -8,12 +8,21 @@ import no.elhub.auth.features.documents.common.ProxyDocumentBusinessHandler
 import no.elhub.auth.features.requests.common.ProxyRequestBusinessHandler
 import no.elhub.auth.features.requests.create.RequestBusinessHandler
 import org.koin.core.module.dsl.singleOf
+import org.koin.core.qualifier.named
 import org.koin.dsl.bind
 import org.koin.ktor.plugin.koinModule
 
 fun Application.businessProcessesModule() {
     koinModule {
-        singleOf(::ChangeOfEnergySupplierBusinessHandler)
+        single {
+            ChangeOfEnergySupplierBusinessHandler(
+                meteringPointsService = get(),
+                personService = get(),
+                organisationsService = get(),
+                stromprisService = get(),
+                validateBalanceSupplierContractName = get(named("validateBalanceSupplierContractName"))
+            )
+        }
         singleOf(::MoveInAndChangeOfEnergySupplierBusinessHandler)
         singleOf(::ProxyDocumentBusinessHandler) bind DocumentBusinessHandler::class
         singleOf(::ProxyRequestBusinessHandler) bind RequestBusinessHandler::class
