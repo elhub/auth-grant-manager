@@ -118,6 +118,9 @@
         "startDate": {
           "$ref": "../authorization-common.schema.json#/$defs/startDate"
         },
+        "language": {
+          "$ref": "../authorization-common.schema.json#/$defs/language"
+        },
         "requestedBy": {
           "description": "The party identifier of the actor who initiated the request (e.g., the GLN of the requesting balance supplier).",
           "$ref": "../elhub-common.schema.json#/$defs/partyIdentifier"

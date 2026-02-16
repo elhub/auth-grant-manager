@@ -6,6 +6,7 @@ import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.create.model.CreateDocumentModel
+import no.elhub.auth.features.filegenerator.SupportedLanguage
 import no.elhub.devxp.jsonapi.model.JsonApiAttributes
 import no.elhub.devxp.jsonapi.model.JsonApiResourceMeta
 import no.elhub.devxp.jsonapi.request.JsonApiRequest
@@ -26,6 +27,7 @@ data class CreateDocumentMeta(
     val balanceSupplierName: String,
     val balanceSupplierContractName: String,
     val startDate: LocalDate? = null,
+    val language: SupportedLanguage = SupportedLanguage.DEFAULT,
 ) : JsonApiResourceMeta
 
 typealias JsonApiCreateDocumentRequest = JsonApiRequest.SingleDocumentWithMeta<CreateDocumentRequestAttributes, CreateDocumentMeta>
