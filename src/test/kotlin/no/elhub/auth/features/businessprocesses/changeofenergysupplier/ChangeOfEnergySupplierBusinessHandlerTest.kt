@@ -449,7 +449,7 @@ class ChangeOfEnergySupplierBusinessHandlerTest :
                 .shouldBeLeft(BusinessProcessError.Unexpected(ChangeOfEnergySupplierValidationError.UnexpectedError.message))
         }
 
-        test("strompris service is not called if stromprisValidation is false, assuming all previous validations pass") {
+        test("strompris service is not called if validateBalanceSupplierContractName is false, assuming all previous validations pass") {
             val model =
                 CreateRequestModel(
                     authorizedParty = AUTHORIZED_PARTY,
@@ -472,7 +472,7 @@ class ChangeOfEnergySupplierBusinessHandlerTest :
             coVerify(exactly = 0) { stromprisService.getProductsByOrganizationNumber(any()) }
         }
 
-        test("strompris service is called if stromprisValidation is true, assuming all previous validations pass") {
+        test("strompris service is called if validateBalanceSupplierContractName is true, assuming all previous validations pass") {
             val mockStromprisService = mockk<StromprisService>()
             coEvery {
                 mockStromprisService.getProductsByOrganizationNumber(any())

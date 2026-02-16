@@ -9,7 +9,7 @@ fun Application.stromprisServiceModule() {
     koinModule {
         single { environment.config }
         single(named("validateBalanceSupplierContractName")) {
-            environment.config.propertyOrNull("dataSharing.stromprisValidationFeature")?.getString()?.toBoolean() ?: false
+            environment.config.propertyOrNull("dataSharing.validateContractNameFeature")?.getString()?.toBoolean() ?: false
         }
         single<JwtTokenProvider> {
             val stromprisServiceConfig = get<ApplicationConfig>().config("dataSharing.stromprisService")

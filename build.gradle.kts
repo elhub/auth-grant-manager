@@ -167,7 +167,7 @@ val localEnvVars = mapOf(
     "STROMPRIS_SERVICE_IDP_CLIENT_ID" to "strompris-client-id",
     "STROMPRIS_SERVICE_IDP_CLIENT_SECRET" to "strompris-client-secret",
     "STROMPRIS_SERVICE_IDP_TOKEN_URL" to "http://localhost:8085/token",
-    "STROMPRIS_VALIDATION_FEATURE" to "false"
+    "VALIDATE_CONTRACT_NAME_FEATURE" to "false"
 )
 
 tasks.named<JavaExec>("run").configure {
