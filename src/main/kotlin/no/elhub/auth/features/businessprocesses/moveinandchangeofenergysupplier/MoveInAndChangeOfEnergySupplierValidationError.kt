@@ -80,12 +80,27 @@ sealed class MoveInAndChangeOfEnergySupplierValidationError(
         MoveInAndChangeOfEnergySupplierValidationError("requested_from_not_found", "Requested from id not found")
 
     @Serializable
+    data object RequestedToRequestedFromMismatch :
+        MoveInAndChangeOfEnergySupplierValidationError("requested_to_requested_from_mismatch", "Requested to and requested from are not the same party")
+
+    @Serializable
     data object RequestedByNotFound :
         MoveInAndChangeOfEnergySupplierValidationError("requested_by_not_found", "Requested by not found")
 
     @Serializable
     data object NotActiveRequestedBy :
         MoveInAndChangeOfEnergySupplierValidationError("not_active_requested_by", "Requested by is not an active party in Elhub")
+
+    @Serializable
+    data object ContractsNotFound :
+        MoveInAndChangeOfEnergySupplierValidationError("contracts_not_found", "Contracts not found in strømpris.no for provided organization number")
+
+    @Serializable
+    data object InvalidBalanceSupplierContractName :
+        MoveInAndChangeOfEnergySupplierValidationError(
+            "invalid_balance_supplier_contract_name",
+            "Balance supplier contract name has no matches in strømpris.no"
+        )
 
     @Serializable
     data object UnexpectedError :
