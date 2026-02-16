@@ -123,6 +123,14 @@ class HandlerTest : FunSpec({
 
         response.shouldBeRight(savedDocument)
         verify(exactly = 1) { documentRepository.insert(any(), command.scopes) }
+        verify(exactly = 1) {
+            documentRepository.insert(
+                match { document ->
+                    document.properties.any { it.key == "language" && it.value == command.language.code }
+                },
+                command.scopes
+            )
+        }
     }
 
     test("returns RequestedPartyError when requestedBy cannot be resolved") {

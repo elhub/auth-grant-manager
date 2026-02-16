@@ -235,6 +235,40 @@ class AuthorizationDocumentRouteTest :
                     }
                 }
 
+                test("Should return 400 Bad Request on invalid language field in request body") {
+                    val response =
+                        client.post(DOCUMENTS_PATH) {
+                            header(HttpHeaders.Authorization, "Bearer maskinporten")
+                            header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                            contentType(ContentType.Application.Json)
+                            setBody(
+                                """
+                {
+                  "data": {
+                    "type": "AuthorizationDocument",
+                    "attributes": {
+                      "documentType": "ChangeOfEnergySupplierForPerson"
+                    },
+                    "meta": {
+                      "requestedBy": { "idType": "GlobalLocationNumber", "id": "0107000000021" },
+                      "requestedFrom": { "idType": "NationalIdentityNumber", "id": "$REQUESTED_FROM_NIN" },
+                      "requestedTo": { "idType": "NationalIdentityNumber", "id": "$REQUESTED_TO_NIN" },
+                      "requestedFromName": "Hillary Orr",
+                      "requestedForMeteringPointId": "123456789012345678",
+                      "requestedForMeteringPointAddress": "quaerendum",
+                      "balanceSupplierName": "Balance Supplier",
+                      "balanceSupplierContractName": "Selena Chandler",
+                      "language": "de"
+                    }
+                  }
+                }
+                                """.trimIndent()
+                            )
+                        }
+
+                    response.status shouldBe HttpStatusCode.BadRequest
+                }
+
                 test("Should create a document and return correct response") {
                     val response =
                         client
@@ -318,6 +352,7 @@ class AuthorizationDocumentRouteTest :
                             values["requestedForMeteringPointAddress"] shouldBe "quaerendum"
                             values["balanceSupplierName"] shouldBe "Jami Wade"
                             values["balanceSupplierContractName"] shouldBe "Selena Chandler"
+                            values["language"] shouldBe "nb"
                         }
                         links.self shouldBe "$DOCUMENTS_PATH/$id"
                         links.file shouldBe "$DOCUMENTS_PATH/$id.pdf"
@@ -434,7 +469,6 @@ class AuthorizationDocumentRouteTest :
 
                 test("Get document list should give proper size given the authorized user") {
 
-                    // When authorized party is the requestedBy number of documents returned should be 1
                     val requestedByResponse: GetDocumentCollectionResponse = client.get(DOCUMENTS_PATH) {
                         header(HttpHeaders.Authorization, "Bearer maskinporten")
                         header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
@@ -442,7 +476,6 @@ class AuthorizationDocumentRouteTest :
 
                     requestedByResponse.data.size shouldBe 1
 
-                    // When authorized party is the requestedFrom number of documents returned should be 1
                     val requestedFromResponse: GetDocumentCollectionResponse = client.get(DOCUMENTS_PATH) {
                         header(HttpHeaders.Authorization, "Bearer enduser")
                         header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
@@ -450,7 +483,6 @@ class AuthorizationDocumentRouteTest :
 
                     requestedFromResponse.data.size shouldBe 1
 
-                    // When authorized party is the requestedTo number of documents returned should be 0
                     val requestedToResponse: GetDocumentCollectionResponse = client.get(DOCUMENTS_PATH) {
                         header(HttpHeaders.Authorization, "Bearer not-authorized")
                         header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
@@ -605,6 +637,90 @@ class AuthorizationDocumentRouteTest :
             }
         }
 
+        context("Document create language handling in isolated flow") {
+            testApplication {
+                client = createClient {
+                    install(ContentNegotiation) {
+                        json()
+                    }
+                }
+                application {
+                    applicationModule()
+                    testBusinessProcessesModule()
+                    commonModule()
+                    grantsModule()
+                    module()
+                }
+
+                environment {
+                    config = MapApplicationConfig(
+                        "ktor.database.username" to "app",
+                        "ktor.database.password" to "app",
+                        "ktor.database.url" to "jdbc:postgresql://localhost:5432/auth",
+                        "ktor.database.driverClass" to "org.postgresql.Driver",
+                        "pdfGenerator.mustacheResourcePath" to "templates",
+                        "pdfGenerator.useTestPdfNotice" to "true",
+                        "pdfSigner.vault.url" to "http://localhost:8200/v1/transit",
+                        "pdfSigner.vault.tokenPath" to "src/test/resources/vault_token_mock.txt",
+                        "pdfSigner.vault.key" to "test-key",
+                        "pdfSigner.certificate.signing" to TestCertificateUtil.Constants.CERTIFICATE_LOCATION,
+                        "pdfSigner.certificate.chain" to TestCertificateUtil.Constants.CERTIFICATE_LOCATION,
+                        "pdfSigner.certificate.bankIdIdRoot" to TestCertificateUtil.Constants.BANKID_ROOT_CERTIFICATE_LOCATION,
+                        "featureToggle.enableEndpoints" to "true",
+                        "authPersons.baseUri" to AuthPersonsTestContainer.baseUri(),
+                        "pdp.baseUrl" to "http://localhost:8085"
+                    )
+                }
+
+                test("Should create document with explicit language in meta") {
+                    val response =
+                        client
+                            .post(DOCUMENTS_PATH) {
+                                contentType(ContentType.Application.Json)
+                                accept(ContentType.Application.Json)
+                                header(HttpHeaders.Authorization, "Bearer maskinporten")
+                                header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                                setBody(
+                                    JsonApiCreateDocumentRequest(
+                                        data = JsonApiRequestResourceObjectWithMeta(
+                                            type = "AuthorizationDocument",
+                                            attributes = CreateDocumentRequestAttributes(
+                                                documentType = AuthorizationDocument.Type.ChangeOfEnergySupplierForPerson
+                                            ),
+                                            meta = CreateDocumentMeta(
+                                                requestedBy = PartyIdentifier(
+                                                    idType = PartyIdentifierType.GlobalLocationNumber,
+                                                    idValue = "0107000000021"
+                                                ),
+                                                requestedFrom = PartyIdentifier(
+                                                    idType = PartyIdentifierType.NationalIdentityNumber,
+                                                    idValue = REQUESTED_FROM_NIN
+                                                ),
+                                                requestedTo = PartyIdentifier(
+                                                    idType = PartyIdentifierType.NationalIdentityNumber,
+                                                    idValue = REQUESTED_TO_NIN
+                                                ),
+                                                requestedFromName = "Hillary Orr",
+                                                requestedForMeteringPointId = "123456789012345678",
+                                                requestedForMeteringPointAddress = "quaerendum",
+                                                balanceSupplierName = "Jami Wade",
+                                                balanceSupplierContractName = "Selena Chandler",
+                                                language = SupportedLanguage.EN,
+                                            )
+                                        )
+                                    )
+                                )
+                            }
+
+                    response.status shouldBe HttpStatusCode.Created
+                    val createDocumentResponse: CreateDocumentResponse = response.body()
+                    createDocumentResponse.data.meta.shouldNotBeNull().apply {
+                        values["language"] shouldBe "en"
+                    }
+                }
+            }
+        }
+
         // TODO this should be moved to a proper place, but for that, we need to revisit the test setup
         context("Invalid User-Agent header") {
             testApplication {
@@ -682,7 +798,7 @@ private class TestDocumentBusinessHandler : DocumentBusinessHandler {
                 requestedFrom = meta.requestedFrom,
                 requestedTo = meta.requestedTo,
                 requestedBy = meta.requestedBy,
-                language = SupportedLanguage.DEFAULT,
+                language = meta.language,
                 validTo = defaultValidTo().toTimeZoneOffsetDateTimeAtStartOfDay(),
                 scopes = listOf(
                     CreateScopeData(
