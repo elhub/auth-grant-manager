@@ -24,7 +24,7 @@ fun Application.stromprisServiceModule() {
             )
         }
         single {
-            val stromprisServiceConfig = get<ApplicationConfig>().config("businessProcesses.dataSharing.stromprisService")
+            val stromprisServiceConfig = get<ApplicationConfig>().config("dataSharing.stromprisService")
             StromprisApiConfig(
                 serviceUrl = stromprisServiceConfig.property("serviceUrl").getString(),
             )
