@@ -24,8 +24,8 @@ data class GetRequestSingleResponseAttributes(
     val status: String,
     val requestType: String,
     val validTo: String,
-    val updatedAt: String,
-    val createdAt: String,
+    val updatedAt: String?,
+    val createdAt: String?,
 ) : JsonApiAttributes
 
 @Serializable
@@ -65,8 +65,8 @@ fun AuthorizationRequest.toGetSingleResponse() =
                 status = this.status.name,
                 requestType = this.type.name,
                 validTo = this.validTo.toString(),
-                updatedAt = this.updatedAt.toTimeZoneOffsetString(),
-                createdAt = this.createdAt.toTimeZoneOffsetString(),
+                updatedAt = this.updatedAt?.toTimeZoneOffsetString(),
+                createdAt = this.createdAt?.toTimeZoneOffsetString(),
 
             ),
             relationships = GetRequestSingleResponseRelationships(
@@ -101,7 +101,7 @@ fun AuthorizationRequest.toGetSingleResponse() =
         links = JsonApiLinks.ResourceObjectLink("${REQUESTS_PATH}/${this.id}"),
         meta = JsonApiMeta(
             buildJsonObject {
-                put("createdAt", this@toGetSingleResponse.createdAt.toTimeZoneOffsetString())
+                put("createdAt", this@toGetSingleResponse.createdAt?.toTimeZoneOffsetString())
             }
         )
     )

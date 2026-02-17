@@ -24,8 +24,8 @@ data class GetDocumentSingleResponseAttributes(
     val status: String,
     val documentType: String,
     val validTo: String,
-    val createdAt: String,
-    val updatedAt: String
+    val createdAt: String?,
+    val updatedAt: String?
 ) : JsonApiAttributes
 
 @Serializable
@@ -65,8 +65,8 @@ fun AuthorizationDocument.toGetSingleResponse() =
                 status = this.status.name,
                 documentType = this.type.name,
                 validTo = this.validTo.toTimeZoneOffsetString(),
-                createdAt = this.createdAt.toTimeZoneOffsetString(),
-                updatedAt = this.createdAt.toTimeZoneOffsetString(),
+                createdAt = this.createdAt?.toTimeZoneOffsetString(),
+                updatedAt = this.updatedAt?.toTimeZoneOffsetString(),
             ),
             relationships = GetDocumentSingleResponseRelationship(
                 requestedBy = this.requestedBy.toJsonApiRelationship(),
@@ -107,7 +107,7 @@ fun AuthorizationDocument.toGetSingleResponse() =
         links = JsonApiLinks.ResourceObjectLink(DOCUMENTS_PATH),
         meta = JsonApiMeta(
             buildJsonObject {
-                put("createdAt", this@toGetSingleResponse.createdAt.toTimeZoneOffsetString())
+                put("createdAt", this@toGetSingleResponse.createdAt?.toTimeZoneOffsetString())
             }
         )
     )

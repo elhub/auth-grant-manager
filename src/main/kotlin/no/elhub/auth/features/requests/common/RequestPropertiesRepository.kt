@@ -8,6 +8,7 @@ import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.java.javaUUID
+import org.jetbrains.exposed.v1.javatime.CurrentTimestampWithTimeZone
 import org.jetbrains.exposed.v1.javatime.timestampWithTimeZone
 import org.jetbrains.exposed.v1.jdbc.batchInsert
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -44,7 +45,7 @@ object AuthorizationRequestPropertyTable : Table("auth.authorization_request_pro
     val requestId = javaUUID("authorization_request_id").references(AuthorizationRequestTable.id)
     val key = varchar("key", 64)
     val value = text("value")
-    val createdAt = timestampWithTimeZone("created_at").default(OffsetDateTime.now(ZoneId.of("Europe/Oslo")))
+    val createdAt = timestampWithTimeZone("created_at").defaultExpression(CurrentTimestampWithTimeZone)
 }
 
 private fun ResultRow.toAuthorizationRequestProperty() = AuthorizationRequestProperty(

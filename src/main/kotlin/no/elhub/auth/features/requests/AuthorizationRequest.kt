@@ -1,6 +1,5 @@
 package no.elhub.auth.features.requests
 
-import no.elhub.auth.features.common.currentTimeWithTimeZone
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.requests.common.AuthorizationRequestProperty
 import java.time.OffsetDateTime
@@ -15,8 +14,8 @@ data class AuthorizationRequest(
     val requestedTo: AuthorizationParty,
     val approvedBy: AuthorizationParty? = null,
     var grantId: UUID? = null,
-    val createdAt: OffsetDateTime,
-    val updatedAt: OffsetDateTime,
+    val createdAt: OffsetDateTime? = null,
+    val updatedAt: OffsetDateTime? = null,
     val validTo: OffsetDateTime,
     val properties: List<AuthorizationRequestProperty>,
 ) {
@@ -35,8 +34,6 @@ data class AuthorizationRequest(
                 requestedBy = requestedBy,
                 requestedFrom = requestedFrom,
                 requestedTo = requestedTo,
-                createdAt = currentTimeWithTimeZone(),
-                updatedAt = currentTimeWithTimeZone(),
                 validTo = validTo,
                 properties = emptyList(),
             )

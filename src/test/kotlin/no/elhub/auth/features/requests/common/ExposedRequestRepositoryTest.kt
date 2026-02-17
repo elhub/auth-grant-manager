@@ -3,6 +3,8 @@ package no.elhub.auth.features.requests.common
 import arrow.core.getOrElse
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.collections.shouldBeSortedDescending
+import io.kotest.matchers.collections.shouldBeSortedDescendingBy
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
 import no.elhub.auth.features.common.CreateScopeData
@@ -122,7 +124,7 @@ class ExposedRequestRepositoryTest : FunSpec({
 
             val createdAtList = result.map { it.createdAt }
 
-            createdAtList shouldBe createdAtList.sortedDescending()
+            createdAtList.requireNoNulls().shouldBeSortedDescending()
         }
     }
 

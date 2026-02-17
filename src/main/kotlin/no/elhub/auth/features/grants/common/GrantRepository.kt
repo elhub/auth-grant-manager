@@ -23,6 +23,7 @@ import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.core.or
+import org.jetbrains.exposed.v1.javatime.CurrentTimestampWithTimeZone
 import org.jetbrains.exposed.v1.javatime.timestamp
 import org.jetbrains.exposed.v1.javatime.timestampWithTimeZone
 import org.jetbrains.exposed.v1.jdbc.batchInsert
@@ -250,7 +251,7 @@ class ExposedGrantRepository(
             where = { AuthorizationGrantTable.id eq grantId }
         ) {
             it[grantStatus] = newStatus
-            // TODO consider add a updatedAt field
+            it[updatedAt] = AuthorizationGrantTable.updatedAt
         }
 
         if (rowsUpdated == 0) {
@@ -311,7 +312,7 @@ object AuthorizationGrantScopeTable : Table("auth.authorization_grant_scope") {
         .references(AuthorizationGrantTable.id, onDelete = ReferenceOption.CASCADE)
     val authorizationScopeId = javaUUID("authorization_scope_id")
         .references(AuthorizationScopeTable.id, onDelete = ReferenceOption.CASCADE)
-    val createdAt = timestamp("created_at").clientDefault { java.time.Instant.now() }
+    val createdAt = timestampWithTimeZone("created_at").defaultExpression(CurrentTimestampWithTimeZone)
     override val primaryKey = PrimaryKey(authorizationGrantId, authorizationScopeId)
 }
 
@@ -326,9 +327,11 @@ object AuthorizationGrantTable : UUIDTable("auth.authorization_grant") {
     val grantedFor = javaUUID("granted_for").references(AuthorizationPartyTable.id)
     val grantedBy = javaUUID("granted_by").references(AuthorizationPartyTable.id)
     val grantedTo = javaUUID("granted_to").references(AuthorizationPartyTable.id)
-    val grantedAt = timestampWithTimeZone("granted_at").default(OffsetDateTime.now(ZoneId.of("Europe/Oslo")))
-    val validFrom = timestampWithTimeZone("valid_from").default(OffsetDateTime.now(ZoneId.of("Europe/Oslo")))
-    val validTo = timestampWithTimeZone("valid_to").default(OffsetDateTime.now(ZoneId.of("Europe/Oslo")))
+    val grantedAt = timestampWithTimeZone("granted_at").defaultExpression(CurrentTimestampWithTimeZone)
+    val validFrom = timestampWithTimeZone("valid_from").defaultExpression(CurrentTimestampWithTimeZone)
+    val validTo = timestampWithTimeZone("valid_to").defaultExpression(CurrentTimestampWithTimeZone)
+    val createdAt = timestampWithTimeZone("created_at").defaultExpression(CurrentTimestampWithTimeZone)
+    val updatedAt = timestampWithTimeZone("updated_at").defaultExpression(CurrentTimestampWithTimeZone)
     val sourceType =
         customEnumeration(
             name = "source_type",
@@ -353,7 +356,7 @@ object AuthorizationScopeTable : UUIDTable(name = "auth.authorization_scope") {
         fromDb = { AuthorizationScope.PermissionType.valueOf(it as String) },
         toDb = { PGEnum("authorization_permission_type", it) }
     )
-    val createdAt = timestampWithTimeZone("created_at").default(OffsetDateTime.now(ZoneId.of("Europe/Oslo")))
+    val createdAt = timestampWithTimeZone("created_at").defaultExpression(CurrentTimestampWithTimeZone)
 }
 
 fun ResultRow.toAuthorizationGrant(
@@ -372,6 +375,8 @@ fun ResultRow.toAuthorizationGrant(
     validTo = this[AuthorizationGrantTable.validTo],
     sourceType = this[AuthorizationGrantTable.sourceType],
     sourceId = this[AuthorizationGrantTable.sourceId],
+    createdAt = this[AuthorizationGrantTable.createdAt],
+    updatedAt = this[AuthorizationGrantTable.updatedAt],
     scopeIds = scopeIds
 )
 

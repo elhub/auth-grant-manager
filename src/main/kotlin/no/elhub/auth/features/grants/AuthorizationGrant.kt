@@ -17,6 +17,8 @@ data class AuthorizationGrant(
     val sourceType: SourceType,
     val sourceId: UUID,
     val scopeIds: List<UUID>,
+    val createdAt: OffsetDateTime? = null,
+    val updatedAt: OffsetDateTime? = null
 ) {
     companion object {
         fun create(

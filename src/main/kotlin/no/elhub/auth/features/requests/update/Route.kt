@@ -55,6 +55,8 @@ fun Route.route(
             return@patch
         }
 
+        println("juletre: ${updated.createdAt}")
+
         call.respond(HttpStatusCode.OK, updated.toUpdateResponse())
     }
 }

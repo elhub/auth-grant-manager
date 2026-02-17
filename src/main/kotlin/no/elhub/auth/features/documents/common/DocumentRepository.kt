@@ -27,6 +27,7 @@ import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.core.or
+import org.jetbrains.exposed.v1.javatime.CurrentTimestampWithTimeZone
 import org.jetbrains.exposed.v1.javatime.timestamp
 import org.jetbrains.exposed.v1.javatime.timestampWithTimeZone
 import org.jetbrains.exposed.v1.jdbc.batchInsert
@@ -89,8 +90,6 @@ class ExposedDocumentRepository(
                 it[requestedFrom] = requestedFromParty.id
                 it[requestedTo] = requestedToParty.id
                 it[validTo] = doc.validTo
-                it[createdAt] = doc.createdAt
-                it[updatedAt] = doc.updatedAt
             }.single()
 
             documentPropertiesRepository.insert(doc.properties, doc.id)
@@ -176,7 +175,7 @@ class ExposedDocumentRepository(
                             where = { AuthorizationDocumentTable.id eq documentId }
                         ) {
                             it[file] = signedFile
-                            it[updatedAt] = OffsetDateTime.now(ZoneId.of("Europe/Oslo"))
+                            it[updatedAt] = AuthorizationDocumentTable.updatedAt
                         }
                     }.mapLeft {
                         RepositoryWriteError.UnexpectedError
@@ -295,8 +294,8 @@ object AuthorizationDocumentTable : UUIDTable("auth.authorization_document") {
     val requestedFrom = javaUUID("requested_from").references(AuthorizationPartyTable.id)
     val requestedTo = javaUUID("requested_to").references(AuthorizationPartyTable.id)
     val validTo = timestampWithTimeZone("valid_to")
-    val createdAt = timestampWithTimeZone("created_at").default(OffsetDateTime.now(ZoneId.of("Europe/Oslo")))
-    val updatedAt = timestampWithTimeZone("updated_at").default(OffsetDateTime.now(ZoneId.of("Europe/Oslo")))
+    val createdAt = timestampWithTimeZone("created_at").defaultExpression(CurrentTimestampWithTimeZone)
+    val updatedAt = timestampWithTimeZone("updated_at").defaultExpression(CurrentTimestampWithTimeZone)
 }
 
 object AuthorizationDocumentScopeTable : Table("auth.authorization_document_scope") {
@@ -304,7 +303,7 @@ object AuthorizationDocumentScopeTable : Table("auth.authorization_document_scop
         .references(AuthorizationDocumentTable.id, onDelete = ReferenceOption.CASCADE)
     val authorizationScopeId = javaUUID("authorization_scope_id")
         .references(AuthorizationScopeTable.id, onDelete = ReferenceOption.CASCADE)
-    val createdAt = timestamp("created_at").clientDefault { java.time.Instant.now() }
+    val createdAt = timestampWithTimeZone("created_at").defaultExpression(CurrentTimestampWithTimeZone)
     override val primaryKey = PrimaryKey(authorizationDocumentId, authorizationScopeId)
 }
 
