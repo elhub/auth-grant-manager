@@ -6,10 +6,11 @@ object TestCertificateUtil {
 
     object Constants {
         private const val LOCATION = "build/tmp/test-certs"
-        const val CERTIFICATE_LOCATION = "$LOCATION/self-signed-cert.pem"
-        const val PRIVATE_KEY_LOCATION = "$LOCATION/self-signed-key.pem"
-        const val BANKID_ROOT_CERTIFICATE_LOCATION = "$LOCATION/bankid-root-cert.pem"
-        const val BANKID_ROOT_PRIVATE_KEY_LOCATION = "$LOCATION/bankid-root-key.pem"
+        const val CERTIFICATE_LOCATION = "$LOCATION/elhub/self-signed-cert.pem"
+        const val PRIVATE_KEY_LOCATION = "$LOCATION/elhub/self-signed-key.pem"
+        const val BANKID_ROOT_CERTIFICATE_LOCATION = "$LOCATION/bankid/certs/bankid-root-cert.pem"
+        const val BANKID_ROOT_PRIVATE_KEY_LOCATION = "$LOCATION/bankid/keys/bankid-root-key.pem"
+        const val BANKID_ROOT_CERTIFICATES_DIR = "$LOCATION/bankid/certs"
     }
 
     init {
@@ -17,6 +18,7 @@ object TestCertificateUtil {
         val keyFile = File(Constants.PRIVATE_KEY_LOCATION)
         val bankIdCertFile = File(Constants.BANKID_ROOT_CERTIFICATE_LOCATION)
         val bankIdKeyFile = File(Constants.BANKID_ROOT_PRIVATE_KEY_LOCATION)
+        val bankIdCertsDir = File(Constants.BANKID_ROOT_CERTIFICATES_DIR)
 
         require(certFile.exists()) {
             "Certificate file is missing: ${certFile.absolutePath}, run generateTestCerts task to create it."
@@ -32,6 +34,10 @@ object TestCertificateUtil {
 
         require(bankIdKeyFile.exists()) {
             "BankID root private key file is missing: ${bankIdKeyFile.absolutePath}, run generateTestCerts task to create it."
+        }
+
+        require(bankIdCertsDir.isDirectory) {
+            "BankID root certificates directory is missing: ${bankIdCertsDir.absolutePath}, run generateTestCerts task to create it."
         }
     }
 }

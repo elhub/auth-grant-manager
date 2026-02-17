@@ -64,7 +64,8 @@ class PdfSignatureService(
 
     private val trustedSource = CommonTrustedCertificateSource().apply {
         addCertificate(CertificateToken(certificateProvider.getElhubSigningCertificate()))
-        addCertificate(CertificateToken(certificateProvider.getBankIdRootCertificate()))
+        certificateProvider.getBankIdRootCertificates()
+            .forEach { addCertificate(CertificateToken(it)) }
     }
 
     private val verifier = CommonCertificateVerifier(true).apply {
@@ -139,7 +140,7 @@ class PdfSignatureService(
         val bankIdSignature = ensureNotNull(
             signatures.firstOrNull { signature ->
                 val rootCert = signature.certificateChain.lastOrNull()
-                hasIssuerAndSerial(rootCert, certificateProvider.getBankIdRootCertificate())
+                hasIssuerAndSerialAny(rootCert, certificateProvider.getBankIdRootCertificates())
             }
         ) {
             SignatureValidationError.MissingBankIdSignature
@@ -240,6 +241,9 @@ class PdfSignatureService(
         return expected.issuerX500Principal.name == cert.certificateIssuerDN &&
             expected.serialNumber.toString() == cert.serialNumber
     }
+
+    private fun hasIssuerAndSerialAny(cert: CertificateWrapper?, expected: List<X509Certificate>): Boolean =
+        expected.any { hasIssuerAndSerial(cert, it) }
 
     private fun digestOverByteRange(
         pdf: ByteArray,

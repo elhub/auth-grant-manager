@@ -32,10 +32,12 @@ import java.time.temporal.ChronoUnit
 import java.util.Date
 
 class TestCertificateFactory(
-    private val defaultValidity: Duration = Duration.ofMinutes(30)
+    private val defaultValidity: Duration = Duration.ofMinutes(30),
+    private val bankIdRootCertificatePath: String? = null,
+    private val bankIdRootPrivateKeyPath: String? = null
 ) {
-    val trustedBankIdRootCertificate: X509Certificate = readRootCertificate()
-    val trustedBankIdRootKeyPair: KeyPair = readRootKeyPair(trustedBankIdRootCertificate)
+    val trustedBankIdRootCertificate: X509Certificate = readRootCertificate(bankIdRootCertificatePath)
+    val trustedBankIdRootKeyPair: KeyPair = readRootKeyPair(trustedBankIdRootCertificate, bankIdRootPrivateKeyPath)
 
     data class FakeElhubCerts(
         val signingKey: KeyPair,
@@ -229,11 +231,11 @@ class TestCertificateFactory(
         return JcaX509CertificateConverter().setProvider("BC").getCertificate(builder.build(signer))
     }
 
-    private fun readRootCertificate(): X509Certificate =
-        readSingleCert(TestCertificateUtil.Constants.BANKID_ROOT_CERTIFICATE_LOCATION)
+    private fun readRootCertificate(pathOverride: String?): X509Certificate =
+        readSingleCert(pathOverride ?: TestCertificateUtil.Constants.BANKID_ROOT_CERTIFICATE_LOCATION)
 
-    private fun readRootKeyPair(rootCert: X509Certificate): KeyPair {
-        val privateKey = readPrivateKey(TestCertificateUtil.Constants.BANKID_ROOT_PRIVATE_KEY_LOCATION)
+    private fun readRootKeyPair(rootCert: X509Certificate, pathOverride: String?): KeyPair {
+        val privateKey = readPrivateKey(pathOverride ?: TestCertificateUtil.Constants.BANKID_ROOT_PRIVATE_KEY_LOCATION)
         return KeyPair(rootCert.publicKey, privateKey)
     }
 
