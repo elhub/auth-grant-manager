@@ -24,7 +24,9 @@ data class GrantResponseAttributes(
     val status: String,
     val grantedAt: String,
     val validFrom: String,
-    val validTo: String
+    val validTo: String,
+    val createdAt: String,
+    val updatedAt: String,
 ) : JsonApiAttributes
 
 @Serializable
@@ -55,7 +57,9 @@ fun AuthorizationGrant.toSingleGrantResponse() =
                 status = this.grantStatus.name,
                 grantedAt = this.grantedAt.toTimeZoneOffsetString(),
                 validFrom = this.validFrom.toTimeZoneOffsetString(),
-                validTo = this.validTo.toTimeZoneOffsetString()
+                validTo = this.validTo.toTimeZoneOffsetString(),
+                createdAt = this.createdAt.toTimeZoneOffsetString(),
+                updatedAt = this.updatedAt.toTimeZoneOffsetString(),
             ),
             relationships = GrantResponseRelationShips(
                 grantedFor = JsonApiRelationshipToOne(
@@ -120,7 +124,9 @@ fun List<AuthorizationGrant>.toCollectionGrantResponse() =
                     status = grant.grantStatus.name,
                     grantedAt = grant.grantedAt.toTimeZoneOffsetString(),
                     validFrom = grant.validFrom.toTimeZoneOffsetString(),
-                    validTo = grant.validTo.toTimeZoneOffsetString()
+                    validTo = grant.validTo.toTimeZoneOffsetString(),
+                    createdAt = grant.createdAt.toTimeZoneOffsetString(),
+                    updatedAt = grant.updatedAt.toTimeZoneOffsetString(),
                 ),
                 relationships = GrantResponseRelationShips(
                     grantedFor = JsonApiRelationshipToOne(

@@ -4,15 +4,19 @@ import arrow.core.Either
 import no.elhub.auth.features.common.PGEnum
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.RepositoryWriteError
+import no.elhub.auth.features.common.currentTimeWithTimeZone
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.javatime.timestamp
+import org.jetbrains.exposed.v1.javatime.timestampWithTimeZone
+import org.jetbrains.exposed.v1.javatime.timestampWithTimeZoneParam
 import org.jetbrains.exposed.v1.jdbc.insertIgnore
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.slf4j.LoggerFactory
 import java.time.Instant
+import java.time.OffsetDateTime
 import java.util.UUID
 
 interface PartyRepository {
@@ -83,7 +87,7 @@ object AuthorizationPartyTable : UUIDTable("auth.authorization_party") {
     )
 
     val partyId = varchar("party_id", 255)
-    val createdAt = timestamp("created_at").clientDefault { Instant.now() }
+    val createdAt = timestampWithTimeZone("created_at").default(currentTimeWithTimeZone())
 
     init {
         index(isUnique = true, columns = arrayOf(type, partyId))
@@ -94,7 +98,7 @@ data class AuthorizationPartyRecord(
     val id: UUID,
     val type: PartyType,
     val resourceId: String,
-    val createdAt: Instant,
+    val createdAt: OffsetDateTime,
 )
 
 fun ResultRow.toAuthorizationParty() = AuthorizationPartyRecord(

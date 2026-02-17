@@ -38,8 +38,6 @@ object AuthorizationDocumentPropertyTable : Table("auth.authorization_document_p
         .references(AuthorizationDocumentTable.id, onDelete = ReferenceOption.CASCADE)
     val key = varchar("key", length = 64)
     val value = text("value")
-    val createdAt = timestamp("created_at").clientDefault { Instant.now() }
-
     override val primaryKey = PrimaryKey(documentId, key)
 }
 

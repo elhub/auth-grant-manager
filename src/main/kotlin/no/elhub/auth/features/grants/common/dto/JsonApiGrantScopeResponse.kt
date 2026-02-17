@@ -18,7 +18,8 @@ import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObjectWithRelation
 
 @Serializable
 data class ScopeResponseAttributes(
-    val permissionType: AuthorizationScope.PermissionType
+    val permissionType: AuthorizationScope.PermissionType,
+    val createdAt: String
 ) : JsonApiAttributes
 
 @Serializable
@@ -38,7 +39,8 @@ fun List<AuthorizationScope>.toResponse(grantId: String) =
                 id = authorizationScope.id.toString(),
                 type = (AuthorizationScope::class).simpleName ?: "AuthorizationScope",
                 attributes = ScopeResponseAttributes(
-                    permissionType = authorizationScope.permissionType
+                    permissionType = authorizationScope.permissionType,
+                    createdAt = authorizationScope.createdAt.toTimeZoneOffsetString()
                 ),
                 relationships = ScopeResponseRelationships(
                     authorizedResources = JsonApiRelationshipToMany(

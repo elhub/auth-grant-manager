@@ -7,6 +7,7 @@ import no.elhub.auth.features.common.PGEnum
 import no.elhub.auth.features.common.RepositoryError
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.RepositoryWriteError
+import no.elhub.auth.features.common.currentTimeWithTimeZone
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.AuthorizationPartyRecord
 import no.elhub.auth.features.common.party.AuthorizationPartyTable
@@ -23,15 +24,12 @@ import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.core.or
-import org.jetbrains.exposed.v1.javatime.timestamp
 import org.jetbrains.exposed.v1.javatime.timestampWithTimeZone
 import org.jetbrains.exposed.v1.jdbc.batchInsert
 import org.jetbrains.exposed.v1.jdbc.insertReturning
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.update
 import org.slf4j.LoggerFactory
-import java.time.OffsetDateTime
-import java.time.ZoneId
 import java.util.UUID
 import kotlin.collections.listOf
 
@@ -224,6 +222,8 @@ class ExposedGrantRepository(
                         it[grantedAt] = grant.grantedAt
                         it[validFrom] = grant.validFrom
                         it[validTo] = grant.validTo
+                        it[createdAt] = grant.createdAt
+                        it[updatedAt] = grant.updatedAt
                         it[sourceType] = grant.sourceType
                         it[sourceId] = grant.sourceId
                     }.map {
@@ -250,7 +250,7 @@ class ExposedGrantRepository(
             where = { AuthorizationGrantTable.id eq grantId }
         ) {
             it[grantStatus] = newStatus
-            // TODO consider add a updatedAt field
+            it[updatedAt] = currentTimeWithTimeZone()
         }
 
         if (rowsUpdated == 0) {
@@ -311,7 +311,7 @@ object AuthorizationGrantScopeTable : Table("auth.authorization_grant_scope") {
         .references(AuthorizationGrantTable.id, onDelete = ReferenceOption.CASCADE)
     val authorizationScopeId = javaUUID("authorization_scope_id")
         .references(AuthorizationScopeTable.id, onDelete = ReferenceOption.CASCADE)
-    val createdAt = timestamp("created_at").clientDefault { java.time.Instant.now() }
+    val createdAt = timestampWithTimeZone("created_at").default(currentTimeWithTimeZone())
     override val primaryKey = PrimaryKey(authorizationGrantId, authorizationScopeId)
 }
 
@@ -326,9 +326,11 @@ object AuthorizationGrantTable : UUIDTable("auth.authorization_grant") {
     val grantedFor = javaUUID("granted_for").references(AuthorizationPartyTable.id)
     val grantedBy = javaUUID("granted_by").references(AuthorizationPartyTable.id)
     val grantedTo = javaUUID("granted_to").references(AuthorizationPartyTable.id)
-    val grantedAt = timestampWithTimeZone("granted_at").default(OffsetDateTime.now(ZoneId.of("Europe/Oslo")))
-    val validFrom = timestampWithTimeZone("valid_from").default(OffsetDateTime.now(ZoneId.of("Europe/Oslo")))
-    val validTo = timestampWithTimeZone("valid_to").default(OffsetDateTime.now(ZoneId.of("Europe/Oslo")))
+    val grantedAt = timestampWithTimeZone("granted_at")
+    val validFrom = timestampWithTimeZone("valid_from")
+    val createdAt = timestampWithTimeZone("created_at")
+    val updatedAt = timestampWithTimeZone("updated_at")
+    val validTo = timestampWithTimeZone("valid_to")
     val sourceType =
         customEnumeration(
             name = "source_type",
@@ -353,7 +355,7 @@ object AuthorizationScopeTable : UUIDTable(name = "auth.authorization_scope") {
         fromDb = { AuthorizationScope.PermissionType.valueOf(it as String) },
         toDb = { PGEnum("authorization_permission_type", it) }
     )
-    val createdAt = timestampWithTimeZone("created_at").default(OffsetDateTime.now(ZoneId.of("Europe/Oslo")))
+    val createdAt = timestampWithTimeZone("created_at").default(currentTimeWithTimeZone())
 }
 
 fun ResultRow.toAuthorizationGrant(
@@ -369,6 +371,8 @@ fun ResultRow.toAuthorizationGrant(
     grantedTo = grantedTo.toAuthorizationParty(),
     grantedAt = this[AuthorizationGrantTable.grantedAt],
     validFrom = this[AuthorizationGrantTable.validFrom],
+    createdAt = this[AuthorizationGrantTable.createdAt],
+    updatedAt = this[AuthorizationGrantTable.updatedAt],
     validTo = this[AuthorizationGrantTable.validTo],
     sourceType = this[AuthorizationGrantTable.sourceType],
     sourceId = this[AuthorizationGrantTable.sourceId],

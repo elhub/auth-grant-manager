@@ -84,6 +84,8 @@ class AuthorizationGrantRouteTest : FunSpec({
                         grantedAt shouldBe "2025-04-04T04:00:00+02:00"
                         validFrom shouldBe "2025-04-04T04:00:00+02:00"
                         validTo shouldBe "2026-04-04T04:00:00+02:00"
+                        createdAt shouldBe "2025-04-04T04:00:00+02:00"
+                        updatedAt shouldBe "2025-04-04T04:00:00+02:00"
                     }
                     relationships.apply {
                         grantedFor.apply {
@@ -201,6 +203,8 @@ class AuthorizationGrantRouteTest : FunSpec({
                         grantedAt shouldBe "2025-04-04T04:00:00+02:00"
                         validFrom shouldBe "2025-04-04T04:00:00+02:00"
                         validTo shouldBe "2026-04-04T04:00:00+02:00"
+                        createdAt shouldBe "2025-04-04T04:00:00+02:00"
+                        updatedAt shouldBe "2025-04-04T04:00:00+02:00"
                     }
                     relationships.apply {
                         grantedFor.apply {
@@ -516,6 +520,8 @@ class AuthorizationGrantRouteTest : FunSpec({
                             grantedAt shouldBe "2025-04-04T04:00:00+02:00"
                             validFrom shouldBe "2025-04-04T04:00:00+02:00"
                             validTo shouldBe "2026-04-04T04:00:00+02:00"
+                            createdAt shouldBe "2025-04-04T04:00:00+02:00"
+                            updatedAt shouldBe "2025-04-04T04:00:00+02:00"
                         }
                         relationships.apply {
                             grantedFor.apply {
@@ -565,6 +571,8 @@ class AuthorizationGrantRouteTest : FunSpec({
                             grantedAt shouldBe "2025-01-04T03:00:00+01:00"
                             validFrom shouldBe "2025-02-03T17:07:00+01:00"
                             validTo shouldBe "2025-05-16T04:00:00+02:00"
+                            createdAt shouldBe "2025-01-04T03:00:00+01:00"
+                            updatedAt shouldBe "2025-01-04T03:00:00+01:00"
                         }
                         relationships.apply {
                             grantedFor.apply {
