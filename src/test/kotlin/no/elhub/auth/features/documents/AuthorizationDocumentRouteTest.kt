@@ -667,6 +667,7 @@ class AuthorizationDocumentRouteTest :
                         "pdfSigner.certificate.signing" to TestCertificateUtil.Constants.CERTIFICATE_LOCATION,
                         "pdfSigner.certificate.chain" to TestCertificateUtil.Constants.CERTIFICATE_LOCATION,
                         "pdfSigner.certificate.bankIdIdRoot" to TestCertificateUtil.Constants.BANKID_ROOT_CERTIFICATE_LOCATION,
+                        "pdfSigner.certificate.bankIdRootDir" to TestCertificateUtil.Constants.BANKID_ROOT_CERTIFICATES_DIR,
                         "featureToggle.enableEndpoints" to "true",
                         "authPersons.baseUri" to AuthPersonsTestContainer.baseUri(),
                         "pdp.baseUrl" to "http://localhost:8085"
