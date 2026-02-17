@@ -73,8 +73,8 @@ class MoveInAndChangeOfEnergySupplierBusinessHandler(
 
     override suspend fun validateAndReturnDocumentCommand(model: CreateDocumentModel): Either<BusinessProcessError, DocumentCommand> =
         either {
-            val model = model.toMoveInAndChangeOfEnergySupplierBusinessModel()
-            validate(model).mapLeft { it.toBusinessError() }.bind().toDocumentCommand()
+            val businessModel = model.toMoveInAndChangeOfEnergySupplierBusinessModel()
+            validate(businessModel).mapLeft { it.toBusinessError() }.bind().toDocumentCommand()
         }
 
     override fun getCreateGrantProperties(document: AuthorizationDocument): CreateGrantProperties =
@@ -198,6 +198,7 @@ class MoveInAndChangeOfEnergySupplierBusinessHandler(
 
         val meta =
             MoveInAndChangeOfEnergySupplierBusinessMeta(
+                language = model.language,
                 requestedFromName = model.requestedFromName,
                 requestedForMeteringPointId = model.requestedForMeteringPointId,
                 requestedForMeteringPointAddress = model.requestedForMeteringPointAddress,

@@ -31,6 +31,7 @@ import no.elhub.auth.features.documents.create.command.DocumentCommand
 import no.elhub.auth.features.documents.create.command.DocumentMetaMarker
 import no.elhub.auth.features.documents.create.dto.CreateDocumentMeta
 import no.elhub.auth.features.documents.create.model.CreateDocumentModel
+import no.elhub.auth.features.filegenerator.SupportedLanguage
 import no.elhub.auth.features.grants.AuthorizationScope
 
 class HandlerTest : FunSpec({
@@ -63,7 +64,7 @@ class HandlerTest : FunSpec({
         )
 
     val commandMeta = object : DocumentMetaMarker {
-        override fun toMetaAttributes(): Map<String, String> = mapOf("k" to "v")
+        override fun toMetaAttributes(): Map<String, String> = mapOf("k" to "v", "language" to SupportedLanguage.DEFAULT.code)
     }
 
     val command =
@@ -121,6 +122,14 @@ class HandlerTest : FunSpec({
 
         response.shouldBeRight(savedDocument)
         verify(exactly = 1) { documentRepository.insert(any(), command.scopes) }
+        verify(exactly = 1) {
+            documentRepository.insert(
+                match { document ->
+                    document.properties.any { it.key == "language" && it.value == SupportedLanguage.DEFAULT.code }
+                },
+                command.scopes
+            )
+        }
     }
 
     test("returns RequestedPartyError when requestedBy cannot be resolved") {

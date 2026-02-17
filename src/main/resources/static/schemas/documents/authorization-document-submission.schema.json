@@ -50,6 +50,9 @@
             },
             "startDate": {
               "$ref": "../authorization-common.schema.json#/$defs/startDate"
+            },
+            "language": {
+              "$ref": "../authorization-common.schema.json#/$defs/language"
             }
           }
         }

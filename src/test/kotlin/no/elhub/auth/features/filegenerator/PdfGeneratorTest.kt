@@ -15,6 +15,7 @@ import org.apache.pdfbox.text.PDFTextStripper
 class PdfGeneratorTest :
     FunSpec({
         val cosMeta = ChangeOfEnergySupplierBusinessMeta(
+            language = SupportedLanguage.DEFAULT,
             balanceSupplierName = "Balance Supplier",
             balanceSupplierContractName = "Contract Name",
             requestedForMeteringPointId = "Meter123",
@@ -22,6 +23,7 @@ class PdfGeneratorTest :
             requestedFromName = "Requester"
         )
         val moveInMeta = MoveInAndChangeOfEnergySupplierBusinessMeta(
+            language = SupportedLanguage.DEFAULT,
             requestedFromName = "Alberto Balsalm",
             requestedForMeteringPointId = "Meter123",
             requestedForMeteringPointAddress = "Address 1",
@@ -40,7 +42,7 @@ class PdfGeneratorTest :
 
             val result = pdfGenerator.generate(
                 signerNin = "123",
-                documentMeta = cosMeta
+                documentMeta = cosMeta,
             )
             result.shouldBeRight()
 
@@ -66,7 +68,7 @@ class PdfGeneratorTest :
 
             val result = pdfGenerator.generate(
                 signerNin = "123",
-                documentMeta = cosMeta
+                documentMeta = cosMeta,
             )
             result.shouldBeRight()
 
@@ -92,7 +94,7 @@ class PdfGeneratorTest :
 
             val result = pdfGenerator.generate(
                 signerNin = "123",
-                documentMeta = moveInMeta
+                documentMeta = moveInMeta,
             )
 
             result.shouldBeRight()
@@ -118,7 +120,7 @@ class PdfGeneratorTest :
 
             val result = pdfGenerator.generate(
                 signerNin = "123",
-                documentMeta = moveInMeta
+                documentMeta = moveInMeta,
             )
 
             result.shouldBeRight()

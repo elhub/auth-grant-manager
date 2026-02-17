@@ -68,8 +68,8 @@ class ChangeOfEnergySupplierBusinessHandler(
 
     override suspend fun validateAndReturnDocumentCommand(model: CreateDocumentModel): Either<BusinessProcessError, DocumentCommand> =
         either {
-            val model = model.toChangeOfEnergySupplierBusinessModel()
-            validate(model)
+            val businessModel = model.toChangeOfEnergySupplierBusinessModel()
+            validate(businessModel)
                 .mapLeft { it.toBusinessError() }
                 .bind()
                 .toDocumentCommand()
@@ -205,6 +205,7 @@ class ChangeOfEnergySupplierBusinessHandler(
 
         val meta =
             ChangeOfEnergySupplierBusinessMeta(
+                language = model.language,
                 requestedFromName = model.requestedFromName,
                 requestedForMeteringPointId = model.requestedForMeteringPointId,
                 requestedForMeteringPointAddress = model.requestedForMeteringPointAddress,

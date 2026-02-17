@@ -6,7 +6,7 @@ import no.elhub.auth.features.documents.create.command.DocumentMetaMarker
 interface FileGenerator {
     fun generate(
         signerNin: String,
-        documentMeta: DocumentMetaMarker
+        documentMeta: DocumentMetaMarker,
     ): Either<DocumentGenerationError.ContentGenerationError, ByteArray>
 }
 

@@ -2,10 +2,13 @@ package no.elhub.auth.features.businessprocesses.moveinandchangeofenergysupplier
 
 import kotlinx.datetime.LocalDate
 import no.elhub.auth.features.common.party.PartyIdentifier
+import no.elhub.auth.features.documents.create.dto.toSupportedLanguage
 import no.elhub.auth.features.documents.create.model.CreateDocumentModel
+import no.elhub.auth.features.filegenerator.SupportedLanguage
 import no.elhub.auth.features.requests.create.model.CreateRequestModel
 
 data class MoveInAndChangeOfEnergySupplierBusinessModel(
+    val language: SupportedLanguage = SupportedLanguage.DEFAULT,
     val requestedBy: PartyIdentifier,
     val requestedFrom: PartyIdentifier,
     val requestedTo: PartyIdentifier,
@@ -34,6 +37,7 @@ fun CreateRequestModel.toMoveInAndChangeOfEnergySupplierBusinessModel(): MoveInA
 
 fun CreateDocumentModel.toMoveInAndChangeOfEnergySupplierBusinessModel(): MoveInAndChangeOfEnergySupplierBusinessModel =
     MoveInAndChangeOfEnergySupplierBusinessModel(
+        language = this.meta.language.toSupportedLanguage(),
         requestedBy = this.meta.requestedBy,
         requestedFrom = this.meta.requestedFrom,
         requestedTo = this.meta.requestedTo,

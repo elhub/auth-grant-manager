@@ -7,6 +7,7 @@ import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.create.command.DocumentCommand
 import no.elhub.auth.features.documents.create.command.DocumentMetaMarker
+import no.elhub.auth.features.filegenerator.SupportedLanguage
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.create.command.RequestCommand
 import no.elhub.auth.features.requests.create.command.RequestMetaMarker
@@ -26,6 +27,7 @@ data class ChangeOfEnergySupplierBusinessMeta(
     val requestedForMeteringPointAddress: String,
     val balanceSupplierName: String,
     val balanceSupplierContractName: String,
+    val language: SupportedLanguage? = null,
     val redirectURI: String? = null,
 ) : RequestMetaMarker,
     DocumentMetaMarker {
@@ -36,6 +38,7 @@ data class ChangeOfEnergySupplierBusinessMeta(
             put("requestedForMeteringPointAddress", requestedForMeteringPointAddress)
             put("balanceSupplierContractName", balanceSupplierContractName)
             put("balanceSupplierName", balanceSupplierName)
+            language?.let { put("language", it.code) }
             redirectURI?.let { put("redirectURI", it) }
         }
 }
