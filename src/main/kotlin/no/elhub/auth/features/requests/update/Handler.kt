@@ -51,7 +51,6 @@ class Handler(
                 }
             }
 
-            println("nissemor: ${updatedRequest.createdAt}")
             updatedRequest
         }
     }
