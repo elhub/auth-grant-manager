@@ -51,10 +51,11 @@ import no.elhub.auth.features.documents.create.dto.CreateDocumentMeta
 import no.elhub.auth.features.documents.create.dto.CreateDocumentRequestAttributes
 import no.elhub.auth.features.documents.create.dto.CreateDocumentResponse
 import no.elhub.auth.features.documents.create.dto.JsonApiCreateDocumentRequest
+import no.elhub.auth.features.documents.create.dto.SupportedLanguageDTO
+import no.elhub.auth.features.documents.create.dto.toSupportedLanguage
 import no.elhub.auth.features.documents.create.model.CreateDocumentModel
 import no.elhub.auth.features.documents.get.dto.GetDocumentSingleResponse
 import no.elhub.auth.features.documents.query.dto.GetDocumentCollectionResponse
-import no.elhub.auth.features.filegenerator.SupportedLanguage
 import no.elhub.auth.features.grants.AuthorizationScope
 import no.elhub.auth.features.grants.GRANTS_PATH
 import no.elhub.auth.features.grants.common.CreateGrantProperties
@@ -705,7 +706,7 @@ class AuthorizationDocumentRouteTest :
                                                 requestedForMeteringPointAddress = "quaerendum",
                                                 balanceSupplierName = "Jami Wade",
                                                 balanceSupplierContractName = "Selena Chandler",
-                                                language = SupportedLanguage.EN,
+                                                language = SupportedLanguageDTO.EN,
                                             )
                                         )
                                     )
@@ -798,7 +799,7 @@ private class TestDocumentBusinessHandler : DocumentBusinessHandler {
                 requestedFrom = meta.requestedFrom,
                 requestedTo = meta.requestedTo,
                 requestedBy = meta.requestedBy,
-                language = meta.language,
+                language = meta.language.toSupportedLanguage(),
                 validTo = defaultValidTo().toTimeZoneOffsetDateTimeAtStartOfDay(),
                 scopes = listOf(
                     CreateScopeData(

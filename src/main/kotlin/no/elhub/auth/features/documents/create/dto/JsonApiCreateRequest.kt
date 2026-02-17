@@ -1,6 +1,7 @@
 package no.elhub.auth.features.documents.create.dto
 
 import kotlinx.datetime.LocalDate
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyIdentifier
@@ -27,8 +28,31 @@ data class CreateDocumentMeta(
     val balanceSupplierName: String,
     val balanceSupplierContractName: String,
     val startDate: LocalDate? = null,
-    val language: SupportedLanguage = SupportedLanguage.DEFAULT,
+    val language: SupportedLanguageDTO = SupportedLanguageDTO.DEFAULT,
 ) : JsonApiResourceMeta
+
+@Serializable
+enum class SupportedLanguageDTO {
+    @SerialName("nb")
+    NB,
+
+    @SerialName("nn")
+    NN,
+
+    @SerialName("en")
+    EN;
+
+    companion object {
+        val DEFAULT = NB
+    }
+}
+
+fun SupportedLanguageDTO.toSupportedLanguage(): SupportedLanguage =
+    when (this) {
+        SupportedLanguageDTO.NB -> SupportedLanguage.NB
+        SupportedLanguageDTO.NN -> SupportedLanguage.NN
+        SupportedLanguageDTO.EN -> SupportedLanguage.EN
+    }
 
 typealias JsonApiCreateDocumentRequest = JsonApiRequest.SingleDocumentWithMeta<CreateDocumentRequestAttributes, CreateDocumentMeta>
 
