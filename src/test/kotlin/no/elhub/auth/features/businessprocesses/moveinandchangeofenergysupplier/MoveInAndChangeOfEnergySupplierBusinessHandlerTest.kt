@@ -461,6 +461,6 @@ class MoveInAndChangeOfEnergySupplierBusinessHandlerTest :
 
             val command = handler.validateAndReturnDocumentCommand(model).shouldBeRight()
             command.meta.toMetaAttributes()["startDate"] shouldBe VALID_START_DATE.toString()
-            command.language shouldBe SupportedLanguage.DEFAULT
+            command.meta.toMetaAttributes()["language"] shouldBe SupportedLanguage.DEFAULT.code
         }
     })

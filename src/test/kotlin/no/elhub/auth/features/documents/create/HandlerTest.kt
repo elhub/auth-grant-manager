@@ -64,7 +64,7 @@ class HandlerTest : FunSpec({
         )
 
     val commandMeta = object : DocumentMetaMarker {
-        override fun toMetaAttributes(): Map<String, String> = mapOf("k" to "v")
+        override fun toMetaAttributes(): Map<String, String> = mapOf("k" to "v", "language" to SupportedLanguage.DEFAULT.code)
     }
 
     val command =
@@ -73,7 +73,6 @@ class HandlerTest : FunSpec({
             requestedFrom = requestedFromIdentifier,
             requestedTo = requestedToIdentifier,
             requestedBy = requestedByIdentifier,
-            language = SupportedLanguage.DEFAULT,
             validTo = defaultValidTo().toTimeZoneOffsetDateTimeAtStartOfDay(),
             scopes = listOf(
                 CreateScopeData(
@@ -103,7 +102,7 @@ class HandlerTest : FunSpec({
 
         stubPartyResolution(partyService)
         coEvery { businessHandler.validateAndReturnDocumentCommand(model) } returns command.right()
-        every { fileGenerator.generate(requestedFromIdentifier.idValue, commandMeta, command.language) } returns unsignedFile.right()
+        every { fileGenerator.generate(requestedFromIdentifier.idValue, commandMeta) } returns unsignedFile.right()
         coEvery { signatureService.sign(unsignedFile) } returns signedFile.right()
 
         val savedDocument = AuthorizationDocument.create(
@@ -112,7 +111,7 @@ class HandlerTest : FunSpec({
             requestedBy = requestedByParty,
             requestedFrom = requestedFromParty,
             requestedTo = requestedToParty,
-            properties = commandMeta.toMetaAttributes().plus("language" to command.language.code).toDocumentProperties(),
+            properties = commandMeta.toMetaAttributes().toDocumentProperties(),
             validTo = command.validTo,
         )
         every { documentRepository.insert(any(), command.scopes) } returns savedDocument.right()
@@ -126,7 +125,7 @@ class HandlerTest : FunSpec({
         verify(exactly = 1) {
             documentRepository.insert(
                 match { document ->
-                    document.properties.any { it.key == "language" && it.value == command.language.code }
+                    document.properties.any { it.key == "language" && it.value == SupportedLanguage.DEFAULT.code }
                 },
                 command.scopes
             )
@@ -226,7 +225,7 @@ class HandlerTest : FunSpec({
             CreateError.BusinessError(BusinessProcessError.Validation(ChangeOfEnergySupplierValidationError.MissingRequestedFromName.message))
         )
 
-        verify(exactly = 0) { fileGenerator.generate(any(), any(), any()) }
+        verify(exactly = 0) { fileGenerator.generate(any(), any()) }
     }
 
     test("returns FileGenerationError when file generation fails") {
@@ -239,7 +238,7 @@ class HandlerTest : FunSpec({
         stubPartyResolution(partyService)
         coEvery { businessHandler.validateAndReturnDocumentCommand(model) } returns command.right()
         every {
-            fileGenerator.generate(requestedFromIdentifier.idValue, commandMeta, command.language)
+            fileGenerator.generate(requestedFromIdentifier.idValue, commandMeta)
         } returns DocumentGenerationError.ContentGenerationError.left()
 
         val handler = Handler(businessHandler, signatureService, documentRepository, partyService, fileGenerator)
@@ -259,7 +258,7 @@ class HandlerTest : FunSpec({
 
         stubPartyResolution(partyService)
         coEvery { businessHandler.validateAndReturnDocumentCommand(model) } returns command.right()
-        every { fileGenerator.generate(requestedFromIdentifier.idValue, commandMeta, command.language) } returns unsignedFile.right()
+        every { fileGenerator.generate(requestedFromIdentifier.idValue, commandMeta) } returns unsignedFile.right()
         coEvery {
             signatureService.sign(unsignedFile)
         } returns SignatureSigningError.SignatureFetchingError.left()
@@ -281,7 +280,7 @@ class HandlerTest : FunSpec({
 
         stubPartyResolution(partyService)
         coEvery { businessHandler.validateAndReturnDocumentCommand(model) } returns command.right()
-        every { fileGenerator.generate(requestedFromIdentifier.idValue, commandMeta, command.language) } returns unsignedFile.right()
+        every { fileGenerator.generate(requestedFromIdentifier.idValue, commandMeta) } returns unsignedFile.right()
         coEvery { signatureService.sign(unsignedFile) } returns signedFile.right()
         every {
             documentRepository.insert(any(), command.scopes)

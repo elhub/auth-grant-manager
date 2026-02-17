@@ -27,6 +27,7 @@ data class ChangeOfEnergySupplierBusinessMeta(
     val requestedForMeteringPointAddress: String,
     val balanceSupplierName: String,
     val balanceSupplierContractName: String,
+    val language: SupportedLanguage? = null,
     val redirectURI: String? = null,
 ) : RequestMetaMarker,
     DocumentMetaMarker {
@@ -37,6 +38,7 @@ data class ChangeOfEnergySupplierBusinessMeta(
             put("requestedForMeteringPointAddress", requestedForMeteringPointAddress)
             put("balanceSupplierContractName", balanceSupplierContractName)
             put("balanceSupplierName", balanceSupplierName)
+            language?.let { put("language", it.code) }
             redirectURI?.let { put("redirectURI", it) }
         }
 }
@@ -52,13 +54,12 @@ fun ChangeOfEnergySupplierBusinessCommand.toRequestCommand(): RequestCommand =
         meta = this.meta,
     )
 
-fun ChangeOfEnergySupplierBusinessCommand.toDocumentCommand(language: SupportedLanguage): DocumentCommand =
+fun ChangeOfEnergySupplierBusinessCommand.toDocumentCommand(): DocumentCommand =
     DocumentCommand(
         type = AuthorizationDocument.Type.ChangeOfEnergySupplierForPerson,
         requestedFrom = this.requestedFrom,
         requestedTo = this.requestedTo,
         requestedBy = this.requestedBy,
-        language = language,
         scopes = this.scopes,
         validTo = this.validTo.toTimeZoneOffsetDateTimeAtStartOfDay(),
         meta = this.meta,

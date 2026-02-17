@@ -16,6 +16,7 @@ class PdfGeneratorI18nTest : FunSpec({
             )
         )
         val meta = ChangeOfEnergySupplierBusinessMeta(
+            language = SupportedLanguage.DEFAULT,
             requestedFromName = "Hillary Orr",
             requestedForMeteringPointId = "123456789012345678",
             requestedForMeteringPointAddress = "Example Street 1, 1234 Oslo",
@@ -26,7 +27,6 @@ class PdfGeneratorI18nTest : FunSpec({
         val pdfResult = generator.generate(
             signerNin = "01017012345",
             documentMeta = meta,
-            language = SupportedLanguage.DEFAULT,
         )
         val pdfBytes = when (pdfResult) {
             is Either.Left -> error("PDF generation failed for default language")
@@ -48,6 +48,7 @@ class PdfGeneratorI18nTest : FunSpec({
             )
         )
         val meta = ChangeOfEnergySupplierBusinessMeta(
+            language = SupportedLanguage.EN,
             requestedFromName = "Hillary Orr",
             requestedForMeteringPointId = "123456789012345678",
             requestedForMeteringPointAddress = "Example Street 1, 1234 Oslo",
@@ -58,7 +59,6 @@ class PdfGeneratorI18nTest : FunSpec({
         val englishPdfResult = generator.generate(
             signerNin = "01017012345",
             documentMeta = meta,
-            language = SupportedLanguage.EN,
         )
         val englishText = when (englishPdfResult) {
             is Either.Left -> error("PDF generation failed for english language")

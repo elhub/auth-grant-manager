@@ -3,7 +3,6 @@ package no.elhub.auth.features.documents.create.command
 import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.documents.AuthorizationDocument
-import no.elhub.auth.features.filegenerator.SupportedLanguage
 import java.time.OffsetDateTime
 
 interface DocumentMetaMarker {
@@ -15,7 +14,6 @@ data class DocumentCommand(
     val requestedFrom: PartyIdentifier,
     val requestedTo: PartyIdentifier,
     val requestedBy: PartyIdentifier,
-    val language: SupportedLanguage,
     val validTo: OffsetDateTime,
     val scopes: List<CreateScopeData>,
     val meta: DocumentMetaMarker,

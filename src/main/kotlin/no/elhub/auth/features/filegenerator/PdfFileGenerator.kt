@@ -97,8 +97,8 @@ class PdfGenerator(
     override fun generate(
         signerNin: String,
         documentMeta: DocumentMetaMarker,
-        language: SupportedLanguage,
     ): Either<DocumentGenerationError.ContentGenerationError, ByteArray> = either {
+        val language = resolveLanguage(documentMeta)
         val contractHtmlString = when (documentMeta) {
             is ChangeOfEnergySupplierBusinessMeta -> generateChangeOfEnergySupplierHtml(
                 customerNin = signerNin,
@@ -249,6 +249,12 @@ class PdfGenerator(
             }
         }
     }
+
+    private fun resolveLanguage(documentMeta: DocumentMetaMarker): SupportedLanguage =
+        documentMeta
+            .toMetaAttributes()["language"]
+            ?.let { languageCode -> SupportedLanguage.entries.firstOrNull { it.code == languageCode } }
+            ?: SupportedLanguage.DEFAULT
 
     private fun PdfRendererBuilder.useFonts(fonts: List<Font>): PdfRendererBuilder {
         fonts.forEach { font ->

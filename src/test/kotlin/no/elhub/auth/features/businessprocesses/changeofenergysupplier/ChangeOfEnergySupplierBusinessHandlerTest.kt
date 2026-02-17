@@ -473,6 +473,6 @@ class ChangeOfEnergySupplierBusinessHandlerTest :
 
             val command = handler.validateAndReturnDocumentCommand(model).shouldBeRight()
             command.meta.toMetaAttributes()["requestedFromName"] shouldBe "From"
-            command.language shouldBe SupportedLanguage.DEFAULT
+            command.meta.toMetaAttributes()["language"] shouldBe SupportedLanguage.DEFAULT.code
         }
     })

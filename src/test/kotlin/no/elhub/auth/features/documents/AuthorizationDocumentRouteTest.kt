@@ -799,7 +799,6 @@ private class TestDocumentBusinessHandler : DocumentBusinessHandler {
                 requestedFrom = meta.requestedFrom,
                 requestedTo = meta.requestedTo,
                 requestedBy = meta.requestedBy,
-                language = meta.language.toSupportedLanguage(),
                 validTo = defaultValidTo().toTimeZoneOffsetDateTimeAtStartOfDay(),
                 scopes = listOf(
                     CreateScopeData(
@@ -809,6 +808,7 @@ private class TestDocumentBusinessHandler : DocumentBusinessHandler {
                     )
                 ),
                 meta = ChangeOfEnergySupplierBusinessMeta(
+                    language = meta.language.toSupportedLanguage(),
                     requestedFromName = meta.requestedFromName,
                     requestedForMeteringPointId = meta.requestedForMeteringPointId,
                     requestedForMeteringPointAddress = meta.requestedForMeteringPointAddress,

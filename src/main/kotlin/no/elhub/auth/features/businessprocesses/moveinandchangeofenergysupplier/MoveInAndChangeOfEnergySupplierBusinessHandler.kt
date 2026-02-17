@@ -28,7 +28,6 @@ import no.elhub.auth.features.common.person.PersonService
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.DocumentBusinessHandler
 import no.elhub.auth.features.documents.create.command.DocumentCommand
-import no.elhub.auth.features.documents.create.dto.toSupportedLanguage
 import no.elhub.auth.features.documents.create.model.CreateDocumentModel
 import no.elhub.auth.features.grants.AuthorizationScope
 import no.elhub.auth.features.grants.common.CreateGrantProperties
@@ -72,7 +71,7 @@ class MoveInAndChangeOfEnergySupplierBusinessHandler(
     override suspend fun validateAndReturnDocumentCommand(model: CreateDocumentModel): Either<BusinessProcessError, DocumentCommand> =
         either {
             val businessModel = model.toMoveInAndChangeOfEnergySupplierBusinessModel()
-            validate(businessModel).mapLeft { it.toBusinessError() }.bind().toDocumentCommand(model.meta.language.toSupportedLanguage())
+            validate(businessModel).mapLeft { it.toBusinessError() }.bind().toDocumentCommand()
         }
 
     override fun getCreateGrantProperties(document: AuthorizationDocument): CreateGrantProperties =
@@ -171,6 +170,7 @@ class MoveInAndChangeOfEnergySupplierBusinessHandler(
 
         val meta =
             MoveInAndChangeOfEnergySupplierBusinessMeta(
+                language = model.language,
                 requestedFromName = model.requestedFromName,
                 requestedForMeteringPointId = model.requestedForMeteringPointId,
                 requestedForMeteringPointAddress = model.requestedForMeteringPointAddress,
