@@ -36,6 +36,9 @@ fun generateSelfSignedCertificate(baseDirLocation: String) {
 
     val baseDir = File(baseDirLocation)
     baseDir.mkdirs()
+    val elhubDir = baseDir.resolve("elhub").apply { mkdirs() }
+    val bankIdCertsDir = baseDir.resolve("bankid/certs").apply { mkdirs() }
+    val bankIdKeysDir = baseDir.resolve("bankid/keys").apply { mkdirs() }
 
     val crlFile = baseDir.resolve("ca.crl")
     val crlUri = "file://${crlFile.absolutePath.replace("\\", "/")}"
@@ -43,8 +46,8 @@ fun generateSelfSignedCertificate(baseDirLocation: String) {
     val caKeyPair = generateKeyPair()
     val caCert = generateSelfSignedCert("CN=My-Root-CA", caKeyPair, 3650, crlUri)
 
-    writePem(baseDir.resolve("self-signed-key.pem"), caKeyPair.private)
-    writePem(baseDir.resolve("self-signed-cert.pem"), caCert)
+    writePem(elhubDir.resolve("self-signed-key.pem"), caKeyPair.private)
+    writePem(elhubDir.resolve("self-signed-cert.pem"), caCert)
 
     val bankIdKeyPair = generateKeyPair()
     val today = LocalDate.now(ZoneOffset.UTC)
@@ -56,8 +59,8 @@ fun generateSelfSignedCertificate(baseDirLocation: String) {
         crlUri = crlUri
     )
 
-    writePem(baseDir.resolve("bankid-root-key.pem"), bankIdKeyPair.private)
-    writePem(baseDir.resolve("bankid-root-cert.pem"), bankIdCert)
+    writePem(bankIdKeysDir.resolve("bankid-root-key.pem"), bankIdKeyPair.private)
+    writePem(bankIdCertsDir.resolve("bankid-root-cert.pem"), bankIdCert)
 }
 
 fun generateKeyPair(): KeyPair =

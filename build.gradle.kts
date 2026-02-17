@@ -70,9 +70,9 @@ val dbUsername = System.getenv("DB_USERNAME")?.takeIf { it.isNotBlank() } ?: "ad
 val dbPassword = System.getenv("DB_PASSWORD")?.takeIf { it.isNotBlank() } ?: "admin"
 
 val certDir = layout.buildDirectory.dir("tmp/test-certs")
-val testCertPath = certDir.map { it.file("self-signed-cert.pem").asFile.path }
-val testKeyPath = certDir.map { it.file("self-signed-key.pem").asFile.path }
-val bankIdPath = certDir.map { it.file("bankid-root-cert.pem").asFile.path }
+val testCertPath = certDir.map { it.file("elhub/self-signed-cert.pem").asFile.path }
+val testKeyPath = certDir.map { it.file("elhub/self-signed-key.pem").asFile.path }
+val bankIdPath = certDir.map { it.file("bankid/certs/bankid-root-cert.pem").asFile.path }
 
 dockerCompose {
     createNested("services").apply {
