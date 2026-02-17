@@ -22,8 +22,8 @@ data class CreateDocumentResponseAttributes(
     val status: String,
     val documentType: String,
     val validTo: String,
-    val createdAt: String?,
-    val updatedAt: String?,
+    val createdAt: String,
+    val updatedAt: String,
 ) : JsonApiAttributes
 
 @Serializable
@@ -62,8 +62,8 @@ fun AuthorizationDocument.toCreateDocumentResponse() = CreateDocumentResponse(
             status = this.status.name,
             documentType = this.type.name,
             validTo = this.validTo.toTimeZoneOffsetString(),
-            createdAt = this.createdAt?.toTimeZoneOffsetString(),
-            updatedAt = this.updatedAt?.toTimeZoneOffsetString(),
+            createdAt = requireNotNull(this.createdAt?.toTimeZoneOffsetString()) { "createdAt not set!" },
+            updatedAt = requireNotNull(this.updatedAt?.toTimeZoneOffsetString()) { "updatedAt not set!" },
         ),
         relationships = CreateDocumentResponseRelationships(
             requestedBy = JsonApiRelationshipToOne(

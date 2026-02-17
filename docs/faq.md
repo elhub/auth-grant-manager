@@ -6,7 +6,7 @@
 
 ### How do I gain access to the test environment?
 
-* You need to be registered in Maskinporten (https://api.elhub.no/maskinporten/getting-started)
+* You need to be registered in Maskinporten (<https://api.elhub.no/maskinporten/getting-started>)
 * The IPs of your test environments need to be whitelisted by Elhub.
   * See [elhub.no](https://elhub.no/fagomrader/markedsprosesser/samtykkekontroll?article=test-av-samtykkekontroll)
 

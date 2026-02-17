@@ -22,8 +22,8 @@ data class CreateRequestResponseAttributes(
     val status: String,
     val requestType: String,
     val validTo: String,
-    val createdAt: String?,
-    val updatedAt: String?,
+    val createdAt: String,
+    val updatedAt: String,
 ) : JsonApiAttributes
 
 @Serializable
@@ -62,8 +62,8 @@ fun AuthorizationRequest.toCreateResponse() =
                 status = this.status.name,
                 requestType = this.type.name,
                 validTo = this.validTo.toString(),
-                createdAt = this.createdAt?.toTimeZoneOffsetString(),
-                updatedAt = this.updatedAt?.toTimeZoneOffsetString(),
+                createdAt = requireNotNull(this.createdAt?.toTimeZoneOffsetString()) { "createdAt not set!" },
+                updatedAt = requireNotNull(this.updatedAt?.toTimeZoneOffsetString()) { "updatedAt not set!" },
             ),
             relationships = CreateRequestResponseRelationShips(
                 requestedBy = JsonApiRelationshipToOne(
@@ -100,7 +100,7 @@ fun AuthorizationRequest.toCreateResponse() =
         links = JsonApiLinks.ResourceObjectLink(REQUESTS_PATH),
         meta = JsonApiMeta(
             buildJsonObject {
-                put("createdAt", this@toCreateResponse.createdAt?.toTimeZoneOffsetString())
+                put("createdAt", this@toCreateResponse.createdAt.toTimeZoneOffsetString())
             }
         )
     )

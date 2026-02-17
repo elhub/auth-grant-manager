@@ -25,8 +25,8 @@ data class GetRequestCollectionResponseAttributes(
     val status: String,
     val requestType: String,
     val validTo: String,
-    val createdAt: String?,
-    val updatedAt: String?,
+    val createdAt: String,
+    val updatedAt: String,
 ) : JsonApiAttributes
 
 @Serializable
@@ -66,8 +66,8 @@ fun List<AuthorizationRequest>.toGetCollectionResponse() =
                     status = request.status.toString(),
                     requestType = request.type.toString(),
                     validTo = request.validTo.toString(),
-                    createdAt = request.createdAt?.toTimeZoneOffsetString(),
-                    updatedAt = request.updatedAt?.toTimeZoneOffsetString(),
+                    createdAt = requireNotNull(request.createdAt?.toTimeZoneOffsetString()) { "createdAt not set!" },
+                    updatedAt = requireNotNull(request.updatedAt?.toTimeZoneOffsetString()) { "updatedAt not set!" },
                 ),
                 relationships = GetRequestCollectionResponseRelationships(
                     requestedBy = request.requestedBy.toJsonApiRelationship(),

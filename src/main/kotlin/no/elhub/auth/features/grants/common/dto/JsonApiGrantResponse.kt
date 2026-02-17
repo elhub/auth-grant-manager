@@ -25,8 +25,8 @@ data class GrantResponseAttributes(
     val grantedAt: String,
     val validFrom: String,
     val validTo: String,
-    val createdAt: String?,
-    val updatedAt: String?
+    val createdAt: String,
+    val updatedAt: String
 ) : JsonApiAttributes
 
 @Serializable
@@ -58,8 +58,8 @@ fun AuthorizationGrant.toSingleGrantResponse() =
                 grantedAt = this.grantedAt.toTimeZoneOffsetString(),
                 validFrom = this.validFrom.toTimeZoneOffsetString(),
                 validTo = this.validTo.toTimeZoneOffsetString(),
-                createdAt = this.createdAt?.toTimeZoneOffsetString(),
-                updatedAt = this.updatedAt?.toTimeZoneOffsetString(),
+                createdAt = requireNotNull(this.createdAt?.toTimeZoneOffsetString()) { "createdAt not set!" },
+                updatedAt = requireNotNull(this.updatedAt?.toTimeZoneOffsetString()) { "updatedAt not set!" },
             ),
             relationships = GrantResponseRelationShips(
                 grantedFor = JsonApiRelationshipToOne(
@@ -125,8 +125,8 @@ fun List<AuthorizationGrant>.toCollectionGrantResponse() =
                     grantedAt = grant.grantedAt.toTimeZoneOffsetString(),
                     validFrom = grant.validFrom.toTimeZoneOffsetString(),
                     validTo = grant.validTo.toTimeZoneOffsetString(),
-                    createdAt = grant.createdAt?.toTimeZoneOffsetString(),
-                    updatedAt = grant.updatedAt?.toTimeZoneOffsetString(),
+                    createdAt = requireNotNull(grant.createdAt?.toTimeZoneOffsetString()) { "createdAt not set!" },
+                    updatedAt = requireNotNull(grant.updatedAt?.toTimeZoneOffsetString()) { "updatedAt not set!" },
                 ),
                 relationships = GrantResponseRelationShips(
                     grantedFor = JsonApiRelationshipToOne(

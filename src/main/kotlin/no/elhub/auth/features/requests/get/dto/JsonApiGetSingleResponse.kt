@@ -24,8 +24,8 @@ data class GetRequestSingleResponseAttributes(
     val status: String,
     val requestType: String,
     val validTo: String,
-    val updatedAt: String?,
-    val createdAt: String?,
+    val updatedAt: String,
+    val createdAt: String,
 ) : JsonApiAttributes
 
 @Serializable
@@ -65,9 +65,8 @@ fun AuthorizationRequest.toGetSingleResponse() =
                 status = this.status.name,
                 requestType = this.type.name,
                 validTo = this.validTo.toString(),
-                updatedAt = this.updatedAt?.toTimeZoneOffsetString(),
-                createdAt = this.createdAt?.toTimeZoneOffsetString(),
-
+                createdAt = requireNotNull(this.createdAt?.toTimeZoneOffsetString()) { "createdAt not set!" },
+                updatedAt = requireNotNull(this.updatedAt?.toTimeZoneOffsetString()) { "updatedAt not set!" },
             ),
             relationships = GetRequestSingleResponseRelationships(
                 requestedBy = this.requestedBy.toJsonApiRelationship(),

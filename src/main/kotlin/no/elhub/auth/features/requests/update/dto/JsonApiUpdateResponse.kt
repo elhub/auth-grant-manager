@@ -23,8 +23,8 @@ data class UpdateRequestResponseAttributes(
     val status: String,
     val requestType: String,
     val validTo: String,
-    val createdAt: String?,
-    val updatedAt: String?,
+    val createdAt: String,
+    val updatedAt: String,
 ) : JsonApiAttributes
 
 @Serializable
@@ -63,8 +63,8 @@ fun AuthorizationRequest.toUpdateResponse() = UpdateRequestResponse(
             status = this.status.name,
             requestType = this.type.name,
             validTo = this.validTo.toString(),
-            createdAt = this.createdAt?.toTimeZoneOffsetString(),
-            updatedAt = this.updatedAt?.toTimeZoneOffsetString(),
+            createdAt = requireNotNull(this.createdAt?.toTimeZoneOffsetString()) { "createdAt not set!" },
+            updatedAt = requireNotNull(this.updatedAt?.toTimeZoneOffsetString()) { "updatedAt not set!" },
         ),
         relationships = UpdateRequestResponseRelationShips(
             requestedBy = JsonApiRelationshipToOne(
