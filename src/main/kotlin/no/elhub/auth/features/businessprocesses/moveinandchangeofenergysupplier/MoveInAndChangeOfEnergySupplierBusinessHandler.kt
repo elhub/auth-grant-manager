@@ -11,6 +11,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 import no.elhub.auth.features.businessprocesses.BusinessProcessError
+import no.elhub.auth.features.businessprocesses.datasharing.StromprisService
 import no.elhub.auth.features.businessprocesses.moveinandchangeofenergysupplier.domain.MoveInAndChangeOfEnergySupplierBusinessCommand
 import no.elhub.auth.features.businessprocesses.moveinandchangeofenergysupplier.domain.MoveInAndChangeOfEnergySupplierBusinessMeta
 import no.elhub.auth.features.businessprocesses.moveinandchangeofenergysupplier.domain.MoveInAndChangeOfEnergySupplierBusinessModel
@@ -53,7 +54,9 @@ private fun moveInGrantValidTo() = today().plus(DatePeriod(years = MOVE_IN_GRANT
 class MoveInAndChangeOfEnergySupplierBusinessHandler(
     private val organisationsService: OrganisationsService,
     private val meteringPointsService: MeteringPointsService,
-    private val personService: PersonService
+    private val personService: PersonService,
+    private val stromprisService: StromprisService,
+    private val validateBalanceSupplierContractName: Boolean
 ) : RequestBusinessHandler,
     DocumentBusinessHandler {
     override suspend fun validateAndReturnRequestCommand(createRequestModel: CreateRequestModel): Either<BusinessProcessError, RequestCommand> =
@@ -166,6 +169,31 @@ class MoveInAndChangeOfEnergySupplierBusinessHandler(
 
         if (party.data.attributes?.status != PartyStatus.ACTIVE) {
             return MoveInAndChangeOfEnergySupplierValidationError.NotActiveRequestedBy.left()
+        }
+
+        if (model.requestedTo.idValue != model.requestedFrom.idValue) {
+            return MoveInAndChangeOfEnergySupplierValidationError.RequestedToRequestedFromMismatch.left()
+        }
+
+        if (validateBalanceSupplierContractName) {
+            val organizationNumber =
+                party.data.relationships.organizationNumber?.data?.id ?: return MoveInAndChangeOfEnergySupplierValidationError.UnexpectedError.left()
+            val products = stromprisService.getProductsByOrganizationNumber(organizationNumber).mapLeft { err ->
+                return when (err) {
+                    ClientError.NotFound -> MoveInAndChangeOfEnergySupplierValidationError.ContractsNotFound.left()
+
+                    ClientError.BadRequest,
+                    ClientError.Unauthorized,
+                    ClientError.ServerError,
+                    is ClientError.UnexpectedError -> MoveInAndChangeOfEnergySupplierValidationError.UnexpectedError.left()
+                }
+            }.getOrElse { return MoveInAndChangeOfEnergySupplierValidationError.UnexpectedError.left() }
+            if (products.data.none { product ->
+                    model.balanceSupplierContractName.equals(product.attributes?.name?.trim(), ignoreCase = true)
+                }
+            ) {
+                return MoveInAndChangeOfEnergySupplierValidationError.InvalidBalanceSupplierContractName.left()
+            }
         }
 
         val meta =

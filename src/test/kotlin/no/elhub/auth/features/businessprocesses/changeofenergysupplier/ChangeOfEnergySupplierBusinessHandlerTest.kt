@@ -10,6 +10,7 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import no.elhub.auth.features.businessprocesses.BusinessProcessError
 import no.elhub.auth.features.businessprocesses.datasharing.Attributes
+import no.elhub.auth.features.businessprocesses.datasharing.ProductsResponse
 import no.elhub.auth.features.businessprocesses.datasharing.StromprisService
 import no.elhub.auth.features.businessprocesses.structuredata.common.ClientError
 import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.BasicAuthConfig
@@ -477,7 +478,7 @@ class ChangeOfEnergySupplierBusinessHandlerTest :
             coEvery {
                 mockStromprisService.getProductsByOrganizationNumber(any())
             } returns Either.Right(
-                no.elhub.auth.features.businessprocesses.datasharing.ProductsResponse(
+                ProductsResponse(
                     listOf(
                         JsonApiResponseResourceObject(
                             id = "1",
