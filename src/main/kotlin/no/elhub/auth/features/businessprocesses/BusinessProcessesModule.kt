@@ -23,7 +23,15 @@ fun Application.businessProcessesModule() {
                 validateBalanceSupplierContractName = get(named("validateBalanceSupplierContractName"))
             )
         }
-        singleOf(::MoveInAndChangeOfEnergySupplierBusinessHandler)
+        single {
+            MoveInAndChangeOfEnergySupplierBusinessHandler(
+                meteringPointsService = get(),
+                personService = get(),
+                organisationsService = get(),
+                stromprisService = get(),
+                validateBalanceSupplierContractName = get(named("validateBalanceSupplierContractName"))
+            )
+        }
         singleOf(::ProxyDocumentBusinessHandler) bind DocumentBusinessHandler::class
         singleOf(::ProxyRequestBusinessHandler) bind RequestBusinessHandler::class
     }
