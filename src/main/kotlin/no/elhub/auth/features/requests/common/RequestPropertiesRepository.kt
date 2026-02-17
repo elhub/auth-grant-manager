@@ -12,8 +12,6 @@ import org.jetbrains.exposed.v1.javatime.CurrentTimestampWithTimeZone
 import org.jetbrains.exposed.v1.javatime.timestampWithTimeZone
 import org.jetbrains.exposed.v1.jdbc.batchInsert
 import org.jetbrains.exposed.v1.jdbc.selectAll
-import java.time.OffsetDateTime
-import java.time.ZoneId
 import java.util.UUID
 
 interface RequestPropertiesRepository {
