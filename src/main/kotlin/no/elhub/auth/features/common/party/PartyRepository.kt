@@ -9,13 +9,10 @@ import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.javatime.timestamp
 import org.jetbrains.exposed.v1.javatime.timestampWithTimeZone
-import org.jetbrains.exposed.v1.javatime.timestampWithTimeZoneParam
 import org.jetbrains.exposed.v1.jdbc.insertIgnore
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.slf4j.LoggerFactory
-import java.time.Instant
 import java.time.OffsetDateTime
 import java.util.UUID
 
