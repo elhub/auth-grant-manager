@@ -41,7 +41,7 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
             is AuthorizedParty.OrganizationEntity -> Query(
                 documentId = id,
                 authorizedParty = AuthorizationParty(
-                    resourceId = authorizedParty.gln,
+                    id = authorizedParty.gln,
                     type = PartyType.OrganizationEntity
                 )
             )
@@ -49,7 +49,7 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
             is AuthorizedParty.Person -> Query(
                 documentId = id,
                 authorizedParty = AuthorizationParty(
-                    resourceId = authorizedParty.id.toString(),
+                    id = authorizedParty.id.toString(),
                     type = PartyType.Person
                 )
             )
@@ -88,7 +88,7 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
             is AuthorizedParty.OrganizationEntity -> Query(
                 documentId = id,
                 authorizedParty = AuthorizationParty(
-                    resourceId = authorizedParty.gln,
+                    id = authorizedParty.gln,
                     type = PartyType.OrganizationEntity
                 )
             )
@@ -96,7 +96,7 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
             is AuthorizedParty.Person -> Query(
                 documentId = id,
                 authorizedParty = AuthorizationParty(
-                    resourceId = authorizedParty.id.toString(),
+                    id = authorizedParty.id.toString(),
                     type = PartyType.Person
                 )
             )

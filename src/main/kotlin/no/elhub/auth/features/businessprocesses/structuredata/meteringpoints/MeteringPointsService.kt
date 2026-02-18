@@ -1,12 +1,13 @@
 package no.elhub.auth.features.businessprocesses.structuredata.meteringpoints
 
 import arrow.core.Either
+import arrow.core.left
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
-import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.request.get
-import io.ktor.client.statement.bodyAsText
 import io.ktor.http.isSuccess
+import no.elhub.auth.features.businessprocesses.structuredata.common.ClientError
+import no.elhub.auth.features.businessprocesses.structuredata.common.mapErrorsFromServer
 import org.slf4j.LoggerFactory
 
 interface MeteringPointsService {
@@ -29,8 +30,8 @@ class MeteringPointsApi(
                 val responseBody: MeteringPointResponse = response.body()
                 responseBody
             } else {
-                logger.error("Failed to fetch metering point with status: ${response.status.value}")
-                throw ClientRequestException(response, response.bodyAsText())
+                logger.error("Failed to fetch metering point with status ${response.status.value}")
+                return mapErrorsFromServer(response).left()
             }
         }.mapLeft { throwable ->
             logger.error("Failed to fetch metering point: {}", throwable.message)
@@ -47,7 +48,3 @@ data class BasicAuthConfig(
     val username: String,
     val password: String
 )
-
-sealed class ClientError {
-    data class UnexpectedError(val cause: Throwable) : ClientError()
-}

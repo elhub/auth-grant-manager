@@ -11,7 +11,7 @@ enum class PartyType {
 
 @Serializable
 data class AuthorizationParty(
-    val resourceId: String,
+    val id: String,
     val type: PartyType
 )
 

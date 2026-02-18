@@ -10,6 +10,7 @@ import eu.europa.esig.dss.diagnostic.jaxb.XmlCertificateExtension
 import eu.europa.esig.dss.enumerations.CertificationPermission
 import eu.europa.esig.dss.enumerations.DigestAlgorithm
 import eu.europa.esig.dss.enumerations.SignatureLevel
+import eu.europa.esig.dss.enumerations.ValidationLevel
 import eu.europa.esig.dss.model.InMemoryDocument
 import eu.europa.esig.dss.model.SignatureValue
 import eu.europa.esig.dss.model.x509.CertificateToken
@@ -45,6 +46,8 @@ sealed class SignatureValidationError {
     data object ElhubSigningCertNotTrusted : SignatureValidationError()
     data object MissingBankIdSignature : SignatureValidationError()
     data object InvalidBankIdSignature : SignatureValidationError()
+    data object MissingBankIdTrustedTimestamp : SignatureValidationError()
+    data object BankIdSigningCertNotValidAtTimestamp : SignatureValidationError()
     data object BankIdSigningCertNotFromExpectedRoot : SignatureValidationError()
     data object MissingNationalId : SignatureValidationError()
     data object OriginalDocumentMismatch : SignatureValidationError()
@@ -61,7 +64,8 @@ class PdfSignatureService(
 
     private val trustedSource = CommonTrustedCertificateSource().apply {
         addCertificate(CertificateToken(certificateProvider.getElhubSigningCertificate()))
-        addCertificate(CertificateToken(certificateProvider.getBankIdRootCertificate()))
+        certificateProvider.getBankIdRootCertificates()
+            .forEach { addCertificate(CertificateToken(it)) }
     }
 
     private val verifier = CommonCertificateVerifier(true).apply {
@@ -112,6 +116,7 @@ class PdfSignatureService(
 
         val validator = SignedDocumentValidator.fromDocument(document).apply {
             setCertificateVerifier(verifier)
+            setValidationLevel(ValidationLevel.LONG_TERM_DATA)
         }
 
         val reports = validator.validateDocument()
@@ -135,7 +140,7 @@ class PdfSignatureService(
         val bankIdSignature = ensureNotNull(
             signatures.firstOrNull { signature ->
                 val rootCert = signature.certificateChain.lastOrNull()
-                hasIssuerAndSerial(rootCert, certificateProvider.getBankIdRootCertificate())
+                hasIssuerAndSerialAny(rootCert, certificateProvider.getBankIdRootCertificates())
             }
         ) {
             SignatureValidationError.MissingBankIdSignature
@@ -181,15 +186,30 @@ class PdfSignatureService(
             SignatureValidationError.InvalidBankIdSignature
         }
 
-        val rootCert = signature.certificateChain.lastOrNull()
+        val trustedSignatureTimestamp = signature.timestampList.firstOrNull { timestamp ->
+            (timestamp.type?.isSignatureTimestamp == true) &&
+                timestamp.isSignatureIntact &&
+                timestamp.isSignatureValid &&
+                timestamp.isCertificateChainFromTrustedStore
+        }
 
-        ensure(rootCert != null && rootCert.isTrusted) {
+        ensure(trustedSignatureTimestamp != null && trustedSignatureTimestamp.productionTime != null) {
+            SignatureValidationError.MissingBankIdTrustedTimestamp
+        }
+
+        ensure(signature.isCertificateChainFromTrustedStore) {
             SignatureValidationError.BankIdSigningCertNotFromExpectedRoot
         }
-        val signingCert = signature.signingCertificate
-
-        ensure(signingCert != null) {
+        val signingCert = ensureNotNull(signature.signingCertificate) {
             SignatureValidationError.InvalidBankIdSignature
+        }
+
+        val timestampTime = trustedSignatureTimestamp.productionTime
+        val notBefore = signingCert.notBefore
+        val notAfter = signingCert.notAfter
+
+        ensure(!timestampTime.before(notBefore) && !timestampTime.after(notAfter)) {
+            SignatureValidationError.BankIdSigningCertNotValidAtTimestamp
         }
 
         val nationalIdExtension = ensureNotNull(
@@ -221,6 +241,9 @@ class PdfSignatureService(
         return expected.issuerX500Principal.name == cert.certificateIssuerDN &&
             expected.serialNumber.toString() == cert.serialNumber
     }
+
+    private fun hasIssuerAndSerialAny(cert: CertificateWrapper?, expected: List<X509Certificate>): Boolean =
+        expected.any { hasIssuerAndSerial(cert, it) }
 
     private fun digestOverByteRange(
         pdf: ByteArray,

@@ -43,7 +43,7 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
             return@put
         }
 
-        val authorizedParty = AuthorizationParty(resourceId = resolvedActor.gln, type = PartyType.OrganizationEntity)
+        val authorizedParty = AuthorizationParty(id = resolvedActor.gln, type = PartyType.OrganizationEntity)
         handler(
             Command(
                 documentId = documentId,

@@ -10,7 +10,9 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import no.elhub.auth.features.businessprocesses.changeofsupplier.defaultValidTo
+import no.elhub.auth.features.businessprocesses.BusinessProcessError
+import no.elhub.auth.features.businessprocesses.changeofenergysupplier.ChangeOfEnergySupplierValidationError
+import no.elhub.auth.features.businessprocesses.changeofenergysupplier.defaultValidTo
 import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.common.RepositoryWriteError
 import no.elhub.auth.features.common.party.AuthorizationParty
@@ -29,6 +31,7 @@ import no.elhub.auth.features.documents.create.command.DocumentCommand
 import no.elhub.auth.features.documents.create.command.DocumentMetaMarker
 import no.elhub.auth.features.documents.create.dto.CreateDocumentMeta
 import no.elhub.auth.features.documents.create.model.CreateDocumentModel
+import no.elhub.auth.features.filegenerator.SupportedLanguage
 import no.elhub.auth.features.grants.AuthorizationScope
 
 class HandlerTest : FunSpec({
@@ -37,9 +40,9 @@ class HandlerTest : FunSpec({
     val requestedFromIdentifier = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "01010112345")
     val requestedToIdentifier = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "02020212345")
 
-    val requestedByParty = AuthorizationParty(resourceId = requestedByIdentifier.idValue, type = PartyType.OrganizationEntity)
-    val requestedFromParty = AuthorizationParty(resourceId = "person-1", type = PartyType.Person)
-    val requestedToParty = AuthorizationParty(resourceId = "person-2", type = PartyType.Person)
+    val requestedByParty = AuthorizationParty(id = requestedByIdentifier.idValue, type = PartyType.OrganizationEntity)
+    val requestedFromParty = AuthorizationParty(id = "person-1", type = PartyType.Person)
+    val requestedToParty = AuthorizationParty(id = "person-2", type = PartyType.Person)
 
     val meta =
         CreateDocumentMeta(
@@ -61,7 +64,7 @@ class HandlerTest : FunSpec({
         )
 
     val commandMeta = object : DocumentMetaMarker {
-        override fun toMetaAttributes(): Map<String, String> = mapOf("k" to "v")
+        override fun toMetaAttributes(): Map<String, String> = mapOf("k" to "v", "language" to SupportedLanguage.DEFAULT.code)
     }
 
     val command =
@@ -119,6 +122,14 @@ class HandlerTest : FunSpec({
 
         response.shouldBeRight(savedDocument)
         verify(exactly = 1) { documentRepository.insert(any(), command.scopes) }
+        verify(exactly = 1) {
+            documentRepository.insert(
+                match { document ->
+                    document.properties.any { it.key == "language" && it.value == SupportedLanguage.DEFAULT.code }
+                },
+                command.scopes
+            )
+        }
     }
 
     test("returns RequestedPartyError when requestedBy cannot be resolved") {
@@ -148,7 +159,7 @@ class HandlerTest : FunSpec({
         coEvery { partyService.resolve(requestedByIdentifier) } returns requestedByParty.right()
 
         val handler = Handler(businessHandler, signatureService, documentRepository, partyService, fileGenerator)
-        val otherAuthorizedParty = AuthorizationParty(resourceId = "other", type = PartyType.OrganizationEntity)
+        val otherAuthorizedParty = AuthorizationParty(id = "other", type = PartyType.OrganizationEntity)
 
         val response = handler(model.copy(authorizedParty = otherAuthorizedParty))
 
@@ -202,14 +213,18 @@ class HandlerTest : FunSpec({
         val fileGenerator = mockk<FileGenerator>()
 
         stubPartyResolution(partyService)
-        val validationError = CreateError.BusinessValidationError("validation failed")
-        coEvery { businessHandler.validateAndReturnDocumentCommand(model) } returns validationError.left()
+        coEvery {
+            businessHandler.validateAndReturnDocumentCommand(model)
+        } returns BusinessProcessError.Validation(ChangeOfEnergySupplierValidationError.MissingRequestedFromName.message).left()
 
         val handler = Handler(businessHandler, signatureService, documentRepository, partyService, fileGenerator)
 
         val response = handler(model)
 
-        response.shouldBeLeft(validationError)
+        response.shouldBeLeft(
+            CreateError.BusinessError(BusinessProcessError.Validation(ChangeOfEnergySupplierValidationError.MissingRequestedFromName.message))
+        )
+
         verify(exactly = 0) { fileGenerator.generate(any(), any()) }
     }
 

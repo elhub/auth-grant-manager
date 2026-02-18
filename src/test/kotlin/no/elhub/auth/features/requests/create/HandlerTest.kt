@@ -11,7 +11,8 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.datetime.LocalDate
-import no.elhub.auth.features.businessprocesses.changeofsupplier.ChangeOfSupplierValidationError
+import no.elhub.auth.features.businessprocesses.BusinessProcessError
+import no.elhub.auth.features.businessprocesses.changeofenergysupplier.ChangeOfEnergySupplierValidationError
 import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.common.RepositoryWriteError
 import no.elhub.auth.features.common.party.AuthorizationParty
@@ -38,9 +39,9 @@ class HandlerTest : FunSpec({
     val requestedFromIdentifier = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "01010112345")
     val requestedToIdentifier = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "02020212345")
 
-    val requestedByParty = AuthorizationParty(resourceId = requestedByIdentifier.idValue, type = PartyType.Organization)
-    val requestedFromParty = AuthorizationParty(resourceId = "person-1", type = PartyType.Person)
-    val requestedToParty = AuthorizationParty(resourceId = "person-2", type = PartyType.Person)
+    val requestedByParty = AuthorizationParty(id = requestedByIdentifier.idValue, type = PartyType.Organization)
+    val requestedFromParty = AuthorizationParty(id = "person-1", type = PartyType.Person)
+    val requestedToParty = AuthorizationParty(id = "person-2", type = PartyType.Person)
 
     val meta =
         CreateRequestMeta(
@@ -156,7 +157,7 @@ class HandlerTest : FunSpec({
         coEvery { partyService.resolve(requestedByIdentifier) } returns requestedByParty.right()
 
         val handler = Handler(businessHandler, partyService, requestRepo, requestPropertyRepo)
-        val otherAuthorizedParty = AuthorizationParty(resourceId = "other", type = PartyType.Organization)
+        val otherAuthorizedParty = AuthorizationParty(id = "other", type = PartyType.Organization)
 
         val response = handler(model.copy(authorizedParty = otherAuthorizedParty))
 
@@ -209,13 +210,15 @@ class HandlerTest : FunSpec({
         stubPartyResolution(partyService)
         coEvery {
             businessHandler.validateAndReturnRequestCommand(model)
-        } returns ChangeOfSupplierValidationError.MissingRequestedFromName.left()
+        } returns BusinessProcessError.Validation(ChangeOfEnergySupplierValidationError.MissingRequestedFromName.message).left()
 
         val handler = Handler(businessHandler, partyService, requestRepo, requestPropertyRepo)
 
         val response = handler(model)
 
-        response.shouldBeLeft(CreateError.ValidationError(ChangeOfSupplierValidationError.MissingRequestedFromName))
+        response.shouldBeLeft(
+            CreateError.BusinessError(BusinessProcessError.Validation(ChangeOfEnergySupplierValidationError.MissingRequestedFromName.message))
+        )
         verify(exactly = 0) { requestRepo.insert(any(), any()) }
     }
 

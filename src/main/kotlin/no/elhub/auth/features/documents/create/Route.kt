@@ -40,7 +40,7 @@ fun Route.route(
         }
 
         val authorizedParty = AuthorizationParty(
-            resourceId = resolvedActor.gln,
+            id = resolvedActor.gln,
             type = PartyType.OrganizationEntity
         )
 

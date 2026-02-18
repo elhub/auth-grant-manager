@@ -13,6 +13,8 @@ data class AuthorizationGrant(
     val grantedTo: AuthorizationParty,
     val grantedAt: OffsetDateTime,
     val validFrom: OffsetDateTime,
+    val createdAt: OffsetDateTime,
+    val updatedAt: OffsetDateTime,
     val validTo: OffsetDateTime,
     val sourceType: SourceType,
     val sourceId: UUID,
@@ -35,6 +37,8 @@ data class AuthorizationGrant(
                 grantedTo = grantedTo,
                 grantedAt = currentTimeWithTimeZone(),
                 validFrom = currentTimeWithTimeZone(),
+                createdAt = currentTimeWithTimeZone(),
+                updatedAt = currentTimeWithTimeZone(),
                 validTo = currentTimeWithTimeZone().plusYears(1), // TODO this will be handled by the value stream
                 sourceId = sourceId,
                 sourceType = sourceType,

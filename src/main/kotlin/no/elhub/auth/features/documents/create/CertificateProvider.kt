@@ -7,7 +7,7 @@ import java.security.cert.X509Certificate
 interface CertificateProvider {
     fun getElhubSigningCertificate(): X509Certificate
     fun getElhubCertificateChain(): List<X509Certificate>
-    fun getBankIdRootCertificate(): X509Certificate
+    fun getBankIdRootCertificates(): List<X509Certificate>
 }
 
 sealed class CertificateRetrievalError {
@@ -19,7 +19,7 @@ const val CERT_TYPE = "X.509"
 class FileCertificateProviderConfig(
     val pathToCertificateChain: String,
     val pathToSigningCertificate: String,
-    val pathToBankIdRootCertificate: String,
+    val pathToBankIdRootCertificatesDir: String,
 )
 
 class FileCertificateProvider(
@@ -32,12 +32,12 @@ class FileCertificateProvider(
     private val elhubChain: List<X509Certificate> =
         readChain(cfg.pathToCertificateChain)
 
-    private val bankIdRootCert: X509Certificate =
-        readSingleCert(cfg.pathToBankIdRootCertificate)
+    private val bankIdRootCerts: List<X509Certificate> =
+        readAllCertsInDir(cfg.pathToBankIdRootCertificatesDir)
 
     override fun getElhubSigningCertificate() = elhubSigningCert
     override fun getElhubCertificateChain() = elhubChain
-    override fun getBankIdRootCertificate() = bankIdRootCert
+    override fun getBankIdRootCertificates() = bankIdRootCerts
 
     private fun readChain(path: String): List<X509Certificate> =
         File(path).inputStream().use {
@@ -49,4 +49,15 @@ class FileCertificateProvider(
 
     private fun readSingleCert(path: String): X509Certificate =
         readChain(path).single()
+
+    private fun readAllCertsInDir(dirPath: String): List<X509Certificate> {
+        val dir = File(dirPath)
+        require(dir.isDirectory) { "Not a directory: $dirPath" }
+        val pemFiles = dir.listFiles { file -> file.isFile && file.extension.equals("pem", ignoreCase = true) }
+            ?.sortedBy { it.name }
+            ?: emptyList()
+        require(pemFiles.isNotEmpty()) { "No .pem files found in $dirPath" }
+        return pemFiles.flatMap { readChain(it.path) }
+            .also { require(it.isNotEmpty()) { "No certs found in $dirPath" } }
+    }
 }

@@ -1,4 +1,4 @@
-package no.elhub.auth.features.businessprocesses.changeofsupplier.domain
+package no.elhub.auth.features.businessprocesses.changeofenergysupplier.domain
 
 import kotlinx.datetime.LocalDate
 import no.elhub.auth.features.common.CreateScopeData
@@ -7,25 +7,27 @@ import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.create.command.DocumentCommand
 import no.elhub.auth.features.documents.create.command.DocumentMetaMarker
+import no.elhub.auth.features.filegenerator.SupportedLanguage
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.create.command.RequestCommand
 import no.elhub.auth.features.requests.create.command.RequestMetaMarker
 
-data class ChangeOfSupplierBusinessCommand(
+data class ChangeOfEnergySupplierBusinessCommand(
     val requestedFrom: PartyIdentifier,
     val requestedBy: PartyIdentifier,
     val requestedTo: PartyIdentifier,
     val validTo: LocalDate,
     val scopes: List<CreateScopeData>,
-    val meta: ChangeOfSupplierBusinessMeta,
+    val meta: ChangeOfEnergySupplierBusinessMeta,
 )
 
-data class ChangeOfSupplierBusinessMeta(
+data class ChangeOfEnergySupplierBusinessMeta(
     val requestedFromName: String,
     val requestedForMeteringPointId: String,
     val requestedForMeteringPointAddress: String,
     val balanceSupplierName: String,
     val balanceSupplierContractName: String,
+    val language: SupportedLanguage? = null,
     val redirectURI: String? = null,
 ) : RequestMetaMarker,
     DocumentMetaMarker {
@@ -36,11 +38,12 @@ data class ChangeOfSupplierBusinessMeta(
             put("requestedForMeteringPointAddress", requestedForMeteringPointAddress)
             put("balanceSupplierContractName", balanceSupplierContractName)
             put("balanceSupplierName", balanceSupplierName)
+            language?.let { put("language", it.code) }
             redirectURI?.let { put("redirectURI", it) }
         }
 }
 
-fun ChangeOfSupplierBusinessCommand.toRequestCommand(): RequestCommand =
+fun ChangeOfEnergySupplierBusinessCommand.toRequestCommand(): RequestCommand =
     RequestCommand(
         type = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
         requestedBy = this.requestedBy,
@@ -51,7 +54,7 @@ fun ChangeOfSupplierBusinessCommand.toRequestCommand(): RequestCommand =
         meta = this.meta,
     )
 
-fun ChangeOfSupplierBusinessCommand.toDocumentCommand(): DocumentCommand =
+fun ChangeOfEnergySupplierBusinessCommand.toDocumentCommand(): DocumentCommand =
     DocumentCommand(
         type = AuthorizationDocument.Type.ChangeOfEnergySupplierForPerson,
         requestedFrom = this.requestedFrom,

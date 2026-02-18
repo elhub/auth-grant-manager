@@ -14,6 +14,7 @@ import io.ktor.http.fullPath
 import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
+import no.elhub.auth.features.businessprocesses.structuredata.common.ClientError
 
 class OrganisationsApiTest : FunSpec({
     val validPartyId = "3004300000019"

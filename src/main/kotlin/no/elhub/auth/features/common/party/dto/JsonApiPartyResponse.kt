@@ -8,6 +8,6 @@ fun AuthorizationParty.toJsonApiRelationship() =
     JsonApiRelationshipToOne(
         data = JsonApiRelationshipData(
             type = this.type.name,
-            id = this.resourceId
+            id = this.id
         )
     )

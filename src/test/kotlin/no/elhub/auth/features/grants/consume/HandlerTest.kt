@@ -28,9 +28,9 @@ class HandlerTest : FunSpec({
 
     val grantId = UUID.randomUUID()
     val newStatus = Status.Exhausted
-    val grantedFor = AuthorizationParty(resourceId = "person-1", type = PartyType.Person)
-    val grantedBy = AuthorizationParty(resourceId = "issuer-1", type = PartyType.Organization)
-    val grantedTo = AuthorizationParty(resourceId = "org-entity-1", type = PartyType.OrganizationEntity)
+    val grantedFor = AuthorizationParty(id = "person-1", type = PartyType.Person)
+    val grantedBy = AuthorizationParty(id = "issuer-1", type = PartyType.Organization)
+    val grantedTo = AuthorizationParty(id = "org-entity-1", type = PartyType.OrganizationEntity)
     val scopeIds = listOf(UUID.randomUUID(), UUID.randomUUID())
 
     val updatedGrant = AuthorizationGrant(
@@ -41,6 +41,8 @@ class HandlerTest : FunSpec({
         grantedTo = grantedTo,
         grantedAt = currentTimeWithTimeZone(),
         validFrom = currentTimeWithTimeZone(),
+        createdAt = currentTimeWithTimeZone(),
+        updatedAt = currentTimeWithTimeZone(),
         validTo = currentTimeWithTimeZone().plusYears(1),
         sourceType = SourceType.Document,
         sourceId = UUID.randomUUID(),
@@ -53,6 +55,8 @@ class HandlerTest : FunSpec({
         grantedBy = grantedBy,
         grantedTo = grantedTo,
         grantedAt = currentTimeWithTimeZone(),
+        createdAt = currentTimeWithTimeZone(),
+        updatedAt = currentTimeWithTimeZone(),
         validFrom = currentTimeWithTimeZone().minusDays(1),
         validTo = currentTimeWithTimeZone().plusYears(1),
         sourceType = SourceType.Document,
@@ -77,7 +81,7 @@ class HandlerTest : FunSpec({
             ConsumeCommand(
                 grantId = grantId,
                 newStatus = newStatus,
-                authorizedParty = AuthorizationParty(resourceId = "other-system", type = PartyType.System)
+                authorizedParty = AuthorizationParty(id = "other-system", type = PartyType.System)
             )
         )
 

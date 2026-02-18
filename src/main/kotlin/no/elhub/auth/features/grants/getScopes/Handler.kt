@@ -26,7 +26,7 @@ class Handler(
 
             val authorizedParty = query.authorizedParty
             when (authorizedParty.type) {
-                PartyType.System -> ensure(authorizedParty.resourceId == Constants.CONSENT_MANAGEMENT_OSB_ID) {
+                PartyType.System -> ensure(authorizedParty.id == Constants.CONSENT_MANAGEMENT_OSB_ID) {
                     QueryError.NotAuthorizedError
                 }
 

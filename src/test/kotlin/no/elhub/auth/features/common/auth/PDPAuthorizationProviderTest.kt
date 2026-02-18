@@ -168,14 +168,14 @@ class PDPAuthorizationProviderTest : FunSpec({
             response.shouldBeLeft(AuthError.InvalidToken)
         }
 
-        test("returns NotAuthorized when tokenType is not maskinporten") {
+        test("returns Forbidden when tokenType is not maskinporten") {
             val response = runProviderMethod(
                 method = PDPAuthorizationProvider::authorizeMaskinporten,
                 headers = validHeadersForMaskinporten,
                 pdpResponse = maskinportenResponse(tokenType = "random")
             )
 
-            response.shouldBeLeft(AuthError.NotAuthorized)
+            response.shouldBeLeft(AuthError.AccessDenied)
         }
 
         test("returns AuthorizedOrganizationEntity for authorized maskinporten decision") {
@@ -219,7 +219,7 @@ class PDPAuthorizationProviderTest : FunSpec({
             response.shouldBeLeft(AuthError.InvalidPdpResponseActingGlnMissing)
         }
 
-        test("returns UnknownError when PDP response includes input failed") {
+        test("returns Forbidden when PDP response includes input failed") {
 
             val response = runProviderMethod(
                 method = PDPAuthorizationProvider::authorizeMaskinporten,
@@ -230,7 +230,7 @@ class PDPAuthorizationProviderTest : FunSpec({
                     )
                 )
             )
-            response.shouldBeLeft(AuthError.NotAuthorized)
+            response.shouldBeLeft(AuthError.AccessDenied)
         }
 
         test("returns ActingFunctionNotSupported when PDP response includes unsupported actingFunction") {
@@ -293,14 +293,14 @@ class PDPAuthorizationProviderTest : FunSpec({
     }
 
     context("authorizeElhubService") {
-        test("returns NotAuthorized when tokenType is not elhub-service") {
+        test("returns Forbidden when tokenType is not elhub-service") {
             val response = runProviderMethod(
                 method = PDPAuthorizationProvider::authorizeElhubService,
                 headers = authorizationOnlyHeaders(),
                 pdpResponse = endUserResponse()
             )
 
-            response.shouldBeLeft(AuthError.NotAuthorized)
+            response.shouldBeLeft(AuthError.AccessDenied)
         }
 
         test("returns UnknownError when partyId is missing") {

@@ -6,6 +6,7 @@ import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.common.PGEnum
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.RepositoryWriteError
+import no.elhub.auth.features.common.currentTimeWithTimeZone
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.AuthorizationPartyRecord
 import no.elhub.auth.features.common.party.AuthorizationPartyTable
@@ -36,7 +37,6 @@ import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.update
 import java.time.OffsetDateTime
-import java.time.ZoneId
 import java.time.ZoneOffset
 import java.util.UUID
 
@@ -68,15 +68,15 @@ class ExposedDocumentRepository(
         scopes: List<CreateScopeData>
     ): Either<RepositoryWriteError, AuthorizationDocument> =
         either {
-            val requestedByParty = partyRepo.findOrInsert(doc.requestedBy.type, doc.requestedBy.resourceId)
+            val requestedByParty = partyRepo.findOrInsert(doc.requestedBy.type, doc.requestedBy.id)
                 .mapLeft { RepositoryWriteError.UnexpectedError }
                 .bind()
 
-            val requestedFromParty = partyRepo.findOrInsert(doc.requestedFrom.type, doc.requestedFrom.resourceId)
+            val requestedFromParty = partyRepo.findOrInsert(doc.requestedFrom.type, doc.requestedFrom.id)
                 .mapLeft { RepositoryWriteError.UnexpectedError }
                 .bind()
 
-            val requestedToParty = partyRepo.findOrInsert(doc.requestedTo.type, doc.requestedTo.resourceId)
+            val requestedToParty = partyRepo.findOrInsert(doc.requestedTo.type, doc.requestedTo.id)
                 .mapLeft { RepositoryWriteError.UnexpectedError }
                 .bind()
 
@@ -162,9 +162,9 @@ class ExposedDocumentRepository(
             val updatedCount =
                 Either
                     .catch {
-                        val signatoryRecord = partyRepo.findOrInsert(signatory.type, signatory.resourceId).bind()
+                        val signatoryRecord = partyRepo.findOrInsert(signatory.type, signatory.id).bind()
                         val requestedFromRecord =
-                            partyRepo.findOrInsert(requestedFrom.type, requestedFrom.resourceId).bind()
+                            partyRepo.findOrInsert(requestedFrom.type, requestedFrom.id).bind()
 
                         SignatoriesTable.insert {
                             it[authorizationDocumentId] = documentId
@@ -176,7 +176,7 @@ class ExposedDocumentRepository(
                             where = { AuthorizationDocumentTable.id eq documentId }
                         ) {
                             it[file] = signedFile
-                            it[updatedAt] = OffsetDateTime.now(ZoneId.of("Europe/Oslo"))
+                            it[updatedAt] = currentTimeWithTimeZone()
                         }
                     }.mapLeft {
                         RepositoryWriteError.UnexpectedError
@@ -206,7 +206,7 @@ class ExposedDocumentRepository(
 
     override fun findAll(requestedBy: AuthorizationParty): Either<RepositoryReadError, List<AuthorizationDocument>> =
         either {
-            val partyRecord = partyRepo.findOrInsert(type = requestedBy.type, partyId = requestedBy.resourceId)
+            val partyRecord = partyRepo.findOrInsert(type = requestedBy.type, partyId = requestedBy.id)
                 .mapLeft { RepositoryReadError.UnexpectedError }
                 .bind()
 
@@ -294,9 +294,9 @@ object AuthorizationDocumentTable : UUIDTable("auth.authorization_document") {
     val requestedBy = javaUUID("requested_by").references(AuthorizationPartyTable.id)
     val requestedFrom = javaUUID("requested_from").references(AuthorizationPartyTable.id)
     val requestedTo = javaUUID("requested_to").references(AuthorizationPartyTable.id)
-    val validTo = timestampWithTimeZone("valid_to")
-    val createdAt = timestampWithTimeZone("created_at").default(OffsetDateTime.now(ZoneId.of("Europe/Oslo")))
-    val updatedAt = timestampWithTimeZone("updated_at").default(OffsetDateTime.now(ZoneId.of("Europe/Oslo")))
+    val validTo = timestampWithTimeZone("valid_to").clientDefault { currentTimeWithTimeZone() }
+    val createdAt = timestampWithTimeZone("created_at").clientDefault { currentTimeWithTimeZone() }
+    val updatedAt = timestampWithTimeZone("updated_at").clientDefault { currentTimeWithTimeZone() }
 }
 
 object AuthorizationDocumentScopeTable : Table("auth.authorization_document_scope") {
@@ -304,7 +304,6 @@ object AuthorizationDocumentScopeTable : Table("auth.authorization_document_scop
         .references(AuthorizationDocumentTable.id, onDelete = ReferenceOption.CASCADE)
     val authorizationScopeId = javaUUID("authorization_scope_id")
         .references(AuthorizationScopeTable.id, onDelete = ReferenceOption.CASCADE)
-    val createdAt = timestamp("created_at").clientDefault { java.time.Instant.now() }
     override val primaryKey = PrimaryKey(authorizationDocumentId, authorizationScopeId)
 }
 
@@ -342,10 +341,10 @@ fun ResultRow.toAuthorizationDocument(
         type = this[AuthorizationDocumentTable.type],
         status = status,
         file = this[AuthorizationDocumentTable.file],
-        requestedBy = AuthorizationParty(resourceId = requestedBy.resourceId, type = requestedBy.type),
-        requestedFrom = AuthorizationParty(resourceId = requestedFrom.resourceId, type = requestedFrom.type),
-        requestedTo = AuthorizationParty(resourceId = requestedTo.resourceId, type = requestedTo.type),
-        signedBy = signedBy?.let { AuthorizationParty(resourceId = it.resourceId, type = it.type) },
+        requestedBy = AuthorizationParty(id = requestedBy.resourceId, type = requestedBy.type),
+        requestedFrom = AuthorizationParty(id = requestedFrom.resourceId, type = requestedFrom.type),
+        requestedTo = AuthorizationParty(id = requestedTo.resourceId, type = requestedTo.type),
+        signedBy = signedBy?.let { AuthorizationParty(id = it.resourceId, type = it.type) },
         createdAt = this[AuthorizationDocumentTable.createdAt],
         updatedAt = this[AuthorizationDocumentTable.updatedAt],
         validTo = validTo,

@@ -5,11 +5,12 @@ import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.raise.either
 import com.github.mustachejava.DefaultMustacheFactory
+import com.github.mustachejava.TemplateFunction
 import com.openhtmltopdf.extend.FSSupplier
 import com.openhtmltopdf.outputdevice.helper.BaseRendererBuilder
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder
-import no.elhub.auth.features.businessprocesses.changeofsupplier.domain.ChangeOfSupplierBusinessMeta
-import no.elhub.auth.features.businessprocesses.movein.domain.MoveInBusinessMeta
+import no.elhub.auth.features.businessprocesses.changeofenergysupplier.domain.ChangeOfEnergySupplierBusinessMeta
+import no.elhub.auth.features.businessprocesses.moveinandchangeofenergysupplier.domain.MoveInAndChangeOfEnergySupplierBusinessMeta
 import no.elhub.auth.features.documents.create.DocumentGenerationError
 import no.elhub.auth.features.documents.create.FileGenerator
 import no.elhub.auth.features.documents.create.command.DocumentMetaMarker
@@ -24,6 +25,8 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.io.StringWriter
+import java.util.Locale
+import java.util.ResourceBundle
 import kotlin.math.PI
 
 data class Font(
@@ -54,6 +57,8 @@ class PdfGenerator(
         internal const val VARIABLE_KEY_BALANCE_SUPPLIER_NAME = "balanceSupplierName"
         internal const val VARIABLE_KEY_BALANCE_SUPPLIER_CONTRACT_NAME = "balanceSupplierContractName"
         internal const val VARIABLE_KEY_MOVE_IN_DATE = "moveInDate"
+        internal const val VARIABLE_KEY_HTML_LANG = "htmlLang"
+        internal const val VARIABLE_KEY_I18N = "i18n"
     }
 
     private fun loadClasspathResource(path: String): ByteArray =
@@ -63,52 +68,22 @@ class PdfGenerator(
     val fonts =
         listOf(
             Font(
-                loadClasspathResource("/fonts/liberation-sans/LiberationSans-Regular.ttf"),
-                "LiberationSans",
+                loadClasspathResource("/fonts/roboto/Roboto-Regular.ttf"),
+                "Roboto",
                 400,
                 BaseRendererBuilder.FontStyle.NORMAL,
             ),
             Font(
-                loadClasspathResource("/fonts/liberation-sans/LiberationSans-Bold.ttf"),
-                "LiberationSans",
-                700,
+                loadClasspathResource("/fonts/roboto/Roboto-Medium.ttf"),
+                "Roboto",
+                500,
                 BaseRendererBuilder.FontStyle.NORMAL,
             ),
             Font(
-                loadClasspathResource("/fonts/liberation-sans/LiberationSans-Italic.ttf"),
-                "LiberationSans",
-                400,
-                BaseRendererBuilder.FontStyle.ITALIC,
-            ),
-            Font(
-                loadClasspathResource("/fonts/liberation-sans/LiberationSans-BoldItalic.ttf"),
-                "LiberationSans",
-                700,
-                BaseRendererBuilder.FontStyle.ITALIC,
-            ),
-            Font(
-                loadClasspathResource("/fonts/libre-bodoni/LibreBodoni-Regular.ttf"),
-                "LibreBodoni",
-                400,
-                BaseRendererBuilder.FontStyle.NORMAL,
-            ),
-            Font(
-                loadClasspathResource("/fonts/libre-bodoni/LibreBodoni-Bold.ttf"),
-                "LibreBodoni",
+                loadClasspathResource("/fonts/roboto/Roboto-Bold.ttf"),
+                "Roboto",
                 700,
                 BaseRendererBuilder.FontStyle.NORMAL,
-            ),
-            Font(
-                loadClasspathResource("/fonts/libre-bodoni/LibreBodoni-Italic.ttf"),
-                "LibreBodoni",
-                400,
-                BaseRendererBuilder.FontStyle.ITALIC,
-            ),
-            Font(
-                loadClasspathResource("/fonts/libre-bodoni/LibreBodoni-BoldItalic.ttf"),
-                "LibreBodoni",
-                700,
-                BaseRendererBuilder.FontStyle.ITALIC,
             ),
         )
 
@@ -121,25 +96,28 @@ class PdfGenerator(
 
     override fun generate(
         signerNin: String,
-        documentMeta: DocumentMetaMarker
+        documentMeta: DocumentMetaMarker,
     ): Either<DocumentGenerationError.ContentGenerationError, ByteArray> = either {
+        val language = resolveLanguage(documentMeta)
         val contractHtmlString = when (documentMeta) {
-            is ChangeOfSupplierBusinessMeta -> generateChangeOfSupplierHtml(
+            is ChangeOfEnergySupplierBusinessMeta -> generateChangeOfEnergySupplierHtml(
                 customerNin = signerNin,
                 customerName = documentMeta.requestedFromName,
                 meteringPointAddress = documentMeta.requestedForMeteringPointAddress,
                 meteringPointId = documentMeta.requestedForMeteringPointId,
                 balanceSupplierName = documentMeta.balanceSupplierName,
                 balanceSupplierContractName = documentMeta.balanceSupplierContractName,
+                language = language
             )
 
-            is MoveInBusinessMeta -> generateMoveInHtml(
+            is MoveInAndChangeOfEnergySupplierBusinessMeta -> generateMoveInAndChangeOfEnergySupplierHtml(
                 customerName = documentMeta.requestedFromName,
                 meteringPointAddress = documentMeta.requestedForMeteringPointAddress,
                 meteringPointId = documentMeta.requestedForMeteringPointId,
                 balanceSupplierName = documentMeta.balanceSupplierName,
                 balanceSupplierContractName = documentMeta.balanceSupplierContractName,
-                startDate = documentMeta.startDate?.toString()
+                startDate = documentMeta.startDate?.let { formatNorwegianDate(it.year, it.monthNumber, it.dayOfMonth) },
+                language = language
             )
 
             else -> return DocumentGenerationError.ContentGenerationError.left()
@@ -161,14 +139,16 @@ class PdfGenerator(
         )
     }
 
-    private fun generateChangeOfSupplierHtml(
+    private fun generateChangeOfEnergySupplierHtml(
         customerNin: String,
         customerName: String,
         meteringPointAddress: String,
         meteringPointId: String,
         balanceSupplierName: String,
         balanceSupplierContractName: String,
+        language: SupportedLanguage,
     ): Either<DocumentGenerationError.ContentGenerationError, String> = Either.catch {
+        val i18n = i18nTemplateFunction(language)
         StringWriter().apply {
             mustacheFactory
                 .compile(MustacheConstants.TEMPLATE_CHANGE_SUPPLIER_CONTRACT)
@@ -181,19 +161,23 @@ class PdfGenerator(
                         MustacheConstants.VARIABLE_KEY_METERING_POINT_ADDRESS to meteringPointAddress,
                         MustacheConstants.VARIABLE_KEY_BALANCE_SUPPLIER_NAME to balanceSupplierName,
                         MustacheConstants.VARIABLE_KEY_BALANCE_SUPPLIER_CONTRACT_NAME to balanceSupplierContractName,
+                        MustacheConstants.VARIABLE_KEY_HTML_LANG to language.code,
+                        MustacheConstants.VARIABLE_KEY_I18N to i18n,
                     )
                 ).flush()
         }.toString()
     }.mapLeft { DocumentGenerationError.ContentGenerationError }
 
-    private fun generateMoveInHtml(
+    private fun generateMoveInAndChangeOfEnergySupplierHtml(
         customerName: String,
         meteringPointAddress: String,
         meteringPointId: String,
         balanceSupplierName: String,
         balanceSupplierContractName: String,
-        startDate: String?
+        startDate: String?,
+        language: SupportedLanguage,
     ): Either<DocumentGenerationError.ContentGenerationError, String> = Either.catch {
+        val i18n = i18nTemplateFunction(language)
         StringWriter().apply {
             mustacheFactory
                 .compile(MustacheConstants.TEMPLATE_MOVE_IN)
@@ -205,6 +189,8 @@ class PdfGenerator(
                         MustacheConstants.VARIABLE_KEY_METERING_POINT_ADDRESS to meteringPointAddress,
                         MustacheConstants.VARIABLE_KEY_BALANCE_SUPPLIER_NAME to balanceSupplierName,
                         MustacheConstants.VARIABLE_KEY_BALANCE_SUPPLIER_CONTRACT_NAME to balanceSupplierContractName,
+                        MustacheConstants.VARIABLE_KEY_HTML_LANG to language.code,
+                        MustacheConstants.VARIABLE_KEY_I18N to i18n,
                     )
                         .let { base ->
                             if (startDate == null) {
@@ -216,6 +202,9 @@ class PdfGenerator(
                 ).flush()
         }.toString()
     }.mapLeft { DocumentGenerationError.ContentGenerationError }
+
+    private fun formatNorwegianDate(year: Int, month: Int, day: Int): String =
+        String.format(Locale.ROOT, "%02d.%02d.%04d", day, month, year)
 
     private fun generatePdfFromHtml(htmlString: String) = Either.catch {
         ByteArrayOutputStream().use { out ->
@@ -248,6 +237,24 @@ class PdfGenerator(
 
     private fun fontSupplier(bytes: ByteArray): FSSupplier<InputStream> =
         FSSupplier { ByteArrayInputStream(bytes) }
+
+    private fun i18nTemplateFunction(language: SupportedLanguage): TemplateFunction {
+        val bundle = ResourceBundle.getBundle("templates.i18n.messages", Locale.forLanguageTag(language.code))
+        return TemplateFunction { key ->
+            val normalizedKey = key.trim()
+            if (bundle.containsKey(normalizedKey)) {
+                bundle.getString(normalizedKey)
+            } else {
+                normalizedKey
+            }
+        }
+    }
+
+    private fun resolveLanguage(documentMeta: DocumentMetaMarker): SupportedLanguage =
+        documentMeta
+            .toMetaAttributes()["language"]
+            ?.let { languageCode -> SupportedLanguage.entries.firstOrNull { it.code == languageCode } }
+            ?: SupportedLanguage.DEFAULT
 
     private fun PdfRendererBuilder.useFonts(fonts: List<Font>): PdfRendererBuilder {
         fonts.forEach { font ->

@@ -69,19 +69,19 @@ fun AuthorizationDocument.toCreateDocumentResponse() = CreateDocumentResponse(
             requestedBy = JsonApiRelationshipToOne(
                 data = JsonApiRelationshipData(
                     type = this.requestedBy.type.name,
-                    id = this.requestedBy.resourceId,
+                    id = this.requestedBy.id,
                 )
             ),
             requestedFrom = JsonApiRelationshipToOne(
                 data = JsonApiRelationshipData(
                     type = this.requestedFrom.type.name,
-                    id = this.requestedFrom.resourceId,
+                    id = this.requestedFrom.id,
                 )
             ),
             requestedTo = JsonApiRelationshipToOne(
                 data = JsonApiRelationshipData(
                     type = this.requestedTo.type.name,
-                    id = this.requestedTo.resourceId,
+                    id = this.requestedTo.id,
                 )
             )
         ),

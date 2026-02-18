@@ -1,4 +1,4 @@
-package no.elhub.auth.features.businessprocesses.movein.domain
+package no.elhub.auth.features.businessprocesses.moveinandchangeofenergysupplier.domain
 
 import kotlinx.datetime.LocalDate
 import no.elhub.auth.features.common.CreateScopeData
@@ -7,26 +7,28 @@ import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.create.command.DocumentCommand
 import no.elhub.auth.features.documents.create.command.DocumentMetaMarker
+import no.elhub.auth.features.filegenerator.SupportedLanguage
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.create.command.RequestCommand
 import no.elhub.auth.features.requests.create.command.RequestMetaMarker
 
-data class MoveInBusinessCommand(
+data class MoveInAndChangeOfEnergySupplierBusinessCommand(
     val requestedFrom: PartyIdentifier,
     val requestedBy: PartyIdentifier,
     val requestedTo: PartyIdentifier,
     val validTo: LocalDate,
     val scopes: List<CreateScopeData>,
-    val meta: MoveInBusinessMeta,
+    val meta: MoveInAndChangeOfEnergySupplierBusinessMeta,
 )
 
-data class MoveInBusinessMeta(
+data class MoveInAndChangeOfEnergySupplierBusinessMeta(
     val requestedFromName: String,
     val requestedForMeteringPointId: String,
     val requestedForMeteringPointAddress: String,
     val balanceSupplierName: String,
     val balanceSupplierContractName: String,
     val startDate: LocalDate?,
+    val language: SupportedLanguage? = null,
     val redirectURI: String? = null,
 ) : RequestMetaMarker,
     DocumentMetaMarker {
@@ -37,12 +39,13 @@ data class MoveInBusinessMeta(
             put("requestedForMeteringPointAddress", requestedForMeteringPointAddress)
             put("balanceSupplierContractName", balanceSupplierContractName)
             put("balanceSupplierName", balanceSupplierName)
+            language?.let { put("language", it.code) }
             startDate?.let { put("startDate", it.toString()) }
             redirectURI?.let { put("redirectURI", it) }
         }
 }
 
-fun MoveInBusinessCommand.toRequestCommand(): RequestCommand =
+fun MoveInAndChangeOfEnergySupplierBusinessCommand.toRequestCommand(): RequestCommand =
     RequestCommand(
         type = AuthorizationRequest.Type.MoveInAndChangeOfEnergySupplierForPerson,
         requestedBy = this.requestedBy,
@@ -53,7 +56,7 @@ fun MoveInBusinessCommand.toRequestCommand(): RequestCommand =
         meta = this.meta,
     )
 
-fun MoveInBusinessCommand.toDocumentCommand(): DocumentCommand =
+fun MoveInAndChangeOfEnergySupplierBusinessCommand.toDocumentCommand(): DocumentCommand =
     DocumentCommand(
         type = AuthorizationDocument.Type.MoveInAndChangeOfEnergySupplierForPerson,
         requestedFrom = this.requestedFrom,

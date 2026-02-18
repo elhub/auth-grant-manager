@@ -28,14 +28,14 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
         val query = when (authorizedParty) {
             is AuthorizedParty.OrganizationEntity -> Query(
                 authorizedParty = AuthorizationParty(
-                    resourceId = authorizedParty.gln,
+                    id = authorizedParty.gln,
                     type = PartyType.OrganizationEntity
                 )
             )
 
             is AuthorizedParty.Person -> Query(
                 authorizedParty = AuthorizationParty(
-                    resourceId = authorizedParty.id.toString(),
+                    id = authorizedParty.id.toString(),
                     type = PartyType.Person
                 )
             )

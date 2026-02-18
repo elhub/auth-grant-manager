@@ -24,7 +24,9 @@ data class GrantResponseAttributes(
     val status: String,
     val grantedAt: String,
     val validFrom: String,
-    val validTo: String
+    val validTo: String,
+    val createdAt: String,
+    val updatedAt: String,
 ) : JsonApiAttributes
 
 @Serializable
@@ -55,25 +57,27 @@ fun AuthorizationGrant.toSingleGrantResponse() =
                 status = this.grantStatus.name,
                 grantedAt = this.grantedAt.toTimeZoneOffsetString(),
                 validFrom = this.validFrom.toTimeZoneOffsetString(),
-                validTo = this.validTo.toTimeZoneOffsetString()
+                validTo = this.validTo.toTimeZoneOffsetString(),
+                createdAt = this.createdAt.toTimeZoneOffsetString(),
+                updatedAt = this.updatedAt.toTimeZoneOffsetString(),
             ),
             relationships = GrantResponseRelationShips(
                 grantedFor = JsonApiRelationshipToOne(
                     data = JsonApiRelationshipData(
                         type = this.grantedFor.type.name,
-                        id = this.grantedFor.resourceId
+                        id = this.grantedFor.id
                     )
                 ),
                 grantedBy = JsonApiRelationshipToOne(
                     data = JsonApiRelationshipData(
                         type = this.grantedBy.type.name,
-                        id = this.grantedBy.resourceId
+                        id = this.grantedBy.id
                     )
                 ),
                 grantedTo = JsonApiRelationshipToOne(
                     data = JsonApiRelationshipData(
                         type = this.grantedTo.type.name,
-                        id = this.grantedTo.resourceId
+                        id = this.grantedTo.id
                     )
                 ),
                 source = JsonApiRelationshipToOne(
@@ -120,25 +124,27 @@ fun List<AuthorizationGrant>.toCollectionGrantResponse() =
                     status = grant.grantStatus.name,
                     grantedAt = grant.grantedAt.toTimeZoneOffsetString(),
                     validFrom = grant.validFrom.toTimeZoneOffsetString(),
-                    validTo = grant.validTo.toTimeZoneOffsetString()
+                    validTo = grant.validTo.toTimeZoneOffsetString(),
+                    createdAt = grant.createdAt.toTimeZoneOffsetString(),
+                    updatedAt = grant.updatedAt.toTimeZoneOffsetString(),
                 ),
                 relationships = GrantResponseRelationShips(
                     grantedFor = JsonApiRelationshipToOne(
                         data = JsonApiRelationshipData(
                             type = grant.grantedFor.type.name,
-                            id = grant.grantedFor.resourceId
+                            id = grant.grantedFor.id
                         )
                     ),
                     grantedBy = JsonApiRelationshipToOne(
                         data = JsonApiRelationshipData(
                             type = grant.grantedBy.type.name,
-                            id = grant.grantedBy.resourceId
+                            id = grant.grantedBy.id
                         )
                     ),
                     grantedTo = JsonApiRelationshipToOne(
                         data = JsonApiRelationshipData(
                             type = grant.grantedTo.type.name,
-                            id = grant.grantedTo.resourceId
+                            id = grant.grantedTo.id
                         )
                     ),
                     source = JsonApiRelationshipToOne(

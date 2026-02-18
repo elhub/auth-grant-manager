@@ -84,6 +84,8 @@ class AuthorizationGrantRouteTest : FunSpec({
                         grantedAt shouldBe "2025-04-04T04:00:00+02:00"
                         validFrom shouldBe "2025-04-04T04:00:00+02:00"
                         validTo shouldBe "2026-04-04T04:00:00+02:00"
+                        createdAt shouldBe "2025-04-04T04:00:00+02:00"
+                        updatedAt shouldBe "2025-04-04T04:00:00+02:00"
                     }
                     relationships.apply {
                         grantedFor.apply {
@@ -201,6 +203,8 @@ class AuthorizationGrantRouteTest : FunSpec({
                         grantedAt shouldBe "2025-04-04T04:00:00+02:00"
                         validFrom shouldBe "2025-04-04T04:00:00+02:00"
                         validTo shouldBe "2026-04-04T04:00:00+02:00"
+                        createdAt shouldBe "2025-04-04T04:00:00+02:00"
+                        updatedAt shouldBe "2025-04-04T04:00:00+02:00"
                     }
                     relationships.apply {
                         grantedFor.apply {
@@ -274,7 +278,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                     size shouldBe 1
                     this[0].apply {
                         status shouldBe "404"
-                        title shouldBe "Not found"
+                        title shouldBe "Not found error"
                         detail shouldBe "The requested resource could not be found"
                     }
                 }
@@ -477,7 +481,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                     size shouldBe 1
                     this[0].apply {
                         status shouldBe "404"
-                        title shouldBe "Not found"
+                        title shouldBe "Not found error"
                         detail shouldBe "The requested resource could not be found"
                     }
                 }

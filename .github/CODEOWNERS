@@ -5,12 +5,14 @@
 # https://github.com/orgs/elhub/teams
 
 # Default Repository Owner
-* @elhub/devxp @elhub/auth
+* @elhub/team-devxp @elhub/chapter-auth
 
 # Business process modules
-/src/main/kotlin/no/elhub/auth/features/businessprocesses/changeofsupplier/ @elhub/wow
-/src/test/kotlin/no/elhub/auth/features/businessprocesses/changeofsupplier/ @elhub/wow
-/src/main/kotlin/no/elhub/auth/features/businessprocesses/movein/ @elhub/wow
-/src/test/kotlin/no/elhub/auth/features/businessprocesses/movein/ @elhub/wow
-/src/main/kotlin/no/elhub/auth/features/businessprocesses/structuredata/ @elhub/wow
-/src/test/kotlin/no/elhub/auth/features/businessprocesses/structuredata/ @elhub/wow
+/src/main/kotlin/no/elhub/auth/features/businessprocesses/changeofenergysupplier/ @elhub/team-wow
+/src/test/kotlin/no/elhub/auth/features/businessprocesses/changeofenergysupplier/ @elhub/team-wow
+/src/main/kotlin/no/elhub/auth/features/businessprocesses/moveinandchangeofenergysupplier/ @elhub/team-wow
+/src/test/kotlin/no/elhub/auth/features/businessprocesses/moveinandchangeofenergysupplier/ @elhub/team-wow
+/src/main/kotlin/no/elhub/auth/features/businessprocesses/structuredata/ @elhub/team-wow
+/src/test/kotlin/no/elhub/auth/features/businessprocesses/structuredata/ @elhub/team-wow
+/src/main/kotlin/no/elhub/auth/features/businessprocesses/datasharing/ @elhub/team-wow
+/src/test/kotlin/no/elhub/auth/features/businessprocesses/datasharing/ @elhub/team-wow

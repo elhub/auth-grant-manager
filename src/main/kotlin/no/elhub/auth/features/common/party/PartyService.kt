@@ -12,7 +12,7 @@ class PartyService(
         when (partyIdentifier.idType) {
             PartyIdentifierType.NationalIdentityNumber ->
                 personService.findOrCreateByNin(partyIdentifier.idValue)
-                    .map { AuthorizationParty(resourceId = it.internalId.toString(), type = PartyType.Person) }
+                    .map { AuthorizationParty(id = it.internalId.toString(), type = PartyType.Person) }
                     .mapLeft { error ->
                         when (error) {
                             ClientError.InvalidNin -> PartyError.InvalidNin
@@ -23,12 +23,12 @@ class PartyService(
                     }
 
             PartyIdentifierType.OrganizationNumber -> AuthorizationParty(
-                resourceId = partyIdentifier.idValue,
+                id = partyIdentifier.idValue,
                 type = PartyType.Organization
             ).right()
 
             PartyIdentifierType.GlobalLocationNumber -> AuthorizationParty(
-                resourceId = partyIdentifier.idValue,
+                id = partyIdentifier.idValue,
                 type = PartyType.OrganizationEntity
             ).right()
         }

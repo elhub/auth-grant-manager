@@ -2,6 +2,8 @@ package no.elhub.auth.features.documents.confirm
 
 import io.ktor.http.HttpStatusCode
 import no.elhub.auth.features.common.buildApiErrorResponse
+import no.elhub.auth.features.common.toInternalServerApiErrorResponse
+import no.elhub.auth.features.common.toNotFoundApiErrorResponse
 import no.elhub.auth.features.documents.common.SignatureValidationError
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 
@@ -22,11 +24,7 @@ sealed class ConfirmError {
 
 fun ConfirmError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> =
     when (this) {
-        ConfirmError.DocumentNotFoundError -> buildApiErrorResponse(
-            status = HttpStatusCode.NotFound,
-            title = "Not found",
-            detail = "Document could not be found"
-        )
+        ConfirmError.DocumentNotFoundError -> toNotFoundApiErrorResponse("Document could not be found")
 
         is ConfirmError.ValidateSignaturesError -> handleValidateSignatureError(this)
 
@@ -44,7 +42,7 @@ fun ConfirmError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollecti
         )
 
         ConfirmError.IllegalStateError -> buildApiErrorResponse(
-            status = HttpStatusCode.NotFound,
+            status = HttpStatusCode.BadRequest,
             title = "Invalid status state",
             detail = "Document must be in 'Pending' status to confirm."
         )
@@ -60,11 +58,7 @@ fun ConfirmError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollecti
         ConfirmError.DocumentUpdateError,
         ConfirmError.ScopeReadError,
         ConfirmError.GrantCreationError,
-        ConfirmError.RequestedByResolutionError, -> buildApiErrorResponse(
-            status = HttpStatusCode.InternalServerError,
-            title = "Internal Server error",
-            detail = "An internal error occurred."
-        )
+        ConfirmError.RequestedByResolutionError, -> toInternalServerApiErrorResponse()
     }
 
 fun handleValidateSignatureError(error: ConfirmError.ValidateSignaturesError): Pair<HttpStatusCode, JsonApiErrorCollection> = when (error.cause) {
@@ -83,6 +77,8 @@ fun handleValidateSignatureError(error: ConfirmError.ValidateSignaturesError): P
             detail = "The end user signing certificate is not trusted."
         )
 
+    SignatureValidationError.MissingBankIdTrustedTimestamp,
+    SignatureValidationError.BankIdSigningCertNotValidAtTimestamp,
     SignatureValidationError.InvalidBankIdSignature ->
         buildApiErrorResponse(
             status = HttpStatusCode.BadRequest,

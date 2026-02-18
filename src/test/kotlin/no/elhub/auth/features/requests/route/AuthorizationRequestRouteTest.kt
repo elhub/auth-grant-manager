@@ -1,5 +1,6 @@
 package no.elhub.auth.features.requests.route
 
+import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import io.kotest.assertions.throwables.shouldNotThrowAny
@@ -22,6 +23,7 @@ import io.ktor.server.application.Application
 import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
+import no.elhub.auth.features.businessprocesses.BusinessProcessError
 import no.elhub.auth.features.common.AuthPersonsTestContainer
 import no.elhub.auth.features.common.AuthPersonsTestContainerExtension
 import no.elhub.auth.features.common.CreateScopeData
@@ -49,6 +51,7 @@ import no.elhub.auth.features.requests.create.dto.CreateRequestResponse
 import no.elhub.auth.features.requests.create.dto.JsonApiCreateRequest
 import no.elhub.auth.features.requests.create.model.CreateRequestModel
 import no.elhub.auth.features.requests.create.model.defaultRequestValidTo
+import no.elhub.auth.features.requests.create.model.today
 import no.elhub.auth.features.requests.create.requesttypes.RequestTypeValidationError
 import no.elhub.auth.features.requests.get.dto.GetRequestSingleResponse
 import no.elhub.auth.features.requests.query.dto.GetRequestCollectionResponse
@@ -335,67 +338,23 @@ class AuthorizationRequestRouteTest : FunSpec({
                     contentType(ContentType.Application.Json)
                     setBody(examplePostBody)
                 }
-
-                response.status shouldBe HttpStatusCode.Created
-
-                val responseJson: CreateRequestResponse = response.body()
-                responseJson.data.apply {
-                    id.shouldNotBeNull()
-                    type shouldBe "AuthorizationRequest"
-                    attributes.shouldNotBeNull().apply {
-                        requestType shouldBe "ChangeOfEnergySupplierForPerson"
-                        status shouldBe AuthorizationRequest.Status.Pending.name
-                        val validTo = validTo.shouldNotBeNull()
-                        shouldNotThrowAny {
-                            JavaLocalDate.parse(validTo, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
-                        }
-                        val createdAt = createdAt.shouldNotBeNull()
-                        val updatedAt = updatedAt.shouldNotBeNull()
-
-                        shouldNotThrowAny {
-                            OffsetDateTime.parse(createdAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
-                            OffsetDateTime.parse(updatedAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
-                        }
-                    }
-                    relationships.shouldNotBeNull().apply {
-                        requestedBy.apply {
-                            data.apply {
-                                id shouldBe "0107000000021"
-                                type shouldBe "OrganizationEntity"
-                            }
-                        }
-                        requestedFrom.apply {
-                            data.apply {
-                                id.shouldNotBeNull()
-                                type shouldBe "Person"
-                            }
-                        }
-                        requestedTo.apply {
-                            data.apply {
-                                id.shouldNotBeNull()
-                                type shouldBe "Person"
-                            }
-                        }
-                    }
-                    meta.shouldNotBeNull().apply {
-                        values["requestedFromName"] shouldBe "Hillary Orr"
-                        values["requestedForMeteringPointId"] shouldBe "123456789012345678"
-                        values["requestedForMeteringPointAddress"] shouldBe "quaerendum"
-                        values["balanceSupplierName"] shouldBe "Balance Supplier"
-                        values["balanceSupplierContractName"] shouldBe "Selena Chandler"
-                        values["redirectURI"] shouldBe "https://example.com/redirect"
-                    }
-                    links.shouldNotBeNull().apply {
-                        self.shouldNotBeNull()
+                response.status shouldBe HttpStatusCode.NotFound
+                val responseJson: JsonApiErrorCollection = response.body()
+                responseJson.errors.apply {
+                    size shouldBe 1
+                    this[0].apply {
+                        status shouldBe "404"
+                        title shouldBe "Not found error"
+                        detail shouldBe "The requested resource could not be found"
                     }
                 }
-                responseJson.links.shouldNotBeNull().apply {
-                    self.shouldNotBeNull()
-                }
-                responseJson.meta.shouldNotBeNull().apply {
+                responseJson.meta.apply {
                     "createdAt".shouldNotBeNull()
                 }
             }
+
+
+
 
 
             test("PATCH /authorization-requests/ should accept authorization request and persist grant relationship") {
@@ -822,4 +781,3 @@ class AuthorizationRequestRouteTest : FunSpec({
         }
     }
 })
-

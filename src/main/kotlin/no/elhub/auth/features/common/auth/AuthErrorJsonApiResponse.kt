@@ -2,6 +2,7 @@ package no.elhub.auth.features.common.auth
 
 import io.ktor.http.HttpStatusCode
 import no.elhub.auth.features.common.buildApiErrorResponse
+import no.elhub.auth.features.common.toInternalServerApiErrorResponse
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 
 fun AuthError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> =
@@ -39,15 +40,17 @@ fun AuthError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection>
         AuthError.NotAuthorized -> buildApiErrorResponse(
             status = HttpStatusCode.Unauthorized,
             title = "Not authorized",
-            detail = "Not authorized for this endpoint."
+            detail = "Authentication is required or invalid."
+        )
+
+        AuthError.AccessDenied -> buildApiErrorResponse(
+            status = HttpStatusCode.Forbidden,
+            title = "Forbidden",
+            detail = "Access is denied for this endpoint."
         )
 
         AuthError.InvalidPdpResponseAuthInfoMissing,
         AuthError.InvalidPdpResponseActingGlnMissing,
         AuthError.InvalidPdpResponseActingFunctionMissing,
-        AuthError.UnknownError -> buildApiErrorResponse(
-            status = HttpStatusCode.InternalServerError,
-            title = "Internal server error",
-            detail = "An internal error occurred."
-        )
+        AuthError.UnknownError -> toInternalServerApiErrorResponse()
     }

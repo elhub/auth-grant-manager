@@ -15,7 +15,7 @@
                 "Person"
               ]
             },
-            "resourceId": {
+            "id": {
               "type": "string",
               "description": "The unique identifier of the linked resource."
             }
@@ -23,7 +23,7 @@
           "examples": [
             {
               "type": "Person",
-              "resourceId": "56365eae-bc09-5c51-e063-9f768d0ac8cf"
+              "id": "56365eae-bc09-5c51-e063-9f768d0ac8cf"
             }
           ]
         }

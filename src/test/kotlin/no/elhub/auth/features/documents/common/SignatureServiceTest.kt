@@ -17,6 +17,7 @@ import no.elhub.auth.features.common.httpTestClient
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
 import no.elhub.auth.features.documents.EndUserSignatureTestHelper
+import no.elhub.auth.features.documents.TempBankIdCertificatesLocation
 import no.elhub.auth.features.documents.TestCertificateFactory
 import no.elhub.auth.features.documents.TestCertificateUtil
 import no.elhub.auth.features.documents.TestPdfSigner
@@ -37,15 +38,20 @@ class SignatureServiceTest : FunSpec({
         cfg = localVaultConfig
     )
 
+    val tempBankIdCerts = TempBankIdCertificatesLocation.create()
+
     val certProviderConfig = FileCertificateProviderConfig(
         TestCertificateUtil.Constants.CERTIFICATE_LOCATION,
         TestCertificateUtil.Constants.CERTIFICATE_LOCATION,
-        TestCertificateUtil.Constants.BANKID_ROOT_CERTIFICATE_LOCATION,
+        tempBankIdCerts.bankIdRootCertificatesDir,
     )
 
     val certProvider = FileCertificateProvider(certProviderConfig)
     val padesService = PAdESService(CommonCertificateVerifier())
-    val certFactory = TestCertificateFactory()
+    val certFactory = TestCertificateFactory(
+        bankIdRootCertificatePath = tempBankIdCerts.bankIdRootCertificatePath,
+        bankIdRootPrivateKeyPath = tempBankIdCerts.bankIdRootPrivateKeyPath
+    )
 
     val signingService = PdfSignatureService(padesService, certProvider, vaultSignatureProvider)
 
@@ -150,6 +156,32 @@ class SignatureServiceTest : FunSpec({
             pdfValidationResult.shouldBeRight(PartyIdentifier(idType = PartyIdentifierType.NationalIdentityNumber, idValue = nationalIdentityNumber))
         }
 
+        test("Should accept signatures from multiple trusted BankID roots") {
+            val elhubSignedPdfBytes = signingService.sign(unsignedPdfBytes).shouldBeRight()
+
+            val bankIdSignedFromRoot1 = endUserSignatureTestHelper.sign(
+                pdfBytes = elhubSignedPdfBytes,
+                nationalIdentityNumber = nationalIdentityNumber
+            )
+
+            val secondRoot = tempBankIdCerts.getRoot(1)
+            val certFactory2 = TestCertificateFactory(
+                bankIdRootCertificatePath = secondRoot.certificatePath,
+                bankIdRootPrivateKeyPath = secondRoot.privateKeyPath
+            )
+            val endUserSignatureHelper2 = EndUserSignatureTestHelper(certFactory = certFactory2)
+            val bankIdSignedFromRoot2 = endUserSignatureHelper2.sign(
+                pdfBytes = elhubSignedPdfBytes,
+                nationalIdentityNumber = nationalIdentityNumber
+            )
+
+            signingService.validateSignaturesAndReturnSignatory(bankIdSignedFromRoot1, elhubSignedPdfBytes)
+                .shouldBeRight(PartyIdentifier(idType = PartyIdentifierType.NationalIdentityNumber, idValue = nationalIdentityNumber))
+
+            signingService.validateSignaturesAndReturnSignatory(bankIdSignedFromRoot2, elhubSignedPdfBytes)
+                .shouldBeRight(PartyIdentifier(idType = PartyIdentifierType.NationalIdentityNumber, idValue = nationalIdentityNumber))
+        }
+
         test("Should return MissingElhubSignature when validating a pdf without Elhub signature") {
             val bankIdSignedPdfBytes = endUserSignatureTestHelper.sign(
                 pdfBytes = unsignedPdfBytes,
@@ -211,6 +243,19 @@ class SignatureServiceTest : FunSpec({
             val pdfValidationResult = signingService.validateSignaturesAndReturnSignatory(bankIdSignedPdfBytes, elhubSignedPdfBytes)
 
             pdfValidationResult.shouldBeLeft(SignatureValidationError.MissingNationalId)
+        }
+
+        test("Should return MissingBankIdTrustedTimestamp when bankId signature has untrusted timestamp") {
+            val elhubSignedPdfBytes = signingService.sign(unsignedPdfBytes).shouldBeRight()
+
+            val bankIdSignedPdfBytes = endUserSignatureTestHelper.signWithUntrustedTimestamp(
+                pdfBytes = elhubSignedPdfBytes,
+                nationalIdentityNumber = nationalIdentityNumber
+            )
+
+            val pdfValidationResult = signingService.validateSignaturesAndReturnSignatory(bankIdSignedPdfBytes, elhubSignedPdfBytes)
+
+            pdfValidationResult.shouldBeLeft(SignatureValidationError.MissingBankIdTrustedTimestamp)
         }
 
         test("Should return ElhubSigningCertNotTrusted when Elhub signing cert isn't trusted") {

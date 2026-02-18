@@ -26,6 +26,7 @@ data class CreateDocumentMeta(
     val balanceSupplierName: String,
     val balanceSupplierContractName: String,
     val startDate: LocalDate? = null,
+    val language: SupportedLanguageDTO = SupportedLanguageDTO.DEFAULT,
 ) : JsonApiResourceMeta
 
 typealias JsonApiCreateDocumentRequest = JsonApiRequest.SingleDocumentWithMeta<CreateDocumentRequestAttributes, CreateDocumentMeta>

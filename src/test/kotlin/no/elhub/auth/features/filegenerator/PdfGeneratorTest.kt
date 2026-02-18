@@ -7,21 +7,23 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
 import kotlinx.datetime.LocalDate
-import no.elhub.auth.features.businessprocesses.changeofsupplier.domain.ChangeOfSupplierBusinessMeta
-import no.elhub.auth.features.businessprocesses.movein.domain.MoveInBusinessMeta
+import no.elhub.auth.features.businessprocesses.changeofenergysupplier.domain.ChangeOfEnergySupplierBusinessMeta
+import no.elhub.auth.features.businessprocesses.moveinandchangeofenergysupplier.domain.MoveInAndChangeOfEnergySupplierBusinessMeta
 import org.apache.pdfbox.Loader
 import org.apache.pdfbox.text.PDFTextStripper
 
 class PdfGeneratorTest :
     FunSpec({
-        val cosMeta = ChangeOfSupplierBusinessMeta(
+        val cosMeta = ChangeOfEnergySupplierBusinessMeta(
+            language = SupportedLanguage.DEFAULT,
             balanceSupplierName = "Balance Supplier",
             balanceSupplierContractName = "Contract Name",
             requestedForMeteringPointId = "Meter123",
             requestedForMeteringPointAddress = "Address 1",
             requestedFromName = "Requester"
         )
-        val moveInMeta = MoveInBusinessMeta(
+        val moveInMeta = MoveInAndChangeOfEnergySupplierBusinessMeta(
+            language = SupportedLanguage.DEFAULT,
             requestedFromName = "Alberto Balsalm",
             requestedForMeteringPointId = "Meter123",
             requestedForMeteringPointAddress = "Address 1",
@@ -31,16 +33,16 @@ class PdfGeneratorTest :
             redirectURI = "https://example.com",
         )
 
-        test("Generates PDF with watermark and correct metadata for change of supplier meta") {
+        test("Generates PDF with watermark and metadata for change of supplier meta") {
             val cfg = PdfGeneratorConfig(
                 mustacheResourcePath = "templates",
-                useTestPdfNotice = true
+                useTestPdfNotice = true,
             )
             val pdfGenerator = PdfGenerator(cfg)
 
             val result = pdfGenerator.generate(
                 signerNin = "123",
-                documentMeta = cosMeta
+                documentMeta = cosMeta,
             )
             result.shouldBeRight()
 
@@ -57,19 +59,19 @@ class PdfGeneratorTest :
             }
         }
 
-        test("Generates PDF without watermark and correct metadata for change of supplier metadata") {
+        test("Generates PDF without watermark and metadata for change of supplier meta") {
             val cfg = PdfGeneratorConfig(
                 mustacheResourcePath = "templates",
-                useTestPdfNotice = false
+                useTestPdfNotice = false,
             )
             val pdfGenerator = PdfGenerator(cfg)
 
             val result = pdfGenerator.generate(
                 signerNin = "123",
-                documentMeta = cosMeta
+                documentMeta = cosMeta,
             )
-
             result.shouldBeRight()
+
             val text = extractText(result.value)
             text shouldNotContain "TESTDOKUMENT"
             text shouldContain "Balance Supplier"
@@ -82,23 +84,23 @@ class PdfGeneratorTest :
                 testDocument.shouldBeNull()
             }
         }
-        test("Generates PDF with watermark and correct metadata for move in meta") {
+
+        test("Generates PDF with watermark and metadata for move in and change of supplier meta") {
             val cfg = PdfGeneratorConfig(
                 mustacheResourcePath = "templates",
-                useTestPdfNotice = true
+                useTestPdfNotice = true,
             )
             val pdfGenerator = PdfGenerator(cfg)
 
             val result = pdfGenerator.generate(
                 signerNin = "123",
-                documentMeta = moveInMeta
+                documentMeta = moveInMeta,
             )
-            result.shouldBeRight()
 
+            result.shouldBeRight()
             val text = extractText(result.value)
             text shouldContain "TESTDOKUMENT"
-            text shouldContain "Balance Supplier"
-
+            text shouldContain "Greatest Balance Supplier of all"
             Loader.loadPDF(result.value).use { document ->
                 val metadata = document.documentInformation
                 val signerNin = metadata.getCustomMetadataValue("signerNin")
@@ -108,23 +110,23 @@ class PdfGeneratorTest :
                 testDocument shouldBe "true"
             }
         }
-        test("Generates PDF without watermark and correct metadata for move in and change of supplier meta") {
+
+        test("Generates PDF without watermark and metadata for move in and change of supplier meta") {
             val cfg = PdfGeneratorConfig(
                 mustacheResourcePath = "templates",
-                useTestPdfNotice = false
+                useTestPdfNotice = false,
             )
             val pdfGenerator = PdfGenerator(cfg)
 
             val result = pdfGenerator.generate(
                 signerNin = "123",
-                documentMeta = moveInMeta
+                documentMeta = moveInMeta,
             )
 
             result.shouldBeRight()
             val text = extractText(result.value)
             text shouldNotContain "TESTDOKUMENT"
-            text shouldContain "Balance Supplier"
-
+            text shouldContain "Greatest Balance Supplier of all"
             Loader.loadPDF(result.value).use { document ->
                 val metadata = document.documentInformation
                 val signerNin = metadata.getCustomMetadataValue("signerNin")

@@ -46,7 +46,7 @@ fun Application.module() {
             FileCertificateProviderConfig(
                 pathToCertificateChain = cfg.property("chain").getString(),
                 pathToSigningCertificate = cfg.property("signing").getString(),
-                pathToBankIdRootCertificate = cfg.property("bankIdIdRoot").getString(),
+                pathToBankIdRootCertificatesDir = cfg.property("bankIdRootDir").getString(),
             )
         }
         singleOf(::FileCertificateProvider) bind CertificateProvider::class

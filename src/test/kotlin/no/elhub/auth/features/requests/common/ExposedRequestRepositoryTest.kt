@@ -59,9 +59,9 @@ class ExposedRequestRepositoryTest : FunSpec({
     }
 
     test("findAllAndSortByCreatedAt returns all requests matching party") {
-        val targetParty1 = AuthorizationParty(type = PartyType.Person, resourceId = "67652749875413695986")
-        val targetParty2 = AuthorizationParty(type = PartyType.Person, resourceId = "17652749875413695986")
-        val otherParty = AuthorizationParty(type = PartyType.Person, resourceId = "413695986")
+        val targetParty1 = AuthorizationParty(type = PartyType.Person, id = "67652749875413695986")
+        val targetParty2 = AuthorizationParty(type = PartyType.Person, id = "17652749875413695986")
+        val otherParty = AuthorizationParty(type = PartyType.Person, id = "413695986")
         val numTargetRequests = 100
         val numOtherRequests = 50
         transaction {
@@ -102,7 +102,7 @@ class ExposedRequestRepositoryTest : FunSpec({
     }
 
     test("findAllAndSortByCreatedAt returns requests by createdAt DESC") {
-        val party = AuthorizationParty(type = PartyType.Person, resourceId = UUID.randomUUID().toString())
+        val party = AuthorizationParty(type = PartyType.Person, id = UUID.randomUUID().toString())
         val numRequests = 10
 
         transaction {
@@ -254,9 +254,9 @@ class ExposedRequestRepositoryTest : FunSpec({
 @OptIn(ExperimentalTime::class)
 private fun generateRequestWithoutProperties(): AuthorizationRequest = AuthorizationRequest.create(
     type = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
-    requestedBy = AuthorizationParty(type = PartyType.Person, resourceId = "12345"),
-    requestedFrom = AuthorizationParty(type = PartyType.Person, resourceId = "56789"),
-    requestedTo = AuthorizationParty(type = PartyType.Person, resourceId = "45567"),
+    requestedBy = AuthorizationParty(type = PartyType.Person, id = "12345"),
+    requestedFrom = AuthorizationParty(type = PartyType.Person, id = "56789"),
+    requestedTo = AuthorizationParty(type = PartyType.Person, id = "45567"),
     // validTo is set by the value stream team in production,
     // but we set it here for testing purposes
     validTo = OffsetDateTime.now(ZoneOffset.UTC).plusDays(30),

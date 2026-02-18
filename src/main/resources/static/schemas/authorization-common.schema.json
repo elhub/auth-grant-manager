@@ -35,6 +35,12 @@
       "description": "The requested move-in start date. If set, must be today or earlier.",
       "examples": ["2024-01-01"]
     },
+    "language": {
+      "type": "string",
+      "description": "Language used for generated authorization document content.",
+      "enum": ["nb", "nn", "en"],
+      "examples": ["nb"]
+    },
     "requestedBy": {
       "description": "The party identifier of the actor who initiated the request (e.g., the GLN of the requesting balance supplier).",
       "$ref": "elhub-common.schema.json#/$defs/partyIdentifier"

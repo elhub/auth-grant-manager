@@ -7,6 +7,7 @@ import no.elhub.auth.features.common.PGEnum
 import no.elhub.auth.features.common.RepositoryError
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.RepositoryWriteError
+import no.elhub.auth.features.common.currentTimeWithTimeZone
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.AuthorizationPartyRecord
 import no.elhub.auth.features.common.party.AuthorizationPartyTable
@@ -26,14 +27,12 @@ import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.core.or
-import org.jetbrains.exposed.v1.javatime.timestamp
 import org.jetbrains.exposed.v1.javatime.timestampWithTimeZone
 import org.jetbrains.exposed.v1.jdbc.batchInsert
 import org.jetbrains.exposed.v1.jdbc.insertReturning
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.update
 import java.time.OffsetDateTime
-import java.time.ZoneId
 import java.time.ZoneOffset
 import java.util.UUID
 
@@ -60,7 +59,7 @@ class ExposedRequestRepository(
 
     override fun findAllAndSortByCreatedAt(party: AuthorizationParty): Either<RepositoryReadError, List<AuthorizationRequest>> =
         either {
-            val partyId = partyRepo.findOrInsert(type = party.type, partyId = party.resourceId)
+            val partyId = partyRepo.findOrInsert(type = party.type, partyId = party.id)
                 .mapLeft { RepositoryReadError.UnexpectedError }
                 .bind()
                 .id
@@ -95,19 +94,19 @@ class ExposedRequestRepository(
         either {
             val requestedByParty =
                 partyRepo
-                    .findOrInsert(request.requestedBy.type, request.requestedBy.resourceId)
+                    .findOrInsert(request.requestedBy.type, request.requestedBy.id)
                     .mapLeft { RepositoryWriteError.UnexpectedError }
                     .bind()
 
             val requestedFromParty =
                 partyRepo
-                    .findOrInsert(request.requestedFrom.type, request.requestedFrom.resourceId)
+                    .findOrInsert(request.requestedFrom.type, request.requestedFrom.id)
                     .mapLeft { RepositoryWriteError.UnexpectedError }
                     .bind()
 
             val requestedToParty =
                 partyRepo
-                    .findOrInsert(request.requestedTo.type, request.requestedTo.resourceId)
+                    .findOrInsert(request.requestedTo.type, request.requestedTo.id)
                     .mapLeft { RepositoryWriteError.UnexpectedError }
                     .bind()
 
@@ -135,14 +134,14 @@ class ExposedRequestRepository(
         }.mapLeft { RepositoryWriteError.UnexpectedError }
 
     override fun acceptRequest(requestId: UUID, approvedBy: AuthorizationParty) = either {
-        val approvedByRecord = partyRepo.findOrInsert(approvedBy.type, approvedBy.resourceId).bind()
+        val approvedByRecord = partyRepo.findOrInsert(approvedBy.type, approvedBy.id).bind()
 
         val rowsUpdated =
             AuthorizationRequestTable.update(
                 where = { AuthorizationRequestTable.id eq requestId }
             ) {
                 it[requestStatus] = DatabaseRequestStatus.Accepted
-                it[updatedAt] = OffsetDateTime.now(ZoneId.of("Europe/Oslo"))
+                it[updatedAt] = currentTimeWithTimeZone()
                 it[this.approvedBy] = approvedByRecord.id
             }
 
@@ -154,7 +153,7 @@ class ExposedRequestRepository(
             where = { AuthorizationRequestTable.id eq requestId }
         ) {
             it[requestStatus] = DatabaseRequestStatus.Rejected
-            it[updatedAt] = OffsetDateTime.now(ZoneId.of("Europe/Oslo"))
+            it[updatedAt] = currentTimeWithTimeZone()
         }
 
         updateAndFetch(requestId, rowsUpdated).bind()
@@ -257,7 +256,6 @@ object AuthorizationRequestScopeTable : Table("auth.authorization_request_scope"
         .references(AuthorizationRequestTable.id, onDelete = ReferenceOption.CASCADE)
     val authorizationScopeId = javaUUID("authorization_scope_id")
         .references(AuthorizationScopeTable.id, onDelete = ReferenceOption.CASCADE)
-    val createdAt = timestamp("created_at").clientDefault { java.time.Instant.now() }
     override val primaryKey = PrimaryKey(authorizationRequestId, authorizationScopeId)
 }
 
@@ -280,9 +278,9 @@ object AuthorizationRequestTable : UUIDTable("auth.authorization_request") {
     val requestedFrom = javaUUID("requested_from").references(AuthorizationPartyTable.id)
     val requestedTo = javaUUID("requested_to").references(AuthorizationPartyTable.id)
     val approvedBy = javaUUID("approved_by").references(AuthorizationPartyTable.id).nullable()
-    val createdAt = timestampWithTimeZone("created_at").default(OffsetDateTime.now(ZoneId.of("Europe/Oslo")))
-    val updatedAt = timestampWithTimeZone("updated_at").default(OffsetDateTime.now(ZoneId.of("Europe/Oslo")))
-    val validTo = timestampWithTimeZone("valid_to")
+    val createdAt = timestampWithTimeZone("created_at").clientDefault { currentTimeWithTimeZone() }
+    val updatedAt = timestampWithTimeZone("updated_at").clientDefault { currentTimeWithTimeZone() }
+    val validTo = timestampWithTimeZone("valid_to").clientDefault { currentTimeWithTimeZone() }
 }
 
 enum class DatabaseRequestStatus {
@@ -318,10 +316,10 @@ fun ResultRow.toAuthorizationRequest(
         id = this[AuthorizationRequestTable.id].value,
         type = this[AuthorizationRequestTable.requestType],
         status = status,
-        requestedBy = AuthorizationParty(resourceId = requestedBy.resourceId, type = requestedBy.type),
-        requestedFrom = AuthorizationParty(resourceId = requestedFrom.resourceId, type = requestedFrom.type),
-        requestedTo = AuthorizationParty(resourceId = requestedTo.resourceId, type = requestedTo.type),
-        approvedBy = approvedBy?.let { AuthorizationParty(resourceId = it.resourceId, type = it.type) },
+        requestedBy = AuthorizationParty(id = requestedBy.resourceId, type = requestedBy.type),
+        requestedFrom = AuthorizationParty(id = requestedFrom.resourceId, type = requestedFrom.type),
+        requestedTo = AuthorizationParty(id = requestedTo.resourceId, type = requestedTo.type),
+        approvedBy = approvedBy?.let { AuthorizationParty(id = it.resourceId, type = it.type) },
         createdAt = this[AuthorizationRequestTable.createdAt],
         updatedAt = this[AuthorizationRequestTable.updatedAt],
         validTo = validTo,

@@ -1,4 +1,4 @@
-package no.elhub.auth.features.businessprocesses.changeofsupplier
+package no.elhub.auth.features.businessprocesses.changeofenergysupplier
 
 import arrow.core.Either
 import io.kotest.assertions.arrow.core.shouldBeLeft
@@ -6,7 +6,13 @@ import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
+import no.elhub.auth.features.businessprocesses.BusinessProcessError
+import no.elhub.auth.features.businessprocesses.datasharing.Attributes
+import no.elhub.auth.features.businessprocesses.datasharing.ProductsResponse
+import no.elhub.auth.features.businessprocesses.datasharing.StromprisService
+import no.elhub.auth.features.businessprocesses.structuredata.common.ClientError
 import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.BasicAuthConfig
 import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsApi
 import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsApiConfig
@@ -40,13 +46,15 @@ import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.create.dto.CreateDocumentMeta
 import no.elhub.auth.features.documents.create.model.CreateDocumentModel
+import no.elhub.auth.features.filegenerator.SupportedLanguage
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.create.model.CreateRequestMeta
 import no.elhub.auth.features.requests.create.model.CreateRequestModel
+import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObject
 import java.util.UUID
 
 private val VALID_PARTY = PartyIdentifier(PartyIdentifierType.OrganizationNumber, VALID_PARTY_ID)
-private val AUTHORIZED_PARTY = AuthorizationParty(resourceId = VALID_PARTY_ID, type = Organization)
+private val AUTHORIZED_PARTY = AuthorizationParty(id = VALID_PARTY_ID, type = Organization)
 private val NOT_VALID_PARTY = PartyIdentifier(PartyIdentifierType.OrganizationNumber, "0000")
 private val NON_EXISTING_PARTY = PartyIdentifier(PartyIdentifierType.OrganizationNumber, NOT_BALANCE_SUPPLIER_PARTY_ID)
 private val INACTIVE_PARTY = PartyIdentifier(PartyIdentifierType.OrganizationNumber, INACTIVE_PARTY_ID)
@@ -55,15 +63,16 @@ private val END_USER = PartyIdentifier(PartyIdentifierType.NationalIdentityNumbe
 private val ANOTHER_END_USER = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "987654321")
 private val SHARED_END_USER = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "11223344556")
 
-class ChangeOfSupplierBusinessHandlerTest :
+class ChangeOfEnergySupplierBusinessHandlerTest :
     FunSpec({
 
         extensions(MeteringPointsServiceTestContainerExtension, OrganisationsServiceTestContainerExtension)
         lateinit var meteringPointsService: MeteringPointsService
-        lateinit var handler: ChangeOfSupplierBusinessHandler
+        lateinit var handler: ChangeOfEnergySupplierBusinessHandler
         lateinit var organisationsService: OrganisationsService
 
         val personService = mockk<PersonService>()
+        val stromprisService = mockk<StromprisService>()
 
         beforeSpec {
             meteringPointsService = MeteringPointsApi(
@@ -77,7 +86,13 @@ class ChangeOfSupplierBusinessHandlerTest :
                 ),
                 organisationsServiceHttpClient
             )
-            handler = ChangeOfSupplierBusinessHandler(meteringPointsService, personService, organisationsService)
+            handler = ChangeOfEnergySupplierBusinessHandler(
+                meteringPointsService = meteringPointsService,
+                personService = personService,
+                organisationsService = organisationsService,
+                stromprisService = stromprisService,
+                validateBalanceSupplierContractName = false
+            )
         }
 
         coEvery { personService.findOrCreateByNin(END_USER.idValue) } returns Either.Right(Person(UUID.fromString(END_USER_ID_1)))
@@ -103,7 +118,8 @@ class ChangeOfSupplierBusinessHandlerTest :
                     ),
                 )
 
-            handler.validateAndReturnRequestCommand(model).shouldBeLeft(ChangeOfSupplierValidationError.MissingRequestedFromName)
+            handler.validateAndReturnRequestCommand(model)
+                .shouldBeLeft(BusinessProcessError.Validation(ChangeOfEnergySupplierValidationError.MissingRequestedFromName.message))
         }
 
         test("request validation fails when requestedFrom is not related to metering point") {
@@ -125,7 +141,8 @@ class ChangeOfSupplierBusinessHandlerTest :
                     ),
                 )
 
-            handler.validateAndReturnRequestCommand(model).shouldBeLeft(ChangeOfSupplierValidationError.RequestedFromNotMeteringPointEndUser)
+            handler.validateAndReturnRequestCommand(model)
+                .shouldBeLeft(BusinessProcessError.Validation(ChangeOfEnergySupplierValidationError.RequestedFromNotMeteringPointEndUser.message))
         }
 
         test("request validation fails when requestedFrom has access to metering point but is not end user") {
@@ -147,7 +164,8 @@ class ChangeOfSupplierBusinessHandlerTest :
                     ),
                 )
 
-            handler.validateAndReturnRequestCommand(model).shouldBeLeft(ChangeOfSupplierValidationError.RequestedFromNotMeteringPointEndUser)
+            handler.validateAndReturnRequestCommand(model)
+                .shouldBeLeft(BusinessProcessError.Validation(ChangeOfEnergySupplierValidationError.RequestedFromNotMeteringPointEndUser.message))
         }
 
         test("request validation fails on invalid metering point") {
@@ -169,7 +187,8 @@ class ChangeOfSupplierBusinessHandlerTest :
                     ),
                 )
 
-            handler.validateAndReturnRequestCommand(model).shouldBeLeft(ChangeOfSupplierValidationError.InvalidMeteringPointId)
+            handler.validateAndReturnRequestCommand(model)
+                .shouldBeLeft(BusinessProcessError.Validation(ChangeOfEnergySupplierValidationError.InvalidMeteringPointId.message))
         }
 
         test("request validation fails on unexisting metering point") {
@@ -191,7 +210,8 @@ class ChangeOfSupplierBusinessHandlerTest :
                     ),
                 )
 
-            handler.validateAndReturnRequestCommand(model).shouldBeLeft(ChangeOfSupplierValidationError.MeteringPointNotFound)
+            handler.validateAndReturnRequestCommand(model)
+                .shouldBeLeft(BusinessProcessError.NotFound(ChangeOfEnergySupplierValidationError.MeteringPointNotFound.message))
         }
 
         test("request validation fails on metering point blocked for switching") {
@@ -213,7 +233,8 @@ class ChangeOfSupplierBusinessHandlerTest :
                     ),
                 )
 
-            handler.validateAndReturnRequestCommand(model).shouldBeLeft(ChangeOfSupplierValidationError.MeteringPointBlockedForSwitching)
+            handler.validateAndReturnRequestCommand(model)
+                .shouldBeLeft(BusinessProcessError.Validation(ChangeOfEnergySupplierValidationError.MeteringPointBlockedForSwitching.message))
         }
 
         test("request validation fails on not valid redirect URI") {
@@ -235,7 +256,8 @@ class ChangeOfSupplierBusinessHandlerTest :
                     ),
                 )
 
-            handler.validateAndReturnRequestCommand(model).shouldBeLeft(ChangeOfSupplierValidationError.InvalidRedirectURI)
+            handler.validateAndReturnRequestCommand(model)
+                .shouldBeLeft(BusinessProcessError.Validation(ChangeOfEnergySupplierValidationError.InvalidRedirectURI.message))
         }
 
         test("request validation fails on not valid requested by") {
@@ -257,7 +279,8 @@ class ChangeOfSupplierBusinessHandlerTest :
                     ),
                 )
 
-            handler.validateAndReturnRequestCommand(model).shouldBeLeft(ChangeOfSupplierValidationError.InvalidRequestedBy)
+            handler.validateAndReturnRequestCommand(model)
+                .shouldBeLeft(BusinessProcessError.Validation(ChangeOfEnergySupplierValidationError.InvalidRequestedBy.message))
         }
 
         test("request validation fails on non existing requested by") {
@@ -279,7 +302,8 @@ class ChangeOfSupplierBusinessHandlerTest :
                     ),
                 )
 
-            handler.validateAndReturnRequestCommand(model).shouldBeLeft(ChangeOfSupplierValidationError.RequestedByNotFound)
+            handler.validateAndReturnRequestCommand(model)
+                .shouldBeLeft(BusinessProcessError.NotFound(ChangeOfEnergySupplierValidationError.RequestedByNotFound.message))
         }
 
         test("request validation fails on not active requested by") {
@@ -301,7 +325,8 @@ class ChangeOfSupplierBusinessHandlerTest :
                     ),
                 )
 
-            handler.validateAndReturnRequestCommand(model).shouldBeLeft(ChangeOfSupplierValidationError.NotActiveRequestedBy)
+            handler.validateAndReturnRequestCommand(model)
+                .shouldBeLeft(BusinessProcessError.Validation(ChangeOfEnergySupplierValidationError.NotActiveRequestedBy.message))
         }
 
         test("request validation fails on requested by matching current balance supplier") {
@@ -323,7 +348,8 @@ class ChangeOfSupplierBusinessHandlerTest :
                     ),
                 )
 
-            handler.validateAndReturnRequestCommand(model).shouldBeLeft(ChangeOfSupplierValidationError.MatchingRequestedBy)
+            handler.validateAndReturnRequestCommand(model)
+                .shouldBeLeft(BusinessProcessError.Validation(ChangeOfEnergySupplierValidationError.MatchingRequestedBy.message))
         }
 
         test("request validation fails on requested to not matching requested from") {
@@ -345,7 +371,153 @@ class ChangeOfSupplierBusinessHandlerTest :
                     ),
                 )
 
-            handler.validateAndReturnRequestCommand(model).shouldBeLeft(ChangeOfSupplierValidationError.RequestedToRequestedFromMismatch)
+            handler.validateAndReturnRequestCommand(model)
+                .shouldBeLeft(BusinessProcessError.Validation(ChangeOfEnergySupplierValidationError.RequestedToRequestedFromMismatch.message))
+        }
+
+        test("request validation fails with UnexpectedError when a non-validation-specific error happens in metering points service") {
+            val mockMeteringPointsService = mockk<MeteringPointsService>()
+            coEvery {
+                mockMeteringPointsService.getMeteringPointByIdAndElhubInternalId(
+                    any(),
+                    any()
+                )
+            } returns Either.Left(ClientError.BadRequest)
+            val handlerWithMockedService = ChangeOfEnergySupplierBusinessHandler(
+                meteringPointsService = mockMeteringPointsService,
+                personService = personService,
+                organisationsService = organisationsService,
+                stromprisService = stromprisService,
+                validateBalanceSupplierContractName = false
+            )
+
+            val model =
+                CreateRequestModel(
+                    authorizedParty = AUTHORIZED_PARTY,
+                    requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
+                    meta =
+                    CreateRequestMeta(
+                        requestedBy = VALID_PARTY,
+                        requestedFrom = END_USER,
+                        requestedFromName = "From",
+                        requestedTo = END_USER,
+                        requestedForMeteringPointId = VALID_METERING_POINT_1,
+                        requestedForMeteringPointAddress = "addr",
+                        balanceSupplierName = "Supplier",
+                        balanceSupplierContractName = "Contract",
+                        redirectURI = "https://example.com",
+                    ),
+                )
+
+            handlerWithMockedService.validateAndReturnRequestCommand(model)
+                .shouldBeLeft(BusinessProcessError.Unexpected(ChangeOfEnergySupplierValidationError.UnexpectedError.message))
+        }
+
+        test("request validation fails with UnexpectedError when a non-validation-specific error happens in organisations service") {
+            val mockOrganisationsService = mockk<OrganisationsService>()
+            coEvery {
+                mockOrganisationsService.getPartyByIdAndPartyType(
+                    any(),
+                    any()
+                )
+            } returns Either.Left(ClientError.ServerError)
+            val handlerWithMockedService = ChangeOfEnergySupplierBusinessHandler(
+                meteringPointsService = meteringPointsService,
+                personService = personService,
+                organisationsService = mockOrganisationsService,
+                stromprisService = stromprisService,
+                validateBalanceSupplierContractName = false
+            )
+
+            val model =
+                CreateRequestModel(
+                    authorizedParty = AUTHORIZED_PARTY,
+                    requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
+                    meta =
+                    CreateRequestMeta(
+                        requestedBy = VALID_PARTY,
+                        requestedFrom = END_USER,
+                        requestedFromName = "From",
+                        requestedTo = END_USER,
+                        requestedForMeteringPointId = VALID_METERING_POINT_1,
+                        requestedForMeteringPointAddress = "addr",
+                        balanceSupplierName = "Supplier",
+                        balanceSupplierContractName = "Contract",
+                        redirectURI = "https://example.com",
+                    ),
+                )
+
+            handlerWithMockedService.validateAndReturnRequestCommand(model)
+                .shouldBeLeft(BusinessProcessError.Unexpected(ChangeOfEnergySupplierValidationError.UnexpectedError.message))
+        }
+
+        test("strompris service is not called if validateBalanceSupplierContractName is false, assuming all previous validations pass") {
+            val model =
+                CreateRequestModel(
+                    authorizedParty = AUTHORIZED_PARTY,
+                    requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
+                    meta =
+                    CreateRequestMeta(
+                        requestedBy = VALID_PARTY,
+                        requestedFrom = END_USER,
+                        requestedFromName = "From",
+                        requestedTo = END_USER,
+                        requestedForMeteringPointId = VALID_METERING_POINT_1,
+                        requestedForMeteringPointAddress = "addr",
+                        balanceSupplierName = "Supplier",
+                        balanceSupplierContractName = "Contract",
+                        redirectURI = "https://example.com",
+                    ),
+                )
+
+            handler.validateAndReturnRequestCommand(model).shouldBeRight()
+            coVerify(exactly = 0) { stromprisService.getProductsByOrganizationNumber(any()) }
+        }
+
+        test("strompris service is called if validateBalanceSupplierContractName is true, assuming all previous validations pass") {
+            val mockStromprisService = mockk<StromprisService>()
+            coEvery {
+                mockStromprisService.getProductsByOrganizationNumber(any())
+            } returns Either.Right(
+                ProductsResponse(
+                    listOf(
+                        JsonApiResponseResourceObject(
+                            id = "1",
+                            type = "product",
+                            attributes = Attributes(
+                                1,
+                                "Contract"
+                            )
+                        )
+                    )
+                )
+            )
+            val handlerWithMockedStromprisService = ChangeOfEnergySupplierBusinessHandler(
+                meteringPointsService = meteringPointsService,
+                personService = personService,
+                organisationsService = organisationsService,
+                stromprisService = mockStromprisService,
+                validateBalanceSupplierContractName = true
+            )
+            val model =
+                CreateRequestModel(
+                    authorizedParty = AUTHORIZED_PARTY,
+                    requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
+                    meta =
+                    CreateRequestMeta(
+                        requestedBy = VALID_PARTY,
+                        requestedFrom = END_USER,
+                        requestedFromName = "From",
+                        requestedTo = END_USER,
+                        requestedForMeteringPointId = VALID_METERING_POINT_1,
+                        requestedForMeteringPointAddress = "addr",
+                        balanceSupplierName = "Supplier",
+                        balanceSupplierContractName = "Contract",
+                        redirectURI = "https://example.com",
+                    ),
+                )
+            handlerWithMockedStromprisService.validateAndReturnRequestCommand(model).shouldBeRight()
+            coVerify(exactly = 1) { mockStromprisService.getProductsByOrganizationNumber(any()) }
         }
 
         test("request produces RequestCommand for valid input") {
@@ -377,7 +549,7 @@ class ChangeOfSupplierBusinessHandlerTest :
         test("document produces DocumentCommand for valid input") {
             val model =
                 CreateDocumentModel(
-                    authorizedParty = AuthorizationParty(resourceId = VALID_PARTY.idValue, type = Organization),
+                    authorizedParty = AuthorizationParty(id = VALID_PARTY.idValue, type = Organization),
                     documentType = AuthorizationDocument.Type.ChangeOfEnergySupplierForPerson,
                     meta =
                     CreateDocumentMeta(
@@ -394,5 +566,6 @@ class ChangeOfSupplierBusinessHandlerTest :
 
             val command = handler.validateAndReturnDocumentCommand(model).shouldBeRight()
             command.meta.toMetaAttributes()["requestedFromName"] shouldBe "From"
+            command.meta.toMetaAttributes()["language"] shouldBe SupportedLanguage.DEFAULT.code
         }
     })

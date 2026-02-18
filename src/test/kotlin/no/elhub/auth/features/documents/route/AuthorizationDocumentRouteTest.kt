@@ -29,9 +29,10 @@ import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
-import no.elhub.auth.features.businessprocesses.changeofsupplier.defaultValidTo
-import no.elhub.auth.features.businessprocesses.changeofsupplier.domain.ChangeOfSupplierBusinessMeta
-import no.elhub.auth.features.businessprocesses.changeofsupplier.today
+import no.elhub.auth.features.businessprocesses.BusinessProcessError
+import no.elhub.auth.features.businessprocesses.changeofenergysupplier.defaultValidTo
+import no.elhub.auth.features.businessprocesses.changeofenergysupplier.domain.ChangeOfEnergySupplierBusinessMeta
+import no.elhub.auth.features.businessprocesses.changeofenergysupplier.today
 import no.elhub.auth.features.common.AuthPersonsTestContainer
 import no.elhub.auth.features.common.AuthPersonsTestContainerExtension
 import no.elhub.auth.features.common.CreateScopeData
@@ -60,6 +61,8 @@ import no.elhub.auth.features.documents.create.dto.CreateDocumentMeta
 import no.elhub.auth.features.documents.create.dto.CreateDocumentRequestAttributes
 import no.elhub.auth.features.documents.create.dto.CreateDocumentResponse
 import no.elhub.auth.features.documents.create.dto.JsonApiCreateDocumentRequest
+import no.elhub.auth.features.documents.create.dto.SupportedLanguageDTO
+import no.elhub.auth.features.documents.create.dto.toSupportedLanguage
 import no.elhub.auth.features.documents.create.model.CreateDocumentModel
 import no.elhub.auth.features.documents.get.dto.GetDocumentSingleResponse
 import no.elhub.auth.features.documents.query.dto.GetDocumentCollectionResponse
@@ -171,6 +174,7 @@ class AuthorizationDocumentRouteTest :
                             values["requestedForMeteringPointAddress"] shouldBe "quaerendum"
                             values["balanceSupplierName"] shouldBe "Jami Wade"
                             values["balanceSupplierContractName"] shouldBe "Selena Chandler"
+                            values["language"] shouldBe "nb"
                         }
                         links.self shouldBe "$DOCUMENTS_PATH/$id"
                         links.file shouldBe "$DOCUMENTS_PATH/$id.pdf"
@@ -270,7 +274,6 @@ class AuthorizationDocumentRouteTest :
 
                     requestedByResponse.data.size shouldBe 1
 
-                    // When authorized party is the requestedFrom number of documents returned should be 1
                     val requestedFromResponse: GetDocumentCollectionResponse = client.get(DOCUMENTS_PATH) {
                         header(HttpHeaders.Authorization, "Bearer enduser")
                         header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
@@ -278,12 +281,6 @@ class AuthorizationDocumentRouteTest :
 
                     requestedFromResponse.data.size shouldBe 1
 
-                    // When authorized party is the requestedTo number of documents returned should be 0
-                    pdpContainer.registerEnduserMapping(
-                        token = "not-authorized",
-                        partyId = requestedToId
-
-                    )
                     val requestedToResponse: GetDocumentCollectionResponse = client.get(DOCUMENTS_PATH) {
                         header(HttpHeaders.Authorization, "Bearer not-authorized")
                         header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
@@ -439,6 +436,91 @@ class AuthorizationDocumentRouteTest :
             }
         }
 
+        context("Document create language handling in isolated flow") {
+            testApplication {
+                client = createClient {
+                    install(ContentNegotiation) {
+                        json()
+                    }
+                }
+                application {
+                    applicationModule()
+                    testBusinessProcessesModule()
+                    commonModule()
+                    grantsModule()
+                    module()
+                }
+
+                environment {
+                    config = MapApplicationConfig(
+                        "ktor.database.username" to "app",
+                        "ktor.database.password" to "app",
+                        "ktor.database.url" to "jdbc:postgresql://localhost:5432/auth",
+                        "ktor.database.driverClass" to "org.postgresql.Driver",
+                        "pdfGenerator.mustacheResourcePath" to "templates",
+                        "pdfGenerator.useTestPdfNotice" to "true",
+                        "pdfSigner.vault.url" to "http://localhost:8200/v1/transit",
+                        "pdfSigner.vault.tokenPath" to "src/test/resources/vault_token_mock.txt",
+                        "pdfSigner.vault.key" to "test-key",
+                        "pdfSigner.certificate.signing" to TestCertificateUtil.Constants.CERTIFICATE_LOCATION,
+                        "pdfSigner.certificate.chain" to TestCertificateUtil.Constants.CERTIFICATE_LOCATION,
+                        "pdfSigner.certificate.bankIdIdRoot" to TestCertificateUtil.Constants.BANKID_ROOT_CERTIFICATE_LOCATION,
+                        "pdfSigner.certificate.bankIdRootDir" to TestCertificateUtil.Constants.BANKID_ROOT_CERTIFICATES_DIR,
+                        "featureToggle.enableEndpoints" to "true",
+                        "authPersons.baseUri" to AuthPersonsTestContainer.baseUri(),
+                        "pdp.baseUrl" to "http://localhost:8085"
+                    )
+                }
+
+                test("Should create document with explicit language in meta") {
+                    val response =
+                        client
+                            .post(DOCUMENTS_PATH) {
+                                contentType(ContentType.Application.Json)
+                                accept(ContentType.Application.Json)
+                                header(HttpHeaders.Authorization, "Bearer maskinporten")
+                                header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                                setBody(
+                                    JsonApiCreateDocumentRequest(
+                                        data = JsonApiRequestResourceObjectWithMeta(
+                                            type = "AuthorizationDocument",
+                                            attributes = CreateDocumentRequestAttributes(
+                                                documentType = AuthorizationDocument.Type.ChangeOfEnergySupplierForPerson
+                                            ),
+                                            meta = CreateDocumentMeta(
+                                                requestedBy = PartyIdentifier(
+                                                    idType = PartyIdentifierType.GlobalLocationNumber,
+                                                    idValue = "0107000000021"
+                                                ),
+                                                requestedFrom = PartyIdentifier(
+                                                    idType = PartyIdentifierType.NationalIdentityNumber,
+                                                    idValue = REQUESTED_FROM_NIN
+                                                ),
+                                                requestedTo = PartyIdentifier(
+                                                    idType = PartyIdentifierType.NationalIdentityNumber,
+                                                    idValue = REQUESTED_TO_NIN
+                                                ),
+                                                requestedFromName = "Hillary Orr",
+                                                requestedForMeteringPointId = "123456789012345678",
+                                                requestedForMeteringPointAddress = "quaerendum",
+                                                balanceSupplierName = "Jami Wade",
+                                                balanceSupplierContractName = "Selena Chandler",
+                                                language = SupportedLanguageDTO.EN,
+                                            )
+                                        )
+                                    )
+                                )
+                            }
+
+                    response.status shouldBe HttpStatusCode.Created
+                    val createDocumentResponse: CreateDocumentResponse = response.body()
+                    createDocumentResponse.data.meta.shouldNotBeNull().apply {
+                        values["language"] shouldBe "en"
+                    }
+                }
+            }
+        }
+
         // TODO this should be moved to a proper place, but for that, we need to revisit the test setup
         context("Invalid User-Agent header") {
             testApplication {
@@ -489,7 +571,8 @@ private class TestDocumentBusinessHandler : DocumentBusinessHandler {
                         permissionType = AuthorizationScope.PermissionType.ChangeOfEnergySupplierForPerson
                     )
                 ),
-                meta = ChangeOfSupplierBusinessMeta(
+                meta = ChangeOfEnergySupplierBusinessMeta(
+                    language = meta.language.toSupportedLanguage(),
                     requestedFromName = meta.requestedFromName,
                     requestedForMeteringPointId = meta.requestedForMeteringPointId,
                     requestedForMeteringPointAddress = meta.requestedForMeteringPointAddress,
@@ -499,7 +582,7 @@ private class TestDocumentBusinessHandler : DocumentBusinessHandler {
             ).right()
         }
 
-        else -> CreateError.BusinessValidationError("Unsupported document type").left()
+        else -> BusinessProcessError.Validation(detail = "Unsupported document type").left()
     }
 
     override fun getCreateGrantProperties(document: AuthorizationDocument): CreateGrantProperties =

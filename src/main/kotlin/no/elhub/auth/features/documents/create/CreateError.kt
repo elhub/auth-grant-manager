@@ -1,7 +1,11 @@
 package no.elhub.auth.features.documents.create
 
 import io.ktor.http.HttpStatusCode
+import no.elhub.auth.features.businessprocesses.BusinessProcessError
 import no.elhub.auth.features.common.buildApiErrorResponse
+import no.elhub.auth.features.common.toInternalServerApiErrorResponse
+import no.elhub.auth.features.common.toNotFoundApiErrorResponse
+import no.elhub.auth.features.common.toValidationApiErrorResponse
 import no.elhub.auth.features.documents.common.SignatureSigningError
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 
@@ -12,19 +16,11 @@ sealed class CreateError {
     data object PersistenceError : CreateError()
     data object RequestedPartyError : CreateError()
     data object InvalidNinError : CreateError()
-
-    // To be used by value streams in during the business validation process. Auth Grant will return this message back to the API consumer
-    data class BusinessValidationError(val message: String) : CreateError()
+    data class BusinessError(val error: BusinessProcessError) : CreateError()
 }
 
 fun CreateError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> =
     when (this) {
-        is CreateError.BusinessValidationError -> buildApiErrorResponse(
-            status = HttpStatusCode.BadRequest,
-            title = "Business validation error",
-            detail = this.message
-        )
-
         is CreateError.AuthorizationError -> buildApiErrorResponse(
             status = HttpStatusCode.Forbidden,
             title = "Party not authorized",
@@ -40,9 +36,13 @@ fun CreateError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollectio
         CreateError.FileGenerationError,
         is CreateError.SignFileError,
         CreateError.PersistenceError,
-        CreateError.RequestedPartyError -> buildApiErrorResponse(
-            status = HttpStatusCode.InternalServerError,
-            title = "Internal server error",
-            detail = "An internal error occurred."
-        )
+        CreateError.RequestedPartyError -> toInternalServerApiErrorResponse()
+
+        is CreateError.BusinessError -> {
+            when (error.kind) {
+                BusinessProcessError.Kind.UNEXPECTED_ERROR -> toInternalServerApiErrorResponse()
+                BusinessProcessError.Kind.VALIDATION -> toValidationApiErrorResponse(error.detail)
+                BusinessProcessError.Kind.NOT_FOUND -> toNotFoundApiErrorResponse(error.detail)
+            }
+        }
     }

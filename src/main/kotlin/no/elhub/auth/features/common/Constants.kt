@@ -10,7 +10,7 @@ object Constants {
 
 object AuthorizationParties {
     val ConsentManagementSystem = AuthorizationParty(
-        resourceId = CONSENT_MANAGEMENT_OSB_ID,
+        id = CONSENT_MANAGEMENT_OSB_ID,
         type = PartyType.System
     )
 }
