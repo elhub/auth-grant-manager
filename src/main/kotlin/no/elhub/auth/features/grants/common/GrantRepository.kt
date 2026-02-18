@@ -326,11 +326,11 @@ object AuthorizationGrantTable : UUIDTable("auth.authorization_grant") {
     val grantedFor = javaUUID("granted_for").references(AuthorizationPartyTable.id)
     val grantedBy = javaUUID("granted_by").references(AuthorizationPartyTable.id)
     val grantedTo = javaUUID("granted_to").references(AuthorizationPartyTable.id)
-    val grantedAt = timestampWithTimeZone("granted_at")
-    val validFrom = timestampWithTimeZone("valid_from")
-    val createdAt = timestampWithTimeZone("created_at")
-    val updatedAt = timestampWithTimeZone("updated_at")
-    val validTo = timestampWithTimeZone("valid_to")
+    val grantedAt = timestampWithTimeZone("granted_at").default(currentTimeWithTimeZone())
+    val validFrom = timestampWithTimeZone("valid_from").default(currentTimeWithTimeZone())
+    val createdAt = timestampWithTimeZone("created_at").default(currentTimeWithTimeZone())
+    val updatedAt = timestampWithTimeZone("updated_at").default(currentTimeWithTimeZone())
+    val validTo = timestampWithTimeZone("valid_to").default(currentTimeWithTimeZone())
     val sourceType =
         customEnumeration(
             name = "source_type",
