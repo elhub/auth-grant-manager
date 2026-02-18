@@ -311,7 +311,7 @@ object AuthorizationGrantScopeTable : Table("auth.authorization_grant_scope") {
         .references(AuthorizationGrantTable.id, onDelete = ReferenceOption.CASCADE)
     val authorizationScopeId = javaUUID("authorization_scope_id")
         .references(AuthorizationScopeTable.id, onDelete = ReferenceOption.CASCADE)
-    val createdAt = timestampWithTimeZone("created_at").default(currentTimeWithTimeZone())
+    val createdAt = timestampWithTimeZone("created_at").clientDefault { currentTimeWithTimeZone() }
     override val primaryKey = PrimaryKey(authorizationGrantId, authorizationScopeId)
 }
 
@@ -326,11 +326,11 @@ object AuthorizationGrantTable : UUIDTable("auth.authorization_grant") {
     val grantedFor = javaUUID("granted_for").references(AuthorizationPartyTable.id)
     val grantedBy = javaUUID("granted_by").references(AuthorizationPartyTable.id)
     val grantedTo = javaUUID("granted_to").references(AuthorizationPartyTable.id)
-    val grantedAt = timestampWithTimeZone("granted_at").default(currentTimeWithTimeZone())
-    val validFrom = timestampWithTimeZone("valid_from").default(currentTimeWithTimeZone())
-    val createdAt = timestampWithTimeZone("created_at").default(currentTimeWithTimeZone())
-    val updatedAt = timestampWithTimeZone("updated_at").default(currentTimeWithTimeZone())
-    val validTo = timestampWithTimeZone("valid_to").default(currentTimeWithTimeZone())
+    val grantedAt = timestampWithTimeZone("granted_at").clientDefault { currentTimeWithTimeZone() }
+    val validFrom = timestampWithTimeZone("valid_from").clientDefault { currentTimeWithTimeZone() }
+    val createdAt = timestampWithTimeZone("created_at").clientDefault { currentTimeWithTimeZone() }
+    val updatedAt = timestampWithTimeZone("updated_at").clientDefault { currentTimeWithTimeZone() }
+    val validTo = timestampWithTimeZone("valid_to").clientDefault { currentTimeWithTimeZone() }
     val sourceType =
         customEnumeration(
             name = "source_type",
@@ -355,7 +355,7 @@ object AuthorizationScopeTable : UUIDTable(name = "auth.authorization_scope") {
         fromDb = { AuthorizationScope.PermissionType.valueOf(it as String) },
         toDb = { PGEnum("authorization_permission_type", it) }
     )
-    val createdAt = timestampWithTimeZone("created_at").default(currentTimeWithTimeZone())
+    val createdAt = timestampWithTimeZone("created_at").clientDefault { currentTimeWithTimeZone() }
 }
 
 fun ResultRow.toAuthorizationGrant(

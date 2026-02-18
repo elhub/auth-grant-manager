@@ -278,9 +278,9 @@ object AuthorizationRequestTable : UUIDTable("auth.authorization_request") {
     val requestedFrom = javaUUID("requested_from").references(AuthorizationPartyTable.id)
     val requestedTo = javaUUID("requested_to").references(AuthorizationPartyTable.id)
     val approvedBy = javaUUID("approved_by").references(AuthorizationPartyTable.id).nullable()
-    val createdAt = timestampWithTimeZone("created_at").default(currentTimeWithTimeZone())
-    val updatedAt = timestampWithTimeZone("updated_at").default(currentTimeWithTimeZone())
-    val validTo = timestampWithTimeZone("valid_to").default(currentTimeWithTimeZone())
+    val createdAt = timestampWithTimeZone("created_at").clientDefault { currentTimeWithTimeZone() }
+    val updatedAt = timestampWithTimeZone("updated_at").clientDefault { currentTimeWithTimeZone() }
+    val validTo = timestampWithTimeZone("valid_to").clientDefault { currentTimeWithTimeZone() }
 }
 
 enum class DatabaseRequestStatus {

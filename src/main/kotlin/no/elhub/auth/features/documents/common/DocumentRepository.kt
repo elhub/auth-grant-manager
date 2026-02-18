@@ -294,9 +294,9 @@ object AuthorizationDocumentTable : UUIDTable("auth.authorization_document") {
     val requestedBy = javaUUID("requested_by").references(AuthorizationPartyTable.id)
     val requestedFrom = javaUUID("requested_from").references(AuthorizationPartyTable.id)
     val requestedTo = javaUUID("requested_to").references(AuthorizationPartyTable.id)
-    val validTo = timestampWithTimeZone("valid_to")
-    val createdAt = timestampWithTimeZone("created_at")
-    val updatedAt = timestampWithTimeZone("updated_at")
+    val validTo = timestampWithTimeZone("valid_to").clientDefault { currentTimeWithTimeZone() }
+    val createdAt = timestampWithTimeZone("created_at").clientDefault { currentTimeWithTimeZone() }
+    val updatedAt = timestampWithTimeZone("updated_at").clientDefault { currentTimeWithTimeZone() }
 }
 
 object AuthorizationDocumentScopeTable : Table("auth.authorization_document_scope") {
