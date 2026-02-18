@@ -65,7 +65,7 @@ class AuthorizationGrantRouteTest : FunSpec({
         )
     }
 
-    context("Some context") {
+    context("Happy path") {
         testApplication {
             setupAuthorizationGrantTestApplication()
 
@@ -486,256 +486,261 @@ class AuthorizationGrantRouteTest : FunSpec({
                 }
             }
 
-            test("Should return 200 OK") {
-                val response = client.get(GRANTS_PATH) {
-                    header(HttpHeaders.Authorization, "Bearer maskinporten")
-                    header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
-                }
-                response.status shouldBe HttpStatusCode.OK
-                val responseJson: CollectionGrantResponse = response.body()
-                responseJson.data.apply {
-                    size shouldBe 5
-                    this[0].apply {
-                        id.shouldNotBeNull()
-                        type shouldBe "AuthorizationGrant"
-                        attributes.shouldNotBeNull()
-                        attributes!!.apply {
-                            status shouldBe "Active"
-                            grantedAt shouldBe "2025-04-04T04:00:00+02:00"
-                            validFrom shouldBe "2025-04-04T04:00:00+02:00"
-                            validTo shouldBe "2026-04-04T04:00:00+02:00"
+        }
+        context("When all inputs are valid") {
+            testApplication {
+                setupAuthorizationGrantTestApplication()
+                test("GET /authorization-grants/ should return 200 OK") {
+                    val response = client.get(GRANTS_PATH) {
+                        header(HttpHeaders.Authorization, "Bearer maskinporten")
+                        header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                    }
+                    response.status shouldBe HttpStatusCode.OK
+                    val responseJson: CollectionGrantResponse = response.body()
+                    responseJson.data.apply {
+                        size shouldBe 5
+                        this[0].apply {
+                            id.shouldNotBeNull()
+                            type shouldBe "AuthorizationGrant"
+                            attributes.shouldNotBeNull()
+                            attributes!!.apply {
+                                status shouldBe "Active"
+                                grantedAt shouldBe "2025-04-04T04:00:00+02:00"
+                                validFrom shouldBe "2025-04-04T04:00:00+02:00"
+                                validTo shouldBe "2026-04-04T04:00:00+02:00"
+                            }
+                            relationships.apply {
+                                grantedFor.apply {
+                                    data.apply {
+                                        id shouldBe "17abdc56-8f6f-440a-9f00-b9bfbb22065e"
+                                        type shouldBe "Person"
+                                    }
+                                }
+                                grantedBy.apply {
+                                    data.apply {
+                                        id shouldBe "17abdc56-8f6f-440a-9f00-b9bfbb22065e"
+                                        type shouldBe "Person"
+                                    }
+                                }
+                                grantedTo.apply {
+                                    data.apply {
+                                        id shouldBe "0107000000021"
+                                        type shouldBe "OrganizationEntity"
+                                    }
+                                }
+                                source.apply {
+                                    data.apply {
+                                        id shouldBe "4f71d596-99e4-415e-946d-7252c1a40c5b"
+                                        type shouldBe "AuthorizationRequest"
+                                    }
+                                    links.shouldNotBeNull().apply {
+                                        self shouldBe "$REQUESTS_PATH/4f71d596-99e4-415e-946d-7252c1a40c5b"
+                                    }
+                                }
+                                scopes.apply {
+                                    data.apply {
+                                        size shouldBe 1
+                                        this[0].apply {
+                                            id shouldBe "e705af95-571d-47ea-9b1b-742aa598c85c"
+                                            type shouldBe "AuthorizationScope"
+                                        }
+                                    }
+                                }
+                            }
                         }
-                        relationships.apply {
-                            grantedFor.apply {
-                                data.apply {
-                                    id shouldBe "17abdc56-8f6f-440a-9f00-b9bfbb22065e"
-                                    type shouldBe "Person"
-                                }
+                        this[1].apply {
+                            id.shouldNotBeNull()
+                            type shouldBe "AuthorizationGrant"
+                            attributes.shouldNotBeNull()
+                            attributes!!.apply {
+                                status shouldBe "Revoked"
+                                grantedAt shouldBe "2025-01-04T03:00:00+01:00"
+                                validFrom shouldBe "2025-02-03T17:07:00+01:00"
+                                validTo shouldBe "2025-05-16T04:00:00+02:00"
                             }
-                            grantedBy.apply {
-                                data.apply {
-                                    id shouldBe "17abdc56-8f6f-440a-9f00-b9bfbb22065e"
-                                    type shouldBe "Person"
+                            relationships.apply {
+                                grantedFor.apply {
+                                    data.apply {
+                                        id shouldBe "123123123"
+                                        type shouldBe "OrganizationEntity"
+                                    }
                                 }
-                            }
-                            grantedTo.apply {
-                                data.apply {
-                                    id shouldBe "0107000000021"
-                                    type shouldBe "OrganizationEntity"
+                                grantedBy.apply {
+                                    data.apply {
+                                        id shouldBe "6e88f1e2-e576-44ab-80d3-c70a6fe354c0"
+                                        type shouldBe "Person"
+                                    }
                                 }
-                            }
-                            source.apply {
-                                data.apply {
-                                    id shouldBe "4f71d596-99e4-415e-946d-7252c1a40c5b"
-                                    type shouldBe "AuthorizationRequest"
+                                grantedTo.apply {
+                                    data.apply {
+                                        id shouldBe "0107000000021"
+                                        type shouldBe "OrganizationEntity"
+                                    }
                                 }
-                                links.shouldNotBeNull().apply {
-                                    self shouldBe "$REQUESTS_PATH/4f71d596-99e4-415e-946d-7252c1a40c5b"
-                                }
-                            }
-                            scopes.apply {
-                                data.apply {
-                                    size shouldBe 1
-                                    this[0].apply {
-                                        id shouldBe "e705af95-571d-47ea-9b1b-742aa598c85c"
-                                        type shouldBe "AuthorizationScope"
+                                source.apply {
+                                    data.apply {
+                                        id shouldBe "4f71d596-99e4-415e-946d-7252c1a40c52"
+                                        type shouldBe "AuthorizationRequest"
+                                    }
+                                    links.shouldNotBeNull().apply {
+                                        self shouldBe "$REQUESTS_PATH/4f71d596-99e4-415e-946d-7252c1a40c52"
                                     }
                                 }
                             }
                         }
                     }
-                    this[1].apply {
-                        id.shouldNotBeNull()
+                }
+
+                test("GET /authorization-grants/ should return grants for an authorized person") {
+                    val response = client.get(GRANTS_PATH) {
+                        header(HttpHeaders.Authorization, "Bearer enduser")
+                    }
+
+                    response.status shouldBe HttpStatusCode.OK
+                    val responseJson: CollectionGrantResponse = response.body()
+                    responseJson.data.size shouldBe 1
+                    responseJson.data[0].apply {
+                        id shouldBe "123e4567-e89b-12d3-a456-426614174000"
+                        relationships.grantedFor.data.apply {
+                            id shouldBe "17abdc56-8f6f-440a-9f00-b9bfbb22065e"
+                            type shouldBe "Person"
+                        }
+                    }
+                }
+
+                test("GET /authorization-grants/ should return empty list when authorized person has no grants") {
+                    pdpContainer.registerEnduserMapping(
+                        token = "enduser-no-grants",
+                        partyId = "4e55f1e2-e576-23ab-80d3-c70a6fe354c0"
+                    )
+
+                    val response = client.get(GRANTS_PATH) {
+                        header(HttpHeaders.Authorization, "Bearer enduser-no-grants")
+                    }
+
+                    response.status shouldBe HttpStatusCode.OK
+                    val responseJson: CollectionGrantResponse = response.body()
+                    responseJson.data.size shouldBe 0
+                }
+
+                test("PATCH /authorization-grants/ should update status and return updated object as response") {
+                    val response = client.patch("$GRANTS_PATH/123e4567-e89b-12d3-a456-426614174000") {
+                        header(HttpHeaders.Authorization, "Bearer elhub-service")
+                        contentType(ContentType.Application.Json)
+                        setBody(
+                            JsonApiConsumeRequest(
+                                data = JsonApiRequestResourceObject(
+                                    type = "AuthorizationGrant",
+                                    attributes = ConsumeRequestAttributes(
+                                        status = AuthorizationGrant.Status.Exhausted
+                                    )
+                                )
+                            ),
+                        )
+                    }
+
+                    response.status shouldBe HttpStatusCode.OK
+                    val patchGrantResponse: SingleGrantResponse = response.body()
+
+                    patchGrantResponse.data.apply {
                         type shouldBe "AuthorizationGrant"
-                        attributes.shouldNotBeNull()
-                        attributes!!.apply {
-                            status shouldBe "Revoked"
-                            grantedAt shouldBe "2025-01-04T03:00:00+01:00"
-                            validFrom shouldBe "2025-02-03T17:07:00+01:00"
-                            validTo shouldBe "2025-05-16T04:00:00+02:00"
-                        }
-                        relationships.apply {
-                            grantedFor.apply {
-                                data.apply {
-                                    id shouldBe "123123123"
-                                    type shouldBe "OrganizationEntity"
-                                }
-                            }
-                            grantedBy.apply {
-                                data.apply {
-                                    id shouldBe "6e88f1e2-e576-44ab-80d3-c70a6fe354c0"
-                                    type shouldBe "Person"
-                                }
-                            }
-                            grantedTo.apply {
-                                data.apply {
-                                    id shouldBe "0107000000021"
-                                    type shouldBe "OrganizationEntity"
-                                }
-                            }
-                            source.apply {
-                                data.apply {
-                                    id shouldBe "4f71d596-99e4-415e-946d-7252c1a40c52"
-                                    type shouldBe "AuthorizationRequest"
-                                }
-                                links.shouldNotBeNull().apply {
-                                    self shouldBe "$REQUESTS_PATH/4f71d596-99e4-415e-946d-7252c1a40c52"
-                                }
-                            }
+                        id.shouldNotBeNull()
+                        attributes.shouldNotBeNull().apply {
+                            status shouldBe "Exhausted"
                         }
                     }
                 }
-            }
-
-            test("Should return grants for an authorized person") {
-                val response = client.get(GRANTS_PATH) {
-                    header(HttpHeaders.Authorization, "Bearer enduser")
-                }
-
-                response.status shouldBe HttpStatusCode.OK
-                val responseJson: CollectionGrantResponse = response.body()
-                responseJson.data.size shouldBe 1
-                responseJson.data[0].apply {
-                    id shouldBe "123e4567-e89b-12d3-a456-426614174000"
-                    relationships.grantedFor.data.apply {
-                        id shouldBe "17abdc56-8f6f-440a-9f00-b9bfbb22065e"
-                        type shouldBe "Person"
-                    }
-                }
-            }
-
-            test("Should return empty list when authorized person has no grants") {
-                pdpContainer.registerEnduserMapping(
-                    token = "enduser-no-grants",
-                    partyId = "4e55f1e2-e576-23ab-80d3-c70a6fe354c0"
-                )
-
-                val response = client.get(GRANTS_PATH) {
-                    header(HttpHeaders.Authorization, "Bearer enduser-no-grants")
-                }
-
-                response.status shouldBe HttpStatusCode.OK
-                val responseJson: CollectionGrantResponse = response.body()
-                responseJson.data.size shouldBe 0
-            }
-
-            test("Should update status and return updated object as response") {
-                val response = client.patch("$GRANTS_PATH/123e4567-e89b-12d3-a456-426614174000") {
-                    header(HttpHeaders.Authorization, "Bearer elhub-service")
-                    contentType(ContentType.Application.Json)
-                    setBody(
-                        JsonApiConsumeRequest(
-                            data = JsonApiRequestResourceObject(
-                                type = "AuthorizationGrant",
-                                attributes = ConsumeRequestAttributes(
-                                    status = AuthorizationGrant.Status.Exhausted
+                test("Should reject update of non-'Active' grant") {
+                    val response = client.patch("$GRANTS_PATH/123e4567-e89b-12d3-a456-426614174000") {
+                        header(HttpHeaders.Authorization, "Bearer elhub-service")
+                        contentType(ContentType.Application.Json)
+                        setBody(
+                            JsonApiConsumeRequest(
+                                data = JsonApiRequestResourceObject(
+                                    type = "AuthorizationGrant",
+                                    attributes = ConsumeRequestAttributes(
+                                        status = AuthorizationGrant.Status.Exhausted
+                                    )
                                 )
-                            )
-                        ),
-                    )
-                }
+                            ),
+                        )
+                    }
 
-                response.status shouldBe HttpStatusCode.OK
-                val patchGrantResponse: SingleGrantResponse = response.body()
-
-                patchGrantResponse.data.apply {
-                    type shouldBe "AuthorizationGrant"
-                    id.shouldNotBeNull()
-                    attributes.shouldNotBeNull().apply {
-                        status shouldBe "Exhausted"
+                    response.status shouldBe HttpStatusCode.BadRequest
+                    val responseJson: JsonApiErrorCollection = response.body()
+                    responseJson.errors.apply {
+                        size shouldBe 1
+                        this[0].apply {
+                            status shouldBe "400"
+                            title shouldBe "Illegal status state"
+                            detail shouldBe "Grant must be 'Active' to get consumed"
+                        }
+                    }
+                    responseJson.meta.apply {
+                        "createdAt".shouldNotBeNull()
                     }
                 }
-            }
-            test("Should reject update of non-'Active' grant") {
-                val response = client.patch("$GRANTS_PATH/123e4567-e89b-12d3-a456-426614174000") {
-                    header(HttpHeaders.Authorization, "Bearer elhub-service")
-                    contentType(ContentType.Application.Json)
-                    setBody(
-                        JsonApiConsumeRequest(
-                            data = JsonApiRequestResourceObject(
-                                type = "AuthorizationGrant",
-                                attributes = ConsumeRequestAttributes(
-                                    status = AuthorizationGrant.Status.Exhausted
+                test("Should reject update of expired grant") {
+                    val response = client.patch("$GRANTS_PATH/2a28a9dd-d3b3-4dec-a420-3f7d0d0105b7") {
+                        header(HttpHeaders.Authorization, "Bearer elhub-service")
+                        contentType(ContentType.Application.Json)
+                        setBody(
+                            JsonApiConsumeRequest(
+                                data = JsonApiRequestResourceObject(
+                                    type = "AuthorizationGrant",
+                                    attributes = ConsumeRequestAttributes(
+                                        status = AuthorizationGrant.Status.Exhausted
+                                    )
                                 )
-                            )
-                        ),
-                    )
-                }
+                            ),
+                        )
+                    }
 
-                response.status shouldBe HttpStatusCode.BadRequest
-                val responseJson: JsonApiErrorCollection = response.body()
-                responseJson.errors.apply {
-                    size shouldBe 1
-                    this[0].apply {
-                        status shouldBe "400"
-                        title shouldBe "Illegal status state"
-                        detail shouldBe "Grant must be 'Active' to get consumed"
+                    response.status shouldBe HttpStatusCode.BadRequest
+
+                    val responseJson: JsonApiErrorCollection = response.body()
+                    responseJson.errors.apply {
+                        size shouldBe 1
+                        this[0].apply {
+                            status shouldBe "400"
+                            title shouldBe "Grant has expired"
+                            detail shouldBe "Grant validity period has passed"
+                        }
+                    }
+                    responseJson.meta.apply {
+                        "createdAt".shouldNotBeNull()
                     }
                 }
-                responseJson.meta.apply {
-                    "createdAt".shouldNotBeNull()
-                }
-            }
-            test("Should reject update of expired grant") {
-                val response = client.patch("$GRANTS_PATH/2a28a9dd-d3b3-4dec-a420-3f7d0d0105b7") {
-                    header(HttpHeaders.Authorization, "Bearer elhub-service")
-                    contentType(ContentType.Application.Json)
-                    setBody(
-                        JsonApiConsumeRequest(
-                            data = JsonApiRequestResourceObject(
-                                type = "AuthorizationGrant",
-                                attributes = ConsumeRequestAttributes(
-                                    status = AuthorizationGrant.Status.Exhausted
+                test("Should reject invalid status transition") {
+                    val response = client.patch("$GRANTS_PATH/2a28a9dd-d3b3-4dec-a420-3f7d0d0105b7") {
+                        header(HttpHeaders.Authorization, "Bearer elhub-service")
+                        contentType(ContentType.Application.Json)
+                        setBody(
+                            JsonApiConsumeRequest(
+                                data = JsonApiRequestResourceObject(
+                                    type = "AuthorizationGrant",
+                                    attributes = ConsumeRequestAttributes(
+                                        status = AuthorizationGrant.Status.Active
+                                    )
                                 )
-                            )
-                        ),
-                    )
-                }
-
-                response.status shouldBe HttpStatusCode.BadRequest
-
-                val responseJson: JsonApiErrorCollection = response.body()
-                responseJson.errors.apply {
-                    size shouldBe 1
-                    this[0].apply {
-                        status shouldBe "400"
-                        title shouldBe "Grant has expired"
-                        detail shouldBe "Grant validity period has passed"
+                            ),
+                        )
                     }
-                }
-                responseJson.meta.apply {
-                    "createdAt".shouldNotBeNull()
-                }
-            }
-            test("Should reject invalid status transition") {
-                val response = client.patch("$GRANTS_PATH/2a28a9dd-d3b3-4dec-a420-3f7d0d0105b7") {
-                    header(HttpHeaders.Authorization, "Bearer elhub-service")
-                    contentType(ContentType.Application.Json)
-                    setBody(
-                        JsonApiConsumeRequest(
-                            data = JsonApiRequestResourceObject(
-                                type = "AuthorizationGrant",
-                                attributes = ConsumeRequestAttributes(
-                                    status = AuthorizationGrant.Status.Active
-                                )
-                            )
-                        ),
-                    )
-                }
 
-                response.status shouldBe HttpStatusCode.BadRequest
+                    response.status shouldBe HttpStatusCode.BadRequest
 
-                val responseJson: JsonApiErrorCollection = response.body()
-                responseJson.errors.apply {
-                    size shouldBe 1
-                    this[0].apply {
-                        status shouldBe "400"
-                        title shouldBe "Invalid status transition"
-                        detail shouldBe "Only 'Exhausted' status is allowed."
+                    val responseJson: JsonApiErrorCollection = response.body()
+                    responseJson.errors.apply {
+                        size shouldBe 1
+                        this[0].apply {
+                            status shouldBe "400"
+                            title shouldBe "Invalid status transition"
+                            detail shouldBe "Only 'Exhausted' status is allowed."
+                        }
                     }
-                }
-                responseJson.meta.apply {
-                    "createdAt".shouldNotBeNull()
+                    responseJson.meta.apply {
+                        "createdAt".shouldNotBeNull()
+                    }
                 }
             }
         }
