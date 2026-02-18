@@ -61,7 +61,7 @@ class PDPAuthorizationProvider(
     private val log = LoggerFactory.getLogger(PDPAuthorizationProvider::class.java)
 
     companion object {
-        const val POLICY = "v1/data/v3/token/authinfo"
+        const val POLICY = "/v1/data/v3/token/authinfo"
 
         object Headers {
             const val AUTHORIZATION = "Authorization"
@@ -166,7 +166,7 @@ class PDPAuthorizationProvider(
             )
         )
         val response = Either.catch {
-            httpClient.post("$pdpBaseUrl/$POLICY") {
+            httpClient.post("$pdpBaseUrl$POLICY") {
                 contentType(ContentType.Application.Json)
                 setBody(request)
             }
