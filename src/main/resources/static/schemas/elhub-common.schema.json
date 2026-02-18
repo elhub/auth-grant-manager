@@ -102,9 +102,10 @@
     "validTo": {
       "type": "string",
       "format": "date-time",
-      "description": "Timestamp indicating when this object is no longer valid (and can thus no longer be used or modified).",
+      "description":
+      "Timestamp (start of day in the configured time zone) indicating when this object is no longer valid and can no longer be used or modified.",
       "examples": [
-        "2025-12-31T23:59:59+01:00"
+        "2026-12-31T00:00:00+01:00"
       ]
     }
   }
