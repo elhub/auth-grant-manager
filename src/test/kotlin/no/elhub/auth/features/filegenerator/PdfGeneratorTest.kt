@@ -41,7 +41,6 @@ class PdfGeneratorTest :
             val pdfGenerator = PdfGenerator(cfg)
 
             val result = pdfGenerator.generate(
-                signerNin = "123",
                 documentMeta = cosMeta,
             )
             result.shouldBeRight()
@@ -51,10 +50,8 @@ class PdfGeneratorTest :
             text shouldContain "Balance Supplier"
             Loader.loadPDF(result.value).use { document ->
                 val metadata = document.documentInformation
-                val signerNin = metadata.getCustomMetadataValue("signerNin")
                 val testDocument = metadata.getCustomMetadataValue("testDocument")
 
-                signerNin shouldBe "123"
                 testDocument shouldBe "true"
             }
         }
@@ -67,7 +64,6 @@ class PdfGeneratorTest :
             val pdfGenerator = PdfGenerator(cfg)
 
             val result = pdfGenerator.generate(
-                signerNin = "123",
                 documentMeta = cosMeta,
             )
             result.shouldBeRight()
@@ -77,10 +73,8 @@ class PdfGeneratorTest :
             text shouldContain "Balance Supplier"
             Loader.loadPDF(result.value).use { document ->
                 val metadata = document.documentInformation
-                val signerNin = metadata.getCustomMetadataValue("signerNin")
                 val testDocument = metadata.getCustomMetadataValue("testDocument")
 
-                signerNin shouldBe "123"
                 testDocument.shouldBeNull()
             }
         }
@@ -93,7 +87,6 @@ class PdfGeneratorTest :
             val pdfGenerator = PdfGenerator(cfg)
 
             val result = pdfGenerator.generate(
-                signerNin = "123",
                 documentMeta = moveInMeta,
             )
 
@@ -103,10 +96,8 @@ class PdfGeneratorTest :
             text shouldContain "Greatest Balance Supplier of all"
             Loader.loadPDF(result.value).use { document ->
                 val metadata = document.documentInformation
-                val signerNin = metadata.getCustomMetadataValue("signerNin")
                 val testDocument = metadata.getCustomMetadataValue("testDocument")
 
-                signerNin shouldBe "123"
                 testDocument shouldBe "true"
             }
         }
@@ -119,7 +110,6 @@ class PdfGeneratorTest :
             val pdfGenerator = PdfGenerator(cfg)
 
             val result = pdfGenerator.generate(
-                signerNin = "123",
                 documentMeta = moveInMeta,
             )
 
@@ -129,10 +119,8 @@ class PdfGeneratorTest :
             text shouldContain "Greatest Balance Supplier of all"
             Loader.loadPDF(result.value).use { document ->
                 val metadata = document.documentInformation
-                val signerNin = metadata.getCustomMetadataValue("signerNin")
                 val testDocument = metadata.getCustomMetadataValue("testDocument")
 
-                signerNin shouldBe "123"
                 testDocument.shouldBeNull()
             }
         }

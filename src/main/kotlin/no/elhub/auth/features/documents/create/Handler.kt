@@ -73,7 +73,7 @@ class Handler(
 
             val file =
                 fileGenerator
-                    .generate(command.requestedFrom.idValue, command.meta)
+                    .generate(command.meta)
                     .mapLeft {
                         CreateError.FileGenerationError
                     }

@@ -25,7 +25,6 @@ class PdfGeneratorI18nTest : FunSpec({
         )
 
         val pdfResult = generator.generate(
-            signerNin = "01017012345",
             documentMeta = meta,
         )
         val pdfBytes = when (pdfResult) {
@@ -57,7 +56,6 @@ class PdfGeneratorI18nTest : FunSpec({
         )
 
         val englishPdfResult = generator.generate(
-            signerNin = "01017012345",
             documentMeta = meta,
         )
         val englishText = when (englishPdfResult) {
