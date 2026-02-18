@@ -85,7 +85,7 @@ class AuthorizationRequestRouteTest : FunSpec({
     beforeSpec {
         pdpContainer.registerMaskinportenMapping(
             token = "maskinporten",
-            actingFunction = "BalanceSupplier",
+            functionName = "BalanceSupplier",
             actingGln = "0107000000021"
         )
         pdpContainer.registerEnduserMapping(
@@ -94,7 +94,7 @@ class AuthorizationRequestRouteTest : FunSpec({
         )
         pdpContainer.registerMaskinportenMapping(
             token = "gridowner",
-            actingFunction = "GridOwner",
+            functionName = "GridOwner",
             actingGln = "0107000000038"
         )
         pdpContainer.registerInvalidTokenMapping()
@@ -170,7 +170,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                 pdpContainer.registerMaskinportenMapping(
                     token = "no-requests",
                     actingGln = "0107000000022",
-                    actingFunction = "BalanceSupplier",
+                    functionName = "BalanceSupplier",
                 )
 
                 val response = client.get(REQUESTS_PATH) {

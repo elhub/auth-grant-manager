@@ -150,7 +150,12 @@ class PDPAuthorizationProviderTest : FunSpec({
                 headers = authorizationOnlyHeaders(),
                 pdpResponse = maskinportenResponse(
                     authInfo = AuthInfo(
-                        actingFunction = RoleType.BalanceSupplier.name,
+                        authorizedFunctions = listOf(
+                            AuthorizedFunction(
+                                functionCode = "SELF",
+                                functionName = RoleType.BalanceSupplier.name
+                            )
+                        ),
                         actingGLN = "0107000000021"
                     )
                 )
@@ -192,18 +197,18 @@ class PDPAuthorizationProviderTest : FunSpec({
             )
         }
 
-        test("returns InvalidPdpResponseActingFunctionMissing when PDP response lacks actingFunction") {
+        test("returns InvalidPdpResponseActingFunctionMissing when PDP response lacks authorizedFunctions") {
             val response = runProviderMethod(
                 method = PDPAuthorizationProvider::authorizeMaskinporten,
                 headers = validHeadersForMaskinporten,
                 pdpResponse = maskinportenResponse(
                     authInfo = AuthInfo(
-                        actingFunction = null,
+                        authorizedFunctions = null,
                         actingGLN = "0107000000021"
                     )
                 )
             )
-            response.shouldBeLeft(AuthError.InvalidPdpResponseActingFunctionMissing)
+            response.shouldBeLeft(AuthError.InvalidPdpResponseAuthorizedFunctionsMissing)
         }
         test("returns InvalidPdpResponseActingGlnMissing when PDP response lacks actingGln") {
             val response = runProviderMethod(
@@ -211,7 +216,12 @@ class PDPAuthorizationProviderTest : FunSpec({
                 headers = validHeadersForMaskinporten,
                 pdpResponse = maskinportenResponse(
                     authInfo = AuthInfo(
-                        actingFunction = RoleType.BalanceSupplier.name,
+                        authorizedFunctions = listOf(
+                            AuthorizedFunction(
+                                functionCode = "SELF",
+                                functionName = RoleType.BalanceSupplier.name
+                            )
+                        ),
                         actingGLN = null
                     )
                 )
@@ -233,13 +243,18 @@ class PDPAuthorizationProviderTest : FunSpec({
             response.shouldBeLeft(AuthError.AccessDenied)
         }
 
-        test("returns ActingFunctionNotSupported when PDP response includes unsupported actingFunction") {
+        test("returns ActingFunctionNotSupported when PDP response includes unsupported authorizedFunctions") {
             val response = runProviderMethod(
                 method = PDPAuthorizationProvider::authorizeMaskinporten,
                 headers = validHeadersForMaskinporten,
                 pdpResponse = maskinportenResponse(
                     authInfo = AuthInfo(
-                        actingFunction = "UnknownRole",
+                        authorizedFunctions = listOf(
+                            AuthorizedFunction(
+                                functionCode = "SELF",
+                                functionName = "UnknownRole"
+                            )
+                        ),
                         actingGLN = "0107000000021"
                     )
                 )
@@ -376,7 +391,12 @@ private fun maskinportenResponse(
     tokenStatus: String = "verified",
     tokenType: String? = TokenType.MASKINPORTEN.value,
     authInfo: AuthInfo? = AuthInfo(
-        actingFunction = RoleType.BalanceSupplier.name,
+        authorizedFunctions = listOf(
+            AuthorizedFunction(
+                functionCode = "SELF",
+                functionName = RoleType.BalanceSupplier.name
+            )
+        ),
         actingGLN = "0107000000021"
     )
 ) = PdpResponse(
