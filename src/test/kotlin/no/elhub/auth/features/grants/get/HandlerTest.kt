@@ -38,6 +38,8 @@ class HandlerTest : FunSpec({
             grantedTo = grantedTo,
             grantedAt = currentTimeWithTimeZone(),
             validFrom = currentTimeWithTimeZone(),
+            createdAt = currentTimeWithTimeZone(),
+            updatedAt = currentTimeWithTimeZone(),
             validTo = currentTimeWithTimeZone().plusYears(1),
             sourceType = SourceType.Document,
             sourceId = UUID.randomUUID(),
