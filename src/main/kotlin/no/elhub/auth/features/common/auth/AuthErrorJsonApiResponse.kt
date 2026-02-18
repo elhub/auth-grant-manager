@@ -51,6 +51,6 @@ fun AuthError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection>
 
         AuthError.InvalidPdpResponseAuthInfoMissing,
         AuthError.InvalidPdpResponseActingGlnMissing,
-        AuthError.InvalidPdpResponseActingFunctionMissing,
+        AuthError.InvalidPdpResponseAuthorizedFunctionsMissing,
         AuthError.UnknownError -> toInternalServerApiErrorResponse()
     }

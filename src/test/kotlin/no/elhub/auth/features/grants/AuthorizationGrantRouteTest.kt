@@ -51,7 +51,7 @@ class AuthorizationGrantRouteTest : FunSpec({
         pdpContainer.registerMaskinportenMapping(
             token = "maskinporten",
             actingGln = "0107000000021",
-            actingFunction = "BalanceSupplier"
+            functionName = "BalanceSupplier"
         )
 
         pdpContainer.registerEnduserMapping(

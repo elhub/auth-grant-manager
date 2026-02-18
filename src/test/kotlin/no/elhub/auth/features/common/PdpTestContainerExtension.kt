@@ -13,6 +13,7 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import no.elhub.auth.features.common.auth.PDPAuthorizationProvider
 import org.testcontainers.containers.GenericContainer
 
 class PdpTestContainerExtension() : BeforeSpecListener, AfterSpecListener {
@@ -38,11 +39,11 @@ class PdpTestContainerExtension() : BeforeSpecListener, AfterSpecListener {
         client.close()
     }
 
-    suspend fun registerMaskinportenMapping(token: String, actingGln: String, actingFunction: String) {
+    suspend fun registerMaskinportenMapping(token: String, actingGln: String, functionName: String) {
         val client = HttpClient(CIO)
         client.post("http://localhost:8085/__admin/mappings") {
             contentType(ContentType.Application.Json)
-            setBody(maskinportenMapping(token, actingGln, actingFunction))
+            setBody(maskinportenMapping(token, actingGln, functionName))
         }
         client.close()
     }
@@ -65,7 +66,7 @@ class PdpTestContainerExtension() : BeforeSpecListener, AfterSpecListener {
                 {
                   "request": {
                     "method": "POST",
-                    "url": "/v1/data/v2/token/authinfo",
+                    "url": "${PDPAuthorizationProvider.POLICY}",
                     "bodyPatterns": [
                       { "contains": "\"token\":\"invalid-token\"" }
                     ]
@@ -96,13 +97,13 @@ class PdpTestContainerExtension() : BeforeSpecListener, AfterSpecListener {
     }
 
     companion object {
-        private fun maskinportenMapping(token: String, actingGln: String, actingFunction: String): String =
+        private fun maskinportenMapping(token: String, actingGln: String, functionName: String): String =
             """
         {
           "priority": 1,
           "request": {
             "method": "POST",
-            "url": "/v1/data/v2/token/authinfo",
+            "url": "${PDPAuthorizationProvider.POLICY}",
             "bodyPatterns": [
               { "contains": "\"token\":\"$token\"" }
             ]
@@ -118,7 +119,12 @@ class PdpTestContainerExtension() : BeforeSpecListener, AfterSpecListener {
                   "tokenType": "maskinporten"
                 },
                 "authInfo": {
-                  "actingFunction": "$actingFunction",
+                  "authorizedFunctions": [
+                    {
+                      "functionCode": "SELF",
+                      "functionName": "$functionName"
+                    }
+                  ],
                   "actingGLN": "$actingGln"
                 }
               }
@@ -133,7 +139,7 @@ class PdpTestContainerExtension() : BeforeSpecListener, AfterSpecListener {
                   "priority": 1,
                   "request": {
                     "method": "POST",
-                    "url": "/v1/data/v2/token/authinfo",
+                    "url": "${PDPAuthorizationProvider.POLICY}",
                     "bodyPatterns": [
                       { "contains": "\"token\":\"$token\"" }
                     ]
@@ -160,7 +166,7 @@ class PdpTestContainerExtension() : BeforeSpecListener, AfterSpecListener {
                   "priority": 1,
                   "request": {
                     "method": "POST",
-                    "url": "/v1/data/v2/token/authinfo",
+                    "url": "${PDPAuthorizationProvider.POLICY}",
                     "bodyPatterns": [
                       { "contains": "\"token\":\"$token\"" }
                     ]

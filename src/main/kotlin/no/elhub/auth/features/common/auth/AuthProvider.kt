@@ -33,7 +33,7 @@ sealed interface AuthError {
     object InvalidToken : AuthError
     object InvalidPdpResponseAuthInfoMissing : AuthError
     object InvalidPdpResponseActingGlnMissing : AuthError
-    object InvalidPdpResponseActingFunctionMissing : AuthError
+    object InvalidPdpResponseAuthorizedFunctionsMissing : AuthError
     object ActingFunctionNotSupported : AuthError
     object UnknownError : AuthError
     object NotAuthorized : AuthError
@@ -61,7 +61,7 @@ class PDPAuthorizationProvider(
     private val log = LoggerFactory.getLogger(PDPAuthorizationProvider::class.java)
 
     companion object {
-        const val POLICY = "v1/data/v2/token/authinfo"
+        const val POLICY = "v1/data/v3/token/authinfo"
 
         object Headers {
             const val AUTHORIZATION = "Authorization"
@@ -210,15 +210,20 @@ class PDPAuthorizationProvider(
             raise(AuthError.AccessDenied)
         }
         val actingGLN = authInfo.actingGLN ?: raise(AuthError.InvalidPdpResponseActingGlnMissing)
-        val actingFunction = authInfo.actingFunction ?: raise(AuthError.InvalidPdpResponseActingFunctionMissing)
-        val roleType = Either.catch {
-            enumValueOf<RoleType>(actingFunction)
-        }
-            .mapLeft {
-                log.warn("Unsupported actingFunction for traceId={} actingFunction={}", traceId, actingFunction)
-                AuthError.ActingFunctionNotSupported
+        val authorizedFunctions = authInfo.authorizedFunctions
+            ?.takeIf { it.isNotEmpty() }
+            ?: run {
+                log.warn("PDP response missing authorizedFunctions for traceId={}", traceId)
+                raise(AuthError.InvalidPdpResponseAuthorizedFunctionsMissing)
             }
-            .bind()
+
+        val roleType = authorizedFunctions
+            .firstOrNull { it.functionName == RoleType.BalanceSupplier.name }
+            ?.let { RoleType.BalanceSupplier }
+            ?: run {
+                log.warn("Unsupported authorizedFunctions for traceId={} authorizedFunctions={}", traceId, authorizedFunctions)
+                raise(AuthError.ActingFunctionNotSupported)
+            }
         val authorizedParty = AuthorizedParty.OrganizationEntity(actingGLN, roleType)
         log.info("Authorized party is $authorizedParty")
         authorizedParty
