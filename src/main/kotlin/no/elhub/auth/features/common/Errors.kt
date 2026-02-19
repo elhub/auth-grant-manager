@@ -53,6 +53,12 @@ fun buildApiErrorResponse(status: HttpStatusCode, title: String, detail: String)
         )
     )
 
+fun toTypeMismatchApiErrorResponse(expectedType: String, actualType: String): Pair<HttpStatusCode, JsonApiErrorCollection> = buildApiErrorResponse(
+    status = HttpStatusCode.Conflict,
+    title = "Resource type mismatch",
+    detail = "Expected 'data.type' to be '$expectedType', but received '$actualType'"
+)
+
 fun toInternalServerApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> = buildApiErrorResponse(
     status = HttpStatusCode.InternalServerError,
     title = "Internal server error",

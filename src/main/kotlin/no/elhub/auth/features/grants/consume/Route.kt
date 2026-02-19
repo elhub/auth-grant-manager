@@ -6,12 +6,12 @@ import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.patch
-import no.elhub.auth.features.common.InputError
 import no.elhub.auth.features.common.auth.AuthorizationProvider
 import no.elhub.auth.features.common.auth.toApiErrorResponse
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toApiErrorResponse
+import no.elhub.auth.features.common.toTypeMismatchApiErrorResponse
 import no.elhub.auth.features.common.validateId
 import no.elhub.auth.features.grants.common.dto.toSingleGrantResponse
 import no.elhub.auth.features.grants.consume.dto.JsonApiConsumeRequest
@@ -37,17 +37,20 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
                 return@patch
             }
 
-        val body = runCatching {
-            call.receive<JsonApiConsumeRequest>()
-        }.getOrElse {
-            val (status, body) = InputError.MalformedInputError.toApiErrorResponse()
-            call.respond(status, body)
+        val requestBody = call.receive<JsonApiConsumeRequest>()
+
+        if (requestBody.data.type != "AuthorizationGrant") {
+            val (status, message) = toTypeMismatchApiErrorResponse(
+                expectedType = "AuthorizationGrant",
+                actualType = requestBody.data.type
+            )
+            call.respond(status, message)
             return@patch
         }
 
         val command = ConsumeCommand(
             grantId = grantId,
-            newStatus = body.data.attributes.status,
+            newStatus = requestBody.data.attributes.status,
             authorizedParty = AuthorizationParty(
                 id = authorizedSystem.id,
                 type = PartyType.System
