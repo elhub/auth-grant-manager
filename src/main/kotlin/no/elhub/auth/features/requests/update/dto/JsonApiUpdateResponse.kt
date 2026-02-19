@@ -62,7 +62,7 @@ fun AuthorizationRequest.toUpdateResponse() = UpdateRequestResponse(
         attributes = UpdateRequestResponseAttributes(
             status = this.status.name,
             requestType = this.type.name,
-            validTo = this.validTo.toString(),
+            validTo = this.validTo.toTimeZoneOffsetString(),
             createdAt = this.createdAt.toTimeZoneOffsetString(),
             updatedAt = this.updatedAt.toTimeZoneOffsetString(),
         ),

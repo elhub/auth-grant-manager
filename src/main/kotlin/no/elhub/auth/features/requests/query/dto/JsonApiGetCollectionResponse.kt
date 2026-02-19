@@ -65,7 +65,7 @@ fun List<AuthorizationRequest>.toGetCollectionResponse() =
                 attributes = GetRequestCollectionResponseAttributes(
                     status = request.status.toString(),
                     requestType = request.type.toString(),
-                    validTo = request.validTo.toString(),
+                    validTo = request.validTo.toTimeZoneOffsetString(),
                     createdAt = request.createdAt.toTimeZoneOffsetString(),
                     updatedAt = request.updatedAt.toTimeZoneOffsetString(),
                 ),
