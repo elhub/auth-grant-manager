@@ -208,6 +208,7 @@ class ChangeOfEnergySupplierBusinessHandler(
                 language = model.language,
                 requestedFromName = model.requestedFromName,
                 requestedForMeteringPointId = model.requestedForMeteringPointId,
+                requestedForMeterNumber = meteringPoint.data.attributes?.accountingPoint?.meter?.meterNumber ?: "",
                 requestedForMeteringPointAddress = model.requestedForMeteringPointAddress,
                 balanceSupplierContractName = model.balanceSupplierContractName,
                 balanceSupplierName = model.balanceSupplierName,

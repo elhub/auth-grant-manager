@@ -13,6 +13,7 @@ class DocumentMetaMarkerTest : FunSpec({
             balanceSupplierName = "Balance Supplier",
             balanceSupplierContractName = "Contract Name",
             requestedForMeteringPointId = "Meter123",
+            requestedForMeterNumber = "123456789",
             requestedForMeteringPointAddress = "Address 1",
             requestedFromName = "Requester",
         )
@@ -22,6 +23,7 @@ class DocumentMetaMarkerTest : FunSpec({
             "balanceSupplierName" to "Balance Supplier",
             "balanceSupplierContractName" to "Contract Name",
             "requestedForMeteringPointId" to "Meter123",
+            "requestedForMeterNumber" to "123456789",
             "requestedForMeteringPointAddress" to "Address 1",
             "requestedFromName" to "Requester",
         )

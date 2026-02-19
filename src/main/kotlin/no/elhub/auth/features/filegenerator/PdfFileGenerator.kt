@@ -52,6 +52,7 @@ class PdfGenerator(
         internal const val VARIABLE_KEY_CUSTOMER_NAME = "customerName"
         internal const val VARIABLE_KEY_METERING_POINT_ADDRESS = "meteringPointAddress"
         internal const val VARIABLE_KEY_METERING_POINT_ID = "meteringPointId"
+        internal const val VARIABLE_KEY_METER_NUMBER = "meterNumber"
         internal const val VARIABLE_KEY_BALANCE_SUPPLIER_NAME = "balanceSupplierName"
         internal const val VARIABLE_KEY_BALANCE_SUPPLIER_CONTRACT_NAME = "balanceSupplierContractName"
         internal const val VARIABLE_KEY_MOVE_IN_DATE = "moveInDate"
@@ -100,6 +101,7 @@ class PdfGenerator(
                 customerName = documentMeta.requestedFromName,
                 meteringPointAddress = documentMeta.requestedForMeteringPointAddress,
                 meteringPointId = documentMeta.requestedForMeteringPointId,
+                meterNumber = documentMeta.requestedForMeterNumber,
                 balanceSupplierName = documentMeta.balanceSupplierName,
                 balanceSupplierContractName = documentMeta.balanceSupplierContractName,
                 language = language
@@ -110,6 +112,7 @@ class PdfGenerator(
                 meteringPointAddress = documentMeta.requestedForMeteringPointAddress,
                 meteringPointId = documentMeta.requestedForMeteringPointId,
                 balanceSupplierName = documentMeta.balanceSupplierName,
+                meterNumber = documentMeta.requestedForMeterNumber,
                 balanceSupplierContractName = documentMeta.balanceSupplierContractName,
                 startDate = documentMeta.startDate?.let { formatNorwegianDate(it.year, it.month.number, it.day) },
                 language = language
@@ -135,6 +138,7 @@ class PdfGenerator(
         customerName: String,
         meteringPointAddress: String,
         meteringPointId: String,
+        meterNumber: String,
         balanceSupplierName: String,
         balanceSupplierContractName: String,
         language: SupportedLanguage,
@@ -148,6 +152,7 @@ class PdfGenerator(
                     mapOf(
                         MustacheConstants.VARIABLE_KEY_CUSTOMER_NAME to customerName,
                         MustacheConstants.VARIABLE_KEY_METERING_POINT_ID to meteringPointId,
+                        MustacheConstants.VARIABLE_KEY_METER_NUMBER to meterNumber,
                         MustacheConstants.VARIABLE_KEY_METERING_POINT_ADDRESS to meteringPointAddress,
                         MustacheConstants.VARIABLE_KEY_BALANCE_SUPPLIER_NAME to balanceSupplierName,
                         MustacheConstants.VARIABLE_KEY_BALANCE_SUPPLIER_CONTRACT_NAME to balanceSupplierContractName,
@@ -162,6 +167,7 @@ class PdfGenerator(
         customerName: String,
         meteringPointAddress: String,
         meteringPointId: String,
+        meterNumber: String,
         balanceSupplierName: String,
         balanceSupplierContractName: String,
         startDate: String?,
@@ -176,6 +182,7 @@ class PdfGenerator(
                     mapOf(
                         MustacheConstants.VARIABLE_KEY_CUSTOMER_NAME to customerName,
                         MustacheConstants.VARIABLE_KEY_METERING_POINT_ID to meteringPointId,
+                        MustacheConstants.VARIABLE_KEY_METER_NUMBER to meterNumber,
                         MustacheConstants.VARIABLE_KEY_METERING_POINT_ADDRESS to meteringPointAddress,
                         MustacheConstants.VARIABLE_KEY_BALANCE_SUPPLIER_NAME to balanceSupplierName,
                         MustacheConstants.VARIABLE_KEY_BALANCE_SUPPLIER_CONTRACT_NAME to balanceSupplierContractName,

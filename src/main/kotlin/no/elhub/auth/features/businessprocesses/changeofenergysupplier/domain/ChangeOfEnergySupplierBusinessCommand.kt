@@ -24,6 +24,7 @@ data class ChangeOfEnergySupplierBusinessCommand(
 data class ChangeOfEnergySupplierBusinessMeta(
     val requestedFromName: String,
     val requestedForMeteringPointId: String,
+    val requestedForMeterNumber: String,
     val requestedForMeteringPointAddress: String,
     val balanceSupplierName: String,
     val balanceSupplierContractName: String,
@@ -35,6 +36,7 @@ data class ChangeOfEnergySupplierBusinessMeta(
         buildMap {
             put("requestedFromName", requestedFromName)
             put("requestedForMeteringPointId", requestedForMeteringPointId)
+            put("requestedForMeterNumber", requestedForMeterNumber)
             put("requestedForMeteringPointAddress", requestedForMeteringPointAddress)
             put("balanceSupplierContractName", balanceSupplierContractName)
             put("balanceSupplierName", balanceSupplierName)

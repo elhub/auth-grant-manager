@@ -812,6 +812,7 @@ private class TestDocumentBusinessHandler : DocumentBusinessHandler {
                     language = meta.language.toSupportedLanguage(),
                     requestedFromName = meta.requestedFromName,
                     requestedForMeteringPointId = meta.requestedForMeteringPointId,
+                    requestedForMeterNumber = "123456789",
                     requestedForMeteringPointAddress = meta.requestedForMeteringPointAddress,
                     balanceSupplierName = meta.balanceSupplierName,
                     balanceSupplierContractName = meta.balanceSupplierContractName
