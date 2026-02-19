@@ -8,6 +8,7 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.patch
+import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
@@ -644,7 +645,39 @@ class AuthorizationGrantRouteTest : FunSpec({
     context("PATCH /authorization-grants/{id}") {
         testApplication {
             setupAuthorizationGrantTestApplication()
+            test("Should return 409 Conflict on invalid data.type") {
+                val response = client.patch("$GRANTS_PATH/123e4567-e89b-12d3-a456-426614174000") {
+                    header(HttpHeaders.Authorization, "Bearer elhub-service")
+                    contentType(ContentType.Application.Json)
+                    setBody(
+                        """
+                {
+                  "data": {
+                    "type": "test",
+                    "attributes": {
+                      "status": "Exhausted"
+                    }
+                  }
+                }
+                        """.trimIndent()
+                    )
+                }
 
+                response.status shouldBe HttpStatusCode.Conflict
+
+                val responseJson: JsonApiErrorCollection = response.body()
+                responseJson.errors.apply {
+                    size shouldBe 1
+                    this[0].apply {
+                        status shouldBe "409"
+                        title shouldBe "Resource type mismatch"
+                        detail shouldBe "Expected 'data.type' to be 'AuthorizationGrant', but received 'test'"
+                    }
+                }
+                responseJson.meta.apply {
+                    "createdAt".shouldNotBeNull()
+                }
+            }
             test("Should update status and return updated object as response") {
                 val response = client.patch("$GRANTS_PATH/123e4567-e89b-12d3-a456-426614174000") {
                     header(HttpHeaders.Authorization, "Bearer elhub-service")

@@ -12,6 +12,7 @@ import no.elhub.auth.features.common.auth.toApiErrorResponse
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toBalanceSupplierNotApiAuthorizedResponse
+import no.elhub.auth.features.common.toTypeMismatchApiErrorResponse
 import no.elhub.auth.features.requests.create.dto.JsonApiCreateRequest
 import no.elhub.auth.features.requests.create.dto.toCreateResponse
 import no.elhub.auth.features.requests.create.dto.toModel
@@ -33,6 +34,16 @@ fun Route.route(
             }
 
         val requestBody = call.receive<JsonApiCreateRequest>()
+
+        if (requestBody.data.type != "AuthorizationRequest") {
+            val (status, message) = toTypeMismatchApiErrorResponse(
+                expectedType = "AuthorizationRequest",
+                actualType = requestBody.data.type
+            )
+            call.respond(status, message)
+            return@post
+        }
+
         if (resolvedActor.role != RoleType.BalanceSupplier) {
             val (status, body) = toBalanceSupplierNotApiAuthorizedResponse()
             call.respond(status, body)

@@ -501,6 +501,53 @@ class AuthorizationRequestRouteTest : FunSpec({
                 }
             }
 
+            test("Should return 409 Conflict on invalid data.type") {
+                val response =
+                    client.post(REQUESTS_PATH) {
+                        header(HttpHeaders.Authorization, "Bearer maskinporten")
+                        header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                        contentType(ContentType.Application.Json)
+                        setBody(
+                            """
+                {
+                  "data": {
+                  "type": "test"
+                    "attributes": {
+                      "requestType": "ChangeOfEnergySupplierForPerson"
+                    },
+                    "meta": {
+                      "requestedBy": { "idType": "GlobalLocationNumber", "idValue": "0107000000021" },
+                      "requestedFrom": { "idType": "NationalIdentityNumber", "idValue": "$REQUESTED_FROM_NIN" },
+                      "requestedTo": { "idType": "NationalIdentityNumber", "idValue": "$REQUESTED_TO_NIN" },
+                      "requestedFromName": "Hillary Orr",
+                      "requestedForMeteringPointId": "123456789012345678",
+                      "requestedForMeteringPointAddress": "quaerendum",
+                      "balanceSupplierName": "Balance Supplier",
+                      "balanceSupplierContractName": "Selena Chandler",
+                      "redirectURI": "https://example.com/redirect"
+                    }
+                  }
+                }
+                            """.trimIndent()
+                        )
+                    }
+
+                response.status shouldBe HttpStatusCode.Conflict
+
+                val responseJson: JsonApiErrorCollection = response.body()
+                responseJson.errors.apply {
+                    size shouldBe 1
+                    this[0].apply {
+                        status shouldBe "409"
+                        title shouldBe "Resource type mismatch"
+                        detail shouldBe "Expected 'data.type' to be 'AuthorizationRequest', but received 'test'"
+                    }
+                }
+                responseJson.meta.apply {
+                    "createdAt".shouldNotBeNull()
+                }
+            }
+
             test("Should return 400 Bad Request on missing field in request body") {
                 val response =
                     client.post(REQUESTS_PATH) {
@@ -511,13 +558,14 @@ class AuthorizationRequestRouteTest : FunSpec({
                             """
                 {
                   "data": {
+                    "type": "AuthorizationRequest"
                     "attributes": {
                       "requestType": "ChangeOfEnergySupplierForPerson"
                     },
                     "meta": {
-                      "requestedBy": { "idType": "GlobalLocationNumber", "id": "0107000000021" },
-                      "requestedFrom": { "idType": "NationalIdentityNumber", "id": "$REQUESTED_FROM_NIN" },
-                      "requestedTo": { "idType": "NationalIdentityNumber", "id": "$REQUESTED_TO_NIN" },
+                      "requestedBy": { "idType": "GlobalLocationNumber" },
+                      "requestedFrom": { "idType": "NationalIdentityNumber", "idValue": "$REQUESTED_FROM_NIN" },
+                      "requestedTo": { "idType": "NationalIdentityNumber", "idValue": "$REQUESTED_TO_NIN" },
                       "requestedFromName": "Hillary Orr",
                       "requestedForMeteringPointId": "123456789012345678",
                       "requestedForMeteringPointAddress": "quaerendum",
@@ -562,9 +610,9 @@ class AuthorizationRequestRouteTest : FunSpec({
                       "requestType": "ChangeOfEnergySupplierForPerson"
                     },
                     "meta": {
-                      "requestedBy": { "idType": "TEST", "id": "0107000000021" },
-                      "requestedFrom": { "idType": "NationalIdentityNumber", "id": "$REQUESTED_FROM_NIN" },
-                      "requestedTo": { "idType": "NationalIdentityNumber", "id": "$REQUESTED_TO_NIN" },
+                      "requestedBy": { "idType": "TEST", "id": "0107000000021", "idValue": "0107000000020"" },
+                      "requestedFrom": { "idType": "NationalIdentityNumber", "idValue": "$REQUESTED_FROM_NIN" },
+                      "requestedTo": { "idType": "NationalIdentityNumber", "idValue": "$REQUESTED_TO_NIN" },
                       "requestedFromName": "Hillary Orr",
                       "requestedForMeteringPointId": "123456789012345678",
                       "requestedForMeteringPointAddress": "quaerendum",
@@ -770,6 +818,40 @@ class AuthorizationRequestRouteTest : FunSpec({
     context("PATCH /authorization-requests/{ID}") {
         testApplication {
             setUpAuthorizationRequestTestApplication()
+
+            test("Should return 409 Conflict on invalid data.type") {
+                val response = client.patch("${REQUESTS_PATH}/130b6bca-1e3a-4653-8a9b-ccc0dc4fe389") {
+                    header(HttpHeaders.Authorization, "Bearer enduser")
+                    contentType(ContentType.Application.Json)
+                    setBody(
+                        """
+                {
+                  "data": {
+                    "type": "test",
+                    "attributes": {
+                        "status": "Accepted"
+                    }
+                  }
+                }
+                        """.trimIndent()
+                    )
+                }
+
+                response.status shouldBe HttpStatusCode.Conflict
+
+                val responseJson: JsonApiErrorCollection = response.body()
+                responseJson.errors.apply {
+                    size shouldBe 1
+                    this[0].apply {
+                        status shouldBe "409"
+                        title shouldBe "Resource type mismatch"
+                        detail shouldBe "Expected 'data.type' to be 'AuthorizationRequest', but received 'test'"
+                    }
+                }
+                responseJson.meta.apply {
+                    "createdAt".shouldNotBeNull()
+                }
+            }
 
             test("Should return 400 Bad Request on missing field in request body") {
                 val response = client.patch("${REQUESTS_PATH}/130b6bca-1e3a-4653-8a9b-ccc0dc4fe389") {

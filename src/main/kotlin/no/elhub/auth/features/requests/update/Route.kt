@@ -11,6 +11,7 @@ import no.elhub.auth.features.common.auth.toApiErrorResponse
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toApiErrorResponse
+import no.elhub.auth.features.common.toTypeMismatchApiErrorResponse
 import no.elhub.auth.features.common.validateId
 import no.elhub.auth.features.requests.update.dto.JsonApiUpdateRequest
 import no.elhub.auth.features.requests.update.dto.toUpdateResponse
@@ -39,6 +40,16 @@ fun Route.route(
             }
 
         val requestBody = call.receive<JsonApiUpdateRequest>()
+
+        if (requestBody.data.type != "AuthorizationRequest") {
+            val (status, message) = toTypeMismatchApiErrorResponse(
+                expectedType = "AuthorizationRequest",
+                actualType = requestBody.data.type
+            )
+            call.respond(status, message)
+            return@patch
+        }
+
         val command = UpdateCommand(
             requestId = requestId,
             newStatus = requestBody.data.attributes.status,
