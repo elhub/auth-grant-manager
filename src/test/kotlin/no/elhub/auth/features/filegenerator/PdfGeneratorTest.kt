@@ -19,6 +19,7 @@ class PdfGeneratorTest :
             balanceSupplierName = "Balance Supplier",
             balanceSupplierContractName = "Contract Name",
             requestedForMeteringPointId = "Meter123",
+            requestedForMeterNumber = "123456789",
             requestedForMeteringPointAddress = "Address 1",
             requestedFromName = "Requester"
         )
@@ -26,6 +27,7 @@ class PdfGeneratorTest :
             language = SupportedLanguage.DEFAULT,
             requestedFromName = "Alberto Balsalm",
             requestedForMeteringPointId = "Meter123",
+            requestedForMeterNumber = "123456789",
             requestedForMeteringPointAddress = "Address 1",
             balanceSupplierContractName = "Contract Name",
             balanceSupplierName = "Greatest Balance Supplier of all",

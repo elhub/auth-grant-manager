@@ -49,7 +49,14 @@ data class Relationships(
 
 @Serializable
 data class AccountingPoint(
-    val blockedForSwitching: Boolean? = null
+    val blockedForSwitching: Boolean? = null,
+    val meter: Meter? = null
+)
+
+@Serializable
+data class Meter(
+    val meterConstant: Double,
+    val meterNumber: String,
 )
 
 typealias MeteringPointResponse = JsonApiResponse.SingleDocumentWithRelationships<Attributes, Relationships>

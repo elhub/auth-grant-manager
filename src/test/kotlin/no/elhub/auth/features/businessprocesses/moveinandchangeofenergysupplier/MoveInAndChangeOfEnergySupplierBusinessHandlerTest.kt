@@ -542,6 +542,7 @@ class MoveInAndChangeOfEnergySupplierBusinessHandlerTest :
             command.validTo shouldBe today().plus(DatePeriod(days = 28)).toTimeZoneOffsetDateTimeAtStartOfDay()
             command.meta.toMetaAttributes()["startDate"] shouldBe VALID_START_DATE.toString()
             command.meta.toMetaAttributes()["redirectURI"] shouldBe "https://example.com"
+            command.meta.toMetaAttributes().containsKey("requestedForMeterNumber") shouldBe true
         }
 
         test("grant properties validTo is one year from acceptance") {
@@ -582,5 +583,6 @@ class MoveInAndChangeOfEnergySupplierBusinessHandlerTest :
             val command = handler.validateAndReturnDocumentCommand(model).shouldBeRight()
             command.meta.toMetaAttributes()["startDate"] shouldBe VALID_START_DATE.toString()
             command.meta.toMetaAttributes()["language"] shouldBe SupportedLanguage.DEFAULT.code
+            command.meta.toMetaAttributes().containsKey("requestedForMeterNumber") shouldBe true
         }
     })

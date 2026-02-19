@@ -544,6 +544,7 @@ class ChangeOfEnergySupplierBusinessHandlerTest :
             command.type shouldBe AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson
             command.validTo shouldBe defaultValidTo().toTimeZoneOffsetDateTimeAtStartOfDay()
             command.meta.toMetaAttributes()["redirectURI"] shouldBe "https://example.com"
+            command.meta.toMetaAttributes().containsKey("requestedForMeterNumber") shouldBe true
         }
 
         test("document produces DocumentCommand for valid input") {
@@ -567,5 +568,6 @@ class ChangeOfEnergySupplierBusinessHandlerTest :
             val command = handler.validateAndReturnDocumentCommand(model).shouldBeRight()
             command.meta.toMetaAttributes()["requestedFromName"] shouldBe "From"
             command.meta.toMetaAttributes()["language"] shouldBe SupportedLanguage.DEFAULT.code
+            command.meta.toMetaAttributes().containsKey("requestedForMeterNumber") shouldBe true
         }
     })
