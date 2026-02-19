@@ -6,7 +6,6 @@ import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.patch
-import no.elhub.auth.features.common.InputError
 import no.elhub.auth.features.common.auth.AuthorizationProvider
 import no.elhub.auth.features.common.auth.toApiErrorResponse
 import no.elhub.auth.features.common.party.AuthorizationParty
@@ -38,7 +37,6 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
                 return@patch
             }
 
-        // TODO nisse -> test malformed input error -> should be caught by errorHandler
         val requestBody = call.receive<JsonApiConsumeRequest>()
 
         if (requestBody.data.type != "AuthorizationGrant") {
