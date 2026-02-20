@@ -538,7 +538,7 @@ paths:
         '404':
           $ref: '#/components/responses/404NotFoundError'
         '409':
-          $ref: '#/components/responses/404NotFoundError'
+          $ref: '#/components/responses/409ConflictError'
         '500':
           $ref: '#/components/responses/500InternalServerError'
     delete:
