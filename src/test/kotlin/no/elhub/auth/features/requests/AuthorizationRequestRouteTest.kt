@@ -818,15 +818,17 @@ class AuthorizationRequestRouteTest : FunSpec({
     context("PATCH /authorization-requests/{ID}") {
         testApplication {
             setUpAuthorizationRequestTestApplication()
+            val requestIdParam = "130b6bca-1e3a-4653-8a9b-ccc0dc4fe389"
 
             test("Should return 409 Conflict on invalid data.type") {
-                val response = client.patch("${REQUESTS_PATH}/130b6bca-1e3a-4653-8a9b-ccc0dc4fe389") {
+                val response = client.patch("${REQUESTS_PATH}/$requestIdParam") {
                     header(HttpHeaders.Authorization, "Bearer enduser")
                     contentType(ContentType.Application.Json)
                     setBody(
                         """
                 {
                   "data": {
+                    "id" : "$requestIdParam",
                     "type": "test",
                     "attributes": {
                         "status": "Accepted"
@@ -854,13 +856,14 @@ class AuthorizationRequestRouteTest : FunSpec({
             }
 
             test("Should return 400 Bad Request on missing field in request body") {
-                val response = client.patch("${REQUESTS_PATH}/130b6bca-1e3a-4653-8a9b-ccc0dc4fe389") {
+                val response = client.patch("${REQUESTS_PATH}/$requestIdParam") {
                     header(HttpHeaders.Authorization, "Bearer enduser")
                     contentType(ContentType.Application.Json)
                     setBody(
                         """
                 {
                   "data": {
+                    "id" : "$requestIdParam",
                     "type": "AuthorizationRequest",
                     "attributes": {
                     }
@@ -887,13 +890,14 @@ class AuthorizationRequestRouteTest : FunSpec({
             }
 
             test("Should return 400 Bad Request on invalid field value in request body") {
-                val response = client.patch("${REQUESTS_PATH}/130b6bca-1e3a-4653-8a9b-ccc0dc4fe389") {
+                val response = client.patch("${REQUESTS_PATH}/$requestIdParam") {
                     header(HttpHeaders.Authorization, "Bearer enduser")
                     contentType(ContentType.Application.Json)
                     setBody(
                         """
                 {
                   "data": {
+                  "id" : "$requestIdParam",
                     "type": "AuthorizationRequest",
                     "attributes": { "status" : "TEST" }
                   }
@@ -920,12 +924,13 @@ class AuthorizationRequestRouteTest : FunSpec({
 
             test("should not be accepted when validTo has expired") {
                 val patchResult =
-                    client.patch("${REQUESTS_PATH}/130b6bca-1e3a-4653-8a9b-ccc0dc4fe389") {
+                    client.patch("${REQUESTS_PATH}/$requestIdParam") {
                         header(HttpHeaders.Authorization, "Bearer enduser")
                         contentType(ContentType.Application.Json)
                         setBody(
                             JsonApiUpdateRequest(
                                 data = JsonApiRequestResourceObject(
+                                    id = requestIdParam,
                                     type = "AuthorizationRequest",
                                     attributes = UpdateRequestAttributes(
                                         status = AuthorizationRequest.Status.Accepted
@@ -967,6 +972,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                         setBody(
                             JsonApiUpdateRequest(
                                 data = JsonApiRequestResourceObject(
+                                    id = requestId.toString(),
                                     type = "AuthorizationRequest",
                                     attributes = UpdateRequestAttributes(
                                         status = AuthorizationRequest.Status.Accepted
@@ -1121,6 +1127,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                         setBody(
                             JsonApiUpdateRequest(
                                 data = JsonApiRequestResourceObject(
+                                    id = requestId.toString(),
                                     type = "AuthorizationRequest",
                                     attributes = UpdateRequestAttributes(
                                         status = AuthorizationRequest.Status.Rejected
@@ -1180,6 +1187,39 @@ class AuthorizationRequestRouteTest : FunSpec({
                 }
             }
 
+            test("Should return 409 Conflict on mismatch id") {
+                val requestId = insertAuthorizationRequest()
+                val response =
+                    client.patch("${REQUESTS_PATH}/$requestId") {
+                        contentType(ContentType.Application.Json)
+                        header(HttpHeaders.Authorization, "Bearer enduser")
+                        setBody(
+                            JsonApiUpdateRequest(
+                                data = JsonApiRequestResourceObject(
+                                    id = "1234",
+                                    type = "AuthorizationRequest",
+                                    attributes = UpdateRequestAttributes(
+                                        status = AuthorizationRequest.Status.Expired
+                                    )
+                                )
+                            ),
+                        )
+                    }
+                response.status shouldBe HttpStatusCode.Conflict
+                val responseJson: JsonApiErrorCollection = response.body()
+                responseJson.errors.apply {
+                    size shouldBe 1
+                    this[0].apply {
+                        status shouldBe "409"
+                        title shouldBe "Resource id mismatch"
+                        detail shouldBe "Expected 'data.id' to be the same as in URL path {id}"
+                    }
+                }
+                responseJson.meta.apply {
+                    "createdAt".shouldNotBeNull()
+                }
+            }
+
             test("Should return 400 Bad Request on illegal transaction") {
                 val requestId = insertAuthorizationRequest()
                 val response =
@@ -1189,6 +1229,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                         setBody(
                             JsonApiUpdateRequest(
                                 data = JsonApiRequestResourceObject(
+                                    id = requestId.toString(),
                                     type = "AuthorizationRequest",
                                     attributes = UpdateRequestAttributes(
                                         status = AuthorizationRequest.Status.Expired
