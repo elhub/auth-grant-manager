@@ -19,7 +19,7 @@ ktor:
     username: '$APP_USERNAME'
     password: '$APP_PASSWORD'
     hikari:
-      maximumPoolSize: 3
+      maximumPoolSize: 10
 
 pdfGenerator:
   mustacheResourcePath: 'templates'
