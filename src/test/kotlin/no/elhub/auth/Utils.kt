@@ -87,6 +87,55 @@ suspend fun validateUnsupportedPartyResponse(response: HttpResponse) {
     }
 }
 
+suspend fun validateMalformedInputResponse(response: HttpResponse) {
+    response.status.value shouldBe 400
+    val responseJson: JsonApiErrorCollection = response.body()
+    responseJson.errors.apply {
+        size shouldBe 1
+
+        this[0].apply {
+            title shouldBe "Invalid input"
+            detail shouldBe "The provided payload did not satisfy the expected format"
+        }
+    }
+}
+
+suspend fun validateInternalServerErrorResponse(response: HttpResponse) {
+    response.status.value shouldBe 500
+    val responseJson: JsonApiErrorCollection = response.body()
+    responseJson.errors.apply {
+        size shouldBe 1
+        this[0].apply {
+            title shouldBe "Internal server error"
+            detail shouldBe "An internal server error occurred"
+        }
+    }
+}
+
+suspend fun validateNotAuthorizedResponse(response: HttpResponse) {
+    response.status.value shouldBe 401
+    val responseJson: JsonApiErrorCollection = response.body()
+    responseJson.errors.apply {
+        size shouldBe 1
+        this[0].apply {
+            title shouldBe "Not authorized"
+            detail shouldBe "Authentication is required or invalid."
+        }
+    }
+}
+
+suspend fun validateForbiddenResponse(response: HttpResponse) {
+    response.status.value shouldBe 403
+    val responseJson: JsonApiErrorCollection = response.body()
+    responseJson.errors.apply {
+        size shouldBe 1
+        this[0].apply {
+            title shouldBe "Forbidden"
+            detail shouldBe "Access is denied for this endpoint."
+        }
+    }
+}
+
 fun ApplicationTestBuilder.setupAppWith(
     routingConfig: Routing.() -> Unit
 ) {
