@@ -11,7 +11,7 @@ import no.elhub.auth.features.common.auth.toApiErrorResponse
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toApiErrorResponse
-import no.elhub.auth.features.common.validateId
+import no.elhub.auth.features.common.validatePathId
 import no.elhub.auth.features.requests.get.dto.toGetSingleResponse
 import org.slf4j.LoggerFactory
 import java.util.UUID
@@ -28,7 +28,7 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
                 return@get
             }
 
-        val id: UUID = validateId(call.parameters[REQUEST_ID_PARAM])
+        val id: UUID = validatePathId(call.parameters[REQUEST_ID_PARAM])
             .getOrElse { err ->
                 val (status, body) = err.toApiErrorResponse()
                 call.respond(status, body)
