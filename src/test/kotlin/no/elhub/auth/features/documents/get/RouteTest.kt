@@ -1,9 +1,7 @@
 package no.elhub.auth.features.documents.get
 
 import io.ktor.server.routing.Routing
-
 import no.elhub.auth.features.documents.module
-
 
 import io.ktor.serialization.kotlinx.json.json
 import arrow.core.Either
@@ -24,6 +22,9 @@ import kotlin.random.Random
 import io.mockk.mockk
 import no.elhub.auth.features.common.auth.AuthorizationProvider
 import no.elhub.auth.setupAppWith
+import no.elhub.auth.validateInternalServerErrorResponse
+import no.elhub.auth.validateNotAuthorizedResponse
+import no.elhub.auth.validateMalformedInputResponse
 import no.elhub.auth.features.common.auth.RoleType
 import no.elhub.auth.features.common.auth.AuthorizedParty
 import no.elhub.auth.features.common.auth.AuthError
@@ -64,7 +65,6 @@ import no.elhub.auth.features.common.toTimeZoneOffsetString
 import no.elhub.auth.features.documents.get.dto.GetDocumentSingleResponse
 
 class RouteTest : FunSpec({
-
     val byAuthParty = AuthorizationParty("id1", PartyType.Organization)
     val fromAuthParty = AuthorizationParty("id2", PartyType.Person)
     val toAuthParty = AuthorizationParty("id3", PartyType.Person)
@@ -89,46 +89,38 @@ class RouteTest : FunSpec({
     )
     val authorizedPerson = AuthorizedParty.Person(id = UUID.fromString("1d024a64-abb0-47d1-9b81-5d98aaa1a8a9"))
     val authorizedOrg = AuthorizedParty.OrganizationEntity(gln = "1", role = RoleType.BalanceSupplier)
-
     test("GET /{id}[.pdf] returns 200 when authorized as person and handler succeeds") {
         val authProvider = mockk<AuthorizationProvider>()
         val handler = mockk<Handler>()
         coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
         coEvery { handler.invoke(any()) } returns document.right()
         testApplication {
-
             setupAppWith { route(handler, authProvider) }
             var response = client.get("/${document.id}")
             response.status shouldBe HttpStatusCode.OK
             validateGetByIdResponse(response, document)
-
             coVerify(exactly = 1) {
                 handler.invoke(match { it.authorizedParty.id == authorizedPerson.id.toString() })
             }
-
             response = client.get("/${document.id}.pdf")
             response.status shouldBe HttpStatusCode.OK
             response.contentType()?.withoutParameters() shouldBe ContentType.Application.Pdf
             response.bodyAsChannel().toByteArray() shouldBe document.file
-
             coVerify(exactly = 2) {
                 handler.invoke(match { it.authorizedParty.id == authorizedPerson.id.toString() })
             }
         }
     }
-
     test("GET /{id}[.pdf] returns 200 when authorized as org and handler succeeds") {
         val authProvider = mockk<AuthorizationProvider>()
         val handler = mockk<Handler>()
         coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedOrg.right()
         coEvery { handler.invoke(any()) } returns document.right()
         testApplication {
-
             setupAppWith { route(handler, authProvider) }
             var response = client.get("/${document.id}")
             response.status shouldBe HttpStatusCode.OK
             validateGetByIdResponse(response, document)
-
             coVerify(exactly = 1) {
                 handler.invoke(match { it.authorizedParty.id == authorizedOrg.gln })
             }
@@ -141,14 +133,12 @@ class RouteTest : FunSpec({
             }
         }
     }
-
     test("GET /{id}[.pdf] returns 400 when UUID is invalid") {
         val authProvider = mockk<AuthorizationProvider>()
         val handler = mockk<Handler>()
         coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
         coEvery { handler.invoke(any()) } returns document.right()
         testApplication {
-
             setupAppWith { route(handler, authProvider) }
             val id = "not-a-uuid"
             validateMalformedInputResponse(client.get("/$id"))
@@ -156,14 +146,12 @@ class RouteTest : FunSpec({
             coVerify(exactly = 0) { handler.invoke(any()) }
         }
     }
-
     test("GET /{id}[.pdf] returns appropriate error when authorization fails") {
         val authProvider = mockk<AuthorizationProvider>()
         val handler = mockk<Handler>()
         coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns AuthError.NotAuthorized.left()
         coEvery { handler.invoke(any()) } returns document.right()
         testApplication {
-
             setupAppWith { route(handler, authProvider) }
             val id = "7b14fcba-c899-4a5c-aecb-6e5abcac2bcf"
             validateNotAuthorizedResponse(client.get("/$id"))
@@ -171,59 +159,19 @@ class RouteTest : FunSpec({
             coVerify(exactly = 0) { handler.invoke(any()) }
         }
     }
-
     test("GET /{id}[.pdf] returns appropriate error when handler fails") {
         val authProvider = mockk<AuthorizationProvider>()
         val handler = mockk<Handler>()
         coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
         coEvery { handler.invoke(any()) } returns QueryError.IOError.left()
         testApplication {
-
             setupAppWith { route(handler, authProvider) }
             val id = "7b14fcba-c899-4a5c-aecb-6e5abcac2bcf"
             validateInternalServerErrorResponse(client.get("/$id"))
             validateInternalServerErrorResponse(client.get("/$id.pdf"))
         }
     }
-
 })
-
-private suspend fun validateMalformedInputResponse(response: HttpResponse) {
-    response.status.value shouldBe 400
-    val responseJson: JsonApiErrorCollection = response.body()
-    responseJson.errors.apply {
-        size shouldBe 1
-
-        this[0].apply {
-            title shouldBe "Invalid input"
-            detail shouldBe "The provided payload did not satisfy the expected format"
-        }
-    }
-}
-
-private suspend fun validateInternalServerErrorResponse(response: HttpResponse) {
-    response.status.value shouldBe 500
-    val responseJson: JsonApiErrorCollection = response.body()
-    responseJson.errors.apply {
-        size shouldBe 1
-        this[0].apply {
-            title shouldBe "Internal server error"
-            detail shouldBe "An internal server error occurred"
-        }
-    }
-}
-
-private suspend fun validateNotAuthorizedResponse(response: HttpResponse) {
-    response.status.value shouldBe 401
-    val responseJson: JsonApiErrorCollection = response.body()
-    responseJson.errors.apply {
-        size shouldBe 1
-        this[0].apply {
-            title shouldBe "Not authorized"
-            detail shouldBe "Authentication is required or invalid."
-        }
-    }
-}
 
 // Verifies document response from route matches document returned by handler
 private suspend fun validateGetByIdResponse(response: HttpResponse, handlerDocument: AuthorizationDocument) {
