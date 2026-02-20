@@ -1,9 +1,9 @@
 package no.elhub.auth.features.documents.get
 
+import io.ktor.server.routing.Routing
+
 import no.elhub.auth.features.documents.module
 
-import io.ktor.server.plugins.contentnegotiation.ContentNegotiation as ServerContentNegotiation
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation as ClientContentNegotiation
 
 import io.ktor.serialization.kotlinx.json.json
 import arrow.core.Either
@@ -23,6 +23,7 @@ import io.mockk.coEvery
 import kotlin.random.Random
 import io.mockk.mockk
 import no.elhub.auth.features.common.auth.AuthorizationProvider
+import no.elhub.auth.setupAppWith
 import no.elhub.auth.features.common.auth.RoleType
 import no.elhub.auth.features.common.auth.AuthorizedParty
 import no.elhub.auth.features.common.auth.AuthError
@@ -58,12 +59,9 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.serialization.json.Json
-import no.elhub.auth.config.configureErrorHandling
-import no.elhub.auth.config.configureSerialization
 import no.elhub.auth.features.common.commonModule
 import no.elhub.auth.features.common.toTimeZoneOffsetString
 import no.elhub.auth.features.documents.get.dto.GetDocumentSingleResponse
-import no.elhub.auth.features.documents.route.testBusinessProcessesModule
 
 class RouteTest : FunSpec({
 
@@ -98,8 +96,9 @@ class RouteTest : FunSpec({
         coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
         coEvery { handler.invoke(any()) } returns document.right()
         testApplication {
-            setupApp(handler, authProvider)
-            var response = client.get("/$hardId")
+
+            setupAppWith { route(handler, authProvider) }
+            var response = client.get("/${document.id}")
             response.status shouldBe HttpStatusCode.OK
             validateGetByIdResponse(response, document)
 
@@ -107,7 +106,7 @@ class RouteTest : FunSpec({
                 handler.invoke(match { it.authorizedParty.id == authorizedPerson.id.toString() })
             }
 
-            response = client.get("/$hardId.pdf")
+            response = client.get("/${document.id}.pdf")
             response.status shouldBe HttpStatusCode.OK
             response.contentType()?.withoutParameters() shouldBe ContentType.Application.Pdf
             response.bodyAsChannel().toByteArray() shouldBe document.file
@@ -124,15 +123,16 @@ class RouteTest : FunSpec({
         coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedOrg.right()
         coEvery { handler.invoke(any()) } returns document.right()
         testApplication {
-            setupApp(handler, authProvider)
-            var response = client.get("/$hardId")
+
+            setupAppWith { route(handler, authProvider) }
+            var response = client.get("/${document.id}")
             response.status shouldBe HttpStatusCode.OK
             validateGetByIdResponse(response, document)
 
             coVerify(exactly = 1) {
                 handler.invoke(match { it.authorizedParty.id == authorizedOrg.gln })
             }
-            response = client.get("/$hardId.pdf")
+            response = client.get("/${document.id}.pdf")
             response.status shouldBe HttpStatusCode.OK
             response.contentType()?.withoutParameters() shouldBe ContentType.Application.Pdf
             response.bodyAsChannel().toByteArray() shouldBe document.file
@@ -148,7 +148,8 @@ class RouteTest : FunSpec({
         coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
         coEvery { handler.invoke(any()) } returns document.right()
         testApplication {
-            setupApp(handler, authProvider)
+
+            setupAppWith { route(handler, authProvider) }
             val id = "not-a-uuid"
             validateMalformedInputResponse(client.get("/$id"))
             validateMalformedInputResponse(client.get("/$id.pdf"))
@@ -162,7 +163,8 @@ class RouteTest : FunSpec({
         coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns AuthError.NotAuthorized.left()
         coEvery { handler.invoke(any()) } returns document.right()
         testApplication {
-            setupApp(handler, authProvider)
+
+            setupAppWith { route(handler, authProvider) }
             val id = "7b14fcba-c899-4a5c-aecb-6e5abcac2bcf"
             validateNotAuthorizedResponse(client.get("/$id"))
             validateNotAuthorizedResponse(client.get("/$id.pdf"))
@@ -176,7 +178,8 @@ class RouteTest : FunSpec({
         coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
         coEvery { handler.invoke(any()) } returns QueryError.IOError.left()
         testApplication {
-            setupApp(handler, authProvider)
+
+            setupAppWith { route(handler, authProvider) }
             val id = "7b14fcba-c899-4a5c-aecb-6e5abcac2bcf"
             validateInternalServerErrorResponse(client.get("/$id"))
             validateInternalServerErrorResponse(client.get("/$id.pdf"))
@@ -256,19 +259,3 @@ private suspend fun validateGetByIdResponse(response: HttpResponse, handlerDocum
     }
 }
 
-private fun ApplicationTestBuilder.setupApp(
-    handler: Handler, authProvider: AuthorizationProvider
-) {
-    client = createClient {
-        install(ClientContentNegotiation) { json() }
-    }
-    // TODO review setup! try to set up as similar as possible to real app
-    // without configuring too many dependencies
-    application {
-        configureSerialization()
-        configureErrorHandling()
-        routing {
-            route(handler = handler, authProvider = authProvider)
-        }
-    }
-}

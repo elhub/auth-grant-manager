@@ -1,5 +1,15 @@
 package no.elhub.auth
 
+import io.ktor.serialization.kotlinx.json.json
+
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation as ClientContentNegotiation
+
+import io.ktor.server.routing.routing
+import no.elhub.auth.config.configureErrorHandling
+import no.elhub.auth.config.configureSerialization
+
+import io.ktor.server.routing.Routing
+
 import io.kotest.matchers.Matcher
 import io.kotest.matchers.MatcherResult
 import io.ktor.client.call.*
@@ -74,5 +84,20 @@ suspend fun validateUnsupportedPartyResponse(response: HttpResponse) {
     }
     responseJson.meta.apply {
         "createdAt".shouldNotBeNull()
+    }
+}
+
+fun ApplicationTestBuilder.setupAppWith(
+    routingConfig: Routing.() -> Unit
+) {
+    client = createClient {
+        install(ClientContentNegotiation) { json() }
+    }
+    application {
+        configureSerialization()
+        configureErrorHandling()
+        routing {
+            routingConfig()
+        }
     }
 }
