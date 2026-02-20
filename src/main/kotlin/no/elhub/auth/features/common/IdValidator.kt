@@ -2,8 +2,6 @@ package no.elhub.auth.features.common
 
 import arrow.core.Either
 import arrow.core.left
-import io.ktor.http.HttpStatusCode
-import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import java.util.UUID
 
 /**
