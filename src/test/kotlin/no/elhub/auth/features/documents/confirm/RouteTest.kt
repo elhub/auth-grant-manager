@@ -72,9 +72,8 @@ import no.elhub.auth.features.common.toTimeZoneOffsetString
 
 class RouteTest : FunSpec({
 
-    // TODO coVerify some more stuff
     val authorizedOrg = AuthorizedParty.OrganizationEntity(gln = "1", role = RoleType.BalanceSupplier)
-    test("PUT /{id}.pdf returns 204 when authorized as person and handler succeeds") {
+    test("PUT /{id}.pdf returns 204 when authorized as org and handler succeeds") {
         val authProvider = mockk<AuthorizationProvider>()
         val handler = mockk<Handler>()
         coEvery { authProvider.authorizeMaskinporten(any()) } returns authorizedOrg.right()
