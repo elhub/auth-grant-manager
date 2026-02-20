@@ -37,6 +37,8 @@ import no.elhub.auth.module as applicationModule
 
 class AuthorizationGrantRouteTest : FunSpec({
     val pdpContainer = PdpTestContainerExtension()
+    val grantId = "123e4567-e89b-12d3-a456-426614174000"
+
     extensions(
         PostgresTestContainerExtension(),
         RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-grants.sql"),
@@ -70,7 +72,7 @@ class AuthorizationGrantRouteTest : FunSpec({
             setupAuthorizationGrantTestApplication()
 
             test("Should return 200 OK on a valid ID") {
-                val response = client.get("$GRANTS_PATH/123e4567-e89b-12d3-a456-426614174000") {
+                val response = client.get("$GRANTS_PATH/$grantId") {
                     header(HttpHeaders.Authorization, "Bearer maskinporten")
                     header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
                 }
@@ -188,7 +190,7 @@ class AuthorizationGrantRouteTest : FunSpec({
             }
 
             test("Should return 200 when correct grantedFor") {
-                val response = client.get("$GRANTS_PATH/123e4567-e89b-12d3-a456-426614174000") {
+                val response = client.get("$GRANTS_PATH/$grantId") {
                     header(HttpHeaders.Authorization, "Bearer enduser")
                 }
 
@@ -196,7 +198,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                 val responseJson: SingleGrantResponse = response.body()
 
                 responseJson.data.apply {
-                    id shouldBe "123e4567-e89b-12d3-a456-426614174000"
+                    id shouldBe grantId
                     type shouldBe "AuthorizationGrant"
                     attributes.shouldNotBeNull().apply {
                         status shouldBe "Active"
@@ -294,7 +296,7 @@ class AuthorizationGrantRouteTest : FunSpec({
             setupAuthorizationGrantTestApplication()
 
             test("Should return 200 OK on a valid ID and a single authorization scope") {
-                val response = client.get("$GRANTS_PATH/123e4567-e89b-12d3-a456-426614174000/scopes") {
+                val response = client.get("$GRANTS_PATH/$grantId/scopes") {
                     header(HttpHeaders.Authorization, "Bearer maskinporten")
                     header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
                 }
@@ -322,7 +324,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                         get("createdAt").shouldNotBeNull()
                     }
                     responseJson.links.shouldNotBeNull().apply {
-                        self shouldBe "$GRANTS_PATH/123e4567-e89b-12d3-a456-426614174000/scopes"
+                        self shouldBe "$GRANTS_PATH/$grantId/scopes"
                     }
                 }
             }
@@ -388,7 +390,7 @@ class AuthorizationGrantRouteTest : FunSpec({
             }
 
             test("Should return 401 when authorization header not set") {
-                val response = client.get("$GRANTS_PATH/123e4567-e89b-12d3-a456-426614174000/scopes") {
+                val response = client.get("$GRANTS_PATH/$grantId/scopes") {
                     header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
                 }
                 response.status shouldBe HttpStatusCode.Unauthorized
@@ -427,7 +429,7 @@ class AuthorizationGrantRouteTest : FunSpec({
             }
 
             test("Should return 200 when correct grantedFor") {
-                val response = client.get("$GRANTS_PATH/123e4567-e89b-12d3-a456-426614174000/scopes") {
+                val response = client.get("$GRANTS_PATH/$grantId/scopes") {
                     header(HttpHeaders.Authorization, "Bearer enduser")
                 }
 
@@ -616,7 +618,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                 val responseJson: CollectionGrantResponse = response.body()
                 responseJson.data.size shouldBe 1
                 responseJson.data[0].apply {
-                    id shouldBe "123e4567-e89b-12d3-a456-426614174000"
+                    id shouldBe grantId
                     relationships.grantedFor.data.apply {
                         id shouldBe "17abdc56-8f6f-440a-9f00-b9bfbb22065e"
                         type shouldBe "Person"
@@ -645,13 +647,14 @@ class AuthorizationGrantRouteTest : FunSpec({
         testApplication {
             setupAuthorizationGrantTestApplication()
             test("Should return 409 Conflict on invalid data.type") {
-                val response = client.patch("$GRANTS_PATH/123e4567-e89b-12d3-a456-426614174000") {
+                val response = client.patch("$GRANTS_PATH/$grantId") {
                     header(HttpHeaders.Authorization, "Bearer elhub-service")
                     contentType(ContentType.Application.Json)
                     setBody(
                         """
                 {
                   "data": {
+                    "id": "$grantId",
                     "type": "test",
                     "attributes": {
                       "status": "Exhausted"
@@ -677,13 +680,47 @@ class AuthorizationGrantRouteTest : FunSpec({
                     "createdAt".shouldNotBeNull()
                 }
             }
-            test("Should update status and return updated object as response") {
-                val response = client.patch("$GRANTS_PATH/123e4567-e89b-12d3-a456-426614174000") {
+
+            test("Should return 409 Conflict on mismatch id") {
+                val response = client.patch("$GRANTS_PATH/$grantId") {
                     header(HttpHeaders.Authorization, "Bearer elhub-service")
                     contentType(ContentType.Application.Json)
                     setBody(
                         JsonApiConsumeRequest(
                             data = JsonApiRequestResourceObject(
+                                id = "123",
+                                type = "AuthorizationGrant",
+                                attributes = ConsumeRequestAttributes(
+                                    status = AuthorizationGrant.Status.Exhausted
+                                )
+                            )
+                        ),
+                    )
+                }
+
+                response.status shouldBe HttpStatusCode.Conflict
+                val responseJson: JsonApiErrorCollection = response.body()
+                responseJson.errors.apply {
+                    size shouldBe 1
+                    this[0].apply {
+                        status shouldBe "409"
+                        title shouldBe "Resource id mismatch"
+                        detail shouldBe "Expected 'data.id' to be the same as in URL path {id}"
+                    }
+                }
+                responseJson.meta.apply {
+                    "createdAt".shouldNotBeNull()
+                }
+            }
+
+            test("Should update status and return updated object as response") {
+                val response = client.patch("$GRANTS_PATH/$grantId") {
+                    header(HttpHeaders.Authorization, "Bearer elhub-service")
+                    contentType(ContentType.Application.Json)
+                    setBody(
+                        JsonApiConsumeRequest(
+                            data = JsonApiRequestResourceObject(
+                                id = grantId,
                                 type = "AuthorizationGrant",
                                 attributes = ConsumeRequestAttributes(
                                     status = AuthorizationGrant.Status.Exhausted
@@ -704,13 +741,15 @@ class AuthorizationGrantRouteTest : FunSpec({
                     }
                 }
             }
+
             test("Should reject update of non-'Active' grant") {
-                val response = client.patch("$GRANTS_PATH/123e4567-e89b-12d3-a456-426614174000") {
+                val response = client.patch("$GRANTS_PATH/$grantId") {
                     header(HttpHeaders.Authorization, "Bearer elhub-service")
                     contentType(ContentType.Application.Json)
                     setBody(
                         JsonApiConsumeRequest(
                             data = JsonApiRequestResourceObject(
+                                id = grantId,
                                 type = "AuthorizationGrant",
                                 attributes = ConsumeRequestAttributes(
                                     status = AuthorizationGrant.Status.Exhausted
@@ -734,6 +773,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                     "createdAt".shouldNotBeNull()
                 }
             }
+
             test("Should reject update of expired grant") {
                 val response = client.patch("$GRANTS_PATH/2a28a9dd-d3b3-4dec-a420-3f7d0d0105b7") {
                     header(HttpHeaders.Authorization, "Bearer elhub-service")
@@ -741,6 +781,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                     setBody(
                         JsonApiConsumeRequest(
                             data = JsonApiRequestResourceObject(
+                                id = "2a28a9dd-d3b3-4dec-a420-3f7d0d0105b7",
                                 type = "AuthorizationGrant",
                                 attributes = ConsumeRequestAttributes(
                                     status = AuthorizationGrant.Status.Exhausted
@@ -772,6 +813,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                     setBody(
                         JsonApiConsumeRequest(
                             data = JsonApiRequestResourceObject(
+                                id = "2a28a9dd-d3b3-4dec-a420-3f7d0d0105b7",
                                 type = "AuthorizationGrant",
                                 attributes = ConsumeRequestAttributes(
                                     status = AuthorizationGrant.Status.Active

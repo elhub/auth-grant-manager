@@ -14,7 +14,7 @@ import no.elhub.auth.features.common.auth.toApiErrorResponse
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toApiErrorResponse
-import no.elhub.auth.features.common.validateId
+import no.elhub.auth.features.common.validatePathId
 import org.slf4j.LoggerFactory
 
 const val DOCUMENT_ID_PARAM = "id"
@@ -29,7 +29,7 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
                 return@put
             }
 
-        val documentId = validateId(call.parameters[DOCUMENT_ID_PARAM])
+        val documentId = validatePathId(call.parameters[DOCUMENT_ID_PARAM])
             .getOrElse { error ->
                 val (status, body) = error.toApiErrorResponse()
                 call.respond(status, body)

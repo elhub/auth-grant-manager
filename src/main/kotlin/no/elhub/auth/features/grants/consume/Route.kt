@@ -12,7 +12,8 @@ import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.common.toTypeMismatchApiErrorResponse
-import no.elhub.auth.features.common.validateId
+import no.elhub.auth.features.common.validateDataId
+import no.elhub.auth.features.common.validatePathId
 import no.elhub.auth.features.grants.common.dto.toSingleGrantResponse
 import no.elhub.auth.features.grants.consume.dto.JsonApiConsumeRequest
 import org.slf4j.LoggerFactory
@@ -30,7 +31,7 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
                 return@patch
             }
 
-        val grantId = validateId(call.parameters[GRANT_ID_PARAM])
+        val grantId = validatePathId(call.parameters[GRANT_ID_PARAM])
             .getOrElse { error ->
                 val (status, body) = error.toApiErrorResponse()
                 call.respond(status, body)
@@ -38,6 +39,13 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
             }
 
         val requestBody = call.receive<JsonApiConsumeRequest>()
+
+        validateDataId(requestBody.data.id, grantId)
+            .getOrElse { err ->
+                val (status, body) = err.toApiErrorResponse()
+                call.respond(status, body)
+                return@patch
+            }
 
         if (requestBody.data.type != "AuthorizationGrant") {
             val (status, message) = toTypeMismatchApiErrorResponse(
