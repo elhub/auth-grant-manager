@@ -38,6 +38,7 @@ import no.elhub.auth.features.requests.update.dto.JsonApiUpdateRequest
 import no.elhub.auth.features.requests.update.dto.UpdateRequestAttributes
 import no.elhub.auth.validateInvalidTokenResponse
 import no.elhub.auth.validateMissingTokenResponse
+import no.elhub.auth.validatePartyNotAuthorizedResponse
 import no.elhub.auth.validateUnsupportedPartyResponse
 import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObject
 import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObjectWithMeta
@@ -203,38 +204,14 @@ class AuthorizationRequestRouteSecurityTest : FunSpec({
                     header(HttpHeaders.Authorization, "Bearer maskinporten")
                     header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
                 }
-                response.status shouldBe HttpStatusCode.Forbidden
-                val responseJson: JsonApiErrorCollection = response.body()
-                responseJson.errors.apply {
-                    size shouldBe 1
-                    this[0].apply {
-                        status shouldBe "403"
-                        title shouldBe "Party not authorized"
-                        detail shouldBe "The party is not allowed to access this resource"
-                    }
-                }
-                responseJson.meta.apply {
-                    "createdAt".shouldNotBeNull()
-                }
+                validatePartyNotAuthorizedResponse(response)
             }
 
             test("GET /authorization-requests/{id} should return 403 when the request does not belong to the requester using end user token") {
                 val response = client.get("$REQUESTS_PATH/3f2c9e6b-7a4d-4f1a-9b6e-8c1d2a5e9f47") {
                     header(HttpHeaders.Authorization, "Bearer enduser")
                 }
-                response.status shouldBe HttpStatusCode.Forbidden
-                val responseJson: JsonApiErrorCollection = response.body()
-                responseJson.errors.apply {
-                    size shouldBe 1
-                    this[0].apply {
-                        status shouldBe "403"
-                        title shouldBe "Party not authorized"
-                        detail shouldBe "The party is not allowed to access this resource"
-                    }
-                }
-                responseJson.meta.apply {
-                    "createdAt".shouldNotBeNull()
-                }
+                validatePartyNotAuthorizedResponse(response)
             }
         }
     }

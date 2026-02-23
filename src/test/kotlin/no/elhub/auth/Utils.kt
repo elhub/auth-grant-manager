@@ -132,6 +132,22 @@ suspend fun validateForbiddenResponse(response: HttpResponse) {
     }
 }
 
+suspend fun validatePartyNotAuthorizedResponse(response: HttpResponse) {
+    response.status shouldBe HttpStatusCode.Forbidden
+    val responseJson: JsonApiErrorCollection = response.body()
+    responseJson.errors.apply {
+        size shouldBe 1
+        this[0].apply {
+            status shouldBe "403"
+            title shouldBe "Party not authorized"
+            detail shouldBe "The party is not allowed to access this resource"
+        }
+    }
+    responseJson.meta.apply {
+        "createdAt".shouldNotBeNull()
+    }
+}
+
 fun ApplicationTestBuilder.setupAppWith(
     routingConfig: Routing.() -> Unit
 ) {
