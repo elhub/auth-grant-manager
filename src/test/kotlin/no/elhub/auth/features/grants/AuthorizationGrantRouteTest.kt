@@ -766,7 +766,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                     this[0].apply {
                         status shouldBe "400"
                         title shouldBe "Illegal status state"
-                        detail shouldBe "Grant must be 'Active' to get consumed"
+                        detail shouldBe "AuthorizationGrant must be 'Active' to get consumed."
                     }
                 }
                 responseJson.meta.apply {
@@ -798,8 +798,8 @@ class AuthorizationGrantRouteTest : FunSpec({
                     size shouldBe 1
                     this[0].apply {
                         status shouldBe "400"
-                        title shouldBe "Grant has expired"
-                        detail shouldBe "Grant validity period has passed"
+                        title shouldBe "AuthorizationGrant has expired"
+                        detail shouldBe "Validity period has passed."
                     }
                 }
                 responseJson.meta.apply {

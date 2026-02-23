@@ -24,14 +24,14 @@ sealed class ConfirmError {
 
 fun ConfirmError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> =
     when (this) {
-        ConfirmError.DocumentNotFoundError -> toNotFoundApiErrorResponse("AuthorizationDocument could not be found")
+        ConfirmError.DocumentNotFoundError -> toNotFoundApiErrorResponse("AuthorizationDocument could not be found.")
 
         is ConfirmError.ValidateSignaturesError -> handleValidateSignatureError(this)
 
         ConfirmError.SignatoryNotAllowedToSignDocument -> buildApiErrorResponse(
             status = HttpStatusCode.Forbidden,
-            title = "Signatory is not allowed to sign this document",
-            detail = "The signer is not authorized for this document."
+            title = "Signatory is not allowed to sign",
+            detail = "The signer is not authorized for this AuthorizationDocument."
 
         )
 
@@ -67,7 +67,7 @@ fun handleValidateSignatureError(error: ConfirmError.ValidateSignaturesError): P
     SignatureValidationError.MissingElhubSignature -> buildApiErrorResponse(
         status = HttpStatusCode.BadRequest,
         title = "Elhub signature is not valid",
-        detail = "The Elhub signature could not be validated. The document may have been tampered with."
+        detail = "The Elhub signature could not be validated. The AuthorizationDocument may have been tampered with."
     )
 
     SignatureValidationError.BankIdSigningCertNotFromExpectedRoot ->
@@ -90,7 +90,7 @@ fun handleValidateSignatureError(error: ConfirmError.ValidateSignaturesError): P
         buildApiErrorResponse(
             status = HttpStatusCode.BadRequest,
             title = "End user signature validation failed",
-            detail = "The document is missing the end user signature."
+            detail = "The AuthorizationDocument is missing the end user signature."
         )
 
     SignatureValidationError.MissingNationalId ->
@@ -103,7 +103,7 @@ fun handleValidateSignatureError(error: ConfirmError.ValidateSignaturesError): P
     SignatureValidationError.OriginalDocumentMismatch ->
         buildApiErrorResponse(
             status = HttpStatusCode.BadRequest,
-            title = "Original document mismatch",
-            detail = "The document provided for confirmation differs from the original generated document."
+            title = "Original AuthorizationDocument mismatch",
+            detail = "The AuthorizationDocument provided for confirmation differs from the original generated AuthorizationDocument."
         )
 }
