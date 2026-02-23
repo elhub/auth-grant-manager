@@ -70,6 +70,7 @@ idp:
   tokenUrl: ${IDP_TOKEN_URL}
 
 ediel:
+  environment: ${EDIEL_ENV:production}
   serviceUrl: ${EDIEL_SERVICE_URL:https://ws.ediel.no/api}
   authentication:
     basic:

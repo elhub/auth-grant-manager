@@ -16,7 +16,7 @@ internal fun validateRedirectUriDomain(
     val inputHost = parseHost(inputRedirectUri) ?: return RedirectUriDomainValidationResult.InvalidInputUri
     val edielHost = parseHost(edielRedirectUri.orEmpty()) ?: return RedirectUriDomainValidationResult.InvalidEdielUri
 
-    val isMatching = isSameOrSubdomain(inputHost, edielHost) || isSameOrSubdomain(edielHost, inputHost)
+    val isMatching = isSameOrSubdomain(inputHost, edielHost)
     return if (isMatching) RedirectUriDomainValidationResult.MatchingDomain else RedirectUriDomainValidationResult.DomainMismatch
 }
 

@@ -12,8 +12,10 @@ import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 import no.elhub.auth.features.businessprocesses.BusinessProcessError
 import no.elhub.auth.features.businessprocesses.datasharing.StromprisService
+import no.elhub.auth.features.businessprocesses.ediel.EdielEnvironment
 import no.elhub.auth.features.businessprocesses.ediel.EdielService
 import no.elhub.auth.features.businessprocesses.ediel.RedirectUriDomainValidationResult
+import no.elhub.auth.features.businessprocesses.ediel.redirectUriFor
 import no.elhub.auth.features.businessprocesses.ediel.validateRedirectUriDomain
 import no.elhub.auth.features.businessprocesses.moveinandchangeofbalancesupplier.domain.MoveInAndChangeOfBalanceSupplierBusinessCommand
 import no.elhub.auth.features.businessprocesses.moveinandchangeofbalancesupplier.domain.MoveInAndChangeOfBalanceSupplierBusinessMeta
@@ -62,6 +64,7 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandler(
     private val personService: PersonService,
     private val stromprisService: StromprisService,
     private val edielService: EdielService,
+    private val edielEnvironment: EdielEnvironment,
     private val validateBalanceSupplierContractName: Boolean
 ) : RequestBusinessHandler,
     DocumentBusinessHandler {
@@ -100,7 +103,7 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandler(
             }
         }.getOrElse { return MoveInAndChangeOfBalanceSupplierValidationError.UnexpectedError.left() }
 
-        return when (validateRedirectUriDomain(redirectUri, redirectUriFromEdiel.redirectUrls.production)) {
+        return when (validateRedirectUriDomain(redirectUri, redirectUriFromEdiel.redirectUriFor(edielEnvironment))) {
             RedirectUriDomainValidationResult.MatchingDomain -> Unit.right()
 
             RedirectUriDomainValidationResult.InvalidInputUri -> MoveInAndChangeOfBalanceSupplierValidationError.InvalidRedirectURI.left()
