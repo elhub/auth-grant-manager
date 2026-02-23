@@ -755,7 +755,6 @@ class AuthorizationGrantRouteTest : FunSpec({
     }
 })
 
-
 private fun ApplicationTestBuilder.setupAuthorizationGrantTestApplication() {
     client = createClient {
         install(ContentNegotiation) {

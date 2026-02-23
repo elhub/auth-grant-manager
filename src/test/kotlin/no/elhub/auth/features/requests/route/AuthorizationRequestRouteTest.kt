@@ -400,7 +400,6 @@ class AuthorizationRequestRouteTest : FunSpec({
                 }
             }
 
-
             test("PATCH /authorization-requests/ should accept authorization request and persist grant relationship") {
                 val requestId = insertAuthorizationRequest(
                     properties = mapOf(
@@ -487,7 +486,6 @@ class AuthorizationRequestRouteTest : FunSpec({
                             }
                         }
                     }
-
                 }
             }
         }
@@ -502,7 +500,6 @@ class AuthorizationRequestRouteTest : FunSpec({
                     header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
                 }
                 response.status shouldBe HttpStatusCode.NotFound
-
             }
             test("Should return 409 Conflict on invalid data.type") {
                 val requestIdParam = "130b6bca-1e3a-4653-8a9b-ccc0dc4fe389"
@@ -787,34 +784,34 @@ class AuthorizationRequestRouteTest : FunSpec({
                         setBody(
                             JsonApiCreateRequest(
                                 data =
-                                    JsonApiRequestResourceObjectWithMeta(
-                                        type = "AuthorizationRequest",
-                                        attributes =
-                                            CreateRequestAttributes(
-                                                requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
-                                            ),
-                                        meta =
-                                            CreateRequestMeta(
-                                                requestedBy = PartyIdentifier(
-                                                    PartyIdentifierType.GlobalLocationNumber,
-                                                    "0107000000021"
-                                                ),
-                                                requestedFrom = PartyIdentifier(
-                                                    PartyIdentifierType.NationalIdentityNumber,
-                                                    REQUESTED_FROM_NIN
-                                                ),
-                                                requestedFromName = "",
-                                                requestedTo = PartyIdentifier(
-                                                    PartyIdentifierType.NationalIdentityNumber,
-                                                    REQUESTED_TO_NIN
-                                                ),
-                                                requestedForMeteringPointId = "123456789012345678",
-                                                requestedForMeteringPointAddress = "quaerendum",
-                                                balanceSupplierName = "Balance Supplier",
-                                                balanceSupplierContractName = "Selena Chandler",
-                                                redirectURI = "https://example.com",
-                                            ),
+                                JsonApiRequestResourceObjectWithMeta(
+                                    type = "AuthorizationRequest",
+                                    attributes =
+                                    CreateRequestAttributes(
+                                        requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
                                     ),
+                                    meta =
+                                    CreateRequestMeta(
+                                        requestedBy = PartyIdentifier(
+                                            PartyIdentifierType.GlobalLocationNumber,
+                                            "0107000000021"
+                                        ),
+                                        requestedFrom = PartyIdentifier(
+                                            PartyIdentifierType.NationalIdentityNumber,
+                                            REQUESTED_FROM_NIN
+                                        ),
+                                        requestedFromName = "",
+                                        requestedTo = PartyIdentifier(
+                                            PartyIdentifierType.NationalIdentityNumber,
+                                            REQUESTED_TO_NIN
+                                        ),
+                                        requestedForMeteringPointId = "123456789012345678",
+                                        requestedForMeteringPointAddress = "quaerendum",
+                                        balanceSupplierName = "Balance Supplier",
+                                        balanceSupplierContractName = "Selena Chandler",
+                                        redirectURI = "https://example.com",
+                                    ),
+                                ),
                             ),
                         )
                     }
@@ -843,34 +840,34 @@ class AuthorizationRequestRouteTest : FunSpec({
                     setBody(
                         JsonApiCreateRequest(
                             data =
-                                JsonApiRequestResourceObjectWithMeta(
-                                    type = "AuthorizationRequest",
-                                    attributes =
-                                        CreateRequestAttributes(
-                                            requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
-                                        ),
-                                    meta =
-                                        CreateRequestMeta(
-                                            requestedBy = PartyIdentifier(
-                                                PartyIdentifierType.GlobalLocationNumber,
-                                                "0107000000021"
-                                            ),
-                                            requestedFrom = PartyIdentifier(
-                                                PartyIdentifierType.NationalIdentityNumber,
-                                                "123"
-                                            ),
-                                            requestedFromName = "Hillary Orr",
-                                            requestedTo = PartyIdentifier(
-                                                PartyIdentifierType.NationalIdentityNumber,
-                                                REQUESTED_TO_NIN
-                                            ),
-                                            requestedForMeteringPointId = "123456789012345678",
-                                            requestedForMeteringPointAddress = "quaerendum",
-                                            balanceSupplierName = "Balance Supplier",
-                                            balanceSupplierContractName = "Selena Chandler",
-                                            redirectURI = "https://example.com",
-                                        ),
+                            JsonApiRequestResourceObjectWithMeta(
+                                type = "AuthorizationRequest",
+                                attributes =
+                                CreateRequestAttributes(
+                                    requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
                                 ),
+                                meta =
+                                CreateRequestMeta(
+                                    requestedBy = PartyIdentifier(
+                                        PartyIdentifierType.GlobalLocationNumber,
+                                        "0107000000021"
+                                    ),
+                                    requestedFrom = PartyIdentifier(
+                                        PartyIdentifierType.NationalIdentityNumber,
+                                        "123"
+                                    ),
+                                    requestedFromName = "Hillary Orr",
+                                    requestedTo = PartyIdentifier(
+                                        PartyIdentifierType.NationalIdentityNumber,
+                                        REQUESTED_TO_NIN
+                                    ),
+                                    requestedForMeteringPointId = "123456789012345678",
+                                    requestedForMeteringPointAddress = "quaerendum",
+                                    balanceSupplierName = "Balance Supplier",
+                                    balanceSupplierContractName = "Selena Chandler",
+                                    redirectURI = "https://example.com",
+                                ),
+                            ),
                         ),
                     )
                 }

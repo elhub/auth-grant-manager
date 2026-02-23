@@ -192,7 +192,7 @@ val examplePostBody = JsonApiCreateRequest(
     data = JsonApiRequestResourceObjectWithMeta(
         type = "AuthorizationRequest",
         attributes =
-            CreateRequestAttributes(requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson),
+        CreateRequestAttributes(requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson),
         meta = CreateRequestMeta(
             requestedBy = PartyIdentifier(
                 PartyIdentifierType.GlobalLocationNumber,
