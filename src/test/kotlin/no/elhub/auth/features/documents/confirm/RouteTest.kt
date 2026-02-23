@@ -1,6 +1,6 @@
 package no.elhub.auth.features.documents.confirm
 
-
+import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import io.kotest.core.spec.style.FunSpec
@@ -12,8 +12,13 @@ import io.ktor.client.request.header
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsChannel
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.contentType
 import io.ktor.server.testing.testApplication
+import io.ktor.utils.io.toByteArray
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -30,27 +35,21 @@ import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.AuthorizationDocument.Status
 import no.elhub.auth.features.documents.AuthorizationDocument.Type
 import no.elhub.auth.features.documents.common.AuthorizationDocumentProperty
+import no.elhub.auth.features.documents.common.SignatureValidationError
+import no.elhub.auth.features.documents.get.dto.GetDocumentSingleResponse
 import no.elhub.auth.features.documents.query.dto.GetDocumentCollectionResponse
-import no.elhub.auth.setupAppWith
 import no.elhub.auth.putPdf
+import no.elhub.auth.setupAppWith
 import no.elhub.auth.validateForbiddenResponse
 import no.elhub.auth.validateInternalServerErrorResponse
+import no.elhub.auth.validateMalformedInputResponse
 import no.elhub.auth.validateNotAuthorizedResponse
+import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import java.util.UUID
 import kotlin.random.Random
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation as ClientContentNegotiation
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation as ServerContentNegotiation
 import no.elhub.auth.module as applicationModule
-import arrow.core.Either
-import io.ktor.client.statement.bodyAsChannel
-import io.ktor.http.ContentType
-import io.ktor.http.contentType
-import io.ktor.utils.io.toByteArray
-import no.elhub.auth.features.documents.get.dto.GetDocumentSingleResponse
-import no.elhub.auth.validateMalformedInputResponse
-import io.ktor.client.statement.bodyAsText
-import no.elhub.auth.features.documents.common.SignatureValidationError
-import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 
 class RouteTest : FunSpec({
 
