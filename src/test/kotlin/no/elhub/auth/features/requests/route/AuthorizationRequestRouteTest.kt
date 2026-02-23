@@ -1,15 +1,10 @@
 package no.elhub.auth.features.requests.route
 
-import arrow.core.Either
-import arrow.core.left
-import arrow.core.right
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldBeEmpty
 import io.ktor.client.call.body
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.patch
@@ -20,41 +15,20 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
-import io.ktor.serialization.kotlinx.json.json
-import io.ktor.server.application.Application
-import io.ktor.server.config.MapApplicationConfig
-import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
-import no.elhub.auth.features.businessprocesses.BusinessProcessError
-import no.elhub.auth.features.common.AuthPersonsTestContainer
 import no.elhub.auth.features.common.AuthPersonsTestContainerExtension
-import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.common.PdpTestContainerExtension
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.RunPostgresScriptExtension
 import no.elhub.auth.features.common.auth.PDPAuthorizationProvider
-import no.elhub.auth.features.common.commonModule
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
-import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
-import no.elhub.auth.features.grants.AuthorizationScope
-import no.elhub.auth.features.grants.common.CreateGrantProperties
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.REQUESTS_PATH
-import no.elhub.auth.features.requests.common.AuthorizationRequestPropertyTable
-import no.elhub.auth.features.requests.common.AuthorizationRequestTable
-import no.elhub.auth.features.requests.common.DatabaseRequestStatus
-import no.elhub.auth.features.requests.create.RequestBusinessHandler
-import no.elhub.auth.features.requests.create.command.RequestCommand
-import no.elhub.auth.features.requests.create.command.RequestMetaMarker
 import no.elhub.auth.features.requests.create.dto.CreateRequestAttributes
 import no.elhub.auth.features.requests.create.dto.CreateRequestMeta
 import no.elhub.auth.features.requests.create.dto.CreateRequestResponse
 import no.elhub.auth.features.requests.create.dto.JsonApiCreateRequest
-import no.elhub.auth.features.requests.create.model.CreateRequestModel
-import no.elhub.auth.features.requests.create.model.defaultRequestValidTo
-import no.elhub.auth.features.requests.create.model.today
-import no.elhub.auth.features.requests.create.requesttypes.RequestTypeValidationError
 import no.elhub.auth.features.requests.get.dto.GetRequestSingleResponse
 import no.elhub.auth.features.requests.query.dto.GetRequestCollectionResponse
 import no.elhub.auth.features.requests.update.dto.JsonApiUpdateRequest
@@ -63,16 +37,9 @@ import no.elhub.auth.features.requests.update.dto.UpdateRequestResponse
 import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObject
 import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObjectWithMeta
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
-import org.jetbrains.exposed.v1.jdbc.batchInsert
-import org.jetbrains.exposed.v1.jdbc.insert
-import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import org.koin.ktor.plugin.koinModule
 import java.time.OffsetDateTime
-import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
-import java.util.UUID
 import java.time.LocalDate as JavaLocalDate
-import no.elhub.auth.module as applicationModule
 
 class AuthorizationRequestRouteTest : FunSpec({
     val pdpContainer = PdpTestContainerExtension()
