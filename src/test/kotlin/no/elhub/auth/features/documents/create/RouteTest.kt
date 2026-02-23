@@ -31,6 +31,7 @@ import no.elhub.auth.features.documents.AuthorizationDocument.Type
 import no.elhub.auth.features.documents.common.AuthorizationDocumentProperty
 import no.elhub.auth.features.documents.query.dto.GetDocumentCollectionResponse
 import no.elhub.auth.setupAppWith
+import no.elhub.auth.postJson
 import no.elhub.auth.validateForbiddenResponse
 import no.elhub.auth.validateInternalServerErrorResponse
 import no.elhub.auth.validateNotAuthorizedResponse
@@ -135,10 +136,7 @@ class RouteTest : FunSpec({
         coEvery { handler.invoke(any()) } returns document.right()
         testApplication {
             setupAppWith { route(handler, authProvider) }
-            val result = client.post("/") {
-                contentType(ContentType.Application.Json)
-                setBody(examplePostBody)
-            }
+            val result = client.postJson("/", examplePostBody)
             validateCreateDocumentResponse(result, examplePostBody)
             coVerify(exactly = 1) { handler.invoke(any()) }
         }
@@ -149,10 +147,7 @@ class RouteTest : FunSpec({
         coEvery { handler.invoke(any()) } returns document.right()
         testApplication {
             setupAppWith { route(handler, authProvider) }
-            val result = client.post("/") {
-                contentType(ContentType.Application.Json)
-                setBody(examplePostBody)
-            }
+            val result = client.postJson("/", examplePostBody)
             validateInvalidTokenResponse(result)
             coVerify(exactly = 0) { handler.invoke(any()) }
         }
@@ -163,10 +158,7 @@ class RouteTest : FunSpec({
         coEvery { handler.invoke(any()) } returns CreateError.InvalidNinError.left()
         testApplication {
             setupAppWith { route(handler, authProvider) }
-            val result = client.post("/") {
-                contentType(ContentType.Application.Json)
-                setBody(examplePostBody)
-            }
+            val result = client.postJson("/", examplePostBody)
             result.status shouldBe HttpStatusCode.BadRequest
             val resultJson: JsonApiErrorCollection = result.body()
             resultJson.errors.apply {
@@ -185,10 +177,7 @@ class RouteTest : FunSpec({
         coEvery { handler.invoke(any()) } returns CreateError.FileGenerationError.left()
         testApplication {
             setupAppWith { route(handler, authProvider) }
-            val result = client.post("/") {
-                contentType(ContentType.Application.Json)
-                setBody(examplePostBody)
-            }
+            val result = client.postJson("/", examplePostBody)
             validateInternalServerErrorResponse(result)
             coVerify(exactly = 1) { handler.invoke(any()) }
         }
@@ -199,10 +188,7 @@ class RouteTest : FunSpec({
         coEvery { handler.invoke(any()) } returns CreateError.FileGenerationError.left()
         testApplication {
             setupAppWith { route(handler, authProvider) }
-            val result = client.post("/") {
-                contentType(ContentType.Application.Json)
-                setBody(createBodyWithMissingField)
-            }
+            val result = client.postJson("/", createBodyWithMissingField)
             result.status shouldBe HttpStatusCode.BadRequest
             val resultJson: JsonApiErrorCollection = result.body()
             resultJson.errors.apply {
@@ -221,10 +207,7 @@ class RouteTest : FunSpec({
         coEvery { handler.invoke(any()) } returns CreateError.FileGenerationError.left()
         testApplication {
             setupAppWith { route(handler, authProvider) }
-            val result = client.post("/") {
-                contentType(ContentType.Application.Json)
-                setBody(createBodyWithInvalidFieldValue)
-            }
+            val result = client.postJson("/", createBodyWithInvalidFieldValue)
             result.status shouldBe HttpStatusCode.BadRequest
             val resultJson: JsonApiErrorCollection = result.body()
             resultJson.errors.apply {

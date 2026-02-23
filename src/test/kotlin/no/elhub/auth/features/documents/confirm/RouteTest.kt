@@ -32,6 +32,7 @@ import no.elhub.auth.features.documents.AuthorizationDocument.Type
 import no.elhub.auth.features.documents.common.AuthorizationDocumentProperty
 import no.elhub.auth.features.documents.query.dto.GetDocumentCollectionResponse
 import no.elhub.auth.setupAppWith
+import no.elhub.auth.putPdf
 import no.elhub.auth.validateForbiddenResponse
 import no.elhub.auth.validateInternalServerErrorResponse
 import no.elhub.auth.validateNotAuthorizedResponse
@@ -68,10 +69,7 @@ class RouteTest : FunSpec({
 
         testApplication {
             setupAppWith { route(handler, authProvider) }
-            val response = client.put("/02fe286b-4519-4ba8-9c84-dc18bffc9eb3.pdf") {
-                contentType(ContentType.Application.Pdf)
-                setBody(Random.nextBytes(256))
-            }
+            val response = client.putPdf("/02fe286b-4519-4ba8-9c84-dc18bffc9eb3.pdf", Random.nextBytes(256))
             response.status shouldBe HttpStatusCode.NoContent
             response.bodyAsText().shouldBeEmpty()
             coVerify(exactly = 1) { handler.invoke(any()) }
@@ -85,10 +83,7 @@ class RouteTest : FunSpec({
 
         testApplication {
             setupAppWith { route(handler, authProvider) }
-            val response = client.put("/8d4ed1dc-2ed2-4744-9a36-c5f9c4d224dc.pdf") {
-                contentType(ContentType.Application.Pdf)
-                setBody(Random.nextBytes(256))
-            }
+            val response = client.putPdf("/8d4ed1dc-2ed2-4744-9a36-c5f9c4d224dc.pdf", Random.nextBytes(256))
             response.status shouldBe HttpStatusCode.BadRequest
             val responseJson: JsonApiErrorCollection = response.body()
             responseJson.errors.apply {
@@ -108,10 +103,7 @@ class RouteTest : FunSpec({
 
         testApplication {
             setupAppWith { route(handler, authProvider) }
-            val response = client.put("/8d4ed1dc-2ed2-4744-9a36-c5f9c4d224dc.pdf") {
-                contentType(ContentType.Application.Pdf)
-                setBody(Random.nextBytes(256))
-            }
+            val response = client.putPdf("/7507f641-4734-41c5-9798-a507747f326e.pdf", Random.nextBytes(256))
             response.status shouldBe HttpStatusCode.Unauthorized
             val responseJson: JsonApiErrorCollection = response.body()
             responseJson.errors.apply {
@@ -131,10 +123,7 @@ class RouteTest : FunSpec({
 
         testApplication {
             setupAppWith { route(handler, authProvider) }
-            val response = client.put("/not-a-uuid.pdf") {
-                contentType(ContentType.Application.Pdf)
-                setBody(Random.nextBytes(256))
-            }
+            val response = client.putPdf("/not-a-uuid.pdf", Random.nextBytes(256))
             response.status shouldBe HttpStatusCode.BadRequest
             val responseJson: JsonApiErrorCollection = response.body()
             responseJson.errors.apply {
@@ -153,10 +142,7 @@ class RouteTest : FunSpec({
 
         testApplication {
             setupAppWith { route(handler, authProvider) }
-            val response = client.put("/ac983fc0-8bb5-48be-a343-78d345b3e8f6.pdf") {
-                contentType(ContentType.Application.Pdf)
-                setBody(Random.nextBytes(0))
-            }
+            val response = client.putPdf("/4803264d-11a4-4d6a-81f4-996986cb7b35.pdf", Random.nextBytes(256))
             response.status shouldBe HttpStatusCode.BadRequest
             val responseJson: JsonApiErrorCollection = response.body()
             responseJson.errors.apply {

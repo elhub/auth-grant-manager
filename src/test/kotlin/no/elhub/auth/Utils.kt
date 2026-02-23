@@ -1,12 +1,17 @@
 package no.elhub.auth
 
+import io.ktor.client.HttpClient
+import io.ktor.client.request.post
+import io.ktor.client.request.put
 import io.kotest.matchers.Matcher
 import io.kotest.matchers.MatcherResult
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.ktor.client.call.body
+import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
+import io.ktor.http.contentType
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
@@ -146,6 +151,22 @@ suspend fun validatePartyNotAuthorizedResponse(response: HttpResponse) {
     responseJson.meta.apply {
         "createdAt".shouldNotBeNull()
     }
+}
+
+suspend inline fun <reified T> HttpClient.postJson(
+    path: String,
+    body: T
+) = post(path) {
+    contentType(ContentType.Application.Json)
+    setBody(body)
+}
+
+suspend inline fun HttpClient.putPdf(
+    path: String,
+    body: ByteArray
+) = post(path) {
+    contentType(ContentType.Application.Pdf)
+    setBody(body)
 }
 
 fun ApplicationTestBuilder.setupAppWith(
