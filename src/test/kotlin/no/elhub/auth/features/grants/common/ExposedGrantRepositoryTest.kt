@@ -20,7 +20,8 @@ import java.util.UUID
 class ExposedGrantRepositoryTest : FunSpec({
     extensions(PostgresTestContainerExtension())
     val partyRepo = ExposedPartyRepository()
-    val grantRepo = ExposedGrantRepository(partyRepo)
+    val grantPropertiesRepo = ExposedGrantPropertiesRepository()
+    val grantRepo = ExposedGrantRepository(partyRepo, grantPropertiesRepo)
     val scopeIds = listOf(UUID.randomUUID(), UUID.randomUUID())
 
     beforeSpec {

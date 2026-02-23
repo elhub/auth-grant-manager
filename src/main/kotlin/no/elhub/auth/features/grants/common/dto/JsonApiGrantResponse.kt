@@ -104,7 +104,16 @@ fun AuthorizationGrant.toSingleGrantResponse() =
                     }
                 )
             ),
-            links = JsonApiLinks.ResourceObjectLink("$GRANTS_PATH/${this.id}"),
+            meta = this.properties.takeIf { it.isNotEmpty() }?.let {
+                JsonApiMeta(
+                    buildJsonObject {
+                        this@toSingleGrantResponse.properties.forEach { prop ->
+                            put(prop.key, prop.value)
+                        }
+                    }
+                )
+            },
+            links = JsonApiLinks.ResourceObjectLink(self = "$GRANTS_PATH/${this.id}"),
         ),
         links = JsonApiLinks.ResourceObjectLink("$GRANTS_PATH/${this.id}"),
         meta = JsonApiMeta(
@@ -171,6 +180,15 @@ fun List<AuthorizationGrant>.toCollectionGrantResponse() =
                         }
                     )
                 ),
+                meta = grant.properties.takeIf { it.isNotEmpty() }?.let {
+                    JsonApiMeta(
+                        buildJsonObject {
+                            grant.properties.forEach { prop ->
+                                put(prop.key, prop.value)
+                            }
+                        }
+                    )
+                },
                 links = JsonApiLinks.ResourceObjectLink("$GRANTS_PATH/${grant.id}"),
             )
         },

@@ -19,6 +19,7 @@ import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.AuthorizationGrant.SourceType
 import no.elhub.auth.features.grants.AuthorizationGrant.Status
+import no.elhub.auth.features.grants.common.AuthorizationGrantProperty
 import no.elhub.auth.features.grants.common.GrantRepository
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
@@ -46,7 +47,12 @@ class HandlerTest : FunSpec({
         validTo = currentTimeWithTimeZone().plusYears(1),
         sourceType = SourceType.Document,
         sourceId = UUID.randomUUID(),
-        scopeIds = scopeIds
+        scopeIds = scopeIds,
+        properties = listOf(AuthorizationGrantProperty(
+            grantId = grantId,
+            key = "startDate",
+            value = "2024-01-01"
+        ))
     )
     val activeGrant = AuthorizationGrant(
         id = grantId,
@@ -61,7 +67,8 @@ class HandlerTest : FunSpec({
         validTo = currentTimeWithTimeZone().plusYears(1),
         sourceType = SourceType.Document,
         sourceId = UUID.randomUUID(),
-        scopeIds = scopeIds
+        scopeIds = scopeIds,
+        properties = emptyList()
     )
 
     fun repoReturning(

@@ -10,6 +10,7 @@ import kotlinx.datetime.LocalDate
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
+import no.elhub.auth.features.grants.common.GrantPropertiesRepository
 import no.elhub.auth.features.grants.common.GrantRepository
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.common.RequestRepository
@@ -35,11 +36,17 @@ class HandlerTest : FunSpec({
             )
 
         val requestRepository = mockk<RequestRepository>()
+        val businessHandler = mockk<GrantBusinessHandler>()
         val grantRepository = mockk<GrantRepository>(relaxed = true)
+        val grantPropertiesRepository = mockk<GrantPropertiesRepository>(relaxed = true)
 
         every { requestRepository.find(requestId) } returns existingRequest.right()
 
-        val handler = Handler(requestRepository, grantRepository)
+        val handler = Handler(
+            businessHandler = businessHandler,
+            requestRepository = requestRepository,
+            grantRepository = grantRepository,
+            grantPropertiesRepository = grantPropertiesRepository)
 
         val result = handler(
             UpdateCommand(

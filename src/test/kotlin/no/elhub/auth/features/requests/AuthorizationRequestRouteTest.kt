@@ -53,6 +53,7 @@ import no.elhub.auth.features.requests.create.model.today
 import no.elhub.auth.features.requests.create.requesttypes.RequestTypeValidationError
 import no.elhub.auth.features.requests.get.dto.GetRequestSingleResponse
 import no.elhub.auth.features.requests.query.dto.GetRequestCollectionResponse
+import no.elhub.auth.features.requests.update.GrantBusinessHandler
 import no.elhub.auth.features.requests.update.dto.JsonApiUpdateRequest
 import no.elhub.auth.features.requests.update.dto.UpdateRequestAttributes
 import no.elhub.auth.features.requests.update.dto.UpdateRequestResponse
@@ -1479,6 +1480,10 @@ private class TestRequestBusinessHandler : RequestBusinessHandler {
         )
 }
 
+private class TestGrantBusinessHandler : GrantBusinessHandler {
+    override fun getMetaProperties(request: AuthorizationRequest): List<String> = emptyList()
+}
+
 private data class TestRequestMeta(
     val requestedFromName: String,
     val requestedForMeteringPointId: String,
@@ -1513,6 +1518,7 @@ private sealed class TestRequestValidationError : RequestTypeValidationError {
 private fun Application.testRequestBusinessModule() {
     koinModule {
         single<RequestBusinessHandler> { TestRequestBusinessHandler() }
+        single<GrantBusinessHandler> { TestGrantBusinessHandler() }
     }
 }
 

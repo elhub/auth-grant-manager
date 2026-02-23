@@ -44,7 +44,8 @@ class HandlerTest : FunSpec({
             validTo = currentTimeWithTimeZone().plusYears(1),
             sourceType = SourceType.Document,
             sourceId = UUID.randomUUID(),
-            scopeIds = scopeIds
+            scopeIds = scopeIds,
+            properties = emptyList()
         )
     val scopes =
         listOf(

@@ -2,6 +2,7 @@ package no.elhub.auth.features.grants
 
 import no.elhub.auth.features.common.currentTimeWithTimeZone
 import no.elhub.auth.features.common.party.AuthorizationParty
+import no.elhub.auth.features.grants.common.AuthorizationGrantProperty
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -19,6 +20,7 @@ data class AuthorizationGrant(
     val sourceType: SourceType,
     val sourceId: UUID,
     val scopeIds: List<UUID>,
+    val properties: List<AuthorizationGrantProperty>
 ) {
     companion object {
         fun create(
@@ -42,7 +44,8 @@ data class AuthorizationGrant(
                 validTo = currentTimeWithTimeZone().plusYears(1), // TODO this will be handled by the value stream
                 sourceId = sourceId,
                 sourceType = sourceType,
-                scopeIds = scopeIds
+                scopeIds = scopeIds,
+                properties = emptyList()
             )
     }
 

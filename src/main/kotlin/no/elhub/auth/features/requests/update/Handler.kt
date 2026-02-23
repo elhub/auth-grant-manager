@@ -6,6 +6,8 @@ import arrow.core.raise.ensure
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.grants.AuthorizationGrant
+import no.elhub.auth.features.grants.common.AuthorizationGrantProperty
+import no.elhub.auth.features.grants.common.GrantPropertiesRepository
 import no.elhub.auth.features.grants.common.GrantRepository
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.common.RequestRepository
@@ -13,8 +15,10 @@ import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.slf4j.LoggerFactory
 
 class Handler(
+    private val businessHandler: GrantBusinessHandler,
     private val requestRepository: RequestRepository,
-    private val grantRepository: GrantRepository
+    private val grantRepository: GrantRepository,
+    private val grantPropertiesRepository: GrantPropertiesRepository
 ) {
 
     private val logger = LoggerFactory.getLogger(Handler::class.java)
@@ -72,18 +76,26 @@ class Handler(
                     }
                 }.bind()
 
+
             val grantToCreate = AuthorizationGrant.create(
                 grantedFor = acceptedRequest.requestedFrom,
                 grantedBy = acceptedBy,
                 grantedTo = acceptedRequest.requestedBy,
                 sourceType = AuthorizationGrant.SourceType.Request,
                 sourceId = acceptedRequest.id,
-                scopeIds = scopeIds
+                scopeIds = scopeIds,
             )
 
             val createdGrant = grantRepository.insert(grantToCreate, scopeIds)
                 .mapLeft { UpdateError.GrantCreationError }
                 .bind()
+
+            val metaKeys = businessHandler.getMetaProperties(acceptedRequest).toSet()
+            val grantProperties = acceptedRequest.properties
+                .filter { it.key in metaKeys }
+                .map { prop -> AuthorizationGrantProperty(grantId = createdGrant.id, key = prop.key, value = prop.value) }
+
+            grantPropertiesRepository.insert(grantProperties)
 
             acceptedRequest.copy(grantId = createdGrant.id)
         }
@@ -96,4 +108,8 @@ class Handler(
                 .bind()
             rejectedRequest
         }
+}
+
+interface GrantBusinessHandler{
+    fun getMetaProperties(request: AuthorizationRequest): List<String>
 }

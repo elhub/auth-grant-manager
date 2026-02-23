@@ -31,11 +31,13 @@ import no.elhub.auth.features.documents.common.DocumentBusinessHandler
 import no.elhub.auth.features.documents.create.command.DocumentCommand
 import no.elhub.auth.features.documents.create.model.CreateDocumentModel
 import no.elhub.auth.features.grants.AuthorizationScope
+import no.elhub.auth.features.grants.common.AuthorizationGrantProperty
 import no.elhub.auth.features.grants.common.CreateGrantProperties
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.create.RequestBusinessHandler
 import no.elhub.auth.features.requests.create.command.RequestCommand
 import no.elhub.auth.features.requests.create.model.CreateRequestModel
+import no.elhub.auth.features.requests.update.GrantBusinessHandler
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
@@ -58,7 +60,13 @@ class MoveInAndChangeOfEnergySupplierBusinessHandler(
     private val stromprisService: StromprisService,
     private val validateBalanceSupplierContractName: Boolean
 ) : RequestBusinessHandler,
-    DocumentBusinessHandler {
+    DocumentBusinessHandler,
+    GrantBusinessHandler
+{
+    override fun getMetaProperties(request: AuthorizationRequest): List<String> {
+        return listOf("startDate")
+    }
+
     override suspend fun validateAndReturnRequestCommand(createRequestModel: CreateRequestModel): Either<BusinessProcessError, RequestCommand> =
         either {
             val model = createRequestModel.toMoveInAndChangeOfEnergySupplierBusinessModel()

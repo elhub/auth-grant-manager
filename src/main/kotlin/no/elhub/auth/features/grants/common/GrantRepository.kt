@@ -42,7 +42,8 @@ interface GrantRepository {
 }
 
 class ExposedGrantRepository(
-    private val partyRepository: PartyRepository
+    private val partyRepository: PartyRepository,
+    private val grantPropertiesRepository: GrantPropertiesRepository
 ) : GrantRepository {
 
     private val logger = LoggerFactory.getLogger(ExposedGrantRepository::class.java)
@@ -108,11 +109,14 @@ class ExposedGrantRepository(
             val grantedTo = partyRepository.find(grant[AuthorizationGrantTable.grantedTo]).bind()
             val scopes = findScopeIds(grant[AuthorizationGrantTable.id].value).bind()
 
+            val properties = grantPropertiesRepository.findBy(grant[AuthorizationGrantTable.id].value)
+
             grant.toAuthorizationGrant(
                 grantedBy = grantedBy,
                 grantedFor = grantedFor,
                 grantedTo = grantedTo,
-                scopeIds = scopes
+                scopeIds = scopes,
+                properties = properties
             )
         }
 
@@ -198,7 +202,8 @@ class ExposedGrantRepository(
                             grantedBy = grantedByParty,
                             grantedFor = grantedForParty,
                             grantedTo = grantedToParty,
-                            scopeIds = scopeIds
+                            scopeIds = scopeIds,
+                            properties = grant.properties
                         )
                     }.single()
 
@@ -272,11 +277,14 @@ class ExposedGrantRepository(
                     }
                     .bind()
 
+            val properties = grantPropertiesRepository.findBy(grantId = grant[AuthorizationGrantTable.id].value)
+
             grant.toAuthorizationGrant(
                 grantedBy = grantedByParty,
                 grantedFor = grantedForParty,
                 grantedTo = grantedToParty,
-                scopeIds = scopes
+                scopeIds = scopes,
+                properties = properties
             )
         }
 }
@@ -337,7 +345,8 @@ fun ResultRow.toAuthorizationGrant(
     grantedBy: AuthorizationPartyRecord,
     grantedFor: AuthorizationPartyRecord,
     grantedTo: AuthorizationPartyRecord,
-    scopeIds: List<UUID>
+    scopeIds: List<UUID>,
+    properties: List<AuthorizationGrantProperty>
 ) = AuthorizationGrant(
     id = this[AuthorizationGrantTable.id].value,
     grantStatus = this[AuthorizationGrantTable.grantStatus],
@@ -351,7 +360,8 @@ fun ResultRow.toAuthorizationGrant(
     validTo = this[AuthorizationGrantTable.validTo],
     sourceType = this[AuthorizationGrantTable.sourceType],
     sourceId = this[AuthorizationGrantTable.sourceId],
-    scopeIds = scopeIds
+    scopeIds = scopeIds,
+    properties = properties
 )
 
 fun AuthorizationPartyRecord.toAuthorizationParty() = AuthorizationParty(id = this.resourceId, type = this.type)
