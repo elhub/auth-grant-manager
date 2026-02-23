@@ -24,33 +24,33 @@ sealed class ConfirmError {
 
 fun ConfirmError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> =
     when (this) {
-        ConfirmError.DocumentNotFoundError -> toNotFoundApiErrorResponse("Document could not be found")
+        ConfirmError.DocumentNotFoundError -> toNotFoundApiErrorResponse("AuthorizationDocument could not be found")
 
         is ConfirmError.ValidateSignaturesError -> handleValidateSignatureError(this)
 
         ConfirmError.SignatoryNotAllowedToSignDocument -> buildApiErrorResponse(
             status = HttpStatusCode.Forbidden,
             title = "Signatory is not allowed to sign this document",
-            detail = "The signer is not authorized for this document"
+            detail = "The signer is not authorized for this document."
 
         )
 
         ConfirmError.InvalidRequestedByError -> buildApiErrorResponse(
             status = HttpStatusCode.Forbidden,
             title = "Party not authorized",
-            detail = "RequestedBy must match the authorized party",
+            detail = "RequestedBy must match the authorized party.",
         )
 
         ConfirmError.IllegalStateError -> buildApiErrorResponse(
             status = HttpStatusCode.BadRequest,
             title = "Invalid status state",
-            detail = "Document must be in 'Pending' status to confirm."
+            detail = "AuthorizationDocument must be in 'Pending' status to confirm."
         )
 
         ConfirmError.ExpiredError -> buildApiErrorResponse(
             status = HttpStatusCode.BadRequest,
-            title = "Document has expired",
-            detail = "Document validity period has passed"
+            title = "AuthorizationDocument has expired",
+            detail = "Validity period has passed."
         )
 
         ConfirmError.SignatoryResolutionError,
@@ -67,7 +67,7 @@ fun handleValidateSignatureError(error: ConfirmError.ValidateSignaturesError): P
     SignatureValidationError.MissingElhubSignature -> buildApiErrorResponse(
         status = HttpStatusCode.BadRequest,
         title = "Elhub signature is not valid",
-        detail = "The Elhub signature could not be validated. The document may have been tampered with"
+        detail = "The Elhub signature could not be validated. The document may have been tampered with."
     )
 
     SignatureValidationError.BankIdSigningCertNotFromExpectedRoot ->

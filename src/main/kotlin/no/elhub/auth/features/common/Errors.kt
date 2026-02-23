@@ -75,7 +75,7 @@ fun toValidationApiErrorResponse(detail: String? = null): Pair<HttpStatusCode, J
 fun toNotFoundApiErrorResponse(detail: String? = null): Pair<HttpStatusCode, JsonApiErrorCollection> = buildApiErrorResponse(
     status = HttpStatusCode.NotFound,
     title = "Not found error",
-    detail = detail.orEmpty().ifEmpty({ "The requested resource could not be found" })
+    detail = detail.orEmpty().ifEmpty { "The requested resource could not be found" }
 )
 
 fun toBalanceSupplierNotApiAuthorizedResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> = buildApiErrorResponse(

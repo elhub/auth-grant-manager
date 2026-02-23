@@ -23,7 +23,7 @@ fun UpdateError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollectio
         UpdateError.GrantCreationError,
         UpdateError.ScopeReadError, -> toInternalServerApiErrorResponse()
 
-        UpdateError.RequestNotFound -> toNotFoundApiErrorResponse("Request could not be found")
+        UpdateError.RequestNotFound -> toNotFoundApiErrorResponse("AuthorizationRequest could not be found")
 
         UpdateError.IllegalTransitionError -> buildApiErrorResponse(
             status = HttpStatusCode.BadRequest,
@@ -34,13 +34,13 @@ fun UpdateError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollectio
         UpdateError.AlreadyProcessed -> buildApiErrorResponse(
             status = HttpStatusCode.BadRequest,
             title = "Invalid status state",
-            detail = "Request must be in 'Pending' status to update."
+            detail = "AuthorizationRequest must be in 'Pending' status to update."
         )
 
         UpdateError.Expired -> buildApiErrorResponse(
             status = HttpStatusCode.BadRequest,
-            title = "Request has expired",
-            detail = "Request validity period has passed"
+            title = "AuthorizationRequest has expired",
+            detail = "Validity period has passed."
         )
 
         UpdateError.NotAuthorizedError -> buildApiErrorResponse(
