@@ -1,6 +1,5 @@
 package no.elhub.auth.features.documents.get
 
-import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import io.kotest.core.spec.style.FunSpec
