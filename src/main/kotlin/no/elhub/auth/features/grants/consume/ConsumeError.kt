@@ -17,7 +17,7 @@ sealed class ConsumeError {
 
 fun ConsumeError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> =
     when (this) {
-        ConsumeError.GrantNotFound -> toNotFoundApiErrorResponse("Grant could not be found")
+        ConsumeError.GrantNotFound -> toNotFoundApiErrorResponse("AuthorizationGrant could not be found")
 
         ConsumeError.PersistenceError -> toInternalServerApiErrorResponse()
 
@@ -30,7 +30,7 @@ fun ConsumeError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollecti
         ConsumeError.IllegalStateError -> buildApiErrorResponse(
             status = HttpStatusCode.BadRequest,
             title = "Illegal status state",
-            detail = "Grant must be 'Active' to get consumed"
+            detail = "AuthorizationGrant must be 'Active' to get consumed."
         )
 
         ConsumeError.IllegalTransitionError -> buildApiErrorResponse(
@@ -41,7 +41,7 @@ fun ConsumeError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollecti
 
         ConsumeError.ExpiredError -> buildApiErrorResponse(
             status = HttpStatusCode.BadRequest,
-            title = "Grant has expired",
-            detail = "Grant validity period has passed"
+            title = "AuthorizationGrant has expired",
+            detail = "Validity period has passed."
         )
     }

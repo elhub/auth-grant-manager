@@ -731,9 +731,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                             ),
                         )
                     }
-
                     response.status shouldBe HttpStatusCode.BadRequest
-
                     val responseJson: JsonApiErrorCollection = response.body()
                     responseJson.errors.apply {
                         size shouldBe 1
@@ -742,15 +740,26 @@ class AuthorizationGrantRouteTest : FunSpec({
                             title shouldBe "Invalid status transition"
                             detail shouldBe "Only 'Exhausted' status is allowed."
                         }
-                    }
-                    responseJson.meta.apply {
-                        "createdAt".shouldNotBeNull()
+
+                        val responseJson: JsonApiErrorCollection = response.body()
+                        responseJson.errors.apply {
+                            size shouldBe 1
+                            this[0].apply {
+                                status shouldBe "400"
+                                title shouldBe "AuthorizationGrant has expired"
+                                detail shouldBe "Validity period has passed."
+                            }
+                            responseJson.meta.apply {
+                                "createdAt".shouldNotBeNull()
+                            }
+                        }
                     }
                 }
             }
         }
     }
 })
+
 
 private fun ApplicationTestBuilder.setupAuthorizationGrantTestApplication() {
     client = createClient {

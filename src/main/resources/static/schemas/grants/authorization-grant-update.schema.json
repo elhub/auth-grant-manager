@@ -6,7 +6,7 @@
   "properties": {
     "data": {
       "type": "object",
-      "required": ["type", "attributes"],
+      "required": ["id", "type", "attributes"],
       "properties": {
         "id": {
           "$ref": "authorization-grant-common.schema.json#/$defs/id"
