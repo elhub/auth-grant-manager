@@ -114,9 +114,14 @@ class RouteTest : FunSpec({
     val authorizedPerson = AuthorizedParty.Person(id = UUID.fromString("adde4fc4-55b4-40bb-b84b-9f39ec027ce0"))
     val authorizedOrg = AuthorizedParty.OrganizationEntity(gln = "🐟", role = RoleType.BalanceSupplier)
 
+    lateinit var authProvider: AuthorizationProvider
+    lateinit var handler: Handler
+    beforeAny {
+        authProvider = mockk<AuthorizationProvider>()
+        handler = mockk<Handler>()
+    }
+
     test("GET / returns 200 when authorized as person and handler succeeds") {
-        val authProvider = mockk<AuthorizationProvider>()
-        val handler = mockk<Handler>()
         coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
         coEvery { handler.invoke(any()) } returns documents.right()
         testApplication {
@@ -128,8 +133,6 @@ class RouteTest : FunSpec({
     }
 
     test("GET / returns 200 when authorized as org and handler succeeds") {
-        val authProvider = mockk<AuthorizationProvider>()
-        val handler = mockk<Handler>()
         coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedOrg.right()
         coEvery { handler.invoke(any()) } returns documents.right()
         testApplication {
@@ -140,8 +143,6 @@ class RouteTest : FunSpec({
         }
     }
     test("GET / returns appropriate error when authorization fails") {
-        val authProvider = mockk<AuthorizationProvider>()
-        val handler = mockk<Handler>()
         coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns AuthError.AccessDenied.left()
         coEvery { handler.invoke(any()) } returns documents.right()
         testApplication {
@@ -151,8 +152,6 @@ class RouteTest : FunSpec({
         }
     }
     test("GET / returns appropriate error when authorized as org and handler fails") {
-        val authProvider = mockk<AuthorizationProvider>()
-        val handler = mockk<Handler>()
         coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedOrg.right()
         coEvery { handler.invoke(any()) } returns QueryError.IOError.left()
         testApplication {

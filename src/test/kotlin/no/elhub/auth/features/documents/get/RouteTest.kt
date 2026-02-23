@@ -84,9 +84,15 @@ class RouteTest : FunSpec({
     )
     val authorizedPerson = AuthorizedParty.Person(id = UUID.fromString("1d024a64-abb0-47d1-9b81-5d98aaa1a8a9"))
     val authorizedOrg = AuthorizedParty.OrganizationEntity(gln = "1", role = RoleType.BalanceSupplier)
+
+    lateinit var authProvider: AuthorizationProvider
+    lateinit var handler: Handler
+    beforeAny {
+        authProvider = mockk<AuthorizationProvider>()
+        handler = mockk<Handler>()
+    }
+
     test("GET /{id}[.pdf] returns 200 when authorized as person and handler succeeds") {
-        val authProvider = mockk<AuthorizationProvider>()
-        val handler = mockk<Handler>()
         coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
         coEvery { handler.invoke(any()) } returns document.right()
         testApplication {
@@ -107,8 +113,6 @@ class RouteTest : FunSpec({
         }
     }
     test("GET /{id}[.pdf] returns 200 when authorized as org and handler succeeds") {
-        val authProvider = mockk<AuthorizationProvider>()
-        val handler = mockk<Handler>()
         coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedOrg.right()
         coEvery { handler.invoke(any()) } returns document.right()
         testApplication {
@@ -129,8 +133,6 @@ class RouteTest : FunSpec({
         }
     }
     test("GET /{id}[.pdf] returns 400 when UUID is invalid") {
-        val authProvider = mockk<AuthorizationProvider>()
-        val handler = mockk<Handler>()
         coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
         coEvery { handler.invoke(any()) } returns document.right()
         testApplication {
@@ -142,8 +144,6 @@ class RouteTest : FunSpec({
         }
     }
     test("GET /{id}[.pdf] returns appropriate error when authorization fails") {
-        val authProvider = mockk<AuthorizationProvider>()
-        val handler = mockk<Handler>()
         coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns AuthError.NotAuthorized.left()
         coEvery { handler.invoke(any()) } returns document.right()
         testApplication {
@@ -155,8 +155,6 @@ class RouteTest : FunSpec({
         }
     }
     test("GET /{id}[.pdf] returns appropriate error when handler fails") {
-        val authProvider = mockk<AuthorizationProvider>()
-        val handler = mockk<Handler>()
         coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
         coEvery { handler.invoke(any()) } returns QueryError.IOError.left()
         testApplication {

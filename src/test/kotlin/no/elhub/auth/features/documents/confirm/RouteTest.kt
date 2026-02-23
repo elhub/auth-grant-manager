@@ -66,9 +66,15 @@ import no.elhub.auth.module as applicationModule
 class RouteTest : FunSpec({
 
     val authorizedOrg = AuthorizedParty.OrganizationEntity(gln = "1", role = RoleType.BalanceSupplier)
+
+    lateinit var authProvider: AuthorizationProvider
+    lateinit var handler: Handler
+    beforeAny {
+        authProvider = mockk<AuthorizationProvider>()
+        handler = mockk<Handler>()
+    }
+
     test("PUT /{id}.pdf returns 204 when authorized as org and handler succeeds") {
-        val authProvider = mockk<AuthorizationProvider>()
-        val handler = mockk<Handler>()
         coEvery { authProvider.authorizeMaskinporten(any()) } returns authorizedOrg.right()
         coEvery { handler.invoke(any()) } returns Unit.right()
 
@@ -84,8 +90,6 @@ class RouteTest : FunSpec({
         }
     }
     test("PUT /{id}.pdf returns appropriate error when handler fails to validate signature") {
-        val authProvider = mockk<AuthorizationProvider>()
-        val handler = mockk<Handler>()
         coEvery { authProvider.authorizeMaskinporten(any()) } returns authorizedOrg.right()
         coEvery { handler.invoke(any()) } returns ConfirmError.ValidateSignaturesError(
             SignatureValidationError.MissingBankIdSignature
@@ -111,8 +115,6 @@ class RouteTest : FunSpec({
     }
 
     test("PUT /{id}.pdf returns appropriate error when authorization fails") {
-        val authProvider = mockk<AuthorizationProvider>()
-        val handler = mockk<Handler>()
         coEvery { authProvider.authorizeMaskinporten(any()) } returns AuthError.InvalidToken.left()
         coEvery { handler.invoke(any()) } returns Unit.right()
 
@@ -136,8 +138,6 @@ class RouteTest : FunSpec({
     }
 
     test("PUT /{id}.pdf returns appropriate error when id is invalid") {
-        val authProvider = mockk<AuthorizationProvider>()
-        val handler = mockk<Handler>()
         coEvery { authProvider.authorizeMaskinporten(any()) } returns authorizedOrg.right()
         coEvery { handler.invoke(any()) } returns Unit.right()
 
@@ -160,8 +160,6 @@ class RouteTest : FunSpec({
         }
     }
     test("PUT /{id}.pdf returns appropriate error when document is empty") {
-        val authProvider = mockk<AuthorizationProvider>()
-        val handler = mockk<Handler>()
         coEvery { authProvider.authorizeMaskinporten(any()) } returns authorizedOrg.right()
         coEvery { handler.invoke(any()) } returns Unit.right()
 

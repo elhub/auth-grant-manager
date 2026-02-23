@@ -138,9 +138,16 @@ class RouteTest : FunSpec({
             )
         )
     )
+
+    lateinit var authProvider: AuthorizationProvider
+    lateinit var handler: Handler
+
+    beforeAny {
+        authProvider = mockk<AuthorizationProvider>()
+        handler = mockk<Handler>()
+    }
+
     test("POST / returns 201 when authorized as org and handler succeeds") {
-        val authProvider = mockk<AuthorizationProvider>()
-        val handler = mockk<Handler>()
         coEvery { authProvider.authorizeMaskinporten(any()) } returns authorizedOrg.right()
         coEvery { handler.invoke(any()) } returns document.right()
         testApplication {
@@ -155,8 +162,6 @@ class RouteTest : FunSpec({
     }
 
     test("POST / returns approprate error when authorization fails") {
-        val authProvider = mockk<AuthorizationProvider>()
-        val handler = mockk<Handler>()
         coEvery { authProvider.authorizeMaskinporten(any()) } returns AuthError.InvalidToken.left()
         coEvery { handler.invoke(any()) } returns document.right()
         testApplication {
@@ -171,8 +176,6 @@ class RouteTest : FunSpec({
     }
 
     test("POST / returns appropriate error when handler fails (InvalidNinError)") {
-        val authProvider = mockk<AuthorizationProvider>()
-        val handler = mockk<Handler>()
         coEvery { authProvider.authorizeMaskinporten(any()) } returns authorizedOrg.right()
         coEvery { handler.invoke(any()) } returns CreateError.InvalidNinError.left()
         testApplication {
@@ -195,8 +198,6 @@ class RouteTest : FunSpec({
         }
     }
     test("POST / returns appropriate error when handler fails (FileGenerationError)") {
-        val authProvider = mockk<AuthorizationProvider>()
-        val handler = mockk<Handler>()
         coEvery { authProvider.authorizeMaskinporten(any()) } returns authorizedOrg.right()
         coEvery { handler.invoke(any()) } returns CreateError.FileGenerationError.left()
         testApplication {
@@ -211,8 +212,6 @@ class RouteTest : FunSpec({
     }
 
     test("POST / returns appropriate error when missing field in request body") {
-        val authProvider = mockk<AuthorizationProvider>()
-        val handler = mockk<Handler>()
         coEvery { authProvider.authorizeMaskinporten(any()) } returns authorizedOrg.right()
         coEvery { handler.invoke(any()) } returns CreateError.FileGenerationError.left()
         testApplication {
@@ -235,8 +234,6 @@ class RouteTest : FunSpec({
         }
     }
     test("POST / returns appropriate error when invalid field value in request body") {
-        val authProvider = mockk<AuthorizationProvider>()
-        val handler = mockk<Handler>()
         coEvery { authProvider.authorizeMaskinporten(any()) } returns authorizedOrg.right()
         coEvery { handler.invoke(any()) } returns CreateError.FileGenerationError.left()
         testApplication {
