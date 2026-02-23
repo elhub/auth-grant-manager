@@ -1,48 +1,25 @@
 package no.elhub.auth.features.requests.route
 
 import io.kotest.core.spec.style.FunSpec
-import io.kotest.matchers.nulls.shouldNotBeNull
-import io.kotest.matchers.shouldBe
-import io.ktor.client.call.body
-import io.ktor.client.request.get
-import io.ktor.client.request.header
-import io.ktor.client.request.patch
-import io.ktor.client.request.post
-import io.ktor.client.request.setBody
-import io.ktor.client.statement.HttpResponse
-import io.ktor.client.statement.bodyAsChannel
-import io.ktor.http.ContentType
-import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpStatusCode
-import io.ktor.http.contentType
-import io.ktor.server.application.install
-import io.ktor.server.routing.Routing
-import io.ktor.server.routing.routing
-import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
+import io.ktor.client.request.header
+import io.ktor.client.request.get
+import io.ktor.client.request.patch
+import io.ktor.http.HttpHeaders
+import io.ktor.client.request.post
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
+import io.ktor.client.request.setBody
 import no.elhub.auth.features.common.AuthPersonsTestContainerExtension
 import no.elhub.auth.features.common.PdpTestContainerExtension
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.RunPostgresScriptExtension
 import no.elhub.auth.features.common.auth.PDPAuthorizationProvider
-import no.elhub.auth.features.common.party.PartyIdentifier
-import no.elhub.auth.features.common.party.PartyIdentifierType
-import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.REQUESTS_PATH
-import no.elhub.auth.features.requests.create.dto.CreateRequestAttributes
-import no.elhub.auth.features.requests.create.dto.CreateRequestMeta
-import no.elhub.auth.features.requests.create.dto.JsonApiCreateRequest
-import no.elhub.auth.features.requests.route.examplePatchBody
-import no.elhub.auth.features.requests.route.examplePostBody
-import no.elhub.auth.features.requests.update.dto.JsonApiUpdateRequest
-import no.elhub.auth.features.requests.update.dto.UpdateRequestAttributes
 import no.elhub.auth.validateInvalidTokenResponse
 import no.elhub.auth.validateMissingTokenResponse
 import no.elhub.auth.validatePartyNotAuthorizedResponse
 import no.elhub.auth.validateUnsupportedPartyResponse
-import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObject
-import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObjectWithMeta
-import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 
 class AuthorizationRequestRouteSecurityTest : FunSpec({
     val pdpContainer = PdpTestContainerExtension()

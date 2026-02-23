@@ -1,12 +1,9 @@
 package no.elhub.auth.features.documents.confirm
 
-import arrow.core.Either
+
 import arrow.core.left
 import arrow.core.right
-import io.kotest.assertions.arrow.core.shouldBeLeft
-import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.core.spec.style.FunSpec
-import io.kotest.core.tuple
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldBeEmpty
 import io.ktor.client.call.body
@@ -15,33 +12,16 @@ import io.ktor.client.request.header
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
-import io.ktor.client.statement.bodyAsChannel
-import io.ktor.client.statement.bodyAsText
-import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
-import io.ktor.http.contentType
-import io.ktor.serialization.kotlinx.json.json
-import io.ktor.server.application.install
-import io.ktor.server.routing.routing
-import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
-import io.ktor.utils.io.availableForRead
-import io.ktor.utils.io.toByteArray
 import io.mockk.coEvery
 import io.mockk.coVerify
-import io.mockk.every
 import io.mockk.mockk
-import kotlinx.serialization.json.Json
-import no.elhub.auth.config.configureErrorHandling
-import no.elhub.auth.config.configureSerialization
 import no.elhub.auth.features.common.QueryError
-import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.auth.AuthError
 import no.elhub.auth.features.common.auth.AuthorizationProvider
 import no.elhub.auth.features.common.auth.AuthorizedParty
-import no.elhub.auth.features.common.auth.PDPAuthorizationProvider
 import no.elhub.auth.features.common.auth.RoleType
-import no.elhub.auth.features.common.commonModule
 import no.elhub.auth.features.common.currentTimeWithTimeZone
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
@@ -50,18 +30,26 @@ import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.AuthorizationDocument.Status
 import no.elhub.auth.features.documents.AuthorizationDocument.Type
 import no.elhub.auth.features.documents.common.AuthorizationDocumentProperty
-import no.elhub.auth.features.documents.common.DocumentRepository
-import no.elhub.auth.features.documents.common.SignatureValidationError
-import no.elhub.auth.features.documents.module
-import no.elhub.auth.features.grants.AuthorizationGrant
-import no.elhub.auth.features.grants.common.GrantRepository
+import no.elhub.auth.features.documents.query.dto.GetDocumentCollectionResponse
 import no.elhub.auth.setupAppWith
-import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
+import no.elhub.auth.validateForbiddenResponse
+import no.elhub.auth.validateInternalServerErrorResponse
+import no.elhub.auth.validateNotAuthorizedResponse
 import java.util.UUID
 import kotlin.random.Random
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation as ClientContentNegotiation
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation as ServerContentNegotiation
 import no.elhub.auth.module as applicationModule
+import arrow.core.Either
+import io.ktor.client.statement.bodyAsChannel
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
+import io.ktor.utils.io.toByteArray
+import no.elhub.auth.features.documents.get.dto.GetDocumentSingleResponse
+import no.elhub.auth.validateMalformedInputResponse
+import io.ktor.client.statement.bodyAsText
+import no.elhub.auth.features.documents.common.SignatureValidationError
+import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 
 class RouteTest : FunSpec({
 
