@@ -6,9 +6,6 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.ktor.client.call.body
 import io.ktor.client.request.get
-import io.ktor.client.request.header
-import io.ktor.client.request.put
-import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsChannel
 import io.ktor.http.ContentType
@@ -33,17 +30,12 @@ import no.elhub.auth.features.documents.AuthorizationDocument.Status
 import no.elhub.auth.features.documents.AuthorizationDocument.Type
 import no.elhub.auth.features.documents.common.AuthorizationDocumentProperty
 import no.elhub.auth.features.documents.get.dto.GetDocumentSingleResponse
-import no.elhub.auth.features.documents.query.dto.GetDocumentCollectionResponse
 import no.elhub.auth.setupAppWith
-import no.elhub.auth.validateForbiddenResponse
 import no.elhub.auth.validateInternalServerErrorResponse
 import no.elhub.auth.validateMalformedInputResponse
 import no.elhub.auth.validateNotAuthorizedResponse
 import java.util.UUID
 import kotlin.random.Random
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation as ClientContentNegotiation
-import io.ktor.server.plugins.contentnegotiation.ContentNegotiation as ServerContentNegotiation
-import no.elhub.auth.module as applicationModule
 
 class RouteTest : FunSpec({
     val byAuthParty = AuthorizationParty("id1", PartyType.Organization)

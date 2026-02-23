@@ -5,13 +5,10 @@ import arrow.core.right
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldBeEmpty
 import io.ktor.client.call.body
 import io.ktor.client.statement.HttpResponse
-import io.ktor.client.statement.bodyAsChannel
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.testing.testApplication
-import io.ktor.utils.io.toByteArray
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -19,7 +16,6 @@ import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
-import no.elhub.auth.features.common.QueryError
 import no.elhub.auth.features.common.auth.AuthError
 import no.elhub.auth.features.common.auth.AuthorizationProvider
 import no.elhub.auth.features.common.auth.AuthorizedParty
@@ -29,7 +25,6 @@ import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
 import no.elhub.auth.features.common.party.PartyType
-import no.elhub.auth.features.common.toTimeZoneOffsetString
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.AuthorizationDocument.Status
 import no.elhub.auth.features.documents.AuthorizationDocument.Type
@@ -39,16 +34,11 @@ import no.elhub.auth.features.documents.create.dto.CreateDocumentMeta
 import no.elhub.auth.features.documents.create.dto.CreateDocumentRequestAttributes
 import no.elhub.auth.features.documents.create.dto.CreateDocumentResponse
 import no.elhub.auth.features.documents.create.dto.JsonApiCreateDocumentRequest
-import no.elhub.auth.features.documents.get.dto.GetDocumentSingleResponse
-import no.elhub.auth.features.documents.query.dto.GetDocumentCollectionResponse
 import no.elhub.auth.postJson
 import no.elhub.auth.setupAppWith
 import no.elhub.auth.shouldBeValidUuid
-import no.elhub.auth.validateForbiddenResponse
 import no.elhub.auth.validateInternalServerErrorResponse
 import no.elhub.auth.validateInvalidTokenResponse
-import no.elhub.auth.validateMalformedInputResponse
-import no.elhub.auth.validateNotAuthorizedResponse
 import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObjectWithMeta
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import java.time.Duration
@@ -59,9 +49,6 @@ import kotlin.random.Random
 import kotlin.test.assertTrue
 import kotlin.time.Clock
 import kotlin.time.Instant
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation as ClientContentNegotiation
-import io.ktor.server.plugins.contentnegotiation.ContentNegotiation as ServerContentNegotiation
-import no.elhub.auth.module as applicationModule
 
 class RouteTest : FunSpec({
     val authorizedOrg = AuthorizedParty.OrganizationEntity(gln = "1", role = RoleType.BalanceSupplier)
