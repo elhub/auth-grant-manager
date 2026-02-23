@@ -1,5 +1,7 @@
 package no.elhub.auth.features.requests.route
 
+import no.elhub.auth.features.businessprocesses.BusinessProcessError
+
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
 import no.elhub.auth.features.requests.create.dto.CreateRequestMeta
@@ -97,7 +99,7 @@ class TestRequestBusinessHandler : RequestBusinessHandler {
             AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson -> {
                 val meta = createRequestModel.meta
                 if (meta.requestedFromName.isBlank()) {
-                    TestRequestValidationError.MissingRequestedFromName.left()
+                    BusinessProcessError.Validation(TestRequestValidationError.MissingRequestedFromName.message).left()
                 } else {
                     RequestCommand(
                         type = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
@@ -124,7 +126,8 @@ class TestRequestBusinessHandler : RequestBusinessHandler {
                 }
             }
 
-            else -> TestRequestValidationError.UnsupportedRequestType.left()
+            else -> BusinessProcessError.Validation(TestRequestValidationError.UnsupportedRequestType.message).left()
+
         }
 
     override fun getCreateGrantProperties(request: AuthorizationRequest): CreateGrantProperties =

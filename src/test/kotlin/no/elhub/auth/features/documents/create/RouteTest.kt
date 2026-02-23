@@ -1,5 +1,19 @@
 package no.elhub.auth.features.documents.create
 
+import no.elhub.auth.features.documents.DOCUMENTS_PATH
+
+import java.time.Duration
+
+import kotlin.test.assertTrue
+import kotlinx.datetime.toLocalDateTime
+import kotlin.time.Instant
+
+import kotlinx.datetime.TimeZone
+import kotlin.time.Clock
+
+import java.time.OffsetDateTime
+import no.elhub.auth.shouldBeValidUuid
+import io.kotest.matchers.nulls.shouldNotBeNull
 import no.elhub.auth.features.documents.create.dto.CreateDocumentRequestAttributes
 import no.elhub.auth.features.documents.create.dto.CreateDocumentMeta
 import no.elhub.auth.features.common.party.PartyIdentifier
@@ -70,21 +84,25 @@ import io.ktor.utils.io.toByteArray
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.datetime.DatePeriod
+import kotlinx.datetime.plus
 import kotlinx.serialization.json.Json
 import no.elhub.auth.config.configureErrorHandling
 import no.elhub.auth.config.configureSerialization
 import no.elhub.auth.features.common.commonModule
 import no.elhub.auth.features.common.toTimeZoneOffsetString
+import no.elhub.auth.features.documents.create.dto.CreateDocumentResponse
 import no.elhub.auth.features.documents.create.dto.JsonApiCreateDocumentRequest
 import no.elhub.auth.validateInternalServerErrorResponse
 import no.elhub.auth.validateInvalidTokenResponse
 import no.elhub.auth.validateNotAuthorizedResponse
+import java.time.format.DateTimeFormatter
 
 class RouteTest : FunSpec({
     val authorizedOrg = AuthorizedParty.OrganizationEntity(gln = "1", role = RoleType.BalanceSupplier)
-    val byAuthParty = AuthorizationParty("id1", PartyType.Organization)
-    val fromAuthParty = AuthorizationParty("id2", PartyType.Person)
-    val toAuthParty = AuthorizationParty("id3", PartyType.Person)
+    val byAuthParty = AuthorizationParty("gln1", PartyType.Organization)
+    val fromAuthParty = AuthorizationParty("nin1", PartyType.Person)
+    val toAuthParty = AuthorizationParty("nin2", PartyType.Person)
     val document = AuthorizationDocument(
         id = UUID.fromString("b5b61d43-6e35-4b30-aa4d-48f506be5af4"),
         type = AuthorizationDocument.Type.ChangeOfEnergySupplierForPerson,
@@ -113,21 +131,21 @@ class RouteTest : FunSpec({
             meta = CreateDocumentMeta(
                 requestedBy = PartyIdentifier(
                     idType = PartyIdentifierType.GlobalLocationNumber,
-                    idValue = "0107000000021"
+                    idValue = byAuthParty.id
                 ),
                 requestedFrom = PartyIdentifier(
                     idType = PartyIdentifierType.NationalIdentityNumber,
-                    idValue = REQUESTED_FROM_NIN
+                    idValue = fromAuthParty.id
                 ),
                 requestedTo = PartyIdentifier(
                     idType = PartyIdentifierType.NationalIdentityNumber,
-                    idValue = REQUESTED_TO_NIN
+                    idValue = toAuthParty.id
                 ),
                 requestedFromName = "Hillary Orr",
                 requestedForMeteringPointId = "123456789012345678",
                 requestedForMeteringPointAddress = "quaerendum",
-                balanceSupplierName = "Jami Wade",
-                balanceSupplierContractName = "Selena Chandler"
+                balanceSupplierName = "Greatest Balance Supplier of All",
+                balanceSupplierContractName = "Greatest Contract of All"
             )
         )
     )
@@ -142,9 +160,7 @@ class RouteTest : FunSpec({
                 contentType(ContentType.Application.Json)
                 setBody(examplePostBody)
             }
-            result.status shouldBe HttpStatusCode.Created
-            // TODO validate body!
-
+            validateCreateDocumentResponse(result, examplePostBody)
             coVerify(exactly = 1) { handler.invoke(any()) }
         }
     }
@@ -299,3 +315,64 @@ private val createBodyWithInvalidFieldValue = """
       }
     }
 """.trimIndent()
+
+private suspend fun validateCreateDocumentResponse(response: HttpResponse, createBody: JsonApiCreateDocumentRequest) {
+    val nowTolerance = Duration.ofSeconds(10)
+    response.status shouldBe HttpStatusCode.Created
+    val createDocumentResponse: CreateDocumentResponse = response.body()
+    val defaultValidTo = Clock.System.now().toLocalDateTime(TimeZone.UTC).date.plus(DatePeriod(days = 30))
+    createDocumentResponse.data.apply {
+        type shouldBe "AuthorizationDocument"
+        id!!.shouldBeValidUuid()
+        attributes.shouldNotBeNull().apply {
+            documentType shouldBe createBody.data.attributes.documentType.toString()
+            status shouldBe AuthorizationDocument.Status.Pending.name
+
+            val createdAt = OffsetDateTime.parse(createdAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+            val updatedAt = OffsetDateTime.parse(updatedAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+            //val validTo = Instant.parse(validTo).toLocalDateTime(TimeZone.of("+01:00")).date
+            val validTo = Instant.parse(validTo).toLocalDateTime(TimeZone.of("Europe/Oslo")).date
+
+            validTo shouldBe defaultValidTo
+
+            println(createdAt)
+            println(currentTimeWithTimeZone())
+            println(updatedAt)
+            assertTrue(Duration.between(createdAt, currentTimeWithTimeZone()).abs() < nowTolerance)
+            assertTrue(Duration.between(updatedAt, currentTimeWithTimeZone()).abs() < nowTolerance)
+        }
+        relationships.shouldNotBeNull().apply {
+            requestedBy.apply {
+                data.apply {
+                    id shouldBe createBody.data.meta.requestedBy.idValue
+                    type shouldBe "Organization"
+                }
+            }
+            requestedFrom.apply {
+                data.apply {
+                    id.shouldNotBeNull()
+                    type shouldBe "Person"
+                }
+            }
+            requestedTo.apply {
+                data.apply {
+                    id.shouldNotBeNull()
+                    type shouldBe "Person"
+                }
+            }
+        }
+        meta.shouldNotBeNull().apply {
+            // From mocked handler
+            values["key1"] shouldBe "value1"
+            values["key2"] shouldBe "value2"
+        }
+        links.self shouldBe "$DOCUMENTS_PATH/$id"
+        links.file shouldBe "$DOCUMENTS_PATH/$id.pdf"
+    }
+    createDocumentResponse.meta.shouldNotBeNull().apply {
+        "createdAt".shouldNotBeNull()
+    }
+    val createdDocumentId = createDocumentResponse.data.id.toString()
+    val linkToDocument = createDocumentResponse.data.links.self
+    val linkToDocumentFile = createDocumentResponse.data.links.file
+}
