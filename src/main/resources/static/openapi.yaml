@@ -363,46 +363,6 @@ paths:
         '500':
           $ref: '#/components/responses/500InternalServerError'
 
-  '/authorization-grants/{id}/scopes/{scopeId}':
-    get:
-      tags:
-        - Authorization Grants
-      summary: Retrieve a specific authorization grant scope
-      description: >
-        Retrieve a specific authorization scope associated with an authorization grant using its scopeId.
-      parameters:
-        - $ref: '#/components/parameters/UserAgent'
-        - $ref: '#/components/parameters/AuthorizationMaskinportenOrEndUser'
-        - $ref: '#/components/parameters/SenderGlnOptional'
-        - $ref: '#/components/parameters/OnBehalfOfGlnOptional'
-        - name: id
-          in: path
-          required: true
-          description: Unique identifier of the authorization grant whose scopes should be retrieved.
-          schema:
-            type: string
-        - name: scopeId
-          in: path
-          required: true
-          description: Unique identifier of the authorization scope that is being retrieved.
-          schema:
-            type: string
-      responses:
-        '200':
-          description: An authorization scope associated with the grant.
-          content:
-            application/json:
-              schema:
-                $ref: './schemas/grants/authorization-scope-resource.schema.json'
-        '400':
-          $ref: '#/components/responses/400BadRequestError'
-        '401':
-          $ref: '#/components/responses/401UnauthorizedError'
-        '404':
-          $ref: '#/components/responses/404NotFoundError'
-        '500':
-          $ref: '#/components/responses/500InternalServerError'
-
   '/authorization-requests':
     get:
       tags:
