@@ -3,6 +3,7 @@ package no.elhub.auth.features.requests.update
 import io.ktor.http.HttpStatusCode
 import no.elhub.auth.features.common.buildApiErrorResponse
 import no.elhub.auth.features.common.toInternalServerApiErrorResponse
+import no.elhub.auth.features.common.toNotFoundApiErrorResponse
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 
 sealed class UpdateError {
@@ -19,9 +20,10 @@ sealed class UpdateError {
 fun UpdateError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> =
     when (this) {
         UpdateError.PersistenceError,
-        UpdateError.RequestNotFound,
         UpdateError.GrantCreationError,
         UpdateError.ScopeReadError, -> toInternalServerApiErrorResponse()
+
+        UpdateError.RequestNotFound -> toNotFoundApiErrorResponse("AuthorizationRequest could not be found")
 
         UpdateError.IllegalTransitionError -> buildApiErrorResponse(
             status = HttpStatusCode.BadRequest,
@@ -32,13 +34,13 @@ fun UpdateError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollectio
         UpdateError.AlreadyProcessed -> buildApiErrorResponse(
             status = HttpStatusCode.BadRequest,
             title = "Invalid status state",
-            detail = "Request must be in 'Pending' status to update."
+            detail = "AuthorizationRequest must be in 'Pending' status to update."
         )
 
         UpdateError.Expired -> buildApiErrorResponse(
             status = HttpStatusCode.BadRequest,
-            title = "Request has expired",
-            detail = "Request validity period has passed"
+            title = "AuthorizationRequest has expired",
+            detail = "Validity period has passed."
         )
 
         UpdateError.NotAuthorizedError -> buildApiErrorResponse(

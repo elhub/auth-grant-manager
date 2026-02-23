@@ -54,18 +54,6 @@ fun buildApiErrorResponse(status: HttpStatusCode, title: String, detail: String)
         )
     )
 
-fun toIdMissingApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> = buildApiErrorResponse(
-    status = HttpStatusCode.BadRequest,
-    title = "Missing Required Field",
-    detail = "The field 'data.id' is required but was not provided.",
-)
-
-fun toIdMismatchApiErrorResponse(expectedId: String, actualId: String): Pair<HttpStatusCode, JsonApiErrorCollection> = buildApiErrorResponse(
-    status = HttpStatusCode.Conflict,
-    title = "Resource id mismatch",
-    detail = "Expected 'data.id' to be '$expectedId', but received '$actualId'"
-)
-
 fun toTypeMismatchApiErrorResponse(expectedType: String, actualType: String): Pair<HttpStatusCode, JsonApiErrorCollection> = buildApiErrorResponse(
     status = HttpStatusCode.Conflict,
     title = "Resource type mismatch",
@@ -87,7 +75,7 @@ fun toValidationApiErrorResponse(detail: String? = null): Pair<HttpStatusCode, J
 fun toNotFoundApiErrorResponse(detail: String? = null): Pair<HttpStatusCode, JsonApiErrorCollection> = buildApiErrorResponse(
     status = HttpStatusCode.NotFound,
     title = "Not found error",
-    detail = detail.orEmpty().ifEmpty({ "The requested resource could not be found" })
+    detail = detail.orEmpty().ifEmpty { "The requested resource could not be found" }
 )
 
 fun toBalanceSupplierNotApiAuthorizedResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> = buildApiErrorResponse(

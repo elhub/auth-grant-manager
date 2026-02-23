@@ -25,27 +25,27 @@ class ConfirmErrorJsonApiResponseTest : FunSpec({
         ConfirmError.DocumentNotFoundError to Expectation(
             status = HttpStatusCode.NotFound,
             title = "Not found error",
-            detail = "Document could not be found"
+            detail = "AuthorizationDocument could not be found."
         ),
         ConfirmError.SignatoryNotAllowedToSignDocument to Expectation(
             status = HttpStatusCode.Forbidden,
-            title = "Signatory is not allowed to sign this document",
-            detail = "The signer is not authorized for this document"
+            title = "Signatory is not allowed to sign",
+            detail = "The signer is not authorized for this AuthorizationDocument."
         ),
         ConfirmError.InvalidRequestedByError to Expectation(
             status = HttpStatusCode.Forbidden,
             title = "Party not authorized",
-            detail = "RequestedBy must match the authorized party"
+            detail = "RequestedBy must match the authorized party."
         ),
         ConfirmError.IllegalStateError to Expectation(
             status = HttpStatusCode.BadRequest,
             title = "Invalid status state",
-            detail = "Document must be in 'Pending' status to confirm."
+            detail = "AuthorizationDocument must be in 'Pending' status to confirm."
         ),
         ConfirmError.ExpiredError to Expectation(
             status = HttpStatusCode.BadRequest,
-            title = "Document has expired",
-            detail = "Document validity period has passed"
+            title = "AuthorizationDocument has expired",
+            detail = "Validity period has passed."
         )
     ).forEach { (error, expected) ->
         test("maps ${error::class.simpleName} to ${expected.status}") {
@@ -77,17 +77,17 @@ class ConfirmErrorJsonApiResponseTest : FunSpec({
         SignatureValidationError.ElhubSigningCertNotTrusted to Expectation(
             status = HttpStatusCode.BadRequest,
             title = "Elhub signature is not valid",
-            detail = "The Elhub signature could not be validated. The document may have been tampered with"
+            detail = "The Elhub signature could not be validated. The AuthorizationDocument may have been tampered with."
         ),
         SignatureValidationError.InvalidElhubSignature to Expectation(
             status = HttpStatusCode.BadRequest,
             title = "Elhub signature is not valid",
-            detail = "The Elhub signature could not be validated. The document may have been tampered with"
+            detail = "The Elhub signature could not be validated. The AuthorizationDocument may have been tampered with."
         ),
         SignatureValidationError.MissingElhubSignature to Expectation(
             status = HttpStatusCode.BadRequest,
             title = "Elhub signature is not valid",
-            detail = "The Elhub signature could not be validated. The document may have been tampered with"
+            detail = "The Elhub signature could not be validated. The AuthorizationDocument may have been tampered with."
         ),
         SignatureValidationError.BankIdSigningCertNotFromExpectedRoot to Expectation(
             status = HttpStatusCode.BadRequest,
@@ -102,7 +102,7 @@ class ConfirmErrorJsonApiResponseTest : FunSpec({
         SignatureValidationError.MissingBankIdSignature to Expectation(
             status = HttpStatusCode.BadRequest,
             title = "End user signature validation failed",
-            detail = "The document is missing the end user signature."
+            detail = "The AuthorizationDocument is missing the end user signature."
         ),
         SignatureValidationError.MissingNationalId to Expectation(
             status = HttpStatusCode.BadRequest,
@@ -111,8 +111,8 @@ class ConfirmErrorJsonApiResponseTest : FunSpec({
         ),
         SignatureValidationError.OriginalDocumentMismatch to Expectation(
             status = HttpStatusCode.BadRequest,
-            title = "Original document mismatch",
-            detail = "The document provided for confirmation differs from the original generated document."
+            title = "Original AuthorizationDocument mismatch",
+            detail = "The AuthorizationDocument provided for confirmation differs from the original generated AuthorizationDocument."
         )
     ).forEach { (cause, expected) ->
         test("maps ValidateSignaturesError(${cause::class.simpleName}) to ${expected.status}") {
