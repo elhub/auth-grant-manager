@@ -102,7 +102,7 @@ class HandlerTest : FunSpec({
 
         stubPartyResolution(partyService)
         coEvery { businessHandler.validateAndReturnDocumentCommand(model) } returns command.right()
-        every { fileGenerator.generate(requestedFromIdentifier.idValue, commandMeta) } returns unsignedFile.right()
+        every { fileGenerator.generate(commandMeta) } returns unsignedFile.right()
         coEvery { signatureService.sign(unsignedFile) } returns signedFile.right()
 
         val savedDocument = AuthorizationDocument.create(
@@ -225,7 +225,7 @@ class HandlerTest : FunSpec({
             CreateError.BusinessError(BusinessProcessError.Validation(ChangeOfEnergySupplierValidationError.MissingRequestedFromName.message))
         )
 
-        verify(exactly = 0) { fileGenerator.generate(any(), any()) }
+        verify(exactly = 0) { fileGenerator.generate(any()) }
     }
 
     test("returns FileGenerationError when file generation fails") {
@@ -238,7 +238,7 @@ class HandlerTest : FunSpec({
         stubPartyResolution(partyService)
         coEvery { businessHandler.validateAndReturnDocumentCommand(model) } returns command.right()
         every {
-            fileGenerator.generate(requestedFromIdentifier.idValue, commandMeta)
+            fileGenerator.generate(commandMeta)
         } returns DocumentGenerationError.ContentGenerationError.left()
 
         val handler = Handler(businessHandler, signatureService, documentRepository, partyService, fileGenerator)
@@ -258,7 +258,7 @@ class HandlerTest : FunSpec({
 
         stubPartyResolution(partyService)
         coEvery { businessHandler.validateAndReturnDocumentCommand(model) } returns command.right()
-        every { fileGenerator.generate(requestedFromIdentifier.idValue, commandMeta) } returns unsignedFile.right()
+        every { fileGenerator.generate(commandMeta) } returns unsignedFile.right()
         coEvery {
             signatureService.sign(unsignedFile)
         } returns SignatureSigningError.SignatureFetchingError.left()
@@ -280,7 +280,7 @@ class HandlerTest : FunSpec({
 
         stubPartyResolution(partyService)
         coEvery { businessHandler.validateAndReturnDocumentCommand(model) } returns command.right()
-        every { fileGenerator.generate(requestedFromIdentifier.idValue, commandMeta) } returns unsignedFile.right()
+        every { fileGenerator.generate(commandMeta) } returns unsignedFile.right()
         coEvery { signatureService.sign(unsignedFile) } returns signedFile.right()
         every {
             documentRepository.insert(any(), command.scopes)

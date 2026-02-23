@@ -37,6 +37,8 @@ import no.elhub.auth.module as applicationModule
 
 class AuthorizationGrantRouteTest : FunSpec({
     val pdpContainer = PdpTestContainerExtension()
+    val grantId = "123e4567-e89b-12d3-a456-426614174000"
+
     extensions(
         PostgresTestContainerExtension(),
         RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-grants.sql"),
@@ -51,7 +53,7 @@ class AuthorizationGrantRouteTest : FunSpec({
         pdpContainer.registerMaskinportenMapping(
             token = "maskinporten",
             actingGln = "0107000000021",
-            actingFunction = "BalanceSupplier"
+            functionName = "BalanceSupplier"
         )
 
         pdpContainer.registerEnduserMapping(
@@ -70,7 +72,7 @@ class AuthorizationGrantRouteTest : FunSpec({
             setupAuthorizationGrantTestApplication()
 
             test("Should return 200 OK on a valid ID") {
-                val response = client.get("$GRANTS_PATH/123e4567-e89b-12d3-a456-426614174000") {
+                val response = client.get("$GRANTS_PATH/$grantId") {
                     header(HttpHeaders.Authorization, "Bearer maskinporten")
                     header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
                 }
@@ -188,7 +190,7 @@ class AuthorizationGrantRouteTest : FunSpec({
             }
 
             test("Should return 200 when correct grantedFor") {
-                val response = client.get("$GRANTS_PATH/123e4567-e89b-12d3-a456-426614174000") {
+                val response = client.get("$GRANTS_PATH/$grantId") {
                     header(HttpHeaders.Authorization, "Bearer enduser")
                 }
 
@@ -196,7 +198,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                 val responseJson: SingleGrantResponse = response.body()
 
                 responseJson.data.apply {
-                    id shouldBe "123e4567-e89b-12d3-a456-426614174000"
+                    id shouldBe grantId
                     type shouldBe "AuthorizationGrant"
                     attributes.shouldNotBeNull().apply {
                         status shouldBe "Active"
@@ -288,7 +290,7 @@ class AuthorizationGrantRouteTest : FunSpec({
             }
 
             test("Should return 200 OK on a valid ID and a single authorization scope") {
-                val response = client.get("$GRANTS_PATH/123e4567-e89b-12d3-a456-426614174000/scopes") {
+                val response = client.get("$GRANTS_PATH/$grantId/scopes") {
                     header(HttpHeaders.Authorization, "Bearer maskinporten")
                     header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
                 }
@@ -316,7 +318,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                         get("createdAt").shouldNotBeNull()
                     }
                     responseJson.links.shouldNotBeNull().apply {
-                        self shouldBe "$GRANTS_PATH/123e4567-e89b-12d3-a456-426614174000/scopes"
+                        self shouldBe "$GRANTS_PATH/$grantId/scopes"
                     }
                 }
             }
@@ -382,7 +384,7 @@ class AuthorizationGrantRouteTest : FunSpec({
             }
 
             test("Should return 401 when authorization header not set") {
-                val response = client.get("$GRANTS_PATH/123e4567-e89b-12d3-a456-426614174000/scopes") {
+                val response = client.get("$GRANTS_PATH/$grantId/scopes") {
                     header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
                 }
                 response.status shouldBe HttpStatusCode.Unauthorized
@@ -421,7 +423,7 @@ class AuthorizationGrantRouteTest : FunSpec({
             }
 
             test("Should return 200 when correct grantedFor") {
-                val response = client.get("$GRANTS_PATH/123e4567-e89b-12d3-a456-426614174000/scopes") {
+                val response = client.get("$GRANTS_PATH/$grantId/scopes") {
                     header(HttpHeaders.Authorization, "Bearer enduser")
                 }
 

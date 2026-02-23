@@ -202,6 +202,7 @@ class MoveInAndChangeOfEnergySupplierBusinessHandler(
                 requestedFromName = model.requestedFromName,
                 requestedForMeteringPointId = model.requestedForMeteringPointId,
                 requestedForMeteringPointAddress = model.requestedForMeteringPointAddress,
+                requestedForMeterNumber = meteringPoint.data.attributes?.accountingPoint?.meter?.meterNumber ?: "",
                 balanceSupplierContractName = model.balanceSupplierContractName,
                 balanceSupplierName = model.balanceSupplierName,
                 startDate = startDate,

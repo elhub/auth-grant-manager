@@ -11,6 +11,7 @@ interface Error
 sealed class InputError : Error {
     data object MissingInputError : InputError()
     data object MalformedInputError : InputError()
+    data object IdMismatchError : InputError()
 }
 
 sealed class CommandError : Error {
@@ -53,6 +54,24 @@ fun buildApiErrorResponse(status: HttpStatusCode, title: String, detail: String)
         )
     )
 
+fun toIdMissingApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> = buildApiErrorResponse(
+    status = HttpStatusCode.BadRequest,
+    title = "Missing Required Field",
+    detail = "The field 'data.id' is required but was not provided.",
+)
+
+fun toIdMismatchApiErrorResponse(expectedId: String, actualId: String): Pair<HttpStatusCode, JsonApiErrorCollection> = buildApiErrorResponse(
+    status = HttpStatusCode.Conflict,
+    title = "Resource id mismatch",
+    detail = "Expected 'data.id' to be '$expectedId', but received '$actualId'"
+)
+
+fun toTypeMismatchApiErrorResponse(expectedType: String, actualType: String): Pair<HttpStatusCode, JsonApiErrorCollection> = buildApiErrorResponse(
+    status = HttpStatusCode.Conflict,
+    title = "Resource type mismatch",
+    detail = "Expected 'data.type' to be '$expectedType', but received '$actualType'"
+)
+
 fun toInternalServerApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> = buildApiErrorResponse(
     status = HttpStatusCode.InternalServerError,
     title = "Internal server error",
@@ -89,6 +108,12 @@ fun InputError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection
             status = HttpStatusCode.BadRequest,
             title = "Invalid input",
             detail = "The provided payload did not satisfy the expected format"
+        )
+
+        InputError.IdMismatchError -> buildApiErrorResponse(
+            status = HttpStatusCode.Conflict,
+            title = "Resource id mismatch",
+            detail = "Expected 'data.id' to be the same as in URL path {id}"
         )
     }
 

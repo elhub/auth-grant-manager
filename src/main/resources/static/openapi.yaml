@@ -324,6 +324,8 @@ paths:
           $ref: '#/components/responses/401UnauthorizedError'
         '404':
           $ref: '#/components/responses/404NotFoundError'
+        '409':
+          $ref: '#/components/responses/409ConflictError'
         '500':
           $ref: '#/components/responses/500InternalServerError'
 
@@ -352,46 +354,6 @@ paths:
             application/json:
               schema:
                 $ref: './schemas/grants/authorization-scope-collection.schema.json'
-        '400':
-          $ref: '#/components/responses/400BadRequestError'
-        '401':
-          $ref: '#/components/responses/401UnauthorizedError'
-        '404':
-          $ref: '#/components/responses/404NotFoundError'
-        '500':
-          $ref: '#/components/responses/500InternalServerError'
-
-  '/authorization-grants/{id}/scopes/{scopeId}':
-    get:
-      tags:
-        - Authorization Grants
-      summary: Retrieve a specific authorization grant scope
-      description: >
-        Retrieve a specific authorization scope associated with an authorization grant using its scopeId.
-      parameters:
-        - $ref: '#/components/parameters/UserAgent'
-        - $ref: '#/components/parameters/AuthorizationMaskinportenOrEndUser'
-        - $ref: '#/components/parameters/SenderGlnOptional'
-        - $ref: '#/components/parameters/OnBehalfOfGlnOptional'
-        - name: id
-          in: path
-          required: true
-          description: Unique identifier of the authorization grant whose scopes should be retrieved.
-          schema:
-            type: string
-        - name: scopeId
-          in: path
-          required: true
-          description: Unique identifier of the authorization scope that is being retrieved.
-          schema:
-            type: string
-      responses:
-        '200':
-          description: An authorization scope associated with the grant.
-          content:
-            application/json:
-              schema:
-                $ref: './schemas/grants/authorization-scope-resource.schema.json'
         '400':
           $ref: '#/components/responses/400BadRequestError'
         '401':
@@ -535,6 +497,8 @@ paths:
           $ref: '#/components/responses/403ForbiddenError'
         '404':
           $ref: '#/components/responses/404NotFoundError'
+        '409':
+          $ref: '#/components/responses/409ConflictError'
         '500':
           $ref: '#/components/responses/500InternalServerError'
     delete:
@@ -658,6 +622,13 @@ components:
     404NotFoundError:
       description: >
         Not found. The requested resource does not exist or is not accessible to the caller.
+      content:
+        application/json:
+          schema:
+            $ref: './schemas/json-api-error.schema.json'
+    409ConflictError:
+      description: >
+        Conflict. The request could not be completed due to a conflict with the current state of the resource.
       content:
         application/json:
           schema:

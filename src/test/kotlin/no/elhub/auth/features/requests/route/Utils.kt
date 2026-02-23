@@ -192,7 +192,7 @@ val examplePostBody = JsonApiCreateRequest(
     data = JsonApiRequestResourceObjectWithMeta(
         type = "AuthorizationRequest",
         attributes =
-        CreateRequestAttributes(requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson),
+            CreateRequestAttributes(requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson),
         meta = CreateRequestMeta(
             requestedBy = PartyIdentifier(
                 PartyIdentifierType.GlobalLocationNumber,
@@ -218,6 +218,7 @@ val examplePostBody = JsonApiCreateRequest(
 
 val examplePatchBody = JsonApiUpdateRequest(
     data = JsonApiRequestResourceObject(
+        id = "427c1432-664e-46f8-8b8d-5599916cb3cf",
         type = "AuthorizationRequest",
         attributes = UpdateRequestAttributes(
             status = AuthorizationRequest.Status.Accepted

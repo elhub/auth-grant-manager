@@ -19,13 +19,13 @@ class PdfGeneratorI18nTest : FunSpec({
             language = SupportedLanguage.DEFAULT,
             requestedFromName = "Hillary Orr",
             requestedForMeteringPointId = "123456789012345678",
+            requestedForMeterNumber = "123456789",
             requestedForMeteringPointAddress = "Example Street 1, 1234 Oslo",
             balanceSupplierName = "Jami Wade",
             balanceSupplierContractName = "Selena Chandler",
         )
 
         val pdfResult = generator.generate(
-            signerNin = "01017012345",
             documentMeta = meta,
         )
         val pdfBytes = when (pdfResult) {
@@ -51,13 +51,13 @@ class PdfGeneratorI18nTest : FunSpec({
             language = SupportedLanguage.EN,
             requestedFromName = "Hillary Orr",
             requestedForMeteringPointId = "123456789012345678",
+            requestedForMeterNumber = "123456789",
             requestedForMeteringPointAddress = "Example Street 1, 1234 Oslo",
             balanceSupplierName = "Jami Wade",
             balanceSupplierContractName = "Selena Chandler",
         )
 
         val englishPdfResult = generator.generate(
-            signerNin = "01017012345",
             documentMeta = meta,
         )
         val englishText = when (englishPdfResult) {

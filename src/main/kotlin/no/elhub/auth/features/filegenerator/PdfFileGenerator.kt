@@ -1,14 +1,13 @@
 package no.elhub.auth.features.filegenerator
 
 import arrow.core.Either
-import arrow.core.getOrElse
-import arrow.core.left
 import arrow.core.raise.either
 import com.github.mustachejava.DefaultMustacheFactory
 import com.github.mustachejava.TemplateFunction
 import com.openhtmltopdf.extend.FSSupplier
 import com.openhtmltopdf.outputdevice.helper.BaseRendererBuilder
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder
+import kotlinx.datetime.number
 import no.elhub.auth.features.businessprocesses.changeofenergysupplier.domain.ChangeOfEnergySupplierBusinessMeta
 import no.elhub.auth.features.businessprocesses.moveinandchangeofenergysupplier.domain.MoveInAndChangeOfEnergySupplierBusinessMeta
 import no.elhub.auth.features.documents.create.DocumentGenerationError
@@ -50,10 +49,10 @@ class PdfGenerator(
     object MustacheConstants {
         internal const val TEMPLATE_CHANGE_SUPPLIER_CONTRACT = "change_of_supplier.mustache"
         internal const val TEMPLATE_MOVE_IN = "move_in.mustache"
-        internal const val VARIABLE_KEY_CUSTOMER_NIN = "customerNin"
         internal const val VARIABLE_KEY_CUSTOMER_NAME = "customerName"
         internal const val VARIABLE_KEY_METERING_POINT_ADDRESS = "meteringPointAddress"
         internal const val VARIABLE_KEY_METERING_POINT_ID = "meteringPointId"
+        internal const val VARIABLE_KEY_METER_NUMBER = "meterNumber"
         internal const val VARIABLE_KEY_BALANCE_SUPPLIER_NAME = "balanceSupplierName"
         internal const val VARIABLE_KEY_BALANCE_SUPPLIER_CONTRACT_NAME = "balanceSupplierContractName"
         internal const val VARIABLE_KEY_MOVE_IN_DATE = "moveInDate"
@@ -90,21 +89,19 @@ class PdfGenerator(
     val colorProfile = loadClasspathResource("/fonts/sRGB.icc")
 
     object PdfConstants {
-        internal const val PDF_METADATA_KEY_NIN = "signerNin"
         internal const val PDF_METADATA_KEY_TESTDOCUMENT = "testDocument"
     }
 
     override fun generate(
-        signerNin: String,
         documentMeta: DocumentMetaMarker,
     ): Either<DocumentGenerationError.ContentGenerationError, ByteArray> = either {
         val language = resolveLanguage(documentMeta)
         val contractHtmlString = when (documentMeta) {
             is ChangeOfEnergySupplierBusinessMeta -> generateChangeOfEnergySupplierHtml(
-                customerNin = signerNin,
                 customerName = documentMeta.requestedFromName,
                 meteringPointAddress = documentMeta.requestedForMeteringPointAddress,
                 meteringPointId = documentMeta.requestedForMeteringPointId,
+                meterNumber = documentMeta.requestedForMeterNumber,
                 balanceSupplierName = documentMeta.balanceSupplierName,
                 balanceSupplierContractName = documentMeta.balanceSupplierContractName,
                 language = language
@@ -115,35 +112,33 @@ class PdfGenerator(
                 meteringPointAddress = documentMeta.requestedForMeteringPointAddress,
                 meteringPointId = documentMeta.requestedForMeteringPointId,
                 balanceSupplierName = documentMeta.balanceSupplierName,
+                meterNumber = documentMeta.requestedForMeterNumber,
                 balanceSupplierContractName = documentMeta.balanceSupplierContractName,
-                startDate = documentMeta.startDate?.let { formatNorwegianDate(it.year, it.monthNumber, it.dayOfMonth) },
+                startDate = documentMeta.startDate?.let { formatNorwegianDate(it.year, it.month.number, it.day) },
                 language = language
             )
 
-            else -> return DocumentGenerationError.ContentGenerationError.left()
-        }.getOrElse { return DocumentGenerationError.ContentGenerationError.left() }
+            else -> raise(DocumentGenerationError.ContentGenerationError)
+        }
+            .bind()
 
         val pdfBytes =
-            generatePdfFromHtml(contractHtmlString).getOrElse { return DocumentGenerationError.ContentGenerationError.left() }
+            generatePdfFromHtml(contractHtmlString).mapLeft { DocumentGenerationError.ContentGenerationError }.bind()
 
         if (useTestPdfNotice) {
-            return pdfBytes.addTestWatermark().addMetadataToPdf(
-                mapOf(
-                    PdfConstants.PDF_METADATA_KEY_NIN to signerNin,
-                    PdfConstants.PDF_METADATA_KEY_TESTDOCUMENT to "true"
-                )
-            )
+            pdfBytes.addTestWatermark()
+                .addMetadataToPdf(mapOf(PdfConstants.PDF_METADATA_KEY_TESTDOCUMENT to "true"))
+                .bind()
+        } else {
+            pdfBytes
         }
-        return pdfBytes.addMetadataToPdf(
-            mapOf(PdfConstants.PDF_METADATA_KEY_NIN to signerNin)
-        )
     }
 
     private fun generateChangeOfEnergySupplierHtml(
-        customerNin: String,
         customerName: String,
         meteringPointAddress: String,
         meteringPointId: String,
+        meterNumber: String,
         balanceSupplierName: String,
         balanceSupplierContractName: String,
         language: SupportedLanguage,
@@ -155,9 +150,9 @@ class PdfGenerator(
                 .execute(
                     this,
                     mapOf(
-                        MustacheConstants.VARIABLE_KEY_CUSTOMER_NIN to customerNin,
                         MustacheConstants.VARIABLE_KEY_CUSTOMER_NAME to customerName,
                         MustacheConstants.VARIABLE_KEY_METERING_POINT_ID to meteringPointId,
+                        MustacheConstants.VARIABLE_KEY_METER_NUMBER to meterNumber,
                         MustacheConstants.VARIABLE_KEY_METERING_POINT_ADDRESS to meteringPointAddress,
                         MustacheConstants.VARIABLE_KEY_BALANCE_SUPPLIER_NAME to balanceSupplierName,
                         MustacheConstants.VARIABLE_KEY_BALANCE_SUPPLIER_CONTRACT_NAME to balanceSupplierContractName,
@@ -172,6 +167,7 @@ class PdfGenerator(
         customerName: String,
         meteringPointAddress: String,
         meteringPointId: String,
+        meterNumber: String,
         balanceSupplierName: String,
         balanceSupplierContractName: String,
         startDate: String?,
@@ -186,6 +182,7 @@ class PdfGenerator(
                     mapOf(
                         MustacheConstants.VARIABLE_KEY_CUSTOMER_NAME to customerName,
                         MustacheConstants.VARIABLE_KEY_METERING_POINT_ID to meteringPointId,
+                        MustacheConstants.VARIABLE_KEY_METER_NUMBER to meterNumber,
                         MustacheConstants.VARIABLE_KEY_METERING_POINT_ADDRESS to meteringPointAddress,
                         MustacheConstants.VARIABLE_KEY_BALANCE_SUPPLIER_NAME to balanceSupplierName,
                         MustacheConstants.VARIABLE_KEY_BALANCE_SUPPLIER_CONTRACT_NAME to balanceSupplierContractName,

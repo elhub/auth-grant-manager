@@ -46,7 +46,7 @@ class AuthorizationRequestRouteSecurityTest : FunSpec({
     beforeSpec {
         pdpContainer.registerMaskinportenMapping(
             token = "maskinporten",
-            actingFunction = "BalanceSupplier",
+            functionName = "BalanceSupplier",
             actingGln = "0107000000021"
         )
         pdpContainer.registerEnduserMapping(
@@ -55,7 +55,7 @@ class AuthorizationRequestRouteSecurityTest : FunSpec({
         )
         pdpContainer.registerMaskinportenMapping(
             token = "gridowner",
-            actingFunction = "GridOwner",
+            functionName = "GridOwner",
             actingGln = "0107000000038"
         )
         pdpContainer.registerInvalidTokenMapping()

@@ -11,7 +11,9 @@ import no.elhub.auth.features.common.auth.toApiErrorResponse
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toApiErrorResponse
-import no.elhub.auth.features.common.validateId
+import no.elhub.auth.features.common.toTypeMismatchApiErrorResponse
+import no.elhub.auth.features.common.validateDataId
+import no.elhub.auth.features.common.validatePathId
 import no.elhub.auth.features.requests.update.dto.JsonApiUpdateRequest
 import no.elhub.auth.features.requests.update.dto.toUpdateResponse
 import org.slf4j.LoggerFactory
@@ -31,7 +33,7 @@ fun Route.route(
                 return@patch
             }
 
-        val requestId = validateId(call.parameters[REQUEST_ID_PARAM])
+        val requestId = validatePathId(call.parameters[REQUEST_ID_PARAM])
             .getOrElse { error ->
                 val (status, body) = error.toApiErrorResponse()
                 call.respond(status, body)
@@ -39,6 +41,23 @@ fun Route.route(
             }
 
         val requestBody = call.receive<JsonApiUpdateRequest>()
+
+        validateDataId(requestBody.data.id, requestId)
+            .getOrElse { err ->
+                val (status, body) = err.toApiErrorResponse()
+                call.respond(status, body)
+                return@patch
+            }
+
+        if (requestBody.data.type != "AuthorizationRequest") {
+            val (status, message) = toTypeMismatchApiErrorResponse(
+                expectedType = "AuthorizationRequest",
+                actualType = requestBody.data.type
+            )
+            call.respond(status, message)
+            return@patch
+        }
+
         val command = UpdateCommand(
             requestId = requestId,
             newStatus = requestBody.data.attributes.status,

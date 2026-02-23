@@ -6,11 +6,11 @@
   "properties": {
     "data": {
       "type": "object",
-      "required": [
-        "type",
-        "attributes"
-      ],
+      "required": ["type", "attributes"],
       "properties": {
+        "id": {
+          "$ref": "authorization-grant-common.schema.json#/$defs/id"
+        },
         "type": {
           "$ref": "authorization-grant-common.schema.json#/$defs/type"
         },
@@ -22,14 +22,10 @@
               "$ref": "authorization-grant-common.schema.json#/$defs/status"
             }
           },
-          "required": [
-            "status"
-          ]
+          "required": ["status"]
         }
       }
     }
   },
-  "required": [
-    "data"
-  ]
+  "required": ["data"]
 }

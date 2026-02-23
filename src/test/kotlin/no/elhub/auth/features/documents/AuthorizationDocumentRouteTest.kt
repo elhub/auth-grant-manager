@@ -93,7 +93,7 @@ class AuthorizationDocumentRouteTest :
             pdpContainer.registerMaskinportenMapping(
                 token = "maskinporten",
                 actingGln = "0107000000021",
-                actingFunction = "BalanceSupplier"
+                functionName = "BalanceSupplier"
             )
         }
 
@@ -141,6 +141,53 @@ class AuthorizationDocumentRouteTest :
                         "authPersons.baseUri" to AuthPersonsTestContainer.baseUri(),
                         "pdp.baseUrl" to "http://localhost:8085"
                     )
+                }
+
+                test("Should return 409 Conflict on invalid data.type") {
+                    val response =
+                        client.post(DOCUMENTS_PATH) {
+                            header(HttpHeaders.Authorization, "Bearer maskinporten")
+                            header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                            contentType(ContentType.Application.Json)
+                            setBody(
+                                """
+                {
+                  "data": {
+                    "type": "test"
+                    "attributes": {
+                      "documentType": "ChangeOfEnergySupplierForPerson"
+                    },
+                    "meta": {
+                      "requestedBy": { "idType": "GlobalLocationNumber", "idValue": "0107000000021" },
+                      "requestedFrom": { "idType": "NationalIdentityNumber", "idValue": "$REQUESTED_FROM_NIN" },
+                      "requestedTo": { "idType": "NationalIdentityNumber", "idValue": "$REQUESTED_TO_NIN" },
+                      "requestedFromName": "Hillary Orr",
+                      "requestedForMeteringPointId": "123456789012345678",
+                      "requestedForMeteringPointAddress": "quaerendum",
+                      "balanceSupplierName": "Balance Supplier",
+                      "balanceSupplierContractName": "Selena Chandler",
+                      "redirectURI": "https://example.com/redirect"
+                    }
+                  }
+                }
+                                """.trimIndent()
+                            )
+                        }
+
+                    response.status shouldBe HttpStatusCode.Conflict
+
+                    val responseJson: JsonApiErrorCollection = response.body()
+                    responseJson.errors.apply {
+                        size shouldBe 1
+                        this[0].apply {
+                            status shouldBe "409"
+                            title shouldBe "Resource type mismatch"
+                            detail shouldBe "Expected 'data.type' to be 'AuthorizationDocument', but received 'test'"
+                        }
+                    }
+                    responseJson.meta.apply {
+                        "createdAt".shouldNotBeNull()
+                    }
                 }
 
                 test("Should return 400 Bad Request on missing field in request body") {
@@ -813,6 +860,7 @@ private class TestDocumentBusinessHandler : DocumentBusinessHandler {
                     language = meta.language.toSupportedLanguage(),
                     requestedFromName = meta.requestedFromName,
                     requestedForMeteringPointId = meta.requestedForMeteringPointId,
+                    requestedForMeterNumber = "123456789",
                     requestedForMeteringPointAddress = meta.requestedForMeteringPointAddress,
                     balanceSupplierName = meta.balanceSupplierName,
                     balanceSupplierContractName = meta.balanceSupplierContractName

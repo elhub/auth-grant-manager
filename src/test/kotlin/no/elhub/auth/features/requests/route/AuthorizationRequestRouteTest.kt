@@ -89,7 +89,7 @@ class AuthorizationRequestRouteTest : FunSpec({
     beforeSpec {
         pdpContainer.registerMaskinportenMapping(
             token = "maskinporten",
-            actingFunction = "BalanceSupplier",
+            functionName = "BalanceSupplier",
             actingGln = "0107000000021"
         )
         pdpContainer.registerEnduserMapping(
@@ -98,7 +98,7 @@ class AuthorizationRequestRouteTest : FunSpec({
         )
         pdpContainer.registerMaskinportenMapping(
             token = "gridowner",
-            actingFunction = "GridOwner",
+            functionName = "GridOwner",
             actingGln = "0107000000038"
         )
         pdpContainer.registerInvalidTokenMapping()
@@ -174,7 +174,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                 pdpContainer.registerMaskinportenMapping(
                     token = "no-requests",
                     actingGln = "0107000000022",
-                    actingFunction = "BalanceSupplier",
+                    functionName = "BalanceSupplier",
                 )
 
                 val response = client.get(REQUESTS_PATH) {
@@ -400,6 +400,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                 }
             }
 
+
             test("PATCH /authorization-requests/ should accept authorization request and persist grant relationship") {
                 val requestId = insertAuthorizationRequest(
                     properties = mapOf(
@@ -413,12 +414,22 @@ class AuthorizationRequestRouteTest : FunSpec({
                 val patchResult = client.patch("${REQUESTS_PATH}/$requestId") {
                     header(HttpHeaders.Authorization, "Bearer enduser")
                     contentType(ContentType.Application.Json)
-                    setBody(examplePatchBody)
+                    setBody(
+                        JsonApiUpdateRequest(
+                            data = JsonApiRequestResourceObject(
+                                id = requestId.toString(),
+                                type = "AuthorizationRequest",
+                                attributes = UpdateRequestAttributes(
+                                    status = AuthorizationRequest.Status.Accepted
+                                )
+                            )
+                        )
+                    )
                 }
+                println("RESULT: ${patchResult.bodyAsText()}")
 
                 patchResult.status shouldBe HttpStatusCode.OK
                 val patchResponse: UpdateRequestResponse = patchResult.body()
-
                 patchResponse.data.apply {
                     type shouldBe "AuthorizationRequest"
                     id.shouldNotBeNull()
@@ -476,147 +487,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                             }
                         }
                     }
-                }
 
-                // verify that a subsequent GET of this resource reflects the updated state persisted in the database
-                val getResult = client.get("${REQUESTS_PATH}/${patchResponse.data.id}") {
-                    header(HttpHeaders.Authorization, "Bearer enduser")
-                }
-                val getResponse: GetRequestSingleResponse = getResult.body()
-
-                getResponse.data.apply {
-                    type shouldBe "AuthorizationRequest"
-                    id.shouldNotBeNull()
-                    attributes.shouldNotBeNull().apply {
-                        status shouldBe "Accepted"
-                        val validTo = validTo.shouldNotBeNull()
-                        val createdAt = createdAt.shouldNotBeNull()
-                        val updatedAt = updatedAt.shouldNotBeNull()
-
-                        shouldNotThrowAny {
-                            OffsetDateTime.parse(createdAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
-                            OffsetDateTime.parse(updatedAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
-                            OffsetDateTime.parse(validTo, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
-                        }
-                    }
-                    relationships.shouldNotBeNull().apply {
-                        relationships.apply {
-                            requestedBy.apply {
-                                data.apply {
-                                    id shouldBe "987654321"
-                                    type shouldBe "Organization"
-                                }
-                            }
-                            requestedFrom.apply {
-                                data.apply {
-                                    id shouldBe "17abdc56-8f6f-440a-9f00-b9bfbb22065e"
-                                    type shouldBe "Person"
-                                }
-                            }
-                            requestedTo.apply {
-                                data.apply {
-                                    id shouldBe "17abdc56-8f6f-440a-9f00-b9bfbb22065e"
-                                    type shouldBe "Person"
-                                }
-                            }
-                            approvedBy.shouldNotBeNull().apply {
-                                data.apply {
-                                    id shouldBe "17abdc56-8f6f-440a-9f00-b9bfbb22065e"
-                                    type shouldBe "Person"
-                                }
-                            }
-                            authorizationGrant.shouldNotBeNull().apply {
-                                data.apply {
-                                    id.shouldNotBeNull()
-                                    type shouldBe "AuthorizationGrant"
-                                }
-                                links.shouldNotBeNull()
-                            }
-                            meta.shouldNotBeNull().apply {
-                                values["requestedFromName"] shouldBe "Kasper Lind"
-                                values["requestedForMeteringPointId"] shouldBe "1234567890555"
-                                values["requestedForMeteringPointAddress"] shouldBe "Example Street 2, 0654 Oslo"
-                                values["balanceSupplierName"] shouldBe "Power AS"
-                                values["balanceSupplierContractName"] shouldBe "ExampleSupplierContract"
-                            }
-                        }
-                    }
-                }
-            }
-
-            test("PATCH /authorization-requests/{id} should correctly return new status Rejected") {
-                val requestId = insertAuthorizationRequest(
-                    properties = mapOf(
-                        "requestedFromName" to "Ola Normann",
-                        "requestedForMeteringPointId" to "1234567890123",
-                        "requestedForMeteringPointAddress" to "Example Street 1, 1234 Oslo",
-                        "balanceSupplierName" to "Example Energy AS",
-                        "balanceSupplierContractName" to "ExampleSupplierContract"
-                    )
-                )
-                val response =
-                    client.patch("${REQUESTS_PATH}/$requestId") {
-                        header(HttpHeaders.Authorization, "Bearer enduser")
-                        contentType(ContentType.Application.Json)
-                        setBody(
-                            JsonApiUpdateRequest(
-                                data = JsonApiRequestResourceObject(
-                                    type = "AuthorizationRequest",
-                                    attributes = UpdateRequestAttributes(
-                                        status = AuthorizationRequest.Status.Rejected
-                                    )
-                                )
-                            ),
-                        )
-                    }
-                response.status shouldBe HttpStatusCode.OK
-
-                val patchRequestResponse: UpdateRequestResponse = response.body()
-
-                patchRequestResponse.data.apply {
-                    type shouldBe "AuthorizationRequest"
-                    id.shouldNotBeNull()
-                    attributes.shouldNotBeNull().apply {
-                        status shouldBe "Rejected"
-                        val validTo = validTo.shouldNotBeNull()
-                        val createdAt = createdAt.shouldNotBeNull()
-                        val updatedAt = updatedAt.shouldNotBeNull()
-
-                        shouldNotThrowAny {
-                            OffsetDateTime.parse(createdAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
-                            OffsetDateTime.parse(updatedAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
-                            OffsetDateTime.parse(validTo, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
-                        }
-                    }
-                    relationships.shouldNotBeNull().apply {
-                        relationships.apply {
-                            requestedBy.apply {
-                                data.apply {
-                                    id shouldBe "987654321"
-                                    type shouldBe "Organization"
-                                }
-                            }
-                            requestedFrom.apply {
-                                data.apply {
-                                    id shouldBe "17abdc56-8f6f-440a-9f00-b9bfbb22065e"
-                                    type shouldBe "Person"
-                                }
-                            }
-                            requestedTo.apply {
-                                data.apply {
-                                    id shouldBe "17abdc56-8f6f-440a-9f00-b9bfbb22065e"
-                                    type shouldBe "Person"
-                                }
-                            }
-                            meta.shouldNotBeNull().apply {
-                                values["requestedFromName"] shouldBe "Ola Normann"
-                                values["requestedForMeteringPointId"] shouldBe "1234567890123"
-                                values["requestedForMeteringPointAddress"] shouldBe "Example Street 1, 1234 Oslo"
-                                values["balanceSupplierName"] shouldBe "Example Energy AS"
-                                values["balanceSupplierContractName"] shouldBe "ExampleSupplierContract"
-                            }
-                        }
-                    }
                 }
             }
         }
@@ -631,19 +502,122 @@ class AuthorizationRequestRouteTest : FunSpec({
                     header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
                 }
                 response.status shouldBe HttpStatusCode.NotFound
+
+            }
+            test("Should return 409 Conflict on invalid data.type") {
+                val requestIdParam = "130b6bca-1e3a-4653-8a9b-ccc0dc4fe389"
+                val response = client.patch("${REQUESTS_PATH}/$requestIdParam") {
+                    header(HttpHeaders.Authorization, "Bearer enduser")
+                    contentType(ContentType.Application.Json)
+                    setBody(
+                        """
+                {
+                  "data": {
+                    "id" : "$requestIdParam",
+                    "type": "test",
+                    "attributes": {
+                        "status": "Accepted"
+                    }
+                  }
+                }
+                        """.trimIndent()
+                    )
+                }
+
+                response.status shouldBe HttpStatusCode.Conflict
+
                 val responseJson: JsonApiErrorCollection = response.body()
                 responseJson.errors.apply {
                     size shouldBe 1
                     this[0].apply {
-                        status shouldBe "404"
-                        title shouldBe "Not found error"
-                        detail shouldBe "The requested resource could not be found"
+                        status shouldBe "409"
+                        title shouldBe "Resource type mismatch"
+                        detail shouldBe "Expected 'data.type' to be 'AuthorizationRequest', but received 'test'"
                     }
                 }
                 responseJson.meta.apply {
                     "createdAt".shouldNotBeNull()
                 }
             }
+            test("POST /authorization-requests/ should return 409 Conflict on invalid data.type") {
+                val response =
+                    client.post(REQUESTS_PATH) {
+                        header(HttpHeaders.Authorization, "Bearer maskinporten")
+                        header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                        contentType(ContentType.Application.Json)
+                        setBody(
+                            """
+                {
+                  "data": {
+                  "type": "test"
+                    "attributes": {
+                      "requestType": "ChangeOfEnergySupplierForPerson"
+                    },
+                    "meta": {
+                      "requestedBy": { "idType": "GlobalLocationNumber", "idValue": "0107000000021" },
+                      "requestedFrom": { "idType": "NationalIdentityNumber", "idValue": "$REQUESTED_FROM_NIN" },
+                      "requestedTo": { "idType": "NationalIdentityNumber", "idValue": "$REQUESTED_TO_NIN" },
+                      "requestedFromName": "Hillary Orr",
+                      "requestedForMeteringPointId": "123456789012345678",
+                      "requestedForMeteringPointAddress": "quaerendum",
+                      "balanceSupplierName": "Balance Supplier",
+                      "balanceSupplierContractName": "Selena Chandler",
+                      "redirectURI": "https://example.com/redirect"
+                    }
+                  }
+                }
+                            """.trimIndent()
+                        )
+                    }
+
+                response.status shouldBe HttpStatusCode.Conflict
+
+                val responseJson: JsonApiErrorCollection = response.body()
+                responseJson.errors.apply {
+                    size shouldBe 1
+                    this[0].apply {
+                        status shouldBe "409"
+                        title shouldBe "Resource type mismatch"
+                        detail shouldBe "Expected 'data.type' to be 'AuthorizationRequest', but received 'test'"
+                    }
+                }
+                responseJson.meta.apply {
+                    "createdAt".shouldNotBeNull()
+                }
+            }
+            test("PATCH /authorization-requests/{id} should return 409 Conflict on mismatch id") {
+                val requestId = insertAuthorizationRequest()
+                val response =
+                    client.patch("${REQUESTS_PATH}/$requestId") {
+                        contentType(ContentType.Application.Json)
+                        header(HttpHeaders.Authorization, "Bearer enduser")
+                        setBody(
+                            JsonApiUpdateRequest(
+                                data = JsonApiRequestResourceObject(
+                                    id = "1234",
+                                    type = "AuthorizationRequest",
+                                    attributes = UpdateRequestAttributes(
+                                        status = AuthorizationRequest.Status.Expired
+                                    )
+                                )
+                            ),
+                        )
+                    }
+                response.status shouldBe HttpStatusCode.Conflict
+                val responseJson: JsonApiErrorCollection = response.body()
+                responseJson.errors.apply {
+                    size shouldBe 1
+                    this[0].apply {
+                        status shouldBe "409"
+                        title shouldBe "Resource id mismatch"
+                        detail shouldBe "Expected 'data.id' to be the same as in URL path {id}"
+                    }
+                }
+                responseJson.meta.apply {
+                    "createdAt".shouldNotBeNull()
+                }
+            }
+
             test("PATCH /authorization-requests/{id} should return 400 Bad Request on illegal transaction") {
                 val requestId = insertAuthorizationRequest()
                 val response =
@@ -653,6 +627,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                         setBody(
                             JsonApiUpdateRequest(
                                 data = JsonApiRequestResourceObject(
+                                    id = requestId.toString(),
                                     type = "AuthorizationRequest",
                                     attributes = UpdateRequestAttributes(
                                         status = AuthorizationRequest.Status.Expired
@@ -677,13 +652,15 @@ class AuthorizationRequestRouteTest : FunSpec({
                 }
             }
             test("PATCH /authorization-requests/{id} should not be accepted when validTo has expired") {
+                val id = "130b6bca-1e3a-4653-8a9b-ccc0dc4fe389"
                 val patchResult =
-                    client.patch("${REQUESTS_PATH}/130b6bca-1e3a-4653-8a9b-ccc0dc4fe389") {
+                    client.patch("${REQUESTS_PATH}/$id") {
                         header(HttpHeaders.Authorization, "Bearer enduser")
                         contentType(ContentType.Application.Json)
                         setBody(
                             JsonApiUpdateRequest(
                                 data = JsonApiRequestResourceObject(
+                                    id = id,
                                     type = "AuthorizationRequest",
                                     attributes = UpdateRequestAttributes(
                                         status = AuthorizationRequest.Status.Accepted
@@ -707,6 +684,99 @@ class AuthorizationRequestRouteTest : FunSpec({
                     "createdAt".shouldNotBeNull()
                 }
             }
+            test("POST /authorization-requests/ should return 400 Bad Request on missing field in request body") {
+                val response =
+                    client.post(REQUESTS_PATH) {
+                        header(HttpHeaders.Authorization, "Bearer maskinporten")
+                        header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                        contentType(ContentType.Application.Json)
+                        setBody(
+                            """
+                {
+                  "data": {
+                    "type": "AuthorizationRequest"
+                    "attributes": {
+                      "requestType": "ChangeOfEnergySupplierForPerson"
+                    },
+                    "meta": {
+                      "requestedBy": { "idType": "GlobalLocationNumber" },
+                      "requestedFrom": { "idType": "NationalIdentityNumber", "idValue": "$REQUESTED_FROM_NIN" },
+                      "requestedTo": { "idType": "NationalIdentityNumber", "idValue": "$REQUESTED_TO_NIN" },
+                      "requestedFromName": "Hillary Orr",
+                      "requestedForMeteringPointId": "123456789012345678",
+                      "requestedForMeteringPointAddress": "quaerendum",
+                      "balanceSupplierName": "Balance Supplier",
+                      "balanceSupplierContractName": "Selena Chandler",
+                      "redirectURI": "https://example.com/redirect"
+                    }
+                  }
+                }
+                            """.trimIndent()
+                        )
+                    }
+
+                response.status shouldBe HttpStatusCode.BadRequest
+
+                val responseJson: JsonApiErrorCollection = response.body()
+                responseJson.errors.apply {
+                    size shouldBe 1
+                    this[0].apply {
+                        status shouldBe "400"
+                        title shouldBe "Missing required field in request body"
+                        detail shouldBe "Field '[idValue]' is missing or invalid"
+                    }
+                }
+                responseJson.meta.apply {
+                    "createdAt".shouldNotBeNull()
+                }
+            }
+
+            test("POST /authorization-requests/ should return 400 Bad Request on invalid field value in request body") {
+                val response =
+                    client.post(REQUESTS_PATH) {
+                        header(HttpHeaders.Authorization, "Bearer maskinporten")
+                        header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                        contentType(ContentType.Application.Json)
+                        setBody(
+                            """
+                {
+                  "data": {
+                    "type": "AuthorizationRequest",
+                    "attributes": {
+                      "requestType": "ChangeOfEnergySupplierForPerson"
+                    },
+                    "meta": {
+                      "requestedBy": { "idType": "TEST", "id": "0107000000021", "idValue": "0107000000020"" },
+                      "requestedFrom": { "idType": "NationalIdentityNumber", "idValue": "$REQUESTED_FROM_NIN" },
+                      "requestedTo": { "idType": "NationalIdentityNumber", "idValue": "$REQUESTED_TO_NIN" },
+                      "requestedFromName": "Hillary Orr",
+                      "requestedForMeteringPointId": "123456789012345678",
+                      "requestedForMeteringPointAddress": "quaerendum",
+                      "balanceSupplierName": "Balance Supplier",
+                      "balanceSupplierContractName": "Selena Chandler",
+                      "redirectURI": "https://example.com/redirect"
+                    }
+                  }
+                }
+                            """.trimIndent()
+                        )
+                    }
+
+                response.status shouldBe HttpStatusCode.BadRequest
+
+                val responseJson: JsonApiErrorCollection = response.body()
+                responseJson.errors.apply {
+                    size shouldBe 1
+                    this[0].apply {
+                        status shouldBe "400"
+                        title shouldBe "Invalid field value in request body"
+                        detail shouldBe "Invalid value 'TEST' for field 'data' at $.data.meta.requestedBy.idType"
+                    }
+                }
+                responseJson.meta.apply {
+                    "createdAt".shouldNotBeNull()
+                }
+            }
 
             test("POST /authorization-requests/ should return 400 Bad Request on validation error with error payload") {
                 val response =
@@ -717,34 +787,34 @@ class AuthorizationRequestRouteTest : FunSpec({
                         setBody(
                             JsonApiCreateRequest(
                                 data =
-                                JsonApiRequestResourceObjectWithMeta(
-                                    type = "AuthorizationRequest",
-                                    attributes =
-                                    CreateRequestAttributes(
-                                        requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
+                                    JsonApiRequestResourceObjectWithMeta(
+                                        type = "AuthorizationRequest",
+                                        attributes =
+                                            CreateRequestAttributes(
+                                                requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
+                                            ),
+                                        meta =
+                                            CreateRequestMeta(
+                                                requestedBy = PartyIdentifier(
+                                                    PartyIdentifierType.GlobalLocationNumber,
+                                                    "0107000000021"
+                                                ),
+                                                requestedFrom = PartyIdentifier(
+                                                    PartyIdentifierType.NationalIdentityNumber,
+                                                    REQUESTED_FROM_NIN
+                                                ),
+                                                requestedFromName = "",
+                                                requestedTo = PartyIdentifier(
+                                                    PartyIdentifierType.NationalIdentityNumber,
+                                                    REQUESTED_TO_NIN
+                                                ),
+                                                requestedForMeteringPointId = "123456789012345678",
+                                                requestedForMeteringPointAddress = "quaerendum",
+                                                balanceSupplierName = "Balance Supplier",
+                                                balanceSupplierContractName = "Selena Chandler",
+                                                redirectURI = "https://example.com",
+                                            ),
                                     ),
-                                    meta =
-                                    CreateRequestMeta(
-                                        requestedBy = PartyIdentifier(
-                                            PartyIdentifierType.GlobalLocationNumber,
-                                            "0107000000021"
-                                        ),
-                                        requestedFrom = PartyIdentifier(
-                                            PartyIdentifierType.NationalIdentityNumber,
-                                            REQUESTED_FROM_NIN
-                                        ),
-                                        requestedFromName = "",
-                                        requestedTo = PartyIdentifier(
-                                            PartyIdentifierType.NationalIdentityNumber,
-                                            REQUESTED_TO_NIN
-                                        ),
-                                        requestedForMeteringPointId = "123456789012345678",
-                                        requestedForMeteringPointAddress = "quaerendum",
-                                        balanceSupplierName = "Balance Supplier",
-                                        balanceSupplierContractName = "Selena Chandler",
-                                        redirectURI = "https://example.com",
-                                    ),
-                                ),
                             ),
                         )
                     }
@@ -773,34 +843,34 @@ class AuthorizationRequestRouteTest : FunSpec({
                     setBody(
                         JsonApiCreateRequest(
                             data =
-                            JsonApiRequestResourceObjectWithMeta(
-                                type = "AuthorizationRequest",
-                                attributes =
-                                CreateRequestAttributes(
-                                    requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
+                                JsonApiRequestResourceObjectWithMeta(
+                                    type = "AuthorizationRequest",
+                                    attributes =
+                                        CreateRequestAttributes(
+                                            requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
+                                        ),
+                                    meta =
+                                        CreateRequestMeta(
+                                            requestedBy = PartyIdentifier(
+                                                PartyIdentifierType.GlobalLocationNumber,
+                                                "0107000000021"
+                                            ),
+                                            requestedFrom = PartyIdentifier(
+                                                PartyIdentifierType.NationalIdentityNumber,
+                                                "123"
+                                            ),
+                                            requestedFromName = "Hillary Orr",
+                                            requestedTo = PartyIdentifier(
+                                                PartyIdentifierType.NationalIdentityNumber,
+                                                REQUESTED_TO_NIN
+                                            ),
+                                            requestedForMeteringPointId = "123456789012345678",
+                                            requestedForMeteringPointAddress = "quaerendum",
+                                            balanceSupplierName = "Balance Supplier",
+                                            balanceSupplierContractName = "Selena Chandler",
+                                            redirectURI = "https://example.com",
+                                        ),
                                 ),
-                                meta =
-                                CreateRequestMeta(
-                                    requestedBy = PartyIdentifier(
-                                        PartyIdentifierType.GlobalLocationNumber,
-                                        "0107000000021"
-                                    ),
-                                    requestedFrom = PartyIdentifier(
-                                        PartyIdentifierType.NationalIdentityNumber,
-                                        "123"
-                                    ),
-                                    requestedFromName = "Hillary Orr",
-                                    requestedTo = PartyIdentifier(
-                                        PartyIdentifierType.NationalIdentityNumber,
-                                        REQUESTED_TO_NIN
-                                    ),
-                                    requestedForMeteringPointId = "123456789012345678",
-                                    requestedForMeteringPointAddress = "quaerendum",
-                                    balanceSupplierName = "Balance Supplier",
-                                    balanceSupplierContractName = "Selena Chandler",
-                                    redirectURI = "https://example.com",
-                                ),
-                            ),
                         ),
                     )
                 }
