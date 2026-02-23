@@ -9,9 +9,6 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.server.testing.*
 import no.elhub.auth.features.common.AuthPersonsTestContainerExtension
-import no.elhub.auth.validateInvalidTokenResponse
-import no.elhub.auth.validateMissingTokenResponse
-import no.elhub.auth.validateUnsupportedPartyResponse
 import no.elhub.auth.features.common.PdpTestContainerExtension
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.RunPostgresScriptExtension
@@ -20,14 +17,16 @@ import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.REQUESTS_PATH
-import no.elhub.auth.features.requests.route.examplePatchBody
-import no.elhub.auth.features.requests.route.examplePostBody
-
 import no.elhub.auth.features.requests.create.dto.CreateRequestAttributes
 import no.elhub.auth.features.requests.create.dto.CreateRequestMeta
 import no.elhub.auth.features.requests.create.dto.JsonApiCreateRequest
+import no.elhub.auth.features.requests.route.examplePatchBody
+import no.elhub.auth.features.requests.route.examplePostBody
 import no.elhub.auth.features.requests.update.dto.JsonApiUpdateRequest
 import no.elhub.auth.features.requests.update.dto.UpdateRequestAttributes
+import no.elhub.auth.validateInvalidTokenResponse
+import no.elhub.auth.validateMissingTokenResponse
+import no.elhub.auth.validateUnsupportedPartyResponse
 import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObject
 import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObjectWithMeta
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
@@ -70,7 +69,6 @@ class AuthorizationRequestRouteSecurityTest : FunSpec({
                     header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
                 }
                 validateMissingTokenResponse(response)
-
             }
             test("GET /authorization-requests/{id} returns 401") {
                 val response = client.get("$REQUESTS_PATH/4f71d596-99e4-415e-946d-7352c1a40c53") {
@@ -119,7 +117,6 @@ class AuthorizationRequestRouteSecurityTest : FunSpec({
                     header(HttpHeaders.Authorization, "Bearer invalid-token")
                 }
                 validateInvalidTokenResponse(response)
-
             }
             test("GET /authorization-requests/{id} returns 401") {
                 val response = client.get("$REQUESTS_PATH/4f71d596-99e4-415e-946d-7352c1a40c53") {
@@ -172,7 +169,6 @@ class AuthorizationRequestRouteSecurityTest : FunSpec({
                     header(HttpHeaders.Authorization, "Bearer gridowner")
                 }
                 validateUnsupportedPartyResponse(response)
-
             }
             test("GET /authorization-requests/{id} returns 403 for valid gridowner token") {
                 val requestId = insertAuthorizationRequest(
@@ -231,5 +227,3 @@ class AuthorizationRequestRouteSecurityTest : FunSpec({
         }
     }
 })
-
-

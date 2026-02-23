@@ -489,7 +489,6 @@ class AuthorizationGrantRouteTest : FunSpec({
                     "createdAt".shouldNotBeNull()
                 }
             }
-
         }
         context("When all inputs are valid") {
             testApplication {

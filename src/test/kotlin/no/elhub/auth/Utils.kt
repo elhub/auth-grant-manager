@@ -1,28 +1,23 @@
 package no.elhub.auth
 
-import io.ktor.serialization.kotlinx.json.json
-
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation as ClientContentNegotiation
-
-import io.ktor.server.routing.routing
-import no.elhub.auth.config.configureErrorHandling
-import no.elhub.auth.config.configureSerialization
-
-import io.ktor.server.routing.Routing
-
 import io.kotest.matchers.Matcher
 import io.kotest.matchers.MatcherResult
-import io.ktor.client.call.*
+import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import io.ktor.serialization.kotlinx.json.json
+import io.ktor.server.routing.Routing
+import io.ktor.server.routing.routing
 import io.ktor.server.testing.*
-import io.kotest.matchers.should
+import no.elhub.auth.config.configureErrorHandling
+import no.elhub.auth.config.configureSerialization
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import java.util.UUID
-import io.kotest.matchers.nulls.shouldNotBeNull
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation as ClientContentNegotiation
 
 fun String.shouldBeValidUuid() {
     this should beValidUuid()
@@ -68,7 +63,6 @@ suspend fun validateInvalidTokenResponse(response: HttpResponse) {
     responseJson.meta.apply {
         "createdAt".shouldNotBeNull()
     }
-
 }
 
 suspend fun validateUnsupportedPartyResponse(response: HttpResponse) {

@@ -29,8 +29,6 @@ import no.elhub.auth.features.businessprocesses.BusinessProcessError
 import no.elhub.auth.features.common.AuthPersonsTestContainer
 import no.elhub.auth.features.common.AuthPersonsTestContainerExtension
 import no.elhub.auth.features.common.CreateScopeData
-import no.elhub.auth.features.requests.AuthorizationRequest
-import no.elhub.auth.features.requests.REQUESTS_PATH
 import no.elhub.auth.features.common.PdpTestContainerExtension
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.RunPostgresScriptExtension
@@ -41,6 +39,8 @@ import no.elhub.auth.features.common.party.PartyIdentifierType
 import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
 import no.elhub.auth.features.grants.AuthorizationScope
 import no.elhub.auth.features.grants.common.CreateGrantProperties
+import no.elhub.auth.features.requests.AuthorizationRequest
+import no.elhub.auth.features.requests.REQUESTS_PATH
 import no.elhub.auth.features.requests.common.AuthorizationRequestPropertyTable
 import no.elhub.auth.features.requests.common.AuthorizationRequestTable
 import no.elhub.auth.features.requests.common.DatabaseRequestStatus
@@ -332,7 +332,6 @@ class AuthorizationRequestRouteTest : FunSpec({
                 }
             }
 
-
             test("POST /authorization-requests/ should return 201 Created") {
                 val result = client.post(REQUESTS_PATH) {
                     header(HttpHeaders.Authorization, "Bearer maskinporten")
@@ -399,12 +398,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                 responseJson.meta.shouldNotBeNull().apply {
                     "createdAt".shouldNotBeNull()
                 }
-
             }
-
-
-
-
 
             test("PATCH /authorization-requests/ should accept authorization request and persist grant relationship") {
                 val requestId = insertAuthorizationRequest(
@@ -549,7 +543,6 @@ class AuthorizationRequestRouteTest : FunSpec({
                     }
                 }
             }
-
 
             test("PATCH /authorization-requests/{id} should correctly return new status Rejected") {
                 val requestId = insertAuthorizationRequest(
@@ -724,34 +717,34 @@ class AuthorizationRequestRouteTest : FunSpec({
                         setBody(
                             JsonApiCreateRequest(
                                 data =
-                                    JsonApiRequestResourceObjectWithMeta(
-                                        type = "AuthorizationRequest",
-                                        attributes =
-                                            CreateRequestAttributes(
-                                                requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
-                                            ),
-                                        meta =
-                                            CreateRequestMeta(
-                                                requestedBy = PartyIdentifier(
-                                                    PartyIdentifierType.GlobalLocationNumber,
-                                                    "0107000000021"
-                                                ),
-                                                requestedFrom = PartyIdentifier(
-                                                    PartyIdentifierType.NationalIdentityNumber,
-                                                    REQUESTED_FROM_NIN
-                                                ),
-                                                requestedFromName = "",
-                                                requestedTo = PartyIdentifier(
-                                                    PartyIdentifierType.NationalIdentityNumber,
-                                                    REQUESTED_TO_NIN
-                                                ),
-                                                requestedForMeteringPointId = "123456789012345678",
-                                                requestedForMeteringPointAddress = "quaerendum",
-                                                balanceSupplierName = "Balance Supplier",
-                                                balanceSupplierContractName = "Selena Chandler",
-                                                redirectURI = "https://example.com",
-                                            ),
+                                JsonApiRequestResourceObjectWithMeta(
+                                    type = "AuthorizationRequest",
+                                    attributes =
+                                    CreateRequestAttributes(
+                                        requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
                                     ),
+                                    meta =
+                                    CreateRequestMeta(
+                                        requestedBy = PartyIdentifier(
+                                            PartyIdentifierType.GlobalLocationNumber,
+                                            "0107000000021"
+                                        ),
+                                        requestedFrom = PartyIdentifier(
+                                            PartyIdentifierType.NationalIdentityNumber,
+                                            REQUESTED_FROM_NIN
+                                        ),
+                                        requestedFromName = "",
+                                        requestedTo = PartyIdentifier(
+                                            PartyIdentifierType.NationalIdentityNumber,
+                                            REQUESTED_TO_NIN
+                                        ),
+                                        requestedForMeteringPointId = "123456789012345678",
+                                        requestedForMeteringPointAddress = "quaerendum",
+                                        balanceSupplierName = "Balance Supplier",
+                                        balanceSupplierContractName = "Selena Chandler",
+                                        redirectURI = "https://example.com",
+                                    ),
+                                ),
                             ),
                         )
                     }
@@ -780,34 +773,34 @@ class AuthorizationRequestRouteTest : FunSpec({
                     setBody(
                         JsonApiCreateRequest(
                             data =
-                                JsonApiRequestResourceObjectWithMeta(
-                                    type = "AuthorizationRequest",
-                                    attributes =
-                                        CreateRequestAttributes(
-                                            requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
-                                        ),
-                                    meta =
-                                        CreateRequestMeta(
-                                            requestedBy = PartyIdentifier(
-                                                PartyIdentifierType.GlobalLocationNumber,
-                                                "0107000000021"
-                                            ),
-                                            requestedFrom = PartyIdentifier(
-                                                PartyIdentifierType.NationalIdentityNumber,
-                                                "123"
-                                            ),
-                                            requestedFromName = "Hillary Orr",
-                                            requestedTo = PartyIdentifier(
-                                                PartyIdentifierType.NationalIdentityNumber,
-                                                REQUESTED_TO_NIN
-                                            ),
-                                            requestedForMeteringPointId = "123456789012345678",
-                                            requestedForMeteringPointAddress = "quaerendum",
-                                            balanceSupplierName = "Balance Supplier",
-                                            balanceSupplierContractName = "Selena Chandler",
-                                            redirectURI = "https://example.com",
-                                        ),
+                            JsonApiRequestResourceObjectWithMeta(
+                                type = "AuthorizationRequest",
+                                attributes =
+                                CreateRequestAttributes(
+                                    requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
                                 ),
+                                meta =
+                                CreateRequestMeta(
+                                    requestedBy = PartyIdentifier(
+                                        PartyIdentifierType.GlobalLocationNumber,
+                                        "0107000000021"
+                                    ),
+                                    requestedFrom = PartyIdentifier(
+                                        PartyIdentifierType.NationalIdentityNumber,
+                                        "123"
+                                    ),
+                                    requestedFromName = "Hillary Orr",
+                                    requestedTo = PartyIdentifier(
+                                        PartyIdentifierType.NationalIdentityNumber,
+                                        REQUESTED_TO_NIN
+                                    ),
+                                    requestedForMeteringPointId = "123456789012345678",
+                                    requestedForMeteringPointAddress = "quaerendum",
+                                    balanceSupplierName = "Balance Supplier",
+                                    balanceSupplierContractName = "Selena Chandler",
+                                    redirectURI = "https://example.com",
+                                ),
+                            ),
                         ),
                     )
                 }

@@ -1,68 +1,63 @@
 package no.elhub.auth.features.documents.get
 
-import io.ktor.server.routing.Routing
-import no.elhub.auth.features.documents.module
-
-import io.ktor.serialization.kotlinx.json.json
 import arrow.core.Either
 import arrow.core.left
-import io.ktor.client.request.header
-import io.ktor.client.statement.HttpResponse
-import no.elhub.auth.features.common.auth.PDPAuthorizationProvider
 import arrow.core.right
 import io.kotest.assertions.arrow.core.shouldBeLeft
-import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
-import no.elhub.auth.module as applicationModule
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.core.tuple
-import io.mockk.every
-import io.mockk.coEvery
-import kotlin.random.Random
-import io.mockk.mockk
-import no.elhub.auth.features.common.auth.AuthorizationProvider
-import no.elhub.auth.setupAppWith
-import no.elhub.auth.validateInternalServerErrorResponse
-import no.elhub.auth.validateNotAuthorizedResponse
-import no.elhub.auth.validateMalformedInputResponse
-import no.elhub.auth.features.common.auth.RoleType
-import no.elhub.auth.features.common.auth.AuthorizedParty
-import no.elhub.auth.features.common.auth.AuthError
-import no.elhub.auth.features.common.QueryError
-import io.ktor.server.testing.testApplication
-import io.ktor.server.application.install
-import io.ktor.server.routing.routing
-import no.elhub.auth.features.common.RepositoryReadError
-import no.elhub.auth.features.common.currentTimeWithTimeZone
-import no.elhub.auth.features.common.party.AuthorizationParty
-import no.elhub.auth.features.common.party.PartyType
-import no.elhub.auth.features.documents.AuthorizationDocument
-import no.elhub.auth.features.documents.AuthorizationDocument.Type
-import no.elhub.auth.features.documents.AuthorizationDocument.Status
-import io.ktor.http.HttpStatusCode
-import io.ktor.client.call.body
-import io.ktor.http.ContentType
-import no.elhub.auth.features.documents.common.AuthorizationDocumentProperty
-import no.elhub.auth.features.documents.common.DocumentRepository
-import no.elhub.auth.features.grants.AuthorizationGrant
-import no.elhub.auth.features.grants.common.GrantRepository
-import java.util.UUID
 import io.kotest.matchers.shouldBe
+import io.ktor.client.call.body
 import io.ktor.client.request.get
+import io.ktor.client.request.header
+import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsChannel
+import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
+import io.ktor.serialization.kotlinx.json.json
+import io.ktor.server.application.install
+import io.ktor.server.routing.Routing
 import io.ktor.server.routing.routing
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import io.ktor.utils.io.availableForRead
 import io.ktor.utils.io.toByteArray
+import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.serialization.json.Json
+import no.elhub.auth.features.common.QueryError
+import no.elhub.auth.features.common.RepositoryReadError
+import no.elhub.auth.features.common.auth.AuthError
+import no.elhub.auth.features.common.auth.AuthorizationProvider
+import no.elhub.auth.features.common.auth.AuthorizedParty
+import no.elhub.auth.features.common.auth.PDPAuthorizationProvider
+import no.elhub.auth.features.common.auth.RoleType
 import no.elhub.auth.features.common.commonModule
+import no.elhub.auth.features.common.currentTimeWithTimeZone
+import no.elhub.auth.features.common.party.AuthorizationParty
+import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toTimeZoneOffsetString
+import no.elhub.auth.features.documents.AuthorizationDocument
+import no.elhub.auth.features.documents.AuthorizationDocument.Status
+import no.elhub.auth.features.documents.AuthorizationDocument.Type
+import no.elhub.auth.features.documents.common.AuthorizationDocumentProperty
+import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.documents.get.dto.GetDocumentSingleResponse
+import no.elhub.auth.features.documents.module
+import no.elhub.auth.features.grants.AuthorizationGrant
+import no.elhub.auth.features.grants.common.GrantRepository
+import no.elhub.auth.setupAppWith
+import no.elhub.auth.validateInternalServerErrorResponse
+import no.elhub.auth.validateMalformedInputResponse
+import no.elhub.auth.validateNotAuthorizedResponse
+import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
+import java.util.UUID
+import kotlin.random.Random
+import no.elhub.auth.module as applicationModule
 
 class RouteTest : FunSpec({
     val byAuthParty = AuthorizationParty("id1", PartyType.Organization)
@@ -206,4 +201,3 @@ private suspend fun validateGetByIdResponse(response: HttpResponse, handlerDocum
         }
     }
 }
-

@@ -1,60 +1,47 @@
 package no.elhub.auth.features.requests.route
 
-import no.elhub.auth.features.businessprocesses.BusinessProcessError
-
-import no.elhub.auth.features.common.party.PartyIdentifier
-import no.elhub.auth.features.common.party.PartyIdentifierType
-import no.elhub.auth.features.requests.create.dto.CreateRequestMeta
-import no.elhub.auth.features.requests.create.dto.CreateRequestAttributes
-import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObjectWithMeta
-
-import no.elhub.auth.features.requests.create.dto.JsonApiCreateRequest
-
-import no.elhub.auth.features.requests.update.dto.UpdateRequestAttributes
-import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObject
-import no.elhub.auth.features.requests.update.dto.JsonApiUpdateRequest
-
-import org.jetbrains.exposed.v1.jdbc.batchInsert
-import no.elhub.auth.features.requests.common.AuthorizationRequestPropertyTable
-import org.jetbrains.exposed.v1.jdbc.insert
-import no.elhub.auth.features.requests.common.AuthorizationRequestTable
-import java.util.UUID
-import java.time.ZoneOffset
-import java.time.OffsetDateTime
-import no.elhub.auth.features.requests.common.DatabaseRequestStatus
-import no.elhub.auth.features.grants.AuthorizationScope
-import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
-import no.elhub.auth.features.common.CreateScopeData
 import arrow.core.left
 import arrow.core.right
-
-import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-
-import no.elhub.auth.features.requests.create.model.defaultRequestValidTo
-import no.elhub.auth.features.grants.common.CreateGrantProperties
-
-import no.elhub.auth.features.requests.create.command.RequestCommand
-
-import no.elhub.auth.features.requests.AuthorizationRequest
-
-import no.elhub.auth.features.requests.create.command.RequestMetaMarker
-
-import no.elhub.auth.features.requests.create.requesttypes.RequestTypeValidationError
-
-import no.elhub.auth.features.requests.create.model.CreateRequestModel
-
-import io.ktor.server.application.Application
-import org.koin.ktor.plugin.koinModule
-import no.elhub.auth.features.requests.create.RequestBusinessHandler
-
-import no.elhub.auth.features.common.AuthPersonsTestContainer
-import no.elhub.auth.features.common.commonModule
-import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.serialization.kotlinx.json.json
-import no.elhub.auth.features.requests.module
-import no.elhub.auth.module as applicationModule
+import io.ktor.server.application.Application
 import io.ktor.server.config.MapApplicationConfig
+import io.ktor.server.testing.ApplicationTestBuilder
+import no.elhub.auth.features.businessprocesses.BusinessProcessError
+import no.elhub.auth.features.common.AuthPersonsTestContainer
+import no.elhub.auth.features.common.CreateScopeData
+import no.elhub.auth.features.common.commonModule
+import no.elhub.auth.features.common.party.PartyIdentifier
+import no.elhub.auth.features.common.party.PartyIdentifierType
+import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
+import no.elhub.auth.features.grants.AuthorizationScope
+import no.elhub.auth.features.grants.common.CreateGrantProperties
+import no.elhub.auth.features.requests.AuthorizationRequest
+import no.elhub.auth.features.requests.common.AuthorizationRequestPropertyTable
+import no.elhub.auth.features.requests.common.AuthorizationRequestTable
+import no.elhub.auth.features.requests.common.DatabaseRequestStatus
+import no.elhub.auth.features.requests.create.RequestBusinessHandler
+import no.elhub.auth.features.requests.create.command.RequestCommand
+import no.elhub.auth.features.requests.create.command.RequestMetaMarker
+import no.elhub.auth.features.requests.create.dto.CreateRequestAttributes
+import no.elhub.auth.features.requests.create.dto.CreateRequestMeta
+import no.elhub.auth.features.requests.create.dto.JsonApiCreateRequest
+import no.elhub.auth.features.requests.create.model.CreateRequestModel
+import no.elhub.auth.features.requests.create.model.defaultRequestValidTo
+import no.elhub.auth.features.requests.create.requesttypes.RequestTypeValidationError
+import no.elhub.auth.features.requests.module
+import no.elhub.auth.features.requests.update.dto.JsonApiUpdateRequest
+import no.elhub.auth.features.requests.update.dto.UpdateRequestAttributes
+import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObject
+import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObjectWithMeta
+import org.jetbrains.exposed.v1.jdbc.batchInsert
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.koin.ktor.plugin.koinModule
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
+import java.util.UUID
+import no.elhub.auth.module as applicationModule
 
 const val REQUESTED_FROM_NIN = "02916297702"
 const val REQUESTED_TO_NIN = "14810797496"
@@ -127,7 +114,6 @@ class TestRequestBusinessHandler : RequestBusinessHandler {
             }
 
             else -> BusinessProcessError.Validation(TestRequestValidationError.UnsupportedRequestType.message).left()
-
         }
 
     override fun getCreateGrantProperties(request: AuthorizationRequest): CreateGrantProperties =
@@ -136,7 +122,6 @@ class TestRequestBusinessHandler : RequestBusinessHandler {
             validTo = defaultRequestValidTo(),
         )
 }
-
 
 fun insertAuthorizationRequest(
     status: DatabaseRequestStatus = DatabaseRequestStatus.Pending,
@@ -207,7 +192,7 @@ val examplePostBody = JsonApiCreateRequest(
     data = JsonApiRequestResourceObjectWithMeta(
         type = "AuthorizationRequest",
         attributes =
-            CreateRequestAttributes(requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson),
+        CreateRequestAttributes(requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson),
         meta = CreateRequestMeta(
             requestedBy = PartyIdentifier(
                 PartyIdentifierType.GlobalLocationNumber,
