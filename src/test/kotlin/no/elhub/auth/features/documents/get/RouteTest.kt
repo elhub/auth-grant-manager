@@ -143,7 +143,7 @@ class RouteTest : FunSpec({
             coVerify(exactly = 0) { handler.invoke(any()) }
         }
     }
-    test("GET /{id}[.pdf] returns appropriate error when authorization fails") {
+    test("GET /{id}[.pdf] returns 401 Not authorized when authorization fails") {
         coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns AuthError.NotAuthorized.left()
         coEvery { handler.invoke(any()) } returns document.right()
         testApplication {
@@ -154,7 +154,7 @@ class RouteTest : FunSpec({
             coVerify(exactly = 0) { handler.invoke(any()) }
         }
     }
-    test("GET /{id}[.pdf] returns appropriate error when handler fails") {
+    test("GET /{id}[.pdf] returns 500 Internal server error when handler fails with IOError") {
         coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
         coEvery { handler.invoke(any()) } returns QueryError.IOError.left()
         testApplication {

@@ -142,7 +142,7 @@ class RouteTest : FunSpec({
             coVerify(exactly = 1) { handler.invoke(any()) }
         }
     }
-    test("GET / returns appropriate error when authorization fails") {
+    test("GET / returns 403 'Forbidden' when authorization fails with AccessDenied error") {
         coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns AuthError.AccessDenied.left()
         coEvery { handler.invoke(any()) } returns documents.right()
         testApplication {
@@ -151,7 +151,7 @@ class RouteTest : FunSpec({
             coVerify(exactly = 0) { handler.invoke(any()) }
         }
     }
-    test("GET / returns appropriate error when authorized as org and handler fails") {
+    test("GET / returns 500 Internal server error when authorized as org and handler fails with IOError") {
         coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedOrg.right()
         coEvery { handler.invoke(any()) } returns QueryError.IOError.left()
         testApplication {

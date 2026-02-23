@@ -175,7 +175,7 @@ class RouteTest : FunSpec({
         }
     }
 
-    test("POST / returns appropriate error when handler fails (InvalidNinError)") {
+    test("POST / returns 400 Bad Request with 'Invalid national identity number' handler fails with InvalidNinError") {
         coEvery { authProvider.authorizeMaskinporten(any()) } returns authorizedOrg.right()
         coEvery { handler.invoke(any()) } returns CreateError.InvalidNinError.left()
         testApplication {
@@ -197,7 +197,7 @@ class RouteTest : FunSpec({
             coVerify(exactly = 1) { handler.invoke(any()) }
         }
     }
-    test("POST / returns appropriate error when handler fails (FileGenerationError)") {
+    test("POST / returns 500 Internal Server Error when handler fails with FileGenerationError") {
         coEvery { authProvider.authorizeMaskinporten(any()) } returns authorizedOrg.right()
         coEvery { handler.invoke(any()) } returns CreateError.FileGenerationError.left()
         testApplication {
@@ -211,7 +211,7 @@ class RouteTest : FunSpec({
         }
     }
 
-    test("POST / returns appropriate error when missing field in request body") {
+    test("POST / returns 400 with detail about missing field when missing field in request body") {
         coEvery { authProvider.authorizeMaskinporten(any()) } returns authorizedOrg.right()
         coEvery { handler.invoke(any()) } returns CreateError.FileGenerationError.left()
         testApplication {
@@ -233,7 +233,7 @@ class RouteTest : FunSpec({
             coVerify(exactly = 0) { handler.invoke(any()) }
         }
     }
-    test("POST / returns appropriate error when invalid field value in request body") {
+    test("POST / returns 400 with specific field reference when invalid field value in request body") {
         coEvery { authProvider.authorizeMaskinporten(any()) } returns authorizedOrg.right()
         coEvery { handler.invoke(any()) } returns CreateError.FileGenerationError.left()
         testApplication {

@@ -89,7 +89,7 @@ class RouteTest : FunSpec({
             coVerify(exactly = 1) { handler.invoke(any()) }
         }
     }
-    test("PUT /{id}.pdf returns appropriate error when handler fails to validate signature") {
+    test("PUT /{id}.pdf returns 400 with missing signature message when handler fails to validate signature") {
         coEvery { authProvider.authorizeMaskinporten(any()) } returns authorizedOrg.right()
         coEvery { handler.invoke(any()) } returns ConfirmError.ValidateSignaturesError(
             SignatureValidationError.MissingBankIdSignature
@@ -114,7 +114,7 @@ class RouteTest : FunSpec({
         }
     }
 
-    test("PUT /{id}.pdf returns appropriate error when authorization fails") {
+    test("PUT /{id}.pdf returns 400 Invalid token when authorization fails with InvalidToken error") {
         coEvery { authProvider.authorizeMaskinporten(any()) } returns AuthError.InvalidToken.left()
         coEvery { handler.invoke(any()) } returns Unit.right()
 
@@ -137,7 +137,7 @@ class RouteTest : FunSpec({
         }
     }
 
-    test("PUT /{id}.pdf returns appropriate error when id is invalid") {
+    test("PUT /{id}.pdf returns 400 'Invalid input' when id is invalid") {
         coEvery { authProvider.authorizeMaskinporten(any()) } returns authorizedOrg.right()
         coEvery { handler.invoke(any()) } returns Unit.right()
 
@@ -159,7 +159,7 @@ class RouteTest : FunSpec({
             coVerify(exactly = 0) { handler.invoke(any()) }
         }
     }
-    test("PUT /{id}.pdf returns appropriate error when document is empty") {
+    test("PUT /{id}.pdf returns 400 'Missing input' when document is empty") {
         coEvery { authProvider.authorizeMaskinporten(any()) } returns authorizedOrg.right()
         coEvery { handler.invoke(any()) } returns Unit.right()
 
