@@ -14,7 +14,7 @@ fun Application.module() {
                 val (status, body) = buildApiErrorResponse(
                     HttpStatusCode.NotFound,
                     "Endpoint not found",
-                    "The requested endpoint does not exist. Please check the URL and HTTP method."
+                    "The requested endpoint does not exist. Please check the URL."
                 )
                 call.respond<JsonApiErrorCollection>(status, body)
             }
