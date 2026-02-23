@@ -164,7 +164,7 @@ suspend inline fun <reified T> HttpClient.postJson(
 suspend inline fun HttpClient.putPdf(
     path: String,
     body: ByteArray
-) = post(path) {
+) = put(path) {
     contentType(ContentType.Application.Pdf)
     setBody(body)
 }

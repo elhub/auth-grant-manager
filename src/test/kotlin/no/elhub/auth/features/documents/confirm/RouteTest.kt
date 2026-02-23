@@ -90,7 +90,7 @@ class RouteTest : FunSpec({
                 size shouldBe 1
                 this[0].apply {
                     title shouldBe "End user signature validation failed"
-                    detail shouldBe "The document is missing the end user signature."
+                    detail shouldBe "The AuthorizationDocument is missing the end user signature."
                 }
             }
             coVerify(exactly = 1) { handler.invoke(any()) }
@@ -142,7 +142,7 @@ class RouteTest : FunSpec({
 
         testApplication {
             setupAppWith { route(handler, authProvider) }
-            val response = client.putPdf("/4803264d-11a4-4d6a-81f4-996986cb7b35.pdf", Random.nextBytes(256))
+            val response = client.putPdf("/4803264d-11a4-4d6a-81f4-996986cb7b35.pdf", Random.nextBytes(0))
             response.status shouldBe HttpStatusCode.BadRequest
             val responseJson: JsonApiErrorCollection = response.body()
             responseJson.errors.apply {
