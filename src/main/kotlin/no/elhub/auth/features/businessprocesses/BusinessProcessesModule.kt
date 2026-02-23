@@ -20,6 +20,7 @@ fun Application.businessProcessesModule() {
                 personService = get(),
                 organisationsService = get(),
                 stromprisService = get(),
+                edielService = get(),
                 validateBalanceSupplierContractName = get(named("validateBalanceSupplierContractName"))
             )
         }
@@ -29,6 +30,7 @@ fun Application.businessProcessesModule() {
                 personService = get(),
                 organisationsService = get(),
                 stromprisService = get(),
+                edielService = get(),
                 validateBalanceSupplierContractName = get(named("validateBalanceSupplierContractName"))
             )
         }

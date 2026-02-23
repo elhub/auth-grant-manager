@@ -132,6 +132,14 @@ sealed class MoveInAndChangeOfBalanceSupplierValidationError(
         )
 
     @Serializable
+    data object InvalidRedirectURI :
+        MoveInAndChangeOfBalanceSupplierValidationError("invalid_redirect_uri", "Redirect URI has invalid format")
+
+    @Serializable
+    data object RedirectURINotMatchingEdiel :
+        MoveInAndChangeOfBalanceSupplierValidationError("redirect_uri_not_matching_ediel", "Redirect URI does not match URI set in Ediel")
+
+    @Serializable
     data object ContractsNotFound :
         MoveInAndChangeOfBalanceSupplierValidationError(
             "contracts_not_found",

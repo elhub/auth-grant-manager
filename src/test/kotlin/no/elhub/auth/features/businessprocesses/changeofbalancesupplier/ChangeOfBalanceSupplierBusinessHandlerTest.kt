@@ -12,6 +12,9 @@ import no.elhub.auth.features.businessprocesses.BusinessProcessError
 import no.elhub.auth.features.businessprocesses.datasharing.Attributes
 import no.elhub.auth.features.businessprocesses.datasharing.ProductsResponse
 import no.elhub.auth.features.businessprocesses.datasharing.StromprisService
+import no.elhub.auth.features.businessprocesses.ediel.EdielPartyRedirectResponseDto
+import no.elhub.auth.features.businessprocesses.ediel.EdielRedirectUrlsDto
+import no.elhub.auth.features.businessprocesses.ediel.EdielService
 import no.elhub.auth.features.businessprocesses.structuredata.common.ClientError
 import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.BasicAuthConfig
 import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsApi
@@ -73,6 +76,7 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
 
         val personService = mockk<PersonService>()
         val stromprisService = mockk<StromprisService>()
+        val edielService = mockk<EdielService>()
 
         beforeSpec {
             meteringPointsService = MeteringPointsApi(
@@ -91,6 +95,7 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
                 personService = personService,
                 organisationsService = organisationsService,
                 stromprisService = stromprisService,
+                edielService = edielService,
                 validateBalanceSupplierContractName = false
             )
         }
@@ -98,6 +103,13 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
         coEvery { personService.findOrCreateByNin(END_USER.idValue) } returns Either.Right(Person(UUID.fromString(END_USER_ID_1)))
         coEvery { personService.findOrCreateByNin(ANOTHER_END_USER.idValue) } returns Either.Right(Person(UUID.fromString(END_USER_ID_2)))
         coEvery { personService.findOrCreateByNin(SHARED_END_USER.idValue) } returns Either.Right(Person(UUID.fromString(SHARED_END_USER_ID_1)))
+        coEvery { edielService.getPartyRedirect(any()) } returns Either.Right(
+            EdielPartyRedirectResponseDto(
+                redirectUrls = EdielRedirectUrlsDto(
+                    production = "https://example.com"
+                )
+            )
+        )
 
         test("request validation fails on missing requestedFromName") {
             val model =
@@ -388,6 +400,7 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
                 personService = personService,
                 organisationsService = organisationsService,
                 stromprisService = stromprisService,
+                edielService = edielService,
                 validateBalanceSupplierContractName = false
             )
 
@@ -426,6 +439,7 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
                 personService = personService,
                 organisationsService = mockOrganisationsService,
                 stromprisService = stromprisService,
+                edielService = edielService,
                 validateBalanceSupplierContractName = false
             )
 
@@ -497,6 +511,7 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
                 personService = personService,
                 organisationsService = organisationsService,
                 stromprisService = mockStromprisService,
+                edielService = edielService,
                 validateBalanceSupplierContractName = true
             )
             val model =
