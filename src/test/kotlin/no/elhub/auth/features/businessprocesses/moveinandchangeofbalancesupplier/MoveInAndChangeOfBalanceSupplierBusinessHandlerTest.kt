@@ -15,6 +15,9 @@ import no.elhub.auth.features.businessprocesses.BusinessProcessError
 import no.elhub.auth.features.businessprocesses.datasharing.Attributes
 import no.elhub.auth.features.businessprocesses.datasharing.ProductsResponse
 import no.elhub.auth.features.businessprocesses.datasharing.StromprisService
+import no.elhub.auth.features.businessprocesses.ediel.EdielPartyRedirectResponseDto
+import no.elhub.auth.features.businessprocesses.ediel.EdielRedirectUrlsDto
+import no.elhub.auth.features.businessprocesses.ediel.EdielService
 import no.elhub.auth.features.businessprocesses.structuredata.common.ClientError
 import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsApi
 import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsApiConfig
@@ -76,6 +79,7 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
 
         val personService = mockk<PersonService>()
         val stromprisService = mockk<StromprisService>()
+        val edielService = mockk<EdielService>()
 
         beforeSpec {
             organisationsService = OrganisationsApi(
@@ -97,6 +101,7 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
                 meteringPointsService = meteringPointsService,
                 personService = personService,
                 stromprisService = stromprisService,
+                edielService = edielService,
                 validateBalanceSupplierContractName = false
             )
         }
@@ -104,6 +109,15 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
         coEvery { personService.findOrCreateByNin(END_USER.idValue) } returns Either.Right(Person(UUID.fromString(END_USER_ID_1)))
         coEvery { personService.findOrCreateByNin(ANOTHER_END_USER.idValue) } returns Either.Right(Person(UUID.fromString(END_USER_ID_2)))
         coEvery { personService.findOrCreateByNin(SHARED_END_USER.idValue) } returns Either.Right(Person(UUID.fromString(SHARED_END_USER_ID_1)))
+        beforeTest {
+            coEvery { edielService.getPartyRedirect(any()) } returns Either.Right(
+                EdielPartyRedirectResponseDto(
+                    redirectUrls = EdielRedirectUrlsDto(
+                        production = "https://example.com"
+                    )
+                )
+            )
+        }
 
         test("request validation allows missing moveInDate") {
             val model =
@@ -174,6 +188,103 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
                 )
 
             handler.validateAndReturnRequestCommand(model).shouldBeRight()
+        }
+
+        test("request validation fails on not valid redirect URI") {
+            val model =
+                CreateRequestModel(
+                    authorizedParty = AUTHORIZED_PARTY,
+                    requestType = AuthorizationRequest.Type.MoveInAndChangeOfEnergySupplierForPerson,
+                    meta =
+                    CreateRequestMeta(
+                        requestedBy = VALID_PARTY,
+                        requestedFrom = ANOTHER_END_USER,
+                        requestedFromName = "From",
+                        requestedTo = ANOTHER_END_USER,
+                        requestedForMeteringPointId = VALID_METERING_POINT_1,
+                        requestedForMeteringPointAddress = "addr",
+                        balanceSupplierName = "Supplier",
+                        balanceSupplierContractName = "Contract",
+                        startDate = VALID_START_DATE,
+                        redirectURI = "example.com",
+                    ),
+                )
+
+            handler.validateAndReturnRequestCommand(model)
+                .shouldBeLeft(BusinessProcessError.Validation(MoveInAndChangeOfEnergySupplierValidationError.InvalidRedirectURI.message))
+        }
+
+        test("request validation allows redirect URI when host matches Ediel domain") {
+            coEvery { edielService.getPartyRedirect(any()) } returns Either.Right(edielRedirectResponse("https://example.com/login"))
+            val model =
+                CreateRequestModel(
+                    authorizedParty = AUTHORIZED_PARTY,
+                    requestType = AuthorizationRequest.Type.MoveInAndChangeOfEnergySupplierForPerson,
+                    meta =
+                    CreateRequestMeta(
+                        requestedBy = VALID_PARTY,
+                        requestedFrom = ANOTHER_END_USER,
+                        requestedFromName = "From",
+                        requestedTo = ANOTHER_END_USER,
+                        requestedForMeteringPointId = VALID_METERING_POINT_1,
+                        requestedForMeteringPointAddress = "addr",
+                        balanceSupplierName = "Supplier",
+                        balanceSupplierContractName = "Contract",
+                        startDate = VALID_START_DATE,
+                        redirectURI = "https://example.com/callback",
+                    ),
+                )
+
+            handler.validateAndReturnRequestCommand(model).shouldBeRight()
+        }
+
+        test("request validation allows redirect URI when host is subdomain of Ediel domain") {
+            coEvery { edielService.getPartyRedirect(any()) } returns Either.Right(edielRedirectResponse("https://example.com/login"))
+            val model =
+                CreateRequestModel(
+                    authorizedParty = AUTHORIZED_PARTY,
+                    requestType = AuthorizationRequest.Type.MoveInAndChangeOfEnergySupplierForPerson,
+                    meta =
+                    CreateRequestMeta(
+                        requestedBy = VALID_PARTY,
+                        requestedFrom = ANOTHER_END_USER,
+                        requestedFromName = "From",
+                        requestedTo = ANOTHER_END_USER,
+                        requestedForMeteringPointId = VALID_METERING_POINT_1,
+                        requestedForMeteringPointAddress = "addr",
+                        balanceSupplierName = "Supplier",
+                        balanceSupplierContractName = "Contract",
+                        startDate = VALID_START_DATE,
+                        redirectURI = "https://app.example.com/callback",
+                    ),
+                )
+
+            handler.validateAndReturnRequestCommand(model).shouldBeRight()
+        }
+
+        test("request validation fails when redirect URI domain does not match Ediel domain") {
+            coEvery { edielService.getPartyRedirect(any()) } returns Either.Right(edielRedirectResponse("https://other-domain.example/callback"))
+            val model =
+                CreateRequestModel(
+                    authorizedParty = AUTHORIZED_PARTY,
+                    requestType = AuthorizationRequest.Type.MoveInAndChangeOfEnergySupplierForPerson,
+                    meta =
+                    CreateRequestMeta(
+                        requestedBy = VALID_PARTY,
+                        requestedFrom = ANOTHER_END_USER,
+                        requestedFromName = "From",
+                        requestedTo = ANOTHER_END_USER,
+                        requestedForMeteringPointId = VALID_METERING_POINT_1,
+                        requestedForMeteringPointAddress = "addr",
+                        balanceSupplierName = "Supplier",
+                        balanceSupplierContractName = "Contract",
+                        startDate = VALID_START_DATE,
+                        redirectURI = "https://example.com/callback",
+                    ),
+                )
+
+            handler.validateAndReturnRequestCommand(model)
+                .shouldBeLeft(BusinessProcessError.Validation(MoveInAndChangeOfEnergySupplierValidationError.RedirectURINotMatchingEdiel.message))
         }
 
         test("request validation fails on invalid metering point") {
@@ -356,6 +467,7 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
                 meteringPointsService = mockMeteringPointsService,
                 personService = personService,
                 stromprisService = stromprisService,
+                edielService = edielService,
                 validateBalanceSupplierContractName = false
             )
 
@@ -395,6 +507,7 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
                 meteringPointsService = meteringPointsService,
                 personService = personService,
                 stromprisService = stromprisService,
+                edielService = edielService,
                 validateBalanceSupplierContractName = false
             )
 
@@ -492,6 +605,7 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
                 meteringPointsService = meteringPointsService,
                 personService = personService,
                 stromprisService = mockStromprisService,
+                edielService = edielService,
                 validateBalanceSupplierContractName = true
             )
             val model =
@@ -596,3 +710,10 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
             command.meta.toMetaAttributes().containsKey("requestedForMeterNumber") shouldBe true
         }
     })
+
+private fun edielRedirectResponse(productionRedirectUrl: String?) =
+    EdielPartyRedirectResponseDto(
+        redirectUrls = EdielRedirectUrlsDto(
+            production = productionRedirectUrl
+        )
+    )
