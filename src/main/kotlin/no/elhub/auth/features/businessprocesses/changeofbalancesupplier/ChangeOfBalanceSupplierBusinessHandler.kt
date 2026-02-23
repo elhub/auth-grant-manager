@@ -16,8 +16,10 @@ import no.elhub.auth.features.businessprocesses.changeofbalancesupplier.domain.t
 import no.elhub.auth.features.businessprocesses.changeofbalancesupplier.domain.toDocumentCommand
 import no.elhub.auth.features.businessprocesses.changeofbalancesupplier.domain.toRequestCommand
 import no.elhub.auth.features.businessprocesses.datasharing.StromprisService
+import no.elhub.auth.features.businessprocesses.ediel.EdielEnvironment
 import no.elhub.auth.features.businessprocesses.ediel.EdielService
 import no.elhub.auth.features.businessprocesses.ediel.RedirectUriDomainValidationResult
+import no.elhub.auth.features.businessprocesses.ediel.redirectUriFor
 import no.elhub.auth.features.businessprocesses.ediel.validateRedirectUriDomain
 import no.elhub.auth.features.businessprocesses.structuredata.common.ClientError
 import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.AccessType.SHARED
@@ -50,6 +52,7 @@ class ChangeOfBalanceSupplierBusinessHandler(
     private val organisationsService: OrganisationsService,
     private val stromprisService: StromprisService,
     private val edielService: EdielService,
+    private val edielEnvironment: EdielEnvironment,
     private val validateBalanceSupplierContractName: Boolean
 ) : RequestBusinessHandler, DocumentBusinessHandler {
 
@@ -90,13 +93,13 @@ class ChangeOfBalanceSupplierBusinessHandler(
             }
         }.getOrElse { return ChangeOfBalanceSupplierValidationError.UnexpectedError.left() }
 
-        return when (validateRedirectUriDomain(redirectUri, redirectUriFromEdiel.redirectUrls.production)) {
+        return when (validateRedirectUriDomain(redirectUri, redirectUriFromEdiel.redirectUriFor(edielEnvironment))) {
             RedirectUriDomainValidationResult.MatchingDomain -> Unit.right()
 
             RedirectUriDomainValidationResult.InvalidInputUri -> ChangeOfBalanceSupplierValidationError.InvalidRedirectURI.left()
 
             RedirectUriDomainValidationResult.InvalidEdielUri,
-            RedirectUriDomainValidationResult.DomainMismatch -> ChangeOfBalanceSupplierValidationError.InvalidRedirectURI.left()
+            RedirectUriDomainValidationResult.DomainMismatch -> ChangeOfBalanceSupplierValidationError.RedirectURINotMatchingEdiel.left()
         }
     }
 

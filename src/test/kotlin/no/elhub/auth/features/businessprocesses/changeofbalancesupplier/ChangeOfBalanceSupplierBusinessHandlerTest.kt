@@ -14,6 +14,7 @@ import no.elhub.auth.features.businessprocesses.BusinessProcessError
 import no.elhub.auth.features.businessprocesses.datasharing.Attributes
 import no.elhub.auth.features.businessprocesses.datasharing.ProductsResponse
 import no.elhub.auth.features.businessprocesses.datasharing.StromprisService
+import no.elhub.auth.features.businessprocesses.ediel.EdielEnvironment
 import no.elhub.auth.features.businessprocesses.ediel.EdielPartyRedirectResponseDto
 import no.elhub.auth.features.businessprocesses.ediel.EdielRedirectUrlsDto
 import no.elhub.auth.features.businessprocesses.ediel.EdielService
@@ -105,6 +106,7 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
                 organisationsService = organisationsService,
                 stromprisService = stromprisService,
                 edielService = edielService,
+                edielEnvironment = EdielEnvironment.PRODUCTION,
                 validateBalanceSupplierContractName = false
             )
         }
@@ -133,13 +135,15 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
         coEvery { personService.findOrCreateByNin(END_USER.idValue) } returns Either.Right(Person(UUID.fromString(END_USER_ID_1)))
         coEvery { personService.findOrCreateByNin(ANOTHER_END_USER.idValue) } returns Either.Right(Person(UUID.fromString(END_USER_ID_2)))
         coEvery { personService.findOrCreateByNin(SHARED_END_USER.idValue) } returns Either.Right(Person(UUID.fromString(SHARED_END_USER_ID_1)))
-        coEvery { edielService.getPartyRedirect(any()) } returns Either.Right(
-            EdielPartyRedirectResponseDto(
-                redirectUrls = EdielRedirectUrlsDto(
-                    production = "https://example.com"
+        beforeTest {
+            coEvery { edielService.getPartyRedirect(any()) } returns Either.Right(
+                EdielPartyRedirectResponseDto(
+                    redirectUrls = EdielRedirectUrlsDto(
+                        production = "https://example.com"
+                    )
                 )
             )
-        )
+        }
 
         test("request validation fails on missing requestedFromName") {
             val model =
@@ -302,6 +306,75 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
                 .shouldBeLeft(BusinessProcessError.Validation(ChangeOfBalanceSupplierValidationError.InvalidRedirectURI.message))
         }
 
+        test("request validation fails when redirect URI domain does not match Ediel domain") {
+            coEvery { edielService.getPartyRedirect(any()) } returns Either.Right(
+                EdielPartyRedirectResponseDto(
+                    redirectUrls = EdielRedirectUrlsDto(
+                        production = "https://other-domain.example/login"
+                    )
+                )
+            )
+            val model =
+                CreateRequestModel(
+                    authorizedParty = AUTHORIZED_PARTY,
+                    requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
+                    meta =
+                    CreateRequestMeta(
+                        requestedBy = VALID_PARTY,
+                        requestedFrom = END_USER,
+                        requestedFromName = "From",
+                        requestedTo = END_USER,
+                        requestedForMeteringPointId = VALID_METERING_POINT_1,
+                        requestedForMeteringPointAddress = "addr",
+                        balanceSupplierName = "Supplier",
+                        balanceSupplierContractName = "Contract",
+                        redirectURI = "https://example.com/callback",
+                    ),
+                )
+
+            handler.validateAndReturnRequestCommand(model)
+                .shouldBeLeft(BusinessProcessError.Validation(ChangeOfEnergySupplierValidationError.RedirectURINotMatchingEdiel.message))
+        }
+
+        test("request validation in test environment uses test URL from Ediel") {
+            val handlerWithTestEnvironment = ChangeOfEnergySupplierBusinessHandler(
+                meteringPointsService = meteringPointsService,
+                personService = personService,
+                organisationsService = organisationsService,
+                stromprisService = stromprisService,
+                edielService = edielService,
+                edielEnvironment = EdielEnvironment.TEST,
+                validateBalanceSupplierContractName = false
+            )
+            coEvery { edielService.getPartyRedirect(any()) } returns Either.Right(
+                EdielPartyRedirectResponseDto(
+                    redirectUrls = EdielRedirectUrlsDto(
+                        production = "https://production.example/login",
+                        test = "https://test.example/login"
+                    )
+                )
+            )
+            val model =
+                CreateRequestModel(
+                    authorizedParty = AUTHORIZED_PARTY,
+                    requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
+                    meta =
+                    CreateRequestMeta(
+                        requestedBy = VALID_PARTY,
+                        requestedFrom = END_USER,
+                        requestedFromName = "From",
+                        requestedTo = END_USER,
+                        requestedForMeteringPointId = VALID_METERING_POINT_1,
+                        requestedForMeteringPointAddress = "addr",
+                        balanceSupplierName = "Supplier",
+                        balanceSupplierContractName = "Contract",
+                        redirectURI = "https://app.test.example/callback",
+                    ),
+                )
+
+            handlerWithTestEnvironment.validateAndReturnRequestCommand(model).shouldBeRight()
+        }
+
         test("request validation fails on not valid requested by") {
             val model =
                 CreateRequestModel(
@@ -431,6 +504,7 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
                 organisationsService = organisationsService,
                 stromprisService = stromprisService,
                 edielService = edielService,
+                edielEnvironment = EdielEnvironment.PRODUCTION,
                 validateBalanceSupplierContractName = false
             )
 
@@ -470,6 +544,7 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
                 organisationsService = mockOrganisationsService,
                 stromprisService = stromprisService,
                 edielService = edielService,
+                edielEnvironment = EdielEnvironment.PRODUCTION,
                 validateBalanceSupplierContractName = false
             )
 
@@ -542,6 +617,7 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
                 organisationsService = organisationsService,
                 stromprisService = mockStromprisService,
                 edielService = edielService,
+                edielEnvironment = EdielEnvironment.PRODUCTION,
                 validateBalanceSupplierContractName = true
             )
             val model =

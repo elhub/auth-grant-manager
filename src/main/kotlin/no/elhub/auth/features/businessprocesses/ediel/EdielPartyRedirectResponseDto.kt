@@ -16,3 +16,9 @@ data class EdielRedirectUrlsDto(
     @SerialName("Test")
     val test: String? = null,
 )
+
+fun EdielPartyRedirectResponseDto.redirectUriFor(environment: EdielEnvironment): String? =
+    when (environment) {
+        EdielEnvironment.PRODUCTION -> redirectUrls.production
+        EdielEnvironment.TEST -> redirectUrls.test
+    }

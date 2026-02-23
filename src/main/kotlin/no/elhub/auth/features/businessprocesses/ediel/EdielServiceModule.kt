@@ -14,9 +14,11 @@ fun Application.edielServiceModule() {
                 basicAuthConfig = BasicAuthConfig(
                     username = edielApiConfig.property("authentication.basic.username").getString(),
                     password = edielApiConfig.property("authentication.basic.password").getString()
-                )
+                ),
+                environment = edielApiConfig.property("environment").getString().toEdielEnvironment()
             )
         }
+        single(named("edielEnvironment")) { get<EdielApiConfig>().environment }
         single<EdielService> {
             EdielApi(
                 edielApiConfig = get(),
@@ -25,3 +27,10 @@ fun Application.edielServiceModule() {
         }
     }
 }
+
+private fun String.toEdielEnvironment(): EdielEnvironment =
+    when (trim().uppercase()) {
+        "TEST" -> EdielEnvironment.TEST
+        "PRODUCTION" -> EdielEnvironment.PRODUCTION
+        else -> throw IllegalArgumentException("Invalid ediel.environment value '$this'. Allowed values: test, production")
+    }

@@ -26,8 +26,8 @@ class EdielApi(
 
     override suspend fun getPartyRedirect(gln: String): Either<ClientError, EdielPartyRedirectResponseDto> =
         Either.catch {
-            logger.info("Fetching party redirect from EDIEL for GLN {}", gln)
-            val response = client.get("${edielApiConfig.serviceUrl}/PartyRedirectUrl/?gln=$gln") {
+            logger.info("Fetching party redirect from Ediel for GLN {}", gln)
+            val response = client.get("${edielApiConfig.serviceUrl}/PartyRedirectUrl?gln=$gln") {
                 basicAuth(
                     username = edielApiConfig.basicAuthConfig.username,
                     password = edielApiConfig.basicAuthConfig.password
@@ -37,26 +37,26 @@ class EdielApi(
             if (response.status.isSuccess()) {
                 val responseBody = response.bodyAsText()
                 if (responseBody.isBlank() || responseBody.trim().equals("null", ignoreCase = true)) {
-                    logger.warn("EDIEL returned empty/null body for GLN {}", gln)
+                    logger.warn("Ediel returned empty/null body for GLN {}", gln)
                     return ClientError.NotFound.left()
                 }
                 val edielResponse = runCatching {
                     json.decodeFromString<EdielPartyRedirectResponseDto>(responseBody)
                 }.getOrElse { error ->
-                    logger.warn("EDIEL returned non-parseable redirect response for GLN {}: {}", gln, error.message)
+                    logger.warn("Ediel returned non-parseable redirect response for GLN {}: {}", gln, error.message)
                     return ClientError.NotFound.left()
                 }
-                logger.info("Successfully fetched party redirect from EDIEL for GLN {}", gln)
+                logger.info("Successfully fetched party redirect from Ediel for GLN {}", gln)
                 edielResponse
             } else if (response.status == HttpStatusCode.Unauthorized) {
-                logger.error("Failed to fetch party redirect from EDIEL for GLN {} with status {}", gln, response.status.value)
+                logger.error("Ediel returned 401 Unauthorized for GLN {}", gln)
                 return ClientError.Unauthorized.left()
             } else {
-                logger.error("Failed to fetch party redirect from EDIEL for GLN {} with status {}", gln, response.status.value)
+                logger.error("Failed to fetch party redirect from Ediel for GLN {} with status {}", gln, response.status.value)
                 return mapErrorsFromServer(response).left()
             }
         }.mapLeft { throwable ->
-            logger.error("Failed to fetch party redirect from EDIEL for GLN {}: {}", gln, throwable.message)
+            logger.error("Failed to fetch party redirect from Ediel for GLN {}: {}", gln, throwable.message)
             ClientError.UnexpectedError(throwable)
         }
 }
@@ -64,12 +64,18 @@ class EdielApi(
 data class EdielApiConfig(
     val serviceUrl: String,
     val basicAuthConfig: BasicAuthConfig,
+    val environment: EdielEnvironment,
 )
 
 data class BasicAuthConfig(
     val username: String,
     val password: String
 )
+
+enum class EdielEnvironment {
+    TEST,
+    PRODUCTION
+}
 
 private val json = Json {
     ignoreUnknownKeys = true

@@ -25,6 +25,13 @@ class RedirectUriDomainValidationTest : FunSpec({
         ) shouldBe RedirectUriDomainValidationResult.DomainMismatch
     }
 
+    test("returns domain mismatch when input is parent domain of Ediel host") {
+        validateRedirectUriDomain(
+            inputRedirectUri = "https://example.com/callback",
+            edielRedirectUri = "https://app.example.com/login"
+        ) shouldBe RedirectUriDomainValidationResult.DomainMismatch
+    }
+
     test("returns invalid input uri for malformed input redirect uri") {
         validateRedirectUriDomain(
             inputRedirectUri = "example.com",

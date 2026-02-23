@@ -2,6 +2,7 @@ package no.elhub.auth.features.businessprocesses
 
 import io.ktor.server.application.Application
 import no.elhub.auth.features.businessprocesses.changeofbalancesupplier.ChangeOfBalanceSupplierBusinessHandler
+import no.elhub.auth.features.businessprocesses.ediel.EdielEnvironment
 import no.elhub.auth.features.businessprocesses.moveinandchangeofbalancesupplier.MoveInAndChangeOfBalanceSupplierBusinessHandler
 import no.elhub.auth.features.documents.common.DocumentBusinessHandler
 import no.elhub.auth.features.documents.common.ProxyDocumentBusinessHandler
@@ -21,6 +22,7 @@ fun Application.businessProcessesModule() {
                 organisationsService = get(),
                 stromprisService = get(),
                 edielService = get(),
+                edielEnvironment = get<EdielEnvironment>(named("edielEnvironment")),
                 validateBalanceSupplierContractName = get(named("validateBalanceSupplierContractName"))
             )
         }
@@ -31,6 +33,7 @@ fun Application.businessProcessesModule() {
                 organisationsService = get(),
                 stromprisService = get(),
                 edielService = get(),
+                edielEnvironment = get<EdielEnvironment>(named("edielEnvironment")),
                 validateBalanceSupplierContractName = get(named("validateBalanceSupplierContractName"))
             )
         }

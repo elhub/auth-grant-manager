@@ -96,6 +96,10 @@ sealed class ChangeOfBalanceSupplierValidationError(
         ChangeOfBalanceSupplierValidationError("invalid_redirect_uri", "Redirect URI has invalid format")
 
     @Serializable
+    data object RedirectURINotMatchingEdiel :
+        ChangeOfBalanceSupplierValidationError("redirect_uri_not_matching_ediel", "Redirect URI does not match URI set in Ediel")
+
+    @Serializable
     data object RequestedToRequestedFromMismatch :
         ChangeOfBalanceSupplierValidationError("requested_to_requested_from_mismatch", "Requested to and requested from are not the same party")
 
