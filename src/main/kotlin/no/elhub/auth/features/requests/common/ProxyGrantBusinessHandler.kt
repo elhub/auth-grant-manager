@@ -9,10 +9,8 @@ class ProxyGrantBusinessHandler(
     private val changeOfEnergySupplierHandler: ChangeOfEnergySupplierBusinessHandler,
     private val moveInAndChangeOfEnergySupplierHandler: MoveInAndChangeOfEnergySupplierBusinessHandler,
 ) : GrantBusinessHandler {
-    override fun getMetaProperties(request: AuthorizationRequest): List<String> {
-        return when(request.type) {
-            AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson -> changeOfEnergySupplierHandler.getMetaProperties(request)
-            AuthorizationRequest.Type.MoveInAndChangeOfEnergySupplierForPerson -> moveInAndChangeOfEnergySupplierHandler.getMetaProperties(request)
-        }
+    override fun getMetaProperties(request: AuthorizationRequest): List<String> = when (request.type) {
+        AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson -> changeOfEnergySupplierHandler.getMetaProperties(request)
+        AuthorizationRequest.Type.MoveInAndChangeOfEnergySupplierForPerson -> moveInAndChangeOfEnergySupplierHandler.getMetaProperties(request)
     }
 }

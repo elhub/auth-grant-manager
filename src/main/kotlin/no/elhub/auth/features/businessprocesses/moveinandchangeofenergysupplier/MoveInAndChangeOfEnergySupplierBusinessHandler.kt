@@ -61,11 +61,8 @@ class MoveInAndChangeOfEnergySupplierBusinessHandler(
     private val validateBalanceSupplierContractName: Boolean
 ) : RequestBusinessHandler,
     DocumentBusinessHandler,
-    GrantBusinessHandler
-{
-    override fun getMetaProperties(request: AuthorizationRequest): List<String> {
-        return listOf("startDate")
-    }
+    GrantBusinessHandler {
+    override fun getMetaProperties(request: AuthorizationRequest): List<String> = listOf("startDate")
 
     override suspend fun validateAndReturnRequestCommand(createRequestModel: CreateRequestModel): Either<BusinessProcessError, RequestCommand> =
         either {

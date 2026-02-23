@@ -76,7 +76,6 @@ class Handler(
                     }
                 }.bind()
 
-
             val grantToCreate = AuthorizationGrant.create(
                 grantedFor = acceptedRequest.requestedFrom,
                 grantedBy = acceptedBy,
@@ -110,6 +109,6 @@ class Handler(
         }
 }
 
-interface GrantBusinessHandler{
+interface GrantBusinessHandler {
     fun getMetaProperties(request: AuthorizationRequest): List<String>
 }

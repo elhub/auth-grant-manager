@@ -46,7 +46,8 @@ class HandlerTest : FunSpec({
             businessHandler = businessHandler,
             requestRepository = requestRepository,
             grantRepository = grantRepository,
-            grantPropertiesRepository = grantPropertiesRepository)
+            grantPropertiesRepository = grantPropertiesRepository
+        )
 
         val result = handler(
             UpdateCommand(

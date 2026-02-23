@@ -48,11 +48,13 @@ class HandlerTest : FunSpec({
         sourceType = SourceType.Document,
         sourceId = UUID.randomUUID(),
         scopeIds = scopeIds,
-        properties = listOf(AuthorizationGrantProperty(
-            grantId = grantId,
-            key = "startDate",
-            value = "2024-01-01"
-        ))
+        properties = listOf(
+            AuthorizationGrantProperty(
+                grantId = grantId,
+                key = "startDate",
+                value = "2024-01-01"
+            )
+        )
     )
     val activeGrant = AuthorizationGrant(
         id = grantId,

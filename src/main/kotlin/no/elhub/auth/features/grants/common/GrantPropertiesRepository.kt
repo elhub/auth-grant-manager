@@ -34,7 +34,6 @@ class ExposedGrantPropertiesRepository : GrantPropertiesRepository {
             .selectAll()
             .where { AuthorizationGrantPropertyTable.grantId eq grantId }
             .map { it.toAuthorizationGrantProperty() }
-
 }
 
 object AuthorizationGrantPropertyTable : Table("auth.authorization_grant_property") {
