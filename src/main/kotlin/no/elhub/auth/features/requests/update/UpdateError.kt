@@ -3,6 +3,7 @@ package no.elhub.auth.features.requests.update
 import io.ktor.http.HttpStatusCode
 import no.elhub.auth.features.common.buildApiErrorResponse
 import no.elhub.auth.features.common.toInternalServerApiErrorResponse
+import no.elhub.auth.features.common.toNotFoundApiErrorResponse
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 
 sealed class UpdateError {
@@ -19,9 +20,10 @@ sealed class UpdateError {
 fun UpdateError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> =
     when (this) {
         UpdateError.PersistenceError,
-        UpdateError.RequestNotFound,
         UpdateError.GrantCreationError,
         UpdateError.ScopeReadError, -> toInternalServerApiErrorResponse()
+
+        UpdateError.RequestNotFound -> toNotFoundApiErrorResponse("Request could not be found")
 
         UpdateError.IllegalTransitionError -> buildApiErrorResponse(
             status = HttpStatusCode.BadRequest,
