@@ -676,8 +676,8 @@ class AuthorizationRequestRouteTest : FunSpec({
                     size shouldBe 1
                     this[0].apply {
                         status shouldBe "400"
-                        title shouldBe "Request has expired"
-                        detail shouldBe "Request validity period has passed"
+                        title shouldBe "AuthorizationRequest has expired"
+                        detail shouldBe "Validity period has passed."
                     }
                 }
                 responseJson.meta.apply {
