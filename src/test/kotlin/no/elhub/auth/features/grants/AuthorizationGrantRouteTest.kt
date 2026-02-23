@@ -629,12 +629,14 @@ class AuthorizationGrantRouteTest : FunSpec({
                 }
 
                 test("PATCH /authorization-grants/ should update status and return updated object as response") {
-                    val response = client.patch("$GRANTS_PATH/123e4567-e89b-12d3-a456-426614174000") {
+                    val id = "123e4567-e89b-12d3-a456-426614174000"
+                    val response = client.patch("$GRANTS_PATH/$id") {
                         header(HttpHeaders.Authorization, "Bearer elhub-service")
                         contentType(ContentType.Application.Json)
                         setBody(
                             JsonApiConsumeRequest(
                                 data = JsonApiRequestResourceObject(
+                                    id = id,
                                     type = "AuthorizationGrant",
                                     attributes = ConsumeRequestAttributes(
                                         status = AuthorizationGrant.Status.Exhausted
@@ -656,12 +658,14 @@ class AuthorizationGrantRouteTest : FunSpec({
                     }
                 }
                 test("Should reject update of non-'Active' grant") {
-                    val response = client.patch("$GRANTS_PATH/123e4567-e89b-12d3-a456-426614174000") {
+                    val id = "123e4567-e89b-12d3-a456-426614174000"
+                    val response = client.patch("$GRANTS_PATH/$id") {
                         header(HttpHeaders.Authorization, "Bearer elhub-service")
                         contentType(ContentType.Application.Json)
                         setBody(
                             JsonApiConsumeRequest(
                                 data = JsonApiRequestResourceObject(
+                                    id = id,
                                     type = "AuthorizationGrant",
                                     attributes = ConsumeRequestAttributes(
                                         status = AuthorizationGrant.Status.Exhausted
@@ -678,7 +682,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                         this[0].apply {
                             status shouldBe "400"
                             title shouldBe "Illegal status state"
-                            detail shouldBe "Grant must be 'Active' to get consumed"
+                            detail shouldBe "AuthorizationGrant must be 'Active' to get consumed."
                         }
                     }
                     responseJson.meta.apply {
@@ -686,12 +690,14 @@ class AuthorizationGrantRouteTest : FunSpec({
                     }
                 }
                 test("Should reject update of expired grant") {
-                    val response = client.patch("$GRANTS_PATH/2a28a9dd-d3b3-4dec-a420-3f7d0d0105b7") {
+                    val id = "2a28a9dd-d3b3-4dec-a420-3f7d0d0105b7"
+                    val response = client.patch("$GRANTS_PATH/$id") {
                         header(HttpHeaders.Authorization, "Bearer elhub-service")
                         contentType(ContentType.Application.Json)
                         setBody(
                             JsonApiConsumeRequest(
                                 data = JsonApiRequestResourceObject(
+                                    id = id,
                                     type = "AuthorizationGrant",
                                     attributes = ConsumeRequestAttributes(
                                         status = AuthorizationGrant.Status.Exhausted
@@ -708,8 +714,8 @@ class AuthorizationGrantRouteTest : FunSpec({
                         size shouldBe 1
                         this[0].apply {
                             status shouldBe "400"
-                            title shouldBe "Grant has expired"
-                            detail shouldBe "Grant validity period has passed"
+                            title shouldBe "AuthorizationGrant has expired"
+                            detail shouldBe "Validity period has passed."
                         }
                     }
                     responseJson.meta.apply {
@@ -717,12 +723,14 @@ class AuthorizationGrantRouteTest : FunSpec({
                     }
                 }
                 test("Should reject invalid status transition") {
-                    val response = client.patch("$GRANTS_PATH/2a28a9dd-d3b3-4dec-a420-3f7d0d0105b7") {
+                    val id = "2a28a9dd-d3b3-4dec-a420-3f7d0d0105b7"
+                    val response = client.patch("$GRANTS_PATH/$id") {
                         header(HttpHeaders.Authorization, "Bearer elhub-service")
                         contentType(ContentType.Application.Json)
                         setBody(
                             JsonApiConsumeRequest(
                                 data = JsonApiRequestResourceObject(
+                                    id = id,
                                     type = "AuthorizationGrant",
                                     attributes = ConsumeRequestAttributes(
                                         status = AuthorizationGrant.Status.Active
@@ -739,19 +747,6 @@ class AuthorizationGrantRouteTest : FunSpec({
                             status shouldBe "400"
                             title shouldBe "Invalid status transition"
                             detail shouldBe "Only 'Exhausted' status is allowed."
-                        }
-
-                        val responseJson: JsonApiErrorCollection = response.body()
-                        responseJson.errors.apply {
-                            size shouldBe 1
-                            this[0].apply {
-                                status shouldBe "400"
-                                title shouldBe "AuthorizationGrant has expired"
-                                detail shouldBe "Validity period has passed."
-                            }
-                            responseJson.meta.apply {
-                                "createdAt".shouldNotBeNull()
-                            }
                         }
                     }
                 }
