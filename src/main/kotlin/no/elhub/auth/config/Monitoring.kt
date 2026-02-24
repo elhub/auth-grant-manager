@@ -34,20 +34,11 @@ import io.ktor.http.isSuccess
 import io.ktor.server.config.ApplicationConfig
 import kotlin.time.Duration.Companion.seconds
 
-fun Application.configureMonitoring(
-    dataSource: HikariDataSource,
-) {
+fun Application.configureMonitoring(dataSource: HikariDataSource) {
     val appMicrometerRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
     install(MicrometerMetrics) {
         registry = appMicrometerRegistry
     }
-    val pdpHealthUrl = "${environment.config.property("pdp.baseUrl").getString()}/health"
-    val authPersonsHealthUrl = "${environment.config.property("authPersons.baseUri").getString()}/health"
-    val meteringPointsHealthUrl =
-        "${environment.config.property("structureData.meteringPointsService.serviceUrl").getString()}/health"
-    val organisationsServiceHealthUrl =
-        "${environment.config.property("structureData.organisationsService.serviceUrl").getString()}/health"
-
     val serviceDependencies = listOf(
         ServiceDependency("PDP", "pdp.baseUrl"),
         ServiceDependency("Auth persons", "authPersons.baseUri"),
