@@ -13,26 +13,26 @@ import com.sksamuel.cohort.hikari.HikariDataSourceManager
 import com.sksamuel.cohort.micrometer.CohortMetrics
 import com.sksamuel.cohort.threads.ThreadDeadlockHealthCheck
 import com.zaxxer.hikari.HikariDataSource
+import io.ktor.client.HttpClient
+import io.ktor.client.plugins.HttpResponseValidator
+import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.plugins.timeout
+import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.isSuccess
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
+import io.ktor.server.config.ApplicationConfig
 import io.ktor.server.metrics.micrometer.MicrometerMetrics
 import io.ktor.server.response.respond
-import io.ktor.client.request.get as sendGetRequest
-import io.ktor.server.routing.get as buildGetRoute
 import io.ktor.server.routing.routing
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import kotlinx.coroutines.Dispatchers
 import kotlin.time.Duration.Companion.minutes
-import io.ktor.client.HttpClient
-import io.ktor.client.plugins.HttpResponseValidator
-import io.ktor.client.plugins.HttpTimeout
-import io.ktor.client.plugins.timeout
-import io.ktor.client.statement.bodyAsText
-import io.ktor.client.statement.HttpResponse
-import io.ktor.http.isSuccess
-import io.ktor.server.config.ApplicationConfig
 import kotlin.time.Duration.Companion.seconds
+import io.ktor.client.request.get as sendGetRequest
+import io.ktor.server.routing.get as buildGetRoute
 
 fun Application.configureMonitoring(dataSource: HikariDataSource) {
     val appMicrometerRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
@@ -99,4 +99,3 @@ private class ServiceDependencyHealthCheck(
         { HealthCheckResult.healthy(it) }
     )
 }
-
