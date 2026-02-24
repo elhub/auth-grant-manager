@@ -1,8 +1,6 @@
 package no.elhub.auth.features.requests.update
 
 import arrow.core.Either
-import arrow.core.getOrElse
-import arrow.core.raise.context.bind
 import arrow.core.raise.either
 import arrow.core.raise.ensure
 import no.elhub.auth.features.businessprocesses.BusinessProcessError
