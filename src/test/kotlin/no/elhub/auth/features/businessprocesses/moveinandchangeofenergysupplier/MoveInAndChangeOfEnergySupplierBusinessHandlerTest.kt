@@ -49,6 +49,7 @@ import no.elhub.auth.features.documents.create.dto.CreateDocumentMeta
 import no.elhub.auth.features.documents.create.model.CreateDocumentModel
 import no.elhub.auth.features.filegenerator.SupportedLanguage
 import no.elhub.auth.features.requests.AuthorizationRequest
+import no.elhub.auth.features.requests.common.AuthorizationRequestProperty
 import no.elhub.auth.features.requests.create.model.CreateRequestMeta
 import no.elhub.auth.features.requests.create.model.CreateRequestModel
 import no.elhub.auth.features.requests.create.model.today
@@ -442,6 +443,61 @@ class MoveInAndChangeOfEnergySupplierBusinessHandlerTest :
 
             handler.validateAndReturnRequestCommand(model)
                 .shouldBeLeft(BusinessProcessError.Validation(MoveInAndChangeOfEnergySupplierValidationError.RequestedToRequestedFromMismatch.message))
+        }
+
+        test("returns properties when startDate property is present and not blank") {
+            val request = AuthorizationRequest.create(
+                type = AuthorizationRequest.Type.MoveInAndChangeOfEnergySupplierForPerson,
+                requestedBy = AUTHORIZED_PARTY,
+                requestedFrom = AUTHORIZED_PARTY,
+                requestedTo = AUTHORIZED_PARTY,
+                validTo = today().toTimeZoneOffsetDateTimeAtStartOfDay(),
+            ).copy(
+                properties = listOf(
+                    AuthorizationRequestProperty(
+                        requestId = UUID.randomUUID(),
+                        key = "startDate",
+                        value = "2024-01-01"
+                    )
+                )
+            )
+            val result = handler.getUpdateGrantMetaProperties(request)
+            result.shouldBeRight(mapOf("startDate" to "2024-01-01"))
+        }
+
+        test("returns unexpected error unknown property is present and not blank") {
+            val request = AuthorizationRequest.create(
+                type = AuthorizationRequest.Type.MoveInAndChangeOfEnergySupplierForPerson,
+                requestedBy = AUTHORIZED_PARTY,
+                requestedFrom = AUTHORIZED_PARTY,
+                requestedTo = AUTHORIZED_PARTY,
+                validTo = today().toTimeZoneOffsetDateTimeAtStartOfDay(),
+            ).copy(
+                properties = listOf(
+                    AuthorizationRequestProperty(
+                        requestId = UUID.randomUUID(),
+                        key = "key1",
+                        value = "value1"
+                    )
+                )
+            )
+            val result = handler.getUpdateGrantMetaProperties(request)
+            result.shouldBeLeft(
+                (BusinessProcessError.Unexpected(MoveInAndChangeOfEnergySupplierValidationError.UnexpectedError.message)))
+        }
+
+        test("returns unexpected error when startDate is not present") {
+            val request = AuthorizationRequest.create(
+                type = AuthorizationRequest.Type.MoveInAndChangeOfEnergySupplierForPerson,
+                requestedBy = AUTHORIZED_PARTY,
+                requestedFrom = AUTHORIZED_PARTY,
+                requestedTo = AUTHORIZED_PARTY,
+                validTo = today().toTimeZoneOffsetDateTimeAtStartOfDay(),
+            )
+
+            val result = handler.getUpdateGrantMetaProperties(request)
+            result.shouldBeLeft(
+                (BusinessProcessError.Unexpected(MoveInAndChangeOfEnergySupplierValidationError.UnexpectedError.message)))
         }
 
         test("strompris service is not called if validateBalanceSupplierContractName is false, assuming all previous validations pass") {
