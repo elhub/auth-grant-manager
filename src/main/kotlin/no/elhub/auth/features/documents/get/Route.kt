@@ -3,9 +3,11 @@ package no.elhub.auth.features.documents.get
 import arrow.core.getOrElse
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
+import io.ktor.server.request.acceptItems
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondBytes
 import io.ktor.server.routing.Route
+import io.ktor.server.routing.accept
 import io.ktor.server.routing.get
 import no.elhub.auth.features.common.auth.AuthorizationProvider
 import no.elhub.auth.features.common.auth.AuthorizedParty
@@ -70,6 +72,16 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
     }
 
     get("/{$DOCUMENT_ID_PARAM}.pdf") {
+        val acceptFromClient = call.request.acceptItems()
+        val acceptsPdf = call.request.acceptItems().any {
+            ContentType.Application.Pdf.match(it.value) || ContentType.Any.match(it.value)
+        }
+
+        if (!acceptsPdf && acceptFromClient.isNotEmpty()) {
+            call.respond(HttpStatusCode.NotAcceptable, "Client must accept application/pdf for this endpoint")
+            return@get
+        }
+
         val authorizedParty = authProvider.authorizeEndUserOrMaskinporten(call)
             .getOrElse { err ->
                 val (status, body) = err.toApiErrorResponse()
