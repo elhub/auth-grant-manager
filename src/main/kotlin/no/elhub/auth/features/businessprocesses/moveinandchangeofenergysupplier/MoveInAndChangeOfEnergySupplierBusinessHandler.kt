@@ -140,10 +140,10 @@ class MoveInAndChangeOfEnergySupplierBusinessHandler(
             return MoveInAndChangeOfEnergySupplierValidationError.RequestedFromIsMeteringPointEndUser.left()
         }
 
-        val startDate = model.startDate
-        startDate?.let {
+        val moveInDate = model.moveInDate
+        moveInDate?.let {
             if (it > today()) {
-                return MoveInAndChangeOfEnergySupplierValidationError.StartDateNotBackInTime.left()
+                return MoveInAndChangeOfEnergySupplierValidationError.MoveInDateNotBackInTime.left()
             }
         }
 
@@ -205,7 +205,7 @@ class MoveInAndChangeOfEnergySupplierBusinessHandler(
                 requestedForMeterNumber = meteringPoint.data.attributes?.accountingPoint?.meter?.meterNumber ?: "",
                 balanceSupplierContractName = model.balanceSupplierContractName,
                 balanceSupplierName = model.balanceSupplierName,
-                startDate = startDate,
+                moveInDate = moveInDate,
                 redirectURI = model.redirectURI,
             )
 

@@ -104,7 +104,7 @@ class MoveInAndChangeOfEnergySupplierBusinessHandlerTest :
         coEvery { personService.findOrCreateByNin(ANOTHER_END_USER.idValue) } returns Either.Right(Person(UUID.fromString(END_USER_ID_2)))
         coEvery { personService.findOrCreateByNin(SHARED_END_USER.idValue) } returns Either.Right(Person(UUID.fromString(SHARED_END_USER_ID_1)))
 
-        test("request validation allows missing startDate") {
+        test("request validation allows missing moveInDate") {
             val model =
                 CreateRequestModel(
                     authorizedParty = AUTHORIZED_PARTY,
@@ -119,16 +119,16 @@ class MoveInAndChangeOfEnergySupplierBusinessHandlerTest :
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
-                        startDate = null,
+                        moveInDate = null,
                         redirectURI = "https://example.com",
                     ),
                 )
 
             val command = handler.validateAndReturnRequestCommand(model).shouldBeRight()
-            command.meta.toMetaAttributes()["startDate"] shouldBe null
+            command.meta.toMetaAttributes()["moveInDate"] shouldBe null
         }
 
-        test("request validation fails on future startDate") {
+        test("request validation fails on future moveInDate") {
             val model =
                 CreateRequestModel(
                     authorizedParty = AUTHORIZED_PARTY,
@@ -143,16 +143,16 @@ class MoveInAndChangeOfEnergySupplierBusinessHandlerTest :
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
-                        startDate = today().plus(DatePeriod(days = 1)),
+                        moveInDate = today().plus(DatePeriod(days = 1)),
                         redirectURI = "https://example.com",
                     ),
                 )
 
             handler.validateAndReturnRequestCommand(model)
-                .shouldBeLeft(BusinessProcessError.Validation(MoveInAndChangeOfEnergySupplierValidationError.StartDateNotBackInTime.message))
+                .shouldBeLeft(BusinessProcessError.Validation(MoveInAndChangeOfEnergySupplierValidationError.MoveInDateNotBackInTime.message))
         }
 
-        test("request validation allows startDate today") {
+        test("request validation allows moveInDate today") {
             val model =
                 CreateRequestModel(
                     authorizedParty = AUTHORIZED_PARTY,
@@ -167,7 +167,7 @@ class MoveInAndChangeOfEnergySupplierBusinessHandlerTest :
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
-                        startDate = today(),
+                        moveInDate = today(),
                         redirectURI = "https://example.com",
                     ),
                 )
@@ -190,7 +190,7 @@ class MoveInAndChangeOfEnergySupplierBusinessHandlerTest :
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
-                        startDate = VALID_START_DATE,
+                        moveInDate = VALID_START_DATE,
                         redirectURI = "https://example.com",
                     ),
                 )
@@ -214,7 +214,7 @@ class MoveInAndChangeOfEnergySupplierBusinessHandlerTest :
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
-                        startDate = VALID_START_DATE,
+                        moveInDate = VALID_START_DATE,
                         redirectURI = "https://example.com",
                     ),
                 )
@@ -238,7 +238,7 @@ class MoveInAndChangeOfEnergySupplierBusinessHandlerTest :
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
-                        startDate = VALID_START_DATE,
+                        moveInDate = VALID_START_DATE,
                         redirectURI = "https://example.com",
                     ),
                 )
@@ -262,7 +262,7 @@ class MoveInAndChangeOfEnergySupplierBusinessHandlerTest :
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
-                        startDate = VALID_START_DATE,
+                        moveInDate = VALID_START_DATE,
                         redirectURI = "https://example.com",
                     ),
                 )
@@ -285,7 +285,7 @@ class MoveInAndChangeOfEnergySupplierBusinessHandlerTest :
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
-                        startDate = VALID_START_DATE,
+                        moveInDate = VALID_START_DATE,
                         redirectURI = "https://example.com",
                     ),
                 )
@@ -309,7 +309,7 @@ class MoveInAndChangeOfEnergySupplierBusinessHandlerTest :
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
-                        startDate = VALID_START_DATE,
+                        moveInDate = VALID_START_DATE,
                         redirectURI = "https://example.com",
                     ),
                 )
@@ -333,7 +333,7 @@ class MoveInAndChangeOfEnergySupplierBusinessHandlerTest :
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
-                        startDate = VALID_START_DATE,
+                        moveInDate = VALID_START_DATE,
                         redirectURI = "https://example.com",
                     ),
                 )
@@ -372,7 +372,7 @@ class MoveInAndChangeOfEnergySupplierBusinessHandlerTest :
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
-                        startDate = VALID_START_DATE,
+                        moveInDate = VALID_START_DATE,
                         redirectURI = "https://example.com",
                     ),
                 )
@@ -411,7 +411,7 @@ class MoveInAndChangeOfEnergySupplierBusinessHandlerTest :
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
-                        startDate = VALID_START_DATE,
+                        moveInDate = VALID_START_DATE,
                         redirectURI = "https://example.com",
                     ),
                 )
@@ -435,7 +435,7 @@ class MoveInAndChangeOfEnergySupplierBusinessHandlerTest :
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
-                        startDate = VALID_START_DATE,
+                        moveInDate = VALID_START_DATE,
                         redirectURI = "https://example.com",
                     ),
                 )
@@ -459,7 +459,7 @@ class MoveInAndChangeOfEnergySupplierBusinessHandlerTest :
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
-                        startDate = VALID_START_DATE,
+                        moveInDate = VALID_START_DATE,
                         redirectURI = "https://example.com",
                     ),
                 )
@@ -507,7 +507,7 @@ class MoveInAndChangeOfEnergySupplierBusinessHandlerTest :
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
-                        startDate = VALID_START_DATE,
+                        moveInDate = VALID_START_DATE,
                         redirectURI = "https://example.com",
                     ),
                 )
@@ -531,7 +531,7 @@ class MoveInAndChangeOfEnergySupplierBusinessHandlerTest :
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
-                        startDate = VALID_START_DATE,
+                        moveInDate = VALID_START_DATE,
                         redirectURI = "https://example.com",
                     ),
                 )
@@ -540,7 +540,7 @@ class MoveInAndChangeOfEnergySupplierBusinessHandlerTest :
 
             command.type shouldBe AuthorizationRequest.Type.MoveInAndChangeOfEnergySupplierForPerson
             command.validTo shouldBe today().plus(DatePeriod(days = 28)).toTimeZoneOffsetDateTimeAtStartOfDay()
-            command.meta.toMetaAttributes()["startDate"] shouldBe VALID_START_DATE.toString()
+            command.meta.toMetaAttributes()["moveInDate"] shouldBe VALID_START_DATE.toString()
             command.meta.toMetaAttributes()["redirectURI"] shouldBe "https://example.com"
             command.meta.toMetaAttributes().containsKey("requestedForMeterNumber") shouldBe true
         }
@@ -576,12 +576,12 @@ class MoveInAndChangeOfEnergySupplierBusinessHandlerTest :
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
-                        startDate = VALID_START_DATE,
+                        moveInDate = VALID_START_DATE,
                     ),
                 )
 
             val command = handler.validateAndReturnDocumentCommand(model).shouldBeRight()
-            command.meta.toMetaAttributes()["startDate"] shouldBe VALID_START_DATE.toString()
+            command.meta.toMetaAttributes()["moveInDate"] shouldBe VALID_START_DATE.toString()
             command.meta.toMetaAttributes()["language"] shouldBe SupportedLanguage.DEFAULT.code
             command.meta.toMetaAttributes().containsKey("requestedForMeterNumber") shouldBe true
         }

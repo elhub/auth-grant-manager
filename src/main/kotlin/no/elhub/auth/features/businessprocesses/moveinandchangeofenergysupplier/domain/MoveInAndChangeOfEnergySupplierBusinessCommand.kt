@@ -28,7 +28,7 @@ data class MoveInAndChangeOfEnergySupplierBusinessMeta(
     val requestedForMeteringPointAddress: String,
     val balanceSupplierName: String,
     val balanceSupplierContractName: String,
-    val startDate: LocalDate?,
+    val moveInDate: LocalDate?,
     val language: SupportedLanguage? = null,
     val redirectURI: String? = null,
 ) : RequestMetaMarker,
@@ -42,7 +42,7 @@ data class MoveInAndChangeOfEnergySupplierBusinessMeta(
             put("balanceSupplierContractName", balanceSupplierContractName)
             put("balanceSupplierName", balanceSupplierName)
             language?.let { put("language", it.code) }
-            startDate?.let { put("startDate", it.toString()) }
+            moveInDate?.let { put("moveInDate", it.toString()) }
             redirectURI?.let { put("redirectURI", it) }
         }
 }

@@ -26,7 +26,7 @@ data class CreateRequestMeta(
     val requestedForMeteringPointAddress: String,
     val balanceSupplierName: String,
     val balanceSupplierContractName: String,
-    val startDate: LocalDate? = null,
+    val moveInDate: LocalDate? = null,
     val redirectURI: String,
 )
 

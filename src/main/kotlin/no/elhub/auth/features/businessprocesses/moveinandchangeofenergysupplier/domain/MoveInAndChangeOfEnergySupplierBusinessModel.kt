@@ -17,7 +17,7 @@ data class MoveInAndChangeOfEnergySupplierBusinessModel(
     val requestedForMeteringPointAddress: String,
     val balanceSupplierName: String,
     val balanceSupplierContractName: String,
-    val startDate: LocalDate?,
+    val moveInDate: LocalDate?,
     val redirectURI: String? = null,
 )
 
@@ -31,7 +31,7 @@ fun CreateRequestModel.toMoveInAndChangeOfEnergySupplierBusinessModel(): MoveInA
         requestedForMeteringPointAddress = this.meta.requestedForMeteringPointAddress,
         balanceSupplierName = this.meta.balanceSupplierName,
         balanceSupplierContractName = this.meta.balanceSupplierContractName,
-        startDate = this.meta.startDate,
+        moveInDate = this.meta.moveInDate,
         redirectURI = this.meta.redirectURI,
     )
 
@@ -46,5 +46,5 @@ fun CreateDocumentModel.toMoveInAndChangeOfEnergySupplierBusinessModel(): MoveIn
         requestedForMeteringPointAddress = this.meta.requestedForMeteringPointAddress,
         balanceSupplierName = this.meta.balanceSupplierName,
         balanceSupplierContractName = this.meta.balanceSupplierContractName,
-        startDate = this.meta.startDate,
+        moveInDate = this.meta.moveInDate,
     )
