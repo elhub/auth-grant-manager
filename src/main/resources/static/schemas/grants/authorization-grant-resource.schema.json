@@ -39,6 +39,15 @@
             "scopes"
           ]
         },
+        "meta": {
+          "type": "object",
+          "description": "Read-only context and human-readable metadata.",
+          "properties": {
+            "startDate": {
+              "$ref": "../authorization-common.schema.json#/$defs/startDate"
+            }
+          }
+        },
         "links": {
           "$ref": "authorization-grant-common.schema.json#/$defs/links",
           "required": [
