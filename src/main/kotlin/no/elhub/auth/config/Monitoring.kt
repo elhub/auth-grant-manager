@@ -2,6 +2,8 @@ package no.elhub.auth.config
 
 import arrow.core.Either
 import arrow.core.flatMap
+import arrow.core.raise.either
+import arrow.core.raise.ensure
 import com.sksamuel.cohort.Cohort
 import com.sksamuel.cohort.HealthCheck
 import com.sksamuel.cohort.HealthCheckRegistry
@@ -45,6 +47,14 @@ fun Application.configureMonitoring(
         "${environment.config.property("structureData.meteringPointsService.serviceUrl").getString()}/health"
     val organisationsServiceHealthUrl =
         "${environment.config.property("structureData.organisationsService.serviceUrl").getString()}/health"
+
+    val serviceDependencies = listOf(
+        ServiceDependency("PDP", "pdp.baseUrl"),
+        ServiceDependency("Auth persons", "authPersons.baseUri"),
+        ServiceDependency("Metering points service", "structureData.meteringPointsService.serviceUrl"),
+        ServiceDependency("Organisations service", "structureData.organisationsService.serviceUrl"),
+        // TODO consider IDP
+    )
     install(Cohort) {
         dataSources = listOf(HikariDataSourceManager(dataSource))
         sysprops = true
@@ -53,29 +63,15 @@ fun Application.configureMonitoring(
         val checks = HealthCheckRegistry(Dispatchers.Default) {
             register("Thread Deadlocks", ThreadDeadlockHealthCheck(), 10.seconds, 1.minutes)
             register("Database Connection", HikariConnectionsHealthCheck(dataSource, 1), 10.seconds, 5.seconds)
-            register(
-                "PDP connection",
-                ServiceDependencyHealthCheck(dependencyCheckClient, pdpHealthUrl),
-                10.seconds,
-                5.seconds,
-            )
-            register(
-                "Auth persons connection", ServiceDependencyHealthCheck(dependencyCheckClient, authPersonsHealthUrl),
-                10.seconds,
-                5.seconds,
-            )
-            register(
-                "Metering points service connection",
-                ServiceDependencyHealthCheck(dependencyCheckClient, meteringPointsHealthUrl),
-                10.seconds,
-                5.seconds,
-            )
-            register(
-                "Organisations service connection",
-                ServiceDependencyHealthCheck(dependencyCheckClient, organisationsServiceHealthUrl),
-                10.seconds,
-                5.seconds,
-            )
+            serviceDependencies.forEach { dependency ->
+                val url = environment.config.property(dependency.baseUrlConfigKey).getString() + "/health"
+                register(
+                    "${dependency.name} connection",
+                    ServiceDependencyHealthCheck(dependencyCheckClient, url),
+                    10.seconds,
+                    10.seconds
+                )
+            }
         }
         healthcheck("/health", checks)
         CohortMetrics(checks).bindTo(appMicrometerRegistry)
@@ -88,29 +84,28 @@ fun Application.configureMonitoring(
     }
 }
 
-class ServiceDependencyHealthCheck(
+private data class ServiceDependency(
+    val name: String,
+    val baseUrlConfigKey: String,
+)
+
+private class ServiceDependencyHealthCheck(
     private val client: HttpClient,
     private val url: String,
 ) : HealthCheck {
-    override suspend fun check(): HealthCheckResult = Either.catch {
-        client.sendGetRequest(url) {
-            timeout {
-                requestTimeoutMillis = 1500
-            }
+    override suspend fun check(): HealthCheckResult = either {
+        val response = Either.catch { client.sendGetRequest(url) }.bind()
+
+        ensure(response.status.isSuccess()) {
+            "$url responded with ${response.status.value}: ${response.bodyAsText()}"
         }
-    }.mapLeft { "Failed calling $url: ${it.message}" }
-        .flatMap { response ->
-            if (response.status.isSuccess()) {
-                Either.Right("$url OK")
-            } else {
-                Either.Left(
-                    "HTTP ${response.status.value} from $url with message ${response.bodyAsText()}"
-                )
-            }
-        }
-        .fold(
-            { HealthCheckResult.unhealthy(it) },
-            { HealthCheckResult.healthy(it) }
-        )
+
+        println("$url OK :)")
+
+        "$url OK"
+    }.fold(
+        { HealthCheckResult.unhealthy("Failed calling $url: $it") },
+        { HealthCheckResult.healthy(it) }
+    )
 }
 
