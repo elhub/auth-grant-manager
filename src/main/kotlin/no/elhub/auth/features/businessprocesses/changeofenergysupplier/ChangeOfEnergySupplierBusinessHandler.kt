@@ -53,8 +53,7 @@ class ChangeOfEnergySupplierBusinessHandler(
     private val validateBalanceSupplierContractName: Boolean
 ) : RequestBusinessHandler, DocumentBusinessHandler, GrantBusinessHandler {
 
-    override fun getUpdateGrantMetaProperties(request: AuthorizationRequest):
-        Either<BusinessProcessError, Map<String, String>> = emptyMap<String, String>().right()
+    override fun getUpdateGrantMetaProperties(request: AuthorizationRequest): Either<BusinessProcessError, Map<String, String>> = emptyMap<String, String>().right()
 
     override suspend fun validateAndReturnRequestCommand(createRequestModel: CreateRequestModel): Either<BusinessProcessError, RequestCommand> =
         either {

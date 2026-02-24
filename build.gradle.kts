@@ -180,3 +180,9 @@ dependencyCheck {
         datafeedUrl = "https://owasp.elhub.cloud"
     }
 }
+
+tasks.test {
+    testLogging {
+        showStandardStreams = true
+    }
+}

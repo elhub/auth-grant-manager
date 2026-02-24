@@ -84,8 +84,7 @@ fun Application.testRequestBusinessModule() {
 }
 
 private class TestGrantBusinessHandler : GrantBusinessHandler {
-    override fun getUpdateGrantMetaProperties(request: AuthorizationRequest):
-        Either<BusinessProcessError, Map<String, String>> = emptyMap<String, String>().right()
+    override fun getUpdateGrantMetaProperties(request: AuthorizationRequest): Either<BusinessProcessError, Map<String, String>> = emptyMap<String, String>().right()
 }
 
 class TestRequestBusinessHandler : RequestBusinessHandler {
