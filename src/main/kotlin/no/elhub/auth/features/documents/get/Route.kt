@@ -7,7 +7,6 @@ import io.ktor.server.request.acceptItems
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondBytes
 import io.ktor.server.routing.Route
-import io.ktor.server.routing.accept
 import io.ktor.server.routing.get
 import no.elhub.auth.features.common.auth.AuthorizationProvider
 import no.elhub.auth.features.common.auth.AuthorizedParty
@@ -15,6 +14,7 @@ import no.elhub.auth.features.common.auth.toApiErrorResponse
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toApiErrorResponse
+import no.elhub.auth.features.common.toNotAcceptedErrorResponse
 import no.elhub.auth.features.common.validatePathId
 import no.elhub.auth.features.documents.get.dto.toGetSingleResponse
 import org.slf4j.LoggerFactory
@@ -78,7 +78,7 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
         }
 
         if (!acceptsPdf && acceptFromClient.isNotEmpty()) {
-            call.respond(HttpStatusCode.NotAcceptable, "Client must accept application/pdf for this endpoint")
+            call.respond(HttpStatusCode.NotAcceptable, toNotAcceptedErrorResponse(detail = "Accept header must be set to Application/Pdf" ))
             return@get
         }
 
