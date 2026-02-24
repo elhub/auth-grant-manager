@@ -31,7 +31,6 @@ import no.elhub.auth.features.documents.common.DocumentBusinessHandler
 import no.elhub.auth.features.documents.create.command.DocumentCommand
 import no.elhub.auth.features.documents.create.model.CreateDocumentModel
 import no.elhub.auth.features.grants.AuthorizationScope
-import no.elhub.auth.features.grants.common.AuthorizationGrantProperty
 import no.elhub.auth.features.grants.common.CreateGrantProperties
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.create.RequestBusinessHandler
@@ -62,7 +61,19 @@ class MoveInAndChangeOfEnergySupplierBusinessHandler(
 ) : RequestBusinessHandler,
     DocumentBusinessHandler,
     GrantBusinessHandler {
-    override fun getMetaProperties(request: AuthorizationRequest): List<String> = listOf("startDate")
+
+    override fun getUpdateGrantMetaProperties(request: AuthorizationRequest): Either<BusinessProcessError, Map<String, String>> {
+        val metaKeys = listOf("startDate")
+        val metaMap = request.properties
+            .filter { it.key in metaKeys }
+            .associate { it.key to it.value }
+
+        if (metaMap["startDate"].isNullOrBlank()) {
+            return MoveInAndChangeOfEnergySupplierValidationError.UnexpectedError.toBusinessError().left()
+        }
+
+        return metaMap.right()
+    }
 
     override suspend fun validateAndReturnRequestCommand(createRequestModel: CreateRequestModel): Either<BusinessProcessError, RequestCommand> =
         either {

@@ -1481,7 +1481,9 @@ private class TestRequestBusinessHandler : RequestBusinessHandler {
 }
 
 private class TestGrantBusinessHandler : GrantBusinessHandler {
-    override fun getMetaProperties(request: AuthorizationRequest): List<String> = emptyList()
+    override fun getUpdateGrantMetaProperties(request: AuthorizationRequest):
+        Either<BusinessProcessError, Map<String, String>> = emptyMap<String, String>().right()
+
 }
 
 private data class TestRequestMeta(

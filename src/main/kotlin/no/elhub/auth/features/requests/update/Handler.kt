@@ -1,8 +1,11 @@
 package no.elhub.auth.features.requests.update
 
 import arrow.core.Either
+import arrow.core.getOrElse
+import arrow.core.raise.context.bind
 import arrow.core.raise.either
 import arrow.core.raise.ensure
+import no.elhub.auth.features.businessprocesses.BusinessProcessError
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.grants.AuthorizationGrant
@@ -89,10 +92,14 @@ class Handler(
                 .mapLeft { UpdateError.GrantCreationError }
                 .bind()
 
-            val metaKeys = businessHandler.getMetaProperties(acceptedRequest).toSet()
-            val grantProperties = acceptedRequest.properties
-                .filter { it.key in metaKeys }
-                .map { prop -> AuthorizationGrantProperty(grantId = createdGrant.id, key = prop.key, value = prop.value) }
+            val metaProperties = businessHandler.getUpdateGrantMetaProperties(acceptedRequest)
+                .mapLeft {
+                    UpdateError.PersistenceError
+                }.bind()
+
+            val grantProperties = metaProperties.map { (key, value) ->
+                AuthorizationGrantProperty(grantId = createdGrant.id, key = key, value = value)
+            }
 
             grantPropertiesRepository.insert(grantProperties)
 
@@ -110,5 +117,5 @@ class Handler(
 }
 
 interface GrantBusinessHandler {
-    fun getMetaProperties(request: AuthorizationRequest): List<String>
+    fun getUpdateGrantMetaProperties(request: AuthorizationRequest): Either<BusinessProcessError, Map<String, String>>
 }
