@@ -42,8 +42,8 @@ fun Application.configureMonitoring(dataSource: HikariDataSource) {
     val serviceDependencies = listOf(
         ServiceDependency("PDP", "pdp.baseUrl"),
         ServiceDependency("Auth persons", "authPersons.baseUri"),
-        ServiceDependency("Metering points service", "structureData.meteringPointsService.serviceUrl"),
-        ServiceDependency("Organisations service", "structureData.organisationsService.serviceUrl"),
+        ServiceDependency("Metering points service", "structureData.meteringPointsService.baseUrl"),
+        ServiceDependency("Organisations service", "structureData.organisationsService.baseUrl"),
         // TODO consider IDP
     )
     install(Cohort) {
@@ -53,9 +53,15 @@ fun Application.configureMonitoring(dataSource: HikariDataSource) {
         val dependencyCheckClient = HttpClient()
         val checks = HealthCheckRegistry(Dispatchers.Default) {
             register("Thread Deadlocks", ThreadDeadlockHealthCheck(), 10.seconds, 1.minutes)
-            register("Database Connection", HikariConnectionsHealthCheck(dataSource, 1), 10.seconds, 5.seconds)
+            register(
+                "Database Connection",
+                HikariConnectionsHealthCheck(dataSource, 1),
+                10.seconds,
+                5.seconds
+            )
             serviceDependencies.forEach { dependency ->
-                val url = environment.config.property(dependency.baseUrlConfigKey).getString() + "/health"
+                val url =
+                    environment.config.property(dependency.baseUrlConfigKey).getString() + "/health"
                 register(
                     "${dependency.name} connection",
                     ServiceDependencyHealthCheck(dependencyCheckClient, url),
