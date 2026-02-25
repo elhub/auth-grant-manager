@@ -139,7 +139,9 @@ class AuthorizationDocumentRouteTest :
                         "pdfSigner.certificate.bankIdRootDir" to TestCertificateUtil.Constants.BANKID_ROOT_CERTIFICATES_DIR,
                         "featureToggle.enableEndpoints" to "true",
                         "authPersons.baseUri" to AuthPersonsTestContainer.baseUri(),
-                        "pdp.baseUrl" to "http://localhost:8085"
+                        "pdp.baseUrl" to "http://localhost:8085",
+                        "structureData.meteringPointsService.baseUrl" to "http://localhost:8083",
+                        "structureData.organisationsService.baseUrl" to "http://localhost:8082",
                     )
                 }
 
@@ -718,7 +720,9 @@ class AuthorizationDocumentRouteTest :
                         "pdfSigner.certificate.bankIdRootDir" to TestCertificateUtil.Constants.BANKID_ROOT_CERTIFICATES_DIR,
                         "featureToggle.enableEndpoints" to "true",
                         "authPersons.baseUri" to AuthPersonsTestContainer.baseUri(),
-                        "pdp.baseUrl" to "http://localhost:8085"
+                        "pdp.baseUrl" to "http://localhost:8085",
+                        "structureData.meteringPointsService.baseUrl" to "http://localhost:8083",
+                        "structureData.organisationsService.baseUrl" to "http://localhost:8082",
                     )
                 }
 
@@ -803,7 +807,9 @@ class AuthorizationDocumentRouteTest :
                         "pdfSigner.certificate.bankIdRootDir" to TestCertificateUtil.Constants.BANKID_ROOT_CERTIFICATES_DIR,
                         "featureToggle.enableEndpoints" to "true",
                         "authPersons.baseUri" to AuthPersonsTestContainer.baseUri(),
-                        "pdp.baseUrl" to "http://localhost:8085"
+                        "pdp.baseUrl" to "http://localhost:8085",
+                        "structureData.meteringPointsService.baseUrl" to "http://localhost:8083",
+                        "structureData.organisationsService.baseUrl" to "http://localhost:8082",
                     )
                 }
 

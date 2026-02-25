@@ -22,7 +22,7 @@ fun Application.meteringPointsServiceModule() {
         single {
             val meteringPointsApiConfig = get<ApplicationConfig>().config("structureData.meteringPointsService")
             MeteringPointsApiConfig(
-                serviceUrl = meteringPointsApiConfig.property("serviceUrl").getString(),
+                serviceUrl = meteringPointsApiConfig.property("baseUrl").getString() + "/service",
                 basicAuthConfig = BasicAuthConfig(
                     username = meteringPointsApiConfig.property("authentication.basic.username").getString(),
                     password = meteringPointsApiConfig.property("authentication.basic.password").getString()

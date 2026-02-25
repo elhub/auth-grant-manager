@@ -22,7 +22,7 @@ fun Application.organisationsServiceModule() {
         single {
             val organisationsApiConfig = get<ApplicationConfig>().config("structureData.organisationsService")
             OrganisationsApiConfig(
-                serviceUrl = organisationsApiConfig.property("serviceUrl").getString(),
+                serviceUrl = organisationsApiConfig.property("baseUrl").getString() + "/v1/service",
                 basicAuthConfig = BasicAuthConfig(
                     username = organisationsApiConfig.property("authentication.basic.username").getString(),
                     password = organisationsApiConfig.property("authentication.basic.password").getString()

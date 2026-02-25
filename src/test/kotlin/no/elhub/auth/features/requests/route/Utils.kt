@@ -69,7 +69,9 @@ fun ApplicationTestBuilder.setUpAuthorizationRequestTestApplication() {
                 "ktor.database.driverClass" to "org.postgresql.Driver",
                 "featureToggle.enableEndpoints" to "true",
                 "authPersons.baseUri" to AuthPersonsTestContainer.baseUri(),
-                "pdp.baseUrl" to "http://localhost:8085"
+                "pdp.baseUrl" to "http://localhost:8085",
+                "structureData.meteringPointsService.baseUrl" to "http://localhost:8083",
+                "structureData.organisationsService.baseUrl" to "http://localhost:8082",
             )
     }
 }
@@ -192,7 +194,7 @@ val examplePostBody = JsonApiCreateRequest(
     data = JsonApiRequestResourceObjectWithMeta(
         type = "AuthorizationRequest",
         attributes =
-        CreateRequestAttributes(requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson),
+            CreateRequestAttributes(requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson),
         meta = CreateRequestMeta(
             requestedBy = PartyIdentifier(
                 PartyIdentifierType.GlobalLocationNumber,

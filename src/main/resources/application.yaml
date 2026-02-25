@@ -45,13 +45,13 @@ authPersons:
 
 structureData:
   meteringPointsService:
-    serviceUrl: ${STRUCTURE_DATA_METERING_POINTS_SERVICE_URL}
+    baseUrl: ${STRUCTURE_DATA_METERING_POINTS_BASE_URL}
     authentication:
       basic:
         username: ${STRUCTURE_DATA_METERING_POINTS_SERVICE_API_USERNAME}
         password: ${STRUCTURE_DATA_METERING_POINTS_SERVICE_API_PASSWORD}
   organisationsService:
-    serviceUrl: ${STRUCTURE_DATA_ORGANISATIONS_SERVICE_URL}
+    baseUrl: ${STRUCTURE_DATA_ORGANISATIONS_BASE_URL}
     authentication:
       basic:
         username: ${STRUCTURE_DATA_ORGANISATIONS_SERVICE_API_USERNAME}
