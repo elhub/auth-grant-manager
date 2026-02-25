@@ -14,11 +14,9 @@ import no.elhub.auth.features.common.auth.toApiErrorResponse
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toApiErrorResponse
-import no.elhub.auth.features.common.toBalanceSupplierNotApiAuthorizedResponse
 import no.elhub.auth.features.common.toNotAcceptedErrorResponse
 import no.elhub.auth.features.common.validatePathId
 import no.elhub.auth.features.documents.get.dto.toGetSingleResponse
-import org.apache.commons.collections4.KeyValue
 import org.slf4j.LoggerFactory
 import java.util.UUID
 
