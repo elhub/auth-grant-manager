@@ -40,7 +40,7 @@ class RouteTest : FunSpec({
     val documents = listOf(
         AuthorizationDocument(
             id = UUID.fromString("e4cf3f16-3ca4-4cc1-9130-8792b29d06d3"),
-            type = AuthorizationDocument.Type.ChangeOfEnergySupplierForPerson,
+            type = AuthorizationDocument.Type.ChangeOfBalanceSupplierForPerson,
             status = AuthorizationDocument.Status.Pending,
             file = Random.nextBytes(256),
             requestedBy = byAuthParty,
@@ -58,7 +58,7 @@ class RouteTest : FunSpec({
         ),
         AuthorizationDocument(
             id = UUID.fromString("f696ce1d-3efa-48aa-b3e5-3019a0bfbabd"),
-            type = AuthorizationDocument.Type.MoveInAndChangeOfEnergySupplierForPerson,
+            type = AuthorizationDocument.Type.MoveInAndChangeOfBalanceSupplierForPerson,
             status = AuthorizationDocument.Status.Rejected,
             file = Random.nextBytes(256),
             requestedBy = byAuthParty,

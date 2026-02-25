@@ -12,7 +12,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.datetime.LocalDate
 import no.elhub.auth.features.businessprocesses.BusinessProcessError
-import no.elhub.auth.features.businessprocesses.changeofenergysupplier.ChangeOfEnergySupplierValidationError
+import no.elhub.auth.features.businessprocesses.changeofenergysupplier.ChangeOfBalanceSupplierValidationError
 import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.common.RepositoryWriteError
 import no.elhub.auth.features.common.party.AuthorizationParty
@@ -59,7 +59,7 @@ class HandlerTest : FunSpec({
     val model =
         CreateRequestModel(
             authorizedParty = requestedByParty,
-            requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
+            requestType = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
             meta = meta,
         )
 
@@ -69,7 +69,7 @@ class HandlerTest : FunSpec({
 
     val command =
         RequestCommand(
-            type = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
+            type = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
             requestedFrom = requestedFromIdentifier,
             requestedBy = requestedByIdentifier,
             requestedTo = requestedToIdentifier,
@@ -78,7 +78,7 @@ class HandlerTest : FunSpec({
                 CreateScopeData(
                     authorizedResourceType = AuthorizationScope.AuthorizationResource.MeteringPoint,
                     authorizedResourceId = "123456789012345678",
-                    permissionType = AuthorizationScope.PermissionType.ChangeOfEnergySupplierForPerson,
+                    permissionType = AuthorizationScope.PermissionType.ChangeOfBalanceSupplierForPerson,
                 )
             ),
             meta = commandMeta,
@@ -210,14 +210,14 @@ class HandlerTest : FunSpec({
         stubPartyResolution(partyService)
         coEvery {
             businessHandler.validateAndReturnRequestCommand(model)
-        } returns BusinessProcessError.Validation(ChangeOfEnergySupplierValidationError.MissingRequestedFromName.message).left()
+        } returns BusinessProcessError.Validation(ChangeOfBalanceSupplierValidationError.MissingRequestedFromName.message).left()
 
         val handler = Handler(businessHandler, partyService, requestRepo, requestPropertyRepo)
 
         val response = handler(model)
 
         response.shouldBeLeft(
-            CreateError.BusinessError(BusinessProcessError.Validation(ChangeOfEnergySupplierValidationError.MissingRequestedFromName.message))
+            CreateError.BusinessError(BusinessProcessError.Validation(ChangeOfBalanceSupplierValidationError.MissingRequestedFromName.message))
         )
         verify(exactly = 0) { requestRepo.insert(any(), any()) }
     }

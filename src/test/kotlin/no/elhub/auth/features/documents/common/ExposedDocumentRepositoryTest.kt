@@ -48,7 +48,7 @@ class ExposedDocumentRepositoryTest :
                     AuthorizationDocument(
                         id = UUID.randomUUID(),
                         file = byteArrayOf(),
-                        type = AuthorizationDocument.Type.ChangeOfEnergySupplierForPerson,
+                        type = AuthorizationDocument.Type.ChangeOfBalanceSupplierForPerson,
                         status = AuthorizationDocument.Status.Pending,
                         requestedBy = AuthorizationParty(type = PartyType.Person, id = "1234567890"),
                         requestedFrom = AuthorizationParty(type = PartyType.Person, id = "1234567890"),
@@ -64,7 +64,7 @@ class ExposedDocumentRepositoryTest :
                     CreateScopeData(
                         authorizedResourceType = AuthorizationScope.AuthorizationResource.MeteringPoint,
                         authorizedResourceId = "1234",
-                        permissionType = AuthorizationScope.PermissionType.ChangeOfEnergySupplierForPerson
+                        permissionType = AuthorizationScope.PermissionType.ChangeOfBalanceSupplierForPerson
 
                     )
                 )
@@ -93,7 +93,7 @@ class ExposedDocumentRepositoryTest :
                     authorizationScopeRow.shouldNotBeNull()
                     authorizationScopeRow[AuthorizationScopeTable.authorizedResourceId] shouldBe "1234"
                     authorizationScopeRow[AuthorizationScopeTable.authorizedResourceType] shouldBe AuthorizationScope.AuthorizationResource.MeteringPoint
-                    authorizationScopeRow[AuthorizationScopeTable.permissionType] shouldBe AuthorizationScope.PermissionType.ChangeOfEnergySupplierForPerson
+                    authorizationScopeRow[AuthorizationScopeTable.permissionType] shouldBe AuthorizationScope.PermissionType.ChangeOfBalanceSupplierForPerson
                 }
             }
         }
@@ -107,7 +107,7 @@ class ExposedDocumentRepositoryTest :
                 val matchingDocument = AuthorizationDocument(
                     id = UUID.randomUUID(),
                     file = byteArrayOf(),
-                    type = AuthorizationDocument.Type.ChangeOfEnergySupplierForPerson,
+                    type = AuthorizationDocument.Type.ChangeOfBalanceSupplierForPerson,
                     status = AuthorizationDocument.Status.Pending,
                     requestedBy = matchingRequestedBy,
                     requestedFrom = AuthorizationParty(type = PartyType.Person, id = "from-1"),
@@ -122,7 +122,7 @@ class ExposedDocumentRepositoryTest :
                 val otherDocument = AuthorizationDocument(
                     id = UUID.randomUUID(),
                     file = byteArrayOf(),
-                    type = AuthorizationDocument.Type.ChangeOfEnergySupplierForPerson,
+                    type = AuthorizationDocument.Type.ChangeOfBalanceSupplierForPerson,
                     status = AuthorizationDocument.Status.Pending,
                     requestedBy = otherRequestedBy,
                     requestedFrom = AuthorizationParty(type = PartyType.Person, id = "from-2"),

@@ -35,7 +35,7 @@ data class AuthorizationScope(
     }
 
     enum class PermissionType {
-        ChangeOfEnergySupplierForPerson,
-        MoveInAndChangeOfEnergySupplierForPerson
+        ChangeOfBalanceSupplierForPerson,
+        MoveInAndChangeOfBalanceSupplierForPerson
     }
 }

@@ -302,7 +302,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                         id shouldBe "e705af95-571d-47ea-9b1b-742aa598c85c"
                         type shouldBe "AuthorizationScope"
                         attributes.shouldNotBeNull().apply {
-                            permissionType shouldBe AuthorizationScope.PermissionType.MoveInAndChangeOfEnergySupplierForPerson
+                            permissionType shouldBe AuthorizationScope.PermissionType.MoveInAndChangeOfBalanceSupplierForPerson
                         }
                         relationships.shouldNotBeNull().apply {
                             authorizedResources.apply {
@@ -346,7 +346,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                         id shouldBe "c597482d-b013-400b-9362-35bb16724c8f"
                         type shouldBe "AuthorizationScope"
                         attributes.shouldNotBeNull().apply {
-                            permissionType shouldBe AuthorizationScope.PermissionType.ChangeOfEnergySupplierForPerson
+                            permissionType shouldBe AuthorizationScope.PermissionType.ChangeOfBalanceSupplierForPerson
                         }
                         relationships.shouldNotBeNull().apply {
                             authorizedResources.apply {
@@ -362,7 +362,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                         id shouldBe "75ad606f-4ac9-4d4f-acd5-20d6862ec198"
                         type shouldBe "AuthorizationScope"
                         attributes.shouldNotBeNull().apply {
-                            permissionType shouldBe AuthorizationScope.PermissionType.ChangeOfEnergySupplierForPerson
+                            permissionType shouldBe AuthorizationScope.PermissionType.ChangeOfBalanceSupplierForPerson
                         }
                         relationships.shouldNotBeNull().apply {
                             authorizedResources.apply {

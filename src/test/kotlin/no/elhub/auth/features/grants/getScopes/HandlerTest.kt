@@ -52,7 +52,7 @@ class HandlerTest : FunSpec({
                 id = UUID.randomUUID(),
                 authorizedResourceType = AuthorizationScope.AuthorizationResource.MeteringPoint,
                 authorizedResourceId = "mp-1",
-                permissionType = AuthorizationScope.PermissionType.ChangeOfEnergySupplierForPerson,
+                permissionType = AuthorizationScope.PermissionType.ChangeOfBalanceSupplierForPerson,
                 createdAt = currentTimeWithTimeZone(),
             )
         )

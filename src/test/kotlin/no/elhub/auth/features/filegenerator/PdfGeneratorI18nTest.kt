@@ -5,7 +5,7 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
-import no.elhub.auth.features.businessprocesses.changeofenergysupplier.domain.ChangeOfEnergySupplierBusinessMeta
+import no.elhub.auth.features.businessprocesses.changeofenergysupplier.domain.ChangeOfBalanceSupplierBusinessMeta
 
 class PdfGeneratorI18nTest : FunSpec({
     test("should generate localized pdf text with default language") {
@@ -15,7 +15,7 @@ class PdfGeneratorI18nTest : FunSpec({
                 useTestPdfNotice = false,
             )
         )
-        val meta = ChangeOfEnergySupplierBusinessMeta(
+        val meta = ChangeOfBalanceSupplierBusinessMeta(
             language = SupportedLanguage.DEFAULT,
             requestedFromName = "Hillary Orr",
             requestedForMeteringPointId = "123456789012345678",
@@ -47,7 +47,7 @@ class PdfGeneratorI18nTest : FunSpec({
                 useTestPdfNotice = false,
             )
         )
-        val meta = ChangeOfEnergySupplierBusinessMeta(
+        val meta = ChangeOfBalanceSupplierBusinessMeta(
             language = SupportedLanguage.EN,
             requestedFromName = "Hillary Orr",
             requestedForMeteringPointId = "123456789012345678",

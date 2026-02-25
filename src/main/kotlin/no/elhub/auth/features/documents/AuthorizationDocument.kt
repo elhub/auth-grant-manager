@@ -52,7 +52,7 @@ data class AuthorizationDocument(
     }
 
     enum class Type {
-        ChangeOfEnergySupplierForPerson,
-        MoveInAndChangeOfEnergySupplierForPerson
+        ChangeOfBalanceSupplierForPerson,
+        MoveInAndChangeOfBalanceSupplierForPerson
     }
 }

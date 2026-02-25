@@ -7,7 +7,7 @@ import no.elhub.auth.features.documents.create.model.CreateDocumentModel
 import no.elhub.auth.features.filegenerator.SupportedLanguage
 import no.elhub.auth.features.requests.create.model.CreateRequestModel
 
-data class MoveInAndChangeOfEnergySupplierBusinessModel(
+data class MoveInAndChangeOfBalanceSupplierBusinessModel(
     val language: SupportedLanguage = SupportedLanguage.DEFAULT,
     val requestedBy: PartyIdentifier,
     val requestedFrom: PartyIdentifier,
@@ -21,8 +21,8 @@ data class MoveInAndChangeOfEnergySupplierBusinessModel(
     val redirectURI: String? = null,
 )
 
-fun CreateRequestModel.toMoveInAndChangeOfEnergySupplierBusinessModel(): MoveInAndChangeOfEnergySupplierBusinessModel =
-    MoveInAndChangeOfEnergySupplierBusinessModel(
+fun CreateRequestModel.toMoveInAndChangeOfBalanceSupplierBusinessModel(): MoveInAndChangeOfBalanceSupplierBusinessModel =
+    MoveInAndChangeOfBalanceSupplierBusinessModel(
         requestedBy = this.meta.requestedBy,
         requestedFrom = this.meta.requestedFrom,
         requestedTo = this.meta.requestedTo,
@@ -35,8 +35,8 @@ fun CreateRequestModel.toMoveInAndChangeOfEnergySupplierBusinessModel(): MoveInA
         redirectURI = this.meta.redirectURI,
     )
 
-fun CreateDocumentModel.toMoveInAndChangeOfEnergySupplierBusinessModel(): MoveInAndChangeOfEnergySupplierBusinessModel =
-    MoveInAndChangeOfEnergySupplierBusinessModel(
+fun CreateDocumentModel.toMoveInAndChangeOfBalanceSupplierBusinessModel(): MoveInAndChangeOfBalanceSupplierBusinessModel =
+    MoveInAndChangeOfBalanceSupplierBusinessModel(
         language = this.meta.language.toSupportedLanguage(),
         requestedBy = this.meta.requestedBy,
         requestedFrom = this.meta.requestedFrom,

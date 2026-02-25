@@ -48,7 +48,7 @@ class HandlerTest : FunSpec({
         requestedToParty: AuthorizationParty = requestedTo
     ): AuthorizationDocument =
         AuthorizationDocument.create(
-            type = AuthorizationDocument.Type.ChangeOfEnergySupplierForPerson,
+            type = AuthorizationDocument.Type.ChangeOfBalanceSupplierForPerson,
             file = "file".toByteArray(),
             requestedBy = requestedBy,
             requestedFrom = requestedFromParty,
