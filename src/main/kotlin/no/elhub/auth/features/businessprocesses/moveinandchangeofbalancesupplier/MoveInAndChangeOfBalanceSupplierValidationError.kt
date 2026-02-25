@@ -48,8 +48,8 @@ sealed class MoveInAndChangeOfBalanceSupplierValidationError(
     @Serializable
     data object MoveInDateNotBackInTime :
         MoveInAndChangeOfBalanceSupplierValidationError(
-            "start_date_not_back_in_time",
-            "Start date must be today or back in time"
+            "move_in_date_not_back_in_time",
+            "Move-in date must be today or back in time"
         )
 
     @Serializable
