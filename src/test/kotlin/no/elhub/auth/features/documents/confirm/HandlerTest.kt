@@ -10,7 +10,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import no.elhub.auth.features.businessprocesses.changeofenergysupplier.defaultValidTo
+import no.elhub.auth.features.businessprocesses.changeofbalancesupplier.defaultValidTo
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.RepositoryWriteError
 import no.elhub.auth.features.common.party.AuthorizationParty
@@ -48,7 +48,7 @@ class HandlerTest : FunSpec({
         requestedToParty: AuthorizationParty = requestedTo
     ): AuthorizationDocument =
         AuthorizationDocument.create(
-            type = AuthorizationDocument.Type.ChangeOfEnergySupplierForPerson,
+            type = AuthorizationDocument.Type.ChangeOfBalanceSupplierForPerson,
             file = "file".toByteArray(),
             requestedBy = requestedBy,
             requestedFrom = requestedFromParty,

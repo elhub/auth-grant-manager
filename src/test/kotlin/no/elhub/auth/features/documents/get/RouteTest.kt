@@ -43,7 +43,7 @@ class RouteTest : FunSpec({
     val hardId = UUID.fromString("acc22222-346b-4a26-a01b-e57aeada523b")
     val document = AuthorizationDocument(
         id = hardId,
-        type = AuthorizationDocument.Type.ChangeOfEnergySupplierForPerson,
+        type = AuthorizationDocument.Type.ChangeOfBalanceSupplierForPerson,
         status = AuthorizationDocument.Status.Pending,
         file = Random.nextBytes(256),
         requestedBy = byAuthParty,

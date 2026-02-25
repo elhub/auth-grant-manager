@@ -1,8 +1,8 @@
 package no.elhub.auth.features.businessprocesses
 
 import io.ktor.server.application.Application
-import no.elhub.auth.features.businessprocesses.changeofenergysupplier.ChangeOfEnergySupplierBusinessHandler
-import no.elhub.auth.features.businessprocesses.moveinandchangeofenergysupplier.MoveInAndChangeOfEnergySupplierBusinessHandler
+import no.elhub.auth.features.businessprocesses.changeofbalancesupplier.ChangeOfBalanceSupplierBusinessHandler
+import no.elhub.auth.features.businessprocesses.moveinandchangeofbalancesupplier.MoveInAndChangeOfBalanceSupplierBusinessHandler
 import no.elhub.auth.features.documents.common.DocumentBusinessHandler
 import no.elhub.auth.features.documents.common.ProxyDocumentBusinessHandler
 import no.elhub.auth.features.requests.common.ProxyRequestBusinessHandler
@@ -15,7 +15,7 @@ import org.koin.ktor.plugin.koinModule
 fun Application.businessProcessesModule() {
     koinModule {
         single {
-            ChangeOfEnergySupplierBusinessHandler(
+            ChangeOfBalanceSupplierBusinessHandler(
                 meteringPointsService = get(),
                 personService = get(),
                 organisationsService = get(),
@@ -24,7 +24,7 @@ fun Application.businessProcessesModule() {
             )
         }
         single {
-            MoveInAndChangeOfEnergySupplierBusinessHandler(
+            MoveInAndChangeOfBalanceSupplierBusinessHandler(
                 meteringPointsService = get(),
                 personService = get(),
                 organisationsService = get(),

@@ -30,9 +30,9 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 import no.elhub.auth.features.businessprocesses.BusinessProcessError
-import no.elhub.auth.features.businessprocesses.changeofenergysupplier.defaultValidTo
-import no.elhub.auth.features.businessprocesses.changeofenergysupplier.domain.ChangeOfEnergySupplierBusinessMeta
-import no.elhub.auth.features.businessprocesses.changeofenergysupplier.today
+import no.elhub.auth.features.businessprocesses.changeofbalancesupplier.defaultValidTo
+import no.elhub.auth.features.businessprocesses.changeofbalancesupplier.domain.ChangeOfBalanceSupplierBusinessMeta
+import no.elhub.auth.features.businessprocesses.changeofbalancesupplier.today
 import no.elhub.auth.features.common.AuthPersonsTestContainer
 import no.elhub.auth.features.common.AuthPersonsTestContainerExtension
 import no.elhub.auth.features.common.CreateScopeData
@@ -155,7 +155,7 @@ class AuthorizationDocumentRouteTest :
                   "data": {
                     "type": "test"
                     "attributes": {
-                      "documentType": "ChangeOfEnergySupplierForPerson"
+                      "documentType": "ChangeOfBalanceSupplierForPerson"
                     },
                     "meta": {
                       "requestedBy": { "idType": "GlobalLocationNumber", "idValue": "0107000000021" },
@@ -202,7 +202,7 @@ class AuthorizationDocumentRouteTest :
                   "data": {
                     "type": "AuthorizationDocument"
                     "attributes": {
-                      "documentType": "ChangeOfEnergySupplierForPerson"
+                      "documentType": "ChangeOfBalanceSupplierForPerson"
                     },
                     "meta": {
                       "requestedBy": { "idType": "GlobalLocationNumber" },
@@ -249,7 +249,7 @@ class AuthorizationDocumentRouteTest :
                   "data": {
                     "type": "AuthorizationDocument",
                     "attributes": {
-                      "documentType": "ChangeOfEnergySupplierForPerson"
+                      "documentType": "ChangeOfBalanceSupplierForPerson"
                     },
                     "meta": {
                       "requestedBy": { "idType": "TEST", "idValue": "0107000000021" },
@@ -296,7 +296,7 @@ class AuthorizationDocumentRouteTest :
                   "data": {
                     "type": "AuthorizationDocument",
                     "attributes": {
-                      "documentType": "ChangeOfEnergySupplierForPerson"
+                      "documentType": "ChangeOfBalanceSupplierForPerson"
                     },
                     "meta": {
                       "requestedBy": { "idType": "GlobalLocationNumber", "idValue": "0107000000021" },
@@ -331,7 +331,7 @@ class AuthorizationDocumentRouteTest :
                                         data = JsonApiRequestResourceObjectWithMeta(
                                             type = "AuthorizationDocument",
                                             attributes = CreateDocumentRequestAttributes(
-                                                documentType = AuthorizationDocument.Type.ChangeOfEnergySupplierForPerson
+                                                documentType = AuthorizationDocument.Type.ChangeOfBalanceSupplierForPerson
                                             ),
                                             meta = CreateDocumentMeta(
                                                 requestedBy = PartyIdentifier(
@@ -363,7 +363,7 @@ class AuthorizationDocumentRouteTest :
                         type shouldBe "AuthorizationDocument"
                         id!!.shouldBeValidUuid()
                         attributes.shouldNotBeNull().apply {
-                            documentType shouldBe AuthorizationDocument.Type.ChangeOfEnergySupplierForPerson.name
+                            documentType shouldBe AuthorizationDocument.Type.ChangeOfBalanceSupplierForPerson.name
                             status shouldBe AuthorizationDocument.Status.Pending.name
                             validTo shouldBe "${defaultValidTo()}T00:00:00+01:00"
 
@@ -431,7 +431,7 @@ class AuthorizationDocumentRouteTest :
                             id!!.shouldBeValidUuid()
                             attributes.shouldNotBeNull().apply {
                                 status shouldBe AuthorizationDocument.Status.Pending.toString()
-                                documentType shouldBe AuthorizationDocument.Type.ChangeOfEnergySupplierForPerson.name
+                                documentType shouldBe AuthorizationDocument.Type.ChangeOfBalanceSupplierForPerson.name
                                 validTo shouldBe "${defaultValidTo()}T00:00:00+01:00"
                                 val createdAt = OffsetDateTime.parse(createdAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
                                 val updatedAt = OffsetDateTime.parse(updatedAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
@@ -667,7 +667,7 @@ class AuthorizationDocumentRouteTest :
                             id.shouldBeValidUuid()
                             type shouldBe "AuthorizationScope"
                             attributes.shouldNotBeNull().apply {
-                                permissionType shouldBe AuthorizationScope.PermissionType.ChangeOfEnergySupplierForPerson
+                                permissionType shouldBe AuthorizationScope.PermissionType.ChangeOfBalanceSupplierForPerson
                             }
                             relationships.shouldNotBeNull().apply {
                                 authorizedResources.apply {
@@ -739,7 +739,7 @@ class AuthorizationDocumentRouteTest :
                                         data = JsonApiRequestResourceObjectWithMeta(
                                             type = "AuthorizationDocument",
                                             attributes = CreateDocumentRequestAttributes(
-                                                documentType = AuthorizationDocument.Type.ChangeOfEnergySupplierForPerson
+                                                documentType = AuthorizationDocument.Type.ChangeOfBalanceSupplierForPerson
                                             ),
                                             meta = CreateDocumentMeta(
                                                 requestedBy = PartyIdentifier(
@@ -845,10 +845,10 @@ private class TestDocumentBusinessHandler : DocumentBusinessHandler {
     override suspend fun validateAndReturnDocumentCommand(
         model: CreateDocumentModel
     ) = when (model.documentType) {
-        AuthorizationDocument.Type.ChangeOfEnergySupplierForPerson -> {
+        AuthorizationDocument.Type.ChangeOfBalanceSupplierForPerson -> {
             val meta = model.meta
             DocumentCommand(
-                type = AuthorizationDocument.Type.ChangeOfEnergySupplierForPerson,
+                type = AuthorizationDocument.Type.ChangeOfBalanceSupplierForPerson,
                 requestedFrom = meta.requestedFrom,
                 requestedTo = meta.requestedTo,
                 requestedBy = meta.requestedBy,
@@ -857,10 +857,10 @@ private class TestDocumentBusinessHandler : DocumentBusinessHandler {
                     CreateScopeData(
                         authorizedResourceType = AuthorizationScope.AuthorizationResource.MeteringPoint,
                         authorizedResourceId = meta.requestedForMeteringPointId,
-                        permissionType = AuthorizationScope.PermissionType.ChangeOfEnergySupplierForPerson
+                        permissionType = AuthorizationScope.PermissionType.ChangeOfBalanceSupplierForPerson
                     )
                 ),
-                meta = ChangeOfEnergySupplierBusinessMeta(
+                meta = ChangeOfBalanceSupplierBusinessMeta(
                     language = meta.language.toSupportedLanguage(),
                     requestedFromName = meta.requestedFromName,
                     requestedForMeteringPointId = meta.requestedForMeteringPointId,
