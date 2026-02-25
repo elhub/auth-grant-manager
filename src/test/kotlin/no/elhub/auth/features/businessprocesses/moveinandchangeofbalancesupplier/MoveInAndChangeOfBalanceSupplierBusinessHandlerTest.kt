@@ -572,20 +572,6 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
             properties.validTo shouldBe today().plus(DatePeriod(years = 1))
         }
 
-//        test("exception is thrown when moveInDate is not set") {
-//            val party = AuthorizationParty(id = "party-1", type = PartyType.Organization)
-//            val request = AuthorizationRequest.create(
-//                type = AuthorizationRequest.Type.MoveInAndChangeOfEnergySupplierForPerson,
-//                requestedBy = party,
-//                requestedFrom = party,
-//                requestedTo = party,
-//                validTo = today().toTimeZoneOffsetDateTimeAtStartOfDay(),
-//            )
-//            shouldThrow<NoSuchElementException> {
-//                handler.getCreateGrantProperties(request)
-//            }
-//        }
-
         test("exception is thrown when properties is invalid") {
             val party = AuthorizationParty(id = "party-1", type = PartyType.Organization)
             val request = AuthorizationRequest.create(
