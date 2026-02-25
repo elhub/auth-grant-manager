@@ -589,7 +589,7 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
         test("exception is thrown when properties is invalid") {
             val party = AuthorizationParty(id = "party-1", type = PartyType.Organization)
             val request = AuthorizationRequest.create(
-                type = AuthorizationRequest.Type.MoveInAndChangeOfEnergySupplierForPerson,
+                type = AuthorizationRequest.Type.MoveInAndChangeOfBalanceSupplierForPerson,
                 requestedBy = party,
                 requestedFrom = party,
                 requestedTo = party,
