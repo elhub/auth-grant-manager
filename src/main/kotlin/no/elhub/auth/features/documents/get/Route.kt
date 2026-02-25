@@ -78,7 +78,7 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
         }
 
         if (!acceptsPdf && acceptFromClient.isNotEmpty()) {
-            call.respond(HttpStatusCode.NotAcceptable, toNotAcceptedErrorResponse(detail = "Accept header must be set to Application/Pdf" ))
+            call.respond(HttpStatusCode.NotAcceptable, toNotAcceptedErrorResponse(detail = "Accept header must be set to Application/Pdf"))
             return@get
         }
 
