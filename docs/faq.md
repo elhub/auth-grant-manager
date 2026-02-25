@@ -6,7 +6,7 @@
 
 ### How do I gain access to the test environment?
 
-* You need to be registered in Maskinporten (https://api.elhub.no/maskinporten/getting-started)
+* You need to be registered in Maskinporten (<https://api.elhub.no/maskinporten/getting-started>)
 * The IPs of your test environments need to be whitelisted by Elhub.
   * See [elhub.no](https://elhub.no/fagomrader/markedsprosesser/samtykkekontroll?article=test-av-samtykkekontroll)
 
@@ -68,15 +68,15 @@ The following fields are validated when the authorization request/document is pr
     For Authorization Document flow, this field is not used.
 * **requestedBy**: We validate that the GLN is an active Market Participant in Elhub and (for ChangeOfEnergySupplierForPerson)
     that it is not the current supplier in the metering point.
-* **startDate**: For `documentType: MoveInAndChangeOfEnergySupplierForPerson`, omit `startDate` when the move-in is in the future (BRS-102).
-    If the move-in is today or in the past (BRS-103), you must set `startDate`.
+* **moveInDate**: For `documentType: MoveInAndChangeOfEnergySupplierForPerson`, omit `moveInDate` when the move-in is in the future (BRS-102).
+    If the move-in is today or in the past (BRS-103), you must set `moveInDate`.
 
 ### Move-in in the future vs today/past (BRS-102 vs BRS-103)
 
-For move-in scenarios you should use `documentType: MoveInAndChangeOfEnergySupplierForPerson`. The difference is how you handle `startDate`:
+For move-in scenarios you should use `documentType: MoveInAndChangeOfEnergySupplierForPerson`. The difference is how you handle `moveInDate`:
 
-* **Future move-in (BRS-102):** Do not include `startDate` in the request. We will validate that the date is not set to a date in the future if present.
-* **Today or past move-in (BRS-103):** You must include `startDate`.
+* **Future move-in (BRS-102):** Do not include `moveInDate` in the request. We will validate that the date is not set to a date in the future if present.
+* **Today or past move-in (BRS-103):** You must include `moveInDate`.
 
 `documentType: ChangeOfEnergySupplierForPerson` applies only to the current end user on the metering point and is not used for move-in cases.
 

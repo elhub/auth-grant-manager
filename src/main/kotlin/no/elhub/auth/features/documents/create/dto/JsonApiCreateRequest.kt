@@ -25,7 +25,7 @@ data class CreateDocumentMeta(
     val requestedForMeteringPointAddress: String,
     val balanceSupplierName: String,
     val balanceSupplierContractName: String,
-    val startDate: LocalDate? = null,
+    val moveInDate: LocalDate? = null,
     val language: SupportedLanguageDTO = SupportedLanguageDTO.DEFAULT,
 ) : JsonApiResourceMeta
 

@@ -114,7 +114,7 @@ class PdfGenerator(
                 balanceSupplierName = documentMeta.balanceSupplierName,
                 meterNumber = documentMeta.requestedForMeterNumber,
                 balanceSupplierContractName = documentMeta.balanceSupplierContractName,
-                startDate = documentMeta.startDate?.let { formatNorwegianDate(it.year, it.month.number, it.day) },
+                moveInDate = documentMeta.moveInDate?.let { formatNorwegianDate(it.year, it.month.number, it.day) },
                 language = language
             )
 
@@ -170,7 +170,7 @@ class PdfGenerator(
         meterNumber: String,
         balanceSupplierName: String,
         balanceSupplierContractName: String,
-        startDate: String?,
+        moveInDate: String?,
         language: SupportedLanguage,
     ): Either<DocumentGenerationError.ContentGenerationError, String> = Either.catch {
         val i18n = i18nTemplateFunction(language)
@@ -190,10 +190,10 @@ class PdfGenerator(
                         MustacheConstants.VARIABLE_KEY_I18N to i18n,
                     )
                         .let { base ->
-                            if (startDate == null) {
+                            if (moveInDate == null) {
                                 base
                             } else {
-                                base + (MustacheConstants.VARIABLE_KEY_MOVE_IN_DATE to startDate)
+                                base + (MustacheConstants.VARIABLE_KEY_MOVE_IN_DATE to moveInDate)
                             }
                         }
                 ).flush()
