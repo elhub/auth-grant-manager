@@ -8,8 +8,8 @@ import com.openhtmltopdf.extend.FSSupplier
 import com.openhtmltopdf.outputdevice.helper.BaseRendererBuilder
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder
 import kotlinx.datetime.number
-import no.elhub.auth.features.businessprocesses.changeofenergysupplier.domain.ChangeOfEnergySupplierBusinessMeta
-import no.elhub.auth.features.businessprocesses.moveinandchangeofenergysupplier.domain.MoveInAndChangeOfEnergySupplierBusinessMeta
+import no.elhub.auth.features.businessprocesses.changeofbalancesupplier.domain.ChangeOfBalanceSupplierBusinessMeta
+import no.elhub.auth.features.businessprocesses.moveinandchangeofbalancesupplier.domain.MoveInAndChangeOfBalanceSupplierBusinessMeta
 import no.elhub.auth.features.documents.create.DocumentGenerationError
 import no.elhub.auth.features.documents.create.FileGenerator
 import no.elhub.auth.features.documents.create.command.DocumentMetaMarker
@@ -97,7 +97,7 @@ class PdfGenerator(
     ): Either<DocumentGenerationError.ContentGenerationError, ByteArray> = either {
         val language = resolveLanguage(documentMeta)
         val contractHtmlString = when (documentMeta) {
-            is ChangeOfEnergySupplierBusinessMeta -> generateChangeOfEnergySupplierHtml(
+            is ChangeOfBalanceSupplierBusinessMeta -> generateChangeOfBalanceSupplierHtml(
                 customerName = documentMeta.requestedFromName,
                 meteringPointAddress = documentMeta.requestedForMeteringPointAddress,
                 meteringPointId = documentMeta.requestedForMeteringPointId,
@@ -107,14 +107,14 @@ class PdfGenerator(
                 language = language
             )
 
-            is MoveInAndChangeOfEnergySupplierBusinessMeta -> generateMoveInAndChangeOfEnergySupplierHtml(
+            is MoveInAndChangeOfBalanceSupplierBusinessMeta -> generateMoveInAndChangeOfBalanceSupplierHtml(
                 customerName = documentMeta.requestedFromName,
                 meteringPointAddress = documentMeta.requestedForMeteringPointAddress,
                 meteringPointId = documentMeta.requestedForMeteringPointId,
                 balanceSupplierName = documentMeta.balanceSupplierName,
                 meterNumber = documentMeta.requestedForMeterNumber,
                 balanceSupplierContractName = documentMeta.balanceSupplierContractName,
-                startDate = documentMeta.startDate?.let { formatNorwegianDate(it.year, it.month.number, it.day) },
+                moveInDate = documentMeta.moveInDate?.let { formatNorwegianDate(it.year, it.month.number, it.day) },
                 language = language
             )
 
@@ -134,7 +134,7 @@ class PdfGenerator(
         }
     }
 
-    private fun generateChangeOfEnergySupplierHtml(
+    private fun generateChangeOfBalanceSupplierHtml(
         customerName: String,
         meteringPointAddress: String,
         meteringPointId: String,
@@ -163,14 +163,14 @@ class PdfGenerator(
         }.toString()
     }.mapLeft { DocumentGenerationError.ContentGenerationError }
 
-    private fun generateMoveInAndChangeOfEnergySupplierHtml(
+    private fun generateMoveInAndChangeOfBalanceSupplierHtml(
         customerName: String,
         meteringPointAddress: String,
         meteringPointId: String,
         meterNumber: String,
         balanceSupplierName: String,
         balanceSupplierContractName: String,
-        startDate: String?,
+        moveInDate: String?,
         language: SupportedLanguage,
     ): Either<DocumentGenerationError.ContentGenerationError, String> = Either.catch {
         val i18n = i18nTemplateFunction(language)
@@ -190,10 +190,10 @@ class PdfGenerator(
                         MustacheConstants.VARIABLE_KEY_I18N to i18n,
                     )
                         .let { base ->
-                            if (startDate == null) {
+                            if (moveInDate == null) {
                                 base
                             } else {
-                                base + (MustacheConstants.VARIABLE_KEY_MOVE_IN_DATE to startDate)
+                                base + (MustacheConstants.VARIABLE_KEY_MOVE_IN_DATE to moveInDate)
                             }
                         }
                 ).flush()

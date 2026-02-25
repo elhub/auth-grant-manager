@@ -168,7 +168,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                     id.shouldNotBeNull()
                     type shouldBe "AuthorizationRequest"
                     attributes.shouldNotBeNull().apply {
-                        requestType shouldBe "ChangeOfEnergySupplierForPerson"
+                        requestType shouldBe "ChangeOfBalanceSupplierForPerson"
                         status shouldBe "Accepted"
                         val validTo = validTo.shouldNotBeNull()
                         val createdAt = createdAt.shouldNotBeNull()
@@ -243,7 +243,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                     id.shouldNotBeNull()
                     type shouldBe "AuthorizationRequest"
                     attributes.shouldNotBeNull().apply {
-                        requestType shouldBe "ChangeOfEnergySupplierForPerson"
+                        requestType shouldBe "ChangeOfBalanceSupplierForPerson"
                         status shouldBe "Expired"
 
                         val validTo = validTo.shouldNotBeNull()
@@ -313,7 +313,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                     id.shouldNotBeNull()
                     type shouldBe "AuthorizationRequest"
                     attributes.shouldNotBeNull().apply {
-                        requestType shouldBe "ChangeOfEnergySupplierForPerson"
+                        requestType shouldBe "ChangeOfBalanceSupplierForPerson"
                         status shouldBe AuthorizationRequest.Status.Pending.name
                         val validTo = validTo.shouldNotBeNull()
                         shouldNotThrowAny {
@@ -515,7 +515,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                   "data": {
                   "type": "test"
                     "attributes": {
-                      "requestType": "ChangeOfEnergySupplierForPerson"
+                      "requestType": "ChangeOfBalanceSupplierForPerson"
                     },
                     "meta": {
                       "requestedBy": { "idType": "GlobalLocationNumber", "idValue": "0107000000021" },
@@ -660,7 +660,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                   "data": {
                     "type": "AuthorizationRequest"
                     "attributes": {
-                      "requestType": "ChangeOfEnergySupplierForPerson"
+                      "requestType": "ChangeOfBalanceSupplierForPerson"
                     },
                     "meta": {
                       "requestedBy": { "idType": "GlobalLocationNumber" },
@@ -707,7 +707,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                   "data": {
                     "type": "AuthorizationRequest",
                     "attributes": {
-                      "requestType": "ChangeOfEnergySupplierForPerson"
+                      "requestType": "ChangeOfBalanceSupplierForPerson"
                     },
                     "meta": {
                       "requestedBy": { "idType": "TEST", "id": "0107000000021", "idValue": "0107000000020"" },
@@ -755,7 +755,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                                     type = "AuthorizationRequest",
                                     attributes =
                                     CreateRequestAttributes(
-                                        requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
+                                        requestType = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
                                     ),
                                     meta =
                                     CreateRequestMeta(
@@ -811,7 +811,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                                 type = "AuthorizationRequest",
                                 attributes =
                                 CreateRequestAttributes(
-                                    requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
+                                    requestType = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
                                 ),
                                 meta =
                                 CreateRequestMeta(

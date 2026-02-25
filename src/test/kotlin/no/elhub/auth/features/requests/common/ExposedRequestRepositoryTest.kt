@@ -39,7 +39,7 @@ class ExposedRequestRepositoryTest : FunSpec({
         CreateScopeData(
             authorizedResourceType = AuthorizationScope.AuthorizationResource.MeteringPoint,
             authorizedResourceId = "1234",
-            permissionType = AuthorizationScope.PermissionType.ChangeOfEnergySupplierForPerson
+            permissionType = AuthorizationScope.PermissionType.ChangeOfBalanceSupplierForPerson
         )
     )
 
@@ -67,7 +67,7 @@ class ExposedRequestRepositoryTest : FunSpec({
         transaction {
             repeat(numTargetRequests) {
                 val request = AuthorizationRequest.create(
-                    type = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
+                    type = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
                     requestedBy = targetParty1,
                     requestedFrom = targetParty2,
                     requestedTo = targetParty2,
@@ -78,7 +78,7 @@ class ExposedRequestRepositoryTest : FunSpec({
 
             repeat(numOtherRequests) {
                 val request = AuthorizationRequest.create(
-                    type = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
+                    type = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
                     requestedBy = otherParty,
                     requestedFrom = otherParty,
                     requestedTo = otherParty,
@@ -108,7 +108,7 @@ class ExposedRequestRepositoryTest : FunSpec({
         transaction {
             repeat(numRequests) {
                 val request = AuthorizationRequest.create(
-                    type = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
+                    type = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
                     requestedBy = party,
                     requestedFrom = party,
                     requestedTo = party,
@@ -253,7 +253,7 @@ class ExposedRequestRepositoryTest : FunSpec({
 
 @OptIn(ExperimentalTime::class)
 private fun generateRequestWithoutProperties(): AuthorizationRequest = AuthorizationRequest.create(
-    type = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
+    type = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
     requestedBy = AuthorizationParty(type = PartyType.Person, id = "12345"),
     requestedFrom = AuthorizationParty(type = PartyType.Person, id = "56789"),
     requestedTo = AuthorizationParty(type = PartyType.Person, id = "45567"),

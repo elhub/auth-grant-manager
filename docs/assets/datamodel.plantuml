@@ -14,8 +14,8 @@ enum AuthorizationGrantStatus {
 }
 
 enum PermissionType {
-  ChangeOfEnergySupplierForPerson
-  MoveInAndChangeOfEnergySupplierForPerson
+  ChangeOfBalanceSupplierForPerson
+  MoveInAndChangeOfBalanceSupplierForPerson
 }
 
 enum AuthorizationDocumentStatus {
@@ -47,13 +47,13 @@ enum PartyType {
 }
 
 enum DocumentType {
-  ChangeOfEnergySupplierForPerson
-  MoveInAndChangeOfEnergySupplierForPerson
+  ChangeOfBalanceSupplierForPerson
+  MoveInAndChangeOfBalanceSupplierForPerson
 }
 
 enum RequestType {
-  ChangeOfEnergySupplierForPerson
-  MoveInAndChangeOfEnergySupplierForPerson
+  ChangeOfBalanceSupplierForPerson
+  MoveInAndChangeOfBalanceSupplierForPerson
 }
 
 entity AuthorizationGrant {

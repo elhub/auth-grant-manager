@@ -1,12 +1,13 @@
-package no.elhub.auth.features.businessprocesses.changeofenergysupplier.domain
+package no.elhub.auth.features.businessprocesses.moveinandchangeofbalancesupplier.domain
 
+import kotlinx.datetime.LocalDate
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.documents.create.dto.toSupportedLanguage
 import no.elhub.auth.features.documents.create.model.CreateDocumentModel
 import no.elhub.auth.features.filegenerator.SupportedLanguage
 import no.elhub.auth.features.requests.create.model.CreateRequestModel
 
-data class ChangeOfEnergySupplierBusinessModel(
+data class MoveInAndChangeOfBalanceSupplierBusinessModel(
     val language: SupportedLanguage = SupportedLanguage.DEFAULT,
     val requestedBy: PartyIdentifier,
     val requestedFrom: PartyIdentifier,
@@ -16,11 +17,12 @@ data class ChangeOfEnergySupplierBusinessModel(
     val requestedForMeteringPointAddress: String,
     val balanceSupplierName: String,
     val balanceSupplierContractName: String,
+    val moveInDate: LocalDate?,
     val redirectURI: String? = null,
 )
 
-fun CreateRequestModel.toChangeOfEnergySupplierBusinessModel(): ChangeOfEnergySupplierBusinessModel =
-    ChangeOfEnergySupplierBusinessModel(
+fun CreateRequestModel.toMoveInAndChangeOfBalanceSupplierBusinessModel(): MoveInAndChangeOfBalanceSupplierBusinessModel =
+    MoveInAndChangeOfBalanceSupplierBusinessModel(
         requestedBy = this.meta.requestedBy,
         requestedFrom = this.meta.requestedFrom,
         requestedTo = this.meta.requestedTo,
@@ -29,11 +31,12 @@ fun CreateRequestModel.toChangeOfEnergySupplierBusinessModel(): ChangeOfEnergySu
         requestedForMeteringPointAddress = this.meta.requestedForMeteringPointAddress,
         balanceSupplierName = this.meta.balanceSupplierName,
         balanceSupplierContractName = this.meta.balanceSupplierContractName,
+        moveInDate = this.meta.moveInDate,
         redirectURI = this.meta.redirectURI,
     )
 
-fun CreateDocumentModel.toChangeOfEnergySupplierBusinessModel(): ChangeOfEnergySupplierBusinessModel =
-    ChangeOfEnergySupplierBusinessModel(
+fun CreateDocumentModel.toMoveInAndChangeOfBalanceSupplierBusinessModel(): MoveInAndChangeOfBalanceSupplierBusinessModel =
+    MoveInAndChangeOfBalanceSupplierBusinessModel(
         language = this.meta.language.toSupportedLanguage(),
         requestedBy = this.meta.requestedBy,
         requestedFrom = this.meta.requestedFrom,
@@ -43,4 +46,5 @@ fun CreateDocumentModel.toChangeOfEnergySupplierBusinessModel(): ChangeOfEnergyS
         requestedForMeteringPointAddress = this.meta.requestedForMeteringPointAddress,
         balanceSupplierName = this.meta.balanceSupplierName,
         balanceSupplierContractName = this.meta.balanceSupplierContractName,
+        moveInDate = this.meta.moveInDate,
     )

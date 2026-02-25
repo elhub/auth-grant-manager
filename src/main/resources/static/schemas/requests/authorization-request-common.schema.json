@@ -14,12 +14,12 @@
       "type": "string",
       "description": "The type of the authorization request.",
       "enum": [
-        "ChangeOfEnergySupplierForPerson",
-        "MoveInAndChangeOfEnergySupplierForPerson"
+        "ChangeOfBalanceSupplierForPerson",
+        "MoveInAndChangeOfBalanceSupplierForPerson"
       ],
       "examples": [
-        "ChangeOfEnergySupplierForPerson",
-        "MoveInAndChangeOfEnergySupplierForPerson"
+        "ChangeOfBalanceSupplierForPerson",
+        "MoveInAndChangeOfBalanceSupplierForPerson"
       ]
     },
     "status": {
@@ -128,8 +128,8 @@
           "description": "The name of the balance supplier associated with the authorization document.",
           "examples": ["Example Supplier AS"]
         },
-        "startDate": {
-          "$ref": "../authorization-common.schema.json#/$defs/startDate"
+        "moveInDate": {
+          "$ref": "../authorization-common.schema.json#/$defs/moveInDate"
         }
       },
       "additionalProperties": false

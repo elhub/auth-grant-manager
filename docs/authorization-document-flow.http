@@ -24,7 +24,7 @@
 #    - Currently, Elhub's MT1 environment only supports signatures made by a BankID production qualified certificate,
 #      but we will later add support for BankID test qualified certificates
 
-# This script is hardcoded for the case where the token scope is "elhub:balancesupplier" and doing a MoveInAndChangeOfEnergySupplier
+# This script is hardcoded for the case where the token scope is "elhub:balancesupplier" and doing a MoveInAndChangeOfBalanceSupplier
 
 # Required variables:
 # userAgent: Header used by Auth Grant Manager to identify the requesting balance supplier (used for logging purposes).
@@ -33,7 +33,7 @@
 # nationalIdentityNumber: National identity number of the person you want an authorization from.
 # bankIdClientId: Client ID for BankID signing.
 # bankIdClientSecret: Client secret for BankID signing.
-# meteringPointId: Metering point you want to switch energy supplier on.
+# meteringPointId: Metering point you want to switch balance supplier on.
 @userAgent =
 @senderGln =
 @maskinPortenToken =
@@ -52,7 +52,7 @@
 #@bankIdTokenApi = https://auth.current.bankid.no/auth/realms/current/protocol/openid-connect/token
 
 
-### Create authorization document for move-in and change of energy supplier
+### Create authorization document for move-in and change of balance supplier
 POST https://auth-grant-manager-{{elhubEnv}}.elhub.cloud/access/v0/authorization-documents
 Accept: application/json
 Content-Type: application/json
@@ -64,7 +64,7 @@ User-Agent: {{userAgent}}
   "data": {
     "type": "AuthorizationDocument",
     "attributes": {
-      "documentType": "MoveInAndChangeOfEnergySupplierForPerson"
+      "documentType": "MoveInAndChangeOfBalanceSupplierForPerson"
     },
     "meta": {
       "requestedBy": {

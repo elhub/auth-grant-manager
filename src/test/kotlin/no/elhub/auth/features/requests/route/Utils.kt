@@ -85,13 +85,13 @@ fun Application.testRequestBusinessModule() {
 class TestRequestBusinessHandler : RequestBusinessHandler {
     override suspend fun validateAndReturnRequestCommand(createRequestModel: CreateRequestModel) =
         when (createRequestModel.requestType) {
-            AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson -> {
+            AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson -> {
                 val meta = createRequestModel.meta
                 if (meta.requestedFromName.isBlank()) {
                     BusinessProcessError.Validation(TestRequestValidationError.MissingRequestedFromName.message).left()
                 } else {
                     RequestCommand(
-                        type = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
+                        type = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
                         requestedFrom = meta.requestedFrom,
                         requestedBy = meta.requestedBy,
                         requestedTo = meta.requestedTo,
@@ -100,7 +100,7 @@ class TestRequestBusinessHandler : RequestBusinessHandler {
                             CreateScopeData(
                                 authorizedResourceType = AuthorizationScope.AuthorizationResource.MeteringPoint,
                                 authorizedResourceId = meta.requestedForMeteringPointId,
-                                permissionType = AuthorizationScope.PermissionType.ChangeOfEnergySupplierForPerson
+                                permissionType = AuthorizationScope.PermissionType.ChangeOfBalanceSupplierForPerson
                             )
                         ),
                         meta = TestRequestMeta(
@@ -138,7 +138,7 @@ fun insertAuthorizationRequest(
     transaction {
         AuthorizationRequestTable.insert {
             it[id] = requestId
-            it[requestType] = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson
+            it[requestType] = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson
             it[requestStatus] = status
             it[requestedBy] = requestedById
             it[requestedFrom] = requestedFromId

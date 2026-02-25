@@ -12,7 +12,7 @@ INSERT INTO auth.authorization_request (
 )
 VALUES (
   'd81e5bf2-8a0c-4348-a788-2a3fab4e77d6',
-  'ChangeOfEnergySupplierForPerson',
+  'ChangeOfBalanceSupplierForPerson',
   'Pending',
   '22222222-2222-2222-2222-222222222222',
   '11111111-1111-1111-1111-111111111111',
@@ -37,7 +37,7 @@ INSERT INTO auth.authorization_request (
 )
 VALUES (
   '3f2c9e6b-7a4d-4f1a-9b6e-8c1d2a5e9f47',
-  'ChangeOfEnergySupplierForPerson',
+  'ChangeOfBalanceSupplierForPerson',
   'Pending',
   '22222222-2222-2222-2222-222222222222',
   '11111111-1111-1111-1111-111111111111',
@@ -62,7 +62,7 @@ INSERT INTO auth.authorization_request (
 )
 VALUES (
   '4f71d596-99e4-415e-946d-7252c1a40c5b',
-  'ChangeOfEnergySupplierForPerson',
+  'ChangeOfBalanceSupplierForPerson',
   'Accepted',
   '22222222-2222-2222-2222-222222222222',
   '11111111-1111-1111-1111-111111111111',
@@ -87,7 +87,7 @@ INSERT INTO auth.authorization_request (
 )
 VALUES (
   '4f71d596-99e4-415e-946d-7252c1a40c51',
-  'ChangeOfEnergySupplierForPerson',
+  'ChangeOfBalanceSupplierForPerson',
   'Accepted',
   '22222222-2222-2222-2222-222222222222',
   '11111111-1111-1111-1111-111111111111',
@@ -112,7 +112,7 @@ INSERT INTO auth.authorization_request (
 )
 VALUES (
   '4f71d596-99e4-415e-946d-7252c1a40c52',
-  'ChangeOfEnergySupplierForPerson',
+  'ChangeOfBalanceSupplierForPerson',
   'Accepted',
   '22222222-2222-2222-2222-222222222222',
   '11111111-1111-1111-1111-111111111111',
@@ -137,7 +137,7 @@ INSERT INTO auth.authorization_request (
 )
 VALUES (
   '4f71d596-99e4-415e-946d-7252c1a40c50',
-  'ChangeOfEnergySupplierForPerson',
+  'ChangeOfBalanceSupplierForPerson',
   'Accepted',
   '22222222-2222-2222-2222-222222222222',
   '55555555-5555-5555-5555-555555555555',
@@ -162,7 +162,7 @@ INSERT INTO auth.authorization_request (
 )
 VALUES (
   '4f71d596-99e4-415e-946d-7352c1a40c53',
-  'ChangeOfEnergySupplierForPerson',
+  'ChangeOfBalanceSupplierForPerson',
   'Pending',
   '22222222-2222-2222-2222-222222222222',
   '11111111-1111-1111-1111-111111111111',
@@ -187,7 +187,7 @@ INSERT INTO auth.authorization_request (
 )
 VALUES (
   '5f71d596-99e4-415e-946d-7352c1a40c53',
-  'ChangeOfEnergySupplierForPerson',
+  'ChangeOfBalanceSupplierForPerson',
   'Accepted',
   '44444444-4444-4444-4444-444444444444',
   '11111111-1111-1111-1111-111111111111',
@@ -278,7 +278,7 @@ INSERT INTO auth.authorization_request (
 )
 VALUES (
   '130b6bca-1e3a-4653-8a9b-ccc0dc4fe389',
-  'ChangeOfEnergySupplierForPerson',
+  'ChangeOfBalanceSupplierForPerson',
   'Pending',
   '22222222-2222-2222-2222-222222222222',
   '11111111-1111-1111-1111-111111111111',

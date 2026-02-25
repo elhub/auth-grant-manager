@@ -14,12 +14,12 @@
       "type": "string",
       "description": "Classifies the type of the authorization document being created or managed (e.g., supplier switch confirmation).",
       "enum": [
-        "ChangeOfEnergySupplierForPerson",
-        "MoveInAndChangeOfEnergySupplierForPerson"
+        "ChangeOfBalanceSupplierForPerson",
+        "MoveInAndChangeOfBalanceSupplierForPerson"
       ],
       "examples": [
-        "ChangeOfEnergySupplierForPerson",
-        "MoveInAndChangeOfEnergySupplierForPerson"
+        "ChangeOfBalanceSupplierForPerson",
+        "MoveInAndChangeOfBalanceSupplierForPerson"
       ]
     },
     "attributes": {
@@ -32,12 +32,7 @@
         "status": {
           "type": "string",
           "description": "The current state of the document within the signature workflow (e.g., waiting for signature, signed, or expired).",
-          "enum": [
-            "Expired",
-            "Pending",
-            "Rejected",
-            "Signed"
-          ],
+          "enum": ["Expired", "Pending", "Rejected", "Signed"],
           "examples": ["Pending"]
         },
         "createdAt": {
@@ -120,8 +115,8 @@
         "balanceSupplierContractName": {
           "$ref": "../authorization-common.schema.json#/$defs/balanceSupplierContractName"
         },
-        "startDate": {
-          "$ref": "../authorization-common.schema.json#/$defs/startDate"
+        "moveInDate": {
+          "$ref": "../authorization-common.schema.json#/$defs/moveInDate"
         },
         "language": {
           "$ref": "../authorization-common.schema.json#/$defs/language"

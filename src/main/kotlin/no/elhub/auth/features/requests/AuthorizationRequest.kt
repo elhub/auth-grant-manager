@@ -50,7 +50,7 @@ data class AuthorizationRequest(
     }
 
     enum class Type {
-        ChangeOfEnergySupplierForPerson,
-        MoveInAndChangeOfEnergySupplierForPerson
+        ChangeOfBalanceSupplierForPerson,
+        MoveInAndChangeOfBalanceSupplierForPerson
     }
 }
