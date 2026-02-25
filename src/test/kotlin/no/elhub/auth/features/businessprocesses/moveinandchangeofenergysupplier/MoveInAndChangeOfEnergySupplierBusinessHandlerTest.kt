@@ -482,8 +482,7 @@ class MoveInAndChangeOfEnergySupplierBusinessHandlerTest :
                 )
             )
             val result = handler.getUpdateGrantMetaProperties(request)
-            result.shouldBeLeft(
-                (BusinessProcessError.Unexpected(MoveInAndChangeOfEnergySupplierValidationError.UnexpectedError.message)))
+            result.shouldBeLeft((BusinessProcessError.Unexpected(MoveInAndChangeOfEnergySupplierValidationError.UnexpectedError.message)))
         }
 
         test("returns unexpected error when startDate is not present") {
@@ -496,8 +495,7 @@ class MoveInAndChangeOfEnergySupplierBusinessHandlerTest :
             )
 
             val result = handler.getUpdateGrantMetaProperties(request)
-            result.shouldBeLeft(
-                (BusinessProcessError.Unexpected(MoveInAndChangeOfEnergySupplierValidationError.UnexpectedError.message)))
+            result.shouldBeLeft((BusinessProcessError.Unexpected(MoveInAndChangeOfEnergySupplierValidationError.UnexpectedError.message)))
         }
 
         test("strompris service is not called if validateBalanceSupplierContractName is false, assuming all previous validations pass") {
