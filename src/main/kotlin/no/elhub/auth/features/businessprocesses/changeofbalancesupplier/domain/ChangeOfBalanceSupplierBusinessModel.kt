@@ -1,4 +1,4 @@
-package no.elhub.auth.features.businessprocesses.changeofenergysupplier.domain
+package no.elhub.auth.features.businessprocesses.changeofbalancesupplier.domain
 
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.documents.create.dto.toSupportedLanguage

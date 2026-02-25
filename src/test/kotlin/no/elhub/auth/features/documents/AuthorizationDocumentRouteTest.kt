@@ -30,9 +30,9 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 import no.elhub.auth.features.businessprocesses.BusinessProcessError
-import no.elhub.auth.features.businessprocesses.changeofenergysupplier.defaultValidTo
-import no.elhub.auth.features.businessprocesses.changeofenergysupplier.domain.ChangeOfBalanceSupplierBusinessMeta
-import no.elhub.auth.features.businessprocesses.changeofenergysupplier.today
+import no.elhub.auth.features.businessprocesses.changeofbalancesupplier.defaultValidTo
+import no.elhub.auth.features.businessprocesses.changeofbalancesupplier.domain.ChangeOfBalanceSupplierBusinessMeta
+import no.elhub.auth.features.businessprocesses.changeofbalancesupplier.today
 import no.elhub.auth.features.common.AuthPersonsTestContainer
 import no.elhub.auth.features.common.AuthPersonsTestContainerExtension
 import no.elhub.auth.features.common.CreateScopeData

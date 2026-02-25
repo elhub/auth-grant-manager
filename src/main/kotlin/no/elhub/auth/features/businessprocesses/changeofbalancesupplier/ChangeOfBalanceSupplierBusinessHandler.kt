@@ -1,4 +1,4 @@
-package no.elhub.auth.features.businessprocesses.changeofenergysupplier
+package no.elhub.auth.features.businessprocesses.changeofbalancesupplier
 
 import arrow.core.Either
 import arrow.core.getOrElse
@@ -11,12 +11,12 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 import no.elhub.auth.features.businessprocesses.BusinessProcessError
-import no.elhub.auth.features.businessprocesses.changeofenergysupplier.domain.ChangeOfBalanceSupplierBusinessCommand
-import no.elhub.auth.features.businessprocesses.changeofenergysupplier.domain.ChangeOfBalanceSupplierBusinessMeta
-import no.elhub.auth.features.businessprocesses.changeofenergysupplier.domain.ChangeOfBalanceSupplierBusinessModel
-import no.elhub.auth.features.businessprocesses.changeofenergysupplier.domain.toChangeOfBalanceSupplierBusinessModel
-import no.elhub.auth.features.businessprocesses.changeofenergysupplier.domain.toDocumentCommand
-import no.elhub.auth.features.businessprocesses.changeofenergysupplier.domain.toRequestCommand
+import no.elhub.auth.features.businessprocesses.changeofbalancesupplier.domain.ChangeOfBalanceSupplierBusinessCommand
+import no.elhub.auth.features.businessprocesses.changeofbalancesupplier.domain.ChangeOfBalanceSupplierBusinessMeta
+import no.elhub.auth.features.businessprocesses.changeofbalancesupplier.domain.ChangeOfBalanceSupplierBusinessModel
+import no.elhub.auth.features.businessprocesses.changeofbalancesupplier.domain.toChangeOfBalanceSupplierBusinessModel
+import no.elhub.auth.features.businessprocesses.changeofbalancesupplier.domain.toDocumentCommand
+import no.elhub.auth.features.businessprocesses.changeofbalancesupplier.domain.toRequestCommand
 import no.elhub.auth.features.businessprocesses.datasharing.StromprisService
 import no.elhub.auth.features.businessprocesses.structuredata.common.ClientError
 import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.AccessType.SHARED

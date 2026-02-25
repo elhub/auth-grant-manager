@@ -5,7 +5,7 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
-import no.elhub.auth.features.businessprocesses.changeofenergysupplier.domain.ChangeOfBalanceSupplierBusinessMeta
+import no.elhub.auth.features.businessprocesses.changeofbalancesupplier.domain.ChangeOfBalanceSupplierBusinessMeta
 
 class PdfGeneratorI18nTest : FunSpec({
     test("should generate localized pdf text with default language") {

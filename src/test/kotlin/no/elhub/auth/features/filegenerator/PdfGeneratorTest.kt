@@ -7,8 +7,8 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
 import kotlinx.datetime.LocalDate
-import no.elhub.auth.features.businessprocesses.changeofenergysupplier.domain.ChangeOfBalanceSupplierBusinessMeta
-import no.elhub.auth.features.businessprocesses.moveinandchangeofenergysupplier.domain.MoveInAndChangeOfBalanceSupplierBusinessMeta
+import no.elhub.auth.features.businessprocesses.changeofbalancesupplier.domain.ChangeOfBalanceSupplierBusinessMeta
+import no.elhub.auth.features.businessprocesses.moveinandchangeofbalancesupplier.domain.MoveInAndChangeOfBalanceSupplierBusinessMeta
 import org.apache.pdfbox.Loader
 import org.apache.pdfbox.text.PDFTextStripper
 

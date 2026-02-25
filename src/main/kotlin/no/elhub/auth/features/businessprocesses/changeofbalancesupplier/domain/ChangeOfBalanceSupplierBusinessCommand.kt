@@ -1,4 +1,4 @@
-package no.elhub.auth.features.businessprocesses.changeofenergysupplier.domain
+package no.elhub.auth.features.businessprocesses.changeofbalancesupplier.domain
 
 import kotlinx.datetime.LocalDate
 import no.elhub.auth.features.common.CreateScopeData

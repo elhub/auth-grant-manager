@@ -1,4 +1,4 @@
-package no.elhub.auth.features.businessprocesses.moveinandchangeofenergysupplier
+package no.elhub.auth.features.businessprocesses.moveinandchangeofbalancesupplier
 
 import arrow.core.Either
 import io.kotest.assertions.arrow.core.shouldBeLeft

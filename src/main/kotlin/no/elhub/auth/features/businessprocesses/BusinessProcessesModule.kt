@@ -1,8 +1,8 @@
 package no.elhub.auth.features.businessprocesses
 
 import io.ktor.server.application.Application
-import no.elhub.auth.features.businessprocesses.changeofenergysupplier.ChangeOfBalanceSupplierBusinessHandler
-import no.elhub.auth.features.businessprocesses.moveinandchangeofenergysupplier.MoveInAndChangeOfBalanceSupplierBusinessHandler
+import no.elhub.auth.features.businessprocesses.changeofbalancesupplier.ChangeOfBalanceSupplierBusinessHandler
+import no.elhub.auth.features.businessprocesses.moveinandchangeofbalancesupplier.MoveInAndChangeOfBalanceSupplierBusinessHandler
 import no.elhub.auth.features.documents.common.DocumentBusinessHandler
 import no.elhub.auth.features.documents.common.ProxyDocumentBusinessHandler
 import no.elhub.auth.features.requests.common.ProxyRequestBusinessHandler

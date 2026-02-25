@@ -12,7 +12,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.datetime.LocalDate
 import no.elhub.auth.features.businessprocesses.BusinessProcessError
-import no.elhub.auth.features.businessprocesses.changeofenergysupplier.ChangeOfBalanceSupplierValidationError
+import no.elhub.auth.features.businessprocesses.changeofbalancesupplier.ChangeOfBalanceSupplierValidationError
 import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.common.RepositoryWriteError
 import no.elhub.auth.features.common.party.AuthorizationParty

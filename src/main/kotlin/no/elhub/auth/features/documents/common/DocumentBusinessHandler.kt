@@ -2,8 +2,8 @@ package no.elhub.auth.features.documents.common
 
 import arrow.core.Either
 import no.elhub.auth.features.businessprocesses.BusinessProcessError
-import no.elhub.auth.features.businessprocesses.changeofenergysupplier.ChangeOfBalanceSupplierBusinessHandler
-import no.elhub.auth.features.businessprocesses.moveinandchangeofenergysupplier.MoveInAndChangeOfBalanceSupplierBusinessHandler
+import no.elhub.auth.features.businessprocesses.changeofbalancesupplier.ChangeOfBalanceSupplierBusinessHandler
+import no.elhub.auth.features.businessprocesses.moveinandchangeofbalancesupplier.MoveInAndChangeOfBalanceSupplierBusinessHandler
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.create.command.DocumentCommand
 import no.elhub.auth.features.documents.create.model.CreateDocumentModel

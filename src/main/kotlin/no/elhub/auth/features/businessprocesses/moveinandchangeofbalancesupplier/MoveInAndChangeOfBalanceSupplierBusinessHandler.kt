@@ -1,4 +1,4 @@
-package no.elhub.auth.features.businessprocesses.moveinandchangeofenergysupplier
+package no.elhub.auth.features.businessprocesses.moveinandchangeofbalancesupplier
 
 import arrow.core.Either
 import arrow.core.getOrElse
@@ -12,12 +12,12 @@ import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 import no.elhub.auth.features.businessprocesses.BusinessProcessError
 import no.elhub.auth.features.businessprocesses.datasharing.StromprisService
-import no.elhub.auth.features.businessprocesses.moveinandchangeofenergysupplier.domain.MoveInAndChangeOfBalanceSupplierBusinessCommand
-import no.elhub.auth.features.businessprocesses.moveinandchangeofenergysupplier.domain.MoveInAndChangeOfBalanceSupplierBusinessMeta
-import no.elhub.auth.features.businessprocesses.moveinandchangeofenergysupplier.domain.MoveInAndChangeOfBalanceSupplierBusinessModel
-import no.elhub.auth.features.businessprocesses.moveinandchangeofenergysupplier.domain.toDocumentCommand
-import no.elhub.auth.features.businessprocesses.moveinandchangeofenergysupplier.domain.toMoveInAndChangeOfBalanceSupplierBusinessModel
-import no.elhub.auth.features.businessprocesses.moveinandchangeofenergysupplier.domain.toRequestCommand
+import no.elhub.auth.features.businessprocesses.moveinandchangeofbalancesupplier.domain.MoveInAndChangeOfBalanceSupplierBusinessCommand
+import no.elhub.auth.features.businessprocesses.moveinandchangeofbalancesupplier.domain.MoveInAndChangeOfBalanceSupplierBusinessMeta
+import no.elhub.auth.features.businessprocesses.moveinandchangeofbalancesupplier.domain.MoveInAndChangeOfBalanceSupplierBusinessModel
+import no.elhub.auth.features.businessprocesses.moveinandchangeofbalancesupplier.domain.toDocumentCommand
+import no.elhub.auth.features.businessprocesses.moveinandchangeofbalancesupplier.domain.toMoveInAndChangeOfBalanceSupplierBusinessModel
+import no.elhub.auth.features.businessprocesses.moveinandchangeofbalancesupplier.domain.toRequestCommand
 import no.elhub.auth.features.businessprocesses.structuredata.common.ClientError
 import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.AccessType.OWNED
 import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsService

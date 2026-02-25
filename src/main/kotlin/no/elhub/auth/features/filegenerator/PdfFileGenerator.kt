@@ -8,8 +8,8 @@ import com.openhtmltopdf.extend.FSSupplier
 import com.openhtmltopdf.outputdevice.helper.BaseRendererBuilder
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder
 import kotlinx.datetime.number
-import no.elhub.auth.features.businessprocesses.changeofenergysupplier.domain.ChangeOfBalanceSupplierBusinessMeta
-import no.elhub.auth.features.businessprocesses.moveinandchangeofenergysupplier.domain.MoveInAndChangeOfBalanceSupplierBusinessMeta
+import no.elhub.auth.features.businessprocesses.changeofbalancesupplier.domain.ChangeOfBalanceSupplierBusinessMeta
+import no.elhub.auth.features.businessprocesses.moveinandchangeofbalancesupplier.domain.MoveInAndChangeOfBalanceSupplierBusinessMeta
 import no.elhub.auth.features.documents.create.DocumentGenerationError
 import no.elhub.auth.features.documents.create.FileGenerator
 import no.elhub.auth.features.documents.create.command.DocumentMetaMarker

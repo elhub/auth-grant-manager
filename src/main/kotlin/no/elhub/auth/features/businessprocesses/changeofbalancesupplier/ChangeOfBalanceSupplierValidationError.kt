@@ -1,4 +1,4 @@
-package no.elhub.auth.features.businessprocesses.changeofenergysupplier
+package no.elhub.auth.features.businessprocesses.changeofbalancesupplier
 
 import kotlinx.serialization.Serializable
 import no.elhub.auth.features.businessprocesses.BusinessProcessError

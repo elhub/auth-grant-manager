@@ -2,7 +2,7 @@ package no.elhub.auth.features.documents.create.command
 
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
-import no.elhub.auth.features.businessprocesses.changeofenergysupplier.domain.ChangeOfBalanceSupplierBusinessMeta
+import no.elhub.auth.features.businessprocesses.changeofbalancesupplier.domain.ChangeOfBalanceSupplierBusinessMeta
 import no.elhub.auth.features.filegenerator.SupportedLanguage
 
 class DocumentMetaMarkerTest : FunSpec({
