@@ -63,12 +63,12 @@ class MoveInAndChangeOfEnergySupplierBusinessHandler(
     GrantBusinessHandler {
 
     override fun getUpdateGrantMetaProperties(request: AuthorizationRequest): Either<BusinessProcessError, Map<String, String>> {
-        val metaKeys = listOf("startDate")
+        val metaKeys = listOf("moveInDate")
         val metaMap = request.properties
             .filter { it.key in metaKeys }
             .associate { it.key to it.value }
 
-        if (metaMap["startDate"].isNullOrBlank()) {
+        if (metaMap["moveInDate"].isNullOrBlank()) {
             return MoveInAndChangeOfEnergySupplierValidationError.UnexpectedError.toBusinessError().left()
         }
 

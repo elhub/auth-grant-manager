@@ -32,8 +32,8 @@
           "type": "object",
           "description": "Read-only context and human-readable metadata.",
           "properties": {
-            "startDate": {
-              "$ref": "../authorization-common.schema.json#/$defs/startDate"
+            "moveInDate": {
+              "$ref": "../authorization-common.schema.json#/$defs/moveInDate"
             }
           }
         },

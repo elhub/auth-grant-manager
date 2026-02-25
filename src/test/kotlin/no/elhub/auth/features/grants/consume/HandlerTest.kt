@@ -51,7 +51,7 @@ class HandlerTest : FunSpec({
         properties = listOf(
             AuthorizationGrantProperty(
                 grantId = grantId,
-                key = "startDate",
+                key = "moveInDate",
                 value = "2024-01-01"
             )
         )

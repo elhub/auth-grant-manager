@@ -445,7 +445,7 @@ class MoveInAndChangeOfEnergySupplierBusinessHandlerTest :
                 .shouldBeLeft(BusinessProcessError.Validation(MoveInAndChangeOfEnergySupplierValidationError.RequestedToRequestedFromMismatch.message))
         }
 
-        test("returns properties when startDate property is present and not blank") {
+        test("returns properties when moveInDate property is present and not blank") {
             val request = AuthorizationRequest.create(
                 type = AuthorizationRequest.Type.MoveInAndChangeOfEnergySupplierForPerson,
                 requestedBy = AUTHORIZED_PARTY,
@@ -456,13 +456,13 @@ class MoveInAndChangeOfEnergySupplierBusinessHandlerTest :
                 properties = listOf(
                     AuthorizationRequestProperty(
                         requestId = UUID.randomUUID(),
-                        key = "startDate",
+                        key = "moveInDate",
                         value = "2024-01-01"
                     )
                 )
             )
             val result = handler.getUpdateGrantMetaProperties(request)
-            result.shouldBeRight(mapOf("startDate" to "2024-01-01"))
+            result.shouldBeRight(mapOf("moveInDate" to "2024-01-01"))
         }
 
         test("returns unexpected error unknown property is present and not blank") {
@@ -485,7 +485,7 @@ class MoveInAndChangeOfEnergySupplierBusinessHandlerTest :
             result.shouldBeLeft((BusinessProcessError.Unexpected(MoveInAndChangeOfEnergySupplierValidationError.UnexpectedError.message)))
         }
 
-        test("returns unexpected error when startDate is not present") {
+        test("returns unexpected error when moveInDate is not present") {
             val request = AuthorizationRequest.create(
                 type = AuthorizationRequest.Type.MoveInAndChangeOfEnergySupplierForPerson,
                 requestedBy = AUTHORIZED_PARTY,
