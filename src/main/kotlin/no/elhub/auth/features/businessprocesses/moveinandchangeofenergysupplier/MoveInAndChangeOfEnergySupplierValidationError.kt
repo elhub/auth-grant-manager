@@ -33,8 +33,8 @@ sealed class MoveInAndChangeOfEnergySupplierValidationError(
         MoveInAndChangeOfEnergySupplierValidationError("missing_balance_supplier_contract_name", "Balance supplier contract name is missing")
 
     @Serializable
-    data object StartDateNotBackInTime :
-        MoveInAndChangeOfEnergySupplierValidationError("start_date_not_back_in_time", "Start date must be today or back in time")
+    data object MoveInDateNotBackInTime :
+        MoveInAndChangeOfEnergySupplierValidationError("move_in_date_not_back_in_time", "Move in date must be today or back in time")
 
     @Serializable
     data object MissingMeteringPointId :
