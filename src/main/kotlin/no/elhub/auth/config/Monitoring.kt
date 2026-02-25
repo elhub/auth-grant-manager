@@ -44,7 +44,6 @@ fun Application.configureMonitoring(dataSource: HikariDataSource) {
         ServiceDependency("Auth persons", "authPersons.baseUri"),
         ServiceDependency("Metering points service", "structureData.meteringPointsService.baseUrl"),
         ServiceDependency("Organisations service", "structureData.organisationsService.baseUrl"),
-        // TODO consider IDP
     )
     install(Cohort) {
         dataSources = listOf(HikariDataSourceManager(dataSource))
@@ -96,8 +95,6 @@ private class ServiceDependencyHealthCheck(
         ensure(response.status.isSuccess()) {
             "$url responded with ${response.status.value}: ${response.bodyAsText()}"
         }
-
-        println("$url OK :)")
 
         "$url OK"
     }.fold(
