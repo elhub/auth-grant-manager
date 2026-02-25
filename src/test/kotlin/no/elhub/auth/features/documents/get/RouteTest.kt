@@ -110,7 +110,7 @@ class RouteTest : FunSpec({
         }
     }
 
-    test("GET /{id}.pdf returns not accepted on unssupported accept header") {
+    test("GET /{id}.pdf returns not accepted on unsupported accept header") {
         coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
         coEvery { handler.invoke(any()) } returns document.right()
         testApplication {
@@ -120,6 +120,7 @@ class RouteTest : FunSpec({
             coVerify(exactly = 0) { handler.invoke(any()) }
         }
     }
+
     test("GET /{id}[.pdf] returns 400 when UUID is invalid") {
         coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
         coEvery { handler.invoke(any()) } returns document.right()

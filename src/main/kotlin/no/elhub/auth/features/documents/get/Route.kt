@@ -14,9 +14,11 @@ import no.elhub.auth.features.common.auth.toApiErrorResponse
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toApiErrorResponse
+import no.elhub.auth.features.common.toBalanceSupplierNotApiAuthorizedResponse
 import no.elhub.auth.features.common.toNotAcceptedErrorResponse
 import no.elhub.auth.features.common.validatePathId
 import no.elhub.auth.features.documents.get.dto.toGetSingleResponse
+import org.apache.commons.collections4.KeyValue
 import org.slf4j.LoggerFactory
 import java.util.UUID
 
@@ -78,7 +80,8 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
         }
 
         if (!acceptsPdf && acceptFromClient.isNotEmpty()) {
-            call.respond(HttpStatusCode.NotAcceptable, toNotAcceptedErrorResponse(detail = "Accept header must be set to Application/Pdf"))
+            val (status, body) = toNotAcceptedErrorResponse(detail = "Client must accept 'application/pdf' to receive the document as PDF")
+            call.respond(status, body)
             return@get
         }
 
