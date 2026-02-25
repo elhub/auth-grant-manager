@@ -1,13 +1,12 @@
-package no.elhub.auth.features.businessprocesses.moveinandchangeofenergysupplier.domain
+package no.elhub.auth.features.businessprocesses.changeofbalancesupplier.domain
 
-import kotlinx.datetime.LocalDate
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.documents.create.dto.toSupportedLanguage
 import no.elhub.auth.features.documents.create.model.CreateDocumentModel
 import no.elhub.auth.features.filegenerator.SupportedLanguage
 import no.elhub.auth.features.requests.create.model.CreateRequestModel
 
-data class MoveInAndChangeOfEnergySupplierBusinessModel(
+data class ChangeOfBalanceSupplierBusinessModel(
     val language: SupportedLanguage = SupportedLanguage.DEFAULT,
     val requestedBy: PartyIdentifier,
     val requestedFrom: PartyIdentifier,
@@ -17,12 +16,11 @@ data class MoveInAndChangeOfEnergySupplierBusinessModel(
     val requestedForMeteringPointAddress: String,
     val balanceSupplierName: String,
     val balanceSupplierContractName: String,
-    val moveInDate: LocalDate?,
     val redirectURI: String? = null,
 )
 
-fun CreateRequestModel.toMoveInAndChangeOfEnergySupplierBusinessModel(): MoveInAndChangeOfEnergySupplierBusinessModel =
-    MoveInAndChangeOfEnergySupplierBusinessModel(
+fun CreateRequestModel.toChangeOfBalanceSupplierBusinessModel(): ChangeOfBalanceSupplierBusinessModel =
+    ChangeOfBalanceSupplierBusinessModel(
         requestedBy = this.meta.requestedBy,
         requestedFrom = this.meta.requestedFrom,
         requestedTo = this.meta.requestedTo,
@@ -31,12 +29,11 @@ fun CreateRequestModel.toMoveInAndChangeOfEnergySupplierBusinessModel(): MoveInA
         requestedForMeteringPointAddress = this.meta.requestedForMeteringPointAddress,
         balanceSupplierName = this.meta.balanceSupplierName,
         balanceSupplierContractName = this.meta.balanceSupplierContractName,
-        moveInDate = this.meta.moveInDate,
         redirectURI = this.meta.redirectURI,
     )
 
-fun CreateDocumentModel.toMoveInAndChangeOfEnergySupplierBusinessModel(): MoveInAndChangeOfEnergySupplierBusinessModel =
-    MoveInAndChangeOfEnergySupplierBusinessModel(
+fun CreateDocumentModel.toChangeOfBalanceSupplierBusinessModel(): ChangeOfBalanceSupplierBusinessModel =
+    ChangeOfBalanceSupplierBusinessModel(
         language = this.meta.language.toSupportedLanguage(),
         requestedBy = this.meta.requestedBy,
         requestedFrom = this.meta.requestedFrom,
@@ -46,5 +43,4 @@ fun CreateDocumentModel.toMoveInAndChangeOfEnergySupplierBusinessModel(): MoveIn
         requestedForMeteringPointAddress = this.meta.requestedForMeteringPointAddress,
         balanceSupplierName = this.meta.balanceSupplierName,
         balanceSupplierContractName = this.meta.balanceSupplierContractName,
-        moveInDate = this.meta.moveInDate,
     )

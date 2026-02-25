@@ -57,7 +57,7 @@ class RouteTest : FunSpec({
     val toAuthParty = AuthorizationParty("nin2", PartyType.Person)
     val document = AuthorizationDocument(
         id = UUID.fromString("b5b61d43-6e35-4b30-aa4d-48f506be5af4"),
-        type = AuthorizationDocument.Type.ChangeOfEnergySupplierForPerson,
+        type = AuthorizationDocument.Type.ChangeOfBalanceSupplierForPerson,
         status = AuthorizationDocument.Status.Pending,
         file = Random.nextBytes(256),
         requestedBy = byAuthParty,
@@ -78,7 +78,7 @@ class RouteTest : FunSpec({
         data = JsonApiRequestResourceObjectWithMeta(
             type = "AuthorizationDocument",
             attributes = CreateDocumentRequestAttributes(
-                documentType = AuthorizationDocument.Type.ChangeOfEnergySupplierForPerson
+                documentType = AuthorizationDocument.Type.ChangeOfBalanceSupplierForPerson
             ),
             meta = CreateDocumentMeta(
                 requestedBy = PartyIdentifier(
@@ -209,7 +209,7 @@ private val createBodyWithMissingField = """
       "data": {
         "type": "AuthorizationDocument"
         "attributes": {
-          "documentType": "ChangeOfEnergySupplierForPerson"
+          "documentType": "ChangeOfBalanceSupplierForPerson"
         },
         "meta": {
           "requestedBy": { "idType": "GlobalLocationNumber" },
@@ -230,7 +230,7 @@ private val createBodyWithInvalidFieldValue = """
       "data": {
         "type": "AuthorizationDocument",
         "attributes": {
-          "documentType": "ChangeOfEnergySupplierForPerson"
+          "documentType": "ChangeOfBalanceSupplierForPerson"
         },
         "meta": {
           "requestedBy": { "idType": "TEST", "idValue": "0107000000021" },

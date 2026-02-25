@@ -153,8 +153,8 @@
       "type": "string",
       "description": "The type of permission granted by the scope.",
       "enum": [
-        "ChangeOfEnergySupplierForPerson",
-        "MoveInAndChangeOfEnergySupplierForPerson"
+        "ChangeOfBalanceSupplierForPerson",
+        "MoveInAndChangeOfBalanceSupplierForPerson"
       ]
     },
     "authorizedResources": {

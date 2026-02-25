@@ -78,6 +78,12 @@ fun toNotFoundApiErrorResponse(detail: String? = null): Pair<HttpStatusCode, Jso
     detail = detail.orEmpty().ifEmpty { "The requested resource could not be found" }
 )
 
+fun toNotAcceptedErrorResponse(detail: String? = null): Pair<HttpStatusCode, JsonApiErrorCollection> = buildApiErrorResponse(
+    status = HttpStatusCode.NotAcceptable,
+    title = "Not acceptable",
+    detail = detail.orEmpty().ifEmpty { "The requested resource does not have a representation that matches the criteria given in the request's Accept header" }
+)
+
 fun toBalanceSupplierNotApiAuthorizedResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> = buildApiErrorResponse(
     status = HttpStatusCode.Forbidden,
     title = "Not authorized",

@@ -14,12 +14,12 @@
       "type": "string",
       "description": "Classifies the type of the authorization document being created or managed (e.g., supplier switch confirmation).",
       "enum": [
-        "ChangeOfEnergySupplierForPerson",
-        "MoveInAndChangeOfEnergySupplierForPerson"
+        "ChangeOfBalanceSupplierForPerson",
+        "MoveInAndChangeOfBalanceSupplierForPerson"
       ],
       "examples": [
-        "ChangeOfEnergySupplierForPerson",
-        "MoveInAndChangeOfEnergySupplierForPerson"
+        "ChangeOfBalanceSupplierForPerson",
+        "MoveInAndChangeOfBalanceSupplierForPerson"
       ]
     },
     "attributes": {

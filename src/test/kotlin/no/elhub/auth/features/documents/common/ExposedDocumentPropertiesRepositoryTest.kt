@@ -54,7 +54,7 @@ class ExposedDocumentPropertiesRepositoryTest : FunSpec({
                 AuthorizationDocument(
                     id = UUID.randomUUID(),
                     file = byteArrayOf(),
-                    type = AuthorizationDocument.Type.ChangeOfEnergySupplierForPerson,
+                    type = AuthorizationDocument.Type.ChangeOfBalanceSupplierForPerson,
                     status = AuthorizationDocument.Status.Pending,
                     requestedBy = AuthorizationParty(type = PartyType.Person, id = "1234567890"),
                     requestedFrom = AuthorizationParty(type = PartyType.Person, id = "1234567890"),

@@ -8,10 +8,10 @@
 * @elhub/team-devxp @elhub/chapter-auth
 
 # Business process modules
-/src/main/kotlin/no/elhub/auth/features/businessprocesses/changeofenergysupplier/ @elhub/team-wow
-/src/test/kotlin/no/elhub/auth/features/businessprocesses/changeofenergysupplier/ @elhub/team-wow
-/src/main/kotlin/no/elhub/auth/features/businessprocesses/moveinandchangeofenergysupplier/ @elhub/team-wow
-/src/test/kotlin/no/elhub/auth/features/businessprocesses/moveinandchangeofenergysupplier/ @elhub/team-wow
+/src/main/kotlin/no/elhub/auth/features/businessprocesses/changeofbalancesupplier/ @elhub/team-wow
+/src/test/kotlin/no/elhub/auth/features/businessprocesses/changeofbalancesupplier/ @elhub/team-wow
+/src/main/kotlin/no/elhub/auth/features/businessprocesses/moveinandchangeofbalancesupplier/ @elhub/team-wow
+/src/test/kotlin/no/elhub/auth/features/businessprocesses/moveinandchangeofbalancesupplier/ @elhub/team-wow
 /src/main/kotlin/no/elhub/auth/features/businessprocesses/structuredata/ @elhub/team-wow
 /src/test/kotlin/no/elhub/auth/features/businessprocesses/structuredata/ @elhub/team-wow
 /src/main/kotlin/no/elhub/auth/features/businessprocesses/datasharing/ @elhub/team-wow

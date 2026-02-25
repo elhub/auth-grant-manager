@@ -191,6 +191,8 @@ paths:
           $ref: '#/components/responses/401UnauthorizedError'
         '404':
           $ref: '#/components/responses/404NotFoundError'
+        '406':
+          $ref: '#/components/responses/406NotAcceptableError'
         '500':
           $ref: '#/components/responses/500InternalServerError'
     put:
@@ -622,6 +624,14 @@ components:
     404NotFoundError:
       description: >
         Not found. The requested resource does not exist or is not accessible to the caller.
+      content:
+        application/json:
+          schema:
+            $ref: './schemas/json-api-error.schema.json'
+
+    406NotAcceptableError:
+      description: >
+        Not acceptable. The requested resource exists but cannot be returned in a format acceptable to the client.
       content:
         application/json:
           schema:
