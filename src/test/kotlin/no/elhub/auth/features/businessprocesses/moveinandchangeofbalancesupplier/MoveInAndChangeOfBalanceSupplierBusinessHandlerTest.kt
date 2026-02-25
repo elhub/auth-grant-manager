@@ -196,7 +196,7 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
             val model =
                 CreateRequestModel(
                     authorizedParty = AUTHORIZED_PARTY,
-                    requestType = AuthorizationRequest.Type.MoveInAndChangeOfEnergySupplierForPerson,
+                    requestType = AuthorizationRequest.Type.MoveInAndChangeOfBalanceSupplierForPerson,
                     meta =
                     CreateRequestMeta(
                         requestedBy = VALID_PARTY,
@@ -207,13 +207,13 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
-                        startDate = VALID_START_DATE,
+                        moveInDate = VALID_MOVEIN_DATE,
                         redirectURI = "example.com",
                     ),
                 )
 
             handler.validateAndReturnRequestCommand(model)
-                .shouldBeLeft(BusinessProcessError.Validation(MoveInAndChangeOfEnergySupplierValidationError.InvalidRedirectURI.message))
+                .shouldBeLeft(BusinessProcessError.Validation(MoveInAndChangeOfBalanceSupplierValidationError.InvalidRedirectURI.message))
         }
 
         test("request validation allows redirect URI when host matches Ediel domain") {
@@ -221,7 +221,7 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
             val model =
                 CreateRequestModel(
                     authorizedParty = AUTHORIZED_PARTY,
-                    requestType = AuthorizationRequest.Type.MoveInAndChangeOfEnergySupplierForPerson,
+                    requestType = AuthorizationRequest.Type.MoveInAndChangeOfBalanceSupplierForPerson,
                     meta =
                     CreateRequestMeta(
                         requestedBy = VALID_PARTY,
@@ -232,7 +232,7 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
-                        startDate = VALID_START_DATE,
+                        moveInDate = VALID_MOVEIN_DATE,
                         redirectURI = "https://example.com/callback",
                     ),
                 )
@@ -241,7 +241,7 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
         }
 
         test("request validation in test environment uses test URL from Ediel") {
-            val handlerWithTestEnvironment = MoveInAndChangeOfEnergySupplierBusinessHandler(
+            val handlerWithTestEnvironment = MoveInAndChangeOfBalanceSupplierBusinessHandler(
                 organisationsService = organisationsService,
                 meteringPointsService = meteringPointsService,
                 personService = personService,
@@ -259,7 +259,7 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
             val model =
                 CreateRequestModel(
                     authorizedParty = AUTHORIZED_PARTY,
-                    requestType = AuthorizationRequest.Type.MoveInAndChangeOfEnergySupplierForPerson,
+                    requestType = AuthorizationRequest.Type.MoveInAndChangeOfBalanceSupplierForPerson,
                     meta =
                     CreateRequestMeta(
                         requestedBy = VALID_PARTY,
@@ -270,7 +270,7 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
-                        startDate = VALID_START_DATE,
+                        moveInDate = VALID_MOVEIN_DATE,
                         redirectURI = "https://app.test.example/callback",
                     ),
                 )
@@ -283,7 +283,7 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
             val model =
                 CreateRequestModel(
                     authorizedParty = AUTHORIZED_PARTY,
-                    requestType = AuthorizationRequest.Type.MoveInAndChangeOfEnergySupplierForPerson,
+                    requestType = AuthorizationRequest.Type.MoveInAndChangeOfBalanceSupplierForPerson,
                     meta =
                     CreateRequestMeta(
                         requestedBy = VALID_PARTY,
@@ -294,7 +294,7 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
-                        startDate = VALID_START_DATE,
+                        moveInDate = VALID_MOVEIN_DATE,
                         redirectURI = "https://app.example.com/callback",
                     ),
                 )
@@ -307,7 +307,7 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
             val model =
                 CreateRequestModel(
                     authorizedParty = AUTHORIZED_PARTY,
-                    requestType = AuthorizationRequest.Type.MoveInAndChangeOfEnergySupplierForPerson,
+                    requestType = AuthorizationRequest.Type.MoveInAndChangeOfBalanceSupplierForPerson,
                     meta =
                     CreateRequestMeta(
                         requestedBy = VALID_PARTY,
@@ -318,13 +318,13 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
                         balanceSupplierContractName = "Contract",
-                        startDate = VALID_START_DATE,
+                        moveInDate = VALID_MOVEIN_DATE,
                         redirectURI = "https://example.com/callback",
                     ),
                 )
 
             handler.validateAndReturnRequestCommand(model)
-                .shouldBeLeft(BusinessProcessError.Validation(MoveInAndChangeOfEnergySupplierValidationError.RedirectURINotMatchingEdiel.message))
+                .shouldBeLeft(BusinessProcessError.Validation(MoveInAndChangeOfBalanceSupplierValidationError.RedirectURINotMatchingEdiel.message))
         }
 
         test("request validation fails on invalid metering point") {
