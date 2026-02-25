@@ -3,6 +3,7 @@ package no.elhub.auth.features.documents.get
 import arrow.core.getOrElse
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
+import io.ktor.server.request.acceptItems
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondBytes
 import io.ktor.server.routing.Route
@@ -13,6 +14,7 @@ import no.elhub.auth.features.common.auth.toApiErrorResponse
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toApiErrorResponse
+import no.elhub.auth.features.common.toNotAcceptedErrorResponse
 import no.elhub.auth.features.common.validatePathId
 import no.elhub.auth.features.documents.get.dto.toGetSingleResponse
 import org.slf4j.LoggerFactory
@@ -70,6 +72,17 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
     }
 
     get("/{$DOCUMENT_ID_PARAM}.pdf") {
+        val acceptFromClient = call.request.acceptItems()
+        val acceptsPdf = call.request.acceptItems().any {
+            ContentType.Application.Pdf.match(it.value) || ContentType.Any.match(it.value)
+        }
+
+        if (!acceptsPdf && acceptFromClient.isNotEmpty()) {
+            val (status, body) = toNotAcceptedErrorResponse(detail = "Client must accept 'application/pdf' to receive the document as PDF")
+            call.respond(status, body)
+            return@get
+        }
+
         val authorizedParty = authProvider.authorizeEndUserOrMaskinporten(call)
             .getOrElse { err ->
                 val (status, body) = err.toApiErrorResponse()

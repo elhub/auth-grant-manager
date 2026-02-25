@@ -421,6 +421,7 @@ class AuthorizationDocumentRouteTest :
                     val response = client.get(linkToDocument) {
                         header(HttpHeaders.Authorization, "Bearer maskinporten")
                         header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                        accept(ContentType.Application.Pdf)
                     }
                     response.status shouldBe HttpStatusCode.OK
                     val getDocumentResponse: GetDocumentSingleResponse = response.body()
@@ -483,6 +484,7 @@ class AuthorizationDocumentRouteTest :
 
                     val enduserResponse = client.get(linkToDocument) {
                         header(HttpHeaders.Authorization, "Bearer enduser")
+                        accept(ContentType.Application.Pdf)
                     }
 
                     enduserResponse.status shouldBe HttpStatusCode.OK
@@ -544,6 +546,7 @@ class AuthorizationDocumentRouteTest :
                     signedFile = client.get(linkToDocumentFile) {
                         header(HttpHeaders.Authorization, "Bearer maskinporten")
                         header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                        accept(ContentType.Application.Pdf)
                     }.bodyAsBytes()
                     signedFile.validateFileIsSignedByUs()
                 }
@@ -559,6 +562,7 @@ class AuthorizationDocumentRouteTest :
                         setBody(documentSignedByPerson)
                         header(HttpHeaders.Authorization, "Bearer maskinporten")
                         header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                        accept(ContentType.Application.Pdf)
                     }
                     response.status shouldBe HttpStatusCode.NoContent
                     response.bodyAsText().shouldBeEmpty()

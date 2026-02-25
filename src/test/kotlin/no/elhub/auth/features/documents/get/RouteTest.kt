@@ -5,6 +5,7 @@ import arrow.core.right
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.ktor.client.call.body
+import io.ktor.client.request.accept
 import io.ktor.client.request.get
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsChannel
@@ -26,8 +27,6 @@ import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toTimeZoneOffsetString
 import no.elhub.auth.features.documents.AuthorizationDocument
-import no.elhub.auth.features.documents.AuthorizationDocument.Status
-import no.elhub.auth.features.documents.AuthorizationDocument.Type
 import no.elhub.auth.features.documents.common.AuthorizationDocumentProperty
 import no.elhub.auth.features.documents.get.dto.GetDocumentSingleResponse
 import no.elhub.auth.setupAppWith
@@ -81,7 +80,7 @@ class RouteTest : FunSpec({
             coVerify(exactly = 1) {
                 handler.invoke(match { it.authorizedParty.id == authorizedPerson.id.toString() })
             }
-            response = client.get("/${document.id}.pdf")
+            response = client.get("/${document.id}.pdf") { accept(ContentType.Application.Pdf) }
             response.status shouldBe HttpStatusCode.OK
             response.contentType()?.withoutParameters() shouldBe ContentType.Application.Pdf
             response.bodyAsChannel().toByteArray() shouldBe document.file
@@ -101,7 +100,7 @@ class RouteTest : FunSpec({
             coVerify(exactly = 1) {
                 handler.invoke(match { it.authorizedParty.id == authorizedOrg.gln })
             }
-            response = client.get("/${document.id}.pdf")
+            response = client.get("/${document.id}.pdf") { accept(ContentType.Application.Pdf) }
             response.status shouldBe HttpStatusCode.OK
             response.contentType()?.withoutParameters() shouldBe ContentType.Application.Pdf
             response.bodyAsChannel().toByteArray() shouldBe document.file
@@ -110,6 +109,18 @@ class RouteTest : FunSpec({
             }
         }
     }
+
+    test("GET /{id}.pdf returns not accepted on unsupported accept header") {
+        coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
+        coEvery { handler.invoke(any()) } returns document.right()
+        testApplication {
+            setupAppWith { route(handler, authProvider) }
+            val response = client.get("/${document.id}.pdf") { accept(ContentType.Application.Json) }
+            response.status shouldBe HttpStatusCode.NotAcceptable
+            coVerify(exactly = 0) { handler.invoke(any()) }
+        }
+    }
+
     test("GET /{id}[.pdf] returns 400 when UUID is invalid") {
         coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
         coEvery { handler.invoke(any()) } returns document.right()
@@ -117,7 +128,7 @@ class RouteTest : FunSpec({
             setupAppWith { route(handler, authProvider) }
             val id = "not-a-uuid"
             validateMalformedInputResponse(client.get("/$id"))
-            validateMalformedInputResponse(client.get("/$id.pdf"))
+            validateMalformedInputResponse(client.get("/$id.pdf") { accept(ContentType.Application.Pdf) })
             coVerify(exactly = 0) { handler.invoke(any()) }
         }
     }
@@ -128,7 +139,7 @@ class RouteTest : FunSpec({
             setupAppWith { route(handler, authProvider) }
             val id = "7b14fcba-c899-4a5c-aecb-6e5abcac2bcf"
             validateNotAuthorizedResponse(client.get("/$id"))
-            validateNotAuthorizedResponse(client.get("/$id.pdf"))
+            validateNotAuthorizedResponse(client.get("/$id.pdf") { accept(ContentType.Application.Pdf) })
             coVerify(exactly = 0) { handler.invoke(any()) }
         }
     }
@@ -139,7 +150,7 @@ class RouteTest : FunSpec({
             setupAppWith { route(handler, authProvider) }
             val id = "7b14fcba-c899-4a5c-aecb-6e5abcac2bcf"
             validateInternalServerErrorResponse(client.get("/$id"))
-            validateInternalServerErrorResponse(client.get("/$id.pdf"))
+            validateInternalServerErrorResponse(client.get("/$id.pdf") { accept(ContentType.Application.Pdf) })
         }
     }
 })
