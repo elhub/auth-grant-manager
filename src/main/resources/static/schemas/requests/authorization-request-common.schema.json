@@ -14,12 +14,12 @@
       "type": "string",
       "description": "The type of the authorization request.",
       "enum": [
-        "ChangeOfEnergySupplierForPerson",
-        "MoveInAndChangeOfEnergySupplierForPerson"
+        "ChangeOfBalanceSupplierForPerson",
+        "MoveInAndChangeOfBalanceSupplierForPerson"
       ],
       "examples": [
-        "ChangeOfEnergySupplierForPerson",
-        "MoveInAndChangeOfEnergySupplierForPerson"
+        "ChangeOfBalanceSupplierForPerson",
+        "MoveInAndChangeOfBalanceSupplierForPerson"
       ]
     },
     "status": {
