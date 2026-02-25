@@ -317,7 +317,7 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
             val model =
                 CreateRequestModel(
                     authorizedParty = AUTHORIZED_PARTY,
-                    requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
+                    requestType = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
                     meta =
                     CreateRequestMeta(
                         requestedBy = VALID_PARTY,
@@ -333,11 +333,11 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
                 )
 
             handler.validateAndReturnRequestCommand(model)
-                .shouldBeLeft(BusinessProcessError.Validation(ChangeOfEnergySupplierValidationError.RedirectURINotMatchingEdiel.message))
+                .shouldBeLeft(BusinessProcessError.Validation(ChangeOfBalanceSupplierValidationError.RedirectURINotMatchingEdiel.message))
         }
 
         test("request validation in test environment uses test URL from Ediel") {
-            val handlerWithTestEnvironment = ChangeOfEnergySupplierBusinessHandler(
+            val handlerWithTestEnvironment = ChangeOfBalanceSupplierBusinessHandler(
                 meteringPointsService = meteringPointsService,
                 personService = personService,
                 organisationsService = organisationsService,
@@ -357,7 +357,7 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
             val model =
                 CreateRequestModel(
                     authorizedParty = AUTHORIZED_PARTY,
-                    requestType = AuthorizationRequest.Type.ChangeOfEnergySupplierForPerson,
+                    requestType = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
                     meta =
                     CreateRequestMeta(
                         requestedBy = VALID_PARTY,
