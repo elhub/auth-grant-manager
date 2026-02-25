@@ -6,11 +6,15 @@ import no.elhub.auth.features.requests.create.requesttypes.RequestTypeValidation
 
 fun MoveInAndChangeOfBalanceSupplierValidationError.toBusinessError(): BusinessProcessError =
     when (this) {
-        is MoveInAndChangeOfBalanceSupplierValidationError.UnexpectedError -> BusinessProcessError.Unexpected(detail = this.message)
+        is MoveInAndChangeOfBalanceSupplierValidationError.UnexpectedError -> BusinessProcessError.Unexpected(
+            detail = this.message
+        )
 
         MoveInAndChangeOfBalanceSupplierValidationError.MeteringPointNotFound,
         MoveInAndChangeOfBalanceSupplierValidationError.RequestedByNotFound,
-        MoveInAndChangeOfBalanceSupplierValidationError.RequestedFromNotFound -> BusinessProcessError.NotFound(detail = this.message)
+        MoveInAndChangeOfBalanceSupplierValidationError.RequestedFromNotFound -> BusinessProcessError.NotFound(
+            detail = this.message
+        )
 
         else -> BusinessProcessError.Validation(detail = this.message)
     }
@@ -22,27 +26,45 @@ sealed class MoveInAndChangeOfBalanceSupplierValidationError(
 ) : RequestTypeValidationError {
     @Serializable
     data object MissingRequestedFromName :
-        MoveInAndChangeOfBalanceSupplierValidationError("missing_requested_from_name", "Requested from name is missing")
+        MoveInAndChangeOfBalanceSupplierValidationError(
+            "missing_requested_from_name",
+            "Requested from name is missing"
+        )
 
     @Serializable
     data object MissingBalanceSupplierName :
-        MoveInAndChangeOfBalanceSupplierValidationError("missing_balance_supplier_name", "Balance supplier name is missing")
+        MoveInAndChangeOfBalanceSupplierValidationError(
+            "missing_balance_supplier_name",
+            "Balance supplier name is missing"
+        )
 
     @Serializable
     data object MissingBalanceSupplierContractName :
-        MoveInAndChangeOfBalanceSupplierValidationError("missing_balance_supplier_contract_name", "Balance supplier contract name is missing")
+        MoveInAndChangeOfBalanceSupplierValidationError(
+            "missing_balance_supplier_contract_name",
+            "Balance supplier contract name is missing"
+        )
 
     @Serializable
-    data object StartDateNotBackInTime :
-        MoveInAndChangeOfBalanceSupplierValidationError("start_date_not_back_in_time", "Start date must be today or back in time")
+    data object MoveInDateNotBackInTime :
+        MoveInAndChangeOfBalanceSupplierValidationError(
+            "start_date_not_back_in_time",
+            "Start date must be today or back in time"
+        )
 
     @Serializable
     data object MissingMeteringPointId :
-        MoveInAndChangeOfBalanceSupplierValidationError("missing_metering_point_id", "Metering point id is missing")
+        MoveInAndChangeOfBalanceSupplierValidationError(
+            "missing_metering_point_id",
+            "Metering point id is missing"
+        )
 
     @Serializable
     data object InvalidMeteringPointId :
-        MoveInAndChangeOfBalanceSupplierValidationError("invalid_metering_point_id", "Metering point id is invalid")
+        MoveInAndChangeOfBalanceSupplierValidationError(
+            "invalid_metering_point_id",
+            "Metering point id is invalid"
+        )
 
     @Serializable
     data object MeteringPointNotFound :
@@ -57,7 +79,10 @@ sealed class MoveInAndChangeOfBalanceSupplierValidationError(
 
     @Serializable
     data object MissingMeteringPointAddress :
-        MoveInAndChangeOfBalanceSupplierValidationError("missing_metering_point_address", "Metering point address is missing")
+        MoveInAndChangeOfBalanceSupplierValidationError(
+            "missing_metering_point_address",
+            "Metering point address is missing"
+        )
 
     @Serializable
     data object MissingRequestedBy :
@@ -65,7 +90,10 @@ sealed class MoveInAndChangeOfBalanceSupplierValidationError(
 
     @Serializable
     data object InvalidRequestedBy :
-        MoveInAndChangeOfBalanceSupplierValidationError("invalid_requested_by", "Requested by has invalid format")
+        MoveInAndChangeOfBalanceSupplierValidationError(
+            "invalid_requested_by",
+            "Requested by has invalid format"
+        )
 
     @Serializable
     data object MissingRequestedFrom :
@@ -73,15 +101,24 @@ sealed class MoveInAndChangeOfBalanceSupplierValidationError(
 
     @Serializable
     data object InvalidRequestedFrom :
-        MoveInAndChangeOfBalanceSupplierValidationError("invalid_requested_from", "Requested from has invalid format")
+        MoveInAndChangeOfBalanceSupplierValidationError(
+            "invalid_requested_from",
+            "Requested from has invalid format"
+        )
 
     @Serializable
     data object RequestedFromNotFound :
-        MoveInAndChangeOfBalanceSupplierValidationError("requested_from_not_found", "Requested from id not found")
+        MoveInAndChangeOfBalanceSupplierValidationError(
+            "requested_from_not_found",
+            "Requested from id not found"
+        )
 
     @Serializable
     data object RequestedToRequestedFromMismatch :
-        MoveInAndChangeOfBalanceSupplierValidationError("requested_to_requested_from_mismatch", "Requested to and requested from are not the same party")
+        MoveInAndChangeOfBalanceSupplierValidationError(
+            "requested_to_requested_from_mismatch",
+            "Requested to and requested from are not the same party"
+        )
 
     @Serializable
     data object RequestedByNotFound :
@@ -89,11 +126,17 @@ sealed class MoveInAndChangeOfBalanceSupplierValidationError(
 
     @Serializable
     data object NotActiveRequestedBy :
-        MoveInAndChangeOfBalanceSupplierValidationError("not_active_requested_by", "Requested by is not an active party in Elhub")
+        MoveInAndChangeOfBalanceSupplierValidationError(
+            "not_active_requested_by",
+            "Requested by is not an active party in Elhub"
+        )
 
     @Serializable
     data object ContractsNotFound :
-        MoveInAndChangeOfBalanceSupplierValidationError("contracts_not_found", "Contracts not found in strømpris.no for provided organization number")
+        MoveInAndChangeOfBalanceSupplierValidationError(
+            "contracts_not_found",
+            "Contracts not found in strømpris.no for provided organization number"
+        )
 
     @Serializable
     data object InvalidBalanceSupplierContractName :

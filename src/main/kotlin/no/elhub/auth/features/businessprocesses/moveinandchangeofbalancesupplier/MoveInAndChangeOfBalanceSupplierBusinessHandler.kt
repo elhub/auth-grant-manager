@@ -119,8 +119,9 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandler(
         }
 
         // temporary mapping until model has elhubInternalId instead of NIN
-        val endUserElhubInternalId = personService.findOrCreateByNin(model.requestedFrom.idValue).getOrNull()?.internalId
-            ?: return MoveInAndChangeOfBalanceSupplierValidationError.RequestedFromNotFound.left()
+        val endUserElhubInternalId =
+            personService.findOrCreateByNin(model.requestedFrom.idValue).getOrNull()?.internalId
+                ?: return MoveInAndChangeOfBalanceSupplierValidationError.RequestedFromNotFound.left()
 
         val meteringPoint = meteringPointsService.getMeteringPointByIdAndElhubInternalId(
             meteringPointId = model.requestedForMeteringPointId,
@@ -140,10 +141,10 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandler(
             return MoveInAndChangeOfBalanceSupplierValidationError.RequestedFromIsMeteringPointEndUser.left()
         }
 
-        val startDate = model.startDate
-        startDate?.let {
+        val moveInDate = model.moveInDate
+        moveInDate?.let {
             if (it > today()) {
-                return MoveInAndChangeOfBalanceSupplierValidationError.StartDateNotBackInTime.left()
+                return MoveInAndChangeOfBalanceSupplierValidationError.MoveInDateNotBackInTime.left()
             }
         }
 
@@ -155,7 +156,10 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandler(
             return MoveInAndChangeOfBalanceSupplierValidationError.InvalidRequestedBy.left()
         }
 
-        val party = organisationsService.getPartyByIdAndPartyType(model.requestedBy.idValue, PartyType.BalanceSupplier)
+        val party = organisationsService.getPartyByIdAndPartyType(
+            model.requestedBy.idValue,
+            PartyType.BalanceSupplier
+        )
             .mapLeft { err ->
                 return when (err) {
                     ClientError.NotFound -> MoveInAndChangeOfBalanceSupplierValidationError.RequestedByNotFound.left()
@@ -165,7 +169,8 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandler(
                     ClientError.ServerError,
                     is ClientError.UnexpectedError -> MoveInAndChangeOfBalanceSupplierValidationError.UnexpectedError.left()
                 }
-            }.getOrElse { return MoveInAndChangeOfBalanceSupplierValidationError.RequestedByNotFound.left() }
+            }
+            .getOrElse { return MoveInAndChangeOfBalanceSupplierValidationError.RequestedByNotFound.left() }
 
         if (party.data.attributes?.status != PartyStatus.ACTIVE) {
             return MoveInAndChangeOfBalanceSupplierValidationError.NotActiveRequestedBy.left()
@@ -177,19 +182,25 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandler(
 
         if (validateBalanceSupplierContractName) {
             val organizationNumber =
-                party.data.relationships.organizationNumber?.data?.id ?: return MoveInAndChangeOfBalanceSupplierValidationError.UnexpectedError.left()
-            val products = stromprisService.getProductsByOrganizationNumber(organizationNumber).mapLeft { err ->
-                return when (err) {
-                    ClientError.NotFound -> MoveInAndChangeOfBalanceSupplierValidationError.ContractsNotFound.left()
+                party.data.relationships.organizationNumber?.data?.id
+                    ?: return MoveInAndChangeOfBalanceSupplierValidationError.UnexpectedError.left()
+            val products =
+                stromprisService.getProductsByOrganizationNumber(organizationNumber).mapLeft { err ->
+                    return when (err) {
+                        ClientError.NotFound -> MoveInAndChangeOfBalanceSupplierValidationError.ContractsNotFound.left()
 
-                    ClientError.BadRequest,
-                    ClientError.Unauthorized,
-                    ClientError.ServerError,
-                    is ClientError.UnexpectedError -> MoveInAndChangeOfBalanceSupplierValidationError.UnexpectedError.left()
+                        ClientError.BadRequest,
+                        ClientError.Unauthorized,
+                        ClientError.ServerError,
+                        is ClientError.UnexpectedError -> MoveInAndChangeOfBalanceSupplierValidationError.UnexpectedError.left()
+                    }
                 }
-            }.getOrElse { return MoveInAndChangeOfBalanceSupplierValidationError.UnexpectedError.left() }
+                    .getOrElse { return MoveInAndChangeOfBalanceSupplierValidationError.UnexpectedError.left() }
             if (products.data.none { product ->
-                    model.balanceSupplierContractName.equals(product.attributes?.name?.trim(), ignoreCase = true)
+                    model.balanceSupplierContractName.equals(
+                        product.attributes?.name?.trim(),
+                        ignoreCase = true
+                    )
                 }
             ) {
                 return MoveInAndChangeOfBalanceSupplierValidationError.InvalidBalanceSupplierContractName.left()
@@ -202,10 +213,11 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandler(
                 requestedFromName = model.requestedFromName,
                 requestedForMeteringPointId = model.requestedForMeteringPointId,
                 requestedForMeteringPointAddress = model.requestedForMeteringPointAddress,
-                requestedForMeterNumber = meteringPoint.data.attributes?.accountingPoint?.meter?.meterNumber ?: "",
+                requestedForMeterNumber = meteringPoint.data.attributes?.accountingPoint?.meter?.meterNumber
+                    ?: "",
                 balanceSupplierContractName = model.balanceSupplierContractName,
                 balanceSupplierName = model.balanceSupplierName,
-                startDate = startDate,
+                moveInDate = moveInDate,
                 redirectURI = model.redirectURI,
             )
 

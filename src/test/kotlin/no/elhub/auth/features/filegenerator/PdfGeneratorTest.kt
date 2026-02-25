@@ -31,7 +31,7 @@ class PdfGeneratorTest :
             requestedForMeteringPointAddress = "Address 1",
             balanceSupplierContractName = "Contract Name",
             balanceSupplierName = "Greatest Balance Supplier of all",
-            startDate = LocalDate(2024, 1, 1),
+            moveInDate = LocalDate(2024, 1, 1),
             redirectURI = "https://example.com",
         )
 

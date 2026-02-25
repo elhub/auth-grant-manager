@@ -48,8 +48,8 @@
             "balanceSupplierContractName": {
               "$ref": "../authorization-common.schema.json#/$defs/balanceSupplierContractName"
             },
-            "startDate": {
-              "$ref": "../authorization-common.schema.json#/$defs/startDate"
+            "moveInDate": {
+              "$ref": "../authorization-common.schema.json#/$defs/moveInDate"
             },
             "language": {
               "$ref": "../authorization-common.schema.json#/$defs/language"

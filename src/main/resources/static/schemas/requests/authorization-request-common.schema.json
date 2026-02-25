@@ -128,8 +128,8 @@
           "description": "The name of the balance supplier associated with the authorization document.",
           "examples": ["Example Supplier AS"]
         },
-        "startDate": {
-          "$ref": "../authorization-common.schema.json#/$defs/startDate"
+        "moveInDate": {
+          "$ref": "../authorization-common.schema.json#/$defs/moveInDate"
         }
       },
       "additionalProperties": false
