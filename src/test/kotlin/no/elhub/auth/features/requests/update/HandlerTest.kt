@@ -14,6 +14,7 @@ import no.elhub.auth.features.grants.common.GrantPropertiesRepository
 import no.elhub.auth.features.grants.common.GrantRepository
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.common.RequestRepository
+import no.elhub.auth.features.requests.create.RequestBusinessHandler
 import java.util.UUID
 
 class HandlerTest : FunSpec({
@@ -36,7 +37,7 @@ class HandlerTest : FunSpec({
             )
 
         val requestRepository = mockk<RequestRepository>()
-        val businessHandler = mockk<GrantBusinessHandler>()
+        val businessHandler = mockk<RequestBusinessHandler>()
         val grantRepository = mockk<GrantRepository>(relaxed = true)
         val grantPropertiesRepository = mockk<GrantPropertiesRepository>(relaxed = true)
 

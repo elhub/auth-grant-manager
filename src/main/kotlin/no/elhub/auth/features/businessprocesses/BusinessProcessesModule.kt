@@ -5,10 +5,8 @@ import no.elhub.auth.features.businessprocesses.changeofenergysupplier.ChangeOfE
 import no.elhub.auth.features.businessprocesses.moveinandchangeofenergysupplier.MoveInAndChangeOfEnergySupplierBusinessHandler
 import no.elhub.auth.features.documents.common.DocumentBusinessHandler
 import no.elhub.auth.features.documents.common.ProxyDocumentBusinessHandler
-import no.elhub.auth.features.requests.common.ProxyGrantBusinessHandler
 import no.elhub.auth.features.requests.common.ProxyRequestBusinessHandler
 import no.elhub.auth.features.requests.create.RequestBusinessHandler
-import no.elhub.auth.features.requests.update.GrantBusinessHandler
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.qualifier.named
 import org.koin.dsl.bind
@@ -36,6 +34,5 @@ fun Application.businessProcessesModule() {
         }
         singleOf(::ProxyDocumentBusinessHandler) bind DocumentBusinessHandler::class
         singleOf(::ProxyRequestBusinessHandler) bind RequestBusinessHandler::class
-        singleOf(::ProxyGrantBusinessHandler) bind GrantBusinessHandler::class
     }
 }

@@ -3,7 +3,6 @@ package no.elhub.auth.features.requests.update
 import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensure
-import no.elhub.auth.features.businessprocesses.BusinessProcessError
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.grants.AuthorizationGrant
@@ -12,11 +11,12 @@ import no.elhub.auth.features.grants.common.GrantPropertiesRepository
 import no.elhub.auth.features.grants.common.GrantRepository
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.common.RequestRepository
+import no.elhub.auth.features.requests.create.RequestBusinessHandler
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.slf4j.LoggerFactory
 
 class Handler(
-    private val businessHandler: GrantBusinessHandler,
+    private val businessHandler: RequestBusinessHandler,
     private val requestRepository: RequestRepository,
     private val grantRepository: GrantRepository,
     private val grantPropertiesRepository: GrantPropertiesRepository
@@ -90,16 +90,16 @@ class Handler(
                 .mapLeft { UpdateError.GrantCreationError }
                 .bind()
 
-            val metaProperties = businessHandler.getUpdateGrantMetaProperties(acceptedRequest)
-                .mapLeft {
-                    UpdateError.PersistenceError
-                }.bind()
-
-            val grantProperties = metaProperties.map { (key, value) ->
-                AuthorizationGrantProperty(grantId = createdGrant.id, key = key, value = value)
+            val createGrantProperties = businessHandler.getCreateGrantProperties(acceptedRequest)
+            val grantMetaProperties = createGrantProperties.meta.map { (key, value) ->
+                AuthorizationGrantProperty(
+                    grantId = createdGrant.id,
+                    key = key,
+                    value = value
+                )
             }
 
-            grantPropertiesRepository.insert(grantProperties)
+            grantPropertiesRepository.insert(grantMetaProperties)
 
             acceptedRequest.copy(grantId = createdGrant.id)
         }
@@ -112,8 +112,4 @@ class Handler(
                 .bind()
             rejectedRequest
         }
-}
-
-interface GrantBusinessHandler {
-    fun getUpdateGrantMetaProperties(request: AuthorizationRequest): Either<BusinessProcessError, Map<String, String>>
 }

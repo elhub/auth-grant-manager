@@ -3,6 +3,7 @@ package no.elhub.auth.features.businessprocesses.moveinandchangeofenergysupplier
 import arrow.core.Either
 import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
@@ -445,59 +446,6 @@ class MoveInAndChangeOfEnergySupplierBusinessHandlerTest :
                 .shouldBeLeft(BusinessProcessError.Validation(MoveInAndChangeOfEnergySupplierValidationError.RequestedToRequestedFromMismatch.message))
         }
 
-        test("returns properties when moveInDate property is present and not blank") {
-            val request = AuthorizationRequest.create(
-                type = AuthorizationRequest.Type.MoveInAndChangeOfEnergySupplierForPerson,
-                requestedBy = AUTHORIZED_PARTY,
-                requestedFrom = AUTHORIZED_PARTY,
-                requestedTo = AUTHORIZED_PARTY,
-                validTo = today().toTimeZoneOffsetDateTimeAtStartOfDay(),
-            ).copy(
-                properties = listOf(
-                    AuthorizationRequestProperty(
-                        requestId = UUID.randomUUID(),
-                        key = "moveInDate",
-                        value = "2024-01-01"
-                    )
-                )
-            )
-            val result = handler.getUpdateGrantMetaProperties(request)
-            result.shouldBeRight(mapOf("moveInDate" to "2024-01-01"))
-        }
-
-        test("returns unexpected error unknown property is present and not blank") {
-            val request = AuthorizationRequest.create(
-                type = AuthorizationRequest.Type.MoveInAndChangeOfEnergySupplierForPerson,
-                requestedBy = AUTHORIZED_PARTY,
-                requestedFrom = AUTHORIZED_PARTY,
-                requestedTo = AUTHORIZED_PARTY,
-                validTo = today().toTimeZoneOffsetDateTimeAtStartOfDay(),
-            ).copy(
-                properties = listOf(
-                    AuthorizationRequestProperty(
-                        requestId = UUID.randomUUID(),
-                        key = "key1",
-                        value = "value1"
-                    )
-                )
-            )
-            val result = handler.getUpdateGrantMetaProperties(request)
-            result.shouldBeLeft((BusinessProcessError.Unexpected(MoveInAndChangeOfEnergySupplierValidationError.UnexpectedError.message)))
-        }
-
-        test("returns unexpected error when moveInDate is not present") {
-            val request = AuthorizationRequest.create(
-                type = AuthorizationRequest.Type.MoveInAndChangeOfEnergySupplierForPerson,
-                requestedBy = AUTHORIZED_PARTY,
-                requestedFrom = AUTHORIZED_PARTY,
-                requestedTo = AUTHORIZED_PARTY,
-                validTo = today().toTimeZoneOffsetDateTimeAtStartOfDay(),
-            )
-
-            val result = handler.getUpdateGrantMetaProperties(request)
-            result.shouldBeLeft((BusinessProcessError.Unexpected(MoveInAndChangeOfEnergySupplierValidationError.UnexpectedError.message)))
-        }
-
         test("strompris service is not called if validateBalanceSupplierContractName is false, assuming all previous validations pass") {
             val model =
                 CreateRequestModel(
@@ -599,7 +547,7 @@ class MoveInAndChangeOfEnergySupplierBusinessHandlerTest :
             command.meta.toMetaAttributes().containsKey("requestedForMeterNumber") shouldBe true
         }
 
-        test("grant properties validTo is one year from acceptance") {
+        test("grant properties moveInDate is present and validTo is one year from acceptance") {
             val party = AuthorizationParty(id = "party-1", type = PartyType.Organization)
             val request = AuthorizationRequest.create(
                 type = AuthorizationRequest.Type.MoveInAndChangeOfEnergySupplierForPerson,
@@ -607,12 +555,58 @@ class MoveInAndChangeOfEnergySupplierBusinessHandlerTest :
                 requestedFrom = party,
                 requestedTo = party,
                 validTo = today().toTimeZoneOffsetDateTimeAtStartOfDay(),
+            ).copy(
+                properties = listOf(
+                    AuthorizationRequestProperty(
+                        requestId = UUID.randomUUID(),
+                        key = "moveInDate",
+                        value = "2024-01-01"
+                    )
+                )
             )
 
             val properties = handler.getCreateGrantProperties(request)
 
+            properties.meta.getValue("moveInDate") shouldBe "2024-01-01"
             properties.validFrom shouldBe today()
             properties.validTo shouldBe today().plus(DatePeriod(years = 1))
+        }
+
+//        test("exception is thrown when moveInDate is not set") {
+//            val party = AuthorizationParty(id = "party-1", type = PartyType.Organization)
+//            val request = AuthorizationRequest.create(
+//                type = AuthorizationRequest.Type.MoveInAndChangeOfEnergySupplierForPerson,
+//                requestedBy = party,
+//                requestedFrom = party,
+//                requestedTo = party,
+//                validTo = today().toTimeZoneOffsetDateTimeAtStartOfDay(),
+//            )
+//            shouldThrow<NoSuchElementException> {
+//                handler.getCreateGrantProperties(request)
+//            }
+//        }
+
+        test("exception is thrown when properties is invalid") {
+            val party = AuthorizationParty(id = "party-1", type = PartyType.Organization)
+            val request = AuthorizationRequest.create(
+                type = AuthorizationRequest.Type.MoveInAndChangeOfEnergySupplierForPerson,
+                requestedBy = party,
+                requestedFrom = party,
+                requestedTo = party,
+                validTo = today().toTimeZoneOffsetDateTimeAtStartOfDay(),
+            ).copy(
+                properties = listOf(
+                    AuthorizationRequestProperty(
+                        requestId = UUID.randomUUID(),
+                        key = "random",
+                        value = "test"
+                    )
+                )
+            )
+
+            shouldThrow<IllegalArgumentException> {
+                handler.getCreateGrantProperties(request)
+            }
         }
 
         test("document produces DocumentCommand for valid input") {

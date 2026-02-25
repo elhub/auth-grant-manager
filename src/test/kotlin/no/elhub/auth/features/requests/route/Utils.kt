@@ -1,6 +1,5 @@
 package no.elhub.auth.features.requests.route
 
-import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -31,7 +30,6 @@ import no.elhub.auth.features.requests.create.model.CreateRequestModel
 import no.elhub.auth.features.requests.create.model.defaultRequestValidTo
 import no.elhub.auth.features.requests.create.requesttypes.RequestTypeValidationError
 import no.elhub.auth.features.requests.module
-import no.elhub.auth.features.requests.update.GrantBusinessHandler
 import no.elhub.auth.features.requests.update.dto.JsonApiUpdateRequest
 import no.elhub.auth.features.requests.update.dto.UpdateRequestAttributes
 import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObject
@@ -79,13 +77,7 @@ fun ApplicationTestBuilder.setUpAuthorizationRequestTestApplication() {
 fun Application.testRequestBusinessModule() {
     koinModule {
         single<RequestBusinessHandler> { TestRequestBusinessHandler() }
-        single<GrantBusinessHandler> { TestGrantBusinessHandler() }
     }
-}
-
-private class TestGrantBusinessHandler : GrantBusinessHandler {
-    override fun getUpdateGrantMetaProperties(request: AuthorizationRequest): Either<BusinessProcessError, Map<String, String>> =
-        emptyMap<String, String>().right()
 }
 
 class TestRequestBusinessHandler : RequestBusinessHandler {

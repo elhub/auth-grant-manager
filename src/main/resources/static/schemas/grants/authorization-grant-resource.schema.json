@@ -6,7 +6,13 @@
   "properties": {
     "data": {
       "type": "object",
-      "required": ["id", "type", "attributes", "relationships", "links"],
+      "required": [
+        "id",
+        "type",
+        "attributes",
+        "relationships",
+        "links"
+      ],
       "properties": {
         "id": {
           "$ref": "authorization-grant-common.schema.json#/$defs/id"
@@ -26,7 +32,12 @@
         },
         "relationships": {
           "$ref": "authorization-grant-common.schema.json#/$defs/relationships",
-          "required": ["grantedFor", "grantedTo", "source", "scopes"]
+          "required": [
+            "grantedFor",
+            "grantedTo",
+            "source",
+            "scopes"
+          ]
         },
         "meta": {
           "type": "object",

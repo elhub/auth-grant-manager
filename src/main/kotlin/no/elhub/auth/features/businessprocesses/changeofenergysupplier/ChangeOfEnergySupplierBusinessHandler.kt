@@ -36,7 +36,6 @@ import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.create.RequestBusinessHandler
 import no.elhub.auth.features.requests.create.command.RequestCommand
 import no.elhub.auth.features.requests.create.model.CreateRequestModel
-import no.elhub.auth.features.requests.update.GrantBusinessHandler
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
@@ -51,10 +50,7 @@ class ChangeOfEnergySupplierBusinessHandler(
     private val organisationsService: OrganisationsService,
     private val stromprisService: StromprisService,
     private val validateBalanceSupplierContractName: Boolean
-) : RequestBusinessHandler, DocumentBusinessHandler, GrantBusinessHandler {
-
-    override fun getUpdateGrantMetaProperties(request: AuthorizationRequest): Either<BusinessProcessError, Map<String, String>> =
-        emptyMap<String, String>().right()
+) : RequestBusinessHandler, DocumentBusinessHandler {
 
     override suspend fun validateAndReturnRequestCommand(createRequestModel: CreateRequestModel): Either<BusinessProcessError, RequestCommand> =
         either {

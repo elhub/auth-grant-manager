@@ -36,7 +36,6 @@ import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.create.RequestBusinessHandler
 import no.elhub.auth.features.requests.create.command.RequestCommand
 import no.elhub.auth.features.requests.create.model.CreateRequestModel
-import no.elhub.auth.features.requests.update.GrantBusinessHandler
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
@@ -47,6 +46,8 @@ private const val REGEX_METERING_POINT = "^\\d{18}$"
 
 private const val MOVE_IN_REQUEST_VALID_DAYS = 28
 private const val MOVE_IN_GRANT_VALID_YEARS = 1
+
+val allowedKeys = setOf("moveInDate")
 
 private fun moveInRequestValidTo() = today().plus(DatePeriod(days = MOVE_IN_REQUEST_VALID_DAYS))
 
@@ -59,21 +60,7 @@ class MoveInAndChangeOfEnergySupplierBusinessHandler(
     private val stromprisService: StromprisService,
     private val validateBalanceSupplierContractName: Boolean
 ) : RequestBusinessHandler,
-    DocumentBusinessHandler,
-    GrantBusinessHandler {
-
-    override fun getUpdateGrantMetaProperties(request: AuthorizationRequest): Either<BusinessProcessError, Map<String, String>> {
-        val metaKeys = listOf("moveInDate")
-        val metaMap = request.properties
-            .filter { it.key in metaKeys }
-            .associate { it.key to it.value }
-
-        if (metaMap["moveInDate"].isNullOrBlank()) {
-            return MoveInAndChangeOfEnergySupplierValidationError.UnexpectedError.toBusinessError().left()
-        }
-
-        return metaMap.right()
-    }
+    DocumentBusinessHandler {
 
     override suspend fun validateAndReturnRequestCommand(createRequestModel: CreateRequestModel): Either<BusinessProcessError, RequestCommand> =
         either {
@@ -81,11 +68,11 @@ class MoveInAndChangeOfEnergySupplierBusinessHandler(
             validate(model).mapLeft { it.toBusinessError() }.bind().toRequestCommand()
         }
 
-    override fun getCreateGrantProperties(request: AuthorizationRequest): CreateGrantProperties =
-        CreateGrantProperties(
-            validTo = moveInGrantValidTo(),
-            validFrom = today(),
-        )
+    override fun getCreateGrantProperties(request: AuthorizationRequest): CreateGrantProperties {
+        validateKeys(request.properties.map { it.key }, allowedKeys)
+        val propertyMap = request.properties.associate { it.key to it.value }
+        return buildCreateGrantProperties(propertyMap, allowedKeys)
+    }
 
     override suspend fun validateAndReturnDocumentCommand(model: CreateDocumentModel): Either<BusinessProcessError, DocumentCommand> =
         either {
@@ -93,11 +80,28 @@ class MoveInAndChangeOfEnergySupplierBusinessHandler(
             validate(businessModel).mapLeft { it.toBusinessError() }.bind().toDocumentCommand()
         }
 
-    override fun getCreateGrantProperties(document: AuthorizationDocument): CreateGrantProperties =
-        CreateGrantProperties(
+    override fun getCreateGrantProperties(document: AuthorizationDocument): CreateGrantProperties {
+        validateKeys(document.properties.map { it.key }, allowedKeys)
+        val propertyMap = document.properties.associate { it.key to it.value }
+        return buildCreateGrantProperties(propertyMap, allowedKeys)
+    }
+
+    private fun validateKeys(keys: List<String>, allowedKeys: Set<String>) {
+        val invalidKeys = keys.filter { it !in allowedKeys }
+        require(invalidKeys.isEmpty()) { "Only $allowedKeys allowed as properties, but found: $invalidKeys" }
+    }
+
+    private fun buildCreateGrantProperties(
+        propertyMap: Map<String, String>,
+        allowedKeys: Set<String>
+    ): CreateGrantProperties {
+        val meta = propertyMap.filterKeys { it in allowedKeys }
+        return CreateGrantProperties(
             validTo = moveInGrantValidTo(),
             validFrom = today(),
+            meta = meta
         )
+    }
 
     private suspend fun validate(
         model: MoveInAndChangeOfEnergySupplierBusinessModel

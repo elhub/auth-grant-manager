@@ -9,7 +9,6 @@ import no.elhub.auth.features.grants.common.GrantPropertiesRepository
 import no.elhub.auth.features.grants.common.GrantRepository
 import no.elhub.auth.features.requests.common.ExposedRequestPropertiesRepository
 import no.elhub.auth.features.requests.common.ExposedRequestRepository
-import no.elhub.auth.features.requests.common.ProxyGrantBusinessHandler
 import no.elhub.auth.features.requests.common.ProxyRequestBusinessHandler
 import no.elhub.auth.features.requests.common.RequestPropertiesRepository
 import no.elhub.auth.features.requests.common.RequestRepository
@@ -36,7 +35,6 @@ fun Application.module() {
         singleOf(::ExposedRequestPropertiesRepository) bind RequestPropertiesRepository::class
         singleOf(::ExposedGrantPropertiesRepository) bind GrantPropertiesRepository::class
         singleOf(::ProxyRequestBusinessHandler)
-        singleOf(::ProxyGrantBusinessHandler)
         singleOf(::UpdateHandler)
         singleOf(::CreateHandler)
         singleOf(::GetHandler)

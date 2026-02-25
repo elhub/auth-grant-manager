@@ -5,4 +5,5 @@ import kotlinx.datetime.LocalDate
 data class CreateGrantProperties(
     val validTo: LocalDate,
     val validFrom: LocalDate,
+    val meta: Map<String, String> = emptyMap()
 )
