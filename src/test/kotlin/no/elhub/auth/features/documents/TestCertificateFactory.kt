@@ -6,10 +6,13 @@ import org.bouncycastle.asn1.DERPrintableString
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo
 import org.bouncycastle.asn1.x500.X500Name
 import org.bouncycastle.asn1.x509.BasicConstraints
+import org.bouncycastle.asn1.x509.CRLReason
 import org.bouncycastle.asn1.x509.ExtendedKeyUsage
 import org.bouncycastle.asn1.x509.Extension
 import org.bouncycastle.asn1.x509.KeyPurposeId
 import org.bouncycastle.asn1.x509.KeyUsage
+import org.bouncycastle.cert.X509v2CRLBuilder
+import org.bouncycastle.cert.jcajce.JcaX509CRLConverter
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter
 import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder
 import org.bouncycastle.jce.provider.BouncyCastleProvider
@@ -25,6 +28,7 @@ import java.security.KeyPairGenerator
 import java.security.PrivateKey
 import java.security.Security
 import java.security.cert.CertificateFactory
+import java.security.cert.X509CRL
 import java.security.cert.X509Certificate
 import java.time.Duration
 import java.time.Instant
@@ -40,6 +44,7 @@ class TestCertificateFactory(
     val trustedBankIdRootKeyPair: KeyPair = readRootKeyPair(trustedBankIdRootCertificate, bankIdRootPrivateKeyPath)
 
     data class FakeElhubCerts(
+        val rootKeyPair: KeyPair,
         val signingKey: KeyPair,
         val signingCert: X509Certificate,
         val chain: List<X509Certificate>
@@ -167,10 +172,33 @@ class TestCertificateFactory(
             serial = expectedElhubCert.serialNumber
         )
         return FakeElhubCerts(
+            rootKeyPair = issuerKeyPair,
             signingKey = signingKeyPair,
             signingCert = leafCert,
             chain = listOf(leafCert, rootCert)
         )
+    }
+
+    fun generateCrl(
+        issuerCertificate: X509Certificate,
+        issuerKey: PrivateKey,
+        revokedSerials: List<BigInteger> = emptyList()
+    ): X509CRL {
+        ensureBouncyCastle()
+        val now = Instant.now()
+        val thisUpdate = Date.from(now.minus(1, ChronoUnit.MINUTES))
+        val nextUpdate = Date.from(now.plus(defaultValidity))
+        val issuer = X500Name(issuerCertificate.subjectX500Principal.name)
+
+        val builder = X509v2CRLBuilder(issuer, thisUpdate).apply {
+            setNextUpdate(nextUpdate)
+            revokedSerials.forEach { serial ->
+                addCRLEntry(serial, thisUpdate, CRLReason.privilegeWithdrawn)
+            }
+        }
+
+        val signer = JcaContentSignerBuilder("SHA256withRSA").setProvider("BC").build(issuerKey)
+        return JcaX509CRLConverter().setProvider("BC").getCRL(builder.build(signer))
     }
 
     private fun generateSelfSignedRootCertificate(

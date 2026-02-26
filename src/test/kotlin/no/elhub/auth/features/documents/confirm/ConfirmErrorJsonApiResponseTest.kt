@@ -59,7 +59,7 @@ class ConfirmErrorJsonApiResponseTest : FunSpec({
         ConfirmError.DocumentUpdateError,
         ConfirmError.ScopeReadError,
         ConfirmError.GrantCreationError,
-        ConfirmError.RequestedByResolutionError
+        ConfirmError.RequestedByResolutionError,
     ).forEach { error ->
         test("maps ${error::class.simpleName} to InternalServerError") {
             assertMapping(
@@ -96,6 +96,11 @@ class ConfirmErrorJsonApiResponseTest : FunSpec({
         ),
         SignatureValidationError.InvalidBankIdSignature to Expectation(
             status = HttpStatusCode.UnprocessableEntity,
+            title = "End user signature validation failed",
+            detail = "The end user signature is invalid."
+        ),
+        SignatureValidationError.BankIdCertificateRevoked to Expectation(
+            status = HttpStatusCode.BadRequest,
             title = "End user signature validation failed",
             detail = "The end user signature is invalid."
         ),
