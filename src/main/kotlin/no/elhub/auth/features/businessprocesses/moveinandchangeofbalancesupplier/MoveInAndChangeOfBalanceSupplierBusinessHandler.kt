@@ -92,9 +92,7 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandler(
 
     private fun validateKeys(propertyMap: Map<String, String>) {
         val missingKeys = ALLOWED_GRANT_PROPERTY_KEYS.filter { it !in propertyMap.keys }
-        if (missingKeys.isNotEmpty()) {
-            require(false) { "Missing required grant property keys: $missingKeys" }
-        }
+        require(missingKeys.isEmpty()) { "Missing required grant property keys: $missingKeys" }
     }
 
     private fun buildCreateGrantProperties(
