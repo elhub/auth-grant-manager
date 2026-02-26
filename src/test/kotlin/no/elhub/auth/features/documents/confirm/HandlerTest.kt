@@ -10,7 +10,10 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.datetime.DatePeriod
+import kotlinx.datetime.plus
 import no.elhub.auth.features.businessprocesses.changeofbalancesupplier.defaultValidTo
+import no.elhub.auth.features.businessprocesses.changeofbalancesupplier.today
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.RepositoryWriteError
 import no.elhub.auth.features.common.party.AuthorizationParty
@@ -21,10 +24,13 @@ import no.elhub.auth.features.common.party.PartyService
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
 import no.elhub.auth.features.documents.AuthorizationDocument
+import no.elhub.auth.features.documents.common.DocumentBusinessHandler
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.documents.common.SignatureService
 import no.elhub.auth.features.documents.common.SignatureValidationError
 import no.elhub.auth.features.grants.AuthorizationGrant
+import no.elhub.auth.features.grants.common.CreateGrantProperties
+import no.elhub.auth.features.grants.common.GrantPropertiesRepository
 import no.elhub.auth.features.grants.common.GrantRepository
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
@@ -38,6 +44,8 @@ class HandlerTest : FunSpec({
     val signedFile = "signed".toByteArray()
     val signatoryIdentifier =
         PartyIdentifier(idType = PartyIdentifierType.NationalIdentityNumber, idValue = "01019012345")
+    val grantPropertiesRepository = mockk<GrantPropertiesRepository>(relaxed = true)
+    val businessHandler = mockk<DocumentBusinessHandler>()
 
     fun createDocument(
         documentId: UUID,
@@ -66,10 +74,12 @@ class HandlerTest : FunSpec({
         signatureService: SignatureService,
         grantRepository: GrantRepository
     ) = Handler(
+        businessHandler = businessHandler,
         documentRepository = documentRepository,
         grantRepository = grantRepository,
         partyService = partyService,
-        signatureService = signatureService
+        signatureService = signatureService,
+        grantPropertiesRepository = grantPropertiesRepository,
     )
 
     test("returns DocumentNotFoundError when document is missing") {
@@ -408,6 +418,11 @@ class HandlerTest : FunSpec({
         val grantRepository = mockk<GrantRepository>(relaxed = true)
         val scopeId = UUID.randomUUID()
 
+        every { businessHandler.getCreateGrantProperties(any()) } returns CreateGrantProperties(
+            validFrom = today(),
+            validTo = today().plus(DatePeriod(years = 1)),
+            meta = emptyMap()
+        )
         every { documentRepository.find(documentId) } returns document.right()
         every { signatureService.validateSignaturesAndReturnSignatory(signedFile, document.file) } returns
             signatoryIdentifier.right()
@@ -439,6 +454,14 @@ class HandlerTest : FunSpec({
         val partyService = mockk<PartyService>()
         val signatureService = mockk<SignatureService>()
         val grantRepository = mockk<GrantRepository>()
+        val validFrom = today()
+        val validTo = today().plus(DatePeriod(years = 1))
+
+        every { businessHandler.getCreateGrantProperties(any()) } returns CreateGrantProperties(
+            validFrom = validFrom,
+            validTo = validTo,
+            meta = emptyMap()
+        )
 
         val expectedGrant = AuthorizationGrant.create(
             grantedFor = confirmedDocument.requestedFrom,
@@ -446,7 +469,9 @@ class HandlerTest : FunSpec({
             grantedTo = confirmedDocument.requestedBy,
             sourceType = AuthorizationGrant.SourceType.Document,
             sourceId = confirmedDocument.id,
-            scopeIds = scopeIds
+            scopeIds = scopeIds,
+            validFrom = businessHandler.getCreateGrantProperties(confirmedDocument).validFrom.toTimeZoneOffsetDateTimeAtStartOfDay(),
+            validTo = businessHandler.getCreateGrantProperties(confirmedDocument).validTo.toTimeZoneOffsetDateTimeAtStartOfDay()
         )
 
         every { documentRepository.find(documentId) } returns document.right()
@@ -470,6 +495,20 @@ class HandlerTest : FunSpec({
         result.shouldBeRight()
         verify(exactly = 1) { documentRepository.confirm(documentId, signedFile, requestedFrom, requestedTo) }
         verify(exactly = 1) { documentRepository.findScopeIds(confirmedDocument.id) }
-        verify(exactly = 1) { grantRepository.insert(any(), scopeIds) }
+        coVerify(exactly = 1) {
+            grantRepository.insert(
+                match { grant ->
+                    grant.grantedFor == confirmedDocument.requestedFrom &&
+                        grant.grantedBy == requestedTo &&
+                        grant.grantedTo == confirmedDocument.requestedBy &&
+                        grant.sourceType == AuthorizationGrant.SourceType.Document &&
+                        grant.sourceId == confirmedDocument.id &&
+                        grant.scopeIds == scopeIds &&
+                        grant.validFrom == validFrom.toTimeZoneOffsetDateTimeAtStartOfDay() &&
+                        grant.validTo == validTo.toTimeZoneOffsetDateTimeAtStartOfDay()
+                },
+                scopeIds
+            )
+        }
     }
 })

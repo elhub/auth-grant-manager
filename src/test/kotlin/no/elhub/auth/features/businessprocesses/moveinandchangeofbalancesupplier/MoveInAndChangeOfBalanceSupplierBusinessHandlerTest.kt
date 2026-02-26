@@ -3,6 +3,7 @@ package no.elhub.auth.features.businessprocesses.moveinandchangeofbalancesupplie
 import arrow.core.Either
 import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
@@ -49,6 +50,7 @@ import no.elhub.auth.features.documents.create.dto.CreateDocumentMeta
 import no.elhub.auth.features.documents.create.model.CreateDocumentModel
 import no.elhub.auth.features.filegenerator.SupportedLanguage
 import no.elhub.auth.features.requests.AuthorizationRequest
+import no.elhub.auth.features.requests.common.AuthorizationRequestProperty
 import no.elhub.auth.features.requests.create.model.CreateRequestMeta
 import no.elhub.auth.features.requests.create.model.CreateRequestModel
 import no.elhub.auth.features.requests.create.model.today
@@ -545,7 +547,7 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
             command.meta.toMetaAttributes().containsKey("requestedForMeterNumber") shouldBe true
         }
 
-        test("grant properties validTo is one year from acceptance") {
+        test("grant properties moveInDate is present and validTo is one year from acceptance") {
             val party = AuthorizationParty(id = "party-1", type = PartyType.Organization)
             val request = AuthorizationRequest.create(
                 type = AuthorizationRequest.Type.MoveInAndChangeOfBalanceSupplierForPerson,
@@ -553,12 +555,44 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
                 requestedFrom = party,
                 requestedTo = party,
                 validTo = today().toTimeZoneOffsetDateTimeAtStartOfDay(),
+            ).copy(
+                properties = listOf(
+                    AuthorizationRequestProperty(
+                        requestId = UUID.randomUUID(),
+                        key = "moveInDate",
+                        value = "2024-01-01"
+                    )
+                )
             )
 
             val properties = handler.getCreateGrantProperties(request)
 
+            properties.meta.getValue("moveInDate") shouldBe "2024-01-01"
             properties.validFrom shouldBe today()
             properties.validTo shouldBe today().plus(DatePeriod(years = 1))
+        }
+
+        test("exception is thrown when properties is invalid") {
+            val party = AuthorizationParty(id = "party-1", type = PartyType.Organization)
+            val request = AuthorizationRequest.create(
+                type = AuthorizationRequest.Type.MoveInAndChangeOfBalanceSupplierForPerson,
+                requestedBy = party,
+                requestedFrom = party,
+                requestedTo = party,
+                validTo = today().toTimeZoneOffsetDateTimeAtStartOfDay(),
+            ).copy(
+                properties = listOf(
+                    AuthorizationRequestProperty(
+                        requestId = UUID.randomUUID(),
+                        key = "random",
+                        value = "test"
+                    )
+                )
+            )
+
+            shouldThrow<IllegalArgumentException> {
+                handler.getCreateGrantProperties(request)
+            }
         }
 
         test("document produces DocumentCommand for valid input") {

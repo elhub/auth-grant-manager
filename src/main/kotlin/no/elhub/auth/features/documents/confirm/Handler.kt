@@ -6,21 +6,29 @@ import arrow.core.raise.ensure
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.RepositoryWriteError
 import no.elhub.auth.features.common.party.PartyService
+import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
 import no.elhub.auth.features.documents.AuthorizationDocument
+import no.elhub.auth.features.documents.common.DocumentBusinessHandler
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.documents.common.SignatureService
 import no.elhub.auth.features.grants.AuthorizationGrant
+import no.elhub.auth.features.grants.common.AuthorizationGrantProperty
+import no.elhub.auth.features.grants.common.GrantPropertiesRepository
 import no.elhub.auth.features.grants.common.GrantRepository
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.slf4j.LoggerFactory
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
+import kotlin.collections.component1
+import kotlin.collections.component2
 
 class Handler(
+    private val businessHandler: DocumentBusinessHandler,
     private val documentRepository: DocumentRepository,
     private val grantRepository: GrantRepository,
     private val partyService: PartyService,
-    private val signatureService: SignatureService
+    private val signatureService: SignatureService,
+    private val grantPropertiesRepository: GrantPropertiesRepository
 ) {
 
     private val log = LoggerFactory.getLogger(Handler::class.java)
@@ -90,6 +98,8 @@ class Handler(
                     }
                 }.bind()
 
+            val grantProperties = businessHandler.getCreateGrantProperties(confirmedDocument)
+
             val grantToCreate =
                 AuthorizationGrant.create(
                     grantedFor = confirmedDocument.requestedFrom,
@@ -97,11 +107,23 @@ class Handler(
                     grantedTo = confirmedDocument.requestedBy,
                     sourceType = AuthorizationGrant.SourceType.Document,
                     sourceId = confirmedDocument.id,
-                    scopeIds = scopeIds
+                    scopeIds = scopeIds,
+                    validFrom = grantProperties.validFrom.toTimeZoneOffsetDateTimeAtStartOfDay(),
+                    validTo = grantProperties.validTo.toTimeZoneOffsetDateTimeAtStartOfDay()
                 )
 
-            grantRepository.insert(grantToCreate, scopeIds)
+            val createdGrant = grantRepository.insert(grantToCreate, scopeIds)
                 .mapLeft { ConfirmError.GrantCreationError }.bind()
+
+            val grantMetaProperties = grantProperties.meta.map { (key, value) ->
+                AuthorizationGrantProperty(
+                    grantId = createdGrant.id,
+                    key = key,
+                    value = value
+                )
+            }
+
+            grantPropertiesRepository.insert(grantMetaProperties)
         }
     }
 }

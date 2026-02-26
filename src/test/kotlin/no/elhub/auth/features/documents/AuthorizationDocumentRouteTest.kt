@@ -620,7 +620,7 @@ class AuthorizationDocumentRouteTest :
                                 .toLocalDateTime(TimeZone.UTC).date
                             Instant.parse(validTo)
                                 .toLocalDateTime(TimeZone.of("Europe/Oslo")).date shouldBe Clock.System.now()
-                                .toLocalDateTime(TimeZone.UTC).date.plus(1, DateTimeUnit.YEAR)
+                                .toLocalDateTime(TimeZone.UTC).date.plus(30, DateTimeUnit.DAY)
                         }
                         relationships.apply {
                             grantedFor.apply {

@@ -51,6 +51,7 @@ class ChangeOfBalanceSupplierBusinessHandler(
     private val stromprisService: StromprisService,
     private val validateBalanceSupplierContractName: Boolean
 ) : RequestBusinessHandler, DocumentBusinessHandler {
+
     override suspend fun validateAndReturnRequestCommand(createRequestModel: CreateRequestModel): Either<BusinessProcessError, RequestCommand> =
         either {
             val model = createRequestModel.toChangeOfBalanceSupplierBusinessModel()

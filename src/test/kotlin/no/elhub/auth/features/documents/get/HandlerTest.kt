@@ -8,11 +8,15 @@ import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.core.spec.style.FunSpec
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.datetime.DatePeriod
+import kotlinx.datetime.plus
+import no.elhub.auth.features.businessprocesses.changeofbalancesupplier.today
 import no.elhub.auth.features.common.QueryError
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.currentTimeWithTimeZone
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
+import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.AuthorizationDocumentProperty
 import no.elhub.auth.features.documents.common.DocumentRepository
@@ -25,6 +29,8 @@ class HandlerTest : FunSpec({
     val requestedBy = AuthorizationParty(id = "org-entity-1", type = PartyType.OrganizationEntity)
     val requestedFrom = AuthorizationParty(id = "person-1", type = PartyType.Person)
     val requestedTo = AuthorizationParty(id = "person-2", type = PartyType.Person)
+    val grantValidFrom = today()
+    val grantValidTo = today().plus(DatePeriod(years = 1))
     val validTo = currentTimeWithTimeZone().plusDays(1)
     val scopeIds = listOf(UUID.randomUUID(), UUID.randomUUID())
 
@@ -49,7 +55,9 @@ class HandlerTest : FunSpec({
         grantedTo = requestedTo,
         sourceType = AuthorizationGrant.SourceType.Document,
         sourceId = documentId,
-        scopeIds = scopeIds
+        scopeIds = scopeIds,
+        validFrom = grantValidFrom.toTimeZoneOffsetDateTimeAtStartOfDay(),
+        validTo = grantValidTo.toTimeZoneOffsetDateTimeAtStartOfDay()
     )
 
     fun documentRepoReturning(result: Either<RepositoryReadError, AuthorizationDocument>): DocumentRepository =

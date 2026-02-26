@@ -47,6 +47,8 @@ private const val REGEX_METERING_POINT = "^\\d{18}$"
 private const val MOVE_IN_REQUEST_VALID_DAYS = 28
 private const val MOVE_IN_GRANT_VALID_YEARS = 1
 
+private val ALLOWED_GRANT_PROPERTY_KEYS = setOf("moveInDate")
+
 private fun moveInRequestValidTo() = today().plus(DatePeriod(days = MOVE_IN_REQUEST_VALID_DAYS))
 
 private fun moveInGrantValidTo() = today().plus(DatePeriod(years = MOVE_IN_GRANT_VALID_YEARS))
@@ -59,17 +61,18 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandler(
     private val validateBalanceSupplierContractName: Boolean
 ) : RequestBusinessHandler,
     DocumentBusinessHandler {
+
     override suspend fun validateAndReturnRequestCommand(createRequestModel: CreateRequestModel): Either<BusinessProcessError, RequestCommand> =
         either {
             val model = createRequestModel.toMoveInAndChangeOfBalanceSupplierBusinessModel()
             validate(model).mapLeft { it.toBusinessError() }.bind().toRequestCommand()
         }
 
-    override fun getCreateGrantProperties(request: AuthorizationRequest): CreateGrantProperties =
-        CreateGrantProperties(
-            validTo = moveInGrantValidTo(),
-            validFrom = today(),
-        )
+    override fun getCreateGrantProperties(request: AuthorizationRequest): CreateGrantProperties {
+        validateKeys(request.properties.map { it.key }, ALLOWED_GRANT_PROPERTY_KEYS)
+        val propertyMap = request.properties.associate { it.key to it.value }
+        return buildCreateGrantProperties(propertyMap, ALLOWED_GRANT_PROPERTY_KEYS)
+    }
 
     override suspend fun validateAndReturnDocumentCommand(model: CreateDocumentModel): Either<BusinessProcessError, DocumentCommand> =
         either {
@@ -77,11 +80,28 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandler(
             validate(businessModel).mapLeft { it.toBusinessError() }.bind().toDocumentCommand()
         }
 
-    override fun getCreateGrantProperties(document: AuthorizationDocument): CreateGrantProperties =
-        CreateGrantProperties(
+    override fun getCreateGrantProperties(document: AuthorizationDocument): CreateGrantProperties {
+        validateKeys(document.properties.map { it.key }, ALLOWED_GRANT_PROPERTY_KEYS)
+        val propertyMap = document.properties.associate { it.key to it.value }
+        return buildCreateGrantProperties(propertyMap, ALLOWED_GRANT_PROPERTY_KEYS)
+    }
+
+    private fun validateKeys(keys: List<String>, allowedKeys: Set<String>) {
+        val invalidKeys = keys.filter { it !in allowedKeys }
+        require(invalidKeys.isEmpty()) { "Only $allowedKeys allowed as properties, but found: $invalidKeys" }
+    }
+
+    private fun buildCreateGrantProperties(
+        propertyMap: Map<String, String>,
+        allowedKeys: Set<String>
+    ): CreateGrantProperties {
+        val meta = propertyMap.filterKeys { it in allowedKeys }
+        return CreateGrantProperties(
             validTo = moveInGrantValidTo(),
             validFrom = today(),
+            meta = meta
         )
+    }
 
     private suspend fun validate(
         model: MoveInAndChangeOfBalanceSupplierBusinessModel

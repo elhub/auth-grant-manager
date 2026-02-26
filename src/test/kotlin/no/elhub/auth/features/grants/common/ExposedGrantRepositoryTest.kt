@@ -3,12 +3,16 @@ package no.elhub.auth.features.grants.common
 import arrow.core.getOrElse
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
+import kotlinx.datetime.DatePeriod
+import kotlinx.datetime.plus
+import no.elhub.auth.features.businessprocesses.changeofbalancesupplier.today
 import no.elhub.auth.features.common.PostgresTestContainer
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.AuthorizationPartyTable
 import no.elhub.auth.features.common.party.ExposedPartyRepository
 import no.elhub.auth.features.common.party.PartyType
+import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
 import no.elhub.auth.features.grants.AuthorizationGrant
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
@@ -20,7 +24,8 @@ import java.util.UUID
 class ExposedGrantRepositoryTest : FunSpec({
     extensions(PostgresTestContainerExtension())
     val partyRepo = ExposedPartyRepository()
-    val grantRepo = ExposedGrantRepository(partyRepo)
+    val grantPropertiesRepo = ExposedGrantPropertiesRepository()
+    val grantRepo = ExposedGrantRepository(partyRepo, grantPropertiesRepo)
     val scopeIds = listOf(UUID.randomUUID(), UUID.randomUUID())
 
     beforeSpec {
@@ -54,7 +59,9 @@ class ExposedGrantRepositoryTest : FunSpec({
                 grantedTo = AuthorizationParty(type = PartyType.Person, id = "45567"),
                 sourceType = AuthorizationGrant.SourceType.Request,
                 sourceId = UUID.randomUUID(),
-                scopeIds = scopeIds
+                scopeIds = scopeIds,
+                validFrom = today().toTimeZoneOffsetDateTimeAtStartOfDay(),
+                validTo = today().plus(DatePeriod(years = 1)).toTimeZoneOffsetDateTimeAtStartOfDay()
             )
 
             grantRepo.insert(grant, emptyList()).getOrElse { error((it)) }
@@ -73,7 +80,9 @@ class ExposedGrantRepositoryTest : FunSpec({
                 grantedTo = AuthorizationParty(type = PartyType.Person, id = "45567"),
                 sourceType = AuthorizationGrant.SourceType.Request,
                 sourceId = UUID.randomUUID(),
-                scopeIds = scopeIds
+                scopeIds = scopeIds,
+                validFrom = today().toTimeZoneOffsetDateTimeAtStartOfDay(),
+                validTo = today().plus(DatePeriod(years = 1)).toTimeZoneOffsetDateTimeAtStartOfDay()
             )
 
             grantRepo.insert(grant, emptyList()).getOrElse { error((it)) }

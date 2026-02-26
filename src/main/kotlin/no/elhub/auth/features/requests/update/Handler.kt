@@ -5,16 +5,22 @@ import arrow.core.raise.either
 import arrow.core.raise.ensure
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.party.AuthorizationParty
+import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
 import no.elhub.auth.features.grants.AuthorizationGrant
+import no.elhub.auth.features.grants.common.AuthorizationGrantProperty
+import no.elhub.auth.features.grants.common.GrantPropertiesRepository
 import no.elhub.auth.features.grants.common.GrantRepository
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.common.RequestRepository
+import no.elhub.auth.features.requests.create.RequestBusinessHandler
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.slf4j.LoggerFactory
 
 class Handler(
+    private val businessHandler: RequestBusinessHandler,
     private val requestRepository: RequestRepository,
-    private val grantRepository: GrantRepository
+    private val grantRepository: GrantRepository,
+    private val grantPropertiesRepository: GrantPropertiesRepository
 ) {
 
     private val logger = LoggerFactory.getLogger(Handler::class.java)
@@ -72,18 +78,32 @@ class Handler(
                     }
                 }.bind()
 
+            val grantProperties = businessHandler.getCreateGrantProperties(acceptedRequest)
+
             val grantToCreate = AuthorizationGrant.create(
                 grantedFor = acceptedRequest.requestedFrom,
                 grantedBy = acceptedBy,
                 grantedTo = acceptedRequest.requestedBy,
                 sourceType = AuthorizationGrant.SourceType.Request,
                 sourceId = acceptedRequest.id,
-                scopeIds = scopeIds
+                scopeIds = scopeIds,
+                validFrom = grantProperties.validFrom.toTimeZoneOffsetDateTimeAtStartOfDay(),
+                validTo = grantProperties.validTo.toTimeZoneOffsetDateTimeAtStartOfDay()
             )
 
             val createdGrant = grantRepository.insert(grantToCreate, scopeIds)
                 .mapLeft { UpdateError.GrantCreationError }
                 .bind()
+
+            val grantMetaProperties = grantProperties.meta.map { (key, value) ->
+                AuthorizationGrantProperty(
+                    grantId = createdGrant.id,
+                    key = key,
+                    value = value
+                )
+            }
+
+            grantPropertiesRepository.insert(grantMetaProperties)
 
             acceptedRequest.copy(grantId = createdGrant.id)
         }

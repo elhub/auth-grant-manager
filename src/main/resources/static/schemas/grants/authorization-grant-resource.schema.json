@@ -6,13 +6,7 @@
   "properties": {
     "data": {
       "type": "object",
-      "required": [
-        "id",
-        "type",
-        "attributes",
-        "relationships",
-        "links"
-      ],
+      "required": ["id", "type", "attributes", "relationships", "links"],
       "properties": {
         "id": {
           "$ref": "authorization-grant-common.schema.json#/$defs/id"
@@ -32,18 +26,20 @@
         },
         "relationships": {
           "$ref": "authorization-grant-common.schema.json#/$defs/relationships",
-          "required": [
-            "grantedFor",
-            "grantedTo",
-            "source",
-            "scopes"
-          ]
+          "required": ["grantedFor", "grantedTo", "source", "scopes"]
+        },
+        "meta": {
+          "type": "object",
+          "description": "Read-only context and human-readable metadata.",
+          "properties": {
+            "moveInDate": {
+              "$ref": "../authorization-common.schema.json#/$defs/moveInDate"
+            }
+          }
         },
         "links": {
           "$ref": "authorization-grant-common.schema.json#/$defs/links",
-          "required": [
-            "self"
-          ]
+          "required": ["self"]
         }
       }
     },
@@ -60,9 +56,5 @@
       "$ref": "../json-api-framework.schema.json#/$defs/topLevelMeta"
     }
   },
-  "required": [
-    "data",
-    "links",
-    "meta"
-  ]
+  "required": ["data", "links", "meta"]
 }

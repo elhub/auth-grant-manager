@@ -10,7 +10,6 @@ import io.ktor.client.request.header
 import io.ktor.client.request.patch
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
-import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
@@ -392,7 +391,6 @@ class AuthorizationRequestRouteTest : FunSpec({
                         )
                     )
                 }
-                println("RESULT: ${patchResult.bodyAsText()}")
 
                 patchResult.status shouldBe HttpStatusCode.OK
                 val patchResponse: UpdateRequestResponse = patchResult.body()
