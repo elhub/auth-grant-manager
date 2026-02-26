@@ -418,6 +418,11 @@ class HandlerTest : FunSpec({
         val grantRepository = mockk<GrantRepository>(relaxed = true)
         val scopeId = UUID.randomUUID()
 
+        every { businessHandler.getCreateGrantProperties(any()) } returns CreateGrantProperties(
+            validFrom = today(),
+            validTo = today().plus(DatePeriod(years = 1)),
+            meta = emptyMap()
+        )
         every { documentRepository.find(documentId) } returns document.right()
         every { signatureService.validateSignaturesAndReturnSignatory(signedFile, document.file) } returns
             signatoryIdentifier.right()
