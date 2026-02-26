@@ -47,7 +47,7 @@ private const val REGEX_METERING_POINT = "^\\d{18}$"
 private const val MOVE_IN_REQUEST_VALID_DAYS = 28
 private const val MOVE_IN_GRANT_VALID_YEARS = 1
 
-val allowedKeys = setOf("moveInDate")
+private val ALLOWED_GRANT_PROPERTY_KEYS = setOf("moveInDate")
 
 private fun moveInRequestValidTo() = today().plus(DatePeriod(days = MOVE_IN_REQUEST_VALID_DAYS))
 
@@ -69,9 +69,9 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandler(
         }
 
     override fun getCreateGrantProperties(request: AuthorizationRequest): CreateGrantProperties {
-        validateKeys(request.properties.map { it.key }, allowedKeys)
+        validateKeys(request.properties.map { it.key }, ALLOWED_GRANT_PROPERTY_KEYS)
         val propertyMap = request.properties.associate { it.key to it.value }
-        return buildCreateGrantProperties(propertyMap, allowedKeys)
+        return buildCreateGrantProperties(propertyMap, ALLOWED_GRANT_PROPERTY_KEYS)
     }
 
     override suspend fun validateAndReturnDocumentCommand(model: CreateDocumentModel): Either<BusinessProcessError, DocumentCommand> =
@@ -81,9 +81,9 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandler(
         }
 
     override fun getCreateGrantProperties(document: AuthorizationDocument): CreateGrantProperties {
-        validateKeys(document.properties.map { it.key }, allowedKeys)
+        validateKeys(document.properties.map { it.key }, ALLOWED_GRANT_PROPERTY_KEYS)
         val propertyMap = document.properties.associate { it.key to it.value }
-        return buildCreateGrantProperties(propertyMap, allowedKeys)
+        return buildCreateGrantProperties(propertyMap, ALLOWED_GRANT_PROPERTY_KEYS)
     }
 
     private fun validateKeys(keys: List<String>, allowedKeys: Set<String>) {

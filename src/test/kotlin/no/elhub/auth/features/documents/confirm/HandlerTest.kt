@@ -457,6 +457,12 @@ class HandlerTest : FunSpec({
         val validFrom = today()
         val validTo = today().plus(DatePeriod(years = 1))
 
+        every { businessHandler.getCreateGrantProperties(any()) } returns CreateGrantProperties(
+            validFrom = validFrom,
+            validTo = validTo,
+            meta = emptyMap()
+        )
+
         val expectedGrant = AuthorizationGrant.create(
             grantedFor = confirmedDocument.requestedFrom,
             grantedBy = requestedTo,
@@ -464,14 +470,8 @@ class HandlerTest : FunSpec({
             sourceType = AuthorizationGrant.SourceType.Document,
             sourceId = confirmedDocument.id,
             scopeIds = scopeIds,
-            validFrom = validFrom.toTimeZoneOffsetDateTimeAtStartOfDay(),
-            validTo = validTo.toTimeZoneOffsetDateTimeAtStartOfDay()
-        )
-
-        every { businessHandler.getCreateGrantProperties(any()) } returns CreateGrantProperties(
-            validFrom = today(),
-            validTo = today().plus(DatePeriod(years = 1)),
-            meta = emptyMap()
+            validFrom = businessHandler.getCreateGrantProperties(confirmedDocument).validFrom.toTimeZoneOffsetDateTimeAtStartOfDay(),
+            validTo = businessHandler.getCreateGrantProperties(confirmedDocument).validTo.toTimeZoneOffsetDateTimeAtStartOfDay()
         )
 
         every { documentRepository.find(documentId) } returns document.right()
@@ -495,6 +495,20 @@ class HandlerTest : FunSpec({
         result.shouldBeRight()
         verify(exactly = 1) { documentRepository.confirm(documentId, signedFile, requestedFrom, requestedTo) }
         verify(exactly = 1) { documentRepository.findScopeIds(confirmedDocument.id) }
-        verify(exactly = 1) { grantRepository.insert(any(), scopeIds) }
+        coVerify(exactly = 1) {
+            grantRepository.insert(
+                match { grant ->
+                    grant.grantedFor == confirmedDocument.requestedFrom &&
+                        grant.grantedBy == requestedTo &&
+                        grant.grantedTo == confirmedDocument.requestedBy &&
+                        grant.sourceType == AuthorizationGrant.SourceType.Document &&
+                        grant.sourceId == confirmedDocument.id &&
+                        grant.scopeIds == scopeIds &&
+                        grant.validFrom == validFrom.toTimeZoneOffsetDateTimeAtStartOfDay() &&
+                        grant.validTo == validTo.toTimeZoneOffsetDateTimeAtStartOfDay()
+                },
+                scopeIds
+            )
+        }
     }
 })

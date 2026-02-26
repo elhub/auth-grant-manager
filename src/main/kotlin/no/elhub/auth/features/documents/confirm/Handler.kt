@@ -98,7 +98,7 @@ class Handler(
                     }
                 }.bind()
 
-            val createGrantProperties = businessHandler.getCreateGrantProperties(confirmedDocument)
+            val grantProperties = businessHandler.getCreateGrantProperties(confirmedDocument)
 
             val grantToCreate =
                 AuthorizationGrant.create(
@@ -108,14 +108,14 @@ class Handler(
                     sourceType = AuthorizationGrant.SourceType.Document,
                     sourceId = confirmedDocument.id,
                     scopeIds = scopeIds,
-                    validFrom = createGrantProperties.validFrom.toTimeZoneOffsetDateTimeAtStartOfDay(),
-                    validTo = createGrantProperties.validTo.toTimeZoneOffsetDateTimeAtStartOfDay()
+                    validFrom = grantProperties.validFrom.toTimeZoneOffsetDateTimeAtStartOfDay(),
+                    validTo = grantProperties.validTo.toTimeZoneOffsetDateTimeAtStartOfDay()
                 )
 
             val createdGrant = grantRepository.insert(grantToCreate, scopeIds)
                 .mapLeft { ConfirmError.GrantCreationError }.bind()
 
-            val grantMetaProperties = createGrantProperties.meta.map { (key, value) ->
+            val grantMetaProperties = grantProperties.meta.map { (key, value) ->
                 AuthorizationGrantProperty(
                     grantId = createdGrant.id,
                     key = key,
