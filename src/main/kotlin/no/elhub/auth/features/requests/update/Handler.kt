@@ -4,7 +4,9 @@ import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensure
 import no.elhub.auth.features.common.RepositoryReadError
+import no.elhub.auth.features.common.currentTimeWithTimeZone
 import no.elhub.auth.features.common.party.AuthorizationParty
+import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
 import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.common.AuthorizationGrantProperty
 import no.elhub.auth.features.grants.common.GrantPropertiesRepository
@@ -77,6 +79,8 @@ class Handler(
                     }
                 }.bind()
 
+            val createGrantProperties = businessHandler.getCreateGrantProperties(acceptedRequest)
+
             val grantToCreate = AuthorizationGrant.create(
                 grantedFor = acceptedRequest.requestedFrom,
                 grantedBy = acceptedBy,
@@ -84,13 +88,14 @@ class Handler(
                 sourceType = AuthorizationGrant.SourceType.Request,
                 sourceId = acceptedRequest.id,
                 scopeIds = scopeIds,
+                validFrom = createGrantProperties.validFrom.toTimeZoneOffsetDateTimeAtStartOfDay(),
+                validTo = createGrantProperties.validTo.toTimeZoneOffsetDateTimeAtStartOfDay()
             )
 
             val createdGrant = grantRepository.insert(grantToCreate, scopeIds)
                 .mapLeft { UpdateError.GrantCreationError }
                 .bind()
 
-            val createGrantProperties = businessHandler.getCreateGrantProperties(acceptedRequest)
             val grantMetaProperties = createGrantProperties.meta.map { (key, value) ->
                 AuthorizationGrantProperty(
                     grantId = createdGrant.id,

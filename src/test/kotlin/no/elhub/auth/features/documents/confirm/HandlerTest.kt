@@ -449,6 +449,8 @@ class HandlerTest : FunSpec({
         val partyService = mockk<PartyService>()
         val signatureService = mockk<SignatureService>()
         val grantRepository = mockk<GrantRepository>()
+        val validFrom = today()
+        val validTo = today().plus(DatePeriod(years = 1))
 
         val expectedGrant = AuthorizationGrant.create(
             grantedFor = confirmedDocument.requestedFrom,
@@ -456,7 +458,9 @@ class HandlerTest : FunSpec({
             grantedTo = confirmedDocument.requestedBy,
             sourceType = AuthorizationGrant.SourceType.Document,
             sourceId = confirmedDocument.id,
-            scopeIds = scopeIds
+            scopeIds = scopeIds,
+            validFrom = validFrom.toTimeZoneOffsetDateTimeAtStartOfDay(),
+            validTo = validTo.toTimeZoneOffsetDateTimeAtStartOfDay()
         )
 
         every { businessHandler.getCreateGrantProperties(any()) } returns CreateGrantProperties(
@@ -464,6 +468,7 @@ class HandlerTest : FunSpec({
             validTo = today().plus(DatePeriod(years = 1)),
             meta = emptyMap()
         )
+
         every { documentRepository.find(documentId) } returns document.right()
         every { signatureService.validateSignaturesAndReturnSignatory(signedFile, document.file) } returns
             signatoryIdentifier.right()

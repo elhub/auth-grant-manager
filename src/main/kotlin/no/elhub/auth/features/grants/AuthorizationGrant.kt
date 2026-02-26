@@ -30,6 +30,8 @@ data class AuthorizationGrant(
             sourceType: SourceType,
             sourceId: UUID,
             scopeIds: List<UUID>,
+            validFrom: OffsetDateTime,
+            validTo: OffsetDateTime
         ): AuthorizationGrant =
             AuthorizationGrant(
                 id = UUID.randomUUID(),
@@ -38,10 +40,10 @@ data class AuthorizationGrant(
                 grantedBy = grantedBy,
                 grantedTo = grantedTo,
                 grantedAt = currentTimeWithTimeZone(),
-                validFrom = currentTimeWithTimeZone(),
+                validFrom = validFrom,
                 createdAt = currentTimeWithTimeZone(),
                 updatedAt = currentTimeWithTimeZone(),
-                validTo = currentTimeWithTimeZone().plusYears(1), // TODO this will be handled by the value stream
+                validTo = validTo,
                 sourceId = sourceId,
                 sourceType = sourceType,
                 scopeIds = scopeIds,
