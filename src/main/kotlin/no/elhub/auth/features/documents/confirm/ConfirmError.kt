@@ -42,13 +42,13 @@ fun ConfirmError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollecti
         )
 
         ConfirmError.IllegalStateError -> buildApiErrorResponse(
-            status = HttpStatusCode.BadRequest,
+            status = HttpStatusCode.UnprocessableEntity,
             title = "Invalid status state",
             detail = "AuthorizationDocument must be in 'Pending' status to confirm."
         )
 
         ConfirmError.ExpiredError -> buildApiErrorResponse(
-            status = HttpStatusCode.BadRequest,
+            status = HttpStatusCode.UnprocessableEntity,
             title = "AuthorizationDocument has expired",
             detail = "Validity period has passed."
         )
@@ -58,52 +58,54 @@ fun ConfirmError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollecti
         ConfirmError.DocumentUpdateError,
         ConfirmError.ScopeReadError,
         ConfirmError.GrantCreationError,
-        ConfirmError.RequestedByResolutionError, -> toInternalServerApiErrorResponse()
+        ConfirmError.RequestedByResolutionError,
+        -> toInternalServerApiErrorResponse()
     }
 
-fun handleValidateSignatureError(error: ConfirmError.ValidateSignaturesError): Pair<HttpStatusCode, JsonApiErrorCollection> = when (error.cause) {
-    SignatureValidationError.ElhubSigningCertNotTrusted,
-    SignatureValidationError.InvalidElhubSignature,
-    SignatureValidationError.MissingElhubSignature -> buildApiErrorResponse(
-        status = HttpStatusCode.BadRequest,
-        title = "Elhub signature is not valid",
-        detail = "The Elhub signature could not be validated. The AuthorizationDocument may have been tampered with."
-    )
-
-    SignatureValidationError.BankIdSigningCertNotFromExpectedRoot ->
-        buildApiErrorResponse(
-            status = HttpStatusCode.BadRequest,
-            title = "End user signature validation failed",
-            detail = "The end user signing certificate is not trusted."
+fun handleValidateSignatureError(error: ConfirmError.ValidateSignaturesError): Pair<HttpStatusCode, JsonApiErrorCollection> =
+    when (error.cause) {
+        SignatureValidationError.ElhubSigningCertNotTrusted,
+        SignatureValidationError.InvalidElhubSignature,
+        SignatureValidationError.MissingElhubSignature -> buildApiErrorResponse(
+            status = HttpStatusCode.UnprocessableEntity,
+            title = "Elhub signature is not valid",
+            detail = "The Elhub signature could not be validated. The AuthorizationDocument may have been tampered with."
         )
 
-    SignatureValidationError.MissingBankIdTrustedTimestamp,
-    SignatureValidationError.BankIdSigningCertNotValidAtTimestamp,
-    SignatureValidationError.InvalidBankIdSignature ->
-        buildApiErrorResponse(
-            status = HttpStatusCode.BadRequest,
-            title = "End user signature validation failed",
-            detail = "The end user signature is invalid."
-        )
+        SignatureValidationError.BankIdSigningCertNotFromExpectedRoot ->
+            buildApiErrorResponse(
+                status = HttpStatusCode.UnprocessableEntity,
+                title = "End user signature validation failed",
+                detail = "The end user signing certificate is not trusted."
+            )
 
-    SignatureValidationError.MissingBankIdSignature ->
-        buildApiErrorResponse(
-            status = HttpStatusCode.BadRequest,
-            title = "End user signature validation failed",
-            detail = "The AuthorizationDocument is missing the end user signature."
-        )
+        SignatureValidationError.MissingBankIdTrustedTimestamp,
+        SignatureValidationError.BankIdSigningCertNotValidAtTimestamp,
+        SignatureValidationError.InvalidBankIdSignature ->
+            buildApiErrorResponse(
+                status = HttpStatusCode.UnprocessableEntity,
+                title = "End user signature validation failed",
+                detail = "The end user signature is invalid."
+            )
 
-    SignatureValidationError.MissingNationalId ->
-        buildApiErrorResponse(
-            status = HttpStatusCode.BadRequest,
-            title = "End user signature validation failed",
-            detail = "Could not extract the Norwegian national identity number from the end user signing certificate."
-        )
+        SignatureValidationError.MissingBankIdSignature ->
+            buildApiErrorResponse(
+                status = HttpStatusCode.UnprocessableEntity,
+                title = "End user signature validation failed",
+                detail = "The AuthorizationDocument is missing the end user signature."
+            )
 
-    SignatureValidationError.OriginalDocumentMismatch ->
-        buildApiErrorResponse(
-            status = HttpStatusCode.BadRequest,
-            title = "Original AuthorizationDocument mismatch",
-            detail = "The AuthorizationDocument provided for confirmation differs from the original generated AuthorizationDocument."
-        )
-}
+        SignatureValidationError.MissingNationalId ->
+            buildApiErrorResponse(
+                status = HttpStatusCode.UnprocessableEntity,
+                title = "End user signature validation failed",
+                detail = "Could not extract the Norwegian national identity number from the end user signing certificate."
+            )
+
+        SignatureValidationError.OriginalDocumentMismatch ->
+            buildApiErrorResponse(
+                status = HttpStatusCode.UnprocessableEntity,
+                title = "Original AuthorizationDocument mismatch",
+                detail = "The AuthorizationDocument provided for confirmation differs from the original generated AuthorizationDocument."
+            )
+    }

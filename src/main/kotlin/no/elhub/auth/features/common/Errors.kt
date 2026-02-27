@@ -54,7 +54,10 @@ fun buildApiErrorResponse(status: HttpStatusCode, title: String, detail: String)
         )
     )
 
-fun toTypeMismatchApiErrorResponse(expectedType: String, actualType: String): Pair<HttpStatusCode, JsonApiErrorCollection> = buildApiErrorResponse(
+fun toTypeMismatchApiErrorResponse(
+    expectedType: String,
+    actualType: String
+): Pair<HttpStatusCode, JsonApiErrorCollection> = buildApiErrorResponse(
     status = HttpStatusCode.Conflict,
     title = "Resource type mismatch",
     detail = "Expected 'data.type' to be '$expectedType', but received '$actualType'"
@@ -66,23 +69,27 @@ fun toInternalServerApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollect
     detail = "An internal server error occurred",
 )
 
-fun toValidationApiErrorResponse(detail: String? = null): Pair<HttpStatusCode, JsonApiErrorCollection> = buildApiErrorResponse(
-    status = HttpStatusCode.BadRequest,
-    title = "Validation error",
-    detail = detail.orEmpty().ifEmpty({ "The requested resource could not be found" })
-)
+fun toValidationApiErrorResponse(detail: String? = null): Pair<HttpStatusCode, JsonApiErrorCollection> =
+    buildApiErrorResponse(
+        status = HttpStatusCode.UnprocessableEntity,
+        title = "Validation error",
+        detail = detail.orEmpty().ifEmpty({ "The requested resource could not be found" })
+    )
 
-fun toNotFoundApiErrorResponse(detail: String? = null): Pair<HttpStatusCode, JsonApiErrorCollection> = buildApiErrorResponse(
-    status = HttpStatusCode.NotFound,
-    title = "Not found error",
-    detail = detail.orEmpty().ifEmpty { "The requested resource could not be found" }
-)
+fun toNotFoundApiErrorResponse(detail: String? = null): Pair<HttpStatusCode, JsonApiErrorCollection> =
+    buildApiErrorResponse(
+        status = HttpStatusCode.NotFound,
+        title = "Not found error",
+        detail = detail.orEmpty().ifEmpty { "The requested resource could not be found" }
+    )
 
-fun toNotAcceptedErrorResponse(detail: String? = null): Pair<HttpStatusCode, JsonApiErrorCollection> = buildApiErrorResponse(
-    status = HttpStatusCode.NotAcceptable,
-    title = "Not acceptable",
-    detail = detail.orEmpty().ifEmpty { "The requested resource does not have a representation that matches the criteria given in the request's Accept header" }
-)
+fun toNotAcceptedErrorResponse(detail: String? = null): Pair<HttpStatusCode, JsonApiErrorCollection> =
+    buildApiErrorResponse(
+        status = HttpStatusCode.NotAcceptable,
+        title = "Not acceptable",
+        detail = detail.orEmpty()
+            .ifEmpty { "The requested resource does not have a representation that matches the criteria given in the request's Accept header" }
+    )
 
 fun toBalanceSupplierNotApiAuthorizedResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> = buildApiErrorResponse(
     status = HttpStatusCode.Forbidden,

@@ -21,24 +21,25 @@ fun UpdateError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollectio
     when (this) {
         UpdateError.PersistenceError,
         UpdateError.GrantCreationError,
-        UpdateError.ScopeReadError, -> toInternalServerApiErrorResponse()
+        UpdateError.ScopeReadError,
+        -> toInternalServerApiErrorResponse()
 
         UpdateError.RequestNotFound -> toNotFoundApiErrorResponse("AuthorizationRequest could not be found")
 
         UpdateError.IllegalTransitionError -> buildApiErrorResponse(
-            status = HttpStatusCode.BadRequest,
+            status = HttpStatusCode.UnprocessableEntity,
             title = "Invalid status transition",
             detail = "Only 'Accepted' and 'Rejected' statuses are allowed."
         )
 
         UpdateError.AlreadyProcessed -> buildApiErrorResponse(
-            status = HttpStatusCode.BadRequest,
+            status = HttpStatusCode.UnprocessableEntity,
             title = "Invalid status state",
             detail = "AuthorizationRequest must be in 'Pending' status to update."
         )
 
         UpdateError.Expired -> buildApiErrorResponse(
-            status = HttpStatusCode.BadRequest,
+            status = HttpStatusCode.UnprocessableEntity,
             title = "AuthorizationRequest has expired",
             detail = "Validity period has passed."
         )

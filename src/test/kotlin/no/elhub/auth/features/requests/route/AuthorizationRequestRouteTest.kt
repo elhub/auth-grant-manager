@@ -580,7 +580,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                 }
             }
 
-            test("PATCH /authorization-requests/{id} should return 400 Bad Request on illegal transaction") {
+            test("PATCH /authorization-requests/{id} should return 422 Unprocessable Entity on illegal transaction") {
                 val requestId = insertAuthorizationRequest()
                 val response =
                     client.patch("${REQUESTS_PATH}/$requestId") {
@@ -599,12 +599,12 @@ class AuthorizationRequestRouteTest : FunSpec({
                         )
                     }
 
-                response.status shouldBe HttpStatusCode.BadRequest
+                response.status shouldBe HttpStatusCode.UnprocessableEntity
                 val responseJson: JsonApiErrorCollection = response.body()
                 responseJson.errors.apply {
                     size shouldBe 1
                     this[0].apply {
-                        status shouldBe "400"
+                        status shouldBe "422"
                         title shouldBe "Invalid status transition"
                         detail shouldBe "Only 'Accepted' and 'Rejected' statuses are allowed."
                     }
@@ -632,12 +632,12 @@ class AuthorizationRequestRouteTest : FunSpec({
                         )
                     }
 
-                patchResult.status shouldBe HttpStatusCode.BadRequest
+                patchResult.status shouldBe HttpStatusCode.UnprocessableEntity
                 val responseJson: JsonApiErrorCollection = patchResult.body()
                 responseJson.errors.apply {
                     size shouldBe 1
                     this[0].apply {
-                        status shouldBe "400"
+                        status shouldBe "422"
                         title shouldBe "AuthorizationRequest has expired"
                         detail shouldBe "Validity period has passed."
                     }
@@ -740,7 +740,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                 }
             }
 
-            test("POST /authorization-requests/ should return 400 Bad Request on validation error with error payload") {
+            test("POST /authorization-requests/ should return 422 Unprocessable Entity on validation error with error payload") {
                 val response =
                     client.post(REQUESTS_PATH) {
                         header(HttpHeaders.Authorization, "Bearer maskinporten")
@@ -781,13 +781,13 @@ class AuthorizationRequestRouteTest : FunSpec({
                         )
                     }
 
-                response.status shouldBe HttpStatusCode.BadRequest
+                response.status shouldBe HttpStatusCode.UnprocessableEntity
 
                 val responseJson: JsonApiErrorCollection = response.body()
                 responseJson.errors.apply {
                     size shouldBe 1
                     this[0].apply {
-                        status shouldBe "400"
+                        status shouldBe "422"
 
                         title shouldBe "Validation error"
                         detail shouldBe "Requested from name is missing"
@@ -797,7 +797,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                     "createdAt".shouldNotBeNull()
                 }
             }
-            test("POST /authorization-requests/ should return 400 Bad Request when requestee has invalid nin in body") {
+            test("POST /authorization-requests/ should return 422 Unprocessable Entity when requestee has invalid nin in body") {
                 val response = client.post(REQUESTS_PATH) {
                     header(HttpHeaders.Authorization, "Bearer maskinporten")
                     header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
@@ -837,13 +837,13 @@ class AuthorizationRequestRouteTest : FunSpec({
                     )
                 }
 
-                response.status shouldBe HttpStatusCode.BadRequest
+                response.status shouldBe HttpStatusCode.UnprocessableEntity
 
                 val responseJson: JsonApiErrorCollection = response.body()
                 responseJson.errors.apply {
                     size shouldBe 1
                     this[0].apply {
-                        status shouldBe "400"
+                        status shouldBe "422"
                         title shouldBe "Invalid national identity number"
                         detail shouldBe "Provided national identity number is invalid"
                     }
