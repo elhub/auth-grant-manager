@@ -22,7 +22,7 @@ fun UpdateError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollectio
         UpdateError.PersistenceError,
         UpdateError.GrantCreationError,
         UpdateError.ScopeReadError,
-            -> toInternalServerApiErrorResponse()
+        -> toInternalServerApiErrorResponse()
 
         UpdateError.RequestNotFound -> toNotFoundApiErrorResponse("AuthorizationRequest could not be found")
 

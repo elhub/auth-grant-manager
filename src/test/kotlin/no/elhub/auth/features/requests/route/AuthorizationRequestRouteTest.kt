@@ -749,34 +749,34 @@ class AuthorizationRequestRouteTest : FunSpec({
                         setBody(
                             JsonApiCreateRequest(
                                 data =
-                                    JsonApiRequestResourceObjectWithMeta(
-                                        type = "AuthorizationRequest",
-                                        attributes =
-                                            CreateRequestAttributes(
-                                                requestType = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
-                                            ),
-                                        meta =
-                                            CreateRequestMeta(
-                                                requestedBy = PartyIdentifier(
-                                                    PartyIdentifierType.GlobalLocationNumber,
-                                                    "0107000000021"
-                                                ),
-                                                requestedFrom = PartyIdentifier(
-                                                    PartyIdentifierType.NationalIdentityNumber,
-                                                    REQUESTED_FROM_NIN
-                                                ),
-                                                requestedFromName = "",
-                                                requestedTo = PartyIdentifier(
-                                                    PartyIdentifierType.NationalIdentityNumber,
-                                                    REQUESTED_TO_NIN
-                                                ),
-                                                requestedForMeteringPointId = "123456789012345678",
-                                                requestedForMeteringPointAddress = "quaerendum",
-                                                balanceSupplierName = "Balance Supplier",
-                                                balanceSupplierContractName = "Selena Chandler",
-                                                redirectURI = "https://example.com",
-                                            ),
+                                JsonApiRequestResourceObjectWithMeta(
+                                    type = "AuthorizationRequest",
+                                    attributes =
+                                    CreateRequestAttributes(
+                                        requestType = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
                                     ),
+                                    meta =
+                                    CreateRequestMeta(
+                                        requestedBy = PartyIdentifier(
+                                            PartyIdentifierType.GlobalLocationNumber,
+                                            "0107000000021"
+                                        ),
+                                        requestedFrom = PartyIdentifier(
+                                            PartyIdentifierType.NationalIdentityNumber,
+                                            REQUESTED_FROM_NIN
+                                        ),
+                                        requestedFromName = "",
+                                        requestedTo = PartyIdentifier(
+                                            PartyIdentifierType.NationalIdentityNumber,
+                                            REQUESTED_TO_NIN
+                                        ),
+                                        requestedForMeteringPointId = "123456789012345678",
+                                        requestedForMeteringPointAddress = "quaerendum",
+                                        balanceSupplierName = "Balance Supplier",
+                                        balanceSupplierContractName = "Selena Chandler",
+                                        redirectURI = "https://example.com",
+                                    ),
+                                ),
                             ),
                         )
                     }
@@ -805,34 +805,34 @@ class AuthorizationRequestRouteTest : FunSpec({
                     setBody(
                         JsonApiCreateRequest(
                             data =
-                                JsonApiRequestResourceObjectWithMeta(
-                                    type = "AuthorizationRequest",
-                                    attributes =
-                                        CreateRequestAttributes(
-                                            requestType = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
-                                        ),
-                                    meta =
-                                        CreateRequestMeta(
-                                            requestedBy = PartyIdentifier(
-                                                PartyIdentifierType.GlobalLocationNumber,
-                                                "0107000000021"
-                                            ),
-                                            requestedFrom = PartyIdentifier(
-                                                PartyIdentifierType.NationalIdentityNumber,
-                                                "123"
-                                            ),
-                                            requestedFromName = "Hillary Orr",
-                                            requestedTo = PartyIdentifier(
-                                                PartyIdentifierType.NationalIdentityNumber,
-                                                REQUESTED_TO_NIN
-                                            ),
-                                            requestedForMeteringPointId = "123456789012345678",
-                                            requestedForMeteringPointAddress = "quaerendum",
-                                            balanceSupplierName = "Balance Supplier",
-                                            balanceSupplierContractName = "Selena Chandler",
-                                            redirectURI = "https://example.com",
-                                        ),
+                            JsonApiRequestResourceObjectWithMeta(
+                                type = "AuthorizationRequest",
+                                attributes =
+                                CreateRequestAttributes(
+                                    requestType = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
                                 ),
+                                meta =
+                                CreateRequestMeta(
+                                    requestedBy = PartyIdentifier(
+                                        PartyIdentifierType.GlobalLocationNumber,
+                                        "0107000000021"
+                                    ),
+                                    requestedFrom = PartyIdentifier(
+                                        PartyIdentifierType.NationalIdentityNumber,
+                                        "123"
+                                    ),
+                                    requestedFromName = "Hillary Orr",
+                                    requestedTo = PartyIdentifier(
+                                        PartyIdentifierType.NationalIdentityNumber,
+                                        REQUESTED_TO_NIN
+                                    ),
+                                    requestedForMeteringPointId = "123456789012345678",
+                                    requestedForMeteringPointAddress = "quaerendum",
+                                    balanceSupplierName = "Balance Supplier",
+                                    balanceSupplierContractName = "Selena Chandler",
+                                    redirectURI = "https://example.com",
+                                ),
+                            ),
                         ),
                     )
                 }
