@@ -7,7 +7,6 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
 import no.elhub.auth.features.businessprocesses.changeofbalancesupplier.domain.ChangeOfBalanceSupplierBusinessMeta
-import org.apache.pdfbox.Loader
 
 class PdfGeneratorI18nTest : FunSpec({
     test("should generate localized pdf text with default language") {
