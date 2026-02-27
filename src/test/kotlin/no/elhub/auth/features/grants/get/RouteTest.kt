@@ -21,7 +21,7 @@ import no.elhub.auth.validateMalformedInputResponse
 import java.time.OffsetDateTime
 import java.util.UUID
 
-class RouteTest : FunSpec( {
+class RouteTest : FunSpec({
     val authorizedSystem = AuthorizedParty.System(id = "id")
     val validUuid = "02fe286b-4519-4ba8-9c84-dc18bffc9eb3"
     lateinit var authProvider: AuthorizationProvider
@@ -102,8 +102,6 @@ class RouteTest : FunSpec( {
         }
         coVerify(exactly = 1) { handler.invoke(any()) }
     }
-    
-
 
     test("GET /{id} returns 401 when not authorized as any party") {
         coEvery { authProvider.authorizeAll(any()) } returns AuthError.NotAuthorized.left()
@@ -114,6 +112,4 @@ class RouteTest : FunSpec( {
         }
         coVerify(exactly = 0) { handler.invoke(any()) }
     }
-
-
 })
