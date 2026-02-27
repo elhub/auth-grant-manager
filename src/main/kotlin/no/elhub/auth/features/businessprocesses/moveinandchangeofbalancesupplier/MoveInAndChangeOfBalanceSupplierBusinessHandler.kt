@@ -72,7 +72,6 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandler(
         val propertyMap = request.properties
             .filter { it.key in ALLOWED_GRANT_PROPERTY_KEYS }
             .associate { it.key to it.value }
-        validateKeys(propertyMap)
         return buildCreateGrantProperties(propertyMap, ALLOWED_GRANT_PROPERTY_KEYS)
     }
 
@@ -86,13 +85,7 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandler(
         val propertyMap = document.properties
             .filter { it.key in ALLOWED_GRANT_PROPERTY_KEYS }
             .associate { it.key to it.value }
-        validateKeys(propertyMap)
         return buildCreateGrantProperties(propertyMap, ALLOWED_GRANT_PROPERTY_KEYS)
-    }
-
-    private fun validateKeys(propertyMap: Map<String, String>) {
-        val missingKeys = ALLOWED_GRANT_PROPERTY_KEYS.filter { it !in propertyMap.keys }
-        require(missingKeys.isEmpty()) { "Missing required grant property keys: $missingKeys" }
     }
 
     private fun buildCreateGrantProperties(
