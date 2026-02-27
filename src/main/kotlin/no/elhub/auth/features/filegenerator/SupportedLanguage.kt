@@ -7,6 +7,12 @@ enum class SupportedLanguage(
     NN("nn"),
     EN("en");
 
+    fun toPdfLanguage() = when (this) {
+        NB -> "nb-NO"
+        NN -> "nn-NO"
+        EN -> "en-US"
+    }
+
     companion object {
         val DEFAULT = NB
     }
