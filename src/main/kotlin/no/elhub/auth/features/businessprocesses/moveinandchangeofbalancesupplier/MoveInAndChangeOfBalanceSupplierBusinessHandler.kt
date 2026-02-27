@@ -12,6 +12,11 @@ import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 import no.elhub.auth.features.businessprocesses.BusinessProcessError
 import no.elhub.auth.features.businessprocesses.datasharing.StromprisService
+import no.elhub.auth.features.businessprocesses.ediel.EdielEnvironment
+import no.elhub.auth.features.businessprocesses.ediel.EdielService
+import no.elhub.auth.features.businessprocesses.ediel.RedirectUriDomainValidationResult
+import no.elhub.auth.features.businessprocesses.ediel.redirectUriFor
+import no.elhub.auth.features.businessprocesses.ediel.validateRedirectUriDomain
 import no.elhub.auth.features.businessprocesses.moveinandchangeofbalancesupplier.domain.MoveInAndChangeOfBalanceSupplierBusinessCommand
 import no.elhub.auth.features.businessprocesses.moveinandchangeofbalancesupplier.domain.MoveInAndChangeOfBalanceSupplierBusinessMeta
 import no.elhub.auth.features.businessprocesses.moveinandchangeofbalancesupplier.domain.MoveInAndChangeOfBalanceSupplierBusinessModel
@@ -58,6 +63,8 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandler(
     private val meteringPointsService: MeteringPointsService,
     private val personService: PersonService,
     private val stromprisService: StromprisService,
+    private val edielService: EdielService,
+    private val edielEnvironment: EdielEnvironment,
     private val validateBalanceSupplierContractName: Boolean
 ) : RequestBusinessHandler,
     DocumentBusinessHandler {
@@ -65,8 +72,46 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandler(
     override suspend fun validateAndReturnRequestCommand(createRequestModel: CreateRequestModel): Either<BusinessProcessError, RequestCommand> =
         either {
             val model = createRequestModel.toMoveInAndChangeOfBalanceSupplierBusinessModel()
-            validate(model).mapLeft { it.toBusinessError() }.bind().toRequestCommand()
+            validateRequest(model).mapLeft { it.toBusinessError() }.bind().toRequestCommand()
         }
+
+    private suspend fun validateRequest(
+        model: MoveInAndChangeOfBalanceSupplierBusinessModel
+    ): Either<MoveInAndChangeOfBalanceSupplierValidationError, MoveInAndChangeOfBalanceSupplierBusinessCommand> =
+        either {
+            val command = validate(model).bind()
+            validateRedirectUriForRequest(model).bind()
+            command
+        }
+
+    private suspend fun validateRedirectUriForRequest(
+        model: MoveInAndChangeOfBalanceSupplierBusinessModel
+    ): Either<MoveInAndChangeOfBalanceSupplierValidationError, Unit> {
+        val redirectUri = model.redirectURI?.trim()
+        if (redirectUri.isNullOrBlank()) {
+            return MoveInAndChangeOfBalanceSupplierValidationError.InvalidRedirectURI.left()
+        }
+
+        val redirectUriFromEdiel = edielService.getPartyRedirect(model.requestedBy.idValue).mapLeft { err ->
+            return when (err) {
+                ClientError.NotFound -> MoveInAndChangeOfBalanceSupplierValidationError.InvalidRedirectURI.left()
+
+                ClientError.BadRequest,
+                ClientError.Unauthorized,
+                ClientError.ServerError,
+                is ClientError.UnexpectedError -> MoveInAndChangeOfBalanceSupplierValidationError.UnexpectedError.left()
+            }
+        }.getOrElse { return MoveInAndChangeOfBalanceSupplierValidationError.UnexpectedError.left() }
+
+        return when (validateRedirectUriDomain(redirectUri, redirectUriFromEdiel.redirectUriFor(edielEnvironment))) {
+            RedirectUriDomainValidationResult.MatchingDomain -> Unit.right()
+
+            RedirectUriDomainValidationResult.InvalidInputUri -> MoveInAndChangeOfBalanceSupplierValidationError.InvalidRedirectURI.left()
+
+            RedirectUriDomainValidationResult.InvalidEdielUri,
+            RedirectUriDomainValidationResult.DomainMismatch -> MoveInAndChangeOfBalanceSupplierValidationError.RedirectURINotMatchingEdiel.left()
+        }
+    }
 
     override fun getCreateGrantProperties(request: AuthorizationRequest): CreateGrantProperties {
         val propertyMap = request.properties

@@ -4,6 +4,7 @@ ktor:
       - no.elhub.auth.ApplicationKt.module
       - no.elhub.auth.features.common.CommonModuleKt.commonModule
       - no.elhub.auth.features.businessprocesses.datasharing.StromprisServiceModuleKt.stromprisServiceModule
+      - no.elhub.auth.features.businessprocesses.ediel.EdielServiceModuleKt.edielServiceModule
       - no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceModuleKt.meteringPointsServiceModule
       - no.elhub.auth.features.businessprocesses.structuredata.organisations.OrganisationsServiceModuleKt.organisationsServiceModule
       - no.elhub.auth.features.businessprocesses.BusinessProcessesModuleKt.businessProcessesModule
@@ -67,3 +68,11 @@ dataSharing:
 
 idp:
   tokenUrl: ${IDP_TOKEN_URL}
+
+ediel:
+  environment: ${EDIEL_ENV:production}
+  serviceUrl: ${EDIEL_SERVICE_URL:https://ws.ediel.no/api}
+  authentication:
+    basic:
+      username: ${EDIEL_USERNAME}
+      password: ${EDIEL_PASSWORD}

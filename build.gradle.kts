@@ -167,7 +167,9 @@ val localEnvVars = mapOf(
     "STROMPRIS_SERVICE_IDP_CLIENT_ID" to "strompris-client-id",
     "STROMPRIS_SERVICE_IDP_CLIENT_SECRET" to "strompris-client-secret",
     "IDP_TOKEN_URL" to "http://localhost:8085/token",
-    "VALIDATE_CONTRACT_NAME_FEATURE" to "false"
+    "VALIDATE_CONTRACT_NAME_FEATURE" to "false",
+    "EDIEL_ENV" to "test",
+    "EDIEL_SERVICE_URL" to "https://ws.qa1.ediel.no/api/"
 )
 
 tasks.named<JavaExec>("run").configure {

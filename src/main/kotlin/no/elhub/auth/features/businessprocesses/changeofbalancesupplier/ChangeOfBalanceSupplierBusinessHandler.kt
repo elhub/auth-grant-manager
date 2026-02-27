@@ -18,6 +18,11 @@ import no.elhub.auth.features.businessprocesses.changeofbalancesupplier.domain.t
 import no.elhub.auth.features.businessprocesses.changeofbalancesupplier.domain.toDocumentCommand
 import no.elhub.auth.features.businessprocesses.changeofbalancesupplier.domain.toRequestCommand
 import no.elhub.auth.features.businessprocesses.datasharing.StromprisService
+import no.elhub.auth.features.businessprocesses.ediel.EdielEnvironment
+import no.elhub.auth.features.businessprocesses.ediel.EdielService
+import no.elhub.auth.features.businessprocesses.ediel.RedirectUriDomainValidationResult
+import no.elhub.auth.features.businessprocesses.ediel.redirectUriFor
+import no.elhub.auth.features.businessprocesses.ediel.validateRedirectUriDomain
 import no.elhub.auth.features.businessprocesses.structuredata.common.ClientError
 import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.AccessType.SHARED
 import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsService
@@ -49,17 +54,57 @@ class ChangeOfBalanceSupplierBusinessHandler(
     private val personService: PersonService,
     private val organisationsService: OrganisationsService,
     private val stromprisService: StromprisService,
+    private val edielService: EdielService,
+    private val edielEnvironment: EdielEnvironment,
     private val validateBalanceSupplierContractName: Boolean
 ) : RequestBusinessHandler, DocumentBusinessHandler {
 
     override suspend fun validateAndReturnRequestCommand(createRequestModel: CreateRequestModel): Either<BusinessProcessError, RequestCommand> =
         either {
             val model = createRequestModel.toChangeOfBalanceSupplierBusinessModel()
-            validate(model)
+            validateRequest(model)
                 .mapLeft { it.toBusinessError() }
                 .bind()
                 .toRequestCommand()
         }
+
+    private suspend fun validateRequest(
+        model: ChangeOfBalanceSupplierBusinessModel
+    ): Either<ChangeOfBalanceSupplierValidationError, ChangeOfBalanceSupplierBusinessCommand> =
+        either {
+            val command = validate(model).bind()
+            validateRedirectUriForRequest(model).bind()
+            command
+        }
+
+    private suspend fun validateRedirectUriForRequest(
+        model: ChangeOfBalanceSupplierBusinessModel
+    ): Either<ChangeOfBalanceSupplierValidationError, Unit> {
+        val redirectUri = model.redirectURI?.trim()
+        if (redirectUri.isNullOrBlank()) {
+            return ChangeOfBalanceSupplierValidationError.InvalidRedirectURI.left()
+        }
+
+        val redirectUriFromEdiel = edielService.getPartyRedirect(model.requestedBy.idValue).mapLeft { err ->
+            return when (err) {
+                ClientError.NotFound -> ChangeOfBalanceSupplierValidationError.InvalidRedirectURI.left()
+
+                ClientError.BadRequest,
+                ClientError.Unauthorized,
+                ClientError.ServerError,
+                is ClientError.UnexpectedError -> ChangeOfBalanceSupplierValidationError.UnexpectedError.left()
+            }
+        }.getOrElse { return ChangeOfBalanceSupplierValidationError.UnexpectedError.left() }
+
+        return when (validateRedirectUriDomain(redirectUri, redirectUriFromEdiel.redirectUriFor(edielEnvironment))) {
+            RedirectUriDomainValidationResult.MatchingDomain -> Unit.right()
+
+            RedirectUriDomainValidationResult.InvalidInputUri -> ChangeOfBalanceSupplierValidationError.InvalidRedirectURI.left()
+
+            RedirectUriDomainValidationResult.InvalidEdielUri,
+            RedirectUriDomainValidationResult.DomainMismatch -> ChangeOfBalanceSupplierValidationError.RedirectURINotMatchingEdiel.left()
+        }
+    }
 
     override fun getCreateGrantProperties(request: AuthorizationRequest): CreateGrantProperties =
         CreateGrantProperties(
@@ -137,11 +182,6 @@ class ChangeOfBalanceSupplierBusinessHandler(
 
         if (meteringPoint.data.attributes?.accountingPoint?.blockedForSwitching == true) {
             return ChangeOfBalanceSupplierValidationError.MeteringPointBlockedForSwitching.left()
-        }
-
-        // temporary validation for URI until it is fetched from EDIEL and validated against that value instead
-        if (model.redirectURI != null && !model.redirectURI.contains("http")) {
-            return ChangeOfBalanceSupplierValidationError.InvalidRedirectURI.left()
         }
 
         if (model.requestedForMeteringPointAddress.isBlank()) {
