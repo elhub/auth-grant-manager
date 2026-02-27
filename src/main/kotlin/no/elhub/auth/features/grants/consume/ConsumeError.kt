@@ -28,19 +28,19 @@ fun ConsumeError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollecti
         )
 
         ConsumeError.IllegalStateError -> buildApiErrorResponse(
-            status = HttpStatusCode.BadRequest,
+            status = HttpStatusCode.UnprocessableEntity,
             title = "Illegal status state",
             detail = "AuthorizationGrant must be 'Active' to get consumed."
         )
 
         ConsumeError.IllegalTransitionError -> buildApiErrorResponse(
-            status = HttpStatusCode.BadRequest,
+            status = HttpStatusCode.UnprocessableEntity,
             title = "Invalid status transition",
             detail = "Only 'Exhausted' status is allowed."
         )
 
         ConsumeError.ExpiredError -> buildApiErrorResponse(
-            status = HttpStatusCode.BadRequest,
+            status = HttpStatusCode.UnprocessableEntity,
             title = "AuthorizationGrant has expired",
             detail = "Validity period has passed."
         )

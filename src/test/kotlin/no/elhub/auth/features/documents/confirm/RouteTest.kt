@@ -45,7 +45,7 @@ class RouteTest : FunSpec({
             coVerify(exactly = 1) { handler.invoke(any()) }
         }
     }
-    test("PUT /{id}.pdf returns 400 with missing signature message when handler fails to validate signature") {
+    test("PUT /{id}.pdf returns 422 with missing signature message when handler fails to validate signature") {
         coEvery { authProvider.authorizeMaskinporten(any()) } returns authorizedOrg.right()
         coEvery { handler.invoke(any()) } returns ConfirmError.ValidateSignaturesError(
             SignatureValidationError.MissingBankIdSignature
@@ -54,7 +54,7 @@ class RouteTest : FunSpec({
         testApplication {
             setupAppWith { route(handler, authProvider) }
             val response = client.putPdf("/8d4ed1dc-2ed2-4744-9a36-c5f9c4d224dc.pdf", Random.nextBytes(256))
-            response.status shouldBe HttpStatusCode.BadRequest
+            response.status shouldBe HttpStatusCode.UnprocessableEntity
             val responseJson: JsonApiErrorCollection = response.body()
             responseJson.errors.apply {
                 size shouldBe 1
