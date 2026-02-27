@@ -3,9 +3,11 @@ package no.elhub.auth.features.filegenerator
 import arrow.core.Either
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
 import no.elhub.auth.features.businessprocesses.changeofbalancesupplier.domain.ChangeOfBalanceSupplierBusinessMeta
+import org.apache.pdfbox.Loader
 
 class PdfGeneratorI18nTest : FunSpec({
     test("should generate localized pdf text with default language") {
@@ -33,7 +35,9 @@ class PdfGeneratorI18nTest : FunSpec({
             is Either.Right -> pdfResult.value
         }
         pdfBytes.isNotEmpty().shouldBeTrue()
+        val language = extractLanguage(pdfBytes)
         val text = extractText(pdfBytes).normalizeWhitespace()
+        language shouldBe "nb-NO"
         text shouldContain "Hillary Orr"
         text shouldContain "Example Street 1, 1234 Oslo"
         text shouldContain "Jami Wade"
@@ -60,11 +64,15 @@ class PdfGeneratorI18nTest : FunSpec({
         val englishPdfResult = generator.generate(
             documentMeta = meta,
         )
-        val englishText = when (englishPdfResult) {
+        val englishPdf = when (englishPdfResult) {
             is Either.Left -> error("PDF generation failed for english language")
-            is Either.Right -> extractText(englishPdfResult.value).normalizeWhitespace()
+            is Either.Right -> englishPdfResult.value
         }
 
+        val languageMetadata = extractLanguage(englishPdf)
+        val englishText = extractText(englishPdf).normalizeWhitespace()
+
+        languageMetadata shouldBe "en-US"
         englishText shouldContain "Agreement confirmation - Change of supplier"
         englishText shouldNotContain "Avtalebekreftelse"
     }

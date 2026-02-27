@@ -127,10 +127,11 @@ class PdfGenerator(
 
         if (useTestPdfNotice) {
             pdfBytes.addTestWatermark()
-                .addMetadataToPdf(mapOf(PdfConstants.PDF_METADATA_KEY_TESTDOCUMENT to "true"))
+                .addMetadataToPdf(language, mapOf(PdfConstants.PDF_METADATA_KEY_TESTDOCUMENT to "true"))
                 .bind()
         } else {
-            pdfBytes
+            pdfBytes.addMetadataToPdf(language)
+                .bind()
         }
     }
 
@@ -217,15 +218,19 @@ class PdfGenerator(
     }.mapLeft { DocumentGenerationError.ContentGenerationError }
 
     private fun ByteArray.addMetadataToPdf(
-        metadata: Map<String, String>
+        language: SupportedLanguage,
+        metadata: Map<String, String> = emptyMap()
     ) = Either.catch {
         ByteArrayOutputStream().use { out ->
             Loader.loadPDF(this).use { doc ->
                 doc.documentInformation = PDDocumentInformation().apply {
+                    author = "Elhub AS"
+                    producer = "Elhub Document Service"
                     for (metadataPair in metadata) {
                         setCustomMetadataValue(metadataPair.key, metadataPair.value)
                     }
                 }
+                doc.documentCatalog.language = language.toPdfLanguage()
                 doc.save(out)
             }
             out.toByteArray()
