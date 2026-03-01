@@ -5,8 +5,10 @@ import io.kotest.matchers.MatcherResult
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.request.patch
 import io.ktor.client.request.post
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
@@ -99,6 +101,18 @@ suspend fun validateMalformedInputResponse(response: HttpResponse) {
     }
 }
 
+suspend fun validateNotFoundResponse(response: HttpResponse) {
+    response.status.value shouldBe 404
+    val responseJson: JsonApiErrorCollection = response.body()
+    responseJson.errors.apply {
+        size shouldBe 1
+        this[0].apply {
+            title shouldBe "Not found error"
+            detail shouldBe "The requested resource could not be found"
+        }
+    }
+}
+
 suspend fun validateInternalServerErrorResponse(response: HttpResponse) {
     response.status.value shouldBe 500
     val responseJson: JsonApiErrorCollection = response.body()
@@ -107,6 +121,17 @@ suspend fun validateInternalServerErrorResponse(response: HttpResponse) {
         this[0].apply {
             title shouldBe "Internal server error"
             detail shouldBe "An internal server error occurred"
+        }
+    }
+}
+
+suspend fun validateConflictErrorResponse(response: HttpResponse) {
+    response.status shouldBe HttpStatusCode.Conflict
+    val responseJson: JsonApiErrorCollection = response.body()
+    responseJson.errors.apply {
+        size shouldBe 1
+        this[0].apply {
+            title shouldContain "mismatch"
         }
     }
 }
@@ -164,6 +189,14 @@ suspend inline fun HttpClient.putPdf(
     body: ByteArray
 ) = put(path) {
     contentType(ContentType.Application.Pdf)
+    setBody(body)
+}
+
+suspend inline fun <reified T> HttpClient.patchJson(
+    path: String,
+    body: T
+) = patch(path) {
+    contentType(ContentType.Application.Json)
     setBody(body)
 }
 
