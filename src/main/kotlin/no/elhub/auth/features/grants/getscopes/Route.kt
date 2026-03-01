@@ -1,4 +1,4 @@
-package no.elhub.auth.features.grants.getScopes
+package no.elhub.auth.features.grants.getscopes
 
 import arrow.core.getOrElse
 import io.ktor.http.HttpStatusCode

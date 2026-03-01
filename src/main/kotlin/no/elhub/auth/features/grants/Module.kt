@@ -15,8 +15,8 @@ import no.elhub.auth.features.grants.consume.Handler as ConsumeHandler
 import no.elhub.auth.features.grants.consume.route as consumeRoute
 import no.elhub.auth.features.grants.get.Handler as GetHandler
 import no.elhub.auth.features.grants.get.route as getRoute
-import no.elhub.auth.features.grants.getScopes.Handler as GetScopesHandler
-import no.elhub.auth.features.grants.getScopes.route as getScopesRoute
+import no.elhub.auth.features.grants.getscopes.Handler as GetScopesHandler
+import no.elhub.auth.features.grants.getscopes.route as getScopesRoute
 import no.elhub.auth.features.grants.query.Handler as QueryHandler
 import no.elhub.auth.features.grants.query.route as queryRoute
 

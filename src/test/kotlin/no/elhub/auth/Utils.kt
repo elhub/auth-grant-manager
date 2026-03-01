@@ -101,6 +101,18 @@ suspend fun validateMalformedInputResponse(response: HttpResponse) {
     }
 }
 
+suspend fun validateNotFoundResponse(response: HttpResponse) {
+    response.status.value shouldBe 404
+    val responseJson: JsonApiErrorCollection = response.body()
+    responseJson.errors.apply {
+        size shouldBe 1
+        this[0].apply {
+            title shouldBe "Not found error"
+            detail shouldBe "The requested resource could not be found"
+        }
+    }
+}
+
 suspend fun validateInternalServerErrorResponse(response: HttpResponse) {
     response.status.value shouldBe 500
     val responseJson: JsonApiErrorCollection = response.body()
