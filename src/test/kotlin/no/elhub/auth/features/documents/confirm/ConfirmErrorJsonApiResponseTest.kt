@@ -100,7 +100,7 @@ class ConfirmErrorJsonApiResponseTest : FunSpec({
             detail = "The end user signature is invalid."
         ),
         SignatureValidationError.BankIdCertificateRevoked to Expectation(
-            status = HttpStatusCode.BadRequest,
+            status = HttpStatusCode.UnprocessableEntity,
             title = "End user signature validation failed",
             detail = "The end user signature is invalid."
         ),

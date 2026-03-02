@@ -9,6 +9,7 @@ import org.bouncycastle.asn1.x509.DistributionPointName
 import org.bouncycastle.asn1.x509.Extension
 import org.bouncycastle.asn1.x509.GeneralName
 import org.bouncycastle.asn1.x509.GeneralNames
+import org.bouncycastle.asn1.x509.KeyUsage
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter
 import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder
 import org.bouncycastle.jce.provider.BouncyCastleProvider
@@ -93,11 +94,14 @@ fun generateSelfSignedCertWithDates(
         notAfterDate,
         X500Name(subjectDn),
         keyPair.public
-    ).addExtension(
-        Extension.basicConstraints,
-        true,
-        BasicConstraints(true)
-    )
+    ).apply {
+        addExtension(Extension.basicConstraints, true, BasicConstraints(true))
+        addExtension(
+            Extension.keyUsage,
+            true,
+            KeyUsage(KeyUsage.keyCertSign or KeyUsage.cRLSign)
+        )
+    }
 
     // Add CRL Distribution Point extension only if crlUri is not null or blank
     val withCrl = if (!crlUri.isNullOrBlank()) {
