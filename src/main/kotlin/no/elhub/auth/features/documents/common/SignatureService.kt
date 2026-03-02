@@ -1,6 +1,7 @@
 package no.elhub.auth.features.documents.common
 
 import arrow.core.Either
+import arrow.core.raise.Raise
 import arrow.core.raise.either
 import arrow.core.raise.ensure
 import arrow.core.raise.ensureNotNull
@@ -49,6 +50,8 @@ sealed class SignatureValidationError {
     data object MissingBankIdTrustedTimestamp : SignatureValidationError()
     data object BankIdSigningCertNotValidAtTimestamp : SignatureValidationError()
     data object BankIdSigningCertNotFromExpectedRoot : SignatureValidationError()
+    data object BankIdCertificateRevoked : SignatureValidationError()
+    data object BankIdSignatureNotPadesLT : SignatureValidationError()
     data object MissingNationalId : SignatureValidationError()
     data object OriginalDocumentMismatch : SignatureValidationError()
 }
@@ -182,6 +185,13 @@ class PdfSignatureService(
     }
 
     private fun validateBankIdSignatureAndReturnSignatory(signature: SignatureWrapper): Either<SignatureValidationError, PartyIdentifier> = either {
+        ensure(signature.isCertificateChainFromTrustedStore) {
+            SignatureValidationError.BankIdSigningCertNotFromExpectedRoot
+        }
+        val signingCert = ensureNotNull(signature.signingCertificate) {
+            SignatureValidationError.InvalidBankIdSignature
+        }
+
         ensure(signature.isSignatureIntact && signature.isSignatureValid) {
             SignatureValidationError.InvalidBankIdSignature
         }
@@ -197,19 +207,19 @@ class PdfSignatureService(
             SignatureValidationError.MissingBankIdTrustedTimestamp
         }
 
-        ensure(signature.isCertificateChainFromTrustedStore) {
-            SignatureValidationError.BankIdSigningCertNotFromExpectedRoot
-        }
-        val signingCert = ensureNotNull(signature.signingCertificate) {
-            SignatureValidationError.InvalidBankIdSignature
-        }
-
         val timestampTime = trustedSignatureTimestamp.productionTime
         val notBefore = signingCert.notBefore
         val notAfter = signingCert.notAfter
 
         ensure(!timestampTime.before(notBefore) && !timestampTime.after(notAfter)) {
             SignatureValidationError.BankIdSigningCertNotValidAtTimestamp
+        }
+
+        ensureNoRevokedCertificateAt(timestampTime, signature.certificateChain)
+
+        val signatureFormat = signature.signatureFormat
+        ensure(signatureFormat == SignatureLevel.PAdES_BASELINE_LT || signatureFormat == SignatureLevel.PAdES_BASELINE_LTA) {
+            SignatureValidationError.BankIdSignatureNotPadesLT
         }
 
         val nationalIdExtension = ensureNotNull(
@@ -226,6 +236,21 @@ class PdfSignatureService(
         }
 
         PartyIdentifier(idType = PartyIdentifierType.NationalIdentityNumber, idValue = nationalIdentityNumber)
+    }
+
+    private fun Raise<SignatureValidationError>.ensureNoRevokedCertificateAt(
+        timestampTime: java.util.Date,
+        certificateChain: List<CertificateWrapper>
+    ) {
+        val revokedCertificate = certificateChain.firstOrNull { cert ->
+            cert.certificateRevocationData.any { revocation ->
+                revocation.isRevoked && (revocation.revocationDate == null || !revocation.revocationDate.after(timestampTime))
+            }
+        }
+
+        ensure(revokedCertificate == null) {
+            SignatureValidationError.BankIdCertificateRevoked
+        }
     }
 
     private fun decodeNationalIdentityNumber(extension: XmlCertificateExtension): String? {

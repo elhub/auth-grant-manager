@@ -81,6 +81,8 @@ fun handleValidateSignatureError(error: ConfirmError.ValidateSignaturesError): P
 
         SignatureValidationError.MissingBankIdTrustedTimestamp,
         SignatureValidationError.BankIdSigningCertNotValidAtTimestamp,
+        SignatureValidationError.BankIdCertificateRevoked,
+        SignatureValidationError.BankIdSignatureNotPadesLT,
         SignatureValidationError.InvalidBankIdSignature ->
             buildApiErrorResponse(
                 status = HttpStatusCode.UnprocessableEntity,

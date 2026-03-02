@@ -45,6 +45,7 @@ import no.elhub.auth.features.common.currentTimeWithTimeZone
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
 import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
+import no.elhub.auth.features.documents.TestCertificateFactory
 import no.elhub.auth.features.documents.common.DocumentBusinessHandler
 import no.elhub.auth.features.documents.create.command.DocumentCommand
 import no.elhub.auth.features.documents.create.dto.CreateDocumentMeta
@@ -550,7 +551,12 @@ class AuthorizationDocumentRouteTest :
                 }
 
                 test("Put signed file should return 204") {
-                    val documentSignedByPerson = EndUserSignatureTestHelper().sign(
+                    val documentSignedByPerson = EndUserSignatureTestHelper(
+                        certFactory = TestCertificateFactory(
+                            bankIdRootCertificatePath = TestCertificateUtil.Constants.BANKID_ROOT_CERTIFICATE_LOCATION,
+                            bankIdRootPrivateKeyPath = TestCertificateUtil.Constants.BANKID_ROOT_PRIVATE_KEY_LOCATION
+                        )
+                    ).sign(
                         pdfBytes = signedFile,
                         nationalIdentityNumber = REQUESTED_TO_NIN
                     )
