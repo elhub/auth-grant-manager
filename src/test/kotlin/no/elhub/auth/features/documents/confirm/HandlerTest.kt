@@ -12,8 +12,8 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.plus
-import no.elhub.auth.features.businessprocesses.changeofbalancesupplier.defaultValidTo
-import no.elhub.auth.features.businessprocesses.changeofbalancesupplier.today
+import no.elhub.auth.features.common.defaultValidTo
+import no.elhub.auth.features.common.today
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.RepositoryWriteError
 import no.elhub.auth.features.common.party.AuthorizationParty

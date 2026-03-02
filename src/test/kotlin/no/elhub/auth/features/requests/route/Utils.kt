@@ -26,8 +26,9 @@ import no.elhub.auth.features.requests.create.command.RequestMetaMarker
 import no.elhub.auth.features.requests.create.dto.CreateRequestAttributes
 import no.elhub.auth.features.requests.create.dto.CreateRequestMeta
 import no.elhub.auth.features.requests.create.dto.JsonApiCreateRequest
+import no.elhub.auth.features.common.today
 import no.elhub.auth.features.requests.create.model.CreateRequestModel
-import no.elhub.auth.features.requests.create.model.defaultRequestValidTo
+import no.elhub.auth.features.common.defaultValidTo
 import no.elhub.auth.features.requests.create.requesttypes.RequestTypeValidationError
 import no.elhub.auth.features.requests.module
 import no.elhub.auth.features.requests.update.dto.JsonApiUpdateRequest
@@ -93,7 +94,7 @@ class TestRequestBusinessHandler : RequestBusinessHandler {
                         requestedFrom = meta.requestedFrom,
                         requestedBy = meta.requestedBy,
                         requestedTo = meta.requestedTo,
-                        validTo = defaultRequestValidTo().toTimeZoneOffsetDateTimeAtStartOfDay(),
+                        validTo = defaultValidTo().toTimeZoneOffsetDateTimeAtStartOfDay(),
                         scopes = listOf(
                             CreateScopeData(
                                 authorizedResourceType = AuthorizationScope.AuthorizationResource.MeteringPoint,
@@ -118,8 +119,8 @@ class TestRequestBusinessHandler : RequestBusinessHandler {
 
     override fun getCreateGrantProperties(request: AuthorizationRequest): CreateGrantProperties =
         CreateGrantProperties(
-            validFrom = no.elhub.auth.features.requests.create.model.today(),
-            validTo = defaultRequestValidTo(),
+            validFrom = today(),
+            validTo = defaultValidTo(),
         )
 }
 

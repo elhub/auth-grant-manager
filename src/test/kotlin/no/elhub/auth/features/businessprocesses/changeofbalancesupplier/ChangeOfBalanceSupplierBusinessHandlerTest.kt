@@ -36,6 +36,7 @@ import no.elhub.auth.features.businessprocesses.structuredata.organisations.Orga
 import no.elhub.auth.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.NOT_BALANCE_SUPPLIER_PARTY_ID
 import no.elhub.auth.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.VALID_PARTY_ID
 import no.elhub.auth.features.businessprocesses.structuredata.organisations.organisationsServiceHttpClient
+import no.elhub.auth.features.common.defaultValidTo
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
@@ -76,13 +77,19 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
 
         beforeSpec {
             meteringPointsService = MeteringPointsApi(
-                MeteringPointsApiConfig(serviceUrl = MeteringPointsServiceTestContainer.serviceUrl(), basicAuthConfig = BasicAuthConfig("user", "pass")),
+                MeteringPointsApiConfig(
+                    serviceUrl = MeteringPointsServiceTestContainer.serviceUrl(),
+                    basicAuthConfig = BasicAuthConfig("user", "pass")
+                ),
                 meteringPointsServiceHttpClient
             )
             organisationsService = OrganisationsApi(
                 OrganisationsApiConfig(
                     serviceUrl = OrganisationsServiceTestContainer.serviceUrl(),
-                    basicAuthConfig = no.elhub.auth.features.businessprocesses.structuredata.organisations.BasicAuthConfig("user", "pass")
+                    basicAuthConfig = no.elhub.auth.features.businessprocesses.structuredata.organisations.BasicAuthConfig(
+                        "user",
+                        "pass"
+                    )
                 ),
                 organisationsServiceHttpClient
             )
@@ -95,9 +102,27 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
             )
         }
 
-        coEvery { personService.findOrCreateByNin(END_USER.idValue) } returns Either.Right(Person(UUID.fromString(END_USER_ID_1)))
-        coEvery { personService.findOrCreateByNin(ANOTHER_END_USER.idValue) } returns Either.Right(Person(UUID.fromString(END_USER_ID_2)))
-        coEvery { personService.findOrCreateByNin(SHARED_END_USER.idValue) } returns Either.Right(Person(UUID.fromString(SHARED_END_USER_ID_1)))
+        coEvery { personService.findOrCreateByNin(END_USER.idValue) } returns Either.Right(
+            Person(
+                UUID.fromString(
+                    END_USER_ID_1
+                )
+            )
+        )
+        coEvery { personService.findOrCreateByNin(ANOTHER_END_USER.idValue) } returns Either.Right(
+            Person(
+                UUID.fromString(
+                    END_USER_ID_2
+                )
+            )
+        )
+        coEvery { personService.findOrCreateByNin(SHARED_END_USER.idValue) } returns Either.Right(
+            Person(
+                UUID.fromString(
+                    SHARED_END_USER_ID_1
+                )
+            )
+        )
 
         test("request validation fails on missing requestedFromName") {
             val model =
@@ -105,17 +130,17 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
                     authorizedParty = AUTHORIZED_PARTY,
                     requestType = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
                     meta =
-                    CreateRequestMeta(
-                        requestedBy = VALID_PARTY,
-                        requestedFrom = END_USER,
-                        requestedFromName = "",
-                        requestedTo = END_USER,
-                        requestedForMeteringPointId = VALID_METERING_POINT_1,
-                        requestedForMeteringPointAddress = "addr",
-                        balanceSupplierName = "Supplier",
-                        balanceSupplierContractName = "Contract",
-                        redirectURI = "https://example.com",
-                    ),
+                        CreateRequestMeta(
+                            requestedBy = VALID_PARTY,
+                            requestedFrom = END_USER,
+                            requestedFromName = "",
+                            requestedTo = END_USER,
+                            requestedForMeteringPointId = VALID_METERING_POINT_1,
+                            requestedForMeteringPointAddress = "addr",
+                            balanceSupplierName = "Supplier",
+                            balanceSupplierContractName = "Contract",
+                            redirectURI = "https://example.com",
+                        ),
                 )
 
             handler.validateAndReturnRequestCommand(model)
@@ -128,17 +153,17 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
                     authorizedParty = AUTHORIZED_PARTY,
                     requestType = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
                     meta =
-                    CreateRequestMeta(
-                        requestedBy = VALID_PARTY,
-                        requestedFrom = ANOTHER_END_USER,
-                        requestedFromName = "From",
-                        requestedTo = ANOTHER_END_USER,
-                        requestedForMeteringPointId = VALID_METERING_POINT_1,
-                        requestedForMeteringPointAddress = "addr",
-                        balanceSupplierName = "Supplier",
-                        balanceSupplierContractName = "Contract",
-                        redirectURI = "https://example.com",
-                    ),
+                        CreateRequestMeta(
+                            requestedBy = VALID_PARTY,
+                            requestedFrom = ANOTHER_END_USER,
+                            requestedFromName = "From",
+                            requestedTo = ANOTHER_END_USER,
+                            requestedForMeteringPointId = VALID_METERING_POINT_1,
+                            requestedForMeteringPointAddress = "addr",
+                            balanceSupplierName = "Supplier",
+                            balanceSupplierContractName = "Contract",
+                            redirectURI = "https://example.com",
+                        ),
                 )
 
             handler.validateAndReturnRequestCommand(model)
@@ -151,17 +176,17 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
                     authorizedParty = AUTHORIZED_PARTY,
                     requestType = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
                     meta =
-                    CreateRequestMeta(
-                        requestedBy = VALID_PARTY,
-                        requestedFrom = SHARED_END_USER,
-                        requestedFromName = "From",
-                        requestedTo = SHARED_END_USER,
-                        requestedForMeteringPointId = VALID_METERING_POINT_1,
-                        requestedForMeteringPointAddress = "addr",
-                        balanceSupplierName = "Supplier",
-                        balanceSupplierContractName = "Contract",
-                        redirectURI = "https://example.com",
-                    ),
+                        CreateRequestMeta(
+                            requestedBy = VALID_PARTY,
+                            requestedFrom = SHARED_END_USER,
+                            requestedFromName = "From",
+                            requestedTo = SHARED_END_USER,
+                            requestedForMeteringPointId = VALID_METERING_POINT_1,
+                            requestedForMeteringPointAddress = "addr",
+                            balanceSupplierName = "Supplier",
+                            balanceSupplierContractName = "Contract",
+                            redirectURI = "https://example.com",
+                        ),
                 )
 
             handler.validateAndReturnRequestCommand(model)
@@ -174,17 +199,17 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
                     authorizedParty = AUTHORIZED_PARTY,
                     requestType = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
                     meta =
-                    CreateRequestMeta(
-                        requestedBy = VALID_PARTY,
-                        requestedFrom = END_USER,
-                        requestedFromName = "From",
-                        requestedTo = END_USER,
-                        requestedForMeteringPointId = "123",
-                        requestedForMeteringPointAddress = "addr",
-                        balanceSupplierName = "Supplier",
-                        balanceSupplierContractName = "Contract",
-                        redirectURI = "https://example.com",
-                    ),
+                        CreateRequestMeta(
+                            requestedBy = VALID_PARTY,
+                            requestedFrom = END_USER,
+                            requestedFromName = "From",
+                            requestedTo = END_USER,
+                            requestedForMeteringPointId = "123",
+                            requestedForMeteringPointAddress = "addr",
+                            balanceSupplierName = "Supplier",
+                            balanceSupplierContractName = "Contract",
+                            redirectURI = "https://example.com",
+                        ),
                 )
 
             handler.validateAndReturnRequestCommand(model)
@@ -197,17 +222,17 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
                     authorizedParty = AUTHORIZED_PARTY,
                     requestType = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
                     meta =
-                    CreateRequestMeta(
-                        requestedBy = VALID_PARTY,
-                        requestedFrom = END_USER,
-                        requestedFromName = "From",
-                        requestedTo = END_USER,
-                        requestedForMeteringPointId = NON_EXISTING_METERING_POINT,
-                        requestedForMeteringPointAddress = "addr",
-                        balanceSupplierName = "Supplier",
-                        balanceSupplierContractName = "Contract",
-                        redirectURI = "https://example.com",
-                    ),
+                        CreateRequestMeta(
+                            requestedBy = VALID_PARTY,
+                            requestedFrom = END_USER,
+                            requestedFromName = "From",
+                            requestedTo = END_USER,
+                            requestedForMeteringPointId = NON_EXISTING_METERING_POINT,
+                            requestedForMeteringPointAddress = "addr",
+                            balanceSupplierName = "Supplier",
+                            balanceSupplierContractName = "Contract",
+                            redirectURI = "https://example.com",
+                        ),
                 )
 
             handler.validateAndReturnRequestCommand(model)
@@ -220,17 +245,17 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
                     authorizedParty = AUTHORIZED_PARTY,
                     requestType = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
                     meta =
-                    CreateRequestMeta(
-                        requestedBy = VALID_PARTY,
-                        requestedFrom = END_USER,
-                        requestedFromName = "From",
-                        requestedTo = END_USER,
-                        requestedForMeteringPointId = BLOCKED_FOR_SWITCHING_METERING_POINT_1,
-                        requestedForMeteringPointAddress = "addr",
-                        balanceSupplierName = "Supplier",
-                        balanceSupplierContractName = "Contract",
-                        redirectURI = "https://example.com",
-                    ),
+                        CreateRequestMeta(
+                            requestedBy = VALID_PARTY,
+                            requestedFrom = END_USER,
+                            requestedFromName = "From",
+                            requestedTo = END_USER,
+                            requestedForMeteringPointId = BLOCKED_FOR_SWITCHING_METERING_POINT_1,
+                            requestedForMeteringPointAddress = "addr",
+                            balanceSupplierName = "Supplier",
+                            balanceSupplierContractName = "Contract",
+                            redirectURI = "https://example.com",
+                        ),
                 )
 
             handler.validateAndReturnRequestCommand(model)
@@ -243,17 +268,17 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
                     authorizedParty = AUTHORIZED_PARTY,
                     requestType = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
                     meta =
-                    CreateRequestMeta(
-                        requestedBy = VALID_PARTY,
-                        requestedFrom = END_USER,
-                        requestedFromName = "From",
-                        requestedTo = END_USER,
-                        requestedForMeteringPointId = VALID_METERING_POINT_1,
-                        requestedForMeteringPointAddress = "addr",
-                        balanceSupplierName = "Supplier",
-                        balanceSupplierContractName = "Contract",
-                        redirectURI = "example.com",
-                    ),
+                        CreateRequestMeta(
+                            requestedBy = VALID_PARTY,
+                            requestedFrom = END_USER,
+                            requestedFromName = "From",
+                            requestedTo = END_USER,
+                            requestedForMeteringPointId = VALID_METERING_POINT_1,
+                            requestedForMeteringPointAddress = "addr",
+                            balanceSupplierName = "Supplier",
+                            balanceSupplierContractName = "Contract",
+                            redirectURI = "example.com",
+                        ),
                 )
 
             handler.validateAndReturnRequestCommand(model)
@@ -266,17 +291,17 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
                     authorizedParty = AUTHORIZED_PARTY,
                     requestType = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
                     meta =
-                    CreateRequestMeta(
-                        requestedBy = NOT_VALID_PARTY,
-                        requestedFrom = END_USER,
-                        requestedFromName = "From",
-                        requestedTo = END_USER,
-                        requestedForMeteringPointId = VALID_METERING_POINT_1,
-                        requestedForMeteringPointAddress = "addr",
-                        balanceSupplierName = "Supplier",
-                        balanceSupplierContractName = "Contract",
-                        redirectURI = "https://example.com",
-                    ),
+                        CreateRequestMeta(
+                            requestedBy = NOT_VALID_PARTY,
+                            requestedFrom = END_USER,
+                            requestedFromName = "From",
+                            requestedTo = END_USER,
+                            requestedForMeteringPointId = VALID_METERING_POINT_1,
+                            requestedForMeteringPointAddress = "addr",
+                            balanceSupplierName = "Supplier",
+                            balanceSupplierContractName = "Contract",
+                            redirectURI = "https://example.com",
+                        ),
                 )
 
             handler.validateAndReturnRequestCommand(model)
@@ -289,17 +314,17 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
                     authorizedParty = AUTHORIZED_PARTY,
                     requestType = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
                     meta =
-                    CreateRequestMeta(
-                        requestedBy = NON_EXISTING_PARTY,
-                        requestedFrom = END_USER,
-                        requestedFromName = "From",
-                        requestedTo = END_USER,
-                        requestedForMeteringPointId = VALID_METERING_POINT_1,
-                        requestedForMeteringPointAddress = "addr",
-                        balanceSupplierName = "Supplier",
-                        balanceSupplierContractName = "Contract",
-                        redirectURI = "https://example.com",
-                    ),
+                        CreateRequestMeta(
+                            requestedBy = NON_EXISTING_PARTY,
+                            requestedFrom = END_USER,
+                            requestedFromName = "From",
+                            requestedTo = END_USER,
+                            requestedForMeteringPointId = VALID_METERING_POINT_1,
+                            requestedForMeteringPointAddress = "addr",
+                            balanceSupplierName = "Supplier",
+                            balanceSupplierContractName = "Contract",
+                            redirectURI = "https://example.com",
+                        ),
                 )
 
             handler.validateAndReturnRequestCommand(model)
@@ -312,17 +337,17 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
                     authorizedParty = AUTHORIZED_PARTY,
                     requestType = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
                     meta =
-                    CreateRequestMeta(
-                        requestedBy = INACTIVE_PARTY,
-                        requestedFrom = END_USER,
-                        requestedFromName = "From",
-                        requestedTo = END_USER,
-                        requestedForMeteringPointId = VALID_METERING_POINT_1,
-                        requestedForMeteringPointAddress = "addr",
-                        balanceSupplierName = "Supplier",
-                        balanceSupplierContractName = "Contract",
-                        redirectURI = "https://example.com",
-                    ),
+                        CreateRequestMeta(
+                            requestedBy = INACTIVE_PARTY,
+                            requestedFrom = END_USER,
+                            requestedFromName = "From",
+                            requestedTo = END_USER,
+                            requestedForMeteringPointId = VALID_METERING_POINT_1,
+                            requestedForMeteringPointAddress = "addr",
+                            balanceSupplierName = "Supplier",
+                            balanceSupplierContractName = "Contract",
+                            redirectURI = "https://example.com",
+                        ),
                 )
 
             handler.validateAndReturnRequestCommand(model)
@@ -335,17 +360,17 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
                     authorizedParty = AUTHORIZED_PARTY,
                     requestType = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
                     meta =
-                    CreateRequestMeta(
-                        requestedBy = MATCHING_PARTY,
-                        requestedFrom = END_USER,
-                        requestedFromName = "From",
-                        requestedTo = END_USER,
-                        requestedForMeteringPointId = VALID_METERING_POINT_1,
-                        requestedForMeteringPointAddress = "addr",
-                        balanceSupplierName = "Supplier",
-                        balanceSupplierContractName = "Contract",
-                        redirectURI = "https://example.com",
-                    ),
+                        CreateRequestMeta(
+                            requestedBy = MATCHING_PARTY,
+                            requestedFrom = END_USER,
+                            requestedFromName = "From",
+                            requestedTo = END_USER,
+                            requestedForMeteringPointId = VALID_METERING_POINT_1,
+                            requestedForMeteringPointAddress = "addr",
+                            balanceSupplierName = "Supplier",
+                            balanceSupplierContractName = "Contract",
+                            redirectURI = "https://example.com",
+                        ),
                 )
 
             handler.validateAndReturnRequestCommand(model)
@@ -358,17 +383,17 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
                     authorizedParty = AUTHORIZED_PARTY,
                     requestType = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
                     meta =
-                    CreateRequestMeta(
-                        requestedBy = VALID_PARTY,
-                        requestedFrom = END_USER,
-                        requestedFromName = "From",
-                        requestedTo = ANOTHER_END_USER,
-                        requestedForMeteringPointId = VALID_METERING_POINT_1,
-                        requestedForMeteringPointAddress = "addr",
-                        balanceSupplierName = "Supplier",
-                        balanceSupplierContractName = "Contract",
-                        redirectURI = "https://example.com",
-                    ),
+                        CreateRequestMeta(
+                            requestedBy = VALID_PARTY,
+                            requestedFrom = END_USER,
+                            requestedFromName = "From",
+                            requestedTo = ANOTHER_END_USER,
+                            requestedForMeteringPointId = VALID_METERING_POINT_1,
+                            requestedForMeteringPointAddress = "addr",
+                            balanceSupplierName = "Supplier",
+                            balanceSupplierContractName = "Contract",
+                            redirectURI = "https://example.com",
+                        ),
                 )
 
             handler.validateAndReturnRequestCommand(model)
@@ -396,17 +421,17 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
                     authorizedParty = AUTHORIZED_PARTY,
                     requestType = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
                     meta =
-                    CreateRequestMeta(
-                        requestedBy = VALID_PARTY,
-                        requestedFrom = END_USER,
-                        requestedFromName = "From",
-                        requestedTo = END_USER,
-                        requestedForMeteringPointId = VALID_METERING_POINT_1,
-                        requestedForMeteringPointAddress = "addr",
-                        balanceSupplierName = "Supplier",
-                        balanceSupplierContractName = "Contract",
-                        redirectURI = "https://example.com",
-                    ),
+                        CreateRequestMeta(
+                            requestedBy = VALID_PARTY,
+                            requestedFrom = END_USER,
+                            requestedFromName = "From",
+                            requestedTo = END_USER,
+                            requestedForMeteringPointId = VALID_METERING_POINT_1,
+                            requestedForMeteringPointAddress = "addr",
+                            balanceSupplierName = "Supplier",
+                            balanceSupplierContractName = "Contract",
+                            redirectURI = "https://example.com",
+                        ),
                 )
 
             handlerWithMockedService.validateAndReturnRequestCommand(model)
@@ -434,17 +459,17 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
                     authorizedParty = AUTHORIZED_PARTY,
                     requestType = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
                     meta =
-                    CreateRequestMeta(
-                        requestedBy = VALID_PARTY,
-                        requestedFrom = END_USER,
-                        requestedFromName = "From",
-                        requestedTo = END_USER,
-                        requestedForMeteringPointId = VALID_METERING_POINT_1,
-                        requestedForMeteringPointAddress = "addr",
-                        balanceSupplierName = "Supplier",
-                        balanceSupplierContractName = "Contract",
-                        redirectURI = "https://example.com",
-                    ),
+                        CreateRequestMeta(
+                            requestedBy = VALID_PARTY,
+                            requestedFrom = END_USER,
+                            requestedFromName = "From",
+                            requestedTo = END_USER,
+                            requestedForMeteringPointId = VALID_METERING_POINT_1,
+                            requestedForMeteringPointAddress = "addr",
+                            balanceSupplierName = "Supplier",
+                            balanceSupplierContractName = "Contract",
+                            redirectURI = "https://example.com",
+                        ),
                 )
 
             handlerWithMockedService.validateAndReturnRequestCommand(model)
@@ -457,17 +482,17 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
                     authorizedParty = AUTHORIZED_PARTY,
                     requestType = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
                     meta =
-                    CreateRequestMeta(
-                        requestedBy = VALID_PARTY,
-                        requestedFrom = END_USER,
-                        requestedFromName = "From",
-                        requestedTo = END_USER,
-                        requestedForMeteringPointId = VALID_METERING_POINT_1,
-                        requestedForMeteringPointAddress = "addr",
-                        balanceSupplierName = "Supplier",
-                        balanceSupplierContractName = "Contract",
-                        redirectURI = "https://example.com",
-                    ),
+                        CreateRequestMeta(
+                            requestedBy = VALID_PARTY,
+                            requestedFrom = END_USER,
+                            requestedFromName = "From",
+                            requestedTo = END_USER,
+                            requestedForMeteringPointId = VALID_METERING_POINT_1,
+                            requestedForMeteringPointAddress = "addr",
+                            balanceSupplierName = "Supplier",
+                            balanceSupplierContractName = "Contract",
+                            redirectURI = "https://example.com",
+                        ),
                 )
 
             handler.validateAndReturnRequestCommand(model).shouldBeRight()
@@ -504,17 +529,17 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
                     authorizedParty = AUTHORIZED_PARTY,
                     requestType = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
                     meta =
-                    CreateRequestMeta(
-                        requestedBy = VALID_PARTY,
-                        requestedFrom = END_USER,
-                        requestedFromName = "From",
-                        requestedTo = END_USER,
-                        requestedForMeteringPointId = VALID_METERING_POINT_1,
-                        requestedForMeteringPointAddress = "addr",
-                        balanceSupplierName = "Supplier",
-                        balanceSupplierContractName = "Contract",
-                        redirectURI = "https://example.com",
-                    ),
+                        CreateRequestMeta(
+                            requestedBy = VALID_PARTY,
+                            requestedFrom = END_USER,
+                            requestedFromName = "From",
+                            requestedTo = END_USER,
+                            requestedForMeteringPointId = VALID_METERING_POINT_1,
+                            requestedForMeteringPointAddress = "addr",
+                            balanceSupplierName = "Supplier",
+                            balanceSupplierContractName = "Contract",
+                            redirectURI = "https://example.com",
+                        ),
                 )
             handlerWithMockedStromprisService.validateAndReturnRequestCommand(model).shouldBeRight()
             coVerify(exactly = 1) { mockStromprisService.getProductsByOrganizationNumber(any()) }
@@ -526,17 +551,17 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
                     authorizedParty = AUTHORIZED_PARTY,
                     requestType = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
                     meta =
-                    CreateRequestMeta(
-                        requestedBy = VALID_PARTY,
-                        requestedFrom = END_USER,
-                        requestedFromName = "From",
-                        requestedTo = END_USER,
-                        requestedForMeteringPointId = VALID_METERING_POINT_1,
-                        requestedForMeteringPointAddress = "addr",
-                        balanceSupplierName = "Supplier",
-                        balanceSupplierContractName = "Contract",
-                        redirectURI = "https://example.com",
-                    ),
+                        CreateRequestMeta(
+                            requestedBy = VALID_PARTY,
+                            requestedFrom = END_USER,
+                            requestedFromName = "From",
+                            requestedTo = END_USER,
+                            requestedForMeteringPointId = VALID_METERING_POINT_1,
+                            requestedForMeteringPointAddress = "addr",
+                            balanceSupplierName = "Supplier",
+                            balanceSupplierContractName = "Contract",
+                            redirectURI = "https://example.com",
+                        ),
                 )
 
             val command = handler.validateAndReturnRequestCommand(model).shouldBeRight()
@@ -553,16 +578,16 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
                     authorizedParty = AuthorizationParty(id = VALID_PARTY.idValue, type = Organization),
                     documentType = AuthorizationDocument.Type.ChangeOfBalanceSupplierForPerson,
                     meta =
-                    CreateDocumentMeta(
-                        requestedBy = VALID_PARTY,
-                        requestedFrom = END_USER,
-                        requestedTo = END_USER,
-                        requestedFromName = "From",
-                        requestedForMeteringPointId = VALID_METERING_POINT_1,
-                        requestedForMeteringPointAddress = "addr",
-                        balanceSupplierName = "Supplier",
-                        balanceSupplierContractName = "Contract",
-                    ),
+                        CreateDocumentMeta(
+                            requestedBy = VALID_PARTY,
+                            requestedFrom = END_USER,
+                            requestedTo = END_USER,
+                            requestedFromName = "From",
+                            requestedForMeteringPointId = VALID_METERING_POINT_1,
+                            requestedForMeteringPointAddress = "addr",
+                            balanceSupplierName = "Supplier",
+                            balanceSupplierContractName = "Contract",
+                        ),
                 )
 
             val command = handler.validateAndReturnDocumentCommand(model).shouldBeRight()

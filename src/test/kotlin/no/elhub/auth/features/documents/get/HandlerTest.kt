@@ -10,7 +10,7 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.plus
-import no.elhub.auth.features.businessprocesses.changeofbalancesupplier.today
+import no.elhub.auth.features.common.today
 import no.elhub.auth.features.common.QueryError
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.currentTimeUtc

@@ -52,7 +52,7 @@ import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.common.AuthorizationRequestProperty
 import no.elhub.auth.features.requests.create.model.CreateRequestMeta
 import no.elhub.auth.features.requests.create.model.CreateRequestModel
-import no.elhub.auth.features.requests.create.model.today
+import no.elhub.auth.features.common.today
 import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObject
 import java.util.UUID
 
