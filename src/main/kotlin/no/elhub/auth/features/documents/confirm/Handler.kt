@@ -17,8 +17,7 @@ import no.elhub.auth.features.grants.common.GrantPropertiesRepository
 import no.elhub.auth.features.grants.common.GrantRepository
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.slf4j.LoggerFactory
-import java.time.OffsetDateTime
-import java.time.ZoneOffset
+import no.elhub.auth.features.common.currentTimeUtc
 import kotlin.collections.component1
 import kotlin.collections.component2
 
@@ -54,7 +53,7 @@ class Handler(
             ConfirmError.IllegalStateError
         }
 
-        ensure(document.validTo >= OffsetDateTime.now(ZoneOffset.UTC)) {
+        ensure(document.validTo >= currentTimeUtc()) {
             ConfirmError.ExpiredError
         }
 

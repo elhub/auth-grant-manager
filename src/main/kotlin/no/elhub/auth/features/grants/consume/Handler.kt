@@ -8,8 +8,7 @@ import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.AuthorizationGrant.Status
 import no.elhub.auth.features.grants.common.GrantRepository
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import java.time.OffsetDateTime
-import java.time.ZoneOffset
+import no.elhub.auth.features.common.currentTimeUtc
 
 class Handler(
     private val repo: GrantRepository
@@ -28,7 +27,7 @@ class Handler(
                 .mapLeft { ConsumeError.GrantNotFound }
                 .bind()
 
-            ensure(originalGrant.validTo >= OffsetDateTime.now(ZoneOffset.UTC)) {
+            ensure(originalGrant.validTo >= currentTimeUtc()) {
                 ConsumeError.ExpiredError
             }
 

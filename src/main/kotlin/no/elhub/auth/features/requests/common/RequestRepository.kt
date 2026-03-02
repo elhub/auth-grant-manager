@@ -309,7 +309,7 @@ fun ResultRow.toAuthorizationRequest(
     val status: AuthorizationRequest.Status = when (dbStatus) {
         DatabaseRequestStatus.Accepted -> AuthorizationRequest.Status.Accepted
         DatabaseRequestStatus.Rejected -> AuthorizationRequest.Status.Rejected
-        DatabaseRequestStatus.Pending if validTo <= OffsetDateTime.now(ZoneOffset.UTC) -> AuthorizationRequest.Status.Expired
+        DatabaseRequestStatus.Pending if validTo <= currentTimeUtc() -> AuthorizationRequest.Status.Expired
         else -> AuthorizationRequest.Status.Pending
     }
     return AuthorizationRequest(

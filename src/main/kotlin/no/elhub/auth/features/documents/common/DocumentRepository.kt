@@ -332,7 +332,7 @@ fun ResultRow.toAuthorizationDocument(
     val status: AuthorizationDocument.Status = when {
         signedBy != null -> AuthorizationDocument.Status.Signed
         dbStatus == DatabaseStatus.Rejected -> AuthorizationDocument.Status.Rejected
-        dbStatus == DatabaseStatus.Pending && validTo <= OffsetDateTime.now(ZoneOffset.UTC) -> AuthorizationDocument.Status.Expired
+        dbStatus == DatabaseStatus.Pending && validTo <= currentTimeUtc() -> AuthorizationDocument.Status.Expired
         else -> dbStatus.toDocumentStatus()
     }
 
