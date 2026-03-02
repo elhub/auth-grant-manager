@@ -6,7 +6,7 @@ import no.elhub.auth.features.common.PGEnum
 import no.elhub.auth.features.common.RepositoryError
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.RepositoryWriteError
-import no.elhub.auth.features.common.currentTimeWithTimeZone
+import no.elhub.auth.features.common.currentTimeUtc
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.AuthorizationPartyRecord
 import no.elhub.auth.features.common.party.AuthorizationPartyTable
@@ -222,7 +222,7 @@ class ExposedGrantRepository(
             where = { AuthorizationGrantTable.id eq grantId }
         ) {
             it[grantStatus] = newStatus
-            it[updatedAt] = currentTimeWithTimeZone()
+            it[updatedAt] = currentTimeUtc()
         }
 
         if (rowsUpdated == 0) {
@@ -308,11 +308,11 @@ object AuthorizationGrantTable : UUIDTable("auth.authorization_grant") {
     val grantedFor = javaUUID("granted_for").references(AuthorizationPartyTable.id)
     val grantedBy = javaUUID("granted_by").references(AuthorizationPartyTable.id)
     val grantedTo = javaUUID("granted_to").references(AuthorizationPartyTable.id)
-    val grantedAt = timestampWithTimeZone("granted_at").clientDefault { currentTimeWithTimeZone() }
-    val validFrom = timestampWithTimeZone("valid_from").clientDefault { currentTimeWithTimeZone() }
-    val createdAt = timestampWithTimeZone("created_at").clientDefault { currentTimeWithTimeZone() }
-    val updatedAt = timestampWithTimeZone("updated_at").clientDefault { currentTimeWithTimeZone() }
-    val validTo = timestampWithTimeZone("valid_to").clientDefault { currentTimeWithTimeZone() }
+    val grantedAt = timestampWithTimeZone("granted_at").clientDefault { currentTimeUtc() }
+    val validFrom = timestampWithTimeZone("valid_from").clientDefault { currentTimeUtc() }
+    val createdAt = timestampWithTimeZone("created_at").clientDefault { currentTimeUtc() }
+    val updatedAt = timestampWithTimeZone("updated_at").clientDefault { currentTimeUtc() }
+    val validTo = timestampWithTimeZone("valid_to").clientDefault { currentTimeUtc() }
     val sourceType =
         customEnumeration(
             name = "source_type",
@@ -337,7 +337,7 @@ object AuthorizationScopeTable : UUIDTable(name = "auth.authorization_scope") {
         fromDb = { AuthorizationScope.PermissionType.valueOf(it as String) },
         toDb = { PGEnum("authorization_permission_type", it) }
     )
-    val createdAt = timestampWithTimeZone("created_at").clientDefault { currentTimeWithTimeZone() }
+    val createdAt = timestampWithTimeZone("created_at").clientDefault { currentTimeUtc() }
 }
 
 fun ResultRow.toAuthorizationGrant(

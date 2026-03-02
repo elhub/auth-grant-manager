@@ -6,7 +6,7 @@ import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
 import no.elhub.auth.features.common.PostgresTestContainer
 import no.elhub.auth.features.common.PostgresTestContainerExtension
-import no.elhub.auth.features.common.currentTimeWithTimeZone
+import no.elhub.auth.features.common.currentTimeUtc
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.ExposedPartyRepository
 import no.elhub.auth.features.common.party.PartyType
@@ -61,9 +61,9 @@ class ExposedDocumentPropertiesRepositoryTest : FunSpec({
                     requestedTo = AuthorizationParty(type = PartyType.Person, id = "1234567890"),
                     signedBy = AuthorizationParty(type = PartyType.Person, id = "1234567890"),
                     properties = emptyList(),
-                    validTo = currentTimeWithTimeZone().plusDays(1),
-                    createdAt = currentTimeWithTimeZone(),
-                    updatedAt = currentTimeWithTimeZone()
+                    validTo = currentTimeUtc().plusDays(1),
+                    createdAt = currentTimeUtc(),
+                    updatedAt = currentTimeUtc()
                 )
 
             transaction {

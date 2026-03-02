@@ -4,6 +4,7 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.toJavaLocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneId
+import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
@@ -16,7 +17,9 @@ fun OffsetDateTime.toTimeZoneOffsetString(): String =
         .truncatedTo(ChronoUnit.SECONDS)
         .format(ISO_OFFSET_FORMATTER)
 
-fun currentTimeWithTimeZone(): OffsetDateTime = OffsetDateTime.now(TIME_ZONE)
+fun currentTimeLocal(): OffsetDateTime = OffsetDateTime.now(TIME_ZONE)
+
+fun currentTimeUtc(): OffsetDateTime = OffsetDateTime.now(ZoneOffset.UTC)
 
 fun LocalDate.toTimeZoneOffsetDateTimeAtStartOfDay(): OffsetDateTime =
     this.toJavaLocalDate()

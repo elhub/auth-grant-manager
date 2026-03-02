@@ -6,7 +6,7 @@ import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.common.PGEnum
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.RepositoryWriteError
-import no.elhub.auth.features.common.currentTimeWithTimeZone
+import no.elhub.auth.features.common.currentTimeUtc
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.AuthorizationPartyRecord
 import no.elhub.auth.features.common.party.AuthorizationPartyTable
@@ -176,7 +176,7 @@ class ExposedDocumentRepository(
                             where = { AuthorizationDocumentTable.id eq documentId }
                         ) {
                             it[file] = signedFile
-                            it[updatedAt] = currentTimeWithTimeZone()
+                            it[updatedAt] = currentTimeUtc()
                         }
                     }.mapLeft {
                         RepositoryWriteError.UnexpectedError
@@ -294,9 +294,9 @@ object AuthorizationDocumentTable : UUIDTable("auth.authorization_document") {
     val requestedBy = javaUUID("requested_by").references(AuthorizationPartyTable.id)
     val requestedFrom = javaUUID("requested_from").references(AuthorizationPartyTable.id)
     val requestedTo = javaUUID("requested_to").references(AuthorizationPartyTable.id)
-    val validTo = timestampWithTimeZone("valid_to").clientDefault { currentTimeWithTimeZone() }
-    val createdAt = timestampWithTimeZone("created_at").clientDefault { currentTimeWithTimeZone() }
-    val updatedAt = timestampWithTimeZone("updated_at").clientDefault { currentTimeWithTimeZone() }
+    val validTo = timestampWithTimeZone("valid_to").clientDefault { currentTimeUtc() }
+    val createdAt = timestampWithTimeZone("created_at").clientDefault { currentTimeUtc() }
+    val updatedAt = timestampWithTimeZone("updated_at").clientDefault { currentTimeUtc() }
 }
 
 object AuthorizationDocumentScopeTable : Table("auth.authorization_document_scope") {

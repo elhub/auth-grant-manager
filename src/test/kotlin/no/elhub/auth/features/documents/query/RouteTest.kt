@@ -17,7 +17,7 @@ import no.elhub.auth.features.common.auth.AuthError
 import no.elhub.auth.features.common.auth.AuthorizationProvider
 import no.elhub.auth.features.common.auth.AuthorizedParty
 import no.elhub.auth.features.common.auth.RoleType
-import no.elhub.auth.features.common.currentTimeWithTimeZone
+import no.elhub.auth.features.common.currentTimeLocal
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toTimeZoneOffsetString
@@ -52,9 +52,9 @@ class RouteTest : FunSpec({
                 AuthorizationDocumentProperty("key1", "value1"),
                 AuthorizationDocumentProperty("key2", "value2"),
             ),
-            validTo = currentTimeWithTimeZone().plusDays(30),
-            createdAt = currentTimeWithTimeZone(),
-            updatedAt = currentTimeWithTimeZone()
+            validTo = currentTimeLocal().plusDays(30),
+            createdAt = currentTimeLocal(),
+            updatedAt = currentTimeLocal()
         ),
         AuthorizationDocument(
             id = UUID.fromString("f696ce1d-3efa-48aa-b3e5-3019a0bfbabd"),
@@ -71,9 +71,9 @@ class RouteTest : FunSpec({
                 AuthorizationDocumentProperty("key2", "value2"),
                 AuthorizationDocumentProperty("key3", "value3"),
             ),
-            validTo = currentTimeWithTimeZone().plusDays(30),
-            createdAt = currentTimeWithTimeZone(),
-            updatedAt = currentTimeWithTimeZone()
+            validTo = currentTimeLocal().plusDays(30),
+            createdAt = currentTimeLocal(),
+            updatedAt = currentTimeLocal()
         ),
     )
     val authorizedPerson = AuthorizedParty.Person(id = UUID.fromString("adde4fc4-55b4-40bb-b84b-9f39ec027ce0"))

@@ -7,7 +7,7 @@ import no.elhub.auth.features.common.PGEnum
 import no.elhub.auth.features.common.RepositoryError
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.RepositoryWriteError
-import no.elhub.auth.features.common.currentTimeWithTimeZone
+import no.elhub.auth.features.common.currentTimeUtc
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.AuthorizationPartyRecord
 import no.elhub.auth.features.common.party.AuthorizationPartyTable
@@ -141,7 +141,7 @@ class ExposedRequestRepository(
                 where = { AuthorizationRequestTable.id eq requestId }
             ) {
                 it[requestStatus] = DatabaseRequestStatus.Accepted
-                it[updatedAt] = currentTimeWithTimeZone()
+                it[updatedAt] = currentTimeUtc()
                 it[this.approvedBy] = approvedByRecord.id
             }
 
@@ -153,7 +153,7 @@ class ExposedRequestRepository(
             where = { AuthorizationRequestTable.id eq requestId }
         ) {
             it[requestStatus] = DatabaseRequestStatus.Rejected
-            it[updatedAt] = currentTimeWithTimeZone()
+            it[updatedAt] = currentTimeUtc()
         }
 
         updateAndFetch(requestId, rowsUpdated).bind()
@@ -278,9 +278,9 @@ object AuthorizationRequestTable : UUIDTable("auth.authorization_request") {
     val requestedFrom = javaUUID("requested_from").references(AuthorizationPartyTable.id)
     val requestedTo = javaUUID("requested_to").references(AuthorizationPartyTable.id)
     val approvedBy = javaUUID("approved_by").references(AuthorizationPartyTable.id).nullable()
-    val createdAt = timestampWithTimeZone("created_at").clientDefault { currentTimeWithTimeZone() }
-    val updatedAt = timestampWithTimeZone("updated_at").clientDefault { currentTimeWithTimeZone() }
-    val validTo = timestampWithTimeZone("valid_to").clientDefault { currentTimeWithTimeZone() }
+    val createdAt = timestampWithTimeZone("created_at").clientDefault { currentTimeUtc() }
+    val updatedAt = timestampWithTimeZone("updated_at").clientDefault { currentTimeUtc() }
+    val validTo = timestampWithTimeZone("valid_to").clientDefault { currentTimeUtc() }
 }
 
 enum class DatabaseRequestStatus {

@@ -41,7 +41,7 @@ import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.RunPostgresScriptExtension
 import no.elhub.auth.features.common.auth.PDPAuthorizationProvider
 import no.elhub.auth.features.common.commonModule
-import no.elhub.auth.features.common.currentTimeWithTimeZone
+import no.elhub.auth.features.common.currentTimeLocal
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
 import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
@@ -372,8 +372,8 @@ class AuthorizationDocumentRouteTest :
                             val validTo = Instant.parse(validTo).toLocalDateTime(TimeZone.of("Europe/Oslo")).date
 
                             assertTrue(validTo == defaultValidTo())
-                            assertTrue(Duration.between(createdAt, currentTimeWithTimeZone()).abs() < nowTolerance)
-                            assertTrue(Duration.between(updatedAt, currentTimeWithTimeZone()).abs() < nowTolerance)
+                            assertTrue(Duration.between(createdAt, currentTimeLocal()).abs() < nowTolerance)
+                            assertTrue(Duration.between(updatedAt, currentTimeLocal()).abs() < nowTolerance)
                         }
                         relationships.shouldNotBeNull().apply {
                             requestedBy.apply {
@@ -437,8 +437,8 @@ class AuthorizationDocumentRouteTest :
                                 val validTo = Instant.parse(validTo).toLocalDateTime(TimeZone.of("Europe/Oslo")).date
 
                                 assertTrue(validTo == defaultValidTo())
-                                assertTrue(Duration.between(createdAt, currentTimeWithTimeZone()) < nowTolerance)
-                                assertTrue(Duration.between(updatedAt, currentTimeWithTimeZone()) < nowTolerance)
+                                assertTrue(Duration.between(createdAt, currentTimeLocal()) < nowTolerance)
+                                assertTrue(Duration.between(updatedAt, currentTimeLocal()) < nowTolerance)
                             }
                             relationships.apply {
                                 requestedBy.data.apply {

@@ -4,7 +4,7 @@ import arrow.core.Either
 import no.elhub.auth.features.common.PGEnum
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.RepositoryWriteError
-import no.elhub.auth.features.common.currentTimeWithTimeZone
+import no.elhub.auth.features.common.currentTimeUtc
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
@@ -84,7 +84,7 @@ object AuthorizationPartyTable : UUIDTable("auth.authorization_party") {
     )
 
     val partyId = varchar("party_id", 255)
-    val createdAt = timestampWithTimeZone("created_at").default(currentTimeWithTimeZone())
+    val createdAt = timestampWithTimeZone("created_at").default(currentTimeUtc())
 
     init {
         index(isUnique = true, columns = arrayOf(type, partyId))

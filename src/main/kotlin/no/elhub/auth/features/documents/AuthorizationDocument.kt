@@ -1,6 +1,6 @@
 package no.elhub.auth.features.documents
 
-import no.elhub.auth.features.common.currentTimeWithTimeZone
+import no.elhub.auth.features.common.currentTimeUtc
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.documents.common.AuthorizationDocumentProperty
 import java.time.OffsetDateTime
@@ -40,8 +40,8 @@ data class AuthorizationDocument(
             requestedTo = requestedTo,
             properties = properties,
             validTo = validTo,
-            createdAt = currentTimeWithTimeZone(),
-            updatedAt = currentTimeWithTimeZone()
+            createdAt = currentTimeUtc(),
+            updatedAt = currentTimeUtc()
         )
     }
     enum class Status {
