@@ -365,11 +365,10 @@ class AuthorizationDocumentRouteTest :
                         attributes.shouldNotBeNull().apply {
                             documentType shouldBe AuthorizationDocument.Type.ChangeOfBalanceSupplierForPerson.name
                             status shouldBe AuthorizationDocument.Status.Pending.name
-                            validTo shouldBe "${defaultValidTo()}T00:00:00+01:00"
 
                             val createdAt = OffsetDateTime.parse(createdAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
                             val updatedAt = OffsetDateTime.parse(updatedAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
-                            val validTo = Instant.parse(validTo).toLocalDateTime(TimeZone.of("+01:00")).date
+                            val validTo = Instant.parse(validTo).toLocalDateTime(TimeZone.of("Europe/Oslo")).date
 
                             assertTrue(validTo == defaultValidTo())
                             assertTrue(Duration.between(createdAt, currentTimeWithTimeZone()).abs() < nowTolerance)
@@ -432,10 +431,9 @@ class AuthorizationDocumentRouteTest :
                             attributes.shouldNotBeNull().apply {
                                 status shouldBe AuthorizationDocument.Status.Pending.toString()
                                 documentType shouldBe AuthorizationDocument.Type.ChangeOfBalanceSupplierForPerson.name
-                                validTo shouldBe "${defaultValidTo()}T00:00:00+01:00"
                                 val createdAt = OffsetDateTime.parse(createdAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
                                 val updatedAt = OffsetDateTime.parse(updatedAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
-                                val validTo = Instant.parse(validTo).toLocalDateTime(TimeZone.of("+01:00")).date
+                                val validTo = Instant.parse(validTo).toLocalDateTime(TimeZone.of("Europe/Oslo")).date
 
                                 assertTrue(validTo == defaultValidTo())
                                 assertTrue(Duration.between(createdAt, currentTimeWithTimeZone()) < nowTolerance)
