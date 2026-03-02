@@ -11,9 +11,11 @@ import no.elhub.auth.features.businessprocesses.BusinessProcessError
 import no.elhub.auth.features.common.AuthPersonsTestContainer
 import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.common.commonModule
+import no.elhub.auth.features.common.defaultValidTo
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
 import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
+import no.elhub.auth.features.common.today
 import no.elhub.auth.features.grants.AuthorizationScope
 import no.elhub.auth.features.grants.common.CreateGrantProperties
 import no.elhub.auth.features.requests.AuthorizationRequest
@@ -26,9 +28,7 @@ import no.elhub.auth.features.requests.create.command.RequestMetaMarker
 import no.elhub.auth.features.requests.create.dto.CreateRequestAttributes
 import no.elhub.auth.features.requests.create.dto.CreateRequestMeta
 import no.elhub.auth.features.requests.create.dto.JsonApiCreateRequest
-import no.elhub.auth.features.common.today
 import no.elhub.auth.features.requests.create.model.CreateRequestModel
-import no.elhub.auth.features.common.defaultValidTo
 import no.elhub.auth.features.requests.create.requesttypes.RequestTypeValidationError
 import no.elhub.auth.features.requests.module
 import no.elhub.auth.features.requests.update.dto.JsonApiUpdateRequest
