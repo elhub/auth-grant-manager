@@ -79,16 +79,16 @@ fun handleValidateSignatureError(error: ConfirmError.ValidateSignaturesError): P
                 detail = "The end user signing certificate is not trusted."
             )
 
-    SignatureValidationError.MissingBankIdTrustedTimestamp,
-    SignatureValidationError.BankIdSigningCertNotValidAtTimestamp,
-    SignatureValidationError.BankIdCertificateRevoked,
-    SignatureValidationError.BankIdSignatureNotPadesLT,
-    SignatureValidationError.InvalidBankIdSignature ->
-        buildApiErrorResponse(
-            status = HttpStatusCode.UnprocessableEntity,
-            title = "End user signature validation failed",
-            detail = "The end user signature is invalid."
-        )
+        SignatureValidationError.MissingBankIdTrustedTimestamp,
+        SignatureValidationError.BankIdSigningCertNotValidAtTimestamp,
+        SignatureValidationError.BankIdCertificateRevoked,
+        SignatureValidationError.BankIdSignatureNotPadesLT,
+        SignatureValidationError.InvalidBankIdSignature ->
+            buildApiErrorResponse(
+                status = HttpStatusCode.UnprocessableEntity,
+                title = "End user signature validation failed",
+                detail = "The end user signature is invalid."
+            )
 
         SignatureValidationError.MissingBankIdSignature ->
             buildApiErrorResponse(
