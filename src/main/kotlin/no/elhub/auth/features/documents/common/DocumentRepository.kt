@@ -314,7 +314,7 @@ object SignatoriesTable : Table("auth.authorization_document_signatories") {
         .references(AuthorizationPartyTable.id)
     val signedBy = javaUUID("signed_by")
         .references(AuthorizationPartyTable.id)
-    val signedAt = timestamp("signed_at").clientDefault { java.time.Instant.now() }
+    val signedAt = timestampWithTimeZone("signed_at").clientDefault { currentTimeUtc() }
 
     override val primaryKey = PrimaryKey(authorizationDocumentId, requestedFrom)
 }
