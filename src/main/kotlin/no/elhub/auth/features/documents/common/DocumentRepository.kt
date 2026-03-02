@@ -36,8 +36,6 @@ import org.jetbrains.exposed.v1.jdbc.insertReturning
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.update
-import java.time.OffsetDateTime
-import java.time.ZoneOffset
 import java.util.UUID
 
 interface DocumentRepository {
