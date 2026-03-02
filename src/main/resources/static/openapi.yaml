@@ -95,6 +95,8 @@ paths:
           $ref: '#/components/responses/400BadRequestError'
         '401':
           $ref: '#/components/responses/401UnauthorizedError'
+        '422':
+          $ref: '#/components/responses/422UnprocessableEntityError'
         '500':
           $ref: '#/components/responses/500InternalServerError'
 
@@ -229,6 +231,8 @@ paths:
           $ref: '#/components/responses/400BadRequestError'
         '401':
           $ref: '#/components/responses/401UnauthorizedError'
+        '422':
+          $ref: '#/components/responses/422UnprocessableEntityError'
         '500':
           $ref: '#/components/responses/500InternalServerError'
 
@@ -328,6 +332,8 @@ paths:
           $ref: '#/components/responses/404NotFoundError'
         '409':
           $ref: '#/components/responses/409ConflictError'
+        '422':
+          $ref: '#/components/responses/422UnprocessableEntityError'
         '500':
           $ref: '#/components/responses/500InternalServerError'
 
@@ -422,6 +428,8 @@ paths:
           $ref: '#/components/responses/401UnauthorizedError'
         '403':
           $ref: '#/components/responses/403ForbiddenError'
+        '422':
+          $ref: '#/components/responses/422UnprocessableEntityError'
         '500':
           $ref: '#/components/responses/500InternalServerError'
 
@@ -501,6 +509,8 @@ paths:
           $ref: '#/components/responses/404NotFoundError'
         '409':
           $ref: '#/components/responses/409ConflictError'
+        '422':
+          $ref: '#/components/responses/422UnprocessableEntityError'
         '500':
           $ref: '#/components/responses/500InternalServerError'
     delete:
@@ -639,6 +649,13 @@ components:
     409ConflictError:
       description: >
         Conflict. The request could not be completed due to a conflict with the current state of the resource.
+      content:
+        application/json:
+          schema:
+            $ref: './schemas/json-api-error.schema.json'
+    422UnprocessableEntityError:
+      description: >
+        Unprocessable entity. The request was well-formed but failed validation.
       content:
         application/json:
           schema:

@@ -26,7 +26,7 @@ fun CreateError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollectio
         )
 
         CreateError.InvalidNinError -> buildApiErrorResponse(
-            status = HttpStatusCode.BadRequest,
+            status = HttpStatusCode.UnprocessableEntity,
             title = "Invalid national identity number",
             detail = "Provided national identity number is invalid"
         )

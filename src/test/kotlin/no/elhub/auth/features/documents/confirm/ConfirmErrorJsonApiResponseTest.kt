@@ -38,12 +38,12 @@ class ConfirmErrorJsonApiResponseTest : FunSpec({
             detail = "RequestedBy must match the authorized party."
         ),
         ConfirmError.IllegalStateError to Expectation(
-            status = HttpStatusCode.BadRequest,
+            status = HttpStatusCode.UnprocessableEntity,
             title = "Invalid status state",
             detail = "AuthorizationDocument must be in 'Pending' status to confirm."
         ),
         ConfirmError.ExpiredError to Expectation(
-            status = HttpStatusCode.BadRequest,
+            status = HttpStatusCode.UnprocessableEntity,
             title = "AuthorizationDocument has expired",
             detail = "Validity period has passed."
         )
@@ -75,42 +75,42 @@ class ConfirmErrorJsonApiResponseTest : FunSpec({
 
     listOf(
         SignatureValidationError.ElhubSigningCertNotTrusted to Expectation(
-            status = HttpStatusCode.BadRequest,
+            status = HttpStatusCode.UnprocessableEntity,
             title = "Elhub signature is not valid",
             detail = "The Elhub signature could not be validated. The AuthorizationDocument may have been tampered with."
         ),
         SignatureValidationError.InvalidElhubSignature to Expectation(
-            status = HttpStatusCode.BadRequest,
+            status = HttpStatusCode.UnprocessableEntity,
             title = "Elhub signature is not valid",
             detail = "The Elhub signature could not be validated. The AuthorizationDocument may have been tampered with."
         ),
         SignatureValidationError.MissingElhubSignature to Expectation(
-            status = HttpStatusCode.BadRequest,
+            status = HttpStatusCode.UnprocessableEntity,
             title = "Elhub signature is not valid",
             detail = "The Elhub signature could not be validated. The AuthorizationDocument may have been tampered with."
         ),
         SignatureValidationError.BankIdSigningCertNotFromExpectedRoot to Expectation(
-            status = HttpStatusCode.BadRequest,
+            status = HttpStatusCode.UnprocessableEntity,
             title = "End user signature validation failed",
             detail = "The end user signing certificate is not trusted."
         ),
         SignatureValidationError.InvalidBankIdSignature to Expectation(
-            status = HttpStatusCode.BadRequest,
+            status = HttpStatusCode.UnprocessableEntity,
             title = "End user signature validation failed",
             detail = "The end user signature is invalid."
         ),
         SignatureValidationError.MissingBankIdSignature to Expectation(
-            status = HttpStatusCode.BadRequest,
+            status = HttpStatusCode.UnprocessableEntity,
             title = "End user signature validation failed",
             detail = "The AuthorizationDocument is missing the end user signature."
         ),
         SignatureValidationError.MissingNationalId to Expectation(
-            status = HttpStatusCode.BadRequest,
+            status = HttpStatusCode.UnprocessableEntity,
             title = "End user signature validation failed",
             detail = "Could not extract the Norwegian national identity number from the end user signing certificate."
         ),
         SignatureValidationError.OriginalDocumentMismatch to Expectation(
-            status = HttpStatusCode.BadRequest,
+            status = HttpStatusCode.UnprocessableEntity,
             title = "Original AuthorizationDocument mismatch",
             detail = "The AuthorizationDocument provided for confirmation differs from the original generated AuthorizationDocument."
         )

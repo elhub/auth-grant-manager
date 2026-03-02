@@ -676,12 +676,12 @@ class AuthorizationGrantRouteTest : FunSpec({
                         )
                     }
 
-                    response.status shouldBe HttpStatusCode.BadRequest
+                    response.status shouldBe HttpStatusCode.UnprocessableEntity
                     val responseJson: JsonApiErrorCollection = response.body()
                     responseJson.errors.apply {
                         size shouldBe 1
                         this[0].apply {
-                            status shouldBe "400"
+                            status shouldBe "422"
                             title shouldBe "Illegal status state"
                             detail shouldBe "AuthorizationGrant must be 'Active' to get consumed."
                         }
@@ -708,13 +708,13 @@ class AuthorizationGrantRouteTest : FunSpec({
                         )
                     }
 
-                    response.status shouldBe HttpStatusCode.BadRequest
+                    response.status shouldBe HttpStatusCode.UnprocessableEntity
 
                     val responseJson: JsonApiErrorCollection = response.body()
                     responseJson.errors.apply {
                         size shouldBe 1
                         this[0].apply {
-                            status shouldBe "400"
+                            status shouldBe "422"
                             title shouldBe "AuthorizationGrant has expired"
                             detail shouldBe "Validity period has passed."
                         }
@@ -740,12 +740,12 @@ class AuthorizationGrantRouteTest : FunSpec({
                             ),
                         )
                     }
-                    response.status shouldBe HttpStatusCode.BadRequest
+                    response.status shouldBe HttpStatusCode.UnprocessableEntity
                     val responseJson: JsonApiErrorCollection = response.body()
                     responseJson.errors.apply {
                         size shouldBe 1
                         this[0].apply {
-                            status shouldBe "400"
+                            status shouldBe "422"
                             title shouldBe "Invalid status transition"
                             detail shouldBe "Only 'Exhausted' status is allowed."
                         }
