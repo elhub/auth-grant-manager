@@ -294,7 +294,6 @@ object AuthorizationGrantScopeTable : Table("auth.authorization_grant_scope") {
         .references(AuthorizationGrantTable.id, onDelete = ReferenceOption.CASCADE)
     val authorizationScopeId = javaUUID("authorization_scope_id")
         .references(AuthorizationScopeTable.id, onDelete = ReferenceOption.CASCADE)
-    val createdAt = timestampWithTimeZone("created_at").clientDefault { currentTimeWithTimeZone() }
     override val primaryKey = PrimaryKey(authorizationGrantId, authorizationScopeId)
 }
 
