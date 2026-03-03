@@ -15,7 +15,7 @@ import no.elhub.auth.features.common.auth.AuthError
 import no.elhub.auth.features.common.auth.AuthorizationProvider
 import no.elhub.auth.features.common.auth.AuthorizedParty
 import no.elhub.auth.features.common.auth.RoleType
-import no.elhub.auth.features.common.currentTimeWithTimeZone
+import no.elhub.auth.features.common.currentTimeUtc
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
@@ -47,9 +47,9 @@ class RouteTest : FunSpec({
         requestedBy = requestedByParty,
         requestedFrom = requestedFromParty,
         requestedTo = requestedToParty,
-        createdAt = currentTimeWithTimeZone(),
-        updatedAt = currentTimeWithTimeZone(),
-        validTo = currentTimeWithTimeZone().plusDays(30),
+        createdAt = currentTimeUtc(),
+        updatedAt = currentTimeUtc(),
+        validTo = currentTimeUtc().plusDays(30),
         properties = emptyList()
     )
 

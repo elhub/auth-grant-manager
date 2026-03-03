@@ -16,7 +16,7 @@ import no.elhub.auth.features.common.auth.AuthError
 import no.elhub.auth.features.common.auth.AuthorizationProvider
 import no.elhub.auth.features.common.auth.AuthorizedParty
 import no.elhub.auth.features.common.auth.RoleType
-import no.elhub.auth.features.common.currentTimeWithTimeZone
+import no.elhub.auth.features.common.currentTimeUtc
 import no.elhub.auth.features.grants.AuthorizationScope
 import no.elhub.auth.features.grants.common.dto.AuthorizationGrantScopesResponse
 import no.elhub.auth.setupAppWith
@@ -41,7 +41,7 @@ class RouteTest : FunSpec({
         authorizedResourceType = AuthorizationScope.AuthorizationResource.MeteringPoint,
         authorizedResourceId = "resource-id",
         permissionType = AuthorizationScope.PermissionType.ChangeOfBalanceSupplierForPerson,
-        createdAt = currentTimeWithTimeZone()
+        createdAt = currentTimeUtc()
     )
     val expectedScopes = listOf(scope)
 
