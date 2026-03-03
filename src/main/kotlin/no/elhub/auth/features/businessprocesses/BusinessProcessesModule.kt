@@ -23,6 +23,7 @@ fun Application.businessProcessesModule() {
                 stromprisService = get(),
                 edielService = get(),
                 edielEnvironment = get<EdielEnvironment>(named("edielEnvironment")),
+                validateRedirectUriFeature = get(named("validateRedirectUriFeature")),
                 validateBalanceSupplierContractName = get(named("validateBalanceSupplierContractName"))
             )
         }
@@ -34,6 +35,7 @@ fun Application.businessProcessesModule() {
                 stromprisService = get(),
                 edielService = get(),
                 edielEnvironment = get<EdielEnvironment>(named("edielEnvironment")),
+                validateRedirectUriFeature = get(named("validateRedirectUriFeature")),
                 validateBalanceSupplierContractName = get(named("validateBalanceSupplierContractName"))
             )
         }

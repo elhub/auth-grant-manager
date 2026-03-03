@@ -7,6 +7,9 @@ import org.koin.ktor.plugin.koinModule
 
 fun Application.edielServiceModule() {
     koinModule {
+        single<Boolean>(named("validateRedirectUriFeature")) {
+            environment.config.propertyOrNull("ediel.validateRedirectUriFeature")?.getString()?.toBoolean() ?: true
+        }
         single {
             val edielApiConfig = get<ApplicationConfig>().config("ediel")
             EdielApiConfig(

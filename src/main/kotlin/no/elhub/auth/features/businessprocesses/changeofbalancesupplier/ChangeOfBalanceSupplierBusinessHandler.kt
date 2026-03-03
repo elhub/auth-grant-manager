@@ -53,6 +53,7 @@ class ChangeOfBalanceSupplierBusinessHandler(
     private val stromprisService: StromprisService,
     private val edielService: EdielService,
     private val edielEnvironment: EdielEnvironment,
+    private val validateRedirectUriFeature: Boolean,
     private val validateBalanceSupplierContractName: Boolean
 ) : RequestBusinessHandler, DocumentBusinessHandler {
 
@@ -70,7 +71,9 @@ class ChangeOfBalanceSupplierBusinessHandler(
     ): Either<ChangeOfBalanceSupplierValidationError, ChangeOfBalanceSupplierBusinessCommand> =
         either {
             val command = validate(model).bind()
-            validateRedirectUriForRequest(model).bind()
+            if (validateRedirectUriFeature) {
+                validateRedirectUriForRequest(model).bind()
+            }
             command
         }
 

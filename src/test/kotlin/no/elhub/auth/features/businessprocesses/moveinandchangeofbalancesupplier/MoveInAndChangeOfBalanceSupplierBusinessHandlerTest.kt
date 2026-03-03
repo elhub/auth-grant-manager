@@ -104,6 +104,7 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
                 stromprisService = stromprisService,
                 edielService = edielService,
                 edielEnvironment = EdielEnvironment.PRODUCTION,
+                validateRedirectUriFeature = true,
                 validateBalanceSupplierContractName = false
             )
         }
@@ -248,6 +249,7 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
                 stromprisService = stromprisService,
                 edielService = edielService,
                 edielEnvironment = EdielEnvironment.TEST,
+                validateRedirectUriFeature = true,
                 validateBalanceSupplierContractName = false
             )
             coEvery { edielService.getPartyRedirect(any()) } returns Either.Right(
@@ -276,6 +278,41 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
                 )
 
             handlerWithTestEnvironment.validateAndReturnRequestCommand(model).shouldBeRight()
+        }
+
+        test("request validation skips redirect URI validation when feature toggle is disabled") {
+            val mockEdielService = mockk<EdielService>()
+            val handlerWithRedirectValidationDisabled = MoveInAndChangeOfBalanceSupplierBusinessHandler(
+                organisationsService = organisationsService,
+                meteringPointsService = meteringPointsService,
+                personService = personService,
+                stromprisService = stromprisService,
+                edielService = mockEdielService,
+                edielEnvironment = EdielEnvironment.PRODUCTION,
+                validateRedirectUriFeature = false,
+                validateBalanceSupplierContractName = false
+            )
+            val model =
+                CreateRequestModel(
+                    authorizedParty = AUTHORIZED_PARTY,
+                    requestType = AuthorizationRequest.Type.MoveInAndChangeOfBalanceSupplierForPerson,
+                    meta =
+                    CreateRequestMeta(
+                        requestedBy = VALID_PARTY,
+                        requestedFrom = ANOTHER_END_USER,
+                        requestedFromName = "From",
+                        requestedTo = ANOTHER_END_USER,
+                        requestedForMeteringPointId = VALID_METERING_POINT_1,
+                        requestedForMeteringPointAddress = "addr",
+                        balanceSupplierName = "Supplier",
+                        balanceSupplierContractName = "Contract",
+                        moveInDate = VALID_MOVEIN_DATE,
+                        redirectURI = "not-a-valid-uri",
+                    ),
+                )
+
+            handlerWithRedirectValidationDisabled.validateAndReturnRequestCommand(model).shouldBeRight()
+            coVerify(exactly = 0) { mockEdielService.getPartyRedirect(any()) }
         }
 
         test("request validation allows redirect URI when host is subdomain of Ediel domain") {
@@ -509,6 +546,7 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
                 stromprisService = stromprisService,
                 edielService = edielService,
                 edielEnvironment = EdielEnvironment.PRODUCTION,
+                validateRedirectUriFeature = true,
                 validateBalanceSupplierContractName = false
             )
 
@@ -550,6 +588,7 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
                 stromprisService = stromprisService,
                 edielService = edielService,
                 edielEnvironment = EdielEnvironment.PRODUCTION,
+                validateRedirectUriFeature = true,
                 validateBalanceSupplierContractName = false
             )
 
@@ -649,6 +688,7 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
                 stromprisService = mockStromprisService,
                 edielService = edielService,
                 edielEnvironment = EdielEnvironment.PRODUCTION,
+                validateRedirectUriFeature = true,
                 validateBalanceSupplierContractName = true
             )
             val model =

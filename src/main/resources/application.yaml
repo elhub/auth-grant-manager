@@ -70,6 +70,7 @@ idp:
   tokenUrl: ${IDP_TOKEN_URL}
 
 ediel:
+  validateRedirectUriFeature: ${VALIDATE_REDIRECT_URI_FEATURE:true}
   environment: ${EDIEL_ENV:production}
   serviceUrl: ${EDIEL_SERVICE_URL:https://ws.ediel.no/api}
   authentication:
