@@ -1,0 +1,163 @@
+package no.elhub.auth.features.requests.update
+
+import arrow.core.left
+import arrow.core.right
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldNotBeBlank
+import io.ktor.client.call.body
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.testing.testApplication
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.mockk
+import no.elhub.auth.features.common.auth.AuthError
+import no.elhub.auth.features.common.auth.AuthorizationProvider
+import no.elhub.auth.features.common.auth.AuthorizedParty
+import no.elhub.auth.features.common.currentTimeUtc
+import no.elhub.auth.features.common.party.AuthorizationParty
+import no.elhub.auth.features.common.party.PartyType
+import no.elhub.auth.features.requests.AuthorizationRequest
+import no.elhub.auth.features.requests.REQUESTS_PATH
+import no.elhub.auth.features.requests.update.dto.JsonApiUpdateRequest
+import no.elhub.auth.features.requests.update.dto.UpdateRequestAttributes
+import no.elhub.auth.features.requests.update.dto.UpdateRequestResponse
+import no.elhub.auth.patchJson
+import no.elhub.auth.setupAppWith
+import no.elhub.auth.validateConflictErrorResponse
+import no.elhub.auth.validateForbiddenResponse
+import no.elhub.auth.validateMalformedInputResponse
+import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObject
+import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
+import java.util.UUID
+
+class RouteTest : FunSpec({
+
+    val authorizedPerson = AuthorizedParty.Person(id = UUID.randomUUID())
+    lateinit var authProvider: AuthorizationProvider
+    lateinit var handler: Handler
+
+    val requestData = JsonApiRequestResourceObject(
+        id = authorizedPerson.id.toString(),
+        type = "AuthorizationRequest",
+        attributes = UpdateRequestAttributes(
+            status = AuthorizationRequest.Status.Pending
+        )
+    )
+    val requestBody = JsonApiUpdateRequest(data = requestData)
+
+    val requestedByParty = AuthorizationParty("gln1", PartyType.OrganizationEntity)
+    val requestedFromParty = AuthorizationParty("nin1", PartyType.Person)
+    val requestedToParty = AuthorizationParty("nin2", PartyType.Person)
+
+    beforeAny {
+        authProvider = mockk<AuthorizationProvider>()
+        handler = mockk<Handler>()
+    }
+
+    test("PATCH /{id} Should return unauthorized when endUser is AccessDenied") {
+        coEvery { authProvider.authorizeEndUser(any()) } returns AuthError.AccessDenied.left()
+        testApplication {
+            setupAppWith { route(handler, authProvider) }
+            val response = client.patchJson("/random-id", "")
+            validateForbiddenResponse(response)
+        }
+        coVerify(exactly = 0) { handler.invoke(any()) }
+    }
+
+    test("PATCH /{id} Should return bad request when having an invalid requestID") {
+        coEvery { authProvider.authorizeEndUser(any()) } returns authorizedPerson.right()
+        testApplication {
+            setupAppWith { route(handler, authProvider) }
+            val response = client.patchJson("/random-id", "")
+            validateMalformedInputResponse(response)
+        }
+        coVerify(exactly = 0) { handler.invoke(any()) }
+    }
+
+    test("PATCH /{id} should return bad request when input body is wrong") {
+        coEvery { authProvider.authorizeEndUser(any()) } returns authorizedPerson.right()
+        testApplication {
+            setupAppWith { route(handler, authProvider) }
+            val response = client.patchJson("/${authorizedPerson.id}", "{\"test\": \"badInput\" }")
+            response.status shouldBe HttpStatusCode.BadRequest
+            val responseJson: JsonApiErrorCollection = response.body()
+            responseJson.errors.apply {
+                size shouldBe 1
+                this[0].apply {
+                    title shouldBe "Missing required field in request body"
+                }
+            }
+        }
+        coVerify(exactly = 0) { handler.invoke(any()) }
+    }
+    test("PATCH /{id} should return bad request when id in path doesnt match the request body") {
+        coEvery { authProvider.authorizeEndUser(any()) } returns authorizedPerson.right()
+        testApplication {
+            setupAppWith { route(handler, authProvider) }
+            val response = client.patchJson("/${UUID.randomUUID()}", requestData)
+            response.status shouldBe HttpStatusCode.BadRequest
+            val responseJson: JsonApiErrorCollection = response.body()
+            responseJson.errors.apply {
+                size shouldBe 1
+
+                this[0].apply {
+                    title shouldBe "Missing required field in request body"
+                }
+            }
+        }
+        coVerify(exactly = 0) { handler.invoke(any()) }
+    }
+
+    test("PATCH /{id} should return Conflict when request type is not AuthorizationRequest") {
+        coEvery { authProvider.authorizeEndUser(any()) } returns authorizedPerson.right()
+        testApplication {
+            setupAppWith { route(handler, authProvider) }
+            val response = client.patchJson("/${authorizedPerson.id}", requestBody.copy(data = requestData.copy(type = "InvalidType")))
+            validateConflictErrorResponse(response)
+        }
+        coVerify(exactly = 0) { handler.invoke(any()) }
+    }
+
+    test("PATCH /{id} should return OK when handler returns") {
+        coEvery { authProvider.authorizeEndUser(any()) } returns authorizedPerson.right()
+        val authorizationRequest = AuthorizationRequest(
+            type = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
+            status = AuthorizationRequest.Status.Accepted,
+            validTo = currentTimeUtc(),
+            createdAt = currentTimeUtc(),
+            updatedAt = currentTimeUtc(),
+            requestedBy = requestedByParty,
+            requestedTo = requestedToParty,
+            requestedFrom = requestedFromParty,
+            id = authorizedPerson.id,
+            properties = emptyList()
+        )
+
+        coEvery { handler.invoke(any()) } returns authorizationRequest.right()
+        testApplication {
+            setupAppWith { route(handler, authProvider) }
+            val response = client.patchJson("/${authorizedPerson.id}", requestBody)
+            response.status shouldBe HttpStatusCode.OK
+            val body = response.body<UpdateRequestResponse>()
+            body.data.id shouldBe authorizationRequest.id.toString()
+            body.data.type shouldBe "AuthorizationRequest"
+            body.data.attributes.status shouldBe "Accepted"
+            body.data.attributes.requestType shouldBe "ChangeOfBalanceSupplierForPerson"
+            body.data.attributes.validTo.shouldNotBeBlank()
+            body.data.attributes.createdAt.shouldNotBeBlank()
+            body.data.attributes.updatedAt.shouldNotBeBlank()
+            body.data.relationships.requestedBy.data.id shouldBe requestedByParty.id
+            body.data.relationships.requestedBy.data.type shouldBe requestedByParty.type.name
+            body.data.relationships.requestedFrom.data.id shouldBe requestedFromParty.id
+            body.data.relationships.requestedFrom.data.type shouldBe requestedFromParty.type.name
+            body.data.relationships.requestedTo.data.id shouldBe requestedToParty.id
+            body.data.relationships.requestedTo.data.type shouldBe requestedToParty.type.name
+            body.data.relationships.approvedBy.shouldBeNull()
+            body.data.relationships.authorizationGrant.shouldBeNull()
+            body.data.meta.values shouldBe emptyMap()
+            body.data.links.self shouldBe "$REQUESTS_PATH/${authorizationRequest.id}"
+        }
+    }
+})
