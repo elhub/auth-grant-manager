@@ -12,7 +12,7 @@ import io.kotest.matchers.shouldNotBe
 import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.common.PostgresTestContainer
 import no.elhub.auth.features.common.PostgresTestContainerExtension
-import no.elhub.auth.features.common.currentTimeWithTimeZone
+import no.elhub.auth.features.common.currentTimeUtc
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.ExposedPartyRepository
 import no.elhub.auth.features.common.party.PartyType
@@ -55,9 +55,9 @@ class ExposedDocumentRepositoryTest :
                         requestedTo = AuthorizationParty(type = PartyType.Person, id = "1234567890"),
                         signedBy = AuthorizationParty(type = PartyType.Person, id = "1234567890"),
                         properties = emptyList(),
-                        validTo = currentTimeWithTimeZone().plusDays(1),
-                        createdAt = currentTimeWithTimeZone(),
-                        updatedAt = currentTimeWithTimeZone()
+                        validTo = currentTimeUtc().plusDays(1),
+                        createdAt = currentTimeUtc(),
+                        updatedAt = currentTimeUtc()
                     )
 
                 val scopes = listOf(
@@ -114,9 +114,9 @@ class ExposedDocumentRepositoryTest :
                     requestedTo = AuthorizationParty(type = PartyType.Person, id = "to-1"),
                     signedBy = AuthorizationParty(type = PartyType.Person, id = "signer-1"),
                     properties = emptyList(),
-                    validTo = currentTimeWithTimeZone().plusDays(1),
-                    createdAt = currentTimeWithTimeZone(),
-                    updatedAt = currentTimeWithTimeZone()
+                    validTo = currentTimeUtc().plusDays(1),
+                    createdAt = currentTimeUtc(),
+                    updatedAt = currentTimeUtc()
                 )
 
                 val otherDocument = AuthorizationDocument(
@@ -128,10 +128,10 @@ class ExposedDocumentRepositoryTest :
                     requestedFrom = AuthorizationParty(type = PartyType.Person, id = "from-2"),
                     requestedTo = AuthorizationParty(type = PartyType.Person, id = "to-2"),
                     signedBy = AuthorizationParty(type = PartyType.Person, id = "signer-2"),
-                    createdAt = currentTimeWithTimeZone(),
+                    createdAt = currentTimeUtc(),
                     properties = emptyList(),
-                    validTo = currentTimeWithTimeZone().plusDays(1),
-                    updatedAt = currentTimeWithTimeZone()
+                    validTo = currentTimeUtc().plusDays(1),
+                    updatedAt = currentTimeUtc()
                 )
 
                 transaction {

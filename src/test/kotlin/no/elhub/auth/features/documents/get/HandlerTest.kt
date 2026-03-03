@@ -10,13 +10,13 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.plus
-import no.elhub.auth.features.businessprocesses.changeofbalancesupplier.today
 import no.elhub.auth.features.common.QueryError
 import no.elhub.auth.features.common.RepositoryReadError
-import no.elhub.auth.features.common.currentTimeWithTimeZone
+import no.elhub.auth.features.common.currentTimeUtc
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
+import no.elhub.auth.features.common.today
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.AuthorizationDocumentProperty
 import no.elhub.auth.features.documents.common.DocumentRepository
@@ -31,7 +31,7 @@ class HandlerTest : FunSpec({
     val requestedTo = AuthorizationParty(id = "person-2", type = PartyType.Person)
     val grantValidFrom = today()
     val grantValidTo = today().plus(DatePeriod(years = 1))
-    val validTo = currentTimeWithTimeZone().plusDays(1)
+    val validTo = currentTimeUtc().plusDays(1)
     val scopeIds = listOf(UUID.randomUUID(), UUID.randomUUID())
 
     val documentId = UUID.randomUUID()
@@ -45,8 +45,8 @@ class HandlerTest : FunSpec({
         requestedTo = requestedTo,
         properties = listOf(AuthorizationDocumentProperty(key = "k", value = "v")),
         validTo = validTo,
-        createdAt = currentTimeWithTimeZone(),
-        updatedAt = currentTimeWithTimeZone()
+        createdAt = currentTimeUtc(),
+        updatedAt = currentTimeUtc()
     )
 
     val grant = AuthorizationGrant.create(

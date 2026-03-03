@@ -20,7 +20,7 @@ import no.elhub.auth.features.common.auth.AuthError
 import no.elhub.auth.features.common.auth.AuthorizationProvider
 import no.elhub.auth.features.common.auth.AuthorizedParty
 import no.elhub.auth.features.common.auth.RoleType
-import no.elhub.auth.features.common.currentTimeWithTimeZone
+import no.elhub.auth.features.common.currentTimeLocal
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
@@ -69,9 +69,9 @@ class RouteTest : FunSpec({
             AuthorizationDocumentProperty("key1", "value1"),
             AuthorizationDocumentProperty("key2", "value2"),
         ),
-        validTo = currentTimeWithTimeZone().plusDays(30),
-        createdAt = currentTimeWithTimeZone(),
-        updatedAt = currentTimeWithTimeZone()
+        validTo = currentTimeLocal().plusDays(30),
+        createdAt = currentTimeLocal(),
+        updatedAt = currentTimeLocal()
     )
 
     val examplePostBody = JsonApiCreateDocumentRequest(
@@ -266,10 +266,10 @@ private suspend fun validateCreateDocumentResponse(response: HttpResponse, creat
             validTo shouldBe defaultValidTo
 
             println(createdAt)
-            println(currentTimeWithTimeZone())
+            println(currentTimeLocal())
             println(updatedAt)
-            assertTrue(Duration.between(createdAt, currentTimeWithTimeZone()).abs() < nowTolerance)
-            assertTrue(Duration.between(updatedAt, currentTimeWithTimeZone()).abs() < nowTolerance)
+            assertTrue(Duration.between(createdAt, currentTimeLocal()).abs() < nowTolerance)
+            assertTrue(Duration.between(updatedAt, currentTimeLocal()).abs() < nowTolerance)
         }
         relationships.shouldNotBeNull().apply {
             requestedBy.apply {

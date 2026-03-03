@@ -1,6 +1,6 @@
 package no.elhub.auth.features.grants
 
-import no.elhub.auth.features.common.currentTimeWithTimeZone
+import no.elhub.auth.features.common.currentTimeUtc
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.grants.common.AuthorizationGrantProperty
 import java.time.OffsetDateTime
@@ -39,10 +39,10 @@ data class AuthorizationGrant(
                 grantedFor = grantedFor,
                 grantedBy = grantedBy,
                 grantedTo = grantedTo,
-                grantedAt = currentTimeWithTimeZone(),
+                grantedAt = currentTimeUtc(),
                 validFrom = validFrom,
-                createdAt = currentTimeWithTimeZone(),
-                updatedAt = currentTimeWithTimeZone(),
+                createdAt = currentTimeUtc(),
+                updatedAt = currentTimeUtc(),
                 validTo = validTo,
                 sourceId = sourceId,
                 sourceType = sourceType,

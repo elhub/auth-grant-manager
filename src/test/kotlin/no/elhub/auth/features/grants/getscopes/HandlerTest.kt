@@ -10,7 +10,7 @@ import io.mockk.mockk
 import no.elhub.auth.features.common.Constants
 import no.elhub.auth.features.common.QueryError
 import no.elhub.auth.features.common.RepositoryReadError
-import no.elhub.auth.features.common.currentTimeWithTimeZone
+import no.elhub.auth.features.common.currentTimeUtc
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.grants.AuthorizationGrant
@@ -37,11 +37,11 @@ class HandlerTest : FunSpec({
             grantedFor = grantedFor,
             grantedBy = grantedBy,
             grantedTo = grantedTo,
-            grantedAt = currentTimeWithTimeZone(),
-            validFrom = currentTimeWithTimeZone(),
-            createdAt = currentTimeWithTimeZone(),
-            updatedAt = currentTimeWithTimeZone(),
-            validTo = currentTimeWithTimeZone().plusYears(1),
+            grantedAt = currentTimeUtc(),
+            validFrom = currentTimeUtc(),
+            createdAt = currentTimeUtc(),
+            updatedAt = currentTimeUtc(),
+            validTo = currentTimeUtc().plusYears(1),
             sourceType = SourceType.Document,
             sourceId = UUID.randomUUID(),
             scopeIds = scopeIds,
@@ -54,7 +54,7 @@ class HandlerTest : FunSpec({
                 authorizedResourceType = AuthorizationScope.AuthorizationResource.MeteringPoint,
                 authorizedResourceId = "mp-1",
                 permissionType = AuthorizationScope.PermissionType.ChangeOfBalanceSupplierForPerson,
-                createdAt = currentTimeWithTimeZone(),
+                createdAt = currentTimeUtc(),
             )
         )
 

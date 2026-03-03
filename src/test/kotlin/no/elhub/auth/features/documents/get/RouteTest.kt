@@ -22,7 +22,7 @@ import no.elhub.auth.features.common.auth.AuthError
 import no.elhub.auth.features.common.auth.AuthorizationProvider
 import no.elhub.auth.features.common.auth.AuthorizedParty
 import no.elhub.auth.features.common.auth.RoleType
-import no.elhub.auth.features.common.currentTimeWithTimeZone
+import no.elhub.auth.features.common.currentTimeLocal
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toTimeZoneOffsetString
@@ -55,9 +55,9 @@ class RouteTest : FunSpec({
             AuthorizationDocumentProperty("key1", "value1"),
             AuthorizationDocumentProperty("key2", "value2"),
         ),
-        validTo = currentTimeWithTimeZone().plusDays(30),
-        createdAt = currentTimeWithTimeZone(),
-        updatedAt = currentTimeWithTimeZone()
+        validTo = currentTimeLocal().plusDays(30),
+        createdAt = currentTimeLocal(),
+        updatedAt = currentTimeLocal()
     )
     val authorizedPerson = AuthorizedParty.Person(id = UUID.fromString("1d024a64-abb0-47d1-9b81-5d98aaa1a8a9"))
     val authorizedOrg = AuthorizedParty.OrganizationEntity(gln = "1", role = RoleType.BalanceSupplier)

@@ -6,7 +6,7 @@ import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.common.PGEnum
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.RepositoryWriteError
-import no.elhub.auth.features.common.currentTimeWithTimeZone
+import no.elhub.auth.features.common.currentTimeUtc
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.AuthorizationPartyRecord
 import no.elhub.auth.features.common.party.AuthorizationPartyTable
@@ -28,7 +28,6 @@ import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.core.or
-import org.jetbrains.exposed.v1.javatime.timestamp
 import org.jetbrains.exposed.v1.javatime.timestampWithTimeZone
 import org.jetbrains.exposed.v1.jdbc.batchInsert
 import org.jetbrains.exposed.v1.jdbc.insert
@@ -36,8 +35,6 @@ import org.jetbrains.exposed.v1.jdbc.insertReturning
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.update
-import java.time.OffsetDateTime
-import java.time.ZoneOffset
 import java.util.UUID
 
 interface DocumentRepository {
@@ -176,7 +173,7 @@ class ExposedDocumentRepository(
                             where = { AuthorizationDocumentTable.id eq documentId }
                         ) {
                             it[file] = signedFile
-                            it[updatedAt] = currentTimeWithTimeZone()
+                            it[updatedAt] = currentTimeUtc()
                         }
                     }.mapLeft {
                         RepositoryWriteError.UnexpectedError
@@ -294,9 +291,9 @@ object AuthorizationDocumentTable : UUIDTable("auth.authorization_document") {
     val requestedBy = javaUUID("requested_by").references(AuthorizationPartyTable.id)
     val requestedFrom = javaUUID("requested_from").references(AuthorizationPartyTable.id)
     val requestedTo = javaUUID("requested_to").references(AuthorizationPartyTable.id)
-    val validTo = timestampWithTimeZone("valid_to").clientDefault { currentTimeWithTimeZone() }
-    val createdAt = timestampWithTimeZone("created_at").clientDefault { currentTimeWithTimeZone() }
-    val updatedAt = timestampWithTimeZone("updated_at").clientDefault { currentTimeWithTimeZone() }
+    val validTo = timestampWithTimeZone("valid_to").clientDefault { currentTimeUtc() }
+    val createdAt = timestampWithTimeZone("created_at").clientDefault { currentTimeUtc() }
+    val updatedAt = timestampWithTimeZone("updated_at").clientDefault { currentTimeUtc() }
 }
 
 object AuthorizationDocumentScopeTable : Table("auth.authorization_document_scope") {
@@ -314,7 +311,7 @@ object SignatoriesTable : Table("auth.authorization_document_signatories") {
         .references(AuthorizationPartyTable.id)
     val signedBy = javaUUID("signed_by")
         .references(AuthorizationPartyTable.id)
-    val signedAt = timestamp("signed_at").clientDefault { java.time.Instant.now() }
+    val signedAt = timestampWithTimeZone("signed_at").clientDefault { currentTimeUtc() }
 
     override val primaryKey = PrimaryKey(authorizationDocumentId, requestedFrom)
 }
@@ -332,7 +329,7 @@ fun ResultRow.toAuthorizationDocument(
     val status: AuthorizationDocument.Status = when {
         signedBy != null -> AuthorizationDocument.Status.Signed
         dbStatus == DatabaseStatus.Rejected -> AuthorizationDocument.Status.Rejected
-        dbStatus == DatabaseStatus.Pending && validTo <= OffsetDateTime.now(ZoneOffset.UTC) -> AuthorizationDocument.Status.Expired
+        dbStatus == DatabaseStatus.Pending && validTo <= currentTimeUtc() -> AuthorizationDocument.Status.Expired
         else -> dbStatus.toDocumentStatus()
     }
 

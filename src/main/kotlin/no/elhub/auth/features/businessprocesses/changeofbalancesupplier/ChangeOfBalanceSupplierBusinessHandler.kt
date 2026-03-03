@@ -7,9 +7,7 @@ import arrow.core.raise.either
 import arrow.core.right
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.TimeZone
 import kotlinx.datetime.plus
-import kotlinx.datetime.toLocalDateTime
 import no.elhub.auth.features.businessprocesses.BusinessProcessError
 import no.elhub.auth.features.businessprocesses.changeofbalancesupplier.domain.ChangeOfBalanceSupplierBusinessCommand
 import no.elhub.auth.features.businessprocesses.changeofbalancesupplier.domain.ChangeOfBalanceSupplierBusinessMeta
@@ -26,6 +24,7 @@ import no.elhub.auth.features.businessprocesses.structuredata.organisations.Part
 import no.elhub.auth.features.businessprocesses.structuredata.organisations.PartyType
 import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.common.person.PersonService
+import no.elhub.auth.features.common.today
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.DocumentBusinessHandler
 import no.elhub.auth.features.documents.create.command.DocumentCommand
@@ -36,8 +35,6 @@ import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.create.RequestBusinessHandler
 import no.elhub.auth.features.requests.create.command.RequestCommand
 import no.elhub.auth.features.requests.create.model.CreateRequestModel
-import kotlin.time.Clock
-import kotlin.time.ExperimentalTime
 
 private const val REGEX_NUMBERS_LETTERS_SYMBOLS = "^[a-zA-Z0-9_.-]*$"
 private const val REGEX_REQUESTED_FROM = REGEX_NUMBERS_LETTERS_SYMBOLS
@@ -81,6 +78,8 @@ class ChangeOfBalanceSupplierBusinessHandler(
             validTo = defaultValidTo(),
             validFrom = today(),
         )
+
+    private fun defaultValidTo(): LocalDate = today().plus(DatePeriod(days = 30))
 
     private suspend fun validate(
         model: ChangeOfBalanceSupplierBusinessModel
@@ -233,16 +232,4 @@ class ChangeOfBalanceSupplierBusinessHandler(
             meta = meta,
         ).right()
     }
-}
-
-@OptIn(ExperimentalTime::class)
-fun defaultValidTo(): LocalDate {
-    val now = Clock.System.now().toLocalDateTime(TimeZone.UTC).date
-    return now.plus(DatePeriod(days = 30))
-}
-
-@OptIn(ExperimentalTime::class)
-fun today(): LocalDate {
-    val now = Clock.System.now().toLocalDateTime(TimeZone.UTC).date
-    return now
 }

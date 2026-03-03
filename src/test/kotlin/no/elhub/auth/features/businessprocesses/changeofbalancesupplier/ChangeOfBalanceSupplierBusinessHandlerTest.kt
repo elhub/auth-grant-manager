@@ -8,6 +8,8 @@ import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import kotlinx.datetime.DatePeriod
+import kotlinx.datetime.plus
 import no.elhub.auth.features.businessprocesses.BusinessProcessError
 import no.elhub.auth.features.businessprocesses.datasharing.Attributes
 import no.elhub.auth.features.businessprocesses.datasharing.ProductsResponse
@@ -43,6 +45,7 @@ import no.elhub.auth.features.common.party.PartyType.Organization
 import no.elhub.auth.features.common.person.Person
 import no.elhub.auth.features.common.person.PersonService
 import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
+import no.elhub.auth.features.common.today
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.create.dto.CreateDocumentMeta
 import no.elhub.auth.features.documents.create.model.CreateDocumentModel
@@ -76,13 +79,19 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
 
         beforeSpec {
             meteringPointsService = MeteringPointsApi(
-                MeteringPointsApiConfig(serviceUrl = MeteringPointsServiceTestContainer.serviceUrl(), basicAuthConfig = BasicAuthConfig("user", "pass")),
+                MeteringPointsApiConfig(
+                    serviceUrl = MeteringPointsServiceTestContainer.serviceUrl(),
+                    basicAuthConfig = BasicAuthConfig("user", "pass")
+                ),
                 meteringPointsServiceHttpClient
             )
             organisationsService = OrganisationsApi(
                 OrganisationsApiConfig(
                     serviceUrl = OrganisationsServiceTestContainer.serviceUrl(),
-                    basicAuthConfig = no.elhub.auth.features.businessprocesses.structuredata.organisations.BasicAuthConfig("user", "pass")
+                    basicAuthConfig = no.elhub.auth.features.businessprocesses.structuredata.organisations.BasicAuthConfig(
+                        "user",
+                        "pass"
+                    )
                 ),
                 organisationsServiceHttpClient
             )
@@ -95,9 +104,27 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
             )
         }
 
-        coEvery { personService.findOrCreateByNin(END_USER.idValue) } returns Either.Right(Person(UUID.fromString(END_USER_ID_1)))
-        coEvery { personService.findOrCreateByNin(ANOTHER_END_USER.idValue) } returns Either.Right(Person(UUID.fromString(END_USER_ID_2)))
-        coEvery { personService.findOrCreateByNin(SHARED_END_USER.idValue) } returns Either.Right(Person(UUID.fromString(SHARED_END_USER_ID_1)))
+        coEvery { personService.findOrCreateByNin(END_USER.idValue) } returns Either.Right(
+            Person(
+                UUID.fromString(
+                    END_USER_ID_1
+                )
+            )
+        )
+        coEvery { personService.findOrCreateByNin(ANOTHER_END_USER.idValue) } returns Either.Right(
+            Person(
+                UUID.fromString(
+                    END_USER_ID_2
+                )
+            )
+        )
+        coEvery { personService.findOrCreateByNin(SHARED_END_USER.idValue) } returns Either.Right(
+            Person(
+                UUID.fromString(
+                    SHARED_END_USER_ID_1
+                )
+            )
+        )
 
         test("request validation fails on missing requestedFromName") {
             val model =
@@ -542,7 +569,7 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
             val command = handler.validateAndReturnRequestCommand(model).shouldBeRight()
 
             command.type shouldBe AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson
-            command.validTo shouldBe defaultValidTo().toTimeZoneOffsetDateTimeAtStartOfDay()
+            command.validTo shouldBe today().plus(DatePeriod(days = 30)).toTimeZoneOffsetDateTimeAtStartOfDay()
             command.meta.toMetaAttributes()["redirectURI"] shouldBe "https://example.com"
             command.meta.toMetaAttributes().containsKey("requestedForMeterNumber") shouldBe true
         }

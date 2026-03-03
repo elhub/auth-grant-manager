@@ -1,6 +1,6 @@
 package no.elhub.auth.features.grants
 
-import no.elhub.auth.features.common.currentTimeWithTimeZone
+import no.elhub.auth.features.common.currentTimeUtc
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -22,7 +22,7 @@ data class AuthorizationScope(
                 authorizedResourceType = authorizationResourceType,
                 authorizedResourceId = authorizedResourceId,
                 permissionType = permissionType,
-                createdAt = currentTimeWithTimeZone()
+                createdAt = currentTimeUtc()
             )
     }
 

@@ -12,8 +12,6 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.plus
-import no.elhub.auth.features.businessprocesses.changeofbalancesupplier.defaultValidTo
-import no.elhub.auth.features.businessprocesses.changeofbalancesupplier.today
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.RepositoryWriteError
 import no.elhub.auth.features.common.party.AuthorizationParty
@@ -23,6 +21,7 @@ import no.elhub.auth.features.common.party.PartyIdentifierType
 import no.elhub.auth.features.common.party.PartyService
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
+import no.elhub.auth.features.common.today
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.DocumentBusinessHandler
 import no.elhub.auth.features.documents.common.DocumentRepository
@@ -50,7 +49,7 @@ class HandlerTest : FunSpec({
     fun createDocument(
         documentId: UUID,
         status: AuthorizationDocument.Status = AuthorizationDocument.Status.Pending,
-        validTo: OffsetDateTime = defaultValidTo().toTimeZoneOffsetDateTimeAtStartOfDay(),
+        validTo: OffsetDateTime = today().plus(DatePeriod(days = 30)).toTimeZoneOffsetDateTimeAtStartOfDay(),
         requestedBy: AuthorizationParty = authorizationParty,
         requestedFromParty: AuthorizationParty = requestedFrom,
         requestedToParty: AuthorizationParty = requestedTo
