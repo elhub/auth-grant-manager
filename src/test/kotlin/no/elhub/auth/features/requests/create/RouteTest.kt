@@ -146,8 +146,8 @@ class RouteTest : FunSpec({
             )
             val response = client.postJson("/", wrongTypeBody)
             response.status shouldBe HttpStatusCode.Conflict
-            coVerify(exactly = 0) { handler.invoke(any()) }
         }
+        coVerify(exactly = 0) { handler.invoke(any()) }
     }
 
     test("POST / returns 400 when handler fails with InvalidNinError") {
@@ -156,12 +156,12 @@ class RouteTest : FunSpec({
         testApplication {
             setupAppWith { route(handler, authProvider) }
             val response = client.postJson("/", examplePostBody)
-            response.status shouldBe HttpStatusCode.BadRequest
+            response.status shouldBe HttpStatusCode.UnprocessableEntity
             val responseJson: JsonApiErrorCollection = response.body()
             responseJson.errors.apply {
                 size shouldBe 1
                 this[0].apply {
-                    status shouldBe "400"
+                    status shouldBe "422"
                     title shouldBe "Invalid national identity number"
                     detail shouldBe "Provided national identity number is invalid"
                 }
