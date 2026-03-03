@@ -25,6 +25,7 @@ import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.testing.testApplication
+import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.plus
@@ -40,7 +41,6 @@ import no.elhub.auth.features.common.RunPostgresScriptExtension
 import no.elhub.auth.features.common.auth.PDPAuthorizationProvider
 import no.elhub.auth.features.common.commonModule
 import no.elhub.auth.features.common.currentTimeLocal
-import no.elhub.auth.features.common.defaultValidTo
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
 import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
@@ -371,7 +371,7 @@ class AuthorizationDocumentRouteTest :
                             val updatedAt = OffsetDateTime.parse(updatedAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
                             val validTo = Instant.parse(validTo).toLocalDateTime(TimeZone.of("Europe/Oslo")).date
 
-                            assertTrue(validTo == defaultValidTo())
+                            assertTrue(validTo == today().plus(DatePeriod(days = 30)))
                             assertTrue(Duration.between(createdAt, currentTimeLocal()).abs() < nowTolerance)
                             assertTrue(Duration.between(updatedAt, currentTimeLocal()).abs() < nowTolerance)
                         }
@@ -436,7 +436,7 @@ class AuthorizationDocumentRouteTest :
                                 val updatedAt = OffsetDateTime.parse(updatedAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
                                 val validTo = Instant.parse(validTo).toLocalDateTime(TimeZone.of("Europe/Oslo")).date
 
-                                assertTrue(validTo == defaultValidTo())
+                                assertTrue(validTo == today().plus(DatePeriod(days = 30)))
                                 assertTrue(Duration.between(createdAt, currentTimeLocal()) < nowTolerance)
                                 assertTrue(Duration.between(updatedAt, currentTimeLocal()) < nowTolerance)
                             }
@@ -856,7 +856,7 @@ private class TestDocumentBusinessHandler : DocumentBusinessHandler {
                 requestedFrom = meta.requestedFrom,
                 requestedTo = meta.requestedTo,
                 requestedBy = meta.requestedBy,
-                validTo = defaultValidTo().toTimeZoneOffsetDateTimeAtStartOfDay(),
+                validTo = today().plus(DatePeriod(days = 30)).toTimeZoneOffsetDateTimeAtStartOfDay(),
                 scopes = listOf(
                     CreateScopeData(
                         authorizedResourceType = AuthorizationScope.AuthorizationResource.MeteringPoint,
@@ -882,7 +882,7 @@ private class TestDocumentBusinessHandler : DocumentBusinessHandler {
     override fun getCreateGrantProperties(document: AuthorizationDocument): CreateGrantProperties =
         CreateGrantProperties(
             validFrom = today(),
-            validTo = defaultValidTo()
+            validTo = today().plus(DatePeriod(days = 30))
         )
 }
 

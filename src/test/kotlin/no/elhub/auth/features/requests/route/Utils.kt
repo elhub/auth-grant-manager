@@ -7,11 +7,12 @@ import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.testing.ApplicationTestBuilder
+import kotlinx.datetime.DatePeriod
+import kotlinx.datetime.plus
 import no.elhub.auth.features.businessprocesses.BusinessProcessError
 import no.elhub.auth.features.common.AuthPersonsTestContainer
 import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.common.commonModule
-import no.elhub.auth.features.common.defaultValidTo
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
 import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
@@ -94,7 +95,7 @@ class TestRequestBusinessHandler : RequestBusinessHandler {
                         requestedFrom = meta.requestedFrom,
                         requestedBy = meta.requestedBy,
                         requestedTo = meta.requestedTo,
-                        validTo = defaultValidTo().toTimeZoneOffsetDateTimeAtStartOfDay(),
+                        validTo = today().plus(DatePeriod(days = 30)).toTimeZoneOffsetDateTimeAtStartOfDay(),
                         scopes = listOf(
                             CreateScopeData(
                                 authorizedResourceType = AuthorizationScope.AuthorizationResource.MeteringPoint,
@@ -120,7 +121,7 @@ class TestRequestBusinessHandler : RequestBusinessHandler {
     override fun getCreateGrantProperties(request: AuthorizationRequest): CreateGrantProperties =
         CreateGrantProperties(
             validFrom = today(),
-            validTo = defaultValidTo(),
+            validTo = today().plus(DatePeriod(days = 30)),
         )
 }
 

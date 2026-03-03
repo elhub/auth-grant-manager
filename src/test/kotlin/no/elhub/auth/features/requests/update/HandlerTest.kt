@@ -10,7 +10,6 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.plus
-import no.elhub.auth.features.common.defaultValidTo
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyService
 import no.elhub.auth.features.common.party.PartyType
@@ -33,7 +32,7 @@ class HandlerTest : FunSpec({
 
     fun createRequest(
         requestId: UUID,
-        validTo: OffsetDateTime = defaultValidTo().toTimeZoneOffsetDateTimeAtStartOfDay(),
+        validTo: OffsetDateTime = today().plus(DatePeriod(days = 30)).toTimeZoneOffsetDateTimeAtStartOfDay(),
         requestedByParty: AuthorizationParty = requestedBy,
         requestedFromParty: AuthorizationParty = requestedFrom,
         requestedToParty: AuthorizationParty = requestedTo

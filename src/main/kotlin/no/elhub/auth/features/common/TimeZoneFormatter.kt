@@ -1,9 +1,7 @@
 package no.elhub.auth.features.common
 
-import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
-import kotlinx.datetime.plus
 import kotlinx.datetime.toJavaLocalDate
 import kotlinx.datetime.toLocalDateTime
 import java.time.OffsetDateTime
@@ -35,5 +33,3 @@ fun LocalDate.toTimeZoneOffsetDateTimeAtStartOfDay(): OffsetDateTime =
 @OptIn(ExperimentalTime::class)
 fun today(): LocalDate = Clock.System.now().toLocalDateTime(TimeZone.UTC).date
 
-@OptIn(ExperimentalTime::class)
-fun defaultValidTo(): LocalDate = today().plus(DatePeriod(days = 30))

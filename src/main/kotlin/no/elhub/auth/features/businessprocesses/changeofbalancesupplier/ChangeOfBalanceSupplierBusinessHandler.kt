@@ -19,8 +19,10 @@ import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.Met
 import no.elhub.auth.features.businessprocesses.structuredata.organisations.OrganisationsService
 import no.elhub.auth.features.businessprocesses.structuredata.organisations.PartyStatus
 import no.elhub.auth.features.businessprocesses.structuredata.organisations.PartyType
+import kotlinx.datetime.DatePeriod
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.plus
 import no.elhub.auth.features.common.CreateScopeData
-import no.elhub.auth.features.common.defaultValidTo
 import no.elhub.auth.features.common.person.PersonService
 import no.elhub.auth.features.common.today
 import no.elhub.auth.features.documents.AuthorizationDocument
@@ -76,6 +78,8 @@ class ChangeOfBalanceSupplierBusinessHandler(
             validTo = defaultValidTo(),
             validFrom = today(),
         )
+
+    private fun defaultValidTo(): LocalDate = today().plus(DatePeriod(days = 30))
 
     private suspend fun validate(
         model: ChangeOfBalanceSupplierBusinessModel

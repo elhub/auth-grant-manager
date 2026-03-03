@@ -12,9 +12,11 @@ import io.mockk.mockk
 import io.mockk.verify
 import no.elhub.auth.features.businessprocesses.BusinessProcessError
 import no.elhub.auth.features.businessprocesses.changeofbalancesupplier.ChangeOfBalanceSupplierValidationError
+import kotlinx.datetime.DatePeriod
+import kotlinx.datetime.plus
 import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.common.RepositoryWriteError
-import no.elhub.auth.features.common.defaultValidTo
+import no.elhub.auth.features.common.today
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyError
 import no.elhub.auth.features.common.party.PartyIdentifier
@@ -73,7 +75,7 @@ class HandlerTest : FunSpec({
             requestedFrom = requestedFromIdentifier,
             requestedTo = requestedToIdentifier,
             requestedBy = requestedByIdentifier,
-            validTo = defaultValidTo().toTimeZoneOffsetDateTimeAtStartOfDay(),
+            validTo = today().plus(DatePeriod(days = 30)).toTimeZoneOffsetDateTimeAtStartOfDay(),
             scopes = listOf(
                 CreateScopeData(
                     authorizedResourceType = AuthorizationScope.AuthorizationResource.MeteringPoint,

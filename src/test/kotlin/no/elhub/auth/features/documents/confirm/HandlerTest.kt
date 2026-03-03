@@ -14,7 +14,7 @@ import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.plus
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.RepositoryWriteError
-import no.elhub.auth.features.common.defaultValidTo
+import no.elhub.auth.features.common.today
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyError
 import no.elhub.auth.features.common.party.PartyIdentifier
@@ -50,7 +50,7 @@ class HandlerTest : FunSpec({
     fun createDocument(
         documentId: UUID,
         status: AuthorizationDocument.Status = AuthorizationDocument.Status.Pending,
-        validTo: OffsetDateTime = defaultValidTo().toTimeZoneOffsetDateTimeAtStartOfDay(),
+        validTo: OffsetDateTime = today().plus(DatePeriod(days = 30)).toTimeZoneOffsetDateTimeAtStartOfDay(),
         requestedBy: AuthorizationParty = authorizationParty,
         requestedFromParty: AuthorizationParty = requestedFrom,
         requestedToParty: AuthorizationParty = requestedTo

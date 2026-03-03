@@ -36,8 +36,10 @@ import no.elhub.auth.features.businessprocesses.structuredata.organisations.Orga
 import no.elhub.auth.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.NOT_BALANCE_SUPPLIER_PARTY_ID
 import no.elhub.auth.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.VALID_PARTY_ID
 import no.elhub.auth.features.businessprocesses.structuredata.organisations.organisationsServiceHttpClient
-import no.elhub.auth.features.common.defaultValidTo
+import kotlinx.datetime.DatePeriod
+import kotlinx.datetime.plus
 import no.elhub.auth.features.common.party.AuthorizationParty
+import no.elhub.auth.features.common.today
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
 import no.elhub.auth.features.common.party.PartyType.Organization
@@ -567,7 +569,7 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
             val command = handler.validateAndReturnRequestCommand(model).shouldBeRight()
 
             command.type shouldBe AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson
-            command.validTo shouldBe defaultValidTo().toTimeZoneOffsetDateTimeAtStartOfDay()
+            command.validTo shouldBe today().plus(DatePeriod(days = 30)).toTimeZoneOffsetDateTimeAtStartOfDay()
             command.meta.toMetaAttributes()["redirectURI"] shouldBe "https://example.com"
             command.meta.toMetaAttributes().containsKey("requestedForMeterNumber") shouldBe true
         }
