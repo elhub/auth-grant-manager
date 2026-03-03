@@ -264,7 +264,9 @@ class SignatureServiceTest : FunSpec({
                 pdfBytes = unsignedPdfBytes,
                 signingCert = fakeElhubCerts.signingCert,
                 chain = fakeElhubCerts.chain,
-                signingKey = fakeElhubCerts.signingKey.private
+                signingKey = fakeElhubCerts.signingKey.private,
+                signatureLevel = SignatureLevel.PAdES_BASELINE_B
+
             )
             val bankIdSignedPdfBytes = endUserSignatureTestHelper.sign(
                 pdfBytes = elhubSignedPdfBytes,
@@ -288,6 +290,31 @@ class SignatureServiceTest : FunSpec({
             val pdfValidationResult = signingService.validateSignaturesAndReturnSignatory(bankIdSignedPdfBytes, originalElhubSignedPdfBytes)
 
             pdfValidationResult.shouldBeLeft(SignatureValidationError.OriginalDocumentMismatch)
+        }
+
+        test("Should return BankIdCertificateRevoked when is revoked") {
+            val elhubSignedPdfBytes = signingService.sign(unsignedPdfBytes).shouldBeRight()
+            val bankIdSignedPdfBytes = endUserSignatureTestHelper.signWithRevokedCertificate(
+                pdfBytes = elhubSignedPdfBytes,
+                nationalIdentityNumber = nationalIdentityNumber
+            )
+
+            val pdfValidationResult = signingService.validateSignaturesAndReturnSignatory(bankIdSignedPdfBytes, elhubSignedPdfBytes)
+
+            pdfValidationResult.shouldBeLeft(SignatureValidationError.BankIdCertificateRevoked)
+        }
+
+        test("Should return BankIdSignatureNotPadesLT when BankId signature is Pades B-T") {
+            val elhubSignedPdfBytes = signingService.sign(unsignedPdfBytes).shouldBeRight()
+            val bankIdSignedPdfBytes = endUserSignatureTestHelper.sign(
+                pdfBytes = elhubSignedPdfBytes,
+                nationalIdentityNumber = nationalIdentityNumber,
+                signatureLevel = SignatureLevel.PAdES_BASELINE_T
+            )
+
+            val pdfValidationResult = signingService.validateSignaturesAndReturnSignatory(bankIdSignedPdfBytes, elhubSignedPdfBytes)
+
+            pdfValidationResult.shouldBeLeft(SignatureValidationError.BankIdSignatureNotPadesLT)
         }
     }
 })

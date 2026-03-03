@@ -28,8 +28,9 @@ import kotlin.time.ExperimentalTime
 class ExposedRequestRepositoryTest : FunSpec({
     extensions(
         PostgresTestContainerExtension(),
+        RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-party.sql"),
         RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-scopes.sql"),
-        RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-requests.sql")
+        RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-requests.sql"),
     )
     val partyRepo = ExposedPartyRepository()
     val requestPropertiesRepo = ExposedRequestPropertiesRepository()

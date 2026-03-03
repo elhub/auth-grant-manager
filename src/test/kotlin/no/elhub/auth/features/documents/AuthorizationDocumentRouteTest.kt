@@ -45,6 +45,7 @@ import no.elhub.auth.features.common.currentTimeWithTimeZone
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
 import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
+import no.elhub.auth.features.documents.TestCertificateFactory
 import no.elhub.auth.features.documents.common.DocumentBusinessHandler
 import no.elhub.auth.features.documents.create.command.DocumentCommand
 import no.elhub.auth.features.documents.create.dto.CreateDocumentMeta
@@ -365,11 +366,10 @@ class AuthorizationDocumentRouteTest :
                         attributes.shouldNotBeNull().apply {
                             documentType shouldBe AuthorizationDocument.Type.ChangeOfBalanceSupplierForPerson.name
                             status shouldBe AuthorizationDocument.Status.Pending.name
-                            validTo shouldBe "${defaultValidTo()}T00:00:00+01:00"
 
                             val createdAt = OffsetDateTime.parse(createdAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
                             val updatedAt = OffsetDateTime.parse(updatedAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
-                            val validTo = Instant.parse(validTo).toLocalDateTime(TimeZone.of("+01:00")).date
+                            val validTo = Instant.parse(validTo).toLocalDateTime(TimeZone.of("Europe/Oslo")).date
 
                             assertTrue(validTo == defaultValidTo())
                             assertTrue(Duration.between(createdAt, currentTimeWithTimeZone()).abs() < nowTolerance)
@@ -432,10 +432,9 @@ class AuthorizationDocumentRouteTest :
                             attributes.shouldNotBeNull().apply {
                                 status shouldBe AuthorizationDocument.Status.Pending.toString()
                                 documentType shouldBe AuthorizationDocument.Type.ChangeOfBalanceSupplierForPerson.name
-                                validTo shouldBe "${defaultValidTo()}T00:00:00+01:00"
                                 val createdAt = OffsetDateTime.parse(createdAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
                                 val updatedAt = OffsetDateTime.parse(updatedAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
-                                val validTo = Instant.parse(validTo).toLocalDateTime(TimeZone.of("+01:00")).date
+                                val validTo = Instant.parse(validTo).toLocalDateTime(TimeZone.of("Europe/Oslo")).date
 
                                 assertTrue(validTo == defaultValidTo())
                                 assertTrue(Duration.between(createdAt, currentTimeWithTimeZone()) < nowTolerance)
@@ -552,7 +551,12 @@ class AuthorizationDocumentRouteTest :
                 }
 
                 test("Put signed file should return 204") {
-                    val documentSignedByPerson = EndUserSignatureTestHelper().sign(
+                    val documentSignedByPerson = EndUserSignatureTestHelper(
+                        certFactory = TestCertificateFactory(
+                            bankIdRootCertificatePath = TestCertificateUtil.Constants.BANKID_ROOT_CERTIFICATE_LOCATION,
+                            bankIdRootPrivateKeyPath = TestCertificateUtil.Constants.BANKID_ROOT_PRIVATE_KEY_LOCATION
+                        )
+                    ).sign(
                         pdfBytes = signedFile,
                         nationalIdentityNumber = REQUESTED_TO_NIN
                     )

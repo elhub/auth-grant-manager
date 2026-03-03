@@ -1,18 +1,26 @@
 package no.elhub.auth.features.documents
 
+import eu.europa.esig.dss.alert.SilentOnStatusAlert
+import eu.europa.esig.dss.crl.CRLBinary
 import eu.europa.esig.dss.enumerations.CertificationPermission
 import eu.europa.esig.dss.enumerations.DigestAlgorithm
+import eu.europa.esig.dss.enumerations.RevocationOrigin
 import eu.europa.esig.dss.enumerations.SignatureLevel
 import eu.europa.esig.dss.model.InMemoryDocument
 import eu.europa.esig.dss.model.SignatureValue
 import eu.europa.esig.dss.model.x509.CertificateToken
+import eu.europa.esig.dss.model.x509.revocation.crl.CRL
 import eu.europa.esig.dss.pades.PAdESSignatureParameters
 import eu.europa.esig.dss.pades.signature.PAdESService
 import eu.europa.esig.dss.spi.validation.CommonCertificateVerifier
+import eu.europa.esig.dss.spi.x509.CommonTrustedCertificateSource
+import eu.europa.esig.dss.spi.x509.revocation.RevocationToken
+import eu.europa.esig.dss.spi.x509.revocation.crl.OfflineCRLSource
 import eu.europa.esig.dss.spi.x509.tsp.TSPSource
 import org.apache.pdfbox.Loader
 import java.io.ByteArrayOutputStream
 import java.security.PrivateKey
+import java.security.cert.X509CRL
 
 object TestPdfSigner {
     fun signWithCertificate(
@@ -20,10 +28,30 @@ object TestPdfSigner {
         signingCert: java.security.cert.X509Certificate,
         chain: List<java.security.cert.X509Certificate>,
         signingKey: PrivateKey,
-        signatureLevel: SignatureLevel = SignatureLevel.PAdES_BASELINE_B,
-        tspSource: TSPSource? = null
+        signatureLevel: SignatureLevel,
+        tspSource: TSPSource? = null,
+        crls: List<X509CRL> = emptyList()
     ): ByteArray {
-        val padesService = PAdESService(CommonCertificateVerifier())
+        if ((signatureLevel == SignatureLevel.PAdES_BASELINE_LT || signatureLevel == SignatureLevel.PAdES_BASELINE_LTA) && crls.isEmpty()) {
+            error("CRL data must be provided for PAdES LT/LTA signatures in tests")
+        }
+
+        val trustedSource = CommonTrustedCertificateSource().apply {
+            addCertificate(CertificateToken(chain.last()))
+        }
+
+        val verifier = CommonCertificateVerifier().apply {
+            setTrustedCertSources(trustedSource)
+            alertOnRevokedCertificate = SilentOnStatusAlert()
+            alertOnMissingRevocationData = SilentOnStatusAlert()
+            alertOnNoRevocationAfterBestSignatureTime = SilentOnStatusAlert()
+            alertOnRevokedCertificate = SilentOnStatusAlert()
+            alertOnInvalidSignature = SilentOnStatusAlert()
+            if (crls.isNotEmpty()) {
+                crlSource = StaticCrlSource(crls)
+            }
+        }
+        val padesService = PAdESService(verifier)
         if (tspSource != null) {
             padesService.setTspSource(tspSource)
         }
@@ -43,6 +71,23 @@ object TestPdfSigner {
         return padesService.signDocument(document, signatureParameters, signatureValue)
             .openStream()
             .use { it.readBytes() }
+    }
+
+    private class StaticCrlSource(crls: List<X509CRL>) : OfflineCRLSource() {
+        init {
+            crls.forEach { crl ->
+                addBinary(CRLBinary(crl.encoded), RevocationOrigin.EXTERNAL)
+            }
+        }
+
+        override fun getRevocationTokens(
+            certificateToken: CertificateToken,
+            issuerToken: CertificateToken
+        ): List<RevocationToken<CRL>> {
+            val tokens = super.getRevocationTokens(certificateToken, issuerToken)
+            tokens.forEach { it.setExternalOrigin(RevocationOrigin.EXTERNAL) }
+            return tokens
+        }
     }
 
     private fun signData(data: ByteArray, key: PrivateKey, jceId: String): ByteArray {

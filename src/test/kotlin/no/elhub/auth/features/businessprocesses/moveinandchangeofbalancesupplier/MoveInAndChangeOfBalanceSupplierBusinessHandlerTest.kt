@@ -3,7 +3,6 @@ package no.elhub.auth.features.businessprocesses.moveinandchangeofbalancesupplie
 import arrow.core.Either
 import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
@@ -570,29 +569,6 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
             properties.meta.getValue("moveInDate") shouldBe "2024-01-01"
             properties.validFrom shouldBe today()
             properties.validTo shouldBe today().plus(DatePeriod(years = 1))
-        }
-
-        test("exception is thrown when properties is invalid") {
-            val party = AuthorizationParty(id = "party-1", type = PartyType.Organization)
-            val request = AuthorizationRequest.create(
-                type = AuthorizationRequest.Type.MoveInAndChangeOfBalanceSupplierForPerson,
-                requestedBy = party,
-                requestedFrom = party,
-                requestedTo = party,
-                validTo = today().toTimeZoneOffsetDateTimeAtStartOfDay(),
-            ).copy(
-                properties = listOf(
-                    AuthorizationRequestProperty(
-                        requestId = UUID.randomUUID(),
-                        key = "random",
-                        value = "test"
-                    )
-                )
-            )
-
-            shouldThrow<IllegalArgumentException> {
-                handler.getCreateGrantProperties(request)
-            }
         }
 
         test("document produces DocumentCommand for valid input") {

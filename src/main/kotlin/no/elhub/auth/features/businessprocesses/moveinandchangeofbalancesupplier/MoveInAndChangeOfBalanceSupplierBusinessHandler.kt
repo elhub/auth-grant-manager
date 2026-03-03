@@ -69,8 +69,9 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandler(
         }
 
     override fun getCreateGrantProperties(request: AuthorizationRequest): CreateGrantProperties {
-        validateKeys(request.properties.map { it.key }, ALLOWED_GRANT_PROPERTY_KEYS)
-        val propertyMap = request.properties.associate { it.key to it.value }
+        val propertyMap = request.properties
+            .filter { it.key in ALLOWED_GRANT_PROPERTY_KEYS }
+            .associate { it.key to it.value }
         return buildCreateGrantProperties(propertyMap, ALLOWED_GRANT_PROPERTY_KEYS)
     }
 
@@ -81,14 +82,10 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandler(
         }
 
     override fun getCreateGrantProperties(document: AuthorizationDocument): CreateGrantProperties {
-        validateKeys(document.properties.map { it.key }, ALLOWED_GRANT_PROPERTY_KEYS)
-        val propertyMap = document.properties.associate { it.key to it.value }
+        val propertyMap = document.properties
+            .filter { it.key in ALLOWED_GRANT_PROPERTY_KEYS }
+            .associate { it.key to it.value }
         return buildCreateGrantProperties(propertyMap, ALLOWED_GRANT_PROPERTY_KEYS)
-    }
-
-    private fun validateKeys(keys: List<String>, allowedKeys: Set<String>) {
-        val invalidKeys = keys.filter { it !in allowedKeys }
-        require(invalidKeys.isEmpty()) { "Only $allowedKeys allowed as properties, but found: $invalidKeys" }
     }
 
     private fun buildCreateGrantProperties(

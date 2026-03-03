@@ -106,7 +106,6 @@ entity AuthorizationRequestProperty {
   key: String
   --
   value: String
-  createdAt: DateTime
 }
 
 ' In this model it is assumed that the metadata is stored in the document.
@@ -143,22 +142,16 @@ entity AuthorizationDocumentSignatories {
 entity AuthorizationGrantScope {
   authorizationGrantId: UUID, FK→AuthorizationGrant
   authorizationScopeId: BigInt, FK→AuthorizationScope
-  --
-  createdAt: DateTime
 }
 
 entity AuthorizationDocumentScope {
   authorizationDocumentId: UUID, FK→AuthorizationDocument
   authorizationScopeId: BigInt, FK→AuthorizationScope
-  --
-  createdAt: DateTime
 }
 
 entity AuthorizationRequestScope {
   authorizationRequestId: UUID, FK→AuthorizationRequest
   authorizationScopeId: BigInt, FK→AuthorizationScope
-  --
-  createdAt: DateTime
 }
 
 entity AuthorizationScope {
