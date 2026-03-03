@@ -10,9 +10,10 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.datetime.DatePeriod
+import kotlinx.datetime.plus
 import no.elhub.auth.features.businessprocesses.BusinessProcessError
 import no.elhub.auth.features.businessprocesses.changeofbalancesupplier.ChangeOfBalanceSupplierValidationError
-import no.elhub.auth.features.businessprocesses.changeofbalancesupplier.defaultValidTo
 import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.common.RepositoryWriteError
 import no.elhub.auth.features.common.party.AuthorizationParty
@@ -22,6 +23,7 @@ import no.elhub.auth.features.common.party.PartyIdentifierType
 import no.elhub.auth.features.common.party.PartyService
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
+import no.elhub.auth.features.common.today
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.DocumentBusinessHandler
 import no.elhub.auth.features.documents.common.DocumentRepository
@@ -73,7 +75,7 @@ class HandlerTest : FunSpec({
             requestedFrom = requestedFromIdentifier,
             requestedTo = requestedToIdentifier,
             requestedBy = requestedByIdentifier,
-            validTo = defaultValidTo().toTimeZoneOffsetDateTimeAtStartOfDay(),
+            validTo = today().plus(DatePeriod(days = 30)).toTimeZoneOffsetDateTimeAtStartOfDay(),
             scopes = listOf(
                 CreateScopeData(
                     authorizedResourceType = AuthorizationScope.AuthorizationResource.MeteringPoint,

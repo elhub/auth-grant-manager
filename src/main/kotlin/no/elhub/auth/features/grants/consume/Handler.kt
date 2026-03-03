@@ -4,12 +4,11 @@ import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensure
 import no.elhub.auth.features.common.AuthorizationParties
+import no.elhub.auth.features.common.currentTimeUtc
 import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.AuthorizationGrant.Status
 import no.elhub.auth.features.grants.common.GrantRepository
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import java.time.OffsetDateTime
-import java.time.ZoneOffset
 
 class Handler(
     private val repo: GrantRepository
@@ -28,7 +27,7 @@ class Handler(
                 .mapLeft { ConsumeError.GrantNotFound }
                 .bind()
 
-            ensure(originalGrant.validTo >= OffsetDateTime.now(ZoneOffset.UTC)) {
+            ensure(originalGrant.validTo >= currentTimeUtc()) {
                 ConsumeError.ExpiredError
             }
 

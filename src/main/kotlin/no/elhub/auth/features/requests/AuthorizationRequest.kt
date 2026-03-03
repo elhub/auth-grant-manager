@@ -1,6 +1,6 @@
 package no.elhub.auth.features.requests
 
-import no.elhub.auth.features.common.currentTimeWithTimeZone
+import no.elhub.auth.features.common.currentTimeUtc
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.requests.common.AuthorizationRequestProperty
 import java.time.OffsetDateTime
@@ -35,8 +35,8 @@ data class AuthorizationRequest(
                 requestedBy = requestedBy,
                 requestedFrom = requestedFrom,
                 requestedTo = requestedTo,
-                createdAt = currentTimeWithTimeZone(),
-                updatedAt = currentTimeWithTimeZone(),
+                createdAt = currentTimeUtc(),
+                updatedAt = currentTimeUtc(),
                 validTo = validTo,
                 properties = emptyList(),
             )

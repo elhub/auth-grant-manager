@@ -49,7 +49,7 @@ fun buildApiErrorResponse(status: HttpStatusCode, title: String, detail: String)
         ),
         meta = JsonApiMeta(
             mapOf(
-                "createdAt" to JsonPrimitive(currentTimeWithTimeZone().toString())
+                "createdAt" to JsonPrimitive(currentTimeLocal().toTimeZoneOffsetString())
             )
         )
     )
