@@ -1,4 +1,4 @@
-package no.elhub.auth.features.grants.getScopes
+package no.elhub.auth.features.grants.getscopes
 
 import no.elhub.auth.features.common.party.AuthorizationParty
 import java.util.UUID
