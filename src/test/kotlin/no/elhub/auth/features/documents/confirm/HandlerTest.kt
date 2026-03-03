@@ -14,7 +14,6 @@ import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.plus
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.RepositoryWriteError
-import no.elhub.auth.features.common.today
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyError
 import no.elhub.auth.features.common.party.PartyIdentifier

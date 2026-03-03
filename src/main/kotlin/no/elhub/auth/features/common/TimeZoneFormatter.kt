@@ -32,4 +32,3 @@ fun LocalDate.toTimeZoneOffsetDateTimeAtStartOfDay(): OffsetDateTime =
 
 @OptIn(ExperimentalTime::class)
 fun today(): LocalDate = Clock.System.now().toLocalDateTime(TimeZone.UTC).date
-

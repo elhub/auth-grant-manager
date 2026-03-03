@@ -8,6 +8,8 @@ import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import kotlinx.datetime.DatePeriod
+import kotlinx.datetime.plus
 import no.elhub.auth.features.businessprocesses.BusinessProcessError
 import no.elhub.auth.features.businessprocesses.datasharing.Attributes
 import no.elhub.auth.features.businessprocesses.datasharing.ProductsResponse
@@ -36,16 +38,14 @@ import no.elhub.auth.features.businessprocesses.structuredata.organisations.Orga
 import no.elhub.auth.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.NOT_BALANCE_SUPPLIER_PARTY_ID
 import no.elhub.auth.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.VALID_PARTY_ID
 import no.elhub.auth.features.businessprocesses.structuredata.organisations.organisationsServiceHttpClient
-import kotlinx.datetime.DatePeriod
-import kotlinx.datetime.plus
 import no.elhub.auth.features.common.party.AuthorizationParty
-import no.elhub.auth.features.common.today
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
 import no.elhub.auth.features.common.party.PartyType.Organization
 import no.elhub.auth.features.common.person.Person
 import no.elhub.auth.features.common.person.PersonService
 import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
+import no.elhub.auth.features.common.today
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.create.dto.CreateDocumentMeta
 import no.elhub.auth.features.documents.create.model.CreateDocumentModel
