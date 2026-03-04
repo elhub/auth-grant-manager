@@ -202,6 +202,45 @@ class SignatureServiceTest : FunSpec({
             pdfValidationResult.shouldBeLeft(SignatureValidationError.InvalidElhubSignature)
         }
 
+        test("Should return ElhubSignatureModifiedAfterSigning when annotations are added after Elhub signature") {
+            val elhubSignedPdfBytes = signingService.sign(unsignedPdfBytes).shouldBeRight()
+            val annotatedPdfBytes = TestPdfSigner.addAnnotationIncremental(elhubSignedPdfBytes)
+            val bankIdSignedPdfBytes = endUserSignatureTestHelper.sign(
+                pdfBytes = annotatedPdfBytes,
+                nationalIdentityNumber = nationalIdentityNumber
+            )
+
+            val pdfValidationResult = signingService.validateSignaturesAndReturnSignatory(bankIdSignedPdfBytes, elhubSignedPdfBytes)
+
+            pdfValidationResult.shouldBeLeft(SignatureValidationError.ElhubSignatureModifiedAfterSigning)
+        }
+
+        test("Should return ElhubSignatureModifiedAfterSigning when pages are added after Elhub signature") {
+            val elhubSignedPdfBytes = signingService.sign(unsignedPdfBytes).shouldBeRight()
+            val extraPagePdfBytes = TestPdfSigner.addPageIncremental(elhubSignedPdfBytes)
+            val bankIdSignedPdfBytes = endUserSignatureTestHelper.sign(
+                pdfBytes = extraPagePdfBytes,
+                nationalIdentityNumber = nationalIdentityNumber
+            )
+
+            val pdfValidationResult = signingService.validateSignaturesAndReturnSignatory(bankIdSignedPdfBytes, elhubSignedPdfBytes)
+
+            pdfValidationResult.shouldBeLeft(SignatureValidationError.ElhubSignatureModifiedAfterSigning)
+        }
+
+        test("Should return ElhubSignatureModifiedAfterSigning when visual changes are added after Elhub signature") {
+            val elhubSignedPdfBytes = signingService.sign(unsignedPdfBytes).shouldBeRight()
+            val visuallyChangedPdfBytes = TestPdfSigner.addVisualChangeIncremental(elhubSignedPdfBytes)
+            val bankIdSignedPdfBytes = endUserSignatureTestHelper.sign(
+                pdfBytes = visuallyChangedPdfBytes,
+                nationalIdentityNumber = nationalIdentityNumber
+            )
+
+            val pdfValidationResult = signingService.validateSignaturesAndReturnSignatory(bankIdSignedPdfBytes, elhubSignedPdfBytes)
+
+            pdfValidationResult.shouldBeLeft(SignatureValidationError.ElhubSignatureModifiedAfterSigning)
+        }
+
         test("Should return MissingBankIdSignature when pdf doesn't have a bankId signature") {
             val elhubSignedPdfBytes = signingService.sign(unsignedPdfBytes).shouldBeRight()
             val pdfValidationResult = signingService.validateSignaturesAndReturnSignatory(elhubSignedPdfBytes, elhubSignedPdfBytes)
