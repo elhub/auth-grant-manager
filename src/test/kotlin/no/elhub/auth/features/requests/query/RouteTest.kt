@@ -1,0 +1,189 @@
+package no.elhub.auth.features.requests.query
+
+import arrow.core.left
+import arrow.core.right
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.collections.shouldBeEmpty
+import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldNotBeBlank
+import io.ktor.client.call.body
+import io.ktor.client.request.get
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.testing.testApplication
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.mockk
+import no.elhub.auth.features.common.QueryError
+import no.elhub.auth.features.common.auth.AuthError
+import no.elhub.auth.features.common.auth.AuthorizationProvider
+import no.elhub.auth.features.common.auth.AuthorizedParty
+import no.elhub.auth.features.common.currentTimeUtc
+import no.elhub.auth.features.common.party.AuthorizationParty
+import no.elhub.auth.features.common.party.PartyType
+import no.elhub.auth.features.requests.AuthorizationRequest
+import no.elhub.auth.features.requests.REQUESTS_PATH
+import no.elhub.auth.features.requests.query.dto.GetRequestCollectionResponse
+import no.elhub.auth.setupAppWith
+import no.elhub.auth.validateForbiddenResponse
+import no.elhub.auth.validateNotAuthorizedResponse
+import java.util.UUID
+
+class RouteTest : FunSpec({
+
+    val authorizedPerson = AuthorizedParty.Person(id = UUID.randomUUID())
+    lateinit var authProvider: AuthorizationProvider
+    lateinit var handler: Handler
+
+    val requestedByParty = AuthorizationParty("gln1", PartyType.OrganizationEntity)
+    val requestedFromParty = AuthorizationParty("nin1", PartyType.Person)
+    val requestedToParty = AuthorizationParty("nin2", PartyType.Person)
+
+    beforeAny {
+        authProvider = mockk<AuthorizationProvider>()
+        handler = mockk<Handler>()
+    }
+
+    test("GET should return forbidden when access is denied") {
+        coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns AuthError.AccessDenied.left()
+        testApplication {
+            setupAppWith { route(handler, authProvider) }
+            val response = client.get("/")
+            validateForbiddenResponse(response)
+        }
+        coVerify(exactly = 0) { handler.invoke(any()) }
+    }
+
+    test("GET should return unauthorized when not authorized") {
+        coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns AuthError.NotAuthorized.left()
+        testApplication {
+            setupAppWith { route(handler, authProvider) }
+            val response = client.get("/")
+            validateNotAuthorizedResponse(response)
+        }
+        coVerify(exactly = 0) { handler.invoke(any()) }
+    }
+
+    test("GET should return forbidden when handler returns NotAuthorizedError") {
+        coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
+        coEvery { handler.invoke(any()) } returns QueryError.NotAuthorizedError.left()
+        testApplication {
+            setupAppWith { route(handler, authProvider) }
+            val response = client.get("/")
+            response.status shouldBe HttpStatusCode.Forbidden
+        }
+        coVerify(exactly = 1) { handler.invoke(any()) }
+    }
+
+    test("GET should return 500 when handler throws exception") {
+        coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
+        coEvery { handler.invoke(any()) } throws RuntimeException("Unexpected error")
+        testApplication {
+            setupAppWith { route(handler, authProvider) }
+            val response = client.get("/")
+            response.status shouldBe HttpStatusCode.InternalServerError
+        }
+        coVerify(exactly = 1) { handler.invoke(any()) }
+    }
+
+    test("GET should return OK with empty list when handler returns no requests") {
+        coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
+        coEvery { handler.invoke(any()) } returns emptyList<AuthorizationRequest>().right()
+        testApplication {
+            setupAppWith { route(handler, authProvider) }
+            val response = client.get("/")
+            response.status shouldBe HttpStatusCode.OK
+            val body = response.body<GetRequestCollectionResponse>()
+            body.data.shouldBeEmpty()
+        }
+        coVerify(exactly = 1) { handler.invoke(any()) }
+    }
+
+    test("GET should return OK with correct body when handler returns") {
+        coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
+        val authorizationRequest = AuthorizationRequest(
+            id = UUID.randomUUID(),
+            type = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
+            status = AuthorizationRequest.Status.Pending,
+            validTo = currentTimeUtc(),
+            createdAt = currentTimeUtc(),
+            updatedAt = currentTimeUtc(),
+            requestedBy = requestedByParty,
+            requestedTo = requestedToParty,
+            requestedFrom = requestedFromParty,
+            properties = emptyList()
+        )
+
+        coEvery { handler.invoke(any()) } returns listOf(authorizationRequest).right()
+        testApplication {
+            setupAppWith { route(handler, authProvider) }
+            val response = client.get("/")
+            response.status shouldBe HttpStatusCode.OK
+            val body = response.body<GetRequestCollectionResponse>()
+            body.data.shouldHaveSize(1)
+            body.data[0].id shouldBe authorizationRequest.id.toString()
+            body.data[0].type shouldBe "AuthorizationRequest"
+            body.data[0].attributes.status shouldBe "Pending"
+            body.data[0].attributes.requestType shouldBe "ChangeOfBalanceSupplierForPerson"
+            body.data[0].attributes.validTo.shouldNotBeBlank()
+            body.data[0].attributes.createdAt.shouldNotBeBlank()
+            body.data[0].attributes.updatedAt.shouldNotBeBlank()
+            body.data[0].relationships.requestedBy.data.id shouldBe requestedByParty.id
+            body.data[0].relationships.requestedBy.data.type shouldBe requestedByParty.type.name
+            body.data[0].relationships.requestedFrom.data.id shouldBe requestedFromParty.id
+            body.data[0].relationships.requestedFrom.data.type shouldBe requestedFromParty.type.name
+            body.data[0].relationships.requestedTo.data.id shouldBe requestedToParty.id
+            body.data[0].relationships.requestedTo.data.type shouldBe requestedToParty.type.name
+            body.data[0].relationships.approvedBy.shouldBeNull()
+            body.data[0].relationships.authorizationGrant.shouldBeNull()
+            body.data[0].meta.values shouldBe emptyMap()
+            body.data[0].links.self shouldBe "$REQUESTS_PATH/${authorizationRequest.id}"
+        }
+        coVerify(exactly = 1) { handler.invoke(any()) }
+    }
+
+    test("GET should return OK with multiple items when handler returns multiple requests") {
+        coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
+        val request1 = AuthorizationRequest(
+            id = UUID.randomUUID(),
+            type = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
+            status = AuthorizationRequest.Status.Pending,
+            validTo = currentTimeUtc(),
+            createdAt = currentTimeUtc(),
+            updatedAt = currentTimeUtc(),
+            requestedBy = requestedByParty,
+            requestedTo = requestedToParty,
+            requestedFrom = requestedFromParty,
+            properties = emptyList()
+        )
+        val request2 = AuthorizationRequest(
+            id = UUID.randomUUID(),
+            type = AuthorizationRequest.Type.MoveInAndChangeOfBalanceSupplierForPerson,
+            status = AuthorizationRequest.Status.Accepted,
+            validTo = currentTimeUtc(),
+            createdAt = currentTimeUtc(),
+            updatedAt = currentTimeUtc(),
+            requestedBy = requestedByParty,
+            requestedTo = requestedToParty,
+            requestedFrom = requestedFromParty,
+            properties = emptyList()
+        )
+
+        coEvery { handler.invoke(any()) } returns listOf(request1, request2).right()
+        testApplication {
+            setupAppWith { route(handler, authProvider) }
+            val response = client.get("/")
+            response.status shouldBe HttpStatusCode.OK
+            val body = response.body<GetRequestCollectionResponse>()
+            body.data.shouldHaveSize(2)
+            body.data[0].id shouldBe request1.id.toString()
+            body.data[0].attributes.status shouldBe "Pending"
+            body.data[0].attributes.requestType shouldBe "ChangeOfBalanceSupplierForPerson"
+            body.data[1].id shouldBe request2.id.toString()
+            body.data[1].attributes.status shouldBe "Accepted"
+            body.data[1].attributes.requestType shouldBe "MoveInAndChangeOfBalanceSupplierForPerson"
+        }
+        coVerify(exactly = 1) { handler.invoke(any()) }
+    }
+})
