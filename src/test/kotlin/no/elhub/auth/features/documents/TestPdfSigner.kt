@@ -18,6 +18,12 @@ import eu.europa.esig.dss.spi.x509.revocation.RevocationToken
 import eu.europa.esig.dss.spi.x509.revocation.crl.OfflineCRLSource
 import eu.europa.esig.dss.spi.x509.tsp.TSPSource
 import org.apache.pdfbox.Loader
+import org.apache.pdfbox.pdmodel.PDPage
+import org.apache.pdfbox.pdmodel.PDPageContentStream
+import org.apache.pdfbox.pdmodel.common.PDRectangle
+import org.apache.pdfbox.pdmodel.font.PDType1Font
+import org.apache.pdfbox.pdmodel.font.Standard14Fonts
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationText
 import java.io.ByteArrayOutputStream
 import java.security.PrivateKey
 import java.security.cert.X509CRL
@@ -166,4 +172,54 @@ object TestPdfSigner {
         this == 0x0C.toByte() ||
         this == 0x0D.toByte() ||
         this == 0x20.toByte()
+
+    fun addAnnotationIncremental(pdfBytes: ByteArray): ByteArray {
+        ByteArrayOutputStream().use { output ->
+            Loader.loadPDF(pdfBytes).use { doc ->
+                val page = doc.getPage(0)
+                val annotation = PDAnnotationText().apply {
+                    contents = "Test annotation"
+                    rectangle = PDRectangle(50f, 50f, 200f, 50f)
+                }
+                val annotations = page.annotations
+                annotations.add(annotation)
+                page.annotations = annotations
+                doc.saveIncremental(output)
+            }
+            return output.toByteArray()
+        }
+    }
+
+    fun addPageIncremental(pdfBytes: ByteArray): ByteArray {
+        ByteArrayOutputStream().use { output ->
+            Loader.loadPDF(pdfBytes).use { doc ->
+                doc.addPage(PDPage())
+                doc.saveIncremental(output)
+            }
+            return output.toByteArray()
+        }
+    }
+
+    fun addVisualChangeIncremental(pdfBytes: ByteArray): ByteArray {
+        ByteArrayOutputStream().use { output ->
+            Loader.loadPDF(pdfBytes).use { doc ->
+                val page = doc.getPage(0)
+                PDPageContentStream(
+                    doc,
+                    page,
+                    PDPageContentStream.AppendMode.APPEND,
+                    true,
+                    true
+                ).use { contentStream ->
+                    contentStream.beginText()
+                    contentStream.setFont(PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD), 12f)
+                    contentStream.newLineAtOffset(72f, 72f)
+                    contentStream.showText("visual-change")
+                    contentStream.endText()
+                }
+                doc.saveIncremental(output)
+            }
+            return output.toByteArray()
+        }
+    }
 }

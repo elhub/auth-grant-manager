@@ -45,6 +45,7 @@ sealed class SignatureValidationError {
     data object MissingElhubSignature : SignatureValidationError()
     data object InvalidElhubSignature : SignatureValidationError()
     data object ElhubSigningCertNotTrusted : SignatureValidationError()
+    data object ElhubSignatureModifiedAfterSigning : SignatureValidationError()
     data object MissingBankIdSignature : SignatureValidationError()
     data object InvalidBankIdSignature : SignatureValidationError()
     data object MissingBankIdTrustedTimestamp : SignatureValidationError()
@@ -181,6 +182,21 @@ class PdfSignatureService(
         val signingCert = signature.signingCertificate
         ensure(signingCert != null && signingCert.isTrusted) {
             SignatureValidationError.ElhubSigningCertNotTrusted
+        }
+
+        ensureNoPdfChangesAfterElhubSignature(signature).bind()
+    }
+
+    private fun ensureNoPdfChangesAfterElhubSignature(signature: SignatureWrapper): Either<SignatureValidationError, Unit> = either {
+        val noChangesAfterSigning = listOf(
+            signature.pdfPageDifferenceConcernedPages,
+            signature.pdfVisualDifferenceConcernedPages,
+            signature.pdfAnnotationsOverlapConcernedPages,
+            signature.pdfAnnotationChanges,
+        ).all { it.isEmpty() }
+
+        ensure(noChangesAfterSigning) {
+            SignatureValidationError.ElhubSignatureModifiedAfterSigning
         }
     }
 

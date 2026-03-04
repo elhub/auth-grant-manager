@@ -84,6 +84,11 @@ class ConfirmErrorJsonApiResponseTest : FunSpec({
             title = "Elhub signature is not valid",
             detail = "The Elhub signature could not be validated. The AuthorizationDocument may have been tampered with."
         ),
+        SignatureValidationError.ElhubSignatureModifiedAfterSigning to Expectation(
+            status = HttpStatusCode.UnprocessableEntity,
+            title = "Elhub signature is not valid",
+            detail = "The Elhub signature could not be validated. The AuthorizationDocument may have been tampered with."
+        ),
         SignatureValidationError.MissingElhubSignature to Expectation(
             status = HttpStatusCode.UnprocessableEntity,
             title = "Elhub signature is not valid",
