@@ -188,12 +188,14 @@ class PdfSignatureService(
     }
 
     private fun ensureNoPdfChangesAfterElhubSignature(signature: SignatureWrapper): Either<SignatureValidationError, Unit> = either {
-        val hasPageDifferences = signature.pdfPageDifferenceConcernedPages.isNotEmpty()
-        val hasVisualDifferences = signature.pdfVisualDifferenceConcernedPages.isNotEmpty()
-        val hasAnnotationOverlaps = signature.pdfAnnotationsOverlapConcernedPages.isNotEmpty()
-        val hasAnnotationChanges = signature.pdfAnnotationChanges.isNotEmpty()
+        val noChangesAfterSigning = listOf(
+            signature.pdfPageDifferenceConcernedPages,
+            signature.pdfVisualDifferenceConcernedPages,
+            signature.pdfAnnotationsOverlapConcernedPages,
+            signature.pdfAnnotationChanges,
+        ).all { it.isEmpty() }
 
-        ensure(!(hasPageDifferences || hasVisualDifferences || hasAnnotationOverlaps || hasAnnotationChanges)) {
+        ensure(noChangesAfterSigning) {
             SignatureValidationError.ElhubSignatureModifiedAfterSigning
         }
     }
