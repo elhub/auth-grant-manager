@@ -51,7 +51,7 @@ class PdfGeneratorTest :
             extractLanguage(result.value) shouldBe "nb-NO"
             val metadata = extractMetadata(result.value)
             metadata.author shouldBe "Elhub AS"
-            metadata.producer shouldBe "Elhub Document Service"
+            metadata.producer shouldBe null
         }
 
         test("Generates PDF with watermark and metadata for change of supplier meta") {

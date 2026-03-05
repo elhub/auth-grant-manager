@@ -225,7 +225,7 @@ class PdfGenerator(
             Loader.loadPDF(this).use { doc ->
                 doc.documentInformation = PDDocumentInformation().apply {
                     author = "Elhub AS"
-                    producer = "Elhub Document Service"
+                    producer = null
                     for (metadataPair in customMetadata) {
                         setCustomMetadataValue(metadataPair.key, metadataPair.value)
                     }
