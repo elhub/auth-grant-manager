@@ -32,7 +32,10 @@ import java.security.cert.X509Certificate
 
 interface SignatureService {
     suspend fun sign(fileByteArray: ByteArray): Either<SignatureSigningError, ByteArray>
-    fun validateSignaturesAndReturnSignatory(file: ByteArray, originalFile: ByteArray): Either<SignatureValidationError, PartyIdentifier>
+    fun validateSignaturesAndReturnSignatory(
+        file: ByteArray,
+        originalFile: ByteArray
+    ): Either<SignatureValidationError, PartyIdentifier>
 }
 
 sealed class SignatureSigningError {
@@ -80,13 +83,9 @@ class PdfSignatureService(
     }
 
     override suspend fun sign(fileByteArray: ByteArray): Either<SignatureSigningError, ByteArray> = either {
-        val certChain =
-            certificateProvider
-                .getElhubCertificateChain()
+        val certChain = certificateProvider.getElhubCertificateChain()
 
-        val signingCert =
-            certificateProvider
-                .getElhubSigningCertificate()
+        val signingCert = certificateProvider.getElhubSigningCertificate()
 
         val signatureParameters = PAdESSignatureParameters().apply {
             signatureLevel = SignatureLevel.PAdES_BASELINE_B
@@ -115,7 +114,10 @@ class PdfSignatureService(
         }.mapLeft { SignatureSigningError.AddSignatureToSignatureError }.bind()
     }
 
-    override fun validateSignaturesAndReturnSignatory(file: ByteArray, originalFile: ByteArray): Either<SignatureValidationError, PartyIdentifier> = either {
+    override fun validateSignaturesAndReturnSignatory(
+        file: ByteArray,
+        originalFile: ByteArray
+    ): Either<SignatureValidationError, PartyIdentifier> = either {
         val document = InMemoryDocument(file)
 
         val validator = SignedDocumentValidator.fromDocument(document).apply {
@@ -187,72 +189,74 @@ class PdfSignatureService(
         ensureNoPdfChangesAfterElhubSignature(signature).bind()
     }
 
-    private fun ensureNoPdfChangesAfterElhubSignature(signature: SignatureWrapper): Either<SignatureValidationError, Unit> = either {
-        val noChangesAfterSigning = listOf(
-            signature.pdfPageDifferenceConcernedPages,
-            signature.pdfVisualDifferenceConcernedPages,
-            signature.pdfAnnotationsOverlapConcernedPages,
-            signature.pdfAnnotationChanges,
-        ).all { it.isEmpty() }
+    private fun ensureNoPdfChangesAfterElhubSignature(signature: SignatureWrapper): Either<SignatureValidationError, Unit> =
+        either {
+            val noChangesAfterSigning = listOf(
+                signature.pdfPageDifferenceConcernedPages,
+                signature.pdfVisualDifferenceConcernedPages,
+                signature.pdfAnnotationsOverlapConcernedPages,
+                signature.pdfAnnotationChanges,
+            ).all { it.isEmpty() }
 
-        ensure(noChangesAfterSigning) {
-            SignatureValidationError.ElhubSignatureModifiedAfterSigning
-        }
-    }
-
-    private fun validateBankIdSignatureAndReturnSignatory(signature: SignatureWrapper): Either<SignatureValidationError, PartyIdentifier> = either {
-        ensure(signature.isCertificateChainFromTrustedStore) {
-            SignatureValidationError.BankIdSigningCertNotFromExpectedRoot
-        }
-        val signingCert = ensureNotNull(signature.signingCertificate) {
-            SignatureValidationError.InvalidBankIdSignature
+            ensure(noChangesAfterSigning) {
+                SignatureValidationError.ElhubSignatureModifiedAfterSigning
+            }
         }
 
-        ensure(signature.isSignatureIntact && signature.isSignatureValid) {
-            SignatureValidationError.InvalidBankIdSignature
+    private fun validateBankIdSignatureAndReturnSignatory(signature: SignatureWrapper): Either<SignatureValidationError, PartyIdentifier> =
+        either {
+            ensure(signature.isCertificateChainFromTrustedStore) {
+                SignatureValidationError.BankIdSigningCertNotFromExpectedRoot
+            }
+            val signingCert = ensureNotNull(signature.signingCertificate) {
+                SignatureValidationError.InvalidBankIdSignature
+            }
+
+            ensure(signature.isSignatureIntact && signature.isSignatureValid) {
+                SignatureValidationError.InvalidBankIdSignature
+            }
+
+            val trustedSignatureTimestamp = signature.timestampList.firstOrNull { timestamp ->
+                (timestamp.type?.isSignatureTimestamp == true) &&
+                        timestamp.isSignatureIntact &&
+                        timestamp.isSignatureValid &&
+                        timestamp.isCertificateChainFromTrustedStore
+            }
+
+            ensure(trustedSignatureTimestamp != null && trustedSignatureTimestamp.productionTime != null) {
+                SignatureValidationError.MissingBankIdTrustedTimestamp
+            }
+
+            val timestampTime = trustedSignatureTimestamp.productionTime
+            val notBefore = signingCert.notBefore
+            val notAfter = signingCert.notAfter
+
+            ensure(!timestampTime.before(notBefore) && !timestampTime.after(notAfter)) {
+                SignatureValidationError.BankIdSigningCertNotValidAtTimestamp
+            }
+
+            ensureNoRevokedCertificateAt(timestampTime, signature.certificateChain)
+
+            val signatureFormat = signature.signatureFormat
+            ensure(signatureFormat == SignatureLevel.PAdES_BASELINE_LT || signatureFormat == SignatureLevel.PAdES_BASELINE_LTA) {
+                SignatureValidationError.BankIdSignatureNotPadesLT
+            }
+
+            val nationalIdExtension = ensureNotNull(
+                signingCert.getCertificateExtensionForOid(
+                    NATIONAL_ID_EXTENSION_OID,
+                    XmlCertificateExtension::class.java
+                )
+            ) {
+                SignatureValidationError.MissingNationalId
+            }
+
+            val nationalIdentityNumber = ensureNotNull(decodeNationalIdentityNumber(nationalIdExtension)) {
+                SignatureValidationError.MissingNationalId
+            }
+
+            PartyIdentifier(idType = PartyIdentifierType.NationalIdentityNumber, idValue = nationalIdentityNumber)
         }
-
-        val trustedSignatureTimestamp = signature.timestampList.firstOrNull { timestamp ->
-            (timestamp.type?.isSignatureTimestamp == true) &&
-                timestamp.isSignatureIntact &&
-                timestamp.isSignatureValid &&
-                timestamp.isCertificateChainFromTrustedStore
-        }
-
-        ensure(trustedSignatureTimestamp != null && trustedSignatureTimestamp.productionTime != null) {
-            SignatureValidationError.MissingBankIdTrustedTimestamp
-        }
-
-        val timestampTime = trustedSignatureTimestamp.productionTime
-        val notBefore = signingCert.notBefore
-        val notAfter = signingCert.notAfter
-
-        ensure(!timestampTime.before(notBefore) && !timestampTime.after(notAfter)) {
-            SignatureValidationError.BankIdSigningCertNotValidAtTimestamp
-        }
-
-        ensureNoRevokedCertificateAt(timestampTime, signature.certificateChain)
-
-        val signatureFormat = signature.signatureFormat
-        ensure(signatureFormat == SignatureLevel.PAdES_BASELINE_LT || signatureFormat == SignatureLevel.PAdES_BASELINE_LTA) {
-            SignatureValidationError.BankIdSignatureNotPadesLT
-        }
-
-        val nationalIdExtension = ensureNotNull(
-            signingCert.getCertificateExtensionForOid(
-                NATIONAL_ID_EXTENSION_OID,
-                XmlCertificateExtension::class.java
-            )
-        ) {
-            SignatureValidationError.MissingNationalId
-        }
-
-        val nationalIdentityNumber = ensureNotNull(decodeNationalIdentityNumber(nationalIdExtension)) {
-            SignatureValidationError.MissingNationalId
-        }
-
-        PartyIdentifier(idType = PartyIdentifierType.NationalIdentityNumber, idValue = nationalIdentityNumber)
-    }
 
     private fun Raise<SignatureValidationError>.ensureNoRevokedCertificateAt(
         timestampTime: java.util.Date,
@@ -260,7 +264,9 @@ class PdfSignatureService(
     ) {
         val revokedCertificate = certificateChain.firstOrNull { cert ->
             cert.certificateRevocationData.any { revocation ->
-                revocation.isRevoked && (revocation.revocationDate == null || !revocation.revocationDate.after(timestampTime))
+                revocation.isRevoked && (revocation.revocationDate == null || !revocation.revocationDate.after(
+                    timestampTime
+                ))
             }
         }
 
@@ -280,7 +286,7 @@ class PdfSignatureService(
     private fun hasIssuerAndSerial(cert: CertificateWrapper?, expected: X509Certificate): Boolean {
         if (cert == null) return false
         return expected.issuerX500Principal.name == cert.certificateIssuerDN &&
-            expected.serialNumber.toString() == cert.serialNumber
+                expected.serialNumber.toString() == cert.serialNumber
     }
 
     private fun hasIssuerAndSerialAny(cert: CertificateWrapper?, expected: List<X509Certificate>): Boolean =

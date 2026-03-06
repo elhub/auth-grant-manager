@@ -30,6 +30,8 @@ dependencies {
     implementation(libs.bundles.dss)
     implementation(libs.bouncycastle.bcprov)
     implementation(libs.bouncycastle.bcpkix)
+    implementation(libs.itext.sign)
+    implementation(libs.itext.bouncy.castle.adapter)
     // Observability
     implementation(libs.bundles.logging)
     implementation(libs.bundles.monitoring)
@@ -153,7 +155,7 @@ val localEnvVars = mapOf(
     "PATH_TO_SIGNING_CERTIFICATE" to testCertPath.get(),
     "PATH_TO_SIGNING_CERTIFICATE_CHAIN" to testCertPath.get(),
     "PATH_TO_BANKID_ROOT_CERTIFICATES_DIR" to bankIdDirPath.get(),
-    "ENABLE_ENDPOINTS" to "true",
+    //"ENABLE_ENDPOINTS" to "true",
     "AUTH_PERSONS_URL" to "http://localhost:8081",
     "PDP_BASE_URL" to "https://auth-policy-decision-point-test9.elhub.cloud",
     "STRUCTURE_DATA_METERING_POINTS_SERVICE_URL" to "http://localhost:8083",
@@ -163,12 +165,14 @@ val localEnvVars = mapOf(
     "STRUCTURE_DATA_ORGANISATIONS_SERVICE_API_USERNAME" to "user",
     "STRUCTURE_DATA_ORGANISATIONS_SERVICE_API_PASSWORD" to "pass",
     "USE_PDF_TEST_NOTICE" to "true",
-    "STROMPRIS_SERVICE_URL" to "http://localhost:8084",
-    "STROMPRIS_SERVICE_IDP_CLIENT_ID" to "strompris-client-id",
-    "STROMPRIS_SERVICE_IDP_CLIENT_SECRET" to "strompris-client-secret",
+    "STROMPRIS_SERVICE_URL" to "",
+    "STROMPRIS_SERVICE_IDP_CLIENT_ID" to "",
+    "STROMPRIS_SERVICE_IDP_CLIENT_SECRET" to "",
     "IDP_TOKEN_URL" to "http://localhost:8085/token",
     "VALIDATE_CONTRACT_NAME_FEATURE" to "false",
     "EDIEL_ENV" to "test",
+    "EDIEL_USERNAME" to "test",
+    "EDIEL_PASSWORD" to "test",
     "EDIEL_SERVICE_URL" to "https://ws.qa1.ediel.no/api/"
 )
 

@@ -28,6 +28,7 @@ pdfGenerator:
   useTestPdfNotice: ${USE_PDF_TEST_NOTICE:false}
 
 pdfSigner:
+  implementation: ${PDF_SIGNER_IMPLEMENTATION:dss}
   # HashiCorp Vault settings
   vault:
     url: $VAULT_URL

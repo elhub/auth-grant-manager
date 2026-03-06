@@ -10,6 +10,7 @@ import no.elhub.auth.features.documents.common.DocumentPropertiesRepository
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.documents.common.ExposedDocumentPropertiesRepository
 import no.elhub.auth.features.documents.common.ExposedDocumentRepository
+import no.elhub.auth.features.documents.common.ITextPdfSignatureService
 import no.elhub.auth.features.documents.common.PdfSignatureService
 import no.elhub.auth.features.documents.common.SignatureService
 import no.elhub.auth.features.documents.create.CertificateProvider
@@ -51,7 +52,13 @@ fun Application.module() {
         }
         singleOf(::FileCertificateProvider) bind CertificateProvider::class
         single { PAdESService(CommonCertificateVerifier()) }
-        singleOf(::PdfSignatureService) bind SignatureService::class
+        single<SignatureService> {
+            when (get<ApplicationConfig>().propertyOrNull("pdfSigner.implementation")?.getString()?.lowercase()) {
+                "itext" -> ITextPdfSignatureService(get(), get())
+                null, "", "dss" -> PdfSignatureService(get(), get(), get())
+                else -> error("Unsupported pdfSigner.implementation value")
+            }
+        }
 
         single {
             val cfg = get<ApplicationConfig>().config("pdfSigner.vault")
