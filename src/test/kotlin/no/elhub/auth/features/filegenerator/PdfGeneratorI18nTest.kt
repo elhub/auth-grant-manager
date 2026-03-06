@@ -72,7 +72,7 @@ class PdfGeneratorI18nTest : FunSpec({
         val englishText = extractText(englishPdf).normalizeWhitespace()
 
         languageMetadata shouldBe "en-US"
-        englishText shouldContain "Agreement confirmation - Change of supplier"
+        englishText shouldContain "Confirm electricity supply agreement"
         englishText shouldNotContain "Avtalebekreftelse"
     }
 })
