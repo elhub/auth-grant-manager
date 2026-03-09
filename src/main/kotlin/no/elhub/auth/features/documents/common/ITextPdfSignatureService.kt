@@ -310,7 +310,7 @@ class ITextPdfSignatureService(
         if (!trustedRootMatch) return null
         if (!chainIntact) return null
 
-        return runCatching { signature.getTimeStampDate().time }.getOrNull()
+        return runCatching { signature.timeStampDate.time }.getOrNull()
     }
 
     private fun isPadesLtOrLta(signature: PdfPKCS7, documentHasDss: Boolean): Boolean {
