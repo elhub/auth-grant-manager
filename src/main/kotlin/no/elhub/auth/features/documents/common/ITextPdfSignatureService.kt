@@ -75,7 +75,7 @@ class ITextPdfSignatureService(
                 output,
                 StampingProperties().useAppendMode()
             )
-            signer.setFieldName("Signature${System.nanoTime()}")
+            signer.setFieldName("Signature1")
             signer.setCertificationLevel(PdfSigner.CERTIFIED_FORM_FILLING)
             signer.signDetached(
                 externalSignature,
@@ -119,14 +119,7 @@ class ITextPdfSignatureService(
         verifyNewMatchesOriginalByByteRange(elhubSignature, originalFile, file).bind()
 
         val expectedBankIdRoots = certificateProvider.getBankIdRootCertificates()
-        val bankIdSignature = ensureNotNull(
-            parsedDocument.signatures
-                .asSequence()
-                .filter { signature ->
-                    signature.fieldName != elhubSignature.fieldName && !signature.isTimestampSignature
-                }
-                .minByOrNull { it.revision }
-        ) {
+        val bankIdSignature = ensureNotNull(parsedDocument.signatures.getOrNull(1)) {
             SignatureValidationError.MissingBankIdSignature
         }
 
