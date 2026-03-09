@@ -316,9 +316,9 @@ class ITextPdfSignatureService(
     private fun isPadesLtOrLta(signature: PdfPKCS7, documentHasDss: Boolean): Boolean {
         val hasTimestamp = signature.timeStampTokenInfo != null
         val hasRevocationData = !signature.signedDataCRLs.isNullOrEmpty() ||
-                !signature.crLs.isNullOrEmpty() ||
-                !signature.signedDataOcsps.isNullOrEmpty() ||
-                signature.ocsp != null
+            !signature.crLs.isNullOrEmpty() ||
+            !signature.signedDataOcsps.isNullOrEmpty() ||
+            signature.ocsp != null
 
         return hasTimestamp && (documentHasDss || hasRevocationData)
     }
@@ -357,7 +357,7 @@ class ITextPdfSignatureService(
     private fun hasIssuerAndSerial(cert: X509Certificate?, expected: X509Certificate): Boolean {
         if (cert == null) return false
         return cert.issuerX500Principal.name == expected.issuerX500Principal.name &&
-                cert.serialNumber == expected.serialNumber
+            cert.serialNumber == expected.serialNumber
     }
 
     private fun hasIssuerAndSerialAny(cert: X509Certificate?, expected: List<X509Certificate>): Boolean =
