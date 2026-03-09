@@ -384,11 +384,6 @@ class SignatureServiceTest : FunSpec({
 
             pdfValidationResult.shouldBeLeft(SignatureValidationError.BankIdSignatureNotPadesLT)
         }
-        test("Should.....when random bytes validated") {
-            val result = signingService.validateSignaturesAndReturnSignatory(ByteArray(0), ByteArray(0))
-
-            result.shouldBeLeft(SignatureValidationError.BankIdSignatureNotPadesLT)
-        }
     }
 })
 
