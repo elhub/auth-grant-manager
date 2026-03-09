@@ -27,7 +27,6 @@ dependencies {
     implementation(libs.bundles.documentation)
     // PDF generation and signing
     implementation(libs.bundles.pdf.generation)
-    implementation(libs.bundles.dss)
     implementation(libs.bouncycastle.bcprov)
     implementation(libs.bouncycastle.bcpkix)
     implementation(libs.itext.sign)
@@ -55,6 +54,7 @@ dependencies {
     testImplementation(libs.test.testcontainers.postgres)
     testImplementation(libs.test.mybatis)
     testImplementation(libs.test.verapdf.validation.model)
+    testImplementation(libs.bundles.dss)
 }
 
 ksp {
@@ -155,7 +155,6 @@ val localEnvVars = mapOf(
     "PATH_TO_SIGNING_CERTIFICATE" to testCertPath.get(),
     "PATH_TO_SIGNING_CERTIFICATE_CHAIN" to testCertPath.get(),
     "PATH_TO_BANKID_ROOT_CERTIFICATES_DIR" to bankIdDirPath.get(),
-    //"ENABLE_ENDPOINTS" to "true",
     "AUTH_PERSONS_URL" to "http://localhost:8081",
     "PDP_BASE_URL" to "https://auth-policy-decision-point-test9.elhub.cloud",
     "STRUCTURE_DATA_METERING_POINTS_SERVICE_URL" to "http://localhost:8083",

@@ -127,8 +127,8 @@ database = ["database-exposed-core", "database-exposed-dao", "database-exposed-j
 dependency-injection = ["di-koin-ktor", "di-koin-logger-slf4j", "di-koin-annotations"]
 documentation = ["ktor-server-swagger"]
 functional-programming = ["fp-arrow-core", "fp-arrow-core-high-arity", "fp-arrow-fx-coroutines"]
-ktor = ["ktor-server-core", "ktor-server-netty", "ktor-server-content-negotiation", "ktor-server-config-yaml", "ktor-server-auth", "ktor-client-core", "ktor-client-cio",
-  "ktor-client-content-negotiation", "ktor-client-logging", "ktor-server-status-pages", "ktor-client-auth"]
+ktor = ["ktor-server-core", "ktor-server-netty", "ktor-server-content-negotiation", "ktor-server-config-yaml", "ktor-server-auth", "ktor-client-core",
+  "ktor-client-cio", "ktor-client-content-negotiation", "ktor-client-logging", "ktor-server-status-pages", "ktor-client-auth"]
 logging = ["ktor-server-call-id", "ktor-server-call-logging", "logging-logback-classic", "logging-oshai-kotlin-logging"]
 monitoring = ["ktor-server-metrics-micrometer", "monitoring-micrometer-registry-prometheus", "monitoring-cohort-hikari", "monitoring-cohort-ktor",
   "monitoring-cohort-micrometer"]
