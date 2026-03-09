@@ -23,11 +23,12 @@ import no.elhub.auth.features.documents.create.SignatureProvider
 import org.bouncycastle.asn1.ASN1OctetString
 import org.bouncycastle.asn1.ASN1Primitive
 import org.bouncycastle.asn1.ASN1String
-import java.io.ByteArrayOutputStream
 import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import java.math.BigInteger
 import java.security.GeneralSecurityException
 import java.security.MessageDigest
+import java.security.cert.Certificate
 import java.security.cert.CertificateFactory
 import java.security.cert.X509CRL
 import java.security.cert.X509Certificate
@@ -42,7 +43,7 @@ class ITextPdfSignatureService(
     }
 
     override suspend fun sign(fileByteArray: ByteArray): Either<SignatureSigningError, ByteArray> = either {
-        val certChain = certificateProvider.getElhubCertificateChain().toTypedArray<java.security.cert.Certificate>()
+        val certChain = certificateProvider.getElhubCertificateChain().toTypedArray<Certificate>()
         var signatureCallbackInvoked = false
         var signatureFetchFailed = false
 
@@ -124,7 +125,7 @@ class ITextPdfSignatureService(
                 .filter { signature ->
                     signature.fieldName != elhubSignature.fieldName && !signature.isTimestampSignature
                 }
-                .maxByOrNull { it.revision }
+                .minByOrNull { it.revision }
         ) {
             SignatureValidationError.MissingBankIdSignature
         }
@@ -315,9 +316,9 @@ class ITextPdfSignatureService(
     private fun isPadesLtOrLta(signature: PdfPKCS7, documentHasDss: Boolean): Boolean {
         val hasTimestamp = signature.getTimeStampTokenInfo() != null
         val hasRevocationData = !signature.getSignedDataCRLs().isNullOrEmpty() ||
-                !signature.getCRLs().isNullOrEmpty() ||
-                !signature.getSignedDataOcsps().isNullOrEmpty() ||
-                signature.getOcsp() != null
+            !signature.getCRLs().isNullOrEmpty() ||
+            !signature.getSignedDataOcsps().isNullOrEmpty() ||
+            signature.getOcsp() != null
 
         return hasTimestamp && (documentHasDss || hasRevocationData)
     }
@@ -356,7 +357,7 @@ class ITextPdfSignatureService(
     private fun hasIssuerAndSerial(cert: X509Certificate?, expected: X509Certificate): Boolean {
         if (cert == null) return false
         return cert.issuerX500Principal.name == expected.issuerX500Principal.name &&
-                cert.serialNumber == expected.serialNumber
+            cert.serialNumber == expected.serialNumber
     }
 
     private fun hasIssuerAndSerialAny(cert: X509Certificate?, expected: List<X509Certificate>): Boolean =
