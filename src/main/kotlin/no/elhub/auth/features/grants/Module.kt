@@ -28,8 +28,8 @@ fun Application.module() {
         singleOf(::ExposedGrantRepository) { createdAtStart() } bind GrantRepository::class
         singleOf(::ExposedGrantPropertiesRepository) { createdAtStart() } bind GrantPropertiesRepository::class
         singleOf(::GetHandler) { createdAtStart() }
-        singleOf(::GetScopesHandler) { createdAtStart()}
-        singleOf(::QueryHandler) { createdAtStart()}
+        singleOf(::GetScopesHandler) { createdAtStart() }
+        singleOf(::QueryHandler) { createdAtStart() }
         singleOf(::ConsumeHandler) { createdAtStart() }
     }
 

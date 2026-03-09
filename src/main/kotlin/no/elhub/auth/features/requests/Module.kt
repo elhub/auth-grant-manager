@@ -32,7 +32,7 @@ fun Application.module() {
     koinModule {
         single { environment.config }
         singleOf(::ExposedRequestRepository) { createdAtStart() } bind RequestRepository::class
-        singleOf(::ExposedGrantRepository)  { createdAtStart() } bind GrantRepository::class
+        singleOf(::ExposedGrantRepository) { createdAtStart() } bind GrantRepository::class
         singleOf(::ExposedRequestPropertiesRepository) { createdAtStart() } bind RequestPropertiesRepository::class
         singleOf(::ExposedGrantPropertiesRepository) { createdAtStart() } bind GrantPropertiesRepository::class
         singleOf(::ProxyRequestBusinessHandler) { createdAtStart() }

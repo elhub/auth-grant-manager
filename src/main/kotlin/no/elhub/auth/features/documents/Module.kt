@@ -23,6 +23,7 @@ import no.elhub.auth.features.filegenerator.PdfGenerator
 import no.elhub.auth.features.filegenerator.PdfGeneratorConfig
 import no.elhub.auth.features.grants.common.ExposedGrantRepository
 import no.elhub.auth.features.grants.common.GrantRepository
+import org.koin.core.module.dsl.createdAtStart
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.qualifier.named
 import org.koin.dsl.bind
@@ -49,9 +50,9 @@ fun Application.module() {
                 pathToBankIdRootCertificatesDir = cfg.property("bankIdRootDir").getString(),
             )
         }
-        singleOf(::FileCertificateProvider) bind CertificateProvider::class
+        singleOf(::FileCertificateProvider) { createdAtStart() } bind CertificateProvider::class
         single { PAdESService(CommonCertificateVerifier()) }
-        singleOf(::PdfSignatureService) bind SignatureService::class
+        singleOf(::PdfSignatureService) { createdAtStart() } bind SignatureService::class
 
         single {
             val cfg = get<ApplicationConfig>().config("pdfSigner.vault")
@@ -77,14 +78,14 @@ fun Application.module() {
             )
         }
 
-        singleOf(::PdfGenerator) bind FileGenerator::class
-        singleOf(::ExposedDocumentRepository) bind DocumentRepository::class
-        singleOf(::ExposedGrantRepository) bind GrantRepository::class
-        singleOf(::ExposedDocumentPropertiesRepository) bind DocumentPropertiesRepository::class
-        singleOf(::ConfirmHandler)
-        singleOf(::CreateHandler)
-        singleOf(::GetHandler)
-        singleOf(::QueryHandler)
+        singleOf(::PdfGenerator) { createdAtStart() } bind FileGenerator::class
+        singleOf(::ExposedDocumentRepository) { createdAtStart() } bind DocumentRepository::class
+        singleOf(::ExposedGrantRepository) { createdAtStart() } bind GrantRepository::class
+        singleOf(::ExposedDocumentPropertiesRepository) { createdAtStart() } bind DocumentPropertiesRepository::class
+        singleOf(::ConfirmHandler) { createdAtStart() }
+        singleOf(::CreateHandler) { createdAtStart() }
+        singleOf(::GetHandler) { createdAtStart() }
+        singleOf(::QueryHandler) { createdAtStart() }
     }
 
     routing {
