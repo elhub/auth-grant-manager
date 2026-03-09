@@ -150,7 +150,7 @@ class ITextPdfSignatureService(
             val parsedSignatures = signatureUtil.getSignatureNames().mapNotNull { fieldName ->
                 parseSignature(signatureUtil, fieldName, signatureUtil.getRevision(fieldName))
             }
-            val dssDictionary = document.getCatalog().getPdfObject().getAsDictionary(PdfName.DSS)
+            val dssDictionary = document.getCatalog().pdfObject.getAsDictionary(PdfName.DSS)
             ParsedDocument(
                 signatures = parsedSignatures,
                 totalRevisions = signatureUtil.getTotalRevisions(),
@@ -178,16 +178,16 @@ class ITextPdfSignatureService(
     private fun parseSignature(signatureUtil: SignatureUtil, fieldName: String, revision: Int): ParsedSignature? {
         val signature = signatureUtil.getSignature(fieldName) ?: return null
         val pkcs7 = runCatching { signatureUtil.readSignatureData(fieldName) }.getOrNull() ?: return null
-        val byteRange = signature.getByteRange()?.toLongArray()?.map(BigInteger::valueOf) ?: emptyList()
+        val byteRange = signature.byteRange?.toLongArray()?.map(BigInteger::valueOf) ?: emptyList()
         val revisionEof = signatureUtil.extractRevision(fieldName)?.use { it.readBytes().size.toLong() } ?: 0L
         return ParsedSignature(
             fieldName = fieldName,
             revision = revision,
             revisionEof = revisionEof,
-            isTimestampSignature = pkcs7.isTsp || signature.getType() == PdfName.DocTimeStamp,
+            isTimestampSignature = pkcs7.isTsp || signature.type == PdfName.DocTimeStamp,
             pkcs7 = pkcs7,
-            signingCertificate = pkcs7.getSigningCertificate(),
-            certificateChain = pkcs7.getSignCertificateChain().filterIsInstance<X509Certificate>(),
+            signingCertificate = pkcs7.signingCertificate,
+            certificateChain = pkcs7.signCertificateChain.filterIsInstance<X509Certificate>(),
             byteRange = byteRange
         )
     }
@@ -314,11 +314,11 @@ class ITextPdfSignatureService(
     }
 
     private fun isPadesLtOrLta(signature: PdfPKCS7, documentHasDss: Boolean): Boolean {
-        val hasTimestamp = signature.getTimeStampTokenInfo() != null
-        val hasRevocationData = !signature.getSignedDataCRLs().isNullOrEmpty() ||
-            !signature.getCRLs().isNullOrEmpty() ||
-            !signature.getSignedDataOcsps().isNullOrEmpty() ||
-            signature.getOcsp() != null
+        val hasTimestamp = signature.timeStampTokenInfo != null
+        val hasRevocationData = !signature.signedDataCRLs.isNullOrEmpty() ||
+                !signature.crLs.isNullOrEmpty() ||
+                !signature.signedDataOcsps.isNullOrEmpty() ||
+                signature.ocsp != null
 
         return hasTimestamp && (documentHasDss || hasRevocationData)
     }
@@ -330,8 +330,8 @@ class ITextPdfSignatureService(
         dssCrls: List<X509CRL>
     ) {
         val revocationLists = buildList<X509CRL> {
-            addAll(pkcs7.getCRLs().orEmpty().filterIsInstance<X509CRL>())
-            addAll(pkcs7.getSignedDataCRLs().filterIsInstance<X509CRL>())
+            addAll(pkcs7.crLs.orEmpty().filterIsInstance<X509CRL>())
+            addAll(pkcs7.signedDataCRLs.filterIsInstance<X509CRL>())
             addAll(dssCrls)
         }
 
@@ -357,7 +357,7 @@ class ITextPdfSignatureService(
     private fun hasIssuerAndSerial(cert: X509Certificate?, expected: X509Certificate): Boolean {
         if (cert == null) return false
         return cert.issuerX500Principal.name == expected.issuerX500Principal.name &&
-            cert.serialNumber == expected.serialNumber
+                cert.serialNumber == expected.serialNumber
     }
 
     private fun hasIssuerAndSerialAny(cert: X509Certificate?, expected: List<X509Certificate>): Boolean =
