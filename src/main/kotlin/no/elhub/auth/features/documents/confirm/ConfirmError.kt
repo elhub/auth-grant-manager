@@ -66,6 +66,7 @@ fun handleValidateSignatureError(error: ConfirmError.ValidateSignaturesError): P
     when (error.cause) {
         SignatureValidationError.ElhubSigningCertNotTrusted,
         SignatureValidationError.InvalidElhubSignature,
+        SignatureValidationError.ElhubSignatureModifiedAfterSigning,
         SignatureValidationError.MissingElhubSignature -> buildApiErrorResponse(
             status = HttpStatusCode.UnprocessableEntity,
             title = "Elhub signature is not valid",

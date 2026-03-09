@@ -17,7 +17,9 @@ fun main(args: Array<String>) {
 }
 
 fun Application.module() {
-    install(Koin)
+    install(Koin) {
+        createEagerInstances()
+    }
     val dataSource = configureDatabase()
     configureRequestTracing()
     configureLogging()

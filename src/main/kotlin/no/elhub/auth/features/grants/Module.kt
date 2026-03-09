@@ -7,6 +7,7 @@ import no.elhub.auth.features.grants.common.ExposedGrantPropertiesRepository
 import no.elhub.auth.features.grants.common.ExposedGrantRepository
 import no.elhub.auth.features.grants.common.GrantPropertiesRepository
 import no.elhub.auth.features.grants.common.GrantRepository
+import org.koin.core.module.dsl.createdAtStart
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
 import org.koin.ktor.ext.get
@@ -24,12 +25,12 @@ const val GRANTS_PATH = "/access/v0/authorization-grants"
 
 fun Application.module() {
     koinModule {
-        singleOf(::ExposedGrantRepository) bind GrantRepository::class
-        singleOf(::ExposedGrantPropertiesRepository) bind GrantPropertiesRepository::class
-        singleOf(::GetHandler)
-        singleOf(::GetScopesHandler)
-        singleOf(::QueryHandler)
-        singleOf(::ConsumeHandler)
+        singleOf(::ExposedGrantRepository) { createdAtStart() } bind GrantRepository::class
+        singleOf(::ExposedGrantPropertiesRepository) { createdAtStart() } bind GrantPropertiesRepository::class
+        singleOf(::GetHandler) { createdAtStart() }
+        singleOf(::GetScopesHandler) { createdAtStart()}
+        singleOf(::QueryHandler) { createdAtStart()}
+        singleOf(::ConsumeHandler) { createdAtStart() }
     }
 
     routing {

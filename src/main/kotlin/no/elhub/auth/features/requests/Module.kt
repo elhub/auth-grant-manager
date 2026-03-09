@@ -12,6 +12,7 @@ import no.elhub.auth.features.requests.common.ExposedRequestRepository
 import no.elhub.auth.features.requests.common.ProxyRequestBusinessHandler
 import no.elhub.auth.features.requests.common.RequestPropertiesRepository
 import no.elhub.auth.features.requests.common.RequestRepository
+import org.koin.core.module.dsl.createdAtStart
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
 import org.koin.ktor.ext.get
@@ -30,15 +31,15 @@ const val REQUESTS_PATH = "/access/v0/authorization-requests"
 fun Application.module() {
     koinModule {
         single { environment.config }
-        singleOf(::ExposedRequestRepository) bind RequestRepository::class
-        singleOf(::ExposedGrantRepository) bind GrantRepository::class
-        singleOf(::ExposedRequestPropertiesRepository) bind RequestPropertiesRepository::class
-        singleOf(::ExposedGrantPropertiesRepository) bind GrantPropertiesRepository::class
-        singleOf(::ProxyRequestBusinessHandler)
-        singleOf(::UpdateHandler)
-        singleOf(::CreateHandler)
-        singleOf(::GetHandler)
-        singleOf(::QueryHandler)
+        singleOf(::ExposedRequestRepository) { createdAtStart() } bind RequestRepository::class
+        singleOf(::ExposedGrantRepository)  { createdAtStart() } bind GrantRepository::class
+        singleOf(::ExposedRequestPropertiesRepository) { createdAtStart() } bind RequestPropertiesRepository::class
+        singleOf(::ExposedGrantPropertiesRepository) { createdAtStart() } bind GrantPropertiesRepository::class
+        singleOf(::ProxyRequestBusinessHandler) { createdAtStart() }
+        singleOf(::UpdateHandler) { createdAtStart() }
+        singleOf(::CreateHandler) { createdAtStart() }
+        singleOf(::GetHandler) { createdAtStart() }
+        singleOf(::QueryHandler) { createdAtStart() }
     }
 
     routing {
