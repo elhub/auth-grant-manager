@@ -108,13 +108,15 @@ class ITextPdfSignatureService(
         val parsedDocument = ensureNotNull(parseDocument(file)) { SignatureValidationError.MissingElhubSignature }
 
         val elhubExpectedCert = certificateProvider.getElhubSigningCertificate()
-        val elhubSignature = ensureNotNull(
-            parsedDocument.signatures.firstOrNull {
-                hasIssuerAndSerial(it.signingCertificate, elhubExpectedCert)
-            }
-        ) {
+
+        val elhubSignature = ensureNotNull(parsedDocument.signatures.firstOrNull()) {
             SignatureValidationError.MissingElhubSignature
         }
+
+        ensure(hasIssuerAndSerial(elhubSignature.signingCertificate, elhubExpectedCert)) {
+            SignatureValidationError.MissingElhubSignature
+        }
+
         validateElhubSignature(elhubSignature, elhubExpectedCert).bind()
         verifyNewMatchesOriginalByByteRange(elhubSignature, originalFile, file).bind()
 
