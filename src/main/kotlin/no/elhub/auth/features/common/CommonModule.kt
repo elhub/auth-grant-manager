@@ -1,7 +1,9 @@
 package no.elhub.auth.features.common
 
 import io.ktor.client.HttpClient
+import io.ktor.client.engine.ProxyBuilder
 import io.ktor.client.engine.cio.CIO
+import io.ktor.client.engine.http
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.logging.LogLevel
@@ -23,12 +25,39 @@ import org.koin.core.module.dsl.singleOf
 import org.koin.core.qualifier.named
 import org.koin.dsl.bind
 import org.koin.ktor.plugin.koinModule
+import org.slf4j.LoggerFactory
 
 fun Application.commonModule() {
     koinModule {
         single { environment.config }
         single(named("commonHttpClient")) {
             HttpClient(CIO) {
+                install(HttpTimeout) {
+                    requestTimeoutMillis = 10_000
+                    connectTimeoutMillis = 10_000
+                    socketTimeoutMillis = 10_000
+                }
+                install(ContentNegotiation) {
+                    json(
+                        Json {
+                            ignoreUnknownKeys = true
+                        }
+                    )
+                }
+                install(Logging) {
+                    format = LoggingFormat.OkHttp
+                    level = LogLevel.INFO
+                }
+            }
+        }
+        single(named("proxyHttpClient")) {
+            val logger = LoggerFactory.getLogger("proxyHttpClient")
+            val proxyUrl = environment.config.propertyOrNull("httpProxy.url")?.getString()?.takeIf { it.isNotBlank() }
+            HttpClient(CIO) {
+                proxyUrl?.let {
+                    logger.info("Configuring HTTP proxy: {}", it)
+                    engine { proxy = ProxyBuilder.http(it) }
+                } ?: logger.info("No HTTP proxy configured (HTTP_PROXY_URL not set)")
                 install(HttpTimeout) {
                     requestTimeoutMillis = 10_000
                     connectTimeoutMillis = 10_000
