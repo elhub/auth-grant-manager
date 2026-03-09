@@ -129,7 +129,6 @@ class ITextPdfSignatureService(
             SignatureValidationError.MissingBankIdSignature
         }
 
-        // TODO does this disallow other certs in between? please check tests
         ensureNoDisallowedChangesBetweenSignatures(
             elhubSignature,
             bankIdSignature,
