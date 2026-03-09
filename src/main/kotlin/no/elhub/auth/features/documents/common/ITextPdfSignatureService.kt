@@ -134,7 +134,6 @@ class ITextPdfSignatureService(
         validateBankIdSignatureAndReturnSignatory(
             signature = bankIdSignature,
             expectedRoots = expectedBankIdRoots,
-            documentHasDss = parsedDocument.hasDss,
             dssCrls = parsedDocument.dssCrls
         ).bind()
     }
@@ -152,7 +151,6 @@ class ITextPdfSignatureService(
                 allRevisionEofs = PdfRevisionsReader(document.reader)
                     .getAllRevisions()
                     .map { it.eofOffset },
-                hasDss = dssDictionary != null,
                 dssCrls = parseDssCrls(dssDictionary)
             )
         }
@@ -240,7 +238,6 @@ class ITextPdfSignatureService(
     private fun validateBankIdSignatureAndReturnSignatory(
         signature: ParsedSignature,
         expectedRoots: List<X509Certificate>,
-        documentHasDss: Boolean,
         dssCrls: List<X509CRL>
     ): Either<SignatureValidationError, PartyIdentifier> = either {
         val signingCert = ensureNotNull(signature.signingCertificate) {
@@ -271,10 +268,6 @@ class ITextPdfSignatureService(
             pkcs7 = signature.pkcs7,
             dssCrls = dssCrls
         )
-
-        ensure(isPadesLtOrLta(signature.pkcs7, documentHasDss)) {
-            SignatureValidationError.BankIdSignatureNotPadesLT
-        }
 
         val nationalIdentityNumber = ensureNotNull(decodeNationalIdentityNumber(signingCert)) {
             SignatureValidationError.MissingNationalId
@@ -308,30 +301,24 @@ class ITextPdfSignatureService(
         return runCatching { signature.timeStampDate.time }.getOrNull()
     }
 
-    private fun isPadesLtOrLta(signature: PdfPKCS7, documentHasDss: Boolean): Boolean {
-        val hasTimestamp = signature.timeStampTokenInfo != null
-        val hasRevocationData = !signature.signedDataCRLs.isNullOrEmpty() ||
-            !signature.crLs.isNullOrEmpty() ||
-            !signature.signedDataOcsps.isNullOrEmpty() ||
-            signature.ocsp != null
-
-        return hasTimestamp && (documentHasDss || hasRevocationData)
-    }
-
     private fun Raise<SignatureValidationError>.ensureNoRevokedCertificateAt(
         timestampTime: Date,
         certificateChain: List<X509Certificate>,
         pkcs7: PdfPKCS7,
         dssCrls: List<X509CRL>
     ) {
-        val revocationLists = buildList<X509CRL> {
+        val revocations = buildList<X509CRL> {
             addAll(pkcs7.crLs.orEmpty().filterIsInstance<X509CRL>())
             addAll(pkcs7.signedDataCRLs.filterIsInstance<X509CRL>())
             addAll(dssCrls)
         }
 
+        ensure(revocations.any()) {
+            SignatureValidationError.BankIdSignatureNotPadesLT
+        }
+
         val revokedCertificate = certificateChain.firstOrNull { cert ->
-            revocationLists.any { crl ->
+            revocations.any { crl ->
                 val revoked = crl.getRevokedCertificate(cert.serialNumber) ?: return@any false
                 revoked.revocationDate == null || !revoked.revocationDate.after(timestampTime)
             }
@@ -352,7 +339,7 @@ class ITextPdfSignatureService(
     private fun hasIssuerAndSerial(cert: X509Certificate?, expected: X509Certificate): Boolean {
         if (cert == null) return false
         return cert.issuerX500Principal.name == expected.issuerX500Principal.name &&
-            cert.serialNumber == expected.serialNumber
+                cert.serialNumber == expected.serialNumber
     }
 
     private fun hasIssuerAndSerialAny(cert: X509Certificate?, expected: List<X509Certificate>): Boolean =
@@ -427,7 +414,6 @@ class ITextPdfSignatureService(
         val signatures: List<ParsedSignature>,
         val totalRevisions: Int,
         val allRevisionEofs: List<Long>,
-        val hasDss: Boolean,
         val dssCrls: List<X509CRL>,
     )
 
