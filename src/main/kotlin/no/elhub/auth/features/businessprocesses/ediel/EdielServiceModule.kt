@@ -25,7 +25,7 @@ fun Application.edielServiceModule() {
         single<EdielService> {
             EdielApi(
                 edielApiConfig = get(),
-                client = get(named("commonHttpClient"))
+                client = get(named("proxyHttpClient"))
             )
         }
     }
