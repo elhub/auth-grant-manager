@@ -5,7 +5,6 @@ import eu.europa.esig.dss.enumerations.DigestAlgorithm
 import eu.europa.esig.dss.enumerations.SignatureAlgorithm
 import eu.europa.esig.dss.enumerations.SignatureLevel
 import eu.europa.esig.dss.model.InMemoryDocument
-import eu.europa.esig.dss.pades.signature.PAdESService
 import eu.europa.esig.dss.pades.validation.PDFDocumentValidator
 import eu.europa.esig.dss.spi.validation.CommonCertificateVerifier
 import io.kotest.assertions.arrow.core.shouldBeLeft
@@ -47,13 +46,12 @@ class SignatureServiceTest : FunSpec({
     )
 
     val certProvider = FileCertificateProvider(certProviderConfig)
-    val padesService = PAdESService(CommonCertificateVerifier())
     val certFactory = TestCertificateFactory(
         bankIdRootCertificatePath = tempBankIdCerts.bankIdRootCertificatePath,
         bankIdRootPrivateKeyPath = tempBankIdCerts.bankIdRootPrivateKeyPath
     )
 
-    val signingService = PdfSignatureService(padesService, certProvider, vaultSignatureProvider)
+    val signingService = ITextPdfSignatureService(certProvider, vaultSignatureProvider)
 
     val unsignedPdfBytes = this::class.java.classLoader.getResourceAsStream("unsigned.pdf")!!.readAllBytes()
     val nationalIdentityNumber = "01827535970"

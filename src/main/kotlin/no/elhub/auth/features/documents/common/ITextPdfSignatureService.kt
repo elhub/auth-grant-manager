@@ -128,7 +128,13 @@ class ITextPdfSignatureService(
         ) {
             SignatureValidationError.MissingBankIdSignature
         }
-        ensureNoDisallowedChangesBetweenSignatures(elhubSignature, bankIdSignature, parsedDocument.allRevisionEofs).bind()
+
+        // TODO does this disallow other certs in between? please check tests
+        ensureNoDisallowedChangesBetweenSignatures(
+            elhubSignature,
+            bankIdSignature,
+            parsedDocument.allRevisionEofs
+        ).bind()
 
         validateBankIdSignatureAndReturnSignatory(
             signature = bankIdSignature,
@@ -310,9 +316,9 @@ class ITextPdfSignatureService(
     private fun isPadesLtOrLta(signature: PdfPKCS7, documentHasDss: Boolean): Boolean {
         val hasTimestamp = signature.getTimeStampTokenInfo() != null
         val hasRevocationData = !signature.getSignedDataCRLs().isNullOrEmpty() ||
-            !signature.getCRLs().isNullOrEmpty() ||
-            !signature.getSignedDataOcsps().isNullOrEmpty() ||
-            signature.getOcsp() != null
+                !signature.getCRLs().isNullOrEmpty() ||
+                !signature.getSignedDataOcsps().isNullOrEmpty() ||
+                signature.getOcsp() != null
 
         return hasTimestamp && (documentHasDss || hasRevocationData)
     }
@@ -351,7 +357,7 @@ class ITextPdfSignatureService(
     private fun hasIssuerAndSerial(cert: X509Certificate?, expected: X509Certificate): Boolean {
         if (cert == null) return false
         return cert.issuerX500Principal.name == expected.issuerX500Principal.name &&
-            cert.serialNumber == expected.serialNumber
+                cert.serialNumber == expected.serialNumber
     }
 
     private fun hasIssuerAndSerialAny(cert: X509Certificate?, expected: List<X509Certificate>): Boolean =
