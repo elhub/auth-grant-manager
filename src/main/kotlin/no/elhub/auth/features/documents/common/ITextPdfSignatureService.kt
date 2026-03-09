@@ -294,15 +294,15 @@ class ITextPdfSignatureService(
         signature: PdfPKCS7,
         expectedRoots: List<X509Certificate>
     ): Date? {
-        if (signature.getTimeStampTokenInfo() == null) return null
+        if (signature.timeStampTokenInfo == null) return null
         if (!runCatching { signature.verifyTimestampImprint() }.getOrDefault(false)) return null
 
-        val timestampSignature = signature.getTimestampSignatureContainer() ?: return null
+        val timestampSignature = signature.timestampSignatureContainer ?: return null
         if (!runCatching { timestampSignature.verifySignatureIntegrityAndAuthenticity() }.getOrDefault(false)) {
             return null
         }
 
-        val timestampChain = timestampSignature.getSignCertificateChain().filterIsInstance<X509Certificate>()
+        val timestampChain = timestampSignature.signCertificateChain.filterIsInstance<X509Certificate>()
         if (timestampChain.isEmpty()) return null
         val trustedRootMatch = isChainTrustedByExpectedRoots(timestampChain, expectedRoots)
         val chainIntact = isCertificateChainIntact(timestampChain)
