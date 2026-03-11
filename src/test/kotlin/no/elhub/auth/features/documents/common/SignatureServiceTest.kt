@@ -21,10 +21,10 @@ import no.elhub.auth.features.documents.TestCertificateFactory
 import no.elhub.auth.features.documents.TestCertificateUtil
 import no.elhub.auth.features.documents.TestPdfSigner
 import no.elhub.auth.features.documents.VaultTransitTestContainerExtension
-import no.elhub.auth.features.documents.localVaultConfig
 import no.elhub.auth.features.documents.create.FileCertificateProvider
 import no.elhub.auth.features.documents.create.FileCertificateProviderConfig
 import no.elhub.auth.features.documents.create.HashicorpVaultSignatureProvider
+import no.elhub.auth.features.documents.localVaultConfig
 import java.math.BigInteger
 import java.nio.file.Files
 import java.security.MessageDigest
