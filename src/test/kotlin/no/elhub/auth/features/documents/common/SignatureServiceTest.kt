@@ -19,7 +19,6 @@ import no.elhub.auth.features.documents.*
 import no.elhub.auth.features.documents.create.FileCertificateProvider
 import no.elhub.auth.features.documents.create.FileCertificateProviderConfig
 import no.elhub.auth.features.documents.create.HashicorpVaultSignatureProvider
-import java.io.File
 import java.math.BigInteger
 import java.nio.file.Files
 import java.security.MessageDigest
@@ -385,7 +384,7 @@ class SignatureServiceTest : FunSpec({
 
                 val classLoader = this::class.java.classLoader
 
-                val pdfBytes = File("bankid-signed-with-seal.pdf").readBytes()
+                val pdfBytes = classLoader.getResourceAsStream("bankid-signed-with-seal.pdf")!!.readAllBytes()
 
                 val elhubPemFile = "elhub-public-key.pem"
                 val elhubRootCertBytes = classLoader.getResourceAsStream(elhubPemFile)!!.readAllBytes()
