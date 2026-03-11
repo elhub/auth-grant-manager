@@ -15,17 +15,13 @@ import io.kotest.matchers.shouldNotBe
 import no.elhub.auth.features.common.httpTestClient
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
-import no.elhub.auth.features.documents.EndUserSignatureTestHelper
-import no.elhub.auth.features.documents.TempBankIdCertificatesLocation
-import no.elhub.auth.features.documents.TestCertificateFactory
-import no.elhub.auth.features.documents.TestCertificateUtil
-import no.elhub.auth.features.documents.TestPdfSigner
-import no.elhub.auth.features.documents.VaultTransitTestContainerExtension
+import no.elhub.auth.features.documents.*
 import no.elhub.auth.features.documents.create.FileCertificateProvider
 import no.elhub.auth.features.documents.create.FileCertificateProviderConfig
 import no.elhub.auth.features.documents.create.HashicorpVaultSignatureProvider
-import no.elhub.auth.features.documents.localVaultConfig
+import java.io.File
 import java.math.BigInteger
+import java.nio.file.Files
 import java.security.MessageDigest
 import java.util.Base64
 
@@ -383,6 +379,36 @@ class SignatureServiceTest : FunSpec({
                 signingService.validateSignaturesAndReturnSignatory(bankIdSignedPdfBytes, elhubSignedPdfBytes)
 
             pdfValidationResult.shouldBeLeft(SignatureValidationError.BankIdSignatureNotPadesLT)
+        }
+        context("Test with real BankID signed document") {
+            test("bankid-signed-with-seal.pdf should pass validation") {
+
+                val classLoader = this::class.java.classLoader
+
+                val pdfBytes = File("bankid-signed-with-seal.pdf").readBytes()
+
+                val elhubPemFile = "elhub-public-key.pem"
+                val elhubRootCertBytes = classLoader.getResourceAsStream(elhubPemFile)!!.readAllBytes()
+                val tempElhubDir = Files.createTempDirectory("elhub-tmp")
+                tempElhubDir.resolve(elhubPemFile).toFile().writeBytes(elhubRootCertBytes)
+
+                val bankIdFile = "bankid-root-cert.pem"
+                val bankIdRootCertBytes = classLoader.getResourceAsStream(bankIdFile)!!.readAllBytes()
+                val tempBankIdDir = Files.createTempDirectory("bankid-tmp")
+                tempBankIdDir.resolve(bankIdFile).toFile().writeBytes(bankIdRootCertBytes)
+
+                val elhubCertPath = "$tempElhubDir/$elhubPemFile"
+                val realCertProvider = FileCertificateProvider(
+                    FileCertificateProviderConfig(
+                        pathToCertificateChain = elhubCertPath,
+                        pathToSigningCertificate = elhubCertPath,
+                        pathToBankIdRootCertificatesDir = tempBankIdDir.toString(),
+                    )
+                )
+
+                val signatureService = ITextPdfSignatureService(realCertProvider, vaultSignatureProvider)
+                signatureService.validateSignaturesAndReturnSignatory(pdfBytes, pdfBytes).shouldBeRight()
+            }
         }
     }
 })

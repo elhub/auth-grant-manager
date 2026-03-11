@@ -293,7 +293,14 @@ class ITextPdfSignatureService(
 
         val timestampChain = timestampSignature.signCertificateChain.filterIsInstance<X509Certificate>()
         if (timestampChain.isEmpty()) return null
-        val trustedRootMatch = isChainTrustedByExpectedRoots(timestampChain, expectedRoots)
+        val topOfTsaChain = timestampChain.lastOrNull() ?: return null
+        val trustedRootMatch =
+            timestampChain.any { cert -> expectedRoots.any { root -> areSameCertificate(cert, root) } } ||
+                    expectedRoots.any { root ->
+                        runCatching { topOfTsaChain.verify(root.publicKey); true }.getOrDefault(
+                            false
+                        )
+                    }
         val chainIntact = isCertificateChainIntact(timestampChain)
         if (!trustedRootMatch) return null
         if (!chainIntact) return null
@@ -339,7 +346,7 @@ class ITextPdfSignatureService(
     private fun hasIssuerAndSerial(cert: X509Certificate?, expected: X509Certificate): Boolean {
         if (cert == null) return false
         return cert.issuerX500Principal.name == expected.issuerX500Principal.name &&
-            cert.serialNumber == expected.serialNumber
+                cert.serialNumber == expected.serialNumber
     }
 
     private fun hasIssuerAndSerialAny(cert: X509Certificate?, expected: List<X509Certificate>): Boolean =
@@ -350,23 +357,18 @@ class ITextPdfSignatureService(
         chain: List<X509Certificate>,
         expectedRoots: List<X509Certificate>
     ): Boolean {
-        if (isChainTrustedByExpectedRoots(chain, expectedRoots)) return true
+        val intermediateCert = chain.lastOrNull() ?: signingCert
         return expectedRoots.any { root ->
-            runCatching {
-                signingCert.verify(root.publicKey)
-                true
-            }.getOrDefault(false)
+            runCatching { intermediateCert.verify(root.publicKey); true }.getOrDefault(false)
         }
     }
 
-    private fun isChainTrustedByExpectedRoots(
-        chain: List<X509Certificate>,
-        expectedRoots: List<X509Certificate>
-    ): Boolean =
-        chain.any { cert -> expectedRoots.any { root -> areSameCertificate(cert, root) } }
-
-    private fun areSameCertificate(left: X509Certificate, right: X509Certificate): Boolean =
-        runCatching { left.encoded.contentEquals(right.encoded) }.getOrDefault(false)
+    private fun areSameCertificate(left: X509Certificate, right: X509Certificate): Boolean {
+        val leftSpki = left.publicKey.encoded
+        val rightSpki = right.publicKey.encoded
+        return leftSpki.contentEquals(rightSpki) &&
+                left.subjectX500Principal == right.subjectX500Principal
+    }
 
     private fun isCertificateChainIntact(chain: List<X509Certificate>): Boolean {
         for (index in 0 until chain.lastIndex) {
