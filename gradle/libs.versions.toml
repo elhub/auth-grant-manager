@@ -4,7 +4,7 @@ format.version = "1.1"
 [versions]
 arrow = "2.2.1.1"
 cohort = "2.8.2"
-dss = "6.3"
+dss = "6.4"
 elhub-gradle = "0.10.6"
 elhub-jsonapi-wrapper = "0.4.13"
 exposed = "1.1.1"
