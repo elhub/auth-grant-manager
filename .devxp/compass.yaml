@@ -33,3 +33,5 @@ labels:
   - "language:kotlin"
   - "source:github"
   - "framework:ktor"
+  - "deployment:kubernetes"
+  - "image:auth-grant-manager"
