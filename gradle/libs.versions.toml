@@ -37,6 +37,7 @@ snakeyaml = "2.6"
 testcontainers = "2.0.3"
 verapdf = "1.28.2"
 bouncycastle = "1.83"
+itext = "8.0.5"
 
 [plugins]
 elhub-gradle-plugin = { id = "no.elhub.devxp.kotlin-service", version.ref = "elhub-gradle" }
@@ -115,6 +116,8 @@ dss-policy-jaxb = { group = "eu.europa.ec.joinup.sd-dss", name = "dss-policy-jax
 test-verapdf-validation-model = { group = "org.verapdf", name = "validation-model", version.ref = "verapdf" }
 bouncycastle-bcprov = { group = "org.bouncycastle", name = "bcprov-jdk18on", version.ref = "bouncycastle" }
 bouncycastle-bcpkix = { group = "org.bouncycastle", name = "bcpkix-jdk18on", version.ref = "bouncycastle" }
+itext-sign = { group = "com.itextpdf", name = "sign", version.ref = "itext" }
+itext-bouncy-castle-adapter = { group = "com.itextpdf", name = "bouncy-castle-adapter", version.ref = "itext" }
 
 # Bundles should be used to group dependencies that are frequently used together.
 [bundles]
@@ -123,8 +126,8 @@ database = ["database-exposed-core", "database-exposed-dao", "database-exposed-j
 dependency-injection = ["di-koin-ktor", "di-koin-logger-slf4j", "di-koin-annotations"]
 documentation = ["ktor-server-swagger"]
 functional-programming = ["fp-arrow-core", "fp-arrow-core-high-arity", "fp-arrow-fx-coroutines"]
-ktor = ["ktor-server-core", "ktor-server-netty", "ktor-server-content-negotiation", "ktor-server-config-yaml", "ktor-client-core", "ktor-client-cio",
-  "ktor-client-content-negotiation", "ktor-client-logging", "ktor-server-status-pages", "ktor-client-auth"]
+ktor = ["ktor-server-core", "ktor-server-netty", "ktor-server-content-negotiation", "ktor-server-config-yaml", "ktor-client-core",
+  "ktor-client-cio", "ktor-client-content-negotiation", "ktor-client-logging", "ktor-server-status-pages", "ktor-client-auth"]
 logging = ["ktor-server-call-id", "ktor-server-call-logging", "logging-logback-classic", "logging-oshai-kotlin-logging"]
 monitoring = ["ktor-server-metrics-micrometer", "monitoring-micrometer-registry-prometheus", "monitoring-cohort-hikari", "monitoring-cohort-ktor",
   "monitoring-cohort-micrometer"]

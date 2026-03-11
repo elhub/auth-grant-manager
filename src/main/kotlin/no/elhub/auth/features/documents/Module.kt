@@ -1,7 +1,5 @@
 package no.elhub.auth.features.documents
 
-import eu.europa.esig.dss.pades.signature.PAdESService
-import eu.europa.esig.dss.spi.validation.CommonCertificateVerifier
 import io.ktor.server.application.Application
 import io.ktor.server.config.ApplicationConfig
 import io.ktor.server.routing.route
@@ -10,7 +8,7 @@ import no.elhub.auth.features.documents.common.DocumentPropertiesRepository
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.documents.common.ExposedDocumentPropertiesRepository
 import no.elhub.auth.features.documents.common.ExposedDocumentRepository
-import no.elhub.auth.features.documents.common.PdfSignatureService
+import no.elhub.auth.features.documents.common.ITextPdfSignatureService
 import no.elhub.auth.features.documents.common.SignatureService
 import no.elhub.auth.features.documents.create.CertificateProvider
 import no.elhub.auth.features.documents.create.FileCertificateProvider
@@ -50,8 +48,7 @@ fun Application.module() {
             )
         }
         singleOf(::FileCertificateProvider) bind CertificateProvider::class
-        single { PAdESService(CommonCertificateVerifier()) }
-        singleOf(::PdfSignatureService) bind SignatureService::class
+        singleOf(::ITextPdfSignatureService) bind SignatureService::class
 
         single {
             val cfg = get<ApplicationConfig>().config("pdfSigner.vault")
