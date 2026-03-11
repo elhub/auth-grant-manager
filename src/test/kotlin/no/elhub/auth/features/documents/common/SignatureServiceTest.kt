@@ -386,7 +386,7 @@ class SignatureServiceTest : FunSpec({
             pdfValidationResult.shouldBeLeft(SignatureValidationError.BankIdSignatureNotPadesLT)
         }
         context("Test with real BankID signed document") {
-            test("bankid-signed-with-seal.pdf should pass validation") {
+            test("Signed document from BankID test environment should be valid when trusting Elhub MT1 public key and BankID preprod public key") {
 
                 val classLoader = this::class.java.classLoader
 
