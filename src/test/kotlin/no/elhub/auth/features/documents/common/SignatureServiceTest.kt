@@ -15,7 +15,13 @@ import io.kotest.matchers.shouldNotBe
 import no.elhub.auth.features.common.httpTestClient
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
-import no.elhub.auth.features.documents.*
+import no.elhub.auth.features.documents.EndUserSignatureTestHelper
+import no.elhub.auth.features.documents.TempBankIdCertificatesLocation
+import no.elhub.auth.features.documents.TestCertificateFactory
+import no.elhub.auth.features.documents.TestCertificateUtil
+import no.elhub.auth.features.documents.TestPdfSigner
+import no.elhub.auth.features.documents.VaultTransitTestContainerExtension
+import no.elhub.auth.features.documents.localVaultConfig
 import no.elhub.auth.features.documents.create.FileCertificateProvider
 import no.elhub.auth.features.documents.create.FileCertificateProviderConfig
 import no.elhub.auth.features.documents.create.HashicorpVaultSignatureProvider
