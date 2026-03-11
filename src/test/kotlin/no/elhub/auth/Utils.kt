@@ -26,6 +26,10 @@ import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import java.util.UUID
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation as ClientContentNegotiation
 
+object Constants {
+    const val CONSENT_MANAGEMENT_OSB_ID = "consent-management-osb"
+}
+
 fun String.shouldBeValidUuid() {
     this should beValidUuid()
 }
@@ -214,3 +218,4 @@ fun ApplicationTestBuilder.setupAppWith(
         }
     }
 }
+

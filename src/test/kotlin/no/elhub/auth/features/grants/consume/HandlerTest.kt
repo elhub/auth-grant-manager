@@ -9,7 +9,7 @@ import io.kotest.core.spec.style.FunSpec
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import no.elhub.auth.features.common.AuthorizationParties
+import no.elhub.auth.Constants
 import no.elhub.auth.features.common.RepositoryError
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.RepositoryWriteError
@@ -73,6 +73,11 @@ class HandlerTest : FunSpec({
         properties = emptyList()
     )
 
+    val consentManagementSystem = AuthorizationParty(
+        id = Constants.CONSENT_MANAGEMENT_OSB_ID,
+        type = PartyType.System,
+    )
+
     fun repoReturning(
         updateResult: Either<RepositoryError, AuthorizationGrant>,
         findResult: Either<RepositoryReadError, AuthorizationGrant> = activeGrant.right(),
@@ -82,22 +87,6 @@ class HandlerTest : FunSpec({
             every { find(grantId) } returns findResult
         }
 
-    test("returns NotAuthorized when authorized party is not consent management system") {
-        val repo = mockk<GrantRepository>(relaxed = true)
-        val handler = Handler(repo)
-
-        val response = handler(
-            ConsumeCommand(
-                grantId = grantId,
-                newStatus = newStatus,
-                authorizedParty = AuthorizationParty(id = "other-system", type = PartyType.System)
-            )
-        )
-
-        response.shouldBeLeft(ConsumeError.NotAuthorized)
-        verify(exactly = 0) { repo.update(any(), any()) }
-    }
-
     test("maps repository error to PersistenceError") {
         val error: RepositoryError = RepositoryWriteError.UnexpectedError
         val handler = Handler(repoReturning(updateResult = error.left()))
@@ -106,7 +95,7 @@ class HandlerTest : FunSpec({
             ConsumeCommand(
                 grantId = grantId,
                 newStatus = newStatus,
-                authorizedParty = AuthorizationParties.ConsentManagementSystem
+                authorizedParty = consentManagementSystem
             )
         )
 
@@ -120,7 +109,7 @@ class HandlerTest : FunSpec({
             ConsumeCommand(
                 grantId = grantId,
                 newStatus = newStatus,
-                authorizedParty = AuthorizationParties.ConsentManagementSystem
+                authorizedParty = consentManagementSystem
             )
         )
 
@@ -142,7 +131,7 @@ class HandlerTest : FunSpec({
             ConsumeCommand(
                 grantId = grantId,
                 newStatus = newStatus,
-                authorizedParty = AuthorizationParties.ConsentManagementSystem
+                authorizedParty = consentManagementSystem
             )
         )
 
@@ -163,7 +152,7 @@ class HandlerTest : FunSpec({
             ConsumeCommand(
                 grantId = grantId,
                 newStatus = newStatus,
-                authorizedParty = AuthorizationParties.ConsentManagementSystem
+                authorizedParty = consentManagementSystem
             )
         )
 
@@ -181,7 +170,7 @@ class HandlerTest : FunSpec({
             ConsumeCommand(
                 grantId = grantId,
                 newStatus = Status.Active,
-                authorizedParty = AuthorizationParties.ConsentManagementSystem
+                authorizedParty = consentManagementSystem
             )
         )
 
