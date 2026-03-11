@@ -8,7 +8,6 @@ import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.core.spec.style.FunSpec
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.verify
 import no.elhub.auth.Constants
 import no.elhub.auth.features.common.RepositoryError
 import no.elhub.auth.features.common.RepositoryReadError
@@ -88,6 +87,7 @@ class HandlerTest : FunSpec({
         }
 
     test("maps repository error to PersistenceError") {
+
         val error: RepositoryError = RepositoryWriteError.UnexpectedError
         val handler = Handler(repoReturning(updateResult = error.left()))
 
