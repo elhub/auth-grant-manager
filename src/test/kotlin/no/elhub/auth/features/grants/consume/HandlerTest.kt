@@ -8,7 +8,6 @@ import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.core.spec.style.FunSpec
 import io.mockk.every
 import io.mockk.mockk
-import no.elhub.auth.Constants
 import no.elhub.auth.features.common.RepositoryError
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.RepositoryWriteError
@@ -73,7 +72,7 @@ class HandlerTest : FunSpec({
     )
 
     val consentManagementSystem = AuthorizationParty(
-        id = Constants.CONSENT_MANAGEMENT_OSB_ID,
+        id = "osb-to-consent-management",
         type = PartyType.System,
     )
 

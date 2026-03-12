@@ -17,7 +17,6 @@ import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
-import no.elhub.auth.Constants
 import no.elhub.auth.features.common.AuthPersonsTestContainer
 import no.elhub.auth.features.common.AuthPersonsTestContainerExtension
 import no.elhub.auth.features.common.PdpTestContainerExtension
@@ -64,7 +63,7 @@ class AuthorizationGrantRouteTest : FunSpec({
 
         pdpContainer.registerElhubServiceTokenMapping(
             token = "elhub-service",
-            partyId = Constants.CONSENT_MANAGEMENT_OSB_ID
+            partyId = "some-elhub-service"
         )
     }
 
