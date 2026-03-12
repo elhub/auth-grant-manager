@@ -23,11 +23,13 @@ import no.elhub.auth.features.documents.create.SignatureProvider
 import org.bouncycastle.asn1.ASN1OctetString
 import org.bouncycastle.asn1.ASN1Primitive
 import org.bouncycastle.asn1.ASN1String
+import org.bouncycastle.jce.provider.BouncyCastleProvider
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.math.BigInteger
 import java.security.GeneralSecurityException
 import java.security.MessageDigest
+import java.security.Security
 import java.security.cert.Certificate
 import java.security.cert.CertificateFactory
 import java.security.cert.X509CRL
@@ -40,6 +42,12 @@ class ITextPdfSignatureService(
 ) : SignatureService {
     companion object {
         const val NATIONAL_ID_EXTENSION_OID = "2.16.578.1.61.2.4"
+
+        init {
+            if (Security.getProvider("BC") == null) {
+                Security.addProvider(BouncyCastleProvider())
+            }
+        }
     }
 
     override suspend fun sign(fileByteArray: ByteArray): Either<SignatureSigningError, ByteArray> = either {
