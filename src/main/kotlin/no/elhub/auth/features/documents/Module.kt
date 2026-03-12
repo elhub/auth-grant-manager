@@ -42,7 +42,7 @@ fun Application.module() {
         single {
             val cfg = get<ApplicationConfig>().config("pdfSigner.certificate")
             FileCertificateProviderConfig(
-                pathToCertificateChain = cfg.property("chain").getString(),
+                pathToIntermediateCertificate = cfg.property("intermediate").getString(),
                 pathToSigningCertificate = cfg.property("signing").getString(),
                 pathToBankIdRootCertificatesDir = cfg.property("bankIdRootDir").getString(),
             )
