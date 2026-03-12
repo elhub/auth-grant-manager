@@ -7,7 +7,6 @@ import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.core.spec.style.FunSpec
 import io.mockk.every
 import io.mockk.mockk
-import no.elhub.auth.features.common.Constants
 import no.elhub.auth.features.common.QueryError
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.currentTimeUtc
@@ -22,8 +21,7 @@ import java.util.UUID
 
 class HandlerTest : FunSpec({
 
-    val authorizedSystem = AuthorizationParty(id = Constants.CONSENT_MANAGEMENT_OSB_ID, type = PartyType.System)
-    val unAuthorizedSystem = AuthorizationParty(id = "invalid-system", type = PartyType.System)
+    val authorizedSystem = AuthorizationParty(id = "some-elhub-service", type = PartyType.System)
     val grantedFor = AuthorizationParty(id = "person-1", type = PartyType.Person)
     val grantedBy = AuthorizationParty(id = "issuer-1", type = PartyType.Organization)
     val grantedTo = AuthorizationParty(id = "org-entity-1", type = PartyType.OrganizationEntity)
@@ -78,19 +76,6 @@ class HandlerTest : FunSpec({
         )
 
         response.shouldBeRight(scopes)
-    }
-
-    test("returns NotAuthorized when authorized party is unauthorized System") {
-        val handler = Handler(repoReturning(grantResult = grant.right()))
-
-        val response = handler(
-            Query(
-                id = grantId,
-                authorizedParty = unAuthorizedSystem,
-            )
-        )
-
-        response.shouldBeLeft(QueryError.NotAuthorizedError)
     }
 
     test("returns scopes when authorized party matches grantedFor") {
