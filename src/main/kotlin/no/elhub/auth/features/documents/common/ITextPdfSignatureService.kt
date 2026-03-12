@@ -43,7 +43,8 @@ class ITextPdfSignatureService(
     }
 
     override suspend fun sign(fileByteArray: ByteArray): Either<SignatureSigningError, ByteArray> = either {
-        val certChain = certificateProvider.getElhubCertificateChain().toTypedArray<Certificate>()
+        val signingCert = certificateProvider.getElhubSigningCertificate()
+        val certChain = arrayOf<Certificate>(signingCert, certificateProvider.getElhubIntermediateCertificate())
         var signatureCallbackInvoked = false
         var signatureFetchFailed = false
 

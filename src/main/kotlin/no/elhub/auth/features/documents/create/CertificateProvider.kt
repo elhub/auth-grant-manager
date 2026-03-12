@@ -6,7 +6,7 @@ import java.security.cert.X509Certificate
 
 interface CertificateProvider {
     fun getElhubSigningCertificate(): X509Certificate
-    fun getElhubCertificateChain(): List<X509Certificate>
+    fun getElhubIntermediateCertificate(): X509Certificate
     fun getBankIdRootCertificates(): List<X509Certificate>
 }
 
@@ -17,7 +17,7 @@ sealed class CertificateRetrievalError {
 const val CERT_TYPE = "X.509"
 
 class FileCertificateProviderConfig(
-    val pathToCertificateChain: String,
+    val pathToIntermediateCertificate: String,
     val pathToSigningCertificate: String,
     val pathToBankIdRootCertificatesDir: String,
 )
@@ -29,14 +29,14 @@ class FileCertificateProvider(
     private val elhubSigningCert: X509Certificate =
         readSingleCert(cfg.pathToSigningCertificate)
 
-    private val elhubChain: List<X509Certificate> =
-        readChain(cfg.pathToCertificateChain)
+    private val elhubIntermediateCertificate: X509Certificate =
+        readSingleCert(cfg.pathToIntermediateCertificate)
 
     private val bankIdRootCerts: List<X509Certificate> =
         readAllCertsInDir(cfg.pathToBankIdRootCertificatesDir)
 
     override fun getElhubSigningCertificate() = elhubSigningCert
-    override fun getElhubCertificateChain() = elhubChain
+    override fun getElhubIntermediateCertificate() = elhubIntermediateCertificate
     override fun getBankIdRootCertificates() = bankIdRootCerts
 
     private fun readChain(path: String): List<X509Certificate> =

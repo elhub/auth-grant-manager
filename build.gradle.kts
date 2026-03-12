@@ -153,7 +153,7 @@ val localEnvVars = mapOf(
     "VAULT_KEY" to "test-key",
     "VAULT_TOKEN_PATH" to "src/test/resources/vault_token_mock.txt",
     "PATH_TO_SIGNING_CERTIFICATE" to testCertPath.get(),
-    "PATH_TO_SIGNING_CERTIFICATE_CHAIN" to testCertPath.get(),
+    "PATH_TO_INTERMEDIATE_CERTIFICATE" to testCertPath.get(),
     "PATH_TO_BANKID_ROOT_CERTIFICATES_DIR" to bankIdDirPath.get(),
     "AUTH_PERSONS_URL" to "http://localhost:8081",
     "PDP_BASE_URL" to "https://auth-policy-decision-point-test9.elhub.cloud",

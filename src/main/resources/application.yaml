@@ -35,7 +35,7 @@ pdfSigner:
     tokenPath: $VAULT_TOKEN_PATH
   certificate:
     signing: $PATH_TO_SIGNING_CERTIFICATE
-    chain: $PATH_TO_SIGNING_CERTIFICATE_CHAIN
+    intermediate: $PATH_TO_INTERMEDIATE_CERTIFICATE
     bankIdRootDir: $PATH_TO_BANKID_ROOT_CERTIFICATES_DIR
 
 pdp:
