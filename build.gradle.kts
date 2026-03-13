@@ -73,7 +73,7 @@ val dbPassword = System.getenv("DB_PASSWORD")?.takeIf { it.isNotBlank() } ?: "ad
 
 val certDir = layout.buildDirectory.dir("tmp/test-certs")
 val testCertPath = certDir.map { it.file("elhub/self-signed-cert.pem").asFile.path }
-val intermediateCertPath = certDir.map { it.file("elhub/intermediate.pem").asFile.path }
+val intermediateCertPath = certDir.map { it.file("elhub/intermediate-cert.pem").asFile.path }
 val testKeyPath = certDir.map { it.file("elhub/self-signed-key.pem").asFile.path }
 val bankIdDirPath = certDir.map { it.dir("bankid/certs").asFile.path }
 
