@@ -41,7 +41,7 @@ class SignatureServiceTest : FunSpec({
     val tempBankIdCerts = TempBankIdCertificatesLocation.create()
 
     val certProviderConfig = FileCertificateProviderConfig(
-        TestCertificateUtil.Constants.CERTIFICATE_LOCATION,
+        TestCertificateUtil.Constants.INTERMEDIATE_CERTIFICATE_LOCATION,
         TestCertificateUtil.Constants.CERTIFICATE_LOCATION,
         tempBankIdCerts.bankIdRootCertificatesDir,
     )
@@ -405,7 +405,7 @@ class SignatureServiceTest : FunSpec({
                 val elhubCertPath = "$tempElhubDir/$elhubPemFile"
                 val realCertProvider = FileCertificateProvider(
                     FileCertificateProviderConfig(
-                        pathToIntermediateCertificate = elhubCertPath,
+                        pathToIntermSigningCertificate = elhubCertPath,
                         pathToSigningCertificate = elhubCertPath,
                         pathToBankIdRootCertificatesDir = tempBankIdDir.toString(),
                     )

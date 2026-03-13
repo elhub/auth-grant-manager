@@ -17,7 +17,7 @@ sealed class CertificateRetrievalError {
 const val CERT_TYPE = "X.509"
 
 class FileCertificateProviderConfig(
-    val pathToIntermediateCertificate: String,
+    val pathToIntermSigningCertificate: String,
     val pathToSigningCertificate: String,
     val pathToBankIdRootCertificatesDir: String,
 )
@@ -30,7 +30,7 @@ class FileCertificateProvider(
         readSingleCert(cfg.pathToSigningCertificate)
 
     private val elhubIntermediateCertificate: X509Certificate =
-        readSingleCert(cfg.pathToIntermediateCertificate)
+        readSingleCert(cfg.pathToIntermSigningCertificate)
 
     private val bankIdRootCerts: List<X509Certificate> =
         readAllCertsInDir(cfg.pathToBankIdRootCertificatesDir)

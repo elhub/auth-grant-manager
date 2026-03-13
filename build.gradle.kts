@@ -73,6 +73,7 @@ val dbPassword = System.getenv("DB_PASSWORD")?.takeIf { it.isNotBlank() } ?: "ad
 
 val certDir = layout.buildDirectory.dir("tmp/test-certs")
 val testCertPath = certDir.map { it.file("elhub/self-signed-cert.pem").asFile.path }
+val intermediateCertPath = certDir.map { it.file("elhub/intermediate-cert.pem").asFile.path }
 val testKeyPath = certDir.map { it.file("elhub/self-signed-key.pem").asFile.path }
 val bankIdDirPath = certDir.map { it.dir("bankid/certs").asFile.path }
 
@@ -153,7 +154,7 @@ val localEnvVars = mapOf(
     "VAULT_KEY" to "test-key",
     "VAULT_TOKEN_PATH" to "src/test/resources/vault_token_mock.txt",
     "PATH_TO_SIGNING_CERTIFICATE" to testCertPath.get(),
-    "PATH_TO_INTERMEDIATE_CERTIFICATE" to testCertPath.get(),
+    "PATH_TO_INTERMEDIATE_CERTIFICATE" to intermediateCertPath.get(),
     "PATH_TO_BANKID_ROOT_CERTIFICATES_DIR" to bankIdDirPath.get(),
     "AUTH_PERSONS_URL" to "http://localhost:8081",
     "PDP_BASE_URL" to "https://auth-policy-decision-point-test9.elhub.cloud",
