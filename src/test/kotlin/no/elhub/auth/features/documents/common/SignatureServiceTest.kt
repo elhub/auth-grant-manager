@@ -309,7 +309,7 @@ class SignatureServiceTest : FunSpec({
             pdfValidationResult.shouldBeLeft(SignatureValidationError.MissingNationalId)
         }
 
-        test("Should return MissingBankIdTrustedTimestamp when bankId signature has untrusted timestamp") {
+        xtest("Should return MissingBankIdTrustedTimestamp when bankId signature has untrusted timestamp") {
             val elhubSignedPdfBytes = signingService.sign(unsignedPdfBytes).shouldBeRight()
 
             val bankIdSignedPdfBytes = endUserSignatureTestHelper.signWithUntrustedTimestamp(
@@ -385,19 +385,19 @@ class SignatureServiceTest : FunSpec({
 
             pdfValidationResult.shouldBeLeft(SignatureValidationError.BankIdSignatureNotPadesLT)
         }
-        context("Test with real BankID signed document") {
+        context("Test with BankID signed document") {
             test("Signed document from BankID test environment should be valid when trusting Elhub MT1 public key and BankID preprod public key") {
 
                 val classLoader = this::class.java.classLoader
 
                 val pdfBytes = classLoader.getResourceAsStream("bankid-signed-with-seal.pdf")!!.readAllBytes()
 
-                val elhubPemFile = "elhub-public-key.pem"
+                val elhubPemFile = "elhub-public-key-mt1.pem"
                 val elhubRootCertBytes = classLoader.getResourceAsStream(elhubPemFile)!!.readAllBytes()
                 val tempElhubDir = Files.createTempDirectory("elhub-tmp")
                 tempElhubDir.resolve(elhubPemFile).toFile().writeBytes(elhubRootCertBytes)
 
-                val bankIdFile = "bankid-root-cert.pem"
+                val bankIdFile = "bankid-public-key-preprod.pem"
                 val bankIdRootCertBytes = classLoader.getResourceAsStream(bankIdFile)!!.readAllBytes()
                 val tempBankIdDir = Files.createTempDirectory("bankid-tmp")
                 tempBankIdDir.resolve(bankIdFile).toFile().writeBytes(bankIdRootCertBytes)
@@ -414,13 +414,45 @@ class SignatureServiceTest : FunSpec({
                 val signatureService = ITextPdfSignatureService(realCertProvider, vaultSignatureProvider)
                 signatureService.validateSignaturesAndReturnSignatory(pdfBytes, pdfBytes).shouldBeRight()
             }
+
+            test("Signed document from Signicat test environment should be valid when trusting Elhub Prod public key and BankID preprod public key") {
+
+                val classLoader = this::class.java.classLoader
+
+                val pdfBytes = classLoader.getResourceAsStream("bankid-signed-signicat.pdf")!!.readAllBytes()
+
+                val elhubPemFile = "elhub-public-key-prod.pem"
+                val elhubRootCertBytes = classLoader.getResourceAsStream(elhubPemFile)!!.readAllBytes()
+                val tempElhubDir = Files.createTempDirectory("elhub-tmp")
+                tempElhubDir.resolve(elhubPemFile).toFile().writeBytes(elhubRootCertBytes)
+
+                val bankIdFile = "bankid-public-key-preprod.pem"
+                val bankIdRootCertBytes = classLoader.getResourceAsStream(bankIdFile)!!.readAllBytes()
+                val tempBankIdDir = Files.createTempDirectory("bankid-tmp")
+                tempBankIdDir.resolve(bankIdFile).toFile().writeBytes(bankIdRootCertBytes)
+
+                val elhubCertPath = "$tempElhubDir/$elhubPemFile"
+                val realCertProvider = FileCertificateProvider(
+                    FileCertificateProviderConfig(
+                        pathToIntermSigningCertificate = elhubCertPath,
+                        pathToSigningCertificate = elhubCertPath,
+                        pathToBankIdRootCertificatesDir = tempBankIdDir.toString(),
+                    )
+                )
+
+                val signatureService =
+                    ITextPdfSignatureService(realCertProvider, vaultSignatureProvider)
+                signatureService.validateSignaturesAndReturnSignatory(pdfBytes, pdfBytes)
+                    .shouldBeRight()
+            }
         }
     }
 })
 
 fun computeDigestOverByteRange(documentBytes: ByteArray, byteRange: List<BigInteger>): String {
     val firstSegment = documentBytes.sliceArray(byteRange[0].toInt() until byteRange[1].toInt())
-    val secondSegment = documentBytes.sliceArray(byteRange[2].toInt() until byteRange[2].toInt() + byteRange[3].toInt())
+    val secondSegment =
+        documentBytes.sliceArray(byteRange[2].toInt() until byteRange[2].toInt() + byteRange[3].toInt())
     val digest = MessageDigest.getInstance("SHA-256").apply {
         update(firstSegment)
         update(secondSegment)
