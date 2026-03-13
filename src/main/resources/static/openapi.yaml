@@ -231,6 +231,8 @@ paths:
           $ref: '#/components/responses/400BadRequestError'
         '401':
           $ref: '#/components/responses/401UnauthorizedError'
+        '415':
+          $ref: '#/components/responses/415UnsupportedMediaTypeError'
         '422':
           $ref: '#/components/responses/422UnprocessableEntityError'
         '500':
