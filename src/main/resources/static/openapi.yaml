@@ -667,8 +667,8 @@ components:
         Unsupported media type.
       content:
         application/json:
-         schema:
-           $ref: './schemas/json-api-error.schema.json'
+          schema:
+            $ref: './schemas/json-api-error.schema.json'
     500InternalServerError:
       description: >
         Internal server error. An unexpected error occurred while processing the request.
