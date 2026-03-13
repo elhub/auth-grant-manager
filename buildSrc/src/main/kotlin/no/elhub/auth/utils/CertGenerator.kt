@@ -45,7 +45,7 @@ fun generateSelfSignedCertificate(baseDirLocation: String) {
     val crlUri = "file://${crlFile.absolutePath.replace("\\", "/")}"
 
     val caKeyPair = generateKeyPair()
-    val caCert = generateSelfSignedCert("CN=My-Root-CA", caKeyPair, 3650, crlUri)
+    val caCert = generateSelfSignedCert("CN=Elhub-Root-CA", caKeyPair, 3650, crlUri)
 
     writePem(elhubDir.resolve("self-signed-key.pem"), caKeyPair.private)
     writePem(elhubDir.resolve("self-signed-cert.pem"), caCert)
@@ -62,6 +62,18 @@ fun generateSelfSignedCertificate(baseDirLocation: String) {
 
     writePem(bankIdKeysDir.resolve("bankid-root-key.pem"), bankIdKeyPair.private)
     writePem(bankIdCertsDir.resolve("bankid-root-cert.pem"), bankIdCert)
+
+    val intermediateKeyPair = generateKeyPair()
+    val intermediateCert = generateIntermediateCert(
+        subjectDn = "CN=Elhub Intermediate CA",
+        keyPair = intermediateKeyPair,
+        issuerCert = caCert,
+        issuerKeyPair = caKeyPair,
+        crlUri = crlUri
+    )
+
+    writePem(elhubDir.resolve("intermediate-key.pem"), intermediateKeyPair.private)
+    writePem(elhubDir.resolve("intermediate-cert.pem"), intermediateCert)
 }
 
 fun generateKeyPair(): KeyPair =
@@ -125,6 +137,51 @@ fun generateSelfSignedCertWithDates(
 
     val signer = JcaContentSignerBuilder("SHA256WithRSA").build(keyPair.private)
     return JcaX509CertificateConverter().getCertificate(withCrl.build(signer))
+}
+
+fun generateIntermediateCert(
+    subjectDn: String,
+    keyPair: KeyPair,
+    issuerCert: X509Certificate,
+    issuerKeyPair: KeyPair,
+    crlUri: String? = null
+): X509Certificate {
+    val today = LocalDate.now(ZoneOffset.UTC)
+    val notBeforeDate = Date.from(today.atStartOfDay(ZoneOffset.UTC).toInstant())
+    val notAfterDate = Date.from(today.plusDays(3650).atStartOfDay(ZoneOffset.UTC).toInstant())
+
+    val builder = JcaX509v3CertificateBuilder(
+        X500Name(issuerCert.subjectX500Principal.name),
+        BigInteger.valueOf(System.currentTimeMillis()),
+        notBeforeDate,
+        notAfterDate,
+        X500Name(subjectDn),
+        keyPair.public
+    ).apply {
+        // pathLen=0: this CA can sign leaf certs but not further CAs
+        addExtension(Extension.basicConstraints, true, BasicConstraints(0))
+        addExtension(
+            Extension.keyUsage,
+            true,
+            KeyUsage(KeyUsage.keyCertSign or KeyUsage.cRLSign)
+        )
+    }
+
+    if (!crlUri.isNullOrBlank()) {
+        val crlDistPoint = DistributionPoint(
+            DistributionPointName(
+                GeneralNames(
+                    GeneralName(GeneralName.uniformResourceIdentifier, DERIA5String(crlUri))
+                )
+            ),
+            null,
+            null
+        )
+        builder.addExtension(Extension.cRLDistributionPoints, false, CRLDistPoint(arrayOf(crlDistPoint)))
+    }
+
+    val signer = JcaContentSignerBuilder("SHA256WithRSA").build(issuerKeyPair.private)
+    return JcaX509CertificateConverter().getCertificate(builder.build(signer))
 }
 
 fun writePem(file: File, obj: Any) {

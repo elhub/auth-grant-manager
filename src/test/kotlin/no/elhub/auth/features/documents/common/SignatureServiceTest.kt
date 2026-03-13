@@ -41,7 +41,7 @@ class SignatureServiceTest : FunSpec({
     val tempBankIdCerts = TempBankIdCertificatesLocation.create()
 
     val certProviderConfig = FileCertificateProviderConfig(
-        TestCertificateUtil.Constants.CERTIFICATE_LOCATION,
+        TestCertificateUtil.Constants.INTERMEDIATE_CERTIFICATE_LOCATION,
         TestCertificateUtil.Constants.CERTIFICATE_LOCATION,
         tempBankIdCerts.bankIdRootCertificatesDir,
     )

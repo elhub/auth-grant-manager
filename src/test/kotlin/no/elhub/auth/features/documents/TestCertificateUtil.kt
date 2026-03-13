@@ -7,6 +7,8 @@ object TestCertificateUtil {
     object Constants {
         private const val LOCATION = "build/tmp/test-certs"
         const val CERTIFICATE_LOCATION = "$LOCATION/elhub/self-signed-cert.pem"
+        const val INTERMEDIATE_CERTIFICATE_LOCATION = "$LOCATION/elhub/intermediate-cert.pem"
+
         const val PRIVATE_KEY_LOCATION = "$LOCATION/elhub/self-signed-key.pem"
         const val BANKID_ROOT_CERTIFICATE_LOCATION = "$LOCATION/bankid/certs/bankid-root-cert.pem"
         const val BANKID_ROOT_PRIVATE_KEY_LOCATION = "$LOCATION/bankid/keys/bankid-root-key.pem"
