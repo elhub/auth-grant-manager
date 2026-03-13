@@ -24,6 +24,7 @@ import org.bouncycastle.asn1.ASN1OctetString
 import org.bouncycastle.asn1.ASN1Primitive
 import org.bouncycastle.asn1.ASN1String
 import org.bouncycastle.jce.provider.BouncyCastleProvider
+import org.slf4j.LoggerFactory
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.math.BigInteger
@@ -49,6 +50,8 @@ class ITextPdfSignatureService(
             }
         }
     }
+
+    private val log = LoggerFactory.getLogger(ITextPdfSignatureService::class.java)
 
     override suspend fun sign(fileByteArray: ByteArray): Either<SignatureSigningError, ByteArray> = either {
         val signingCert = certificateProvider.getElhubSigningCertificate()
@@ -114,7 +117,9 @@ class ITextPdfSignatureService(
         file: ByteArray,
         originalFile: ByteArray
     ): Either<SignatureValidationError, PartyIdentifier> = either {
-        val parsedDocument = ensureNotNull(parseDocument(file)) { SignatureValidationError.MissingElhubSignature }
+        val parsedDocument = ensureNotNull(parseDocument(file)) {
+            SignatureValidationError.MissingElhubSignature
+        }
 
         val elhubExpectedCert = certificateProvider.getElhubSigningCertificate()
 
@@ -314,9 +319,9 @@ class ITextPdfSignatureService(
                     )
                 }
         val chainIntact = isCertificateChainIntact(timestampChain)
-        if (!trustedRootMatch) return null
         if (!chainIntact) return null
 
+        log.info("SubjectDN of timestamp signature: {}", topOfTsaChain.subjectDN)
         return runCatching { signature.timeStampDate.time }.getOrNull()
     }
 
