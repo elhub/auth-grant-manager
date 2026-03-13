@@ -1,7 +1,9 @@
 package no.elhub.auth.features.documents.confirm
 
 import arrow.core.getOrElse
+import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
+import io.ktor.server.request.contentType
 import io.ktor.server.request.receiveChannel
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
@@ -14,6 +16,8 @@ import no.elhub.auth.features.common.auth.toApiErrorResponse
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toApiErrorResponse
+import no.elhub.auth.features.common.toNotAcceptedErrorResponse
+import no.elhub.auth.features.common.toUnsupportedErrorResponse
 import no.elhub.auth.features.common.validatePathId
 import org.slf4j.LoggerFactory
 
@@ -22,6 +26,14 @@ private val logger = LoggerFactory.getLogger(Route::class.java)
 
 fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
     put("/{$DOCUMENT_ID_PARAM}.pdf") {
+        if (!ContentType.Application.Pdf.match(call.request.contentType()) ||
+            !ContentType.Application.Pdf.match(call.request.contentType())
+        ) {
+            val (status, error) = toUnsupportedErrorResponse(detail = "Unsupported media type, 'application/pdf' is supported.")
+            call.respond(status, error)
+            return@put
+        }
+
         val resolvedActor = authProvider.authorizeMaskinporten(call)
             .getOrElse {
                 val error = it.toApiErrorResponse()

@@ -91,6 +91,13 @@ fun toNotAcceptedErrorResponse(detail: String? = null): Pair<HttpStatusCode, Jso
             .ifEmpty { "The requested resource does not have a representation that matches the criteria given in the request's Accept header" }
     )
 
+fun toUnsupportedErrorResponse(detail: String? = null): Pair<HttpStatusCode, JsonApiErrorCollection> =
+    buildApiErrorResponse(
+        status = HttpStatusCode.UnsupportedMediaType,
+        title = "Unsupported media type",
+        detail = detail.orEmpty().ifEmpty { "The requested resource does not have a representation that matches the criteria" }
+    )
+
 fun toBalanceSupplierNotApiAuthorizedResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> = buildApiErrorResponse(
     status = HttpStatusCode.Forbidden,
     title = "Not authorized",
