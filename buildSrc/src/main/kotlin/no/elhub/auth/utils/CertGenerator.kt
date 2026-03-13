@@ -158,7 +158,6 @@ fun generateIntermediateCert(
         X500Name(subjectDn),
         keyPair.public
     ).apply {
-        // pathLen=0: this CA can sign leaf certs but not further CAs
         addExtension(Extension.basicConstraints, true, BasicConstraints(0))
         addExtension(
             Extension.keyUsage,
