@@ -6,8 +6,12 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldBeEmpty
 import io.ktor.client.call.body
+import io.ktor.client.request.put
+import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.contentType
 import io.ktor.server.testing.testApplication
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -31,6 +35,18 @@ class RouteTest : FunSpec({
     beforeAny {
         authProvider = mockk<AuthorizationProvider>()
         handler = mockk<Handler>()
+    }
+
+    test("PUT /{id}.pdf returns 415 when Content-Type is not application/pdf") {
+        testApplication {
+            setupAppWith { route(handler, authProvider) }
+            val response = client.put("/02fe286b-4519-4ba8-9c84-dc18bffc9eb3.pdf") {
+                contentType(ContentType.Application.Json)
+                setBody("""{"data": "not-a-pdf"}""")
+            }
+            response.status shouldBe HttpStatusCode.UnsupportedMediaType
+            coVerify(exactly = 0) { handler.invoke(any()) }
+        }
     }
 
     test("PUT /{id}.pdf returns 204 when authorized as org and handler succeeds") {

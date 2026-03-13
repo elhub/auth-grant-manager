@@ -231,6 +231,8 @@ paths:
           $ref: '#/components/responses/400BadRequestError'
         '401':
           $ref: '#/components/responses/401UnauthorizedError'
+        '415':
+          $ref: '#/components/responses/415UnsupportedMediaTypeError'
         '422':
           $ref: '#/components/responses/422UnprocessableEntityError'
         '500':
@@ -656,6 +658,13 @@ components:
     422UnprocessableEntityError:
       description: >
         Unprocessable entity. The request was well-formed but failed validation.
+      content:
+        application/json:
+          schema:
+            $ref: './schemas/json-api-error.schema.json'
+    415UnsupportedMediaTypeError:
+      description: >
+        Unsupported media type.
       content:
         application/json:
           schema:
