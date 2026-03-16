@@ -312,14 +312,14 @@ class ITextPdfSignatureService(
         val topOfTsaChain = timestampChain.lastOrNull() ?: return null
         val trustedRootMatch =
             timestampChain.any { cert -> tsaRoots.any { root -> areSameCertificate(cert, root) } } ||
-                    tsaRoots.any { root ->
-                        runCatching {
-                            topOfTsaChain.verify(root.publicKey)
-                            true
-                        }.getOrDefault(
-                            false
-                        )
-                    }
+                tsaRoots.any { root ->
+                    runCatching {
+                        topOfTsaChain.verify(root.publicKey)
+                        true
+                    }.getOrDefault(
+                        false
+                    )
+                }
         if (!trustedRootMatch) return null
         val chainIntact = isCertificateChainIntact(timestampChain)
         if (!chainIntact) return null
@@ -367,7 +367,7 @@ class ITextPdfSignatureService(
     private fun hasIssuerAndSerial(cert: X509Certificate?, expected: X509Certificate): Boolean {
         if (cert == null) return false
         return cert.issuerX500Principal.name == expected.issuerX500Principal.name &&
-                cert.serialNumber == expected.serialNumber
+            cert.serialNumber == expected.serialNumber
     }
 
     private fun hasIssuerAndSerialAny(cert: X509Certificate?, expected: List<X509Certificate>): Boolean =
@@ -391,7 +391,7 @@ class ITextPdfSignatureService(
         val leftSpki = left.publicKey.encoded
         val rightSpki = right.publicKey.encoded
         return leftSpki.contentEquals(rightSpki) &&
-                left.subjectX500Principal == right.subjectX500Principal
+            left.subjectX500Principal == right.subjectX500Principal
     }
 
     private fun isCertificateChainIntact(chain: List<X509Certificate>): Boolean {
