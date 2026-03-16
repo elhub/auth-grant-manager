@@ -55,6 +55,7 @@ import no.elhub.auth.features.documents.create.model.CreateDocumentModel
 import no.elhub.auth.features.filegenerator.SupportedLanguage
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.common.AuthorizationRequestProperty
+import no.elhub.auth.features.requests.create.command.TEXT_VERSION_KEY
 import no.elhub.auth.features.requests.create.model.CreateRequestMeta
 import no.elhub.auth.features.requests.create.model.CreateRequestModel
 import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObject
@@ -143,7 +144,8 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
                 )
 
             val command = handler.validateAndReturnRequestCommand(model).shouldBeRight()
-            command.meta.toMetaAttributes()["moveInDate"] shouldBe null
+            command.meta.toRequestMetaAttributes()["moveInDate"] shouldBe null
+            command.meta.toRequestMetaAttributes()[TEXT_VERSION_KEY] shouldBe "v1"
         }
 
         test("request validation fails on future moveInDate") {
@@ -738,9 +740,10 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
 
             command.type shouldBe AuthorizationRequest.Type.MoveInAndChangeOfBalanceSupplierForPerson
             command.validTo shouldBe today().plus(DatePeriod(days = 28)).toTimeZoneOffsetDateTimeAtStartOfDay()
-            command.meta.toMetaAttributes()["moveInDate"] shouldBe VALID_MOVEIN_DATE.toString()
-            command.meta.toMetaAttributes()["redirectURI"] shouldBe "https://example.com"
-            command.meta.toMetaAttributes().containsKey("requestedForMeterNumber") shouldBe true
+            command.meta.toRequestMetaAttributes()["moveInDate"] shouldBe VALID_MOVEIN_DATE.toString()
+            command.meta.toRequestMetaAttributes()["redirectURI"] shouldBe "https://example.com"
+            command.meta.toRequestMetaAttributes()[TEXT_VERSION_KEY] shouldBe "v1"
+            command.meta.toRequestMetaAttributes().containsKey("requestedForMeterNumber") shouldBe true
         }
 
         test("grant properties moveInDate is present and validTo is one year from acceptance") {

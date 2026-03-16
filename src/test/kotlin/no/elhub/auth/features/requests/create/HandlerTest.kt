@@ -30,6 +30,7 @@ import no.elhub.auth.features.requests.common.RequestPropertiesRepository
 import no.elhub.auth.features.requests.common.RequestRepository
 import no.elhub.auth.features.requests.create.command.RequestCommand
 import no.elhub.auth.features.requests.create.command.RequestMetaMarker
+import no.elhub.auth.features.requests.create.command.withTextVersion
 import no.elhub.auth.features.requests.create.model.CreateRequestMeta
 import no.elhub.auth.features.requests.create.model.CreateRequestModel
 
@@ -64,7 +65,8 @@ class HandlerTest : FunSpec({
         )
 
     val commandMeta = object : RequestMetaMarker {
-        override fun toMetaAttributes(): Map<String, String> = mapOf("k" to "v")
+        override fun toRequestMetaAttributes(): Map<String, String> =
+            mapOf("k" to "v").withTextVersion("v1")
     }
 
     val command =
@@ -117,7 +119,7 @@ class HandlerTest : FunSpec({
 
         val expectedProperties =
             commandMeta
-                .toMetaAttributes()
+                .toRequestMetaAttributes()
                 .map { (key, value) ->
                     AuthorizationRequestProperty(
                         requestId = savedRequest.id,
