@@ -60,7 +60,7 @@
     "redirectURI": {
       "type": "string",
       "format": "uri",
-      "description": "The URI to which the user should be redirected after performing an action in minside.",
+      "description": "The URI to which the user should be redirected after completing an action in the MinSide flow.",
       "examples": ["https://example.com/redirect"]
     }
   }
