@@ -37,6 +37,7 @@ pdfSigner:
     signing: $PATH_TO_SIGNING_CERTIFICATE
     intermediate: $PATH_TO_INTERMEDIATE_CERTIFICATE
     bankIdRootDir: $PATH_TO_BANKID_ROOT_CERTIFICATES_DIR
+    tsaRootDir: $PATH_TO_TSA_ROOT_CERTIFICATES_DIR
 
 pdp:
   baseUrl: ${PDP_BASE_URL}

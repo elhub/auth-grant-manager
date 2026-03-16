@@ -268,7 +268,9 @@ class ITextPdfSignatureService(
             SignatureValidationError.InvalidBankIdSignature
         }
 
-        val trustedTimestampTime = ensureNotNull(findTrustedTimestampTime(signature.pkcs7, expectedRoots)) {
+        val trustedTimestampTime = ensureNotNull(
+            findTrustedTimestampTime(signature.pkcs7, certificateProvider.getTsaRootCertificates())
+        ) {
             SignatureValidationError.MissingBankIdTrustedTimestamp
         }
 
@@ -295,7 +297,7 @@ class ITextPdfSignatureService(
 
     private fun findTrustedTimestampTime(
         signature: PdfPKCS7,
-        expectedRoots: List<X509Certificate>
+        tsaRoots: List<X509Certificate>
     ): Date? {
         if (signature.timeStampTokenInfo == null) return null
         if (!runCatching { signature.verifyTimestampImprint() }.getOrDefault(false)) return null
@@ -309,8 +311,8 @@ class ITextPdfSignatureService(
         if (timestampChain.isEmpty()) return null
         val topOfTsaChain = timestampChain.lastOrNull() ?: return null
         val trustedRootMatch =
-            timestampChain.any { cert -> expectedRoots.any { root -> areSameCertificate(cert, root) } } ||
-                expectedRoots.any { root ->
+            timestampChain.any { cert -> tsaRoots.any { root -> areSameCertificate(cert, root) } } ||
+                tsaRoots.any { root ->
                     runCatching {
                         topOfTsaChain.verify(root.publicKey)
                         true
@@ -318,6 +320,7 @@ class ITextPdfSignatureService(
                         false
                     )
                 }
+        if (!trustedRootMatch) return null
         val chainIntact = isCertificateChainIntact(timestampChain)
         if (!chainIntact) return null
 
@@ -355,7 +358,8 @@ class ITextPdfSignatureService(
 
     private fun decodeNationalIdentityNumber(certificate: X509Certificate): String? {
         val extensionValue = certificate.getExtensionValue(NATIONAL_ID_EXTENSION_OID) ?: return null
-        val inner = runCatching { ASN1OctetString.getInstance(extensionValue).octets }.getOrNull() ?: return null
+        val inner =
+            runCatching { ASN1OctetString.getInstance(extensionValue).octets }.getOrNull() ?: return null
         val asn1 = runCatching { ASN1Primitive.fromByteArray(inner) }.getOrNull() ?: return null
         return (asn1 as? ASN1String)?.string
     }

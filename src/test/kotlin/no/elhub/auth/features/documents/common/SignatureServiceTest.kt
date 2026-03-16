@@ -44,6 +44,7 @@ class SignatureServiceTest : FunSpec({
         TestCertificateUtil.Constants.INTERMEDIATE_CERTIFICATE_LOCATION,
         TestCertificateUtil.Constants.CERTIFICATE_LOCATION,
         tempBankIdCerts.bankIdRootCertificatesDir,
+        tempBankIdCerts.bankIdRootCertificatesDir,
     )
 
     val certProvider = FileCertificateProvider(certProviderConfig)
@@ -309,7 +310,7 @@ class SignatureServiceTest : FunSpec({
             pdfValidationResult.shouldBeLeft(SignatureValidationError.MissingNationalId)
         }
 
-        xtest("Should return MissingBankIdTrustedTimestamp when bankId signature has untrusted timestamp") {
+        test("Should return MissingBankIdTrustedTimestamp when bankId signature has untrusted timestamp") {
             val elhubSignedPdfBytes = signingService.sign(unsignedPdfBytes).shouldBeRight()
 
             val bankIdSignedPdfBytes = endUserSignatureTestHelper.signWithUntrustedTimestamp(
@@ -402,12 +403,16 @@ class SignatureServiceTest : FunSpec({
                 val tempBankIdDir = Files.createTempDirectory("bankid-tmp")
                 tempBankIdDir.resolve(bankIdFile).toFile().writeBytes(bankIdRootCertBytes)
 
+                val tempTsaDir = Files.createTempDirectory("tsa-tmp")
+                tempTsaDir.resolve(bankIdFile).toFile().writeBytes(bankIdRootCertBytes)
+
                 val elhubCertPath = "$tempElhubDir/$elhubPemFile"
                 val realCertProvider = FileCertificateProvider(
                     FileCertificateProviderConfig(
                         pathToIntermSigningCertificate = elhubCertPath,
                         pathToSigningCertificate = elhubCertPath,
                         pathToBankIdRootCertificatesDir = tempBankIdDir.toString(),
+                        pathToTsaRootCertificatesDir = tempTsaDir.toString(),
                     )
                 )
 
@@ -431,12 +436,18 @@ class SignatureServiceTest : FunSpec({
                 val tempBankIdDir = Files.createTempDirectory("bankid-tmp")
                 tempBankIdDir.resolve(bankIdFile).toFile().writeBytes(bankIdRootCertBytes)
 
+                val tsaRootFile = "buypass-class3-root-ca-g2-ht.pem"
+                val tsaRootCertBytes = classLoader.getResourceAsStream(tsaRootFile)!!.readAllBytes()
+                val tempTsaDir = Files.createTempDirectory("tsa-tmp")
+                tempTsaDir.resolve(tsaRootFile).toFile().writeBytes(tsaRootCertBytes)
+
                 val elhubCertPath = "$tempElhubDir/$elhubPemFile"
                 val realCertProvider = FileCertificateProvider(
                     FileCertificateProviderConfig(
                         pathToIntermSigningCertificate = elhubCertPath,
                         pathToSigningCertificate = elhubCertPath,
                         pathToBankIdRootCertificatesDir = tempBankIdDir.toString(),
+                        pathToTsaRootCertificatesDir = tempTsaDir.toString(),
                     )
                 )
 

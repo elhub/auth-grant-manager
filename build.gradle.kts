@@ -156,6 +156,7 @@ val localEnvVars = mapOf(
     "PATH_TO_SIGNING_CERTIFICATE" to testCertPath.get(),
     "PATH_TO_INTERMEDIATE_CERTIFICATE" to intermediateCertPath.get(),
     "PATH_TO_BANKID_ROOT_CERTIFICATES_DIR" to bankIdDirPath.get(),
+    "PATH_TO_TSA_ROOT_CERTIFICATES_DIR" to bankIdDirPath.get(),
     "AUTH_PERSONS_URL" to "http://localhost:8081",
     "PDP_BASE_URL" to "https://auth-policy-decision-point-test9.elhub.cloud",
     "STRUCTURE_DATA_METERING_POINTS_SERVICE_URL" to "http://localhost:8083",
