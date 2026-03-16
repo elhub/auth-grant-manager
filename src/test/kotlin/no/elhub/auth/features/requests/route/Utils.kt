@@ -17,7 +17,6 @@ import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
 import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
 import no.elhub.auth.features.common.today
-import no.elhub.auth.features.common.withRequestTextVersion
 import no.elhub.auth.features.grants.AuthorizationScope
 import no.elhub.auth.features.grants.common.CreateGrantProperties
 import no.elhub.auth.features.requests.AuthorizationRequest
@@ -27,6 +26,7 @@ import no.elhub.auth.features.requests.common.DatabaseRequestStatus
 import no.elhub.auth.features.requests.create.RequestBusinessHandler
 import no.elhub.auth.features.requests.create.command.RequestCommand
 import no.elhub.auth.features.requests.create.command.RequestMetaMarker
+import no.elhub.auth.features.requests.create.command.withTextVersion
 import no.elhub.auth.features.requests.create.dto.CreateRequestAttributes
 import no.elhub.auth.features.requests.create.dto.CreateRequestMeta
 import no.elhub.auth.features.requests.create.dto.JsonApiCreateRequest
@@ -48,6 +48,7 @@ import no.elhub.auth.module as applicationModule
 
 const val REQUESTED_FROM_NIN = "02916297702"
 const val REQUESTED_TO_NIN = "14810797496"
+private const val CHANGE_OF_BALANCE_SUPPLIER_TEXT_VERSION = "v1"
 
 fun ApplicationTestBuilder.setUpAuthorizationRequestTestApplication() {
     client = createClient {
@@ -148,7 +149,7 @@ fun insertAuthorizationRequest(
             it[validTo] = validToDate
         }
 
-        val requestProperties = properties.withRequestTextVersion(AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson)
+        val requestProperties = properties.withTextVersion(CHANGE_OF_BALANCE_SUPPLIER_TEXT_VERSION)
         if (requestProperties.isNotEmpty()) {
             AuthorizationRequestPropertyTable.batchInsert(requestProperties.entries) { (key, value) ->
                 this[AuthorizationRequestPropertyTable.requestId] = requestId
@@ -181,7 +182,7 @@ data class TestRequestMeta(
     val balanceSupplierContractName: String,
     val redirectURI: String,
 ) : RequestMetaMarker {
-    override fun toMetaAttributes(): Map<String, String> =
+    override fun toRequestMetaAttributes(): Map<String, String> =
         mapOf(
             "requestedFromName" to requestedFromName,
             "requestedForMeteringPointId" to requestedForMeteringPointId,
@@ -189,7 +190,7 @@ data class TestRequestMeta(
             "balanceSupplierName" to balanceSupplierName,
             "balanceSupplierContractName" to balanceSupplierContractName,
             "redirectURI" to redirectURI,
-        )
+        ).withTextVersion(CHANGE_OF_BALANCE_SUPPLIER_TEXT_VERSION)
 }
 
 val examplePostBody = JsonApiCreateRequest(

@@ -6,7 +6,6 @@ import arrow.core.raise.ensure
 import no.elhub.auth.features.businessprocesses.BusinessProcessError
 import no.elhub.auth.features.common.party.PartyError
 import no.elhub.auth.features.common.party.PartyService
-import no.elhub.auth.features.common.withRequestTextVersion
 import no.elhub.auth.features.grants.common.CreateGrantProperties
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.common.AuthorizationRequestProperty
@@ -72,9 +71,7 @@ class Handler(
                 }
                 .bind()
 
-        val metaAttributes = businessCommand.meta
-            .toMetaAttributes()
-            .withRequestTextVersion(businessCommand.type)
+        val metaAttributes = businessCommand.meta.toRequestMetaAttributes()
 
         val requestToCreate =
             AuthorizationRequest.create(
