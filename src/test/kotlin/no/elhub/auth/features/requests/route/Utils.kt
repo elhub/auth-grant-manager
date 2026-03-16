@@ -17,6 +17,7 @@ import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
 import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
 import no.elhub.auth.features.common.today
+import no.elhub.auth.features.common.withRequestTextVersion
 import no.elhub.auth.features.grants.AuthorizationScope
 import no.elhub.auth.features.grants.common.CreateGrantProperties
 import no.elhub.auth.features.requests.AuthorizationRequest
@@ -147,8 +148,9 @@ fun insertAuthorizationRequest(
             it[validTo] = validToDate
         }
 
-        if (properties.isNotEmpty()) {
-            AuthorizationRequestPropertyTable.batchInsert(properties.entries) { (key, value) ->
+        val requestProperties = properties.withRequestTextVersion(AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson)
+        if (requestProperties.isNotEmpty()) {
+            AuthorizationRequestPropertyTable.batchInsert(requestProperties.entries) { (key, value) ->
                 this[AuthorizationRequestPropertyTable.requestId] = requestId
                 this[AuthorizationRequestPropertyTable.key] = key
                 this[AuthorizationRequestPropertyTable.value] = value

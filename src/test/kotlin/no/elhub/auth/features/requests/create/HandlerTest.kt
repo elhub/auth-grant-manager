@@ -22,6 +22,7 @@ import no.elhub.auth.features.common.party.PartyIdentifierType
 import no.elhub.auth.features.common.party.PartyService
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
+import no.elhub.auth.features.common.withRequestTextVersion
 import no.elhub.auth.features.grants.AuthorizationScope
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.common.AuthorizationRequestProperty
@@ -118,6 +119,7 @@ class HandlerTest : FunSpec({
         val expectedProperties =
             commandMeta
                 .toMetaAttributes()
+                .withRequestTextVersion(command.type)
                 .map { (key, value) ->
                     AuthorizationRequestProperty(
                         requestId = savedRequest.id,

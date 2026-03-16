@@ -14,6 +14,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import no.elhub.auth.features.common.QueryError
+import no.elhub.auth.features.common.TEXT_VERSION_META_KEY
 import no.elhub.auth.features.common.auth.AuthError
 import no.elhub.auth.features.common.auth.AuthorizationProvider
 import no.elhub.auth.features.common.auth.AuthorizedParty
@@ -171,7 +172,8 @@ class RouteTest : FunSpec({
             grantId = UUID.randomUUID(),
             properties = listOf(
                 AuthorizationRequestProperty(UUID.fromString(validUuid), "requestedFromName", "Test Person"),
-                AuthorizationRequestProperty(UUID.fromString(validUuid), "balanceSupplierName", "Power AS")
+                AuthorizationRequestProperty(UUID.fromString(validUuid), "balanceSupplierName", "Power AS"),
+                AuthorizationRequestProperty(UUID.fromString(validUuid), TEXT_VERSION_META_KEY, "v1")
             )
         )
 
@@ -200,6 +202,7 @@ class RouteTest : FunSpec({
             body.data.relationships.authorizationGrant!!.data.type shouldBe "AuthorizationGrant"
             body.data.meta.values["requestedFromName"] shouldBe "Test Person"
             body.data.meta.values["balanceSupplierName"] shouldBe "Power AS"
+            body.data.meta.values[TEXT_VERSION_META_KEY] shouldBe "v1"
             body.data.links.self shouldBe "$REQUESTS_PATH/${authorizationRequest.id}"
         }
         coVerify(exactly = 1) { handler.invoke(any()) }
