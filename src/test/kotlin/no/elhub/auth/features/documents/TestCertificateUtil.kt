@@ -13,6 +13,7 @@ object TestCertificateUtil {
         const val BANKID_ROOT_CERTIFICATE_LOCATION = "$LOCATION/bankid/certs/bankid-root-cert.pem"
         const val BANKID_ROOT_PRIVATE_KEY_LOCATION = "$LOCATION/bankid/keys/bankid-root-key.pem"
         const val BANKID_ROOT_CERTIFICATES_DIR = "$LOCATION/bankid/certs"
+        const val TSA_ROOT_CERTIFICATES_DIR = "$LOCATION/bankid/certs"
     }
 
     init {

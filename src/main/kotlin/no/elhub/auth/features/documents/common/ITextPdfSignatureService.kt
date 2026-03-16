@@ -268,7 +268,9 @@ class ITextPdfSignatureService(
             SignatureValidationError.InvalidBankIdSignature
         }
 
-        val trustedTimestampTime = ensureNotNull(findTrustedTimestampTime(signature.pkcs7, expectedRoots)) {
+        val trustedTimestampTime = ensureNotNull(
+            findTrustedTimestampTime(signature.pkcs7, certificateProvider.getTsaRootCertificates())
+        ) {
             SignatureValidationError.MissingBankIdTrustedTimestamp
         }
 
@@ -295,7 +297,7 @@ class ITextPdfSignatureService(
 
     private fun findTrustedTimestampTime(
         signature: PdfPKCS7,
-        expectedRoots: List<X509Certificate>
+        tsaRoots: List<X509Certificate>
     ): Date? {
         if (signature.timeStampTokenInfo == null) return null
         if (!runCatching { signature.verifyTimestampImprint() }.getOrDefault(false)) return null
@@ -309,15 +311,16 @@ class ITextPdfSignatureService(
         if (timestampChain.isEmpty()) return null
         val topOfTsaChain = timestampChain.lastOrNull() ?: return null
         val trustedRootMatch =
-            timestampChain.any { cert -> expectedRoots.any { root -> areSameCertificate(cert, root) } } ||
-                expectedRoots.any { root ->
-                    runCatching {
-                        topOfTsaChain.verify(root.publicKey)
-                        true
-                    }.getOrDefault(
-                        false
-                    )
-                }
+            timestampChain.any { cert -> tsaRoots.any { root -> areSameCertificate(cert, root) } } ||
+                    tsaRoots.any { root ->
+                        runCatching {
+                            topOfTsaChain.verify(root.publicKey)
+                            true
+                        }.getOrDefault(
+                            false
+                        )
+                    }
+        if (!trustedRootMatch) return null
         val chainIntact = isCertificateChainIntact(timestampChain)
         if (!chainIntact) return null
 
@@ -355,7 +358,8 @@ class ITextPdfSignatureService(
 
     private fun decodeNationalIdentityNumber(certificate: X509Certificate): String? {
         val extensionValue = certificate.getExtensionValue(NATIONAL_ID_EXTENSION_OID) ?: return null
-        val inner = runCatching { ASN1OctetString.getInstance(extensionValue).octets }.getOrNull() ?: return null
+        val inner =
+            runCatching { ASN1OctetString.getInstance(extensionValue).octets }.getOrNull() ?: return null
         val asn1 = runCatching { ASN1Primitive.fromByteArray(inner) }.getOrNull() ?: return null
         return (asn1 as? ASN1String)?.string
     }
@@ -363,7 +367,7 @@ class ITextPdfSignatureService(
     private fun hasIssuerAndSerial(cert: X509Certificate?, expected: X509Certificate): Boolean {
         if (cert == null) return false
         return cert.issuerX500Principal.name == expected.issuerX500Principal.name &&
-            cert.serialNumber == expected.serialNumber
+                cert.serialNumber == expected.serialNumber
     }
 
     private fun hasIssuerAndSerialAny(cert: X509Certificate?, expected: List<X509Certificate>): Boolean =
@@ -387,7 +391,7 @@ class ITextPdfSignatureService(
         val leftSpki = left.publicKey.encoded
         val rightSpki = right.publicKey.encoded
         return leftSpki.contentEquals(rightSpki) &&
-            left.subjectX500Principal == right.subjectX500Principal
+                left.subjectX500Principal == right.subjectX500Principal
     }
 
     private fun isCertificateChainIntact(chain: List<X509Certificate>): Boolean {

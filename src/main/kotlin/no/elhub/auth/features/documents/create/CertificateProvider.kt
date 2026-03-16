@@ -8,6 +8,7 @@ interface CertificateProvider {
     fun getElhubSigningCertificate(): X509Certificate
     fun getElhubIntermediateCertificate(): X509Certificate
     fun getBankIdRootCertificates(): List<X509Certificate>
+    fun getTsaRootCertificates(): List<X509Certificate>
 }
 
 sealed class CertificateRetrievalError {
@@ -20,6 +21,7 @@ class FileCertificateProviderConfig(
     val pathToIntermSigningCertificate: String,
     val pathToSigningCertificate: String,
     val pathToBankIdRootCertificatesDir: String,
+    val pathToTsaRootCertificatesDir: String,
 )
 
 class FileCertificateProvider(
@@ -35,9 +37,13 @@ class FileCertificateProvider(
     private val bankIdRootCerts: List<X509Certificate> =
         readAllCertsInDir(cfg.pathToBankIdRootCertificatesDir)
 
+    private val tsaRootCerts: List<X509Certificate> =
+        readAllCertsInDir(cfg.pathToTsaRootCertificatesDir)
+
     override fun getElhubSigningCertificate() = elhubSigningCert
     override fun getElhubIntermediateCertificate() = elhubIntermediateCertificate
     override fun getBankIdRootCertificates() = bankIdRootCerts
+    override fun getTsaRootCertificates() = tsaRootCerts
 
     private fun readChain(path: String): List<X509Certificate> =
         File(path).inputStream().use {
