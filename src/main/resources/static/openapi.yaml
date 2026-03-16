@@ -404,7 +404,7 @@ paths:
       description: >
         Initiate a new authorization request flow. This creates an authorization request that
         is associated with a user in MinSide and returns the created authorization request,
-        including its ID, which can be used to start the MinSide flow.
+        including its ID, which can be used to start the Elhub Min Side flow.
       parameters:
         - $ref: '#/components/parameters/UserAgent'
         - $ref: '#/components/parameters/AuthorizationMaskinporten'
@@ -420,7 +420,7 @@ paths:
         '201':
           description: >
             The authorization request was created and the response contains details of the
-            request, including the authorization request ID used to start the MinSide flow.
+            request, including the authorization request ID used to start the Elhub Min Side flow.
           content:
             application/json:
               schema:

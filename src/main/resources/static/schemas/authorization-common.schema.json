@@ -60,7 +60,7 @@
     "redirectURI": {
       "type": "string",
       "format": "uri",
-      "description": "The URI to which the user should be redirected after completing an action in the MinSide flow.",
+      "description": "The URI to which the user should be redirected after completing an action in the Elhub Min Side flow.",
       "examples": ["https://example.com/redirect"]
     }
   }
