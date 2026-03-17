@@ -10,6 +10,7 @@ import com.itextpdf.kernel.pdf.PdfName
 import com.itextpdf.kernel.pdf.PdfReader
 import com.itextpdf.kernel.pdf.PdfRevisionsReader
 import com.itextpdf.kernel.pdf.StampingProperties
+import com.itextpdf.signatures.AccessPermissions
 import com.itextpdf.signatures.IExternalSignature
 import com.itextpdf.signatures.ISignatureMechanismParams
 import com.itextpdf.signatures.PdfPKCS7
@@ -87,8 +88,8 @@ class ITextPdfSignatureService(
                 output,
                 StampingProperties().useAppendMode()
             )
-            signer.setFieldName("Signature1")
-            signer.setCertificationLevel(PdfSigner.CERTIFIED_FORM_FILLING)
+            signer.signerProperties.setFieldName("Signature1")
+            signer.signerProperties.setCertificationLevel(AccessPermissions.FORM_FIELDS_MODIFICATION)
             signer.signDetached(
                 externalSignature,
                 certChain,
@@ -161,9 +162,8 @@ class ITextPdfSignatureService(
             val dssDictionary = document.getCatalog().pdfObject.getAsDictionary(PdfName.DSS)
             ParsedDocument(
                 signatures = parsedSignatures,
-                totalRevisions = signatureUtil.getTotalRevisions(),
                 allRevisionEofs = PdfRevisionsReader(document.reader)
-                    .getAllRevisions()
+                    .allRevisions
                     .map { it.eofOffset },
                 dssCrls = parseDssCrls(dssDictionary)
             )
@@ -220,10 +220,12 @@ class ITextPdfSignatureService(
         bankIdSignature: ParsedSignature,
         allRevisionEofs: List<Long>,
     ): Either<SignatureValidationError, Unit> = either {
-        val hasIntermediateRevision = allRevisionEofs.any { revisionEof ->
-            revisionEof > elhubSignature.revisionEof && revisionEof < bankIdSignature.revisionEof
-        }
-        ensure(!hasIntermediateRevision) {
+        // allRevisionEofs (from PdfRevisionsReader) and revisionEof (from ByteRange) can differ by a few bytes
+        // due to iText 9's getNextEof() including trailing EOL bytes that the ByteRange does not.
+        // Use >= to match each signature to its revision by index, then verify they are consecutive.
+        val elhubIdx = allRevisionEofs.indexOfFirst { it >= elhubSignature.revisionEof }
+        val bankIdIdx = allRevisionEofs.indexOfFirst { it >= bankIdSignature.revisionEof }
+        ensure(elhubIdx >= 0 && bankIdIdx == elhubIdx + 1) {
             SignatureValidationError.ElhubSignatureModifiedAfterSigning
         }
     }
@@ -236,7 +238,7 @@ class ITextPdfSignatureService(
         val byteRange = signature.byteRange
         ensure(byteRange.size == 4) { SignatureValidationError.OriginalDocumentMismatch }
 
-        val digestAlgorithm = signature.pkcs7.getDigestAlgorithmName()
+        val digestAlgorithm = signature.pkcs7.digestAlgorithmName
         val originalDigest = runCatching {
             digestOverByteRange(originalElhubSignedPdf, byteRange, digestAlgorithm)
         }.getOrNull()
@@ -312,14 +314,14 @@ class ITextPdfSignatureService(
         val topOfTsaChain = timestampChain.lastOrNull() ?: return null
         val trustedRootMatch =
             timestampChain.any { cert -> tsaRoots.any { root -> areSameCertificate(cert, root) } } ||
-                tsaRoots.any { root ->
-                    runCatching {
-                        topOfTsaChain.verify(root.publicKey)
-                        true
-                    }.getOrDefault(
-                        false
-                    )
-                }
+                    tsaRoots.any { root ->
+                        runCatching {
+                            topOfTsaChain.verify(root.publicKey)
+                            true
+                        }.getOrDefault(
+                            false
+                        )
+                    }
         if (!trustedRootMatch) return null
         val chainIntact = isCertificateChainIntact(timestampChain)
         if (!chainIntact) return null
@@ -367,7 +369,7 @@ class ITextPdfSignatureService(
     private fun hasIssuerAndSerial(cert: X509Certificate?, expected: X509Certificate): Boolean {
         if (cert == null) return false
         return cert.issuerX500Principal.name == expected.issuerX500Principal.name &&
-            cert.serialNumber == expected.serialNumber
+                cert.serialNumber == expected.serialNumber
     }
 
     private fun hasIssuerAndSerialAny(cert: X509Certificate?, expected: List<X509Certificate>): Boolean =
@@ -391,7 +393,7 @@ class ITextPdfSignatureService(
         val leftSpki = left.publicKey.encoded
         val rightSpki = right.publicKey.encoded
         return leftSpki.contentEquals(rightSpki) &&
-            left.subjectX500Principal == right.subjectX500Principal
+                left.subjectX500Principal == right.subjectX500Principal
     }
 
     private fun isCertificateChainIntact(chain: List<X509Certificate>): Boolean {
@@ -438,7 +440,6 @@ class ITextPdfSignatureService(
 
     private data class ParsedDocument(
         val signatures: List<ParsedSignature>,
-        val totalRevisions: Int,
         val allRevisionEofs: List<Long>,
         val dssCrls: List<X509CRL>,
     )
