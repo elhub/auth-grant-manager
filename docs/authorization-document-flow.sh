@@ -74,7 +74,6 @@ CREATE_RESPONSE=$(curl --silent \
   }')
 
 echo $CREATE_RESPONSE
-echo "last err: $?"
 DOCUMENT_ID=$(echo "${CREATE_RESPONSE}" | jq -r '.data.id')
 echo "    documentId = ${DOCUMENT_ID}"
 
