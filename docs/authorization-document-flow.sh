@@ -27,7 +27,7 @@ BANKID_TOKEN_API="https://auth.current.bankid.no/auth/realms/current/protocol/op
 ELHUB_BASE="https://auth-grant-manager.${ELHUB_ENV}.elhub.cloud/access/v0"
 
 for var in USER_AGENT SENDER_GLN MASKINPORTEN_TOKEN NATIONAL_IDENTITY_NUMBER \
-           BANKID_CLIENT_ID BANKID_CLIENT_SECRET METERING_POINT_ID; do
+            BANKID_CLIENT_ID BANKID_CLIENT_SECRET METERING_POINT_ID; do
   if [[ -z "${!var}" ]]; then
     echo "ERROR: \$${var} is not set." >&2
     exit 1
@@ -73,7 +73,7 @@ CREATE_RESPONSE=$(curl --silent \
     }
   }')
 
-echo $CREATE_RESPONSE
+echo "$CREATE_RESPONSE"
 DOCUMENT_ID=$(echo "${CREATE_RESPONSE}" | jq -r '.data.id')
 echo "    documentId = ${DOCUMENT_ID}"
 
@@ -143,7 +143,7 @@ SIGN_ORDER_ID=$(echo "${SIGN_RESPONSE}" | jq -r '.sign_id')
 echo "    signOrderId = ${SIGN_ORDER_ID}"
 echo "    Approve URL (preprod): https://web.preprod.esign-stoetest.cloud/${SIGN_ORDER_ID}"
 
-read -p "Sign via the above URL, and hit Enter when done."
+read -r -p "Sign via the above URL, and hit Enter when done."
 # ---------------------------------------------------------------------------
 # Step 5: Check status of the sign order
 # Run manually / in a poll loop after the end user has signed.
