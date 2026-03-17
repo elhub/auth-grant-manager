@@ -132,36 +132,6 @@ paths:
           $ref: '#/components/responses/404NotFoundError'
         '500':
           $ref: '#/components/responses/500InternalServerError'
-    delete:
-      tags:
-        - TODO
-      summary: Cancel unsigned authorization document
-      description: >
-        Cancel an authorization document. This operation is only allowed if the document
-        has not yet been signed. Once signed, the document can no longer be cancelled through this API.
-      parameters:
-        - $ref: '#/components/parameters/UserAgent'
-        - $ref: '#/components/parameters/AuthorizationMaskinporten'
-        - $ref: '#/components/parameters/SenderGlnRequired'
-        - $ref: '#/components/parameters/OnBehalfOfGlnOptional'
-        - name: id
-          in: path
-          required: true
-          description: Unique identifier of the authorization document to cancel.
-          schema:
-            type: string
-      responses:
-        '200':
-          $ref: '#/components/responses/MetaResponse'
-        '401':
-          $ref: '#/components/responses/401UnauthorizedError'
-        '403':
-          $ref: '#/components/responses/403ForbiddenError'
-        '404':
-          $ref: '#/components/responses/404NotFoundError'
-        '500':
-          $ref: '#/components/responses/500InternalServerError'
-
   '/authorization-documents/{id}.pdf':
     get:
       tags:
@@ -516,36 +486,6 @@ paths:
           $ref: '#/components/responses/422UnprocessableEntityError'
         '500':
           $ref: '#/components/responses/500InternalServerError'
-    delete:
-      tags:
-        - TODO
-      summary: Cancel authorization request
-      description: >
-        Cancel an authorization request. This operation is only allowed if the request has
-        not yet been authorized.
-      parameters:
-        - $ref: '#/components/parameters/UserAgent'
-        - $ref: '#/components/parameters/AuthorizationMaskinporten'
-        - $ref: '#/components/parameters/SenderGlnRequired'
-        - $ref: '#/components/parameters/OnBehalfOfGlnOptional'
-        - name: id
-          in: path
-          required: true
-          description: Unique identifier of the authorization request to cancel.
-          schema:
-            type: string
-      responses:
-        '200':
-          $ref: '#/components/responses/MetaResponse'
-        '401':
-          $ref: '#/components/responses/401UnauthorizedError'
-        '403':
-          $ref: '#/components/responses/403ForbiddenError'
-        '404':
-          $ref: '#/components/responses/404NotFoundError'
-        '500':
-          $ref: '#/components/responses/500InternalServerError'
-
 components:
   parameters:
     UserAgent:
