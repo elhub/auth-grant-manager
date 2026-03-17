@@ -9,7 +9,7 @@ info:
     ecosystem.
 
     Note: The authorization-grant APIs are under active development. Schemas and parameters may still
-    change, Endpoints tagged with "TODO" should be assumed non-functional at the current time.
+    change.
   x-status: Development
   contact:
     name: team-devxp
@@ -30,10 +30,6 @@ tags:
     description: Operations for listing and retrieving authorization grants and their scopes.
   - name: Authorization Requests
     description: Operations for creating, retrieving, and managing authorization requests.
-  - name: Elhub Internal
-    description: Internal Elhub APIs that are not accessible for external integrators.
-  - name: TODO
-    description: Endpoints under active development and not yet enabled in production.
 
 security:
   - bearerAuth: []
