@@ -37,7 +37,7 @@ snakeyaml = "2.6"
 testcontainers = "2.0.3"
 verapdf = "1.28.2"
 bouncycastle = "1.83"
-itext = "8.0.5"
+itext = "9.5.0"
 
 [plugins]
 elhub-gradle-plugin = { id = "no.elhub.devxp.kotlin-service", version.ref = "elhub-gradle" }
