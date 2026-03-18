@@ -1,22 +1,14 @@
 package no.elhub.auth.features.documents
 
-import eu.europa.esig.dss.alert.SilentOnStatusAlert
-import eu.europa.esig.dss.crl.CRLBinary
-import eu.europa.esig.dss.enumerations.CertificationPermission
-import eu.europa.esig.dss.enumerations.DigestAlgorithm
-import eu.europa.esig.dss.enumerations.RevocationOrigin
-import eu.europa.esig.dss.enumerations.SignatureLevel
-import eu.europa.esig.dss.model.InMemoryDocument
-import eu.europa.esig.dss.model.SignatureValue
-import eu.europa.esig.dss.model.x509.CertificateToken
-import eu.europa.esig.dss.model.x509.revocation.crl.CRL
-import eu.europa.esig.dss.pades.PAdESSignatureParameters
-import eu.europa.esig.dss.pades.signature.PAdESService
-import eu.europa.esig.dss.spi.validation.CommonCertificateVerifier
-import eu.europa.esig.dss.spi.x509.CommonTrustedCertificateSource
-import eu.europa.esig.dss.spi.x509.revocation.RevocationToken
-import eu.europa.esig.dss.spi.x509.revocation.crl.OfflineCRLSource
-import eu.europa.esig.dss.spi.x509.tsp.TSPSource
+import com.itextpdf.kernel.pdf.PdfDocument
+import com.itextpdf.kernel.pdf.PdfReader
+import com.itextpdf.kernel.pdf.StampingProperties
+import com.itextpdf.signatures.AccessPermissions
+import com.itextpdf.signatures.CrlClientOffline
+import com.itextpdf.signatures.PdfSigner
+import com.itextpdf.signatures.PrivateKeySignature
+import com.itextpdf.signatures.SignatureUtil
+import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.apache.pdfbox.Loader
 import org.apache.pdfbox.pdmodel.PDPage
 import org.apache.pdfbox.pdmodel.PDPageContentStream
@@ -26,81 +18,72 @@ import org.apache.pdfbox.pdmodel.font.Standard14Fonts
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationText
 import java.io.ByteArrayOutputStream
 import java.security.PrivateKey
+import java.security.Security
 import java.security.cert.X509CRL
+import java.security.cert.X509Certificate
 
 object TestPdfSigner {
-    fun signWithCertificate(
+    init {
+        if (Security.getProvider("BC") == null) {
+            Security.addProvider(BouncyCastleProvider())
+        }
+    }
+
+    enum class SigningProfile {
+        BASELINE_B,
+        BASELINE_T,
+        BASELINE_LT
+    }
+
+    fun signWithChain(
         pdfBytes: ByteArray,
-        signingCert: java.security.cert.X509Certificate,
-        chain: List<java.security.cert.X509Certificate>,
+        chain: List<X509Certificate>,
         signingKey: PrivateKey,
-        signatureLevel: SignatureLevel,
-        tspSource: TSPSource? = null,
+        signingProfile: SigningProfile = SigningProfile.BASELINE_LT,
+        tsaConfig: TsaConfig? = null,
         crls: List<X509CRL> = emptyList()
-    ): ByteArray {
-        if ((signatureLevel == SignatureLevel.PAdES_BASELINE_LT || signatureLevel == SignatureLevel.PAdES_BASELINE_LTA) && crls.isEmpty()) {
-            error("CRL data must be provided for PAdES LT/LTA signatures in tests")
+    ): ByteArray = ByteArrayOutputStream().use { output ->
+        val externalSignature = PrivateKeySignature(signingKey, "SHA-256", "BC")
+        val nextFieldName = nextSignatureFieldName(pdfBytes)
+        val signer = PdfSigner(
+            PdfReader(pdfBytes.inputStream()),
+            output,
+            StampingProperties().useAppendMode()
+        )
+        val tsaClient = if (signingProfile == SigningProfile.BASELINE_B) {
+            null
+        } else {
+            tsaConfig?.let(::InMemoryTsaClient)
+        }
+        val crlClients = if (signingProfile == SigningProfile.BASELINE_LT) {
+            crls.map(::CrlClientOffline).takeIf { it.isNotEmpty() }
+        } else {
+            null
         }
 
-        val trustedSource = CommonTrustedCertificateSource().apply {
-            addCertificate(CertificateToken(chain.last()))
-        }
+        signer.signerProperties.setFieldName(nextFieldName)
+        signer.signerProperties.setCertificationLevel(AccessPermissions.FORM_FIELDS_MODIFICATION)
 
-        val verifier = CommonCertificateVerifier().apply {
-            setTrustedCertSources(trustedSource)
-            alertOnRevokedCertificate = SilentOnStatusAlert()
-            alertOnMissingRevocationData = SilentOnStatusAlert()
-            alertOnNoRevocationAfterBestSignatureTime = SilentOnStatusAlert()
-            alertOnRevokedCertificate = SilentOnStatusAlert()
-            alertOnInvalidSignature = SilentOnStatusAlert()
-            if (crls.isNotEmpty()) {
-                crlSource = StaticCrlSource(crls)
-            }
-        }
-        val padesService = PAdESService(verifier)
-        if (tspSource != null) {
-            padesService.setTspSource(tspSource)
-        }
-        val signatureParameters = PAdESSignatureParameters().apply {
-            this.signatureLevel = signatureLevel
-            digestAlgorithm = DigestAlgorithm.SHA256
-            permission = CertificationPermission.MINIMAL_CHANGES_PERMITTED
-            signingCertificate = CertificateToken(signingCert)
-            certificateChain = chain.map(::CertificateToken)
-        }
+        signer.signDetached(
+            externalSignature,
+            chain.toTypedArray(),
+            crlClients,
+            null,
+            tsaClient,
+            0,
+            PdfSigner.CryptoStandard.CADES
+        )
 
-        val document = InMemoryDocument(pdfBytes)
-        val dataToSign = padesService.getDataToSign(document, signatureParameters).bytes
-        val signatureBytes = signData(dataToSign, signingKey, signatureParameters.signatureAlgorithm.jceId)
-        val signatureValue = SignatureValue(signatureParameters.signatureAlgorithm, signatureBytes)
-
-        return padesService.signDocument(document, signatureParameters, signatureValue)
-            .openStream()
-            .use { it.readBytes() }
+        output.toByteArray()
     }
 
-    private class StaticCrlSource(crls: List<X509CRL>) : OfflineCRLSource() {
-        init {
-            crls.forEach { crl ->
-                addBinary(CRLBinary(crl.encoded), RevocationOrigin.EXTERNAL)
-            }
+    private fun nextSignatureFieldName(pdfBytes: ByteArray): String {
+        val existingNames = PdfDocument(PdfReader(pdfBytes.inputStream())).use { document ->
+            SignatureUtil(document).signatureNames.toSet()
         }
-
-        override fun getRevocationTokens(
-            certificateToken: CertificateToken,
-            issuerToken: CertificateToken
-        ): List<RevocationToken<CRL>> {
-            val tokens = super.getRevocationTokens(certificateToken, issuerToken)
-            tokens.forEach { it.setExternalOrigin(RevocationOrigin.EXTERNAL) }
-            return tokens
-        }
-    }
-
-    private fun signData(data: ByteArray, key: PrivateKey, jceId: String): ByteArray {
-        val signature = java.security.Signature.getInstance(jceId)
-        signature.initSign(key)
-        signature.update(data)
-        return signature.sign()
+        return generateSequence(1) { it + 1 }
+            .map { "Signature$it" }
+            .first { it !in existingNames }
     }
 
     fun tamperPdf(pdfBytes: ByteArray): ByteArray {
@@ -167,11 +150,11 @@ object TestPdfSigner {
     }
 
     private fun Byte.isPdfWhitespace(): Boolean = this == 0x00.toByte() ||
-        this == 0x09.toByte() ||
-        this == 0x0A.toByte() ||
-        this == 0x0C.toByte() ||
-        this == 0x0D.toByte() ||
-        this == 0x20.toByte()
+            this == 0x09.toByte() ||
+            this == 0x0A.toByte() ||
+            this == 0x0C.toByte() ||
+            this == 0x0D.toByte() ||
+            this == 0x20.toByte()
 
     fun addAnnotationIncremental(pdfBytes: ByteArray): ByteArray {
         ByteArrayOutputStream().use { output ->

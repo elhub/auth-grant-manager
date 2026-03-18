@@ -1,5 +1,6 @@
 package no.elhub.auth.features.documents.common
 
+import com.itextpdf.signatures.PdfSigner
 import eu.europa.esig.dss.enumerations.CertificationPermission
 import eu.europa.esig.dss.enumerations.DigestAlgorithm
 import eu.europa.esig.dss.enumerations.SignatureAlgorithm
@@ -326,13 +327,10 @@ class SignatureServiceTest : FunSpec({
 
         test("Should return ElhubSigningCertNotTrusted when Elhub signing cert isn't trusted") {
             val fakeElhubCerts = certFactory.generateFakeElhubCertificates(certProvider.getElhubSigningCertificate())
-            val elhubSignedPdfBytes = TestPdfSigner.signWithCertificate(
+            val elhubSignedPdfBytes = TestPdfSigner.signWithChain(
                 pdfBytes = unsignedPdfBytes,
-                signingCert = fakeElhubCerts.signingCert,
                 chain = fakeElhubCerts.chain,
                 signingKey = fakeElhubCerts.signingKey.private,
-                signatureLevel = SignatureLevel.PAdES_BASELINE_B
-
             )
             val bankIdSignedPdfBytes = endUserSignatureTestHelper.sign(
                 pdfBytes = elhubSignedPdfBytes,
@@ -378,7 +376,7 @@ class SignatureServiceTest : FunSpec({
             val bankIdSignedPdfBytes = endUserSignatureTestHelper.sign(
                 pdfBytes = elhubSignedPdfBytes,
                 nationalIdentityNumber = nationalIdentityNumber,
-                signatureLevel = SignatureLevel.PAdES_BASELINE_T
+                signingProfile = TestPdfSigner.SigningProfile.BASELINE_T
             )
 
             val pdfValidationResult =
