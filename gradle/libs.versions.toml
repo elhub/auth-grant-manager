@@ -4,7 +4,6 @@ format.version = "1.1"
 [versions]
 arrow = "2.2.2"
 cohort = "2.8.2"
-dss = "6.4"
 elhub-gradle = "0.10.6"
 elhub-jsonapi-wrapper = "0.4.13"
 exposed = "1.1.1"
@@ -106,13 +105,6 @@ test-mybatis = { group = "org.mybatis", name = "mybatis", version.ref = "mybatis
 templating-mustache = { group = "com.github.spullara.mustache.java", name = "compiler", version.ref = "mustache" }
 pdf-openhtmltopdf-pdfbox = { group = "io.github.openhtmltopdf", name = "openhtmltopdf-pdfbox", version.ref = "openhtmltopdf" }
 pdf-pdfbox = { group = "org.apache.pdfbox", name = "pdfbox", version.ref = "pdfbox" }
-dss-pades-pdfbox = { group = "eu.europa.ec.joinup.sd-dss", name = "dss-pades-pdfbox", version.ref = "dss" }
-dss-token = { group = "eu.europa.ec.joinup.sd-dss", name = "dss-token", version.ref = "dss" }
-dss-validation = { group = "eu.europa.ec.joinup.sd-dss", name = "dss-validation", version.ref = "dss" }
-dss-utils-apache-commons = { group = "eu.europa.ec.joinup.sd-dss", name = "dss-utils-apache-commons", version.ref = "dss" }
-dss-crl-parser-stream = { group = "eu.europa.ec.joinup.sd-dss", name = "dss-crl-parser-stream", version.ref = "dss" }
-dss-cms-stream = { group = "eu.europa.ec.joinup.sd-dss", name = "dss-cms-stream", version.ref = "dss" }
-dss-policy-jaxb = { group = "eu.europa.ec.joinup.sd-dss", name = "dss-policy-jaxb", version.ref = "dss" }
 test-verapdf-validation-model = { group = "org.verapdf", name = "validation-model", version.ref = "verapdf" }
 bouncycastle-bcprov = { group = "org.bouncycastle", name = "bcprov-jdk18on", version.ref = "bouncycastle" }
 bouncycastle-bcpkix = { group = "org.bouncycastle", name = "bcpkix-jdk18on", version.ref = "bouncycastle" }
@@ -133,4 +125,3 @@ monitoring = ["ktor-server-metrics-micrometer", "monitoring-micrometer-registry-
   "monitoring-cohort-micrometer"]
 serialization = ["kotlinx-datetime", "kotlinx-serialization-json", "ktor-serialization-kotlinx-json", "serialization-yaml-snakeyaml"]
 pdf-generation = ["templating-mustache", "pdf-openhtmltopdf-pdfbox", "pdf-pdfbox"]
-dss = ["dss-pades-pdfbox", "dss-token", "dss-validation", "dss-utils-apache-commons", "dss-crl-parser-stream", "dss-cms-stream", "dss-policy-jaxb"]
