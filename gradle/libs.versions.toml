@@ -55,6 +55,7 @@ database-exposed-dao = { module = "org.jetbrains.exposed:exposed-dao", version.r
 database-exposed-java-time = { module = "org.jetbrains.exposed:exposed-java-time", version.ref = "exposed" }
 database-exposed-jdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposed" }
 database-hikari = { group = "com.zaxxer", name = "HikariCP", version.ref = "hikari" }
+ktor-server-di = { group = "io.ktor", name = "ktor-server-di", version.ref = "ktor" }
 database-liquibase-core = { group = "org.liquibase", name = "liquibase-core", version.ref = "liquibase" }
 database-postgresql = { group = "org.postgresql", name = "postgresql", version.ref = "postgresql" }
 di-koin-annotations = { group = "io.insert-koin", name = "koin-annotations", version.ref = "koin-annotations" }
@@ -124,7 +125,7 @@ dependency-injection = ["di-koin-ktor", "di-koin-logger-slf4j", "di-koin-annotat
 documentation = ["ktor-server-swagger"]
 functional-programming = ["fp-arrow-core", "fp-arrow-core-high-arity", "fp-arrow-fx-coroutines"]
 ktor = ["ktor-server-core", "ktor-server-netty", "ktor-server-content-negotiation", "ktor-server-config-yaml", "ktor-client-core", "ktor-client-cio",
-  "ktor-client-content-negotiation", "ktor-client-logging", "ktor-server-status-pages", "ktor-client-auth"]
+  "ktor-client-content-negotiation", "ktor-client-logging", "ktor-server-status-pages", "ktor-client-auth","ktor-server-di"]
 logging = ["ktor-server-call-id", "ktor-server-call-logging", "logging-logback-classic", "logging-oshai-kotlin-logging"]
 monitoring = ["ktor-server-metrics-micrometer", "monitoring-micrometer-registry-prometheus", "monitoring-cohort-hikari", "monitoring-cohort-ktor",
   "monitoring-cohort-micrometer"]

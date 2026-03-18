@@ -4,15 +4,15 @@ import eu.europa.esig.dss.pades.signature.PAdESService
 import eu.europa.esig.dss.spi.validation.CommonCertificateVerifier
 import io.ktor.server.application.Application
 import io.ktor.server.config.ApplicationConfig
+import io.ktor.server.plugins.di.dependencies
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
+import no.elhub.auth.features.common.auth.AuthorizationProvider
 import no.elhub.auth.features.documents.common.DocumentPropertiesRepository
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.documents.common.ExposedDocumentPropertiesRepository
 import no.elhub.auth.features.documents.common.ExposedDocumentRepository
 import no.elhub.auth.features.documents.common.PdfSignatureService
-import no.elhub.auth.features.documents.common.SignatureService
-import no.elhub.auth.features.documents.create.CertificateProvider
 import no.elhub.auth.features.documents.create.FileCertificateProvider
 import no.elhub.auth.features.documents.create.FileCertificateProviderConfig
 import no.elhub.auth.features.documents.create.FileGenerator
@@ -23,12 +23,7 @@ import no.elhub.auth.features.filegenerator.PdfGenerator
 import no.elhub.auth.features.filegenerator.PdfGeneratorConfig
 import no.elhub.auth.features.grants.common.ExposedGrantRepository
 import no.elhub.auth.features.grants.common.GrantRepository
-import org.koin.core.module.dsl.createdAtStart
-import org.koin.core.module.dsl.singleOf
-import org.koin.core.qualifier.named
-import org.koin.dsl.bind
 import org.koin.ktor.ext.get
-import org.koin.ktor.plugin.koinModule
 import no.elhub.auth.features.documents.confirm.Handler as ConfirmHandler
 import no.elhub.auth.features.documents.confirm.route as confirmRoute
 import no.elhub.auth.features.documents.create.Handler as CreateHandler
@@ -41,21 +36,29 @@ import no.elhub.auth.features.documents.query.route as queryRoute
 const val DOCUMENTS_PATH = "/access/v0/authorization-documents"
 
 fun Application.module() {
-    koinModule {
-        single {
-            val cfg = get<ApplicationConfig>().config("pdfSigner.certificate")
+
+    dependencies {
+
+        provide<FileCertificateProvider> {
+            FileCertificateProvider(resolve())
+        }
+        provide<PAdESService> {
+            PAdESService(CommonCertificateVerifier())
+        }
+        provide<PdfSignatureService>{
+            PdfSignatureService(resolve(), resolve(), resolve())
+        }
+
+        provide<FileCertificateProviderConfig> {
+            val cfg = resolve<ApplicationConfig>().config("pdfSigner.certificate")
             FileCertificateProviderConfig(
                 pathToCertificateChain = cfg.property("chain").getString(),
                 pathToSigningCertificate = cfg.property("signing").getString(),
                 pathToBankIdRootCertificatesDir = cfg.property("bankIdRootDir").getString(),
             )
         }
-        singleOf(::FileCertificateProvider) { createdAtStart() } bind CertificateProvider::class
-        single { PAdESService(CommonCertificateVerifier()) }
-        singleOf(::PdfSignatureService) { createdAtStart() } bind SignatureService::class
-
-        single {
-            val cfg = get<ApplicationConfig>().config("pdfSigner.vault")
+        provide<VaultConfig> {
+            val cfg = resolve<ApplicationConfig>().config("pdfSigner.vault")
             VaultConfig(
                 url = cfg.property("url").getString(),
                 key = cfg.property("key").getString(),
@@ -63,37 +66,40 @@ fun Application.module() {
             )
         }
 
-        single {
+        provide<HashicorpVaultSignatureProvider> {
             HashicorpVaultSignatureProvider(
-                client = get(named("commonHttpClient")),
-                cfg = get()
+                client = resolve("commonHttpClient"),
+                cfg = resolve()
             )
-        } bind SignatureProvider::class
-
-        single {
-            val cfg = get<ApplicationConfig>().config("pdfGenerator")
+        }
+        provide<PdfGeneratorConfig> {
+            val cfg = resolve<ApplicationConfig>().config("pdfGenerator")
             PdfGeneratorConfig(
                 mustacheResourcePath = cfg.property("mustacheResourcePath").getString(),
                 useTestPdfNotice = cfg.property("useTestPdfNotice").getString().toBoolean(),
             )
         }
-
-        singleOf(::PdfGenerator) { createdAtStart() } bind FileGenerator::class
-        singleOf(::ExposedDocumentRepository) { createdAtStart() } bind DocumentRepository::class
-        singleOf(::ExposedGrantRepository) { createdAtStart() } bind GrantRepository::class
-        singleOf(::ExposedDocumentPropertiesRepository) { createdAtStart() } bind DocumentPropertiesRepository::class
-        singleOf(::ConfirmHandler) { createdAtStart() }
-        singleOf(::CreateHandler) { createdAtStart() }
-        singleOf(::GetHandler) { createdAtStart() }
-        singleOf(::QueryHandler) { createdAtStart() }
+        provide<FileGenerator> { PdfGenerator(resolve()) }
+        provide<DocumentRepository> { ExposedDocumentRepository(resolve(), resolve()) }
+        provide<DocumentPropertiesRepository> { ExposedDocumentPropertiesRepository() }
+        provide<ConfirmHandler> { ConfirmHandler(resolve(), resolve(), resolve(), resolve(), resolve(), resolve()) }
+        provide<CreateHandler> { CreateHandler(resolve(), resolve(), resolve(), resolve(), resolve()) }
+        provide<GetHandler> { GetHandler(resolve(), resolve()) }
+        provide<QueryHandler> { QueryHandler(resolve(), resolve()) }
     }
+
+    val createHandler: CreateHandler by dependencies
+    val confirmHandler: ConfirmHandler by dependencies
+    val getHandler: GetHandler by dependencies
+    val queryHandler: QueryHandler by dependencies
+    val authProvider: AuthorizationProvider by dependencies
 
     routing {
         route(DOCUMENTS_PATH) {
-            createRoute(get(), get())
-            confirmRoute(get(), get())
-            getRoute(get(), get())
-            queryRoute(get(), get())
+            createRoute(createHandler, authProvider)
+            confirmRoute(confirmHandler, authProvider)
+            getRoute(getHandler, authProvider)
+            queryRoute(queryHandler, authProvider)
         }
     }
 }

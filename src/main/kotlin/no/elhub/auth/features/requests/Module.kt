@@ -1,8 +1,10 @@
 package no.elhub.auth.features.requests
 
 import io.ktor.server.application.Application
+import io.ktor.server.plugins.di.dependencies
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
+import no.elhub.auth.features.common.auth.AuthorizationProvider
 import no.elhub.auth.features.grants.common.ExposedGrantPropertiesRepository
 import no.elhub.auth.features.grants.common.ExposedGrantRepository
 import no.elhub.auth.features.grants.common.GrantPropertiesRepository
@@ -12,11 +14,6 @@ import no.elhub.auth.features.requests.common.ExposedRequestRepository
 import no.elhub.auth.features.requests.common.ProxyRequestBusinessHandler
 import no.elhub.auth.features.requests.common.RequestPropertiesRepository
 import no.elhub.auth.features.requests.common.RequestRepository
-import org.koin.core.module.dsl.createdAtStart
-import org.koin.core.module.dsl.singleOf
-import org.koin.dsl.bind
-import org.koin.ktor.ext.get
-import org.koin.ktor.plugin.koinModule
 import no.elhub.auth.features.requests.create.Handler as CreateHandler
 import no.elhub.auth.features.requests.create.route as createRoute
 import no.elhub.auth.features.requests.get.Handler as GetHandler
@@ -29,25 +26,31 @@ import no.elhub.auth.features.requests.update.route as updateRoute
 const val REQUESTS_PATH = "/access/v0/authorization-requests"
 
 fun Application.module() {
-    koinModule {
-        single { environment.config }
-        singleOf(::ExposedRequestRepository) { createdAtStart() } bind RequestRepository::class
-        singleOf(::ExposedGrantRepository) { createdAtStart() } bind GrantRepository::class
-        singleOf(::ExposedRequestPropertiesRepository) { createdAtStart() } bind RequestPropertiesRepository::class
-        singleOf(::ExposedGrantPropertiesRepository) { createdAtStart() } bind GrantPropertiesRepository::class
-        singleOf(::ProxyRequestBusinessHandler) { createdAtStart() }
-        singleOf(::UpdateHandler) { createdAtStart() }
-        singleOf(::CreateHandler) { createdAtStart() }
-        singleOf(::GetHandler) { createdAtStart() }
-        singleOf(::QueryHandler) { createdAtStart() }
+    dependencies {
+        provide<RequestRepository> { ExposedRequestRepository(resolve(), resolve()) }
+        provide<GrantRepository> { ExposedGrantRepository(resolve(), resolve()) }
+        provide<RequestPropertiesRepository> { ExposedRequestPropertiesRepository() }
+        provide<GrantPropertiesRepository> { ExposedGrantPropertiesRepository() }
+        provide<ProxyRequestBusinessHandler> { ProxyRequestBusinessHandler(resolve(), resolve()) }
+        provide<UpdateHandler> { UpdateHandler(resolve(), resolve(), resolve(), resolve()) }
+        provide<CreateHandler> { CreateHandler(resolve(), resolve(), resolve(), resolve()) }
+        provide<GetHandler> { GetHandler(resolve(), resolve()) }
+        provide<QueryHandler> { QueryHandler(resolve(), resolve()) }
     }
+
+
+    val updateHandler: UpdateHandler by dependencies
+    val createHandler: CreateHandler by dependencies
+    val getHandler: GetHandler by dependencies
+    val queryHandler: QueryHandler by dependencies
+    val authorizationProvider: AuthorizationProvider by dependencies
 
     routing {
         route(REQUESTS_PATH) {
-            updateRoute(get(), get())
-            createRoute(get(), get())
-            getRoute(get(), get())
-            queryRoute(get(), get())
+            updateRoute(updateHandler, authorizationProvider)
+            createRoute(createHandler, authorizationProvider)
+            getRoute(getHandler, authorizationProvider)
+            queryRoute(queryHandler, authorizationProvider)
         }
     }
 }

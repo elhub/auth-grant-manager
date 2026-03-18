@@ -12,15 +12,18 @@ import io.ktor.http.ContentType
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import io.ktor.server.config.ApplicationConfig
+import io.ktor.server.plugins.di.dependencies
 import kotlinx.serialization.json.Json
-import org.koin.core.qualifier.named
-import org.koin.ktor.plugin.koinModule
+
+import java.security.cert.X509Certificate
+import javax.net.ssl.X509TrustManager
 
 fun Application.organisationsServiceModule() {
-    koinModule {
-        single { environment.config }
-        single {
-            val organisationsApiConfig = get<ApplicationConfig>().config("structureData.organisationsService")
+
+    dependencies {
+
+        provide<OrganisationsApiConfig> {
+            val organisationsApiConfig = resolve<ApplicationConfig>().config("structureData.organisationsService")
             OrganisationsApiConfig(
                 serviceUrl = organisationsApiConfig.property("serviceUrl").getString(),
                 basicAuthConfig = BasicAuthConfig(
@@ -30,8 +33,8 @@ fun Application.organisationsServiceModule() {
             )
         }
 
-        single(named("organisationsHttpClient")) {
-            val organisationsApiConfig = get<OrganisationsApiConfig>()
+        provide<HttpClient> {
+            val organisationsApiConfig = resolve<OrganisationsApiConfig>()
             val basicAuthUsername = organisationsApiConfig.basicAuthConfig.username
             val basicAuthPassword = organisationsApiConfig.basicAuthConfig.password
 
@@ -39,6 +42,15 @@ fun Application.organisationsServiceModule() {
                 install(HttpTimeout) {
                     connectTimeoutMillis = 30_000
                     requestTimeoutMillis = 40_000
+                }
+                engine {
+                    https {
+                        trustManager = object : X509TrustManager {
+                            override fun checkClientTrusted(p0: Array<out X509Certificate?>?, p1: String?) = Unit
+                            override fun checkServerTrusted(p0: Array<out X509Certificate?>?, p1: String?) = Unit
+                            override fun getAcceptedIssuers(): Array<X509Certificate?> = emptyArray()
+                        }
+                    }
                 }
                 install(Auth) {
                     basic {
@@ -49,7 +61,6 @@ fun Application.organisationsServiceModule() {
                         realm = "Access to the '/' path"
                     }
                 }
-
                 install(ContentNegotiation) {
                     json(
                         Json {
@@ -59,15 +70,14 @@ fun Application.organisationsServiceModule() {
                         contentType = ContentType.Application.Json,
                     )
                 }
-
                 install(UserAgent) { agent = "auth-grant-manager" }
             }
         }
 
-        single<OrganisationsService> {
+        provide<OrganisationsService> {
             OrganisationsApi(
-                organisationsApiConfig = get(),
-                client = get(named("organisationsHttpClient"))
+                organisationsApiConfig = resolve(),
+                client = resolve()
             )
         }
     }

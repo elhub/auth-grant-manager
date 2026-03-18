@@ -1,17 +1,13 @@
 package no.elhub.auth.features.grants
 
 import io.ktor.server.application.Application
+import io.ktor.server.plugins.di.dependencies
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
+import no.elhub.auth.features.common.auth.AuthorizationProvider
 import no.elhub.auth.features.grants.common.ExposedGrantPropertiesRepository
 import no.elhub.auth.features.grants.common.ExposedGrantRepository
-import no.elhub.auth.features.grants.common.GrantPropertiesRepository
-import no.elhub.auth.features.grants.common.GrantRepository
-import org.koin.core.module.dsl.createdAtStart
-import org.koin.core.module.dsl.singleOf
-import org.koin.dsl.bind
 import org.koin.ktor.ext.get
-import org.koin.ktor.plugin.koinModule
 import no.elhub.auth.features.grants.consume.Handler as ConsumeHandler
 import no.elhub.auth.features.grants.consume.route as consumeRoute
 import no.elhub.auth.features.grants.get.Handler as GetHandler
@@ -24,21 +20,42 @@ import no.elhub.auth.features.grants.query.route as queryRoute
 const val GRANTS_PATH = "/access/v0/authorization-grants"
 
 fun Application.module() {
-    koinModule {
-        singleOf(::ExposedGrantRepository) { createdAtStart() } bind GrantRepository::class
-        singleOf(::ExposedGrantPropertiesRepository) { createdAtStart() } bind GrantPropertiesRepository::class
-        singleOf(::GetHandler) { createdAtStart() }
-        singleOf(::GetScopesHandler) { createdAtStart() }
-        singleOf(::QueryHandler) { createdAtStart() }
-        singleOf(::ConsumeHandler) { createdAtStart() }
+
+    dependencies {
+        provide<ExposedGrantRepository> {
+            ExposedGrantRepository(resolve(), resolve())
+        }
+        provide<ExposedGrantPropertiesRepository> {
+            ExposedGrantPropertiesRepository()
+        }
+
+        provide<GetHandler> {
+            GetHandler(resolve())
+        }
+
+        provide<GetScopesHandler> {
+            GetScopesHandler(resolve())
+        }
+        provide<QueryHandler> {
+            QueryHandler(resolve())
+        }
+        provide<ConsumeHandler> {
+            ConsumeHandler(resolve())
+        }
     }
+
+    val getRouteHandler: GetHandler by dependencies
+    val getScopesHandler: GetScopesHandler by dependencies
+    val queryRouteHandler: QueryHandler by dependencies
+    val consumerRouteHandler: ConsumeHandler by dependencies
+    val authProvider: AuthorizationProvider by dependencies
 
     routing {
         route(GRANTS_PATH) {
-            getRoute(get(), get())
-            getScopesRoute(get(), get())
-            queryRoute(get(), get())
-            consumeRoute(get(), get())
+            getRoute(getRouteHandler, authProvider)
+            getScopesRoute(getScopesHandler, authProvider)
+            queryRoute(queryRouteHandler, authProvider)
+            consumeRoute(consumerRouteHandler, authProvider)
         }
     }
 }

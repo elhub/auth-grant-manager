@@ -9,7 +9,9 @@ import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.plugins.logging.LoggingFormat
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
+
 import io.ktor.server.config.ApplicationConfig
+import io.ktor.server.plugins.di.dependencies
 import kotlinx.serialization.json.Json
 import no.elhub.auth.features.common.auth.AuthorizationProvider
 import no.elhub.auth.features.common.auth.PDPAuthorizationProvider
@@ -19,20 +21,39 @@ import no.elhub.auth.features.common.party.PartyService
 import no.elhub.auth.features.common.person.ApiPersonService
 import no.elhub.auth.features.common.person.PersonApiConfig
 import no.elhub.auth.features.common.person.PersonService
-import org.koin.core.module.dsl.singleOf
-import org.koin.core.qualifier.named
-import org.koin.dsl.bind
-import org.koin.ktor.plugin.koinModule
+import java.security.cert.X509Certificate
+import javax.net.ssl.TrustManager
+import javax.net.ssl.X509TrustManager
 
 fun Application.commonModule() {
-    koinModule {
-        single { environment.config }
-        single(named("commonHttpClient")) {
+    val appEnvironment = environment
+    dependencies {
+        provide<ApplicationConfig> {
+            appEnvironment.config
+        }
+        provide<HttpClient>(name = "commonHttpClient") {
             HttpClient(CIO) {
                 install(HttpTimeout) {
                     requestTimeoutMillis = 10_000
                     connectTimeoutMillis = 10_000
                     socketTimeoutMillis = 10_000
+                }
+                engine {
+                    https {
+                        trustManager = object: X509TrustManager, TrustManager {
+                            override fun checkClientTrusted(p0: Array<out X509Certificate?>?, p1: String?) {
+                                return Unit
+                            }
+
+                            override fun checkServerTrusted(p0: Array<out X509Certificate?>?, p1: String?) {
+                                return Unit
+                            }
+
+                            override fun getAcceptedIssuers(): Array<X509Certificate?> {
+                                return emptyArray<X509Certificate?>()
+                            }
+                        }
+                    }
                 }
                 install(ContentNegotiation) {
                     json(
@@ -47,21 +68,24 @@ fun Application.commonModule() {
                 }
             }
         }
-
-        single {
-            val cfg = get<ApplicationConfig>().config("authPersons")
-            PersonApiConfig(
-                baseUri = cfg.property("baseUri").getString()
-            )
+        provide<PersonApiConfig> {
+            val cfg = resolve<ApplicationConfig>().config("authPersons")
+            PersonApiConfig(baseUri = cfg.property("baseUri").getString())
         }
 
-        single {
-            val pdpBaseUrl = get<ApplicationConfig>().property("pdp.baseUrl").getString()
-            PDPAuthorizationProvider(httpClient = get(named("commonHttpClient")), pdpBaseUrl = pdpBaseUrl)
-        } bind AuthorizationProvider::class
+        provide<PDPAuthorizationProvider> {
+            val pdpBaseUrl = appEnvironment.config.property("pdp.baseUrl").getString()
+            PDPAuthorizationProvider(httpClient = resolve("commonHttpClient"), pdpBaseUrl = pdpBaseUrl)
+        }
 
-        singleOf(::ExposedPartyRepository) bind PartyRepository::class
-        single { ApiPersonService(cfg = get(), client = get(named("commonHttpClient"))) } bind PersonService::class
-        singleOf(::PartyService) bind PartyService::class
+        provide<PartyRepository> { ExposedPartyRepository() }
+
+        provide<PersonService> {
+            ApiPersonService(cfg = resolve(), client = resolve())
+        }
+
+        provide<PartyService> {
+            PartyService(resolve())
+        }
     }
-}
+    }
