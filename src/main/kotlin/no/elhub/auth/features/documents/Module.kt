@@ -18,8 +18,6 @@ import no.elhub.auth.features.documents.create.HashicorpVaultSignatureProvider
 import no.elhub.auth.features.documents.create.VaultConfig
 import no.elhub.auth.features.filegenerator.PdfGenerator
 import no.elhub.auth.features.filegenerator.PdfGeneratorConfig
-import no.elhub.auth.features.grants.common.ExposedGrantRepository
-import no.elhub.auth.features.grants.common.GrantRepository
 import no.elhub.auth.features.documents.confirm.Handler as ConfirmHandler
 import no.elhub.auth.features.documents.confirm.route as confirmRoute
 import no.elhub.auth.features.documents.create.Handler as CreateHandler
@@ -75,7 +73,6 @@ fun Application.module() {
         provide<FileGenerator> { PdfGenerator(resolve()) }
         provide<DocumentRepository> { ExposedDocumentRepository(resolve(), resolve()) }
         provide<DocumentPropertiesRepository> { ExposedDocumentPropertiesRepository() }
-        provide<GrantRepository> { ExposedGrantRepository(resolve(), resolve()) }
         provide<ConfirmHandler> { ConfirmHandler(resolve(), resolve(), resolve(), resolve(), resolve(), resolve()) }
         provide<CreateHandler> { CreateHandler(resolve(), resolve(), resolve(), resolve(), resolve()) }
         provide<GetHandler> { GetHandler(resolve(), resolve()) }
