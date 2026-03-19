@@ -28,7 +28,7 @@ fun Application.organisationsServiceModule() {
             )
         }
 
-        provide<HttpClient> {
+        provide<HttpClient>(name = "organisationsHttpClient") {
             val organisationsApiConfig = resolve<OrganisationsApiConfig>()
             val basicAuthUsername = organisationsApiConfig.basicAuthConfig.username
             val basicAuthPassword = organisationsApiConfig.basicAuthConfig.password
@@ -63,7 +63,7 @@ fun Application.organisationsServiceModule() {
         provide<OrganisationsService> {
             OrganisationsApi(
                 organisationsApiConfig = resolve(),
-                client = resolve()
+                client = resolve("organisationsHttpClient")
             )
         }
     }
