@@ -15,8 +15,6 @@ import io.ktor.server.config.ApplicationConfig
 import io.ktor.server.plugins.di.dependencies
 import io.ktor.server.plugins.di.resolve
 import kotlinx.serialization.json.Json
-import java.security.cert.X509Certificate
-import javax.net.ssl.X509TrustManager
 
 fun Application.meteringPointsServiceModule() {
     dependencies {
@@ -39,17 +37,6 @@ fun Application.meteringPointsServiceModule() {
                 install(HttpTimeout) {
                     connectTimeoutMillis = 30_000
                     requestTimeoutMillis = 40_000
-                }
-                engine {
-                    https {
-                        trustManager = object : X509TrustManager {
-                            override fun checkClientTrusted(p0: Array<out X509Certificate?>?, p1: String?) = Unit
-
-                            override fun checkServerTrusted(p0: Array<out X509Certificate?>?, p1: String?) = Unit
-
-                            override fun getAcceptedIssuers(): Array<X509Certificate?> = emptyArray<X509Certificate?>()
-                        }
-                    }
                 }
                 install(Auth) {
                     basic {
