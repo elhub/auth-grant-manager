@@ -23,7 +23,6 @@ import no.elhub.auth.features.common.person.PersonApiConfig
 import no.elhub.auth.features.common.person.PersonService
 import org.slf4j.LoggerFactory
 
-
 fun Application.commonModule() {
     val appEnvironment = environment
     dependencies {

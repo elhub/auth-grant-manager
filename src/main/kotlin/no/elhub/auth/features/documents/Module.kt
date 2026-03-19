@@ -1,11 +1,8 @@
 package no.elhub.auth.features.documents
 
-import eu.europa.esig.dss.pades.signature.PAdESService
-import eu.europa.esig.dss.spi.validation.CommonCertificateVerifier
 import io.ktor.server.application.Application
 import io.ktor.server.config.ApplicationConfig
 import io.ktor.server.plugins.di.dependencies
-
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import no.elhub.auth.features.common.auth.AuthorizationProvider
@@ -38,9 +35,6 @@ fun Application.module() {
     dependencies {
         provide<FileCertificateProvider> {
             FileCertificateProvider(resolve())
-        }
-        provide<PAdESService> {
-            PAdESService(CommonCertificateVerifier())
         }
 
         provide<FileCertificateProviderConfig> {
