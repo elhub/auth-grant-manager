@@ -88,7 +88,7 @@ fun Application.commonModule() {
         provide<PartyRepository> { ExposedPartyRepository() }
 
         provide<PersonService> {
-            ApiPersonService(cfg = resolve(), client = resolve())
+            ApiPersonService(cfg = resolve(), client = resolve("commonHttpClient"))
         }
 
         provide<PartyService> {
