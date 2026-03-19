@@ -22,7 +22,7 @@
         "MoveInAndChangeOfBalanceSupplierForPerson"
       ]
     },
-    "status": {
+    "authorizationRequestStatus": {
       "type": "string",
       "description": "The status of the authorization request.",
       "enum": ["Accepted", "Expired", "Pending", "Rejected"],
@@ -36,7 +36,7 @@
           "$ref": "#/$defs/requestType"
         },
         "status": {
-          "$ref": "#/$defs/status"
+          "$ref": "#/$defs/authorizationRequestStatus"
         },
         "createdAt": {
           "$ref": "../elhub-common.schema.json#/$defs/createdAt"

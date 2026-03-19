@@ -16,7 +16,7 @@
       "const": "AuthorizationScope",
       "examples": ["AuthorizationScope"]
     },
-    "status": {
+    "authorizationGrantStatus": {
       "type": "string",
       "description": "The status of the authorization grant.",
       "enum": ["Active", "Exhausted", "Expired", "Revoked"]
@@ -26,7 +26,7 @@
       "description": "Attributes of the AuthorizationGrant resource.",
       "properties": {
         "status": {
-          "$ref": "#/$defs/status"
+          "$ref": "#/$defs/authorizationGrantStatus"
         },
         "createdAt": {
           "$ref": "../elhub-common.schema.json#/$defs/createdAt"
