@@ -179,6 +179,44 @@ class TestCertificateFactory(
         )
     }
 
+    /**
+     * Generates an intermediate CA certificate signed by the given issuer (e.g. the BankID root cert at obj 48).
+     * The resulting cert has BasicConstraints(true) so it can itself sign leaf certificates.
+     */
+    fun generateIntermediateCertificate(
+        keyPair: KeyPair,
+        issuerKeyPair: KeyPair,
+        issuerCertificate: X509Certificate,
+        subject: X500Name = X500Name("CN=Test Intermediate CA")
+    ): X509Certificate {
+        ensureBouncyCastle()
+        val now = Instant.now()
+        val notBefore = Date.from(now.minus(1, ChronoUnit.MINUTES))
+        val notAfter = Date.from(now.plus(defaultValidity))
+        val serial = BigInteger.valueOf(now.toEpochMilli())
+        val issuer = X500Name(issuerCertificate.subjectX500Principal.name)
+
+        val builder = JcaX509v3CertificateBuilder(
+            issuer,
+            serial,
+            notBefore,
+            notAfter,
+            subject,
+            keyPair.public
+        ).apply {
+            // pathLen=0 means this intermediate can sign leaf certs but not further CAs
+            addExtension(Extension.basicConstraints, true, BasicConstraints(0))
+            addExtension(
+                Extension.keyUsage,
+                true,
+                KeyUsage(KeyUsage.keyCertSign or KeyUsage.cRLSign)
+            )
+        }
+
+        val signer = JcaContentSignerBuilder("SHA256withRSA").setProvider("BC").build(issuerKeyPair.private)
+        return JcaX509CertificateConverter().setProvider("BC").getCertificate(builder.build(signer))
+    }
+
     fun generateCrl(
         issuerCertificate: X509Certificate,
         issuerKey: PrivateKey,

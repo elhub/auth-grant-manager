@@ -5,9 +5,14 @@ import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.requests.AuthorizationRequest
 import java.time.OffsetDateTime
 
+const val TEXT_VERSION_KEY = "textVersion"
+
 interface RequestMetaMarker {
-    fun toMetaAttributes(): Map<String, String>
+    fun toRequestMetaAttributes(): Map<String, String>
 }
+
+fun Map<String, String>.withTextVersion(version: String): Map<String, String> =
+    this + (TEXT_VERSION_KEY to version)
 
 data class RequestCommand(
     val type: AuthorizationRequest.Type,

@@ -3,7 +3,6 @@ package no.elhub.auth.features.grants.getscopes
 import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensure
-import no.elhub.auth.features.common.Constants
 import no.elhub.auth.features.common.QueryError
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.party.PartyType
@@ -25,16 +24,9 @@ class Handler(
                 }.bind()
 
             val authorizedParty = query.authorizedParty
-            when (authorizedParty.type) {
-                PartyType.System -> ensure(authorizedParty.id == Constants.CONSENT_MANAGEMENT_OSB_ID) {
-                    QueryError.NotAuthorizedError
-                }
 
-                else -> ensure(
-                    grant.grantedTo == authorizedParty || grant.grantedFor == authorizedParty
-                ) {
-                    QueryError.NotAuthorizedError
-                }
+            ensure(authorizedParty.type == PartyType.System || authorizedParty == grant.grantedTo || authorizedParty == grant.grantedFor) {
+                QueryError.NotAuthorizedError
             }
 
             repo

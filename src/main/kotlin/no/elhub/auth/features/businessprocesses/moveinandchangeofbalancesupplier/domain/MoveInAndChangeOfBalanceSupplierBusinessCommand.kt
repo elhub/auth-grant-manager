@@ -11,6 +11,9 @@ import no.elhub.auth.features.filegenerator.SupportedLanguage
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.create.command.RequestCommand
 import no.elhub.auth.features.requests.create.command.RequestMetaMarker
+import no.elhub.auth.features.requests.create.command.withTextVersion
+
+private const val MOVE_IN_AND_CHANGE_OF_BALANCE_SUPPLIER_TEXT_VERSION = "v1"
 
 data class MoveInAndChangeOfBalanceSupplierBusinessCommand(
     val requestedFrom: PartyIdentifier,
@@ -33,7 +36,7 @@ data class MoveInAndChangeOfBalanceSupplierBusinessMeta(
     val redirectURI: String? = null,
 ) : RequestMetaMarker,
     DocumentMetaMarker {
-    override fun toMetaAttributes(): Map<String, String> =
+    fun commonMetaAttributes(): Map<String, String> =
         buildMap {
             put("requestedFromName", requestedFromName)
             put("requestedForMeteringPointId", requestedForMeteringPointId)
@@ -45,6 +48,11 @@ data class MoveInAndChangeOfBalanceSupplierBusinessMeta(
             moveInDate?.let { put("moveInDate", it.toString()) }
             redirectURI?.let { put("redirectURI", it) }
         }
+
+    override fun toRequestMetaAttributes(): Map<String, String> =
+        commonMetaAttributes().withTextVersion(MOVE_IN_AND_CHANGE_OF_BALANCE_SUPPLIER_TEXT_VERSION)
+
+    override fun toMetaAttributes(): Map<String, String> = commonMetaAttributes()
 }
 
 fun MoveInAndChangeOfBalanceSupplierBusinessCommand.toRequestCommand(): RequestCommand =

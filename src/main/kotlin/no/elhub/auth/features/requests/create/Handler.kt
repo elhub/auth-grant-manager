@@ -71,7 +71,7 @@ class Handler(
                 }
                 .bind()
 
-        val metaAttributes = businessCommand.meta.toMetaAttributes()
+        val metaAttributes = businessCommand.meta.toRequestMetaAttributes()
 
         val requestToCreate =
             AuthorizationRequest.create(

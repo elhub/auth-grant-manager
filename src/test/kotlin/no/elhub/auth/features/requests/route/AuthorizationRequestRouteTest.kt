@@ -448,6 +448,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                                 values["requestedForMeteringPointAddress"] shouldBe "Example Street 2, 0654 Oslo"
                                 values["balanceSupplierName"] shouldBe "Power AS"
                                 values["balanceSupplierContractName"] shouldBe "ExampleSupplierContract"
+                                values["textVersion"] shouldBe "v1"
                             }
                         }
                     }

@@ -133,6 +133,11 @@
           "description": "The name of the balance supplier associated with the authorization document.",
           "examples": ["Example Supplier AS"]
         },
+        "textVersion": {
+          "type": "string",
+          "description": "The authorization text version accepted by the customer.",
+          "examples": ["v1"]
+        },
         "moveInDate": {
           "$ref": "../authorization-common.schema.json#/$defs/moveInDate"
         }

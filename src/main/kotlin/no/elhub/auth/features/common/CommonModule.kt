@@ -1,7 +1,9 @@
 package no.elhub.auth.features.common
 
 import io.ktor.client.HttpClient
+import io.ktor.client.engine.ProxyBuilder
 import io.ktor.client.engine.cio.CIO
+import io.ktor.client.engine.http
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.logging.LogLevel
@@ -19,6 +21,7 @@ import no.elhub.auth.features.common.party.PartyService
 import no.elhub.auth.features.common.person.ApiPersonService
 import no.elhub.auth.features.common.person.PersonApiConfig
 import no.elhub.auth.features.common.person.PersonService
+import org.slf4j.LoggerFactory
 
 
 fun Application.commonModule() {
@@ -50,6 +53,32 @@ fun Application.commonModule() {
         provide<PersonApiConfig> {
             val cfg = resolve<ApplicationConfig>().config("authPersons")
             PersonApiConfig(baseUri = cfg.property("baseUri").getString())
+        }
+        provide(name = "proxyHttpClient") {
+            val logger = LoggerFactory.getLogger("proxyHttpClient")
+            val proxyUrl = resolve<ApplicationConfig>().config("httpProxy.url").getString()?.takeIf { it.isNotBlank() }
+            HttpClient(CIO) {
+                proxyUrl?.let {
+                    logger.info("Configuring HTTP proxy: {}", it)
+                    engine { proxy = ProxyBuilder.http(it) }
+                } ?: logger.info("No HTTP proxy configured (HTTP_PROXY_URL not set)")
+                install(HttpTimeout) {
+                    requestTimeoutMillis = 10_000
+                    connectTimeoutMillis = 10_000
+                    socketTimeoutMillis = 10_000
+                }
+                install(ContentNegotiation) {
+                    json(
+                        Json {
+                            ignoreUnknownKeys = true
+                        }
+                    )
+                }
+                install(Logging) {
+                    format = LoggingFormat.OkHttp
+                    level = LogLevel.INFO
+                }
+            }
         }
 
         provide<PDPAuthorizationProvider> {

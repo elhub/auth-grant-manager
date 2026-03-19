@@ -55,6 +55,7 @@ import no.elhub.auth.features.documents.create.dto.CreateDocumentMeta
 import no.elhub.auth.features.documents.create.model.CreateDocumentModel
 import no.elhub.auth.features.filegenerator.SupportedLanguage
 import no.elhub.auth.features.requests.AuthorizationRequest
+import no.elhub.auth.features.requests.create.command.TEXT_VERSION_KEY
 import no.elhub.auth.features.requests.create.model.CreateRequestMeta
 import no.elhub.auth.features.requests.create.model.CreateRequestModel
 import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObject
@@ -703,8 +704,9 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
 
             command.type shouldBe AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson
             command.validTo shouldBe today().plus(DatePeriod(days = 30)).toTimeZoneOffsetDateTimeAtStartOfDay()
-            command.meta.toMetaAttributes()["redirectURI"] shouldBe "https://example.com"
-            command.meta.toMetaAttributes().containsKey("requestedForMeterNumber") shouldBe true
+            command.meta.toRequestMetaAttributes()["redirectURI"] shouldBe "https://example.com"
+            command.meta.toRequestMetaAttributes()[TEXT_VERSION_KEY] shouldBe "v1"
+            command.meta.toRequestMetaAttributes().containsKey("requestedForMeterNumber") shouldBe true
         }
 
         test("document produces DocumentCommand for valid input") {
