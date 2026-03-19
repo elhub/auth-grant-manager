@@ -55,8 +55,7 @@ fun Application.commonModule() {
         }
         provide(name = "proxyHttpClient") {
             val logger = LoggerFactory.getLogger("proxyHttpClient")
-            val httpProxy = resolve<ApplicationConfig>().config("httpProxy")
-            val proxyUrl = httpProxy.property("url").getString()
+            val proxyUrl = resolve<ApplicationConfig>().property("httpProxy.url")
             HttpClient(CIO) {
                 logger.info("Configuring HTTP proxy: {}", proxyUrl)
                 engine { proxy = ProxyBuilder.http(proxyUrl) }
