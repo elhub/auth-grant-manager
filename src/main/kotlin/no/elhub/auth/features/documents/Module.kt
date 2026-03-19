@@ -1,5 +1,7 @@
 package no.elhub.auth.features.documents
 
+import eu.europa.esig.dss.pades.signature.PAdESService
+import eu.europa.esig.dss.spi.validation.CommonCertificateVerifier
 import io.ktor.server.application.Application
 import io.ktor.server.config.ApplicationConfig
 import io.ktor.server.plugins.di.dependencies
@@ -11,15 +13,11 @@ import no.elhub.auth.features.documents.common.DocumentPropertiesRepository
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.documents.common.ExposedDocumentPropertiesRepository
 import no.elhub.auth.features.documents.common.ExposedDocumentRepository
-import no.elhub.auth.features.documents.common.PdfSignatureService
 import no.elhub.auth.features.documents.common.ITextPdfSignatureService
-import no.elhub.auth.features.documents.common.SignatureService
-import no.elhub.auth.features.documents.create.CertificateProvider
 import no.elhub.auth.features.documents.create.FileCertificateProvider
 import no.elhub.auth.features.documents.create.FileCertificateProviderConfig
 import no.elhub.auth.features.documents.create.FileGenerator
 import no.elhub.auth.features.documents.create.HashicorpVaultSignatureProvider
-import no.elhub.auth.features.documents.create.SignatureProvider
 import no.elhub.auth.features.documents.create.VaultConfig
 import no.elhub.auth.features.filegenerator.PdfGenerator
 import no.elhub.auth.features.filegenerator.PdfGeneratorConfig
@@ -44,9 +42,6 @@ fun Application.module() {
         provide<PAdESService> {
             PAdESService(CommonCertificateVerifier())
         }
-        provide<PdfSignatureService> {
-            PdfSignatureService(resolve(), resolve(), resolve())
-        }
 
         provide<FileCertificateProviderConfig> {
             val cfg = resolve<ApplicationConfig>().config("pdfSigner.certificate")
@@ -62,7 +57,7 @@ fun Application.module() {
         }
 
         provide<ITextPdfSignatureService> {
-            ITextPdfSignatureService()
+            ITextPdfSignatureService(resolve(), resolve())
         }
         provide<VaultConfig> {
             val cfg = resolve<ApplicationConfig>().config("pdfSigner.vault")
@@ -89,6 +84,7 @@ fun Application.module() {
         provide<FileGenerator> { PdfGenerator(resolve()) }
         provide<DocumentRepository> { ExposedDocumentRepository(resolve(), resolve()) }
         provide<DocumentPropertiesRepository> { ExposedDocumentPropertiesRepository() }
+        provide<GrantRepository> { ExposedGrantRepository(resolve(), resolve()) }
         provide<ConfirmHandler> { ConfirmHandler(resolve(), resolve(), resolve(), resolve(), resolve(), resolve()) }
         provide<CreateHandler> { CreateHandler(resolve(), resolve(), resolve(), resolve(), resolve()) }
         provide<GetHandler> { GetHandler(resolve(), resolve()) }

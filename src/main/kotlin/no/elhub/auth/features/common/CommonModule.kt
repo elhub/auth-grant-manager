@@ -56,7 +56,7 @@ fun Application.commonModule() {
         }
         provide(name = "proxyHttpClient") {
             val logger = LoggerFactory.getLogger("proxyHttpClient")
-            val proxyUrl = resolve<ApplicationConfig>().config("httpProxy.url").getString()?.takeIf { it.isNotBlank() }
+            val proxyUrl = resolve<ApplicationConfig>().config("httpProxy.url").toString().takeIf { it.isNotBlank() }
             HttpClient(CIO) {
                 proxyUrl?.let {
                     logger.info("Configuring HTTP proxy: {}", it)
