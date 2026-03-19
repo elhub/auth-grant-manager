@@ -12,7 +12,6 @@ import io.ktor.server.application.Application
 import io.ktor.server.config.ApplicationConfig
 import io.ktor.server.plugins.di.dependencies
 import kotlinx.serialization.json.Json
-import no.elhub.auth.features.common.auth.AuthorizationProvider
 import no.elhub.auth.features.common.auth.PDPAuthorizationProvider
 import no.elhub.auth.features.common.party.ExposedPartyRepository
 import no.elhub.auth.features.common.party.PartyRepository
@@ -20,9 +19,7 @@ import no.elhub.auth.features.common.party.PartyService
 import no.elhub.auth.features.common.person.ApiPersonService
 import no.elhub.auth.features.common.person.PersonApiConfig
 import no.elhub.auth.features.common.person.PersonService
-import java.security.cert.X509Certificate
-import javax.net.ssl.TrustManager
-import javax.net.ssl.X509TrustManager
+
 
 fun Application.commonModule() {
     val appEnvironment = environment
@@ -36,17 +33,6 @@ fun Application.commonModule() {
                     requestTimeoutMillis = 10_000
                     connectTimeoutMillis = 10_000
                     socketTimeoutMillis = 10_000
-                }
-                engine {
-                    https {
-                        trustManager = object : X509TrustManager, TrustManager {
-                            override fun checkClientTrusted(p0: Array<out X509Certificate?>?, p1: String?) = Unit
-
-                            override fun checkServerTrusted(p0: Array<out X509Certificate?>?, p1: String?) = Unit
-
-                            override fun getAcceptedIssuers(): Array<X509Certificate?> = emptyArray<X509Certificate?>()
-                        }
-                    }
                 }
                 install(ContentNegotiation) {
                     json(
