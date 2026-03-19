@@ -18,8 +18,6 @@ import no.elhub.auth.features.documents.create.HashicorpVaultSignatureProvider
 import no.elhub.auth.features.documents.create.VaultConfig
 import no.elhub.auth.features.filegenerator.PdfGenerator
 import no.elhub.auth.features.filegenerator.PdfGeneratorConfig
-import no.elhub.auth.features.grants.common.ExposedGrantRepository
-import no.elhub.auth.features.grants.common.GrantRepository
 import no.elhub.auth.features.documents.confirm.Handler as ConfirmHandler
 import no.elhub.auth.features.documents.confirm.route as confirmRoute
 import no.elhub.auth.features.documents.create.Handler as CreateHandler
