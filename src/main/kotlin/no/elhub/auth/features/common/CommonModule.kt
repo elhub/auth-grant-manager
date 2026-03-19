@@ -59,7 +59,7 @@ fun Application.commonModule() {
             HttpClient(CIO) {
                 proxyUrl?.let {
                     logger.info("Configuring HTTP proxy: {}", it)
-                    engine { proxy = ProxyBuilder.http(it) }
+                    engine { proxy = ProxyBuilder.http(it.toString()) }
                 } ?: logger.info("No HTTP proxy configured (HTTP_PROXY_URL not set)")
 
                 install(HttpTimeout) {
