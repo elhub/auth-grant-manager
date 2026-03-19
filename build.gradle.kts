@@ -164,7 +164,6 @@ val localEnvVars = mapOf(
     "EDIEL_USERNAME" to "test",
     "EDIEL_PASSWORD" to "test",
     "EDIEL_SERVICE_URL" to "https://ws.qa1.ediel.no/api/",
-    "HTTP_PROXY_URL" to "http://localhost:8989"
 )
 
 tasks.named<JavaExec>("run").configure {
