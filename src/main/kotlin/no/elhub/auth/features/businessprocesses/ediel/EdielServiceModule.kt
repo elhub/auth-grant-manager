@@ -30,7 +30,7 @@ fun Application.edielServiceModule() {
         provide<EdielService> {
             EdielApi(
                 edielApiConfig = resolve(),
-                client = resolve()
+                client = resolve("proxyHttpClient")
             )
         }
     }
