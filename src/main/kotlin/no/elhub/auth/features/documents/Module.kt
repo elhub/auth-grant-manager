@@ -75,7 +75,6 @@ fun Application.module() {
         provide<FileGenerator> { PdfGenerator(resolve()) }
         provide<DocumentRepository> { ExposedDocumentRepository(resolve(), resolve()) }
         provide<DocumentPropertiesRepository> { ExposedDocumentPropertiesRepository() }
-        provide<GrantRepository> { ExposedGrantRepository(resolve(), resolve()) }
         provide<ConfirmHandler> { ConfirmHandler(resolve(), resolve(), resolve(), resolve(), resolve(), resolve()) }
         provide<CreateHandler> { CreateHandler(resolve(), resolve(), resolve(), resolve(), resolve()) }
         provide<GetHandler> { GetHandler(resolve(), resolve()) }
