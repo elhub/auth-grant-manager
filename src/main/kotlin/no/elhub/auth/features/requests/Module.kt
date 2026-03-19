@@ -6,9 +6,7 @@ import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import no.elhub.auth.features.common.auth.AuthorizationProvider
 import no.elhub.auth.features.grants.common.ExposedGrantPropertiesRepository
-import no.elhub.auth.features.grants.common.ExposedGrantRepository
 import no.elhub.auth.features.grants.common.GrantPropertiesRepository
-import no.elhub.auth.features.grants.common.GrantRepository
 import no.elhub.auth.features.requests.common.ExposedRequestPropertiesRepository
 import no.elhub.auth.features.requests.common.ExposedRequestRepository
 import no.elhub.auth.features.requests.common.ProxyRequestBusinessHandler
