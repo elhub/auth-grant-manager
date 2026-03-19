@@ -87,8 +87,9 @@ class ChangeOfBalanceSupplierBusinessHandler(
         model: ChangeOfBalanceSupplierBusinessModel
     ): Either<ChangeOfBalanceSupplierValidationError, Unit> {
         val redirectUri = model.redirectURI?.trim()
-        if (redirectUri.isNullOrBlank()) {
-            return ChangeOfBalanceSupplierValidationError.InvalidRedirectURI.left()
+        // allow null redirect URI as it is an optional field, and the validation of the redirect URI domain should only be performed if a redirect URI is set
+        if (redirectUri == null) {
+            return Unit.right()
         }
 
         val redirectUriFromEdiel = edielService.getPartyRedirect(model.requestedBy.idValue).mapLeft { err ->
