@@ -703,10 +703,26 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
             val command = handler.validateAndReturnRequestCommand(model).shouldBeRight()
 
             command.type shouldBe AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson
-            command.validTo shouldBe today().plus(DatePeriod(days = 30)).toTimeZoneOffsetDateTimeAtStartOfDay()
+            command.validTo shouldBe today().plus(DatePeriod(days = 28)).toTimeZoneOffsetDateTimeAtStartOfDay()
             command.meta.toRequestMetaAttributes()["redirectURI"] shouldBe "https://example.com"
             command.meta.toRequestMetaAttributes()[TEXT_VERSION_KEY] shouldBe "v1"
             command.meta.toRequestMetaAttributes().containsKey("requestedForMeterNumber") shouldBe true
+        }
+
+        test("grant properties validTo is one year from acceptance") {
+            val party = AuthorizationParty(id = "party-1", type = Organization)
+            val request = AuthorizationRequest.create(
+                type = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
+                requestedBy = party,
+                requestedFrom = party,
+                requestedTo = party,
+                validTo = today().toTimeZoneOffsetDateTimeAtStartOfDay(),
+            )
+
+            val properties = handler.getCreateGrantProperties(request)
+
+            properties.validFrom shouldBe today()
+            properties.validTo shouldBe today().plus(DatePeriod(years = 1))
         }
 
         test("document produces DocumentCommand for valid input") {

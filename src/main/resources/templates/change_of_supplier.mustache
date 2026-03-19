@@ -13,13 +13,19 @@
             background: rgba(255, 255, 255, 1);
             margin: 20px auto;
             padding: 20px;
+            position: relative;
         }
 
         .logo-image {
-            display: block;
+            position: absolute;
+            top: 20px;
+            right: 20px;
             width: 84px;
             height: 32px;
-            margin: 0 0 24px auto;
+        }
+
+        .meta {
+            margin-bottom: 20px;
         }
 
         .meta-row {
@@ -33,7 +39,7 @@
         }
 
         .title {
-            color: rgba(56, 96, 67);
+            color: #386043;
             font-size: 20px;
             margin: 60px 0 12px;
         }
@@ -55,6 +61,7 @@ li {
      role="presentation"
      aria-hidden="true"
 />
+<h1 class="title">{{#i18n}}change_of_supplier.document_title{{/i18n}}</h1>
 
 <div class="meta">
     <p class="meta-row"><span class="meta-label">{{#i18n}}labels.customer{{/i18n}}:</span> {{customerName}}</p>
@@ -64,8 +71,6 @@ li {
     <p class="meta-row"><span class="meta-label">{{#i18n}}labels.supplier{{/i18n}}:</span> {{balanceSupplierName}}</p>
     <p class="meta-row"><span class="meta-label">{{#i18n}}labels.contract{{/i18n}}:</span> {{balanceSupplierContractName}}</p>
 </div>
-
-<h1 class="title">{{#i18n}}change_of_supplier.document_title{{/i18n}}</h1>
 
 <p>{{#i18n}}change_of_supplier.intro_1{{/i18n}}</p>
 
