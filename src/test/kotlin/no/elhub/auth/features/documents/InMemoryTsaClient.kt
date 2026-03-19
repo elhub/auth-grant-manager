@@ -11,6 +11,7 @@ import org.bouncycastle.tsp.TSPAlgorithms
 import org.bouncycastle.tsp.TimeStampRequestGenerator
 import org.bouncycastle.tsp.TimeStampResponseGenerator
 import org.bouncycastle.tsp.TimeStampTokenGenerator
+import org.bouncycastle.asn1.x509.AlgorithmIdentifier
 import java.math.BigInteger
 import java.security.MessageDigest
 import java.security.PrivateKey
@@ -22,67 +23,52 @@ data class TsaConfig(
     val privateKey: PrivateKey,
     val certificate: X509Certificate,
     val chain: List<X509Certificate>,
-    val policyOid: String = "1.2.3.4.5",
-    val digestAlgorithm: String = "SHA-256",
-    val signatureAlgorithm: String = "SHA256withRSA",
 )
 
+// Tries to behave similarly to iText's TsaClientBouncyCastle but without
+// any communication with online servers.
 class InMemoryTsaClient(
     private val config: TsaConfig
 ) : ITSAClient {
+
+    // These could be part of the TSA config, if we have the need for other algorithms than SHA-256
+    private val digestAlgoName = "SHA-256"
+    private val algoId = TSPAlgorithms.SHA256
+    private val signatureAlgoName = "SHA256withRSA"
+
+    private val providerName = "BC"
     private var tokenSizeEstimate = 4096
-
     override fun getTokenSizeEstimate(): Int = tokenSizeEstimate
-
-    override fun getMessageDigest(): MessageDigest = MessageDigest.getInstance(config.digestAlgorithm, "BC")
-
+    override fun getMessageDigest(): MessageDigest = MessageDigest.getInstance(digestAlgoName, providerName)
     override fun getTimeStampToken(imprint: ByteArray): ByteArray {
         val request = TimeStampRequestGenerator().apply {
             setCertReq(true)
-        }.generate(
-            digestOidFor(config.digestAlgorithm),
-            imprint,
-            BigInteger(64, SecureRandom())
-        )
+        }.generate(algoId, imprint, BigInteger(64, SecureRandom()))
 
         val digestProvider = JcaDigestCalculatorProviderBuilder()
-            .setProvider("BC")
+            .setProvider(providerName)
             .build()
-        val contentSigner = JcaContentSignerBuilder(config.signatureAlgorithm)
-            .setProvider("BC")
+        val contentSigner = JcaContentSignerBuilder(signatureAlgoName)
+            .setProvider(providerName)
             .build(config.privateKey)
         val signerInfo = JcaSignerInfoGeneratorBuilder(digestProvider)
             .setSignedAttributeGenerator(DefaultSignedAttributeTableGenerator())
             .build(contentSigner, config.certificate)
         val tokenGenerator = TimeStampTokenGenerator(
             signerInfo,
-            digestProvider.get(org.bouncycastle.asn1.x509.AlgorithmIdentifier(digestOidFor(config.digestAlgorithm))),
-            ASN1ObjectIdentifier(config.policyOid)
+            digestProvider.get(AlgorithmIdentifier(algoId)),
+            ASN1ObjectIdentifier("1.2.3.4.5")
         ).apply {
             addCertificates(JcaCertStore(config.chain))
         }
 
-        val response = TimeStampResponseGenerator(
-            tokenGenerator,
-            setOf(TSPAlgorithms.SHA256, TSPAlgorithms.SHA384, TSPAlgorithms.SHA512)
-        ).generateGrantedResponse(
-            request,
-            BigInteger(64, SecureRandom()),
-            Date(),
-            "Operation Okay"
-        )
+        val response = TimeStampResponseGenerator(tokenGenerator, setOf(algoId))
+            .generateGrantedResponse(request, BigInteger(64, SecureRandom()), Date(), "Operation Okay")
 
         val encoded = requireNotNull(response.timeStampToken) {
             "In-memory TSA failed to return a timestamp token"
         }.encoded
         tokenSizeEstimate = encoded.size + 32
         return encoded
-    }
-
-    private fun digestOidFor(digestAlgorithm: String): ASN1ObjectIdentifier = when (digestAlgorithm.uppercase()) {
-        "SHA-256", "SHA256" -> TSPAlgorithms.SHA256
-        "SHA-384", "SHA384" -> TSPAlgorithms.SHA384
-        "SHA-512", "SHA512" -> TSPAlgorithms.SHA512
-        else -> error("Unsupported TSA digest algorithm: $digestAlgorithm")
     }
 }
