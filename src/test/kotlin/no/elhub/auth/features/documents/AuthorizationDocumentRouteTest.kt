@@ -3,6 +3,7 @@ package no.elhub.auth.features.documents
 import arrow.core.left
 import arrow.core.right
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
@@ -24,6 +25,7 @@ import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import io.ktor.server.config.MapApplicationConfig
+import io.ktor.server.plugins.di.dependencies
 import io.ktor.server.testing.testApplication
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.DateTimeUnit
@@ -45,7 +47,6 @@ import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
 import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
 import no.elhub.auth.features.common.today
-import no.elhub.auth.features.documents.TestCertificateFactory
 import no.elhub.auth.features.documents.common.DocumentBusinessHandler
 import no.elhub.auth.features.documents.create.command.DocumentCommand
 import no.elhub.auth.features.documents.create.dto.CreateDocumentMeta
@@ -65,15 +66,12 @@ import no.elhub.auth.features.grants.common.dto.SingleGrantResponse
 import no.elhub.auth.shouldBeValidUuid
 import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObjectWithMeta
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
-import org.koin.core.module.dsl.singleOf
-import org.koin.dsl.bind
-import org.koin.ktor.plugin.koinModule
 import java.time.Duration
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
-import kotlin.test.assertTrue
 import kotlin.time.Clock
 import kotlin.time.Instant
+import no.elhub.auth.features.documents.module as documentsModule
 import no.elhub.auth.features.grants.module as grantsModule
 import no.elhub.auth.module as applicationModule
 
@@ -121,7 +119,7 @@ class AuthorizationDocumentRouteTest :
                     testBusinessProcessesModule()
                     commonModule()
                     grantsModule()
-                    module()
+                    documentsModule()
                 }
 
                 environment {
@@ -372,9 +370,9 @@ class AuthorizationDocumentRouteTest :
                             val updatedAt = OffsetDateTime.parse(updatedAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
                             val validTo = Instant.parse(validTo).toLocalDateTime(TimeZone.of("Europe/Oslo")).date
 
-                            assertTrue(validTo == today().plus(DatePeriod(days = 30)))
-                            assertTrue(Duration.between(createdAt, currentTimeLocal()).abs() < nowTolerance)
-                            assertTrue(Duration.between(updatedAt, currentTimeLocal()).abs() < nowTolerance)
+                            (validTo == today().plus(DatePeriod(days = 30))).shouldBeTrue()
+                            (Duration.between(createdAt, currentTimeLocal()).abs() < nowTolerance).shouldBeTrue()
+                            (Duration.between(updatedAt, currentTimeLocal()).abs() < nowTolerance).shouldBeTrue()
                         }
                         relationships.shouldNotBeNull().apply {
                             requestedBy.apply {
@@ -437,9 +435,9 @@ class AuthorizationDocumentRouteTest :
                                 val updatedAt = OffsetDateTime.parse(updatedAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
                                 val validTo = Instant.parse(validTo).toLocalDateTime(TimeZone.of("Europe/Oslo")).date
 
-                                assertTrue(validTo == today().plus(DatePeriod(days = 30)))
-                                assertTrue(Duration.between(createdAt, currentTimeLocal()) < nowTolerance)
-                                assertTrue(Duration.between(updatedAt, currentTimeLocal()) < nowTolerance)
+                                (validTo == today().plus(DatePeriod(days = 30))).shouldBeTrue()
+                                (Duration.between(createdAt, currentTimeLocal()) < nowTolerance).shouldBeTrue()
+                                (Duration.between(updatedAt, currentTimeLocal()) < nowTolerance).shouldBeTrue()
                             }
                             relationships.apply {
                                 requestedBy.data.apply {
@@ -707,7 +705,7 @@ class AuthorizationDocumentRouteTest :
                     testBusinessProcessesModule()
                     commonModule()
                     grantsModule()
-                    module()
+                    documentsModule()
                 }
 
                 environment {
@@ -794,7 +792,7 @@ class AuthorizationDocumentRouteTest :
                     testBusinessProcessesModule()
                     commonModule()
                     grantsModule()
-                    module()
+                    documentsModule()
                 }
 
                 environment {
@@ -890,7 +888,9 @@ private class TestDocumentBusinessHandler : DocumentBusinessHandler {
 }
 
 fun Application.testBusinessProcessesModule() {
-    koinModule {
-        singleOf(::TestDocumentBusinessHandler) bind DocumentBusinessHandler::class
+    dependencies {
+        provide<DocumentBusinessHandler> {
+            TestDocumentBusinessHandler()
+        }
     }
 }

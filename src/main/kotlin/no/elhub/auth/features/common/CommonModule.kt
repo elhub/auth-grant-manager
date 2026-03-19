@@ -12,8 +12,8 @@ import io.ktor.client.plugins.logging.LoggingFormat
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import io.ktor.server.config.ApplicationConfig
+import io.ktor.server.plugins.di.dependencies
 import kotlinx.serialization.json.Json
-import no.elhub.auth.features.common.auth.AuthorizationProvider
 import no.elhub.auth.features.common.auth.PDPAuthorizationProvider
 import no.elhub.auth.features.common.party.ExposedPartyRepository
 import no.elhub.auth.features.common.party.PartyRepository
@@ -21,16 +21,15 @@ import no.elhub.auth.features.common.party.PartyService
 import no.elhub.auth.features.common.person.ApiPersonService
 import no.elhub.auth.features.common.person.PersonApiConfig
 import no.elhub.auth.features.common.person.PersonService
-import org.koin.core.module.dsl.singleOf
-import org.koin.core.qualifier.named
-import org.koin.dsl.bind
-import org.koin.ktor.plugin.koinModule
 import org.slf4j.LoggerFactory
 
 fun Application.commonModule() {
-    koinModule {
-        single { environment.config }
-        single(named("commonHttpClient")) {
+    val appEnvironment = environment
+    dependencies {
+        provide<ApplicationConfig> {
+            appEnvironment.config
+        }
+        provide<HttpClient>(name = "commonHttpClient") {
             HttpClient(CIO) {
                 install(HttpTimeout) {
                     requestTimeoutMillis = 10_000
@@ -50,9 +49,13 @@ fun Application.commonModule() {
                 }
             }
         }
-        single(named("proxyHttpClient")) {
+        provide<PersonApiConfig> {
+            val cfg = resolve<ApplicationConfig>().config("authPersons")
+            PersonApiConfig(baseUri = cfg.property("baseUri").getString())
+        }
+        provide(name = "proxyHttpClient") {
             val logger = LoggerFactory.getLogger("proxyHttpClient")
-            val proxyUrl = environment.config.propertyOrNull("httpProxy.url")?.getString()?.takeIf { it.isNotBlank() }
+            val proxyUrl = resolve<ApplicationConfig>().config("httpProxy.url").toString().takeIf { it.isNotBlank() }
             HttpClient(CIO) {
                 proxyUrl?.let {
                     logger.info("Configuring HTTP proxy: {}", it)
@@ -77,20 +80,19 @@ fun Application.commonModule() {
             }
         }
 
-        single {
-            val cfg = get<ApplicationConfig>().config("authPersons")
-            PersonApiConfig(
-                baseUri = cfg.property("baseUri").getString()
-            )
+        provide<PDPAuthorizationProvider> {
+            val pdpBaseUrl = appEnvironment.config.property("pdp.baseUrl").getString()
+            PDPAuthorizationProvider(httpClient = resolve("commonHttpClient"), pdpBaseUrl = pdpBaseUrl)
         }
 
-        single {
-            val pdpBaseUrl = get<ApplicationConfig>().property("pdp.baseUrl").getString()
-            PDPAuthorizationProvider(httpClient = get(named("commonHttpClient")), pdpBaseUrl = pdpBaseUrl)
-        } bind AuthorizationProvider::class
+        provide<PartyRepository> { ExposedPartyRepository() }
 
-        singleOf(::ExposedPartyRepository) bind PartyRepository::class
-        single { ApiPersonService(cfg = get(), client = get(named("commonHttpClient"))) } bind PersonService::class
-        singleOf(::PartyService) bind PartyService::class
+        provide<PersonService> {
+            ApiPersonService(cfg = resolve(), client = resolve("commonHttpClient"))
+        }
+
+        provide<PartyService> {
+            PartyService(resolve())
+        }
     }
 }

@@ -13,8 +13,6 @@ json-skema = "0.29.0"
 kotlinx-datetime = "0.7.1-0.6.x-compat"
 kotlinx-serialization = "1.10.0"
 kotlinx-serialization-plugin = "2.3.10"
-koin = "4.1.1"
-koin-annotations = "2.3.1"
 kotest = "6.1.7"
 kotlin-logging = "7.0.14"
 ksp = "2.3.6"
@@ -55,12 +53,9 @@ database-exposed-dao = { module = "org.jetbrains.exposed:exposed-dao", version.r
 database-exposed-java-time = { module = "org.jetbrains.exposed:exposed-java-time", version.ref = "exposed" }
 database-exposed-jdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposed" }
 database-hikari = { group = "com.zaxxer", name = "HikariCP", version.ref = "hikari" }
+ktor-server-di = { group = "io.ktor", name = "ktor-server-di", version.ref = "ktor" }
 database-liquibase-core = { group = "org.liquibase", name = "liquibase-core", version.ref = "liquibase" }
 database-postgresql = { group = "org.postgresql", name = "postgresql", version.ref = "postgresql" }
-di-koin-annotations = { group = "io.insert-koin", name = "koin-annotations", version.ref = "koin-annotations" }
-di-koin-ksp-compiler = { group = "io.insert-koin", name = "koin-ksp-compiler", version.ref = "koin-annotations" }
-di-koin-ktor = { group = "io.insert-koin", name = "koin-ktor", version.ref = "koin" }
-di-koin-logger-slf4j = { group = "io.insert-koin", name = "koin-logger-slf4j", version.ref = "koin" }
 fp-arrow-core = { group = "io.arrow-kt", name = "arrow-core", version.ref = "arrow" }
 fp-arrow-core-high-arity = { group = "io.arrow-kt", name = "arrow-core-high-arity", version.ref = "arrow" }
 fp-arrow-fx-coroutines = { group = "io.arrow-kt", name = "arrow-fx-coroutines", version.ref = "arrow" }
@@ -95,8 +90,6 @@ test-kotest-assertions-arrow = { group = "io.kotest", name = "kotest-assertions-
 test-kotest-assertions-core = { group = "io.kotest", name = "kotest-assertions-core", version.ref = "kotest" }
 test-kotest-assertions-json = { group = "io.kotest", name = "kotest-assertions-json", version.ref = "kotest" }
 test-kotest-runner-junit5 = { group = "io.kotest", name = "kotest-runner-junit5", version.ref = "kotest" }
-test-kotest-extensions-koin = { group = "io.kotest", name = "kotest-extensions-koin", version.ref = "kotest" }
-test-koin-test = { group = "io.insert-koin", name = "koin-test", version.ref = "koin" }
 test-ktor-server-test-host = { group = "io.ktor", name = "ktor-server-test-host", version.ref = "ktor" }
 test-mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
 test-testcontainers = { group = "org.testcontainers", name = "testcontainers", version.ref = "testcontainers" }
@@ -115,11 +108,10 @@ itext-bouncy-castle-adapter = { group = "com.itextpdf", name = "bouncy-castle-ad
 [bundles]
 database = ["database-exposed-core", "database-exposed-dao", "database-exposed-java-time", "database-exposed-jdbc", "database-hikari",
   "database-liquibase-core", "database-postgresql"]
-dependency-injection = ["di-koin-ktor", "di-koin-logger-slf4j", "di-koin-annotations"]
 documentation = ["ktor-server-swagger"]
 functional-programming = ["fp-arrow-core", "fp-arrow-core-high-arity", "fp-arrow-fx-coroutines"]
-ktor = ["ktor-server-core", "ktor-server-netty", "ktor-server-content-negotiation", "ktor-server-config-yaml", "ktor-client-core",
-  "ktor-client-cio", "ktor-client-content-negotiation", "ktor-client-logging", "ktor-server-status-pages", "ktor-client-auth"]
+ktor = ["ktor-server-core", "ktor-server-netty", "ktor-server-content-negotiation", "ktor-server-config-yaml", "ktor-client-core", "ktor-client-cio",
+  "ktor-client-content-negotiation", "ktor-client-logging", "ktor-server-status-pages", "ktor-client-auth","ktor-server-di"]
 logging = ["ktor-server-call-id", "ktor-server-call-logging", "logging-logback-classic", "logging-oshai-kotlin-logging"]
 monitoring = ["ktor-server-metrics-micrometer", "monitoring-micrometer-registry-prometheus", "monitoring-cohort-hikari", "monitoring-cohort-ktor",
   "monitoring-cohort-micrometer"]

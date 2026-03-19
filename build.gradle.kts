@@ -16,9 +16,6 @@ dependencies {
     // Ktor
     implementation(libs.bundles.ktor)
     implementation(libs.bundles.functional.programming)
-    // Koin
-    implementation(libs.bundles.dependency.injection)
-    ksp(libs.di.koin.ksp.compiler)
     // Serialization
     implementation(libs.bundles.serialization)
     // Database
@@ -48,17 +45,10 @@ dependencies {
     testImplementation(libs.test.kotest.assertions.arrow)
     testImplementation(libs.test.kotest.assertions.core)
     testImplementation(libs.test.kotest.assertions.json)
-    testImplementation(libs.test.kotest.extensions.koin)
-    testImplementation(libs.test.koin.test)
     testImplementation(libs.test.testcontainers)
     testImplementation(libs.test.testcontainers.postgres)
     testImplementation(libs.test.mybatis)
     testImplementation(libs.test.verapdf.validation.model)
-}
-
-ksp {
-    arg("KOIN_CONFIG_CHECK", "true")
-    arg("KOIN_DEFAULT_MODULE", "true")
 }
 
 application {

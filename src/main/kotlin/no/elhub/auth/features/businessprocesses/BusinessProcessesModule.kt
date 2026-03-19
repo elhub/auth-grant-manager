@@ -1,45 +1,41 @@
 package no.elhub.auth.features.businessprocesses
 
 import io.ktor.server.application.Application
+import io.ktor.server.plugins.di.dependencies
 import no.elhub.auth.features.businessprocesses.changeofbalancesupplier.ChangeOfBalanceSupplierBusinessHandler
-import no.elhub.auth.features.businessprocesses.ediel.EdielEnvironment
 import no.elhub.auth.features.businessprocesses.moveinandchangeofbalancesupplier.MoveInAndChangeOfBalanceSupplierBusinessHandler
 import no.elhub.auth.features.documents.common.DocumentBusinessHandler
 import no.elhub.auth.features.documents.common.ProxyDocumentBusinessHandler
 import no.elhub.auth.features.requests.common.ProxyRequestBusinessHandler
 import no.elhub.auth.features.requests.create.RequestBusinessHandler
-import org.koin.core.module.dsl.singleOf
-import org.koin.core.qualifier.named
-import org.koin.dsl.bind
-import org.koin.ktor.plugin.koinModule
 
 fun Application.businessProcessesModule() {
-    koinModule {
-        single {
+    dependencies {
+        provide<ChangeOfBalanceSupplierBusinessHandler> {
             ChangeOfBalanceSupplierBusinessHandler(
-                meteringPointsService = get(),
-                personService = get(),
-                organisationsService = get(),
-                stromprisService = get(),
-                edielService = get(),
-                edielEnvironment = get<EdielEnvironment>(named("edielEnvironment")),
-                validateRedirectUriFeature = get(named("validateRedirectUriFeature")),
-                validateBalanceSupplierContractName = get(named("validateBalanceSupplierContractName"))
+                meteringPointsService = resolve(),
+                personService = resolve(),
+                organisationsService = resolve(),
+                stromprisService = resolve(),
+                edielService = resolve(),
+                edielEnvironment = resolve("edielEnvironment"),
+                validateRedirectUriFeature = resolve("validateRedirectUriFeature"),
+                validateBalanceSupplierContractName = resolve("validateBalanceSupplierContractName")
             )
         }
-        single {
+        provide<MoveInAndChangeOfBalanceSupplierBusinessHandler> {
             MoveInAndChangeOfBalanceSupplierBusinessHandler(
-                meteringPointsService = get(),
-                personService = get(),
-                organisationsService = get(),
-                stromprisService = get(),
-                edielService = get(),
-                edielEnvironment = get<EdielEnvironment>(named("edielEnvironment")),
-                validateRedirectUriFeature = get(named("validateRedirectUriFeature")),
-                validateBalanceSupplierContractName = get(named("validateBalanceSupplierContractName"))
+                meteringPointsService = resolve(),
+                personService = resolve(),
+                organisationsService = resolve(),
+                stromprisService = resolve(),
+                edielService = resolve(),
+                edielEnvironment = resolve("edielEnvironment"),
+                validateRedirectUriFeature = resolve("validateRedirectUriFeature"),
+                validateBalanceSupplierContractName = resolve("validateBalanceSupplierContractName")
             )
         }
-        singleOf(::ProxyDocumentBusinessHandler) bind DocumentBusinessHandler::class
-        singleOf(::ProxyRequestBusinessHandler) bind RequestBusinessHandler::class
+        provide<DocumentBusinessHandler> { ProxyDocumentBusinessHandler(resolve(), resolve()) }
+        provide<RequestBusinessHandler> { ProxyRequestBusinessHandler(resolve(), resolve()) }
     }
 }
