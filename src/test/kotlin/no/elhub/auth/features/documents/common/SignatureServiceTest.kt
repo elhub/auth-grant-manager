@@ -1,17 +1,14 @@
 package no.elhub.auth.features.documents.common
 
-import eu.europa.esig.dss.enumerations.CertificationPermission
-import eu.europa.esig.dss.enumerations.DigestAlgorithm
-import eu.europa.esig.dss.enumerations.SignatureAlgorithm
-import eu.europa.esig.dss.enumerations.SignatureLevel
-import eu.europa.esig.dss.model.InMemoryDocument
-import eu.europa.esig.dss.pades.validation.PDFDocumentValidator
-import eu.europa.esig.dss.spi.validation.CommonCertificateVerifier
+import com.itextpdf.kernel.pdf.PdfDocument
+import com.itextpdf.kernel.pdf.PdfName
+import com.itextpdf.kernel.pdf.PdfReader
+import com.itextpdf.signatures.SignatureUtil
 import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.shouldNotBe
 import no.elhub.auth.features.common.httpTestClient
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
@@ -25,10 +22,7 @@ import no.elhub.auth.features.documents.create.FileCertificateProvider
 import no.elhub.auth.features.documents.create.FileCertificateProviderConfig
 import no.elhub.auth.features.documents.create.HashicorpVaultSignatureProvider
 import no.elhub.auth.features.documents.localVaultConfig
-import java.math.BigInteger
 import java.nio.file.Files
-import java.security.MessageDigest
-import java.util.Base64
 
 class SignatureServiceTest : FunSpec({
     extensions(VaultTransitTestContainerExtension)
@@ -64,81 +58,78 @@ class SignatureServiceTest : FunSpec({
 
             val signedPdfBytes = signingService.sign(unsignedPdfBytes).shouldBeRight()
 
-            val signedPdf = InMemoryDocument(signedPdfBytes)
+            PdfDocument(PdfReader(signedPdfBytes.inputStream())).use { pdfDocument ->
+                val signatureUtil = SignatureUtil(pdfDocument)
+                val signatureNames = signatureUtil.signatureNames
 
-            val reports = PDFDocumentValidator(signedPdf).apply {
-                setCertificateVerifier(CommonCertificateVerifier())
-            }.validateDocument()
+                signatureNames.size shouldBe 1
 
-            val simpleReport = reports.simpleReport
-            val diagnosticData = reports.diagnosticData
+                val signatureName = signatureNames.single()
+                signatureUtil.signatureCoversWholeDocument(signatureName) shouldBe true
 
-            // Assert that PDF contains exactly one signature
-            simpleReport.signatureIdList.size shouldBe 1
+                val signatureDictionary = signatureUtil.getSignature(signatureName).shouldNotBeNull()
+                val pkcs7 = signatureUtil.readSignatureData(signatureName)
 
-            val signature = diagnosticData.signatures.first()
+                // Signature parameters: algorithm, format, and permission level
+                pkcs7.digestAlgorithmName shouldBe "SHA256"
+                pkcs7.signatureMechanismName shouldBe "SHA256withRSA"
+                signatureDictionary.subFilter shouldBe PdfName.ETSI_CAdES_DETACHED
+                pkcs7.verifySignatureIntegrityAndAuthenticity() shouldBe true
+                val docMdpSignature = pdfDocument.catalog.pdfObject
+                    .getAsDictionary(PdfName.Perms)
+                    ?.getAsDictionary(PdfName.DocMDP)
+                    .shouldNotBeNull()
+                val docMdpReference = docMdpSignature
+                    .getAsArray(PdfName.Reference)
+                    .asSequence()
+                    .mapNotNull { it as? com.itextpdf.kernel.pdf.PdfDictionary }
+                    .first { it.getAsName(PdfName.TransformMethod) == PdfName.DocMDP }
+                val transformParams = docMdpReference
+                    .getAsDictionary(PdfName.TransformParams)
+                    .shouldNotBeNull()
+                // Check permission level 2 is set:
+                transformParams.getAsNumber(PdfName.P).intValue() shouldBe 2
 
-            // Validate signature parameters
-            signature.digestAlgorithm shouldBe DigestAlgorithm.SHA256
-            signature.signatureAlgorithm shouldBe SignatureAlgorithm.RSA_SHA256
-            signature.signatureFormat shouldBe SignatureLevel.PAdES_BASELINE_B
-            signature.pdfRevision.docMDPPermissions shouldBe CertificationPermission.MINIMAL_CHANGES_PERMITTED
-            signature.isBLevelTechnicallyValid shouldBe true
-
-            // Validate that the signing certificate matches the expected certificate
-            val certRef = signature.signingCertificateReference.certificateId
-            val certUsed = diagnosticData.getUsedCertificateById(certRef)
-
-            val signingCert = certProvider.getElhubSigningCertificate()
-            certUsed.serialNumber shouldBe signingCert.serialNumber.toString()
-            certUsed.certificateDN shouldBe signingCert.issuerX500Principal.name
+                // Certificates match:
+                val signingCert = certProvider.getElhubSigningCertificate()
+                val actualSigningCertificate = pkcs7.signingCertificate.shouldNotBeNull()
+                actualSigningCertificate.serialNumber shouldBe signingCert.serialNumber
+                actualSigningCertificate.issuerX500Principal shouldBe signingCert.issuerX500Principal
+            }
         }
 
         test("Should invalidate signature when PDF is tampered with") {
 
             val signedPdfBytes = signingService.sign(unsignedPdfBytes).shouldBeRight()
+            val originalByteRange = PdfDocument(PdfReader(signedPdfBytes.inputStream())).use { pdfDocument ->
+                val signatureUtil = SignatureUtil(pdfDocument)
+                val signatureName = signatureUtil.signatureNames.single()
+                val pkcs7 = signatureUtil.readSignatureData(signatureName)
+                pkcs7.verifySignatureIntegrityAndAuthenticity() shouldBe true
 
-            val signedPdf = InMemoryDocument(signedPdfBytes)
-
-            val preTamperReport = PDFDocumentValidator(signedPdf).apply {
-                setCertificateVerifier(CommonCertificateVerifier())
-            }.validateDocument()
-
-            val originalSignature = preTamperReport.diagnosticData.signatures.first()
-
-            // Verify that the signature is initially valid
-            originalSignature.isBLevelTechnicallyValid shouldBe true
-
-            // Compute the digest from the signed byte range and compare it with the embedded one
-            val byteRange = originalSignature.signatureByteRange
-            val expectedDigestBase64 = computeDigestOverByteRange(signedPdfBytes, byteRange)
-            val embeddedDigestBase64 = Base64.getEncoder().encodeToString(originalSignature.messageDigest.digestValue)
-            expectedDigestBase64 shouldBe embeddedDigestBase64
+                signatureUtil.getSignature(signatureName)
+                    .shouldNotBeNull()
+                    .byteRange
+                    .toLongArray()
+                    .toList()
+            }
 
             // Tamper with the signed PDF by changing a byte outside the signature placeholder
             val tamperedPdfBytes = signedPdfBytes.copyOf().apply {
                 this[100] = (this[100] + 1).toByte()
             }
 
-            val tamperedPdf = InMemoryDocument(tamperedPdfBytes)
-            val tamperedReport = PDFDocumentValidator(tamperedPdf).apply {
-                setCertificateVerifier(CommonCertificateVerifier())
-            }.validateDocument()
+            PdfDocument(PdfReader(tamperedPdfBytes.inputStream())).use { pdfDocument ->
+                val signatureUtil = SignatureUtil(pdfDocument)
+                val signatureName = signatureUtil.signatureNames.single()
+                val tamperedSignature = signatureUtil.getSignature(signatureName).shouldNotBeNull()
+                val tamperedByteRange = tamperedSignature.byteRange.toLongArray().toList()
 
-            val tamperedSignature = tamperedReport.diagnosticData.signatures.first()
+                tamperedByteRange shouldBe originalByteRange
 
-            // Ensure that the ByteRange used for signing is still the same
-            tamperedSignature.signatureByteRange shouldBe byteRange
-
-            // The tampering should cause signature validation to fail
-            tamperedSignature.isBLevelTechnicallyValid shouldBe false
-
-            // Confirm that the digest of the tampered content no longer matches the embedded digest
-            val tamperedDigestBase64 = computeDigestOverByteRange(tamperedPdfBytes, byteRange)
-            val tamperedEmbeddedDigestBase64 =
-                Base64.getEncoder().encodeToString(tamperedSignature.messageDigest.digestValue)
-
-            tamperedDigestBase64 shouldNotBe tamperedEmbeddedDigestBase64
+                val pkcs7 = signatureUtil.readSignatureData(signatureName)
+                pkcs7.verifySignatureIntegrityAndAuthenticity() shouldBe false
+            }
         }
     }
 
@@ -326,13 +317,10 @@ class SignatureServiceTest : FunSpec({
 
         test("Should return ElhubSigningCertNotTrusted when Elhub signing cert isn't trusted") {
             val fakeElhubCerts = certFactory.generateFakeElhubCertificates(certProvider.getElhubSigningCertificate())
-            val elhubSignedPdfBytes = TestPdfSigner.signWithCertificate(
+            val elhubSignedPdfBytes = TestPdfSigner.signWithChain(
                 pdfBytes = unsignedPdfBytes,
-                signingCert = fakeElhubCerts.signingCert,
                 chain = fakeElhubCerts.chain,
                 signingKey = fakeElhubCerts.signingKey.private,
-                signatureLevel = SignatureLevel.PAdES_BASELINE_B
-
             )
             val bankIdSignedPdfBytes = endUserSignatureTestHelper.sign(
                 pdfBytes = elhubSignedPdfBytes,
@@ -378,7 +366,7 @@ class SignatureServiceTest : FunSpec({
             val bankIdSignedPdfBytes = endUserSignatureTestHelper.sign(
                 pdfBytes = elhubSignedPdfBytes,
                 nationalIdentityNumber = nationalIdentityNumber,
-                signatureLevel = SignatureLevel.PAdES_BASELINE_T
+                signingProfile = TestPdfSigner.SigningProfile.BASELINE_T
             )
 
             val pdfValidationResult =
@@ -459,14 +447,3 @@ class SignatureServiceTest : FunSpec({
         }
     }
 })
-
-fun computeDigestOverByteRange(documentBytes: ByteArray, byteRange: List<BigInteger>): String {
-    val firstSegment = documentBytes.sliceArray(byteRange[0].toInt() until byteRange[1].toInt())
-    val secondSegment =
-        documentBytes.sliceArray(byteRange[2].toInt() until byteRange[2].toInt() + byteRange[3].toInt())
-    val digest = MessageDigest.getInstance("SHA-256").apply {
-        update(firstSegment)
-        update(secondSegment)
-    }.digest()
-    return Base64.getEncoder().encodeToString(digest)
-}

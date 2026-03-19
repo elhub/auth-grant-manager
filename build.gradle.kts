@@ -54,7 +54,6 @@ dependencies {
     testImplementation(libs.test.testcontainers.postgres)
     testImplementation(libs.test.mybatis)
     testImplementation(libs.test.verapdf.validation.model)
-    testImplementation(libs.bundles.dss)
 }
 
 ksp {
