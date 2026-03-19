@@ -6,6 +6,7 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import io.ktor.server.config.MapApplicationConfig
+import io.ktor.server.plugins.di.dependencies
 import io.ktor.server.testing.ApplicationTestBuilder
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.plus
@@ -39,7 +40,6 @@ import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObjectWithMeta
 import org.jetbrains.exposed.v1.jdbc.batchInsert
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import org.koin.ktor.plugin.koinModule
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
@@ -77,8 +77,8 @@ fun ApplicationTestBuilder.setUpAuthorizationRequestTestApplication() {
 }
 
 fun Application.testRequestBusinessModule() {
-    koinModule {
-        single<RequestBusinessHandler> { TestRequestBusinessHandler() }
+    dependencies {
+        provide<RequestBusinessHandler> { TestRequestBusinessHandler() }
     }
 }
 

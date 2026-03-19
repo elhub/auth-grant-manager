@@ -7,7 +7,6 @@ import io.ktor.server.routing.routing
 import no.elhub.auth.features.common.auth.AuthorizationProvider
 import no.elhub.auth.features.grants.common.ExposedGrantPropertiesRepository
 import no.elhub.auth.features.grants.common.ExposedGrantRepository
-import org.koin.ktor.ext.get
 import no.elhub.auth.features.grants.consume.Handler as ConsumeHandler
 import no.elhub.auth.features.grants.consume.route as consumeRoute
 import no.elhub.auth.features.grants.get.Handler as GetHandler
