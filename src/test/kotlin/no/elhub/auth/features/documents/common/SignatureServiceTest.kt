@@ -72,15 +72,25 @@ class SignatureServiceTest : FunSpec({
                 val signatureDictionary = signatureUtil.getSignature(signatureName).shouldNotBeNull()
                 val pkcs7 = signatureUtil.readSignatureData(signatureName)
 
+                // Signature parameters: algorithm, format, and permission level
                 pkcs7.digestAlgorithmName shouldBe "SHA256"
                 pkcs7.signatureMechanismName shouldBe "SHA256withRSA"
                 signatureDictionary.subFilter shouldBe PdfName.ETSI_CAdES_DETACHED
                 pkcs7.verifySignatureIntegrityAndAuthenticity() shouldBe true
-
-                val docMdpReference = pdfDocument.catalog.pdfObject
+                val docMdpSignature = pdfDocument.catalog.pdfObject
                     .getAsDictionary(PdfName.Perms)
                     ?.getAsDictionary(PdfName.DocMDP)
-                docMdpReference.shouldNotBeNull()
+                    .shouldNotBeNull()
+                val docMdpReference = docMdpSignature
+                    .getAsArray(PdfName.Reference)
+                    .asSequence()
+                    .mapNotNull { it as? com.itextpdf.kernel.pdf.PdfDictionary }
+                    .first { it.getAsName(PdfName.TransformMethod) == PdfName.DocMDP }
+                val transformParams = docMdpReference
+                    .getAsDictionary(PdfName.TransformParams)
+                    .shouldNotBeNull()
+                // Check permission level 2 is set:
+                transformParams.getAsNumber(PdfName.P).intValue() shouldBe 2
 
                 val signingCert = certProvider.getElhubSigningCertificate()
                 val actualSigningCertificate = pkcs7.signingCertificate.shouldNotBeNull()
