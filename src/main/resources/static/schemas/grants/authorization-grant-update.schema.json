@@ -19,7 +19,7 @@
           "description": "The attributes of the authorization grant to  update.",
           "properties": {
             "status": {
-              "$ref": "authorization-grant-common.schema.json#/$defs/status"
+              "$ref": "authorization-grant-common.schema.json#/$defs/authorizationGrantStatus"
             }
           },
           "required": ["status"]
