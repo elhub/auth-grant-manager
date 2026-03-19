@@ -38,7 +38,6 @@ fun Application.module() {
         provide<QueryHandler> { QueryHandler(resolve(), resolve()) }
     }
 
-
     val updateHandler: UpdateHandler by dependencies
     val createHandler: CreateHandler by dependencies
     val getHandler: GetHandler by dependencies

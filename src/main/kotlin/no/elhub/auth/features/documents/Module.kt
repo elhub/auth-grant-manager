@@ -32,16 +32,14 @@ import no.elhub.auth.features.documents.query.route as queryRoute
 const val DOCUMENTS_PATH = "/access/v0/authorization-documents"
 
 fun Application.module() {
-
     dependencies {
-
         provide<FileCertificateProvider> {
             FileCertificateProvider(resolve())
         }
         provide<PAdESService> {
             PAdESService(CommonCertificateVerifier())
         }
-        provide<PdfSignatureService>{
+        provide<PdfSignatureService> {
             PdfSignatureService(resolve(), resolve(), resolve())
         }
 

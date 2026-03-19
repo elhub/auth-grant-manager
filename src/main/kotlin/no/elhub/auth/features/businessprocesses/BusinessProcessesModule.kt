@@ -10,7 +10,6 @@ import no.elhub.auth.features.documents.common.ProxyDocumentBusinessHandler
 import no.elhub.auth.features.requests.common.ProxyRequestBusinessHandler
 import no.elhub.auth.features.requests.create.RequestBusinessHandler
 
-
 fun Application.businessProcessesModule() {
     dependencies {
         provide<ChangeOfBalanceSupplierBusinessHandler> {

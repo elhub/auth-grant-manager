@@ -14,14 +14,11 @@ import io.ktor.server.application.Application
 import io.ktor.server.config.ApplicationConfig
 import io.ktor.server.plugins.di.dependencies
 import kotlinx.serialization.json.Json
-
 import java.security.cert.X509Certificate
 import javax.net.ssl.X509TrustManager
 
 fun Application.organisationsServiceModule() {
-
     dependencies {
-
         provide<OrganisationsApiConfig> {
             val organisationsApiConfig = resolve<ApplicationConfig>().config("structureData.organisationsService")
             OrganisationsApiConfig(

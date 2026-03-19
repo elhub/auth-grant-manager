@@ -69,11 +69,10 @@ import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import java.time.Duration
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
-
 import kotlin.time.Clock
 import kotlin.time.Instant
-import no.elhub.auth.features.grants.module as grantsModule
 import no.elhub.auth.features.documents.module as documentsModule
+import no.elhub.auth.features.grants.module as grantsModule
 import no.elhub.auth.module as applicationModule
 
 // These testing are sharing data so only works by running all tests in chronological order

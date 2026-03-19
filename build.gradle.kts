@@ -50,7 +50,6 @@ dependencies {
     testImplementation(libs.test.verapdf.validation.model)
 }
 
-
 application {
     mainClass.set("io.ktor.server.netty.EngineMain")
     val isDevelopment: Boolean = project.ext.has("development")

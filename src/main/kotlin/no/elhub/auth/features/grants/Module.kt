@@ -19,7 +19,6 @@ import no.elhub.auth.features.grants.query.route as queryRoute
 const val GRANTS_PATH = "/access/v0/authorization-grants"
 
 fun Application.module() {
-
     dependencies {
         provide<ExposedGrantRepository> {
             ExposedGrantRepository(resolve(), resolve())

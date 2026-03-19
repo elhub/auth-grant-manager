@@ -4,12 +4,10 @@ import io.ktor.server.application.Application
 import io.ktor.server.config.ApplicationConfig
 import io.ktor.server.plugins.di.dependencies
 
-
 fun Application.stromprisServiceModule() {
     val appEnvironment = environment
 
     dependencies {
-
         provide<Boolean>(name = "validateBalanceSupplierContractName") {
             appEnvironment.config.propertyOrNull("dataSharing.validateContractNameFeature")
                 ?.getString()?.toBoolean() ?: false
@@ -45,4 +43,3 @@ fun Application.stromprisServiceModule() {
         }
     }
 }
-

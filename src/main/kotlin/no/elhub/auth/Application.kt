@@ -12,7 +12,6 @@ import no.elhub.auth.config.configureMonitoring
 import no.elhub.auth.config.configureRequestTracing
 import no.elhub.auth.config.configureSerialization
 
-
 fun main(args: Array<String>) {
     EngineMain.main(args)
 }

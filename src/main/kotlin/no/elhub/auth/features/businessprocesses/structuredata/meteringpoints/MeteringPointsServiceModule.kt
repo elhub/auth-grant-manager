@@ -19,12 +19,8 @@ import java.security.cert.X509Certificate
 import javax.net.ssl.X509TrustManager
 
 fun Application.meteringPointsServiceModule() {
-
-
     dependencies {
-
         provide<MeteringPointsApiConfig> {
-
             val meteringPointsApiConfig = resolve<ApplicationConfig>().config("structureData.meteringPointsService")
             MeteringPointsApiConfig(
                 serviceUrl = meteringPointsApiConfig.property("serviceUrl").getString(),
@@ -46,18 +42,12 @@ fun Application.meteringPointsServiceModule() {
                 }
                 engine {
                     https {
-                        trustManager = object: X509TrustManager {
-                            override fun checkClientTrusted(p0: Array<out X509Certificate?>?, p1: String?) {
-                                return Unit
-                            }
+                        trustManager = object : X509TrustManager {
+                            override fun checkClientTrusted(p0: Array<out X509Certificate?>?, p1: String?) = Unit
 
-                            override fun checkServerTrusted(p0: Array<out X509Certificate?>?, p1: String?) {
-                                return Unit
-                            }
+                            override fun checkServerTrusted(p0: Array<out X509Certificate?>?, p1: String?) = Unit
 
-                            override fun getAcceptedIssuers(): Array<X509Certificate?> {
-                                return emptyArray<X509Certificate?>()
-                            }
+                            override fun getAcceptedIssuers(): Array<X509Certificate?> = emptyArray<X509Certificate?>()
                         }
                     }
                 }

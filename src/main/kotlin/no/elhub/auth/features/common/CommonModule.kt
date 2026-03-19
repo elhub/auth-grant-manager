@@ -9,7 +9,6 @@ import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.plugins.logging.LoggingFormat
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
-
 import io.ktor.server.config.ApplicationConfig
 import io.ktor.server.plugins.di.dependencies
 import kotlinx.serialization.json.Json
@@ -40,18 +39,12 @@ fun Application.commonModule() {
                 }
                 engine {
                     https {
-                        trustManager = object: X509TrustManager, TrustManager {
-                            override fun checkClientTrusted(p0: Array<out X509Certificate?>?, p1: String?) {
-                                return Unit
-                            }
+                        trustManager = object : X509TrustManager, TrustManager {
+                            override fun checkClientTrusted(p0: Array<out X509Certificate?>?, p1: String?) = Unit
 
-                            override fun checkServerTrusted(p0: Array<out X509Certificate?>?, p1: String?) {
-                                return Unit
-                            }
+                            override fun checkServerTrusted(p0: Array<out X509Certificate?>?, p1: String?) = Unit
 
-                            override fun getAcceptedIssuers(): Array<X509Certificate?> {
-                                return emptyArray<X509Certificate?>()
-                            }
+                            override fun getAcceptedIssuers(): Array<X509Certificate?> = emptyArray<X509Certificate?>()
                         }
                     }
                 }
@@ -88,4 +81,4 @@ fun Application.commonModule() {
             PartyService(resolve())
         }
     }
-    }
+}
