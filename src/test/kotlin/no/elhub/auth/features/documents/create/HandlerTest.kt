@@ -165,7 +165,7 @@ class HandlerTest : FunSpec({
 
         val response = handler(model.copy(authorizedParty = otherAuthorizedParty))
 
-        response.shouldBeLeft(CreateError.AuthorizationError)
+        response.shouldBeLeft(CreateError.MismatchBetweenAuthorizedPartyAndRequestedBy)
         coVerify(exactly = 0) { partyService.resolve(requestedFromIdentifier) }
         coVerify(exactly = 0) { businessHandler.validateAndReturnDocumentCommand(any()) }
     }
