@@ -23,7 +23,7 @@
           "description": "The attributes of the authorization request to update.",
           "properties": {
             "status": {
-              "$ref": "authorization-request-common.schema.json#/$defs/status"
+              "$ref": "authorization-request-common.schema.json#/$defs/authorizationRequestStatus"
             }
           },
           "required": [
