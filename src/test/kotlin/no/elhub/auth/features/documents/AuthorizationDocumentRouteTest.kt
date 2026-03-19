@@ -45,7 +45,6 @@ import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
 import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
 import no.elhub.auth.features.common.today
-import no.elhub.auth.features.documents.TestCertificateFactory
 import no.elhub.auth.features.documents.common.DocumentBusinessHandler
 import no.elhub.auth.features.documents.create.command.DocumentCommand
 import no.elhub.auth.features.documents.create.dto.CreateDocumentMeta
@@ -121,7 +120,7 @@ class AuthorizationDocumentRouteTest :
                     testBusinessProcessesModule()
                     commonModule()
                     grantsModule()
-                    module()
+                    documentsModule()
                 }
 
                 environment {
@@ -706,7 +705,7 @@ class AuthorizationDocumentRouteTest :
                     testBusinessProcessesModule()
                     commonModule()
                     grantsModule()
-                    module()
+                    documentsModule()
                 }
 
                 environment {
@@ -792,7 +791,7 @@ class AuthorizationDocumentRouteTest :
                     testBusinessProcessesModule()
                     commonModule()
                     grantsModule()
-                    module()
+                    documentsModule()
                 }
 
                 environment {

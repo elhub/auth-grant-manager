@@ -11,7 +11,7 @@ import no.elhub.auth.config.configureLogging
 import no.elhub.auth.config.configureMonitoring
 import no.elhub.auth.config.configureRequestTracing
 import no.elhub.auth.config.configureSerialization
-import no.elhub.auth.features.common.commonModule
+
 
 fun main(args: Array<String>) {
     EngineMain.main(args)
