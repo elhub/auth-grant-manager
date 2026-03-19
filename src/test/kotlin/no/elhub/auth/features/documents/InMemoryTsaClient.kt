@@ -2,6 +2,7 @@ package no.elhub.auth.features.documents
 
 import com.itextpdf.signatures.ITSAClient
 import org.bouncycastle.asn1.ASN1ObjectIdentifier
+import org.bouncycastle.asn1.x509.AlgorithmIdentifier
 import org.bouncycastle.cert.jcajce.JcaCertStore
 import org.bouncycastle.cms.DefaultSignedAttributeTableGenerator
 import org.bouncycastle.cms.jcajce.JcaSignerInfoGeneratorBuilder
@@ -11,7 +12,6 @@ import org.bouncycastle.tsp.TSPAlgorithms
 import org.bouncycastle.tsp.TimeStampRequestGenerator
 import org.bouncycastle.tsp.TimeStampResponseGenerator
 import org.bouncycastle.tsp.TimeStampTokenGenerator
-import org.bouncycastle.asn1.x509.AlgorithmIdentifier
 import java.math.BigInteger
 import java.security.MessageDigest
 import java.security.PrivateKey
@@ -34,7 +34,7 @@ class InMemoryTsaClient(
     // These could be part of the TSA config, if we have the need for other algorithms than SHA-256
     private val digestAlgoName = "SHA-256"
     private val algoId = TSPAlgorithms.SHA256
-    private val signatureAlgoName = "SHA256withRSA"
+    private val signatureMechanismName = "SHA256withRSA"
 
     private val providerName = "BC"
     private var tokenSizeEstimate = 4096
@@ -48,7 +48,7 @@ class InMemoryTsaClient(
         val digestProvider = JcaDigestCalculatorProviderBuilder()
             .setProvider(providerName)
             .build()
-        val contentSigner = JcaContentSignerBuilder(signatureAlgoName)
+        val contentSigner = JcaContentSignerBuilder(signatureMechanismName)
             .setProvider(providerName)
             .build(config.privateKey)
         val signerInfo = JcaSignerInfoGeneratorBuilder(digestProvider)

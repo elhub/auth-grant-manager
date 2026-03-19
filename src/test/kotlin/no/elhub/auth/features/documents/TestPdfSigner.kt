@@ -8,7 +8,6 @@ import com.itextpdf.signatures.CrlClientOffline
 import com.itextpdf.signatures.PdfSigner
 import com.itextpdf.signatures.PrivateKeySignature
 import com.itextpdf.signatures.SignatureUtil
-import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.apache.pdfbox.Loader
 import org.apache.pdfbox.pdmodel.PDPage
 import org.apache.pdfbox.pdmodel.PDPageContentStream
@@ -16,6 +15,7 @@ import org.apache.pdfbox.pdmodel.common.PDRectangle
 import org.apache.pdfbox.pdmodel.font.PDType1Font
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationText
+import org.bouncycastle.jce.provider.BouncyCastleProvider
 import java.io.ByteArrayOutputStream
 import java.security.PrivateKey
 import java.security.Security
@@ -150,11 +150,11 @@ object TestPdfSigner {
     }
 
     private fun Byte.isPdfWhitespace(): Boolean = this == 0x00.toByte() ||
-            this == 0x09.toByte() ||
-            this == 0x0A.toByte() ||
-            this == 0x0C.toByte() ||
-            this == 0x0D.toByte() ||
-            this == 0x20.toByte()
+        this == 0x09.toByte() ||
+        this == 0x0A.toByte() ||
+        this == 0x0C.toByte() ||
+        this == 0x0D.toByte() ||
+        this == 0x20.toByte()
 
     fun addAnnotationIncremental(pdfBytes: ByteArray): ByteArray {
         ByteArrayOutputStream().use { output ->
