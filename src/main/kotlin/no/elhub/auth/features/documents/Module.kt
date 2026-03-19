@@ -46,9 +46,6 @@ fun Application.module() {
                 pathToTsaRootCertificatesDir = cfg.property("tsaRootDir").getString(),
             )
         }
-        provide<FileCertificateProvider> {
-            FileCertificateProvider(resolve())
-        }
 
         provide<ITextPdfSignatureService> {
             ITextPdfSignatureService(resolve(), resolve())
