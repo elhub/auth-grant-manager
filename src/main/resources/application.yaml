@@ -71,7 +71,7 @@ idp:
   tokenUrl: ${IDP_TOKEN_URL}
 
 httpProxy:
-  url: ${HTTP_PROXY_URL:}
+  url: ${HTTP_PROXY_URL}
 
 ediel:
   validateRedirectUriFeature: ${VALIDATE_REDIRECT_URI_FEATURE:true}
