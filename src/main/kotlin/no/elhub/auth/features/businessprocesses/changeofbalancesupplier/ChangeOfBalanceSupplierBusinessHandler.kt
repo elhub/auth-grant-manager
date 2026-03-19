@@ -6,7 +6,6 @@ import arrow.core.left
 import arrow.core.raise.either
 import arrow.core.right
 import kotlinx.datetime.DatePeriod
-import kotlinx.datetime.LocalDate
 import kotlinx.datetime.plus
 import no.elhub.auth.features.businessprocesses.BusinessProcessError
 import no.elhub.auth.features.businessprocesses.changeofbalancesupplier.domain.ChangeOfBalanceSupplierBusinessCommand
@@ -45,6 +44,13 @@ private const val REGEX_NUMBERS_LETTERS_SYMBOLS = "^[a-zA-Z0-9_.-]*$"
 private const val REGEX_REQUESTED_FROM = REGEX_NUMBERS_LETTERS_SYMBOLS
 private const val REGEX_REQUESTED_BY = "^\\d{13}$"
 private const val REGEX_METERING_POINT = "^\\d{18}$"
+
+private const val CHANGE_OF_BALANCE_SUPPLIER_REQUEST_VALID_DAYS = 28
+private const val CHANGE_OF_BALANCE_SUPPLIER_GRANT_VALID_YEARS = 1
+
+private fun changeOfBalanceSupplierRequestValidTo() = today().plus(DatePeriod(days = CHANGE_OF_BALANCE_SUPPLIER_REQUEST_VALID_DAYS))
+
+private fun changeOfBalanceSupplierGrantValidTo() = today().plus(DatePeriod(years = CHANGE_OF_BALANCE_SUPPLIER_GRANT_VALID_YEARS))
 
 class ChangeOfBalanceSupplierBusinessHandler(
     private val meteringPointsService: MeteringPointsService,
@@ -108,7 +114,7 @@ class ChangeOfBalanceSupplierBusinessHandler(
 
     override fun getCreateGrantProperties(request: AuthorizationRequest): CreateGrantProperties =
         CreateGrantProperties(
-            validTo = defaultValidTo(),
+            validTo = changeOfBalanceSupplierGrantValidTo(),
             validFrom = today()
         )
 
@@ -123,11 +129,9 @@ class ChangeOfBalanceSupplierBusinessHandler(
 
     override fun getCreateGrantProperties(document: AuthorizationDocument): CreateGrantProperties =
         CreateGrantProperties(
-            validTo = defaultValidTo(),
+            validTo = changeOfBalanceSupplierGrantValidTo(),
             validFrom = today(),
         )
-
-    private fun defaultValidTo(): LocalDate = today().plus(DatePeriod(days = 30))
 
     private suspend fun validate(
         model: ChangeOfBalanceSupplierBusinessModel
@@ -270,7 +274,7 @@ class ChangeOfBalanceSupplierBusinessHandler(
             requestedFrom = model.requestedFrom,
             requestedBy = model.requestedBy,
             requestedTo = model.requestedTo,
-            validTo = defaultValidTo(),
+            validTo = changeOfBalanceSupplierRequestValidTo(),
             scopes = scopes,
             meta = meta,
         ).right()
