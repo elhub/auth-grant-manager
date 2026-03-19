@@ -6,7 +6,6 @@ import com.itextpdf.signatures.SignatureUtil
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import org.apache.pdfbox.Loader
-import java.io.ByteArrayInputStream
 import java.io.File
 import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate

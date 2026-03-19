@@ -3,14 +3,12 @@ package no.elhub.auth.features.documents.common
 import com.itextpdf.kernel.pdf.PdfDocument
 import com.itextpdf.kernel.pdf.PdfName
 import com.itextpdf.kernel.pdf.PdfReader
-import com.itextpdf.signatures.PdfSigner
 import com.itextpdf.signatures.SignatureUtil
 import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.shouldNotBe
 import no.elhub.auth.features.common.httpTestClient
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
@@ -92,6 +90,7 @@ class SignatureServiceTest : FunSpec({
                 // Check permission level 2 is set:
                 transformParams.getAsNumber(PdfName.P).intValue() shouldBe 2
 
+                // Certificates match:
                 val signingCert = certProvider.getElhubSigningCertificate()
                 val actualSigningCertificate = pkcs7.signingCertificate.shouldNotBeNull()
                 actualSigningCertificate.serialNumber shouldBe signingCert.serialNumber
