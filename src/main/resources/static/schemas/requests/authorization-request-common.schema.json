@@ -25,12 +25,7 @@
     "status": {
       "type": "string",
       "description": "The status of the authorization request.",
-      "enum": [
-        "Accepted",
-        "Expired",
-        "Pending",
-        "Rejected"
-      ],
+      "enum": ["Accepted", "Expired", "Pending", "Rejected"],
       "examples": ["Accepted"]
     },
     "attributes": {
