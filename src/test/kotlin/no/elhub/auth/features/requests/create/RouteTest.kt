@@ -127,6 +127,30 @@ class RouteTest : FunSpec({
         }
     }
 
+    test("POST / returns 201 when redirectURI is omitted from API request") {
+        coEvery { authProvider.authorizeMaskinporten(any()) } returns authorizedOrg.right()
+        coEvery { handler.invoke(any()) } returns authorizationRequest.right()
+        testApplication {
+            setupAppWith { route(handler, authProvider) }
+            val bodyWithoutRedirect = examplePostBody.copy(
+                data = examplePostBody.data.copy(
+                    meta = examplePostBody.data.meta.copy(redirectURI = null)
+                )
+            )
+
+            val response = client.postJson("/", bodyWithoutRedirect)
+            response.status shouldBe HttpStatusCode.Created
+
+            coVerify(exactly = 1) {
+                handler.invoke(
+                    withArg {
+                        it.meta.redirectURI shouldBe null
+                    }
+                )
+            }
+        }
+    }
+
     test("POST / returns 401 when authorization fails with InvalidToken") {
         coEvery { authProvider.authorizeMaskinporten(any()) } returns AuthError.InvalidToken.left()
         testApplication {
