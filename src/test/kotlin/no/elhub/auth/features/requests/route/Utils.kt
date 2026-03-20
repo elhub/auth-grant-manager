@@ -180,17 +180,17 @@ data class TestRequestMeta(
     val requestedForMeteringPointAddress: String,
     val balanceSupplierName: String,
     val balanceSupplierContractName: String,
-    val redirectURI: String,
+    val redirectURI: String? = null,
 ) : RequestMetaMarker {
     override fun toRequestMetaAttributes(): Map<String, String> =
-        mapOf(
-            "requestedFromName" to requestedFromName,
-            "requestedForMeteringPointId" to requestedForMeteringPointId,
-            "requestedForMeteringPointAddress" to requestedForMeteringPointAddress,
-            "balanceSupplierName" to balanceSupplierName,
-            "balanceSupplierContractName" to balanceSupplierContractName,
-            "redirectURI" to redirectURI,
-        ).withTextVersion(CHANGE_OF_BALANCE_SUPPLIER_TEXT_VERSION)
+        buildMap {
+            put("requestedFromName", requestedFromName)
+            put("requestedForMeteringPointId", requestedForMeteringPointId)
+            put("requestedForMeteringPointAddress", requestedForMeteringPointAddress)
+            put("balanceSupplierName", balanceSupplierName)
+            put("balanceSupplierContractName", balanceSupplierContractName)
+            redirectURI?.let { put("redirectURI", it) }
+        }.withTextVersion(CHANGE_OF_BALANCE_SUPPLIER_TEXT_VERSION)
 }
 
 val examplePostBody = JsonApiCreateRequest(

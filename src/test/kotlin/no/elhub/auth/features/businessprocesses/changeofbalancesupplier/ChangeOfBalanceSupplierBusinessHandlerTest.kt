@@ -310,6 +310,29 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
                 .shouldBeLeft(BusinessProcessError.Validation(ChangeOfBalanceSupplierValidationError.InvalidRedirectURI.message))
         }
 
+        test("request validation allows missing redirect URI and skips Ediel lookup") {
+            val model =
+                CreateRequestModel(
+                    authorizedParty = AUTHORIZED_PARTY,
+                    requestType = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
+                    meta =
+                    CreateRequestMeta(
+                        requestedBy = VALID_PARTY,
+                        requestedFrom = END_USER,
+                        requestedFromName = "From",
+                        requestedTo = END_USER,
+                        requestedForMeteringPointId = VALID_METERING_POINT_1,
+                        requestedForMeteringPointAddress = "addr",
+                        balanceSupplierName = "Supplier",
+                        balanceSupplierContractName = "Contract",
+                        redirectURI = null,
+                    ),
+                )
+
+            handler.validateAndReturnRequestCommand(model).shouldBeRight()
+            coVerify(exactly = 0) { edielService.getPartyRedirect(any()) }
+        }
+
         test("request validation fails on blank redirect URI") {
             val model =
                 CreateRequestModel(
