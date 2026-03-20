@@ -201,17 +201,6 @@ paths:
           $ref: '#/components/responses/422UnprocessableEntityError'
         '500':
           $ref: '#/components/responses/500InternalServerError'
-      x-codeSamples:
-        - lang: curl
-          label: curl (PDF)
-          source: |
-            curl -X GET \
-              -H "Authorization: Bearer <token>" \
-              -H "User-Agent: my-client/1.0" \
-              -H "SenderGln: <gln>" \
-              -H "Accept: application/pdf, application/json" \
-              "https://api.elhub.no/access/v0/authorization-documents/{id}.pdf"
-
     put:
       tags:
         - Authorization Documents
