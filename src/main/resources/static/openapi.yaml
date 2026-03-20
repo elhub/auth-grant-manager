@@ -9,7 +9,7 @@ info:
     ecosystem.
 
     Note: The authorization-grant APIs are under active development. Schemas and parameters may still
-    change.
+    change, Endpoints tagged with "TODO" should be assumed non-functional at the current time.
   x-status: Development
   contact:
     name: team-devxp
@@ -30,6 +30,10 @@ tags:
     description: Operations for listing and retrieving authorization grants and their scopes.
   - name: Authorization Requests
     description: Operations for creating, retrieving, and managing authorization requests.
+  - name: Elhub Internal
+    description: Internal Elhub APIs that are not accessible for external integrators.
+  - name: TODO
+    description: Endpoints under active development and not yet enabled in production.
 
 security:
   - bearerAuth: []
@@ -91,8 +95,6 @@ paths:
           $ref: '#/components/responses/400BadRequestError'
         '401':
           $ref: '#/components/responses/401UnauthorizedError'
-        '422':
-          $ref: '#/components/responses/422UnprocessableEntityError'
         '500':
           $ref: '#/components/responses/500InternalServerError'
 
@@ -128,6 +130,36 @@ paths:
           $ref: '#/components/responses/404NotFoundError'
         '500':
           $ref: '#/components/responses/500InternalServerError'
+    delete:
+      tags:
+        - TODO
+      summary: Cancel unsigned authorization document
+      description: >
+        Cancel an authorization document. This operation is only allowed if the document
+        has not yet been signed. Once signed, the document can no longer be cancelled through this API.
+      parameters:
+        - $ref: '#/components/parameters/UserAgent'
+        - $ref: '#/components/parameters/AuthorizationMaskinporten'
+        - $ref: '#/components/parameters/SenderGlnRequired'
+        - $ref: '#/components/parameters/OnBehalfOfGlnOptional'
+        - name: id
+          in: path
+          required: true
+          description: Unique identifier of the authorization document to cancel.
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/MetaResponse'
+        '401':
+          $ref: '#/components/responses/401UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/403ForbiddenError'
+        '404':
+          $ref: '#/components/responses/404NotFoundError'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
+
   '/authorization-documents/{id}.pdf':
     get:
       tags:
@@ -157,12 +189,25 @@ paths:
                 format: binary
         '401':
           $ref: '#/components/responses/401UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/403ForbiddenError'
         '404':
           $ref: '#/components/responses/404NotFoundError'
-        '406':
-          $ref: '#/components/responses/406NotAcceptableError'
+        '422':
+          $ref: '#/components/responses/422UnprocessableEntityError'
         '500':
           $ref: '#/components/responses/500InternalServerError'
+      x-codeSamples:
+        - lang: curl
+          label: curl (PDF)
+          source: |
+            curl -X GET \
+              -H "Authorization: Bearer <token>" \
+              -H "User-Agent: my-client/1.0" \
+              -H "SenderGln: <gln>" \
+              -H "Accept: application/pdf, application/json" \
+              "https://api.elhub.no/access/v0/authorization-documents/{id}.pdf"
+
     put:
       tags:
         - Authorization Documents
@@ -197,10 +242,6 @@ paths:
           $ref: '#/components/responses/400BadRequestError'
         '401':
           $ref: '#/components/responses/401UnauthorizedError'
-        '415':
-          $ref: '#/components/responses/415UnsupportedMediaTypeError'
-        '422':
-          $ref: '#/components/responses/422UnprocessableEntityError'
         '500':
           $ref: '#/components/responses/500InternalServerError'
 
@@ -298,10 +339,6 @@ paths:
           $ref: '#/components/responses/401UnauthorizedError'
         '404':
           $ref: '#/components/responses/404NotFoundError'
-        '409':
-          $ref: '#/components/responses/409ConflictError'
-        '422':
-          $ref: '#/components/responses/422UnprocessableEntityError'
         '500':
           $ref: '#/components/responses/500InternalServerError'
 
@@ -330,6 +367,46 @@ paths:
             application/json:
               schema:
                 $ref: './schemas/grants/authorization-scope-collection.schema.json'
+        '400':
+          $ref: '#/components/responses/400BadRequestError'
+        '401':
+          $ref: '#/components/responses/401UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/404NotFoundError'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
+
+  '/authorization-grants/{id}/scopes/{scopeId}':
+    get:
+      tags:
+        - Authorization Grants
+      summary: Retrieve a specific authorization grant scope
+      description: >
+        Retrieve a specific authorization scope associated with an authorization grant using its scopeId.
+      parameters:
+        - $ref: '#/components/parameters/UserAgent'
+        - $ref: '#/components/parameters/AuthorizationMaskinportenOrEndUser'
+        - $ref: '#/components/parameters/SenderGlnOptional'
+        - $ref: '#/components/parameters/OnBehalfOfGlnOptional'
+        - name: id
+          in: path
+          required: true
+          description: Unique identifier of the authorization grant whose scopes should be retrieved.
+          schema:
+            type: string
+        - name: scopeId
+          in: path
+          required: true
+          description: Unique identifier of the authorization scope that is being retrieved.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: An authorization scope associated with the grant.
+          content:
+            application/json:
+              schema:
+                $ref: './schemas/grants/authorization-scope-resource.schema.json'
         '400':
           $ref: '#/components/responses/400BadRequestError'
         '401':
@@ -369,8 +446,7 @@ paths:
       summary: Create authorization request for MinSide
       description: >
         Initiate a new authorization request flow. This creates an authorization request that
-        is associated with a user in MinSide and returns the created authorization request,
-        including its ID, which can be used to start the Elhub Min Side flow.
+        is associated with a user in MinSide and returns details including a link to the MinSide flow.
       parameters:
         - $ref: '#/components/parameters/UserAgent'
         - $ref: '#/components/parameters/AuthorizationMaskinporten'
@@ -386,7 +462,7 @@ paths:
         '201':
           description: >
             The authorization request was created and the response contains details of the
-            request, including the authorization request ID used to start the Elhub Min Side flow.
+            request, including the URL for the MinSide authorization flow.
           content:
             application/json:
               schema:
@@ -397,8 +473,6 @@ paths:
           $ref: '#/components/responses/401UnauthorizedError'
         '403':
           $ref: '#/components/responses/403ForbiddenError'
-        '422':
-          $ref: '#/components/responses/422UnprocessableEntityError'
         '500':
           $ref: '#/components/responses/500InternalServerError'
 
@@ -476,12 +550,38 @@ paths:
           $ref: '#/components/responses/403ForbiddenError'
         '404':
           $ref: '#/components/responses/404NotFoundError'
-        '409':
-          $ref: '#/components/responses/409ConflictError'
-        '422':
-          $ref: '#/components/responses/422UnprocessableEntityError'
         '500':
           $ref: '#/components/responses/500InternalServerError'
+    delete:
+      tags:
+        - TODO
+      summary: Cancel authorization request
+      description: >
+        Cancel an authorization request. This operation is only allowed if the request has
+        not yet been authorized.
+      parameters:
+        - $ref: '#/components/parameters/UserAgent'
+        - $ref: '#/components/parameters/AuthorizationMaskinporten'
+        - $ref: '#/components/parameters/SenderGlnRequired'
+        - $ref: '#/components/parameters/OnBehalfOfGlnOptional'
+        - name: id
+          in: path
+          required: true
+          description: Unique identifier of the authorization request to cancel.
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/MetaResponse'
+        '401':
+          $ref: '#/components/responses/401UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/403ForbiddenError'
+        '404':
+          $ref: '#/components/responses/404NotFoundError'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
+
 components:
   parameters:
     UserAgent:
@@ -556,6 +656,17 @@ components:
         application/json:
           schema:
             $ref: './schemas/json-api-error.schema.json'
+          examples:
+            badRequest:
+              summary: Bad request error example
+              value:
+                errors:
+                  - status: "400"
+                    title: "Bad Request"
+                    detail: "A required field is missing or invalid."
+                    meta:
+                      createdAt: "2025-12-17T12:51:57+01:00"
+
     401UnauthorizedError:
       description: >
         Unauthorized. The caller is not authenticated or the provided token is invalid or expired.
@@ -563,6 +674,17 @@ components:
         application/json:
           schema:
             $ref: './schemas/json-api-error.schema.json'
+          examples:
+            unauthorized:
+              summary: Unauthorized error example
+              value:
+                errors:
+                  - status: "401"
+                    title: "Unauthorized"
+                    detail: "Authentication credentials are missing or invalid."
+                    meta:
+                      createdAt: "2025-12-17T12:51:57+01:00"
+
     403ForbiddenError:
       description: >
         Forbidden. The caller is authenticated but does not have permission to perform this operation.
@@ -570,6 +692,17 @@ components:
         application/json:
           schema:
             $ref: './schemas/json-api-error.schema.json'
+          examples:
+            forbidden:
+              summary: Forbidden error example
+              value:
+                errors:
+                  - status: "403"
+                    title: "Forbidden"
+                    detail: "A detailed description for getting forbidden"
+                    meta:
+                      createdAt: "2025-12-17T12:51:57+01:00"
+
     404NotFoundError:
       description: >
         Not found. The requested resource does not exist or is not accessible to the caller.
@@ -577,35 +710,17 @@ components:
         application/json:
           schema:
             $ref: './schemas/json-api-error.schema.json'
+          examples:
+            notFound:
+              summary: Not found error example
+              value:
+                errors:
+                  - status: "404"
+                    title: "Not Found"
+                    detail: "The requested resource could not be found."
+                    meta:
+                      createdAt: "2025-12-17T12:51:57+01:00"
 
-    406NotAcceptableError:
-      description: >
-        Not acceptable. The requested resource exists but cannot be returned in a format acceptable to the client.
-      content:
-        application/json:
-          schema:
-            $ref: './schemas/json-api-error.schema.json'
-    409ConflictError:
-      description: >
-        Conflict. The request could not be completed due to a conflict with the current state of the resource.
-      content:
-        application/json:
-          schema:
-            $ref: './schemas/json-api-error.schema.json'
-    422UnprocessableEntityError:
-      description: >
-        Unprocessable entity. The request was well-formed but failed validation.
-      content:
-        application/json:
-          schema:
-            $ref: './schemas/json-api-error.schema.json'
-    415UnsupportedMediaTypeError:
-      description: >
-        Unsupported media type.
-      content:
-        application/json:
-          schema:
-            $ref: './schemas/json-api-error.schema.json'
     500InternalServerError:
       description: >
         Internal server error. An unexpected error occurred while processing the request.
@@ -613,6 +728,33 @@ components:
         application/json:
           schema:
             $ref: './schemas/json-api-error.schema.json'
+          examples:
+            internalServerError:
+              summary: Internal server error example
+              value:
+                errors:
+                  - status: "500"
+                    title: "Internal Server Error"
+                    detail: "An unexpected error occurred."
+                    meta:
+                      createdAt: "2025-12-17T12:51:57+01:00"
+    422UnprocessableEntityError:
+      description: >
+        Unprocessable Entity. The request was well-formed but could not be followed due to semantic errors.
+      content:
+        application/json:
+          schema:
+            $ref: './schemas/json-api-error.schema.json'
+          examples:
+            unprocessableEntity:
+              summary: Unprocessable entity error example
+              value:
+                errors:
+                  - status: "422"
+                    title: "Unprocessable Entity"
+                    detail: "The request could not be processed due to semantic errors."
+                    meta:
+                      createdAt: "2025-12-17T12:51:57+01:00"
     MetaResponse:
       description: >
         Metadata response for informational purposes, typically returned from successful
