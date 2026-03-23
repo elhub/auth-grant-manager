@@ -191,7 +191,7 @@ paths:
             type: string
       responses:
         '200':
-          description: The PDF file representing the authorization document.
+          description: The PDF file representing the authorization document. Error responses are returned as applicaiton/json.
           content:
             application/pdf:
               schema:
@@ -427,8 +427,12 @@ paths:
                 $ref: './schemas/requests/authorization-request-collection.schema.json'
         '401':
           $ref: '#/components/responses/401UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/403ForbiddenError'
         '406':
           $ref: '#/components/responses/406NotAcceptableError'
+        '409':
+          $ref: '#/components/responses/409ConflictError'
         '500':
           $ref: '#/components/responses/500InternalServerError'
     post:
