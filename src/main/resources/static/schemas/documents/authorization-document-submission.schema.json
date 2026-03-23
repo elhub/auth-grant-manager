@@ -23,6 +23,7 @@
         "meta": {
           "type": "object",
           "description": "Contextual metadata required to initialize the document. The required metadata fields depend on the document type.",
+          "required": ["requestedBy", "requestedFrom", "requestedTo"],
           "properties": {
             "requestedBy": {
               "$ref": "../authorization-common.schema.json#/$defs/requestedBy"
