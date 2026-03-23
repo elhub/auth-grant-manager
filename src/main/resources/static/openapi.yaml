@@ -95,8 +95,12 @@ paths:
           $ref: '#/components/responses/400BadRequestError'
         '401':
           $ref: '#/components/responses/401UnauthorizedError'
+        '409':
+          $ref: '#/components/responses/409ConflictError'
         '415':
           $ref: '#/components/responses/415UnsupportedMediaTypeError'
+        '422':
+          $ref: '#/components/responses/422UnprocessableEntityError'
         '500':
           $ref: '#/components/responses/500InternalServerError'
 
@@ -126,6 +130,8 @@ paths:
             application/json:
               schema:
                 $ref: './schemas/documents/authorization-document-resource.schema.json'
+        '400':
+          $ref: '#/components/responses/400BadRequestError'
         '401':
           $ref: '#/components/responses/401UnauthorizedError'
         '404':
@@ -272,6 +278,8 @@ paths:
           $ref: '#/components/responses/400BadRequestError'
         '401':
           $ref: '#/components/responses/401UnauthorizedError'
+        '406':
+          $ref: '#/components/responses/406NotAcceptableError'
         '500':
           $ref: '#/components/responses/500InternalServerError'
 
@@ -306,6 +314,8 @@ paths:
           $ref: '#/components/responses/401UnauthorizedError'
         '404':
           $ref: '#/components/responses/404NotFoundError'
+        '406':
+          $ref: '#/components/responses/406NotAcceptableError'
         '500':
           $ref: '#/components/responses/500InternalServerError'
     patch:
@@ -340,8 +350,16 @@ paths:
           $ref: '#/components/responses/400BadRequestError'
         '401':
           $ref: '#/components/responses/401UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/403ForbiddenError'
         '404':
           $ref: '#/components/responses/404NotFoundError'
+        '406':
+          $ref: '#/components/responses/406NotAcceptableError'
+        '409':
+          $ref: '#/components/responses/409ConflictError'
+        '422':
+          $ref: '#/components/responses/422UnprocessableEntityError'
         '500':
           $ref: '#/components/responses/500InternalServerError'
 
@@ -374,48 +392,14 @@ paths:
           $ref: '#/components/responses/400BadRequestError'
         '401':
           $ref: '#/components/responses/401UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/403ForbiddenError'
         '404':
           $ref: '#/components/responses/404NotFoundError'
-        '500':
-          $ref: '#/components/responses/500InternalServerError'
-
-  '/authorization-grants/{id}/scopes/{scopeId}':
-    get:
-      tags:
-        - Authorization Grants
-      summary: Retrieve a specific authorization grant scope
-      description: >
-        Retrieve a specific authorization scope associated with an authorization grant using its scopeId.
-      parameters:
-        - $ref: '#/components/parameters/UserAgent'
-        - $ref: '#/components/parameters/AuthorizationMaskinportenOrEndUser'
-        - $ref: '#/components/parameters/SenderGlnOptional'
-        - $ref: '#/components/parameters/OnBehalfOfGlnOptional'
-        - name: id
-          in: path
-          required: true
-          description: Unique identifier of the authorization grant whose scopes should be retrieved.
-          schema:
-            type: string
-        - name: scopeId
-          in: path
-          required: true
-          description: Unique identifier of the authorization scope that is being retrieved.
-          schema:
-            type: string
-      responses:
-        '200':
-          description: An authorization scope associated with the grant.
-          content:
-            application/json:
-              schema:
-                $ref: './schemas/grants/authorization-scope-resource.schema.json'
-        '400':
-          $ref: '#/components/responses/400BadRequestError'
-        '401':
-          $ref: '#/components/responses/401UnauthorizedError'
-        '404':
-          $ref: '#/components/responses/404NotFoundError'
+        '406':
+          $ref: '#/components/responses/406NotAcceptableError'
+        '409':
+          $ref: '#/components/responses/409ConflictError'
         '500':
           $ref: '#/components/responses/500InternalServerError'
 
@@ -441,6 +425,8 @@ paths:
                 $ref: './schemas/requests/authorization-request-collection.schema.json'
         '401':
           $ref: '#/components/responses/401UnauthorizedError'
+        '406':
+          $ref: '#/components/responses/406NotAcceptableError'
         '500':
           $ref: '#/components/responses/500InternalServerError'
     post:
@@ -476,8 +462,12 @@ paths:
           $ref: '#/components/responses/401UnauthorizedError'
         '403':
           $ref: '#/components/responses/403ForbiddenError'
+        '406':
+          $ref: '#/components/responses/406NotAcceptableError'
         '415':
           $ref: '#/components/responses/415UnsupportedMediaTypeError'
+        '422':
+          $ref: '#/components/responses/422UnprocessableEntityError'
         '500':
           $ref: '#/components/responses/500InternalServerError'
 
@@ -507,8 +497,12 @@ paths:
             application/json:
               schema:
                 $ref: './schemas/requests/authorization-request-resource.schema.json'
+        '400':
+          $ref: '#/components/responses/400BadRequestError'
         '401':
           $ref: '#/components/responses/401UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/403ForbiddenError'
         '404':
           $ref: '#/components/responses/404NotFoundError'
         '500':
@@ -745,6 +739,41 @@ components:
                     detail: "The requested media type is not supported."
                     meta:
                       createdAt: "2025-12-17T12:51:57+01:00"
+    409ConflictError:
+      description: >
+        Conflict. The request could not be completed due to a conflict with the current state
+        of the resource.
+      content:
+        application/json:
+          schema:
+            $ref: './schemas/json-api-error.schema.json'
+          examples:
+            conflict:
+              summary: Conflict error example
+              value:
+                errors:
+                  - status: "409"
+                    title: "Conflict"
+                    detail: "An authorization document already exists for the specified parties and validity period."
+                    meta:
+                      createdAt: "2025-12-17T12:51:57+01:00"
+    422UnprocessableEntityError:
+      description: >
+        Unprocessable Entity. The request was well-formed but could not be followed due to semantic errors.
+      content:
+        application/json:
+          schema:
+            $ref: './schemas/json-api-error.schema.json'
+          examples:
+            unprocessableEntity:
+              summary: Unprocessable entity error example
+              value:
+                errors:
+                  - status: "422"
+                    title: "Unprocessable Entity"
+                    detail: "The request could not be processed due to semantic errors."
+                    meta:
+                      createdAt: "2025-12-17T12:51:57+01:00"
     415UnsupportedMediaTypeError:
       description: >
         Unsupported Media Type. The request body uses a media type the server or resource does not support.
@@ -780,23 +809,6 @@ components:
                     meta:
                       createdAt: "2025-12-17T12:51:57+01:00"
 
-    422UnprocessableEntityError:
-      description: >
-        Unprocessable Entity. The request was well-formed but could not be followed due to semantic errors.
-      content:
-        application/json:
-          schema:
-            $ref: './schemas/json-api-error.schema.json'
-          examples:
-            unprocessableEntity:
-              summary: Unprocessable entity error example
-              value:
-                errors:
-                  - status: "422"
-                    title: "Unprocessable Entity"
-                    detail: "The request could not be processed due to semantic errors."
-                    meta:
-                      createdAt: "2025-12-17T12:51:57+01:00"
     MetaResponse:
       description: >
         Metadata response for informational purposes, typically returned from successful
