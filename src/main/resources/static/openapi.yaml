@@ -246,7 +246,7 @@ paths:
         '404':
           $ref: '#/components/responses/404NotFoundError'
         '406':
-          $ref:  '#/components/responses/406NotAcceptableError'
+          $ref: '#/components/responses/406NotAcceptableError'
         '415':
           $ref: '#/components/responses/415UnsupportedMediaTypeError'
         '422':
@@ -278,6 +278,8 @@ paths:
           $ref: '#/components/responses/400BadRequestError'
         '401':
           $ref: '#/components/responses/401UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/403ForbiddenError'
         '406':
           $ref: '#/components/responses/406NotAcceptableError'
         '500':
