@@ -64,6 +64,20 @@ Request and response payloads are defined using JSON Schema. The JSON Schemas ar
 >
 > Please check the repository regularly for updates.
 
+## Access Management
+
+For market-party requests, access is evaluated from a combination of the authorization token and the request headers
+`SenderGLN` and optional `OnBehalfOfGLN`.
+
+These values are used together to determine the caller context for the request, including which market party the caller
+is acting as.
+
+For create operations, the resolved caller context must be valid for the `AuthorizationRequest` or
+`AuthorizationDocument` type being created:
+
+- `ChangeOfBalanceSupplierForPerson`: caller context must resolve to a `balance supplier`
+- `MoveInAndChangeOfBalanceSupplierForPerson`: caller context must resolve to a `balance supplier`
+
 ## Authorization Request Flow
 
 > [!NOTE]
