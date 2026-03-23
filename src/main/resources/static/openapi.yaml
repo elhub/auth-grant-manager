@@ -436,6 +436,8 @@ paths:
           $ref: '#/components/responses/403ForbiddenError'
         '406':
           $ref: '#/components/responses/406NotAcceptableError'
+        '409':
+          $ref: '#/components/responses/409ConflictError'
         '415':
           $ref: '#/components/responses/415UnsupportedMediaTypeError'
         '422':
@@ -477,6 +479,10 @@ paths:
           $ref: '#/components/responses/403ForbiddenError'
         '404':
           $ref: '#/components/responses/404NotFoundError'
+        '409':
+          $ref: '#/components/responses/409ConflictError'
+        '422':
+          $ref: '#/components/responses/422UnprocessableEntityError'
         '500':
           $ref: '#/components/responses/500InternalServerError'
     patch:
