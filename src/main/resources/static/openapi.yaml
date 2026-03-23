@@ -9,7 +9,7 @@ info:
     ecosystem.
 
     Note: The authorization-grant APIs are under active development. Schemas and parameters may still
-    change, Endpoints tagged with "TODO" should be assumed non-functional at the current time.
+    change.
   x-status: Development
   contact:
     name: team-devxp
@@ -30,8 +30,6 @@ tags:
     description: Operations for listing and retrieving authorization grants and their scopes.
   - name: Authorization Requests
     description: Operations for creating, retrieving, and managing authorization requests.
-  - name: Elhub Internal
-    description: Internal Elhub APIs that are not accessible for external integrators.
   - name: TODO
     description: Endpoints under active development and not yet enabled in production.
 
@@ -441,7 +439,8 @@ paths:
       summary: Create authorization request for MinSide
       description: >
         Initiate a new authorization request flow. This creates an authorization request that
-        is associated with a user in MinSide and returns details including a link to the MinSide flow.
+        is associated with a user in MinSide and returns the created authorization request,
+        including its ID, which can be used to start the Elhub Min Side flow.
       parameters:
         - $ref: '#/components/parameters/UserAgent'
         - $ref: '#/components/parameters/AuthorizationMaskinporten'
@@ -457,7 +456,7 @@ paths:
         '201':
           description: >
             The authorization request was created and the response contains details of the
-            request, including the URL for the MinSide authorization flow.
+            request, including the authorization request ID used to start the Elhub Min Side flow
           content:
             application/json:
               schema:
@@ -557,35 +556,6 @@ paths:
           $ref: '#/components/responses/404NotFoundError'
         '415':
           $ref: '#/components/responses/415UnsupportedMediaTypeError'
-        '500':
-          $ref: '#/components/responses/500InternalServerError'
-    delete:
-      tags:
-        - TODO
-      summary: Cancel authorization request
-      description: >
-        Cancel an authorization request. This operation is only allowed if the request has
-        not yet been authorized.
-      parameters:
-        - $ref: '#/components/parameters/UserAgent'
-        - $ref: '#/components/parameters/AuthorizationMaskinporten'
-        - $ref: '#/components/parameters/SenderGlnRequired'
-        - $ref: '#/components/parameters/OnBehalfOfGlnOptional'
-        - name: id
-          in: path
-          required: true
-          description: Unique identifier of the authorization request to cancel.
-          schema:
-            type: string
-      responses:
-        '200':
-          $ref: '#/components/responses/MetaResponse'
-        '401':
-          $ref: '#/components/responses/401UnauthorizedError'
-        '403':
-          $ref: '#/components/responses/403ForbiddenError'
-        '404':
-          $ref: '#/components/responses/404NotFoundError'
         '500':
           $ref: '#/components/responses/500InternalServerError'
 
