@@ -30,8 +30,6 @@ tags:
     description: Operations for listing and retrieving authorization grants and their scopes.
   - name: Authorization Requests
     description: Operations for creating, retrieving, and managing authorization requests.
-  - name: TODO
-    description: Endpoints under active development and not yet enabled in production.
 
 security:
   - bearerAuth: []
@@ -134,37 +132,6 @@ paths:
           $ref: '#/components/responses/401UnauthorizedError'
         '404':
           $ref: '#/components/responses/404NotFoundError'
-        '500':
-          $ref: '#/components/responses/500InternalServerError'
-    delete:
-      tags:
-        - TODO
-      summary: Cancel unsigned authorization document
-      description: >
-        Cancel an authorization document. This operation is only allowed if the document
-        has not yet been signed. Once signed, the document can no longer be cancelled through this API.
-      parameters:
-        - $ref: '#/components/parameters/UserAgent'
-        - $ref: '#/components/parameters/AuthorizationMaskinporten'
-        - $ref: '#/components/parameters/SenderGlnRequired'
-        - $ref: '#/components/parameters/OnBehalfOfGlnOptional'
-        - name: id
-          in: path
-          required: true
-          description: Unique identifier of the authorization document to cancel.
-          schema:
-            type: string
-      responses:
-        '200':
-          $ref: '#/components/responses/MetaResponse'
-        '401':
-          $ref: '#/components/responses/401UnauthorizedError'
-        '403':
-          $ref: '#/components/responses/403ForbiddenError'
-        '404':
-          $ref: '#/components/responses/404NotFoundError'
-        '406':
-          $ref: '#/components/responses/406NotAcceptableError'
         '500':
           $ref: '#/components/responses/500InternalServerError'
 
