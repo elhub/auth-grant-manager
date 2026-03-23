@@ -189,7 +189,7 @@ paths:
             type: string
       responses:
         '200':
-          description: The PDF file representing the authorization document. Error responses are returned as applicaiton/json.
+          description: The PDF file representing the authorization document. Error responses are returned as application/json.
           content:
             application/pdf:
               schema:
