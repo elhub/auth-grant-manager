@@ -2,16 +2,19 @@ package no.elhub.auth.features.businessprocesses.ediel
 
 import io.ktor.server.application.Application
 import io.ktor.server.config.ApplicationConfig
-import org.koin.core.qualifier.named
-import org.koin.ktor.plugin.koinModule
+import io.ktor.server.plugins.di.dependencies
 
 fun Application.edielServiceModule() {
-    koinModule {
-        single<Boolean>(named("validateRedirectUriFeature")) {
-            environment.config.propertyOrNull("ediel.validateRedirectUriFeature")?.getString()?.toBoolean() ?: true
+    val appEnvironment = environment
+
+    dependencies {
+        provide<Boolean>(name = "validateRedirectUriFeature") {
+            appEnvironment.config.propertyOrNull("ediel.validateRedirectUriFeature")
+                ?.getString()?.toBoolean() ?: true
         }
-        single {
-            val edielApiConfig = get<ApplicationConfig>().config("ediel")
+
+        provide<EdielApiConfig> {
+            val edielApiConfig = resolve<ApplicationConfig>().config("ediel")
             EdielApiConfig(
                 serviceUrl = edielApiConfig.property("serviceUrl").getString(),
                 basicAuthConfig = BasicAuthConfig(
@@ -21,11 +24,13 @@ fun Application.edielServiceModule() {
                 environment = edielApiConfig.property("environment").getString().toEdielEnvironment()
             )
         }
-        single(named("edielEnvironment")) { get<EdielApiConfig>().environment }
-        single<EdielService> {
+
+        provide<EdielEnvironment>(name = "edielEnvironment") { resolve<EdielApiConfig>().environment }
+
+        provide<EdielService> {
             EdielApi(
-                edielApiConfig = get(),
-                client = get(named("proxyHttpClient"))
+                edielApiConfig = resolve(),
+                client = resolve("proxyHttpClient")
             )
         }
     }

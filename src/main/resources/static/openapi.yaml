@@ -91,6 +91,10 @@ paths:
           $ref: '#/components/responses/400BadRequestError'
         '401':
           $ref: '#/components/responses/401UnauthorizedError'
+        '409':
+          $ref: '#/components/responses/409ConflictError'
+        '415':
+          $ref: '#/components/responses/415UnsupportedMediaTypeError'
         '422':
           $ref: '#/components/responses/422UnprocessableEntityError'
         '500':
@@ -122,12 +126,15 @@ paths:
             application/json:
               schema:
                 $ref: './schemas/documents/authorization-document-resource.schema.json'
+        '400':
+          $ref: '#/components/responses/400BadRequestError'
         '401':
           $ref: '#/components/responses/401UnauthorizedError'
         '404':
           $ref: '#/components/responses/404NotFoundError'
         '500':
           $ref: '#/components/responses/500InternalServerError'
+
   '/authorization-documents/{id}.pdf':
     get:
       tags:
@@ -149,7 +156,7 @@ paths:
             type: string
       responses:
         '200':
-          description: The PDF file representing the authorization document.
+          description: The PDF file representing the authorization document. Error responses are returned as application/json.
           content:
             application/pdf:
               schema:
@@ -157,10 +164,12 @@ paths:
                 format: binary
         '401':
           $ref: '#/components/responses/401UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/403ForbiddenError'
         '404':
           $ref: '#/components/responses/404NotFoundError'
-        '406':
-          $ref: '#/components/responses/406NotAcceptableError'
+        '422':
+          $ref: '#/components/responses/422UnprocessableEntityError'
         '500':
           $ref: '#/components/responses/500InternalServerError'
     put:
@@ -197,6 +206,12 @@ paths:
           $ref: '#/components/responses/400BadRequestError'
         '401':
           $ref: '#/components/responses/401UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/403ForbiddenError'
+        '404':
+          $ref: '#/components/responses/404NotFoundError'
+        '406':
+          $ref: '#/components/responses/406NotAcceptableError'
         '415':
           $ref: '#/components/responses/415UnsupportedMediaTypeError'
         '422':
@@ -228,6 +243,10 @@ paths:
           $ref: '#/components/responses/400BadRequestError'
         '401':
           $ref: '#/components/responses/401UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/403ForbiddenError'
+        '406':
+          $ref: '#/components/responses/406NotAcceptableError'
         '500':
           $ref: '#/components/responses/500InternalServerError'
 
@@ -262,6 +281,8 @@ paths:
           $ref: '#/components/responses/401UnauthorizedError'
         '404':
           $ref: '#/components/responses/404NotFoundError'
+        '406':
+          $ref: '#/components/responses/406NotAcceptableError'
         '500':
           $ref: '#/components/responses/500InternalServerError'
     patch:
@@ -296,8 +317,12 @@ paths:
           $ref: '#/components/responses/400BadRequestError'
         '401':
           $ref: '#/components/responses/401UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/403ForbiddenError'
         '404':
           $ref: '#/components/responses/404NotFoundError'
+        '406':
+          $ref: '#/components/responses/406NotAcceptableError'
         '409':
           $ref: '#/components/responses/409ConflictError'
         '422':
@@ -334,8 +359,14 @@ paths:
           $ref: '#/components/responses/400BadRequestError'
         '401':
           $ref: '#/components/responses/401UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/403ForbiddenError'
         '404':
           $ref: '#/components/responses/404NotFoundError'
+        '406':
+          $ref: '#/components/responses/406NotAcceptableError'
+        '409':
+          $ref: '#/components/responses/409ConflictError'
         '500':
           $ref: '#/components/responses/500InternalServerError'
 
@@ -361,6 +392,12 @@ paths:
                 $ref: './schemas/requests/authorization-request-collection.schema.json'
         '401':
           $ref: '#/components/responses/401UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/403ForbiddenError'
+        '406':
+          $ref: '#/components/responses/406NotAcceptableError'
+        '409':
+          $ref: '#/components/responses/409ConflictError'
         '500':
           $ref: '#/components/responses/500InternalServerError'
     post:
@@ -386,7 +423,7 @@ paths:
         '201':
           description: >
             The authorization request was created and the response contains details of the
-            request, including the authorization request ID used to start the Elhub Min Side flow.
+            request, including the authorization request ID used to start the Elhub Min Side flow
           content:
             application/json:
               schema:
@@ -397,6 +434,12 @@ paths:
           $ref: '#/components/responses/401UnauthorizedError'
         '403':
           $ref: '#/components/responses/403ForbiddenError'
+        '406':
+          $ref: '#/components/responses/406NotAcceptableError'
+        '409':
+          $ref: '#/components/responses/409ConflictError'
+        '415':
+          $ref: '#/components/responses/415UnsupportedMediaTypeError'
         '422':
           $ref: '#/components/responses/422UnprocessableEntityError'
         '500':
@@ -428,10 +471,18 @@ paths:
             application/json:
               schema:
                 $ref: './schemas/requests/authorization-request-resource.schema.json'
+        '400':
+          $ref: '#/components/responses/400BadRequestError'
         '401':
           $ref: '#/components/responses/401UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/403ForbiddenError'
         '404':
           $ref: '#/components/responses/404NotFoundError'
+        '409':
+          $ref: '#/components/responses/409ConflictError'
+        '422':
+          $ref: '#/components/responses/422UnprocessableEntityError'
         '500':
           $ref: '#/components/responses/500InternalServerError'
     patch:
@@ -476,12 +527,11 @@ paths:
           $ref: '#/components/responses/403ForbiddenError'
         '404':
           $ref: '#/components/responses/404NotFoundError'
-        '409':
-          $ref: '#/components/responses/409ConflictError'
-        '422':
-          $ref: '#/components/responses/422UnprocessableEntityError'
+        '415':
+          $ref: '#/components/responses/415UnsupportedMediaTypeError'
         '500':
           $ref: '#/components/responses/500InternalServerError'
+
 components:
   parameters:
     UserAgent:
@@ -556,6 +606,17 @@ components:
         application/json:
           schema:
             $ref: './schemas/json-api-error.schema.json'
+          examples:
+            badRequest:
+              summary: Bad request error example
+              value:
+                errors:
+                  - status: "400"
+                    title: "Bad Request"
+                    detail: "A required field is missing or invalid."
+                    meta:
+                      createdAt: "2025-12-17T12:51:57+01:00"
+
     401UnauthorizedError:
       description: >
         Unauthorized. The caller is not authenticated or the provided token is invalid or expired.
@@ -563,6 +624,17 @@ components:
         application/json:
           schema:
             $ref: './schemas/json-api-error.schema.json'
+          examples:
+            unauthorized:
+              summary: Unauthorized error example
+              value:
+                errors:
+                  - status: "401"
+                    title: "Unauthorized"
+                    detail: "Authentication credentials are missing or invalid."
+                    meta:
+                      createdAt: "2025-12-17T12:51:57+01:00"
+
     403ForbiddenError:
       description: >
         Forbidden. The caller is authenticated but does not have permission to perform this operation.
@@ -570,6 +642,17 @@ components:
         application/json:
           schema:
             $ref: './schemas/json-api-error.schema.json'
+          examples:
+            forbidden:
+              summary: Forbidden error example
+              value:
+                errors:
+                  - status: "403"
+                    title: "Forbidden"
+                    detail: "A detailed description for getting forbidden"
+                    meta:
+                      createdAt: "2025-12-17T12:51:57+01:00"
+
     404NotFoundError:
       description: >
         Not found. The requested resource does not exist or is not accessible to the caller.
@@ -577,35 +660,86 @@ components:
         application/json:
           schema:
             $ref: './schemas/json-api-error.schema.json'
-
+          examples:
+            notFound:
+              summary: Not found error example
+              value:
+                errors:
+                  - status: "404"
+                    title: "Not Found"
+                    detail: "The requested resource could not be found."
+                    meta:
+                      createdAt: "2025-12-17T12:51:57+01:00"
     406NotAcceptableError:
       description: >
-        Not acceptable. The requested resource exists but cannot be returned in a format acceptable to the client.
+        Not Acceptable. The server cannot produce a response matching the list of acceptable
+        values defined in the request's proactive content negotiation headers.
       content:
         application/json:
           schema:
             $ref: './schemas/json-api-error.schema.json'
+          examples:
+            notAcceptable:
+              summary: Not acceptable error example
+              value:
+                errors:
+                  - status: "406"
+                    title: "Not Acceptable"
+                    detail: "The requested media type is not supported."
+                    meta:
+                      createdAt: "2025-12-17T12:51:57+01:00"
     409ConflictError:
       description: >
-        Conflict. The request could not be completed due to a conflict with the current state of the resource.
+        Conflict. The request could not be completed due to a conflict with the current state
+        of the resource.
       content:
         application/json:
           schema:
             $ref: './schemas/json-api-error.schema.json'
+          examples:
+            conflict:
+              summary: Conflict error example
+              value:
+                errors:
+                  - status: "409"
+                    title: "Conflict"
+                    detail: "An authorization document already exists for the specified parties and validity period."
+                    meta:
+                      createdAt: "2025-12-17T12:51:57+01:00"
     422UnprocessableEntityError:
       description: >
-        Unprocessable entity. The request was well-formed but failed validation.
+        Unprocessable Entity. The request was well-formed but could not be followed due to semantic errors.
       content:
         application/json:
           schema:
             $ref: './schemas/json-api-error.schema.json'
+          examples:
+            unprocessableEntity:
+              summary: Unprocessable entity error example
+              value:
+                errors:
+                  - status: "422"
+                    title: "Unprocessable Entity"
+                    detail: "The request could not be processed due to semantic errors."
+                    meta:
+                      createdAt: "2025-12-17T12:51:57+01:00"
     415UnsupportedMediaTypeError:
       description: >
-        Unsupported media type.
+        Unsupported Media Type. The request body uses a media type the server or resource does not support.
       content:
         application/json:
           schema:
             $ref: './schemas/json-api-error.schema.json'
+          examples:
+            unsupportedMediaType:
+              summary: Unsupported media type error example
+              value:
+                errors:
+                  - status: "415"
+                    title: "Unsupported Media Type"
+                    detail: "The submitted content type is not supported."
+                    meta:
+                      createdAt: "2025-12-17T12:51:57+01:00"
     500InternalServerError:
       description: >
         Internal server error. An unexpected error occurred while processing the request.
@@ -613,6 +747,17 @@ components:
         application/json:
           schema:
             $ref: './schemas/json-api-error.schema.json'
+          examples:
+            internalServerError:
+              summary: Internal server error example
+              value:
+                errors:
+                  - status: "500"
+                    title: "Internal Server Error"
+                    detail: "An unexpected error occurred."
+                    meta:
+                      createdAt: "2025-12-17T12:51:57+01:00"
+
     MetaResponse:
       description: >
         Metadata response for informational purposes, typically returned from successful

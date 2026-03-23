@@ -2,6 +2,7 @@ package no.elhub.auth.features.requests.common
 
 import arrow.core.getOrElse
 import io.kotest.assertions.arrow.core.shouldBeRight
+import io.kotest.assertions.fail
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
@@ -22,7 +23,6 @@ import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
-import kotlin.test.fail
 import kotlin.time.ExperimentalTime
 
 class ExposedRequestRepositoryTest : FunSpec({

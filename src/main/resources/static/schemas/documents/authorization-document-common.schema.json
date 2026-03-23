@@ -22,6 +22,12 @@
         "MoveInAndChangeOfBalanceSupplierForPerson"
       ]
     },
+    "authorizationDocumentStatus": {
+      "type": "string",
+      "description": "The current state of the document within the signature workflow (e.g., waiting for signature, signed, or expired).",
+      "enum": ["Expired", "Pending", "Rejected", "Signed"],
+      "examples": ["Pending"]
+    },
     "attributes": {
       "type": "object",
       "description": "Attributes of the AuthorizationDocument resource.",
@@ -30,10 +36,7 @@
           "$ref": "#/$defs/documentType"
         },
         "status": {
-          "type": "string",
-          "description": "The current state of the document within the signature workflow (e.g., waiting for signature, signed, or expired).",
-          "enum": ["Expired", "Pending", "Rejected", "Signed"],
-          "examples": ["Pending"]
+          "$ref": "#/$defs/authorizationDocumentStatus"
         },
         "createdAt": {
           "$ref": "../elhub-common.schema.json#/$defs/createdAt"

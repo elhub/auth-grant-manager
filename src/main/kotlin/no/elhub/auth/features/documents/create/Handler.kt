@@ -37,7 +37,7 @@ class Handler(
                     .bind()
 
             ensure(model.authorizedParty == requestedByParty) {
-                CreateError.AuthorizationError
+                CreateError.MismatchBetweenAuthorizedPartyAndRequestedBy
             }
 
             val requestedFromParty =

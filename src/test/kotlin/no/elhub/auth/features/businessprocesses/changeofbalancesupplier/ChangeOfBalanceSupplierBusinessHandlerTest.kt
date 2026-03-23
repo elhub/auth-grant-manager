@@ -5,6 +5,7 @@ import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
+import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -138,6 +139,7 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
         coEvery { personService.findOrCreateByNin(ANOTHER_END_USER.idValue) } returns Either.Right(Person(UUID.fromString(END_USER_ID_2)))
         coEvery { personService.findOrCreateByNin(SHARED_END_USER.idValue) } returns Either.Right(Person(UUID.fromString(SHARED_END_USER_ID_1)))
         beforeTest {
+            clearMocks(edielService, answers = false, recordedCalls = true)
             coEvery { edielService.getPartyRedirect(any()) } returns Either.Right(
                 EdielPartyRedirectResponseDto(
                     redirectUrls = EdielRedirectUrlsDto(
@@ -306,6 +308,53 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
 
             handler.validateAndReturnRequestCommand(model)
                 .shouldBeLeft(BusinessProcessError.Validation(ChangeOfBalanceSupplierValidationError.InvalidRedirectURI.message))
+        }
+
+        test("request validation allows missing redirect URI and skips Ediel lookup") {
+            val model =
+                CreateRequestModel(
+                    authorizedParty = AUTHORIZED_PARTY,
+                    requestType = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
+                    meta =
+                    CreateRequestMeta(
+                        requestedBy = VALID_PARTY,
+                        requestedFrom = END_USER,
+                        requestedFromName = "From",
+                        requestedTo = END_USER,
+                        requestedForMeteringPointId = VALID_METERING_POINT_1,
+                        requestedForMeteringPointAddress = "addr",
+                        balanceSupplierName = "Supplier",
+                        balanceSupplierContractName = "Contract",
+                        redirectURI = null,
+                    ),
+                )
+
+            handler.validateAndReturnRequestCommand(model).shouldBeRight()
+            coVerify(exactly = 0) { edielService.getPartyRedirect(any()) }
+        }
+
+        test("request validation fails on blank redirect URI") {
+            val model =
+                CreateRequestModel(
+                    authorizedParty = AUTHORIZED_PARTY,
+                    requestType = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
+                    meta =
+                    CreateRequestMeta(
+                        requestedBy = VALID_PARTY,
+                        requestedFrom = END_USER,
+                        requestedFromName = "From",
+                        requestedTo = END_USER,
+                        requestedForMeteringPointId = VALID_METERING_POINT_1,
+                        requestedForMeteringPointAddress = "addr",
+                        balanceSupplierName = "Supplier",
+                        balanceSupplierContractName = "Contract",
+                        redirectURI = "   ",
+                    ),
+                )
+
+            handler.validateAndReturnRequestCommand(model)
+                .shouldBeLeft(BusinessProcessError.Validation(ChangeOfBalanceSupplierValidationError.InvalidRedirectURI.message))
+            coVerify(exactly = 1) { edielService.getPartyRedirect(any()) }
         }
 
         test("request validation fails when redirect URI domain does not match Ediel domain") {
@@ -703,10 +752,26 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
             val command = handler.validateAndReturnRequestCommand(model).shouldBeRight()
 
             command.type shouldBe AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson
-            command.validTo shouldBe today().plus(DatePeriod(days = 30)).toTimeZoneOffsetDateTimeAtStartOfDay()
+            command.validTo shouldBe today().plus(DatePeriod(days = 28)).toTimeZoneOffsetDateTimeAtStartOfDay()
             command.meta.toRequestMetaAttributes()["redirectURI"] shouldBe "https://example.com"
             command.meta.toRequestMetaAttributes()[TEXT_VERSION_KEY] shouldBe "v1"
             command.meta.toRequestMetaAttributes().containsKey("requestedForMeterNumber") shouldBe true
+        }
+
+        test("grant properties validTo is one year from acceptance") {
+            val party = AuthorizationParty(id = "party-1", type = Organization)
+            val request = AuthorizationRequest.create(
+                type = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
+                requestedBy = party,
+                requestedFrom = party,
+                requestedTo = party,
+                validTo = today().toTimeZoneOffsetDateTimeAtStartOfDay(),
+            )
+
+            val properties = handler.getCreateGrantProperties(request)
+
+            properties.validFrom shouldBe today()
+            properties.validTo shouldBe today().plus(DatePeriod(years = 1))
         }
 
         test("document produces DocumentCommand for valid input") {

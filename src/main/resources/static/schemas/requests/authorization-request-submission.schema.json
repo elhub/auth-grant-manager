@@ -7,6 +7,7 @@
     "data": {
       "description": "The authorization request to be created.",
       "type": "object",
+      "required": ["type", "attributes", "meta"],
       "properties": {
         "type": {
           "$ref": "authorization-request-common.schema.json#/$defs/type"
@@ -14,6 +15,7 @@
         "attributes": {
           "type": "object",
           "description": "The attributes of the authorization request.",
+          "required": ["requestType"],
           "properties": {
             "requestType": {
               "$ref": "authorization-request-common.schema.json#/$defs/requestType"
@@ -22,6 +24,7 @@
         },
         "meta": {
           "type": "object",
+          "required": ["requestedBy", "requestedFrom", "requestedTo"],
           "description": "Additional meta-information related to the resource. Most of this information is used for informational purposes.",
           "properties": {
             "requestedFromName": {

@@ -12,15 +12,14 @@ import io.ktor.http.ContentType
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import io.ktor.server.config.ApplicationConfig
+import io.ktor.server.plugins.di.dependencies
+import io.ktor.server.plugins.di.resolve
 import kotlinx.serialization.json.Json
-import org.koin.core.qualifier.named
-import org.koin.ktor.plugin.koinModule
 
 fun Application.meteringPointsServiceModule() {
-    koinModule {
-        single { environment.config }
-        single {
-            val meteringPointsApiConfig = get<ApplicationConfig>().config("structureData.meteringPointsService")
+    dependencies {
+        provide<MeteringPointsApiConfig> {
+            val meteringPointsApiConfig = resolve<ApplicationConfig>().config("structureData.meteringPointsService")
             MeteringPointsApiConfig(
                 serviceUrl = meteringPointsApiConfig.property("serviceUrl").getString(),
                 basicAuthConfig = BasicAuthConfig(
@@ -29,9 +28,8 @@ fun Application.meteringPointsServiceModule() {
                 )
             )
         }
-
-        single(named("meteringPointsHttpClient")) {
-            val meteringPointsApiConfig = get<MeteringPointsApiConfig>()
+        provide(name = "meteringPointsHttpClient") {
+            val meteringPointsApiConfig = resolve<MeteringPointsApiConfig>()
             val basicAuthUsername = meteringPointsApiConfig.basicAuthConfig.username
             val basicAuthPassword = meteringPointsApiConfig.basicAuthConfig.password
 
@@ -63,11 +61,10 @@ fun Application.meteringPointsServiceModule() {
                 install(UserAgent) { agent = "auth-grant-manager" }
             }
         }
-
-        single<MeteringPointsService> {
+        provide<MeteringPointsService> {
             MeteringPointsApi(
-                meteringPointsApiConfig = get(),
-                client = get(named("meteringPointsHttpClient"))
+                meteringPointsApiConfig = resolve(),
+                client = resolve("meteringPointsHttpClient")
             )
         }
     }

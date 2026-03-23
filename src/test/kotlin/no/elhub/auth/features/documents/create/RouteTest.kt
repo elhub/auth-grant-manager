@@ -3,6 +3,7 @@ package no.elhub.auth.features.documents.create
 import arrow.core.left
 import arrow.core.right
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.ktor.client.call.body
@@ -46,7 +47,6 @@ import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 import kotlin.random.Random
-import kotlin.test.assertTrue
 import kotlin.time.Clock
 import kotlin.time.Instant
 
@@ -268,8 +268,8 @@ private suspend fun validateCreateDocumentResponse(response: HttpResponse, creat
             println(createdAt)
             println(currentTimeLocal())
             println(updatedAt)
-            assertTrue(Duration.between(createdAt, currentTimeLocal()).abs() < nowTolerance)
-            assertTrue(Duration.between(updatedAt, currentTimeLocal()).abs() < nowTolerance)
+            (Duration.between(createdAt, currentTimeLocal()).abs() < nowTolerance).shouldBeTrue()
+            (Duration.between(updatedAt, currentTimeLocal()).abs() < nowTolerance).shouldBeTrue()
         }
         relationships.shouldNotBeNull().apply {
             requestedBy.apply {

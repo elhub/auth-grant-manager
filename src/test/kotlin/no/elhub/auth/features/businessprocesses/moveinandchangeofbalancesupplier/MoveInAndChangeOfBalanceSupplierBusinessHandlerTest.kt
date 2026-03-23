@@ -5,6 +5,7 @@ import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
+import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -114,6 +115,7 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
         coEvery { personService.findOrCreateByNin(ANOTHER_END_USER.idValue) } returns Either.Right(Person(UUID.fromString(END_USER_ID_2)))
         coEvery { personService.findOrCreateByNin(SHARED_END_USER.idValue) } returns Either.Right(Person(UUID.fromString(SHARED_END_USER_ID_1)))
         beforeTest {
+            clearMocks(edielService, answers = false, recordedCalls = true)
             coEvery { edielService.getPartyRedirect(any()) } returns Either.Right(
                 EdielPartyRedirectResponseDto(
                     redirectUrls = EdielRedirectUrlsDto(
@@ -217,6 +219,55 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
 
             handler.validateAndReturnRequestCommand(model)
                 .shouldBeLeft(BusinessProcessError.Validation(MoveInAndChangeOfBalanceSupplierValidationError.InvalidRedirectURI.message))
+        }
+
+        test("request validation allows missing redirect URI and skips Ediel lookup") {
+            val model =
+                CreateRequestModel(
+                    authorizedParty = AUTHORIZED_PARTY,
+                    requestType = AuthorizationRequest.Type.MoveInAndChangeOfBalanceSupplierForPerson,
+                    meta =
+                    CreateRequestMeta(
+                        requestedBy = VALID_PARTY,
+                        requestedFrom = ANOTHER_END_USER,
+                        requestedFromName = "From",
+                        requestedTo = ANOTHER_END_USER,
+                        requestedForMeteringPointId = VALID_METERING_POINT_1,
+                        requestedForMeteringPointAddress = "addr",
+                        balanceSupplierName = "Supplier",
+                        balanceSupplierContractName = "Contract",
+                        moveInDate = VALID_MOVEIN_DATE,
+                        redirectURI = null,
+                    ),
+                )
+
+            handler.validateAndReturnRequestCommand(model).shouldBeRight()
+            coVerify(exactly = 0) { edielService.getPartyRedirect(any()) }
+        }
+
+        test("request validation fails on blank redirect URI") {
+            val model =
+                CreateRequestModel(
+                    authorizedParty = AUTHORIZED_PARTY,
+                    requestType = AuthorizationRequest.Type.MoveInAndChangeOfBalanceSupplierForPerson,
+                    meta =
+                    CreateRequestMeta(
+                        requestedBy = VALID_PARTY,
+                        requestedFrom = ANOTHER_END_USER,
+                        requestedFromName = "From",
+                        requestedTo = ANOTHER_END_USER,
+                        requestedForMeteringPointId = VALID_METERING_POINT_1,
+                        requestedForMeteringPointAddress = "addr",
+                        balanceSupplierName = "Supplier",
+                        balanceSupplierContractName = "Contract",
+                        moveInDate = VALID_MOVEIN_DATE,
+                        redirectURI = "   ",
+                    ),
+                )
+
+            handler.validateAndReturnRequestCommand(model)
+                .shouldBeLeft(BusinessProcessError.Validation(MoveInAndChangeOfBalanceSupplierValidationError.InvalidRedirectURI.message))
+            coVerify(exactly = 1) { edielService.getPartyRedirect(any()) }
         }
 
         test("request validation allows redirect URI when host matches Ediel domain") {

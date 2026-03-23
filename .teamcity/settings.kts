@@ -74,13 +74,6 @@ elhubProject(group = Group.AUTH, name = "auth-grant-manager") {
                 }
 
                 gitOps {
-                    clusters = setOf(KubeCluster.QA1)
-                    gitOpsRepository = gitOpsRepo
-                    autoMerge = true
-                    enableChangelog = true
-                }
-
-                gitOps {
                     clusters = setOf(KubeCluster.PROD1)
                     gitOpsRepository = gitOpsRepo
                     enableChangelog = true

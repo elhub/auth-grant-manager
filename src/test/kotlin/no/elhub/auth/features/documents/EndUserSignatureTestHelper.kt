@@ -1,7 +1,5 @@
 package no.elhub.auth.features.documents
 
-import eu.europa.esig.dss.enumerations.SignatureLevel
-import eu.europa.esig.dss.spi.x509.tsp.KeyEntityTSPSource
 import java.security.PrivateKey
 import java.security.cert.X509CRL
 import java.security.cert.X509Certificate
@@ -21,13 +19,11 @@ class EndUserSignatureTestHelper(
         issuerKeyPair = rootKeyPair,
         issuerCertificate = rootCertificate
     )
-    private val tspSource = KeyEntityTSPSource(
-        tsaKeyPair.private,
-        tsaCertificate,
-        listOf(tsaCertificate, rootCertificate)
-    ).apply {
-        setTsaPolicy("1.2.3.4.5")
-    }
+    private val tsaConfig = TsaConfig(
+        privateKey = tsaKeyPair.private,
+        certificate = tsaCertificate,
+        chain = listOf(tsaCertificate, rootCertificate)
+    )
 
     private fun crlFor(
         issuerCertificate: X509Certificate,
@@ -40,7 +36,7 @@ class EndUserSignatureTestHelper(
         nationalIdentityNumber: String,
         notBefore: Instant? = null,
         notAfter: Instant? = null,
-        signatureLevel: SignatureLevel = SignatureLevel.PAdES_BASELINE_LT,
+        signingProfile: TestPdfSigner.SigningProfile = TestPdfSigner.SigningProfile.BASELINE_LT,
     ): ByteArray {
         val keyPair = certFactory.generateKeyPair()
         val certificate = certFactory.generateLeafCertificateWithNationalId(
@@ -51,13 +47,12 @@ class EndUserSignatureTestHelper(
             notBeforeOverride = notBefore,
             notAfterOverride = notAfter
         )
-        return TestPdfSigner.signWithCertificate(
+        return TestPdfSigner.signWithChain(
             pdfBytes = pdfBytes,
-            signingCert = certificate,
             chain = listOf(certificate, rootCertificate),
             signingKey = keyPair.private,
-            signatureLevel = signatureLevel,
-            tspSource = tspSource,
+            signingProfile = signingProfile,
+            tsaConfig = tsaConfig,
             crls = listOf(crlFor(rootCertificate, rootKeyPair.private))
         )
     }
@@ -65,7 +60,7 @@ class EndUserSignatureTestHelper(
     fun signWithRevokedCertificate(
         pdfBytes: ByteArray,
         nationalIdentityNumber: String,
-        signatureLevel: SignatureLevel = SignatureLevel.PAdES_BASELINE_LT,
+        signingProfile: TestPdfSigner.SigningProfile = TestPdfSigner.SigningProfile.BASELINE_LT,
     ): ByteArray {
         val keyPair = certFactory.generateKeyPair()
         val certificate = certFactory.generateLeafCertificateWithNationalId(
@@ -77,13 +72,12 @@ class EndUserSignatureTestHelper(
             notAfterOverride = null
         )
         val crl = crlFor(rootCertificate, rootKeyPair.private, revokedSerials = listOf(certificate.serialNumber))
-        return TestPdfSigner.signWithCertificate(
+        return TestPdfSigner.signWithChain(
             pdfBytes = pdfBytes,
-            signingCert = certificate,
             chain = listOf(certificate, rootCertificate),
             signingKey = keyPair.private,
-            signatureLevel = signatureLevel,
-            tspSource = tspSource,
+            signingProfile = signingProfile,
+            tsaConfig = tsaConfig,
             crls = listOf(crl)
         )
     }
@@ -91,7 +85,7 @@ class EndUserSignatureTestHelper(
     fun signWithUntrustedCertificate(
         pdfBytes: ByteArray,
         nationalIdentityNumber: String,
-        signatureLevel: SignatureLevel = SignatureLevel.PAdES_BASELINE_LT,
+        signingProfile: TestPdfSigner.SigningProfile = TestPdfSigner.SigningProfile.BASELINE_LT,
     ): ByteArray {
         val rootKeyPair = certFactory.generateKeyPair()
         val selfSignedRoot = certFactory.generateSelfSignedRootCertificate(
@@ -107,20 +101,19 @@ class EndUserSignatureTestHelper(
             notBeforeOverride = null,
             notAfterOverride = null
         )
-        return TestPdfSigner.signWithCertificate(
+        return TestPdfSigner.signWithChain(
             pdfBytes = pdfBytes,
-            signingCert = certificate,
             chain = listOf(certificate, selfSignedRoot),
             signingKey = leafKeyPair.private,
-            signatureLevel = signatureLevel,
-            tspSource = tspSource,
+            signingProfile = signingProfile,
+            tsaConfig = tsaConfig,
             crls = listOf(crlFor(selfSignedRoot, rootKeyPair.private))
         )
     }
 
     fun signWithoutNationalIdExtension(
         pdfBytes: ByteArray,
-        signatureLevel: SignatureLevel = SignatureLevel.PAdES_BASELINE_LT,
+        signingProfile: TestPdfSigner.SigningProfile = TestPdfSigner.SigningProfile.BASELINE_LT,
     ): ByteArray {
         val keyPair = certFactory.generateKeyPair()
         val certificate = certFactory.generateLeafCertificateWithoutNationalId(
@@ -128,13 +121,12 @@ class EndUserSignatureTestHelper(
             issuerKeyPair = rootKeyPair,
             issuerCertificate = rootCertificate
         )
-        return TestPdfSigner.signWithCertificate(
+        return TestPdfSigner.signWithChain(
             pdfBytes = pdfBytes,
-            signingCert = certificate,
             chain = listOf(certificate, rootCertificate),
             signingKey = keyPair.private,
-            signatureLevel = signatureLevel,
-            tspSource = tspSource,
+            signingProfile = signingProfile,
+            tsaConfig = tsaConfig,
             crls = listOf(crlFor(rootCertificate, rootKeyPair.private))
         )
     }
@@ -142,7 +134,7 @@ class EndUserSignatureTestHelper(
     fun signWithUntrustedTimestamp(
         pdfBytes: ByteArray,
         nationalIdentityNumber: String,
-        signatureLevel: SignatureLevel = SignatureLevel.PAdES_BASELINE_LT,
+        signingProfile: TestPdfSigner.SigningProfile = TestPdfSigner.SigningProfile.BASELINE_LT,
     ): ByteArray {
         val keyPair = certFactory.generateKeyPair()
         val certificate = certFactory.generateLeafCertificateWithNationalId(
@@ -164,20 +156,17 @@ class EndUserSignatureTestHelper(
             issuerKeyPair = untrustedRootKeyPair,
             issuerCertificate = untrustedRoot
         )
-        val untrustedTspSource = KeyEntityTSPSource(
-            untrustedTsaKeyPair.private,
-            untrustedTsaCert,
-            listOf(untrustedTsaCert, untrustedRoot)
-        ).apply {
-            setTsaPolicy("1.2.3.4.5")
-        }
-        return TestPdfSigner.signWithCertificate(
+        val untrustedTsaConfig = TsaConfig(
+            privateKey = untrustedTsaKeyPair.private,
+            certificate = untrustedTsaCert,
+            chain = listOf(untrustedTsaCert, untrustedRoot)
+        )
+        return TestPdfSigner.signWithChain(
             pdfBytes = pdfBytes,
-            signingCert = certificate,
             chain = listOf(certificate, rootCertificate),
             signingKey = keyPair.private,
-            signatureLevel = signatureLevel,
-            tspSource = untrustedTspSource,
+            signingProfile = signingProfile,
+            tsaConfig = untrustedTsaConfig,
             crls = listOf(
                 crlFor(rootCertificate, rootKeyPair.private),
                 crlFor(untrustedRoot, untrustedRootKeyPair.private)

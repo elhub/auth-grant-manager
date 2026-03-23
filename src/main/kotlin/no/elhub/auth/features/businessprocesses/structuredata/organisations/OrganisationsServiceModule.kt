@@ -12,15 +12,13 @@ import io.ktor.http.ContentType
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import io.ktor.server.config.ApplicationConfig
+import io.ktor.server.plugins.di.dependencies
 import kotlinx.serialization.json.Json
-import org.koin.core.qualifier.named
-import org.koin.ktor.plugin.koinModule
 
 fun Application.organisationsServiceModule() {
-    koinModule {
-        single { environment.config }
-        single {
-            val organisationsApiConfig = get<ApplicationConfig>().config("structureData.organisationsService")
+    dependencies {
+        provide<OrganisationsApiConfig> {
+            val organisationsApiConfig = resolve<ApplicationConfig>().config("structureData.organisationsService")
             OrganisationsApiConfig(
                 serviceUrl = organisationsApiConfig.property("serviceUrl").getString(),
                 basicAuthConfig = BasicAuthConfig(
@@ -30,8 +28,8 @@ fun Application.organisationsServiceModule() {
             )
         }
 
-        single(named("organisationsHttpClient")) {
-            val organisationsApiConfig = get<OrganisationsApiConfig>()
+        provide<HttpClient>(name = "organisationsHttpClient") {
+            val organisationsApiConfig = resolve<OrganisationsApiConfig>()
             val basicAuthUsername = organisationsApiConfig.basicAuthConfig.username
             val basicAuthPassword = organisationsApiConfig.basicAuthConfig.password
 
@@ -49,7 +47,6 @@ fun Application.organisationsServiceModule() {
                         realm = "Access to the '/' path"
                     }
                 }
-
                 install(ContentNegotiation) {
                     json(
                         Json {
@@ -59,15 +56,14 @@ fun Application.organisationsServiceModule() {
                         contentType = ContentType.Application.Json,
                     )
                 }
-
                 install(UserAgent) { agent = "auth-grant-manager" }
             }
         }
 
-        single<OrganisationsService> {
+        provide<OrganisationsService> {
             OrganisationsApi(
-                organisationsApiConfig = get(),
-                client = get(named("organisationsHttpClient"))
+                organisationsApiConfig = resolve(),
+                client = resolve("organisationsHttpClient")
             )
         }
     }

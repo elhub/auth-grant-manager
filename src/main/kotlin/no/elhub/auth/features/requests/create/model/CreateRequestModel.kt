@@ -21,5 +21,5 @@ data class CreateRequestMeta(
     val balanceSupplierName: String,
     val balanceSupplierContractName: String,
     val moveInDate: LocalDate? = null,
-    val redirectURI: String,
+    val redirectURI: String? = null,
 )
