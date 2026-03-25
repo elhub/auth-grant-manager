@@ -13,7 +13,7 @@ Write the test first. Watch it fail. Write minimal code to pass. Refactor.
 
 ## The cycle
 
-```
+```text
 RED   → write one failing test
          ↓ confirm it fails for the right reason
 GREEN → write minimal code to pass

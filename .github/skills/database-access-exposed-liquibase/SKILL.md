@@ -152,7 +152,7 @@ Always bind the implementation to the interface.
 
 ### Structure
 
-```
+```text
 db/
 ├── db-changelog.yaml   # includeAll in order: schemas → user → types → tables
 ├── schemas/

@@ -14,7 +14,7 @@ and models — colocated in a single directory.
 
 ## Directory layout
 
-```
+```text
 src/main/kotlin/no/elhub/auth/
 ├── Application.kt
 ├── config/                         # Cross-cutting: Database, Serialization, ErrorHandling, Logging
@@ -37,7 +37,7 @@ src/main/kotlin/no/elhub/auth/
 
 ## Action slice layout
 
-```
+```text
 features/requests/create/
 ├── Route.kt
 ├── Handler.kt

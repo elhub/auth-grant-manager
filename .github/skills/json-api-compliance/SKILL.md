@@ -190,7 +190,7 @@ All helpers include `meta.createdAt` automatically.
 
 Schemas live in `src/main/resources/static/schemas/` and are referenced by the OpenAPI spec.
 
-```
+```text
 schemas/
 ├── elhub-common.schema.json              # UUID, timestamps, partyIdentifier
 ├── authorization-common.schema.json      # Shared domain fields

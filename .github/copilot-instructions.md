@@ -27,14 +27,14 @@
 
 Load the relevant skill before generating code. Skills are located alongside this file.
 
-| Task                                       | Skill                                      |
-|--------------------------------------------|--------------------------------------------|
-| Any Handler, Service, or Repository        | `functional-error-handling-arrow`          |
-| Any new feature, action slice, or module   | `vertical-slice-architecture`              |
-| Any Repository, Table object, or migration | `database-access-exposed-liquibase`        |
-| Any Route, DTO, or error response          | `json-api-compliance`                      |
-| Any test class                             | `testing-kotest` + `testing-anti-patterns` |
-| Starting any implementation                | `test-driven-development`                  |
+| Task                                       | Skill                                                        |
+|--------------------------------------------|--------------------------------------------------------------|
+| Any Handler, Service, or Repository        | `functional-error-handling-arrow`                            |
+| Any new feature, action slice, or module   | `vertical-slice-architecture`                                |
+| Any Repository, Table object, or migration | `database-access-exposed-liquibase`                          |
+| Any Route, DTO, or error response          | `json-api-compliance`                                        |
+| Any test class                             | `testing-kotest` + `testing-anti-patterns` +`testing layers` |
+| Starting any implementation                | `test-driven-development`                                    |
 
 When a task touches multiple concerns, load all relevant skills before starting.
 
