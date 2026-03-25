@@ -3,6 +3,7 @@ package no.elhub.auth.features.requests.create
 import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensure
+import no.elhub.auth.config.withTransaction
 import no.elhub.auth.features.businessprocesses.BusinessProcessError
 import no.elhub.auth.features.common.party.PartyError
 import no.elhub.auth.features.common.party.PartyService
@@ -82,7 +83,7 @@ class Handler(
                 validTo = businessCommand.validTo,
             )
 
-        val result = transaction {
+        val result = withTransaction {
             val savedRequest =
                 requestRepo
                     .insert(requestToCreate, businessCommand.scopes)

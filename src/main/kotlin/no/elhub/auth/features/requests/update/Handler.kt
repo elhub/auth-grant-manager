@@ -3,6 +3,7 @@ package no.elhub.auth.features.requests.update
 import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensure
+import no.elhub.auth.config.withTransaction
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
@@ -25,8 +26,8 @@ class Handler(
 
     private val logger = LoggerFactory.getLogger(Handler::class.java)
 
-    operator fun invoke(command: UpdateCommand): Either<UpdateError, AuthorizationRequest> = either {
-        transaction {
+    suspend operator fun invoke(command: UpdateCommand): Either<UpdateError, AuthorizationRequest> = either {
+        withTransaction {
             val request = requestRepository.find(command.requestId)
                 .mapLeft { UpdateError.RequestNotFound }
                 .bind()

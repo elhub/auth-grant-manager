@@ -3,6 +3,7 @@ package no.elhub.auth.features.requests.get
 import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensure
+import no.elhub.auth.config.withTransaction
 import no.elhub.auth.features.common.QueryError
 import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.common.GrantRepository
@@ -18,8 +19,8 @@ class Handler(
 
     private val logger = LoggerFactory.getLogger(Handler::class.java)
 
-    operator fun invoke(query: Query): Either<QueryError, AuthorizationRequest> = either {
-        val requestWithGrant = transaction {
+    suspend operator fun invoke(query: Query): Either<QueryError, AuthorizationRequest> = either {
+        val requestWithGrant = withTransaction {
             val request = requestRepository.find(query.id)
                 .mapLeft { QueryError.ResourceNotFoundError }
                 .bind()

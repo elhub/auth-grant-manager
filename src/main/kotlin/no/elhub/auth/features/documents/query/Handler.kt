@@ -2,6 +2,7 @@ package no.elhub.auth.features.documents.query
 
 import arrow.core.Either
 import arrow.core.raise.either
+import no.elhub.auth.config.withTransaction
 import no.elhub.auth.features.common.QueryError
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.documents.AuthorizationDocument
@@ -14,8 +15,8 @@ class Handler(
     private val repo: DocumentRepository,
     private val grantRepository: GrantRepository
 ) {
-    operator fun invoke(query: Query): Either<QueryError, List<AuthorizationDocument>> = either {
-        transaction {
+    suspend operator fun invoke(query: Query): Either<QueryError, List<AuthorizationDocument>> = either {
+        withTransaction {
             val documents = repo.findAll(query.authorizedParty)
                 .mapLeft { error ->
                     when (error) {

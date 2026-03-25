@@ -3,6 +3,7 @@ package no.elhub.auth.features.documents.create
 import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensure
+import no.elhub.auth.config.withTransaction
 import no.elhub.auth.features.common.party.PartyError
 import no.elhub.auth.features.common.party.PartyService
 import no.elhub.auth.features.documents.AuthorizationDocument
@@ -99,7 +100,7 @@ class Handler(
                     validTo = command.validTo,
                 )
 
-            val savedDocument = transaction {
+            val savedDocument = withTransaction {
                 documentRepository
                     .insert(documentToCreate, command.scopes)
                     .mapLeft { CreateError.PersistenceError }
