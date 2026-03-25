@@ -122,21 +122,32 @@ fun CreateError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollectio
 
 Live in `dto/` within the action slice. Provide `toModel()` and `toResponse()` extension functions. Never referenced outside their slice.
 
-## Module.kt — Koin + routing
+## Module.kt — DI + routing
 
-Each feature domain has one `Module.kt` that registers bindings and mounts routes.
+Each feature domain has one `Module.kt` that registers bindings and mounts routes. Each module needs to be in application.yml under ktor.application.modules list.
 
 ```kotlin
 fun Application.requestsModule() {
-    koinModule {
-        singleOf(::ExposedRequestRepository) bind RequestRepository::class
-        singleOf(::CreateHandler)
-        singleOf(::GetHandler)
+    dependencies {
+        provide<ExposedRequestRepository> {
+            ExposedRequestRepository(resolve(), resolve()) // resolve resolves from Ktor Native Dependency registry
+        }
+        provide<CreateHandler> {
+            CreateHandler(resolve(), resolve(), resolve(), resolve())
+        }
+        provide<GetHandler> {
+            GetHandler(resolve())
+        }
     }
+
+    val createHandler: CreateHandler by dependencies
+    val getHandler: GetHandler by dependencies
+    val authorizationProvider: AuthorizationProvider by dependencies
+
     routing {
         route(REQUESTS_PATH) {
-            createRoute(get(), get())   // get() resolves from Koin container
-            getRoute(get(), get())
+            createRoute(createHandler, authorizationProvider)
+            getRoute(getHandler, authorizationProvider)
         }
     }
 }
@@ -165,6 +176,8 @@ Repository interfaces and Exposed Table objects for that domain.
 | `person/`      | External person-resolution client                                                            |
 
 ## Adding a new action
+
+Whenever a new feature is getting implemented
 
 Example: `DELETE /authorization-requests/{id}`
 
