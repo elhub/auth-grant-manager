@@ -2,17 +2,17 @@ package no.elhub.auth.features.grants.query
 
 import arrow.core.Either
 import arrow.core.raise.either
+import no.elhub.auth.config.withTransaction
 import no.elhub.auth.features.common.QueryError
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.common.GrantRepository
-import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 class Handler(
     private val repo: GrantRepository,
 ) {
-    operator fun invoke(query: Query): Either<QueryError, List<AuthorizationGrant>> = either {
-        transaction {
+    suspend operator fun invoke(query: Query): Either<QueryError, List<AuthorizationGrant>> = either {
+        withTransaction {
             repo.findAll(query.authorizedParty)
                 .mapLeft {
                     when (it) {
