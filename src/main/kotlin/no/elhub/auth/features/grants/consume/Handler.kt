@@ -10,7 +10,6 @@ import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.AuthorizationGrant.Status
 import no.elhub.auth.features.grants.common.GrantRepository
 
-
 class Handler(
     private val repo: GrantRepository
 ) {
