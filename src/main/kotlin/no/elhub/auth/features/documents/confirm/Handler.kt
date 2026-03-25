@@ -115,7 +115,7 @@ class Handler(
                 .mapLeft { ConfirmError.GrantCreationError }.bind()
 
             log.info(
-                "Authorization grant created id={} sourceType={} sourceId={}",
+                "event=authorization_grant_created id={} sourceType={} sourceId={}",
                 createdGrant.id,
                 createdGrant.sourceType,
                 createdGrant.sourceId

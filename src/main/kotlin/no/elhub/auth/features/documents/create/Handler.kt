@@ -105,7 +105,7 @@ class Handler(
                     .mapLeft { CreateError.PersistenceError }
                     .bind()
             }.also { document ->
-                logger.info("Authorization document created id={} type={}", document.id, document.type)
+                logger.info("event=authorization_document_created id={} type={}", document.id, document.type)
             }
 
             savedDocument
