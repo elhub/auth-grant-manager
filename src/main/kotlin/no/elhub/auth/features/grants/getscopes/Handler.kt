@@ -3,18 +3,18 @@ package no.elhub.auth.features.grants.getscopes
 import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensure
+import no.elhub.auth.config.withTransaction
 import no.elhub.auth.features.common.QueryError
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.grants.AuthorizationScope
 import no.elhub.auth.features.grants.common.GrantRepository
-import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 class Handler(
     private val repo: GrantRepository,
 ) {
-    operator fun invoke(query: Query): Either<QueryError, List<AuthorizationScope>> = either {
-        transaction {
+    suspend operator fun invoke(query: Query): Either<QueryError, List<AuthorizationScope>> = either {
+        withTransaction {
             val grant = repo.find(query.id)
                 .mapLeft { error ->
                     when (error) {

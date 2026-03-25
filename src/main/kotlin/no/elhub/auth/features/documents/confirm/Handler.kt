@@ -3,6 +3,7 @@ package no.elhub.auth.features.documents.confirm
 import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensure
+import no.elhub.auth.config.withTransaction
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.RepositoryWriteError
 import no.elhub.auth.features.common.currentTimeUtc
@@ -16,7 +17,6 @@ import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.common.AuthorizationGrantProperty
 import no.elhub.auth.features.grants.common.GrantPropertiesRepository
 import no.elhub.auth.features.grants.common.GrantRepository
-import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.slf4j.LoggerFactory
 import kotlin.collections.component1
 import kotlin.collections.component2
@@ -35,7 +35,7 @@ class Handler(
     suspend operator fun invoke(command: Command): Either<ConfirmError, Unit> = either {
         val authorizationParty = command.authorizedParty
 
-        val document = transaction {
+        val document = withTransaction {
             documentRepository.find(command.documentId)
                 .mapLeft { error ->
                     when (error) {
@@ -73,7 +73,7 @@ class Handler(
             ConfirmError.SignatoryNotAllowedToSignDocument
         }
 
-        transaction {
+        withTransaction {
             val confirmedDocument = documentRepository.confirm(
                 documentId = document.id,
                 signedFile = command.signedFile,
@@ -113,6 +113,13 @@ class Handler(
 
             val createdGrant = grantRepository.insert(grantToCreate, scopeIds)
                 .mapLeft { ConfirmError.GrantCreationError }.bind()
+
+            log.info(
+                "event=authorization_grant_created id={} sourceType={} sourceId={}",
+                createdGrant.id,
+                createdGrant.sourceType,
+                createdGrant.sourceId
+            )
 
             val grantMetaProperties = grantProperties.meta.map { (key, value) ->
                 AuthorizationGrantProperty(

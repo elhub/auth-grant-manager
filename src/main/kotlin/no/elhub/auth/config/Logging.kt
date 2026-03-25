@@ -19,6 +19,9 @@ fun Application.configureLogging() {
     install(CallLogging) {
         level = Level.INFO
         callIdMdc("traceId")
+        mdc("agent") { call ->
+            call.request.headers["User-Agent"].orEmpty()
+        }
         filter { call ->
             excludedPaths.none { prefix -> call.request.path().startsWith(prefix) }
         }
@@ -26,9 +29,8 @@ fun Application.configureLogging() {
             val status = call.response.status()?.value.toString()
             val method = call.request.httpMethod.value
             val uri = call.request.path()
-            val userAgent = call.request.headers["User-Agent"].orEmpty()
             val durationMs = call.processingTimeMillis()
-            "status=$status method=$method uri=$uri userAgent=$userAgent durationMs=$durationMs"
+            "status=$status method=$method uri=$uri durationMs=$durationMs"
         }
     }
 }
