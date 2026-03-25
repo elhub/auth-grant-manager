@@ -10,6 +10,7 @@ Repositories return `Either`. Transactions are explicit. Migrations are versione
 ## Table definitions
 
 Tables are `object`s defined inside the owning feature's `common/` directory. Use `UUIDTable` for entity tables, `Table` for join tables.
+- DAO layer is implementented using org.jetbrains.exposed which is an ORM, where UUIDTable is provided jetbrains.
 
 ```kotlin
 object AuthorizationRequestTable : UUIDTable("auth.authorization_request") {
@@ -42,7 +43,8 @@ object AuthorizationRequestScopeTable : Table("auth.authorization_request_scope"
 - Foreign keys use `.references(OtherTable.id)`
 
 ## Repository pattern
-
+- All repositories must have an interface. Then use a concrete implementation of that interface to interact with data source (Postgres).
+-
 ### Interface (in `features/{domain}/common/`)
 
 ```kotlin
@@ -53,7 +55,10 @@ interface RequestRepository {
 ```
 
 ### Implementation
-
+- DAO always happens through org.jetbrains.exposed, do not use SQL queries. Table must have a table type defined through exposed.
+- Always use Either to map out the Result / Error. E.g. Either<Error, BusinessObject>
+- All errors in repository must be handled and defined as a RepositoryError. This can be found in Errors.kt.
+-
 ```kotlin
 class ExposedRequestRepository(
     private val partyRepo: PartyRepository,
