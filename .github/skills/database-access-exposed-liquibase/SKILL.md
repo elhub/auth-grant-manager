@@ -1,8 +1,11 @@
 ---
 name: database-access-exposed-liquibase
-description: Use when writing or reviewing any Repository, Table object, or migration. Defines Exposed table conventions, the Either-returning repository pattern, newSuspendedTransaction usage, and Liquibase migration rules. Load before generating any database access code.
+description: >
+  Use when writing or reviewing any Repository, Table object, or migration.
+  Defines Exposed table conventions, the Either-returning repository pattern,
+  newSuspendedTransaction usage, and Liquibase migration rules.
+  Load before generating any database access code.
 ---
-
 # Database Access with Exposed & Liquibase
 
 Repositories return `Either`. Transactions are explicit. Migrations are versioned sequential SQL files.

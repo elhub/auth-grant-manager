@@ -1,7 +1,10 @@
 ---
 name: testing-anti-patterns
-description:
-  Use when writing or changing tests, adding mocks, or modifying production classes. Defines four anti-patterns to avoid: testing mock behaviour, test-only methods on production classes, mocking without understanding dependencies, and incomplete mock data structures.
+description: >
+  Use when writing or changing tests, adding mocks, or modifying production classes.
+  Defines four anti-patterns to avoid: testing mock behaviour, test-only methods on
+  production classes, mocking without understanding dependencies, and incomplete mock
+  data structures.
 ---
 
 # Testing Anti-Patterns

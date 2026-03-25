@@ -1,6 +1,9 @@
 ---
 name: testing-kotest
-description: Use when writing any test. Defines FunSpec structure, MockK patterns for suspend functions, clearMocks usage, Arrow assertions, route test wiring, and integration test extensions. Load before generating any test class.
+description: >
+  Use when writing any test.Defines FunSpec structure, MockK patterns for suspend functions, clearMocks usage,
+  Arrow assertions, route test wiring, and integration test extensions.
+  Load before generating any test class.
 ---
 
 # Testing with Kotest

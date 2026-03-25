@@ -1,6 +1,10 @@
 ---
 name: vertical-slice-architecture
-description: Use when creating or modifying any feature code. Defines the feature/action directory layout, Route/Handler/Error/DTO responsibilities, Module.kt wiring, and shared kernel structure. Load before generating any new feature, action slice, or module.
+description: >
+  Use when creating or modifying any feature code.
+  Defines the feature/action directory layout, Route/Handler/Error/DTO responsibilities,
+  Module.kt wiring, and shared kernel structure.
+  Load before generating any new feature, action slice, or module.
 ---
 
 # Vertical Slice Architecture
@@ -129,7 +133,8 @@ Live in `dto/` within the action slice. Provide `toModel()` and `toResponse()` e
 
 ## Module.kt — DI + routing
 
-Each feature domain has one `Module.kt` that registers bindings and mounts routes. Each module needs to be in application.yml under ktor.application.modules list.
+- Each feature domain has one `Module.kt` that registers bindings and mounts routes.
+- Each module needs to be in application.yml under ktor.application.modules list.
 
 ```kotlin
 fun Application.requestsModule() {

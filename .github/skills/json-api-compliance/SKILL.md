@@ -1,6 +1,10 @@
 ---
 name: json-api-compliance
-description: Use when writing any Route, DTO, or error response. Defines JSON:API document shapes, field rules, Kotlin DTO patterns using elhub-jsonapi, error helper functions, and JSON Schema layout. Load before generating any API response or request DTO.
+description: >
+  Use when writing any Route, DTO, or error response.
+  Defines JSON:API document shapes, field rules,
+  Kotlin DTO patterns using elhub-jsonapi,
+  error helper functions, and JSON Schema layout. Load before generating any API response or request DTO.
 ---
 
 # JSON:API Compliance

@@ -1,6 +1,10 @@
 ---
 name: test-driven-development
-description: Use when implementing any feature or bug fix. Defines the red-green-refactor cycle and the rule that no production code may be written without a failing test first. Load before starting any implementation work.
+description: >
+  Use when implementing any feature or bug fix.
+  Defines the red-green-refactor cycle and the rule that no production code
+  may be written without a failing test first.
+  Load before starting any implementation work.
 ---
 
 # Test-Driven Development

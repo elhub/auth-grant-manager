@@ -1,8 +1,10 @@
 ---
 name: functional-error-handling-arrow
-description: Use when writing or reviewing any Handler, Service, or Repository. Defines how Either, bind(), mapLeft, ensure, and Either.catch are used in this codebase. Load before writing any business logic or database access code.
+description: >
+  Use when writing or reviewing any Handler, Service, or Repository.
+  Defines how Either, bind(), mapLeft, ensure, and Either.catch are used in this codebase.
+  Load before writing any business logic or database access code.
 ---
-
 # Functional Error Handling with Arrow
 
 All business logic returns `Either<Failure, Success>`. Exceptions are never used for domain errors.
