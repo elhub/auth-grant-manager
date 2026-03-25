@@ -64,7 +64,6 @@ fun Route.route(
                 return@post
             }
 
-        logger.debug("Successfully created document {}", document.id)
         call.respond(
             status = HttpStatusCode.Created,
             message = document.toCreateDocumentResponse()

@@ -95,6 +95,13 @@ class Handler(
                 .mapLeft { UpdateError.GrantCreationError }
                 .bind()
 
+            logger.info(
+                "event=authorization_grant_created id={} sourceType={} sourceId={}",
+                createdGrant.id,
+                createdGrant.sourceType,
+                createdGrant.sourceId
+            )
+
             val grantMetaProperties = grantProperties.meta.map { (key, value) ->
                 AuthorizationGrantProperty(
                     grantId = createdGrant.id,

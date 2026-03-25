@@ -104,6 +104,8 @@ class Handler(
                     .insert(documentToCreate, command.scopes)
                     .mapLeft { CreateError.PersistenceError }
                     .bind()
+            }.also { document ->
+                logger.info("event=authorization_document_created id={} type={}", document.id, document.type)
             }
 
             savedDocument
