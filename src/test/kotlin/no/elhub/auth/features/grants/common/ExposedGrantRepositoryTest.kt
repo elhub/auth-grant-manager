@@ -7,6 +7,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.nulls.shouldNotBeNull
 import kotlinx.datetime.DatePeriod
 import io.kotest.assertions.fail
+import no.elhub.auth.config.withTransaction
 import kotlinx.datetime.plus
 import no.elhub.auth.features.common.PostgresTestContainer
 import no.elhub.auth.features.common.PostgresTestContainerExtension
@@ -25,7 +26,6 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.apache.ibatis.jdbc.ScriptRunner
 import org.apache.ibatis.io.Resources
 import java.sql.DriverManager
-import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.util.UUID
 
 class ExposedGrantRepositoryTest : FunSpec({
@@ -56,7 +56,7 @@ class ExposedGrantRepositoryTest : FunSpec({
             password = PostgresTestContainer.PASSWORD,
         )
 
-        transaction {
+        withTransaction {
             SchemaUtils.create(AuthorizationPartyTable)
             SchemaUtils.create(AuthorizationGrantTable)
             SchemaUtils.create(AuthorizationScopeTable)
@@ -64,7 +64,7 @@ class ExposedGrantRepositoryTest : FunSpec({
     }
 
     afterTest {
-        transaction {
+        withTransaction {
             AuthorizationGrantTable.deleteAll()
             AuthorizationScopeTable.deleteAll()
             AuthorizationGrantScopeTable.deleteAll()
@@ -73,7 +73,7 @@ class ExposedGrantRepositoryTest : FunSpec({
     }
 
     test("insert without scopes") {
-        transaction {
+        withTransaction {
             grantRepo.insert(exampleGrant, emptyList()).getOrElse { error((it)) }
 
             // Should only have 1 grant in database
@@ -82,7 +82,7 @@ class ExposedGrantRepositoryTest : FunSpec({
     }
 
     test("update grant status") {
-        transaction {
+        withTransaction {
             // insert a grant
             grantRepo.insert(exampleGrant, emptyList()).getOrElse { error((it)) }
 
@@ -96,7 +96,7 @@ class ExposedGrantRepositoryTest : FunSpec({
 
     test("insert with non-empty scope list") {
         insertTestData()
-        transaction {
+        withTransaction {
             AuthorizationGrantTable.deleteAll()
             grantRepo.insert(exampleGrant, scopeIds).getOrElse { error((it)) }
             AuthorizationGrantTable.selectAll().count() shouldBe 1
@@ -108,7 +108,7 @@ class ExposedGrantRepositoryTest : FunSpec({
         val partyWithGrants = AuthorizationParty(type = PartyType.OrganizationEntity, id = "0107000000021")
         val partyWithoutGrants = AuthorizationParty(type = PartyType.Person, id = "666")
 
-        transaction {
+        withTransaction {
             val resultForPartyWithGrants = grantRepo.findAll(partyWithGrants).getOrElse {
                 fail("Failed to read grants for party with grants")
             }
@@ -123,7 +123,7 @@ class ExposedGrantRepositoryTest : FunSpec({
 
     test("findBySource returns grant given sourceType and sourceId)") {
         insertTestData()
-        transaction {
+        withTransaction {
             val grant = grantRepo.findBySource(
                 sourceType = AuthorizationGrant.SourceType.Request,
                 sourceId = UUID.fromString("4f71d596-99e4-415e-946d-7252c1a40c50")
@@ -136,7 +136,7 @@ class ExposedGrantRepositoryTest : FunSpec({
 
     test("findScopes returns correct number of scopes given grantId") {
         insertTestData()
-        transaction {
+        withTransaction {
             val scopes = grantRepo.findScopes(grantId = UUID.fromString("b7f9c2e4-5a3d-4e2b-9c1a-8f6e2d3c4b5a"))
                 .getOrElse {
                     fail("Failed to read scopes by grant id")
@@ -148,7 +148,7 @@ class ExposedGrantRepositoryTest : FunSpec({
 
     test("update should return grant with new status") {
         insertTestData()
-        transaction {
+        withTransaction {
             val grant = grantRepo.update(
                 grantId = UUID.fromString("456e4567-e89b-12d3-a456-426614174000"),
                 newStatus = AuthorizationGrant.Status.Exhausted
