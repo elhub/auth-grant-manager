@@ -1,17 +1,15 @@
 package no.elhub.auth.features.grants.common
 
 import arrow.core.getOrElse
-import io.kotest.assertions.arrow.core.shouldBeRight
-import io.kotest.core.spec.style.FunSpec
-import io.kotest.matchers.shouldBe
-import io.kotest.matchers.nulls.shouldNotBeNull
-import kotlinx.datetime.DatePeriod
 import io.kotest.assertions.fail
-import no.elhub.auth.config.withTransaction
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.shouldBe
+import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.plus
+import no.elhub.auth.config.withTransaction
 import no.elhub.auth.features.common.PostgresTestContainer
 import no.elhub.auth.features.common.PostgresTestContainerExtension
-import no.elhub.auth.features.common.RunPostgresScriptExtension
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.AuthorizationPartyTable
 import no.elhub.auth.features.common.party.ExposedPartyRepository
@@ -19,12 +17,12 @@ import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
 import no.elhub.auth.features.common.today
 import no.elhub.auth.features.grants.AuthorizationGrant
+import org.apache.ibatis.io.Resources
+import org.apache.ibatis.jdbc.ScriptRunner
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.deleteAll
 import org.jetbrains.exposed.v1.jdbc.selectAll
-import org.apache.ibatis.jdbc.ScriptRunner
-import org.apache.ibatis.io.Resources
 import java.sql.DriverManager
 import java.util.UUID
 
@@ -159,7 +157,6 @@ class ExposedGrantRepositoryTest : FunSpec({
             grant.grantStatus shouldBe AuthorizationGrant.Status.Exhausted
         }
     }
-
 })
 
 private fun insertTestData() {
