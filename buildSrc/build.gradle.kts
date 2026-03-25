@@ -11,6 +11,6 @@ dependencies {
     implementation("org.bouncycastle:bcpkix-jdk18on:1.83")
     implementation("com.networknt:json-schema-validator:3.0.1")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.21.1")
-    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.21.1")
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.21.2")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.21.1")
 }
