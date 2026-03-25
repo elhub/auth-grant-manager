@@ -13,8 +13,6 @@ import kotlinx.io.readByteArray
 import no.elhub.auth.features.common.InputError
 import no.elhub.auth.features.common.auth.AuthorizationProvider
 import no.elhub.auth.features.common.auth.toApiErrorResponse
-import no.elhub.auth.features.common.party.AuthorizationParty
-import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.common.toUnsupportedErrorResponse
 import no.elhub.auth.features.common.validatePathId
@@ -52,11 +50,10 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
             return@put
         }
 
-        val authorizedParty = AuthorizationParty(id = resolvedActor.gln, type = PartyType.OrganizationEntity)
         handler(
             Command(
                 documentId = documentId,
-                authorizedParty = authorizedParty,
+                authorizedParty = resolvedActor,
                 signedFile = signedDocument
             )
         ).getOrElse { error ->

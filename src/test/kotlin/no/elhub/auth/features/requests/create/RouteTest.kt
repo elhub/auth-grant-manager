@@ -13,8 +13,6 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import no.elhub.auth.features.common.auth.AuthError
 import no.elhub.auth.features.common.auth.AuthorizationProvider
-import no.elhub.auth.features.common.auth.AuthorizedParty
-import no.elhub.auth.features.common.auth.RoleType
 import no.elhub.auth.features.common.currentTimeUtc
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyIdentifier
@@ -35,7 +33,7 @@ import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import java.util.UUID
 
 class RouteTest : FunSpec({
-    val authorizedOrg = AuthorizedParty.OrganizationEntity(gln = "gln1", role = RoleType.BalanceSupplier)
+    val authorizedOrg = AuthorizationParty(id = "gln1", type = PartyType.OrganizationEntity)
     val requestedByParty = AuthorizationParty("gln1", PartyType.OrganizationEntity)
     val requestedFromParty = AuthorizationParty("nin1", PartyType.Person)
     val requestedToParty = AuthorizationParty("nin2", PartyType.Person)

@@ -14,9 +14,9 @@ import io.mockk.mockk
 import no.elhub.auth.features.common.QueryError
 import no.elhub.auth.features.common.auth.AuthError
 import no.elhub.auth.features.common.auth.AuthorizationProvider
-import no.elhub.auth.features.common.auth.AuthorizedParty
-import no.elhub.auth.features.common.auth.RoleType
 import no.elhub.auth.features.common.currentTimeUtc
+import no.elhub.auth.features.common.party.AuthorizationParty
+import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.grants.AuthorizationScope
 import no.elhub.auth.features.grants.common.dto.AuthorizationGrantScopesResponse
 import no.elhub.auth.setupAppWith
@@ -32,9 +32,9 @@ class RouteTest : FunSpec({
     lateinit var authProvider: AuthorizationProvider
 
     val validUuid = "02fe286b-4519-4ba8-9c84-dc18bffc9eb3"
-    val authorizedSystem = AuthorizedParty.System(id = "id")
-    val authorizedPerson = AuthorizedParty.Person(id = UUID.fromString("1d024a64-abb0-47d1-9b81-5d98aaa1a8a9"))
-    val authorizedOrg = AuthorizedParty.OrganizationEntity(gln = "1", role = RoleType.BalanceSupplier)
+    val authorizedSystem = AuthorizationParty(id = "id", type = PartyType.System)
+    val authorizedPerson = AuthorizationParty(id = "1d024a64-abb0-47d1-9b81-5d98aaa1a8a9", type = PartyType.Person)
+    val authorizedOrg = AuthorizationParty(id = "1", type = PartyType.OrganizationEntity)
 
     val scope = AuthorizationScope(
         id = UUID.fromString("8844261a-5221-455c-a6cd-12a0d60724c2"),
@@ -143,7 +143,7 @@ class RouteTest : FunSpec({
             val body = response.body<AuthorizationGrantScopesResponse>()
             body.data.size shouldBe 1
             body.data.first().id shouldBe scope.id.toString()
-            coVerify(exactly = 1) { handler(match { it.authorizedParty.id == authorizedPerson.id.toString() }) }
+            coVerify(exactly = 1) { handler(match { it.authorizedParty.id == authorizedPerson.id }) }
         }
     }
 
@@ -157,7 +157,7 @@ class RouteTest : FunSpec({
             val body = response.body<AuthorizationGrantScopesResponse>()
             body.data.size shouldBe 1
             body.data.first().id shouldBe scope.id.toString()
-            coVerify(exactly = 1) { handler(match { it.authorizedParty.id == authorizedOrg.gln }) }
+            coVerify(exactly = 1) { handler(match { it.authorizedParty.id == authorizedOrg.id }) }
         }
     }
 

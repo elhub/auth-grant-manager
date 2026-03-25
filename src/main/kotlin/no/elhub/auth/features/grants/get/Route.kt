@@ -6,10 +6,7 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import no.elhub.auth.features.common.auth.AuthorizationProvider
-import no.elhub.auth.features.common.auth.AuthorizedParty
 import no.elhub.auth.features.common.auth.toApiErrorResponse
-import no.elhub.auth.features.common.party.AuthorizationParty
-import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.common.validatePathId
 import no.elhub.auth.features.grants.common.dto.toSingleGrantResponse
@@ -35,31 +32,7 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
                 return@get
             }
 
-        val query = when (authorizedParty) {
-            is AuthorizedParty.OrganizationEntity -> Query(
-                id = id,
-                authorizedParty = AuthorizationParty(
-                    id = authorizedParty.gln,
-                    type = PartyType.OrganizationEntity
-                )
-            )
-
-            is AuthorizedParty.Person -> Query(
-                id = id,
-                authorizedParty = AuthorizationParty(
-                    id = authorizedParty.id.toString(),
-                    type = PartyType.Person
-                )
-            )
-
-            is AuthorizedParty.System -> Query(
-                id = id,
-                authorizedParty = AuthorizationParty(
-                    id = authorizedParty.id,
-                    type = PartyType.System
-                )
-            )
-        }
+        val query = Query(id = id, authorizedParty = authorizedParty)
 
         val grant = handler(query)
             .getOrElse { error ->

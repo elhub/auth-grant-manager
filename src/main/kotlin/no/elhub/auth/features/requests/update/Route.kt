@@ -8,8 +8,6 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.patch
 import no.elhub.auth.features.common.auth.AuthorizationProvider
 import no.elhub.auth.features.common.auth.toApiErrorResponse
-import no.elhub.auth.features.common.party.AuthorizationParty
-import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.common.toTypeMismatchApiErrorResponse
 import no.elhub.auth.features.common.validateDataId
@@ -61,10 +59,7 @@ fun Route.route(
         val command = UpdateCommand(
             requestId = requestId,
             newStatus = requestBody.data.attributes.status,
-            authorizedParty = AuthorizationParty(
-                id = resolvedActor.id.toString(),
-                type = PartyType.Person
-            )
+            authorizedParty = resolvedActor
         )
 
         val updated = handler(command).getOrElse { error ->
