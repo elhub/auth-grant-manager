@@ -9,7 +9,7 @@
 | Language       | Kotlin, JVM 21+                       |
 | Framework      | Ktor (server + client)                |
 | Error handling | Arrow (`Either`, `raise` DSL)         |
-| DI             | Koin + KSP                            |
+| DI             | Ktor Native DI                        |
 | Database       | PostgreSQL, Exposed ORM, Liquibase    |
 | API standard   | JSON:API (`application/vnd.api+json`) |
 | Serialization  | Kotlinx Serialization                 |

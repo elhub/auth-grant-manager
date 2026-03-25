@@ -49,7 +49,9 @@ features/requests/create/
 
 ### Route.kt — HTTP only
 
-Authenticates, deserialises, delegates, maps the `Either` result to HTTP. Contains no business logic.
+- Authenticates, deserialises, delegates, maps the `Either` result to HTTP. Contains no business logic.
+- Handler methods only accept business objects, and not care about ktor implementation details.
+- All routes must have an authProvider and a handlerInterface as input to the route.
 
 ```kotlin
 fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
@@ -73,11 +75,14 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
 }
 ```
 
-**Rules:** No business logic. No database access. Always responds with JSON:API-compliant bodies, including errors.
+- **Rules:** No business logic. No database access. Always responds with JSON:API-compliant bodies, including errors.
 
 ### Handler.kt — business logic
 
-Orchestrates services and repositories using `either { }`. Never imports Ktor types.
+- Orchestrates services and repositories using `either { }`. Never imports Ktor types.
+- Core logic is always in the Handler
+- Service can be seen as a repository or a client which collects data from external apps.
+
 
 ```kotlin
 class Handler(

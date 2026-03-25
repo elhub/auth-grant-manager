@@ -44,7 +44,8 @@ object AuthorizationRequestScopeTable : Table("auth.authorization_request_scope"
 
 ## Repository pattern
 - All repositories must have an interface. Then use a concrete implementation of that interface to interact with data source (Postgres).
--
+- Return type always need to be wrapped in Either<Error, BusinesseObject>.
+- All repository functions must have suspend keyword.
 ### Interface (in `features/{domain}/common/`)
 
 ```kotlin
@@ -58,7 +59,7 @@ interface RequestRepository {
 - DAO always happens through org.jetbrains.exposed, do not use SQL queries. Table must have a table type defined through exposed.
 - Always use Either to map out the Result / Error. E.g. Either<Error, BusinessObject>
 - All errors in repository must be handled and defined as a RepositoryError. This can be found in Errors.kt.
--
+- Always use `withTransaction { }` from Database.kt. Never use `transaction { }` (blocking).
 ```kotlin
 class ExposedRequestRepository(
     private val partyRepo: PartyRepository,
@@ -66,7 +67,7 @@ class ExposedRequestRepository(
 
     override suspend fun find(id: UUID): Either<RepositoryReadError, AuthorizationRequest> =
         Either.catch {
-            newSuspendedTransaction {
+            withTransaction {
                 AuthorizationRequestTable
                     .selectAll()
                     .where { AuthorizationRequestTable.id eq id }
@@ -78,15 +79,13 @@ class ExposedRequestRepository(
 
     override suspend fun insert(request: AuthorizationRequest): Either<RepositoryWriteError, AuthorizationRequest> =
         Either.catch {
-            newSuspendedTransaction {
+            withTransaction {
                 AuthorizationRequestTable.insert { /* ... */ }
                 request
             }
         }.mapLeft { RepositoryWriteError.UnexpectedError }
 }
 ```
-
-Always use `newSuspendedTransaction { }`. Never use `transaction { }` (blocking).
 
 ### Row mapping
 
@@ -122,7 +121,7 @@ Handlers map these to their own feature error type via `mapLeft` before `bind()`
 
 ## Transactions in Handlers
 
-Wrap multi-step repository calls in a single `newSuspendedTransaction` when atomicity is required:
+Wrap multi-step repository calls in a single `withTransaction { }` when atomicity is required:
 
 ```kotlin
 val result = newSuspendedTransaction {
@@ -132,11 +131,15 @@ val result = newSuspendedTransaction {
 
 Handlers own transaction boundaries. Repositories do not nest transactions.
 
-## Koin registration
-
+## Ktor Native Dependency Injection registration
+- Always use Ktor Native Dependency Injection
+- ``resolve()`` resolves dependencies through ktor dependency injection registry. Never instantiate the class yourself.
+- If a new dependency module is neeeded, it must be appended to application.yml under ktor.application.modules
 ```kotlin
-koinModule {
-    singleOf(::ExposedRequestRepository) bind RequestRepository::class
+dependencies {
+    provide<ExposedRequestRepository> {
+      ExposedRequestRepository(partyRepo = resolve(), requestPropertiesRepository = resolve())
+    }
 }
 ```
 

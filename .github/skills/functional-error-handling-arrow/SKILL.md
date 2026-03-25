@@ -25,9 +25,6 @@ This applies to every Handler, Service, and Repository in the codebase.
 ## Composing with `either { }` and `bind()`
 
 ```kotlin
-import arrow.core.raise.either
-import arrow.core.raise.ensure
-
 suspend fun createRequest(model: CreateRequestModel): Either<CreateError, AuthorizationRequest> = either {
     // bind() unwraps Right or short-circuits with Left
     val party = partyService.resolve(model.requestedBy)
@@ -88,11 +85,11 @@ Database calls can throw. Wrap them:
 ```kotlin
 suspend fun insert(entity: Entity): Either<RepositoryWriteError, Entity> =
     Either.catch {
-        newSuspendedTransaction { /* Exposed DSL */ }
+        withTranaction { /* Exposed DSL */ }
     }.mapLeft { RepositoryWriteError.UnexpectedError }
 ```
 
-Never call `transaction { }` (blocking). Use `newSuspendedTransaction { }`.
+Never call `transaction { }` (blocking). Use `withTransaction { }` from ``Database.kt``.
 
 ## Hard rules
 
