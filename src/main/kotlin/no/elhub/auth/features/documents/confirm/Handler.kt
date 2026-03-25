@@ -114,6 +114,13 @@ class Handler(
             val createdGrant = grantRepository.insert(grantToCreate, scopeIds)
                 .mapLeft { ConfirmError.GrantCreationError }.bind()
 
+            log.info(
+                "Authorization grant created id={} sourceType={} sourceId={}",
+                createdGrant.id,
+                createdGrant.sourceType,
+                createdGrant.sourceId
+            )
+
             val grantMetaProperties = grantProperties.meta.map { (key, value) ->
                 AuthorizationGrantProperty(
                     grantId = createdGrant.id,

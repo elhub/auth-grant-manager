@@ -89,6 +89,8 @@ class Handler(
                     .mapLeft { CreateError.PersistenceError }
                     .bind()
 
+            logger.info("Authorization request created id={} type={}", savedRequest.id, savedRequest.type)
+
             val requestProperties: List<AuthorizationRequestProperty> = metaAttributes.map {
                 AuthorizationRequestProperty(
                     requestId = savedRequest.id,
