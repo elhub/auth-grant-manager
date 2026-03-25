@@ -7,7 +7,6 @@ import no.elhub.auth.features.common.QueryError
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.common.GrantRepository
-import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 class Handler(
     private val repo: GrantRepository,
