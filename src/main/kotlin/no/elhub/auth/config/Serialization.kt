@@ -1,10 +1,15 @@
 package no.elhub.auth.config
 
+import io.ktor.http.ContentType
+import io.ktor.serialization.kotlinx.KotlinxSerializationConverter
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import kotlinx.serialization.json.Json
+
+/** The media type required by the JSON:API specification. */
+val jsonApiContentType: ContentType = ContentType.parse("application/vnd.api+json")
 
 /** Configure the serialization plugin for JSON
  *
@@ -23,5 +28,9 @@ fun Application.configureSerialization() {
     }
     install(ContentNegotiation) {
         json(json = defaultJson)
+        register(
+            jsonApiContentType,
+            KotlinxSerializationConverter(defaultJson)
+        )
     }
 }
