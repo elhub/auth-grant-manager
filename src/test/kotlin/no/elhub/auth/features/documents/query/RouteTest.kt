@@ -15,8 +15,6 @@ import io.mockk.mockk
 import no.elhub.auth.features.common.QueryError
 import no.elhub.auth.features.common.auth.AuthError
 import no.elhub.auth.features.common.auth.AuthorizationProvider
-import no.elhub.auth.features.common.auth.AuthorizedParty
-import no.elhub.auth.features.common.auth.RoleType
 import no.elhub.auth.features.common.currentTimeLocal
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
@@ -76,8 +74,8 @@ class RouteTest : FunSpec({
             updatedAt = currentTimeLocal()
         ),
     )
-    val authorizedPerson = AuthorizedParty.Person(id = UUID.fromString("adde4fc4-55b4-40bb-b84b-9f39ec027ce0"))
-    val authorizedOrg = AuthorizedParty.OrganizationEntity(gln = "🐟", role = RoleType.BalanceSupplier)
+    val authorizedPerson = AuthorizationParty(id = "adde4fc4-55b4-40bb-b84b-9f39ec027ce0", type = PartyType.Person)
+    val authorizedOrg = AuthorizationParty(id = "🐟", type = PartyType.OrganizationEntity)
 
     lateinit var authProvider: AuthorizationProvider
     lateinit var handler: Handler

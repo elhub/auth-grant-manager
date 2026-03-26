@@ -18,7 +18,6 @@ import io.mockk.mockk
 import no.elhub.auth.features.common.QueryError
 import no.elhub.auth.features.common.auth.AuthError
 import no.elhub.auth.features.common.auth.AuthorizationProvider
-import no.elhub.auth.features.common.auth.AuthorizedParty
 import no.elhub.auth.features.common.currentTimeUtc
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
@@ -32,7 +31,7 @@ import java.util.UUID
 
 class RouteTest : FunSpec({
 
-    val authorizedPerson = AuthorizedParty.Person(id = UUID.randomUUID())
+    val authorizedPerson = AuthorizationParty(id = UUID.randomUUID().toString(), type = PartyType.Person)
     lateinit var authProvider: AuthorizationProvider
     lateinit var handler: Handler
 

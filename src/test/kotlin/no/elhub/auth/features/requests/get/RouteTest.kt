@@ -16,8 +16,6 @@ import io.mockk.mockk
 import no.elhub.auth.features.common.QueryError
 import no.elhub.auth.features.common.auth.AuthError
 import no.elhub.auth.features.common.auth.AuthorizationProvider
-import no.elhub.auth.features.common.auth.AuthorizedParty
-import no.elhub.auth.features.common.auth.RoleType
 import no.elhub.auth.features.common.currentTimeUtc
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
@@ -36,8 +34,8 @@ private const val TEXT_VERSION_KEY = "textVersion"
 
 class RouteTest : FunSpec({
 
-    val authorizedPerson = AuthorizedParty.Person(id = UUID.randomUUID())
-    val authorizedOrganization = AuthorizedParty.OrganizationEntity(gln = "1234567890123", role = RoleType.BalanceSupplier)
+    val authorizedPerson = AuthorizationParty(id = UUID.randomUUID().toString(), type = PartyType.Person)
+    val authorizedOrganization = AuthorizationParty(id = "1234567890123", type = PartyType.OrganizationEntity)
     val validUuid = "02fe286b-4519-4ba8-9c84-dc18bffc9eb3"
 
     val requestedByParty = AuthorizationParty("gln1", PartyType.OrganizationEntity)

@@ -9,10 +9,7 @@ import io.ktor.server.response.respondBytes
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import no.elhub.auth.features.common.auth.AuthorizationProvider
-import no.elhub.auth.features.common.auth.AuthorizedParty
 import no.elhub.auth.features.common.auth.toApiErrorResponse
-import no.elhub.auth.features.common.party.AuthorizationParty
-import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.common.toNotAcceptedErrorResponse
 import no.elhub.auth.features.common.validatePathId
@@ -39,23 +36,7 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
                 return@get
             }
 
-        val query = when (authorizedParty) {
-            is AuthorizedParty.OrganizationEntity -> Query(
-                documentId = id,
-                authorizedParty = AuthorizationParty(
-                    id = authorizedParty.gln,
-                    type = PartyType.OrganizationEntity
-                )
-            )
-
-            is AuthorizedParty.Person -> Query(
-                documentId = id,
-                authorizedParty = AuthorizationParty(
-                    id = authorizedParty.id.toString(),
-                    type = PartyType.Person
-                )
-            )
-        }
+        val query = Query(documentId = id, authorizedParty = authorizedParty)
 
         val document = handler(query)
             .getOrElse { error ->
@@ -97,23 +78,7 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
                 return@get
             }
 
-        val query = when (authorizedParty) {
-            is AuthorizedParty.OrganizationEntity -> Query(
-                documentId = id,
-                authorizedParty = AuthorizationParty(
-                    id = authorizedParty.gln,
-                    type = PartyType.OrganizationEntity
-                )
-            )
-
-            is AuthorizedParty.Person -> Query(
-                documentId = id,
-                authorizedParty = AuthorizationParty(
-                    id = authorizedParty.id.toString(),
-                    type = PartyType.Person
-                )
-            )
-        }
+        val query = Query(documentId = id, authorizedParty = authorizedParty)
 
         val document = handler(query)
             .getOrElse { error ->

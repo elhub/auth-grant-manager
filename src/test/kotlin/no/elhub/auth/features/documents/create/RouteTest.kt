@@ -19,8 +19,6 @@ import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 import no.elhub.auth.features.common.auth.AuthError
 import no.elhub.auth.features.common.auth.AuthorizationProvider
-import no.elhub.auth.features.common.auth.AuthorizedParty
-import no.elhub.auth.features.common.auth.RoleType
 import no.elhub.auth.features.common.currentTimeLocal
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyIdentifier
@@ -51,7 +49,7 @@ import kotlin.time.Clock
 import kotlin.time.Instant
 
 class RouteTest : FunSpec({
-    val authorizedOrg = AuthorizedParty.OrganizationEntity(gln = "1", role = RoleType.BalanceSupplier)
+    val authorizedOrg = AuthorizationParty(id = "1", type = PartyType.OrganizationEntity)
     val byAuthParty = AuthorizationParty("gln1", PartyType.Organization)
     val fromAuthParty = AuthorizationParty("nin1", PartyType.Person)
     val toAuthParty = AuthorizationParty("nin2", PartyType.Person)
