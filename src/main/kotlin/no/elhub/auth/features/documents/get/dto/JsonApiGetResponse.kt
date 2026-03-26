@@ -1,59 +1,28 @@
 package no.elhub.auth.features.documents.get.dto
 
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import no.elhub.auth.features.common.dto.JsonApiResourceMetaMap
 import no.elhub.auth.features.common.party.dto.toJsonApiRelationship
 import no.elhub.auth.features.common.toTimeZoneOffsetString
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.DOCUMENTS_PATH
+import no.elhub.auth.features.documents.common.dto.AuthorizationDocumentResponseAttributes
+import no.elhub.auth.features.documents.common.dto.AuthorizationDocumentResponseLinks
+import no.elhub.auth.features.documents.common.dto.AuthorizationDocumentResponseRelationships
 import no.elhub.auth.features.grants.GRANTS_PATH
-import no.elhub.devxp.jsonapi.model.JsonApiAttributes
 import no.elhub.devxp.jsonapi.model.JsonApiLinks
 import no.elhub.devxp.jsonapi.model.JsonApiMeta
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipData
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipToOne
-import no.elhub.devxp.jsonapi.model.JsonApiRelationships
-import no.elhub.devxp.jsonapi.model.JsonApiResourceLinks
-import no.elhub.devxp.jsonapi.model.JsonApiResourceMeta
 import no.elhub.devxp.jsonapi.response.JsonApiResponse
 import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObjectWithRelationshipsAndMetaAndLinks
 
-@Serializable
-data class GetDocumentSingleResponseAttributes(
-    val status: String,
-    val documentType: String,
-    val validTo: String,
-    val createdAt: String,
-    val updatedAt: String
-) : JsonApiAttributes
-
-@Serializable
-data class GetDocumentSingleResponseRelationship(
-    val requestedBy: JsonApiRelationshipToOne,
-    val requestedFrom: JsonApiRelationshipToOne,
-    val requestedTo: JsonApiRelationshipToOne,
-    val signedBy: JsonApiRelationshipToOne? = null,
-    val authorizationGrant: JsonApiRelationshipToOne? = null
-) : JsonApiRelationships
-
-@Serializable
-@JvmInline
-value class GetDocumentSingleResponseMeta(
-    val values: Map<String, String>
-) : JsonApiResourceMeta
-
-@Serializable
-data class GetDocumentSingleResponseLinks(
-    val self: String,
-    val file: String,
-) : JsonApiResourceLinks
-
 typealias GetDocumentSingleResponse = JsonApiResponse.SingleDocumentWithRelationshipsAndMetaAndLinks<
-    GetDocumentSingleResponseAttributes,
-    GetDocumentSingleResponseRelationship,
-    GetDocumentSingleResponseMeta,
-    GetDocumentSingleResponseLinks
+    AuthorizationDocumentResponseAttributes,
+    AuthorizationDocumentResponseRelationships,
+    JsonApiResourceMetaMap,
+    AuthorizationDocumentResponseLinks
     >
 
 fun AuthorizationDocument.toGetSingleResponse() =
@@ -61,14 +30,14 @@ fun AuthorizationDocument.toGetSingleResponse() =
         data = JsonApiResponseResourceObjectWithRelationshipsAndMetaAndLinks(
             type = "AuthorizationDocument",
             id = this.id.toString(),
-            attributes = GetDocumentSingleResponseAttributes(
+            attributes = AuthorizationDocumentResponseAttributes(
                 status = this.status.name,
                 documentType = this.type.name,
                 validTo = this.validTo.toTimeZoneOffsetString(),
                 createdAt = this.createdAt.toTimeZoneOffsetString(),
                 updatedAt = this.createdAt.toTimeZoneOffsetString(),
             ),
-            relationships = GetDocumentSingleResponseRelationship(
+            relationships = AuthorizationDocumentResponseRelationships(
                 requestedBy = this.requestedBy.toJsonApiRelationship(),
                 requestedFrom = this.requestedFrom.toJsonApiRelationship(),
                 requestedTo = this.requestedTo.toJsonApiRelationship(),
@@ -92,14 +61,14 @@ fun AuthorizationDocument.toGetSingleResponse() =
                     )
                 },
             ),
-            meta = GetDocumentSingleResponseMeta(
+            meta = JsonApiResourceMetaMap(
                 buildMap {
                     this@toGetSingleResponse.properties.forEach {
-                        put(it.key, (it.value))
+                        put(it.key, it.value)
                     }
                 }
             ),
-            links = GetDocumentSingleResponseLinks(
+            links = AuthorizationDocumentResponseLinks(
                 self = "${DOCUMENTS_PATH}/${this.id}",
                 file = "${DOCUMENTS_PATH}/${this.id}.pdf"
             )
