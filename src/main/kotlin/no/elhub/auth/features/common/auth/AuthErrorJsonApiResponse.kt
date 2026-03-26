@@ -43,6 +43,7 @@ fun AuthError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection>
             detail = "Authentication is required or invalid."
         )
 
+        AuthError.EndUserOnBehalfOfOrganisationVerificationFailed,
         AuthError.AccessDenied -> buildApiErrorResponse(
             status = HttpStatusCode.Forbidden,
             title = "Forbidden",
@@ -52,5 +53,5 @@ fun AuthError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection>
         AuthError.InvalidPdpResponseAuthInfoMissing,
         AuthError.InvalidPdpResponseActingGlnMissing,
         AuthError.InvalidPdpResponseAuthorizedFunctionsMissing,
-        AuthError.UnknownError -> toInternalServerApiErrorResponse()
+        AuthError.UnexpectedPdpError -> toInternalServerApiErrorResponse()
     }

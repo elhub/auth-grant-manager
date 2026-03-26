@@ -30,7 +30,8 @@ sealed interface AuthError {
     object InvalidPdpResponseActingGlnMissing : AuthError
     object InvalidPdpResponseAuthorizedFunctionsMissing : AuthError
     object ActingFunctionNotSupported : AuthError
-    object UnknownError : AuthError
+    object EndUserOnBehalfOfOrganisationVerificationFailed : AuthError
+    object UnexpectedPdpError : AuthError
     object NotAuthorized : AuthError
     object AccessDenied : AuthError
 }
@@ -62,6 +63,10 @@ class PDPAuthorizationProvider(
             const val AUTHORIZATION = "Authorization"
             const val SENDER_GLN = "SenderGLN"
             const val ON_BEHALF_OF_GLN = "OnBehalfOfGLN"
+
+            // Internal header used for Minside enduser acting on behalf of an organisation.
+            // Do not document this in OpenAPI, since it is not part of the public API contract and would cause confusion for consumers.
+            const val END_USER_ON_BEHALF_OF_ORGANISATION = "ElhubOnBehalfOfOrganisation"
         }
     }
 
@@ -137,27 +142,26 @@ class PDPAuthorizationProvider(
         val authorizationHeader = call.request.headers[Headers.AUTHORIZATION] ?: raise(AuthError.MissingAuthorizationHeader)
         val token = authorizationHeader.removePrefix("Bearer ").takeIf { it != authorizationHeader } ?: raise(AuthError.InvalidAuthorizationHeader)
 
-        val senderGLN = call.request.headers[Headers.SENDER_GLN]
-        val onBehalfOfGLN = call.request.headers[Headers.ON_BEHALF_OF_GLN]
-        log.info(
-            "PDP authorize request: traceId={} senderGLN={} delegated={}",
-            traceId,
-            senderGLN,
-            onBehalfOfGLN
-        )
+        val senderGLN = call.request.headers[Headers.SENDER_GLN]?.ifBlank { null }
+        val onBehalfOfGLN = call.request.headers[Headers.ON_BEHALF_OF_GLN]?.ifBlank { null }
+        val onBehalfOfOrganisation = call.request.headers[Headers.END_USER_ON_BEHALF_OF_ORGANISATION]?.ifBlank { null }
 
-        val context: PdpPayload? = senderGLN?.let {
-            when {
-                onBehalfOfGLN == null -> PdpPayload.Self(senderGLN)
-                else -> PdpPayload.Delegated(senderGLN, onBehalfOfGLN)
-            }
-        }
+        log.info(
+            "PDP authorize request senderGLN={} onBehalfOfGLN={} onBehalfOfOrganisation={}",
+            senderGLN,
+            onBehalfOfGLN,
+            onBehalfOfOrganisation
+        )
 
         val request = PdpRequest(
             input = Input(
                 token = token,
                 elhubTraceId = traceId.toString(),
-                payload = context
+                payload = PdpPayload(
+                    senderGLN = senderGLN,
+                    onBehalfOfGLN = onBehalfOfGLN,
+                    onBehalfOfOrganisationId = onBehalfOfOrganisation,
+                )
             )
         )
         val response = Either.catch {
@@ -167,7 +171,7 @@ class PDPAuthorizationProvider(
             }
         }.mapLeft {
             log.error("PDP request failed for traceId={}", traceId, it)
-            raise(AuthError.UnknownError)
+            raise(AuthError.UnexpectedPdpError)
         }.bind()
 
         val pdpBody: PdpResponse = when {
@@ -176,7 +180,7 @@ class PDPAuthorizationProvider(
             else -> {
                 val err = response.bodyAsText()
                 log.warn("PDP non-2xx for traceId={} status={} body={}", traceId, response.status, err)
-                raise(AuthError.UnknownError)
+                raise(AuthError.UnexpectedPdpError)
             }
         }
 
@@ -232,8 +236,27 @@ class PDPAuthorizationProvider(
             log.warn("Unexpected tokenType for traceId={} tokenType={}", traceId, tokenInfo.tokenType)
             raise(AuthError.AccessDenied)
         }
-        val partyId = tokenInfo.partyId ?: raise(AuthError.UnknownError)
-        val authorizedParty = AuthorizationParty(id = UUID.fromString(partyId).toString(), type = PartyType.Person)
+        val authInfo = pdpBody.result.authInfo
+        if (authInfo?.error != null) {
+            log.warn("PDP authInfo error={}", authInfo.error)
+            raise(AuthError.EndUserOnBehalfOfOrganisationVerificationFailed)
+        }
+        val authorizedParty = when (authInfo?.actingType) {
+            ActingType.Person -> {
+                val actingId = authInfo.actingId ?: raise(AuthError.UnexpectedPdpError)
+                AuthorizationParty(id = actingId, type = PartyType.Person)
+            }
+
+            ActingType.Organisation -> {
+                val orgNumber = authInfo.actingOrganisationNumber ?: raise(AuthError.UnexpectedPdpError)
+                AuthorizationParty(id = orgNumber, type = PartyType.Organization)
+            }
+
+            else -> {
+                val partyId = tokenInfo.partyId ?: raise(AuthError.UnexpectedPdpError)
+                AuthorizationParty(id = UUID.fromString(partyId).toString(), type = PartyType.Person)
+            }
+        }
         log.info("Authorized party is $authorizedParty")
         authorizedParty
     }
@@ -247,7 +270,7 @@ class PDPAuthorizationProvider(
             log.warn("Unexpected tokenType for traceId={} tokenType={}", traceId, tokenInfo.tokenType)
             raise(AuthError.AccessDenied)
         }
-        val partyId = tokenInfo.partyId ?: raise(AuthError.UnknownError)
+        val partyId = tokenInfo.partyId ?: raise(AuthError.UnexpectedPdpError)
         val authorizedParty = AuthorizationParty(id = partyId, type = PartyType.System)
         log.info("Authorized party is $authorizedParty")
         authorizedParty

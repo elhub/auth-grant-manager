@@ -14,22 +14,15 @@ data class Input(
     @SerialName("ElhubTraceId")
     val elhubTraceId: String,
     val token: String,
-    val payload: PdpPayload? = null
+    val payload: PdpPayload
 )
 
 @Serializable
-sealed interface PdpPayload {
-    @Serializable
-    data class Self(
-        @SerialName(Headers.SENDER_GLN)
-        val senderGLN: String
-    ) : PdpPayload
-
-    @Serializable
-    data class Delegated(
-        @SerialName(Headers.SENDER_GLN)
-        val senderGLN: String,
-        @SerialName(Headers.ON_BEHALF_OF_GLN)
-        val onBehalfOfGLN: String
-    ) : PdpPayload
-}
+data class PdpPayload(
+    @SerialName(Headers.SENDER_GLN)
+    val senderGLN: String? = null,
+    @SerialName(Headers.ON_BEHALF_OF_GLN)
+    val onBehalfOfGLN: String? = null,
+    @SerialName("OnBehalfOfOrganisationId")
+    val onBehalfOfOrganisationId: String? = null,
+)

@@ -49,6 +49,29 @@ fun Application.commonModule() {
                 }
             }
         }
+        provide<HttpClient>(name = "pdpHttpClient") {
+            HttpClient(CIO) {
+                install(HttpTimeout) {
+                    requestTimeoutMillis = 10_000
+                    connectTimeoutMillis = 10_000
+                    socketTimeoutMillis = 10_000
+                }
+                install(ContentNegotiation) {
+                    json(
+                        Json {
+                            ignoreUnknownKeys = true
+                            // PDP distinguishes between omitted fields and explicit nulls.
+                            // Omit nullable fields so optional values are treated as not provided.
+                            explicitNulls = false
+                        }
+                    )
+                }
+                install(Logging) {
+                    format = LoggingFormat.OkHttp
+                    level = LogLevel.INFO
+                }
+            }
+        }
         provide<PersonApiConfig> {
             val cfg = resolve<ApplicationConfig>().config("authPersons")
             PersonApiConfig(baseUri = cfg.property("baseUri").getString())
@@ -83,7 +106,7 @@ fun Application.commonModule() {
 
         provide<PDPAuthorizationProvider> {
             val pdpBaseUrl = appEnvironment.config.property("pdp.baseUrl").getString()
-            PDPAuthorizationProvider(httpClient = resolve("commonHttpClient"), pdpBaseUrl = pdpBaseUrl)
+            PDPAuthorizationProvider(httpClient = resolve("pdpHttpClient"), pdpBaseUrl = pdpBaseUrl)
         }
 
         provide<PartyRepository> { ExposedPartyRepository() }

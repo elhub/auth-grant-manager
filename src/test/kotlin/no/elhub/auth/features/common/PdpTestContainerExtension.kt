@@ -8,7 +8,9 @@ import io.kotest.core.listeners.AfterSpecListener
 import io.kotest.core.listeners.BeforeSpecListener
 import io.kotest.core.spec.Spec
 import io.ktor.client.HttpClient
+import io.ktor.client.call.body
 import io.ktor.client.engine.cio.CIO
+import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
@@ -34,7 +36,38 @@ class PdpTestContainerExtension() : BeforeSpecListener, AfterSpecListener {
         val client = HttpClient(CIO)
         client.post("http://localhost:8085/__admin/mappings") {
             contentType(ContentType.Application.Json)
-            setBody(enduserMapping(token, partyId))
+            setBody(
+                """
+                {
+                  "priority": 1,
+                  "request": {
+                    "method": "POST",
+                    "url": "${PDPAuthorizationProvider.POLICY}",
+                    "bodyPatterns": [
+                      { "contains": "\"token\":\"$token\"" }
+                    ]
+                  },
+                  "response": {
+                    "status": 200,
+                    "headers": { "Content-Type": "application/json" },
+                    "jsonBody": {
+                      "result": {
+                        "authInfo": {
+                          "actingId": "$partyId",
+                          "actingType": "person",
+                          "originalId": "$partyId"
+                        },
+                        "tokenInfo": {
+                          "partyId": "$partyId",
+                          "tokenStatus": "verified",
+                          "tokenType": "enduser"
+                        }
+                      }
+                    }
+                  }
+                }
+                """.trimIndent()
+            )
         }
         client.close()
     }
@@ -43,7 +76,42 @@ class PdpTestContainerExtension() : BeforeSpecListener, AfterSpecListener {
         val client = HttpClient(CIO)
         client.post("http://localhost:8085/__admin/mappings") {
             contentType(ContentType.Application.Json)
-            setBody(maskinportenMapping(token, actingGln, functionName))
+            setBody(
+                """
+                {
+                  "priority": 1,
+                  "request": {
+                    "method": "POST",
+                    "url": "${PDPAuthorizationProvider.POLICY}",
+                    "bodyPatterns": [
+                      { "contains": "\"token\":\"$token\"" }
+                    ]
+                  },
+                  "response": {
+                    "status": 200,
+                    "headers": { "Content-Type": "application/json" },
+                    "jsonBody": {
+                      "result": {
+                        "tokenInfo": {
+                          "tokenStatus": "verified",
+                          "partyId": "maskinporten",
+                          "tokenType": "maskinporten"
+                        },
+                        "authInfo": {
+                          "authorizedFunctions": [
+                            {
+                              "functionCode": "SELF",
+                              "functionName": "$functionName"
+                            }
+                          ],
+                          "actingGLN": "$actingGln"
+                        }
+                      }
+                    }
+                  }
+                }
+                """.trimIndent()
+            )
         }
         client.close()
     }
@@ -52,7 +120,33 @@ class PdpTestContainerExtension() : BeforeSpecListener, AfterSpecListener {
         val client = HttpClient(CIO)
         client.post("http://localhost:8085/__admin/mappings") {
             contentType(ContentType.Application.Json)
-            setBody(elhubServiceMapping(token, partyId))
+            setBody(
+                """
+                {
+                  "priority": 1,
+                  "request": {
+                    "method": "POST",
+                    "url": "${PDPAuthorizationProvider.POLICY}",
+                    "bodyPatterns": [
+                      { "contains": "\"token\":\"$token\"" }
+                    ]
+                  },
+                  "response": {
+                    "status": 200,
+                    "headers": { "Content-Type": "application/json" },
+                    "jsonBody": {
+                      "result": {
+                        "tokenInfo": {
+                          "tokenStatus": "verified",
+                          "partyId": "$partyId",
+                          "tokenType": "elhub-service"
+                        }
+                      }
+                    }
+                  }
+                }
+                """.trimIndent()
+            )
         }
         client.close()
     }
@@ -86,6 +180,60 @@ class PdpTestContainerExtension() : BeforeSpecListener, AfterSpecListener {
                 """.trimIndent()
             )
         }
+        client.close()
+    }
+
+    suspend fun registerEnduserWithOrganisationAuthInfoMapping(
+        token: String,
+        actingId: String,
+        actingOrganisationNumber: String,
+        originalId: String,
+    ) {
+        val client = HttpClient(CIO)
+        client.post("http://localhost:8085/__admin/mappings") {
+            contentType(ContentType.Application.Json)
+            setBody(
+                """
+                {
+                  "priority": 1,
+                  "request": {
+                    "method": "POST",
+                    "url": "${PDPAuthorizationProvider.POLICY}",
+                    "bodyPatterns": [
+                      { "contains": "\"token\":\"$token\"" }
+                    ]
+                  },
+                  "response": {
+                    "status": 200,
+                    "headers": { "Content-Type": "application/json" },
+                    "jsonBody": {
+                      "result": {
+                        "authInfo": {
+                          "actingId": "$actingId",
+                          "actingOrganisationNumber": "$actingOrganisationNumber",
+                          "actingType": "organisation",
+                          "originalId": "$originalId"
+                        },
+                        "tokenInfo": {
+                          "partyId": "$originalId",
+                          "tokenStatus": "verified",
+                          "tokenType": "enduser"
+                        }
+                      }
+                    }
+                  }
+                }
+                """.trimIndent()
+            )
+        }
+        client.close()
+    }
+
+    suspend fun getLastRequestBody(): String {
+        val client = HttpClient(CIO)
+        val response: String = client.get("http://localhost:8085/__admin/requests?limit=1").body()
+        client.close()
+        return response
     }
 
     override suspend fun beforeSpec(spec: Spec) {
@@ -94,97 +242,5 @@ class PdpTestContainerExtension() : BeforeSpecListener, AfterSpecListener {
 
     override suspend fun afterSpec(spec: Spec) {
         container.stop()
-    }
-
-    companion object {
-        private fun maskinportenMapping(token: String, actingGln: String, functionName: String): String =
-            """
-        {
-          "priority": 1,
-          "request": {
-            "method": "POST",
-            "url": "${PDPAuthorizationProvider.POLICY}",
-            "bodyPatterns": [
-              { "contains": "\"token\":\"$token\"" }
-            ]
-          },
-          "response": {
-            "status": 200,
-            "headers": { "Content-Type": "application/json" },
-            "jsonBody": {
-              "result": {
-                "tokenInfo": {
-                  "tokenStatus": "verified",
-                  "partyId": "maskinporten",
-                  "tokenType": "maskinporten"
-                },
-                "authInfo": {
-                  "authorizedFunctions": [
-                    {
-                      "functionCode": "SELF",
-                      "functionName": "$functionName"
-                    }
-                  ],
-                  "actingGLN": "$actingGln"
-                }
-              }
-            }
-          }
-        }
-            """.trimIndent()
-
-        private fun enduserMapping(token: String, partyId: String): String =
-            """
-                {
-                  "priority": 1,
-                  "request": {
-                    "method": "POST",
-                    "url": "${PDPAuthorizationProvider.POLICY}",
-                    "bodyPatterns": [
-                      { "contains": "\"token\":\"$token\"" }
-                    ]
-                  },
-                  "response": {
-                    "status": 200,
-                    "headers": { "Content-Type": "application/json" },
-                    "jsonBody": {
-                     "result": {
-                      "tokenInfo": {
-                       "tokenStatus": "verified",
-                       "partyId": "$partyId",
-                       "tokenType": "enduser"
-                      }
-                     }
-                    }
-                  }
-                }
-            """.trimIndent()
-
-        private fun elhubServiceMapping(token: String, partyId: String): String =
-            """
-                {
-                  "priority": 1,
-                  "request": {
-                    "method": "POST",
-                    "url": "${PDPAuthorizationProvider.POLICY}",
-                    "bodyPatterns": [
-                      { "contains": "\"token\":\"$token\"" }
-                    ]
-                  },
-                  "response": {
-                    "status": 200,
-                    "headers": { "Content-Type": "application/json" },
-                    "jsonBody": {
-                     "result": {
-                      "tokenInfo": {
-                       "tokenStatus": "verified",
-                       "partyId": "$partyId",
-                       "tokenType": "elhub-service"
-                      }
-                     }
-                    }
-                  }
-                }
-            """.trimIndent()
     }
 }
