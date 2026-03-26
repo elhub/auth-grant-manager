@@ -611,11 +611,11 @@ components:
               summary: Bad request error example
               value:
                 errors:
-                  - status: "400"
-                    title: "Bad Request"
-                    detail: "A required field is missing or invalid."
+                  - status: '400'
+                    title: 'Bad Request'
+                    detail: 'A required field is missing or invalid.'
                     meta:
-                      createdAt: "2025-12-17T12:51:57+01:00"
+                      createdAt: '2025-12-17T12:51:57+01:00'
 
     401UnauthorizedError:
       description: >
@@ -629,11 +629,11 @@ components:
               summary: Unauthorized error example
               value:
                 errors:
-                  - status: "401"
-                    title: "Unauthorized"
-                    detail: "Authentication credentials are missing or invalid."
+                  - status: '401'
+                    title: 'Unauthorized'
+                    detail: 'Authentication credentials are missing or invalid.'
                     meta:
-                      createdAt: "2025-12-17T12:51:57+01:00"
+                      createdAt: '2025-12-17T12:51:57+01:00'
 
     403ForbiddenError:
       description: >
@@ -647,11 +647,11 @@ components:
               summary: Forbidden error example
               value:
                 errors:
-                  - status: "403"
-                    title: "Forbidden"
-                    detail: "A detailed description for getting forbidden"
+                  - status: '403'
+                    title: 'Forbidden'
+                    detail: 'A detailed description for getting forbidden'
                     meta:
-                      createdAt: "2025-12-17T12:51:57+01:00"
+                      createdAt: '2025-12-17T12:51:57+01:00'
 
     404NotFoundError:
       description: >
@@ -665,11 +665,11 @@ components:
               summary: Not found error example
               value:
                 errors:
-                  - status: "404"
-                    title: "Not Found"
-                    detail: "The requested resource could not be found."
+                  - status: '404'
+                    title: 'Not Found'
+                    detail: 'The requested resource could not be found.'
                     meta:
-                      createdAt: "2025-12-17T12:51:57+01:00"
+                      createdAt: '2025-12-17T12:51:57+01:00'
     406NotAcceptableError:
       description: >
         Not Acceptable. The server cannot produce a response matching the list of acceptable
@@ -683,11 +683,11 @@ components:
               summary: Not acceptable error example
               value:
                 errors:
-                  - status: "406"
-                    title: "Not Acceptable"
-                    detail: "The requested media type is not supported."
+                  - status: '406'
+                    title: 'Not Acceptable'
+                    detail: 'The requested media type is not supported.'
                     meta:
-                      createdAt: "2025-12-17T12:51:57+01:00"
+                      createdAt: '2025-12-17T12:51:57+01:00'
     409ConflictError:
       description: >
         Conflict. The request could not be completed due to a conflict with the current state
@@ -701,11 +701,11 @@ components:
               summary: Conflict error example
               value:
                 errors:
-                  - status: "409"
-                    title: "Conflict"
-                    detail: "An authorization document already exists for the specified parties and validity period."
+                  - status: '409'
+                    title: 'Conflict'
+                    detail: 'An authorization document already exists for the specified parties and validity period.'
                     meta:
-                      createdAt: "2025-12-17T12:51:57+01:00"
+                      createdAt: '2025-12-17T12:51:57+01:00'
     422UnprocessableEntityError:
       description: >
         Unprocessable Entity. The request was well-formed but could not be followed due to semantic errors.
@@ -718,11 +718,11 @@ components:
               summary: Unprocessable entity error example
               value:
                 errors:
-                  - status: "422"
-                    title: "Unprocessable Entity"
-                    detail: "The request could not be processed due to semantic errors."
+                  - status: '422'
+                    title: 'Unprocessable Entity'
+                    detail: 'The request could not be processed due to semantic errors.'
                     meta:
-                      createdAt: "2025-12-17T12:51:57+01:00"
+                      createdAt: '2025-12-17T12:51:57+01:00'
     415UnsupportedMediaTypeError:
       description: >
         Unsupported Media Type. The request body uses a media type the server or resource does not support.
@@ -735,11 +735,11 @@ components:
               summary: Unsupported media type error example
               value:
                 errors:
-                  - status: "415"
-                    title: "Unsupported Media Type"
-                    detail: "The submitted content type is not supported."
+                  - status: '415'
+                    title: 'Unsupported Media Type'
+                    detail: 'The submitted content type is not supported.'
                     meta:
-                      createdAt: "2025-12-17T12:51:57+01:00"
+                      createdAt: '2025-12-17T12:51:57+01:00'
     500InternalServerError:
       description: >
         Internal server error. An unexpected error occurred while processing the request.
@@ -752,11 +752,11 @@ components:
               summary: Internal server error example
               value:
                 errors:
-                  - status: "500"
-                    title: "Internal Server Error"
-                    detail: "An unexpected error occurred."
+                  - status: '500'
+                    title: 'Internal Server Error'
+                    detail: 'An unexpected error occurred.'
                     meta:
-                      createdAt: "2025-12-17T12:51:57+01:00"
+                      createdAt: '2025-12-17T12:51:57+01:00'
 
     MetaResponse:
       description: >

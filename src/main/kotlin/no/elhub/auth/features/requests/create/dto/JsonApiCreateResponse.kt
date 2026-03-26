@@ -1,71 +1,41 @@
 package no.elhub.auth.features.requests.create.dto
 
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import no.elhub.auth.features.common.dto.JsonApiResourceMetaMap
 import no.elhub.auth.features.common.toTimeZoneOffsetString
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.REQUESTS_PATH
-import no.elhub.devxp.jsonapi.model.JsonApiAttributes
+import no.elhub.auth.features.requests.common.dto.AuthorizationRequestResponseAttributes
+import no.elhub.auth.features.requests.common.dto.AuthorizationRequestResponseLinks
+import no.elhub.auth.features.requests.common.dto.AuthorizationRequestResponseRelationships
 import no.elhub.devxp.jsonapi.model.JsonApiLinks
 import no.elhub.devxp.jsonapi.model.JsonApiMeta
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipData
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipToOne
-import no.elhub.devxp.jsonapi.model.JsonApiRelationships
-import no.elhub.devxp.jsonapi.model.JsonApiResourceLinks
-import no.elhub.devxp.jsonapi.model.JsonApiResourceMeta
 import no.elhub.devxp.jsonapi.response.JsonApiResponse
 import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObjectWithRelationshipsAndMetaAndLinks
 
-@Serializable
-data class CreateRequestResponseAttributes(
-    val status: String,
-    val requestType: String,
-    val validTo: String,
-    val createdAt: String,
-    val updatedAt: String,
-) : JsonApiAttributes
-
-@Serializable
-data class CreateRequestResponseRelationShips(
-    val requestedBy: JsonApiRelationshipToOne,
-    val requestedFrom: JsonApiRelationshipToOne,
-    val requestedTo: JsonApiRelationshipToOne,
-) : JsonApiRelationships
-
-@Serializable
-@JvmInline
-value class CreateRequestResponseMeta(
-    val values: Map<String, String>
-) : JsonApiResourceMeta
-
-@Serializable
-data class CreateRequestResponseLinks(
-    val self: String,
-) : JsonApiResourceLinks
-
 typealias CreateRequestResponse = JsonApiResponse.SingleDocumentWithRelationshipsAndMetaAndLinks<
-    CreateRequestResponseAttributes,
-    CreateRequestResponseRelationShips,
-    CreateRequestResponseMeta,
-    CreateRequestResponseLinks
+    AuthorizationRequestResponseAttributes,
+    AuthorizationRequestResponseRelationships,
+    JsonApiResourceMetaMap,
+    AuthorizationRequestResponseLinks
     >
 
 fun AuthorizationRequest.toCreateResponse() =
     CreateRequestResponse(
-        data =
-        JsonApiResponseResourceObjectWithRelationshipsAndMetaAndLinks(
+        data = JsonApiResponseResourceObjectWithRelationshipsAndMetaAndLinks(
             type = "AuthorizationRequest",
             id = this.id.toString(),
-            attributes =
-            CreateRequestResponseAttributes(
+            attributes = AuthorizationRequestResponseAttributes(
                 status = this.status.name,
                 requestType = this.type.name,
                 validTo = this.validTo.toTimeZoneOffsetString(),
                 createdAt = this.createdAt.toTimeZoneOffsetString(),
                 updatedAt = this.updatedAt.toTimeZoneOffsetString(),
             ),
-            relationships = CreateRequestResponseRelationShips(
+            relationships = AuthorizationRequestResponseRelationships(
                 requestedBy = JsonApiRelationshipToOne(
                     data = JsonApiRelationshipData(
                         type = this.requestedBy.type.name,
@@ -85,15 +55,14 @@ fun AuthorizationRequest.toCreateResponse() =
                     )
                 ),
             ),
-            meta = CreateRequestResponseMeta(
+            meta = JsonApiResourceMetaMap(
                 buildMap {
                     this@toCreateResponse.properties.forEach { prop ->
                         put(prop.key, prop.value)
                     }
                 }
             ),
-            links =
-            CreateRequestResponseLinks(
+            links = AuthorizationRequestResponseLinks(
                 self = "${REQUESTS_PATH}/${this.id}"
             ),
         ),
