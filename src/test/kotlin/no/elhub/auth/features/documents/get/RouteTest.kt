@@ -20,8 +20,6 @@ import io.mockk.mockk
 import no.elhub.auth.features.common.QueryError
 import no.elhub.auth.features.common.auth.AuthError
 import no.elhub.auth.features.common.auth.AuthorizationProvider
-import no.elhub.auth.features.common.auth.AuthorizedParty
-import no.elhub.auth.features.common.auth.RoleType
 import no.elhub.auth.features.common.currentTimeLocal
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
@@ -59,8 +57,8 @@ class RouteTest : FunSpec({
         createdAt = currentTimeLocal(),
         updatedAt = currentTimeLocal()
     )
-    val authorizedPerson = AuthorizedParty.Person(id = UUID.fromString("1d024a64-abb0-47d1-9b81-5d98aaa1a8a9"))
-    val authorizedOrg = AuthorizedParty.OrganizationEntity(gln = "1", role = RoleType.BalanceSupplier)
+    val authorizedPerson = AuthorizationParty(id = "1d024a64-abb0-47d1-9b81-5d98aaa1a8a9", type = PartyType.Person)
+    val authorizedOrg = AuthorizationParty(id = "1", type = PartyType.OrganizationEntity)
 
     lateinit var authProvider: AuthorizationProvider
     lateinit var handler: Handler
@@ -78,14 +76,14 @@ class RouteTest : FunSpec({
             response.status shouldBe HttpStatusCode.OK
             validateGetByIdResponse(response, document)
             coVerify(exactly = 1) {
-                handler.invoke(match { it.authorizedParty.id == authorizedPerson.id.toString() })
+                handler.invoke(match { it.authorizedParty.id == authorizedPerson.id })
             }
             response = client.get("/${document.id}.pdf") { accept(ContentType.Application.Pdf) }
             response.status shouldBe HttpStatusCode.OK
             response.contentType()?.withoutParameters() shouldBe ContentType.Application.Pdf
             response.bodyAsChannel().toByteArray() shouldBe document.file
             coVerify(exactly = 2) {
-                handler.invoke(match { it.authorizedParty.id == authorizedPerson.id.toString() })
+                handler.invoke(match { it.authorizedParty.id == authorizedPerson.id })
             }
         }
     }
@@ -98,14 +96,14 @@ class RouteTest : FunSpec({
             response.status shouldBe HttpStatusCode.OK
             validateGetByIdResponse(response, document)
             coVerify(exactly = 1) {
-                handler.invoke(match { it.authorizedParty.id == authorizedOrg.gln })
+                handler.invoke(match { it.authorizedParty.id == authorizedOrg.id })
             }
             response = client.get("/${document.id}.pdf") { accept(ContentType.Application.Pdf) }
             response.status shouldBe HttpStatusCode.OK
             response.contentType()?.withoutParameters() shouldBe ContentType.Application.Pdf
             response.bodyAsChannel().toByteArray() shouldBe document.file
             coVerify(exactly = 2) {
-                handler.invoke(match { it.authorizedParty.id == authorizedOrg.gln })
+                handler.invoke(match { it.authorizedParty.id == authorizedOrg.id })
             }
         }
     }

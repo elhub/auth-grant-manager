@@ -8,8 +8,6 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.patch
 import no.elhub.auth.features.common.auth.AuthorizationProvider
 import no.elhub.auth.features.common.auth.toApiErrorResponse
-import no.elhub.auth.features.common.party.AuthorizationParty
-import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.common.toTypeMismatchApiErrorResponse
 import no.elhub.auth.features.common.validateDataId
@@ -59,10 +57,7 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
         val command = ConsumeCommand(
             grantId = grantId,
             newStatus = requestBody.data.attributes.status,
-            authorizedParty = AuthorizationParty(
-                id = authorizedSystem.id,
-                type = PartyType.System
-            )
+            authorizedParty = authorizedSystem
         )
 
         val updated = handler(command).getOrElse { error ->

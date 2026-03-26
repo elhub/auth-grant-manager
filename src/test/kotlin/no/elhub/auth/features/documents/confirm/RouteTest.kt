@@ -18,8 +18,8 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import no.elhub.auth.features.common.auth.AuthError
 import no.elhub.auth.features.common.auth.AuthorizationProvider
-import no.elhub.auth.features.common.auth.AuthorizedParty
-import no.elhub.auth.features.common.auth.RoleType
+import no.elhub.auth.features.common.party.AuthorizationParty
+import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.documents.common.SignatureValidationError
 import no.elhub.auth.putPdf
 import no.elhub.auth.setupAppWith
@@ -28,7 +28,7 @@ import kotlin.random.Random
 
 class RouteTest : FunSpec({
 
-    val authorizedOrg = AuthorizedParty.OrganizationEntity(gln = "1", role = RoleType.BalanceSupplier)
+    val authorizedOrg = AuthorizationParty(id = "1", type = PartyType.OrganizationEntity)
 
     lateinit var authProvider: AuthorizationProvider
     lateinit var handler: Handler

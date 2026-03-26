@@ -20,6 +20,8 @@ import io.ktor.util.Attributes
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.serialization.json.Json
+import no.elhub.auth.features.common.party.AuthorizationParty
+import no.elhub.auth.features.common.party.PartyType
 import java.util.UUID
 
 typealias MachineHeaders = PDPAuthorizationProvider.Companion.Headers
@@ -36,7 +38,7 @@ val validHeadersForMaskinporten = headersOf(
 class PDPAuthorizationProviderTest : FunSpec({
 
     context("authorizeEndUserOrMaskinporten") {
-        test("returns AuthorizedOrganizationEntity when PDP reports maskinporten token") {
+        test("returns AuthorizationParty when PDP reports maskinporten token") {
             val response = runProviderMethod(
                 method = PDPAuthorizationProvider::authorizeEndUserOrMaskinporten,
                 headers = validHeadersForMaskinporten,
@@ -44,14 +46,11 @@ class PDPAuthorizationProviderTest : FunSpec({
             )
 
             response.shouldBeRight(
-                AuthorizedParty.OrganizationEntity(
-                    gln = "0107000000021",
-                    role = RoleType.BalanceSupplier
-                )
+                AuthorizationParty(id = "0107000000021", type = PartyType.OrganizationEntity)
             )
         }
 
-        test("returns AuthorizedPerson when PDP reports enduser token") {
+        test("returns AuthorizationParty when PDP reports enduser token") {
             val partyId = "a8098c1a-f86e-11da-bd1a-00112444be1e"
             val response = runProviderMethod(
                 method = PDPAuthorizationProvider::authorizeEndUserOrMaskinporten,
@@ -59,7 +58,7 @@ class PDPAuthorizationProviderTest : FunSpec({
                 pdpResponse = endUserResponse(partyId = partyId)
             )
 
-            response.shouldBeRight(AuthorizedParty.Person(UUID.fromString(partyId)))
+            response.shouldBeRight(AuthorizationParty(id = UUID.fromString(partyId).toString(), type = PartyType.Person))
         }
 
         test("returns InvalidToken for unsupported tokenType") {
@@ -74,7 +73,7 @@ class PDPAuthorizationProviderTest : FunSpec({
     }
 
     context("authorizeAll") {
-        test("returns AuthorizedOrganizationEntity when PDP reports maskinporten token") {
+        test("returns AuthorizationParty when PDP reports maskinporten token") {
             val response = runProviderMethod(
                 method = PDPAuthorizationProvider::authorizeAll,
                 headers = validHeadersForMaskinporten,
@@ -82,14 +81,11 @@ class PDPAuthorizationProviderTest : FunSpec({
             )
 
             response.shouldBeRight(
-                AuthorizedParty.OrganizationEntity(
-                    gln = "0107000000021",
-                    role = RoleType.BalanceSupplier
-                )
+                AuthorizationParty(id = "0107000000021", type = PartyType.OrganizationEntity)
             )
         }
 
-        test("returns AuthorizedPerson when PDP reports enduser token") {
+        test("returns AuthorizationParty when PDP reports enduser token") {
             val partyId = "a8098c1a-f86e-11da-bd1a-00112444be1e"
             val response = runProviderMethod(
                 method = PDPAuthorizationProvider::authorizeAll,
@@ -97,10 +93,10 @@ class PDPAuthorizationProviderTest : FunSpec({
                 pdpResponse = endUserResponse(partyId = partyId)
             )
 
-            response.shouldBeRight(AuthorizedParty.Person(UUID.fromString(partyId)))
+            response.shouldBeRight(AuthorizationParty(id = UUID.fromString(partyId).toString(), type = PartyType.Person))
         }
 
-        test("returns AuthorizedSystem when PDP reports elhub-service token") {
+        test("returns AuthorizationParty when PDP reports elhub-service token") {
             val partyId = "system-123"
             val response = runProviderMethod(
                 method = PDPAuthorizationProvider::authorizeAll,
@@ -108,7 +104,7 @@ class PDPAuthorizationProviderTest : FunSpec({
                 pdpResponse = elhubServiceResponse(partyId = partyId)
             )
 
-            response.shouldBeRight(AuthorizedParty.System(partyId))
+            response.shouldBeRight(AuthorizationParty(id = partyId, type = PartyType.System))
         }
 
         test("returns InvalidToken for unsupported tokenType") {
@@ -183,18 +179,13 @@ class PDPAuthorizationProviderTest : FunSpec({
             response.shouldBeLeft(AuthError.AccessDenied)
         }
 
-        test("returns AuthorizedOrganizationEntity for authorized maskinporten decision") {
+        test("returns AuthorizationParty for authorized maskinporten decision") {
             val response = runProviderMethod(
                 method = PDPAuthorizationProvider::authorizeMaskinporten,
                 headers = validHeadersForMaskinporten,
                 pdpResponse = maskinportenResponse()
             )
-            response.shouldBeRight(
-                AuthorizedParty.OrganizationEntity(
-                    gln = "0107000000021",
-                    role = RoleType.BalanceSupplier
-                )
-            )
+            response.shouldBeRight(AuthorizationParty(id = "0107000000021", type = PartyType.OrganizationEntity))
         }
 
         test("returns InvalidPdpResponseActingFunctionMissing when PDP response lacks authorizedFunctions") {
@@ -303,7 +294,7 @@ class PDPAuthorizationProviderTest : FunSpec({
                 pdpResponse = endUserResponse(partyId = partyId)
             )
 
-            response.shouldBeRight(AuthorizedParty.Person(UUID.fromString(partyId)))
+            response.shouldBeRight(AuthorizationParty(id = UUID.fromString(partyId).toString(), type = PartyType.Person))
         }
     }
 
@@ -336,7 +327,7 @@ class PDPAuthorizationProviderTest : FunSpec({
                 pdpResponse = elhubServiceResponse(partyId = partyId)
             )
 
-            response.shouldBeRight(AuthorizedParty.System(partyId))
+            response.shouldBeRight(AuthorizationParty(id = partyId, type = PartyType.System))
         }
     }
 })

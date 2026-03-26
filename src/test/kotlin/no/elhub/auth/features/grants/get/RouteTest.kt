@@ -12,7 +12,8 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import no.elhub.auth.features.common.auth.AuthError
 import no.elhub.auth.features.common.auth.AuthorizationProvider
-import no.elhub.auth.features.common.auth.AuthorizedParty
+import no.elhub.auth.features.common.party.AuthorizationParty
+import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.setupAppWith
 import no.elhub.auth.validateForbiddenResponse
@@ -22,7 +23,7 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 class RouteTest : FunSpec({
-    val authorizedSystem = AuthorizedParty.System(id = "id")
+    val authorizedSystem = AuthorizationParty(id = "id", type = PartyType.System)
     val validUuid = "02fe286b-4519-4ba8-9c84-dc18bffc9eb3"
     lateinit var authProvider: AuthorizationProvider
     lateinit var handler: Handler

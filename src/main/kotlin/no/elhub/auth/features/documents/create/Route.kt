@@ -7,11 +7,7 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
 import no.elhub.auth.features.common.auth.AuthorizationProvider
-import no.elhub.auth.features.common.auth.RoleType
 import no.elhub.auth.features.common.auth.toApiErrorResponse
-import no.elhub.auth.features.common.party.AuthorizationParty
-import no.elhub.auth.features.common.party.PartyType
-import no.elhub.auth.features.common.toBalanceSupplierNotApiAuthorizedResponse
 import no.elhub.auth.features.common.toTypeMismatchApiErrorResponse
 import no.elhub.auth.features.documents.create.dto.JsonApiCreateDocumentRequest
 import no.elhub.auth.features.documents.create.dto.toCreateDocumentResponse
@@ -43,18 +39,7 @@ fun Route.route(
             return@post
         }
 
-        if (resolvedActor.role != RoleType.BalanceSupplier) {
-            val (status, body) = toBalanceSupplierNotApiAuthorizedResponse()
-            call.respond(status, body)
-            return@post
-        }
-
-        val authorizedParty = AuthorizationParty(
-            id = resolvedActor.gln,
-            type = PartyType.OrganizationEntity
-        )
-
-        val model = requestBody.toModel(authorizedParty)
+        val model = requestBody.toModel(resolvedActor)
 
         val document = handler(model)
             .getOrElse { error ->
