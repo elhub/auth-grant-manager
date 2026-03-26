@@ -52,7 +52,7 @@ paths:
         '200':
           description: A list of authorization document objects.
           content:
-            application/json:
+            application/vnd.api+json:
               schema:
                 $ref: './schemas/documents/authorization-document-collection.schema.json'
         '401':
@@ -75,7 +75,7 @@ paths:
       requestBody:
         required: true
         content:
-          application/json:
+          application/vnd.api+json:
             schema:
               $ref: './schemas/documents/authorization-document-submission.schema.json'
       responses:
@@ -84,7 +84,7 @@ paths:
             The authorization document was created successfully. The response includes the
             identifier of the new document and links to the resource and its PDF representation.
           content:
-            application/json:
+            application/vnd.api+json:
               schema:
                 $ref: './schemas/documents/authorization-document-resource.schema.json'
         '400':
@@ -123,7 +123,7 @@ paths:
         '200':
           description: Details of the requested authorization document.
           content:
-            application/json:
+            application/vnd.api+json:
               schema:
                 $ref: './schemas/documents/authorization-document-resource.schema.json'
         '400':
@@ -156,7 +156,7 @@ paths:
             type: string
       responses:
         '200':
-          description: The PDF file representing the authorization document. Error responses are returned as application/json.
+          description: The PDF file representing the authorization document. Error responses are returned as application/vnd.api+json.
           content:
             application/pdf:
               schema:
@@ -236,7 +236,7 @@ paths:
         '200':
           description: A list of authorization grants.
           content:
-            application/json:
+            application/vnd.api+json:
               schema:
                 $ref: './schemas/grants/authorization-grant-collection.schema.json'
         '400':
@@ -272,7 +272,7 @@ paths:
         '200':
           description: The requested authorization grant.
           content:
-            application/json:
+            application/vnd.api+json:
               schema:
                 $ref: './schemas/grants/authorization-grant-resource.schema.json'
         '400':
@@ -303,14 +303,14 @@ paths:
       requestBody:
         required: true
         content:
-          application/json:
+          application/vnd.api+json:
             schema:
               $ref: './schemas/grants/authorization-grant-update.schema.json'
       responses:
         '200':
           description: The authorization grant was successfully updated.
           content:
-            application/json:
+            application/vnd.api+json:
               schema:
                 $ref: './schemas/grants/authorization-grant-resource.schema.json'
         '400':
@@ -352,7 +352,7 @@ paths:
         '200':
           description: A list of authorization scopes associated with the grant.
           content:
-            application/json:
+            application/vnd.api+json:
               schema:
                 $ref: './schemas/grants/authorization-scope-collection.schema.json'
         '400':
@@ -387,7 +387,7 @@ paths:
         '200':
           description: A list of authorization requests.
           content:
-            application/json:
+            application/vnd.api+json:
               schema:
                 $ref: './schemas/requests/authorization-request-collection.schema.json'
         '401':
@@ -416,7 +416,7 @@ paths:
       requestBody:
         required: true
         content:
-          application/json:
+          application/vnd.api+json:
             schema:
               $ref: './schemas/requests/authorization-request-submission.schema.json'
       responses:
@@ -425,7 +425,7 @@ paths:
             The authorization request was created and the response contains details of the
             request, including the authorization request ID used to start the Elhub Min Side flow
           content:
-            application/json:
+            application/vnd.api+json:
               schema:
                 $ref: './schemas/requests/authorization-request-resource.schema.json'
         '400':
@@ -468,7 +468,7 @@ paths:
         '200':
           description: Details of the requested authorization request.
           content:
-            application/json:
+            application/vnd.api+json:
               schema:
                 $ref: './schemas/requests/authorization-request-resource.schema.json'
         '400':
@@ -509,14 +509,14 @@ paths:
       requestBody:
         required: true
         content:
-          application/json:
+          application/vnd.api+json:
             schema:
               $ref: './schemas/requests/authorization-request-update.schema.json'
       responses:
         '200':
           description: The authorization request was successfully updated.
           content:
-            application/json:
+            application/vnd.api+json:
               schema:
                 $ref: './schemas/requests/authorization-request-resource.schema.json'
         '400':
@@ -603,7 +603,7 @@ components:
       description: >
         Bad request. The request body is invalid or missing required fields.
       content:
-        application/json:
+        application/vnd.api+json:
           schema:
             $ref: './schemas/json-api-error.schema.json'
           examples:
@@ -621,7 +621,7 @@ components:
       description: >
         Unauthorized. The caller is not authenticated or the provided token is invalid or expired.
       content:
-        application/json:
+        application/vnd.api+json:
           schema:
             $ref: './schemas/json-api-error.schema.json'
           examples:
@@ -632,14 +632,14 @@ components:
                   - status: "401"
                     title: "Unauthorized"
                     detail: "Authentication credentials are missing or invalid."
-                    meta:
-                      createdAt: "2025-12-17T12:51:57+01:00"
+                meta:
+                  createdAt: "2025-12-17T12:51:57+01:00"
 
     403ForbiddenError:
       description: >
         Forbidden. The caller is authenticated but does not have permission to perform this operation.
       content:
-        application/json:
+        application/vnd.api+json:
           schema:
             $ref: './schemas/json-api-error.schema.json'
           examples:
@@ -650,14 +650,14 @@ components:
                   - status: "403"
                     title: "Forbidden"
                     detail: "A detailed description for getting forbidden"
-                    meta:
-                      createdAt: "2025-12-17T12:51:57+01:00"
+                meta:
+                  createdAt: "2025-12-17T12:51:57+01:00"
 
     404NotFoundError:
       description: >
         Not found. The requested resource does not exist or is not accessible to the caller.
       content:
-        application/json:
+        application/vnd.api+json:
           schema:
             $ref: './schemas/json-api-error.schema.json'
           examples:
@@ -675,7 +675,7 @@ components:
         Not Acceptable. The server cannot produce a response matching the list of acceptable
         values defined in the request's proactive content negotiation headers.
       content:
-        application/json:
+        application/vnd.api+json:
           schema:
             $ref: './schemas/json-api-error.schema.json'
           examples:
@@ -693,7 +693,7 @@ components:
         Conflict. The request could not be completed due to a conflict with the current state
         of the resource.
       content:
-        application/json:
+        application/vnd.api+json:
           schema:
             $ref: './schemas/json-api-error.schema.json'
           examples:
@@ -710,7 +710,7 @@ components:
       description: >
         Unprocessable Entity. The request was well-formed but could not be followed due to semantic errors.
       content:
-        application/json:
+        application/vnd.api+json:
           schema:
             $ref: './schemas/json-api-error.schema.json'
           examples:
@@ -727,7 +727,7 @@ components:
       description: >
         Unsupported Media Type. The request body uses a media type the server or resource does not support.
       content:
-        application/json:
+        application/vnd.api+json:
           schema:
             $ref: './schemas/json-api-error.schema.json'
           examples:
@@ -744,7 +744,7 @@ components:
       description: >
         Internal server error. An unexpected error occurred while processing the request.
       content:
-        application/json:
+        application/vnd.api+json:
           schema:
             $ref: './schemas/json-api-error.schema.json'
           examples:
@@ -763,7 +763,7 @@ components:
         Metadata response for informational purposes, typically returned from successful
         cancel operations.
       content:
-        application/json:
+        application/vnd.api+json:
           schema:
             $ref: './schemas/json-api-meta.schema.json'
 
