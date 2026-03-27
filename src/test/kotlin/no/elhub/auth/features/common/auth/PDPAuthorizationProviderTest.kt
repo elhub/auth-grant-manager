@@ -50,15 +50,14 @@ class PDPAuthorizationProviderTest : FunSpec({
             )
         }
 
-        test("returns AuthorizationParty when PDP reports enduser token") {
-            val partyId = "a8098c1a-f86e-11da-bd1a-00112444be1e"
+        test("returns AccessDenied when PDP reports enduser token without valid actingType") {
             val response = runProviderMethod(
                 method = PDPAuthorizationProvider::authorizeEndUserOrMaskinporten,
                 headers = authorizationOnlyHeaders(),
-                pdpResponse = endUserResponse(partyId = partyId)
+                pdpResponse = endUserResponse()
             )
 
-            response.shouldBeRight(AuthorizationParty(id = UUID.fromString(partyId).toString(), type = PartyType.Person))
+            response.shouldBeLeft(AuthError.AccessDenied)
         }
 
         test("returns InvalidToken for unsupported tokenType") {
@@ -85,15 +84,14 @@ class PDPAuthorizationProviderTest : FunSpec({
             )
         }
 
-        test("returns AuthorizationParty when PDP reports enduser token") {
-            val partyId = "a8098c1a-f86e-11da-bd1a-00112444be1e"
+        test("returns AccessDenied when PDP reports enduser token without valid actingType") {
             val response = runProviderMethod(
                 method = PDPAuthorizationProvider::authorizeAll,
                 headers = authorizationOnlyHeaders(),
-                pdpResponse = endUserResponse(partyId = partyId)
+                pdpResponse = endUserResponse()
             )
 
-            response.shouldBeRight(AuthorizationParty(id = UUID.fromString(partyId).toString(), type = PartyType.Person))
+            response.shouldBeLeft(AuthError.AccessDenied)
         }
 
         test("returns AuthorizationParty when PDP reports elhub-service token") {
@@ -276,25 +274,24 @@ class PDPAuthorizationProviderTest : FunSpec({
             response.shouldBeLeft(AuthError.InvalidToken)
         }
 
-        test("returns UnexpectedPdpError when partyId is missing") {
+        test("returns AccessDenied when partyId is missing and actingType is not valid") {
             val response = runProviderMethod(
                 method = PDPAuthorizationProvider::authorizeEndUser,
                 headers = authorizationOnlyHeaders(),
                 pdpResponse = endUserResponse(partyId = null)
             )
 
-            response.shouldBeLeft(AuthError.UnexpectedPdpError)
+            response.shouldBeLeft(AuthError.AccessDenied)
         }
 
-        test("returns AuthorizedPerson when partyId is present") {
-            val partyId = "a8098c1a-f86e-11da-bd1a-00112444be1e"
+        test("returns AccessDenied when authInfo is missing even if partyId is present") {
             val response = runProviderMethod(
                 method = PDPAuthorizationProvider::authorizeEndUser,
                 headers = authorizationOnlyHeaders(),
-                pdpResponse = endUserResponse(partyId = partyId)
+                pdpResponse = endUserResponse()
             )
 
-            response.shouldBeRight(AuthorizationParty(id = UUID.fromString(partyId).toString(), type = PartyType.Person))
+            response.shouldBeLeft(AuthError.AccessDenied)
         }
 
         test("returns AuthorizedPerson with actingId when authInfo contains actingType=person") {
@@ -303,7 +300,7 @@ class PDPAuthorizationProviderTest : FunSpec({
                 method = PDPAuthorizationProvider::authorizeEndUser,
                 headers = authorizationOnlyHeaders(),
                 pdpResponse = endUserResponse(
-                    authInfo = AuthInfo(actingType = ActingType.Person, actingId = actingId)
+                    authInfo = AuthInfo(actingType = "person", actingId = actingId)
                 )
             )
 
@@ -315,7 +312,7 @@ class PDPAuthorizationProviderTest : FunSpec({
                 method = PDPAuthorizationProvider::authorizeEndUser,
                 headers = authorizationOnlyHeaders(),
                 pdpResponse = endUserResponse(
-                    authInfo = AuthInfo(actingType = ActingType.Person, actingId = null)
+                    authInfo = AuthInfo(actingType = "person", actingId = null)
                 )
             )
 
@@ -329,7 +326,7 @@ class PDPAuthorizationProviderTest : FunSpec({
                 headers = authorizationOnlyHeaders(),
                 pdpResponse = endUserResponse(
                     authInfo = AuthInfo(
-                        actingType = ActingType.Organisation,
+                        actingType = "organisation",
                         actingId = "b8af0fb3-bad7-4ca4-9153-919243635601",
                         actingOrganisationNumber = orgNumber,
                         originalId = "e76439bc-0344-4ef5-b2f8-41a72c25ffd8"
@@ -345,7 +342,7 @@ class PDPAuthorizationProviderTest : FunSpec({
                 method = PDPAuthorizationProvider::authorizeEndUser,
                 headers = authorizationOnlyHeaders(),
                 pdpResponse = endUserResponse(
-                    authInfo = AuthInfo(actingType = ActingType.Organisation, actingOrganisationNumber = null)
+                    authInfo = AuthInfo(actingType = "organisation", actingOrganisationNumber = null)
                 )
             )
 
@@ -367,6 +364,53 @@ class PDPAuthorizationProviderTest : FunSpec({
             )
 
             response.shouldBeLeft(AuthError.EndUserOnBehalfOfOrganisationVerificationFailed)
+        }
+
+        test("deserializes blank actingType as null and returns verification error") {
+            val pdpResponse = json.decodeFromString<PdpResponse>(
+                """
+                {
+                  "result": {
+                    "authInfo": {
+                      "actingId": "",
+                      "actingType": "",
+                      "error": "Unable to verify OnBehalfOfOrganisationId for end user token",
+                      "originalId": "e76439bc-0344-4ef5-b2f8-41a72c25ffd8"
+                    },
+                    "tokenInfo": {
+                      "partyId": "e76439bc-0344-4ef5-b2f8-41a72c25ffd8",
+                      "tokenScope": "undefined",
+                      "tokenStatus": "verified",
+                      "tokenType": "enduser"
+                    }
+                  }
+                }
+                """.trimIndent()
+            )
+
+            val response = runProviderMethod(
+                method = PDPAuthorizationProvider::authorizeEndUser,
+                headers = authorizationOnlyHeaders(),
+                pdpResponse = pdpResponse
+            )
+
+            response.shouldBeLeft(AuthError.EndUserOnBehalfOfOrganisationVerificationFailed)
+        }
+
+        test("returns AccessDenied when actingType is blank without authInfo error") {
+            val response = runProviderMethod(
+                method = PDPAuthorizationProvider::authorizeEndUser,
+                headers = authorizationOnlyHeaders(),
+                pdpResponse = endUserResponse(
+                    authInfo = AuthInfo(
+                        actingType = "",
+                        actingId = "",
+                        originalId = "e76439bc-0344-4ef5-b2f8-41a72c25ffd8"
+                    )
+                )
+            )
+
+            response.shouldBeLeft(AuthError.AccessDenied)
         }
     }
 

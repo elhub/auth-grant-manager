@@ -241,20 +241,19 @@ class PDPAuthorizationProvider(
             log.warn("PDP authInfo error={}", authInfo.error)
             raise(AuthError.EndUserOnBehalfOfOrganisationVerificationFailed)
         }
-        val authorizedParty = when (authInfo?.actingType) {
-            ActingType.Person -> {
+        val authorizedParty = when (authInfo?.actingType?.trim()?.lowercase()?.ifBlank { null }) {
+            "person" -> {
                 val actingId = authInfo.actingId ?: raise(AuthError.UnexpectedPdpError)
                 AuthorizationParty(id = actingId, type = PartyType.Person)
             }
 
-            ActingType.Organisation -> {
+            "organisation" -> {
                 val orgNumber = authInfo.actingOrganisationNumber ?: raise(AuthError.UnexpectedPdpError)
                 AuthorizationParty(id = orgNumber, type = PartyType.Organization)
             }
 
             else -> {
-                val partyId = tokenInfo.partyId ?: raise(AuthError.UnexpectedPdpError)
-                AuthorizationParty(id = UUID.fromString(partyId).toString(), type = PartyType.Person)
+                raise(AuthError.AccessDenied)
             }
         }
         log.info("Authorized party is $authorizedParty")
