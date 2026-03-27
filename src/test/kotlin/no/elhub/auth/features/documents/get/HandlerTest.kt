@@ -7,7 +7,6 @@ import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.core.spec.style.FunSpec
 import io.mockk.coEvery
-import io.mockk.every
 import io.mockk.mockk
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.plus
