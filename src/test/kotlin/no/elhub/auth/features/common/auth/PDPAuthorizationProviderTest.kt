@@ -22,7 +22,6 @@ import io.mockk.mockk
 import kotlinx.serialization.json.Json
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
-import java.util.UUID
 
 typealias MachineHeaders = PDPAuthorizationProvider.Companion.Headers
 
