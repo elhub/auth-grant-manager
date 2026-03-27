@@ -13,7 +13,6 @@ import io.mockk.verify
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.plus
 import no.elhub.auth.features.common.RepositoryReadError
-import no.elhub.auth.features.common.RepositoryWriteError
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyError
 import no.elhub.auth.features.common.party.PartyIdentifier
@@ -23,14 +22,13 @@ import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
 import no.elhub.auth.features.common.today
 import no.elhub.auth.features.documents.AuthorizationDocument
+import no.elhub.auth.features.documents.common.ConfirmWithGrantError
 import no.elhub.auth.features.documents.common.DocumentBusinessHandler
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.documents.common.SignatureService
 import no.elhub.auth.features.documents.common.SignatureValidationError
 import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.common.CreateGrantProperties
-import no.elhub.auth.features.grants.common.GrantPropertiesRepository
-import no.elhub.auth.features.grants.common.GrantRepository
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
@@ -43,7 +41,6 @@ class HandlerTest : FunSpec({
     val signedFile = "signed".toByteArray()
     val signatoryIdentifier =
         PartyIdentifier(idType = PartyIdentifierType.NationalIdentityNumber, idValue = "01019012345")
-    val grantPropertiesRepository = mockk<GrantPropertiesRepository>(relaxed = true)
     val businessHandler = mockk<DocumentBusinessHandler>()
 
     fun createDocument(
@@ -71,14 +68,11 @@ class HandlerTest : FunSpec({
         documentRepository: DocumentRepository,
         partyService: PartyService,
         signatureService: SignatureService,
-        grantRepository: GrantRepository
     ) = Handler(
         businessHandler = businessHandler,
         documentRepository = documentRepository,
-        grantRepository = grantRepository,
         partyService = partyService,
         signatureService = signatureService,
-        grantPropertiesRepository = grantPropertiesRepository,
     )
 
     test("returns DocumentNotFoundError when document is missing") {
@@ -86,11 +80,10 @@ class HandlerTest : FunSpec({
         val documentRepository = mockk<DocumentRepository>()
         val partyService = mockk<PartyService>()
         val signatureService = mockk<SignatureService>()
-        val grantRepository = mockk<GrantRepository>(relaxed = true)
 
-        every { documentRepository.find(documentId) } returns RepositoryReadError.NotFoundError.left()
+        coEvery { documentRepository.find(documentId) } returns RepositoryReadError.NotFoundError.left()
 
-        val result = handler(documentRepository, partyService, signatureService, grantRepository)(
+        val result = handler(documentRepository, partyService, signatureService)(
             Command(
                 documentId = documentId,
                 authorizedParty = authorizationParty,
@@ -99,12 +92,11 @@ class HandlerTest : FunSpec({
         )
 
         result.shouldBeLeft(ConfirmError.DocumentNotFoundError)
-        verify(exactly = 1) { documentRepository.find(documentId) }
+        coVerify(exactly = 1) { documentRepository.find(documentId) }
         verify(exactly = 0) { signatureService.validateSignaturesAndReturnSignatory(any(), any()) }
         coVerify(exactly = 0) { partyService.resolve(any()) }
-        verify(exactly = 0) { documentRepository.confirm(any(), any(), any(), any()) }
-        verify(exactly = 0) { documentRepository.findScopeIds(any()) }
-        verify(exactly = 0) { grantRepository.insert(any(), any()) }
+        coVerify(exactly = 0) { documentRepository.findScopeIds(any()) }
+        coVerify(exactly = 0) { documentRepository.confirmWithGrant(any(), any(), any(), any(), any(), any(), any()) }
     }
 
     test("returns DocumentReadError when repository read fails") {
@@ -112,11 +104,10 @@ class HandlerTest : FunSpec({
         val documentRepository = mockk<DocumentRepository>()
         val partyService = mockk<PartyService>()
         val signatureService = mockk<SignatureService>()
-        val grantRepository = mockk<GrantRepository>(relaxed = true)
 
-        every { documentRepository.find(documentId) } returns RepositoryReadError.UnexpectedError.left()
+        coEvery { documentRepository.find(documentId) } returns RepositoryReadError.UnexpectedError.left()
 
-        val result = handler(documentRepository, partyService, signatureService, grantRepository)(
+        val result = handler(documentRepository, partyService, signatureService)(
             Command(
                 documentId = documentId,
                 authorizedParty = authorizationParty,
@@ -125,12 +116,11 @@ class HandlerTest : FunSpec({
         )
 
         result.shouldBeLeft(ConfirmError.DocumentReadError)
-        verify(exactly = 1) { documentRepository.find(documentId) }
+        coVerify(exactly = 1) { documentRepository.find(documentId) }
         verify(exactly = 0) { signatureService.validateSignaturesAndReturnSignatory(any(), any()) }
         coVerify(exactly = 0) { partyService.resolve(any()) }
-        verify(exactly = 0) { documentRepository.confirm(any(), any(), any(), any()) }
-        verify(exactly = 0) { documentRepository.findScopeIds(any()) }
-        verify(exactly = 0) { grantRepository.insert(any(), any()) }
+        coVerify(exactly = 0) { documentRepository.findScopeIds(any()) }
+        coVerify(exactly = 0) { documentRepository.confirmWithGrant(any(), any(), any(), any(), any(), any(), any()) }
     }
 
     test("returns InvalidRequestedByError when authorizedParty does not match") {
@@ -139,11 +129,10 @@ class HandlerTest : FunSpec({
         val documentRepository = mockk<DocumentRepository>()
         val partyService = mockk<PartyService>()
         val signatureService = mockk<SignatureService>()
-        val grantRepository = mockk<GrantRepository>(relaxed = true)
 
-        every { documentRepository.find(documentId) } returns document.right()
+        coEvery { documentRepository.find(documentId) } returns document.right()
 
-        val result = handler(documentRepository, partyService, signatureService, grantRepository)(
+        val result = handler(documentRepository, partyService, signatureService)(
             Command(
                 documentId = documentId,
                 authorizedParty = AuthorizationParty(id = "different", type = PartyType.Person),
@@ -152,12 +141,11 @@ class HandlerTest : FunSpec({
         )
 
         result.shouldBeLeft(ConfirmError.InvalidRequestedByError)
-        verify(exactly = 1) { documentRepository.find(documentId) }
+        coVerify(exactly = 1) { documentRepository.find(documentId) }
         verify(exactly = 0) { signatureService.validateSignaturesAndReturnSignatory(any(), any()) }
         coVerify(exactly = 0) { partyService.resolve(any()) }
-        verify(exactly = 0) { documentRepository.confirm(any(), any(), any(), any()) }
-        verify(exactly = 0) { documentRepository.findScopeIds(any()) }
-        verify(exactly = 0) { grantRepository.insert(any(), any()) }
+        coVerify(exactly = 0) { documentRepository.findScopeIds(any()) }
+        coVerify(exactly = 0) { documentRepository.confirmWithGrant(any(), any(), any(), any(), any(), any(), any()) }
     }
 
     test("returns IllegalTransitionError when document is not pending") {
@@ -170,11 +158,10 @@ class HandlerTest : FunSpec({
         val documentRepository = mockk<DocumentRepository>()
         val partyService = mockk<PartyService>()
         val signatureService = mockk<SignatureService>()
-        val grantRepository = mockk<GrantRepository>(relaxed = true)
 
-        every { documentRepository.find(documentId) } returns document.right()
+        coEvery { documentRepository.find(documentId) } returns document.right()
 
-        val result = handler(documentRepository, partyService, signatureService, grantRepository)(
+        val result = handler(documentRepository, partyService, signatureService)(
             Command(
                 documentId = documentId,
                 authorizedParty = authorizationParty,
@@ -183,11 +170,10 @@ class HandlerTest : FunSpec({
         )
 
         result.shouldBeLeft(ConfirmError.IllegalStateError)
-        verify(exactly = 1) { documentRepository.find(documentId) }
-        verify(exactly = 0) { documentRepository.confirm(any(), any(), any(), any()) }
+        coVerify(exactly = 1) { documentRepository.find(documentId) }
         verify(exactly = 0) { signatureService.validateSignaturesAndReturnSignatory(any(), any()) }
-        verify(exactly = 0) { documentRepository.findScopeIds(any()) }
-        verify(exactly = 0) { grantRepository.insert(any(), any()) }
+        coVerify(exactly = 0) { documentRepository.findScopeIds(any()) }
+        coVerify(exactly = 0) { documentRepository.confirmWithGrant(any(), any(), any(), any(), any(), any(), any()) }
     }
 
     test("returns ExpiredError when document validity period has passed") {
@@ -201,11 +187,10 @@ class HandlerTest : FunSpec({
         val documentRepository = mockk<DocumentRepository>()
         val partyService = mockk<PartyService>()
         val signatureService = mockk<SignatureService>()
-        val grantRepository = mockk<GrantRepository>(relaxed = true)
 
-        every { documentRepository.find(documentId) } returns document.right()
+        coEvery { documentRepository.find(documentId) } returns document.right()
 
-        val result = handler(documentRepository, partyService, signatureService, grantRepository)(
+        val result = handler(documentRepository, partyService, signatureService)(
             Command(
                 documentId = documentId,
                 authorizedParty = authorizationParty,
@@ -214,11 +199,10 @@ class HandlerTest : FunSpec({
         )
 
         result.shouldBeLeft(ConfirmError.ExpiredError)
-        verify(exactly = 1) { documentRepository.find(documentId) }
-        verify(exactly = 0) { documentRepository.confirm(any(), any(), any(), any()) }
+        coVerify(exactly = 1) { documentRepository.find(documentId) }
         verify(exactly = 0) { signatureService.validateSignaturesAndReturnSignatory(any(), any()) }
-        verify(exactly = 0) { documentRepository.findScopeIds(any()) }
-        verify(exactly = 0) { grantRepository.insert(any(), any()) }
+        coVerify(exactly = 0) { documentRepository.findScopeIds(any()) }
+        coVerify(exactly = 0) { documentRepository.confirmWithGrant(any(), any(), any(), any(), any(), any(), any()) }
     }
 
     test("returns ValidateSignaturesError when signature validation fails") {
@@ -227,13 +211,12 @@ class HandlerTest : FunSpec({
         val documentRepository = mockk<DocumentRepository>()
         val partyService = mockk<PartyService>()
         val signatureService = mockk<SignatureService>()
-        val grantRepository = mockk<GrantRepository>(relaxed = true)
 
-        every { documentRepository.find(documentId) } returns document.right()
+        coEvery { documentRepository.find(documentId) } returns document.right()
         every { signatureService.validateSignaturesAndReturnSignatory(signedFile, document.file) } returns
             SignatureValidationError.MissingElhubSignature.left()
 
-        val result = handler(documentRepository, partyService, signatureService, grantRepository)(
+        val result = handler(documentRepository, partyService, signatureService)(
             Command(
                 documentId = documentId,
                 authorizedParty = authorizationParty,
@@ -244,12 +227,11 @@ class HandlerTest : FunSpec({
         result.shouldBeLeft(
             ConfirmError.ValidateSignaturesError(SignatureValidationError.MissingElhubSignature)
         )
-        verify(exactly = 1) { documentRepository.find(documentId) }
+        coVerify(exactly = 1) { documentRepository.find(documentId) }
         verify(exactly = 1) { signatureService.validateSignaturesAndReturnSignatory(signedFile, document.file) }
         coVerify(exactly = 0) { partyService.resolve(any()) }
-        verify(exactly = 0) { documentRepository.confirm(any(), any(), any(), any()) }
-        verify(exactly = 0) { documentRepository.findScopeIds(any()) }
-        verify(exactly = 0) { grantRepository.insert(any(), any()) }
+        coVerify(exactly = 0) { documentRepository.findScopeIds(any()) }
+        coVerify(exactly = 0) { documentRepository.confirmWithGrant(any(), any(), any(), any(), any(), any(), any()) }
     }
 
     test("returns RequestedByResolutionError when signatory cannot be resolved") {
@@ -258,14 +240,13 @@ class HandlerTest : FunSpec({
         val documentRepository = mockk<DocumentRepository>()
         val partyService = mockk<PartyService>()
         val signatureService = mockk<SignatureService>()
-        val grantRepository = mockk<GrantRepository>(relaxed = true)
 
-        every { documentRepository.find(documentId) } returns document.right()
+        coEvery { documentRepository.find(documentId) } returns document.right()
         every { signatureService.validateSignaturesAndReturnSignatory(signedFile, document.file) } returns
             signatoryIdentifier.right()
         coEvery { partyService.resolve(signatoryIdentifier) } returns PartyError.PersonResolutionError.left()
 
-        val result = handler(documentRepository, partyService, signatureService, grantRepository)(
+        val result = handler(documentRepository, partyService, signatureService)(
             Command(
                 documentId = documentId,
                 authorizedParty = authorizationParty,
@@ -274,12 +255,11 @@ class HandlerTest : FunSpec({
         )
 
         result.shouldBeLeft(ConfirmError.SignatoryResolutionError)
-        verify(exactly = 1) { documentRepository.find(documentId) }
+        coVerify(exactly = 1) { documentRepository.find(documentId) }
         verify(exactly = 1) { signatureService.validateSignaturesAndReturnSignatory(signedFile, document.file) }
         coVerify(exactly = 1) { partyService.resolve(signatoryIdentifier) }
-        verify(exactly = 0) { documentRepository.confirm(any(), any(), any(), any()) }
-        verify(exactly = 0) { documentRepository.findScopeIds(any()) }
-        verify(exactly = 0) { grantRepository.insert(any(), any()) }
+        coVerify(exactly = 0) { documentRepository.findScopeIds(any()) }
+        coVerify(exactly = 0) { documentRepository.confirmWithGrant(any(), any(), any(), any(), any(), any(), any()) }
     }
 
     test("returns SignatoryNotAllowedToSignDocument when signatory differs from requestedTo") {
@@ -288,9 +268,8 @@ class HandlerTest : FunSpec({
         val documentRepository = mockk<DocumentRepository>()
         val partyService = mockk<PartyService>()
         val signatureService = mockk<SignatureService>()
-        val grantRepository = mockk<GrantRepository>(relaxed = true)
 
-        every { documentRepository.find(documentId) } returns document.right()
+        coEvery { documentRepository.find(documentId) } returns document.right()
         every { signatureService.validateSignaturesAndReturnSignatory(signedFile, document.file) } returns
             signatoryIdentifier.right()
         coEvery { partyService.resolve(signatoryIdentifier) } returns AuthorizationParty(
@@ -298,7 +277,7 @@ class HandlerTest : FunSpec({
             type = PartyType.Person
         ).right()
 
-        val result = handler(documentRepository, partyService, signatureService, grantRepository)(
+        val result = handler(documentRepository, partyService, signatureService)(
             Command(
                 documentId = documentId,
                 authorizedParty = authorizationParty,
@@ -307,94 +286,28 @@ class HandlerTest : FunSpec({
         )
 
         result.shouldBeLeft(ConfirmError.SignatoryNotAllowedToSignDocument)
-        verify(exactly = 1) { documentRepository.find(documentId) }
+        coVerify(exactly = 1) { documentRepository.find(documentId) }
         verify(exactly = 1) { signatureService.validateSignaturesAndReturnSignatory(signedFile, document.file) }
         coVerify(exactly = 1) { partyService.resolve(signatoryIdentifier) }
-        verify(exactly = 0) { documentRepository.confirm(any(), any(), any(), any()) }
-        verify(exactly = 0) { documentRepository.findScopeIds(any()) }
-        verify(exactly = 0) { grantRepository.insert(any(), any()) }
-    }
-
-    test("returns DocumentNotFoundError when confirm cannot find document") {
-        val documentId = UUID.randomUUID()
-        val document = createDocument(documentId)
-        val documentRepository = mockk<DocumentRepository>()
-        val partyService = mockk<PartyService>()
-        val signatureService = mockk<SignatureService>()
-        val grantRepository = mockk<GrantRepository>(relaxed = true)
-
-        every { documentRepository.find(documentId) } returns document.right()
-        every { signatureService.validateSignaturesAndReturnSignatory(signedFile, document.file) } returns
-            signatoryIdentifier.right()
-        coEvery { partyService.resolve(signatoryIdentifier) } returns requestedTo.right()
-        every {
-            documentRepository.confirm(documentId, signedFile, requestedFrom, requestedTo)
-        } returns RepositoryWriteError.NotFoundError.left()
-
-        val result = handler(documentRepository, partyService, signatureService, grantRepository)(
-            Command(
-                documentId = documentId,
-                authorizedParty = authorizationParty,
-                signedFile = signedFile
-            )
-        )
-
-        result.shouldBeLeft(ConfirmError.DocumentNotFoundError)
-        verify(exactly = 1) { documentRepository.confirm(documentId, signedFile, requestedFrom, requestedTo) }
-        verify(exactly = 0) { documentRepository.findScopeIds(any()) }
-        verify(exactly = 0) { grantRepository.insert(any(), any()) }
-    }
-
-    test("returns DocumentUpdateError when confirm conflicts") {
-        val documentId = UUID.randomUUID()
-        val document = createDocument(documentId)
-        val documentRepository = mockk<DocumentRepository>()
-        val partyService = mockk<PartyService>()
-        val signatureService = mockk<SignatureService>()
-        val grantRepository = mockk<GrantRepository>(relaxed = true)
-
-        every { documentRepository.find(documentId) } returns document.right()
-        every { signatureService.validateSignaturesAndReturnSignatory(signedFile, document.file) } returns
-            signatoryIdentifier.right()
-        coEvery { partyService.resolve(signatoryIdentifier) } returns requestedTo.right()
-        every {
-            documentRepository.confirm(documentId, signedFile, requestedFrom, requestedTo)
-        } returns RepositoryWriteError.ConflictError.left()
-
-        val result = handler(documentRepository, partyService, signatureService, grantRepository)(
-            Command(
-                documentId = documentId,
-                authorizedParty = authorizationParty,
-                signedFile = signedFile
-            )
-        )
-
-        result.shouldBeLeft(ConfirmError.DocumentUpdateError)
-        verify(exactly = 1) { documentRepository.confirm(documentId, signedFile, requestedFrom, requestedTo) }
-        verify(exactly = 0) { documentRepository.findScopeIds(any()) }
-        verify(exactly = 0) { grantRepository.insert(any(), any()) }
+        coVerify(exactly = 0) { documentRepository.findScopeIds(any()) }
+        coVerify(exactly = 0) { documentRepository.confirmWithGrant(any(), any(), any(), any(), any(), any(), any()) }
     }
 
     test("returns ScopeReadError when scope lookup fails") {
         val documentId = UUID.randomUUID()
         val document = createDocument(documentId)
-        val confirmedDocument = document.copy(status = AuthorizationDocument.Status.Signed)
         val documentRepository = mockk<DocumentRepository>()
         val partyService = mockk<PartyService>()
         val signatureService = mockk<SignatureService>()
-        val grantRepository = mockk<GrantRepository>(relaxed = true)
 
-        every { documentRepository.find(documentId) } returns document.right()
+        coEvery { documentRepository.find(documentId) } returns document.right()
         every { signatureService.validateSignaturesAndReturnSignatory(signedFile, document.file) } returns
             signatoryIdentifier.right()
         coEvery { partyService.resolve(signatoryIdentifier) } returns requestedTo.right()
-        every {
-            documentRepository.confirm(documentId, signedFile, requestedFrom, requestedTo)
-        } returns confirmedDocument.right()
-        every { documentRepository.findScopeIds(confirmedDocument.id) } returns
+        coEvery { documentRepository.findScopeIds(documentId) } returns
             RepositoryReadError.UnexpectedError.left()
 
-        val result = handler(documentRepository, partyService, signatureService, grantRepository)(
+        val result = handler(documentRepository, partyService, signatureService)(
             Command(
                 documentId = documentId,
                 authorizedParty = authorizationParty,
@@ -403,45 +316,104 @@ class HandlerTest : FunSpec({
         )
 
         result.shouldBeLeft(ConfirmError.ScopeReadError)
-        verify(exactly = 1) { documentRepository.findScopeIds(confirmedDocument.id) }
-        verify(exactly = 0) { grantRepository.insert(any(), any()) }
+        coVerify(exactly = 1) { documentRepository.findScopeIds(documentId) }
+        coVerify(exactly = 0) { documentRepository.confirmWithGrant(any(), any(), any(), any(), any(), any(), any()) }
     }
 
-    test("returns GrantCreationError when grant insert fails") {
+    test("returns DocumentNotFoundError when confirmWithGrant reports document not found") {
         val documentId = UUID.randomUUID()
         val document = createDocument(documentId)
-        val confirmedDocument = document.copy(status = AuthorizationDocument.Status.Signed)
+        val scopeId = UUID.randomUUID()
         val documentRepository = mockk<DocumentRepository>()
         val partyService = mockk<PartyService>()
         val signatureService = mockk<SignatureService>()
-        val grantRepository = mockk<GrantRepository>(relaxed = true)
-        val scopeId = UUID.randomUUID()
 
         every { businessHandler.getCreateGrantProperties(any()) } returns CreateGrantProperties(
             validFrom = today(),
             validTo = today().plus(DatePeriod(years = 1)),
             meta = emptyMap()
         )
-        every { documentRepository.find(documentId) } returns document.right()
+        coEvery { documentRepository.find(documentId) } returns document.right()
         every { signatureService.validateSignaturesAndReturnSignatory(signedFile, document.file) } returns
             signatoryIdentifier.right()
         coEvery { partyService.resolve(signatoryIdentifier) } returns requestedTo.right()
-        every {
-            documentRepository.confirm(documentId, signedFile, requestedFrom, requestedTo)
-        } returns confirmedDocument.right()
-        every { documentRepository.findScopeIds(confirmedDocument.id) } returns listOf(scopeId).right()
-        every { grantRepository.insert(any(), any()) } returns RepositoryWriteError.UnexpectedError.left()
+        coEvery { documentRepository.findScopeIds(documentId) } returns listOf(scopeId).right()
+        coEvery {
+            documentRepository.confirmWithGrant(documentId, signedFile, requestedFrom, requestedTo, any(), any(), any())
+        } returns ConfirmWithGrantError.DocumentError.NotFound.left()
 
-        val result = handler(documentRepository, partyService, signatureService, grantRepository)(
-            Command(
-                documentId = documentId,
-                authorizedParty = authorizationParty,
-                signedFile = signedFile
-            )
+        val result = handler(documentRepository, partyService, signatureService)(
+            Command(documentId = documentId, authorizedParty = authorizationParty, signedFile = signedFile)
+        )
+
+        result.shouldBeLeft(ConfirmError.DocumentNotFoundError)
+        coVerify(exactly = 1) {
+            documentRepository.confirmWithGrant(documentId, signedFile, requestedFrom, requestedTo, any(), any(), any())
+        }
+    }
+
+    test("returns DocumentUpdateError when confirmWithGrant reports a conflict") {
+        val documentId = UUID.randomUUID()
+        val document = createDocument(documentId)
+        val scopeId = UUID.randomUUID()
+        val documentRepository = mockk<DocumentRepository>()
+        val partyService = mockk<PartyService>()
+        val signatureService = mockk<SignatureService>()
+
+        every { businessHandler.getCreateGrantProperties(any()) } returns CreateGrantProperties(
+            validFrom = today(),
+            validTo = today().plus(DatePeriod(years = 1)),
+            meta = emptyMap()
+        )
+        coEvery { documentRepository.find(documentId) } returns document.right()
+        every { signatureService.validateSignaturesAndReturnSignatory(signedFile, document.file) } returns
+            signatoryIdentifier.right()
+        coEvery { partyService.resolve(signatoryIdentifier) } returns requestedTo.right()
+        coEvery { documentRepository.findScopeIds(documentId) } returns listOf(scopeId).right()
+        coEvery {
+            documentRepository.confirmWithGrant(documentId, signedFile, requestedFrom, requestedTo, any(), any(), any())
+        } returns ConfirmWithGrantError.DocumentError.Conflict.left()
+
+        val result = handler(documentRepository, partyService, signatureService)(
+            Command(documentId = documentId, authorizedParty = authorizationParty, signedFile = signedFile)
+        )
+
+        result.shouldBeLeft(ConfirmError.DocumentUpdateError)
+        coVerify(exactly = 1) {
+            documentRepository.confirmWithGrant(documentId, signedFile, requestedFrom, requestedTo, any(), any(), any())
+        }
+    }
+
+    test("returns GrantCreationError when confirmWithGrant reports grant failure") {
+        val documentId = UUID.randomUUID()
+        val document = createDocument(documentId)
+        val scopeId = UUID.randomUUID()
+        val documentRepository = mockk<DocumentRepository>()
+        val partyService = mockk<PartyService>()
+        val signatureService = mockk<SignatureService>()
+
+        every { businessHandler.getCreateGrantProperties(any()) } returns CreateGrantProperties(
+            validFrom = today(),
+            validTo = today().plus(DatePeriod(years = 1)),
+            meta = emptyMap()
+        )
+        coEvery { documentRepository.find(documentId) } returns document.right()
+        every { signatureService.validateSignaturesAndReturnSignatory(signedFile, document.file) } returns
+            signatoryIdentifier.right()
+        coEvery { partyService.resolve(signatoryIdentifier) } returns requestedTo.right()
+        coEvery { documentRepository.findScopeIds(documentId) } returns listOf(scopeId).right()
+        coEvery {
+            documentRepository.confirmWithGrant(documentId, signedFile, requestedFrom, requestedTo, any(), any(), any())
+        } returns ConfirmWithGrantError.GrantError.left()
+
+        val result = handler(documentRepository, partyService, signatureService)(
+            Command(documentId = documentId, authorizedParty = authorizationParty, signedFile = signedFile)
         )
 
         result.shouldBeLeft(ConfirmError.GrantCreationError)
-        verify(exactly = 1) { grantRepository.insert(any(), listOf(scopeId)) }
+        coVerify(exactly = 1) {
+            documentRepository.confirmWithGrant(documentId, signedFile, requestedFrom, requestedTo, any(), any(), any())
+        }
     }
 
     test("confirms document and creates grant on success") {
@@ -452,7 +424,6 @@ class HandlerTest : FunSpec({
         val documentRepository = mockk<DocumentRepository>()
         val partyService = mockk<PartyService>()
         val signatureService = mockk<SignatureService>()
-        val grantRepository = mockk<GrantRepository>()
         val validFrom = today()
         val validTo = today().plus(DatePeriod(years = 1))
 
@@ -461,52 +432,39 @@ class HandlerTest : FunSpec({
             validTo = validTo,
             meta = emptyMap()
         )
-
-        val expectedGrant = AuthorizationGrant.create(
-            grantedFor = confirmedDocument.requestedFrom,
-            grantedBy = requestedTo,
-            grantedTo = confirmedDocument.requestedBy,
-            sourceType = AuthorizationGrant.SourceType.Document,
-            sourceId = confirmedDocument.id,
-            scopeIds = scopeIds,
-            validFrom = businessHandler.getCreateGrantProperties(confirmedDocument).validFrom.toTimeZoneOffsetDateTimeAtStartOfDay(),
-            validTo = businessHandler.getCreateGrantProperties(confirmedDocument).validTo.toTimeZoneOffsetDateTimeAtStartOfDay()
-        )
-
-        every { documentRepository.find(documentId) } returns document.right()
+        coEvery { documentRepository.find(documentId) } returns document.right()
         every { signatureService.validateSignaturesAndReturnSignatory(signedFile, document.file) } returns
             signatoryIdentifier.right()
         coEvery { partyService.resolve(signatoryIdentifier) } returns requestedTo.right()
-        every {
-            documentRepository.confirm(documentId, signedFile, requestedFrom, requestedTo)
+        coEvery { documentRepository.findScopeIds(documentId) } returns scopeIds.right()
+        coEvery {
+            documentRepository.confirmWithGrant(documentId, signedFile, requestedFrom, requestedTo, any(), scopeIds, any())
         } returns confirmedDocument.right()
-        every { documentRepository.findScopeIds(confirmedDocument.id) } returns scopeIds.right()
-        every { grantRepository.insert(any(), scopeIds) } returns expectedGrant.right()
 
-        val result = handler(documentRepository, partyService, signatureService, grantRepository)(
-            Command(
-                documentId = documentId,
-                authorizedParty = authorizationParty,
-                signedFile = signedFile
-            )
+        val result = handler(documentRepository, partyService, signatureService)(
+            Command(documentId = documentId, authorizedParty = authorizationParty, signedFile = signedFile)
         )
 
         result.shouldBeRight()
-        verify(exactly = 1) { documentRepository.confirm(documentId, signedFile, requestedFrom, requestedTo) }
-        verify(exactly = 1) { documentRepository.findScopeIds(confirmedDocument.id) }
+        coVerify(exactly = 1) { documentRepository.findScopeIds(documentId) }
         coVerify(exactly = 1) {
-            grantRepository.insert(
+            documentRepository.confirmWithGrant(
+                documentId,
+                signedFile,
+                requestedFrom,
+                requestedTo,
                 match { grant ->
-                    grant.grantedFor == confirmedDocument.requestedFrom &&
+                    grant.grantedFor == document.requestedFrom &&
                         grant.grantedBy == requestedTo &&
-                        grant.grantedTo == confirmedDocument.requestedBy &&
+                        grant.grantedTo == document.requestedBy &&
                         grant.sourceType == AuthorizationGrant.SourceType.Document &&
-                        grant.sourceId == confirmedDocument.id &&
+                        grant.sourceId == document.id &&
                         grant.scopeIds == scopeIds &&
                         grant.validFrom == validFrom.toTimeZoneOffsetDateTimeAtStartOfDay() &&
                         grant.validTo == validTo.toTimeZoneOffsetDateTimeAtStartOfDay()
                 },
-                scopeIds
+                scopeIds,
+                any()
             )
         }
     }

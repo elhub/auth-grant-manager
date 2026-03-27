@@ -116,15 +116,15 @@ class HandlerTest : FunSpec({
             properties = commandMeta.toMetaAttributes().toDocumentProperties(),
             validTo = command.validTo,
         )
-        every { documentRepository.insert(any(), command.scopes) } returns savedDocument.right()
+        coEvery { documentRepository.insert(any(), command.scopes) } returns savedDocument.right()
 
         val handler = Handler(businessHandler, signatureService, documentRepository, partyService, fileGenerator)
 
         val response = handler(model)
 
         response.shouldBeRight(savedDocument)
-        verify(exactly = 1) { documentRepository.insert(any(), command.scopes) }
-        verify(exactly = 1) {
+        coVerify(exactly = 1) { documentRepository.insert(any(), command.scopes) }
+        coVerify(exactly = 1) {
             documentRepository.insert(
                 match { document ->
                     document.properties.any { it.key == "language" && it.value == SupportedLanguage.DEFAULT.code }
@@ -270,7 +270,7 @@ class HandlerTest : FunSpec({
         val response = handler(model)
 
         response.shouldBeLeft(CreateError.SignFileError(SignatureSigningError.SignatureFetchingError))
-        verify(exactly = 0) { documentRepository.insert(any(), any()) }
+        coVerify(exactly = 0) { documentRepository.insert(any(), any()) }
     }
 
     test("returns PersistenceError when repository insert fails") {
@@ -284,7 +284,7 @@ class HandlerTest : FunSpec({
         coEvery { businessHandler.validateAndReturnDocumentCommand(model) } returns command.right()
         every { fileGenerator.generate(commandMeta) } returns unsignedFile.right()
         coEvery { signatureService.sign(unsignedFile) } returns signedFile.right()
-        every {
+        coEvery {
             documentRepository.insert(any(), command.scopes)
         } returns RepositoryWriteError.UnexpectedError.left()
 

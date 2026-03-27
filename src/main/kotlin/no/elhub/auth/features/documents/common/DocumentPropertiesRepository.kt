@@ -1,5 +1,6 @@
 package no.elhub.auth.features.documents.common
 
+import no.elhub.auth.config.withTransaction
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.Table
@@ -10,25 +11,29 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import java.util.UUID
 
 interface DocumentPropertiesRepository {
-    fun insert(properties: List<AuthorizationDocumentProperty>, documentId: UUID)
-    fun find(documentId: UUID): List<AuthorizationDocumentProperty>
+    suspend fun insert(properties: List<AuthorizationDocumentProperty>, documentId: UUID)
+    suspend fun find(documentId: UUID): List<AuthorizationDocumentProperty>
 }
 
 class ExposedDocumentPropertiesRepository : DocumentPropertiesRepository {
-    override fun insert(properties: List<AuthorizationDocumentProperty>, documentId: UUID) {
+    override suspend fun insert(properties: List<AuthorizationDocumentProperty>, documentId: UUID) {
         if (properties.isEmpty()) return
-        AuthorizationDocumentPropertyTable.batchInsert(properties) { property ->
-            this[AuthorizationDocumentPropertyTable.documentId] = documentId
-            this[AuthorizationDocumentPropertyTable.key] = property.key
-            this[AuthorizationDocumentPropertyTable.value] = property.value
+        withTransaction {
+            AuthorizationDocumentPropertyTable.batchInsert(properties) { property ->
+                this[AuthorizationDocumentPropertyTable.documentId] = documentId
+                this[AuthorizationDocumentPropertyTable.key] = property.key
+                this[AuthorizationDocumentPropertyTable.value] = property.value
+            }
         }
     }
 
-    override fun find(documentId: UUID): List<AuthorizationDocumentProperty> =
-        AuthorizationDocumentPropertyTable
-            .selectAll()
-            .where { AuthorizationDocumentPropertyTable.documentId eq documentId }
-            .map { it.toAuthorizationDocumentProperty() }
+    override suspend fun find(documentId: UUID): List<AuthorizationDocumentProperty> =
+        withTransaction {
+            AuthorizationDocumentPropertyTable
+                .selectAll()
+                .where { AuthorizationDocumentPropertyTable.documentId eq documentId }
+                .map { it.toAuthorizationDocumentProperty() }
+        }
 }
 
 object AuthorizationDocumentPropertyTable : Table("auth.authorization_document_property") {
