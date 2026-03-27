@@ -13,14 +13,14 @@ import no.elhub.auth.features.common.party.AuthorizationPartyTable
 import no.elhub.auth.features.common.party.PartyRepository
 import no.elhub.auth.features.common.party.toAuthorizationParty
 import no.elhub.auth.features.documents.AuthorizationDocument
-import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.documents.common.AuthorizationDocumentScopeTable.authorizationDocumentId
 import no.elhub.auth.features.documents.common.AuthorizationDocumentScopeTable.authorizationScopeId
+import no.elhub.auth.features.grants.AuthorizationGrant
+import no.elhub.auth.features.grants.common.AuthorizationGrantProperty
 import no.elhub.auth.features.grants.common.AuthorizationScopeTable
 import no.elhub.auth.features.grants.common.AuthorizationScopeTable.authorizedResourceId
 import no.elhub.auth.features.grants.common.AuthorizationScopeTable.authorizedResourceType
 import no.elhub.auth.features.grants.common.AuthorizationScopeTable.permissionType
-import no.elhub.auth.features.grants.common.AuthorizationGrantProperty
 import no.elhub.auth.features.grants.common.GrantPropertiesRepository
 import no.elhub.auth.features.grants.common.GrantRepository
 import org.jetbrains.exposed.v1.core.ReferenceOption
@@ -146,7 +146,7 @@ class ExposedDocumentRepository(
                 .select(listOf(SignatoriesTable.signedBy))
                 .where {
                     (SignatoriesTable.authorizationDocumentId eq id) and
-                            (SignatoriesTable.requestedFrom eq documentRow[AuthorizationDocumentTable.requestedFrom])
+                        (SignatoriesTable.requestedFrom eq documentRow[AuthorizationDocumentTable.requestedFrom])
                 }
                 .singleOrNull()
                 ?.let { resolveParty(it[SignatoriesTable.signedBy]).bind() }

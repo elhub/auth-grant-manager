@@ -107,8 +107,10 @@ class Handler(
         ).mapLeft { error ->
             when (error) {
                 ConfirmWithGrantError.DocumentError.NotFound -> ConfirmError.DocumentNotFoundError
+
                 ConfirmWithGrantError.DocumentError.Conflict,
                 ConfirmWithGrantError.DocumentError.Unexpected -> ConfirmError.DocumentUpdateError
+
                 ConfirmWithGrantError.GrantError -> ConfirmError.GrantCreationError
             }
         }.bind()
