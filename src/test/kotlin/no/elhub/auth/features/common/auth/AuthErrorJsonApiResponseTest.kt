@@ -33,6 +33,11 @@ class AuthErrorJsonApiResponseTest : FunSpec({
             status = HttpStatusCode.Forbidden,
             title = "Unsupported party type",
             detail = "The party type you are authorized as is not supported for this endpoint."
+        ),
+        AuthError.EndUserOnBehalfOfOrganisationVerificationFailed to Expectation(
+            status = HttpStatusCode.Forbidden,
+            title = "Forbidden",
+            detail = "Access is denied for this endpoint."
         )
     ).forEach { (error, expected) ->
         test("toApiErrorResponse maps ${error::class.simpleName} to ${expected.status}") {
@@ -52,7 +57,7 @@ class AuthErrorJsonApiResponseTest : FunSpec({
         AuthError.InvalidPdpResponseAuthInfoMissing,
         AuthError.InvalidPdpResponseActingGlnMissing,
         AuthError.InvalidPdpResponseAuthorizedFunctionsMissing,
-        AuthError.UnknownError
+        AuthError.UnexpectedPdpError
     ).forEach { error ->
         test("toApiErrorResponse maps ${error::class.simpleName} to InternalServerError") {
             val (status, response) = error.toApiErrorResponse()

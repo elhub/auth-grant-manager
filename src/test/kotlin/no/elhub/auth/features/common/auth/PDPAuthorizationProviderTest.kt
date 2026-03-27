@@ -276,14 +276,14 @@ class PDPAuthorizationProviderTest : FunSpec({
             response.shouldBeLeft(AuthError.InvalidToken)
         }
 
-        test("returns UnknownError when partyId is missing") {
+        test("returns UnexpectedPdpError when partyId is missing") {
             val response = runProviderMethod(
                 method = PDPAuthorizationProvider::authorizeEndUser,
                 headers = authorizationOnlyHeaders(),
                 pdpResponse = endUserResponse(partyId = null)
             )
 
-            response.shouldBeLeft(AuthError.UnknownError)
+            response.shouldBeLeft(AuthError.UnexpectedPdpError)
         }
 
         test("returns AuthorizedPerson when partyId is present") {
@@ -295,6 +295,78 @@ class PDPAuthorizationProviderTest : FunSpec({
             )
 
             response.shouldBeRight(AuthorizationParty(id = UUID.fromString(partyId).toString(), type = PartyType.Person))
+        }
+
+        test("returns AuthorizedPerson with actingId when authInfo contains actingType=person") {
+            val actingId = "e76439bc-0344-4ef5-b2f8-41a72c25ffd8"
+            val response = runProviderMethod(
+                method = PDPAuthorizationProvider::authorizeEndUser,
+                headers = authorizationOnlyHeaders(),
+                pdpResponse = endUserResponse(
+                    authInfo = AuthInfo(actingType = ActingType.Person, actingId = actingId)
+                )
+            )
+
+            response.shouldBeRight(AuthorizationParty(id = actingId, type = PartyType.Person))
+        }
+
+        test("returns UnexpectedPdpError when authInfo.actingType is person but actingId is missing") {
+            val response = runProviderMethod(
+                method = PDPAuthorizationProvider::authorizeEndUser,
+                headers = authorizationOnlyHeaders(),
+                pdpResponse = endUserResponse(
+                    authInfo = AuthInfo(actingType = ActingType.Person, actingId = null)
+                )
+            )
+
+            response.shouldBeLeft(AuthError.UnexpectedPdpError)
+        }
+
+        test("returns AuthorizedOrganization when authInfo contains actingType=organisation") {
+            val orgNumber = "306137018"
+            val response = runProviderMethod(
+                method = PDPAuthorizationProvider::authorizeEndUser,
+                headers = authorizationOnlyHeaders(),
+                pdpResponse = endUserResponse(
+                    authInfo = AuthInfo(
+                        actingType = ActingType.Organisation,
+                        actingId = "b8af0fb3-bad7-4ca4-9153-919243635601",
+                        actingOrganisationNumber = orgNumber,
+                        originalId = "e76439bc-0344-4ef5-b2f8-41a72c25ffd8"
+                    )
+                )
+            )
+
+            response.shouldBeRight(AuthorizationParty(id = orgNumber, type = PartyType.Organization))
+        }
+
+        test("returns UnexpectedPdpError when authInfo.actingType is organisation but actingOrganisationNumber is missing") {
+            val response = runProviderMethod(
+                method = PDPAuthorizationProvider::authorizeEndUser,
+                headers = authorizationOnlyHeaders(),
+                pdpResponse = endUserResponse(
+                    authInfo = AuthInfo(actingType = ActingType.Organisation, actingOrganisationNumber = null)
+                )
+            )
+
+            response.shouldBeLeft(AuthError.UnexpectedPdpError)
+        }
+
+        test("returns OnBehalfOfOrganisationVerificationFailed when PDP authInfo contains error") {
+            val response = runProviderMethod(
+                method = PDPAuthorizationProvider::authorizeEndUser,
+                headers = authorizationOnlyHeaders(),
+                pdpResponse = endUserResponse(
+                    authInfo = AuthInfo(
+                        actingId = "",
+                        actingType = null,
+                        error = "Unable to verify OnBehalfOfOrganisationId for end user token",
+                        originalId = "e76439bc-0344-4ef5-b2f8-41a72c25ffd8"
+                    )
+                )
+            )
+
+            response.shouldBeLeft(AuthError.EndUserOnBehalfOfOrganisationVerificationFailed)
         }
     }
 
@@ -309,14 +381,14 @@ class PDPAuthorizationProviderTest : FunSpec({
             response.shouldBeLeft(AuthError.AccessDenied)
         }
 
-        test("returns UnknownError when partyId is missing") {
+        test("returns UnexpectedPdpError when partyId is missing") {
             val response = runProviderMethod(
                 method = PDPAuthorizationProvider::authorizeElhubService,
                 headers = authorizationOnlyHeaders(),
                 pdpResponse = elhubServiceResponse(partyId = null)
             )
 
-            response.shouldBeLeft(AuthError.UnknownError)
+            response.shouldBeLeft(AuthError.UnexpectedPdpError)
         }
 
         test("returns AuthorizedSystem when partyId is present") {
@@ -404,13 +476,15 @@ private fun endUserResponse(
     tokenStatus: String = "verified",
     partyId: String? = "a8098c1a-f86e-11da-bd1a-00112444be1e",
     tokenType: String? = TokenType.ENDUSER.value,
+    authInfo: AuthInfo? = null,
 ) = PdpResponse(
     result = Result(
         tokenInfo = TokenInfo(
             tokenStatus = tokenStatus,
             partyId = partyId,
             tokenType = tokenType
-        )
+        ),
+        authInfo = authInfo
     )
 )
 
