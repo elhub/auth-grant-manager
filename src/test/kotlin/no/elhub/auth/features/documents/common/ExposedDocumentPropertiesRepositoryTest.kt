@@ -4,6 +4,7 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
+import no.elhub.auth.config.withTransaction
 import no.elhub.auth.features.common.PostgresTestContainer
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.currentTimeUtc
@@ -11,18 +12,26 @@ import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.ExposedPartyRepository
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.documents.AuthorizationDocument
+import no.elhub.auth.features.grants.common.ExposedGrantPropertiesRepository
+import no.elhub.auth.features.grants.common.ExposedGrantRepository
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.deleteAll
 import org.jetbrains.exposed.v1.jdbc.selectAll
-import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.util.UUID
 
 class ExposedDocumentPropertiesRepositoryTest : FunSpec({
     extensions(PostgresTestContainerExtension())
 
     val repository = ExposedDocumentPropertiesRepository()
-    val documentRepository =
-        ExposedDocumentRepository(partyRepo = ExposedPartyRepository(), documentPropertiesRepository = repository)
+    val partyRepo = ExposedPartyRepository()
+    val grantPropertiesRepository = ExposedGrantPropertiesRepository()
+    val grantRepository = ExposedGrantRepository(partyRepo, grantPropertiesRepository)
+    val documentRepository = ExposedDocumentRepository(
+        partyRepo = partyRepo,
+        grantRepo = grantRepository,
+        documentPropertiesRepository = repository,
+        grantPropertiesRepository = grantPropertiesRepository
+    )
 
     beforeSpec {
         Database.connect(
@@ -34,7 +43,7 @@ class ExposedDocumentPropertiesRepositoryTest : FunSpec({
     }
 
     beforeTest {
-        transaction {
+        withTransaction {
             AuthorizationDocumentPropertyTable.deleteAll()
         }
     }
@@ -43,8 +52,8 @@ class ExposedDocumentPropertiesRepositoryTest : FunSpec({
     context("Document properties repository") {
         test("insert empty list should not create rows") {
             val properties = emptyList<AuthorizationDocumentProperty>()
-            transaction {
-                repository.insert(properties, documentId)
+            repository.insert(properties, documentId)
+            withTransaction {
                 AuthorizationDocumentPropertyTable.selectAll().count().shouldBe(0)
             }
         }
@@ -66,23 +75,19 @@ class ExposedDocumentPropertiesRepositoryTest : FunSpec({
                     updatedAt = currentTimeUtc()
                 )
 
-            transaction {
-                documentRepository.insert(document, listOf())
+            documentRepository.insert(document, listOf())
 
-                val properties = listOf(
-                    AuthorizationDocumentProperty("requestedFromName", "Ola Normann"),
-                    AuthorizationDocumentProperty("meteringPointId", "1234")
-                )
+            val properties = listOf(
+                AuthorizationDocumentProperty("requestedFromName", "Ola Normann"),
+                AuthorizationDocumentProperty("meteringPointId", "1234")
+            )
 
-                repository.insert(properties, document.id)
-                repository.find(document.id) shouldContainExactlyInAnyOrder properties
-            }
+            repository.insert(properties, document.id)
+            repository.find(document.id) shouldContainExactlyInAnyOrder properties
         }
 
         test("find returns empty list when no properties exist for document") {
-            transaction {
-                repository.find(UUID.randomUUID()).shouldBeEmpty()
-            }
+            repository.find(UUID.randomUUID()).shouldBeEmpty()
         }
     }
 })

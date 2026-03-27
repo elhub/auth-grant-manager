@@ -6,6 +6,7 @@ import arrow.core.right
 import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.core.spec.style.FunSpec
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.datetime.DatePeriod
@@ -62,12 +63,12 @@ class HandlerTest : FunSpec({
 
     fun documentRepoReturning(result: Either<RepositoryReadError, AuthorizationDocument>): DocumentRepository =
         mockk<DocumentRepository> {
-            every { find(documentId) } returns result
+            coEvery { find(documentId) } returns result
         }
 
     fun grantRepoReturning(result: Either<RepositoryReadError, AuthorizationGrant?>): GrantRepository =
         mockk<GrantRepository> {
-            every { findBySource(AuthorizationGrant.SourceType.Document, documentId) } returns result
+            coEvery { findBySource(AuthorizationGrant.SourceType.Document, documentId) } returns result
         }
 
     test("returns document with grant id when authorized party matches requestedBy") {

@@ -3,20 +3,17 @@ package no.elhub.auth.features.documents.confirm
 import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensure
-import no.elhub.auth.config.withTransaction
 import no.elhub.auth.features.common.RepositoryReadError
-import no.elhub.auth.features.common.RepositoryWriteError
 import no.elhub.auth.features.common.currentTimeUtc
 import no.elhub.auth.features.common.party.PartyService
 import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
 import no.elhub.auth.features.documents.AuthorizationDocument
+import no.elhub.auth.features.documents.common.ConfirmWithGrantError
 import no.elhub.auth.features.documents.common.DocumentBusinessHandler
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.documents.common.SignatureService
 import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.common.AuthorizationGrantProperty
-import no.elhub.auth.features.grants.common.GrantPropertiesRepository
-import no.elhub.auth.features.grants.common.GrantRepository
 import org.slf4j.LoggerFactory
 import kotlin.collections.component1
 import kotlin.collections.component2
@@ -24,10 +21,8 @@ import kotlin.collections.component2
 class Handler(
     private val businessHandler: DocumentBusinessHandler,
     private val documentRepository: DocumentRepository,
-    private val grantRepository: GrantRepository,
     private val partyService: PartyService,
     private val signatureService: SignatureService,
-    private val grantPropertiesRepository: GrantPropertiesRepository
 ) {
 
     private val log = LoggerFactory.getLogger(Handler::class.java)
@@ -35,15 +30,13 @@ class Handler(
     suspend operator fun invoke(command: Command): Either<ConfirmError, Unit> = either {
         val authorizationParty = command.authorizedParty
 
-        val document = withTransaction {
-            documentRepository.find(command.documentId)
-                .mapLeft { error ->
-                    when (error) {
-                        is RepositoryReadError.NotFoundError -> ConfirmError.DocumentNotFoundError
-                        is RepositoryReadError.UnexpectedError -> ConfirmError.DocumentReadError
-                    }
-                }.bind()
-        }
+        val document = documentRepository.find(command.documentId)
+            .mapLeft { error ->
+                when (error) {
+                    is RepositoryReadError.NotFoundError -> ConfirmError.DocumentNotFoundError
+                    is RepositoryReadError.UnexpectedError -> ConfirmError.DocumentReadError
+                }
+            }.bind()
 
         ensure(authorizationParty == document.requestedBy) {
             ConfirmError.InvalidRequestedByError
@@ -57,12 +50,13 @@ class Handler(
             ConfirmError.ExpiredError
         }
 
-        val signatoryIdentifier = signatureService.validateSignaturesAndReturnSignatory(command.signedFile, document.file)
-            .mapLeft {
-                log.error("Validate signature error occurred: {}", it)
-                ConfirmError.ValidateSignaturesError(it)
-            }
-            .bind()
+        val signatoryIdentifier =
+            signatureService.validateSignaturesAndReturnSignatory(command.signedFile, document.file)
+                .mapLeft {
+                    log.error("Validate signature error occurred: {}", it)
+                    ConfirmError.ValidateSignaturesError(it)
+                }
+                .bind()
 
         val actualSignatoryParty = partyService.resolve(signatoryIdentifier)
             .mapLeft { ConfirmError.SignatoryResolutionError }
@@ -73,63 +67,56 @@ class Handler(
             ConfirmError.SignatoryNotAllowedToSignDocument
         }
 
-        withTransaction {
-            val confirmedDocument = documentRepository.confirm(
-                documentId = document.id,
-                signedFile = command.signedFile,
-                requestedFrom = document.requestedFrom,
-                signatory = expectedSignatoryParty
+        val scopeIds = documentRepository.findScopeIds(command.documentId)
+            .mapLeft { error ->
+                when (error) {
+                    is RepositoryReadError.NotFoundError -> ConfirmError.DocumentNotFoundError
+                    is RepositoryReadError.UnexpectedError -> ConfirmError.ScopeReadError
+                }
+            }.bind()
+
+        val grantProperties = businessHandler.getCreateGrantProperties(document)
+
+        val grantToCreate = AuthorizationGrant.create(
+            grantedFor = document.requestedFrom,
+            grantedBy = expectedSignatoryParty,
+            grantedTo = document.requestedBy,
+            sourceType = AuthorizationGrant.SourceType.Document,
+            sourceId = document.id,
+            scopeIds = scopeIds,
+            validFrom = grantProperties.validFrom.toTimeZoneOffsetDateTimeAtStartOfDay(),
+            validTo = grantProperties.validTo.toTimeZoneOffsetDateTimeAtStartOfDay()
+        )
+
+        val grantMetaProperties = grantProperties.meta.map { (key, value) ->
+            AuthorizationGrantProperty(
+                grantId = grantToCreate.id,
+                key = key,
+                value = value
             )
-                .mapLeft { error ->
-                    when (error) {
-                        is RepositoryWriteError.NotFoundError -> ConfirmError.DocumentNotFoundError
-
-                        is RepositoryWriteError.ConflictError,
-                        is RepositoryWriteError.UnexpectedError -> ConfirmError.DocumentUpdateError
-                    }
-                }.bind()
-
-            val scopeIds = documentRepository.findScopeIds(command.documentId)
-                .mapLeft { error ->
-                    when (error) {
-                        is RepositoryReadError.NotFoundError -> ConfirmError.DocumentNotFoundError
-                        is RepositoryReadError.UnexpectedError -> ConfirmError.ScopeReadError
-                    }
-                }.bind()
-
-            val grantProperties = businessHandler.getCreateGrantProperties(confirmedDocument)
-
-            val grantToCreate =
-                AuthorizationGrant.create(
-                    grantedFor = confirmedDocument.requestedFrom,
-                    grantedBy = expectedSignatoryParty,
-                    grantedTo = confirmedDocument.requestedBy,
-                    sourceType = AuthorizationGrant.SourceType.Document,
-                    sourceId = confirmedDocument.id,
-                    scopeIds = scopeIds,
-                    validFrom = grantProperties.validFrom.toTimeZoneOffsetDateTimeAtStartOfDay(),
-                    validTo = grantProperties.validTo.toTimeZoneOffsetDateTimeAtStartOfDay()
-                )
-
-            val createdGrant = grantRepository.insert(grantToCreate, scopeIds)
-                .mapLeft { ConfirmError.GrantCreationError }.bind()
-
-            log.info(
-                "event=authorization_grant_created id={} sourceType={} sourceId={}",
-                createdGrant.id,
-                createdGrant.sourceType,
-                createdGrant.sourceId
-            )
-
-            val grantMetaProperties = grantProperties.meta.map { (key, value) ->
-                AuthorizationGrantProperty(
-                    grantId = createdGrant.id,
-                    key = key,
-                    value = value
-                )
-            }
-
-            grantPropertiesRepository.insert(grantMetaProperties)
         }
+
+        val confirmedDocument = documentRepository.confirmWithGrant(
+            documentId = document.id,
+            signedFile = command.signedFile,
+            requestedFrom = document.requestedFrom,
+            signatory = expectedSignatoryParty,
+            grant = grantToCreate,
+            scopeIds = scopeIds,
+            grantProperties = grantMetaProperties
+        ).mapLeft { error ->
+            when (error) {
+                ConfirmWithGrantError.DocumentError.NotFound -> ConfirmError.DocumentNotFoundError
+                ConfirmWithGrantError.DocumentError.Conflict,
+                ConfirmWithGrantError.DocumentError.Unexpected -> ConfirmError.DocumentUpdateError
+                ConfirmWithGrantError.GrantError -> ConfirmError.GrantCreationError
+            }
+        }.bind()
+
+        log.info(
+            "event=authorization_grant_created documentId={} grantId={}",
+            confirmedDocument.id,
+            grantToCreate.id
+        )
     }
 }

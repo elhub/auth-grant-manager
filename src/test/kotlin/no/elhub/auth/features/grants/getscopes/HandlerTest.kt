@@ -5,6 +5,7 @@ import arrow.core.right
 import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.core.spec.style.FunSpec
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import no.elhub.auth.features.common.QueryError
@@ -61,8 +62,8 @@ class HandlerTest : FunSpec({
         scopesResult: arrow.core.Either<RepositoryReadError, List<AuthorizationScope>> = scopes.right(),
     ): GrantRepository =
         mockk<GrantRepository> {
-            every { find(grantId) } returns grantResult
-            every { findScopes(grantId) } returns scopesResult
+            coEvery { find(grantId) } returns grantResult
+            coEvery { findScopes(grantId) } returns scopesResult
         }
 
     test("returns scopes when authorized party is valid System") {

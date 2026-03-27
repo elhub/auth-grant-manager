@@ -2,6 +2,7 @@ package no.elhub.auth.features.grants.common
 
 import arrow.core.Either
 import arrow.core.raise.either
+import no.elhub.auth.config.withTransactionEither
 import no.elhub.auth.features.common.PGEnum
 import no.elhub.auth.features.common.RepositoryError
 import no.elhub.auth.features.common.RepositoryReadError
@@ -33,12 +34,12 @@ import java.util.UUID
 import kotlin.collections.listOf
 
 interface GrantRepository {
-    fun find(grantId: UUID): Either<RepositoryReadError, AuthorizationGrant>
-    fun findBySource(sourceType: SourceType, sourceId: UUID): Either<RepositoryReadError, AuthorizationGrant?>
-    fun findScopes(grantId: UUID): Either<RepositoryReadError, List<AuthorizationScope>>
-    fun findAll(party: AuthorizationParty): Either<RepositoryReadError, List<AuthorizationGrant>>
-    fun insert(grant: AuthorizationGrant, scopeIds: List<UUID>): Either<RepositoryWriteError, AuthorizationGrant>
-    fun update(grantId: UUID, newStatus: Status): Either<RepositoryError, AuthorizationGrant>
+    suspend fun find(grantId: UUID): Either<RepositoryReadError, AuthorizationGrant>
+    suspend fun findBySource(sourceType: SourceType, sourceId: UUID): Either<RepositoryReadError, AuthorizationGrant?>
+    suspend fun findScopes(grantId: UUID): Either<RepositoryReadError, List<AuthorizationScope>>
+    suspend fun findAll(party: AuthorizationParty): Either<RepositoryReadError, List<AuthorizationGrant>>
+    suspend fun insert(grant: AuthorizationGrant, scopeIds: List<UUID>): Either<RepositoryWriteError, AuthorizationGrant>
+    suspend fun update(grantId: UUID, newStatus: Status): Either<RepositoryError, AuthorizationGrant>
 }
 
 class ExposedGrantRepository(
@@ -48,76 +49,56 @@ class ExposedGrantRepository(
 
     private val logger = LoggerFactory.getLogger(ExposedGrantRepository::class.java)
 
-    override fun findAll(party: AuthorizationParty): Either<RepositoryReadError, List<AuthorizationGrant>> = either {
-        val partyId = partyRepository.findOrInsert(type = party.type, partyId = party.id)
-            .mapLeft { RepositoryReadError.UnexpectedError }
-            .bind()
-            .id
+    override suspend fun findAll(party: AuthorizationParty): Either<RepositoryReadError, List<AuthorizationGrant>> =
+        withTransactionEither({ RepositoryReadError.UnexpectedError }) {
+            val partyId = partyRepository.findOrInsert(type = party.type, partyId = party.id)
+                .mapLeft { RepositoryReadError.UnexpectedError }
+                .bind()
+                .id
 
-        val grantRows = AuthorizationGrantTable
-            .selectAll()
-            .where {
-                (AuthorizationGrantTable.grantedTo eq partyId) or (AuthorizationGrantTable.grantedFor eq partyId)
-            }
-            .toList()
-
-        if (grantRows.isEmpty()) {
-            return@either emptyList()
+            AuthorizationGrantTable
+                .selectAll()
+                .where {
+                    (AuthorizationGrantTable.grantedTo eq partyId) or (AuthorizationGrantTable.grantedFor eq partyId)
+                }
+                .map { g ->
+                    findInternalGrant(g[AuthorizationGrantTable.id].value)
+                        .mapLeft { RepositoryReadError.UnexpectedError }
+                        .bind()
+                }
         }
 
-        val partyIds: List<UUID> = grantRows
-            .flatMap { g ->
-                listOf(
-                    g[AuthorizationGrantTable.grantedFor],
-                    g[AuthorizationGrantTable.grantedBy],
-                    g[AuthorizationGrantTable.grantedTo]
-                )
-            }
-            .toSet()
-            .toList()
-
-        grantRows.map { g ->
-            findInternalGrant(g[AuthorizationGrantTable.id].value)
-                .mapLeft { readError ->
-                    when (readError) {
-                        is RepositoryReadError.NotFoundError, RepositoryReadError.UnexpectedError -> RepositoryReadError.UnexpectedError
-                    }
-                }.bind()
+    override suspend fun find(grantId: UUID): Either<RepositoryReadError, AuthorizationGrant> =
+        withTransactionEither<RepositoryReadError, AuthorizationGrant>({ RepositoryReadError.UnexpectedError }) {
+            findInternalGrant(grantId).bind()
         }
-    }
 
-    override fun find(grantId: UUID): Either<RepositoryReadError, AuthorizationGrant> = either {
-        findInternalGrant(grantId)
-            .mapLeft { it }.bind()
-    }
-
-    override fun findBySource(
+    override suspend fun findBySource(
         sourceType: SourceType,
         sourceId: UUID
     ): Either<RepositoryReadError, AuthorizationGrant?> =
-        either {
-            val grant = AuthorizationGrantTable
+        withTransactionEither<RepositoryReadError, AuthorizationGrant?>({ RepositoryReadError.UnexpectedError }) {
+            AuthorizationGrantTable
                 .selectAll()
                 .where {
                     (AuthorizationGrantTable.sourceType eq sourceType) and (AuthorizationGrantTable.sourceId eq sourceId)
                 }
                 .singleOrNull()
-                ?: return@either null
+                ?.let { grant ->
+                    val grantedFor = partyRepository.find(grant[AuthorizationGrantTable.grantedFor]).bind()
+                    val grantedBy = partyRepository.find(grant[AuthorizationGrantTable.grantedBy]).bind()
+                    val grantedTo = partyRepository.find(grant[AuthorizationGrantTable.grantedTo]).bind()
+                    val scopes = findScopeIds(grant[AuthorizationGrantTable.id].value).bind()
+                    val properties = grantPropertiesRepository.findBy(grant[AuthorizationGrantTable.id].value)
 
-            val grantedFor = partyRepository.find(grant[AuthorizationGrantTable.grantedFor]).bind()
-            val grantedBy = partyRepository.find(grant[AuthorizationGrantTable.grantedBy]).bind()
-            val grantedTo = partyRepository.find(grant[AuthorizationGrantTable.grantedTo]).bind()
-            val scopes = findScopeIds(grant[AuthorizationGrantTable.id].value).bind()
-
-            val properties = grantPropertiesRepository.findBy(grant[AuthorizationGrantTable.id].value)
-
-            grant.toAuthorizationGrant(
-                grantedBy = grantedBy,
-                grantedFor = grantedFor,
-                grantedTo = grantedTo,
-                scopeIds = scopes,
-                properties = properties
-            )
+                    grant.toAuthorizationGrant(
+                        grantedBy = grantedBy,
+                        grantedFor = grantedFor,
+                        grantedTo = grantedTo,
+                        scopeIds = scopes,
+                        properties = properties
+                    )
+                }
         }
 
     fun findScopeIds(grantId: UUID): Either<RepositoryReadError, List<UUID>> = either {
@@ -135,77 +116,74 @@ class ExposedGrantRepository(
             .map { row -> row[AuthorizationScopeTable.id].value }
     }
 
-    override fun findScopes(grantId: UUID): Either<RepositoryReadError, List<AuthorizationScope>> = either {
-        AuthorizationGrantTable
-            .selectAll()
-            .where { AuthorizationGrantTable.id eq grantId }
-            .singleOrNull()
-            ?.let {
-                (AuthorizationGrantScopeTable innerJoin AuthorizationScopeTable)
-                    .selectAll()
-                    .where { AuthorizationGrantScopeTable.authorizationGrantId eq grantId }
-                    .map { row ->
-                        AuthorizationScope(
-                            id = row[AuthorizationScopeTable.id].value,
-                            authorizedResourceId = row[AuthorizationScopeTable.authorizedResourceId],
-                            authorizedResourceType = row[AuthorizationScopeTable.authorizedResourceType],
-                            permissionType = row[AuthorizationScopeTable.permissionType],
-                            createdAt = row[AuthorizationScopeTable.createdAt]
-                        )
-                    }
-            } ?: run {
-            logger.error("Scope not found for authorization grant with id=$grantId")
-            raise(RepositoryReadError.NotFoundError)
+    override suspend fun findScopes(grantId: UUID): Either<RepositoryReadError, List<AuthorizationScope>> =
+        withTransactionEither<RepositoryReadError, List<AuthorizationScope>>({ RepositoryReadError.UnexpectedError }) {
+            AuthorizationGrantTable
+                .selectAll()
+                .where { AuthorizationGrantTable.id eq grantId }
+                .singleOrNull()
+                ?.let {
+                    (AuthorizationGrantScopeTable innerJoin AuthorizationScopeTable)
+                        .selectAll()
+                        .where { AuthorizationGrantScopeTable.authorizationGrantId eq grantId }
+                        .map { row ->
+                            AuthorizationScope(
+                                id = row[AuthorizationScopeTable.id].value,
+                                authorizedResourceId = row[AuthorizationScopeTable.authorizedResourceId],
+                                authorizedResourceType = row[AuthorizationScopeTable.authorizedResourceType],
+                                permissionType = row[AuthorizationScopeTable.permissionType],
+                                createdAt = row[AuthorizationScopeTable.createdAt]
+                            )
+                        }
+                } ?: run {
+                logger.error("Scope not found for authorization grant with id=$grantId")
+                raise(RepositoryReadError.NotFoundError)
+            }
         }
-    }
 
-    override fun insert(
+    override suspend fun insert(
         grant: AuthorizationGrant,
         scopeIds: List<UUID>,
     ): Either<RepositoryWriteError, AuthorizationGrant> =
-        either {
-            val grantedByParty =
-                partyRepository
-                    .findOrInsert(grant.grantedBy.type, grant.grantedBy.id)
-                    .mapLeft { RepositoryWriteError.UnexpectedError }
-                    .bind()
+        withTransactionEither({ RepositoryWriteError.UnexpectedError }) {
+            val grantedByParty = partyRepository
+                .findOrInsert(grant.grantedBy.type, grant.grantedBy.id)
+                .mapLeft { RepositoryWriteError.UnexpectedError }
+                .bind()
 
-            val grantedForParty =
-                partyRepository
-                    .findOrInsert(grant.grantedFor.type, grant.grantedFor.id)
-                    .mapLeft { RepositoryWriteError.UnexpectedError }
-                    .bind()
+            val grantedForParty = partyRepository
+                .findOrInsert(grant.grantedFor.type, grant.grantedFor.id)
+                .mapLeft { RepositoryWriteError.UnexpectedError }
+                .bind()
 
-            val grantedToParty =
-                partyRepository
-                    .findOrInsert(grant.grantedTo.type, grant.grantedTo.id)
-                    .mapLeft { RepositoryWriteError.UnexpectedError }
-                    .bind()
+            val grantedToParty = partyRepository
+                .findOrInsert(grant.grantedTo.type, grant.grantedTo.id)
+                .mapLeft { RepositoryWriteError.UnexpectedError }
+                .bind()
 
-            val authorizationGrant =
-                AuthorizationGrantTable
-                    .insertReturning {
-                        it[id] = grant.id
-                        it[grantStatus] = grant.grantStatus
-                        it[grantedBy] = grantedByParty.id
-                        it[grantedFor] = grantedForParty.id
-                        it[grantedTo] = grantedToParty.id
-                        it[grantedAt] = grant.grantedAt
-                        it[validFrom] = grant.validFrom
-                        it[validTo] = grant.validTo
-                        it[createdAt] = grant.createdAt
-                        it[updatedAt] = grant.updatedAt
-                        it[sourceType] = grant.sourceType
-                        it[sourceId] = grant.sourceId
-                    }.map {
-                        it.toAuthorizationGrant(
-                            grantedBy = grantedByParty,
-                            grantedFor = grantedForParty,
-                            grantedTo = grantedToParty,
-                            scopeIds = scopeIds,
-                            properties = grant.properties
-                        )
-                    }.single()
+            val authorizationGrant = AuthorizationGrantTable
+                .insertReturning {
+                    it[id] = grant.id
+                    it[grantStatus] = grant.grantStatus
+                    it[grantedBy] = grantedByParty.id
+                    it[grantedFor] = grantedForParty.id
+                    it[grantedTo] = grantedToParty.id
+                    it[grantedAt] = grant.grantedAt
+                    it[validFrom] = grant.validFrom
+                    it[validTo] = grant.validTo
+                    it[createdAt] = grant.createdAt
+                    it[updatedAt] = grant.updatedAt
+                    it[sourceType] = grant.sourceType
+                    it[sourceId] = grant.sourceId
+                }.map {
+                    it.toAuthorizationGrant(
+                        grantedBy = grantedByParty,
+                        grantedFor = grantedForParty,
+                        grantedTo = grantedToParty,
+                        scopeIds = scopeIds,
+                        properties = grant.properties
+                    )
+                }.single()
 
             if (scopeIds.isNotEmpty()) {
                 AuthorizationGrantScopeTable.batchInsert(scopeIds) { scopeId ->
@@ -215,29 +193,25 @@ class ExposedGrantRepository(
             }
 
             authorizationGrant
-        }.mapLeft { RepositoryWriteError.UnexpectedError }
-
-    override fun update(grantId: UUID, newStatus: Status): Either<RepositoryError, AuthorizationGrant> = either {
-        val rowsUpdated = AuthorizationGrantTable.update(
-            where = { AuthorizationGrantTable.id eq grantId }
-        ) {
-            it[grantStatus] = newStatus
-            it[updatedAt] = currentTimeUtc()
         }
 
-        if (rowsUpdated == 0) {
-            raise(RepositoryWriteError.UnexpectedError)
+    override suspend fun update(grantId: UUID, newStatus: Status): Either<RepositoryError, AuthorizationGrant> =
+        withTransactionEither<RepositoryError, AuthorizationGrant>({ RepositoryWriteError.UnexpectedError }) {
+            val rowsUpdated = AuthorizationGrantTable.update(
+                where = { AuthorizationGrantTable.id eq grantId }
+            ) {
+                it[grantStatus] = newStatus
+                it[updatedAt] = currentTimeUtc()
+            }
+
+            if (rowsUpdated == 0) raise(RepositoryWriteError.UnexpectedError)
+
+            findInternalGrant(grantId)
+                .mapLeft { RepositoryReadError.UnexpectedError }
+                .bind()
         }
 
-        findInternalGrant(grantId)
-            .mapLeft { readError ->
-                when (readError) {
-                    is RepositoryReadError.NotFoundError, RepositoryReadError.UnexpectedError -> RepositoryReadError.UnexpectedError
-                }
-            }.bind()
-    }
-
-    private fun findInternalGrant(grantId: UUID): Either<RepositoryReadError, AuthorizationGrant> =
+    private suspend fun findInternalGrant(grantId: UUID): Either<RepositoryReadError, AuthorizationGrant> =
         either {
             val grant = AuthorizationGrantTable
                 .selectAll()

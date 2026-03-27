@@ -6,6 +6,7 @@ import arrow.core.right
 import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.core.spec.style.FunSpec
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import no.elhub.auth.features.common.RepositoryError
@@ -81,8 +82,8 @@ class HandlerTest : FunSpec({
         findResult: Either<RepositoryReadError, AuthorizationGrant> = activeGrant.right(),
     ): GrantRepository =
         mockk<GrantRepository> {
-            every { update(grantId, newStatus) } returns updateResult
-            every { find(grantId) } returns findResult
+            coEvery { update(grantId, newStatus) } returns updateResult
+            coEvery { find(grantId) } returns findResult
         }
 
     test("maps repository error to PersistenceError") {
