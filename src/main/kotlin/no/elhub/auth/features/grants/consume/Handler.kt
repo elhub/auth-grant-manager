@@ -3,7 +3,6 @@ package no.elhub.auth.features.grants.consume
 import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensure
-import no.elhub.auth.config.withTransaction
 import no.elhub.auth.features.common.currentTimeUtc
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.grants.AuthorizationGrant
@@ -21,24 +20,20 @@ class Handler(
             ConsumeError.IllegalTransitionError
         }
 
-        val updated = withTransaction {
-            val originalGrant = repo.find(command.grantId)
-                .mapLeft { ConsumeError.GrantNotFound }
-                .bind()
+        val originalGrant = repo.find(command.grantId)
+            .mapLeft { ConsumeError.GrantNotFound }
+            .bind()
 
-            ensure(originalGrant.validTo >= currentTimeUtc()) {
-                ConsumeError.ExpiredError
-            }
-
-            ensure(originalGrant.grantStatus == Status.Active) {
-                ConsumeError.IllegalStateError
-            }
-
-            repo.update(command.grantId, command.newStatus)
-                .mapLeft { ConsumeError.PersistenceError }
-                .bind()
+        ensure(originalGrant.validTo >= currentTimeUtc()) {
+            ConsumeError.ExpiredError
         }
 
-        updated
+        ensure(originalGrant.grantStatus == Status.Active) {
+            ConsumeError.IllegalStateError
+        }
+
+        repo.update(command.grantId, command.newStatus)
+            .mapLeft { ConsumeError.PersistenceError }
+            .bind()
     }
 }
