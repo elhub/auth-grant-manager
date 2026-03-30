@@ -1,0 +1,227 @@
+# Skill evaluation cases for auth-grant-manager.
+# Workflow (agent-driven — tell the Copilot CLI agent "evaluate skills"):
+#   1. Agent spawns a generate sub-agent per case (uses the task prompt + skills)
+#   2. Agent spawns a judge sub-agent to score the generated output against the rubric
+#   3. Agent renders a visual report and saves to eval/results.jsonl
+#
+# To add a new case: add an entry following the schema below.
+# skills: which SKILL.md files to load (relative to .github/skills/)
+
+cases:
+
+  - id: new-repository
+    description: "Implement a repository for a new table with a UUID PK and a varchar column"
+    skills:
+      - database-access-exposed-liquibase
+      - functional-error-handling-arrow
+    prompt: |
+      You are working in the auth-grant-manager Kotlin/Ktor codebase.
+      The project uses Exposed v1 ORM with PostgreSQL.
+
+      Add a new table called `bar` with columns:
+        - id   (UUID primary key)
+        - label (varchar, not null)
+
+      Create the following:
+      1. A Liquibase migration SQL file in db/tables/ (filename: 0031-bar.sql)
+      2. A domain data class Bar(id: UUID, label: String)
+      3. A BarTable object (Kotlin)
+      4. A BarRepository interface and ExposedBarRepository implementation
+         with suspend find(id: UUID): Either<NotFound, Bar>
+         and   suspend update(id: UUID, label: String): Either<NotFoundError, Bar>
+
+      Follow the conventions in this codebase exactly.
+      Write files to /tmp/eval-new-repository/
+    rubric:
+      - id: uuid-table
+        criterion: "Uses UUIDTable as base class, not Table + uuid(\"id\")"
+        pass_when: |
+          The table class extends UUIDTable. There is no uuid("id") call.
+        weight: 2
+      - id: no-flatmap
+        criterion: "Error handling uses either { ... ?: raise() }, not .flatMap{}"
+        pass_when: |
+          Arrow Either handling uses the either{} DSL with bind() or ?: raise().
+          The code does NOT call .flatMap{} anywhere.
+        weight: 2
+      - id: update-syntax
+        criterion: "Exposed update uses the named parameter form: update(where = { ... })"
+        pass_when: |
+          The update call uses update(where = { Table.id eq id }) { } with the named
+          parameter `where =`. Not update({ }) with a positional lambda.
+        weight: 2
+      - id: id-dot-value
+        criterion: "ResultRow mapping unwraps EntityID with this[Table.id].value"
+        pass_when: |
+          When mapping a ResultRow to a domain object, UUID id is extracted as
+          this[BarTable.id].value (to unwrap EntityID<UUID> to java.util.UUID).
+        weight: 2
+      - id: suspend
+        criterion: "All repository interface functions are suspend"
+        pass_when: |
+          Every function in the BarRepository interface is declared with the suspend keyword.
+        weight: 1
+      - id: interface
+        criterion: "Repository has a separate interface that ExposedBarRepository implements"
+        pass_when: |
+          There is a BarRepository interface (or similar) and ExposedBarRepository
+          (or ExposedBar + Repository naming) that implements it.
+        weight: 1
+      - id: migration
+        criterion: "Liquibase migration uses --changeset elhub:<N> and auth. schema prefix"
+        pass_when: |
+          The SQL file has a --changeset elhub: header and the table is created
+          in the auth schema (e.g. CREATE TABLE auth.bar).
+        weight: 1
+
+  - id: new-get-endpoint
+    description: "Implement a JSON:API GET endpoint for an existing domain"
+    skills:
+      - vertical-slice-architecture
+      - json-api-compliance
+      - functional-error-handling-arrow
+    prompt: |
+      You are working in the auth-grant-manager Kotlin/Ktor codebase.
+      The project serves a JSON:API (application/vnd.api+json) REST API.
+
+      Add a GET /access/v0/bars/{id} endpoint for the `bar` domain.
+      Assume BarRepository already exists with a suspend find(id: UUID): Either<NotFoundError, Bar>.
+
+      Create the following (write files to /tmp/eval-new-get-endpoint/):
+      1. GetBarHandler that calls the repository and returns Either<GetBarError, BarResource>
+      2. A route function getBarRoute(handler, authProvider) using Ktor routing DSL
+      3. A GetBarError sealed class with NotFound and UnexpectedError variants
+      4. Response DTO (BarResource) conforming to JSON:API with a links block
+
+      Use authorizeEndUserOrMaskinporten for auth.
+      Follow vertical slice architecture: one directory per feature/action.
+    rubric:
+      - id: either-handler
+        criterion: "Handler returns Either<GetBarError, BarResource> using the either{} DSL"
+        pass_when: |
+          The handler function returns Either<GetBarError, BarResource> and uses
+          either { ... } DSL internally. It calls bind() to unwrap repo results.
+        weight: 2
+      - id: get-or-else-route
+        criterion: "Route unwraps Either with getOrElse { return@get } pattern"
+        pass_when: |
+          The route calls the handler result with .getOrElse { ... return@get } or
+          equivalent early-return pattern. It does NOT use when(result) { is Left -> }.
+        weight: 2
+      - id: resource-links
+        criterion: "Response DTO links class extends JsonApiResourceLinks (not JsonApiLinks)"
+        pass_when: |
+          The links data class in the response DTO extends JsonApiResourceLinks.
+          It does NOT extend JsonApiLinks directly (which is sealed and cannot be extended).
+        weight: 2
+      - id: auth-method
+        criterion: "Uses authorizeEndUserOrMaskinporten (not authorizeMaskinporten alone)"
+        pass_when: |
+          The route calls authProvider.authorizeEndUserOrMaskinporten(...) for authorization.
+        weight: 1
+      - id: error-sealed
+        criterion: "GetBarError is a sealed class/interface with at least NotFound and UnexpectedError"
+        pass_when: |
+          GetBarError (or equivalent) is sealed and has at least NotFound and UnexpectedError
+          data object / data class variants.
+        weight: 1
+
+  - id: new-patch-endpoint
+    description: "Implement a JSON:API PATCH endpoint to update a resource attribute"
+    skills:
+      - vertical-slice-architecture
+      - json-api-compliance
+      - functional-error-handling-arrow
+    prompt: |
+      You are working in the auth-grant-manager Kotlin/Ktor codebase.
+      The project serves a JSON:API (application/vnd.api+json) REST API.
+
+      Add a PATCH /access/v0/bars/{id} endpoint.
+      The request body updates the `label` attribute.
+      Assume BarRepository already exists.
+
+      Create the following (write files to /tmp/eval-new-patch-endpoint/):
+      1. UpdateBarHandler returning Either<UpdateBarError, BarResource>
+      2. A route function updateBarRoute(handler, authProvider)
+      3. Request DTO using JsonApiRequest.SingleDocument<UpdateBarAttributes>
+      4. An UpdateBarError sealed class
+
+      Requirements:
+      - Validate that body.data.id matches the path {id} (call validateDataId)
+      - Validate body.data.type matches the expected type string
+      - Reuse the same response DTO shape as GET /bars/{id}
+      - Use authorizeEndUserOrMaskinporten
+    rubric:
+      - id: validate-data-id
+        criterion: "Route calls validateDataId(body.data.id, pathId) before handling"
+        pass_when: |
+          The route explicitly validates that the ID in the request body matches
+          the path parameter by calling validateDataId or equivalent.
+        weight: 2
+      - id: type-check
+        criterion: "Route validates body.data.type matches the expected resource type string"
+        pass_when: |
+          The route checks body.data.type against the expected type (e.g. "bar")
+          and returns a 409/422 if mismatched.
+        weight: 1
+      - id: request-dto
+        criterion: "Request DTO is typed as JsonApiRequest.SingleDocument<UpdateBarAttributes>"
+        pass_when: |
+          The request body is deserialized as JsonApiRequest.SingleDocument<...>
+          (or similar JsonApiRequest wrapper), not a raw Map or custom class.
+        weight: 2
+      - id: reuse-response
+        criterion: "PATCH reuses the same response DTO as GET (not a separate PATCH-specific DTO)"
+        pass_when: |
+          The PATCH handler/route returns the same BarResource (or equivalent) DTO
+          that the GET endpoint uses. There is no separate PatchBarResource or similar.
+        weight: 1
+
+  - id: handler-test
+    description: "Write unit tests for a handler using Kotest + MockK"
+    skills:
+      - testing-kotest
+      - testing-layers
+    prompt: |
+      You are working in the auth-grant-manager Kotlin/Ktor codebase.
+      Tests use Kotest FunSpec + MockK.
+
+      Write handler tests for GetBarHandler. The handler:
+      - Calls barRepository.find(id)
+      - Returns Left(GetBarError.NotFound) when repo returns NotFoundError
+      - Returns Left(GetBarError.UnexpectedError) when repo throws / returns unexpected error
+      - Returns Right(BarResource) on success
+
+      Write files to /tmp/eval-handler-test/.
+      Cover at least: success case, not-found case, authorization mismatch case.
+    rubric:
+      - id: fun-spec
+        criterion: "Test class extends FunSpec (not WordSpec, BehaviorSpec, etc.)"
+        pass_when: |
+          The test class extends FunSpec and uses the test("...") { } DSL.
+          It does NOT use any other Kotest spec style.
+        weight: 1
+      - id: co-every
+        criterion: "Uses coEvery (not every) to stub suspend repository functions"
+        pass_when: |
+          All repository stubs use coEvery { repo.find(...) } returns ...
+          There is no plain every { repo.find } being used for suspend functions.
+        weight: 2
+      - id: clear-mocks
+        criterion: "Calls clearMocks(repo, ...) in a beforeTest block"
+        pass_when: |
+          There is a beforeTest { clearMocks(...) } block resetting all mocks
+          before each test case.
+        weight: 1
+      - id: assert-left
+        criterion: "Error cases are asserted with shouldBeLeft(GetBarError.NotFound)"
+        pass_when: |
+          Error assertions use result.shouldBeLeft(GetBarError.NotFound) or
+          result.shouldBeLeft(GetBarError.UnexpectedError).
+        weight: 2
+      - id: assert-right-value
+        criterion: "Success case uses val x = result.shouldBeRight() then asserts on x"
+        pass_when: |
+          The success assertion does NOT use the block form shouldBeRight { it.foo }.
+          Instead it does: val bar = result.shouldBeRight(); bar.label shouldBe "expected".
+        weight: 2

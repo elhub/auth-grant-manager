@@ -123,6 +123,19 @@ class ExposedFooRepositoryTest : FunSpec({
 })
 ```
 
+## DI registration
+
+Always bind the implementation to the **interface**:
+
+```kotlin
+dependencies {
+    provide<FooRepository> { ExposedFooRepository() }   // interface ← impl
+    provide<GetHandler> { GetHandler(resolve()) }
+}
+```
+
+Use `resolve()` for all dependencies — never instantiate manually.
+
 ## Liquibase migrations
 
 ```text

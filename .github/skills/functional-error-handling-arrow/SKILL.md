@@ -19,6 +19,10 @@ suspend fun createRequest(model: CreateRequestModel): Either<CreateError, Author
 
     ensure(model.authorizedParty == party) { CreateError.AuthorizationError }  // short-circuits if false
 
+    // raise() for explicit short-circuit (e.g. null unwrap):
+    val found = repo.find(model.id).mapLeft { CreateError.NotFound }.bind()
+        ?: raise(CreateError.NotFound)
+
     repo.insert(model.toRequest())
         .mapLeft { CreateError.PersistenceError }
         .bind()
