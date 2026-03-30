@@ -5,22 +5,31 @@ import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.assertions.fail
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainAll
+import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
+import no.elhub.auth.config.withTransaction
 import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.common.PostgresTestContainer
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.RunPostgresScriptExtension
+import no.elhub.auth.features.common.currentTimeUtc
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.AuthorizationPartyTable
 import no.elhub.auth.features.common.party.ExposedPartyRepository
 import no.elhub.auth.features.common.party.PartyType
+import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.AuthorizationScope
+import no.elhub.auth.features.grants.common.AuthorizationGrantProperty
+import no.elhub.auth.features.grants.common.AuthorizationGrantPropertyTable
 import no.elhub.auth.features.grants.common.AuthorizationScopeTable
 import no.elhub.auth.features.grants.common.ExposedGrantPropertiesRepository
 import no.elhub.auth.features.grants.common.ExposedGrantRepository
 import no.elhub.auth.features.requests.AuthorizationRequest
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
@@ -142,31 +151,6 @@ class ExposedRequestRepositoryTest : FunSpec({
         targetRequest.id shouldBe targetId
     }
 
-    test("confirm authorization request with properties") {
-        val request = generateRequestWithoutProperties()
-        val savedRequest = requestRepo
-            .insert(request, scopes)
-            .getOrElse {
-                fail("insert failed")
-            }
-
-        val properties = listOf(
-            AuthorizationRequestProperty(savedRequest.id, "key1", "value1"),
-            AuthorizationRequestProperty(savedRequest.id, "key2", "value2"),
-            AuthorizationRequestProperty(savedRequest.id, "key3", "value3"),
-        )
-
-        requestPropertiesRepo.insert(properties)
-
-        val acceptedRequest = requestRepo.acceptRequest(savedRequest.id, AuthorizationParty("resourceId1", PartyType.Organization))
-            .getOrElse {
-                fail("acceptRequest failed")
-            }
-
-        acceptedRequest.properties.size shouldBe 3
-        acceptedRequest.status shouldBe AuthorizationRequest.Status.Accepted
-    }
-
     test("findScopeIds returns correct scope list") {
         val requestId = UUID.fromString("3f2c9e6b-7a4d-4f1a-9b6e-8c1d2a5e9f47")
         val scopeIds = requestRepo.findScopeIds(requestId)
@@ -184,66 +168,139 @@ class ExposedRequestRepositoryTest : FunSpec({
         val request = generateRequestWithoutProperties()
         val savedRequest = requestRepo
             .insert(request, scopes)
-            .getOrElse {
-                fail("insert failed")
-            }
+            .getOrElse { fail("insert failed") }
+
         val rejectedRequest = requestRepo.rejectRequest(savedRequest.id)
-            .getOrElse {
-                fail("reject failed")
-            }
+            .getOrElse { fail("reject failed") }
+
         rejectedRequest.properties.size shouldBe 0
         rejectedRequest.status shouldBe AuthorizationRequest.Status.Rejected
     }
 
     test("reject authorization request with properties") {
         val request = generateRequestWithoutProperties()
-
         val savedRequest = requestRepo
             .insert(request, scopes)
-            .getOrElse {
-                fail("insert failed")
-            }
+            .getOrElse { fail("insert failed") }
 
-        val properties = listOf(
-            AuthorizationRequestProperty(savedRequest.id, "key1", "value1"),
-            AuthorizationRequestProperty(savedRequest.id, "key2", "value2"),
-            AuthorizationRequestProperty(savedRequest.id, "key3", "value3"),
+        requestPropertiesRepo.insert(
+            listOf(
+                AuthorizationRequestProperty(savedRequest.id, "key1", "value1"),
+                AuthorizationRequestProperty(savedRequest.id, "key2", "value2"),
+            )
         )
 
-        requestPropertiesRepo.insert(properties)
+        val rejectedRequest = requestRepo.rejectRequest(savedRequest.id)
+            .getOrElse { fail("reject failed") }
 
-        val acceptedRequest = requestRepo.acceptRequest(savedRequest.id, AuthorizationParty("resourceId1", PartyType.Organization))
-            .getOrElse {
-                fail("acceptRequest failed")
-            }
-
-        acceptedRequest.properties.size shouldBe 3
-        acceptedRequest.status shouldBe AuthorizationRequest.Status.Accepted
+        rejectedRequest.properties.size shouldBe 2
+        rejectedRequest.status shouldBe AuthorizationRequest.Status.Rejected
     }
 
-    test("confirm authorization request without properties") {
-        val requestToConfirm = generateRequestWithoutProperties()
+    context("acceptWithGrant") {
+        test("atomically accepts request, creates grant and persists grant properties") {
+            val requestedBy = AuthorizationParty(type = PartyType.Person, id = "accept-req-by")
+            val requestedFrom = AuthorizationParty(type = PartyType.Person, id = "accept-req-from")
+            val approvedBy = AuthorizationParty(type = PartyType.Person, id = "accept-approved-by")
 
-        val insertedRequest = requestRepo.insert(requestToConfirm, scopes)
-            .getOrElse { error ->
-                fail("Inserted failed :$error")
+            val savedRequest = requestRepo.insert(
+                AuthorizationRequest.create(
+                    type = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
+                    requestedBy = requestedBy,
+                    requestedFrom = requestedFrom,
+                    requestedTo = approvedBy,
+                    validTo = OffsetDateTime.now(ZoneOffset.UTC).plusDays(30),
+                ),
+                scopes
+            ).getOrElse { fail("insert failed") }
+
+            val scopeIds = requestRepo.findScopeIds(savedRequest.id)
+                .getOrElse { fail("findScopeIds failed") }
+
+            val grant = AuthorizationGrant.create(
+                grantedFor = requestedFrom,
+                grantedBy = approvedBy,
+                grantedTo = requestedBy,
+                sourceType = AuthorizationGrant.SourceType.Request,
+                sourceId = savedRequest.id,
+                scopeIds = scopeIds,
+                validFrom = currentTimeUtc(),
+                validTo = currentTimeUtc().plusDays(365),
+            )
+            val grantProperties = listOf(
+                AuthorizationGrantProperty(grantId = grant.id, key = "meta-key", value = "meta-value"),
+            )
+
+            val result = requestRepo.acceptWithGrant(
+                requestId = savedRequest.id,
+                approvedBy = approvedBy,
+                grant = grant,
+                grantProperties = grantProperties,
+            )
+
+            result.shouldBeRight()
+            val acceptedRequest = result.value
+            acceptedRequest.status shouldBe AuthorizationRequest.Status.Accepted
+            acceptedRequest.grantId shouldBe grant.id
+
+            val createdGrant = grantRepository.find(grant.id).shouldBeRight()
+            createdGrant.sourceId shouldBe savedRequest.id
+            createdGrant.sourceType shouldBe AuthorizationGrant.SourceType.Request
+
+            withTransaction {
+                val storedProperties = AuthorizationGrantPropertyTable
+                    .selectAll()
+                    .where { AuthorizationGrantPropertyTable.grantId eq grant.id }
+                    .map { it[AuthorizationGrantPropertyTable.key] to it[AuthorizationGrantPropertyTable.value] }
+                storedProperties shouldContainExactlyInAnyOrder listOf("meta-key" to "meta-value")
             }
+        }
 
-        insertedRequest.status shouldBe AuthorizationRequest.Status.Pending
+        test("accepted request retains its properties") {
+            val requestedBy = AuthorizationParty(type = PartyType.Person, id = "accept-props-req-by")
+            val requestedFrom = AuthorizationParty(type = PartyType.Person, id = "accept-props-req-from")
+            val approvedBy = AuthorizationParty(type = PartyType.Person, id = "accept-props-approved-by")
 
-        val updatedRequest = requestRepo.acceptRequest(
-            requestId = insertedRequest.id,
-            approvedBy = insertedRequest.requestedTo
-        )
+            val savedRequest = requestRepo.insert(
+                AuthorizationRequest.create(
+                    type = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
+                    requestedBy = requestedBy,
+                    requestedFrom = requestedFrom,
+                    requestedTo = approvedBy,
+                    validTo = OffsetDateTime.now(ZoneOffset.UTC).plusDays(30),
+                ),
+                scopes
+            ).getOrElse { fail("insert failed") }
 
-        updatedRequest.fold(
-            ifLeft = { error ->
-                fail("Confirm failed: $error")
-            },
-            ifRight = { confirmedRequest ->
-                confirmedRequest.status shouldBe AuthorizationRequest.Status.Accepted
-            }
-        )
+            requestPropertiesRepo.insert(
+                listOf(
+                    AuthorizationRequestProperty(savedRequest.id, "prop-key1", "prop-val1"),
+                    AuthorizationRequestProperty(savedRequest.id, "prop-key2", "prop-val2"),
+                )
+            )
+
+            val grant = AuthorizationGrant.create(
+                grantedFor = requestedFrom,
+                grantedBy = approvedBy,
+                grantedTo = requestedBy,
+                sourceType = AuthorizationGrant.SourceType.Request,
+                sourceId = savedRequest.id,
+                scopeIds = emptyList(),
+                validFrom = currentTimeUtc(),
+                validTo = currentTimeUtc().plusDays(365),
+            )
+
+            val acceptedRequest = requestRepo.acceptWithGrant(
+                requestId = savedRequest.id,
+                approvedBy = approvedBy,
+                grant = grant,
+                grantProperties = emptyList(),
+            ).getOrElse { fail("acceptWithGrant failed") }
+
+            acceptedRequest.status shouldBe AuthorizationRequest.Status.Accepted
+            acceptedRequest.properties.size shouldBe 2
+            acceptedRequest.approvedBy shouldNotBe null
+        }
     }
 })
 

@@ -13,9 +13,9 @@ import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.plus
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
+import no.elhub.auth.features.common.RepositoryWriteError.UnexpectedError
 import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
 import no.elhub.auth.features.common.today
-import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.common.CreateGrantProperties
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.common.RequestRepository
@@ -109,7 +109,9 @@ class HandlerTest : FunSpec({
         )
 
         result.shouldBeRight()
-        coVerify(exactly = 1) { requestRepository.acceptWithGrant(eq(requestId), eq(requestedTo), any(), any()) }
+        coVerify(exactly = 1) {
+            requestRepository.acceptWithGrant(eq(requestId), eq(requestedTo), any(), any())
+        }
         coVerify(exactly = 0) { requestRepository.rejectRequest(any()) }
     }
 
@@ -120,8 +122,7 @@ class HandlerTest : FunSpec({
         val businessHandler = mockk<RequestBusinessHandler>()
 
         coEvery { requestRepository.find(requestId) } returns request.right()
-        coEvery { requestRepository.rejectRequest(requestId) } returns
-            no.elhub.auth.features.common.RepositoryWriteError.UnexpectedError.left()
+        coEvery { requestRepository.rejectRequest(requestId) } returns UnexpectedError.left()
 
         val handler = Handler(
             businessHandler = businessHandler,

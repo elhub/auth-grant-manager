@@ -13,7 +13,6 @@ import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.AuthorizationPartyRecord
 import no.elhub.auth.features.common.party.AuthorizationPartyTable
 import no.elhub.auth.features.common.party.PartyRepository
-import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
 import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.common.AuthorizationGrantProperty
 import no.elhub.auth.features.grants.common.AuthorizationScopeTable
@@ -59,11 +58,6 @@ interface RequestRepository {
         request: AuthorizationRequest,
         scopes: List<CreateScopeData>
     ): Either<RepositoryWriteError, AuthorizationRequest>
-
-    suspend fun acceptRequest(
-        requestId: UUID,
-        approvedBy: AuthorizationParty
-    ): Either<RepositoryError, AuthorizationRequest>
 
     suspend fun rejectRequest(requestId: UUID): Either<RepositoryError, AuthorizationRequest>
     suspend fun findScopeIds(requestId: UUID): Either<RepositoryReadError, List<UUID>>
@@ -159,24 +153,6 @@ class ExposedRequestRepository(
                 requestedTo = requestedToParty,
                 properties = request.properties,
             )
-        }
-
-    override suspend fun acceptRequest(requestId: UUID, approvedBy: AuthorizationParty): Either<RepositoryError, AuthorizationRequest> =
-        withTransactionEither<RepositoryError, AuthorizationRequest>({ RepositoryWriteError.UnexpectedError }) {
-            val approvedByRecord = partyRepo.findOrInsert(approvedBy.type, approvedBy.id)
-                .mapLeft { RepositoryWriteError.UnexpectedError }
-                .bind()
-
-            val rowsUpdated =
-                AuthorizationRequestTable.update(
-                    where = { AuthorizationRequestTable.id eq requestId }
-                ) {
-                    it[requestStatus] = DatabaseRequestStatus.Accepted
-                    it[updatedAt] = currentTimeUtc()
-                    it[this.approvedBy] = approvedByRecord.id
-                }
-
-            updateAndFetch(requestId, rowsUpdated).bind()
         }
 
     override suspend fun rejectRequest(requestId: UUID): Either<RepositoryError, AuthorizationRequest> =
