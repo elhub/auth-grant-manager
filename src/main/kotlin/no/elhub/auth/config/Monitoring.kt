@@ -30,14 +30,6 @@ fun Application.configureMonitoring(dataSource: HikariDataSource) {
     val appMicrometerRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
     install(MicrometerMetrics) {
         registry = appMicrometerRegistry
-        meterBinders = listOf(
-            JvmMemoryMetrics(),
-            JvmGcMetrics(),
-            ClassLoaderMetrics(),
-            JvmThreadMetrics(),
-            ProcessorMetrics(),
-            UptimeMetrics(),
-        )
         dataSource.apply {
             registry = appMicrometerRegistry
         }
