@@ -35,13 +35,24 @@ class ExposedGrantRepositoryTest : FunSpec({
         UUID.fromString("75ad606f-4ac9-4d4f-acd5-20d6862ec198"),
         UUID.fromString("0feefd01-36c7-403b-9bf1-c11d6458f639"),
     )
-    val exampleGrant = AuthorizationGrant.create(
+    val exampleGrantWithScopeIds = AuthorizationGrant.create(
         grantedBy = AuthorizationParty(type = PartyType.Person, id = "12345"),
         grantedFor = AuthorizationParty(type = PartyType.Person, id = "56789"),
         grantedTo = AuthorizationParty(type = PartyType.Person, id = "45567"),
         sourceType = AuthorizationGrant.SourceType.Request,
         sourceId = UUID.randomUUID(),
         scopeIds = scopeIds,
+        validFrom = today().toTimeZoneOffsetDateTimeAtStartOfDay(),
+        validTo = today().plus(DatePeriod(years = 1)).toTimeZoneOffsetDateTimeAtStartOfDay()
+    )
+
+    val exampleGrantWithoutScopeIds = AuthorizationGrant.create(
+        grantedBy = AuthorizationParty(type = PartyType.Person, id = "666"),
+        grantedFor = AuthorizationParty(type = PartyType.Person, id = "999"),
+        grantedTo = AuthorizationParty(type = PartyType.Person, id = "111"),
+        sourceType = AuthorizationGrant.SourceType.Request,
+        sourceId = UUID.randomUUID(),
+        scopeIds = emptyList(),
         validFrom = today().toTimeZoneOffsetDateTimeAtStartOfDay(),
         validTo = today().plus(DatePeriod(years = 1)).toTimeZoneOffsetDateTimeAtStartOfDay()
     )
@@ -71,7 +82,7 @@ class ExposedGrantRepositoryTest : FunSpec({
     }
 
     test("insert without scopes") {
-        grantRepo.insert(exampleGrant, emptyList()).getOrElse { error((it)) }
+        grantRepo.insert(exampleGrantWithoutScopeIds).getOrElse { error((it)) }
 
         withTransaction {
             // Should only have 1 grant in database
@@ -81,11 +92,11 @@ class ExposedGrantRepositoryTest : FunSpec({
 
     test("update grant status") {
         // insert a grant
-        grantRepo.insert(exampleGrant, emptyList()).getOrElse { error((it)) }
+        grantRepo.insert(exampleGrantWithoutScopeIds).getOrElse { error((it)) }
 
         // update the grant
         val updated =
-            grantRepo.update(exampleGrant.id, AuthorizationGrant.Status.Revoked).getOrElse { error(it) }
+            grantRepo.update(exampleGrantWithoutScopeIds.id, AuthorizationGrant.Status.Revoked).getOrElse { error(it) }
 
         updated.grantStatus shouldBe AuthorizationGrant.Status.Revoked
     }
@@ -95,7 +106,7 @@ class ExposedGrantRepositoryTest : FunSpec({
         withTransaction {
             AuthorizationGrantTable.deleteAll()
         }
-        grantRepo.insert(exampleGrant, scopeIds).getOrElse { error((it)) }
+        grantRepo.insert(exampleGrantWithScopeIds).getOrElse { error((it)) }
         withTransaction {
             AuthorizationGrantTable.selectAll().count() shouldBe 1
         }

@@ -60,7 +60,10 @@ class Handler(
         }
     }
 
-    private suspend fun handleAccepted(originalRequest: AuthorizationRequest, acceptedBy: AuthorizationParty): Either<UpdateError, AuthorizationRequest> =
+    private suspend fun handleAccepted(
+        originalRequest: AuthorizationRequest,
+        acceptedBy: AuthorizationParty
+    ): Either<UpdateError, AuthorizationRequest> =
         either {
             val acceptedRequest = requestRepository.acceptRequest(
                 requestId = originalRequest.id,
@@ -91,7 +94,7 @@ class Handler(
                 validTo = grantProperties.validTo.toTimeZoneOffsetDateTimeAtStartOfDay()
             )
 
-            val createdGrant = grantRepository.insert(grantToCreate, scopeIds)
+            val createdGrant = grantRepository.insert(grantToCreate)
                 .mapLeft { UpdateError.GrantCreationError }
                 .bind()
 

@@ -81,7 +81,7 @@ class HandlerTest : FunSpec({
         verify(exactly = 0) { requestRepository.acceptRequest(any(), any()) }
         verify(exactly = 0) { requestRepository.rejectRequest(any()) }
         verify(exactly = 0) { requestRepository.findScopeIds(any()) }
-        coVerify(exactly = 0) { grantRepository.insert(any(), any()) }
+        coVerify(exactly = 0) { grantRepository.insert(any()) }
     }
 
     test("update request and creates grant on success") {
@@ -126,7 +126,7 @@ class HandlerTest : FunSpec({
             requestRepository.acceptRequest(requestId, requestedTo)
         } returns updatedRequest.right()
         every { requestRepository.findScopeIds(updatedRequest.id) } returns scopeIds.right()
-        coEvery { grantRepository.insert(any(), scopeIds) } returns expectedGrant.right()
+        coEvery { grantRepository.insert(any()) } returns expectedGrant.right()
 
         val result = handler(
             UpdateCommand(
@@ -151,7 +151,6 @@ class HandlerTest : FunSpec({
                         grant.validFrom == validFrom.toTimeZoneOffsetDateTimeAtStartOfDay() &&
                         grant.validTo == validTo.toTimeZoneOffsetDateTimeAtStartOfDay()
                 },
-                scopeIds
             )
         }
     }

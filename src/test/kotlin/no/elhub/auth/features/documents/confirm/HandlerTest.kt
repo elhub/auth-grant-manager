@@ -96,7 +96,7 @@ class HandlerTest : FunSpec({
         verify(exactly = 0) { signatureService.validateSignaturesAndReturnSignatory(any(), any()) }
         coVerify(exactly = 0) { partyService.resolve(any()) }
         coVerify(exactly = 0) { documentRepository.findScopeIds(any()) }
-        coVerify(exactly = 0) { documentRepository.confirmWithGrant(any(), any(), any(), any(), any(), any(), any()) }
+        coVerify(exactly = 0) { documentRepository.confirmWithGrant(any(), any(), any(), any(), any(), any()) }
     }
 
     test("returns DocumentReadError when repository read fails") {
@@ -120,7 +120,7 @@ class HandlerTest : FunSpec({
         verify(exactly = 0) { signatureService.validateSignaturesAndReturnSignatory(any(), any()) }
         coVerify(exactly = 0) { partyService.resolve(any()) }
         coVerify(exactly = 0) { documentRepository.findScopeIds(any()) }
-        coVerify(exactly = 0) { documentRepository.confirmWithGrant(any(), any(), any(), any(), any(), any(), any()) }
+        coVerify(exactly = 0) { documentRepository.confirmWithGrant(any(), any(), any(), any(), any(), any()) }
     }
 
     test("returns InvalidRequestedByError when authorizedParty does not match") {
@@ -145,7 +145,7 @@ class HandlerTest : FunSpec({
         verify(exactly = 0) { signatureService.validateSignaturesAndReturnSignatory(any(), any()) }
         coVerify(exactly = 0) { partyService.resolve(any()) }
         coVerify(exactly = 0) { documentRepository.findScopeIds(any()) }
-        coVerify(exactly = 0) { documentRepository.confirmWithGrant(any(), any(), any(), any(), any(), any(), any()) }
+        coVerify(exactly = 0) { documentRepository.confirmWithGrant(any(), any(), any(), any(), any(), any()) }
     }
 
     test("returns IllegalTransitionError when document is not pending") {
@@ -173,7 +173,7 @@ class HandlerTest : FunSpec({
         coVerify(exactly = 1) { documentRepository.find(documentId) }
         verify(exactly = 0) { signatureService.validateSignaturesAndReturnSignatory(any(), any()) }
         coVerify(exactly = 0) { documentRepository.findScopeIds(any()) }
-        coVerify(exactly = 0) { documentRepository.confirmWithGrant(any(), any(), any(), any(), any(), any(), any()) }
+        coVerify(exactly = 0) { documentRepository.confirmWithGrant(any(), any(), any(), any(), any(), any()) }
     }
 
     test("returns ExpiredError when document validity period has passed") {
@@ -202,7 +202,7 @@ class HandlerTest : FunSpec({
         coVerify(exactly = 1) { documentRepository.find(documentId) }
         verify(exactly = 0) { signatureService.validateSignaturesAndReturnSignatory(any(), any()) }
         coVerify(exactly = 0) { documentRepository.findScopeIds(any()) }
-        coVerify(exactly = 0) { documentRepository.confirmWithGrant(any(), any(), any(), any(), any(), any(), any()) }
+        coVerify(exactly = 0) { documentRepository.confirmWithGrant(any(), any(), any(), any(), any(), any()) }
     }
 
     test("returns ValidateSignaturesError when signature validation fails") {
@@ -231,7 +231,7 @@ class HandlerTest : FunSpec({
         verify(exactly = 1) { signatureService.validateSignaturesAndReturnSignatory(signedFile, document.file) }
         coVerify(exactly = 0) { partyService.resolve(any()) }
         coVerify(exactly = 0) { documentRepository.findScopeIds(any()) }
-        coVerify(exactly = 0) { documentRepository.confirmWithGrant(any(), any(), any(), any(), any(), any(), any()) }
+        coVerify(exactly = 0) { documentRepository.confirmWithGrant(any(), any(), any(), any(), any(), any()) }
     }
 
     test("returns RequestedByResolutionError when signatory cannot be resolved") {
@@ -259,7 +259,7 @@ class HandlerTest : FunSpec({
         verify(exactly = 1) { signatureService.validateSignaturesAndReturnSignatory(signedFile, document.file) }
         coVerify(exactly = 1) { partyService.resolve(signatoryIdentifier) }
         coVerify(exactly = 0) { documentRepository.findScopeIds(any()) }
-        coVerify(exactly = 0) { documentRepository.confirmWithGrant(any(), any(), any(), any(), any(), any(), any()) }
+        coVerify(exactly = 0) { documentRepository.confirmWithGrant(any(), any(), any(), any(), any(), any()) }
     }
 
     test("returns SignatoryNotAllowedToSignDocument when signatory differs from requestedTo") {
@@ -290,7 +290,7 @@ class HandlerTest : FunSpec({
         verify(exactly = 1) { signatureService.validateSignaturesAndReturnSignatory(signedFile, document.file) }
         coVerify(exactly = 1) { partyService.resolve(signatoryIdentifier) }
         coVerify(exactly = 0) { documentRepository.findScopeIds(any()) }
-        coVerify(exactly = 0) { documentRepository.confirmWithGrant(any(), any(), any(), any(), any(), any(), any()) }
+        coVerify(exactly = 0) { documentRepository.confirmWithGrant(any(), any(), any(), any(), any(), any()) }
     }
 
     test("returns ScopeReadError when scope lookup fails") {
@@ -317,7 +317,7 @@ class HandlerTest : FunSpec({
 
         result.shouldBeLeft(ConfirmError.ScopeReadError)
         coVerify(exactly = 1) { documentRepository.findScopeIds(documentId) }
-        coVerify(exactly = 0) { documentRepository.confirmWithGrant(any(), any(), any(), any(), any(), any(), any()) }
+        coVerify(exactly = 0) { documentRepository.confirmWithGrant(any(), any(), any(), any(), any(), any()) }
     }
 
     test("returns DocumentNotFoundError when confirmWithGrant reports document not found") {
@@ -339,7 +339,7 @@ class HandlerTest : FunSpec({
         coEvery { partyService.resolve(signatoryIdentifier) } returns requestedTo.right()
         coEvery { documentRepository.findScopeIds(documentId) } returns listOf(scopeId).right()
         coEvery {
-            documentRepository.confirmWithGrant(documentId, signedFile, requestedFrom, requestedTo, any(), any(), any())
+            documentRepository.confirmWithGrant(documentId, signedFile, requestedFrom, requestedTo, any(), any())
         } returns ConfirmWithGrantError.DocumentError.NotFound.left()
 
         val result = handler(documentRepository, partyService, signatureService)(
@@ -348,7 +348,7 @@ class HandlerTest : FunSpec({
 
         result.shouldBeLeft(ConfirmError.DocumentNotFoundError)
         coVerify(exactly = 1) {
-            documentRepository.confirmWithGrant(documentId, signedFile, requestedFrom, requestedTo, any(), any(), any())
+            documentRepository.confirmWithGrant(documentId, signedFile, requestedFrom, requestedTo, any(), any())
         }
     }
 
@@ -371,7 +371,7 @@ class HandlerTest : FunSpec({
         coEvery { partyService.resolve(signatoryIdentifier) } returns requestedTo.right()
         coEvery { documentRepository.findScopeIds(documentId) } returns listOf(scopeId).right()
         coEvery {
-            documentRepository.confirmWithGrant(documentId, signedFile, requestedFrom, requestedTo, any(), any(), any())
+            documentRepository.confirmWithGrant(documentId, signedFile, requestedFrom, requestedTo, any(), any())
         } returns ConfirmWithGrantError.DocumentError.Conflict.left()
 
         val result = handler(documentRepository, partyService, signatureService)(
@@ -380,7 +380,7 @@ class HandlerTest : FunSpec({
 
         result.shouldBeLeft(ConfirmError.DocumentUpdateError)
         coVerify(exactly = 1) {
-            documentRepository.confirmWithGrant(documentId, signedFile, requestedFrom, requestedTo, any(), any(), any())
+            documentRepository.confirmWithGrant(documentId, signedFile, requestedFrom, requestedTo, any(), any())
         }
     }
 
@@ -403,7 +403,7 @@ class HandlerTest : FunSpec({
         coEvery { partyService.resolve(signatoryIdentifier) } returns requestedTo.right()
         coEvery { documentRepository.findScopeIds(documentId) } returns listOf(scopeId).right()
         coEvery {
-            documentRepository.confirmWithGrant(documentId, signedFile, requestedFrom, requestedTo, any(), any(), any())
+            documentRepository.confirmWithGrant(documentId, signedFile, requestedFrom, requestedTo, any(), any())
         } returns ConfirmWithGrantError.GrantError.left()
 
         val result = handler(documentRepository, partyService, signatureService)(
@@ -412,7 +412,7 @@ class HandlerTest : FunSpec({
 
         result.shouldBeLeft(ConfirmError.GrantCreationError)
         coVerify(exactly = 1) {
-            documentRepository.confirmWithGrant(documentId, signedFile, requestedFrom, requestedTo, any(), any(), any())
+            documentRepository.confirmWithGrant(documentId, signedFile, requestedFrom, requestedTo, any(), any())
         }
     }
 
@@ -438,7 +438,14 @@ class HandlerTest : FunSpec({
         coEvery { partyService.resolve(signatoryIdentifier) } returns requestedTo.right()
         coEvery { documentRepository.findScopeIds(documentId) } returns scopeIds.right()
         coEvery {
-            documentRepository.confirmWithGrant(documentId, signedFile, requestedFrom, requestedTo, any(), scopeIds, any())
+            documentRepository.confirmWithGrant(
+                documentId,
+                signedFile,
+                requestedFrom,
+                requestedTo,
+                any(),
+                any(),
+            )
         } returns confirmedDocument.right()
 
         val result = handler(documentRepository, partyService, signatureService)(
@@ -463,7 +470,6 @@ class HandlerTest : FunSpec({
                         grant.validFrom == validFrom.toTimeZoneOffsetDateTimeAtStartOfDay() &&
                         grant.validTo == validTo.toTimeZoneOffsetDateTimeAtStartOfDay()
                 },
-                scopeIds,
                 any()
             )
         }

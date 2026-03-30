@@ -68,7 +68,6 @@ interface DocumentRepository {
         requestedFrom: AuthorizationParty,
         signatory: AuthorizationParty,
         grant: AuthorizationGrant,
-        scopeIds: List<UUID>,
         grantProperties: List<AuthorizationGrantProperty>
     ): Either<ConfirmWithGrantError, AuthorizationDocument>
 }
@@ -246,7 +245,13 @@ class ExposedDocumentRepository(
                 val signedByParty = partiesById[row[SignatoriesTable.signedBy]]
                 val properties = documentPropertiesRepository.find(row[AuthorizationDocumentTable.id].value)
 
-                row.toAuthorizationDocument(requestedByParty, requestedFromParty, requestedToParty, properties, signedByParty)
+                row.toAuthorizationDocument(
+                    requestedByParty,
+                    requestedFromParty,
+                    requestedToParty,
+                    properties,
+                    signedByParty
+                )
             }
         }
 
@@ -262,7 +267,6 @@ class ExposedDocumentRepository(
         requestedFrom: AuthorizationParty,
         signatory: AuthorizationParty,
         grant: AuthorizationGrant,
-        scopeIds: List<UUID>,
         grantProperties: List<AuthorizationGrantProperty>
     ): Either<ConfirmWithGrantError, AuthorizationDocument> =
         withTransactionEither<ConfirmWithGrantError, AuthorizationDocument>({ ConfirmWithGrantError.DocumentError.Unexpected }) {
@@ -275,7 +279,7 @@ class ExposedDocumentRepository(
                     }
                 }.bind()
 
-            grantRepo.insert(grant, scopeIds)
+            grantRepo.insert(grant)
                 .mapLeft { ConfirmWithGrantError.GrantError }
                 .bind()
 

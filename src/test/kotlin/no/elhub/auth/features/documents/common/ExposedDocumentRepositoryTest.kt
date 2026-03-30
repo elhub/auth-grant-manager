@@ -39,7 +39,8 @@ class ExposedDocumentRepositoryTest :
         val propertiesRepository = ExposedDocumentPropertiesRepository()
         val grantPropertiesRepository = ExposedGrantPropertiesRepository()
         val grantRepository = ExposedGrantRepository(partyRepository, grantPropertiesRepository)
-        val repository = ExposedDocumentRepository(partyRepository, grantRepository, propertiesRepository, grantPropertiesRepository)
+        val repository =
+            ExposedDocumentRepository(partyRepository, grantRepository, propertiesRepository, grantPropertiesRepository)
 
         beforeSpec {
             Database.connect(
@@ -200,8 +201,7 @@ class ExposedDocumentRepositoryTest :
                     requestedFrom = requestedFrom,
                     signatory = signatory,
                     grant = grant,
-                    scopeIds = emptyList(),
-                    grantProperties = grantProperties
+                    grantProperties = grantProperties,
                 )
 
                 result.shouldBeRight()

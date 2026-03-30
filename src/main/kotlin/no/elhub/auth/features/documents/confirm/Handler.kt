@@ -102,7 +102,6 @@ class Handler(
             requestedFrom = document.requestedFrom,
             signatory = expectedSignatoryParty,
             grant = grantToCreate,
-            scopeIds = scopeIds,
             grantProperties = grantMetaProperties
         ).mapLeft { error ->
             when (error) {
