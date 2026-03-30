@@ -71,7 +71,7 @@ class HandlerTest : FunSpec({
 
         result.shouldBeLeft(UpdateError.AlreadyProcessed)
         coVerify(exactly = 1) { requestRepository.find(requestId) }
-        coVerify(exactly = 0) { requestRepository.acceptWithGrant(any(), any(), any()) }
+        coVerify(exactly = 0) { requestRepository.acceptWithGrant(any(), any(), any(), any()) }
         coVerify(exactly = 0) { requestRepository.rejectRequest(any()) }
     }
 
@@ -95,8 +95,9 @@ class HandlerTest : FunSpec({
         )
 
         coEvery { requestRepository.find(requestId) } returns request.right()
+        coEvery { requestRepository.findScopeIds(requestId) } returns emptyList<UUID>().right()
         coEvery {
-            requestRepository.acceptWithGrant(eq(requestId), eq(requestedTo), any())
+            requestRepository.acceptWithGrant(eq(requestId), eq(requestedTo), any(), any())
         } returns updatedRequest.right()
 
         val result = handler(
@@ -108,7 +109,7 @@ class HandlerTest : FunSpec({
         )
 
         result.shouldBeRight()
-        coVerify(exactly = 1) { requestRepository.acceptWithGrant(eq(requestId), eq(requestedTo), any()) }
+        coVerify(exactly = 1) { requestRepository.acceptWithGrant(eq(requestId), eq(requestedTo), any(), any()) }
         coVerify(exactly = 0) { requestRepository.rejectRequest(any()) }
     }
 

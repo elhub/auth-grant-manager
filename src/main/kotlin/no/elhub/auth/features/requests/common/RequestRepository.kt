@@ -71,7 +71,8 @@ interface RequestRepository {
     suspend fun acceptWithGrant(
         requestId: UUID,
         approvedBy: AuthorizationParty,
-        buildGrantAndProperties: (acceptedRequest: AuthorizationRequest, scopeIds: List<UUID>) -> Pair<AuthorizationGrant, List<AuthorizationGrantProperty>>,
+        grant: AuthorizationGrant,
+        grantProperties: List<AuthorizationGrantProperty>,
     ): Either<AcceptWithGrantError, AuthorizationRequest>
 }
 
@@ -203,7 +204,8 @@ class ExposedRequestRepository(
     override suspend fun acceptWithGrant(
         requestId: UUID,
         approvedBy: AuthorizationParty,
-        buildGrantAndProperties: (acceptedRequest: AuthorizationRequest, scopeIds: List<UUID>) -> Pair<AuthorizationGrant, List<AuthorizationGrantProperty>>,
+        grant: AuthorizationGrant,
+        grantProperties: List<AuthorizationGrantProperty>,
     ): Either<AcceptWithGrantError, AuthorizationRequest> =
         withTransactionEither<AcceptWithGrantError, AuthorizationRequest>({ AcceptWithGrantError.RequestError.Unexpected }) {
             val approvedByRecord = partyRepo.findOrInsert(approvedBy.type, approvedBy.id)
@@ -223,18 +225,11 @@ class ExposedRequestRepository(
                 .mapLeft { AcceptWithGrantError.RequestError.Unexpected }
                 .bind()
 
-            val scopeIds = AuthorizationRequestScopeTable
-                .selectAll()
-                .where { authorizationRequestId eq requestId }
-                .map { row -> row[authorizationScopeId] }
-
-            val (grant, properties) = buildGrantAndProperties(acceptedRequest, scopeIds)
-
             grantRepository.insert(grant)
                 .mapLeft { AcceptWithGrantError.GrantError }
                 .bind()
 
-            grantPropertiesRepository.insert(properties)
+            grantPropertiesRepository.insert(grantProperties)
                 .mapLeft { AcceptWithGrantError.GrantError }
                 .bind()
 

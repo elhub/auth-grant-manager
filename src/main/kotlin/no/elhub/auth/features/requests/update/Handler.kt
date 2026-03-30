@@ -36,47 +36,55 @@ class Handler(
         }
 
         when (command.newStatus) {
-            AuthorizationRequest.Status.Accepted -> handleAccepted(command).bind()
+            AuthorizationRequest.Status.Accepted -> handleAccepted(request, command).bind()
             AuthorizationRequest.Status.Rejected -> handleRejected(request).bind()
             else -> raise(UpdateError.IllegalTransitionError) // consumers can only send Accepted and Rejected statuses
         }
     }
 
-    private suspend fun handleAccepted(command: UpdateCommand): Either<UpdateError, AuthorizationRequest> =
-        requestRepository.acceptWithGrant(
+    private suspend fun handleAccepted(
+        request: AuthorizationRequest,
+        command: UpdateCommand,
+    ): Either<UpdateError, AuthorizationRequest> = either {
+        val scopeIds = requestRepository.findScopeIds(request.id)
+            .mapLeft { UpdateError.PersistenceError }
+            .bind()
+
+        val grantProperties = businessHandler.getCreateGrantProperties(request)
+        val grant = AuthorizationGrant.create(
+            grantedFor = request.requestedFrom,
+            grantedBy = command.authorizedParty,
+            grantedTo = request.requestedBy,
+            sourceType = AuthorizationGrant.SourceType.Request,
+            sourceId = request.id,
+            scopeIds = scopeIds,
+            validFrom = grantProperties.validFrom.toTimeZoneOffsetDateTimeAtStartOfDay(),
+            validTo = grantProperties.validTo.toTimeZoneOffsetDateTimeAtStartOfDay()
+        )
+        val properties = grantProperties.meta.map { (key, value) ->
+            AuthorizationGrantProperty(grantId = grant.id, key = key, value = value)
+        }
+
+        val updatedRequest = requestRepository.acceptWithGrant(
             requestId = command.requestId,
             approvedBy = command.authorizedParty,
-            buildGrantAndProperties = { acceptedRequest, scopeIds ->
-                val grantProperties = businessHandler.getCreateGrantProperties(acceptedRequest)
-                val grant = AuthorizationGrant.create(
-                    grantedFor = acceptedRequest.requestedFrom,
-                    grantedBy = command.authorizedParty,
-                    grantedTo = acceptedRequest.requestedBy,
-                    sourceType = AuthorizationGrant.SourceType.Request,
-                    sourceId = acceptedRequest.id,
-                    scopeIds = scopeIds,
-                    validFrom = grantProperties.validFrom.toTimeZoneOffsetDateTimeAtStartOfDay(),
-                    validTo = grantProperties.validTo.toTimeZoneOffsetDateTimeAtStartOfDay()
-                )
-                val properties = grantProperties.meta.map { (key, value) ->
-                    AuthorizationGrantProperty(grantId = grant.id, key = key, value = value)
-                }
-                grant to properties
-            }
+            grant = grant,
+            grantProperties = properties,
         ).mapLeft { error ->
             when (error) {
                 is AcceptWithGrantError.RequestError -> UpdateError.PersistenceError
                 AcceptWithGrantError.GrantError -> UpdateError.GrantCreationError
             }
-        }.also { result ->
-            result.onRight { updatedRequest ->
-                logger.info(
-                    "event=authorization_grant_created sourceType={} sourceId={}",
-                    AuthorizationGrant.SourceType.Request,
-                    updatedRequest.id
-                )
-            }
-        }
+        }.bind()
+
+        logger.info(
+            "event=authorization_grant_created sourceType={} sourceId={}",
+            AuthorizationGrant.SourceType.Request,
+            updatedRequest.id
+        )
+
+        updatedRequest
+    }
 
     private suspend fun handleRejected(originalRequest: AuthorizationRequest): Either<UpdateError, AuthorizationRequest> =
         requestRepository.rejectRequest(
