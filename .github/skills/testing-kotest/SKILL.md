@@ -95,9 +95,14 @@ class MyRepositoryTest : FunSpec({
 
 ## Assertions
 
+`shouldBeRight()` **returns the right value**:
+
 ```kotlin
-result.shouldBeRight()
-result.shouldBeLeft(SpecificError)
-result.shouldBeRight()  // then: result.getOrNull()!!.field shouldBe expected
-response.status shouldBe HttpStatusCode.OK
+val foo = result.shouldBeRight()  // asserts Right AND returns the value
+foo.id shouldBe expectedId        // assert fields on the returned value
+
+result.shouldBeLeft(SpecificError)  // assert exact Left value
+result.shouldBeRight()              // assert Right without inspecting value
 ```
+
+**Never** `shouldBeRight { it.field }` — the block form does not exist in this codebase's kotest-arrow version.

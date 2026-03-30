@@ -51,11 +51,12 @@ fun Foo.toResponse() = FooResponse(
 
 ### No relationships
 
-Use empty implementations:
+Use empty implementations. Links **must** extend `JsonApiResourceLinks`, not `JsonApiLinks` (sealed — cannot be extended outside the library):
 
 ```kotlin
 @Serializable class FooRelationships : JsonApiRelationships  // empty
 @Serializable class FooMeta : JsonApiResourceMeta            // empty
+@Serializable data class FooLinks(val self: String) : JsonApiResourceLinks  // NOT JsonApiLinks
 ```
 
 ### Available response variants
@@ -92,6 +93,8 @@ fun JsonApiCreateRequest.toModel(actor: AuthorizedActor) = CreateRequestModel(
 | `buildApiErrorResponse(status, title, detail)` | Any |
 | `toInternalServerApiErrorResponse()` | 500 |
 | `toNotFoundApiErrorResponse(detail?)` | 404 |
+
+Call **without** a custom detail unless necessary — the default `"The requested resource could not be found"` is what `validateNotFoundResponse()` test helper checks for.
 | `toValidationApiErrorResponse(detail?)` | 422 |
 | `toUnsupportedErrorResponse(detail?)` | 415 |
 | `toTypeMismatchApiErrorResponse(expected, actual)` | 409 |

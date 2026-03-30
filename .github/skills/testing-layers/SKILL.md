@@ -63,9 +63,10 @@ Use `PostgresTestContainerExtension`. No mocking. Test against a real DB.
 
 ```kotlin
 test("update returns Right(updated) when row exists") {
-    transaction { FooTable.insert { it[id] = testId; it[bar] = "a"; it[zoo] = "b"; it[ok] = "c" } }
-    val result = repo.update(testId, bar = "new")
-    result.shouldBeRight { it.bar shouldBe "new" }
+    transaction { FooTable.insertFoo(testId, "pending") }  // insertFoo is a helper on FooTable
+    val result = repo.update(testId, "active")
+    val foo = result.shouldBeRight()  // shouldBeRight() returns the value
+    foo.status shouldBe "active"
 }
 ```
 

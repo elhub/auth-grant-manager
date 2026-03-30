@@ -3,14 +3,17 @@ name: database-access-exposed-liquibase
 description: >
   Use when writing or reviewing any Repository, Table object, or migration.
   Defines Exposed table conventions, the Either-returning repository pattern,
-  newSuspendedTransaction usage, and Liquibase migration rules.
+  withTransaction usage, and Liquibase migration rules.
   Load before generating any database access code.
 ---
 # Database Access with Exposed & Liquibase
 
 ## Table definitions
 
-`object` inside the owning feature's `common/`. Use `UUIDTable` for entities, `Table` for join tables. All names schema-qualified `"auth.<name>"`.
+`object` inside the owning feature's `common/`. All names schema-qualified `"auth.<name>"`.
+
+**UUID PK entities → `UUIDTable`.** Never `Table` + `uuid("id")` — that maps to Kotlin's experimental `kotlin.uuid.Uuid`, not `java.util.UUID`.
+**Join tables → `Table`** with explicit `PrimaryKey`.
 
 ```kotlin
 object AuthorizationRequestTable : UUIDTable("auth.authorization_request") {
@@ -75,9 +78,9 @@ Handlers map to their own error type via `mapLeft` before `bind()`.
 
 ## Transactions
 
-- Always `withTransaction { }` from `Database.kt`. Never `transaction { }` (blocking).
-- `withTransaction` wraps `suspendTransaction` which **reuses an open transaction** — double-wrapping is safe.
-- Use handler-level `withTransaction` when atomicity is required across multiple repository calls.
+- Always `withTransaction { }` from `config/Database.kt`. Never `transaction { }` (blocking).
+- `withTransaction` reuses an open transaction — double-wrapping (handler + repository) is safe.
+- Use handler-level `withTransaction` when atomicity spans multiple repository calls.
 
 ```kotlin
 // Handler — atomic multi-step
@@ -85,6 +88,39 @@ withTransaction {
     repo.insert(entity).mapLeft { CreateError.PersistenceError }.bind()
     otherRepo.insert(related).mapLeft { CreateError.PersistenceError }.bind()
 }
+```
+
+## update() syntax
+
+`update` is a top-level extension — always use named `where =` parameter:
+
+```kotlin
+import org.jetbrains.exposed.v1.jdbc.update
+
+val rows = MyTable.update(where = { MyTable.id eq id }) {
+    it[MyTable.status] = newStatus
+}
+if (rows == 0) raise(RepositoryWriteError.NotFoundError)
+```
+
+**Never** `MyTable.update({ condition }) { }` — positional lambda overload does not exist in Exposed v1.
+
+## Repository integration tests
+
+```kotlin
+class ExposedFooRepositoryTest : FunSpec({
+    extension(PostgresTestContainerExtension())
+
+    val repo = ExposedFooRepository()
+
+    beforeSpec {
+        Database.connect(PostgresTestContainer.JDBC_URL, PostgresTestContainer.DRIVER,
+            PostgresTestContainer.USERNAME, PostgresTestContainer.PASSWORD)
+    }
+
+    beforeTest { transaction { FooTable.deleteAll() } }
+    // deleteAll import: org.jetbrains.exposed.v1.jdbc.deleteAll
+})
 ```
 
 ## Liquibase migrations
