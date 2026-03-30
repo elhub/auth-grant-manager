@@ -2,207 +2,117 @@
 name: json-api-compliance
 description: >
   Use when writing any Route, DTO, or error response.
-  Defines JSON:API document shapes, field rules,
-  Kotlin DTO patterns using elhub-jsonapi,
+  Defines JSON:API document shapes, field rules, Kotlin DTO patterns using elhub-jsonapi,
   error helper functions, and JSON Schema layout. Load before generating any API response or request DTO.
 ---
-
 # JSON:API Compliance
 
-All responses use `application/vnd.api+json` and the JSON:API v1.1 document structure.
-
-## Document shapes
-
-### Single resource (GET by id, POST 201)
-
-```json
-{
-  "data": {
-    "id": "uuid",
-    "type": "AuthorizationRequest",
-    "attributes": {
-      "status": "Pending",
-      "requestType": "...",
-      "createdAt": "2025-12-17T12:51:57+01:00"
-    },
-    "relationships": {
-      "requestedBy": {
-        "data": {
-          "type": "OrganizationEntity",
-          "id": "gln"
-        }
-      }
-    },
-    "meta": {
-      "requestedByName": "Supplier AS"
-    },
-    "links": {
-      "self": "/access/v0/authorization-requests/uuid"
-    }
-  },
-  "links": {
-    "self": "/access/v0/authorization-requests/uuid"
-  },
-  "meta": {
-    "createdAt": "2025-12-17T12:51:57+01:00"
-  }
-}
-```
-
-### Collection (GET list)
-
-```json
-{
-  "data": [
-    {
-      "id": "uuid-1",
-      "type": "AuthorizationRequest",
-      ...
-    },
-    ...
-  ],
-  "links": {
-    "self": "/access/v0/authorization-requests"
-  },
-  "meta": {
-    "createdAt": "2025-12-17T12:51:57+01:00"
-  }
-}
-```
-
-### Error (all error responses)
-
-```json
-{
-  "errors": [
-    { "status": "403", "title": "Forbidden", "detail": "Actor does not match authorized party." }
-  ],
-  "meta": { "createdAt": "2025-12-17T12:51:57+01:00" }
-}
-```
-
-Every endpoint returns a JSON:API document — including 4xx and 5xx responses.
+All responses use `Content-Type: application/vnd.api+json`.
 
 ## Field rules
 
-| Field               | Rule                                                                                                |
-|---------------------|-----------------------------------------------------------------------------------------------------|
-| `type`              | PascalCase constant string, e.g. `"AuthorizationRequest"`. Must match between request and response. |
-| `id`                | UUID string. Present on responses; omitted from POST request bodies.                                |
-| `attributes`        | Domain state fields. Timestamps in ISO 8601 with offset: `"2025-12-17T12:51:57+01:00"`.             |
-| `relationships`     | References to other resources. Each has `data: { type, id }`.                                       |
-| `meta` (resource)   | Read-only contextual data that is not domain state, e.g. display names.                             |
-| `links` (resource)  | `self` URI for this resource. Documents add `file` for PDF download.                                |
-| `links` (top-level) | Required on all resource and collection responses. Must include `self`.                             |
-| `meta` (top-level)  | Required on all responses. Must include `createdAt`.                                                |
+| Field | Rule |
+| ----- | ---- |
+| `type` | PascalCase constant, e.g. `"AuthorizationRequest"`. Must match between request and response. |
+| `id` | UUID string. Present on responses; omitted from POST request bodies. |
+| `attributes` | Domain state. Timestamps as ISO 8601 with offset: `"2025-12-17T12:51:57+01:00"`. |
+| `relationships` | References: `data: { type, id }`. |
+| `meta` (resource) | Read-only contextual data (display names, etc.) — not domain state. |
+| `links` (resource) | `self` URI. Documents also add `file` for PDF. |
+| `links` (top-level) | **Required** on all resource/collection responses. Must include `self`. |
+| `meta` (top-level) | **Required** on all responses. Must include `createdAt`. |
 
-**`meta` is not for domain state.** If a field can change and affects business logic, it belongs in `attributes`.
+## Kotlin response DTOs
 
-## Kotlin DTOs
-
-DTOs use types from `no.elhub.elhub-jsonapi` (on classpath via Gradle). Import path: `no.elhub.jsonapi.*`.
-
-### Response DTO
+### With relationships (standard)
 
 ```kotlin
-@Serializable
-data class CreateResponseAttributes(
-    val status: String,
-    val requestType: String,
-    val createdAt: String,
-    val updatedAt: String,
-) : JsonApiAttributes
+@Serializable data class FooAttributes(val status: String) : JsonApiAttributes
+@Serializable data class FooRelationships(val party: JsonApiRelationshipToOne) : JsonApiRelationships
+@Serializable data class FooMeta(val displayName: String) : JsonApiResourceMeta
+@Serializable data class FooLinks(val self: String) : JsonApiResourceLinks
 
-@Serializable
-data class CreateResponseRelationships(
-    val requestedBy: JsonApiRelationshipToOne,
-    val requestedFrom: JsonApiRelationshipToOne,
-) : JsonApiRelationships
+typealias FooResponse = JsonApiResponse.SingleDocumentWithRelationshipsAndMetaAndLinks<
+    FooAttributes, FooRelationships, FooMeta, FooLinks>
 
-typealias SingleCreateResponse = JsonApiResponse.SingleDocumentWithRelationshipsAndMetaAndLinks<
-        CreateResponseAttributes,
-        CreateResponseRelationships,
-        CreateResponseMeta,
-        CreateResponseLinks
-        >
-
-fun AuthorizationRequest.toCreateResponse(): SingleCreateResponse = SingleCreateResponse(
+fun Foo.toResponse() = FooResponse(
     data = JsonApiResponseResourceObjectWithRelationshipsAndMetaAndLinks(
-        type = "AuthorizationRequest",
-        id = this.id.toString(),
-        attributes = CreateResponseAttributes(
-            status = this.status.name,
-            requestType = this.type.name,
-            createdAt = this.createdAt.toTimeZoneOffsetString(),
-            updatedAt = this.updatedAt.toTimeZoneOffsetString(),
-        ),
-        relationships = CreateResponseRelationships(
-            requestedBy = JsonApiRelationshipToOne(JsonApiRelationshipData("OrganizationEntity", this.requestedBy.id)),
-            requestedFrom = JsonApiRelationshipToOne(JsonApiRelationshipData("OrganizationEntity", this.requestedFrom.id)),
-        ),
-        meta = CreateResponseMeta(requestedByName = this.requestedByName),
-        links = CreateResponseLinks(self = "$REQUESTS_PATH/${this.id}"),
+        type = "Foo", id = this.id.toString(),
+        attributes = FooAttributes(status = this.status.name),
+        relationships = FooRelationships(party = JsonApiRelationshipToOne(JsonApiRelationshipData("OrgEntity", this.partyId))),
+        meta = FooMeta(displayName = this.name),
+        links = FooLinks(self = "$FOOS_PATH/${this.id}"),
     ),
-    links = JsonApiLinks.ResourceObjectLink(REQUESTS_PATH),
-    meta = JsonApiMeta(buildJsonObject { put("createdAt", this@toCreateResponse.createdAt.toTimeZoneOffsetString()) }),
+    links = JsonApiLinks.ResourceObjectLink(FOOS_PATH),
+    meta = JsonApiMeta(buildJsonObject { put("createdAt", this@toResponse.createdAt.toTimeZoneOffsetString()) }),
+    // Note: use this@toResponse inside buildJsonObject to reference the outer receiver
 )
 ```
 
-Note: `this@toCreateResponse` is needed inside the `buildJsonObject` lambda to reference the outer receiver.
+### No relationships
 
-### Request DTO
+Use empty implementations:
 
 ```kotlin
-@Serializable
-data class CreateRequestAttributes(
-    val requestType: AuthorizationRequest.Type,
-) : JsonApiAttributes
+@Serializable class FooRelationships : JsonApiRelationships  // empty
+@Serializable class FooMeta : JsonApiResourceMeta            // empty
+```
 
-@Serializable
-data class CreateRequestMeta(
-    val requestedBy: PartyIdentifier,
-    val requestedFrom: PartyIdentifier,
-) : JsonApiResourceMeta
+### Available response variants
+
+| Variant | Use when |
+| ------- | -------- |
+| `SingleDocumentWithRelationshipsAndMetaAndLinks<A,R,M,L>` | Preferred — fully compliant |
+| `SingleDocumentWithRelationships<A,R>` | Has relationships, top-level meta/links not needed |
+| `CollectionDocumentWithRelationshipsAndMetaAndLinks<A,R,M,L>` | Fully compliant collection |
+| `CollectionDocumentWithRelationships<A,R>` | Collection with relationships |
+
+**`JsonApiResponse.SingleDocument<A>` is only for deserialising external API responses. Never use it to generate app responses.**
+
+## Request DTOs
+
+```kotlin
+@Serializable data class CreateRequestAttributes(val requestType: AuthorizationRequest.Type) : JsonApiAttributes
+@Serializable data class CreateRequestMeta(val requestedBy: PartyIdentifier) : JsonApiResourceMeta
 
 typealias JsonApiCreateRequest = JsonApiRequest.SingleDocumentWithMeta<CreateRequestAttributes, CreateRequestMeta>
+// Without meta: JsonApiRequest.SingleDocument<Attributes>
 
-fun JsonApiCreateRequest.toModel(actor: AuthorizedActor): CreateRequestModel = CreateRequestModel(
+fun JsonApiCreateRequest.toModel(actor: AuthorizedActor) = CreateRequestModel(
     requestType = this.data.attributes.requestType,
     requestedBy = this.data.meta.requestedBy,
-    requestedFrom = this.data.meta.requestedFrom,
     actor = actor,
 )
 ```
 
-## Error helpers (from `features/common/Errors.kt`)
+## Error helpers (`features/common/Errors.kt`)
 
-| Function                                           | When to use                       |
-|----------------------------------------------------|-----------------------------------|
-| `buildApiErrorResponse(status, title, detail)`     | Any custom error                  |
-| `toInternalServerApiErrorResponse()`               | Unexpected infrastructure failure |
-| `toNotFoundApiErrorResponse()`                     | Resource not found                |
-| `toValidationApiErrorResponse(detail)`             | Input failed validation           |
-| `toTypeMismatchApiErrorResponse(expected, actual)` | JSON:API `type` field wrong       |
+| Function | Status |
+| -------- | ------ |
+| `buildApiErrorResponse(status, title, detail)` | Any |
+| `toInternalServerApiErrorResponse()` | 500 |
+| `toNotFoundApiErrorResponse(detail?)` | 404 |
+| `toValidationApiErrorResponse(detail?)` | 422 |
+| `toUnsupportedErrorResponse(detail?)` | 415 |
+| `toTypeMismatchApiErrorResponse(expected, actual)` | 409 |
 
 All helpers include `meta.createdAt` automatically.
 
+## OpenAPI spec (non-negotiable)
+
+Every route addition, modification, or removal **must** update `src/main/resources/static/openapi.yaml`. Never leave spec out of sync.
+
 ## JSON Schema layout
 
-Schemas live in `src/main/resources/static/schemas/` and are referenced by the OpenAPI spec.
-
 ```text
-schemas/
-├── elhub-common.schema.json              # UUID, timestamps, partyIdentifier
-├── authorization-common.schema.json      # Shared domain fields
-├── json-api-framework.schema.json        # Structural types
-├── json-api-error.schema.json
-├── requests/
-│   ├── authorization-request-common.schema.json      # $defs: attributes, relationships, meta, links
-│   ├── authorization-request-resource.schema.json    # Single resource (assembles from common)
-│   ├── authorization-request-collection.schema.json  # Array of resources
-│   └── authorization-request-submission.schema.json  # POST request body
-└── ...
+src/main/resources/static/schemas/
+├── elhub-common.schema.json           # UUID, timestamps, partyIdentifier
+├── json-api-framework.schema.json     # Structural types
+├── {domain}/
+│   ├── *-common.schema.json           # $defs only
+│   ├── *-resource.schema.json         # Single resource
+│   ├── *-collection.schema.json       # Array
+│   └── *-submission.schema.json       # POST body
 ```
 
-`*-common.schema.json` defines `$defs`. The other three files assemble documents by `$ref`-ing into it and declaring which fields are `required`. Do not
-duplicate field definitions across these files.
+`*-common.schema.json` defines `$defs`. Others `$ref` into it. Do not duplicate field definitions.

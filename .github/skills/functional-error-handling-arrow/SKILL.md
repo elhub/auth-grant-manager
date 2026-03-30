@@ -7,34 +7,17 @@ description: >
 ---
 # Functional Error Handling with Arrow
 
-All business logic returns `Either<Failure, Success>`. Exceptions are never used for domain errors.
-
-## The `Either` contract
-
-```kotlin
-// ✅
-suspend fun findUser(id: UserId): Either<UserError, User>
-
-// ❌ — nullable loses error context
-suspend fun findUser(id: UserId): User?
-
-// ❌ — throws on failure
-suspend fun findUser(id: UserId): User
-```
-
-This applies to every Handler, Service, and Repository in the codebase.
+All business logic returns `Either<Failure, Success>`. No exceptions for domain errors.
 
 ## Composing with `either { }` and `bind()`
 
 ```kotlin
 suspend fun createRequest(model: CreateRequestModel): Either<CreateError, AuthorizationRequest> = either {
-    // bind() unwraps Right or short-circuits with Left
     val party = partyService.resolve(model.requestedBy)
         .mapLeft { CreateError.PartyResolutionFailed }
-        .bind()
+        .bind()                                           // unwraps Right or short-circuits Left
 
-    // ensure() short-circuits if condition is false
-    ensure(model.authorizedParty == party) { CreateError.AuthorizationError }
+    ensure(model.authorizedParty == party) { CreateError.AuthorizationError }  // short-circuits if false
 
     repo.insert(model.toRequest())
         .mapLeft { CreateError.PersistenceError }
@@ -42,33 +25,13 @@ suspend fun createRequest(model: CreateRequestModel): Either<CreateError, Author
 }
 ```
 
-`bind()` is the only way to unwrap inside `either { }`. Never use `getOrThrow()` or `!!`.
-
-## Mapping errors across boundaries (`mapLeft`)
-
-Dependencies return their own error types. Map them before binding:
-
-```kotlin
-repository.getData()
-    .mapLeft { DomainError.InfrastructureError(it) }
-    .bind()
-```
-
-The caller's sealed error type is the only error type that escapes the function boundary.
-
-## List operations
-
-```kotlin
-// Fail fast — stop on first error
-val results = items.map { item -> process(item).bind() }
-
-// Accumulate all errors — use for validation
-val results = items.mapOrAccumulate { item -> process(item).bind() }
-```
+- `bind()` is the only way to unwrap inside `either { }`. Never `getOrThrow()` or `!!`.
+- `mapLeft` maps the dependency's error to the caller's sealed error before `bind()`.
+- **Never use `.flatMap { }` on `Either`** — it does not exist in this Arrow version.
 
 ## Domain error types
 
-Errors are sealed interfaces, one per action slice:
+One sealed interface per action slice:
 
 ```kotlin
 sealed interface CreateRequestError {
@@ -78,27 +41,26 @@ sealed interface CreateRequestError {
 }
 ```
 
-Sealed interfaces enforce exhaustive `when` handling at call sites. Do not use `Exception` subclasses.
-
-## Wrapping Exposed transactions
-
-Database calls can throw. Wrap them:
+## Wrapping infrastructure
 
 ```kotlin
-suspend fun insert(entity: Entity): Either<RepositoryWriteError, Entity> =
-    Either.catch {
-        withTranaction { /* Exposed DSL */ }
-    }.mapLeft { RepositoryWriteError.UnexpectedError }
+Either.catch { withTransaction { /* Exposed DSL */ } }
+    .mapLeft { RepositoryWriteError.UnexpectedError }
 ```
 
-Never call `transaction { }` (blocking). Use `withTransaction { }` from ``Database.kt``.
+## List operations
+
+```kotlin
+items.map { it.bind() }              // fail-fast — stop on first error
+items.mapOrAccumulate { it.bind() }  // accumulate all errors
+```
 
 ## Hard rules
 
-| Situation                       | Rule                                                      |
-|---------------------------------|-----------------------------------------------------------|
-| Domain or expected errors       | Return `Left`, never throw                                |
-| Unwrapping inside `either { }`  | `bind()` only                                             |
-| Unwrapping outside `either { }` | `fold`, `getOrElse`, or `map` — never `getOrThrow()`      |
-| Exception from infrastructure   | `Either.catch { }` then `mapLeft`                         |
-| Truly unrecoverable failure     | Allowed to throw (e.g., OOM, misconfiguration at startup) |
+| Situation | Rule |
+| --------- | ---- |
+| Domain/expected errors | Return `Left`, never throw |
+| Unwrap inside `either { }` | `bind()` only |
+| Unwrap outside `either { }` | `fold`, `getOrElse`, `map` — never `getOrThrow()` |
+| Infrastructure exception | `Either.catch { }` then `mapLeft` |
+| Truly unrecoverable | Allowed to throw (OOM, startup misconfiguration) |
