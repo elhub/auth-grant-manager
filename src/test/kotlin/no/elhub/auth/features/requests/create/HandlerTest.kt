@@ -7,9 +7,7 @@ import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.core.spec.style.FunSpec
 import io.mockk.coEvery
 import io.mockk.coVerify
-import io.mockk.every
 import io.mockk.mockk
-import io.mockk.verify
 import kotlinx.datetime.LocalDate
 import no.elhub.auth.features.businessprocesses.BusinessProcessError
 import no.elhub.auth.features.businessprocesses.changeofbalancesupplier.ChangeOfBalanceSupplierValidationError
@@ -26,7 +24,6 @@ import no.elhub.auth.features.grants.AuthorizationScope
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.common.AuthorizationRequestProperty
 import no.elhub.auth.features.requests.common.ProxyRequestBusinessHandler
-import no.elhub.auth.features.requests.common.RequestPropertiesRepository
 import no.elhub.auth.features.requests.common.RequestRepository
 import no.elhub.auth.features.requests.create.command.RequestCommand
 import no.elhub.auth.features.requests.create.command.RequestMetaMarker
@@ -96,7 +93,6 @@ class HandlerTest : FunSpec({
         val businessHandler = mockk<ProxyRequestBusinessHandler>()
         val partyService = mockk<PartyService>()
         val requestRepo = mockk<RequestRepository>()
-        val requestPropertyRepo = mockk<RequestPropertiesRepository>()
 
         stubPartyResolution(partyService)
         coEvery { businessHandler.validateAndReturnRequestCommand(model) } returns command.right()
@@ -110,13 +106,6 @@ class HandlerTest : FunSpec({
                 validTo = command.validTo,
             )
 
-        every { requestRepo.insert(any(), any()) } returns savedRequest.right()
-        every { requestPropertyRepo.insert(any()) } returns Unit.right()
-
-        val handler = Handler(businessHandler, partyService, requestRepo, requestPropertyRepo)
-
-        val response = handler(model)
-
         val expectedProperties =
             commandMeta
                 .toRequestMetaAttributes()
@@ -127,22 +116,25 @@ class HandlerTest : FunSpec({
                         value = value,
                     )
                 }
-        val expectedRequest = savedRequest.copy(properties = expectedProperties)
 
-        response.shouldBeRight(expectedRequest)
-        verify(exactly = 1) { requestRepo.insert(any(), any()) }
-        verify(exactly = 1) { requestPropertyRepo.insert(expectedProperties) }
+        coEvery { requestRepo.insert(any(), any()) } returns savedRequest.copy(properties = expectedProperties).right()
+
+        val handler = Handler(businessHandler, partyService, requestRepo)
+
+        val response = handler(model)
+
+        response.shouldBeRight(savedRequest.copy(properties = expectedProperties))
+        coVerify(exactly = 1) { requestRepo.insert(any(), any()) }
     }
 
     test("returns RequestedPartyError when requestedBy cannot be resolved") {
         val businessHandler = mockk<ProxyRequestBusinessHandler>(relaxed = true)
         val partyService = mockk<PartyService>()
         val requestRepo = mockk<RequestRepository>(relaxed = true)
-        val requestPropertyRepo = mockk<RequestPropertiesRepository>(relaxed = true)
 
         coEvery { partyService.resolve(requestedByIdentifier) } returns PartyError.PersonResolutionError.left()
 
-        val handler = Handler(businessHandler, partyService, requestRepo, requestPropertyRepo)
+        val handler = Handler(businessHandler, partyService, requestRepo)
 
         val response = handler(model)
 
@@ -154,11 +146,10 @@ class HandlerTest : FunSpec({
         val businessHandler = mockk<ProxyRequestBusinessHandler>(relaxed = true)
         val partyService = mockk<PartyService>()
         val requestRepo = mockk<RequestRepository>(relaxed = true)
-        val requestPropertyRepo = mockk<RequestPropertiesRepository>(relaxed = true)
 
         coEvery { partyService.resolve(requestedByIdentifier) } returns requestedByParty.right()
 
-        val handler = Handler(businessHandler, partyService, requestRepo, requestPropertyRepo)
+        val handler = Handler(businessHandler, partyService, requestRepo)
         val otherAuthorizedParty = AuthorizationParty(id = "other", type = PartyType.Organization)
 
         val response = handler(model.copy(authorizedParty = otherAuthorizedParty))
@@ -172,12 +163,11 @@ class HandlerTest : FunSpec({
         val businessHandler = mockk<ProxyRequestBusinessHandler>(relaxed = true)
         val partyService = mockk<PartyService>()
         val requestRepo = mockk<RequestRepository>(relaxed = true)
-        val requestPropertyRepo = mockk<RequestPropertiesRepository>(relaxed = true)
 
         coEvery { partyService.resolve(requestedByIdentifier) } returns requestedByParty.right()
         coEvery { partyService.resolve(requestedFromIdentifier) } returns PartyError.PersonResolutionError.left()
 
-        val handler = Handler(businessHandler, partyService, requestRepo, requestPropertyRepo)
+        val handler = Handler(businessHandler, partyService, requestRepo)
 
         val response = handler(model)
 
@@ -189,13 +179,12 @@ class HandlerTest : FunSpec({
         val businessHandler = mockk<ProxyRequestBusinessHandler>(relaxed = true)
         val partyService = mockk<PartyService>()
         val requestRepo = mockk<RequestRepository>(relaxed = true)
-        val requestPropertyRepo = mockk<RequestPropertiesRepository>(relaxed = true)
 
         coEvery { partyService.resolve(requestedByIdentifier) } returns requestedByParty.right()
         coEvery { partyService.resolve(requestedFromIdentifier) } returns requestedFromParty.right()
         coEvery { partyService.resolve(requestedToIdentifier) } returns PartyError.PersonResolutionError.left()
 
-        val handler = Handler(businessHandler, partyService, requestRepo, requestPropertyRepo)
+        val handler = Handler(businessHandler, partyService, requestRepo)
 
         val response = handler(model)
 
@@ -207,63 +196,32 @@ class HandlerTest : FunSpec({
         val businessHandler = mockk<ProxyRequestBusinessHandler>()
         val partyService = mockk<PartyService>()
         val requestRepo = mockk<RequestRepository>(relaxed = true)
-        val requestPropertyRepo = mockk<RequestPropertiesRepository>(relaxed = true)
 
         stubPartyResolution(partyService)
         coEvery {
             businessHandler.validateAndReturnRequestCommand(model)
         } returns BusinessProcessError.Validation(ChangeOfBalanceSupplierValidationError.MissingRequestedFromName.message).left()
 
-        val handler = Handler(businessHandler, partyService, requestRepo, requestPropertyRepo)
+        val handler = Handler(businessHandler, partyService, requestRepo)
 
         val response = handler(model)
 
         response.shouldBeLeft(
             CreateError.BusinessError(BusinessProcessError.Validation(ChangeOfBalanceSupplierValidationError.MissingRequestedFromName.message))
         )
-        verify(exactly = 0) { requestRepo.insert(any(), any()) }
+        coVerify(exactly = 0) { requestRepo.insert(any(), any()) }
     }
 
     test("returns PersistenceError when repository insert fails") {
         val businessHandler = mockk<ProxyRequestBusinessHandler>()
         val partyService = mockk<PartyService>()
         val requestRepo = mockk<RequestRepository>()
-        val requestPropertyRepo = mockk<RequestPropertiesRepository>(relaxed = true)
 
         stubPartyResolution(partyService)
         coEvery { businessHandler.validateAndReturnRequestCommand(model) } returns command.right()
-        every { requestRepo.insert(any(), any()) } returns RepositoryWriteError.UnexpectedError.left()
+        coEvery { requestRepo.insert(any(), any()) } returns RepositoryWriteError.UnexpectedError.left()
 
-        val handler = Handler(businessHandler, partyService, requestRepo, requestPropertyRepo)
-
-        val response = handler(model)
-
-        response.shouldBeLeft(CreateError.PersistenceError)
-        verify(exactly = 0) { requestPropertyRepo.insert(any()) }
-    }
-
-    test("returns PersistenceError when property insert fails") {
-        val businessHandler = mockk<ProxyRequestBusinessHandler>()
-        val partyService = mockk<PartyService>()
-        val requestRepo = mockk<RequestRepository>()
-        val requestPropertyRepo = mockk<RequestPropertiesRepository>()
-
-        stubPartyResolution(partyService)
-        coEvery { businessHandler.validateAndReturnRequestCommand(model) } returns command.right()
-
-        val savedRequest =
-            AuthorizationRequest.create(
-                type = command.type,
-                requestedFrom = requestedFromParty,
-                requestedBy = requestedByParty,
-                requestedTo = requestedToParty,
-                validTo = command.validTo,
-            )
-
-        every { requestRepo.insert(any(), any()) } returns savedRequest.right()
-        every { requestPropertyRepo.insert(any()) } returns RepositoryWriteError.UnexpectedError.left()
-
-        val handler = Handler(businessHandler, partyService, requestRepo, requestPropertyRepo)
+        val handler = Handler(businessHandler, partyService, requestRepo)
 
         val response = handler(model)
 

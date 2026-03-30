@@ -2,6 +2,7 @@ package no.elhub.auth.features.requests.common
 
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
+import no.elhub.auth.config.withTransaction
 import no.elhub.auth.features.common.PostgresTestContainer
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.RunPostgresScriptExtension
@@ -41,17 +42,20 @@ class ExposedRequestPropertiesRepositoryTest : FunSpec({
     }
 
     beforeTest {
-        transaction {
+        withTransaction {
             AuthorizationRequestPropertyTable.deleteAll()
         }
     }
 
     context("Request properties repository") {
-        test("insert empty list should return success ") {
-            val result = transaction {
-                propertyRepo.insert(emptyList())
+        test("insert empty list should not persist any rows") {
+            propertyRepo.insert(emptyList())
+            withTransaction {
+                AuthorizationRequestPropertyTable
+                    .selectAll()
+                    .where { AuthorizationRequestPropertyTable.requestId eq requestId }
+                    .count() shouldBe 0
             }
-            result.isRight() shouldBe true
         }
 
         test("insert properties should persist to database") {
@@ -60,12 +64,9 @@ class ExposedRequestPropertiesRepositoryTest : FunSpec({
                 AuthorizationRequestProperty(requestId, "key2", "value2"),
             )
 
-            val insertResult = transaction {
-                propertyRepo.insert(properties)
-            }
-            insertResult.isRight() shouldBe true
+            propertyRepo.insert(properties)
 
-            transaction {
+            withTransaction {
                 val stored = AuthorizationRequestPropertyTable
                     .selectAll()
                     .where { AuthorizationRequestPropertyTable.requestId eq requestId }
@@ -88,13 +89,10 @@ class ExposedRequestPropertiesRepositoryTest : FunSpec({
                 AuthorizationRequestProperty(requestId, "name", "Kari Normann AS"),
             )
 
-            val insertResult = transaction {
-                propertyRepo.insert(properties)
-            }
-            insertResult.isRight() shouldBe true
+            propertyRepo.insert(properties)
 
-            val stored = transaction {
-                AuthorizationRequestPropertyTable
+            withTransaction {
+                val stored = AuthorizationRequestPropertyTable
                     .selectAll()
                     .where { AuthorizationRequestPropertyTable.requestId eq requestId }
                     .map { resultRow ->
@@ -104,11 +102,11 @@ class ExposedRequestPropertiesRepositoryTest : FunSpec({
                             value = resultRow[AuthorizationRequestPropertyTable.value],
                         )
                     }
-            }
 
-            stored.size shouldBe 2
-            stored[0].value shouldBe "Main Street 42, 5000 Bergen"
-            stored[1].value shouldBe "Kari Normann AS"
+                stored.size shouldBe 2
+                stored[0].value shouldBe "Main Street 42, 5000 Bergen"
+                stored[1].value shouldBe "Kari Normann AS"
+            }
         }
     }
 })
