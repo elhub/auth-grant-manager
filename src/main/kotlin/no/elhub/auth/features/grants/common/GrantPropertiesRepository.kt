@@ -1,7 +1,8 @@
 package no.elhub.auth.features.grants.common
 
 import arrow.core.Either
-import arrow.core.raise.either
+import no.elhub.auth.config.withTransaction
+import no.elhub.auth.config.withTransactionEither
 import no.elhub.auth.features.common.RepositoryError
 import no.elhub.auth.features.common.RepositoryWriteError
 import org.jetbrains.exposed.v1.core.ResultRow
@@ -13,27 +14,29 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import java.util.UUID
 
 interface GrantPropertiesRepository {
-    fun insert(properties: List<AuthorizationGrantProperty>): Either<RepositoryError, Unit>
-    fun findBy(grantId: UUID): List<AuthorizationGrantProperty>
+    suspend fun insert(properties: List<AuthorizationGrantProperty>): Either<RepositoryError, Unit>
+    suspend fun findBy(grantId: UUID): List<AuthorizationGrantProperty>
 }
 
 class ExposedGrantPropertiesRepository : GrantPropertiesRepository {
-    override fun insert(properties: List<AuthorizationGrantProperty>): Either<RepositoryError, Unit> =
-        either<RepositoryWriteError, Unit> {
-            if (properties.isEmpty()) return@either
-
-            AuthorizationGrantPropertyTable.batchInsert(properties) { property ->
-                this[AuthorizationGrantPropertyTable.grantId] = property.grantId
-                this[AuthorizationGrantPropertyTable.key] = property.key
-                this[AuthorizationGrantPropertyTable.value] = property.value
+    override suspend fun insert(properties: List<AuthorizationGrantProperty>): Either<RepositoryError, Unit> =
+        withTransactionEither({ RepositoryWriteError.UnexpectedError }) {
+            if (properties.isNotEmpty()) {
+                AuthorizationGrantPropertyTable.batchInsert(properties) { property ->
+                    this[AuthorizationGrantPropertyTable.grantId] = property.grantId
+                    this[AuthorizationGrantPropertyTable.key] = property.key
+                    this[AuthorizationGrantPropertyTable.value] = property.value
+                }
             }
-        }.mapLeft { RepositoryWriteError.UnexpectedError }
+        }
 
-    override fun findBy(grantId: UUID): List<AuthorizationGrantProperty> =
-        AuthorizationGrantPropertyTable
-            .selectAll()
-            .where { AuthorizationGrantPropertyTable.grantId eq grantId }
-            .map { it.toAuthorizationGrantProperty() }
+    override suspend fun findBy(grantId: UUID): List<AuthorizationGrantProperty> =
+        withTransaction {
+            AuthorizationGrantPropertyTable
+                .selectAll()
+                .where { AuthorizationGrantPropertyTable.grantId eq grantId }
+                .map { it.toAuthorizationGrantProperty() }
+        }
 }
 
 object AuthorizationGrantPropertyTable : Table("auth.authorization_grant_property") {

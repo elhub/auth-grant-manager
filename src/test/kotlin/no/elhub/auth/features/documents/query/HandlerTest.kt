@@ -4,9 +4,9 @@ import arrow.core.Either
 import arrow.core.right
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.core.spec.style.FunSpec
-import io.mockk.every
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
-import io.mockk.verify
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.plus
 import no.elhub.auth.features.common.RepositoryReadError
@@ -76,7 +76,7 @@ class HandlerTest : FunSpec({
 
     fun documentRepoReturning(result: Either<RepositoryReadError, List<AuthorizationDocument>>): DocumentRepository =
         mockk<DocumentRepository> {
-            every { findAll(any()) } returns result
+            coEvery { findAll(any()) } returns result
         }
 
     fun grantRepoReturning(
@@ -84,10 +84,10 @@ class HandlerTest : FunSpec({
         secondResult: Either<RepositoryReadError, AuthorizationGrant?>
     ): GrantRepository =
         mockk<GrantRepository> {
-            every {
+            coEvery {
                 findBySource(AuthorizationGrant.SourceType.Document, firstDocumentId)
             } returns firstResult
-            every {
+            coEvery {
                 findBySource(AuthorizationGrant.SourceType.Document, secondDocumentId)
             } returns secondResult
         }
@@ -104,7 +104,7 @@ class HandlerTest : FunSpec({
             )
         )
 
-        verify(exactly = 1) { documentRepo.findAll(requestedBy) }
+        coVerify(exactly = 1) { documentRepo.findAll(requestedBy) }
         response.shouldBeRight(
             listOf(
                 firstDocument.copy(grantId = grant.id),

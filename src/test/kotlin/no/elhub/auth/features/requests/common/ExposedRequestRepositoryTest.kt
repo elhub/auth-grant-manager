@@ -176,7 +176,10 @@ class ExposedRequestRepositoryTest : FunSpec({
         scopeIds.shouldBeRight()
         scopeIds.value.size shouldBe 2
         scopeIds.value.shouldContainAll(
-            listOf(UUID.fromString("e705af95-571d-47ea-9b1b-742aa598c85c"), UUID.fromString("c597482d-b013-400b-9362-35bb16724c8f"))
+            listOf(
+                UUID.fromString("e705af95-571d-47ea-9b1b-742aa598c85c"),
+                UUID.fromString("c597482d-b013-400b-9362-35bb16724c8f")
+            )
         )
     }
 

@@ -1,5 +1,9 @@
 package no.elhub.auth.config
 
+import arrow.core.Either
+import arrow.core.left
+import arrow.core.raise.Raise
+import arrow.core.raise.either
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import io.ktor.server.application.Application
@@ -26,3 +30,16 @@ fun Application.configureDatabase(): HikariDataSource {
 suspend fun <T> withTransaction(block: suspend JdbcTransaction.() -> T): T = withContext(Dispatchers.IO) {
     suspendTransaction { block() }
 }
+
+/**
+ * Runs [block] inside a transaction, catching any exception as [onException].
+ * Replaces the verbose triple-nesting pattern:
+ *   `either { Either.catch { withTransaction { either<E,A> { } } }.mapLeft{}.bind().bind() }`
+ */
+suspend fun <E, A> withTransactionEither(
+    onException: (Throwable) -> E,
+    block: suspend Raise<E>.() -> A
+): Either<E, A> =
+    Either.catch { withTransaction { either<E, A> { block(this) } } }
+        .mapLeft(onException)
+        .fold({ it.left() }, { it })

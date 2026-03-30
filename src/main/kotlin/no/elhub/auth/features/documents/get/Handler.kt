@@ -3,7 +3,6 @@ package no.elhub.auth.features.documents.get
 import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensure
-import no.elhub.auth.config.withTransaction
 import no.elhub.auth.features.common.QueryError
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.documents.AuthorizationDocument
@@ -16,34 +15,30 @@ class Handler(
     private val grantRepository: GrantRepository
 ) {
     suspend operator fun invoke(query: Query): Either<QueryError, AuthorizationDocument> = either {
-        withTransaction {
-            val document = documentRepo.find(query.documentId)
+        val document = documentRepo.find(query.documentId)
+            .mapLeft { error ->
+                when (error) {
+                    is RepositoryReadError.NotFoundError -> QueryError.ResourceNotFoundError
+                    is RepositoryReadError.UnexpectedError -> QueryError.IOError
+                }
+            }.bind()
+
+        ensure(
+            query.authorizedParty == document.requestedBy ||
+                query.authorizedParty == document.requestedFrom
+        ) {
+            QueryError.NotAuthorizedError
+        }
+
+        val grant =
+            grantRepository.findBySource(AuthorizationGrant.SourceType.Document, document.id)
                 .mapLeft { error ->
                     when (error) {
-                        is RepositoryReadError.NotFoundError -> QueryError.ResourceNotFoundError
-                        is RepositoryReadError.UnexpectedError -> QueryError.IOError
+                        RepositoryReadError.NotFoundError -> QueryError.ResourceNotFoundError
+                        RepositoryReadError.UnexpectedError -> QueryError.IOError
                     }
                 }.bind()
 
-            ensure(
-                query.authorizedParty == document.requestedBy ||
-                    query.authorizedParty == document.requestedFrom
-            ) {
-                QueryError.NotAuthorizedError
-            }
-
-            val grant =
-                grantRepository.findBySource(AuthorizationGrant.SourceType.Document, document.id)
-                    .mapLeft { error ->
-                        when (error) {
-                            RepositoryReadError.NotFoundError -> QueryError.ResourceNotFoundError
-                            RepositoryReadError.UnexpectedError -> QueryError.IOError
-                        }
-                    }.bind()
-
-            document.copy(
-                grantId = grant?.id,
-            )
-        }
+        document.copy(grantId = grant?.id)
     }
 }

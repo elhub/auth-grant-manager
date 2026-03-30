@@ -5,7 +5,7 @@ import arrow.core.right
 import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.core.spec.style.FunSpec
-import io.mockk.every
+import io.mockk.coEvery
 import io.mockk.mockk
 import no.elhub.auth.features.common.QueryError
 import no.elhub.auth.features.common.RepositoryReadError
@@ -47,7 +47,7 @@ class HandlerTest : FunSpec({
 
     fun repoReturning(result: arrow.core.Either<RepositoryReadError, AuthorizationGrant>): GrantRepository =
         mockk<GrantRepository> {
-            every { find(grantId) } returns result
+            coEvery { find(grantId) } returns result
         }
 
     test("returns grant when authorized party is valid System") {
