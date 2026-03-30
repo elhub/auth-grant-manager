@@ -73,7 +73,8 @@ ktor-client-cio = { group = "io.ktor", name = "ktor-client-cio", version.ref = "
 ktor-client-core = { group = "io.ktor", name = "ktor-client-core", version.ref = "ktor" }
 ktor-client-logging = { group = "io.ktor", name = "ktor-client-logging", version.ref = "ktor" }
 ktor-client-mock = { group = "io.ktor", name = "ktor-client-mock", version.ref = "ktor" }
-ktor-server-metrics-micrometer = { group = "io.ktor", name = "ktor-server-metrics-micrometer", version.ref = "ktor" }
+http-ktor-server-metrics-micrometer = { group = "io.ktor", name = "ktor-server-metrics-micrometer", version.ref = "ktor" }
+http-ktor-server-metrics-micrometer-registry-prometheus = { group = "io.micrometer", name = "micrometer-registry-prometheus", version.ref = "micrometer" }
 ktor-client-content-negotiation = { group = "io.ktor", name = "ktor-client-content-negotiation", version.ref = "ktor" }
 ktor-server-netty = { group = "io.ktor", name = "ktor-server-netty", version.ref = "ktor" }
 ktor-server-swagger = { group = "io.ktor", name = "ktor-server-swagger", version.ref = "ktor" }
@@ -113,7 +114,9 @@ functional-programming = ["fp-arrow-core", "fp-arrow-core-high-arity", "fp-arrow
 ktor = ["ktor-server-core", "ktor-server-netty", "ktor-server-content-negotiation", "ktor-server-config-yaml", "ktor-client-core", "ktor-client-cio",
   "ktor-client-content-negotiation", "ktor-client-logging", "ktor-server-status-pages", "ktor-client-auth","ktor-server-di"]
 logging = ["ktor-server-call-id", "ktor-server-call-logging", "logging-logback-classic", "logging-oshai-kotlin-logging"]
-monitoring = ["ktor-server-metrics-micrometer", "monitoring-micrometer-registry-prometheus", "monitoring-cohort-hikari", "monitoring-cohort-ktor",
+monitoring = ["http-ktor-server-metrics-micrometer",
+  "http-ktor-server-metrics-micrometer-registry-prometheus",
+  "monitoring-cohort-hikari", "monitoring-cohort-ktor",
   "monitoring-cohort-micrometer"]
 serialization = ["kotlinx-datetime", "kotlinx-serialization-json", "ktor-serialization-kotlinx-json", "serialization-yaml-snakeyaml"]
 pdf-generation = ["templating-mustache", "pdf-openhtmltopdf-pdfbox", "pdf-pdfbox"]
