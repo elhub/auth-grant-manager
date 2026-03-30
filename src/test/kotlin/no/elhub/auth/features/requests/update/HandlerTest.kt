@@ -11,9 +11,9 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.plus
+import no.elhub.auth.features.common.RepositoryWriteError.UnexpectedError
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
-import no.elhub.auth.features.common.RepositoryWriteError.UnexpectedError
 import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
 import no.elhub.auth.features.common.today
 import no.elhub.auth.features.grants.common.CreateGrantProperties
