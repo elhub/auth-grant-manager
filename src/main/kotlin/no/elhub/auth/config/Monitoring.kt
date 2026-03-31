@@ -24,9 +24,6 @@ fun Application.configureMonitoring(dataSource: HikariDataSource) {
     val appMicrometerRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
     install(MicrometerMetrics) {
         registry = appMicrometerRegistry
-        dataSource.apply {
-            registry = appMicrometerRegistry
-        }
     }
 
     install(Cohort) {
