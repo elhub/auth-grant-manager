@@ -7,11 +7,13 @@ import arrow.core.raise.either
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import io.ktor.server.application.Application
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
+import java.util.function.Supplier
 
 fun Application.configureDatabase(): HikariDataSource {
     val config = HikariConfig().apply {
@@ -43,3 +45,8 @@ suspend fun <E, A> withTransactionEither(
     Either.catch { withTransaction { either<E, A> { block(this) } } }
         .mapLeft(onException)
         .fold({ it.left() }, { it })
+
+fun <T> PrometheusMeterRegistry.measureDbCall(
+    name: String,
+    block: () -> T
+): T = timer(name).record(Supplier { block() })
