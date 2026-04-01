@@ -284,7 +284,7 @@ class ExposedGrantRepository(
                     scopeIds = scopes,
                     properties = properties
                 )
-            }     
+            }
         }
 }
 
