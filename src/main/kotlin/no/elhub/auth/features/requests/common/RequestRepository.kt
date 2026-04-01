@@ -82,21 +82,19 @@ class ExposedRequestRepository(
 
     override suspend fun findAllAndSortByCreatedAt(party: AuthorizationParty): Either<RepositoryReadError, List<AuthorizationRequest>> =
         withTransactionEither<RepositoryReadError, List<AuthorizationRequest>>({ RepositoryReadError.UnexpectedError }) {
-            metricsProvider.measureDbCall("request_repo_find_all") {
-                val partyId = partyRepo.findOrInsert(type = party.type, partyId = party.id)
-                    .mapLeft { RepositoryReadError.UnexpectedError }
-                    .bind()
-                    .id
+            val partyId = partyRepo.findOrInsert(type = party.type, partyId = party.id)
+                .mapLeft { RepositoryReadError.UnexpectedError }
+                .bind()
+                .id
 
-                AuthorizationRequestTable
-                    .selectAll()
-                    .where {
-                        (AuthorizationRequestTable.requestedTo eq partyId) or (AuthorizationRequestTable.requestedBy eq partyId)
-                    }
-                    .orderBy(AuthorizationRequestTable.createdAt to SortOrder.DESC)
-                    .toList()
-                    .map { row -> findInternal(row).bind() }
-            }
+            AuthorizationRequestTable
+                .selectAll()
+                .where {
+                    (AuthorizationRequestTable.requestedTo eq partyId) or (AuthorizationRequestTable.requestedBy eq partyId)
+                }
+                .orderBy(AuthorizationRequestTable.createdAt to SortOrder.DESC)
+                .toList()
+                .map { row -> findInternal(row).bind() }
         }
 
     override suspend fun find(requestId: UUID): Either<RepositoryReadError, AuthorizationRequest> =
@@ -115,26 +113,25 @@ class ExposedRequestRepository(
         scopes: List<CreateScopeData>
     ): Either<RepositoryWriteError, AuthorizationRequest> =
         withTransactionEither<RepositoryWriteError, AuthorizationRequest>({ RepositoryWriteError.UnexpectedError }) {
-            metricsProvider.measureDbCall("request_repo_insert") {
-                val requestedByParty =
-                    partyRepo
-                        .findOrInsert(request.requestedBy.type, request.requestedBy.id)
-                        .mapLeft { RepositoryWriteError.UnexpectedError }
-                        .bind()
+            val requestedByParty =
+                partyRepo
+                    .findOrInsert(request.requestedBy.type, request.requestedBy.id)
+                    .mapLeft { RepositoryWriteError.UnexpectedError }
+                    .bind()
 
-                val requestedFromParty =
-                    partyRepo
-                        .findOrInsert(request.requestedFrom.type, request.requestedFrom.id)
-                        .mapLeft { RepositoryWriteError.UnexpectedError }
-                        .bind()
+            val requestedFromParty =
+                partyRepo
+                    .findOrInsert(request.requestedFrom.type, request.requestedFrom.id)
+                    .mapLeft { RepositoryWriteError.UnexpectedError }
+                    .bind()
 
-                val requestedToParty =
-                    partyRepo
-                        .findOrInsert(request.requestedTo.type, request.requestedTo.id)
-                        .mapLeft { RepositoryWriteError.UnexpectedError }
-                        .bind()
-
-                val insertedRequest = AuthorizationRequestTable
+            val requestedToParty =
+                partyRepo
+                    .findOrInsert(request.requestedTo.type, request.requestedTo.id)
+                    .mapLeft { RepositoryWriteError.UnexpectedError }
+                    .bind()
+            val insertedRequest = metricsProvider.measureDbCall("request_repo_insert") {
+                AuthorizationRequestTable
                     .insertReturning {
                         it[id] = request.id
                         it[requestType] = request.type
@@ -145,32 +142,31 @@ class ExposedRequestRepository(
                         it[validTo] = request.validTo
                         it[createdAt] = request.createdAt
                     }.single()
-
-                handleScopes(scopes, insertedRequest)
-
-                requestPropertiesRepository.insert(request.properties)
-
-                insertedRequest.toAuthorizationRequest(
-                    requestedBy = requestedByParty,
-                    requestedFrom = requestedFromParty,
-                    requestedTo = requestedToParty,
-                    properties = request.properties,
-                )
             }
+
+            handleScopes(scopes, insertedRequest)
+
+            requestPropertiesRepository.insert(request.properties)
+
+            insertedRequest.toAuthorizationRequest(
+                requestedBy = requestedByParty,
+                requestedFrom = requestedFromParty,
+                requestedTo = requestedToParty,
+                properties = request.properties,
+            )
         }
 
     override suspend fun rejectRequest(requestId: UUID): Either<RepositoryError, AuthorizationRequest> =
         withTransactionEither<RepositoryError, AuthorizationRequest>({ RepositoryWriteError.UnexpectedError }) {
-            metricsProvider.measureDbCall("request_repo_reject") {
-                val rowsUpdated = AuthorizationRequestTable.update(
+            val rowsUpdated = metricsProvider.measureDbCall("request_repo_reject") {
+                AuthorizationRequestTable.update(
                     where = { AuthorizationRequestTable.id eq requestId }
                 ) {
                     it[requestStatus] = DatabaseRequestStatus.Rejected
                     it[updatedAt] = currentTimeUtc()
                 }
-
-                updateAndFetch(requestId, rowsUpdated).bind()
             }
+            updateAndFetch(requestId, rowsUpdated).bind()
         }
 
     override suspend fun findScopeIds(requestId: UUID): Either<RepositoryReadError, List<UUID>> =
@@ -212,9 +208,7 @@ class ExposedRequestRepository(
             grantRepository.insert(grant).mapLeft { AcceptWithGrantError.GrantError }
                 .bind()
 
-            metricsProvider.measureDbCall("request_repo_insert_grant_properties") {
-                grantPropertiesRepository.insert(grantProperties)
-            }.mapLeft { AcceptWithGrantError.GrantError }
+            grantPropertiesRepository.insert(grantProperties).mapLeft { AcceptWithGrantError.GrantError }
                 .bind()
 
             acceptedRequest.copy(grantId = grant.id)
@@ -238,7 +232,7 @@ class ExposedRequestRepository(
         }
     }
 
-    private fun updateAndFetch(requestId: UUID, rowsUpdated: Int): Either<RepositoryError, AuthorizationRequest> =
+    private suspend fun updateAndFetch(requestId: UUID, rowsUpdated: Int): Either<RepositoryError, AuthorizationRequest> =
         either {
             if (rowsUpdated == 0) {
                 raise(RepositoryWriteError.UnexpectedError)
@@ -255,7 +249,7 @@ class ExposedRequestRepository(
                 .bind()
         }
 
-    private fun findInternal(request: ResultRow): Either<RepositoryReadError, AuthorizationRequest> =
+    private suspend fun findInternal(request: ResultRow): Either<RepositoryReadError, AuthorizationRequest> =
         either {
             val requestedByDbId = request[AuthorizationRequestTable.requestedBy]
             val requestedFromDbId = request[AuthorizationRequestTable.requestedFrom]

@@ -23,13 +23,12 @@ interface PartyRepository {
     fun find(id: UUID): Either<RepositoryReadError, AuthorizationPartyRecord>
 }
 
-class ExposedPartyRepository(private val metricsProvider: PrometheusMeterRegistry): PartyRepository {
+class ExposedPartyRepository(private val metricsProvider: PrometheusMeterRegistry) : PartyRepository {
 
     private val logger = LoggerFactory.getLogger(ExposedPartyRepository::class.java)
     override fun findOrInsert(type: PartyType, partyId: String): Either<RepositoryWriteError, AuthorizationPartyRecord> =
         Either.catch {
-            metricsProvider.measureDbCall("party_repo_find_or_insert"
-            ) {
+            metricsProvider.measureDbCall("party_repo_find_or_insert") {
                 AuthorizationPartyTable
                     // look in the table where type == given AND resource_id = given
                     .selectAll()
@@ -54,7 +53,6 @@ class ExposedPartyRepository(private val metricsProvider: PrometheusMeterRegistr
                         }
                     }
             }
-
         }.mapLeft { error ->
             logger.error("Error occurred during findOrInsert() for authorization grant: ${error.message}")
             RepositoryWriteError.UnexpectedError
@@ -63,8 +61,7 @@ class ExposedPartyRepository(private val metricsProvider: PrometheusMeterRegistr
     override fun find(id: UUID): Either<RepositoryReadError, AuthorizationPartyRecord> =
         Either
             .catch {
-                metricsProvider.measureDbCall("party_repo_find"
-                ) {
+                metricsProvider.measureDbCall("party_repo_find") {
                     AuthorizationPartyTable
                         .selectAll()
                         .where { AuthorizationPartyTable.id eq id }

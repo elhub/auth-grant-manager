@@ -53,8 +53,7 @@ class ExposedGrantRepository(
 
     override suspend fun findAll(party: AuthorizationParty): Either<RepositoryReadError, List<AuthorizationGrant>> =
         withTransactionEither({ RepositoryReadError.UnexpectedError }) {
-            metricsProvider.measureDbCall("grant_repo_find_all"
-            ) {
+            metricsProvider.measureDbCall("grant_repo_find_all") {
                 val partyId = partyRepository.findOrInsert(type = party.type, partyId = party.id)
                     .mapLeft { RepositoryReadError.UnexpectedError }
                     .bind()
@@ -75,8 +74,7 @@ class ExposedGrantRepository(
 
     override suspend fun find(grantId: UUID): Either<RepositoryReadError, AuthorizationGrant> =
         withTransactionEither<RepositoryReadError, AuthorizationGrant>({ RepositoryReadError.UnexpectedError }) {
-            metricsProvider.measureDbCall("grant_repo_find"
-            ) {
+            metricsProvider.measureDbCall("grant_repo_find") {
                 findInternalGrant(grantId).bind()
             }
         }
@@ -86,8 +84,7 @@ class ExposedGrantRepository(
         sourceId: UUID
     ): Either<RepositoryReadError, AuthorizationGrant?> =
         withTransactionEither<RepositoryReadError, AuthorizationGrant?>({ RepositoryReadError.UnexpectedError }) {
-            metricsProvider.measureDbCall("grant_repo_find_by_source"
-            ) {
+            metricsProvider.measureDbCall("grant_repo_find_by_source") {
                 AuthorizationGrantTable
                     .selectAll()
                     .where {
@@ -113,8 +110,7 @@ class ExposedGrantRepository(
         }
 
     fun findScopeIds(grantId: UUID): Either<RepositoryReadError, List<UUID>> = either {
-        metricsProvider.measureDbCall("grant_repo_find_scope_by_ids"
-        ) {
+        metricsProvider.measureDbCall("grant_repo_find_scope_by_ids") {
             AuthorizationGrantTable
                 .selectAll()
                 .where { AuthorizationGrantTable.id eq grantId }
@@ -132,38 +128,36 @@ class ExposedGrantRepository(
 
     override suspend fun findScopes(grantId: UUID): Either<RepositoryReadError, List<AuthorizationScope>> =
         withTransactionEither<RepositoryReadError, List<AuthorizationScope>>({ RepositoryReadError.UnexpectedError }) {
-        metricsProvider.measureDbCall("grant_repo_find_scopes"
-        ) {
-            AuthorizationGrantTable
-                .selectAll()
-                .where { AuthorizationGrantTable.id eq grantId }
-                .singleOrNull()
-                ?.let {
-                    (AuthorizationGrantScopeTable innerJoin AuthorizationScopeTable)
-                        .selectAll()
-                        .where { AuthorizationGrantScopeTable.authorizationGrantId eq grantId }
-                        .map { row ->
-                            AuthorizationScope(
-                                id = row[AuthorizationScopeTable.id].value,
-                                authorizedResourceId = row[AuthorizationScopeTable.authorizedResourceId],
-                                authorizedResourceType = row[AuthorizationScopeTable.authorizedResourceType],
-                                permissionType = row[AuthorizationScopeTable.permissionType],
-                                createdAt = row[AuthorizationScopeTable.createdAt]
-                            )
-                        }
-                } ?: run {
-                logger.error("Scope not found for authorization grant with id=$grantId")
-                raise(RepositoryReadError.NotFoundError)
+            metricsProvider.measureDbCall("grant_repo_find_scopes") {
+                AuthorizationGrantTable
+                    .selectAll()
+                    .where { AuthorizationGrantTable.id eq grantId }
+                    .singleOrNull()
+                    ?.let {
+                        (AuthorizationGrantScopeTable innerJoin AuthorizationScopeTable)
+                            .selectAll()
+                            .where { AuthorizationGrantScopeTable.authorizationGrantId eq grantId }
+                            .map { row ->
+                                AuthorizationScope(
+                                    id = row[AuthorizationScopeTable.id].value,
+                                    authorizedResourceId = row[AuthorizationScopeTable.authorizedResourceId],
+                                    authorizedResourceType = row[AuthorizationScopeTable.authorizedResourceType],
+                                    permissionType = row[AuthorizationScopeTable.permissionType],
+                                    createdAt = row[AuthorizationScopeTable.createdAt]
+                                )
+                            }
+                    } ?: run {
+                    logger.error("Scope not found for authorization grant with id=$grantId")
+                    raise(RepositoryReadError.NotFoundError)
+                }
             }
         }
-   }
 
     override suspend fun insert(
         grant: AuthorizationGrant,
     ): Either<RepositoryWriteError, AuthorizationGrant> =
         withTransactionEither({ RepositoryWriteError.UnexpectedError }) {
-            metricsProvider.measureDbCall("grant_repo_insert"
-            ) {
+            metricsProvider.measureDbCall("grant_repo_insert") {
                 val grantedByParty = partyRepository
                     .findOrInsert(grant.grantedBy.type, grant.grantedBy.id)
                     .mapLeft { RepositoryWriteError.UnexpectedError }
@@ -211,13 +205,11 @@ class ExposedGrantRepository(
                 }
                 authorizationGrant
             }
-
         }
 
     override suspend fun update(grantId: UUID, newStatus: Status): Either<RepositoryError, AuthorizationGrant> =
         withTransactionEither<RepositoryError, AuthorizationGrant>({ RepositoryWriteError.UnexpectedError }) {
-            metricsProvider.measureDbCall("grant_repo_update"
-            ) {
+            metricsProvider.measureDbCall("grant_repo_update") {
                 val rowsUpdated = AuthorizationGrantTable.update(
                     where = { AuthorizationGrantTable.id eq grantId }
                 ) {
@@ -235,8 +227,7 @@ class ExposedGrantRepository(
 
     private fun findInternalGrant(grantId: UUID): Either<RepositoryReadError, AuthorizationGrant> =
         either {
-            metricsProvider.measureDbCall("grant_repo_find_internal_grant"
-            ) {
+            metricsProvider.measureDbCall("grant_repo_find_internal_grant") {
                 val grant = AuthorizationGrantTable
                     .selectAll()
                     .where { AuthorizationGrantTable.id eq grantId }

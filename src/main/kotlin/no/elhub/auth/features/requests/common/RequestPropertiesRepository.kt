@@ -44,7 +44,6 @@ class ExposedRequestPropertiesRepository(
                     .map { it.toAuthorizationRequestProperty() }
             }
         }.fold({ emptyList() }, { it })
-
 }
 
 object AuthorizationRequestPropertyTable : Table("auth.authorization_request_property") {

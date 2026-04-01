@@ -87,8 +87,7 @@ class ExposedDocumentRepository(
         scopes: List<CreateScopeData>
     ): Either<RepositoryWriteError, AuthorizationDocument> =
         withTransactionEither({ RepositoryWriteError.UnexpectedError }) {
-            metricsProvider.measureDbCall("document_repo_insert"
-            ) {
+            metricsProvider.measureDbCall("document_repo_insert") {
                 val requestedByParty = partyRepo.findOrInsert(doc.requestedBy.type, doc.requestedBy.id)
                     .mapLeft { RepositoryWriteError.UnexpectedError }
                     .bind()
@@ -131,12 +130,11 @@ class ExposedDocumentRepository(
                 }
                 documentRow.toAuthorizationDocument(requestedByParty, requestedFromParty, requestedToParty, doc.properties)
             }
-       }
+        }
 
     override suspend fun find(id: UUID): Either<RepositoryReadError, AuthorizationDocument> =
         withTransactionEither<RepositoryReadError, AuthorizationDocument>({ RepositoryReadError.UnexpectedError }) {
-            metricsProvider.measureDbCall("document_repo_find"
-            ) {
+            metricsProvider.measureDbCall("document_repo_find") {
                 val documentRow = AuthorizationDocumentTable
                     .selectAll()
                     .where { AuthorizationDocumentTable.id eq id }
@@ -164,7 +162,6 @@ class ExposedDocumentRepository(
                     properties = properties,
                     signedBy = signatory
                 )
-
             }
         }
 
@@ -175,15 +172,13 @@ class ExposedDocumentRepository(
         signatory: AuthorizationParty
     ): Either<RepositoryWriteError, AuthorizationDocument> =
         withTransactionEither<RepositoryWriteError, AuthorizationDocument>({ RepositoryWriteError.UnexpectedError }) {
-
             val signatoryRecord = partyRepo.findOrInsert(signatory.type, signatory.id)
                 .mapLeft { RepositoryWriteError.UnexpectedError }
                 .bind()
             val requestedFromRecord = partyRepo.findOrInsert(requestedFrom.type, requestedFrom.id)
                 .mapLeft { RepositoryWriteError.UnexpectedError }
                 .bind()
-            metricsProvider.measureDbCall("document_repo_confirm"
-            ) {
+            metricsProvider.measureDbCall("document_repo_confirm") {
                 SignatoriesTable.insert {
                     it[authorizationDocumentId] = documentId
                     it[this.requestedFrom] = requestedFromRecord.id
@@ -206,7 +201,6 @@ class ExposedDocumentRepository(
                         RepositoryReadError.UnexpectedError -> RepositoryWriteError.UnexpectedError
                     }
                 }.bind()
-
         }
 
     override suspend fun findScopeIds(documentId: UUID): Either<RepositoryReadError, List<UUID>> =
