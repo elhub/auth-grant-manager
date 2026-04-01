@@ -28,7 +28,7 @@ class ExposedPartyRepository(private val metricsProvider: PrometheusMeterRegistr
     private val logger = LoggerFactory.getLogger(ExposedPartyRepository::class.java)
     override fun findOrInsert(type: PartyType, partyId: String): Either<RepositoryWriteError, AuthorizationPartyRecord> =
         Either.catch {
-            metricsProvider.measureDbCall("PartyRepository#findOrInsert"
+            metricsProvider.measureDbCall("party_repo_find_or_insert"
             ) {
                 AuthorizationPartyTable
                     // look in the table where type == given AND resource_id = given
@@ -63,7 +63,7 @@ class ExposedPartyRepository(private val metricsProvider: PrometheusMeterRegistr
     override fun find(id: UUID): Either<RepositoryReadError, AuthorizationPartyRecord> =
         Either
             .catch {
-                metricsProvider.measureDbCall("PartyRepository#find"
+                metricsProvider.measureDbCall("party_repo_find"
                 ) {
                     AuthorizationPartyTable
                         .selectAll()
