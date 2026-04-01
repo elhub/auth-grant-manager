@@ -2,6 +2,8 @@ package no.elhub.auth.features.requests.common
 
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
+import io.mockk.mockk
 import no.elhub.auth.config.withTransaction
 import no.elhub.auth.features.common.PostgresTestContainer
 import no.elhub.auth.features.common.PostgresTestContainerExtension
@@ -23,7 +25,7 @@ class ExposedRequestPropertiesRepositoryTest : FunSpec({
         RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-requests.sql"),
     )
 
-    val propertyRepo = ExposedRequestPropertiesRepository()
+    val propertyRepo = ExposedRequestPropertiesRepository(mockk<PrometheusMeterRegistry>())
 
     val requestId = UUID.fromString("4f71d596-99e4-415e-946d-7252c1a40c51")
 

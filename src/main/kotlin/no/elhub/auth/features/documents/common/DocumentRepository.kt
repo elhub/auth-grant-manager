@@ -87,20 +87,20 @@ class ExposedDocumentRepository(
         scopes: List<CreateScopeData>
     ): Either<RepositoryWriteError, AuthorizationDocument> =
         withTransactionEither({ RepositoryWriteError.UnexpectedError }) {
-            metricsProvider.measureDbCall("document_repo_insert") {
-                val requestedByParty = partyRepo.findOrInsert(doc.requestedBy.type, doc.requestedBy.id)
-                    .mapLeft { RepositoryWriteError.UnexpectedError }
-                    .bind()
+            val requestedByParty = partyRepo.findOrInsert(doc.requestedBy.type, doc.requestedBy.id)
+                .mapLeft { RepositoryWriteError.UnexpectedError }
+                .bind()
 
-                val requestedFromParty = partyRepo.findOrInsert(doc.requestedFrom.type, doc.requestedFrom.id)
-                    .mapLeft { RepositoryWriteError.UnexpectedError }
-                    .bind()
+            val requestedFromParty = partyRepo.findOrInsert(doc.requestedFrom.type, doc.requestedFrom.id)
+                .mapLeft { RepositoryWriteError.UnexpectedError }
+                .bind()
 
-                val requestedToParty = partyRepo.findOrInsert(doc.requestedTo.type, doc.requestedTo.id)
-                    .mapLeft { RepositoryWriteError.UnexpectedError }
-                    .bind()
+            val requestedToParty = partyRepo.findOrInsert(doc.requestedTo.type, doc.requestedTo.id)
+                .mapLeft { RepositoryWriteError.UnexpectedError }
+                .bind()
 
-                val documentRow = AuthorizationDocumentTable.insertReturning {
+            val documentRow = metricsProvider.measureDbCall("document_repo_insert") {
+                AuthorizationDocumentTable.insertReturning {
                     it[id] = doc.id
                     it[type] = doc.type
                     it[status] = DatabaseStatus.Pending
@@ -112,6 +112,7 @@ class ExposedDocumentRepository(
                     it[createdAt] = doc.createdAt
                     it[updatedAt] = doc.updatedAt
                 }.single()
+            }
 
                 documentPropertiesRepository.insert(doc.properties, doc.id)
 
@@ -129,40 +130,40 @@ class ExposedDocumentRepository(
                     this[authorizationScopeId] = scopeId
                 }
                 documentRow.toAuthorizationDocument(requestedByParty, requestedFromParty, requestedToParty, doc.properties)
-            }
+
         }
 
     override suspend fun find(id: UUID): Either<RepositoryReadError, AuthorizationDocument> =
         withTransactionEither<RepositoryReadError, AuthorizationDocument>({ RepositoryReadError.UnexpectedError }) {
-            metricsProvider.measureDbCall("document_repo_find") {
-                val documentRow = AuthorizationDocumentTable
+            val documentRow = metricsProvider.measureDbCall("document_repo_find") {
+                AuthorizationDocumentTable
                     .selectAll()
                     .where { AuthorizationDocumentTable.id eq id }
                     .map { it }
                     .singleOrNull() ?: raise(RepositoryReadError.NotFoundError)
-
-                val requestedByParty = resolveParty(documentRow[AuthorizationDocumentTable.requestedBy]).bind()
-                val requestedFromParty = resolveParty(documentRow[AuthorizationDocumentTable.requestedFrom]).bind()
-                val requestedToParty = resolveParty(documentRow[AuthorizationDocumentTable.requestedTo]).bind()
-                val properties = documentPropertiesRepository.find(id)
-
-                val signatory = SignatoriesTable
-                    .select(listOf(SignatoriesTable.signedBy))
-                    .where {
-                        (SignatoriesTable.authorizationDocumentId eq id) and
-                            (SignatoriesTable.requestedFrom eq documentRow[AuthorizationDocumentTable.requestedFrom])
-                    }
-                    .singleOrNull()
-                    ?.let { resolveParty(it[SignatoriesTable.signedBy]).bind() }
-
-                documentRow.toAuthorizationDocument(
-                    requestedBy = requestedByParty,
-                    requestedFrom = requestedFromParty,
-                    requestedTo = requestedToParty,
-                    properties = properties,
-                    signedBy = signatory
-                )
             }
+
+            val requestedByParty = resolveParty(documentRow[AuthorizationDocumentTable.requestedBy]).bind()
+            val requestedFromParty = resolveParty(documentRow[AuthorizationDocumentTable.requestedFrom]).bind()
+            val requestedToParty = resolveParty(documentRow[AuthorizationDocumentTable.requestedTo]).bind()
+            val properties = documentPropertiesRepository.find(id)
+
+            val signatory = SignatoriesTable
+                .select(listOf(SignatoriesTable.signedBy))
+                .where {
+                    (SignatoriesTable.authorizationDocumentId eq id) and
+                        (SignatoriesTable.requestedFrom eq documentRow[AuthorizationDocumentTable.requestedFrom])
+                }
+                .singleOrNull()
+                ?.let { resolveParty(it[SignatoriesTable.signedBy]).bind() }
+
+            documentRow.toAuthorizationDocument(
+                requestedBy = requestedByParty,
+                requestedFrom = requestedFromParty,
+                requestedTo = requestedToParty,
+                properties = properties,
+                signedBy = signatory
+            )
         }
 
     private suspend fun confirm(

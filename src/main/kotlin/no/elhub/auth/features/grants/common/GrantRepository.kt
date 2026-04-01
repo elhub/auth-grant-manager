@@ -53,30 +53,27 @@ class ExposedGrantRepository(
 
     override suspend fun findAll(party: AuthorizationParty): Either<RepositoryReadError, List<AuthorizationGrant>> =
         withTransactionEither({ RepositoryReadError.UnexpectedError }) {
-            metricsProvider.measureDbCall("grant_repo_find_all") {
                 val partyId = partyRepository.findOrInsert(type = party.type, partyId = party.id)
                     .mapLeft { RepositoryReadError.UnexpectedError }
                     .bind()
                     .id
+            metricsProvider.measureDbCall("grant_repo_find_all") {
 
                 AuthorizationGrantTable
                     .selectAll()
                     .where {
                         (AuthorizationGrantTable.grantedTo eq partyId) or (AuthorizationGrantTable.grantedFor eq partyId)
                     }
-                    .map { g ->
-                        findInternalGrant(g[AuthorizationGrantTable.id].value)
-                            .mapLeft { RepositoryReadError.UnexpectedError }
-                            .bind()
-                    }
+            }.map { g ->
+                   findInternalGrant(g[AuthorizationGrantTable.id].value)
+                    .mapLeft { RepositoryReadError.UnexpectedError }
+                    .bind()
             }
         }
 
     override suspend fun find(grantId: UUID): Either<RepositoryReadError, AuthorizationGrant> =
         withTransactionEither<RepositoryReadError, AuthorizationGrant>({ RepositoryReadError.UnexpectedError }) {
-            metricsProvider.measureDbCall("grant_repo_find") {
-                findInternalGrant(grantId).bind()
-            }
+            findInternalGrant(grantId).bind()
         }
 
     override suspend fun findBySource(
@@ -91,22 +88,23 @@ class ExposedGrantRepository(
                         (AuthorizationGrantTable.sourceType eq sourceType) and (AuthorizationGrantTable.sourceId eq sourceId)
                     }
                     .singleOrNull()
-                    ?.let { grant ->
-                        val grantedFor = partyRepository.find(grant[AuthorizationGrantTable.grantedFor]).bind()
-                        val grantedBy = partyRepository.find(grant[AuthorizationGrantTable.grantedBy]).bind()
-                        val grantedTo = partyRepository.find(grant[AuthorizationGrantTable.grantedTo]).bind()
-                        val scopes = findScopeIds(grant[AuthorizationGrantTable.id].value).bind()
-                        val properties = grantPropertiesRepository.findBy(grant[AuthorizationGrantTable.id].value)
-
-                        grant.toAuthorizationGrant(
-                            grantedBy = grantedBy,
-                            grantedFor = grantedFor,
-                            grantedTo = grantedTo,
-                            scopeIds = scopes,
-                            properties = properties
-                        )
-                    }
             }
+                ?.let { grant ->
+                    val grantedFor = partyRepository.find(grant[AuthorizationGrantTable.grantedFor]).bind()
+                    val grantedBy = partyRepository.find(grant[AuthorizationGrantTable.grantedBy]).bind()
+                    val grantedTo = partyRepository.find(grant[AuthorizationGrantTable.grantedTo]).bind()
+                    val scopes = findScopeIds(grant[AuthorizationGrantTable.id].value).bind()
+                    val properties = grantPropertiesRepository.findBy(grant[AuthorizationGrantTable.id].value)
+
+                    grant.toAuthorizationGrant(
+                        grantedBy = grantedBy,
+                        grantedFor = grantedFor,
+                        grantedTo = grantedTo,
+                        scopeIds = scopes,
+                        properties = properties
+                    )
+                }
+
         }
 
     fun findScopeIds(grantId: UUID): Either<RepositoryReadError, List<UUID>> = either {
@@ -209,73 +207,71 @@ class ExposedGrantRepository(
 
     override suspend fun update(grantId: UUID, newStatus: Status): Either<RepositoryError, AuthorizationGrant> =
         withTransactionEither<RepositoryError, AuthorizationGrant>({ RepositoryWriteError.UnexpectedError }) {
-            metricsProvider.measureDbCall("grant_repo_update") {
-                val rowsUpdated = AuthorizationGrantTable.update(
+            val rowsUpdated =  metricsProvider.measureDbCall("grant_repo_update") {
+                AuthorizationGrantTable.update(
                     where = { AuthorizationGrantTable.id eq grantId }
                 ) {
                     it[grantStatus] = newStatus
                     it[updatedAt] = currentTimeUtc()
                 }
-
-                if (rowsUpdated == 0) raise(RepositoryWriteError.UnexpectedError)
-
-                findInternalGrant(grantId)
-                    .mapLeft { RepositoryReadError.UnexpectedError }
-                    .bind()
             }
+
+            if (rowsUpdated == 0) raise(RepositoryWriteError.UnexpectedError)
+
+            findInternalGrant(grantId)
+                .mapLeft { RepositoryReadError.UnexpectedError }
+                .bind()
         }
 
-    private fun findInternalGrant(grantId: UUID): Either<RepositoryReadError, AuthorizationGrant> =
+    private suspend fun findInternalGrant(grantId: UUID): Either<RepositoryReadError, AuthorizationGrant> =
         either {
-            metricsProvider.measureDbCall("grant_repo_find_internal_grant") {
-                val grant = AuthorizationGrantTable
-                    .selectAll()
-                    .where { AuthorizationGrantTable.id eq grantId }
-                    .singleOrNull() ?: raise(RepositoryReadError.NotFoundError)
+            val grant = AuthorizationGrantTable
+                .selectAll()
+                .where { AuthorizationGrantTable.id eq grantId }
+                .singleOrNull() ?: raise(RepositoryReadError.NotFoundError)
 
-                val scopes = findScopeIds(grantId).bind()
+            val scopes = findScopeIds(grantId).bind()
 
-                val grantedByDbId = grant[AuthorizationGrantTable.grantedBy]
-                val grantedForDbId = grant[AuthorizationGrantTable.grantedFor]
-                val grantedToDbId = grant[AuthorizationGrantTable.grantedTo]
+            val grantedByDbId = grant[AuthorizationGrantTable.grantedBy]
+            val grantedForDbId = grant[AuthorizationGrantTable.grantedFor]
+            val grantedToDbId = grant[AuthorizationGrantTable.grantedTo]
 
-                val grantedByParty =
-                    partyRepository
-                        .find(grantedByDbId)
-                        .mapLeft { error ->
-                            logger.error("Failed to get grantedBy: $error")
-                            RepositoryReadError.UnexpectedError
-                        }
-                        .bind()
+            val grantedByParty =
+                partyRepository
+                    .find(grantedByDbId)
+                    .mapLeft { error ->
+                        logger.error("Failed to get grantedBy: $error")
+                        RepositoryReadError.UnexpectedError
+                    }
+                    .bind()
 
-                val grantedForParty =
-                    partyRepository
-                        .find(grantedForDbId)
-                        .mapLeft { error ->
-                            logger.error("Failed to get grantedFor: $error")
-                            RepositoryReadError.UnexpectedError
-                        }
-                        .bind()
+            val grantedForParty =
+                partyRepository
+                    .find(grantedForDbId)
+                    .mapLeft { error ->
+                        logger.error("Failed to get grantedFor: $error")
+                        RepositoryReadError.UnexpectedError
+                    }
+                    .bind()
 
-                val grantedToParty =
-                    partyRepository
-                        .find(grantedToDbId)
-                        .mapLeft { error ->
-                            logger.error("Failed to get grantedTo: $error")
-                            RepositoryReadError.UnexpectedError
-                        }
-                        .bind()
+            val grantedToParty =
+                partyRepository
+                    .find(grantedToDbId)
+                    .mapLeft { error ->
+                        logger.error("Failed to get grantedTo: $error")
+                        RepositoryReadError.UnexpectedError
+                    }
+                    .bind()
 
-                val properties = grantPropertiesRepository.findBy(grantId = grant[AuthorizationGrantTable.id].value)
+            val properties = grantPropertiesRepository.findBy(grantId = grant[AuthorizationGrantTable.id].value)
 
-                grant.toAuthorizationGrant(
-                    grantedBy = grantedByParty,
-                    grantedFor = grantedForParty,
-                    grantedTo = grantedToParty,
-                    scopeIds = scopes,
-                    properties = properties
-                )
-            }
+            grant.toAuthorizationGrant(
+                grantedBy = grantedByParty,
+                grantedFor = grantedForParty,
+                grantedTo = grantedToParty,
+                scopeIds = scopes,
+                properties = properties
+            )
         }
 }
 

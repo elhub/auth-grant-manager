@@ -3,6 +3,7 @@ package no.elhub.auth.features.documents.create
 import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensure
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import no.elhub.auth.features.common.party.PartyError
 import no.elhub.auth.features.common.party.PartyService
 import no.elhub.auth.features.documents.AuthorizationDocument
@@ -18,7 +19,7 @@ class Handler(
     private val signatureService: SignatureService,
     private val documentRepository: DocumentRepository,
     private val partyService: PartyService,
-    private val fileGenerator: FileGenerator
+    private val fileGenerator: FileGenerator,
 ) {
     private val logger = LoggerFactory.getLogger(Handler::class.java)
 

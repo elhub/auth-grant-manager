@@ -5,6 +5,8 @@ import io.kotest.assertions.fail
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
+import io.mockk.mockk
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.plus
 import no.elhub.auth.config.withTransaction
@@ -28,9 +30,9 @@ import java.util.UUID
 
 class ExposedGrantRepositoryTest : FunSpec({
     extensions(PostgresTestContainerExtension())
-    val partyRepo = ExposedPartyRepository()
-    val grantPropertiesRepo = ExposedGrantPropertiesRepository()
-    val grantRepo = ExposedGrantRepository(partyRepo, grantPropertiesRepo)
+    val partyRepo = ExposedPartyRepository(mockk<PrometheusMeterRegistry>())
+    val grantPropertiesRepo = ExposedGrantPropertiesRepository(mockk<PrometheusMeterRegistry>())
+    val grantRepo = ExposedGrantRepository(partyRepo, grantPropertiesRepo, mockk<PrometheusMeterRegistry>())
     val scopeIds = listOf(
         UUID.fromString("75ad606f-4ac9-4d4f-acd5-20d6862ec198"),
         UUID.fromString("0feefd01-36c7-403b-9bf1-c11d6458f639"),

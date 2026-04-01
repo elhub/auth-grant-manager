@@ -5,6 +5,8 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
+import io.mockk.mockk
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import no.elhub.auth.features.common.PostgresTestContainer
@@ -22,7 +24,7 @@ import java.util.UUID
 
 class ExposedPartyRepositoryTest : FunSpec({
     extension(PostgresTestContainerExtension())
-    val partyRepo = ExposedPartyRepository()
+    val partyRepo = ExposedPartyRepository(mockk<PrometheusMeterRegistry>())
 
     beforeSpec {
         Database.connect(

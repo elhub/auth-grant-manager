@@ -14,6 +14,8 @@ import io.ktor.server.application.Application
 import io.ktor.server.config.ApplicationConfig
 import io.ktor.server.plugins.di.dependencies
 import kotlinx.serialization.json.Json
+import java.security.cert.X509Certificate
+import javax.net.ssl.X509TrustManager
 
 fun Application.organisationsServiceModule() {
     dependencies {
@@ -34,6 +36,15 @@ fun Application.organisationsServiceModule() {
             val basicAuthPassword = organisationsApiConfig.basicAuthConfig.password
 
             HttpClient(CIO) {
+                engine {
+                    https {
+                        trustManager = object : X509TrustManager {
+                            override fun checkClientTrusted(chain: Array<X509Certificate>?, authType: String?) {}
+                            override fun checkServerTrusted(chain: Array<X509Certificate>?, authType: String?) {}
+                            override fun getAcceptedIssuers(): Array<X509Certificate> = emptyArray()
+                        }
+                    }
+                }
                 install(HttpTimeout) {
                     connectTimeoutMillis = 30_000
                     requestTimeoutMillis = 40_000
