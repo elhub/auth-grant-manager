@@ -12,6 +12,7 @@ import io.mockk.mockk
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.plus
 import no.elhub.auth.features.businessprocesses.BusinessProcessError
+import no.elhub.auth.features.businessprocesses.common.JwtTokenProvider
 import no.elhub.auth.features.businessprocesses.datasharing.Attributes
 import no.elhub.auth.features.businessprocesses.datasharing.ProductsResponse
 import no.elhub.auth.features.businessprocesses.datasharing.StromprisService
@@ -20,7 +21,6 @@ import no.elhub.auth.features.businessprocesses.ediel.EdielPartyRedirectResponse
 import no.elhub.auth.features.businessprocesses.ediel.EdielRedirectUrlsDto
 import no.elhub.auth.features.businessprocesses.ediel.EdielService
 import no.elhub.auth.features.businessprocesses.structuredata.common.ClientError
-import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.BasicAuthConfig
 import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsApi
 import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsApiConfig
 import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsService
@@ -83,14 +83,16 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
         val personService = mockk<PersonService>()
         val stromprisService = mockk<StromprisService>()
         val edielService = mockk<EdielService>()
+        val jwtTokenProvider = mockk<JwtTokenProvider>()
+        coEvery { jwtTokenProvider.getToken() } returns "token"
 
         beforeSpec {
             meteringPointsService = MeteringPointsApi(
                 MeteringPointsApiConfig(
                     serviceUrl = MeteringPointsServiceTestContainer.serviceUrl(),
-                    basicAuthConfig = BasicAuthConfig("user", "pass")
                 ),
-                meteringPointsServiceHttpClient
+                meteringPointsServiceHttpClient,
+                jwtTokenProvider
             )
             organisationsService = OrganisationsApi(
                 OrganisationsApiConfig(

@@ -15,7 +15,10 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.fullPath
 import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
+import io.mockk.coEvery
+import io.mockk.mockk
 import kotlinx.serialization.json.Json
+import no.elhub.auth.features.businessprocesses.common.JwtTokenProvider
 import no.elhub.auth.features.businessprocesses.structuredata.common.ClientError
 
 class MeteringPointsApiTest : FunSpec({
@@ -23,14 +26,12 @@ class MeteringPointsApiTest : FunSpec({
     val validMeteringPointId = "300362000000000008"
     val endUserId = "d6784082-8344-e733-e053-02058d0a6752"
     val otherEndUserId = "00662e04-2fd6-3b06-b672-3965abe7b7c5"
-    val serviceUrl = "http://localhost:8080/service"
+    val serviceUrl = "http://localhost:8080"
     val config = MeteringPointsApiConfig(
         serviceUrl = serviceUrl,
-        basicAuthConfig = BasicAuthConfig(
-            username = "username",
-            password = "password"
-        )
     )
+    val mockJwtTokenProvider = mockk<JwtTokenProvider>()
+    coEvery { mockJwtTokenProvider.getToken() } returns "token"
 
     val client = HttpClient(MockEngine) {
         install(ContentNegotiation) {
@@ -46,7 +47,7 @@ class MeteringPointsApiTest : FunSpec({
         engine {
             addHandler { request ->
                 when (request.url.fullPath) {
-                    "/service/metering-points/$validMeteringPointId?endUserId=$endUserId" -> {
+                    "/metering-points/$validMeteringPointId?endUserId=$endUserId" -> {
                         respond(
                             content = """
                                 {
@@ -62,7 +63,7 @@ class MeteringPointsApiTest : FunSpec({
                         )
                     }
 
-                    "/service/metering-points/$validMeteringPointId?endUserId=$otherEndUserId" -> {
+                    "/metering-points/$validMeteringPointId?endUserId=$otherEndUserId" -> {
                         respond(
                             content = """{"data":{"id":"$validMeteringPointId","type":"metering-point","relationships":{}}}""".trimMargin(),
                             status = HttpStatusCode.OK,
@@ -78,7 +79,7 @@ class MeteringPointsApiTest : FunSpec({
             }
         }
     }
-    val service = MeteringPointsApi(config, client)
+    val service = MeteringPointsApi(config, client, mockJwtTokenProvider)
 
     test("Valid metering point id and end user id") {
         val response = service.getMeteringPointByIdAndElhubInternalId(validMeteringPointId, endUserId)

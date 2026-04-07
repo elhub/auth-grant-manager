@@ -5,7 +5,9 @@ import arrow.core.left
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
+import io.ktor.client.request.header
 import io.ktor.http.isSuccess
+import no.elhub.auth.features.businessprocesses.common.JwtTokenProvider
 import no.elhub.auth.features.businessprocesses.structuredata.common.ClientError
 import no.elhub.auth.features.businessprocesses.structuredata.common.mapErrorsFromServer
 import org.slf4j.LoggerFactory
@@ -19,13 +21,18 @@ interface MeteringPointsService {
 
 class MeteringPointsApi(
     private val meteringPointsApiConfig: MeteringPointsApiConfig,
-    private val client: HttpClient
+    private val client: HttpClient,
+    private val tokenProvider: JwtTokenProvider
 ) : MeteringPointsService {
     private val logger = LoggerFactory.getLogger(MeteringPointsService::class.java)
 
     override suspend fun getMeteringPointByIdAndElhubInternalId(meteringPointId: String, elhubInternalId: String): Either<ClientError, MeteringPointResponse> =
         Either.catch {
-            val response = client.get("${meteringPointsApiConfig.serviceUrl}/metering-points/$meteringPointId?endUserId=$elhubInternalId")
+            val jwtToken = tokenProvider.getToken()
+            val response = client.get("${meteringPointsApiConfig.serviceUrl}/metering-points/$meteringPointId?endUserId=$elhubInternalId") {
+                header("Authorization", "Bearer $jwtToken")
+                header("User-Agent", "auth-grant-manager")
+            }
             if (response.status.isSuccess()) {
                 val responseBody: MeteringPointResponse = response.body()
                 responseBody
@@ -41,10 +48,4 @@ class MeteringPointsApi(
 
 data class MeteringPointsApiConfig(
     val serviceUrl: String,
-    val basicAuthConfig: BasicAuthConfig
-)
-
-data class BasicAuthConfig(
-    val username: String,
-    val password: String
 )

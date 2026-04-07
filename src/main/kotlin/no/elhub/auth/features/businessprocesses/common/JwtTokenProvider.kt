@@ -1,4 +1,4 @@
-package no.elhub.auth.features.businessprocesses.datasharing
+package no.elhub.auth.features.businessprocesses.common
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
