@@ -10,7 +10,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
-import no.elhub.auth.config.withTransaction
+import no.elhub.auth.config.TransactionContext
 import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.common.PostgresTestContainer
 import no.elhub.auth.features.common.PostgresTestContainerExtension
@@ -45,17 +45,17 @@ class ExposedRequestRepositoryTest : FunSpec({
         RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-scopes.sql"),
         RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-requests.sql"),
     )
-    val meterRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
-    val partyRepo = ExposedPartyRepository(meterRegistry)
-    val requestPropertiesRepo = ExposedRequestPropertiesRepository(meterRegistry)
-    val grantPropertiesRepository = ExposedGrantPropertiesRepository(meterRegistry)
-    val grantRepository = ExposedGrantRepository(partyRepo, grantPropertiesRepository, meterRegistry)
+    val transactionContext = TransactionContext(PrometheusMeterRegistry(PrometheusConfig.DEFAULT))
+    val partyRepo = ExposedPartyRepository(transactionContext)
+    val requestPropertiesRepo = ExposedRequestPropertiesRepository(transactionContext)
+    val grantPropertiesRepository = ExposedGrantPropertiesRepository(transactionContext)
+    val grantRepository = ExposedGrantRepository(partyRepo, grantPropertiesRepository, transactionContext)
     val requestRepo = ExposedRequestRepository(
         partyRepo,
         requestPropertiesRepo,
         grantRepository,
         grantPropertiesRepository,
-        meterRegistry
+        transactionContext
     )
 
     val scopes = listOf(
@@ -256,7 +256,7 @@ class ExposedRequestRepositoryTest : FunSpec({
             createdGrant.sourceId shouldBe savedRequest.id
             createdGrant.sourceType shouldBe AuthorizationGrant.SourceType.Request
 
-            withTransaction {
+            transactionContext.withTransaction {
                 val storedProperties = AuthorizationGrantPropertyTable
                     .selectAll()
                     .where { AuthorizationGrantPropertyTable.grantId eq grant.id }

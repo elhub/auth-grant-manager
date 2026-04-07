@@ -1,8 +1,7 @@
 package no.elhub.auth.features.common.party
 
 import arrow.core.Either
-import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
-import no.elhub.auth.config.measureDbCall
+import no.elhub.auth.config.TransactionContext
 import no.elhub.auth.features.common.PGEnum
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.RepositoryWriteError
@@ -19,64 +18,54 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 interface PartyRepository {
-    fun findOrInsert(type: PartyType, partyId: String): Either<RepositoryWriteError, AuthorizationPartyRecord>
-    fun find(id: UUID): Either<RepositoryReadError, AuthorizationPartyRecord>
+    suspend fun findOrInsert(type: PartyType, partyId: String): Either<RepositoryWriteError, AuthorizationPartyRecord>
+    suspend fun find(id: UUID): Either<RepositoryReadError, AuthorizationPartyRecord>
 }
 
-class ExposedPartyRepository(private val meterRegistry: PrometheusMeterRegistry) : PartyRepository {
+class ExposedPartyRepository(private val transactionContext: TransactionContext) : PartyRepository {
 
     private val logger = LoggerFactory.getLogger(ExposedPartyRepository::class.java)
-    override fun findOrInsert(type: PartyType, partyId: String): Either<RepositoryWriteError, AuthorizationPartyRecord> =
-        Either.catch {
-            meterRegistry.measureDbCall("party_repo_find_or_insert") {
-                AuthorizationPartyTable
-                    // look in the table where type == given AND resource_id = given
-                    .selectAll()
-                    .where { (AuthorizationPartyTable.type eq type) and (AuthorizationPartyTable.partyId eq partyId) }
-                    .singleOrNull()
-                    ?.toAuthorizationParty() // return if found
-                    ?: run {
-                        // try to insert a new row -> ignore if someone else is inserting the same type
-                        val ins = AuthorizationPartyTable.insertIgnore {
-                            it[AuthorizationPartyTable.type] = type
-                            it[AuthorizationPartyTable.partyId] = partyId
-                        }
-                        if (ins.resultedValues?.isNotEmpty() == true) {
-                            ins.resultedValues!!.first().toAuthorizationParty() // return if created
-                        } else {
-                            // run the same select again if the insert was ignored
-                            AuthorizationPartyTable
-                                .selectAll()
-                                .where { (AuthorizationPartyTable.type eq type) and (AuthorizationPartyTable.partyId eq partyId) }
-                                .single()
-                                .toAuthorizationParty()
-                        }
-                    }
-            }
-        }.mapLeft { error ->
-            logger.error("Error occurred during findOrInsert() for authorization grant: ${error.message}")
+
+    override suspend fun findOrInsert(type: PartyType, partyId: String): Either<RepositoryWriteError, AuthorizationPartyRecord> =
+        transactionContext("party_repo_find_or_insert", { error ->
+            logger.error("Error occurred during findOrInsert() for authorization party: ${error.message}")
             RepositoryWriteError.UnexpectedError
+        }) {
+            AuthorizationPartyTable
+                .selectAll()
+                .where { (AuthorizationPartyTable.type eq type) and (AuthorizationPartyTable.partyId eq partyId) }
+                .singleOrNull()
+                ?.toAuthorizationParty()
+                ?: run {
+                    val ins = AuthorizationPartyTable.insertIgnore {
+                        it[AuthorizationPartyTable.type] = type
+                        it[AuthorizationPartyTable.partyId] = partyId
+                    }
+                    if (ins.resultedValues?.isNotEmpty() == true) {
+                        ins.resultedValues!!.first().toAuthorizationParty()
+                    } else {
+                        AuthorizationPartyTable
+                            .selectAll()
+                            .where { (AuthorizationPartyTable.type eq type) and (AuthorizationPartyTable.partyId eq partyId) }
+                            .single()
+                            .toAuthorizationParty()
+                    }
+                }
         }
 
-    override fun find(id: UUID): Either<RepositoryReadError, AuthorizationPartyRecord> =
-        Either
-            .catch {
-                meterRegistry.measureDbCall("party_repo_find") {
-                    AuthorizationPartyTable
-                        .selectAll()
-                        .where { AuthorizationPartyTable.id eq id }
-                        .singleOrNull()
-                        ?.toAuthorizationParty()
-                        ?: throw NoSuchElementException("Party not found: $id")
-                }
-            }.mapLeft { error ->
-                logger.error("Error occurred during find() for authorization grant: ${error.message}")
-                if (error is NoSuchElementException) {
-                    RepositoryReadError.NotFoundError
-                } else {
-                    RepositoryReadError.UnexpectedError
-                }
-            }
+    override suspend fun find(id: UUID): Either<RepositoryReadError, AuthorizationPartyRecord> =
+        transactionContext("party_repo_find", { error ->
+            logger.error("Error occurred during find() for authorization party: ${error.message}")
+            if (error is NoSuchElementException) RepositoryReadError.NotFoundError
+            else RepositoryReadError.UnexpectedError
+        }) {
+            AuthorizationPartyTable
+                .selectAll()
+                .where { AuthorizationPartyTable.id eq id }
+                .singleOrNull()
+                ?.toAuthorizationParty()
+                ?: throw NoSuchElementException("Party not found: $id")
+        }
 }
 
 object AuthorizationPartyTable : UUIDTable("auth.authorization_party") {

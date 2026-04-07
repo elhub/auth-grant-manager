@@ -1,8 +1,6 @@
 package no.elhub.auth.features.requests.common
 
-import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
-import no.elhub.auth.config.measureDbCall
-import no.elhub.auth.config.withTransactionEither
+import no.elhub.auth.config.TransactionContext
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.RepositoryWriteError
 import org.jetbrains.exposed.v1.core.ResultRow
@@ -19,30 +17,26 @@ interface RequestPropertiesRepository {
 }
 
 class ExposedRequestPropertiesRepository(
-    private val meterRegistry: PrometheusMeterRegistry,
+    private val transactionContext: TransactionContext,
 ) : RequestPropertiesRepository {
 
     override suspend fun insert(properties: List<AuthorizationRequestProperty>) {
         if (properties.isEmpty()) return
-        withTransactionEither<RepositoryWriteError, Unit>({ RepositoryWriteError.UnexpectedError }) {
-            meterRegistry.measureDbCall("request_props_repo_insert") {
-                AuthorizationRequestPropertyTable.batchInsert(properties) { property ->
-                    this[AuthorizationRequestPropertyTable.requestId] = property.requestId
-                    this[AuthorizationRequestPropertyTable.key] = property.key
-                    this[AuthorizationRequestPropertyTable.value] = property.value
-                }
+        transactionContext("request_props_repo_insert", { RepositoryWriteError.UnexpectedError }) {
+            AuthorizationRequestPropertyTable.batchInsert(properties) { property ->
+                this[AuthorizationRequestPropertyTable.requestId] = property.requestId
+                this[AuthorizationRequestPropertyTable.key] = property.key
+                this[AuthorizationRequestPropertyTable.value] = property.value
             }
         }
     }
 
     override suspend fun findBy(requestId: UUID): List<AuthorizationRequestProperty> =
-        withTransactionEither<RepositoryReadError, List<AuthorizationRequestProperty>>({ RepositoryReadError.UnexpectedError }) {
-            meterRegistry.measureDbCall("request_props_repo_find") {
-                AuthorizationRequestPropertyTable
-                    .selectAll()
-                    .where { AuthorizationRequestPropertyTable.requestId eq requestId }
-                    .map { it.toAuthorizationRequestProperty() }
-            }
+        transactionContext("request_props_repo_find", { RepositoryReadError.UnexpectedError }) {
+            AuthorizationRequestPropertyTable
+                .selectAll()
+                .where { AuthorizationRequestPropertyTable.requestId eq requestId }
+                .map { it.toAuthorizationRequestProperty() }
         }.fold({ emptyList() }, { it })
 }
 

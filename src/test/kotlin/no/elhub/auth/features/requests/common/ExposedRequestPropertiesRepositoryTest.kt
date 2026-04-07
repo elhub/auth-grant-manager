@@ -4,7 +4,7 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
-import no.elhub.auth.config.withTransaction
+import no.elhub.auth.config.TransactionContext
 import no.elhub.auth.features.common.PostgresTestContainer
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.RunPostgresScriptExtension
@@ -24,8 +24,8 @@ class ExposedRequestPropertiesRepositoryTest : FunSpec({
         RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-scopes.sql"),
         RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-requests.sql"),
     )
-
-    val propertyRepo = ExposedRequestPropertiesRepository(PrometheusMeterRegistry(PrometheusConfig.DEFAULT))
+    val transactionContext = TransactionContext(PrometheusMeterRegistry(PrometheusConfig.DEFAULT))
+    val propertyRepo = ExposedRequestPropertiesRepository(transactionContext)
 
     val requestId = UUID.fromString("4f71d596-99e4-415e-946d-7252c1a40c51")
 
@@ -44,7 +44,7 @@ class ExposedRequestPropertiesRepositoryTest : FunSpec({
     }
 
     beforeTest {
-        withTransaction {
+        transactionContext.withTransaction {
             AuthorizationRequestPropertyTable.deleteAll()
         }
     }
@@ -52,7 +52,7 @@ class ExposedRequestPropertiesRepositoryTest : FunSpec({
     context("Request properties repository") {
         test("insert empty list should not persist any rows") {
             propertyRepo.insert(emptyList())
-            withTransaction {
+            transactionContext.withTransaction {
                 AuthorizationRequestPropertyTable
                     .selectAll()
                     .where { AuthorizationRequestPropertyTable.requestId eq requestId }
@@ -68,7 +68,7 @@ class ExposedRequestPropertiesRepositoryTest : FunSpec({
 
             propertyRepo.insert(properties)
 
-            withTransaction {
+            transactionContext.withTransaction {
                 val stored = AuthorizationRequestPropertyTable
                     .selectAll()
                     .where { AuthorizationRequestPropertyTable.requestId eq requestId }
@@ -93,7 +93,7 @@ class ExposedRequestPropertiesRepositoryTest : FunSpec({
 
             propertyRepo.insert(properties)
 
-            withTransaction {
+            transactionContext.withTransaction {
                 val stored = AuthorizationRequestPropertyTable
                     .selectAll()
                     .where { AuthorizationRequestPropertyTable.requestId eq requestId }

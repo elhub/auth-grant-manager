@@ -1,9 +1,7 @@
 package no.elhub.auth.features.grants.common
 
 import arrow.core.Either
-import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
-import no.elhub.auth.config.measureDbCall
-import no.elhub.auth.config.withTransactionEither
+import no.elhub.auth.config.TransactionContext
 import no.elhub.auth.features.common.RepositoryError
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.RepositoryWriteError
@@ -21,30 +19,27 @@ interface GrantPropertiesRepository {
 }
 
 class ExposedGrantPropertiesRepository(
-    private val meterRegistry: PrometheusMeterRegistry,
+    private val transactionContext: TransactionContext,
 ) : GrantPropertiesRepository {
+
     override suspend fun insert(properties: List<AuthorizationGrantProperty>): Either<RepositoryError, Unit> =
-        withTransactionEither({ RepositoryWriteError.UnexpectedError }) {
-            meterRegistry.measureDbCall("grant_props_repo_insert") {
-                if (properties.isNotEmpty()) {
-                    AuthorizationGrantPropertyTable.batchInsert(properties) { property ->
-                        this[AuthorizationGrantPropertyTable.grantId] = property.grantId
-                        this[AuthorizationGrantPropertyTable.key] = property.key
-                        this[AuthorizationGrantPropertyTable.value] = property.value
-                    }
+        transactionContext("grant_props_repo_insert", { RepositoryWriteError.UnexpectedError }) {
+            if (properties.isNotEmpty()) {
+                AuthorizationGrantPropertyTable.batchInsert(properties) { property ->
+                    this[AuthorizationGrantPropertyTable.grantId] = property.grantId
+                    this[AuthorizationGrantPropertyTable.key] = property.key
+                    this[AuthorizationGrantPropertyTable.value] = property.value
                 }
             }
         }
 
     override suspend fun findBy(grantId: UUID): List<AuthorizationGrantProperty> =
-        withTransactionEither<RepositoryReadError, List<AuthorizationGrantProperty>>({ RepositoryReadError.UnexpectedError }) {
-            meterRegistry.measureDbCall("grant_props_repo_find") {
-                AuthorizationGrantPropertyTable
-                    .selectAll()
-                    .where { AuthorizationGrantPropertyTable.grantId eq grantId }
-                    .map { it.toAuthorizationGrantProperty() }
-            }
-        }.fold({ emptyList() }, { it })
+        transactionContext("grant_props_repo_find", { RepositoryReadError.UnexpectedError }) {
+            AuthorizationGrantPropertyTable
+                .selectAll()
+                .where { AuthorizationGrantPropertyTable.grantId eq grantId }
+                .map { it.toAuthorizationGrantProperty() }
+        }.fold({ emptyList<AuthorizationGrantProperty>() }, { it })
 }
 
 object AuthorizationGrantPropertyTable : Table("auth.authorization_grant_property") {

@@ -13,7 +13,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
-import no.elhub.auth.config.withTransaction
+import no.elhub.auth.config.TransactionContext
 import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.common.PostgresTestContainer
 import no.elhub.auth.features.common.PostgresTestContainerExtension
@@ -37,18 +37,18 @@ import java.util.UUID
 class ExposedDocumentRepositoryTest :
     FunSpec({
         extensions(PostgresTestContainerExtension())
-        val meterRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
-        val partyRepository = ExposedPartyRepository(meterRegistry)
-        val propertiesRepository = ExposedDocumentPropertiesRepository(meterRegistry)
-        val grantPropertiesRepository = ExposedGrantPropertiesRepository(meterRegistry)
-        val grantRepository = ExposedGrantRepository(partyRepository, grantPropertiesRepository, meterRegistry)
+        val transactionContext = TransactionContext(PrometheusMeterRegistry(PrometheusConfig.DEFAULT))
+        val partyRepository = ExposedPartyRepository(transactionContext)
+        val propertiesRepository = ExposedDocumentPropertiesRepository(transactionContext)
+        val grantPropertiesRepository = ExposedGrantPropertiesRepository(transactionContext)
+        val grantRepository = ExposedGrantRepository(partyRepository, grantPropertiesRepository, transactionContext)
         val repository =
             ExposedDocumentRepository(
                 partyRepository,
                 grantRepository,
                 propertiesRepository,
                 grantPropertiesRepository,
-                meterRegistry,
+                transactionContext,
             )
 
         beforeSpec {
@@ -95,7 +95,7 @@ class ExposedDocumentRepositoryTest :
                 val documentExists = repository.find(document.id)
                 documentExists shouldNotBe null
 
-                withTransaction {
+                transactionContext.withTransaction {
                     val authorizationDocumentScopeRow =
                         AuthorizationDocumentScopeTable
                             .selectAll()
@@ -222,7 +222,7 @@ class ExposedDocumentRepositoryTest :
                 createdGrant.sourceId shouldBe document.id
                 createdGrant.sourceType shouldBe AuthorizationGrant.SourceType.Document
 
-                withTransaction {
+                transactionContext.withTransaction {
                     val storedProperties = AuthorizationGrantPropertyTable
                         .selectAll()
                         .where { AuthorizationGrantPropertyTable.grantId eq grant.id }

@@ -1,8 +1,6 @@
 package no.elhub.auth.features.documents.common
 
-import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
-import no.elhub.auth.config.measureDbCall
-import no.elhub.auth.config.withTransactionEither
+import no.elhub.auth.config.TransactionContext
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.RepositoryWriteError
 import org.jetbrains.exposed.v1.core.ReferenceOption
@@ -19,28 +17,24 @@ interface DocumentPropertiesRepository {
     suspend fun find(documentId: UUID): List<AuthorizationDocumentProperty>
 }
 
-class ExposedDocumentPropertiesRepository(private val meterRegistry: PrometheusMeterRegistry) : DocumentPropertiesRepository {
+class ExposedDocumentPropertiesRepository(private val transactionContext: TransactionContext) : DocumentPropertiesRepository {
     override suspend fun insert(properties: List<AuthorizationDocumentProperty>, documentId: UUID) {
         if (properties.isEmpty()) return
-        withTransactionEither<RepositoryWriteError, Unit>({ RepositoryWriteError.UnexpectedError }) {
-            meterRegistry.measureDbCall("document_prop_repo_insert") {
-                AuthorizationDocumentPropertyTable.batchInsert(properties) { property ->
-                    this[AuthorizationDocumentPropertyTable.documentId] = documentId
-                    this[AuthorizationDocumentPropertyTable.key] = property.key
-                    this[AuthorizationDocumentPropertyTable.value] = property.value
-                }
+        transactionContext("document_prop_repo_insert", { RepositoryWriteError.UnexpectedError }) {
+            AuthorizationDocumentPropertyTable.batchInsert(properties) { property ->
+                this[AuthorizationDocumentPropertyTable.documentId] = documentId
+                this[AuthorizationDocumentPropertyTable.key] = property.key
+                this[AuthorizationDocumentPropertyTable.value] = property.value
             }
         }
     }
 
     override suspend fun find(documentId: UUID): List<AuthorizationDocumentProperty> =
-        withTransactionEither<RepositoryReadError, List<AuthorizationDocumentProperty>>({ RepositoryReadError.UnexpectedError }) {
-            meterRegistry.measureDbCall("document_prop_repo_find") {
-                AuthorizationDocumentPropertyTable
-                    .selectAll()
-                    .where { AuthorizationDocumentPropertyTable.documentId eq documentId }
-                    .map { it.toAuthorizationDocumentProperty() }
-            }
+        transactionContext("document_prop_repo_find", { RepositoryReadError.UnexpectedError }) {
+            AuthorizationDocumentPropertyTable
+                .selectAll()
+                .where { AuthorizationDocumentPropertyTable.documentId eq documentId }
+                .map { it.toAuthorizationDocumentProperty() }
         }.fold({ emptyList() }, { it })
 }
 
