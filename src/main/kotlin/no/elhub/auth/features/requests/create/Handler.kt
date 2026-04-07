@@ -22,6 +22,7 @@ class Handler(
     private val logger = LoggerFactory.getLogger(Handler::class.java)
 
     suspend operator fun invoke(model: CreateRequestModel): Either<CreateError, AuthorizationRequest> = either {
+        logger.info("event=authorization_request_creation type=${model.requestType}")
         val requestedByParty =
             partyService
                 .resolve(model.meta.requestedBy)
@@ -63,7 +64,7 @@ class Handler(
             businessHandler
                 .validateAndReturnRequestCommand(model)
                 .mapLeft { err ->
-                    logger.error("Error during business process: kind=${err.kind} detail=${err.detail}")
+                    logger.info("event=authorization_request_business_validation_error kind=${err.kind} detail=${err.detail}")
                     CreateError.BusinessError(err)
                 }
                 .bind()
@@ -92,7 +93,7 @@ class Handler(
             .mapLeft { CreateError.PersistenceError }
             .bind()
 
-        logger.info("event=authorization_request_created id={} type={}", savedRequest.id, savedRequest.type)
+        logger.info("event=authorization_request_created id=${savedRequest.id} type=${savedRequest.type}")
 
         savedRequest
     }
