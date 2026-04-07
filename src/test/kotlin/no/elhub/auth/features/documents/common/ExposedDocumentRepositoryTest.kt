@@ -42,8 +42,13 @@ class ExposedDocumentRepositoryTest :
         val grantPropertiesRepository = ExposedGrantPropertiesRepository(mockk<PrometheusMeterRegistry>())
         val grantRepository = ExposedGrantRepository(partyRepository, grantPropertiesRepository, mockk<PrometheusMeterRegistry>())
         val repository =
-            ExposedDocumentRepository(partyRepository, grantRepository, propertiesRepository,
-                grantPropertiesRepository, mockk<PrometheusMeterRegistry>())
+            ExposedDocumentRepository(
+                partyRepository,
+                grantRepository,
+                propertiesRepository,
+                grantPropertiesRepository,
+                mockk<PrometheusMeterRegistry>()
+            )
 
         beforeSpec {
             Database.connect(

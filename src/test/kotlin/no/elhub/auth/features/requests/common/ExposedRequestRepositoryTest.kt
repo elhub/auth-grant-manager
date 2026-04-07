@@ -49,8 +49,13 @@ class ExposedRequestRepositoryTest : FunSpec({
     val requestPropertiesRepo = ExposedRequestPropertiesRepository(mockk<PrometheusMeterRegistry>())
     val grantPropertiesRepository = ExposedGrantPropertiesRepository(mockk<PrometheusMeterRegistry>())
     val grantRepository = ExposedGrantRepository(partyRepo, grantPropertiesRepository, mockk<PrometheusMeterRegistry>())
-    val requestRepo = ExposedRequestRepository(partyRepo, requestPropertiesRepo,
-        grantRepository, grantPropertiesRepository, mockk<PrometheusMeterRegistry>())
+    val requestRepo = ExposedRequestRepository(
+        partyRepo,
+        requestPropertiesRepo,
+        grantRepository,
+        grantPropertiesRepository,
+        mockk<PrometheusMeterRegistry>()
+    )
 
     val scopes = listOf(
         CreateScopeData(

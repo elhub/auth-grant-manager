@@ -53,19 +53,18 @@ class ExposedGrantRepository(
 
     override suspend fun findAll(party: AuthorizationParty): Either<RepositoryReadError, List<AuthorizationGrant>> =
         withTransactionEither({ RepositoryReadError.UnexpectedError }) {
-                val partyId = partyRepository.findOrInsert(type = party.type, partyId = party.id)
-                    .mapLeft { RepositoryReadError.UnexpectedError }
-                    .bind()
-                    .id
+            val partyId = partyRepository.findOrInsert(type = party.type, partyId = party.id)
+                .mapLeft { RepositoryReadError.UnexpectedError }
+                .bind()
+                .id
             metricsProvider.measureDbCall("grant_repo_find_all") {
-
                 AuthorizationGrantTable
                     .selectAll()
                     .where {
                         (AuthorizationGrantTable.grantedTo eq partyId) or (AuthorizationGrantTable.grantedFor eq partyId)
                     }
             }.map { g ->
-                   findInternalGrant(g[AuthorizationGrantTable.id].value)
+                findInternalGrant(g[AuthorizationGrantTable.id].value)
                     .mapLeft { RepositoryReadError.UnexpectedError }
                     .bind()
             }
@@ -104,7 +103,6 @@ class ExposedGrantRepository(
                         properties = properties
                     )
                 }
-
         }
 
     fun findScopeIds(grantId: UUID): Either<RepositoryReadError, List<UUID>> = either {
@@ -207,7 +205,7 @@ class ExposedGrantRepository(
 
     override suspend fun update(grantId: UUID, newStatus: Status): Either<RepositoryError, AuthorizationGrant> =
         withTransactionEither<RepositoryError, AuthorizationGrant>({ RepositoryWriteError.UnexpectedError }) {
-            val rowsUpdated =  metricsProvider.measureDbCall("grant_repo_update") {
+            val rowsUpdated = metricsProvider.measureDbCall("grant_repo_update") {
                 AuthorizationGrantTable.update(
                     where = { AuthorizationGrantTable.id eq grantId }
                 ) {

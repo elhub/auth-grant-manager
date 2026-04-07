@@ -114,23 +114,22 @@ class ExposedDocumentRepository(
                 }.single()
             }
 
-                documentPropertiesRepository.insert(doc.properties, doc.id)
+            documentPropertiesRepository.insert(doc.properties, doc.id)
 
-                val scopeIds: List<UUID> = AuthorizationScopeTable
-                    .batchInsert(scopes) { scope ->
-                        this[AuthorizationScopeTable.id] = UUID.randomUUID()
-                        this[authorizedResourceType] = scope.authorizedResourceType
-                        this[authorizedResourceId] = scope.authorizedResourceId
-                        this[permissionType] = scope.permissionType
-                    }
-                    .map { it[AuthorizationScopeTable.id].value }
-
-                AuthorizationDocumentScopeTable.batchInsert(scopeIds) { scopeId ->
-                    this[authorizationDocumentId] = documentRow[AuthorizationDocumentTable.id].value
-                    this[authorizationScopeId] = scopeId
+            val scopeIds: List<UUID> = AuthorizationScopeTable
+                .batchInsert(scopes) { scope ->
+                    this[AuthorizationScopeTable.id] = UUID.randomUUID()
+                    this[authorizedResourceType] = scope.authorizedResourceType
+                    this[authorizedResourceId] = scope.authorizedResourceId
+                    this[permissionType] = scope.permissionType
                 }
-                documentRow.toAuthorizationDocument(requestedByParty, requestedFromParty, requestedToParty, doc.properties)
+                .map { it[AuthorizationScopeTable.id].value }
 
+            AuthorizationDocumentScopeTable.batchInsert(scopeIds) { scopeId ->
+                this[authorizationDocumentId] = documentRow[AuthorizationDocumentTable.id].value
+                this[authorizationScopeId] = scopeId
+            }
+            documentRow.toAuthorizationDocument(requestedByParty, requestedFromParty, requestedToParty, doc.properties)
         }
 
     override suspend fun find(id: UUID): Either<RepositoryReadError, AuthorizationDocument> =
