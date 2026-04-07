@@ -21,11 +21,11 @@ interface GrantPropertiesRepository {
 }
 
 class ExposedGrantPropertiesRepository(
-    private val metricsProvider: PrometheusMeterRegistry,
+    private val meterRegistry: PrometheusMeterRegistry,
 ) : GrantPropertiesRepository {
     override suspend fun insert(properties: List<AuthorizationGrantProperty>): Either<RepositoryError, Unit> =
         withTransactionEither({ RepositoryWriteError.UnexpectedError }) {
-            metricsProvider.measureDbCall("grant_props_repo_insert") {
+            meterRegistry.measureDbCall("grant_props_repo_insert") {
                 if (properties.isNotEmpty()) {
                     AuthorizationGrantPropertyTable.batchInsert(properties) { property ->
                         this[AuthorizationGrantPropertyTable.grantId] = property.grantId
@@ -38,7 +38,7 @@ class ExposedGrantPropertiesRepository(
 
     override suspend fun findBy(grantId: UUID): List<AuthorizationGrantProperty> =
         withTransactionEither<RepositoryReadError, List<AuthorizationGrantProperty>>({ RepositoryReadError.UnexpectedError }) {
-            metricsProvider.measureDbCall("grant_props_repo_find") {
+            meterRegistry.measureDbCall("grant_props_repo_find") {
                 AuthorizationGrantPropertyTable
                     .selectAll()
                     .where { AuthorizationGrantPropertyTable.grantId eq grantId }

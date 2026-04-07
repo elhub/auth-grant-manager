@@ -77,7 +77,7 @@ class ExposedRequestRepository(
     private val requestPropertiesRepository: RequestPropertiesRepository,
     private val grantRepository: GrantRepository,
     private val grantPropertiesRepository: GrantPropertiesRepository,
-    private val metricsProvider: PrometheusMeterRegistry,
+    private val meterRegistry: PrometheusMeterRegistry,
 ) : RequestRepository {
 
     override suspend fun findAllAndSortByCreatedAt(party: AuthorizationParty): Either<RepositoryReadError, List<AuthorizationRequest>> =
@@ -99,7 +99,7 @@ class ExposedRequestRepository(
 
     override suspend fun find(requestId: UUID): Either<RepositoryReadError, AuthorizationRequest> =
         withTransactionEither<RepositoryReadError, AuthorizationRequest>({ RepositoryReadError.UnexpectedError }) {
-            val request = metricsProvider.measureDbCall("request_repo_find") {
+            val request = meterRegistry.measureDbCall("request_repo_find") {
                 AuthorizationRequestTable
                     .selectAll()
                     .where { AuthorizationRequestTable.id eq requestId }
@@ -130,7 +130,7 @@ class ExposedRequestRepository(
                     .findOrInsert(request.requestedTo.type, request.requestedTo.id)
                     .mapLeft { RepositoryWriteError.UnexpectedError }
                     .bind()
-            val insertedRequest = metricsProvider.measureDbCall("request_repo_insert") {
+            val insertedRequest = meterRegistry.measureDbCall("request_repo_insert") {
                 AuthorizationRequestTable
                     .insertReturning {
                         it[id] = request.id
@@ -158,7 +158,7 @@ class ExposedRequestRepository(
 
     override suspend fun rejectRequest(requestId: UUID): Either<RepositoryError, AuthorizationRequest> =
         withTransactionEither<RepositoryError, AuthorizationRequest>({ RepositoryWriteError.UnexpectedError }) {
-            val rowsUpdated = metricsProvider.measureDbCall("request_repo_reject") {
+            val rowsUpdated = meterRegistry.measureDbCall("request_repo_reject") {
                 AuthorizationRequestTable.update(
                     where = { AuthorizationRequestTable.id eq requestId }
                 ) {
@@ -171,7 +171,7 @@ class ExposedRequestRepository(
 
     override suspend fun findScopeIds(requestId: UUID): Either<RepositoryReadError, List<UUID>> =
         withTransactionEither<RepositoryReadError, List<UUID>>({ RepositoryReadError.UnexpectedError }) {
-            metricsProvider.measureDbCall("request_repo_find_scope_ids") {
+            meterRegistry.measureDbCall("request_repo_find_scope_ids") {
                 AuthorizationRequestScopeTable
                     .selectAll()
                     .where { authorizationRequestId eq requestId }
@@ -186,12 +186,12 @@ class ExposedRequestRepository(
         grantProperties: List<AuthorizationGrantProperty>,
     ): Either<AcceptWithGrantError, AuthorizationRequest> =
         withTransactionEither<AcceptWithGrantError, AuthorizationRequest>({ AcceptWithGrantError.RequestError.Unexpected }) {
-            val approvedByRecord = metricsProvider.measureDbCall("request_repo_find_or_insert_party") {
+            val approvedByRecord = meterRegistry.measureDbCall("request_repo_find_or_insert_party") {
                 partyRepo.findOrInsert(approvedBy.type, approvedBy.id)
             }.mapLeft { AcceptWithGrantError.RequestError.Unexpected }
                 .bind()
 
-            val rowsUpdated = metricsProvider.measureDbCall("request_repo_accept") {
+            val rowsUpdated = meterRegistry.measureDbCall("request_repo_accept") {
                 AuthorizationRequestTable.update(
                     where = { AuthorizationRequestTable.id eq requestId }
                 ) {

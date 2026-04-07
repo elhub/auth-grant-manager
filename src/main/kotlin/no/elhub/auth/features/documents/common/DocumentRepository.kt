@@ -79,7 +79,7 @@ class ExposedDocumentRepository(
     private val grantRepo: GrantRepository,
     private val documentPropertiesRepository: DocumentPropertiesRepository,
     private val grantPropertiesRepository: GrantPropertiesRepository,
-    private val metricsProvider: PrometheusMeterRegistry
+    private val meterRegistry: PrometheusMeterRegistry
 ) : DocumentRepository {
 
     override suspend fun insert(
@@ -99,7 +99,7 @@ class ExposedDocumentRepository(
                 .mapLeft { RepositoryWriteError.UnexpectedError }
                 .bind()
 
-            val documentRow = metricsProvider.measureDbCall("document_repo_insert") {
+            val documentRow = meterRegistry.measureDbCall("document_repo_insert") {
                 AuthorizationDocumentTable.insertReturning {
                     it[id] = doc.id
                     it[type] = doc.type
@@ -134,7 +134,7 @@ class ExposedDocumentRepository(
 
     override suspend fun find(id: UUID): Either<RepositoryReadError, AuthorizationDocument> =
         withTransactionEither<RepositoryReadError, AuthorizationDocument>({ RepositoryReadError.UnexpectedError }) {
-            val documentRow = metricsProvider.measureDbCall("document_repo_find") {
+            val documentRow = meterRegistry.measureDbCall("document_repo_find") {
                 AuthorizationDocumentTable
                     .selectAll()
                     .where { AuthorizationDocumentTable.id eq id }
@@ -178,7 +178,7 @@ class ExposedDocumentRepository(
             val requestedFromRecord = partyRepo.findOrInsert(requestedFrom.type, requestedFrom.id)
                 .mapLeft { RepositoryWriteError.UnexpectedError }
                 .bind()
-            metricsProvider.measureDbCall("document_repo_confirm") {
+            meterRegistry.measureDbCall("document_repo_confirm") {
                 SignatoriesTable.insert {
                     it[authorizationDocumentId] = documentId
                     it[this.requestedFrom] = requestedFromRecord.id

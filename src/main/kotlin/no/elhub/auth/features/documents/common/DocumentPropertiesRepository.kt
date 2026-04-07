@@ -19,11 +19,11 @@ interface DocumentPropertiesRepository {
     suspend fun find(documentId: UUID): List<AuthorizationDocumentProperty>
 }
 
-class ExposedDocumentPropertiesRepository(private val metricsProvider: PrometheusMeterRegistry) : DocumentPropertiesRepository {
+class ExposedDocumentPropertiesRepository(private val meterRegistry: PrometheusMeterRegistry) : DocumentPropertiesRepository {
     override suspend fun insert(properties: List<AuthorizationDocumentProperty>, documentId: UUID) {
         if (properties.isEmpty()) return
         withTransactionEither<RepositoryWriteError, Unit>({ RepositoryWriteError.UnexpectedError }) {
-            metricsProvider.measureDbCall("document_prop_repo_insert") {
+            meterRegistry.measureDbCall("document_prop_repo_insert") {
                 AuthorizationDocumentPropertyTable.batchInsert(properties) { property ->
                     this[AuthorizationDocumentPropertyTable.documentId] = documentId
                     this[AuthorizationDocumentPropertyTable.key] = property.key
@@ -35,7 +35,7 @@ class ExposedDocumentPropertiesRepository(private val metricsProvider: Prometheu
 
     override suspend fun find(documentId: UUID): List<AuthorizationDocumentProperty> =
         withTransactionEither<RepositoryReadError, List<AuthorizationDocumentProperty>>({ RepositoryReadError.UnexpectedError }) {
-            metricsProvider.measureDbCall("document_prop_repo_find") {
+            meterRegistry.measureDbCall("document_prop_repo_find") {
                 AuthorizationDocumentPropertyTable
                     .selectAll()
                     .where { AuthorizationDocumentPropertyTable.documentId eq documentId }

@@ -29,7 +29,6 @@ interface PersonService {
 class ApiPersonService(
     private val cfg: PersonApiConfig,
     private val client: HttpClient,
-    private val metricsProvider: PrometheusMeterRegistry
 ) : PersonService {
 
     private val logger = LoggerFactory.getLogger(PersonService::class.java)

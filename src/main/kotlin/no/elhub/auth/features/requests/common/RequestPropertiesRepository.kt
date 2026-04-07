@@ -19,13 +19,13 @@ interface RequestPropertiesRepository {
 }
 
 class ExposedRequestPropertiesRepository(
-    private val metricsProvider: PrometheusMeterRegistry,
+    private val meterRegistry: PrometheusMeterRegistry,
 ) : RequestPropertiesRepository {
 
     override suspend fun insert(properties: List<AuthorizationRequestProperty>) {
         if (properties.isEmpty()) return
         withTransactionEither<RepositoryWriteError, Unit>({ RepositoryWriteError.UnexpectedError }) {
-            metricsProvider.measureDbCall("request_props_repo_insert") {
+            meterRegistry.measureDbCall("request_props_repo_insert") {
                 AuthorizationRequestPropertyTable.batchInsert(properties) { property ->
                     this[AuthorizationRequestPropertyTable.requestId] = property.requestId
                     this[AuthorizationRequestPropertyTable.key] = property.key
@@ -37,7 +37,7 @@ class ExposedRequestPropertiesRepository(
 
     override suspend fun findBy(requestId: UUID): List<AuthorizationRequestProperty> =
         withTransactionEither<RepositoryReadError, List<AuthorizationRequestProperty>>({ RepositoryReadError.UnexpectedError }) {
-            metricsProvider.measureDbCall("request_props_repo_find") {
+            meterRegistry.measureDbCall("request_props_repo_find") {
                 AuthorizationRequestPropertyTable
                     .selectAll()
                     .where { AuthorizationRequestPropertyTable.requestId eq requestId }

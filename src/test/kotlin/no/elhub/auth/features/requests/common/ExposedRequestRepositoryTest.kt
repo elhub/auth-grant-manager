@@ -45,17 +45,17 @@ class ExposedRequestRepositoryTest : FunSpec({
         RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-scopes.sql"),
         RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-requests.sql"),
     )
-    val metricsProvider = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
-    val partyRepo = ExposedPartyRepository(metricsProvider)
-    val requestPropertiesRepo = ExposedRequestPropertiesRepository(metricsProvider)
-    val grantPropertiesRepository = ExposedGrantPropertiesRepository(metricsProvider)
-    val grantRepository = ExposedGrantRepository(partyRepo, grantPropertiesRepository, metricsProvider)
+    val meterRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
+    val partyRepo = ExposedPartyRepository(meterRegistry)
+    val requestPropertiesRepo = ExposedRequestPropertiesRepository(meterRegistry)
+    val grantPropertiesRepository = ExposedGrantPropertiesRepository(meterRegistry)
+    val grantRepository = ExposedGrantRepository(partyRepo, grantPropertiesRepository, meterRegistry)
     val requestRepo = ExposedRequestRepository(
         partyRepo,
         requestPropertiesRepo,
         grantRepository,
         grantPropertiesRepository,
-        metricsProvider
+        meterRegistry
     )
 
     val scopes = listOf(

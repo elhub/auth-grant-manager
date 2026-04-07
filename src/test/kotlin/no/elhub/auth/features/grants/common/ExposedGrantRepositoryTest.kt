@@ -31,10 +31,10 @@ import java.util.UUID
 
 class ExposedGrantRepositoryTest : FunSpec({
     extensions(PostgresTestContainerExtension())
-    val metricsProvider = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
-    val partyRepo = ExposedPartyRepository(metricsProvider)
-    val grantPropertiesRepo = ExposedGrantPropertiesRepository(metricsProvider)
-    val grantRepo = ExposedGrantRepository(partyRepo, grantPropertiesRepo, metricsProvider)
+    val meterRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
+    val partyRepo = ExposedPartyRepository(meterRegistry)
+    val grantPropertiesRepo = ExposedGrantPropertiesRepository(meterRegistry)
+    val grantRepo = ExposedGrantRepository(partyRepo, grantPropertiesRepo, meterRegistry)
     val scopeIds = listOf(
         UUID.fromString("75ad606f-4ac9-4d4f-acd5-20d6862ec198"),
         UUID.fromString("0feefd01-36c7-403b-9bf1-c11d6458f639"),

@@ -24,17 +24,17 @@ import java.util.UUID
 
 class ExposedDocumentPropertiesRepositoryTest : FunSpec({
     extensions(PostgresTestContainerExtension())
-    val metricsProvider = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
-    val repository = ExposedDocumentPropertiesRepository(metricsProvider)
-    val partyRepo = ExposedPartyRepository(metricsProvider)
-    val grantPropertiesRepository = ExposedGrantPropertiesRepository(metricsProvider)
-    val grantRepository = ExposedGrantRepository(partyRepo, grantPropertiesRepository, metricsProvider)
+    val meterRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
+    val repository = ExposedDocumentPropertiesRepository(meterRegistry)
+    val partyRepo = ExposedPartyRepository(meterRegistry)
+    val grantPropertiesRepository = ExposedGrantPropertiesRepository(meterRegistry)
+    val grantRepository = ExposedGrantRepository(partyRepo, grantPropertiesRepository, meterRegistry)
     val documentRepository = ExposedDocumentRepository(
         partyRepo = partyRepo,
         grantRepo = grantRepository,
         documentPropertiesRepository = repository,
         grantPropertiesRepository = grantPropertiesRepository,
-        metricsProvider
+        meterRegistry
     )
 
     beforeSpec {

@@ -46,7 +46,7 @@ interface GrantRepository {
 class ExposedGrantRepository(
     private val partyRepository: PartyRepository,
     private val grantPropertiesRepository: GrantPropertiesRepository,
-    private val metricsProvider: PrometheusMeterRegistry
+    private val meterRegistry: PrometheusMeterRegistry
 ) : GrantRepository {
 
     private val logger = LoggerFactory.getLogger(ExposedGrantRepository::class.java)
@@ -57,7 +57,7 @@ class ExposedGrantRepository(
                 .mapLeft { RepositoryReadError.UnexpectedError }
                 .bind()
                 .id
-            metricsProvider.measureDbCall("grant_repo_find_all") {
+            meterRegistry.measureDbCall("grant_repo_find_all") {
                 AuthorizationGrantTable
                     .selectAll()
                     .where {
@@ -80,7 +80,7 @@ class ExposedGrantRepository(
         sourceId: UUID
     ): Either<RepositoryReadError, AuthorizationGrant?> =
         withTransactionEither<RepositoryReadError, AuthorizationGrant?>({ RepositoryReadError.UnexpectedError }) {
-            metricsProvider.measureDbCall("grant_repo_find_by_source") {
+            meterRegistry.measureDbCall("grant_repo_find_by_source") {
                 AuthorizationGrantTable
                     .selectAll()
                     .where {
@@ -106,7 +106,7 @@ class ExposedGrantRepository(
         }
 
     fun findScopeIds(grantId: UUID): Either<RepositoryReadError, List<UUID>> = either {
-        metricsProvider.measureDbCall("grant_repo_find_scope_by_ids") {
+        meterRegistry.measureDbCall("grant_repo_find_scope_by_ids") {
             AuthorizationGrantTable
                 .selectAll()
                 .where { AuthorizationGrantTable.id eq grantId }
@@ -124,7 +124,7 @@ class ExposedGrantRepository(
 
     override suspend fun findScopes(grantId: UUID): Either<RepositoryReadError, List<AuthorizationScope>> =
         withTransactionEither<RepositoryReadError, List<AuthorizationScope>>({ RepositoryReadError.UnexpectedError }) {
-            metricsProvider.measureDbCall("grant_repo_find_scopes") {
+            meterRegistry.measureDbCall("grant_repo_find_scopes") {
                 AuthorizationGrantTable
                     .selectAll()
                     .where { AuthorizationGrantTable.id eq grantId }
@@ -153,7 +153,7 @@ class ExposedGrantRepository(
         grant: AuthorizationGrant,
     ): Either<RepositoryWriteError, AuthorizationGrant> =
         withTransactionEither({ RepositoryWriteError.UnexpectedError }) {
-            metricsProvider.measureDbCall("grant_repo_insert") {
+            meterRegistry.measureDbCall("grant_repo_insert") {
                 val grantedByParty = partyRepository
                     .findOrInsert(grant.grantedBy.type, grant.grantedBy.id)
                     .mapLeft { RepositoryWriteError.UnexpectedError }
@@ -205,7 +205,7 @@ class ExposedGrantRepository(
 
     override suspend fun update(grantId: UUID, newStatus: Status): Either<RepositoryError, AuthorizationGrant> =
         withTransactionEither<RepositoryError, AuthorizationGrant>({ RepositoryWriteError.UnexpectedError }) {
-            val rowsUpdated = metricsProvider.measureDbCall("grant_repo_update") {
+            val rowsUpdated = meterRegistry.measureDbCall("grant_repo_update") {
                 AuthorizationGrantTable.update(
                     where = { AuthorizationGrantTable.id eq grantId }
                 ) {
