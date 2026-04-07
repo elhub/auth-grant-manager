@@ -8,19 +8,25 @@ import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.create.command.DocumentCommand
 import no.elhub.auth.features.documents.create.model.CreateDocumentModel
 import no.elhub.auth.features.grants.common.CreateGrantProperties
+import org.slf4j.LoggerFactory
 
 class ProxyDocumentBusinessHandler(
     private val changeOfBalanceSupplierHandler: ChangeOfBalanceSupplierBusinessHandler,
     private val moveInAndChangeOfBalanceSupplierHandler: MoveInAndChangeOfBalanceSupplierBusinessHandler,
 ) : DocumentBusinessHandler {
-    override suspend fun validateAndReturnDocumentCommand(model: CreateDocumentModel): Either<BusinessProcessError, DocumentCommand> =
-        when (model.documentType) {
+    private val logger = LoggerFactory.getLogger(ProxyDocumentBusinessHandler::class.java)
+
+    override suspend fun validateAndReturnDocumentCommand(model: CreateDocumentModel): Either<BusinessProcessError, DocumentCommand> {
+        logger.info("Handling business process document type={}", model.documentType)
+
+        return when (model.documentType) {
             AuthorizationDocument.Type.ChangeOfBalanceSupplierForPerson -> changeOfBalanceSupplierHandler.validateAndReturnDocumentCommand(model)
 
             AuthorizationDocument.Type.MoveInAndChangeOfBalanceSupplierForPerson -> moveInAndChangeOfBalanceSupplierHandler.validateAndReturnDocumentCommand(
                 model
             )
         }
+    }
 
     override fun getCreateGrantProperties(document: AuthorizationDocument): CreateGrantProperties =
         when (document.type) {
