@@ -1,0 +1,18 @@
+<configuration>
+  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+      <pattern>ts=%d{HH:mm:ss.SSS} level=%-5level logger=%logger{36} %msg%n</pattern>
+    </encoder>
+  </appender>
+
+  <logger name="Exposed" level="DEBUG"/>
+
+  <!-- Silence noisy test infrastructure loggers -->
+  <logger name="org.testcontainers" level="WARN"/>
+  <logger name="com.github.dockerjava" level="WARN"/>
+  <logger name="tc." level="WARN"/>
+
+  <root level="INFO">
+    <appender-ref ref="STDOUT"/>
+  </root>
+</configuration>

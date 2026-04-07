@@ -5,6 +5,7 @@ import io.kotest.assertions.fail
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.plus
 import no.elhub.auth.config.withTransaction
@@ -96,7 +97,8 @@ class ExposedGrantRepositoryTest : FunSpec({
 
         // update the grant
         val updated =
-            grantRepo.update(exampleGrantWithoutScopeIds.id, AuthorizationGrant.Status.Revoked).getOrElse { error(it) }
+            grantRepo.update(exampleGrantWithoutScopeIds.id, AuthorizationGrant.Status.Revoked)
+                .getOrElse { error(it) }
 
         updated.grantStatus shouldBe AuthorizationGrant.Status.Revoked
     }
