@@ -15,8 +15,6 @@ import no.elhub.auth.features.documents.common.SignatureService
 import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.common.AuthorizationGrantProperty
 import org.slf4j.LoggerFactory
-import kotlin.collections.component1
-import kotlin.collections.component2
 
 class Handler(
     private val businessHandler: DocumentBusinessHandler,
@@ -53,7 +51,7 @@ class Handler(
         val signatoryIdentifier =
             signatureService.validateSignaturesAndReturnSignatory(command.signedFile, document.file)
                 .mapLeft {
-                    log.error("Validate signature error occurred: {}", it)
+                    log.info("event=authorization_document_confirm_validation_error error=$it")
                     ConfirmError.ValidateSignaturesError(it)
                 }
                 .bind()
@@ -115,9 +113,10 @@ class Handler(
         }.bind()
 
         log.info(
-            "event=authorization_grant_created documentId={} grantId={}",
-            confirmedDocument.id,
-            grantToCreate.id
+            "event=authorization_grant_created grantId={} sourceType={} sourceId={}",
+            grantToCreate.id,
+            AuthorizationGrant.SourceType.Document,
+            confirmedDocument.id
         )
     }
 }
