@@ -5,7 +5,6 @@ import io.kotest.assertions.fail
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.shouldNotBe
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.plus
 import no.elhub.auth.config.withTransaction
