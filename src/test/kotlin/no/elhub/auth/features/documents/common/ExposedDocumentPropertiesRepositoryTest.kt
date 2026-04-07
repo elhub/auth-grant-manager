@@ -4,6 +4,7 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
+import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import io.mockk.mockk
 import no.elhub.auth.config.withTransaction
@@ -23,17 +24,17 @@ import java.util.UUID
 
 class ExposedDocumentPropertiesRepositoryTest : FunSpec({
     extensions(PostgresTestContainerExtension())
-
-    val repository = ExposedDocumentPropertiesRepository(mockk<PrometheusMeterRegistry>())
-    val partyRepo = ExposedPartyRepository(mockk<PrometheusMeterRegistry>())
-    val grantPropertiesRepository = ExposedGrantPropertiesRepository(mockk<PrometheusMeterRegistry>())
-    val grantRepository = ExposedGrantRepository(partyRepo, grantPropertiesRepository, mockk<PrometheusMeterRegistry>())
+    val metricsProvider = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
+    val repository = ExposedDocumentPropertiesRepository(metricsProvider)
+    val partyRepo = ExposedPartyRepository(metricsProvider)
+    val grantPropertiesRepository = ExposedGrantPropertiesRepository(metricsProvider)
+    val grantRepository = ExposedGrantRepository(partyRepo, grantPropertiesRepository, metricsProvider)
     val documentRepository = ExposedDocumentRepository(
         partyRepo = partyRepo,
         grantRepo = grantRepository,
         documentPropertiesRepository = repository,
         grantPropertiesRepository = grantPropertiesRepository,
-        mockk<PrometheusMeterRegistry>()
+        metricsProvider
     )
 
     beforeSpec {

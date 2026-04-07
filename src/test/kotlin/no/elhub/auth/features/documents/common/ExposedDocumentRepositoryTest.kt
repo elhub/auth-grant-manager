@@ -11,8 +11,8 @@ import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
-import io.mockk.mockk
 import no.elhub.auth.config.withTransaction
 import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.common.PostgresTestContainer
@@ -37,17 +37,18 @@ import java.util.UUID
 class ExposedDocumentRepositoryTest :
     FunSpec({
         extensions(PostgresTestContainerExtension())
-        val partyRepository = ExposedPartyRepository(mockk<PrometheusMeterRegistry>())
-        val propertiesRepository = ExposedDocumentPropertiesRepository(mockk<PrometheusMeterRegistry>())
-        val grantPropertiesRepository = ExposedGrantPropertiesRepository(mockk<PrometheusMeterRegistry>())
-        val grantRepository = ExposedGrantRepository(partyRepository, grantPropertiesRepository, mockk<PrometheusMeterRegistry>())
+        val metricsProvider = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
+        val partyRepository = ExposedPartyRepository(metricsProvider)
+        val propertiesRepository = ExposedDocumentPropertiesRepository(metricsProvider)
+        val grantPropertiesRepository = ExposedGrantPropertiesRepository(metricsProvider)
+        val grantRepository = ExposedGrantRepository(partyRepository, grantPropertiesRepository, metricsProvider)
         val repository =
             ExposedDocumentRepository(
                 partyRepository,
                 grantRepository,
                 propertiesRepository,
                 grantPropertiesRepository,
-                mockk<PrometheusMeterRegistry>()
+                metricsProvider,
             )
 
         beforeSpec {
