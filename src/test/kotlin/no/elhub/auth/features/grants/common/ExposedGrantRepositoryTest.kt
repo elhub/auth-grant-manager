@@ -7,9 +7,9 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
-import no.elhub.auth.config.TransactionContext
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.plus
+import no.elhub.auth.config.TransactionContext
 import no.elhub.auth.features.common.PostgresTestContainer
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.party.AuthorizationParty

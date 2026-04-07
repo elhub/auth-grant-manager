@@ -56,8 +56,11 @@ class ExposedPartyRepository(private val transactionContext: TransactionContext)
     override suspend fun find(id: UUID): Either<RepositoryReadError, AuthorizationPartyRecord> =
         transactionContext("party_repo_find", { error ->
             logger.error("Error occurred during find() for authorization party: ${error.message}")
-            if (error is NoSuchElementException) RepositoryReadError.NotFoundError
-            else RepositoryReadError.UnexpectedError
+            if (error is NoSuchElementException) {
+                RepositoryReadError.NotFoundError
+            } else {
+                RepositoryReadError.UnexpectedError
+            }
         }) {
             AuthorizationPartyTable
                 .selectAll()

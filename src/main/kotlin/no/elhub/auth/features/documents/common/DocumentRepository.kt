@@ -251,7 +251,10 @@ class ExposedDocumentRepository(
         grant: AuthorizationGrant,
         grantProperties: List<AuthorizationGrantProperty>
     ): Either<ConfirmWithGrantError, AuthorizationDocument> =
-        transactionContext<ConfirmWithGrantError, AuthorizationDocument>("document_repo_confirm_with_grant", { ConfirmWithGrantError.DocumentError.Unexpected }) {
+        transactionContext<ConfirmWithGrantError, AuthorizationDocument>(
+            "document_repo_confirm_with_grant",
+            { ConfirmWithGrantError.DocumentError.Unexpected }
+        ) {
             val confirmedDocument = confirm(documentId, signedFile, requestedFrom, signatory)
                 .mapLeft { writeError ->
                     when (writeError) {

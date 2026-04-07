@@ -108,9 +108,9 @@ class ExposedGrantRepository(
             .selectAll()
             .where { AuthorizationGrantTable.id eq grantId }
             .singleOrNull() ?: run {
-                logger.error("Grant not found")
-                raise(RepositoryReadError.NotFoundError)
-            }
+            logger.error("Grant not found")
+            raise(RepositoryReadError.NotFoundError)
+        }
 
         (AuthorizationGrantScopeTable innerJoin AuthorizationScopeTable)
             .selectAll()
@@ -119,9 +119,10 @@ class ExposedGrantRepository(
     }
 
     override suspend fun findScopes(grantId: UUID): Either<RepositoryReadError, List<AuthorizationScope>> =
-        transactionContext<RepositoryReadError, List<AuthorizationScope>>("grant_repo_find_scopes",
-            { RepositoryReadError.UnexpectedError })
-        {
+        transactionContext<RepositoryReadError, List<AuthorizationScope>>(
+            "grant_repo_find_scopes",
+            { RepositoryReadError.UnexpectedError }
+        ) {
             AuthorizationGrantTable
                 .selectAll()
                 .where { AuthorizationGrantTable.id eq grantId }
@@ -195,7 +196,6 @@ class ExposedGrantRepository(
                 }
             }
             authorizationGrant
-
         }
 
     override suspend fun update(grantId: UUID, newStatus: Status): Either<RepositoryError, AuthorizationGrant> =
