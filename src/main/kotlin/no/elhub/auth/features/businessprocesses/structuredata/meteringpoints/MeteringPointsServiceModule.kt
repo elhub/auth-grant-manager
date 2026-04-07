@@ -15,8 +15,6 @@ import io.ktor.server.config.ApplicationConfig
 import io.ktor.server.plugins.di.dependencies
 import io.ktor.server.plugins.di.resolve
 import kotlinx.serialization.json.Json
-import java.security.cert.X509Certificate
-import javax.net.ssl.X509TrustManager
 
 fun Application.meteringPointsServiceModule() {
     dependencies {
