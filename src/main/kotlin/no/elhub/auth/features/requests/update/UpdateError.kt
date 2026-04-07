@@ -7,7 +7,7 @@ import no.elhub.auth.features.common.toNotFoundApiErrorResponse
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 
 sealed class UpdateError {
-    data object NotAuthorizedError : UpdateError()
+    data object AuthorizedPartyNotAllowedToUpdateAuthorizationRequest : UpdateError()
     data object RequestNotFound : UpdateError()
     data object PersistenceError : UpdateError()
     data object ScopeReadError : UpdateError()
@@ -44,9 +44,9 @@ fun UpdateError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollectio
             detail = "Validity period has passed."
         )
 
-        UpdateError.NotAuthorizedError -> buildApiErrorResponse(
-            status = HttpStatusCode.Unauthorized,
-            title = "Not authorized",
-            detail = "Not authorized for this endpoint."
+        UpdateError.AuthorizedPartyNotAllowedToUpdateAuthorizationRequest -> buildApiErrorResponse(
+            status = HttpStatusCode.Forbidden,
+            title = "Not allowed to update",
+            detail = "Party not allowed to update AuthorizationRequest."
         )
     }

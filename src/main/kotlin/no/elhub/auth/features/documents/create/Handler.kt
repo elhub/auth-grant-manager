@@ -24,6 +24,7 @@ class Handler(
 
     suspend operator fun invoke(model: CreateDocumentModel): Either<CreateError, AuthorizationDocument> =
         either {
+            logger.info("event=authorization_document_creation type=${model.documentType}")
             val requestedByParty =
                 partyService
                     .resolve(model.meta.requestedBy)
@@ -65,7 +66,7 @@ class Handler(
                 businessHandler
                     .validateAndReturnDocumentCommand(model)
                     .mapLeft { err ->
-                        logger.error("Error during business process: kind=${err.kind} detail=${err.detail}")
+                        logger.info("event=authorization_document_business_validation_error kind=${err.kind} detail=${err.detail}")
                         CreateError.BusinessError(err)
                     }
                     .bind()
@@ -103,7 +104,7 @@ class Handler(
                 .mapLeft { CreateError.PersistenceError }
                 .bind()
                 .also { document ->
-                    logger.info("event=authorization_document_created id={} type={}", document.id, document.type)
+                    logger.info("event=authorization_document_created id=${document.id} type=${document.type}")
                 }
 
             savedDocument

@@ -85,7 +85,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                         status shouldBe "Active"
                         grantedAt shouldBe "2025-04-04T04:00:00+02:00"
                         validFrom shouldBe "2025-04-04T04:00:00+02:00"
-                        validTo shouldBe "2026-04-04T04:00:00+02:00"
+                        validTo shouldBe "2029-04-04T04:00:00+02:00"
                         createdAt shouldBe "2025-04-04T04:00:00+02:00"
                         updatedAt shouldBe "2025-04-04T04:00:00+02:00"
                     }
@@ -204,7 +204,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                         status shouldBe "Active"
                         grantedAt shouldBe "2025-04-04T04:00:00+02:00"
                         validFrom shouldBe "2025-04-04T04:00:00+02:00"
-                        validTo shouldBe "2026-04-04T04:00:00+02:00"
+                        validTo shouldBe "2029-04-04T04:00:00+02:00"
                         createdAt shouldBe "2025-04-04T04:00:00+02:00"
                         updatedAt shouldBe "2025-04-04T04:00:00+02:00"
                     }
@@ -512,7 +512,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                                 status shouldBe "Active"
                                 grantedAt shouldBe "2025-04-04T04:00:00+02:00"
                                 validFrom shouldBe "2025-04-04T04:00:00+02:00"
-                                validTo shouldBe "2026-04-04T04:00:00+02:00"
+                                validTo shouldBe "2029-04-04T04:00:00+02:00"
                             }
                             relationships.apply {
                                 grantedFor.apply {

@@ -25,8 +25,7 @@ class Handler(
             .bind()
 
         ensure(request.requestedTo == command.authorizedParty) {
-            logger.error("Requestee is not authorized to get the request ${command.authorizedParty}")
-            UpdateError.NotAuthorizedError
+            UpdateError.AuthorizedPartyNotAllowedToUpdateAuthorizationRequest
         }
 
         when (request.status) {
@@ -78,7 +77,8 @@ class Handler(
         }.bind()
 
         logger.info(
-            "event=authorization_grant_created sourceType={} sourceId={}",
+            "event=authorization_grant_created grantId={} sourceType={} sourceId={}",
+            grant.id,
             AuthorizationGrant.SourceType.Request,
             updatedRequest.id
         )
