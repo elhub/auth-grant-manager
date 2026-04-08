@@ -16,7 +16,7 @@ fun Application.stromprisServiceModule() {
                 ?.getString()?.toBoolean() ?: false
         }
 
-        provide<JwtTokenProvider> {
+        provide<JwtTokenProvider>(name = "stromprisServiceTokenProvider") {
             val appConfig = resolve<ApplicationConfig>()
             val stromprisServiceConfig = appConfig.config("dataSharing.stromprisService")
             val idpTokenUrl = appConfig.config("idp").property("tokenUrl").getString()
@@ -41,7 +41,7 @@ fun Application.stromprisServiceModule() {
             StromprisApi(
                 stromprisApiConfig = resolve(),
                 client = resolve("commonHttpClient"),
-                tokenProvider = resolve()
+                tokenProvider = resolve("stromprisServiceTokenProvider")
             )
         }
     }
