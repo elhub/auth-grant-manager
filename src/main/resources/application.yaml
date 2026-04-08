@@ -48,10 +48,9 @@ authPersons:
 structureData:
   meteringPointsService:
     serviceUrl: ${STRUCTURE_DATA_METERING_POINTS_SERVICE_URL}
-    authentication:
-      basic:
-        username: ${STRUCTURE_DATA_METERING_POINTS_SERVICE_API_USERNAME}
-        password: ${STRUCTURE_DATA_METERING_POINTS_SERVICE_API_PASSWORD}
+    idp:
+      clientId: ${STRUCTURE_DATA_METERING_POINTS_SERVICE_IDP_CLIENT_ID}
+      clientSecret: ${STRUCTURE_DATA_METERING_POINTS_SERVICE_IDP_CLIENT_SECRET}
   organisationsService:
     serviceUrl: ${STRUCTURE_DATA_ORGANISATIONS_SERVICE_URL}
     authentication:

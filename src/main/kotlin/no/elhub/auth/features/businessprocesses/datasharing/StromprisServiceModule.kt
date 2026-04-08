@@ -3,6 +3,9 @@ package no.elhub.auth.features.businessprocesses.datasharing
 import io.ktor.server.application.Application
 import io.ktor.server.config.ApplicationConfig
 import io.ktor.server.plugins.di.dependencies
+import no.elhub.auth.features.businessprocesses.common.AuthConfig
+import no.elhub.auth.features.businessprocesses.common.JwtTokenProvider
+import no.elhub.auth.features.businessprocesses.common.JwtTokenProviderImpl
 
 fun Application.stromprisServiceModule() {
     val appEnvironment = environment

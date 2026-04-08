@@ -13,6 +13,7 @@ import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.plus
 import no.elhub.auth.features.businessprocesses.BusinessProcessError
+import no.elhub.auth.features.businessprocesses.common.JwtTokenProvider
 import no.elhub.auth.features.businessprocesses.datasharing.Attributes
 import no.elhub.auth.features.businessprocesses.datasharing.ProductsResponse
 import no.elhub.auth.features.businessprocesses.datasharing.StromprisService
@@ -83,6 +84,8 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
         val personService = mockk<PersonService>()
         val stromprisService = mockk<StromprisService>()
         val edielService = mockk<EdielService>()
+        val jwtTokenProvider = mockk<JwtTokenProvider>()
+        coEvery { jwtTokenProvider.getToken() } returns "token"
 
         beforeSpec {
             organisationsService = OrganisationsApi(
@@ -95,9 +98,9 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
             meteringPointsService = MeteringPointsApi(
                 MeteringPointsApiConfig(
                     serviceUrl = MeteringPointsServiceTestContainer.serviceUrl(),
-                    basicAuthConfig = no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.BasicAuthConfig("user", "pass")
                 ),
-                meteringPointsServiceHttpClient
+                meteringPointsServiceHttpClient,
+                jwtTokenProvider
             )
             handler = MoveInAndChangeOfBalanceSupplierBusinessHandler(
                 organisationsService = organisationsService,

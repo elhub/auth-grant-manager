@@ -7,6 +7,7 @@ import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.http.isSuccess
+import no.elhub.auth.features.businessprocesses.common.JwtTokenProvider
 import no.elhub.auth.features.businessprocesses.structuredata.common.ClientError
 import no.elhub.auth.features.businessprocesses.structuredata.common.mapErrorsFromServer
 import org.slf4j.LoggerFactory

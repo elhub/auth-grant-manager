@@ -1,70 +1,39 @@
 package no.elhub.auth.features.businessprocesses.structuredata.meteringpoints
 
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.cio.CIO
-import io.ktor.client.plugins.HttpTimeout
-import io.ktor.client.plugins.UserAgent
-import io.ktor.client.plugins.auth.Auth
-import io.ktor.client.plugins.auth.providers.BasicAuthCredentials
-import io.ktor.client.plugins.auth.providers.basic
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.http.ContentType
-import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import io.ktor.server.config.ApplicationConfig
 import io.ktor.server.plugins.di.dependencies
 import io.ktor.server.plugins.di.resolve
-import kotlinx.serialization.json.Json
+import no.elhub.auth.features.businessprocesses.common.AuthConfig
+import no.elhub.auth.features.businessprocesses.common.JwtTokenProvider
+import no.elhub.auth.features.businessprocesses.common.JwtTokenProviderImpl
 
 fun Application.meteringPointsServiceModule() {
     dependencies {
-        provide<MeteringPointsApiConfig> {
-            val meteringPointsApiConfig = resolve<ApplicationConfig>().config("structureData.meteringPointsService")
-            MeteringPointsApiConfig(
-                serviceUrl = meteringPointsApiConfig.property("serviceUrl").getString(),
-                basicAuthConfig = BasicAuthConfig(
-                    username = meteringPointsApiConfig.property("authentication.basic.username").getString(),
-                    password = meteringPointsApiConfig.property("authentication.basic.password").getString()
+        provide<JwtTokenProvider> {
+            val appConfig = resolve<ApplicationConfig>()
+            val meteringPointsServiceConfig = appConfig.config("structureData.meteringPointsService")
+            val idpTokenUrl = appConfig.config("idp").property("tokenUrl").getString()
+            JwtTokenProviderImpl(
+                httpClient = resolve("commonHttpClient"),
+                authConfig = AuthConfig(
+                    clientId = meteringPointsServiceConfig.property("idp.clientId").getString(),
+                    clientSecret = meteringPointsServiceConfig.property("idp.clientSecret").getString(),
+                    tokenUrl = idpTokenUrl
                 )
             )
         }
-        provide(name = "meteringPointsHttpClient") {
-            val meteringPointsApiConfig = resolve<MeteringPointsApiConfig>()
-            val basicAuthUsername = meteringPointsApiConfig.basicAuthConfig.username
-            val basicAuthPassword = meteringPointsApiConfig.basicAuthConfig.password
-
-            HttpClient(CIO) {
-                install(HttpTimeout) {
-                    connectTimeoutMillis = 30_000
-                    requestTimeoutMillis = 40_000
-                }
-                install(Auth) {
-                    basic {
-                        credentials {
-                            BasicAuthCredentials(basicAuthUsername, basicAuthPassword)
-                        }
-                        sendWithoutRequest { true }
-                        realm = "Access to the '/' path"
-                    }
-                }
-
-                install(ContentNegotiation) {
-                    json(
-                        Json {
-                            ignoreUnknownKeys = true
-                            prettyPrint = true
-                        },
-                        contentType = ContentType.Application.Json,
-                    )
-                }
-
-                install(UserAgent) { agent = "auth-grant-manager" }
-            }
+        provide<MeteringPointsApiConfig> {
+            val meteringPointsApiConfig = resolve<ApplicationConfig>().config("structureData.meteringPointsService")
+            MeteringPointsApiConfig(
+                serviceUrl = meteringPointsApiConfig.property("serviceUrl").getString()
+            )
         }
         provide<MeteringPointsService> {
             MeteringPointsApi(
                 meteringPointsApiConfig = resolve(),
-                client = resolve("meteringPointsHttpClient")
+                client = resolve("commonHttpClient"),
+                tokenProvider = resolve()
             )
         }
     }
