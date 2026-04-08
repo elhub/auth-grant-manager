@@ -79,7 +79,7 @@ class ExposedRequestRepository(
 ) : RequestRepository {
 
     override suspend fun findAllAndSortByCreatedAt(party: AuthorizationParty): Either<RepositoryReadError, List<AuthorizationRequest>> =
-        transactionContext("request_repo_find_all", { RepositoryReadError.UnexpectedError }) {
+        transactionContext("request_repo.find_all", { RepositoryReadError.UnexpectedError }) {
             val partyId = partyRepo.findOrInsert(type = party.type, partyId = party.id)
                 .mapLeft { RepositoryReadError.UnexpectedError }
                 .bind()
@@ -96,7 +96,7 @@ class ExposedRequestRepository(
         }
 
     override suspend fun find(requestId: UUID): Either<RepositoryReadError, AuthorizationRequest> =
-        transactionContext("request_repo_find", { RepositoryReadError.UnexpectedError }) {
+        transactionContext("request_repo.find", { RepositoryReadError.UnexpectedError }) {
             val request = AuthorizationRequestTable
                 .selectAll()
                 .where { AuthorizationRequestTable.id eq requestId }
@@ -108,7 +108,7 @@ class ExposedRequestRepository(
         request: AuthorizationRequest,
         scopes: List<CreateScopeData>
     ): Either<RepositoryWriteError, AuthorizationRequest> =
-        transactionContext("request_repo_insert", { RepositoryWriteError.UnexpectedError }) {
+        transactionContext("request_repo.insert", { RepositoryWriteError.UnexpectedError }) {
             val requestedByParty = partyRepo
                 .findOrInsert(request.requestedBy.type, request.requestedBy.id)
                 .mapLeft { RepositoryWriteError.UnexpectedError }
@@ -148,7 +148,7 @@ class ExposedRequestRepository(
         }
 
     override suspend fun rejectRequest(requestId: UUID): Either<RepositoryError, AuthorizationRequest> =
-        transactionContext("request_repo_reject", { RepositoryWriteError.UnexpectedError }) {
+        transactionContext("request_repo.reject", { RepositoryWriteError.UnexpectedError }) {
             val rowsUpdated = AuthorizationRequestTable.update(
                 where = { AuthorizationRequestTable.id eq requestId }
             ) {
@@ -159,7 +159,7 @@ class ExposedRequestRepository(
         }
 
     override suspend fun findScopeIds(requestId: UUID): Either<RepositoryReadError, List<UUID>> =
-        transactionContext("request_repo_find_scope_ids", { RepositoryReadError.UnexpectedError }) {
+        transactionContext("request_repo.find_scope_ids", { RepositoryReadError.UnexpectedError }) {
             AuthorizationRequestScopeTable
                 .selectAll()
                 .where { authorizationRequestId eq requestId }
@@ -172,7 +172,7 @@ class ExposedRequestRepository(
         grant: AuthorizationGrant,
         grantProperties: List<AuthorizationGrantProperty>,
     ): Either<AcceptWithGrantError, AuthorizationRequest> =
-        transactionContext<AcceptWithGrantError, AuthorizationRequest>("request_repo_accept_with_grant", { AcceptWithGrantError.RequestError.Unexpected }) {
+        transactionContext<AcceptWithGrantError, AuthorizationRequest>("request_repo.accept_with_grant", { AcceptWithGrantError.RequestError.Unexpected }) {
             val approvedByRecord = partyRepo.findOrInsert(approvedBy.type, approvedBy.id)
                 .mapLeft { AcceptWithGrantError.RequestError.Unexpected as AcceptWithGrantError }
                 .bind()
