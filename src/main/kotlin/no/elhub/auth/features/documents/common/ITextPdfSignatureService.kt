@@ -44,6 +44,7 @@ class ITextPdfSignatureService(
 ) : SignatureService {
     companion object {
         const val NATIONAL_ID_EXTENSION_OID = "2.16.578.1.61.2.4"
+        const val EKU_TIME_STAMPING_OID = "1.3.6.1.5.5.7.3.8"
 
         init {
             if (Security.getProvider("BC") == null) {
@@ -325,6 +326,10 @@ class ITextPdfSignatureService(
         if (!trustedRootMatch) return null
         val chainIntact = isCertificateChainIntact(timestampChain)
         if (!chainIntact) return null
+
+        val tsaSigningCert = timestampChain.first()
+        val ekus = tsaSigningCert.extendedKeyUsage.orEmpty()
+        if (EKU_TIME_STAMPING_OID !in ekus) return null
 
         log.info("SubjectDN of timestamp signature: {}", topOfTsaChain.subjectDN)
         return runCatching { signature.timeStampDate.time }.getOrNull()
