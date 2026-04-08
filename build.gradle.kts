@@ -15,6 +15,28 @@ plugins {
 dependencies {
     // Ktor
     implementation(libs.bundles.ktor)
+    constraints {
+        listOf(
+            "io.netty:netty-buffer",
+            "io.netty:netty-codec-base",
+            "io.netty:netty-codec-compression",
+            "io.netty:netty-codec-http",
+            "io.netty:netty-codec-http2",
+            "io.netty:netty-common",
+            "io.netty:netty-handler",
+            "io.netty:netty-resolver",
+            "io.netty:netty-transport",
+            "io.netty:netty-transport-classes-epoll",
+            "io.netty:netty-transport-classes-kqueue",
+            "io.netty:netty-transport-native-epoll",
+            "io.netty:netty-transport-native-kqueue",
+            "io.netty:netty-transport-native-unix-common",
+        ).forEach { artifact ->
+            implementation("$artifact:4.2.10.Final") {
+                because("CVE-2026-33870. Should be fixed in future Ktor versions >= 3.4.2.")
+            }
+        }
+    }
     implementation(libs.bundles.functional.programming)
     // Serialization
     implementation(libs.bundles.serialization)
@@ -73,7 +95,7 @@ dockerCompose {
             mapOf(
                 "DB_USERNAME" to dbUsername,
                 "DB_PASSWORD" to dbPassword,
-                "PRIVATE_KEY_PATH" to testKeyPath.get()
+                "PRIVATE_KEY_PATH" to testKeyPath.get(),
             ),
         )
     }
