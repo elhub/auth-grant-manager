@@ -9,7 +9,7 @@ import org.testcontainers.utility.DockerImageName
 import java.time.Duration
 
 object MeteringPointsServiceTestContainer {
-    private val image = DockerImageName.parse("docker.jfrog.elhub.cloud/frzq0sxltynr/elhub/structure-data-metering-points-service-mock:0.1.49-255")
+    private val image = DockerImageName.parse("docker.jfrog.elhub.cloud/frzq0sxltynr/structure-data/metering-points-service-mock:0.1.49-255")
     private var container: GenericContainer<*>? = null
 
     fun start() {
