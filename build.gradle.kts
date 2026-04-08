@@ -12,6 +12,17 @@ plugins {
     alias(libs.plugins.openapi.generator.plugin)
 }
 
+configurations.all {
+    resolutionStrategy {
+        eachDependency {
+            if (requested.group == "io.netty" && requested.version == "4.2.9.Final") {
+                useVersion("4.2.10.Final")
+                because("Override Netty version to 4.2.10.Final to address CVE-2026-33870. Should be fixed in future Ktor versions >= 3.4.2.")
+            }
+        }
+    }
+}
+
 dependencies {
     // Ktor
     implementation(libs.bundles.ktor)
@@ -73,7 +84,7 @@ dockerCompose {
             mapOf(
                 "DB_USERNAME" to dbUsername,
                 "DB_PASSWORD" to dbPassword,
-                "PRIVATE_KEY_PATH" to testKeyPath.get()
+                "PRIVATE_KEY_PATH" to testKeyPath.get(),
             ),
         )
     }
