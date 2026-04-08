@@ -10,7 +10,7 @@ import no.elhub.auth.features.businessprocesses.common.JwtTokenProviderImpl
 
 fun Application.meteringPointsServiceModule() {
     dependencies {
-        provide<JwtTokenProvider> {
+        provide<JwtTokenProvider>(name = "meteringPointsServiceTokenProvider") {
             val appConfig = resolve<ApplicationConfig>()
             val meteringPointsServiceConfig = appConfig.config("structureData.meteringPointsService")
             val idpTokenUrl = appConfig.config("idp").property("tokenUrl").getString()
@@ -33,7 +33,7 @@ fun Application.meteringPointsServiceModule() {
             MeteringPointsApi(
                 meteringPointsApiConfig = resolve(),
                 client = resolve("commonHttpClient"),
-                tokenProvider = resolve()
+                tokenProvider = resolve("meteringPointsServiceTokenProvider")
             )
         }
     }
