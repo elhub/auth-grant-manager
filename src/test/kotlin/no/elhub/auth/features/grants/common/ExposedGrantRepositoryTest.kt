@@ -96,7 +96,8 @@ class ExposedGrantRepositoryTest : FunSpec({
 
         // update the grant
         val updated =
-            grantRepo.update(exampleGrantWithoutScopeIds.id, AuthorizationGrant.Status.Revoked).getOrElse { error(it) }
+            grantRepo.update(exampleGrantWithoutScopeIds.id, AuthorizationGrant.Status.Revoked)
+                .getOrElse { error(it) }
 
         updated.grantStatus shouldBe AuthorizationGrant.Status.Revoked
     }

@@ -1,6 +1,7 @@
 package no.elhub.auth.features.grants
 
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.date.shouldBeWithin
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.ktor.client.call.body
@@ -32,6 +33,8 @@ import no.elhub.auth.features.grants.consume.dto.JsonApiConsumeRequest
 import no.elhub.auth.features.requests.REQUESTS_PATH
 import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObject
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
+import java.time.Duration
+import java.time.OffsetDateTime
 import no.elhub.auth.module as applicationModule
 
 class AuthorizationGrantRouteTest : FunSpec({
@@ -85,7 +88,8 @@ class AuthorizationGrantRouteTest : FunSpec({
                         status shouldBe "Active"
                         grantedAt shouldBe "2025-04-04T04:00:00+02:00"
                         validFrom shouldBe "2025-04-04T04:00:00+02:00"
-                        validTo shouldBe "2029-04-04T04:00:00+02:00"
+                        val expectedValidTo = OffsetDateTime.now().plusDays(10)
+                        OffsetDateTime.parse(validTo).shouldBeWithin(Duration.ofHours(1), expectedValidTo)
                         createdAt shouldBe "2025-04-04T04:00:00+02:00"
                         updatedAt shouldBe "2025-04-04T04:00:00+02:00"
                     }
@@ -204,7 +208,8 @@ class AuthorizationGrantRouteTest : FunSpec({
                         status shouldBe "Active"
                         grantedAt shouldBe "2025-04-04T04:00:00+02:00"
                         validFrom shouldBe "2025-04-04T04:00:00+02:00"
-                        validTo shouldBe "2029-04-04T04:00:00+02:00"
+                        val expectedValidTo = OffsetDateTime.now().plusDays(10)
+                        OffsetDateTime.parse(validTo).shouldBeWithin(Duration.ofHours(1), expectedValidTo)
                         createdAt shouldBe "2025-04-04T04:00:00+02:00"
                         updatedAt shouldBe "2025-04-04T04:00:00+02:00"
                     }
@@ -512,7 +517,8 @@ class AuthorizationGrantRouteTest : FunSpec({
                                 status shouldBe "Active"
                                 grantedAt shouldBe "2025-04-04T04:00:00+02:00"
                                 validFrom shouldBe "2025-04-04T04:00:00+02:00"
-                                validTo shouldBe "2029-04-04T04:00:00+02:00"
+                                val expectedValidTo = OffsetDateTime.now().plusDays(10)
+                                OffsetDateTime.parse(validTo).shouldBeWithin(Duration.ofHours(1), expectedValidTo)
                             }
                             relationships.apply {
                                 grantedFor.apply {
