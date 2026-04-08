@@ -50,11 +50,12 @@ class ExposedGrantRepository(
     private val logger = LoggerFactory.getLogger(ExposedGrantRepository::class.java)
 
     override suspend fun findAll(party: AuthorizationParty): Either<RepositoryReadError, List<AuthorizationGrant>> =
-        transactionContext("grant_repo_find_all", { RepositoryReadError.UnexpectedError }) {
+        transactionContext<RepositoryReadError, List<AuthorizationGrant>>("grant_repo_find_all", { RepositoryReadError.UnexpectedError }) {
             val partyId = partyRepository.findOrInsert(type = party.type, partyId = party.id)
                 .mapLeft { RepositoryReadError.UnexpectedError }
                 .bind()
                 .id
+
             AuthorizationGrantTable
                 .selectAll()
                 .where {
@@ -68,15 +69,15 @@ class ExposedGrantRepository(
         }
 
     override suspend fun find(grantId: UUID): Either<RepositoryReadError, AuthorizationGrant> =
-        transactionContext("grant_repo_find", { RepositoryReadError.UnexpectedError }) {
-            findInternalGrant(grantId).mapLeft { RepositoryReadError.UnexpectedError }.bind()
+        transactionContext<RepositoryReadError, AuthorizationGrant>("grant_repo_find", { RepositoryReadError.UnexpectedError }) {
+            findInternalGrant(grantId).bind()
         }
 
     override suspend fun findBySource(
         sourceType: SourceType,
         sourceId: UUID
     ): Either<RepositoryReadError, AuthorizationGrant?> =
-        transactionContext("grant_repo_find_by_source", { RepositoryReadError.UnexpectedError }) {
+        transactionContext<RepositoryReadError, AuthorizationGrant?>("grant_repo_find_by_source", ({ RepositoryReadError.UnexpectedError })) {
             AuthorizationGrantTable
                 .selectAll()
                 .where {
@@ -84,15 +85,12 @@ class ExposedGrantRepository(
                 }
                 .singleOrNull()
                 ?.let { grant ->
-                    val grantedFor = partyRepository.find(grant[AuthorizationGrantTable.grantedFor])
-                        .mapLeft { RepositoryReadError.UnexpectedError }.bind()
-                    val grantedBy = partyRepository.find(grant[AuthorizationGrantTable.grantedBy])
-                        .mapLeft { RepositoryReadError.UnexpectedError }.bind()
-                    val grantedTo = partyRepository.find(grant[AuthorizationGrantTable.grantedTo])
-                        .mapLeft { RepositoryReadError.UnexpectedError }.bind()
-                    val scopes = findScopeIds(grant[AuthorizationGrantTable.id].value)
-                        .mapLeft { RepositoryReadError.UnexpectedError }.bind()
+                    val grantedFor = partyRepository.find(grant[AuthorizationGrantTable.grantedFor]).bind()
+                    val grantedBy = partyRepository.find(grant[AuthorizationGrantTable.grantedBy]).bind()
+                    val grantedTo = partyRepository.find(grant[AuthorizationGrantTable.grantedTo]).bind()
+                    val scopes = findScopeIds(grant[AuthorizationGrantTable.id].value).bind()
                     val properties = grantPropertiesRepository.findBy(grant[AuthorizationGrantTable.id].value)
+
                     grant.toAuthorizationGrant(
                         grantedBy = grantedBy,
                         grantedFor = grantedFor,
@@ -149,7 +147,7 @@ class ExposedGrantRepository(
     override suspend fun insert(
         grant: AuthorizationGrant,
     ): Either<RepositoryWriteError, AuthorizationGrant> =
-        transactionContext("grant_repo_insert", { RepositoryWriteError.UnexpectedError }) {
+        transactionContext<RepositoryWriteError, AuthorizationGrant>("grant_repo_insert", { RepositoryWriteError.UnexpectedError }) {
             val grantedByParty = partyRepository
                 .findOrInsert(grant.grantedBy.type, grant.grantedBy.id)
                 .mapLeft { RepositoryWriteError.UnexpectedError }
@@ -195,6 +193,7 @@ class ExposedGrantRepository(
                     this[AuthorizationGrantScopeTable.authorizationScopeId] = scopeId
                 }
             }
+
             authorizationGrant
         }
 

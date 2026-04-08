@@ -4,14 +4,14 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.raise.Raise
 import arrow.core.raise.either
-import io.micrometer.core.instrument.MeterRegistry
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 import java.util.concurrent.TimeUnit
 
-class TransactionContext(private val meterRegistry: MeterRegistry) {
+class TransactionContext(private val meterRegistry: PrometheusMeterRegistry) {
     suspend fun <T> withTransaction(block: suspend JdbcTransaction.() -> T): T = withContext(Dispatchers.IO) {
         suspendTransaction { block() }
     }
@@ -28,7 +28,7 @@ class TransactionContext(private val meterRegistry: MeterRegistry) {
         }
 }
 
-suspend fun <T> MeterRegistry.measureTransaction(
+suspend fun <T> PrometheusMeterRegistry.measureTransaction(
     name: String,
     block: suspend () -> T
 ): T {

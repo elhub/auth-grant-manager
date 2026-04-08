@@ -27,7 +27,7 @@ class ExposedPartyRepository(private val transactionContext: TransactionContext)
     private val logger = LoggerFactory.getLogger(ExposedPartyRepository::class.java)
 
     override suspend fun findOrInsert(type: PartyType, partyId: String): Either<RepositoryWriteError, AuthorizationPartyRecord> =
-        transactionContext("party_repo_find_or_insert", { error ->
+        transactionContext<RepositoryWriteError, AuthorizationPartyRecord>("party_repo_find_or_insert", { error ->
             logger.error("Error occurred during findOrInsert() for authorization party: ${error.message}")
             RepositoryWriteError.UnexpectedError
         }) {
