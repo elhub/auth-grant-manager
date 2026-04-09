@@ -69,10 +69,6 @@ sealed class ChangeOfBalanceSupplierValidationError(
         ChangeOfBalanceSupplierValidationError("not_active_requested_by", "Requested by is not an active party in Elhub")
 
     @Serializable
-    data object MatchingRequestedBy :
-        ChangeOfBalanceSupplierValidationError("matching_requested_by", "Requested by matches the current balance supplier of the metering point")
-
-    @Serializable
     data object MissingRequestedFrom :
         ChangeOfBalanceSupplierValidationError("missing_requested_from", "Requested from is missing")
 

@@ -221,11 +221,6 @@ class ChangeOfBalanceSupplierBusinessHandler(
             return ChangeOfBalanceSupplierValidationError.NotActiveRequestedBy.left()
         }
 
-        val currentBalanceSupplier = meteringPoint.data.attributes?.balanceSupplierContract?.partyFunction
-        if (model.requestedBy.idValue == currentBalanceSupplier?.partyId) {
-            return ChangeOfBalanceSupplierValidationError.MatchingRequestedBy.left()
-        }
-
         if (model.requestedTo.idValue != model.requestedFrom.idValue) {
             return ChangeOfBalanceSupplierValidationError.RequestedToRequestedFromMismatch.left()
         }

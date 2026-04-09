@@ -532,29 +532,6 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
                 .shouldBeLeft(BusinessProcessError.Validation(ChangeOfBalanceSupplierValidationError.NotActiveRequestedBy.message))
         }
 
-        test("request validation fails on requested by matching current balance supplier") {
-            val model =
-                CreateRequestModel(
-                    authorizedParty = AUTHORIZED_PARTY,
-                    requestType = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
-                    meta =
-                    CreateRequestMeta(
-                        requestedBy = MATCHING_PARTY,
-                        requestedFrom = END_USER,
-                        requestedFromName = "From",
-                        requestedTo = END_USER,
-                        requestedForMeteringPointId = VALID_METERING_POINT_1,
-                        requestedForMeteringPointAddress = "addr",
-                        balanceSupplierName = "Supplier",
-                        balanceSupplierContractName = "Contract",
-                        redirectURI = "https://example.com",
-                    ),
-                )
-
-            handler.validateAndReturnRequestCommand(model)
-                .shouldBeLeft(BusinessProcessError.Validation(ChangeOfBalanceSupplierValidationError.MatchingRequestedBy.message))
-        }
-
         test("request validation fails on requested to not matching requested from") {
             val model =
                 CreateRequestModel(
