@@ -28,7 +28,7 @@ import no.elhub.auth.features.businessprocesses.structuredata.organisations.Part
 import no.elhub.auth.features.businessprocesses.structuredata.organisations.PartyType
 import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.common.person.PersonService
-import no.elhub.auth.features.common.today
+import no.elhub.auth.features.common.todayOslo
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.DocumentBusinessHandler
 import no.elhub.auth.features.documents.create.command.DocumentCommand
@@ -48,9 +48,11 @@ private const val REGEX_METERING_POINT = "^\\d{18}$"
 private const val CHANGE_OF_BALANCE_SUPPLIER_REQUEST_VALID_DAYS = 28
 private const val CHANGE_OF_BALANCE_SUPPLIER_GRANT_VALID_YEARS = 1
 
-private fun changeOfBalanceSupplierRequestValidTo() = today().plus(DatePeriod(days = CHANGE_OF_BALANCE_SUPPLIER_REQUEST_VALID_DAYS))
+private fun changeOfBalanceSupplierRequestValidTo() =
+    todayOslo().plus(DatePeriod(days = CHANGE_OF_BALANCE_SUPPLIER_REQUEST_VALID_DAYS))
 
-private fun changeOfBalanceSupplierGrantValidTo() = today().plus(DatePeriod(years = CHANGE_OF_BALANCE_SUPPLIER_GRANT_VALID_YEARS))
+private fun changeOfBalanceSupplierGrantValidTo() =
+    todayOslo().plus(DatePeriod(years = CHANGE_OF_BALANCE_SUPPLIER_GRANT_VALID_YEARS))
 
 class ChangeOfBalanceSupplierBusinessHandler(
     private val meteringPointsService: MeteringPointsService,
@@ -116,7 +118,7 @@ class ChangeOfBalanceSupplierBusinessHandler(
     override fun getCreateGrantProperties(request: AuthorizationRequest): CreateGrantProperties =
         CreateGrantProperties(
             validTo = changeOfBalanceSupplierGrantValidTo(),
-            validFrom = today()
+            validFrom = todayOslo()
         )
 
     override suspend fun validateAndReturnDocumentCommand(model: CreateDocumentModel): Either<BusinessProcessError, DocumentCommand> =
@@ -131,7 +133,7 @@ class ChangeOfBalanceSupplierBusinessHandler(
     override fun getCreateGrantProperties(document: AuthorizationDocument): CreateGrantProperties =
         CreateGrantProperties(
             validTo = changeOfBalanceSupplierGrantValidTo(),
-            validFrom = today(),
+            validFrom = todayOslo(),
         )
 
     private suspend fun validate(
@@ -166,8 +168,9 @@ class ChangeOfBalanceSupplierBusinessHandler(
         }
 
         // temporary mapping until model has elhubInternalId instead of NIN
-        val endUserElhubInternalId = personService.findOrCreateByNin(model.requestedFrom.idValue).getOrNull()?.internalId
-            ?: return ChangeOfBalanceSupplierValidationError.RequestedFromNotFound.left()
+        val endUserElhubInternalId =
+            personService.findOrCreateByNin(model.requestedFrom.idValue).getOrNull()?.internalId
+                ?: return ChangeOfBalanceSupplierValidationError.RequestedFromNotFound.left()
 
         val meteringPoint = meteringPointsService.getMeteringPointByIdAndElhubInternalId(
             meteringPointId = model.requestedForMeteringPointId,
@@ -227,7 +230,8 @@ class ChangeOfBalanceSupplierBusinessHandler(
 
         if (validateBalanceSupplierContractName) {
             val organizationNumber =
-                party.data.relationships.organizationNumber?.data?.id ?: return ChangeOfBalanceSupplierValidationError.UnexpectedError.left()
+                party.data.relationships.organizationNumber?.data?.id
+                    ?: return ChangeOfBalanceSupplierValidationError.UnexpectedError.left()
             val products = stromprisService.getProductsByOrganizationNumber(organizationNumber).mapLeft { err ->
                 return when (err) {
                     ClientError.NotFound -> ChangeOfBalanceSupplierValidationError.ContractsNotFound.left()

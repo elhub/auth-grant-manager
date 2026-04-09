@@ -31,9 +31,9 @@ class TimeZoneFormatterTest : FunSpec({
         }
     }
 
-    context("currentTimeLocal") {
+    context("currentTimeOslo") {
         test("returns a timestamp in the Europe Oslo offset") {
-            val result = currentTimeLocal()
+            val result = currentTimeOslo()
 
             result.offset shouldBe result.toZonedDateTime().zone.rules.getOffset(result.toInstant())
         }
@@ -63,7 +63,7 @@ class TimeZoneFormatterTest : FunSpec({
         test("returns the current UTC date") {
             val expected = Clock.System.now().toLocalDateTime(TimeZone.UTC).date
 
-            today() shouldBe expected
+            todayOslo() shouldBe expected
         }
     }
 })

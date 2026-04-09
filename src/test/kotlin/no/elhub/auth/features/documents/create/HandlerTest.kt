@@ -23,7 +23,7 @@ import no.elhub.auth.features.common.party.PartyIdentifierType
 import no.elhub.auth.features.common.party.PartyService
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
-import no.elhub.auth.features.common.today
+import no.elhub.auth.features.common.todayOslo
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.DocumentBusinessHandler
 import no.elhub.auth.features.documents.common.DocumentRepository
@@ -66,7 +66,8 @@ class HandlerTest : FunSpec({
         )
 
     val commandMeta = object : DocumentMetaMarker {
-        override fun toMetaAttributes(): Map<String, String> = mapOf("k" to "v", "language" to SupportedLanguage.DEFAULT.code)
+        override fun toMetaAttributes(): Map<String, String> =
+            mapOf("k" to "v", "language" to SupportedLanguage.DEFAULT.code)
     }
 
     val command =
@@ -75,7 +76,7 @@ class HandlerTest : FunSpec({
             requestedFrom = requestedFromIdentifier,
             requestedTo = requestedToIdentifier,
             requestedBy = requestedByIdentifier,
-            validTo = today().plus(DatePeriod(days = 30)).toTimeZoneOffsetDateTimeAtStartOfDay(),
+            validTo = todayOslo().plus(DatePeriod(days = 30)).toTimeZoneOffsetDateTimeAtStartOfDay(),
             scopes = listOf(
                 CreateScopeData(
                     authorizedResourceType = AuthorizationScope.AuthorizationResource.MeteringPoint,
@@ -217,7 +218,8 @@ class HandlerTest : FunSpec({
         stubPartyResolution(partyService)
         coEvery {
             businessHandler.validateAndReturnDocumentCommand(model)
-        } returns BusinessProcessError.Validation(ChangeOfBalanceSupplierValidationError.MissingRequestedFromName.message).left()
+        } returns BusinessProcessError.Validation(ChangeOfBalanceSupplierValidationError.MissingRequestedFromName.message)
+            .left()
 
         val handler = Handler(businessHandler, signatureService, documentRepository, partyService, fileGenerator)
 

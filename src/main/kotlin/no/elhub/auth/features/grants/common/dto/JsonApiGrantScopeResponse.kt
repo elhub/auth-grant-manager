@@ -3,7 +3,7 @@ package no.elhub.auth.features.grants.common.dto
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
-import no.elhub.auth.features.common.currentTimeLocal
+import no.elhub.auth.features.common.currentTimeOslo
 import no.elhub.auth.features.common.toTimeZoneOffsetString
 import no.elhub.auth.features.grants.AuthorizationScope
 import no.elhub.auth.features.grants.GRANTS_PATH
@@ -62,7 +62,7 @@ fun List<AuthorizationScope>.toResponse(grantId: String) =
         links = JsonApiLinks.ResourceObjectLink("$GRANTS_PATH/$grantId/scopes"),
         meta = JsonApiMeta(
             buildJsonObject {
-                put("createdAt", currentTimeLocal().toTimeZoneOffsetString())
+                put("createdAt", currentTimeOslo().toTimeZoneOffsetString())
             }
         )
     )

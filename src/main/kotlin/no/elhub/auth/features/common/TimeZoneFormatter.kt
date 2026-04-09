@@ -12,23 +12,24 @@ import java.time.temporal.ChronoUnit
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
-private val TIME_ZONE = ZoneId.of("Europe/Oslo")
+private const val TIME_ZONE = "Europe/Oslo"
+private val ZONE_ID = ZoneId.of(TIME_ZONE)
 private val ISO_OFFSET_FORMATTER = DateTimeFormatter.ISO_OFFSET_DATE_TIME
 
 fun OffsetDateTime.toTimeZoneOffsetString(): String =
     this.toInstant()
-        .atZone(TIME_ZONE)
+        .atZone(ZONE_ID)
         .truncatedTo(ChronoUnit.SECONDS)
         .format(ISO_OFFSET_FORMATTER)
 
-fun currentTimeLocal(): OffsetDateTime = OffsetDateTime.now(TIME_ZONE)
+fun currentTimeOslo(): OffsetDateTime = OffsetDateTime.now(ZONE_ID)
 
 fun currentTimeUtc(): OffsetDateTime = OffsetDateTime.now(ZoneOffset.UTC)
 
 fun LocalDate.toTimeZoneOffsetDateTimeAtStartOfDay(): OffsetDateTime =
     this.toJavaLocalDate()
-        .atStartOfDay(TIME_ZONE)
+        .atStartOfDay(ZONE_ID)
         .toOffsetDateTime()
 
 @OptIn(ExperimentalTime::class)
-fun today(): LocalDate = Clock.System.now().toLocalDateTime(TimeZone.UTC).date
+fun todayOslo(): LocalDate = Clock.System.now().toLocalDateTime(TimeZone.of(TIME_ZONE)).date

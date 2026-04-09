@@ -137,7 +137,10 @@ sealed class MoveInAndChangeOfBalanceSupplierValidationError(
 
     @Serializable
     data object RedirectURINotMatchingEdiel :
-        MoveInAndChangeOfBalanceSupplierValidationError("redirect_uri_not_matching_ediel", "Redirect URI does not match URI set in Ediel")
+        MoveInAndChangeOfBalanceSupplierValidationError(
+            "redirect_uri_not_matching_ediel",
+            "Redirect URI does not match URI set in Ediel"
+        )
 
     @Serializable
     data object ContractsNotFound :

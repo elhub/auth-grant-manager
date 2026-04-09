@@ -42,11 +42,11 @@ import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.RunPostgresScriptExtension
 import no.elhub.auth.features.common.auth.PDPAuthorizationProvider
 import no.elhub.auth.features.common.commonModule
-import no.elhub.auth.features.common.currentTimeLocal
+import no.elhub.auth.features.common.currentTimeOslo
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
 import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
-import no.elhub.auth.features.common.today
+import no.elhub.auth.features.common.todayOslo
 import no.elhub.auth.features.documents.common.DocumentBusinessHandler
 import no.elhub.auth.features.documents.create.command.DocumentCommand
 import no.elhub.auth.features.documents.create.dto.CreateDocumentMeta
@@ -370,9 +370,9 @@ class AuthorizationDocumentRouteTest :
                             val updatedAt = OffsetDateTime.parse(updatedAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
                             val validTo = Instant.parse(validTo).toLocalDateTime(TimeZone.of("Europe/Oslo")).date
 
-                            (validTo == today().plus(DatePeriod(days = 30))).shouldBeTrue()
-                            (Duration.between(createdAt, currentTimeLocal()).abs() < nowTolerance).shouldBeTrue()
-                            (Duration.between(updatedAt, currentTimeLocal()).abs() < nowTolerance).shouldBeTrue()
+                            (validTo == todayOslo().plus(DatePeriod(days = 30))).shouldBeTrue()
+                            (Duration.between(createdAt, currentTimeOslo()).abs() < nowTolerance).shouldBeTrue()
+                            (Duration.between(updatedAt, currentTimeOslo()).abs() < nowTolerance).shouldBeTrue()
                         }
                         relationships.shouldNotBeNull().apply {
                             requestedBy.apply {
@@ -435,9 +435,9 @@ class AuthorizationDocumentRouteTest :
                                 val updatedAt = OffsetDateTime.parse(updatedAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
                                 val validTo = Instant.parse(validTo).toLocalDateTime(TimeZone.of("Europe/Oslo")).date
 
-                                (validTo == today().plus(DatePeriod(days = 30))).shouldBeTrue()
-                                (Duration.between(createdAt, currentTimeLocal()) < nowTolerance).shouldBeTrue()
-                                (Duration.between(updatedAt, currentTimeLocal()) < nowTolerance).shouldBeTrue()
+                                (validTo == todayOslo().plus(DatePeriod(days = 30))).shouldBeTrue()
+                                (Duration.between(createdAt, currentTimeOslo()) < nowTolerance).shouldBeTrue()
+                                (Duration.between(updatedAt, currentTimeOslo()) < nowTolerance).shouldBeTrue()
                             }
                             relationships.apply {
                                 requestedBy.data.apply {
@@ -857,7 +857,7 @@ private class TestDocumentBusinessHandler : DocumentBusinessHandler {
                 requestedFrom = meta.requestedFrom,
                 requestedTo = meta.requestedTo,
                 requestedBy = meta.requestedBy,
-                validTo = today().plus(DatePeriod(days = 30)).toTimeZoneOffsetDateTimeAtStartOfDay(),
+                validTo = todayOslo().plus(DatePeriod(days = 30)).toTimeZoneOffsetDateTimeAtStartOfDay(),
                 scopes = listOf(
                     CreateScopeData(
                         authorizedResourceType = AuthorizationScope.AuthorizationResource.MeteringPoint,
@@ -882,8 +882,8 @@ private class TestDocumentBusinessHandler : DocumentBusinessHandler {
 
     override fun getCreateGrantProperties(document: AuthorizationDocument): CreateGrantProperties =
         CreateGrantProperties(
-            validFrom = today(),
-            validTo = today().plus(DatePeriod(days = 30))
+            validFrom = todayOslo(),
+            validTo = todayOslo().plus(DatePeriod(days = 30))
         )
 }
 

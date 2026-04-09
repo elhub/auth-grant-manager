@@ -3,7 +3,7 @@ package no.elhub.auth.features.grants.common.dto
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
-import no.elhub.auth.features.common.currentTimeLocal
+import no.elhub.auth.features.common.currentTimeOslo
 import no.elhub.auth.features.common.toTimeZoneOffsetString
 import no.elhub.auth.features.documents.DOCUMENTS_PATH
 import no.elhub.auth.features.grants.AuthorizationGrant
@@ -118,7 +118,7 @@ fun AuthorizationGrant.toSingleGrantResponse() =
         links = JsonApiLinks.ResourceObjectLink("$GRANTS_PATH/${this.id}"),
         meta = JsonApiMeta(
             buildJsonObject {
-                put("createdAt", currentTimeLocal().toTimeZoneOffsetString())
+                put("createdAt", currentTimeOslo().toTimeZoneOffsetString())
             }
         )
     )
@@ -195,7 +195,7 @@ fun List<AuthorizationGrant>.toCollectionGrantResponse() =
         links = JsonApiLinks.ResourceObjectLink(GRANTS_PATH),
         meta = JsonApiMeta(
             buildJsonObject {
-                put("createdAt", currentTimeLocal().toTimeZoneOffsetString())
+                put("createdAt", currentTimeOslo().toTimeZoneOffsetString())
             }
         )
     )
