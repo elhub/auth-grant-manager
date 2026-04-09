@@ -2,7 +2,7 @@ package no.elhub.auth.features.grants.common
 
 import arrow.core.Either
 import arrow.core.raise.either
-import no.elhub.auth.config.withTransactionEither
+import no.elhub.auth.config.TransactionContext
 import no.elhub.auth.features.common.PGEnum
 import no.elhub.auth.features.common.RepositoryError
 import no.elhub.auth.features.common.RepositoryReadError
@@ -43,13 +43,14 @@ interface GrantRepository {
 
 class ExposedGrantRepository(
     private val partyRepository: PartyRepository,
-    private val grantPropertiesRepository: GrantPropertiesRepository
+    private val grantPropertiesRepository: GrantPropertiesRepository,
+    private val transactionContext: TransactionContext,
 ) : GrantRepository {
 
     private val logger = LoggerFactory.getLogger(ExposedGrantRepository::class.java)
 
     override suspend fun findAll(party: AuthorizationParty): Either<RepositoryReadError, List<AuthorizationGrant>> =
-        withTransactionEither({ RepositoryReadError.UnexpectedError }) {
+        transactionContext<RepositoryReadError, List<AuthorizationGrant>>("grant_repo.find_all", { RepositoryReadError.UnexpectedError }) {
             val partyId = partyRepository.findOrInsert(type = party.type, partyId = party.id)
                 .mapLeft { RepositoryReadError.UnexpectedError }
                 .bind()
@@ -68,7 +69,7 @@ class ExposedGrantRepository(
         }
 
     override suspend fun find(grantId: UUID): Either<RepositoryReadError, AuthorizationGrant> =
-        withTransactionEither<RepositoryReadError, AuthorizationGrant>({ RepositoryReadError.UnexpectedError }) {
+        transactionContext<RepositoryReadError, AuthorizationGrant>("grant_repo.find", { RepositoryReadError.UnexpectedError }) {
             findInternalGrant(grantId).bind()
         }
 
@@ -76,7 +77,7 @@ class ExposedGrantRepository(
         sourceType: SourceType,
         sourceId: UUID
     ): Either<RepositoryReadError, AuthorizationGrant?> =
-        withTransactionEither<RepositoryReadError, AuthorizationGrant?>({ RepositoryReadError.UnexpectedError }) {
+        transactionContext<RepositoryReadError, AuthorizationGrant?>("grant_repo.find_by_source", ({ RepositoryReadError.UnexpectedError })) {
             AuthorizationGrantTable
                 .selectAll()
                 .where {
@@ -116,7 +117,10 @@ class ExposedGrantRepository(
     }
 
     override suspend fun findScopes(grantId: UUID): Either<RepositoryReadError, List<AuthorizationScope>> =
-        withTransactionEither<RepositoryReadError, List<AuthorizationScope>>({ RepositoryReadError.UnexpectedError }) {
+        transactionContext<RepositoryReadError, List<AuthorizationScope>>(
+            "grant_repo.find_scopes",
+            { RepositoryReadError.UnexpectedError }
+        ) {
             AuthorizationGrantTable
                 .selectAll()
                 .where { AuthorizationGrantTable.id eq grantId }
@@ -143,7 +147,7 @@ class ExposedGrantRepository(
     override suspend fun insert(
         grant: AuthorizationGrant,
     ): Either<RepositoryWriteError, AuthorizationGrant> =
-        withTransactionEither({ RepositoryWriteError.UnexpectedError }) {
+        transactionContext<RepositoryWriteError, AuthorizationGrant>("grant_repo.insert", { RepositoryWriteError.UnexpectedError }) {
             val grantedByParty = partyRepository
                 .findOrInsert(grant.grantedBy.type, grant.grantedBy.id)
                 .mapLeft { RepositoryWriteError.UnexpectedError }
@@ -194,13 +198,14 @@ class ExposedGrantRepository(
         }
 
     override suspend fun update(grantId: UUID, newStatus: Status): Either<RepositoryError, AuthorizationGrant> =
-        withTransactionEither<RepositoryError, AuthorizationGrant>({ RepositoryWriteError.UnexpectedError }) {
-            val rowsUpdated = AuthorizationGrantTable.update(
-                where = { AuthorizationGrantTable.id eq grantId }
-            ) {
-                it[grantStatus] = newStatus
-                it[updatedAt] = currentTimeUtc()
-            }
+        transactionContext<RepositoryError, AuthorizationGrant>("grant_repo.update", { RepositoryWriteError.UnexpectedError }) {
+            val rowsUpdated =
+                AuthorizationGrantTable.update(
+                    where = { AuthorizationGrantTable.id eq grantId }
+                ) {
+                    it[grantStatus] = newStatus
+                    it[updatedAt] = currentTimeUtc()
+                }
 
             if (rowsUpdated == 0) raise(RepositoryWriteError.UnexpectedError)
 

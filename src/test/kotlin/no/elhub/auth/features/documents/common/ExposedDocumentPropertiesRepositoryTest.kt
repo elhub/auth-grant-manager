@@ -4,7 +4,9 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
-import no.elhub.auth.config.withTransaction
+import io.micrometer.prometheusmetrics.PrometheusConfig
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
+import no.elhub.auth.config.TransactionContext
 import no.elhub.auth.features.common.PostgresTestContainer
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.currentTimeUtc
@@ -21,16 +23,17 @@ import java.util.UUID
 
 class ExposedDocumentPropertiesRepositoryTest : FunSpec({
     extensions(PostgresTestContainerExtension())
-
-    val repository = ExposedDocumentPropertiesRepository()
-    val partyRepo = ExposedPartyRepository()
-    val grantPropertiesRepository = ExposedGrantPropertiesRepository()
-    val grantRepository = ExposedGrantRepository(partyRepo, grantPropertiesRepository)
+    val transactionContext = TransactionContext(PrometheusMeterRegistry(PrometheusConfig.DEFAULT))
+    val repository = ExposedDocumentPropertiesRepository(transactionContext)
+    val partyRepo = ExposedPartyRepository(transactionContext)
+    val grantPropertiesRepository = ExposedGrantPropertiesRepository(transactionContext)
+    val grantRepository = ExposedGrantRepository(partyRepo, grantPropertiesRepository, transactionContext)
     val documentRepository = ExposedDocumentRepository(
         partyRepo = partyRepo,
         grantRepo = grantRepository,
         documentPropertiesRepository = repository,
-        grantPropertiesRepository = grantPropertiesRepository
+        grantPropertiesRepository = grantPropertiesRepository,
+        transactionContext
     )
 
     beforeSpec {
@@ -43,7 +46,7 @@ class ExposedDocumentPropertiesRepositoryTest : FunSpec({
     }
 
     beforeTest {
-        withTransaction {
+        transactionContext.withTransaction {
             AuthorizationDocumentPropertyTable.deleteAll()
         }
     }
@@ -53,7 +56,7 @@ class ExposedDocumentPropertiesRepositoryTest : FunSpec({
         test("insert empty list should not create rows") {
             val properties = emptyList<AuthorizationDocumentProperty>()
             repository.insert(properties, documentId)
-            withTransaction {
+            transactionContext.withTransaction {
                 AuthorizationDocumentPropertyTable.selectAll().count().shouldBe(0)
             }
         }

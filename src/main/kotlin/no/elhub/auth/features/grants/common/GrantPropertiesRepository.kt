@@ -1,9 +1,9 @@
 package no.elhub.auth.features.grants.common
 
 import arrow.core.Either
-import no.elhub.auth.config.withTransaction
-import no.elhub.auth.config.withTransactionEither
+import no.elhub.auth.config.TransactionContext
 import no.elhub.auth.features.common.RepositoryError
+import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.RepositoryWriteError
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.Table
@@ -18,9 +18,12 @@ interface GrantPropertiesRepository {
     suspend fun findBy(grantId: UUID): List<AuthorizationGrantProperty>
 }
 
-class ExposedGrantPropertiesRepository : GrantPropertiesRepository {
+class ExposedGrantPropertiesRepository(
+    private val transactionContext: TransactionContext,
+) : GrantPropertiesRepository {
+
     override suspend fun insert(properties: List<AuthorizationGrantProperty>): Either<RepositoryError, Unit> =
-        withTransactionEither({ RepositoryWriteError.UnexpectedError }) {
+        transactionContext("grant_propertiers.insert", { RepositoryWriteError.UnexpectedError }) {
             if (properties.isNotEmpty()) {
                 AuthorizationGrantPropertyTable.batchInsert(properties) { property ->
                     this[AuthorizationGrantPropertyTable.grantId] = property.grantId
@@ -31,12 +34,12 @@ class ExposedGrantPropertiesRepository : GrantPropertiesRepository {
         }
 
     override suspend fun findBy(grantId: UUID): List<AuthorizationGrantProperty> =
-        withTransaction {
+        transactionContext("grant_properties.find", { RepositoryReadError.UnexpectedError }) {
             AuthorizationGrantPropertyTable
                 .selectAll()
                 .where { AuthorizationGrantPropertyTable.grantId eq grantId }
                 .map { it.toAuthorizationGrantProperty() }
-        }
+        }.fold({ emptyList<AuthorizationGrantProperty>() }, { it })
 }
 
 object AuthorizationGrantPropertyTable : Table("auth.authorization_grant_property") {
