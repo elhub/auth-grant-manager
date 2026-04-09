@@ -21,10 +21,10 @@ const val GRANTS_PATH = "/access/v0/authorization-grants"
 fun Application.module() {
     dependencies {
         provide<ExposedGrantRepository> {
-            ExposedGrantRepository(resolve(), resolve(), resolve())
+            ExposedGrantRepository(resolve(), resolve())
         }
         provide<ExposedGrantPropertiesRepository> {
-            ExposedGrantPropertiesRepository(resolve())
+            ExposedGrantPropertiesRepository()
         }
 
         provide<GetHandler> {

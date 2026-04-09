@@ -109,7 +109,7 @@ fun Application.commonModule() {
             PDPAuthorizationProvider(httpClient = resolve("pdpHttpClient"), pdpBaseUrl = pdpBaseUrl)
         }
 
-        provide<PartyRepository> { ExposedPartyRepository(resolve()) }
+        provide<PartyRepository> { ExposedPartyRepository() }
 
         provide<PersonService> {
             ApiPersonService(cfg = resolve(), client = resolve("commonHttpClient"))
