@@ -22,7 +22,7 @@ fun OffsetDateTime.toTimeZoneOffsetString(): String =
         .truncatedTo(ChronoUnit.SECONDS)
         .format(ISO_OFFSET_FORMATTER)
 
-fun currentTimeLocal(): OffsetDateTime = OffsetDateTime.now(ZONE_ID)
+fun currentTimeOslo(): OffsetDateTime = OffsetDateTime.now(ZONE_ID)
 
 fun currentTimeUtc(): OffsetDateTime = OffsetDateTime.now(ZoneOffset.UTC)
 
@@ -32,4 +32,4 @@ fun LocalDate.toTimeZoneOffsetDateTimeAtStartOfDay(): OffsetDateTime =
         .toOffsetDateTime()
 
 @OptIn(ExperimentalTime::class)
-fun today(): LocalDate = Clock.System.now().toLocalDateTime(TimeZone.of(TIME_ZONE)).date
+fun todayOslo(): LocalDate = Clock.System.now().toLocalDateTime(TimeZone.of(TIME_ZONE)).date
