@@ -28,7 +28,7 @@ import no.elhub.auth.features.businessprocesses.structuredata.organisations.Part
 import no.elhub.auth.features.businessprocesses.structuredata.organisations.PartyType
 import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.common.person.PersonService
-import no.elhub.auth.features.common.today
+import no.elhub.auth.features.common.todayOslo
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.DocumentBusinessHandler
 import no.elhub.auth.features.documents.create.command.DocumentCommand
@@ -50,9 +50,9 @@ private const val MOVE_IN_GRANT_VALID_YEARS = 1
 
 private val ALLOWED_GRANT_PROPERTY_KEYS = setOf("moveInDate")
 
-private fun moveInRequestValidTo() = today().plus(DatePeriod(days = MOVE_IN_REQUEST_VALID_DAYS))
+private fun moveInRequestValidTo() = todayOslo().plus(DatePeriod(days = MOVE_IN_REQUEST_VALID_DAYS))
 
-private fun moveInGrantValidTo() = today().plus(DatePeriod(years = MOVE_IN_GRANT_VALID_YEARS))
+private fun moveInGrantValidTo() = todayOslo().plus(DatePeriod(years = MOVE_IN_GRANT_VALID_YEARS))
 
 class MoveInAndChangeOfBalanceSupplierBusinessHandler(
     private val organisationsService: OrganisationsService,
@@ -140,7 +140,7 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandler(
         val meta = propertyMap.filterKeys { it in allowedKeys }
         return CreateGrantProperties(
             validTo = moveInGrantValidTo(),
-            validFrom = today(),
+            validFrom = todayOslo(),
             meta = meta
         )
     }
@@ -205,7 +205,7 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandler(
 
         val moveInDate = model.moveInDate
         moveInDate?.let {
-            if (it > today()) {
+            if (it > todayOslo()) {
                 return MoveInAndChangeOfBalanceSupplierValidationError.MoveInDateNotBackInTime.left()
             }
         }

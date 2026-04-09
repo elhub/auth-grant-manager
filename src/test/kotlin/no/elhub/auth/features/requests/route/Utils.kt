@@ -17,7 +17,7 @@ import no.elhub.auth.features.common.commonModule
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
 import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
-import no.elhub.auth.features.common.today
+import no.elhub.auth.features.common.todayOslo
 import no.elhub.auth.features.grants.AuthorizationScope
 import no.elhub.auth.features.grants.common.CreateGrantProperties
 import no.elhub.auth.features.requests.AuthorizationRequest
@@ -97,7 +97,7 @@ class TestRequestBusinessHandler : RequestBusinessHandler {
                         requestedFrom = meta.requestedFrom,
                         requestedBy = meta.requestedBy,
                         requestedTo = meta.requestedTo,
-                        validTo = today().plus(DatePeriod(days = 30)).toTimeZoneOffsetDateTimeAtStartOfDay(),
+                        validTo = todayOslo().plus(DatePeriod(days = 30)).toTimeZoneOffsetDateTimeAtStartOfDay(),
                         scopes = listOf(
                             CreateScopeData(
                                 authorizedResourceType = AuthorizationScope.AuthorizationResource.MeteringPoint,
@@ -122,8 +122,8 @@ class TestRequestBusinessHandler : RequestBusinessHandler {
 
     override fun getCreateGrantProperties(request: AuthorizationRequest): CreateGrantProperties =
         CreateGrantProperties(
-            validFrom = today(),
-            validTo = today().plus(DatePeriod(days = 30)),
+            validFrom = todayOslo(),
+            validTo = todayOslo().plus(DatePeriod(days = 30)),
         )
 }
 

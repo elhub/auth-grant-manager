@@ -2,7 +2,7 @@ package no.elhub.auth.features.requests.query.dto
 
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
-import no.elhub.auth.features.common.currentTimeLocal
+import no.elhub.auth.features.common.currentTimeOslo
 import no.elhub.auth.features.common.dto.JsonApiResourceMetaMap
 import no.elhub.auth.features.common.party.dto.toJsonApiRelationship
 import no.elhub.auth.features.common.toTimeZoneOffsetString
@@ -71,7 +71,7 @@ fun List<AuthorizationRequest>.toGetCollectionResponse() =
         links = JsonApiLinks.ResourceObjectLink(REQUESTS_PATH),
         meta = JsonApiMeta(
             buildJsonObject {
-                put("createdAt", currentTimeLocal().toTimeZoneOffsetString())
+                put("createdAt", currentTimeOslo().toTimeZoneOffsetString())
             }
         )
     )

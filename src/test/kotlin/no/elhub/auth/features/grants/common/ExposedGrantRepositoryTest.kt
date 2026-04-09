@@ -15,7 +15,7 @@ import no.elhub.auth.features.common.party.AuthorizationPartyTable
 import no.elhub.auth.features.common.party.ExposedPartyRepository
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
-import no.elhub.auth.features.common.today
+import no.elhub.auth.features.common.todayOslo
 import no.elhub.auth.features.grants.AuthorizationGrant
 import org.apache.ibatis.io.Resources
 import org.apache.ibatis.jdbc.ScriptRunner
@@ -42,8 +42,8 @@ class ExposedGrantRepositoryTest : FunSpec({
         sourceType = AuthorizationGrant.SourceType.Request,
         sourceId = UUID.randomUUID(),
         scopeIds = scopeIds,
-        validFrom = today().toTimeZoneOffsetDateTimeAtStartOfDay(),
-        validTo = today().plus(DatePeriod(years = 1)).toTimeZoneOffsetDateTimeAtStartOfDay()
+        validFrom = todayOslo().toTimeZoneOffsetDateTimeAtStartOfDay(),
+        validTo = todayOslo().plus(DatePeriod(years = 1)).toTimeZoneOffsetDateTimeAtStartOfDay()
     )
 
     val exampleGrantWithoutScopeIds = AuthorizationGrant.create(
@@ -53,8 +53,8 @@ class ExposedGrantRepositoryTest : FunSpec({
         sourceType = AuthorizationGrant.SourceType.Request,
         sourceId = UUID.randomUUID(),
         scopeIds = emptyList(),
-        validFrom = today().toTimeZoneOffsetDateTimeAtStartOfDay(),
-        validTo = today().plus(DatePeriod(years = 1)).toTimeZoneOffsetDateTimeAtStartOfDay()
+        validFrom = todayOslo().toTimeZoneOffsetDateTimeAtStartOfDay(),
+        validTo = todayOslo().plus(DatePeriod(years = 1)).toTimeZoneOffsetDateTimeAtStartOfDay()
     )
 
     beforeSpec {

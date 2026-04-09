@@ -49,7 +49,7 @@ fun buildApiErrorResponse(status: HttpStatusCode, title: String, detail: String)
         ),
         meta = JsonApiMeta(
             mapOf(
-                "createdAt" to JsonPrimitive(currentTimeLocal().toTimeZoneOffsetString())
+                "createdAt" to JsonPrimitive(currentTimeOslo().toTimeZoneOffsetString())
             )
         )
     )
@@ -95,7 +95,8 @@ fun toUnsupportedErrorResponse(detail: String? = null): Pair<HttpStatusCode, Jso
     buildApiErrorResponse(
         status = HttpStatusCode.UnsupportedMediaType,
         title = "Unsupported media type",
-        detail = detail.orEmpty().ifEmpty { "The requested resource does not have a representation that matches the criteria" }
+        detail = detail.orEmpty()
+            .ifEmpty { "The requested resource does not have a representation that matches the criteria" }
     )
 
 fun toBalanceSupplierNotApiAuthorizedResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> = buildApiErrorResponse(

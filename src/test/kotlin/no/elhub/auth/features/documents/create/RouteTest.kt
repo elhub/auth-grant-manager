@@ -19,14 +19,12 @@ import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 import no.elhub.auth.features.common.auth.AuthError
 import no.elhub.auth.features.common.auth.AuthorizationProvider
-import no.elhub.auth.features.common.currentTimeLocal
+import no.elhub.auth.features.common.currentTimeOslo
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.documents.AuthorizationDocument
-import no.elhub.auth.features.documents.AuthorizationDocument.Status
-import no.elhub.auth.features.documents.AuthorizationDocument.Type
 import no.elhub.auth.features.documents.DOCUMENTS_PATH
 import no.elhub.auth.features.documents.common.AuthorizationDocumentProperty
 import no.elhub.auth.features.documents.create.dto.CreateDocumentMeta
@@ -67,9 +65,9 @@ class RouteTest : FunSpec({
             AuthorizationDocumentProperty("key1", "value1"),
             AuthorizationDocumentProperty("key2", "value2"),
         ),
-        validTo = currentTimeLocal().plusDays(30),
-        createdAt = currentTimeLocal(),
-        updatedAt = currentTimeLocal()
+        validTo = currentTimeOslo().plusDays(30),
+        createdAt = currentTimeOslo(),
+        updatedAt = currentTimeOslo()
     )
 
     val examplePostBody = JsonApiCreateDocumentRequest(
@@ -264,10 +262,10 @@ private suspend fun validateCreateDocumentResponse(response: HttpResponse, creat
             validTo shouldBe defaultValidTo
 
             println(createdAt)
-            println(currentTimeLocal())
+            println(currentTimeOslo())
             println(updatedAt)
-            (Duration.between(createdAt, currentTimeLocal()).abs() < nowTolerance).shouldBeTrue()
-            (Duration.between(updatedAt, currentTimeLocal()).abs() < nowTolerance).shouldBeTrue()
+            (Duration.between(createdAt, currentTimeOslo()).abs() < nowTolerance).shouldBeTrue()
+            (Duration.between(updatedAt, currentTimeOslo()).abs() < nowTolerance).shouldBeTrue()
         }
         relationships.shouldNotBeNull().apply {
             requestedBy.apply {

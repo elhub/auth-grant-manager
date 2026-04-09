@@ -20,7 +20,7 @@ import io.mockk.mockk
 import no.elhub.auth.features.common.QueryError
 import no.elhub.auth.features.common.auth.AuthError
 import no.elhub.auth.features.common.auth.AuthorizationProvider
-import no.elhub.auth.features.common.currentTimeLocal
+import no.elhub.auth.features.common.currentTimeOslo
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toTimeZoneOffsetString
@@ -53,9 +53,9 @@ class RouteTest : FunSpec({
             AuthorizationDocumentProperty("key1", "value1"),
             AuthorizationDocumentProperty("key2", "value2"),
         ),
-        validTo = currentTimeLocal().plusDays(30),
-        createdAt = currentTimeLocal(),
-        updatedAt = currentTimeLocal()
+        validTo = currentTimeOslo().plusDays(30),
+        createdAt = currentTimeOslo(),
+        updatedAt = currentTimeOslo()
     )
     val authorizedPerson = AuthorizationParty(id = "1d024a64-abb0-47d1-9b81-5d98aaa1a8a9", type = PartyType.Person)
     val authorizedOrg = AuthorizationParty(id = "1", type = PartyType.OrganizationEntity)

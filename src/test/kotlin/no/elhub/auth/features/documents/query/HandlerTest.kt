@@ -14,7 +14,7 @@ import no.elhub.auth.features.common.currentTimeUtc
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
-import no.elhub.auth.features.common.today
+import no.elhub.auth.features.common.todayOslo
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.AuthorizationDocumentProperty
 import no.elhub.auth.features.documents.common.DocumentRepository
@@ -27,8 +27,8 @@ class HandlerTest : FunSpec({
     val requestedBy = AuthorizationParty(id = "org-entity-1", type = PartyType.OrganizationEntity)
     val requestedFrom = AuthorizationParty(id = "person-1", type = PartyType.Person)
     val requestedTo = AuthorizationParty(id = "person-2", type = PartyType.Person)
-    val grantValidFrom = today()
-    val grantValidTo = today().plus(DatePeriod(years = 1))
+    val grantValidFrom = todayOslo()
+    val grantValidTo = todayOslo().plus(DatePeriod(years = 1))
     val validTo = currentTimeUtc().plusDays(1)
     val scopeIds = listOf(UUID.randomUUID(), UUID.randomUUID())
 

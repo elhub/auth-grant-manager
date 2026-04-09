@@ -15,7 +15,7 @@ import no.elhub.auth.features.common.RepositoryWriteError.UnexpectedError
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
-import no.elhub.auth.features.common.today
+import no.elhub.auth.features.common.todayOslo
 import no.elhub.auth.features.grants.common.CreateGrantProperties
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.common.RequestRepository
@@ -30,7 +30,7 @@ class HandlerTest : FunSpec({
 
     fun createRequest(
         requestId: UUID,
-        validTo: OffsetDateTime = today().plus(DatePeriod(days = 30)).toTimeZoneOffsetDateTimeAtStartOfDay(),
+        validTo: OffsetDateTime = todayOslo().plus(DatePeriod(days = 30)).toTimeZoneOffsetDateTimeAtStartOfDay(),
         requestedByParty: AuthorizationParty = requestedBy,
         requestedFromParty: AuthorizationParty = requestedFrom,
         requestedToParty: AuthorizationParty = requestedTo
@@ -79,8 +79,8 @@ class HandlerTest : FunSpec({
         val requestId = UUID.randomUUID()
         val requestRepository = mockk<RequestRepository>()
         val businessHandler = mockk<RequestBusinessHandler>()
-        val validFrom = today()
-        val validTo = today().plus(DatePeriod(years = 1))
+        val validFrom = todayOslo()
+        val validTo = todayOslo().plus(DatePeriod(years = 1))
         val request = createRequest(requestId)
         val updatedRequest = request.copy(status = AuthorizationRequest.Status.Accepted)
 

@@ -15,13 +15,11 @@ import io.mockk.mockk
 import no.elhub.auth.features.common.QueryError
 import no.elhub.auth.features.common.auth.AuthError
 import no.elhub.auth.features.common.auth.AuthorizationProvider
-import no.elhub.auth.features.common.currentTimeLocal
+import no.elhub.auth.features.common.currentTimeOslo
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toTimeZoneOffsetString
 import no.elhub.auth.features.documents.AuthorizationDocument
-import no.elhub.auth.features.documents.AuthorizationDocument.Status
-import no.elhub.auth.features.documents.AuthorizationDocument.Type
 import no.elhub.auth.features.documents.common.AuthorizationDocumentProperty
 import no.elhub.auth.features.documents.query.dto.GetDocumentCollectionResponse
 import no.elhub.auth.setupAppWith
@@ -50,9 +48,9 @@ class RouteTest : FunSpec({
                 AuthorizationDocumentProperty("key1", "value1"),
                 AuthorizationDocumentProperty("key2", "value2"),
             ),
-            validTo = currentTimeLocal().plusDays(30),
-            createdAt = currentTimeLocal(),
-            updatedAt = currentTimeLocal()
+            validTo = currentTimeOslo().plusDays(30),
+            createdAt = currentTimeOslo(),
+            updatedAt = currentTimeOslo()
         ),
         AuthorizationDocument(
             id = UUID.fromString("f696ce1d-3efa-48aa-b3e5-3019a0bfbabd"),
@@ -69,9 +67,9 @@ class RouteTest : FunSpec({
                 AuthorizationDocumentProperty("key2", "value2"),
                 AuthorizationDocumentProperty("key3", "value3"),
             ),
-            validTo = currentTimeLocal().plusDays(30),
-            createdAt = currentTimeLocal(),
-            updatedAt = currentTimeLocal()
+            validTo = currentTimeOslo().plusDays(30),
+            createdAt = currentTimeOslo(),
+            updatedAt = currentTimeOslo()
         ),
     )
     val authorizedPerson = AuthorizationParty(id = "adde4fc4-55b4-40bb-b84b-9f39ec027ce0", type = PartyType.Person)

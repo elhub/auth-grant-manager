@@ -50,7 +50,7 @@ import no.elhub.auth.features.common.party.PartyType.Organization
 import no.elhub.auth.features.common.person.Person
 import no.elhub.auth.features.common.person.PersonService
 import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
-import no.elhub.auth.features.common.today
+import no.elhub.auth.features.common.todayOslo
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.create.dto.CreateDocumentMeta
 import no.elhub.auth.features.documents.create.model.CreateDocumentModel
@@ -137,9 +137,27 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
                 )
             )
         )
-        coEvery { personService.findOrCreateByNin(END_USER.idValue) } returns Either.Right(Person(UUID.fromString(END_USER_ID_1)))
-        coEvery { personService.findOrCreateByNin(ANOTHER_END_USER.idValue) } returns Either.Right(Person(UUID.fromString(END_USER_ID_2)))
-        coEvery { personService.findOrCreateByNin(SHARED_END_USER.idValue) } returns Either.Right(Person(UUID.fromString(SHARED_END_USER_ID_1)))
+        coEvery { personService.findOrCreateByNin(END_USER.idValue) } returns Either.Right(
+            Person(
+                UUID.fromString(
+                    END_USER_ID_1
+                )
+            )
+        )
+        coEvery { personService.findOrCreateByNin(ANOTHER_END_USER.idValue) } returns Either.Right(
+            Person(
+                UUID.fromString(
+                    END_USER_ID_2
+                )
+            )
+        )
+        coEvery { personService.findOrCreateByNin(SHARED_END_USER.idValue) } returns Either.Right(
+            Person(
+                UUID.fromString(
+                    SHARED_END_USER_ID_1
+                )
+            )
+        )
         beforeTest {
             clearMocks(edielService, answers = false, recordedCalls = true)
             coEvery { edielService.getPartyRedirect(any()) } returns Either.Right(
@@ -754,7 +772,7 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
             val command = handler.validateAndReturnRequestCommand(model).shouldBeRight()
 
             command.type shouldBe AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson
-            command.validTo shouldBe today().plus(DatePeriod(days = 28)).toTimeZoneOffsetDateTimeAtStartOfDay()
+            command.validTo shouldBe todayOslo().plus(DatePeriod(days = 28)).toTimeZoneOffsetDateTimeAtStartOfDay()
             command.meta.toRequestMetaAttributes()["redirectURI"] shouldBe "https://example.com"
             command.meta.toRequestMetaAttributes()[TEXT_VERSION_KEY] shouldBe "v1"
             command.meta.toRequestMetaAttributes().containsKey("requestedForMeterNumber") shouldBe true
@@ -767,13 +785,13 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
                 requestedBy = party,
                 requestedFrom = party,
                 requestedTo = party,
-                validTo = today().toTimeZoneOffsetDateTimeAtStartOfDay(),
+                validTo = todayOslo().toTimeZoneOffsetDateTimeAtStartOfDay(),
             )
 
             val properties = handler.getCreateGrantProperties(request)
 
-            properties.validFrom shouldBe today()
-            properties.validTo shouldBe today().plus(DatePeriod(years = 1))
+            properties.validFrom shouldBe todayOslo()
+            properties.validTo shouldBe todayOslo().plus(DatePeriod(years = 1))
         }
 
         test("document produces DocumentCommand for valid input") {

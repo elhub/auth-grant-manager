@@ -20,7 +20,7 @@ import no.elhub.auth.features.common.party.PartyIdentifierType
 import no.elhub.auth.features.common.party.PartyService
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
-import no.elhub.auth.features.common.today
+import no.elhub.auth.features.common.todayOslo
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.ConfirmWithGrantError
 import no.elhub.auth.features.documents.common.DocumentBusinessHandler
@@ -46,7 +46,7 @@ class HandlerTest : FunSpec({
     fun createDocument(
         documentId: UUID,
         status: AuthorizationDocument.Status = AuthorizationDocument.Status.Pending,
-        validTo: OffsetDateTime = today().plus(DatePeriod(days = 30)).toTimeZoneOffsetDateTimeAtStartOfDay(),
+        validTo: OffsetDateTime = todayOslo().plus(DatePeriod(days = 30)).toTimeZoneOffsetDateTimeAtStartOfDay(),
         requestedBy: AuthorizationParty = authorizationParty,
         requestedFromParty: AuthorizationParty = requestedFrom,
         requestedToParty: AuthorizationParty = requestedTo
@@ -329,8 +329,8 @@ class HandlerTest : FunSpec({
         val signatureService = mockk<SignatureService>()
 
         every { businessHandler.getCreateGrantProperties(any()) } returns CreateGrantProperties(
-            validFrom = today(),
-            validTo = today().plus(DatePeriod(years = 1)),
+            validFrom = todayOslo(),
+            validTo = todayOslo().plus(DatePeriod(years = 1)),
             meta = emptyMap()
         )
         coEvery { documentRepository.find(documentId) } returns document.right()
@@ -361,8 +361,8 @@ class HandlerTest : FunSpec({
         val signatureService = mockk<SignatureService>()
 
         every { businessHandler.getCreateGrantProperties(any()) } returns CreateGrantProperties(
-            validFrom = today(),
-            validTo = today().plus(DatePeriod(years = 1)),
+            validFrom = todayOslo(),
+            validTo = todayOslo().plus(DatePeriod(years = 1)),
             meta = emptyMap()
         )
         coEvery { documentRepository.find(documentId) } returns document.right()
@@ -393,8 +393,8 @@ class HandlerTest : FunSpec({
         val signatureService = mockk<SignatureService>()
 
         every { businessHandler.getCreateGrantProperties(any()) } returns CreateGrantProperties(
-            validFrom = today(),
-            validTo = today().plus(DatePeriod(years = 1)),
+            validFrom = todayOslo(),
+            validTo = todayOslo().plus(DatePeriod(years = 1)),
             meta = emptyMap()
         )
         coEvery { documentRepository.find(documentId) } returns document.right()
@@ -424,8 +424,8 @@ class HandlerTest : FunSpec({
         val documentRepository = mockk<DocumentRepository>()
         val partyService = mockk<PartyService>()
         val signatureService = mockk<SignatureService>()
-        val validFrom = today()
-        val validTo = today().plus(DatePeriod(years = 1))
+        val validFrom = todayOslo()
+        val validTo = todayOslo().plus(DatePeriod(years = 1))
 
         every { businessHandler.getCreateGrantProperties(any()) } returns CreateGrantProperties(
             validFrom = validFrom,
