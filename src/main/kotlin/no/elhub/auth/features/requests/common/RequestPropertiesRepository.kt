@@ -1,8 +1,6 @@
 package no.elhub.auth.features.requests.common
 
-import no.elhub.auth.config.TransactionContext
-import no.elhub.auth.features.common.RepositoryReadError
-import no.elhub.auth.features.common.RepositoryWriteError
+import no.elhub.auth.config.withTransaction
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.eq
@@ -13,16 +11,14 @@ import java.util.UUID
 
 interface RequestPropertiesRepository {
     suspend fun insert(properties: List<AuthorizationRequestProperty>)
-    suspend fun findBy(requestId: UUID): List<AuthorizationRequestProperty>
+    fun findBy(requestId: UUID): List<AuthorizationRequestProperty>
 }
 
-class ExposedRequestPropertiesRepository(
-    private val transactionContext: TransactionContext,
-) : RequestPropertiesRepository {
+class ExposedRequestPropertiesRepository : RequestPropertiesRepository {
 
     override suspend fun insert(properties: List<AuthorizationRequestProperty>) {
         if (properties.isEmpty()) return
-        transactionContext("request_props_repo.insert", { RepositoryWriteError.UnexpectedError }) {
+        withTransaction {
             AuthorizationRequestPropertyTable.batchInsert(properties) { property ->
                 this[AuthorizationRequestPropertyTable.requestId] = property.requestId
                 this[AuthorizationRequestPropertyTable.key] = property.key
@@ -31,13 +27,11 @@ class ExposedRequestPropertiesRepository(
         }
     }
 
-    override suspend fun findBy(requestId: UUID): List<AuthorizationRequestProperty> =
-        transactionContext("request_props_repo.find", { RepositoryReadError.UnexpectedError }) {
-            AuthorizationRequestPropertyTable
-                .selectAll()
-                .where { AuthorizationRequestPropertyTable.requestId eq requestId }
-                .map { it.toAuthorizationRequestProperty() }
-        }.fold({ emptyList() }, { it })
+    override fun findBy(requestId: UUID): List<AuthorizationRequestProperty> =
+        AuthorizationRequestPropertyTable
+            .selectAll()
+            .where { AuthorizationRequestPropertyTable.requestId eq requestId }
+            .map { it.toAuthorizationRequestProperty() }
 }
 
 object AuthorizationRequestPropertyTable : Table("auth.authorization_request_property") {

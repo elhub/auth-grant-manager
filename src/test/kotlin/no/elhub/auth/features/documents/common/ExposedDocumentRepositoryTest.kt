@@ -1,6 +1,7 @@
 package no.elhub.auth.features.documents.common
 
 import arrow.core.getOrElse
+import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.assertions.fail
 import io.kotest.core.spec.style.FunSpec
@@ -11,12 +12,11 @@ import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import io.micrometer.prometheusmetrics.PrometheusConfig
-import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
-import no.elhub.auth.config.TransactionContext
+import no.elhub.auth.config.withTransaction
 import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.common.PostgresTestContainer
 import no.elhub.auth.features.common.PostgresTestContainerExtension
+import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.currentTimeUtc
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.ExposedPartyRepository
@@ -37,19 +37,12 @@ import java.util.UUID
 class ExposedDocumentRepositoryTest :
     FunSpec({
         extensions(PostgresTestContainerExtension())
-        val transactionContext = TransactionContext(PrometheusMeterRegistry(PrometheusConfig.DEFAULT))
-        val partyRepository = ExposedPartyRepository(transactionContext)
-        val propertiesRepository = ExposedDocumentPropertiesRepository(transactionContext)
-        val grantPropertiesRepository = ExposedGrantPropertiesRepository(transactionContext)
-        val grantRepository = ExposedGrantRepository(partyRepository, grantPropertiesRepository, transactionContext)
+        val partyRepository = ExposedPartyRepository()
+        val propertiesRepository = ExposedDocumentPropertiesRepository()
+        val grantPropertiesRepository = ExposedGrantPropertiesRepository()
+        val grantRepository = ExposedGrantRepository(partyRepository, grantPropertiesRepository)
         val repository =
-            ExposedDocumentRepository(
-                partyRepository,
-                grantRepository,
-                propertiesRepository,
-                grantPropertiesRepository,
-                transactionContext,
-            )
+            ExposedDocumentRepository(partyRepository, grantRepository, propertiesRepository, grantPropertiesRepository)
 
         beforeSpec {
             Database.connect(
@@ -95,7 +88,7 @@ class ExposedDocumentRepositoryTest :
                 val documentExists = repository.find(document.id)
                 documentExists shouldNotBe null
 
-                transactionContext.withTransaction {
+                withTransaction {
                     val authorizationDocumentScopeRow =
                         AuthorizationDocumentScopeTable
                             .selectAll()
@@ -222,13 +215,20 @@ class ExposedDocumentRepositoryTest :
                 createdGrant.sourceId shouldBe document.id
                 createdGrant.sourceType shouldBe AuthorizationGrant.SourceType.Document
 
-                transactionContext.withTransaction {
+                withTransaction {
                     val storedProperties = AuthorizationGrantPropertyTable
                         .selectAll()
                         .where { AuthorizationGrantPropertyTable.grantId eq grant.id }
                         .map { it[AuthorizationGrantPropertyTable.key] to it[AuthorizationGrantPropertyTable.value] }
                     storedProperties shouldContainExactlyInAnyOrder listOf("meta-key" to "meta-value")
                 }
+            }
+        }
+
+        context("Find") {
+            test("returns NotFoundError on nonexistent ID") {
+                val result = repository.find(UUID.fromString("244a81f8-250b-4a4e-b27c-01ff60ddfa9b"))
+                result.shouldBeLeft(RepositoryReadError.NotFoundError)
             }
         }
     })

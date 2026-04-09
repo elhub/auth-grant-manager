@@ -10,7 +10,6 @@ import com.zaxxer.hikari.HikariDataSource
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.metrics.micrometer.MicrometerMetrics
-import io.ktor.server.plugins.di.dependencies
 import io.ktor.server.response.respond
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
@@ -25,12 +24,6 @@ fun Application.configureMonitoring(dataSource: HikariDataSource) {
     val appMicrometerRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
     install(MicrometerMetrics) {
         registry = appMicrometerRegistry
-    }
-
-    dependencies {
-        provide<PrometheusMeterRegistry> {
-            appMicrometerRegistry
-        }
     }
 
     install(Cohort) {
