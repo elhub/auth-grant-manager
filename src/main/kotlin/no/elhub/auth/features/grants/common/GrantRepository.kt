@@ -50,7 +50,12 @@ class ExposedGrantRepository(
     private val logger = LoggerFactory.getLogger(ExposedGrantRepository::class.java)
 
     override suspend fun findAll(party: AuthorizationParty): Either<RepositoryReadError, List<AuthorizationGrant>> =
-        transactionContext<RepositoryReadError, List<AuthorizationGrant>>("grant_repo.find_all", { RepositoryReadError.UnexpectedError }) {
+        transactionContext<RepositoryReadError, List<AuthorizationGrant>>(
+            "db_operations",
+            "GrantRepository",
+            "findAll",
+            { RepositoryReadError.UnexpectedError }
+        ) {
             val partyId = partyRepository.findOrInsert(type = party.type, partyId = party.id)
                 .mapLeft { RepositoryReadError.UnexpectedError }
                 .bind()
@@ -69,7 +74,7 @@ class ExposedGrantRepository(
         }
 
     override suspend fun find(grantId: UUID): Either<RepositoryReadError, AuthorizationGrant> =
-        transactionContext<RepositoryReadError, AuthorizationGrant>("grant_repo.find", { RepositoryReadError.UnexpectedError }) {
+        transactionContext<RepositoryReadError, AuthorizationGrant>("db_operations", "GrantRepository", "find", { RepositoryReadError.UnexpectedError }) {
             findInternalGrant(grantId).bind()
         }
 
@@ -77,7 +82,12 @@ class ExposedGrantRepository(
         sourceType: SourceType,
         sourceId: UUID
     ): Either<RepositoryReadError, AuthorizationGrant?> =
-        transactionContext<RepositoryReadError, AuthorizationGrant?>("grant_repo.find_by_source", ({ RepositoryReadError.UnexpectedError })) {
+        transactionContext<RepositoryReadError, AuthorizationGrant?>(
+            "db_operations",
+            "GrantRepository",
+            "findBySource",
+            ({ RepositoryReadError.UnexpectedError })
+        ) {
             AuthorizationGrantTable
                 .selectAll()
                 .where {
@@ -118,7 +128,9 @@ class ExposedGrantRepository(
 
     override suspend fun findScopes(grantId: UUID): Either<RepositoryReadError, List<AuthorizationScope>> =
         transactionContext<RepositoryReadError, List<AuthorizationScope>>(
-            "grant_repo.find_scopes",
+            "db_operations",
+            "GrantRepository",
+            "findScopes",
             { RepositoryReadError.UnexpectedError }
         ) {
             AuthorizationGrantTable
@@ -147,7 +159,7 @@ class ExposedGrantRepository(
     override suspend fun insert(
         grant: AuthorizationGrant,
     ): Either<RepositoryWriteError, AuthorizationGrant> =
-        transactionContext<RepositoryWriteError, AuthorizationGrant>("grant_repo.insert", { RepositoryWriteError.UnexpectedError }) {
+        transactionContext<RepositoryWriteError, AuthorizationGrant>("db_operations", "GrantRepository", "insert", { RepositoryWriteError.UnexpectedError }) {
             val grantedByParty = partyRepository
                 .findOrInsert(grant.grantedBy.type, grant.grantedBy.id)
                 .mapLeft { RepositoryWriteError.UnexpectedError }
@@ -198,7 +210,7 @@ class ExposedGrantRepository(
         }
 
     override suspend fun update(grantId: UUID, newStatus: Status): Either<RepositoryError, AuthorizationGrant> =
-        transactionContext<RepositoryError, AuthorizationGrant>("grant_repo.update", { RepositoryWriteError.UnexpectedError }) {
+        transactionContext<RepositoryError, AuthorizationGrant>("db_operations", "GrantRepository", "update", { RepositoryWriteError.UnexpectedError }) {
             val rowsUpdated =
                 AuthorizationGrantTable.update(
                     where = { AuthorizationGrantTable.id eq grantId }

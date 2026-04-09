@@ -84,7 +84,7 @@ class ExposedDocumentRepository(
         doc: AuthorizationDocument,
         scopes: List<CreateScopeData>
     ): Either<RepositoryWriteError, AuthorizationDocument> =
-        transactionContext("document_repo.insert", { RepositoryWriteError.UnexpectedError }) {
+        transactionContext("db_operations", "DocumentRepository", "insert", { RepositoryWriteError.UnexpectedError }) {
             val requestedByParty = partyRepo.findOrInsert(doc.requestedBy.type, doc.requestedBy.id)
                 .mapLeft { RepositoryWriteError.UnexpectedError }.bind()
             val requestedFromParty = partyRepo.findOrInsert(doc.requestedFrom.type, doc.requestedFrom.id)
@@ -124,7 +124,7 @@ class ExposedDocumentRepository(
         }
 
     override suspend fun find(id: UUID): Either<RepositoryReadError, AuthorizationDocument> =
-        transactionContext("document_repo.find", { RepositoryReadError.UnexpectedError }) {
+        transactionContext("db_operations", "DocumentRepository", "find", { RepositoryReadError.UnexpectedError }) {
             val documentRow = AuthorizationDocumentTable
                 .selectAll()
                 .where { AuthorizationDocumentTable.id eq id }
@@ -159,7 +159,12 @@ class ExposedDocumentRepository(
         requestedFrom: AuthorizationParty,
         signatory: AuthorizationParty
     ): Either<RepositoryWriteError, AuthorizationDocument> =
-        transactionContext<RepositoryWriteError, AuthorizationDocument>("document_repo.confirm", { RepositoryWriteError.UnexpectedError }) {
+        transactionContext<RepositoryWriteError, AuthorizationDocument>(
+            "db_operations",
+            "DocumentRepository",
+            "confirm",
+            { RepositoryWriteError.UnexpectedError }
+        ) {
             val signatoryRecord = partyRepo.findOrInsert(signatory.type, signatory.id)
                 .mapLeft { RepositoryWriteError.UnexpectedError as RepositoryWriteError }.bind()
             val requestedFromRecord = partyRepo.findOrInsert(requestedFrom.type, requestedFrom.id)
@@ -190,7 +195,7 @@ class ExposedDocumentRepository(
         }
 
     override suspend fun findScopeIds(documentId: UUID): Either<RepositoryReadError, List<UUID>> =
-        transactionContext("document_repo.find_scope_ids", { RepositoryReadError.UnexpectedError }) {
+        transactionContext("db_operations", "DocumenRepository", "findScopeIds", { RepositoryReadError.UnexpectedError }) {
             (AuthorizationDocumentScopeTable innerJoin AuthorizationScopeTable)
                 .select(AuthorizationScopeTable.id)
                 .where { authorizationDocumentId eq documentId }
@@ -198,7 +203,7 @@ class ExposedDocumentRepository(
         }
 
     override suspend fun findAll(requestedBy: AuthorizationParty): Either<RepositoryReadError, List<AuthorizationDocument>> =
-        transactionContext("document_repo.find_all", { RepositoryReadError.UnexpectedError }) {
+        transactionContext("db_operations", "DocumenRepository", "findAll", { RepositoryReadError.UnexpectedError }) {
             val partyRecord = partyRepo.findOrInsert(type = requestedBy.type, partyId = requestedBy.id)
                 .mapLeft { RepositoryReadError.UnexpectedError }.bind()
 
@@ -252,7 +257,9 @@ class ExposedDocumentRepository(
         grantProperties: List<AuthorizationGrantProperty>
     ): Either<ConfirmWithGrantError, AuthorizationDocument> =
         transactionContext<ConfirmWithGrantError, AuthorizationDocument>(
-            "document_repo.confirm_with_grant",
+            "db_operations",
+            "DocumenRepository",
+            "confirmWithGrant",
             { ConfirmWithGrantError.DocumentError.Unexpected }
         ) {
             val confirmedDocument = confirm(documentId, signedFile, requestedFrom, signatory)
