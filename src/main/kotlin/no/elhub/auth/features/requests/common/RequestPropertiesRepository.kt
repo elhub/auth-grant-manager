@@ -22,7 +22,7 @@ class ExposedRequestPropertiesRepository(
 
     override suspend fun insert(properties: List<AuthorizationRequestProperty>) {
         if (properties.isEmpty()) return
-        transactionContext("request_props_repo.insert", { RepositoryWriteError.UnexpectedError }) {
+        transactionContext("db_operations", "ExposedRequestPropertiesRepository", "insert", { RepositoryWriteError.UnexpectedError }) {
             AuthorizationRequestPropertyTable.batchInsert(properties) { property ->
                 this[AuthorizationRequestPropertyTable.requestId] = property.requestId
                 this[AuthorizationRequestPropertyTable.key] = property.key
@@ -32,7 +32,7 @@ class ExposedRequestPropertiesRepository(
     }
 
     override suspend fun findBy(requestId: UUID): List<AuthorizationRequestProperty> =
-        transactionContext("request_props_repo.find", { RepositoryReadError.UnexpectedError }) {
+        transactionContext("db_operations", "ExposedRequestPropertiesRepository", "findBy", { RepositoryReadError.UnexpectedError }) {
             AuthorizationRequestPropertyTable
                 .selectAll()
                 .where { AuthorizationRequestPropertyTable.requestId eq requestId }

@@ -27,7 +27,7 @@ class ExposedPartyRepository(private val transactionContext: TransactionContext)
     private val logger = LoggerFactory.getLogger(ExposedPartyRepository::class.java)
 
     override suspend fun findOrInsert(type: PartyType, partyId: String): Either<RepositoryWriteError, AuthorizationPartyRecord> =
-        transactionContext<RepositoryWriteError, AuthorizationPartyRecord>("party_repo.find_or_insert", { error ->
+        transactionContext<RepositoryWriteError, AuthorizationPartyRecord>("db_operations", "PartyRepository", "findOrInsert", { error ->
             logger.error("Error occurred during findOrInsert() for authorization party: ${error.message}")
             RepositoryWriteError.UnexpectedError
         }) {
@@ -54,7 +54,7 @@ class ExposedPartyRepository(private val transactionContext: TransactionContext)
         }
 
     override suspend fun find(id: UUID): Either<RepositoryReadError, AuthorizationPartyRecord> =
-        transactionContext("party_repo.find", { error ->
+        transactionContext("db_operations", "PartyRepository", "find", { error ->
             logger.error("Error occurred during find() for authorization party: ${error.message}")
             if (error is NoSuchElementException) {
                 RepositoryReadError.NotFoundError

@@ -20,7 +20,7 @@ interface DocumentPropertiesRepository {
 class ExposedDocumentPropertiesRepository(private val transactionContext: TransactionContext) : DocumentPropertiesRepository {
     override suspend fun insert(properties: List<AuthorizationDocumentProperty>, documentId: UUID) {
         if (properties.isEmpty()) return
-        transactionContext("document_prop_repo.insert", { RepositoryWriteError.UnexpectedError }) {
+        transactionContext("db_operations", "DocumentPropertiesRepository", "insert", { RepositoryWriteError.UnexpectedError }) {
             AuthorizationDocumentPropertyTable.batchInsert(properties) { property ->
                 this[AuthorizationDocumentPropertyTable.documentId] = documentId
                 this[AuthorizationDocumentPropertyTable.key] = property.key
@@ -30,7 +30,7 @@ class ExposedDocumentPropertiesRepository(private val transactionContext: Transa
     }
 
     override suspend fun find(documentId: UUID): List<AuthorizationDocumentProperty> =
-        transactionContext("document_prop.repo_find", { RepositoryReadError.UnexpectedError }) {
+        transactionContext("db_operations", "DocumentPropertiesRepository", "find", { RepositoryReadError.UnexpectedError }) {
             AuthorizationDocumentPropertyTable
                 .selectAll()
                 .where { AuthorizationDocumentPropertyTable.documentId eq documentId }
