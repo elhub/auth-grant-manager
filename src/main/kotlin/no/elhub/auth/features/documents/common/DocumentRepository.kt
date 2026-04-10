@@ -129,7 +129,12 @@ class ExposedDocumentRepository(
         }
 
     override suspend fun find(id: UUID): Either<RepositoryReadError, AuthorizationDocument> =
-        transactionContext<RepositoryReadError, AuthorizationDocument>("db_operations", "DocumentRepository", "find", { RepositoryReadError.UnexpectedError }) {
+        transactionContext<RepositoryReadError, AuthorizationDocument>(
+            "db_operations",
+            "DocumentRepository",
+            "find",
+            { RepositoryReadError.UnexpectedError }
+        ) {
             val documentRow = AuthorizationDocumentTable
                 .selectAll()
                 .where { AuthorizationDocumentTable.id eq id }
