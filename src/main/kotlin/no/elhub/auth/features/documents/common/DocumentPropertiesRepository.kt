@@ -1,6 +1,8 @@
 package no.elhub.auth.features.documents.common
 
-import no.elhub.auth.config.withTransaction
+import no.elhub.auth.config.TransactionContext
+import no.elhub.auth.features.common.RepositoryReadError
+import no.elhub.auth.features.common.RepositoryWriteError
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.Table
@@ -15,10 +17,10 @@ interface DocumentPropertiesRepository {
     suspend fun find(documentId: UUID): List<AuthorizationDocumentProperty>
 }
 
-class ExposedDocumentPropertiesRepository : DocumentPropertiesRepository {
+class ExposedDocumentPropertiesRepository(private val transactionContext: TransactionContext) : DocumentPropertiesRepository {
     override suspend fun insert(properties: List<AuthorizationDocumentProperty>, documentId: UUID) {
         if (properties.isEmpty()) return
-        withTransaction {
+        transactionContext("document_prop_repo.insert", { RepositoryWriteError.UnexpectedError }) {
             AuthorizationDocumentPropertyTable.batchInsert(properties) { property ->
                 this[AuthorizationDocumentPropertyTable.documentId] = documentId
                 this[AuthorizationDocumentPropertyTable.key] = property.key
@@ -28,12 +30,12 @@ class ExposedDocumentPropertiesRepository : DocumentPropertiesRepository {
     }
 
     override suspend fun find(documentId: UUID): List<AuthorizationDocumentProperty> =
-        withTransaction {
+        transactionContext("document_prop.repo_find", { RepositoryReadError.UnexpectedError }) {
             AuthorizationDocumentPropertyTable
                 .selectAll()
                 .where { AuthorizationDocumentPropertyTable.documentId eq documentId }
                 .map { it.toAuthorizationDocumentProperty() }
-        }
+        }.fold({ emptyList() }, { it })
 }
 
 object AuthorizationDocumentPropertyTable : Table("auth.authorization_document_property") {

@@ -27,10 +27,10 @@ const val REQUESTS_PATH = "/access/v0/authorization-requests"
 
 fun Application.module() {
     dependencies {
-        provide<GrantRepository> { ExposedGrantRepository(resolve(), resolve()) }
-        provide<GrantPropertiesRepository> { ExposedGrantPropertiesRepository() }
-        provide<RequestPropertiesRepository> { ExposedRequestPropertiesRepository() }
-        provide<RequestRepository> { ExposedRequestRepository(resolve(), resolve(), resolve(), resolve()) }
+        provide<GrantRepository> { ExposedGrantRepository(resolve(), resolve(), resolve()) }
+        provide<GrantPropertiesRepository> { ExposedGrantPropertiesRepository(resolve()) }
+        provide<RequestPropertiesRepository> { ExposedRequestPropertiesRepository(resolve()) }
+        provide<RequestRepository> { ExposedRequestRepository(resolve(), resolve(), resolve(), resolve(), resolve()) }
         provide<ProxyRequestBusinessHandler> { ProxyRequestBusinessHandler(resolve(), resolve()) }
         provide<UpdateHandler> { UpdateHandler(resolve(), resolve()) }
         provide<CreateHandler> { CreateHandler(resolve(), resolve(), resolve()) }

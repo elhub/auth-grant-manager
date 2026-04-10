@@ -5,9 +5,11 @@ import io.kotest.assertions.fail
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import io.micrometer.prometheusmetrics.PrometheusConfig
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.plus
-import no.elhub.auth.config.withTransaction
+import no.elhub.auth.config.TransactionContext
 import no.elhub.auth.features.common.PostgresTestContainer
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.party.AuthorizationParty
@@ -28,9 +30,10 @@ import java.util.UUID
 
 class ExposedGrantRepositoryTest : FunSpec({
     extensions(PostgresTestContainerExtension())
-    val partyRepo = ExposedPartyRepository()
-    val grantPropertiesRepo = ExposedGrantPropertiesRepository()
-    val grantRepo = ExposedGrantRepository(partyRepo, grantPropertiesRepo)
+    val transactionContext = TransactionContext(PrometheusMeterRegistry(PrometheusConfig.DEFAULT))
+    val partyRepo = ExposedPartyRepository(transactionContext)
+    val grantPropertiesRepo = ExposedGrantPropertiesRepository(transactionContext)
+    val grantRepo = ExposedGrantRepository(partyRepo, grantPropertiesRepo, transactionContext)
     val scopeIds = listOf(
         UUID.fromString("75ad606f-4ac9-4d4f-acd5-20d6862ec198"),
         UUID.fromString("0feefd01-36c7-403b-9bf1-c11d6458f639"),
@@ -65,7 +68,7 @@ class ExposedGrantRepositoryTest : FunSpec({
             password = PostgresTestContainer.PASSWORD,
         )
 
-        withTransaction {
+        transactionContext.withTransaction {
             SchemaUtils.create(AuthorizationPartyTable)
             SchemaUtils.create(AuthorizationGrantTable)
             SchemaUtils.create(AuthorizationScopeTable)
@@ -73,7 +76,7 @@ class ExposedGrantRepositoryTest : FunSpec({
     }
 
     afterTest {
-        withTransaction {
+        transactionContext.withTransaction {
             AuthorizationGrantTable.deleteAll()
             AuthorizationScopeTable.deleteAll()
             AuthorizationGrantScopeTable.deleteAll()
@@ -84,7 +87,7 @@ class ExposedGrantRepositoryTest : FunSpec({
     test("insert without scopes") {
         grantRepo.insert(exampleGrantWithoutScopeIds).getOrElse { error((it)) }
 
-        withTransaction {
+        transactionContext.withTransaction {
             // Should only have 1 grant in database
             AuthorizationGrantTable.selectAll().count() shouldBe 1
         }
@@ -104,11 +107,11 @@ class ExposedGrantRepositoryTest : FunSpec({
 
     test("insert with non-empty scope list") {
         insertTestData()
-        withTransaction {
+        transactionContext.withTransaction {
             AuthorizationGrantTable.deleteAll()
         }
         grantRepo.insert(exampleGrantWithScopeIds).getOrElse { error((it)) }
-        withTransaction {
+        transactionContext.withTransaction {
             AuthorizationGrantTable.selectAll().count() shouldBe 1
         }
     }
