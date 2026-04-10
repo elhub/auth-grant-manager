@@ -44,33 +44,29 @@ import no.elhub.auth.features.businessprocesses.structuredata.organisations.Orga
 import no.elhub.auth.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.VALID_PARTY_ID
 import no.elhub.auth.features.businessprocesses.structuredata.organisations.organisationsServiceHttpClient
 import no.elhub.auth.features.common.party.AuthorizationParty
-import no.elhub.auth.features.common.party.PartyIdentifier
-import no.elhub.auth.features.common.party.PartyIdentifierType
 import no.elhub.auth.features.common.party.PartyType.Organization
-import no.elhub.auth.features.common.person.Person
-import no.elhub.auth.features.common.person.PersonService
+import no.elhub.auth.features.common.party.PartyType.Person
 import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
 import no.elhub.auth.features.common.todayOslo
 import no.elhub.auth.features.documents.AuthorizationDocument
-import no.elhub.auth.features.documents.create.dto.CreateDocumentMeta
-import no.elhub.auth.features.documents.create.model.CreateDocumentModel
+import no.elhub.auth.features.documents.common.CreateDocumentBusinessMeta
+import no.elhub.auth.features.documents.common.CreateDocumentBusinessModel
 import no.elhub.auth.features.filegenerator.SupportedLanguage
 import no.elhub.auth.features.requests.AuthorizationRequest
+import no.elhub.auth.features.requests.common.CreateRequestBusinessMeta
+import no.elhub.auth.features.requests.common.CreateRequestBusinessModel
 import no.elhub.auth.features.requests.create.command.TEXT_VERSION_KEY
-import no.elhub.auth.features.requests.create.model.CreateRequestMeta
-import no.elhub.auth.features.requests.create.model.CreateRequestModel
 import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObject
-import java.util.UUID
 
-private val VALID_PARTY = PartyIdentifier(PartyIdentifierType.OrganizationNumber, VALID_PARTY_ID)
-private val AUTHORIZED_PARTY = AuthorizationParty(id = VALID_PARTY_ID, type = Organization)
-private val NOT_VALID_PARTY = PartyIdentifier(PartyIdentifierType.OrganizationNumber, "0000")
-private val NON_EXISTING_PARTY = PartyIdentifier(PartyIdentifierType.OrganizationNumber, NOT_BALANCE_SUPPLIER_PARTY_ID)
-private val INACTIVE_PARTY = PartyIdentifier(PartyIdentifierType.OrganizationNumber, INACTIVE_PARTY_ID)
-private val MATCHING_PARTY = PartyIdentifier(PartyIdentifierType.OrganizationNumber, CURRENT_PARTY_ID)
-private val END_USER = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "123456789")
-private val ANOTHER_END_USER = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "987654321")
-private val SHARED_END_USER = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "11223344556")
+private val VALID_PARTY = AuthorizationParty(id = VALID_PARTY_ID, type = Organization)
+private val AUTHORIZED_PARTY = VALID_PARTY
+private val NOT_VALID_PARTY = AuthorizationParty(id = "0000", type = Organization)
+private val NON_EXISTING_PARTY = AuthorizationParty(id = NOT_BALANCE_SUPPLIER_PARTY_ID, type = Organization)
+private val INACTIVE_PARTY = AuthorizationParty(id = INACTIVE_PARTY_ID, type = Organization)
+private val MATCHING_PARTY = AuthorizationParty(id = CURRENT_PARTY_ID, type = Organization)
+private val END_USER = AuthorizationParty(id = END_USER_ID_1, type = Person)
+private val ANOTHER_END_USER = AuthorizationParty(id = END_USER_ID_2, type = Person)
+private val SHARED_END_USER = AuthorizationParty(id = SHARED_END_USER_ID_1, type = Person)
 
 class ChangeOfBalanceSupplierBusinessHandlerTest :
     FunSpec({
@@ -80,7 +76,6 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
         lateinit var handler: ChangeOfBalanceSupplierBusinessHandler
         lateinit var organisationsService: OrganisationsService
 
-        val personService = mockk<PersonService>()
         val stromprisService = mockk<StromprisService>()
         val edielService = mockk<EdielService>()
         val jwtTokenProvider = mockk<JwtTokenProvider>()
@@ -106,7 +101,6 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
             )
             handler = ChangeOfBalanceSupplierBusinessHandler(
                 meteringPointsService = meteringPointsService,
-                personService = personService,
                 organisationsService = organisationsService,
                 stromprisService = stromprisService,
                 edielService = edielService,
@@ -116,48 +110,6 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
             )
         }
 
-        coEvery { personService.findOrCreateByNin(END_USER.idValue) } returns Either.Right(
-            Person(
-                UUID.fromString(
-                    END_USER_ID_1
-                )
-            )
-        )
-        coEvery { personService.findOrCreateByNin(ANOTHER_END_USER.idValue) } returns Either.Right(
-            Person(
-                UUID.fromString(
-                    END_USER_ID_2
-                )
-            )
-        )
-        coEvery { personService.findOrCreateByNin(SHARED_END_USER.idValue) } returns Either.Right(
-            Person(
-                UUID.fromString(
-                    SHARED_END_USER_ID_1
-                )
-            )
-        )
-        coEvery { personService.findOrCreateByNin(END_USER.idValue) } returns Either.Right(
-            Person(
-                UUID.fromString(
-                    END_USER_ID_1
-                )
-            )
-        )
-        coEvery { personService.findOrCreateByNin(ANOTHER_END_USER.idValue) } returns Either.Right(
-            Person(
-                UUID.fromString(
-                    END_USER_ID_2
-                )
-            )
-        )
-        coEvery { personService.findOrCreateByNin(SHARED_END_USER.idValue) } returns Either.Right(
-            Person(
-                UUID.fromString(
-                    SHARED_END_USER_ID_1
-                )
-            )
-        )
         beforeTest {
             clearMocks(edielService, answers = false, recordedCalls = true)
             coEvery { edielService.getPartyRedirect(any()) } returns Either.Right(
@@ -171,15 +123,15 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
 
         test("request validation fails on missing requestedFromName") {
             val model =
-                CreateRequestModel(
+                CreateRequestBusinessModel(
                     authorizedParty = AUTHORIZED_PARTY,
                     requestType = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
+                    requestedBy = VALID_PARTY,
+                    requestedFrom = END_USER,
+                    requestedTo = END_USER,
                     meta =
-                    CreateRequestMeta(
-                        requestedBy = VALID_PARTY,
-                        requestedFrom = END_USER,
+                    CreateRequestBusinessMeta(
                         requestedFromName = "",
-                        requestedTo = END_USER,
                         requestedForMeteringPointId = VALID_METERING_POINT_1,
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
@@ -194,15 +146,15 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
 
         test("request validation fails when requestedFrom is not related to metering point") {
             val model =
-                CreateRequestModel(
+                CreateRequestBusinessModel(
                     authorizedParty = AUTHORIZED_PARTY,
                     requestType = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
+                    requestedBy = VALID_PARTY,
+                    requestedFrom = ANOTHER_END_USER,
+                    requestedTo = ANOTHER_END_USER,
                     meta =
-                    CreateRequestMeta(
-                        requestedBy = VALID_PARTY,
-                        requestedFrom = ANOTHER_END_USER,
+                    CreateRequestBusinessMeta(
                         requestedFromName = "From",
-                        requestedTo = ANOTHER_END_USER,
                         requestedForMeteringPointId = VALID_METERING_POINT_1,
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
@@ -217,15 +169,15 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
 
         test("request validation fails when requestedFrom has access to metering point but is not end user") {
             val model =
-                CreateRequestModel(
+                CreateRequestBusinessModel(
                     authorizedParty = AUTHORIZED_PARTY,
                     requestType = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
+                    requestedBy = VALID_PARTY,
+                    requestedFrom = SHARED_END_USER,
+                    requestedTo = SHARED_END_USER,
                     meta =
-                    CreateRequestMeta(
-                        requestedBy = VALID_PARTY,
-                        requestedFrom = SHARED_END_USER,
+                    CreateRequestBusinessMeta(
                         requestedFromName = "From",
-                        requestedTo = SHARED_END_USER,
                         requestedForMeteringPointId = VALID_METERING_POINT_1,
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
@@ -240,15 +192,15 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
 
         test("request validation fails on invalid metering point") {
             val model =
-                CreateRequestModel(
+                CreateRequestBusinessModel(
                     authorizedParty = AUTHORIZED_PARTY,
                     requestType = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
+                    requestedBy = VALID_PARTY,
+                    requestedFrom = END_USER,
+                    requestedTo = END_USER,
                     meta =
-                    CreateRequestMeta(
-                        requestedBy = VALID_PARTY,
-                        requestedFrom = END_USER,
+                    CreateRequestBusinessMeta(
                         requestedFromName = "From",
-                        requestedTo = END_USER,
                         requestedForMeteringPointId = "123",
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
@@ -263,15 +215,15 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
 
         test("request validation fails on unexisting metering point") {
             val model =
-                CreateRequestModel(
+                CreateRequestBusinessModel(
                     authorizedParty = AUTHORIZED_PARTY,
                     requestType = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
+                    requestedBy = VALID_PARTY,
+                    requestedFrom = END_USER,
+                    requestedTo = END_USER,
                     meta =
-                    CreateRequestMeta(
-                        requestedBy = VALID_PARTY,
-                        requestedFrom = END_USER,
+                    CreateRequestBusinessMeta(
                         requestedFromName = "From",
-                        requestedTo = END_USER,
                         requestedForMeteringPointId = NON_EXISTING_METERING_POINT,
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
@@ -286,15 +238,15 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
 
         test("request validation fails on metering point blocked for switching") {
             val model =
-                CreateRequestModel(
+                CreateRequestBusinessModel(
                     authorizedParty = AUTHORIZED_PARTY,
                     requestType = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
+                    requestedBy = VALID_PARTY,
+                    requestedFrom = END_USER,
+                    requestedTo = END_USER,
                     meta =
-                    CreateRequestMeta(
-                        requestedBy = VALID_PARTY,
-                        requestedFrom = END_USER,
+                    CreateRequestBusinessMeta(
                         requestedFromName = "From",
-                        requestedTo = END_USER,
                         requestedForMeteringPointId = BLOCKED_FOR_SWITCHING_METERING_POINT_1,
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
@@ -309,15 +261,15 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
 
         test("request validation fails on not valid redirect URI") {
             val model =
-                CreateRequestModel(
+                CreateRequestBusinessModel(
                     authorizedParty = AUTHORIZED_PARTY,
                     requestType = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
+                    requestedBy = VALID_PARTY,
+                    requestedFrom = END_USER,
+                    requestedTo = END_USER,
                     meta =
-                    CreateRequestMeta(
-                        requestedBy = VALID_PARTY,
-                        requestedFrom = END_USER,
+                    CreateRequestBusinessMeta(
                         requestedFromName = "From",
-                        requestedTo = END_USER,
                         requestedForMeteringPointId = VALID_METERING_POINT_1,
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
@@ -332,15 +284,15 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
 
         test("request validation allows missing redirect URI and skips Ediel lookup") {
             val model =
-                CreateRequestModel(
+                CreateRequestBusinessModel(
                     authorizedParty = AUTHORIZED_PARTY,
                     requestType = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
+                    requestedBy = VALID_PARTY,
+                    requestedFrom = END_USER,
+                    requestedTo = END_USER,
                     meta =
-                    CreateRequestMeta(
-                        requestedBy = VALID_PARTY,
-                        requestedFrom = END_USER,
+                    CreateRequestBusinessMeta(
                         requestedFromName = "From",
-                        requestedTo = END_USER,
                         requestedForMeteringPointId = VALID_METERING_POINT_1,
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
@@ -355,15 +307,15 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
 
         test("request validation fails on blank redirect URI") {
             val model =
-                CreateRequestModel(
+                CreateRequestBusinessModel(
                     authorizedParty = AUTHORIZED_PARTY,
                     requestType = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
+                    requestedBy = VALID_PARTY,
+                    requestedFrom = END_USER,
+                    requestedTo = END_USER,
                     meta =
-                    CreateRequestMeta(
-                        requestedBy = VALID_PARTY,
-                        requestedFrom = END_USER,
+                    CreateRequestBusinessMeta(
                         requestedFromName = "From",
-                        requestedTo = END_USER,
                         requestedForMeteringPointId = VALID_METERING_POINT_1,
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
@@ -386,15 +338,15 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
                 )
             )
             val model =
-                CreateRequestModel(
+                CreateRequestBusinessModel(
                     authorizedParty = AUTHORIZED_PARTY,
                     requestType = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
+                    requestedBy = VALID_PARTY,
+                    requestedFrom = END_USER,
+                    requestedTo = END_USER,
                     meta =
-                    CreateRequestMeta(
-                        requestedBy = VALID_PARTY,
-                        requestedFrom = END_USER,
+                    CreateRequestBusinessMeta(
                         requestedFromName = "From",
-                        requestedTo = END_USER,
                         requestedForMeteringPointId = VALID_METERING_POINT_1,
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
@@ -410,7 +362,6 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
         test("request validation in test environment uses test URL from Ediel") {
             val handlerWithTestEnvironment = ChangeOfBalanceSupplierBusinessHandler(
                 meteringPointsService = meteringPointsService,
-                personService = personService,
                 organisationsService = organisationsService,
                 stromprisService = stromprisService,
                 edielService = edielService,
@@ -427,15 +378,15 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
                 )
             )
             val model =
-                CreateRequestModel(
+                CreateRequestBusinessModel(
                     authorizedParty = AUTHORIZED_PARTY,
                     requestType = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
+                    requestedBy = VALID_PARTY,
+                    requestedFrom = END_USER,
+                    requestedTo = END_USER,
                     meta =
-                    CreateRequestMeta(
-                        requestedBy = VALID_PARTY,
-                        requestedFrom = END_USER,
+                    CreateRequestBusinessMeta(
                         requestedFromName = "From",
-                        requestedTo = END_USER,
                         requestedForMeteringPointId = VALID_METERING_POINT_1,
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
@@ -451,7 +402,6 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
             val mockEdielService = mockk<EdielService>()
             val handlerWithRedirectValidationDisabled = ChangeOfBalanceSupplierBusinessHandler(
                 meteringPointsService = meteringPointsService,
-                personService = personService,
                 organisationsService = organisationsService,
                 stromprisService = stromprisService,
                 edielService = mockEdielService,
@@ -460,15 +410,15 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
                 validateBalanceSupplierContractName = false
             )
             val model =
-                CreateRequestModel(
+                CreateRequestBusinessModel(
                     authorizedParty = AUTHORIZED_PARTY,
                     requestType = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
+                    requestedBy = VALID_PARTY,
+                    requestedFrom = END_USER,
+                    requestedTo = END_USER,
                     meta =
-                    CreateRequestMeta(
-                        requestedBy = VALID_PARTY,
-                        requestedFrom = END_USER,
+                    CreateRequestBusinessMeta(
                         requestedFromName = "From",
-                        requestedTo = END_USER,
                         requestedForMeteringPointId = VALID_METERING_POINT_1,
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
@@ -483,15 +433,15 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
 
         test("request validation fails on not valid requested by") {
             val model =
-                CreateRequestModel(
+                CreateRequestBusinessModel(
                     authorizedParty = AUTHORIZED_PARTY,
                     requestType = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
+                    requestedBy = NOT_VALID_PARTY,
+                    requestedFrom = END_USER,
+                    requestedTo = END_USER,
                     meta =
-                    CreateRequestMeta(
-                        requestedBy = NOT_VALID_PARTY,
-                        requestedFrom = END_USER,
+                    CreateRequestBusinessMeta(
                         requestedFromName = "From",
-                        requestedTo = END_USER,
                         requestedForMeteringPointId = VALID_METERING_POINT_1,
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
@@ -506,15 +456,15 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
 
         test("request validation fails on non existing requested by") {
             val model =
-                CreateRequestModel(
+                CreateRequestBusinessModel(
                     authorizedParty = AUTHORIZED_PARTY,
                     requestType = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
+                    requestedBy = NON_EXISTING_PARTY,
+                    requestedFrom = END_USER,
+                    requestedTo = END_USER,
                     meta =
-                    CreateRequestMeta(
-                        requestedBy = NON_EXISTING_PARTY,
-                        requestedFrom = END_USER,
+                    CreateRequestBusinessMeta(
                         requestedFromName = "From",
-                        requestedTo = END_USER,
                         requestedForMeteringPointId = VALID_METERING_POINT_1,
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
@@ -529,15 +479,15 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
 
         test("request validation fails on not active requested by") {
             val model =
-                CreateRequestModel(
+                CreateRequestBusinessModel(
                     authorizedParty = AUTHORIZED_PARTY,
                     requestType = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
+                    requestedBy = INACTIVE_PARTY,
+                    requestedFrom = END_USER,
+                    requestedTo = END_USER,
                     meta =
-                    CreateRequestMeta(
-                        requestedBy = INACTIVE_PARTY,
-                        requestedFrom = END_USER,
+                    CreateRequestBusinessMeta(
                         requestedFromName = "From",
-                        requestedTo = END_USER,
                         requestedForMeteringPointId = VALID_METERING_POINT_1,
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
@@ -552,15 +502,15 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
 
         test("request validation fails on requested to not matching requested from") {
             val model =
-                CreateRequestModel(
+                CreateRequestBusinessModel(
                     authorizedParty = AUTHORIZED_PARTY,
                     requestType = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
+                    requestedBy = VALID_PARTY,
+                    requestedFrom = END_USER,
+                    requestedTo = ANOTHER_END_USER,
                     meta =
-                    CreateRequestMeta(
-                        requestedBy = VALID_PARTY,
-                        requestedFrom = END_USER,
+                    CreateRequestBusinessMeta(
                         requestedFromName = "From",
-                        requestedTo = ANOTHER_END_USER,
                         requestedForMeteringPointId = VALID_METERING_POINT_1,
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
@@ -583,7 +533,6 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
             } returns Either.Left(ClientError.BadRequest)
             val handlerWithMockedService = ChangeOfBalanceSupplierBusinessHandler(
                 meteringPointsService = mockMeteringPointsService,
-                personService = personService,
                 organisationsService = organisationsService,
                 stromprisService = stromprisService,
                 edielService = edielService,
@@ -593,15 +542,15 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
             )
 
             val model =
-                CreateRequestModel(
+                CreateRequestBusinessModel(
                     authorizedParty = AUTHORIZED_PARTY,
                     requestType = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
+                    requestedBy = VALID_PARTY,
+                    requestedFrom = END_USER,
+                    requestedTo = END_USER,
                     meta =
-                    CreateRequestMeta(
-                        requestedBy = VALID_PARTY,
-                        requestedFrom = END_USER,
+                    CreateRequestBusinessMeta(
                         requestedFromName = "From",
-                        requestedTo = END_USER,
                         requestedForMeteringPointId = VALID_METERING_POINT_1,
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
@@ -624,7 +573,6 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
             } returns Either.Left(ClientError.ServerError)
             val handlerWithMockedService = ChangeOfBalanceSupplierBusinessHandler(
                 meteringPointsService = meteringPointsService,
-                personService = personService,
                 organisationsService = mockOrganisationsService,
                 stromprisService = stromprisService,
                 edielService = edielService,
@@ -634,15 +582,15 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
             )
 
             val model =
-                CreateRequestModel(
+                CreateRequestBusinessModel(
                     authorizedParty = AUTHORIZED_PARTY,
                     requestType = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
+                    requestedBy = VALID_PARTY,
+                    requestedFrom = END_USER,
+                    requestedTo = END_USER,
                     meta =
-                    CreateRequestMeta(
-                        requestedBy = VALID_PARTY,
-                        requestedFrom = END_USER,
+                    CreateRequestBusinessMeta(
                         requestedFromName = "From",
-                        requestedTo = END_USER,
                         requestedForMeteringPointId = VALID_METERING_POINT_1,
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
@@ -657,15 +605,15 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
 
         test("strompris service is not called if validateBalanceSupplierContractName is false, assuming all previous validations pass") {
             val model =
-                CreateRequestModel(
+                CreateRequestBusinessModel(
                     authorizedParty = AUTHORIZED_PARTY,
                     requestType = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
+                    requestedBy = VALID_PARTY,
+                    requestedFrom = END_USER,
+                    requestedTo = END_USER,
                     meta =
-                    CreateRequestMeta(
-                        requestedBy = VALID_PARTY,
-                        requestedFrom = END_USER,
+                    CreateRequestBusinessMeta(
                         requestedFromName = "From",
-                        requestedTo = END_USER,
                         requestedForMeteringPointId = VALID_METERING_POINT_1,
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
@@ -698,7 +646,6 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
             )
             val handlerWithMockedStromprisService = ChangeOfBalanceSupplierBusinessHandler(
                 meteringPointsService = meteringPointsService,
-                personService = personService,
                 organisationsService = organisationsService,
                 stromprisService = mockStromprisService,
                 edielService = edielService,
@@ -707,15 +654,15 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
                 validateBalanceSupplierContractName = true
             )
             val model =
-                CreateRequestModel(
+                CreateRequestBusinessModel(
                     authorizedParty = AUTHORIZED_PARTY,
                     requestType = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
+                    requestedBy = VALID_PARTY,
+                    requestedFrom = END_USER,
+                    requestedTo = END_USER,
                     meta =
-                    CreateRequestMeta(
-                        requestedBy = VALID_PARTY,
-                        requestedFrom = END_USER,
+                    CreateRequestBusinessMeta(
                         requestedFromName = "From",
-                        requestedTo = END_USER,
                         requestedForMeteringPointId = VALID_METERING_POINT_1,
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
@@ -729,15 +676,15 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
 
         test("request produces RequestCommand for valid input") {
             val model =
-                CreateRequestModel(
+                CreateRequestBusinessModel(
                     authorizedParty = AUTHORIZED_PARTY,
                     requestType = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
+                    requestedBy = VALID_PARTY,
+                    requestedFrom = END_USER,
+                    requestedTo = END_USER,
                     meta =
-                    CreateRequestMeta(
-                        requestedBy = VALID_PARTY,
-                        requestedFrom = END_USER,
+                    CreateRequestBusinessMeta(
                         requestedFromName = "From",
-                        requestedTo = END_USER,
                         requestedForMeteringPointId = VALID_METERING_POINT_1,
                         requestedForMeteringPointAddress = "addr",
                         balanceSupplierName = "Supplier",
@@ -773,14 +720,14 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
 
         test("document produces DocumentCommand for valid input") {
             val model =
-                CreateDocumentModel(
-                    authorizedParty = AuthorizationParty(id = VALID_PARTY.idValue, type = Organization),
+                CreateDocumentBusinessModel(
+                    authorizedParty = VALID_PARTY,
                     documentType = AuthorizationDocument.Type.ChangeOfBalanceSupplierForPerson,
+                    requestedBy = VALID_PARTY,
+                    requestedFrom = END_USER,
+                    requestedTo = END_USER,
                     meta =
-                    CreateDocumentMeta(
-                        requestedBy = VALID_PARTY,
-                        requestedFrom = END_USER,
-                        requestedTo = END_USER,
+                    CreateDocumentBusinessMeta(
                         requestedFromName = "From",
                         requestedForMeteringPointId = VALID_METERING_POINT_1,
                         requestedForMeteringPointAddress = "addr",

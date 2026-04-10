@@ -2,7 +2,6 @@ package no.elhub.auth.features.businessprocesses.changeofbalancesupplier.domain
 
 import kotlinx.datetime.LocalDate
 import no.elhub.auth.features.common.CreateScopeData
-import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.create.command.DocumentCommand
@@ -16,9 +15,6 @@ import no.elhub.auth.features.requests.create.command.withTextVersion
 private const val CHANGE_OF_BALANCE_SUPPLIER_TEXT_VERSION = "v1"
 
 data class ChangeOfBalanceSupplierBusinessCommand(
-    val requestedFrom: PartyIdentifier,
-    val requestedBy: PartyIdentifier,
-    val requestedTo: PartyIdentifier,
     val validTo: LocalDate,
     val scopes: List<CreateScopeData>,
     val meta: ChangeOfBalanceSupplierBusinessMeta,
@@ -56,9 +52,6 @@ data class ChangeOfBalanceSupplierBusinessMeta(
 fun ChangeOfBalanceSupplierBusinessCommand.toRequestCommand(): RequestCommand =
     RequestCommand(
         type = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
-        requestedBy = this.requestedBy,
-        requestedFrom = this.requestedFrom,
-        requestedTo = this.requestedTo,
         scopes = this.scopes,
         validTo = this.validTo.toTimeZoneOffsetDateTimeAtStartOfDay(),
         meta = this.meta,
@@ -67,9 +60,6 @@ fun ChangeOfBalanceSupplierBusinessCommand.toRequestCommand(): RequestCommand =
 fun ChangeOfBalanceSupplierBusinessCommand.toDocumentCommand(): DocumentCommand =
     DocumentCommand(
         type = AuthorizationDocument.Type.ChangeOfBalanceSupplierForPerson,
-        requestedFrom = this.requestedFrom,
-        requestedTo = this.requestedTo,
-        requestedBy = this.requestedBy,
         scopes = this.scopes,
         validTo = this.validTo.toTimeZoneOffsetDateTimeAtStartOfDay(),
         meta = this.meta,

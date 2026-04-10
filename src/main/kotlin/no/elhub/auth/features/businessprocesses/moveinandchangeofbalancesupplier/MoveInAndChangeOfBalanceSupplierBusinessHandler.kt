@@ -27,18 +27,17 @@ import no.elhub.auth.features.businessprocesses.structuredata.organisations.Orga
 import no.elhub.auth.features.businessprocesses.structuredata.organisations.PartyStatus
 import no.elhub.auth.features.businessprocesses.structuredata.organisations.PartyType
 import no.elhub.auth.features.common.CreateScopeData
-import no.elhub.auth.features.common.person.PersonService
 import no.elhub.auth.features.common.todayOslo
 import no.elhub.auth.features.documents.AuthorizationDocument
+import no.elhub.auth.features.documents.common.CreateDocumentBusinessModel
 import no.elhub.auth.features.documents.common.DocumentBusinessHandler
 import no.elhub.auth.features.documents.create.command.DocumentCommand
-import no.elhub.auth.features.documents.create.model.CreateDocumentModel
 import no.elhub.auth.features.grants.AuthorizationScope
 import no.elhub.auth.features.grants.common.CreateGrantProperties
 import no.elhub.auth.features.requests.AuthorizationRequest
-import no.elhub.auth.features.requests.create.RequestBusinessHandler
+import no.elhub.auth.features.requests.common.CreateRequestBusinessModel
+import no.elhub.auth.features.requests.common.RequestBusinessHandler
 import no.elhub.auth.features.requests.create.command.RequestCommand
-import no.elhub.auth.features.requests.create.model.CreateRequestModel
 
 private const val REGEX_NUMBERS_LETTERS_SYMBOLS = "^[a-zA-Z0-9_.-]*$"
 private const val REGEX_REQUESTED_FROM = REGEX_NUMBERS_LETTERS_SYMBOLS
@@ -57,7 +56,6 @@ private fun moveInGrantValidTo() = todayOslo().plus(DatePeriod(years = MOVE_IN_G
 class MoveInAndChangeOfBalanceSupplierBusinessHandler(
     private val organisationsService: OrganisationsService,
     private val meteringPointsService: MeteringPointsService,
-    private val personService: PersonService,
     private val stromprisService: StromprisService,
     private val edielService: EdielService,
     private val edielEnvironment: EdielEnvironment,
@@ -66,7 +64,7 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandler(
 ) : RequestBusinessHandler,
     DocumentBusinessHandler {
 
-    override suspend fun validateAndReturnRequestCommand(createRequestModel: CreateRequestModel): Either<BusinessProcessError, RequestCommand> =
+    override suspend fun validateAndReturnRequestCommand(createRequestModel: CreateRequestBusinessModel): Either<BusinessProcessError, RequestCommand> =
         either {
             val model = createRequestModel.toMoveInAndChangeOfBalanceSupplierBusinessModel()
             validateRequest(model).mapLeft { it.toBusinessError() }.bind().toRequestCommand()
@@ -92,7 +90,7 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandler(
             return Unit.right()
         }
 
-        val redirectUriFromEdiel = edielService.getPartyRedirect(model.requestedBy.idValue).mapLeft { err ->
+        val redirectUriFromEdiel = edielService.getPartyRedirect(model.requestedBy.id).mapLeft { err ->
             return when (err) {
                 ClientError.NotFound -> MoveInAndChangeOfBalanceSupplierValidationError.InvalidRedirectURI.left()
 
@@ -120,7 +118,7 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandler(
         return buildCreateGrantProperties(propertyMap, ALLOWED_GRANT_PROPERTY_KEYS)
     }
 
-    override suspend fun validateAndReturnDocumentCommand(model: CreateDocumentModel): Either<BusinessProcessError, DocumentCommand> =
+    override suspend fun validateAndReturnDocumentCommand(model: CreateDocumentBusinessModel): Either<BusinessProcessError, DocumentCommand> =
         either {
             val businessModel = model.toMoveInAndChangeOfBalanceSupplierBusinessModel()
             validate(businessModel).mapLeft { it.toBusinessError() }.bind().toDocumentCommand()
@@ -172,22 +170,13 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandler(
             return MoveInAndChangeOfBalanceSupplierValidationError.MissingMeteringPointAddress.left()
         }
 
-        if (model.requestedFrom.idValue.isBlank()) {
+        if (model.requestedFrom.id.isBlank()) {
             return MoveInAndChangeOfBalanceSupplierValidationError.MissingRequestedFrom.left()
         }
 
-        if (!model.requestedFrom.idValue.matches(Regex(REGEX_REQUESTED_FROM))) {
-            return MoveInAndChangeOfBalanceSupplierValidationError.InvalidRequestedFrom.left()
-        }
-
-        // temporary mapping until model has elhubInternalId instead of NIN
-        val endUserElhubInternalId =
-            personService.findOrCreateByNin(model.requestedFrom.idValue).getOrNull()?.internalId
-                ?: return MoveInAndChangeOfBalanceSupplierValidationError.RequestedFromNotFound.left()
-
         val meteringPoint = meteringPointsService.getMeteringPointByIdAndElhubInternalId(
             meteringPointId = model.requestedForMeteringPointId,
-            elhubInternalId = endUserElhubInternalId.toString()
+            elhubInternalId = model.requestedFrom.id
         ).mapLeft { err ->
             return when (err) {
                 ClientError.NotFound -> MoveInAndChangeOfBalanceSupplierValidationError.MeteringPointNotFound.left()
@@ -210,16 +199,16 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandler(
             }
         }
 
-        if (model.requestedBy.idValue.isBlank()) {
+        if (model.requestedBy.id.isBlank()) {
             return MoveInAndChangeOfBalanceSupplierValidationError.MissingRequestedBy.left()
         }
 
-        if (!model.requestedBy.idValue.matches(Regex(REGEX_REQUESTED_BY))) {
+        if (!model.requestedBy.id.matches(Regex(REGEX_REQUESTED_BY))) {
             return MoveInAndChangeOfBalanceSupplierValidationError.InvalidRequestedBy.left()
         }
 
         val party = organisationsService.getPartyByIdAndPartyType(
-            model.requestedBy.idValue,
+            model.requestedBy.id,
             PartyType.BalanceSupplier
         )
             .mapLeft { err ->
@@ -238,7 +227,7 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandler(
             return MoveInAndChangeOfBalanceSupplierValidationError.NotActiveRequestedBy.left()
         }
 
-        if (model.requestedTo.idValue != model.requestedFrom.idValue) {
+        if (model.requestedTo.id != model.requestedFrom.id) {
             return MoveInAndChangeOfBalanceSupplierValidationError.RequestedToRequestedFromMismatch.left()
         }
 
@@ -292,9 +281,6 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandler(
         )
 
         return MoveInAndChangeOfBalanceSupplierBusinessCommand(
-            requestedFrom = model.requestedFrom,
-            requestedBy = model.requestedBy,
-            requestedTo = model.requestedTo,
             validTo = moveInRequestValidTo(),
             scopes = scopes,
             meta = meta,

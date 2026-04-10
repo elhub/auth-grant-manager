@@ -23,15 +23,15 @@ import no.elhub.auth.features.grants.common.CreateGrantProperties
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.common.AuthorizationRequestPropertyTable
 import no.elhub.auth.features.requests.common.AuthorizationRequestTable
+import no.elhub.auth.features.requests.common.CreateRequestBusinessModel
 import no.elhub.auth.features.requests.common.DatabaseRequestStatus
-import no.elhub.auth.features.requests.create.RequestBusinessHandler
+import no.elhub.auth.features.requests.common.RequestBusinessHandler
 import no.elhub.auth.features.requests.create.command.RequestCommand
 import no.elhub.auth.features.requests.create.command.RequestMetaMarker
 import no.elhub.auth.features.requests.create.command.withTextVersion
 import no.elhub.auth.features.requests.create.dto.CreateRequestAttributes
 import no.elhub.auth.features.requests.create.dto.CreateRequestMeta
 import no.elhub.auth.features.requests.create.dto.JsonApiCreateRequest
-import no.elhub.auth.features.requests.create.model.CreateRequestModel
 import no.elhub.auth.features.requests.create.requesttypes.RequestTypeValidationError
 import no.elhub.auth.features.requests.module
 import no.elhub.auth.features.requests.update.dto.JsonApiUpdateRequest
@@ -85,7 +85,7 @@ fun Application.testRequestBusinessModule() {
 }
 
 class TestRequestBusinessHandler : RequestBusinessHandler {
-    override suspend fun validateAndReturnRequestCommand(createRequestModel: CreateRequestModel) =
+    override suspend fun validateAndReturnRequestCommand(createRequestModel: CreateRequestBusinessModel) =
         when (createRequestModel.requestType) {
             AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson -> {
                 val meta = createRequestModel.meta
@@ -94,9 +94,6 @@ class TestRequestBusinessHandler : RequestBusinessHandler {
                 } else {
                     RequestCommand(
                         type = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
-                        requestedFrom = meta.requestedFrom,
-                        requestedBy = meta.requestedBy,
-                        requestedTo = meta.requestedTo,
                         validTo = todayOslo().plus(DatePeriod(days = 30)).toTimeZoneOffsetDateTimeAtStartOfDay(),
                         scopes = listOf(
                             CreateScopeData(
