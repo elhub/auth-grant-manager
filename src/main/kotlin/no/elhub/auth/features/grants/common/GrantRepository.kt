@@ -74,7 +74,12 @@ class ExposedGrantRepository(
         }
 
     override suspend fun find(grantId: UUID): Either<RepositoryReadError, AuthorizationGrant> =
-        transactionContext<RepositoryReadError, AuthorizationGrant>("db_operations", "GrantRepository", "find", { RepositoryReadError.UnexpectedError }) {
+        transactionContext<RepositoryReadError, AuthorizationGrant>(
+            "db_operations",
+            "GrantRepository",
+            "find",
+            { RepositoryReadError.UnexpectedError }
+        ) {
             findInternalGrant(grantId).bind()
         }
 
@@ -159,7 +164,12 @@ class ExposedGrantRepository(
     override suspend fun insert(
         grant: AuthorizationGrant,
     ): Either<RepositoryWriteError, AuthorizationGrant> =
-        transactionContext<RepositoryWriteError, AuthorizationGrant>("db_operations", "GrantRepository", "insert", { RepositoryWriteError.UnexpectedError }) {
+        transactionContext<RepositoryWriteError, AuthorizationGrant>(
+            "db_operations",
+            "GrantRepository",
+            "insert",
+            { RepositoryWriteError.UnexpectedError }
+        ) {
             val grantedByParty = partyRepository
                 .findOrInsert(grant.grantedBy.type, grant.grantedBy.id)
                 .mapLeft { RepositoryWriteError.UnexpectedError }

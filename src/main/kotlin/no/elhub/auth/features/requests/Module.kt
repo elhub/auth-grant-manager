@@ -29,7 +29,7 @@ fun Application.module() {
     dependencies {
         provide<GrantRepository> { ExposedGrantRepository(resolve(), resolve(), resolve()) }
         provide<GrantPropertiesRepository> { ExposedGrantPropertiesRepository(resolve()) }
-        provide<RequestPropertiesRepository> { ExposedRequestPropertiesRepository(resolve()) }
+        provide<RequestPropertiesRepository> { ExposedRequestPropertiesRepository() }
         provide<RequestRepository> { ExposedRequestRepository(resolve(), resolve(), resolve(), resolve(), resolve()) }
         provide<ProxyRequestBusinessHandler> { ProxyRequestBusinessHandler(resolve(), resolve()) }
         provide<UpdateHandler> { UpdateHandler(resolve(), resolve()) }

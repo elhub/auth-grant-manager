@@ -23,7 +23,12 @@ class ExposedGrantPropertiesRepository(
 ) : GrantPropertiesRepository {
 
     override suspend fun insert(properties: List<AuthorizationGrantProperty>): Either<RepositoryError, Unit> =
-        transactionContext("db_operations", "GrantPropertiesRepository", "insert", { RepositoryWriteError.UnexpectedError }) {
+        transactionContext(
+            "db_operations",
+            "GrantPropertiesRepository",
+            "insert",
+            { RepositoryWriteError.UnexpectedError }
+        ) {
             if (properties.isNotEmpty()) {
                 AuthorizationGrantPropertyTable.batchInsert(properties) { property ->
                     this[AuthorizationGrantPropertyTable.grantId] = property.grantId
@@ -34,12 +39,17 @@ class ExposedGrantPropertiesRepository(
         }
 
     override suspend fun findBy(grantId: UUID): List<AuthorizationGrantProperty> =
-        transactionContext("db_operations", "GrantPropertiesRepository", "findby", { RepositoryReadError.UnexpectedError }) {
+        transactionContext(
+            "db_operations",
+            "GrantPropertiesRepository",
+            "findby",
+            { RepositoryReadError.UnexpectedError }
+        ) {
             AuthorizationGrantPropertyTable
                 .selectAll()
                 .where { AuthorizationGrantPropertyTable.grantId eq grantId }
                 .map { it.toAuthorizationGrantProperty() }
-        }.fold({ emptyList<AuthorizationGrantProperty>() }, { it })
+        }.fold({ emptyList() }, { it })
 }
 
 object AuthorizationGrantPropertyTable : Table("auth.authorization_grant_property") {

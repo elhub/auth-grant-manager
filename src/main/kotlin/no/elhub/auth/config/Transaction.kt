@@ -13,9 +13,7 @@ import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 import java.util.concurrent.TimeUnit
 
 class TransactionContext(private val meterRegistry: PrometheusMeterRegistry) {
-    suspend fun <T> withTransaction(block: suspend JdbcTransaction.() -> T): T = withContext(Dispatchers.IO) {
-        suspendTransaction { block() }
-    }
+
 
     suspend operator fun <E, A> invoke(
         metricName: String,
@@ -29,6 +27,9 @@ class TransactionContext(private val meterRegistry: PrometheusMeterRegistry) {
                 .mapLeft(onException)
                 .fold({ it.left() }, { it })
         }
+}
+suspend fun <T> withTransaction(block: suspend JdbcTransaction.() -> T): T = withContext(Dispatchers.IO) {
+    suspendTransaction { block() }
 }
 
 suspend fun <T> PrometheusMeterRegistry.measureTransaction(

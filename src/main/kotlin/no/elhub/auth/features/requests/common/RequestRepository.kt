@@ -79,7 +79,12 @@ class ExposedRequestRepository(
 ) : RequestRepository {
 
     override suspend fun findAllAndSortByCreatedAt(party: AuthorizationParty): Either<RepositoryReadError, List<AuthorizationRequest>> =
-        transactionContext("db_operations", "RequestRepository", "findAllAndSortByCreatedAt", { RepositoryReadError.UnexpectedError }) {
+        transactionContext<RepositoryReadError, List<AuthorizationRequest>>(
+            "db_operations",
+             "RequestRepository",
+            "findAllAndSortByCreatedAt",
+            { RepositoryReadError.UnexpectedError }
+        ) {
             val partyId = partyRepo.findOrInsert(type = party.type, partyId = party.id)
                 .mapLeft { RepositoryReadError.UnexpectedError }
                 .bind()
@@ -96,47 +101,53 @@ class ExposedRequestRepository(
         }
 
     override suspend fun find(requestId: UUID): Either<RepositoryReadError, AuthorizationRequest> =
-        transactionContext("db_operations", "RequestRepository", "find", { RepositoryReadError.UnexpectedError }) {
-            val request = AuthorizationRequestTable
-                .selectAll()
-                .where { AuthorizationRequestTable.id eq requestId }
-                .singleOrNull() ?: raise(RepositoryReadError.UnexpectedError)
-            findInternal(request).mapLeft { RepositoryReadError.UnexpectedError }.bind()
+        transactionContext<RepositoryReadError, AuthorizationRequest>("db_operations", "RequestRepository", "find", { RepositoryReadError.UnexpectedError }) {
+            val request =
+                AuthorizationRequestTable
+                    .selectAll()
+                    .where { AuthorizationRequestTable.id eq requestId }
+                    .singleOrNull() ?: raise(RepositoryReadError.NotFoundError)
+            findInternal(request).bind()
         }
 
     override suspend fun insert(
         request: AuthorizationRequest,
         scopes: List<CreateScopeData>
     ): Either<RepositoryWriteError, AuthorizationRequest> =
-        transactionContext("db_operations", "RequestRepository", "insert", { RepositoryWriteError.UnexpectedError }) {
-            val requestedByParty = partyRepo
-                .findOrInsert(request.requestedBy.type, request.requestedBy.id)
-                .mapLeft { RepositoryWriteError.UnexpectedError }
-                .bind()
+        transactionContext<RepositoryWriteError, AuthorizationRequest>("db_operations", "RequestRepository", "insert", { RepositoryWriteError.UnexpectedError }) {
+            val requestedByParty =
+                partyRepo
+                    .findOrInsert(request.requestedBy.type, request.requestedBy.id)
+                    .mapLeft { RepositoryWriteError.UnexpectedError }
+                    .bind()
 
-            val requestedFromParty = partyRepo
-                .findOrInsert(request.requestedFrom.type, request.requestedFrom.id)
-                .mapLeft { RepositoryWriteError.UnexpectedError }
-                .bind()
+            val requestedFromParty =
+                partyRepo
+                    .findOrInsert(request.requestedFrom.type, request.requestedFrom.id)
+                    .mapLeft { RepositoryWriteError.UnexpectedError }
+                    .bind()
 
-            val requestedToParty = partyRepo
-                .findOrInsert(request.requestedTo.type, request.requestedTo.id)
-                .mapLeft { RepositoryWriteError.UnexpectedError }
-                .bind()
+            val requestedToParty =
+                partyRepo
+                    .findOrInsert(request.requestedTo.type, request.requestedTo.id)
+                    .mapLeft { RepositoryWriteError.UnexpectedError }
+                    .bind()
 
-            val insertedRequest = AuthorizationRequestTable
-                .insertReturning {
-                    it[id] = request.id
-                    it[requestType] = request.type
-                    it[requestStatus] = request.status.toDataBaseRequestStatus()
-                    it[requestedBy] = requestedByParty.id
-                    it[requestedFrom] = requestedFromParty.id
-                    it[requestedTo] = requestedToParty.id
-                    it[validTo] = request.validTo
-                    it[createdAt] = request.createdAt
-                }.single()
+            val insertedRequest =
+                AuthorizationRequestTable
+                    .insertReturning {
+                        it[id] = request.id
+                        it[requestType] = request.type
+                        it[requestStatus] = request.status.toDataBaseRequestStatus()
+                        it[requestedBy] = requestedByParty.id
+                        it[requestedFrom] = requestedFromParty.id
+                        it[requestedTo] = requestedToParty.id
+                        it[validTo] = request.validTo
+                        it[createdAt] = request.createdAt
+                    }.single()
 
             handleScopes(scopes, insertedRequest)
+
             requestPropertiesRepository.insert(request.properties)
 
             insertedRequest.toAuthorizationRequest(
@@ -148,18 +159,29 @@ class ExposedRequestRepository(
         }
 
     override suspend fun rejectRequest(requestId: UUID): Either<RepositoryError, AuthorizationRequest> =
-        transactionContext("db_operations", "RequestRepository", "rejectRequest", { RepositoryWriteError.UnexpectedError }) {
+        transactionContext<RepositoryError, AuthorizationRequest>(
+            "db_operations",
+            "RequestRepository",
+            "rejectRequest",
+            { RepositoryWriteError.UnexpectedError }
+        ) {
             val rowsUpdated = AuthorizationRequestTable.update(
                 where = { AuthorizationRequestTable.id eq requestId }
             ) {
                 it[requestStatus] = DatabaseRequestStatus.Rejected
                 it[updatedAt] = currentTimeUtc()
             }
-            updateAndFetch(requestId, rowsUpdated).mapLeft { RepositoryWriteError.UnexpectedError }.bind()
+
+            updateAndFetch(requestId, rowsUpdated).bind()
         }
 
     override suspend fun findScopeIds(requestId: UUID): Either<RepositoryReadError, List<UUID>> =
-        transactionContext("db_operations", "RequestRepository", "findScopeIds", { RepositoryReadError.UnexpectedError }) {
+        transactionContext<RepositoryReadError, List<UUID>>(
+            "db_operations",
+            "RequestRepository",
+            "findScopeIds",
+            { RepositoryReadError.UnexpectedError }
+        ) {
             AuthorizationRequestScopeTable
                 .selectAll()
                 .where { authorizationRequestId eq requestId }
@@ -179,27 +201,28 @@ class ExposedRequestRepository(
             { AcceptWithGrantError.RequestError.Unexpected }
         ) {
             val approvedByRecord = partyRepo.findOrInsert(approvedBy.type, approvedBy.id)
-                .mapLeft { AcceptWithGrantError.RequestError.Unexpected as AcceptWithGrantError }
+                .mapLeft { AcceptWithGrantError.RequestError.Unexpected }
                 .bind()
 
-            val rowsUpdated = AuthorizationRequestTable.update(
-                where = { AuthorizationRequestTable.id eq requestId }
-            ) {
-                it[requestStatus] = DatabaseRequestStatus.Accepted
-                it[updatedAt] = currentTimeUtc()
-                it[this.approvedBy] = approvedByRecord.id
-            }
+            val rowsUpdated =
+                AuthorizationRequestTable.update(
+                    where = { AuthorizationRequestTable.id eq requestId }
+                ) {
+                    it[requestStatus] = DatabaseRequestStatus.Accepted
+                    it[updatedAt] = currentTimeUtc()
+                    it[this.approvedBy] = approvedByRecord.id
+                }
 
             val acceptedRequest = updateAndFetch(requestId, rowsUpdated)
-                .mapLeft { AcceptWithGrantError.RequestError.Unexpected as AcceptWithGrantError }
+                .mapLeft { AcceptWithGrantError.RequestError.Unexpected }
                 .bind()
 
             grantRepository.insert(grant)
-                .mapLeft { AcceptWithGrantError.GrantError as AcceptWithGrantError }
+                .mapLeft { AcceptWithGrantError.GrantError }
                 .bind()
 
             grantPropertiesRepository.insert(grantProperties)
-                .mapLeft { AcceptWithGrantError.GrantError as AcceptWithGrantError }
+                .mapLeft { AcceptWithGrantError.GrantError }
                 .bind()
 
             acceptedRequest.copy(grantId = grant.id)
