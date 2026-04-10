@@ -301,11 +301,11 @@ class ExposedDocumentRepository(
                 }.bind()
 
             grantRepo.insert(grant)
-                .mapLeft { ConfirmWithGrantError.GrantError as ConfirmWithGrantError }
+                .mapLeft { ConfirmWithGrantError.GrantError }
                 .bind()
 
             grantPropertiesRepository.insert(grantProperties)
-                .mapLeft { ConfirmWithGrantError.GrantError as ConfirmWithGrantError }
+                .mapLeft { ConfirmWithGrantError.GrantError }
                 .bind()
 
             confirmedDocument
