@@ -101,7 +101,12 @@ class ExposedRequestRepository(
         }
 
     override suspend fun find(requestId: UUID): Either<RepositoryReadError, AuthorizationRequest> =
-        transactionContext<RepositoryReadError, AuthorizationRequest>("db_operations", "RequestRepository", "find", { RepositoryReadError.UnexpectedError }) {
+        transactionContext<RepositoryReadError, AuthorizationRequest>(
+            "db_operations",
+            "RequestRepository",
+            "find",
+            { RepositoryReadError.UnexpectedError }
+        ) {
             val request =
                 AuthorizationRequestTable
                     .selectAll()
