@@ -28,21 +28,21 @@ class WithTransactionEitherTest : FunSpec({
     }
 
     test("returns Right when block succeeds") {
-        val result = transactionContext("ok", { TestError.UnexpectedError(it.message ?: "") }) {
+        val result = transactionContext("ok", "className", "methodName", { TestError.UnexpectedError(it.message ?: "") }) {
             42
         }
         result shouldBe 42.right()
     }
 
     test("returns Left with domain error when block raises") {
-        val result = transactionContext<TestError, Int>("ok", { TestError.UnexpectedError(it.message ?: "") }) {
+        val result = transactionContext<TestError, Int>("ok", "className", "methodName", { TestError.UnexpectedError(it.message ?: "") }) {
             raise(TestError.DomainError("not found"))
         }
         result shouldBe TestError.DomainError("not found").left()
     }
 
     test("returns Left mapped through onException when block throws") {
-        val result = transactionContext("ok", { e -> TestError.UnexpectedError(e.message ?: "") }) {
+        val result = transactionContext("ok", "className", "methodName", { e -> TestError.UnexpectedError(e.message ?: "") }) {
             error("db exploded")
         }
         result shouldBe TestError.UnexpectedError("db exploded").left()

@@ -14,7 +14,6 @@ import java.util.concurrent.TimeUnit
 
 class TransactionContext(private val meterRegistry: PrometheusMeterRegistry) {
 
-
     suspend operator fun <E, A> invoke(
         metricName: String,
         className: String,

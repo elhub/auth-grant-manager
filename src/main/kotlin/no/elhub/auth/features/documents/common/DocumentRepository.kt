@@ -129,8 +129,7 @@ class ExposedDocumentRepository(
         }
 
     override suspend fun find(id: UUID): Either<RepositoryReadError, AuthorizationDocument> =
-        transactionContext<RepositoryReadError, AuthorizationDocument>("db_operations", "DocumentRepository", "find", { RepositoryReadError.UnexpectedError }
-        ) {
+        transactionContext<RepositoryReadError, AuthorizationDocument>("db_operations", "DocumentRepository", "find", { RepositoryReadError.UnexpectedError }) {
             val documentRow = AuthorizationDocumentTable
                 .selectAll()
                 .where { AuthorizationDocumentTable.id eq id }
@@ -220,7 +219,8 @@ class ExposedDocumentRepository(
             "db_operations",
             "DocumenRepository",
             "findAll",
-            { RepositoryReadError.UnexpectedError }) {
+            { RepositoryReadError.UnexpectedError }
+        ) {
             val partyRecord = partyRepo.findOrInsert(type = requestedBy.type, partyId = requestedBy.id)
                 .mapLeft { RepositoryReadError.UnexpectedError }
                 .bind()
@@ -269,126 +269,126 @@ class ExposedDocumentRepository(
             }
         }
 
-            private suspend fun resolveParty(partyId: UUID): Either<RepositoryReadError.UnexpectedError, AuthorizationPartyRecord> =
-                partyRepo.find(partyId).mapLeft { RepositoryReadError.UnexpectedError }
+    private suspend fun resolveParty(partyId: UUID): Either<RepositoryReadError.UnexpectedError, AuthorizationPartyRecord> =
+        partyRepo.find(partyId).mapLeft { RepositoryReadError.UnexpectedError }
 
-            override suspend fun confirmWithGrant(
-                documentId: UUID,
-                signedFile: ByteArray,
-                requestedFrom: AuthorizationParty,
-                signatory: AuthorizationParty,
-                grant: AuthorizationGrant,
-                grantProperties: List<AuthorizationGrantProperty>
-            ): Either<ConfirmWithGrantError, AuthorizationDocument> =
-                transactionContext<ConfirmWithGrantError, AuthorizationDocument>(
-                    "db_operations",
-                    "DocumenRepository",
-                    "confirmWithGrant",
-                    { ConfirmWithGrantError.DocumentError.Unexpected }
-                ) {
-                    val confirmedDocument = confirm(documentId, signedFile, requestedFrom, signatory)
-                        .mapLeft { writeError ->
-                            when (writeError) {
-                                is RepositoryWriteError.NotFoundError -> ConfirmWithGrantError.DocumentError.NotFound
-                                is RepositoryWriteError.ConflictError -> ConfirmWithGrantError.DocumentError.Conflict
-                                is RepositoryWriteError.UnexpectedError -> ConfirmWithGrantError.DocumentError.Unexpected
-                            }
-                        }.bind()
+    override suspend fun confirmWithGrant(
+        documentId: UUID,
+        signedFile: ByteArray,
+        requestedFrom: AuthorizationParty,
+        signatory: AuthorizationParty,
+        grant: AuthorizationGrant,
+        grantProperties: List<AuthorizationGrantProperty>
+    ): Either<ConfirmWithGrantError, AuthorizationDocument> =
+        transactionContext<ConfirmWithGrantError, AuthorizationDocument>(
+            "db_operations",
+            "DocumenRepository",
+            "confirmWithGrant",
+            { ConfirmWithGrantError.DocumentError.Unexpected }
+        ) {
+            val confirmedDocument = confirm(documentId, signedFile, requestedFrom, signatory)
+                .mapLeft { writeError ->
+                    when (writeError) {
+                        is RepositoryWriteError.NotFoundError -> ConfirmWithGrantError.DocumentError.NotFound
+                        is RepositoryWriteError.ConflictError -> ConfirmWithGrantError.DocumentError.Conflict
+                        is RepositoryWriteError.UnexpectedError -> ConfirmWithGrantError.DocumentError.Unexpected
+                    }
+                }.bind()
 
-                    grantRepo.insert(grant)
-                        .mapLeft { ConfirmWithGrantError.GrantError as ConfirmWithGrantError }
-                        .bind()
+            grantRepo.insert(grant)
+                .mapLeft { ConfirmWithGrantError.GrantError as ConfirmWithGrantError }
+                .bind()
 
-                    grantPropertiesRepository.insert(grantProperties)
-                        .mapLeft { ConfirmWithGrantError.GrantError as ConfirmWithGrantError }
-                        .bind()
+            grantPropertiesRepository.insert(grantProperties)
+                .mapLeft { ConfirmWithGrantError.GrantError as ConfirmWithGrantError }
+                .bind()
 
-                    confirmedDocument
-                }
+            confirmedDocument
         }
+}
 
-    enum class DatabaseStatus {
-        Pending,
-        Rejected
+enum class DatabaseStatus {
+    Pending,
+    Rejected
+}
+
+fun DatabaseStatus.toDocumentStatus() =
+    when (this) {
+        DatabaseStatus.Pending -> AuthorizationDocument.Status.Pending
+        DatabaseStatus.Rejected -> AuthorizationDocument.Status.Rejected
     }
 
-    fun DatabaseStatus.toDocumentStatus() =
-        when (this) {
-            DatabaseStatus.Pending -> AuthorizationDocument.Status.Pending
-            DatabaseStatus.Rejected -> AuthorizationDocument.Status.Rejected
-        }
+object AuthorizationDocumentTable : UUIDTable("auth.authorization_document") {
+    val type = customEnumeration(
+        name = "type",
+        sql = "authorization_document_type",
+        fromDb = { AuthorizationDocument.Type.valueOf(it as String) },
+        toDb = { PGEnum("authorization_document_type", it) },
+    )
+    val file = binary("file")
+    val status = customEnumeration(
+        name = "status",
+        sql = "authorization_document_status",
+        fromDb = { DatabaseStatus.valueOf(it as String) },
+        toDb = { PGEnum("authorization_document_status", it) },
+    )
+    val requestedBy = javaUUID("requested_by").references(AuthorizationPartyTable.id)
+    val requestedFrom = javaUUID("requested_from").references(AuthorizationPartyTable.id)
+    val requestedTo = javaUUID("requested_to").references(AuthorizationPartyTable.id)
+    val validTo = timestampWithTimeZone("valid_to").clientDefault { currentTimeUtc() }
+    val createdAt = timestampWithTimeZone("created_at").clientDefault { currentTimeUtc() }
+    val updatedAt = timestampWithTimeZone("updated_at").clientDefault { currentTimeUtc() }
+}
 
-    object AuthorizationDocumentTable : UUIDTable("auth.authorization_document") {
-        val type = customEnumeration(
-            name = "type",
-            sql = "authorization_document_type",
-            fromDb = { AuthorizationDocument.Type.valueOf(it as String) },
-            toDb = { PGEnum("authorization_document_type", it) },
-        )
-        val file = binary("file")
-        val status = customEnumeration(
-            name = "status",
-            sql = "authorization_document_status",
-            fromDb = { DatabaseStatus.valueOf(it as String) },
-            toDb = { PGEnum("authorization_document_status", it) },
-        )
-        val requestedBy = javaUUID("requested_by").references(AuthorizationPartyTable.id)
-        val requestedFrom = javaUUID("requested_from").references(AuthorizationPartyTable.id)
-        val requestedTo = javaUUID("requested_to").references(AuthorizationPartyTable.id)
-        val validTo = timestampWithTimeZone("valid_to").clientDefault { currentTimeUtc() }
-        val createdAt = timestampWithTimeZone("created_at").clientDefault { currentTimeUtc() }
-        val updatedAt = timestampWithTimeZone("updated_at").clientDefault { currentTimeUtc() }
+object AuthorizationDocumentScopeTable : Table("auth.authorization_document_scope") {
+    val authorizationDocumentId = javaUUID("authorization_document_id")
+        .references(AuthorizationDocumentTable.id, onDelete = ReferenceOption.CASCADE)
+    val authorizationScopeId = javaUUID("authorization_scope_id")
+        .references(AuthorizationScopeTable.id, onDelete = ReferenceOption.CASCADE)
+    override val primaryKey = PrimaryKey(authorizationDocumentId, authorizationScopeId)
+}
+
+object SignatoriesTable : Table("auth.authorization_document_signatories") {
+    val authorizationDocumentId = javaUUID("authorization_document_id")
+        .references(AuthorizationDocumentTable.id, onDelete = ReferenceOption.CASCADE)
+    val requestedFrom = javaUUID("requested_from")
+        .references(AuthorizationPartyTable.id)
+    val signedBy = javaUUID("signed_by")
+        .references(AuthorizationPartyTable.id)
+    val signedAt = timestampWithTimeZone("signed_at").clientDefault { currentTimeUtc() }
+
+    override val primaryKey = PrimaryKey(authorizationDocumentId, requestedFrom)
+}
+
+fun ResultRow.toAuthorizationDocument(
+    requestedBy: AuthorizationPartyRecord,
+    requestedFrom: AuthorizationPartyRecord,
+    requestedTo: AuthorizationPartyRecord,
+    properties: List<AuthorizationDocumentProperty>,
+    signedBy: AuthorizationPartyRecord? = null
+): AuthorizationDocument {
+    val dbStatus = this[AuthorizationDocumentTable.status]
+    val validTo = this[AuthorizationDocumentTable.validTo]
+
+    val status: AuthorizationDocument.Status = when {
+        signedBy != null -> AuthorizationDocument.Status.Signed
+        dbStatus == DatabaseStatus.Rejected -> AuthorizationDocument.Status.Rejected
+        dbStatus == DatabaseStatus.Pending && validTo <= currentTimeUtc() -> AuthorizationDocument.Status.Expired
+        else -> dbStatus.toDocumentStatus()
     }
 
-    object AuthorizationDocumentScopeTable : Table("auth.authorization_document_scope") {
-        val authorizationDocumentId = javaUUID("authorization_document_id")
-            .references(AuthorizationDocumentTable.id, onDelete = ReferenceOption.CASCADE)
-        val authorizationScopeId = javaUUID("authorization_scope_id")
-            .references(AuthorizationScopeTable.id, onDelete = ReferenceOption.CASCADE)
-        override val primaryKey = PrimaryKey(authorizationDocumentId, authorizationScopeId)
-    }
-
-    object SignatoriesTable : Table("auth.authorization_document_signatories") {
-        val authorizationDocumentId = javaUUID("authorization_document_id")
-            .references(AuthorizationDocumentTable.id, onDelete = ReferenceOption.CASCADE)
-        val requestedFrom = javaUUID("requested_from")
-            .references(AuthorizationPartyTable.id)
-        val signedBy = javaUUID("signed_by")
-            .references(AuthorizationPartyTable.id)
-        val signedAt = timestampWithTimeZone("signed_at").clientDefault { currentTimeUtc() }
-
-        override val primaryKey = PrimaryKey(authorizationDocumentId, requestedFrom)
-    }
-
-    fun ResultRow.toAuthorizationDocument(
-        requestedBy: AuthorizationPartyRecord,
-        requestedFrom: AuthorizationPartyRecord,
-        requestedTo: AuthorizationPartyRecord,
-        properties: List<AuthorizationDocumentProperty>,
-        signedBy: AuthorizationPartyRecord? = null
-    ): AuthorizationDocument {
-        val dbStatus = this[AuthorizationDocumentTable.status]
-        val validTo = this[AuthorizationDocumentTable.validTo]
-
-        val status: AuthorizationDocument.Status = when {
-            signedBy != null -> AuthorizationDocument.Status.Signed
-            dbStatus == DatabaseStatus.Rejected -> AuthorizationDocument.Status.Rejected
-            dbStatus == DatabaseStatus.Pending && validTo <= currentTimeUtc() -> AuthorizationDocument.Status.Expired
-            else -> dbStatus.toDocumentStatus()
-        }
-
-        return AuthorizationDocument(
-            id = this[AuthorizationDocumentTable.id].value,
-            type = this[AuthorizationDocumentTable.type],
-            status = status,
-            file = this[AuthorizationDocumentTable.file],
-            requestedBy = AuthorizationParty(id = requestedBy.resourceId, type = requestedBy.type),
-            requestedFrom = AuthorizationParty(id = requestedFrom.resourceId, type = requestedFrom.type),
-            requestedTo = AuthorizationParty(id = requestedTo.resourceId, type = requestedTo.type),
-            signedBy = signedBy?.let { AuthorizationParty(id = it.resourceId, type = it.type) },
-            createdAt = this[AuthorizationDocumentTable.createdAt],
-            updatedAt = this[AuthorizationDocumentTable.updatedAt],
-            validTo = validTo,
-            properties = properties
-        )
-    }
+    return AuthorizationDocument(
+        id = this[AuthorizationDocumentTable.id].value,
+        type = this[AuthorizationDocumentTable.type],
+        status = status,
+        file = this[AuthorizationDocumentTable.file],
+        requestedBy = AuthorizationParty(id = requestedBy.resourceId, type = requestedBy.type),
+        requestedFrom = AuthorizationParty(id = requestedFrom.resourceId, type = requestedFrom.type),
+        requestedTo = AuthorizationParty(id = requestedTo.resourceId, type = requestedTo.type),
+        signedBy = signedBy?.let { AuthorizationParty(id = it.resourceId, type = it.type) },
+        createdAt = this[AuthorizationDocumentTable.createdAt],
+        updatedAt = this[AuthorizationDocumentTable.updatedAt],
+        validTo = validTo,
+        properties = properties
+    )
+}

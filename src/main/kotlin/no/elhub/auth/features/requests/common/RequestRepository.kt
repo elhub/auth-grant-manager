@@ -81,7 +81,7 @@ class ExposedRequestRepository(
     override suspend fun findAllAndSortByCreatedAt(party: AuthorizationParty): Either<RepositoryReadError, List<AuthorizationRequest>> =
         transactionContext<RepositoryReadError, List<AuthorizationRequest>>(
             "db_operations",
-             "RequestRepository",
+            "RequestRepository",
             "findAllAndSortByCreatedAt",
             { RepositoryReadError.UnexpectedError }
         ) {
@@ -114,7 +114,12 @@ class ExposedRequestRepository(
         request: AuthorizationRequest,
         scopes: List<CreateScopeData>
     ): Either<RepositoryWriteError, AuthorizationRequest> =
-        transactionContext<RepositoryWriteError, AuthorizationRequest>("db_operations", "RequestRepository", "insert", { RepositoryWriteError.UnexpectedError }) {
+        transactionContext<RepositoryWriteError, AuthorizationRequest>(
+            "db_operations",
+            "RequestRepository",
+            "insert",
+            { RepositoryWriteError.UnexpectedError }
+        ) {
             val requestedByParty =
                 partyRepo
                     .findOrInsert(request.requestedBy.type, request.requestedBy.id)
