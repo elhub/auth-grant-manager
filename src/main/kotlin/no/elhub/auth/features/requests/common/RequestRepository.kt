@@ -2,7 +2,7 @@ package no.elhub.auth.features.requests.common
 
 import arrow.core.Either
 import arrow.core.raise.either
-import no.elhub.auth.config.withTransactionEither
+import no.elhub.auth.config.TransactionContext
 import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.common.PGEnum
 import no.elhub.auth.features.common.RepositoryError
@@ -75,30 +75,38 @@ class ExposedRequestRepository(
     private val requestPropertiesRepository: RequestPropertiesRepository,
     private val grantRepository: GrantRepository,
     private val grantPropertiesRepository: GrantPropertiesRepository,
+    private val transactionContext: TransactionContext,
 ) : RequestRepository {
 
     override suspend fun findAllAndSortByCreatedAt(party: AuthorizationParty): Either<RepositoryReadError, List<AuthorizationRequest>> =
-        withTransactionEither<RepositoryReadError, List<AuthorizationRequest>>({ RepositoryReadError.UnexpectedError }) {
+        transactionContext<RepositoryReadError, List<AuthorizationRequest>>(
+            "db_operations",
+            "RequestRepository",
+            "findAllAndSortByCreatedAt",
+            { RepositoryReadError.UnexpectedError }
+        ) {
             val partyId = partyRepo.findOrInsert(type = party.type, partyId = party.id)
                 .mapLeft { RepositoryReadError.UnexpectedError }
                 .bind()
                 .id
 
-            val rows = AuthorizationRequestTable
+            AuthorizationRequestTable
                 .selectAll()
                 .where {
                     (AuthorizationRequestTable.requestedTo eq partyId) or (AuthorizationRequestTable.requestedBy eq partyId)
                 }
                 .orderBy(AuthorizationRequestTable.createdAt to SortOrder.DESC)
                 .toList()
-
-            rows.map { row ->
-                findInternal(row).bind()
-            }
+                .map { row -> findInternal(row).mapLeft { RepositoryReadError.UnexpectedError }.bind() }
         }
 
     override suspend fun find(requestId: UUID): Either<RepositoryReadError, AuthorizationRequest> =
-        withTransactionEither<RepositoryReadError, AuthorizationRequest>({ RepositoryReadError.UnexpectedError }) {
+        transactionContext<RepositoryReadError, AuthorizationRequest>(
+            "db_operations",
+            "RequestRepository",
+            "find",
+            { RepositoryReadError.UnexpectedError }
+        ) {
             val request =
                 AuthorizationRequestTable
                     .selectAll()
@@ -111,7 +119,12 @@ class ExposedRequestRepository(
         request: AuthorizationRequest,
         scopes: List<CreateScopeData>
     ): Either<RepositoryWriteError, AuthorizationRequest> =
-        withTransactionEither<RepositoryWriteError, AuthorizationRequest>({ RepositoryWriteError.UnexpectedError }) {
+        transactionContext<RepositoryWriteError, AuthorizationRequest>(
+            "db_operations",
+            "RequestRepository",
+            "insert",
+            { RepositoryWriteError.UnexpectedError }
+        ) {
             val requestedByParty =
                 partyRepo
                     .findOrInsert(request.requestedBy.type, request.requestedBy.id)
@@ -156,7 +169,12 @@ class ExposedRequestRepository(
         }
 
     override suspend fun rejectRequest(requestId: UUID): Either<RepositoryError, AuthorizationRequest> =
-        withTransactionEither<RepositoryError, AuthorizationRequest>({ RepositoryWriteError.UnexpectedError }) {
+        transactionContext<RepositoryError, AuthorizationRequest>(
+            "db_operations",
+            "RequestRepository",
+            "rejectRequest",
+            { RepositoryWriteError.UnexpectedError }
+        ) {
             val rowsUpdated = AuthorizationRequestTable.update(
                 where = { AuthorizationRequestTable.id eq requestId }
             ) {
@@ -168,13 +186,16 @@ class ExposedRequestRepository(
         }
 
     override suspend fun findScopeIds(requestId: UUID): Either<RepositoryReadError, List<UUID>> =
-        withTransactionEither<RepositoryReadError, List<UUID>>({ RepositoryReadError.UnexpectedError }) {
+        transactionContext<RepositoryReadError, List<UUID>>(
+            "db_operations",
+            "RequestRepository",
+            "findScopeIds",
+            { RepositoryReadError.UnexpectedError }
+        ) {
             AuthorizationRequestScopeTable
                 .selectAll()
                 .where { authorizationRequestId eq requestId }
-                .map { row ->
-                    row[authorizationScopeId]
-                }
+                .map { row -> row[authorizationScopeId] }
         }
 
     override suspend fun acceptWithGrant(
@@ -183,7 +204,12 @@ class ExposedRequestRepository(
         grant: AuthorizationGrant,
         grantProperties: List<AuthorizationGrantProperty>,
     ): Either<AcceptWithGrantError, AuthorizationRequest> =
-        withTransactionEither<AcceptWithGrantError, AuthorizationRequest>({ AcceptWithGrantError.RequestError.Unexpected }) {
+        transactionContext<AcceptWithGrantError, AuthorizationRequest>(
+            "db_operations",
+            "RequestRepository",
+            "acceptWithGrant",
+            { AcceptWithGrantError.RequestError.Unexpected }
+        ) {
             val approvedByRecord = partyRepo.findOrInsert(approvedBy.type, approvedBy.id)
                 .mapLeft { AcceptWithGrantError.RequestError.Unexpected }
                 .bind()
@@ -213,7 +239,6 @@ class ExposedRequestRepository(
         }
 
     private fun handleScopes(scopes: List<CreateScopeData>, insertedRequest: ResultRow) {
-        // upsert scopes
         val scopeIds: List<UUID> = AuthorizationScopeTable
             .batchInsert(scopes) { scope ->
                 this[authorizedResourceType] = scope.authorizedResourceType
@@ -223,7 +248,6 @@ class ExposedRequestRepository(
             .map { it[AuthorizationScopeTable.id].value }
             .distinct()
 
-        // insert request-scope links
         if (scopeIds.isNotEmpty()) {
             AuthorizationRequestScopeTable.batchInsert(scopeIds) { id ->
                 this[authorizationRequestId] = insertedRequest[AuthorizationRequestTable.id].value
@@ -232,7 +256,7 @@ class ExposedRequestRepository(
         }
     }
 
-    private fun updateAndFetch(requestId: UUID, rowsUpdated: Int): Either<RepositoryError, AuthorizationRequest> =
+    private suspend fun updateAndFetch(requestId: UUID, rowsUpdated: Int): Either<RepositoryError, AuthorizationRequest> =
         either {
             if (rowsUpdated == 0) {
                 raise(RepositoryWriteError.UnexpectedError)
@@ -249,7 +273,7 @@ class ExposedRequestRepository(
                 .bind()
         }
 
-    private fun findInternal(request: ResultRow): Either<RepositoryReadError, AuthorizationRequest> =
+    private suspend fun findInternal(request: ResultRow): Either<RepositoryReadError, AuthorizationRequest> =
         either {
             val requestedByDbId = request[AuthorizationRequestTable.requestedBy]
             val requestedFromDbId = request[AuthorizationRequestTable.requestedFrom]

@@ -27,7 +27,7 @@ interface PersonService {
 
 class ApiPersonService(
     private val cfg: PersonApiConfig,
-    private val client: HttpClient
+    private val client: HttpClient,
 ) : PersonService {
 
     private val logger = LoggerFactory.getLogger(PersonService::class.java)

@@ -22,7 +22,6 @@ class ExposedRequestPropertiesRepositoryTest : FunSpec({
         RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-scopes.sql"),
         RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-requests.sql"),
     )
-
     val propertyRepo = ExposedRequestPropertiesRepository()
 
     val requestId = UUID.fromString("4f71d596-99e4-415e-946d-7252c1a40c51")

@@ -12,6 +12,9 @@ import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.micrometer.prometheusmetrics.PrometheusConfig
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
+import no.elhub.auth.config.TransactionContext
 import no.elhub.auth.config.withTransaction
 import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.common.PostgresTestContainer
@@ -37,12 +40,19 @@ import java.util.UUID
 class ExposedDocumentRepositoryTest :
     FunSpec({
         extensions(PostgresTestContainerExtension())
+        val transactionContext = TransactionContext(PrometheusMeterRegistry(PrometheusConfig.DEFAULT))
         val partyRepository = ExposedPartyRepository()
         val propertiesRepository = ExposedDocumentPropertiesRepository()
-        val grantPropertiesRepository = ExposedGrantPropertiesRepository()
-        val grantRepository = ExposedGrantRepository(partyRepository, grantPropertiesRepository)
+        val grantPropertiesRepository = ExposedGrantPropertiesRepository(transactionContext)
+        val grantRepository = ExposedGrantRepository(partyRepository, grantPropertiesRepository, transactionContext)
         val repository =
-            ExposedDocumentRepository(partyRepository, grantRepository, propertiesRepository, grantPropertiesRepository)
+            ExposedDocumentRepository(
+                partyRepository,
+                grantRepository,
+                propertiesRepository,
+                grantPropertiesRepository,
+                transactionContext,
+            )
 
         beforeSpec {
             Database.connect(
@@ -53,6 +63,12 @@ class ExposedDocumentRepositoryTest :
             )
         }
 
+        context("Find") {
+            test("Should return not found error when no data exists") {
+                val result = repository.find(UUID.randomUUID())
+                result shouldBeLeft RepositoryReadError.NotFoundError
+            }
+        }
         context("Insert Document") {
             test("Should insert a document and its scopes with correct references") {
                 // Given
@@ -222,13 +238,6 @@ class ExposedDocumentRepositoryTest :
                         .map { it[AuthorizationGrantPropertyTable.key] to it[AuthorizationGrantPropertyTable.value] }
                     storedProperties shouldContainExactlyInAnyOrder listOf("meta-key" to "meta-value")
                 }
-            }
-        }
-
-        context("Find") {
-            test("returns NotFoundError on nonexistent ID") {
-                val result = repository.find(UUID.fromString("244a81f8-250b-4a4e-b27c-01ff60ddfa9b"))
-                result.shouldBeLeft(RepositoryReadError.NotFoundError)
             }
         }
     })
