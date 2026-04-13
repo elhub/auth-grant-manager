@@ -37,7 +37,7 @@ suspend fun <T> PrometheusMeterRegistry.measureTransaction(
     methodName: String,
     block: suspend () -> T
 ): T {
-    val timer = timer(metricName, Tags.of(className, methodName))
+    val timer = timer(metricName, Tags.of("class", className, "method", methodName))
     val start = System.nanoTime()
     return try {
         block()
