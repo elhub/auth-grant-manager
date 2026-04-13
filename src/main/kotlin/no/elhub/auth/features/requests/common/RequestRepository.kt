@@ -135,7 +135,8 @@ class ExposedRequestRepository(
                     ?: raise(RepositoryReadError.UnexpectedError)
                 val requestedTo = partyMap[row[AuthorizationRequestTable.requestedTo]]
                     ?: raise(RepositoryReadError.UnexpectedError)
-                val approvedBy = row[AuthorizationRequestTable.approvedBy]?.let { partyMap[it] }
+                val approvedById = row[AuthorizationRequestTable.approvedBy]
+                val approvedBy = approvedById?.let { partyMap[it] ?: raise(RepositoryReadError.UnexpectedError) }
                 val requestId = row[AuthorizationRequestTable.id].value
                 row.toAuthorizationRequest(
                     requestedBy = requestedBy,
