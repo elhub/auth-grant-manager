@@ -264,7 +264,8 @@ class ExposedGrantRepository(
             "db_operations",
             "GrantRepository",
             "update",
-            { RepositoryWriteError.UnexpectedError }) {
+            { RepositoryWriteError.UnexpectedError }
+        ) {
             val rowsUpdated =
                 AuthorizationGrantTable.update(
                     where = { AuthorizationGrantTable.id eq grantId }
