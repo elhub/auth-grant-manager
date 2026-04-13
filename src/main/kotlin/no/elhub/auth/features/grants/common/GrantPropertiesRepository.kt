@@ -58,7 +58,7 @@ object AuthorizationGrantPropertyTable : Table("auth.authorization_grant_propert
     val value = text("value")
 }
 
-private fun ResultRow.toAuthorizationGrantProperty() = AuthorizationGrantProperty(
+internal fun ResultRow.toAuthorizationGrantProperty() = AuthorizationGrantProperty(
     grantId = this[AuthorizationGrantPropertyTable.grantId],
     key = this[AuthorizationGrantPropertyTable.key],
     value = this[AuthorizationGrantPropertyTable.value]

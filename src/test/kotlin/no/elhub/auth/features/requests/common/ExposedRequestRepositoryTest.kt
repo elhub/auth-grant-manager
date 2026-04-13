@@ -147,6 +147,13 @@ class ExposedRequestRepositoryTest : FunSpec({
         createdAtList shouldBe createdAtList.sortedDescending()
     }
 
+    test("findAllAndSortByCreatedAt returns empty list for party with no requests") {
+        val party = AuthorizationParty(type = PartyType.Person, id = UUID.randomUUID().toString())
+        val result = requestRepo.findAllAndSortByCreatedAt(party)
+            .getOrElse { throw AssertionError("Repository read failed: $it") }
+        result shouldBe emptyList()
+    }
+
     test("find returns correct request") {
         val requests = List(10) {
             generateRequestWithoutProperties()

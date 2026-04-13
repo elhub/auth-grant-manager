@@ -40,7 +40,7 @@ object AuthorizationRequestPropertyTable : Table("auth.authorization_request_pro
     val value = text("value")
 }
 
-private fun ResultRow.toAuthorizationRequestProperty() = AuthorizationRequestProperty(
+internal fun ResultRow.toAuthorizationRequestProperty() = AuthorizationRequestProperty(
     requestId = this[AuthorizationRequestPropertyTable.requestId],
     key = this[AuthorizationRequestPropertyTable.key],
     value = this[AuthorizationRequestPropertyTable.value]
