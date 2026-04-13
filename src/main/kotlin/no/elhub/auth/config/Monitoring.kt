@@ -32,6 +32,9 @@ fun Application.configureMonitoring(dataSource: HikariDataSource) {
             appMicrometerRegistry
         }
     }
+    dataSource.apply {
+        metricRegistry = appMicrometerRegistry
+    }
 
     install(Cohort) {
         dataSources = listOf(HikariDataSourceManager(dataSource))
