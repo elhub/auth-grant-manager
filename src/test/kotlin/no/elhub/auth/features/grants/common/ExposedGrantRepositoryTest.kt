@@ -1,15 +1,20 @@
 package no.elhub.auth.features.grants.common
 
 import arrow.core.getOrElse
+import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.fail
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import io.micrometer.prometheusmetrics.PrometheusConfig
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.plus
+import no.elhub.auth.config.TransactionContext
 import no.elhub.auth.config.withTransaction
 import no.elhub.auth.features.common.PostgresTestContainer
 import no.elhub.auth.features.common.PostgresTestContainerExtension
+import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.AuthorizationPartyTable
 import no.elhub.auth.features.common.party.ExposedPartyRepository
@@ -28,9 +33,10 @@ import java.util.UUID
 
 class ExposedGrantRepositoryTest : FunSpec({
     extensions(PostgresTestContainerExtension())
+    val transactionContext = TransactionContext(PrometheusMeterRegistry(PrometheusConfig.DEFAULT))
     val partyRepo = ExposedPartyRepository()
-    val grantPropertiesRepo = ExposedGrantPropertiesRepository()
-    val grantRepo = ExposedGrantRepository(partyRepo, grantPropertiesRepo)
+    val grantPropertiesRepo = ExposedGrantPropertiesRepository(transactionContext)
+    val grantRepo = ExposedGrantRepository(partyRepo, grantPropertiesRepo, transactionContext)
     val scopeIds = listOf(
         UUID.fromString("75ad606f-4ac9-4d4f-acd5-20d6862ec198"),
         UUID.fromString("0feefd01-36c7-403b-9bf1-c11d6458f639"),
@@ -148,6 +154,11 @@ class ExposedGrantRepositoryTest : FunSpec({
             }
 
         scopes.size shouldBe 3
+    }
+
+    test("find should return not found when not found") {
+        val result = grantRepo.find(UUID.fromString("12345678-e89b-12d3-a111-426614174000"))
+        result shouldBeLeft RepositoryReadError.NotFoundError
     }
 
     test("update should return grant with new status") {

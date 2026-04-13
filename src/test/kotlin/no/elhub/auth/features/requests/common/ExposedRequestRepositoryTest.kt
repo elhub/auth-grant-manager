@@ -8,6 +8,9 @@ import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.micrometer.prometheusmetrics.PrometheusConfig
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
+import no.elhub.auth.config.TransactionContext
 import no.elhub.auth.config.withTransaction
 import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.common.PostgresTestContainer
@@ -43,11 +46,18 @@ class ExposedRequestRepositoryTest : FunSpec({
         RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-scopes.sql"),
         RunPostgresScriptExtension(scriptResourcePath = "db/insert-authorization-requests.sql"),
     )
+    val transactionContext = TransactionContext(PrometheusMeterRegistry(PrometheusConfig.DEFAULT))
     val partyRepo = ExposedPartyRepository()
     val requestPropertiesRepo = ExposedRequestPropertiesRepository()
-    val grantPropertiesRepository = ExposedGrantPropertiesRepository()
-    val grantRepository = ExposedGrantRepository(partyRepo, grantPropertiesRepository)
-    val requestRepo = ExposedRequestRepository(partyRepo, requestPropertiesRepo, grantRepository, grantPropertiesRepository)
+    val grantPropertiesRepository = ExposedGrantPropertiesRepository(transactionContext)
+    val grantRepository = ExposedGrantRepository(partyRepo, grantPropertiesRepository, transactionContext)
+    val requestRepo = ExposedRequestRepository(
+        partyRepo,
+        requestPropertiesRepo,
+        grantRepository,
+        grantPropertiesRepository,
+        transactionContext
+    )
 
     val scopes = listOf(
         CreateScopeData(
