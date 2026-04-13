@@ -13,6 +13,7 @@ import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.AuthorizationPartyRecord
 import no.elhub.auth.features.common.party.AuthorizationPartyTable
 import no.elhub.auth.features.common.party.PartyRepository
+import no.elhub.auth.features.common.party.toAuthorizationParty
 import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.common.AuthorizationGrantProperty
 import no.elhub.auth.features.grants.common.AuthorizationScopeTable
@@ -30,6 +31,7 @@ import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.javatime.timestampWithTimeZone
@@ -90,14 +92,59 @@ class ExposedRequestRepository(
                 .bind()
                 .id
 
-            AuthorizationRequestTable
+            val requestRows = AuthorizationRequestTable
                 .selectAll()
                 .where {
                     (AuthorizationRequestTable.requestedTo eq partyId) or (AuthorizationRequestTable.requestedBy eq partyId)
                 }
                 .orderBy(AuthorizationRequestTable.createdAt to SortOrder.DESC)
                 .toList()
-                .map { row -> findInternal(row).mapLeft { RepositoryReadError.UnexpectedError }.bind() }
+
+            if (requestRows.isEmpty()) return@transactionContext emptyList()
+
+            val requestIds = requestRows.map { it[AuthorizationRequestTable.id].value }
+
+            // Batch-load all party records needed across all requests in a single query
+            val allPartyIds = requestRows.flatMap {
+                listOfNotNull(
+                    it[AuthorizationRequestTable.requestedBy],
+                    it[AuthorizationRequestTable.requestedFrom],
+                    it[AuthorizationRequestTable.requestedTo],
+                    it[AuthorizationRequestTable.approvedBy],
+                )
+            }.distinct()
+            val partyMap: Map<UUID, AuthorizationPartyRecord> = AuthorizationPartyTable
+                .selectAll()
+                .where { AuthorizationPartyTable.id inList allPartyIds }
+                .associate { it[AuthorizationPartyTable.id].value to it.toAuthorizationParty() }
+
+            // Batch-load all properties for all requests in one query
+            val propertiesByRequestId: Map<UUID, List<AuthorizationRequestProperty>> =
+                AuthorizationRequestPropertyTable
+                    .selectAll()
+                    .where { AuthorizationRequestPropertyTable.requestId inList requestIds }
+                    .groupBy(
+                        { it[AuthorizationRequestPropertyTable.requestId] },
+                        { it.toAuthorizationRequestProperty() }
+                    )
+
+            requestRows.map { row ->
+                val requestedBy = partyMap[row[AuthorizationRequestTable.requestedBy]]
+                    ?: raise(RepositoryReadError.UnexpectedError)
+                val requestedFrom = partyMap[row[AuthorizationRequestTable.requestedFrom]]
+                    ?: raise(RepositoryReadError.UnexpectedError)
+                val requestedTo = partyMap[row[AuthorizationRequestTable.requestedTo]]
+                    ?: raise(RepositoryReadError.UnexpectedError)
+                val approvedBy = row[AuthorizationRequestTable.approvedBy]?.let { partyMap[it] }
+                val requestId = row[AuthorizationRequestTable.id].value
+                row.toAuthorizationRequest(
+                    requestedBy = requestedBy,
+                    requestedFrom = requestedFrom,
+                    requestedTo = requestedTo,
+                    properties = propertiesByRequestId[requestId] ?: emptyList(),
+                    approvedBy = approvedBy,
+                )
+            }
         }
 
     override suspend fun find(requestId: UUID): Either<RepositoryReadError, AuthorizationRequest> =
