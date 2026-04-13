@@ -74,7 +74,6 @@ class ExposedGrantRepository(
 
             val grantIds = grantRows.map { it[AuthorizationGrantTable.id].value }
 
-            // Batch-load all party records needed across all grants in a single query
             val allPartyIds = grantRows.flatMap {
                 listOfNotNull(
                     it[AuthorizationGrantTable.grantedBy],
@@ -87,16 +86,15 @@ class ExposedGrantRepository(
                 .where { AuthorizationPartyTable.id inList allPartyIds }
                 .associate { it[AuthorizationPartyTable.id].value to it.toAuthorizationParty() }
 
-            // Batch-load all scopes for all grants in two queries (join table + scope table)
-            val scopesByGrantId: Map<UUID, List<UUID>> = (AuthorizationGrantScopeTable innerJoin AuthorizationScopeTable)
-                .selectAll()
-                .where { AuthorizationGrantScopeTable.authorizationGrantId inList grantIds }
-                .groupBy(
-                    { it[AuthorizationGrantScopeTable.authorizationGrantId] },
-                    { it[AuthorizationScopeTable.id].value }
-                )
+            val scopesByGrantId: Map<UUID, List<UUID>> =
+                (AuthorizationGrantScopeTable innerJoin AuthorizationScopeTable)
+                    .selectAll()
+                    .where { AuthorizationGrantScopeTable.authorizationGrantId inList grantIds }
+                    .groupBy(
+                        { it[AuthorizationGrantScopeTable.authorizationGrantId] },
+                        { it[AuthorizationScopeTable.id].value }
+                    )
 
-            // Batch-load all properties for all grants in one query
             val propertiesByGrantId: Map<UUID, List<AuthorizationGrantProperty>> = AuthorizationGrantPropertyTable
                 .selectAll()
                 .where { AuthorizationGrantPropertyTable.grantId inList grantIds }
@@ -262,7 +260,11 @@ class ExposedGrantRepository(
         }
 
     override suspend fun update(grantId: UUID, newStatus: Status): Either<RepositoryError, AuthorizationGrant> =
-        transactionContext<RepositoryError, AuthorizationGrant>("db_operations", "GrantRepository", "update", { RepositoryWriteError.UnexpectedError }) {
+        transactionContext<RepositoryError, AuthorizationGrant>(
+            "db_operations",
+            "GrantRepository",
+            "update",
+            { RepositoryWriteError.UnexpectedError }) {
             val rowsUpdated =
                 AuthorizationGrantTable.update(
                     where = { AuthorizationGrantTable.id eq grantId }

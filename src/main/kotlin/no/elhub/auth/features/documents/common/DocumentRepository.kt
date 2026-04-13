@@ -149,7 +149,7 @@ class ExposedDocumentRepository(
                 .select(listOf(SignatoriesTable.signedBy))
                 .where {
                     (SignatoriesTable.authorizationDocumentId eq id) and
-                        (SignatoriesTable.requestedFrom eq documentRow[AuthorizationDocumentTable.requestedFrom])
+                            (SignatoriesTable.requestedFrom eq documentRow[AuthorizationDocumentTable.requestedFrom])
                 }
                 .singleOrNull()
                 ?.let { resolveParty(it[SignatoriesTable.signedBy]).bind() }
