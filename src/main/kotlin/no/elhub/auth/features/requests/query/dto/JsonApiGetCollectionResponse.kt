@@ -2,6 +2,7 @@ package no.elhub.auth.features.requests.query.dto
 
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import no.elhub.auth.features.common.Page
 import no.elhub.auth.features.common.currentTimeOslo
 import no.elhub.auth.features.common.dto.JsonApiResourceMetaMap
 import no.elhub.auth.features.common.party.dto.toJsonApiRelationship
@@ -26,9 +27,11 @@ typealias GetRequestCollectionResponse = JsonApiResponse.CollectionDocumentWithR
     AuthorizationRequestResponseLinks
     >
 
-fun List<AuthorizationRequest>.toGetCollectionResponse() =
-    GetRequestCollectionResponse(
-        data = this.map { request ->
+fun Page<AuthorizationRequest>.toGetCollectionResponse(): GetRequestCollectionResponse {
+    val p = this.pagination
+
+    return JsonApiResponse.CollectionDocumentWithRelationshipsAndMetaAndLinks(
+        data = this.items.map { request ->
             JsonApiResponseResourceObjectWithRelationshipsAndMetaAndLinks(
                 id = request.id.toString(),
                 type = "AuthorizationRequest",
@@ -64,14 +67,18 @@ fun List<AuthorizationRequest>.toGetCollectionResponse() =
                     }
                 ),
                 links = AuthorizationRequestResponseLinks(
-                    self = "${REQUESTS_PATH}/${request.id}",
+                    self = "$REQUESTS_PATH/${request.id}",
                 )
             )
         },
-        links = JsonApiLinks.ResourceObjectLink(REQUESTS_PATH),
         meta = JsonApiMeta(
             buildJsonObject {
                 put("createdAt", currentTimeOslo().toTimeZoneOffsetString())
+                put("totalItems", this@toGetCollectionResponse.totalItems)
+                put("totalPages", this@toGetCollectionResponse.totalPages)
+                put("page", p.page)
+                put("pageSize", p.size)
             }
         )
     )
+}

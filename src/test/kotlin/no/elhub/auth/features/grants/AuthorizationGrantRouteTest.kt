@@ -509,8 +509,9 @@ class AuthorizationGrantRouteTest : FunSpec({
                     val responseJson: CollectionGrantResponse = response.body()
                     responseJson.data.apply {
                         size shouldBe 5
-                        this[0].apply {
-                            id.shouldNotBeNull()
+
+                        val activeGrant = first { it.id == "123e4567-e89b-12d3-a456-426614174000" }
+                        activeGrant.apply {
                             type shouldBe "AuthorizationGrant"
                             attributes.shouldNotBeNull()
                             attributes!!.apply {
@@ -559,8 +560,9 @@ class AuthorizationGrantRouteTest : FunSpec({
                                 }
                             }
                         }
-                        this[1].apply {
-                            id.shouldNotBeNull()
+
+                        val revokedGrant = first { it.id == "a8f9c2e4-5a3d-4e2b-9c1a-8f6e2d3c4b5a" }
+                        revokedGrant.apply {
                             type shouldBe "AuthorizationGrant"
                             attributes.shouldNotBeNull()
                             attributes!!.apply {

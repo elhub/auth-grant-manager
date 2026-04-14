@@ -13,6 +13,7 @@ import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import no.elhub.auth.config.TransactionContext
 import no.elhub.auth.config.withTransaction
 import no.elhub.auth.features.common.CreateScopeData
+import no.elhub.auth.features.common.Pagination
 import no.elhub.auth.features.common.PostgresTestContainer
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.RunPostgresScriptExtension
@@ -111,17 +112,17 @@ class ExposedRequestRepositoryTest : FunSpec({
             requestRepo.insert(request, scopes)
         }
 
-        val requestsOfTargetParty1 = requestRepo.findAllAndSortByCreatedAt(targetParty1)
+        val requestsOfTargetParty1 = requestRepo.findAllAndSortByCreatedAt(targetParty1, Pagination(size = 200))
             .getOrElse { _ ->
                 fail("findAllAndSortByCreatedAt failed for target party 1")
             }
-        requestsOfTargetParty1.size shouldBe numTargetRequests
+        requestsOfTargetParty1.items.size shouldBe numTargetRequests
 
-        requestRepo.findAllAndSortByCreatedAt(targetParty2)
+        requestRepo.findAllAndSortByCreatedAt(targetParty2, Pagination(size = 200))
             .getOrElse { _ ->
                 fail("findAllAndSortByCreatedAt failed for target party 2")
             }
-        requestsOfTargetParty1.size shouldBe numTargetRequests
+        requestsOfTargetParty1.items.size shouldBe numTargetRequests
     }
 
     test("findAllAndSortByCreatedAt returns requests by createdAt DESC") {
@@ -139,19 +140,19 @@ class ExposedRequestRepositoryTest : FunSpec({
             requestRepo.insert(request, scopes)
         }
 
-        val result = requestRepo.findAllAndSortByCreatedAt(party)
+        val result = requestRepo.findAllAndSortByCreatedAt(party, Pagination(size = 100))
             .getOrElse { throw AssertionError("Repository read failed: $it") }
 
-        val createdAtList = result.map { it.createdAt }
+        val createdAtList = result.items.map { it.createdAt }
 
         createdAtList shouldBe createdAtList.sortedDescending()
     }
 
     test("findAllAndSortByCreatedAt returns empty list for party with no requests") {
         val party = AuthorizationParty(type = PartyType.Person, id = UUID.randomUUID().toString())
-        val result = requestRepo.findAllAndSortByCreatedAt(party)
+        val result = requestRepo.findAllAndSortByCreatedAt(party, Pagination())
             .getOrElse { throw AssertionError("Repository read failed: $it") }
-        result shouldBe emptyList()
+        result.items shouldBe emptyList()
     }
 
     test("find returns correct request") {

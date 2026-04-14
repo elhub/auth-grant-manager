@@ -9,6 +9,8 @@ import no.elhub.auth.features.common.RepositoryError
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.RepositoryWriteError
 import no.elhub.auth.features.common.currentTimeUtc
+import no.elhub.auth.features.common.Page
+import no.elhub.auth.features.common.Pagination
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.AuthorizationPartyRecord
 import no.elhub.auth.features.common.party.AuthorizationPartyTable
@@ -55,7 +57,7 @@ sealed interface AcceptWithGrantError {
 
 interface RequestRepository {
     suspend fun find(requestId: UUID): Either<RepositoryReadError, AuthorizationRequest>
-    suspend fun findAllAndSortByCreatedAt(party: AuthorizationParty): Either<RepositoryReadError, List<AuthorizationRequest>>
+    suspend fun findAllAndSortByCreatedAt(party: AuthorizationParty, pagination: Pagination): Either<RepositoryReadError, Page<AuthorizationRequest>>
     suspend fun insert(
         request: AuthorizationRequest,
         scopes: List<CreateScopeData>
@@ -80,8 +82,8 @@ class ExposedRequestRepository(
     private val transactionContext: TransactionContext,
 ) : RequestRepository {
 
-    override suspend fun findAllAndSortByCreatedAt(party: AuthorizationParty): Either<RepositoryReadError, List<AuthorizationRequest>> =
-        transactionContext<RepositoryReadError, List<AuthorizationRequest>>(
+    override suspend fun findAllAndSortByCreatedAt(party: AuthorizationParty, pagination: Pagination): Either<RepositoryReadError, Page<AuthorizationRequest>> =
+        transactionContext<RepositoryReadError, Page<AuthorizationRequest>>(
             "db_operations",
             "RequestRepository",
             "findAllAndSortByCreatedAt",
@@ -92,19 +94,25 @@ class ExposedRequestRepository(
                 .bind()
                 .id
 
+            val whereClause = { (AuthorizationRequestTable.requestedTo eq partyId) or (AuthorizationRequestTable.requestedBy eq partyId) }
+
+            val totalItems = AuthorizationRequestTable
+                .selectAll()
+                .where(whereClause)
+                .count()
+
             val requestRows = AuthorizationRequestTable
                 .selectAll()
-                .where {
-                    (AuthorizationRequestTable.requestedTo eq partyId) or (AuthorizationRequestTable.requestedBy eq partyId)
-                }
+                .where(whereClause)
                 .orderBy(AuthorizationRequestTable.createdAt to SortOrder.DESC)
+                .limit(pagination.size)
+                .offset(pagination.offset)
                 .toList()
 
-            if (requestRows.isEmpty()) return@transactionContext emptyList()
+            if (requestRows.isEmpty()) return@transactionContext Page(emptyList(), totalItems, pagination)
 
             val requestIds = requestRows.map { it[AuthorizationRequestTable.id].value }
 
-            // Batch-load all party records needed across all requests in a single query
             val allPartyIds = requestRows.flatMap {
                 listOfNotNull(
                     it[AuthorizationRequestTable.requestedBy],
@@ -118,7 +126,6 @@ class ExposedRequestRepository(
                 .where { AuthorizationPartyTable.id inList allPartyIds }
                 .associate { it[AuthorizationPartyTable.id].value to it.toAuthorizationParty() }
 
-            // Batch-load all properties for all requests in one query
             val propertiesByRequestId: Map<UUID, List<AuthorizationRequestProperty>> =
                 AuthorizationRequestPropertyTable
                     .selectAll()
@@ -128,15 +135,14 @@ class ExposedRequestRepository(
                         { it.toAuthorizationRequestProperty() }
                     )
 
-            requestRows.map { row ->
+            val items = requestRows.map { row ->
                 val requestedBy = partyMap[row[AuthorizationRequestTable.requestedBy]]
                     ?: raise(RepositoryReadError.UnexpectedError)
                 val requestedFrom = partyMap[row[AuthorizationRequestTable.requestedFrom]]
                     ?: raise(RepositoryReadError.UnexpectedError)
                 val requestedTo = partyMap[row[AuthorizationRequestTable.requestedTo]]
                     ?: raise(RepositoryReadError.UnexpectedError)
-                val approvedById = row[AuthorizationRequestTable.approvedBy]
-                val approvedBy = approvedById?.let { partyMap[it] ?: raise(RepositoryReadError.UnexpectedError) }
+                val approvedBy = row[AuthorizationRequestTable.approvedBy]?.let { partyMap[it] ?: raise(RepositoryReadError.UnexpectedError) }
                 val requestId = row[AuthorizationRequestTable.id].value
                 row.toAuthorizationRequest(
                     requestedBy = requestedBy,
@@ -146,6 +152,8 @@ class ExposedRequestRepository(
                     approvedBy = approvedBy,
                 )
             }
+
+            Page(items = items, totalItems = totalItems, pagination = pagination)
         }
 
     override suspend fun find(requestId: UUID): Either<RepositoryReadError, AuthorizationRequest> =

@@ -3,6 +3,7 @@ package no.elhub.auth.features.grants.common.dto
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import no.elhub.auth.features.common.Page
 import no.elhub.auth.features.common.currentTimeOslo
 import no.elhub.auth.features.common.toTimeZoneOffsetString
 import no.elhub.auth.features.documents.DOCUMENTS_PATH
@@ -16,8 +17,11 @@ import no.elhub.devxp.jsonapi.model.JsonApiRelationshipData
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipToMany
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipToOne
 import no.elhub.devxp.jsonapi.model.JsonApiRelationships
+import no.elhub.devxp.jsonapi.model.JsonApiResourceLinks
+import no.elhub.devxp.jsonapi.model.JsonApiResourceMeta
 import no.elhub.devxp.jsonapi.response.JsonApiResponse
 import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObjectWithRelationships
+import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObjectWithRelationshipsAndMetaAndLinks
 
 @Serializable
 data class GrantResponseAttributes(
@@ -38,14 +42,24 @@ data class GrantResponseRelationShips(
     val scopes: JsonApiRelationshipToMany
 ) : JsonApiRelationships
 
+/** Per-item links for a grant in a collection response (just `self`). */
+@Serializable
+data class GrantItemLinks(val self: String) : JsonApiResourceLinks
+
+@Serializable
+@JvmInline
+value class GrantCollectionItemMeta(private val dummy: String = "") : JsonApiResourceMeta
+
 typealias SingleGrantResponse = JsonApiResponse.SingleDocumentWithRelationships<
     GrantResponseAttributes,
     GrantResponseRelationShips,
     >
 
-typealias CollectionGrantResponse = JsonApiResponse.CollectionDocumentWithRelationships<
+typealias CollectionGrantResponse = JsonApiResponse.CollectionDocumentWithRelationshipsAndMetaAndLinks<
     GrantResponseAttributes,
     GrantResponseRelationShips,
+    GrantCollectionItemMeta,
+    GrantItemLinks,
     >
 
 fun AuthorizationGrant.toSingleGrantResponse() =
@@ -123,10 +137,12 @@ fun AuthorizationGrant.toSingleGrantResponse() =
         )
     )
 
-fun List<AuthorizationGrant>.toCollectionGrantResponse() =
-    CollectionGrantResponse(
-        data = this.map { grant ->
-            JsonApiResponseResourceObjectWithRelationships(
+fun Page<AuthorizationGrant>.toCollectionGrantResponse(): CollectionGrantResponse {
+    val p = this.pagination
+
+    return CollectionGrantResponse(
+        data = this.items.map { grant ->
+            JsonApiResponseResourceObjectWithRelationshipsAndMetaAndLinks(
                 type = "AuthorizationGrant",
                 id = grant.id.toString(),
                 attributes = GrantResponseAttributes(
@@ -180,22 +196,18 @@ fun List<AuthorizationGrant>.toCollectionGrantResponse() =
                         }
                     )
                 ),
-                meta = grant.properties.takeIf { it.isNotEmpty() }?.let {
-                    JsonApiMeta(
-                        buildJsonObject {
-                            grant.properties.forEach { prop ->
-                                put(prop.key, prop.value)
-                            }
-                        }
-                    )
-                },
-                links = JsonApiLinks.ResourceObjectLink("$GRANTS_PATH/${grant.id}"),
+                meta = GrantCollectionItemMeta(),
+                links = GrantItemLinks(self = "$GRANTS_PATH/${grant.id}"),
             )
         },
-        links = JsonApiLinks.ResourceObjectLink(GRANTS_PATH),
         meta = JsonApiMeta(
             buildJsonObject {
                 put("createdAt", currentTimeOslo().toTimeZoneOffsetString())
+                put("totalItems", this@toCollectionGrantResponse.totalItems)
+                put("totalPages", this@toCollectionGrantResponse.totalPages)
+                put("page", p.page)
+                put("pageSize", p.size)
             }
         )
     )
+}

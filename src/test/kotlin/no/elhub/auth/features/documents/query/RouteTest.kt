@@ -12,6 +12,8 @@ import io.ktor.server.testing.testApplication
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import no.elhub.auth.features.common.Page
+import no.elhub.auth.features.common.Pagination
 import no.elhub.auth.features.common.QueryError
 import no.elhub.auth.features.common.auth.AuthError
 import no.elhub.auth.features.common.auth.AuthorizationProvider
@@ -84,7 +86,7 @@ class RouteTest : FunSpec({
 
     test("GET / returns 200 when authorized as person and handler succeeds") {
         coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
-        coEvery { handler.invoke(any()) } returns documents.right()
+        coEvery { handler.invoke(any()) } returns Page(documents, documents.size.toLong(), Pagination()).right()
         testApplication {
             setupAppWith { route(handler, authProvider) }
             var response = client.get("/")
@@ -95,7 +97,7 @@ class RouteTest : FunSpec({
 
     test("GET / returns 200 when authorized as org and handler succeeds") {
         coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedOrg.right()
-        coEvery { handler.invoke(any()) } returns documents.right()
+        coEvery { handler.invoke(any()) } returns Page(documents, documents.size.toLong(), Pagination()).right()
         testApplication {
             setupAppWith { route(handler, authProvider) }
             var response = client.get("/")
@@ -105,7 +107,7 @@ class RouteTest : FunSpec({
     }
     test("GET / returns 403 'Forbidden' when authorization fails with AccessDenied error") {
         coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns AuthError.AccessDenied.left()
-        coEvery { handler.invoke(any()) } returns documents.right()
+        coEvery { handler.invoke(any()) } returns Page(documents, documents.size.toLong(), Pagination()).right()
         testApplication {
             setupAppWith { route(handler, authProvider) }
             validateForbiddenResponse(client.get("/"))

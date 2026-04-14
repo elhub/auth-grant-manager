@@ -15,6 +15,7 @@ import no.elhub.auth.config.withTransaction
 import no.elhub.auth.features.common.PostgresTestContainer
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.RepositoryReadError
+import no.elhub.auth.features.common.Pagination
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.AuthorizationPartyTable
 import no.elhub.auth.features.common.party.ExposedPartyRepository
@@ -124,15 +125,15 @@ class ExposedGrantRepositoryTest : FunSpec({
         val partyWithGrants = AuthorizationParty(type = PartyType.OrganizationEntity, id = "0107000000021")
         val partyWithoutGrants = AuthorizationParty(type = PartyType.Person, id = "666")
 
-        val resultForPartyWithGrants = grantRepo.findAll(partyWithGrants).getOrElse {
+        val resultForPartyWithGrants = grantRepo.findAll(partyWithGrants, Pagination()).getOrElse {
             fail("Failed to read grants for party with grants")
         }
-        resultForPartyWithGrants.size shouldBe 5
+        resultForPartyWithGrants.items.size shouldBe 5
 
-        val resultForPartyWithoutGrants = grantRepo.findAll(partyWithoutGrants).getOrElse {
+        val resultForPartyWithoutGrants = grantRepo.findAll(partyWithoutGrants, Pagination()).getOrElse {
             fail("Failed to read grants for party without grants")
         }
-        resultForPartyWithoutGrants.size shouldBe 0
+        resultForPartyWithoutGrants.items.size shouldBe 0
     }
 
     test("findBySource returns grant given sourceType and sourceId)") {

@@ -2,6 +2,7 @@ package no.elhub.auth.features.requests.query
 
 import arrow.core.Either
 import arrow.core.raise.either
+import no.elhub.auth.features.common.Page
 import no.elhub.auth.features.common.QueryError
 import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.common.GrantRepository
@@ -16,14 +17,14 @@ class Handler(
 
     private val logger = LoggerFactory.getLogger(Handler::class.java)
 
-    suspend operator fun invoke(query: Query): Either<QueryError, List<AuthorizationRequest>> = either {
-        val list = requestRepository.findAllAndSortByCreatedAt(query.authorizedParty)
+    suspend operator fun invoke(query: Query): Either<QueryError, Page<AuthorizationRequest>> = either {
+        val page = requestRepository.findAllAndSortByCreatedAt(query.authorizedParty, query.pagination)
             .mapLeft { QueryError.ResourceNotFoundError }
             .bind()
 
-        list.map { request ->
+        val enrichedItems = page.items.map { request ->
             if (request.approvedBy == null) {
-                return@map request
+                request
             } else {
                 // grant can only exist if approvedBy is set
                 val grant = grantRepository.findBySource(
@@ -37,5 +38,7 @@ class Handler(
                 grant?.let { request.copy(grantId = it.id) } ?: request
             }
         }
+
+        page.copy(items = enrichedItems)
     }
 }

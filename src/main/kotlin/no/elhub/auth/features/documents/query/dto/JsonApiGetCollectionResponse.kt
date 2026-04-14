@@ -2,16 +2,15 @@ package no.elhub.auth.features.documents.query.dto
 
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import no.elhub.auth.features.common.Page
 import no.elhub.auth.features.common.currentTimeOslo
 import no.elhub.auth.features.common.dto.JsonApiResourceMetaMap
 import no.elhub.auth.features.common.toTimeZoneOffsetString
 import no.elhub.auth.features.documents.AuthorizationDocument
-import no.elhub.auth.features.documents.DOCUMENTS_PATH
 import no.elhub.auth.features.documents.common.dto.AuthorizationDocumentResponseAttributes
 import no.elhub.auth.features.documents.common.dto.AuthorizationDocumentResponseLinks
 import no.elhub.auth.features.documents.common.dto.AuthorizationDocumentResponseRelationships
 import no.elhub.auth.features.documents.get.dto.toGetSingleResponse
-import no.elhub.devxp.jsonapi.model.JsonApiLinks
 import no.elhub.devxp.jsonapi.model.JsonApiMeta
 import no.elhub.devxp.jsonapi.response.JsonApiResponse
 
@@ -22,14 +21,19 @@ typealias GetDocumentCollectionResponse = JsonApiResponse.CollectionDocumentWith
     AuthorizationDocumentResponseLinks
     >
 
-fun List<AuthorizationDocument>.toGetCollectionResponse() = GetDocumentCollectionResponse(
-    data = this.map {
-        it.toGetSingleResponse().data
-    },
-    links = JsonApiLinks.ResourceObjectLink(DOCUMENTS_PATH),
-    meta = JsonApiMeta(
-        buildJsonObject {
-            put("createdAt", currentTimeOslo().toTimeZoneOffsetString())
-        }
+fun Page<AuthorizationDocument>.toGetCollectionResponse(): GetDocumentCollectionResponse {
+    val p = this.pagination
+
+    return GetDocumentCollectionResponse(
+        data = this.items.map { it.toGetSingleResponse().data },
+        meta = JsonApiMeta(
+            buildJsonObject {
+                put("createdAt", currentTimeOslo().toTimeZoneOffsetString())
+                put("totalItems", this@toGetCollectionResponse.totalItems)
+                put("totalPages", this@toGetCollectionResponse.totalPages)
+                put("page", p.page)
+                put("pageSize", p.size)
+            }
+        )
     )
-)
+}

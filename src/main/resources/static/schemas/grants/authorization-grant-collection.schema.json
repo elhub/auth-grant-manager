@@ -22,7 +22,31 @@
       ]
     },
     "meta": {
-      "$ref": "../json-api-framework.schema.json#/$defs/topLevelMeta"
+      "allOf": [
+        { "$ref": "../json-api-framework.schema.json#/$defs/topLevelMeta" },
+        {
+          "type": "object",
+          "properties": {
+            "totalItems": {
+              "type": "integer",
+              "description": "Total number of items matching the query."
+            },
+            "totalPages": {
+              "type": "integer",
+              "description": "Total number of pages."
+            },
+            "page": {
+              "type": "integer",
+              "description": "Current zero-based page number."
+            },
+            "pageSize": {
+              "type": "integer",
+              "description": "Number of items per page."
+            }
+          },
+          "required": ["totalItems", "totalPages", "page", "pageSize"]
+        }
+      ]
     }
   },
   "required": [

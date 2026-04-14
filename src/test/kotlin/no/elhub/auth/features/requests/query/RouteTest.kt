@@ -15,6 +15,8 @@ import io.ktor.server.testing.testApplication
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import no.elhub.auth.features.common.Page
+import no.elhub.auth.features.common.Pagination
 import no.elhub.auth.features.common.QueryError
 import no.elhub.auth.features.common.auth.AuthError
 import no.elhub.auth.features.common.auth.AuthorizationProvider
@@ -88,7 +90,7 @@ class RouteTest : FunSpec({
 
     test("GET should return OK with empty list when handler returns no requests") {
         coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
-        coEvery { handler.invoke(any()) } returns emptyList<AuthorizationRequest>().right()
+        coEvery { handler.invoke(any()) } returns Page(emptyList<AuthorizationRequest>(), 0L, Pagination()).right()
         testApplication {
             setupAppWith { route(handler, authProvider) }
             val response = client.get("/")
@@ -114,7 +116,7 @@ class RouteTest : FunSpec({
             properties = emptyList()
         )
 
-        coEvery { handler.invoke(any()) } returns listOf(authorizationRequest).right()
+        coEvery { handler.invoke(any()) } returns Page(listOf(authorizationRequest), 1L, Pagination()).right()
         testApplication {
             setupAppWith { route(handler, authProvider) }
             val response = client.get("/")
@@ -169,7 +171,7 @@ class RouteTest : FunSpec({
             properties = emptyList()
         )
 
-        coEvery { handler.invoke(any()) } returns listOf(request1, request2).right()
+        coEvery { handler.invoke(any()) } returns Page(listOf(request1, request2), 2L, Pagination()).right()
         testApplication {
             setupAppWith { route(handler, authProvider) }
             val response = client.get("/")

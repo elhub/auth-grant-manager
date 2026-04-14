@@ -9,6 +9,8 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.plus
+import no.elhub.auth.features.common.Page
+import no.elhub.auth.features.common.Pagination
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.currentTimeUtc
 import no.elhub.auth.features.common.party.AuthorizationParty
@@ -74,9 +76,9 @@ class HandlerTest : FunSpec({
         validTo = grantValidTo.toTimeZoneOffsetDateTimeAtStartOfDay()
     )
 
-    fun documentRepoReturning(result: Either<RepositoryReadError, List<AuthorizationDocument>>): DocumentRepository =
+    fun documentRepoReturning(result: Either<RepositoryReadError, Page<AuthorizationDocument>>): DocumentRepository =
         mockk<DocumentRepository> {
-            coEvery { findAll(any()) } returns result
+            coEvery { findAll(any(), any()) } returns result
         }
 
     fun grantRepoReturning(
@@ -95,20 +97,26 @@ class HandlerTest : FunSpec({
     test("returns documents with grant ids resolved for authorized party") {
         val noGrant: Either<RepositoryReadError, AuthorizationGrant?> = null.right()
 
-        val documentRepo = documentRepoReturning(listOf(firstDocument, secondDocument).right())
+        val pagination = Pagination()
+        val documentRepo = documentRepoReturning(Page(listOf(firstDocument, secondDocument), 2L, pagination).right())
         val handler = Handler(documentRepo, grantRepoReturning(grant.right(), noGrant))
 
         val response = handler(
             Query(
-                authorizedParty = requestedBy
+                authorizedParty = requestedBy,
+                pagination = pagination,
             )
         )
 
-        coVerify(exactly = 1) { documentRepo.findAll(requestedBy) }
+        coVerify(exactly = 1) { documentRepo.findAll(requestedBy, pagination) }
         response.shouldBeRight(
-            listOf(
-                firstDocument.copy(grantId = grant.id),
-                secondDocument.copy(grantId = null)
+            Page(
+                items = listOf(
+                    firstDocument.copy(grantId = grant.id),
+                    secondDocument.copy(grantId = null)
+                ),
+                totalItems = 2L,
+                pagination = pagination,
             )
         )
     }

@@ -17,6 +17,7 @@ import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import no.elhub.auth.config.TransactionContext
 import no.elhub.auth.config.withTransaction
 import no.elhub.auth.features.common.CreateScopeData
+import no.elhub.auth.features.common.Pagination
 import no.elhub.auth.features.common.PostgresTestContainer
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.RepositoryReadError
@@ -166,9 +167,9 @@ class ExposedDocumentRepositoryTest :
                 repository.insert(otherDocument, listOf())
 
                 val documents =
-                    repository.findAll(AuthorizationParty(matchingRequestedBy.id, PartyType.Organization))
+                    repository.findAll(AuthorizationParty(matchingRequestedBy.id, PartyType.Organization), Pagination())
                         .getOrElse { error -> fail("Failed to fetch documents: $error") }
-                val documentIds = documents.map { it.id }
+                val documentIds = documents.items.map { it.id }
 
                 documentIds.shouldHaveSize(1)
                 documentIds shouldContain matchingDocument.id
