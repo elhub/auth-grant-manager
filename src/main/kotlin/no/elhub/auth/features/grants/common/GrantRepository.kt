@@ -19,6 +19,7 @@ import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.AuthorizationGrant.SourceType
 import no.elhub.auth.features.grants.AuthorizationGrant.Status
 import no.elhub.auth.features.grants.AuthorizationScope
+import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.Table
@@ -75,7 +76,7 @@ class ExposedGrantRepository(
             val grantRows = AuthorizationGrantTable
                 .selectAll()
                 .where(whereClause)
-                .orderBy(AuthorizationGrantTable.createdAt to org.jetbrains.exposed.v1.core.SortOrder.DESC)
+                .orderBy(AuthorizationGrantTable.createdAt to SortOrder.DESC)
                 .limit(pagination.size)
                 .offset(pagination.offset)
                 .toList()
