@@ -22,16 +22,17 @@ class Handler(
                 }
             }.bind()
 
-        documents.map { document ->
-            val grant = grantRepository.findBySource(AuthorizationGrant.SourceType.Document, document.id)
-                .mapLeft { error ->
-                    when (error) {
-                        RepositoryReadError.NotFoundError -> QueryError.ResourceNotFoundError
-                        RepositoryReadError.UnexpectedError -> QueryError.IOError
-                    }
-                }.bind()
+        val documentIds = documents.map { it.id }
+        val grantsBySourceId = grantRepository.findBySourceIds(AuthorizationGrant.SourceType.Document, documentIds)
+            .mapLeft { error ->
+                when (error) {
+                    RepositoryReadError.NotFoundError -> QueryError.ResourceNotFoundError
+                    RepositoryReadError.UnexpectedError -> QueryError.IOError
+                }
+            }.bind()
 
-            document.copy(grantId = grant?.id)
+        documents.map { document ->
+            document.copy(grantId = grantsBySourceId[document.id]?.id)
         }
     }
 }

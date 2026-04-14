@@ -21,19 +21,26 @@ class Handler(
             .mapLeft { QueryError.ResourceNotFoundError }
             .bind()
 
+        val approvedRequestIds = list.mapNotNull { request ->
+            request.id.takeIf { request.approvedBy != null }
+        }
+
+        val grantsBySourceId = grantRepository.findBySourceIds(
+            AuthorizationGrant.SourceType.Request,
+            approvedRequestIds
+        ).mapLeft {
+            logger.error("Failed to batch-fetch grants for approved requests")
+            QueryError.IOError
+        }.bind()
+
         list.map { request ->
             if (request.approvedBy == null) {
-                return@map request
+                request
             } else {
-                // grant can only exist if approvedBy is set
-                val grant = grantRepository.findBySource(
-                    AuthorizationGrant.SourceType.Request,
-                    request.id
-                ).mapLeft {
+                val grant = grantsBySourceId[request.id]
+                if (grant == null) {
                     logger.error("approvedBy is present but grant not found for request ${request.id}")
-                    QueryError.ResourceNotFoundError
-                }.bind()
-
+                }
                 grant?.let { request.copy(grantId = it.id) } ?: request
             }
         }

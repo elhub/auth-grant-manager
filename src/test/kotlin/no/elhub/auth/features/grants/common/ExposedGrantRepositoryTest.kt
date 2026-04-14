@@ -135,15 +135,15 @@ class ExposedGrantRepositoryTest : FunSpec({
         resultForPartyWithoutGrants.size shouldBe 0
     }
 
-    test("findBySource returns grant given sourceType and sourceId)") {
+    test("findBySourceIds returns grant given sourceType and sourceId") {
         insertTestData()
-        val grant = grantRepo.findBySource(
+        val result = grantRepo.findBySourceIds(
             sourceType = AuthorizationGrant.SourceType.Request,
-            sourceId = UUID.fromString("4f71d596-99e4-415e-946d-7252c1a40c50")
+            sourceIds = listOf(UUID.fromString("4f71d596-99e4-415e-946d-7252c1a40c50"))
         ).getOrElse {
-            fail("Failed to read grants by source")
+            fail("Failed to read grants by source ids")
         }
-        grant.shouldNotBeNull()
+        result[UUID.fromString("4f71d596-99e4-415e-946d-7252c1a40c50")].shouldNotBeNull()
     }
 
     test("findScopes returns correct number of scopes given grantId") {
