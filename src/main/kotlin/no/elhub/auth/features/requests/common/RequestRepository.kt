@@ -5,12 +5,12 @@ import arrow.core.raise.either
 import no.elhub.auth.config.TransactionContext
 import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.common.PGEnum
+import no.elhub.auth.features.common.Page
+import no.elhub.auth.features.common.Pagination
 import no.elhub.auth.features.common.RepositoryError
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.RepositoryWriteError
 import no.elhub.auth.features.common.currentTimeUtc
-import no.elhub.auth.features.common.Page
-import no.elhub.auth.features.common.Pagination
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.AuthorizationPartyRecord
 import no.elhub.auth.features.common.party.AuthorizationPartyTable

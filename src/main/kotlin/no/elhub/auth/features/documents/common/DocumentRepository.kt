@@ -3,9 +3,9 @@ package no.elhub.auth.features.documents.common
 import arrow.core.Either
 import no.elhub.auth.config.TransactionContext
 import no.elhub.auth.features.common.CreateScopeData
+import no.elhub.auth.features.common.PGEnum
 import no.elhub.auth.features.common.Page
 import no.elhub.auth.features.common.Pagination
-import no.elhub.auth.features.common.PGEnum
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.RepositoryWriteError
 import no.elhub.auth.features.common.currentTimeUtc

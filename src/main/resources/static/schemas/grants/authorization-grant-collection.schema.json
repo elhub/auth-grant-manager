@@ -23,7 +23,9 @@
     },
     "meta": {
       "allOf": [
-        { "$ref": "../json-api-framework.schema.json#/$defs/topLevelMeta" },
+        {
+          "$ref": "../json-api-framework.schema.json#/$defs/topLevelMeta"
+        },
         {
           "type": "object",
           "properties": {
@@ -44,14 +46,15 @@
               "description": "Number of items per page."
             }
           },
-          "required": ["totalItems", "totalPages", "page", "pageSize"]
+          "required": [
+            "totalItems",
+            "totalPages",
+            "page",
+            "pageSize"
+          ]
         }
       ]
     }
   },
-  "required": [
-    "data",
-    "links",
-    "meta"
-  ]
+  "required": ["data", "links", "meta"]
 }
