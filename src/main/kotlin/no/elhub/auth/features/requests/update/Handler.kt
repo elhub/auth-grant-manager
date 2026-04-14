@@ -8,8 +8,8 @@ import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.common.AuthorizationGrantProperty
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.common.AcceptWithGrantError
+import no.elhub.auth.features.requests.common.RequestBusinessHandler
 import no.elhub.auth.features.requests.common.RequestRepository
-import no.elhub.auth.features.requests.create.RequestBusinessHandler
 import org.slf4j.LoggerFactory
 
 class Handler(

@@ -25,13 +25,15 @@ import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
 import no.elhub.auth.features.common.todayOslo
 import no.elhub.auth.features.documents.AuthorizationDocument
+import no.elhub.auth.features.documents.common.CreateDocumentBusinessMeta
+import no.elhub.auth.features.documents.common.CreateDocumentBusinessModel
 import no.elhub.auth.features.documents.common.DocumentBusinessHandler
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.documents.common.SignatureService
 import no.elhub.auth.features.documents.common.SignatureSigningError
 import no.elhub.auth.features.documents.create.command.DocumentCommand
 import no.elhub.auth.features.documents.create.command.DocumentMetaMarker
-import no.elhub.auth.features.documents.create.dto.CreateDocumentMeta
+import no.elhub.auth.features.documents.create.model.CreateDocumentCoreMeta
 import no.elhub.auth.features.documents.create.model.CreateDocumentModel
 import no.elhub.auth.features.filegenerator.SupportedLanguage
 import no.elhub.auth.features.grants.AuthorizationScope
@@ -46,11 +48,15 @@ class HandlerTest : FunSpec({
     val requestedFromParty = AuthorizationParty(id = "person-1", type = PartyType.Person)
     val requestedToParty = AuthorizationParty(id = "person-2", type = PartyType.Person)
 
-    val meta =
-        CreateDocumentMeta(
+    val coreMeta =
+        CreateDocumentCoreMeta(
             requestedBy = requestedByIdentifier,
             requestedFrom = requestedFromIdentifier,
             requestedTo = requestedToIdentifier,
+        )
+
+    val businessMeta =
+        CreateDocumentBusinessMeta(
             requestedFromName = "Requested From",
             requestedForMeteringPointId = "123456789012345678",
             requestedForMeteringPointAddress = "Address",
@@ -62,7 +68,18 @@ class HandlerTest : FunSpec({
         CreateDocumentModel(
             authorizedParty = requestedByParty,
             documentType = AuthorizationDocument.Type.ChangeOfBalanceSupplierForPerson,
-            meta = meta,
+            coreMeta = coreMeta,
+            businessMeta = businessMeta,
+        )
+
+    val businessModel =
+        CreateDocumentBusinessModel(
+            authorizedParty = requestedByParty,
+            documentType = AuthorizationDocument.Type.ChangeOfBalanceSupplierForPerson,
+            requestedBy = requestedByParty,
+            requestedFrom = requestedFromParty,
+            requestedTo = requestedToParty,
+            meta = businessMeta,
         )
 
     val commandMeta = object : DocumentMetaMarker {
@@ -73,9 +90,6 @@ class HandlerTest : FunSpec({
     val command =
         DocumentCommand(
             type = AuthorizationDocument.Type.ChangeOfBalanceSupplierForPerson,
-            requestedFrom = requestedFromIdentifier,
-            requestedTo = requestedToIdentifier,
-            requestedBy = requestedByIdentifier,
             validTo = todayOslo().plus(DatePeriod(days = 30)).toTimeZoneOffsetDateTimeAtStartOfDay(),
             scopes = listOf(
                 CreateScopeData(
@@ -104,7 +118,7 @@ class HandlerTest : FunSpec({
         val fileGenerator = mockk<FileGenerator>()
 
         stubPartyResolution(partyService)
-        coEvery { businessHandler.validateAndReturnDocumentCommand(model) } returns command.right()
+        coEvery { businessHandler.validateAndReturnDocumentCommand(businessModel) } returns command.right()
         every { fileGenerator.generate(commandMeta) } returns unsignedFile.right()
         coEvery { signatureService.sign(unsignedFile) } returns signedFile.right()
 
@@ -125,6 +139,7 @@ class HandlerTest : FunSpec({
 
         response.shouldBeRight(savedDocument)
         coVerify(exactly = 1) { documentRepository.insert(any(), command.scopes) }
+        coVerify(exactly = 1) { businessHandler.validateAndReturnDocumentCommand(businessModel) }
         coVerify(exactly = 1) {
             documentRepository.insert(
                 match { document ->
@@ -217,7 +232,7 @@ class HandlerTest : FunSpec({
 
         stubPartyResolution(partyService)
         coEvery {
-            businessHandler.validateAndReturnDocumentCommand(model)
+            businessHandler.validateAndReturnDocumentCommand(businessModel)
         } returns BusinessProcessError.Validation(ChangeOfBalanceSupplierValidationError.MissingRequestedFromName.message)
             .left()
 
@@ -240,7 +255,7 @@ class HandlerTest : FunSpec({
         val fileGenerator = mockk<FileGenerator>()
 
         stubPartyResolution(partyService)
-        coEvery { businessHandler.validateAndReturnDocumentCommand(model) } returns command.right()
+        coEvery { businessHandler.validateAndReturnDocumentCommand(businessModel) } returns command.right()
         every {
             fileGenerator.generate(commandMeta)
         } returns DocumentGenerationError.ContentGenerationError.left()
@@ -261,7 +276,7 @@ class HandlerTest : FunSpec({
         val fileGenerator = mockk<FileGenerator>()
 
         stubPartyResolution(partyService)
-        coEvery { businessHandler.validateAndReturnDocumentCommand(model) } returns command.right()
+        coEvery { businessHandler.validateAndReturnDocumentCommand(businessModel) } returns command.right()
         every { fileGenerator.generate(commandMeta) } returns unsignedFile.right()
         coEvery {
             signatureService.sign(unsignedFile)
@@ -283,7 +298,7 @@ class HandlerTest : FunSpec({
         val fileGenerator = mockk<FileGenerator>()
 
         stubPartyResolution(partyService)
-        coEvery { businessHandler.validateAndReturnDocumentCommand(model) } returns command.right()
+        coEvery { businessHandler.validateAndReturnDocumentCommand(businessModel) } returns command.right()
         every { fileGenerator.generate(commandMeta) } returns unsignedFile.right()
         coEvery { signatureService.sign(unsignedFile) } returns signedFile.right()
         coEvery {

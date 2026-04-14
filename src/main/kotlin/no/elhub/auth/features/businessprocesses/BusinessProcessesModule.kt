@@ -7,14 +7,13 @@ import no.elhub.auth.features.businessprocesses.moveinandchangeofbalancesupplier
 import no.elhub.auth.features.documents.common.DocumentBusinessHandler
 import no.elhub.auth.features.documents.common.ProxyDocumentBusinessHandler
 import no.elhub.auth.features.requests.common.ProxyRequestBusinessHandler
-import no.elhub.auth.features.requests.create.RequestBusinessHandler
+import no.elhub.auth.features.requests.common.RequestBusinessHandler
 
 fun Application.businessProcessesModule() {
     dependencies {
         provide<ChangeOfBalanceSupplierBusinessHandler> {
             ChangeOfBalanceSupplierBusinessHandler(
                 meteringPointsService = resolve(),
-                personService = resolve(),
                 organisationsService = resolve(),
                 stromprisService = resolve(),
                 edielService = resolve(),
@@ -26,7 +25,6 @@ fun Application.businessProcessesModule() {
         provide<MoveInAndChangeOfBalanceSupplierBusinessHandler> {
             MoveInAndChangeOfBalanceSupplierBusinessHandler(
                 meteringPointsService = resolve(),
-                personService = resolve(),
                 organisationsService = resolve(),
                 stromprisService = resolve(),
                 edielService = resolve(),

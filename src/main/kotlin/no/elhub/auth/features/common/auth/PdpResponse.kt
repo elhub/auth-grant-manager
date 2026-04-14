@@ -29,12 +29,7 @@ data class AuthInfo(
     val actingId: String? = null,
     val actingType: String? = null,
     val actingOrganisationNumber: String? = null,
-    val originalId: String? = null,
     val error: String? = null,
-    val originalOnBehalfOfFunction: String? = null,
-    val originalOnBehalfOfGLN: String? = null,
-    val originalSenderFunction: String? = null,
-    val originalSenderGLN: String? = null
 )
 
 @Serializable

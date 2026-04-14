@@ -47,6 +47,7 @@ import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
 import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
 import no.elhub.auth.features.common.todayOslo
+import no.elhub.auth.features.documents.common.CreateDocumentBusinessModel
 import no.elhub.auth.features.documents.common.DocumentBusinessHandler
 import no.elhub.auth.features.documents.create.command.DocumentCommand
 import no.elhub.auth.features.documents.create.dto.CreateDocumentMeta
@@ -55,7 +56,6 @@ import no.elhub.auth.features.documents.create.dto.CreateDocumentResponse
 import no.elhub.auth.features.documents.create.dto.JsonApiCreateDocumentRequest
 import no.elhub.auth.features.documents.create.dto.SupportedLanguageDTO
 import no.elhub.auth.features.documents.create.dto.toSupportedLanguage
-import no.elhub.auth.features.documents.create.model.CreateDocumentModel
 import no.elhub.auth.features.documents.get.dto.GetDocumentSingleResponse
 import no.elhub.auth.features.documents.query.dto.GetDocumentCollectionResponse
 import no.elhub.auth.features.grants.AuthorizationScope
@@ -848,15 +848,12 @@ private const val REQUESTED_TO_NIN = "14810797496"
 
 private class TestDocumentBusinessHandler : DocumentBusinessHandler {
     override suspend fun validateAndReturnDocumentCommand(
-        model: CreateDocumentModel
+        model: CreateDocumentBusinessModel
     ) = when (model.documentType) {
         AuthorizationDocument.Type.ChangeOfBalanceSupplierForPerson -> {
             val meta = model.meta
             DocumentCommand(
                 type = AuthorizationDocument.Type.ChangeOfBalanceSupplierForPerson,
-                requestedFrom = meta.requestedFrom,
-                requestedTo = meta.requestedTo,
-                requestedBy = meta.requestedBy,
                 validTo = todayOslo().plus(DatePeriod(days = 30)).toTimeZoneOffsetDateTimeAtStartOfDay(),
                 scopes = listOf(
                     CreateScopeData(

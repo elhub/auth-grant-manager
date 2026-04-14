@@ -5,6 +5,8 @@ import kotlinx.serialization.Serializable
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.requests.AuthorizationRequest
+import no.elhub.auth.features.requests.common.CreateRequestBusinessMeta
+import no.elhub.auth.features.requests.create.model.CreateRequestCoreMeta
 import no.elhub.auth.features.requests.create.model.CreateRequestModel
 import no.elhub.devxp.jsonapi.model.JsonApiAttributes
 import no.elhub.devxp.jsonapi.model.JsonApiResourceMeta
@@ -35,19 +37,18 @@ fun JsonApiCreateRequest.toModel(authorizedParty: AuthorizationParty): CreateReq
     CreateRequestModel(
         authorizedParty = authorizedParty,
         requestType = this.data.attributes.requestType,
-        meta = this.data.meta.toModel()
-    )
-
-fun CreateRequestMeta.toModel(): no.elhub.auth.features.requests.create.model.CreateRequestMeta =
-    no.elhub.auth.features.requests.create.model.CreateRequestMeta(
-        requestedBy = this.requestedBy,
-        requestedFrom = this.requestedFrom,
-        requestedFromName = this.requestedFromName,
-        requestedTo = this.requestedTo,
-        requestedForMeteringPointId = this.requestedForMeteringPointId,
-        requestedForMeteringPointAddress = this.requestedForMeteringPointAddress,
-        balanceSupplierName = this.balanceSupplierName,
-        balanceSupplierContractName = this.balanceSupplierContractName,
-        moveInDate = this.moveInDate,
-        redirectURI = this.redirectURI,
+        coreMeta = CreateRequestCoreMeta(
+            requestedBy = this.data.meta.requestedBy,
+            requestedFrom = this.data.meta.requestedFrom,
+            requestedTo = this.data.meta.requestedTo,
+        ),
+        businessMeta = CreateRequestBusinessMeta(
+            requestedFromName = this.data.meta.requestedFromName,
+            requestedForMeteringPointId = this.data.meta.requestedForMeteringPointId,
+            requestedForMeteringPointAddress = this.data.meta.requestedForMeteringPointAddress,
+            balanceSupplierName = this.data.meta.balanceSupplierName,
+            balanceSupplierContractName = this.data.meta.balanceSupplierContractName,
+            moveInDate = this.data.meta.moveInDate,
+            redirectURI = this.data.meta.redirectURI,
+        ),
     )

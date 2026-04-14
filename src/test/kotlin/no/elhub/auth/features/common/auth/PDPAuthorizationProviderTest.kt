@@ -328,7 +328,6 @@ class PDPAuthorizationProviderTest : FunSpec({
                         actingType = "organisation",
                         actingId = "b8af0fb3-bad7-4ca4-9153-919243635601",
                         actingOrganisationNumber = orgNumber,
-                        originalId = "e76439bc-0344-4ef5-b2f8-41a72c25ffd8"
                     )
                 )
             )
@@ -357,7 +356,6 @@ class PDPAuthorizationProviderTest : FunSpec({
                         actingId = "",
                         actingType = null,
                         error = "Unable to verify OnBehalfOfOrganisationId for end user token",
-                        originalId = "e76439bc-0344-4ef5-b2f8-41a72c25ffd8"
                     )
                 )
             )
@@ -404,7 +402,6 @@ class PDPAuthorizationProviderTest : FunSpec({
                     authInfo = AuthInfo(
                         actingType = "",
                         actingId = "",
-                        originalId = "e76439bc-0344-4ef5-b2f8-41a72c25ffd8"
                     )
                 )
             )

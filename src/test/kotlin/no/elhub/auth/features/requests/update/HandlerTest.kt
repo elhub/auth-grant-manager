@@ -18,8 +18,8 @@ import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
 import no.elhub.auth.features.common.todayOslo
 import no.elhub.auth.features.grants.common.CreateGrantProperties
 import no.elhub.auth.features.requests.AuthorizationRequest
+import no.elhub.auth.features.requests.common.RequestBusinessHandler
 import no.elhub.auth.features.requests.common.RequestRepository
-import no.elhub.auth.features.requests.create.RequestBusinessHandler
 import java.time.OffsetDateTime
 import java.util.UUID
 
