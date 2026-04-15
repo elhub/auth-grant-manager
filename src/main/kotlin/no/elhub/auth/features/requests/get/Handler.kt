@@ -29,14 +29,18 @@ class Handler(
 
         // grant can only exist if approvedBy is set
         request.approvedBy?.let {
-            val grant = grantRepository.findBySource(
+            val grantsBySourceId = grantRepository.findBySourceIds(
                 AuthorizationGrant.SourceType.Request,
-                request.id
+                listOf(request.id)
             ).mapLeft {
-                logger.error("approvedBy is present but grant not found for request ${request.id}")
-                QueryError.ResourceNotFoundError
+                logger.error("Failed to fetch grant for request ${request.id}")
+                QueryError.IOError
             }.bind()
 
+            val grant = grantsBySourceId[request.id]
+            if (grant == null) {
+                logger.error("approvedBy is present but grant not found for request ${request.id}")
+            }
             grant?.let { request.copy(grantId = it.id) } ?: request
         } ?: request
     }

@@ -23,12 +23,14 @@ import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
 import no.elhub.auth.features.grants.AuthorizationScope
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.common.AuthorizationRequestProperty
+import no.elhub.auth.features.requests.common.CreateRequestBusinessMeta
+import no.elhub.auth.features.requests.common.CreateRequestBusinessModel
 import no.elhub.auth.features.requests.common.ProxyRequestBusinessHandler
 import no.elhub.auth.features.requests.common.RequestRepository
 import no.elhub.auth.features.requests.create.command.RequestCommand
 import no.elhub.auth.features.requests.create.command.RequestMetaMarker
 import no.elhub.auth.features.requests.create.command.withTextVersion
-import no.elhub.auth.features.requests.create.model.CreateRequestMeta
+import no.elhub.auth.features.requests.create.model.CreateRequestCoreMeta
 import no.elhub.auth.features.requests.create.model.CreateRequestModel
 
 class HandlerTest : FunSpec({
@@ -41,12 +43,16 @@ class HandlerTest : FunSpec({
     val requestedFromParty = AuthorizationParty(id = "person-1", type = PartyType.Person)
     val requestedToParty = AuthorizationParty(id = "person-2", type = PartyType.Person)
 
-    val meta =
-        CreateRequestMeta(
+    val coreMeta =
+        CreateRequestCoreMeta(
             requestedBy = requestedByIdentifier,
             requestedFrom = requestedFromIdentifier,
-            requestedFromName = "Requested From",
             requestedTo = requestedToIdentifier,
+        )
+
+    val businessMeta =
+        CreateRequestBusinessMeta(
+            requestedFromName = "Requested From",
             requestedForMeteringPointId = "123456789012345678",
             requestedForMeteringPointAddress = "Address",
             balanceSupplierName = "Supplier",
@@ -58,7 +64,18 @@ class HandlerTest : FunSpec({
         CreateRequestModel(
             authorizedParty = requestedByParty,
             requestType = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
-            meta = meta,
+            coreMeta = coreMeta,
+            businessMeta = businessMeta,
+        )
+
+    val businessModel =
+        CreateRequestBusinessModel(
+            authorizedParty = requestedByParty,
+            requestType = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
+            requestedBy = requestedByParty,
+            requestedFrom = requestedFromParty,
+            requestedTo = requestedToParty,
+            meta = businessMeta,
         )
 
     val commandMeta = object : RequestMetaMarker {
@@ -69,9 +86,6 @@ class HandlerTest : FunSpec({
     val command =
         RequestCommand(
             type = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
-            requestedFrom = requestedFromIdentifier,
-            requestedBy = requestedByIdentifier,
-            requestedTo = requestedToIdentifier,
             validTo = LocalDate(2025, 1, 1).toTimeZoneOffsetDateTimeAtStartOfDay(),
             scopes = listOf(
                 CreateScopeData(
@@ -95,7 +109,7 @@ class HandlerTest : FunSpec({
         val requestRepo = mockk<RequestRepository>()
 
         stubPartyResolution(partyService)
-        coEvery { businessHandler.validateAndReturnRequestCommand(model) } returns command.right()
+        coEvery { businessHandler.validateAndReturnRequestCommand(businessModel) } returns command.right()
 
         val savedRequest =
             AuthorizationRequest.create(
@@ -125,6 +139,7 @@ class HandlerTest : FunSpec({
 
         response.shouldBeRight(savedRequest.copy(properties = expectedProperties))
         coVerify(exactly = 1) { requestRepo.insert(any(), any()) }
+        coVerify(exactly = 1) { businessHandler.validateAndReturnRequestCommand(businessModel) }
     }
 
     test("returns RequestedPartyError when requestedBy cannot be resolved") {
@@ -199,7 +214,7 @@ class HandlerTest : FunSpec({
 
         stubPartyResolution(partyService)
         coEvery {
-            businessHandler.validateAndReturnRequestCommand(model)
+            businessHandler.validateAndReturnRequestCommand(businessModel)
         } returns BusinessProcessError.Validation(ChangeOfBalanceSupplierValidationError.MissingRequestedFromName.message).left()
 
         val handler = Handler(businessHandler, partyService, requestRepo)
@@ -218,7 +233,7 @@ class HandlerTest : FunSpec({
         val requestRepo = mockk<RequestRepository>()
 
         stubPartyResolution(partyService)
-        coEvery { businessHandler.validateAndReturnRequestCommand(model) } returns command.right()
+        coEvery { businessHandler.validateAndReturnRequestCommand(businessModel) } returns command.right()
         coEvery { requestRepo.insert(any(), any()) } returns RepositoryWriteError.UnexpectedError.left()
 
         val handler = Handler(businessHandler, partyService, requestRepo)

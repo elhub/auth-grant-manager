@@ -7,6 +7,7 @@ import no.elhub.auth.features.common.party.PartyError
 import no.elhub.auth.features.common.party.PartyService
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.AuthorizationDocumentProperty
+import no.elhub.auth.features.documents.common.CreateDocumentBusinessModel
 import no.elhub.auth.features.documents.common.DocumentBusinessHandler
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.documents.common.SignatureService
@@ -25,9 +26,10 @@ class Handler(
     suspend operator fun invoke(model: CreateDocumentModel): Either<CreateError, AuthorizationDocument> =
         either {
             logger.info("event=authorization_document_creation type=${model.documentType}")
+
             val requestedByParty =
                 partyService
-                    .resolve(model.meta.requestedBy)
+                    .resolve(model.coreMeta.requestedBy)
                     .mapLeft { error ->
                         when (error) {
                             PartyError.InvalidNin -> CreateError.InvalidNinError
@@ -42,7 +44,7 @@ class Handler(
 
             val requestedFromParty =
                 partyService
-                    .resolve(model.meta.requestedFrom)
+                    .resolve(model.coreMeta.requestedFrom)
                     .mapLeft { error ->
                         when (error) {
                             PartyError.InvalidNin -> CreateError.InvalidNinError
@@ -53,7 +55,7 @@ class Handler(
 
             val requestedToParty =
                 partyService
-                    .resolve(model.meta.requestedTo)
+                    .resolve(model.coreMeta.requestedTo)
                     .mapLeft { error ->
                         when (error) {
                             PartyError.InvalidNin -> CreateError.InvalidNinError
@@ -62,9 +64,18 @@ class Handler(
                     }
                     .bind()
 
+            val businessModel = CreateDocumentBusinessModel(
+                authorizedParty = model.authorizedParty,
+                documentType = model.documentType,
+                requestedBy = requestedByParty,
+                requestedFrom = requestedFromParty,
+                requestedTo = requestedToParty,
+                meta = model.businessMeta
+            )
+
             val command =
                 businessHandler
-                    .validateAndReturnDocumentCommand(model)
+                    .validateAndReturnDocumentCommand(businessModel)
                     .mapLeft { err ->
                         logger.info("event=authorization_document_business_validation_error kind=${err.kind} detail=${err.detail}")
                         CreateError.BusinessError(err)

@@ -136,15 +136,43 @@ class ExposedGrantRepositoryTest : FunSpec({
         resultForPartyWithoutGrants.items.size shouldBe 0
     }
 
-    test("findBySource returns grant given sourceType and sourceId)") {
+    test("findBySourceIds returns grant given sourceType and sourceId") {
         insertTestData()
-        val grant = grantRepo.findBySource(
+        val result = grantRepo.findBySourceIds(
             sourceType = AuthorizationGrant.SourceType.Request,
-            sourceId = UUID.fromString("4f71d596-99e4-415e-946d-7252c1a40c50")
+            sourceIds = listOf(UUID.fromString("4f71d596-99e4-415e-946d-7252c1a40c50"))
         ).getOrElse {
-            fail("Failed to read grants by source")
+            fail("Failed to read grants by source ids")
         }
-        grant.shouldNotBeNull()
+        result[UUID.fromString("4f71d596-99e4-415e-946d-7252c1a40c50")].shouldNotBeNull()
+    }
+
+    test("findBySourceIds returns multiple grants for multiple source ids") {
+        insertTestData()
+        val sourceId1 = UUID.fromString("4f71d596-99e4-415e-946d-7252c1a40c50")
+        val sourceId2 = UUID.fromString("4f71d596-99e4-415e-946d-7252c1a40c51")
+        val sourceId3 = UUID.fromString("8150d80b-3a48-401e-a6d5-025bd3aa1254")
+        val result = grantRepo.findBySourceIds(
+            sourceType = AuthorizationGrant.SourceType.Request,
+            sourceIds = listOf(sourceId1, sourceId2, sourceId3)
+        ).getOrElse {
+            fail("Failed to read grants by source ids")
+        }
+        result.size shouldBe 3
+        result[sourceId1].shouldNotBeNull()
+        result[sourceId2].shouldNotBeNull()
+        result[sourceId3].shouldNotBeNull()
+    }
+
+    test("findBySourceIds returns empty map for empty source id list") {
+        insertTestData()
+        val result = grantRepo.findBySourceIds(
+            sourceType = AuthorizationGrant.SourceType.Request,
+            sourceIds = emptyList()
+        ).getOrElse {
+            fail("Failed to read grants by source ids")
+        }
+        result.size shouldBe 0
     }
 
     test("findScopes returns correct number of scopes given grantId") {

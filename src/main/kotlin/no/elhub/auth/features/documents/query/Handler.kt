@@ -23,16 +23,17 @@ class Handler(
                 }
             }.bind()
 
-        val enrichedItems = page.items.map { document ->
-            val grant = grantRepository.findBySource(AuthorizationGrant.SourceType.Document, document.id)
-                .mapLeft { error ->
-                    when (error) {
-                        RepositoryReadError.NotFoundError -> QueryError.ResourceNotFoundError
-                        RepositoryReadError.UnexpectedError -> QueryError.IOError
-                    }
-                }.bind()
+        val documentIds = page.items.map { it.id }
+        val grantsBySourceId = grantRepository.findBySourceIds(AuthorizationGrant.SourceType.Document, documentIds)
+            .mapLeft { error ->
+                when (error) {
+                    RepositoryReadError.NotFoundError -> QueryError.ResourceNotFoundError
+                    RepositoryReadError.UnexpectedError -> QueryError.IOError
+                }
+            }.bind()
 
-            document.copy(grantId = grant?.id)
+        val enrichedItems = page.items.map { document ->
+            document.copy(grantId = grantsBySourceId[document.id]?.id)
         }
 
         page.copy(items = enrichedItems)

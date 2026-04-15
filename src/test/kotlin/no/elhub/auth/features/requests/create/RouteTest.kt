@@ -142,7 +142,7 @@ class RouteTest : FunSpec({
             coVerify(exactly = 1) {
                 handler.invoke(
                     withArg {
-                        it.meta.redirectURI shouldBe null
+                        it.businessMeta.redirectURI shouldBe null
                     }
                 )
             }

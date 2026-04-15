@@ -81,25 +81,19 @@ class HandlerTest : FunSpec({
             coEvery { findAll(any(), any()) } returns result
         }
 
-    fun grantRepoReturning(
-        firstResult: Either<RepositoryReadError, AuthorizationGrant?>,
-        secondResult: Either<RepositoryReadError, AuthorizationGrant?>
-    ): GrantRepository =
+    fun grantRepoReturning(result: Either<RepositoryReadError, Map<UUID, AuthorizationGrant>>): GrantRepository =
         mockk<GrantRepository> {
             coEvery {
-                findBySource(AuthorizationGrant.SourceType.Document, firstDocumentId)
-            } returns firstResult
-            coEvery {
-                findBySource(AuthorizationGrant.SourceType.Document, secondDocumentId)
-            } returns secondResult
+                findBySourceIds(AuthorizationGrant.SourceType.Document, any())
+            } returns result
         }
 
     test("returns documents with grant ids resolved for authorized party") {
-        val noGrant: Either<RepositoryReadError, AuthorizationGrant?> = null.right()
-
         val pagination = Pagination()
         val documentRepo = documentRepoReturning(Page(listOf(firstDocument, secondDocument), 2L, pagination).right())
-        val handler = Handler(documentRepo, grantRepoReturning(grant.right(), noGrant))
+        // first document has a grant, second does not
+        val grantMap = mapOf(firstDocumentId to grant)
+        val handler = Handler(documentRepo, grantRepoReturning(grantMap.right()))
 
         val response = handler(
             Query(
