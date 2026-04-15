@@ -30,8 +30,8 @@ class Handler(
             QueryError.NotAuthorizedError
         }
 
-        val grant =
-            grantRepository.findBySource(AuthorizationGrant.SourceType.Document, document.id)
+        val grantsBySourceId =
+            grantRepository.findBySourceIds(AuthorizationGrant.SourceType.Document, listOf(document.id))
                 .mapLeft { error ->
                     when (error) {
                         RepositoryReadError.NotFoundError -> QueryError.ResourceNotFoundError
@@ -39,6 +39,6 @@ class Handler(
                     }
                 }.bind()
 
-        document.copy(grantId = grant?.id)
+        document.copy(grantId = grantsBySourceId[document.id]?.id)
     }
 }

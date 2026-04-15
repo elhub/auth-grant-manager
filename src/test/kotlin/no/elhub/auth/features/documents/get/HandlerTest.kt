@@ -67,7 +67,8 @@ class HandlerTest : FunSpec({
 
     fun grantRepoReturning(result: Either<RepositoryReadError, AuthorizationGrant?>): GrantRepository =
         mockk<GrantRepository> {
-            coEvery { findBySource(AuthorizationGrant.SourceType.Document, documentId) } returns result
+            coEvery { findBySourceIds(AuthorizationGrant.SourceType.Document, listOf(documentId)) } returns
+                result.map { grant -> grant?.let { mapOf(documentId to it) } ?: emptyMap() }
         }
 
     test("returns document with grant id when authorized party matches requestedBy") {
