@@ -2,7 +2,7 @@ package no.elhub.auth.features.common
 
 import kotlin.math.ceil
 
-const val DEFAULT_PAGE_SIZE = 20
+const val DEFAULT_PAGE_SIZE = 30
 const val MAX_PAGE_SIZE = 100
 
 data class Pagination(
