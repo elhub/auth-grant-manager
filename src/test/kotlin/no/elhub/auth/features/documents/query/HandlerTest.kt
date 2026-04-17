@@ -3,6 +3,7 @@ package no.elhub.auth.features.documents.query
 import arrow.core.Either
 import arrow.core.right
 import io.kotest.assertions.arrow.core.shouldBeRight
+import io.kotest.matchers.shouldBe
 import io.kotest.core.spec.style.FunSpec
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -87,6 +88,25 @@ class HandlerTest : FunSpec({
                 findBySourceIds(AuthorizationGrant.SourceType.Document, any())
             } returns result
         }
+
+    test("passes pagination from query to repository and preserves page metadata") {
+        val pagination = Pagination(page = 1, size = 1)
+        val documentRepo = documentRepoReturning(Page(listOf(firstDocument), 2L, pagination).right())
+        val handler = Handler(documentRepo, grantRepoReturning(emptyMap<UUID, AuthorizationGrant>().right()))
+
+        val response = handler(
+            Query(
+                authorizedParty = requestedBy,
+                pagination = pagination,
+            )
+        )
+
+        coVerify(exactly = 1) { documentRepo.findAll(requestedBy, pagination) }
+        val page = response.shouldBeRight()
+        page.pagination shouldBe pagination
+        page.totalItems shouldBe 2L
+        page.totalPages shouldBe 2
+    }
 
     test("returns documents with grant ids resolved for authorized party") {
         val pagination = Pagination()

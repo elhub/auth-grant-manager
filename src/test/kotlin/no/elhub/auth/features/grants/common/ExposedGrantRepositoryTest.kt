@@ -175,6 +175,58 @@ class ExposedGrantRepositoryTest : FunSpec({
         result.size shouldBe 0
     }
 
+    test("findAll returns correct page size and totalItems") {
+        insertTestData()
+        val party = AuthorizationParty(type = PartyType.OrganizationEntity, id = "0107000000021")
+
+        val page = grantRepo.findAll(party, Pagination(page = 0, size = 2)).getOrElse { fail("findAll failed") }
+
+        page.items.size shouldBe 2
+        page.totalItems shouldBe 5
+        page.totalPages shouldBe 3
+    }
+
+    test("findAll returns next page when page=1") {
+        insertTestData()
+        val party = AuthorizationParty(type = PartyType.OrganizationEntity, id = "0107000000021")
+
+        val page = grantRepo.findAll(party, Pagination(page = 1, size = 2)).getOrElse { fail("findAll failed") }
+
+        page.items.size shouldBe 2
+        page.totalItems shouldBe 5
+    }
+
+    test("findAll returns partial last page") {
+        insertTestData()
+        val party = AuthorizationParty(type = PartyType.OrganizationEntity, id = "0107000000021")
+
+        val page = grantRepo.findAll(party, Pagination(page = 2, size = 2)).getOrElse { fail("findAll failed") }
+
+        page.items.size shouldBe 1
+        page.totalItems shouldBe 5
+    }
+
+    test("findAll returns empty items but correct totalItems when page is beyond data") {
+        insertTestData()
+        val party = AuthorizationParty(type = PartyType.OrganizationEntity, id = "0107000000021")
+
+        val page =
+            grantRepo.findAll(party, Pagination(page = 10, size = 2)).getOrElse { fail("findAll failed") }
+
+        page.items shouldBe emptyList()
+        page.totalItems shouldBe 5
+    }
+
+    test("findAll pages do not overlap") {
+        insertTestData()
+        val party = AuthorizationParty(type = PartyType.OrganizationEntity, id = "0107000000021")
+
+        val page0 = grantRepo.findAll(party, Pagination(page = 0, size = 2)).getOrElse { fail("page 0 failed") }
+        val page1 = grantRepo.findAll(party, Pagination(page = 1, size = 2)).getOrElse { fail("page 1 failed") }
+
+        (page0.items.map { it.id }.toSet() intersect page1.items.map { it.id }.toSet()) shouldBe emptySet()
+    }
+
     test("findScopes returns correct number of scopes given grantId") {
         insertTestData()
         val scopes = grantRepo.findScopes(grantId = UUID.fromString("b7f9c2e4-5a3d-4e2b-9c1a-8f6e2d3c4b5a"))

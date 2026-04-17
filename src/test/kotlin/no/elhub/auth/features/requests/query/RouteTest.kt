@@ -15,6 +15,9 @@ import io.ktor.server.testing.testApplication
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import no.elhub.auth.features.common.Page
 import no.elhub.auth.features.common.Pagination
 import no.elhub.auth.features.common.QueryError
@@ -144,8 +147,7 @@ class RouteTest : FunSpec({
         coVerify(exactly = 1) { handler.invoke(any()) }
     }
 
-    test("GET should return OK with multiple items when handler returns multiple requests") {
-        coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
+    test("GET should return OK with multiple items when handler returns multiple requests") {        coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
         val request1 = AuthorizationRequest(
             id = UUID.randomUUID(),
             type = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
@@ -186,5 +188,32 @@ class RouteTest : FunSpec({
             body.data[1].attributes.requestType shouldBe "MoveInAndChangeOfBalanceSupplierForPerson"
         }
         coVerify(exactly = 1) { handler.invoke(any()) }
+    }
+
+    test("GET with page params passes correct Pagination to handler") {
+        coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
+        coEvery { handler.invoke(any()) } returns Page(emptyList<AuthorizationRequest>(), 0L, Pagination(page = 1, size = 5)).right()
+        testApplication {
+            setupAppWith { route(handler, authProvider) }
+            client.get("/?page[number]=1&page[size]=5")
+        }
+        coVerify(exactly = 1) { handler.invoke(match { it.pagination == Pagination(page = 1, size = 5) }) }
+    }
+
+    test("GET response meta contains pagination fields") {
+        val pagination = Pagination(page = 0, size = 10)
+        coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
+        coEvery { handler.invoke(any()) } returns Page(emptyList<AuthorizationRequest>(), 3L, pagination).right()
+        testApplication {
+            setupAppWith { route(handler, authProvider) }
+            val response = client.get("/")
+            response.status shouldBe HttpStatusCode.OK
+            val body = response.body<JsonObject>()
+            val meta = body["meta"]!!.jsonObject
+            meta["totalItems"]!!.jsonPrimitive.content shouldBe "3"
+            meta["totalPages"]!!.jsonPrimitive.content shouldBe "1"
+            meta["page"]!!.jsonPrimitive.content shouldBe "0"
+            meta["pageSize"]!!.jsonPrimitive.content shouldBe "10"
+        }
     }
 })

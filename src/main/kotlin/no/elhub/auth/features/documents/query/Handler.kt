@@ -32,10 +32,10 @@ class Handler(
                 }
             }.bind()
 
-        val enrichedItems = page.items.map { document ->
-            document.copy(grantId = grantsBySourceId[document.id]?.id)
-        }
-
-        page.copy(items = enrichedItems)
+        page.copy(
+            items = page.items.map { document ->
+                document.copy(grantId = grantsBySourceId[document.id]?.id)
+            }
+        )
     }
 }

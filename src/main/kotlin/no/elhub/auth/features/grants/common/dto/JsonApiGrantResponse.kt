@@ -17,11 +17,8 @@ import no.elhub.devxp.jsonapi.model.JsonApiRelationshipData
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipToMany
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipToOne
 import no.elhub.devxp.jsonapi.model.JsonApiRelationships
-import no.elhub.devxp.jsonapi.model.JsonApiResourceLinks
-import no.elhub.devxp.jsonapi.model.JsonApiResourceMeta
 import no.elhub.devxp.jsonapi.response.JsonApiResponse
 import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObjectWithRelationships
-import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObjectWithRelationshipsAndMetaAndLinks
 
 @Serializable
 data class GrantResponseAttributes(
@@ -42,24 +39,14 @@ data class GrantResponseRelationShips(
     val scopes: JsonApiRelationshipToMany
 ) : JsonApiRelationships
 
-/** Per-item links for a grant in a collection response (just `self`). */
-@Serializable
-data class GrantItemLinks(val self: String) : JsonApiResourceLinks
-
-@Serializable
-@JvmInline
-value class GrantCollectionItemMeta(private val dummy: String = "") : JsonApiResourceMeta
-
 typealias SingleGrantResponse = JsonApiResponse.SingleDocumentWithRelationships<
     GrantResponseAttributes,
     GrantResponseRelationShips,
     >
 
-typealias CollectionGrantResponse = JsonApiResponse.CollectionDocumentWithRelationshipsAndMetaAndLinks<
+typealias CollectionGrantResponse = JsonApiResponse.CollectionDocumentWithRelationships<
     GrantResponseAttributes,
     GrantResponseRelationShips,
-    GrantCollectionItemMeta,
-    GrantItemLinks,
     >
 
 fun AuthorizationGrant.toSingleGrantResponse() =
@@ -142,7 +129,7 @@ fun Page<AuthorizationGrant>.toCollectionGrantResponse(): CollectionGrantRespons
 
     return CollectionGrantResponse(
         data = this.items.map { grant ->
-            JsonApiResponseResourceObjectWithRelationshipsAndMetaAndLinks(
+            JsonApiResponseResourceObjectWithRelationships(
                 type = "AuthorizationGrant",
                 id = grant.id.toString(),
                 attributes = GrantResponseAttributes(
@@ -196,8 +183,6 @@ fun Page<AuthorizationGrant>.toCollectionGrantResponse(): CollectionGrantRespons
                         }
                     )
                 ),
-                meta = GrantCollectionItemMeta(),
-                links = GrantItemLinks(self = "$GRANTS_PATH/${grant.id}"),
             )
         },
         meta = JsonApiMeta(

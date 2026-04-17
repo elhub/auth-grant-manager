@@ -59,7 +59,7 @@ paths:
         - name: page[size]
           in: query
           required: false
-          description: Number of items per page. Defaults to 20, maximum 100.
+          description: Number of items per page. Defaults to 30, maximum 100.
           schema:
             type: integer
             minimum: 1
@@ -261,7 +261,7 @@ paths:
         - name: page[size]
           in: query
           required: false
-          description: Number of items per page. Defaults to 20, maximum 100.
+          description: Number of items per page. Defaults to 30, maximum 100.
           schema:
             type: integer
             minimum: 1
@@ -430,7 +430,7 @@ paths:
         - name: page[size]
           in: query
           required: false
-          description: Number of items per page. Defaults to 20, maximum 100.
+          description: Number of items per page. Defaults to 30, maximum 100.
           schema:
             type: integer
             minimum: 1

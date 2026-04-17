@@ -34,18 +34,18 @@ class Handler(
             QueryError.IOError
         }.bind()
 
-        val enrichedItems = page.items.map { request ->
-            if (request.approvedBy == null) {
-                request
-            } else {
-                val grant = grantsBySourceId[request.id]
-                if (grant == null) {
-                    logger.error("approvedBy is present but grant not found for request ${request.id}")
+        page.copy(
+            items = page.items.map { request ->
+                if (request.approvedBy == null) {
+                    request
+                } else {
+                    val grant = grantsBySourceId[request.id]
+                    if (grant == null) {
+                        logger.error("approvedBy is present but grant not found for request ${request.id}")
+                    }
+                    grant?.let { request.copy(grantId = it.id) } ?: request
                 }
-                grant?.let { request.copy(grantId = it.id) } ?: request
             }
-        }
-
-        page.copy(items = enrichedItems)
+        )
     }
 }
