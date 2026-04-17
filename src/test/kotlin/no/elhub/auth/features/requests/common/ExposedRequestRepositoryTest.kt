@@ -159,13 +159,16 @@ class ExposedRequestRepositoryTest : FunSpec({
         test("returns correct page size and totalItems") {
             val party = AuthorizationParty(type = PartyType.Person, id = UUID.randomUUID().toString())
             repeat(5) {
-                requestRepo.insert(AuthorizationRequest.create(
-                    type = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
-                    requestedBy = party,
-                    requestedFrom = party,
-                    requestedTo = party,
-                    validTo = OffsetDateTime.now(ZoneOffset.UTC).plusDays(30),
-                ), scopes)
+                requestRepo.insert(
+                    AuthorizationRequest.create(
+                        type = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
+                        requestedBy = party,
+                        requestedFrom = party,
+                        requestedTo = party,
+                        validTo = OffsetDateTime.now(ZoneOffset.UTC).plusDays(30),
+                    ),
+                    scopes
+                )
             }
 
             val page = requestRepo.findAllAndSortByCreatedAt(party, Pagination(page = 0, size = 2))
@@ -179,13 +182,16 @@ class ExposedRequestRepositoryTest : FunSpec({
         test("returns next page when page=1") {
             val party = AuthorizationParty(type = PartyType.Person, id = UUID.randomUUID().toString())
             repeat(5) {
-                requestRepo.insert(AuthorizationRequest.create(
-                    type = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
-                    requestedBy = party,
-                    requestedFrom = party,
-                    requestedTo = party,
-                    validTo = OffsetDateTime.now(ZoneOffset.UTC).plusDays(30),
-                ), scopes)
+                requestRepo.insert(
+                    AuthorizationRequest.create(
+                        type = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
+                        requestedBy = party,
+                        requestedFrom = party,
+                        requestedTo = party,
+                        validTo = OffsetDateTime.now(ZoneOffset.UTC).plusDays(30),
+                    ),
+                    scopes
+                )
             }
 
             val page = requestRepo.findAllAndSortByCreatedAt(party, Pagination(page = 1, size = 2))
@@ -198,13 +204,16 @@ class ExposedRequestRepositoryTest : FunSpec({
         test("returns partial last page") {
             val party = AuthorizationParty(type = PartyType.Person, id = UUID.randomUUID().toString())
             repeat(5) {
-                requestRepo.insert(AuthorizationRequest.create(
-                    type = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
-                    requestedBy = party,
-                    requestedFrom = party,
-                    requestedTo = party,
-                    validTo = OffsetDateTime.now(ZoneOffset.UTC).plusDays(30),
-                ), scopes)
+                requestRepo.insert(
+                    AuthorizationRequest.create(
+                        type = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
+                        requestedBy = party,
+                        requestedFrom = party,
+                        requestedTo = party,
+                        validTo = OffsetDateTime.now(ZoneOffset.UTC).plusDays(30),
+                    ),
+                    scopes
+                )
             }
 
             val page = requestRepo.findAllAndSortByCreatedAt(party, Pagination(page = 2, size = 2))
@@ -217,13 +226,16 @@ class ExposedRequestRepositoryTest : FunSpec({
         test("returns empty items but correct totalItems when page is beyond data") {
             val party = AuthorizationParty(type = PartyType.Person, id = UUID.randomUUID().toString())
             repeat(5) {
-                requestRepo.insert(AuthorizationRequest.create(
-                    type = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
-                    requestedBy = party,
-                    requestedFrom = party,
-                    requestedTo = party,
-                    validTo = OffsetDateTime.now(ZoneOffset.UTC).plusDays(30),
-                ), scopes)
+                requestRepo.insert(
+                    AuthorizationRequest.create(
+                        type = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
+                        requestedBy = party,
+                        requestedFrom = party,
+                        requestedTo = party,
+                        validTo = OffsetDateTime.now(ZoneOffset.UTC).plusDays(30),
+                    ),
+                    scopes
+                )
             }
 
             val page = requestRepo.findAllAndSortByCreatedAt(party, Pagination(page = 10, size = 2))
@@ -236,13 +248,16 @@ class ExposedRequestRepositoryTest : FunSpec({
         test("pages do not overlap") {
             val party = AuthorizationParty(type = PartyType.Person, id = UUID.randomUUID().toString())
             repeat(5) {
-                requestRepo.insert(AuthorizationRequest.create(
-                    type = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
-                    requestedBy = party,
-                    requestedFrom = party,
-                    requestedTo = party,
-                    validTo = OffsetDateTime.now(ZoneOffset.UTC).plusDays(30),
-                ), scopes)
+                requestRepo.insert(
+                    AuthorizationRequest.create(
+                        type = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
+                        requestedBy = party,
+                        requestedFrom = party,
+                        requestedTo = party,
+                        validTo = OffsetDateTime.now(ZoneOffset.UTC).plusDays(30),
+                    ),
+                    scopes
+                )
             }
 
             val page0 = requestRepo.findAllAndSortByCreatedAt(party, Pagination(page = 0, size = 2))

@@ -147,7 +147,8 @@ class RouteTest : FunSpec({
         coVerify(exactly = 1) { handler.invoke(any()) }
     }
 
-    test("GET should return OK with multiple items when handler returns multiple requests") {        coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
+    test("GET should return OK with multiple items when handler returns multiple requests") {
+        coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
         val request1 = AuthorizationRequest(
             id = UUID.randomUUID(),
             type = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,

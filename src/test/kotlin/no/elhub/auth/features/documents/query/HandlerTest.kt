@@ -3,8 +3,8 @@ package no.elhub.auth.features.documents.query
 import arrow.core.Either
 import arrow.core.right
 import io.kotest.assertions.arrow.core.shouldBeRight
-import io.kotest.matchers.shouldBe
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
