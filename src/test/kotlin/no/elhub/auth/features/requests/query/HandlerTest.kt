@@ -9,7 +9,6 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import no.elhub.auth.features.common.Page
 import no.elhub.auth.features.common.Pagination
-import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.currentTimeUtc
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
