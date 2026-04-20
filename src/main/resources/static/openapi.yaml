@@ -435,7 +435,7 @@ paths:
             type: integer
             minimum: 1
             maximum: 100
-            default: 20
+            default: 30
       responses:
         '200':
           description: A list of authorization requests.
