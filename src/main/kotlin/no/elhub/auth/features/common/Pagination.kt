@@ -51,4 +51,3 @@ fun <T> Page<T>.toPaginationLinks(basePath: String): PaginationLinks {
         next = if (p.page < lastPage) pageUrl(p.page + 1) else null,
     )
 }
-

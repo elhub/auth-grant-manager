@@ -15,10 +15,10 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
-import kotlinx.serialization.json.jsonPrimitive
 import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
+import kotlinx.serialization.json.jsonPrimitive
 import no.elhub.auth.features.common.AuthPersonsTestContainer
 import no.elhub.auth.features.common.AuthPersonsTestContainerExtension
 import no.elhub.auth.features.common.PdpTestContainerExtension
