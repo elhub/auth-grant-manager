@@ -185,6 +185,7 @@ fun Page<AuthorizationGrant>.toCollectionGrantResponse(): CollectionGrantRespons
                 ),
             )
         },
+        links = JsonApiLinks.ResourceObjectLink(GRANTS_PATH),
         meta = JsonApiMeta(
             buildJsonObject {
                 put("createdAt", currentTimeOslo().toTimeZoneOffsetString())
