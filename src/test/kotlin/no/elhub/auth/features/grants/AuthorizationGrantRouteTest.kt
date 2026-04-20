@@ -15,6 +15,7 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
+import kotlinx.serialization.json.jsonPrimitive
 import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
@@ -601,6 +602,17 @@ class AuthorizationGrantRouteTest : FunSpec({
                                 }
                             }
                         }
+                    }
+                    responseJson.meta["totalItems"]!!.jsonPrimitive.content shouldBe "5"
+                    responseJson.meta["totalPages"]!!.jsonPrimitive.content shouldBe "1"
+                    responseJson.meta["page"]!!.jsonPrimitive.content shouldBe "0"
+                    responseJson.meta["pageSize"]!!.jsonPrimitive.content shouldBe "30"
+                    responseJson.links.apply {
+                        self shouldBe "$GRANTS_PATH?page[number]=0&page[size]=30"
+                        first shouldBe "$GRANTS_PATH?page[number]=0&page[size]=30"
+                        last shouldBe "$GRANTS_PATH?page[number]=0&page[size]=30"
+                        prev shouldBe null
+                        next shouldBe null
                     }
                 }
 

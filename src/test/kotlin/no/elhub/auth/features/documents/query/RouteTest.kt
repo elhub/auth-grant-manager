@@ -25,6 +25,7 @@ import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toTimeZoneOffsetString
 import no.elhub.auth.features.documents.AuthorizationDocument
+import no.elhub.auth.features.documents.DOCUMENTS_PATH
 import no.elhub.auth.features.documents.common.AuthorizationDocumentProperty
 import no.elhub.auth.features.documents.query.dto.GetDocumentCollectionResponse
 import no.elhub.auth.setupAppWith
@@ -138,7 +139,7 @@ class RouteTest : FunSpec({
         coVerify(exactly = 1) { handler.invoke(match { it.pagination == Pagination(page = 2, size = 5) }) }
     }
 
-    test("GET response meta contains pagination fields") {
+    test("GET response meta and links contain correct pagination fields") {
         val pagination = Pagination(page = 0, size = 10)
         coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
         coEvery { handler.invoke(any()) } returns Page(emptyList<AuthorizationDocument>(), 4L, pagination).right()
@@ -152,6 +153,29 @@ class RouteTest : FunSpec({
             meta["totalPages"]!!.jsonPrimitive.content shouldBe "1"
             meta["page"]!!.jsonPrimitive.content shouldBe "0"
             meta["pageSize"]!!.jsonPrimitive.content shouldBe "10"
+            val links = body["links"]!!.jsonObject
+            links["self"]!!.jsonPrimitive.content shouldBe "$DOCUMENTS_PATH?page[number]=0&page[size]=10"
+            links["first"]!!.jsonPrimitive.content shouldBe "$DOCUMENTS_PATH?page[number]=0&page[size]=10"
+            links["last"]!!.jsonPrimitive.content shouldBe "$DOCUMENTS_PATH?page[number]=0&page[size]=10"
+            links["prev"] shouldBe null
+            links["next"] shouldBe null
+        }
+    }
+
+    test("GET links on a middle page contain prev and next") {
+        val pagination = Pagination(page = 1, size = 5)
+        coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
+        coEvery { handler.invoke(any()) } returns Page(emptyList<AuthorizationDocument>(), 15L, pagination).right()
+        testApplication {
+            setupAppWith { route(handler, authProvider) }
+            val response = client.get("/")
+            response.status shouldBe HttpStatusCode.OK
+            val links = response.body<JsonObject>()["links"]!!.jsonObject
+            links["self"]!!.jsonPrimitive.content shouldBe "$DOCUMENTS_PATH?page[number]=1&page[size]=5"
+            links["first"]!!.jsonPrimitive.content shouldBe "$DOCUMENTS_PATH?page[number]=0&page[size]=5"
+            links["last"]!!.jsonPrimitive.content shouldBe "$DOCUMENTS_PATH?page[number]=2&page[size]=5"
+            links["prev"]!!.jsonPrimitive.content shouldBe "$DOCUMENTS_PATH?page[number]=0&page[size]=5"
+            links["next"]!!.jsonPrimitive.content shouldBe "$DOCUMENTS_PATH?page[number]=2&page[size]=5"
         }
     }
 })

@@ -201,20 +201,26 @@ class RouteTest : FunSpec({
         coVerify(exactly = 1) { handler.invoke(match { it.pagination == Pagination(page = 1, size = 5) }) }
     }
 
-    test("GET response meta contains pagination fields") {
-        val pagination = Pagination(page = 0, size = 10)
+    test("GET response meta and links contain correct pagination fields") {
+        val pagination = Pagination(page = 1, size = 5)
         coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
-        coEvery { handler.invoke(any()) } returns Page(emptyList<AuthorizationRequest>(), 3L, pagination).right()
+        coEvery { handler.invoke(any()) } returns Page(emptyList<AuthorizationRequest>(), 15L, pagination).right()
         testApplication {
             setupAppWith { route(handler, authProvider) }
             val response = client.get("/")
             response.status shouldBe HttpStatusCode.OK
             val body = response.body<JsonObject>()
             val meta = body["meta"]!!.jsonObject
-            meta["totalItems"]!!.jsonPrimitive.content shouldBe "3"
-            meta["totalPages"]!!.jsonPrimitive.content shouldBe "1"
-            meta["page"]!!.jsonPrimitive.content shouldBe "0"
-            meta["pageSize"]!!.jsonPrimitive.content shouldBe "10"
+            meta["totalItems"]!!.jsonPrimitive.content shouldBe "15"
+            meta["totalPages"]!!.jsonPrimitive.content shouldBe "3"
+            meta["page"]!!.jsonPrimitive.content shouldBe "1"
+            meta["pageSize"]!!.jsonPrimitive.content shouldBe "5"
+            val links = body["links"]!!.jsonObject
+            links["self"]!!.jsonPrimitive.content shouldBe "$REQUESTS_PATH?page[number]=1&page[size]=5"
+            links["first"]!!.jsonPrimitive.content shouldBe "$REQUESTS_PATH?page[number]=0&page[size]=5"
+            links["last"]!!.jsonPrimitive.content shouldBe "$REQUESTS_PATH?page[number]=2&page[size]=5"
+            links["prev"]!!.jsonPrimitive.content shouldBe "$REQUESTS_PATH?page[number]=0&page[size]=5"
+            links["next"]!!.jsonPrimitive.content shouldBe "$REQUESTS_PATH?page[number]=2&page[size]=5"
         }
     }
 })
