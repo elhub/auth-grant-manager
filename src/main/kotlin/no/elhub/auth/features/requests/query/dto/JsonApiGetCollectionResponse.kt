@@ -71,6 +71,7 @@ fun Page<AuthorizationRequest>.toGetCollectionResponse(): GetRequestCollectionRe
                 )
             )
         },
+        links = JsonApiLinks.ResourceObjectLink(REQUESTS_PATH),
         meta = JsonApiMeta(
             buildJsonObject {
                 put("createdAt", currentTimeOslo().toTimeZoneOffsetString())
