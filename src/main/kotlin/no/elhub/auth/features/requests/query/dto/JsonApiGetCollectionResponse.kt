@@ -5,7 +5,9 @@ import kotlinx.serialization.json.put
 import no.elhub.auth.features.common.Page
 import no.elhub.auth.features.common.currentTimeOslo
 import no.elhub.auth.features.common.dto.JsonApiResourceMetaMap
+import no.elhub.auth.features.common.dto.PaginatedCollectionResponse
 import no.elhub.auth.features.common.party.dto.toJsonApiRelationship
+import no.elhub.auth.features.common.toPaginationLinks
 import no.elhub.auth.features.common.toTimeZoneOffsetString
 import no.elhub.auth.features.grants.GRANTS_PATH
 import no.elhub.auth.features.requests.AuthorizationRequest
@@ -14,23 +16,23 @@ import no.elhub.auth.features.requests.common.dto.AuthorizationRequestResponseAt
 import no.elhub.auth.features.requests.common.dto.AuthorizationRequestResponseLinks
 import no.elhub.auth.features.requests.common.dto.AuthorizationRequestResponseRelationships
 import no.elhub.devxp.jsonapi.model.JsonApiLinks
-import no.elhub.devxp.jsonapi.model.JsonApiMeta
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipData
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipToOne
-import no.elhub.devxp.jsonapi.response.JsonApiResponse
 import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObjectWithRelationshipsAndMetaAndLinks
 
-typealias GetRequestCollectionResponse = JsonApiResponse.CollectionDocumentWithRelationshipsAndMetaAndLinks<
-    AuthorizationRequestResponseAttributes,
-    AuthorizationRequestResponseRelationships,
-    JsonApiResourceMetaMap,
-    AuthorizationRequestResponseLinks
+typealias GetRequestCollectionResponse = PaginatedCollectionResponse<
+    JsonApiResponseResourceObjectWithRelationshipsAndMetaAndLinks<
+        AuthorizationRequestResponseAttributes,
+        AuthorizationRequestResponseRelationships,
+        JsonApiResourceMetaMap,
+        AuthorizationRequestResponseLinks
+        >
     >
 
 fun Page<AuthorizationRequest>.toGetCollectionResponse(): GetRequestCollectionResponse {
     val p = this.pagination
 
-    return JsonApiResponse.CollectionDocumentWithRelationshipsAndMetaAndLinks(
+    return GetRequestCollectionResponse(
         data = this.items.map { request ->
             JsonApiResponseResourceObjectWithRelationshipsAndMetaAndLinks(
                 id = request.id.toString(),
@@ -71,15 +73,13 @@ fun Page<AuthorizationRequest>.toGetCollectionResponse(): GetRequestCollectionRe
                 )
             )
         },
-        links = JsonApiLinks.ResourceObjectLink(REQUESTS_PATH),
-        meta = JsonApiMeta(
-            buildJsonObject {
-                put("createdAt", currentTimeOslo().toTimeZoneOffsetString())
-                put("totalItems", this@toGetCollectionResponse.totalItems)
-                put("totalPages", this@toGetCollectionResponse.totalPages)
-                put("page", p.page)
-                put("pageSize", p.size)
-            }
-        )
+        links = toPaginationLinks(REQUESTS_PATH),
+        meta = buildJsonObject {
+            put("createdAt", currentTimeOslo().toTimeZoneOffsetString())
+            put("totalItems", this@toGetCollectionResponse.totalItems)
+            put("totalPages", this@toGetCollectionResponse.totalPages)
+            put("page", p.page)
+            put("pageSize", p.size)
+        }
     )
 }
