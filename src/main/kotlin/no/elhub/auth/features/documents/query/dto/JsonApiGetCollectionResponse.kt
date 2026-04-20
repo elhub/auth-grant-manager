@@ -7,10 +7,12 @@ import no.elhub.auth.features.common.currentTimeOslo
 import no.elhub.auth.features.common.dto.JsonApiResourceMetaMap
 import no.elhub.auth.features.common.toTimeZoneOffsetString
 import no.elhub.auth.features.documents.AuthorizationDocument
+import no.elhub.auth.features.documents.DOCUMENTS_PATH
 import no.elhub.auth.features.documents.common.dto.AuthorizationDocumentResponseAttributes
 import no.elhub.auth.features.documents.common.dto.AuthorizationDocumentResponseLinks
 import no.elhub.auth.features.documents.common.dto.AuthorizationDocumentResponseRelationships
 import no.elhub.auth.features.documents.get.dto.toGetSingleResponse
+import no.elhub.devxp.jsonapi.model.JsonApiLinks
 import no.elhub.devxp.jsonapi.model.JsonApiMeta
 import no.elhub.devxp.jsonapi.response.JsonApiResponse
 
@@ -26,6 +28,7 @@ fun Page<AuthorizationDocument>.toGetCollectionResponse(): GetDocumentCollection
 
     return GetDocumentCollectionResponse(
         data = this.items.map { it.toGetSingleResponse().data },
+        links = JsonApiLinks.ResourceObjectLink(DOCUMENTS_PATH),
         meta = JsonApiMeta(
             buildJsonObject {
                 put("createdAt", currentTimeOslo().toTimeZoneOffsetString())
