@@ -18,6 +18,7 @@ import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
+import kotlinx.serialization.json.jsonPrimitive
 import no.elhub.auth.features.common.AuthPersonsTestContainer
 import no.elhub.auth.features.common.AuthPersonsTestContainerExtension
 import no.elhub.auth.features.common.PdpTestContainerExtension
@@ -509,8 +510,9 @@ class AuthorizationGrantRouteTest : FunSpec({
                     val responseJson: CollectionGrantResponse = response.body()
                     responseJson.data.apply {
                         size shouldBe 5
-                        this[0].apply {
-                            id.shouldNotBeNull()
+
+                        val activeGrant = first { it.id == "123e4567-e89b-12d3-a456-426614174000" }
+                        activeGrant.apply {
                             type shouldBe "AuthorizationGrant"
                             attributes.shouldNotBeNull()
                             attributes!!.apply {
@@ -559,8 +561,9 @@ class AuthorizationGrantRouteTest : FunSpec({
                                 }
                             }
                         }
-                        this[1].apply {
-                            id.shouldNotBeNull()
+
+                        val revokedGrant = first { it.id == "a8f9c2e4-5a3d-4e2b-9c1a-8f6e2d3c4b5a" }
+                        revokedGrant.apply {
                             type shouldBe "AuthorizationGrant"
                             attributes.shouldNotBeNull()
                             attributes!!.apply {
@@ -599,6 +602,17 @@ class AuthorizationGrantRouteTest : FunSpec({
                                 }
                             }
                         }
+                    }
+                    responseJson.meta["totalItems"]!!.jsonPrimitive.content shouldBe "5"
+                    responseJson.meta["totalPages"]!!.jsonPrimitive.content shouldBe "1"
+                    responseJson.meta["page"]!!.jsonPrimitive.content shouldBe "0"
+                    responseJson.meta["pageSize"]!!.jsonPrimitive.content shouldBe "30"
+                    responseJson.links.apply {
+                        self shouldBe "$GRANTS_PATH?page[number]=0&page[size]=30"
+                        first shouldBe "$GRANTS_PATH?page[number]=0&page[size]=30"
+                        last shouldBe "$GRANTS_PATH?page[number]=0&page[size]=30"
+                        prev shouldBe null
+                        next shouldBe null
                     }
                 }
 

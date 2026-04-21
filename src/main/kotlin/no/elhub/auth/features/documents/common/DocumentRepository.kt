@@ -4,6 +4,8 @@ import arrow.core.Either
 import no.elhub.auth.config.TransactionContext
 import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.common.PGEnum
+import no.elhub.auth.features.common.Page
+import no.elhub.auth.features.common.Pagination
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.RepositoryWriteError
 import no.elhub.auth.features.common.currentTimeUtc
@@ -25,6 +27,7 @@ import no.elhub.auth.features.grants.common.GrantPropertiesRepository
 import no.elhub.auth.features.grants.common.GrantRepository
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.ResultRow
+import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
@@ -58,7 +61,7 @@ interface DocumentRepository {
         scopes: List<CreateScopeData>
     ): Either<RepositoryWriteError, AuthorizationDocument>
 
-    suspend fun findAll(requestedBy: AuthorizationParty): Either<RepositoryReadError, List<AuthorizationDocument>>
+    suspend fun findAll(requestedBy: AuthorizationParty, pagination: Pagination): Either<RepositoryReadError, Page<AuthorizationDocument>>
 
     suspend fun findScopeIds(documentId: UUID): Either<RepositoryReadError, List<UUID>>
 
@@ -219,8 +222,8 @@ class ExposedDocumentRepository(
                 .map { row -> row[AuthorizationScopeTable.id].value }
         }
 
-    override suspend fun findAll(requestedBy: AuthorizationParty): Either<RepositoryReadError, List<AuthorizationDocument>> =
-        transactionContext<RepositoryReadError, List<AuthorizationDocument>>(
+    override suspend fun findAll(requestedBy: AuthorizationParty, pagination: Pagination): Either<RepositoryReadError, Page<AuthorizationDocument>> =
+        transactionContext<RepositoryReadError, Page<AuthorizationDocument>>(
             "db_operations",
             "DocumenRepository",
             "findAll",
@@ -230,21 +233,37 @@ class ExposedDocumentRepository(
                 .mapLeft { RepositoryReadError.UnexpectedError }
                 .bind()
 
-            val documentWithSignatoryRecords = (AuthorizationDocumentTable leftJoin SignatoriesTable)
-                .select(AuthorizationDocumentTable.columns + SignatoriesTable.signedBy)
-                .where { (AuthorizationDocumentTable.requestedBy eq partyRecord.id) or (AuthorizationDocumentTable.requestedFrom eq partyRecord.id) }
+            val whereClause = { (AuthorizationDocumentTable.requestedBy eq partyRecord.id) or (AuthorizationDocumentTable.requestedFrom eq partyRecord.id) }
+
+            val totalItems = AuthorizationDocumentTable
+                .selectAll()
+                .where(whereClause)
+                .count()
+
+            val documentRows = AuthorizationDocumentTable
+                .selectAll()
+                .where(whereClause)
+                .orderBy(AuthorizationDocumentTable.createdAt to SortOrder.DESC)
+                .limit(pagination.size)
+                .offset(pagination.offset)
                 .toList()
 
-            if (documentWithSignatoryRecords.isEmpty()) return@transactionContext emptyList()
+            if (documentRows.isEmpty()) return@transactionContext Page(emptyList(), totalItems, pagination)
 
-            val partyIds = documentWithSignatoryRecords.flatMap { row ->
+            val documentIds = documentRows.map { it[AuthorizationDocumentTable.id].value }
+
+            val signatoryByDocumentId = SignatoriesTable
+                .select(listOf(SignatoriesTable.authorizationDocumentId, SignatoriesTable.signedBy))
+                .where { SignatoriesTable.authorizationDocumentId inList documentIds }
+                .associate { it[SignatoriesTable.authorizationDocumentId] to it[SignatoriesTable.signedBy] }
+
+            val partyIds = documentRows.flatMap { row ->
                 setOfNotNull(
                     row[AuthorizationDocumentTable.requestedBy],
                     row[AuthorizationDocumentTable.requestedFrom],
                     row[AuthorizationDocumentTable.requestedTo],
-                    row[SignatoriesTable.signedBy]
                 )
-            }.toSet()
+            }.toMutableSet().also { it.addAll(signatoryByDocumentId.values) }
 
             val partiesById = AuthorizationPartyTable
                 .selectAll()
@@ -254,15 +273,16 @@ class ExposedDocumentRepository(
                     party.id to party
                 }
 
-            documentWithSignatoryRecords.map { row ->
+            val items = documentRows.map { row ->
                 val requestedByParty = partiesById[row[AuthorizationDocumentTable.requestedBy]]
                     ?: raise(RepositoryReadError.UnexpectedError)
                 val requestedFromParty = partiesById[row[AuthorizationDocumentTable.requestedFrom]]
                     ?: raise(RepositoryReadError.UnexpectedError)
                 val requestedToParty = partiesById[row[AuthorizationDocumentTable.requestedTo]]
                     ?: raise(RepositoryReadError.UnexpectedError)
-                val signedByParty = partiesById[row[SignatoriesTable.signedBy]]
-                val properties = documentPropertiesRepository.find(row[AuthorizationDocumentTable.id].value)
+                val docId = row[AuthorizationDocumentTable.id].value
+                val signedByParty = signatoryByDocumentId[docId]?.let { partiesById[it] }
+                val properties = documentPropertiesRepository.find(docId)
 
                 row.toAuthorizationDocument(
                     requestedByParty,
@@ -272,6 +292,8 @@ class ExposedDocumentRepository(
                     signedByParty
                 )
             }
+
+            Page(items = items, totalItems = totalItems, pagination = pagination)
         }
 
     private suspend fun resolveParty(partyId: UUID): Either<RepositoryReadError.UnexpectedError, AuthorizationPartyRecord> =

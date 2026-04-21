@@ -4,6 +4,8 @@ import arrow.core.Either
 import arrow.core.raise.either
 import no.elhub.auth.config.TransactionContext
 import no.elhub.auth.features.common.PGEnum
+import no.elhub.auth.features.common.Page
+import no.elhub.auth.features.common.Pagination
 import no.elhub.auth.features.common.RepositoryError
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.RepositoryWriteError
@@ -19,6 +21,7 @@ import no.elhub.auth.features.grants.AuthorizationGrant.Status
 import no.elhub.auth.features.grants.AuthorizationScope
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.ResultRow
+import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
@@ -38,7 +41,7 @@ interface GrantRepository {
     suspend fun find(grantId: UUID): Either<RepositoryReadError, AuthorizationGrant>
     suspend fun findBySourceIds(sourceType: SourceType, sourceIds: List<UUID>): Either<RepositoryReadError, Map<UUID, AuthorizationGrant>>
     suspend fun findScopes(grantId: UUID): Either<RepositoryReadError, List<AuthorizationScope>>
-    suspend fun findAll(party: AuthorizationParty): Either<RepositoryReadError, List<AuthorizationGrant>>
+    suspend fun findAll(party: AuthorizationParty, pagination: Pagination): Either<RepositoryReadError, Page<AuthorizationGrant>>
     suspend fun insert(grant: AuthorizationGrant): Either<RepositoryWriteError, AuthorizationGrant>
     suspend fun update(grantId: UUID, newStatus: Status): Either<RepositoryError, AuthorizationGrant>
 }
@@ -51,8 +54,8 @@ class ExposedGrantRepository(
 
     private val logger = LoggerFactory.getLogger(ExposedGrantRepository::class.java)
 
-    override suspend fun findAll(party: AuthorizationParty): Either<RepositoryReadError, List<AuthorizationGrant>> =
-        transactionContext<RepositoryReadError, List<AuthorizationGrant>>(
+    override suspend fun findAll(party: AuthorizationParty, pagination: Pagination): Either<RepositoryReadError, Page<AuthorizationGrant>> =
+        transactionContext<RepositoryReadError, Page<AuthorizationGrant>>(
             "db_operations",
             "GrantRepository",
             "findAll",
@@ -63,14 +66,22 @@ class ExposedGrantRepository(
                 .bind()
                 .id
 
+            val whereClause = { (AuthorizationGrantTable.grantedTo eq partyId) or (AuthorizationGrantTable.grantedFor eq partyId) }
+
+            val totalItems = AuthorizationGrantTable
+                .selectAll()
+                .where(whereClause)
+                .count()
+
             val grantRows = AuthorizationGrantTable
                 .selectAll()
-                .where {
-                    (AuthorizationGrantTable.grantedTo eq partyId) or (AuthorizationGrantTable.grantedFor eq partyId)
-                }
+                .where(whereClause)
+                .orderBy(AuthorizationGrantTable.createdAt to SortOrder.DESC)
+                .limit(pagination.size)
+                .offset(pagination.offset)
                 .toList()
 
-            if (grantRows.isEmpty()) return@transactionContext emptyList()
+            if (grantRows.isEmpty()) return@transactionContext Page(emptyList(), totalItems, pagination)
 
             val grantIds = grantRows.map { it[AuthorizationGrantTable.id].value }
 
@@ -103,7 +114,7 @@ class ExposedGrantRepository(
                     { it.toAuthorizationGrantProperty() }
                 )
 
-            grantRows.map { row ->
+            val items = grantRows.map { row ->
                 val grantId = row[AuthorizationGrantTable.id].value
                 val grantedBy = partyMap[row[AuthorizationGrantTable.grantedBy]]
                     ?: raise(RepositoryReadError.UnexpectedError)
@@ -119,6 +130,8 @@ class ExposedGrantRepository(
                     properties = propertiesByGrantId[grantId] ?: emptyList(),
                 )
             }
+
+            Page(items = items, totalItems = totalItems, pagination = pagination)
         }
 
     override suspend fun find(grantId: UUID): Either<RepositoryReadError, AuthorizationGrant> =

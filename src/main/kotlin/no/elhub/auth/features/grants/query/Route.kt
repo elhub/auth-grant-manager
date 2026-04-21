@@ -5,6 +5,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
+import no.elhub.auth.features.common.Pagination
 import no.elhub.auth.features.common.auth.AuthorizationProvider
 import no.elhub.auth.features.common.auth.toApiErrorResponse
 import no.elhub.auth.features.common.toApiErrorResponse
@@ -22,9 +23,14 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
                 return@get
             }
 
-        val query = Query(authorizedParty = authorizedParty)
+        val pagination = Pagination.from(
+            pageParam = call.request.queryParameters["page[number]"],
+            sizeParam = call.request.queryParameters["page[size]"],
+        )
 
-        val grants = handler(query)
+        val query = Query(authorizedParty = authorizedParty, pagination = pagination)
+
+        val page = handler(query)
             .getOrElse { error ->
                 logger.error("Failed to get authorization grants: {}", error)
                 val (status, body) = error.toApiErrorResponse()
@@ -32,6 +38,6 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
                 return@get
             }
 
-        call.respond(HttpStatusCode.OK, grants.toCollectionGrantResponse())
+        call.respond(HttpStatusCode.OK, page.toCollectionGrantResponse())
     }
 }

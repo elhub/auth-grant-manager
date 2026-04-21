@@ -15,6 +15,11 @@ import io.ktor.server.testing.testApplication
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import no.elhub.auth.features.common.Page
+import no.elhub.auth.features.common.Pagination
 import no.elhub.auth.features.common.QueryError
 import no.elhub.auth.features.common.auth.AuthError
 import no.elhub.auth.features.common.auth.AuthorizationProvider
@@ -88,7 +93,7 @@ class RouteTest : FunSpec({
 
     test("GET should return OK with empty list when handler returns no requests") {
         coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
-        coEvery { handler.invoke(any()) } returns emptyList<AuthorizationRequest>().right()
+        coEvery { handler.invoke(any()) } returns Page(emptyList<AuthorizationRequest>(), 0L, Pagination()).right()
         testApplication {
             setupAppWith { route(handler, authProvider) }
             val response = client.get("/")
@@ -114,7 +119,7 @@ class RouteTest : FunSpec({
             properties = emptyList()
         )
 
-        coEvery { handler.invoke(any()) } returns listOf(authorizationRequest).right()
+        coEvery { handler.invoke(any()) } returns Page(listOf(authorizationRequest), 1L, Pagination()).right()
         testApplication {
             setupAppWith { route(handler, authProvider) }
             val response = client.get("/")
@@ -169,7 +174,7 @@ class RouteTest : FunSpec({
             properties = emptyList()
         )
 
-        coEvery { handler.invoke(any()) } returns listOf(request1, request2).right()
+        coEvery { handler.invoke(any()) } returns Page(listOf(request1, request2), 2L, Pagination()).right()
         testApplication {
             setupAppWith { route(handler, authProvider) }
             val response = client.get("/")
@@ -184,5 +189,38 @@ class RouteTest : FunSpec({
             body.data[1].attributes.requestType shouldBe "MoveInAndChangeOfBalanceSupplierForPerson"
         }
         coVerify(exactly = 1) { handler.invoke(any()) }
+    }
+
+    test("GET with page params passes correct Pagination to handler") {
+        coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
+        coEvery { handler.invoke(any()) } returns Page(emptyList<AuthorizationRequest>(), 0L, Pagination(page = 1, size = 5)).right()
+        testApplication {
+            setupAppWith { route(handler, authProvider) }
+            client.get("/?page[number]=1&page[size]=5")
+        }
+        coVerify(exactly = 1) { handler.invoke(match { it.pagination == Pagination(page = 1, size = 5) }) }
+    }
+
+    test("GET response meta and links contain correct pagination fields") {
+        val pagination = Pagination(page = 1, size = 5)
+        coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
+        coEvery { handler.invoke(any()) } returns Page(emptyList<AuthorizationRequest>(), 15L, pagination).right()
+        testApplication {
+            setupAppWith { route(handler, authProvider) }
+            val response = client.get("/")
+            response.status shouldBe HttpStatusCode.OK
+            val body = response.body<JsonObject>()
+            val meta = body["meta"]!!.jsonObject
+            meta["totalItems"]!!.jsonPrimitive.content shouldBe "15"
+            meta["totalPages"]!!.jsonPrimitive.content shouldBe "3"
+            meta["page"]!!.jsonPrimitive.content shouldBe "1"
+            meta["pageSize"]!!.jsonPrimitive.content shouldBe "5"
+            val links = body["links"]!!.jsonObject
+            links["self"]!!.jsonPrimitive.content shouldBe "$REQUESTS_PATH?page[number]=1&page[size]=5"
+            links["first"]!!.jsonPrimitive.content shouldBe "$REQUESTS_PATH?page[number]=0&page[size]=5"
+            links["last"]!!.jsonPrimitive.content shouldBe "$REQUESTS_PATH?page[number]=2&page[size]=5"
+            links["prev"]!!.jsonPrimitive.content shouldBe "$REQUESTS_PATH?page[number]=0&page[size]=5"
+            links["next"]!!.jsonPrimitive.content shouldBe "$REQUESTS_PATH?page[number]=2&page[size]=5"
+        }
     }
 })
