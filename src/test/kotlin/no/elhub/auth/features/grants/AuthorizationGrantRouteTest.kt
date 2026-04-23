@@ -606,11 +606,11 @@ class AuthorizationGrantRouteTest : FunSpec({
                     responseJson.meta["totalItems"]!!.jsonPrimitive.content shouldBe "5"
                     responseJson.meta["totalPages"]!!.jsonPrimitive.content shouldBe "1"
                     responseJson.meta["page"]!!.jsonPrimitive.content shouldBe "0"
-                    responseJson.meta["pageSize"]!!.jsonPrimitive.content shouldBe "30"
+                    responseJson.meta["pageSize"]!!.jsonPrimitive.content shouldBe "100"
                     responseJson.links.apply {
-                        self shouldBe "$GRANTS_PATH?page[number]=0&page[size]=30"
-                        first shouldBe "$GRANTS_PATH?page[number]=0&page[size]=30"
-                        last shouldBe "$GRANTS_PATH?page[number]=0&page[size]=30"
+                        self shouldBe "$GRANTS_PATH?page[number]=0&page[size]=100"
+                        first shouldBe "$GRANTS_PATH?page[number]=0&page[size]=100"
+                        last shouldBe "$GRANTS_PATH?page[number]=0&page[size]=100"
                         prev shouldBe null
                         next shouldBe null
                     }
