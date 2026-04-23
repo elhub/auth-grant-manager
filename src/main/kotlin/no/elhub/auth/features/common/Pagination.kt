@@ -4,7 +4,7 @@ import kotlinx.serialization.Serializable
 import no.elhub.devxp.jsonapi.model.JsonApiResourceLinks
 import kotlin.math.ceil
 
-const val DEFAULT_PAGE_SIZE = 30
+const val DEFAULT_PAGE_SIZE = 100
 const val MAX_PAGE_SIZE = 100
 
 data class Pagination(
