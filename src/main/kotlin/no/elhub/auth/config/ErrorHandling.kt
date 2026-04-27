@@ -54,18 +54,29 @@ fun Application.configureErrorHandling() {
 }
 
 private fun formatDeserializationDetail(raw: String): String {
-    val singleLine = raw.replace(Regex("\\s+"), " ").trim()
-    val path = Regex("""at path (\S+)""").find(singleLine)?.groupValues?.get(1)
+    // kotlinx.serialization appends the path to the first line of the message in one of two formats:
+    //   - enum errors (StreamingJsonDecoder):  "... at path $.field"   (no colon)
+    //   - lexer/structural errors:             "... at path: $.field"  (with colon)
+    // Both use the stable $.field.subField notation.
+    val firstLine = raw.lineSequence().first()
+    val path = firstLine
+        .substringAfterLast("at path: ", missingDelimiterValue = "")
+        .ifEmpty { firstLine.substringAfterLast("at path ", missingDelimiterValue = "") }
+        .ifEmpty { null }
 
-    val enumField = Regex("""at path \S*?\.([A-Za-z0-9_]+)\b""").find(singleLine)?.groupValues?.get(1)
-    val enumValue = Regex("""name '([^']+)'""").find(singleLine)?.groupValues?.get(1)
+    // Enum errors follow the pattern: "<SerialName> does not contain element with name '<value>'"
+    val invalidEnumValue = firstLine
+        .substringAfter("does not contain element with name '", missingDelimiterValue = "")
+        .substringBefore("'")
+        .ifEmpty { null }
 
     return when {
-        enumField != null && path != null && enumValue != null ->
-            "Invalid value '$enumValue' for field '$enumField' at $path"
+        path != null && invalidEnumValue != null ->
+            "Invalid value '$invalidEnumValue' for field '${path.substringAfterLast(".")}' at $path"
 
-        else ->
-            singleLine
-                .replace(Regex("""\bno\.elhub\.[\w.]+\.(\w+\.\w+)\b"""), "$1")
+        path != null ->
+            "Invalid value for field '${path.substringAfterLast(".")}' at $path"
+
+        else -> "Invalid request body"
     }
 }
