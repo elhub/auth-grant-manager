@@ -14,9 +14,9 @@ import no.elhub.auth.features.businessprocesses.BusinessProcessError
 import no.elhub.auth.features.common.AuthPersonsTestContainer
 import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.common.commonModule
-import no.elhub.auth.features.common.stubAuthPersonsTokenProvider
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
+import no.elhub.auth.features.common.stubAuthPersonsTokenProvider
 import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
 import no.elhub.auth.features.common.todayOslo
 import no.elhub.auth.features.grants.AuthorizationScope
