@@ -14,6 +14,7 @@ import no.elhub.auth.features.businessprocesses.BusinessProcessError
 import no.elhub.auth.features.common.AuthPersonsTestContainer
 import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.common.commonModule
+import no.elhub.auth.features.common.stubAuthPersonsTokenProvider
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
 import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
@@ -61,6 +62,7 @@ fun ApplicationTestBuilder.setUpAuthorizationRequestTestApplication() {
         applicationModule()
         testRequestBusinessModule()
         commonModule()
+        stubAuthPersonsTokenProvider()
         module()
     }
 
@@ -73,6 +75,9 @@ fun ApplicationTestBuilder.setUpAuthorizationRequestTestApplication() {
                 "ktor.database.driverClass" to "org.postgresql.Driver",
                 "featureToggle.enableEndpoints" to "true",
                 "authPersons.baseUri" to AuthPersonsTestContainer.baseUri(),
+                "authPersons.idp.clientId" to "test-client-id",
+                "authPersons.idp.clientSecret" to "test-client-secret",
+                "idp.tokenUrl" to "http://localhost:9999/token",
                 "pdp.baseUrl" to "http://localhost:8085"
             )
     }
