@@ -1,7 +1,7 @@
 package no.elhub.auth.features.common.auth
 
-import arrow.core.getOrElse
 import arrow.core.Either
+import arrow.core.getOrElse
 import arrow.core.raise.either
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
