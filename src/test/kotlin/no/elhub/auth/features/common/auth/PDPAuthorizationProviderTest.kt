@@ -41,7 +41,9 @@ class PDPAuthorizationProviderTest : FunSpec({
             val response = runProviderMethod(
                 method = PDPAuthorizationProvider::authorizeEndUserOrMaskinporten,
                 headers = validHeadersForMaskinporten,
-                pdpResponse = maskinportenResponse()
+                responseBody = json.encodeToString(
+                    maskinportenResponse()
+                )
             )
 
             response.shouldBeRight(
@@ -53,7 +55,9 @@ class PDPAuthorizationProviderTest : FunSpec({
             val response = runProviderMethod(
                 method = PDPAuthorizationProvider::authorizeEndUserOrMaskinporten,
                 headers = authorizationOnlyHeaders(),
-                pdpResponse = endUserResponse()
+                responseBody = json.encodeToString(
+                    endUserResponse()
+                )
             )
 
             response.shouldBeLeft(AuthError.AccessDenied)
@@ -63,7 +67,9 @@ class PDPAuthorizationProviderTest : FunSpec({
             val response = runProviderMethod(
                 method = PDPAuthorizationProvider::authorizeEndUserOrMaskinporten,
                 headers = validHeadersForMaskinporten,
-                pdpResponse = maskinportenResponse(tokenType = "unknown")
+                responseBody = json.encodeToString(
+                    maskinportenResponse(tokenType = "unknown")
+                )
             )
 
             response.shouldBeLeft(AuthError.InvalidToken)
@@ -75,7 +81,9 @@ class PDPAuthorizationProviderTest : FunSpec({
             val response = runProviderMethod(
                 method = PDPAuthorizationProvider::authorizeAll,
                 headers = validHeadersForMaskinporten,
-                pdpResponse = maskinportenResponse()
+                responseBody = json.encodeToString(
+                    maskinportenResponse()
+                )
             )
 
             response.shouldBeRight(
@@ -87,7 +95,9 @@ class PDPAuthorizationProviderTest : FunSpec({
             val response = runProviderMethod(
                 method = PDPAuthorizationProvider::authorizeAll,
                 headers = authorizationOnlyHeaders(),
-                pdpResponse = endUserResponse()
+                responseBody = json.encodeToString(
+                    endUserResponse()
+                )
             )
 
             response.shouldBeLeft(AuthError.AccessDenied)
@@ -98,7 +108,9 @@ class PDPAuthorizationProviderTest : FunSpec({
             val response = runProviderMethod(
                 method = PDPAuthorizationProvider::authorizeAll,
                 headers = authorizationOnlyHeaders(),
-                pdpResponse = elhubServiceResponse(partyId = partyId)
+                responseBody = json.encodeToString(
+                    elhubServiceResponse(partyId = partyId)
+                )
             )
 
             response.shouldBeRight(AuthorizationParty(id = partyId, type = PartyType.System))
@@ -108,10 +120,21 @@ class PDPAuthorizationProviderTest : FunSpec({
             val response = runProviderMethod(
                 method = PDPAuthorizationProvider::authorizeAll,
                 headers = validHeadersForMaskinporten,
-                pdpResponse = maskinportenResponse(tokenType = "unknown")
+                responseBody = json.encodeToString(
+                    maskinportenResponse(tokenType = "unknown")
+                )
             )
 
             response.shouldBeLeft(AuthError.InvalidToken)
+        }
+
+        test("returns UnexpectedPdpError when PDP response is not valid PdpResponse") {
+            val response = runProviderMethod(
+                method = PDPAuthorizationProvider::authorizeMaskinporten,
+                headers = validHeadersForMaskinporten,
+                responseBody = """{"not": "a valid pdp response"}"""
+            )
+            response.shouldBeLeft(AuthError.UnexpectedPdpError)
         }
     }
 
@@ -141,15 +164,17 @@ class PDPAuthorizationProviderTest : FunSpec({
             val response = runProviderMethod(
                 method = PDPAuthorizationProvider::authorizeMaskinporten,
                 headers = authorizationOnlyHeaders(),
-                pdpResponse = maskinportenResponse(
-                    authInfo = AuthInfo(
-                        authorizedFunctions = listOf(
-                            AuthorizedFunction(
-                                functionCode = "SELF",
-                                functionName = RoleType.BalanceSupplier.name
-                            )
-                        ),
-                        actingGLN = "0107000000021"
+                responseBody = json.encodeToString(
+                    maskinportenResponse(
+                        authInfo = AuthInfo(
+                            authorizedFunctions = listOf(
+                                AuthorizedFunction(
+                                    functionCode = "SELF",
+                                    functionName = RoleType.BalanceSupplier.name
+                                )
+                            ),
+                            actingGLN = "0107000000021"
+                        )
                     )
                 )
             )
@@ -161,7 +186,9 @@ class PDPAuthorizationProviderTest : FunSpec({
             val response = runProviderMethod(
                 method = PDPAuthorizationProvider::authorizeMaskinporten,
                 headers = validHeadersForMaskinporten,
-                pdpResponse = maskinportenResponse(tokenStatus = "wrong")
+                responseBody = json.encodeToString(
+                    maskinportenResponse(tokenStatus = "wrong")
+                )
             )
             response.shouldBeLeft(AuthError.InvalidToken)
         }
@@ -170,7 +197,9 @@ class PDPAuthorizationProviderTest : FunSpec({
             val response = runProviderMethod(
                 method = PDPAuthorizationProvider::authorizeMaskinporten,
                 headers = validHeadersForMaskinporten,
-                pdpResponse = maskinportenResponse(tokenType = "random")
+                responseBody = json.encodeToString(
+                    maskinportenResponse(tokenType = "random")
+                )
             )
 
             response.shouldBeLeft(AuthError.AccessDenied)
@@ -180,7 +209,9 @@ class PDPAuthorizationProviderTest : FunSpec({
             val response = runProviderMethod(
                 method = PDPAuthorizationProvider::authorizeMaskinporten,
                 headers = validHeadersForMaskinporten,
-                pdpResponse = maskinportenResponse()
+                responseBody = json.encodeToString(
+                    maskinportenResponse()
+                )
             )
             response.shouldBeRight(AuthorizationParty(id = "0107000000021", type = PartyType.OrganizationEntity))
         }
@@ -189,10 +220,12 @@ class PDPAuthorizationProviderTest : FunSpec({
             val response = runProviderMethod(
                 method = PDPAuthorizationProvider::authorizeMaskinporten,
                 headers = validHeadersForMaskinporten,
-                pdpResponse = maskinportenResponse(
-                    authInfo = AuthInfo(
-                        authorizedFunctions = null,
-                        actingGLN = "0107000000021"
+                responseBody = json.encodeToString(
+                    maskinportenResponse(
+                        authInfo = AuthInfo(
+                            authorizedFunctions = null,
+                            actingGLN = "0107000000021"
+                        )
                     )
                 )
             )
@@ -202,15 +235,17 @@ class PDPAuthorizationProviderTest : FunSpec({
             val response = runProviderMethod(
                 method = PDPAuthorizationProvider::authorizeMaskinporten,
                 headers = validHeadersForMaskinporten,
-                pdpResponse = maskinportenResponse(
-                    authInfo = AuthInfo(
-                        authorizedFunctions = listOf(
-                            AuthorizedFunction(
-                                functionCode = "SELF",
-                                functionName = RoleType.BalanceSupplier.name
-                            )
-                        ),
-                        actingGLN = null
+                responseBody = json.encodeToString(
+                    maskinportenResponse(
+                        authInfo = AuthInfo(
+                            authorizedFunctions = listOf(
+                                AuthorizedFunction(
+                                    functionCode = "SELF",
+                                    functionName = RoleType.BalanceSupplier.name
+                                )
+                            ),
+                            actingGLN = null
+                        )
                     )
                 )
             )
@@ -222,9 +257,11 @@ class PDPAuthorizationProviderTest : FunSpec({
             val response = runProviderMethod(
                 method = PDPAuthorizationProvider::authorizeMaskinporten,
                 headers = validHeadersForMaskinporten,
-                pdpResponse = maskinportenResponse(
-                    authInfo = AuthInfo(
-                        inputFailed = "some missing stuff"
+                responseBody = json.encodeToString(
+                    maskinportenResponse(
+                        authInfo = AuthInfo(
+                            inputFailed = "some missing stuff"
+                        )
                     )
                 )
             )
@@ -235,15 +272,17 @@ class PDPAuthorizationProviderTest : FunSpec({
             val response = runProviderMethod(
                 method = PDPAuthorizationProvider::authorizeMaskinporten,
                 headers = validHeadersForMaskinporten,
-                pdpResponse = maskinportenResponse(
-                    authInfo = AuthInfo(
-                        authorizedFunctions = listOf(
-                            AuthorizedFunction(
-                                functionCode = "SELF",
-                                functionName = "UnknownRole"
-                            )
-                        ),
-                        actingGLN = "0107000000021"
+                responseBody = json.encodeToString(
+                    maskinportenResponse(
+                        authInfo = AuthInfo(
+                            authorizedFunctions = listOf(
+                                AuthorizedFunction(
+                                    functionCode = "SELF",
+                                    functionName = "UnknownRole"
+                                )
+                            ),
+                            actingGLN = "0107000000021"
+                        )
                     )
                 )
             )
@@ -258,7 +297,9 @@ class PDPAuthorizationProviderTest : FunSpec({
             val response = runProviderMethod(
                 method = PDPAuthorizationProvider::authorizeEndUser,
                 headers = authorizationOnlyHeaders(),
-                pdpResponse = maskinportenResponse()
+                responseBody = json.encodeToString(
+                    maskinportenResponse()
+                )
             )
 
             response.shouldBeLeft(AuthError.ActingFunctionNotSupported)
@@ -268,7 +309,9 @@ class PDPAuthorizationProviderTest : FunSpec({
             val response = runProviderMethod(
                 method = PDPAuthorizationProvider::authorizeEndUser,
                 headers = authorizationOnlyHeaders(),
-                pdpResponse = maskinportenResponse(tokenStatus = "wrong")
+                responseBody = json.encodeToString(
+                    maskinportenResponse(tokenStatus = "wrong")
+                )
             )
             response.shouldBeLeft(AuthError.InvalidToken)
         }
@@ -277,7 +320,9 @@ class PDPAuthorizationProviderTest : FunSpec({
             val response = runProviderMethod(
                 method = PDPAuthorizationProvider::authorizeEndUser,
                 headers = authorizationOnlyHeaders(),
-                pdpResponse = endUserResponse(partyId = null)
+                responseBody = json.encodeToString(
+                    endUserResponse(partyId = null)
+                )
             )
 
             response.shouldBeLeft(AuthError.AccessDenied)
@@ -287,7 +332,9 @@ class PDPAuthorizationProviderTest : FunSpec({
             val response = runProviderMethod(
                 method = PDPAuthorizationProvider::authorizeEndUser,
                 headers = authorizationOnlyHeaders(),
-                pdpResponse = endUserResponse()
+                responseBody = json.encodeToString(
+                    endUserResponse()
+                )
             )
 
             response.shouldBeLeft(AuthError.AccessDenied)
@@ -298,8 +345,10 @@ class PDPAuthorizationProviderTest : FunSpec({
             val response = runProviderMethod(
                 method = PDPAuthorizationProvider::authorizeEndUser,
                 headers = authorizationOnlyHeaders(),
-                pdpResponse = endUserResponse(
-                    authInfo = AuthInfo(actingType = "person", actingId = actingId)
+                responseBody = json.encodeToString(
+                    endUserResponse(
+                        authInfo = AuthInfo(actingType = "person", actingId = actingId)
+                    )
                 )
             )
 
@@ -310,8 +359,10 @@ class PDPAuthorizationProviderTest : FunSpec({
             val response = runProviderMethod(
                 method = PDPAuthorizationProvider::authorizeEndUser,
                 headers = authorizationOnlyHeaders(),
-                pdpResponse = endUserResponse(
-                    authInfo = AuthInfo(actingType = "person", actingId = null)
+                responseBody = json.encodeToString(
+                    endUserResponse(
+                        authInfo = AuthInfo(actingType = "person", actingId = null)
+                    )
                 )
             )
 
@@ -323,11 +374,13 @@ class PDPAuthorizationProviderTest : FunSpec({
             val response = runProviderMethod(
                 method = PDPAuthorizationProvider::authorizeEndUser,
                 headers = authorizationOnlyHeaders(),
-                pdpResponse = endUserResponse(
-                    authInfo = AuthInfo(
-                        actingType = "organisation",
-                        actingId = "b8af0fb3-bad7-4ca4-9153-919243635601",
-                        actingOrganisationNumber = orgNumber,
+                responseBody = json.encodeToString(
+                    endUserResponse(
+                        authInfo = AuthInfo(
+                            actingType = "organisation",
+                            actingId = "b8af0fb3-bad7-4ca4-9153-919243635601",
+                            actingOrganisationNumber = orgNumber,
+                        )
                     )
                 )
             )
@@ -339,8 +392,10 @@ class PDPAuthorizationProviderTest : FunSpec({
             val response = runProviderMethod(
                 method = PDPAuthorizationProvider::authorizeEndUser,
                 headers = authorizationOnlyHeaders(),
-                pdpResponse = endUserResponse(
-                    authInfo = AuthInfo(actingType = "organisation", actingOrganisationNumber = null)
+                responseBody = json.encodeToString(
+                    endUserResponse(
+                        authInfo = AuthInfo(actingType = "organisation", actingOrganisationNumber = null)
+                    )
                 )
             )
 
@@ -351,11 +406,13 @@ class PDPAuthorizationProviderTest : FunSpec({
             val response = runProviderMethod(
                 method = PDPAuthorizationProvider::authorizeEndUser,
                 headers = authorizationOnlyHeaders(),
-                pdpResponse = endUserResponse(
-                    authInfo = AuthInfo(
-                        actingId = "",
-                        actingType = null,
-                        error = "Unable to verify OnBehalfOfOrganisationId for end user token",
+                responseBody = json.encodeToString(
+                    endUserResponse(
+                        authInfo = AuthInfo(
+                            actingId = "",
+                            actingType = null,
+                            error = "Unable to verify OnBehalfOfOrganisationId for end user token",
+                        )
                     )
                 )
             )
@@ -364,8 +421,10 @@ class PDPAuthorizationProviderTest : FunSpec({
         }
 
         test("deserializes blank actingType as null and returns verification error") {
-            val pdpResponse = json.decodeFromString<PdpResponse>(
-                """
+            val response = runProviderMethod(
+                method = PDPAuthorizationProvider::authorizeEndUser,
+                headers = authorizationOnlyHeaders(),
+                responseBody = """
                 {
                   "result": {
                     "authInfo": {
@@ -385,12 +444,6 @@ class PDPAuthorizationProviderTest : FunSpec({
                 """.trimIndent()
             )
 
-            val response = runProviderMethod(
-                method = PDPAuthorizationProvider::authorizeEndUser,
-                headers = authorizationOnlyHeaders(),
-                pdpResponse = pdpResponse
-            )
-
             response.shouldBeLeft(AuthError.EndUserOnBehalfOfOrganisationVerificationFailed)
         }
 
@@ -398,10 +451,12 @@ class PDPAuthorizationProviderTest : FunSpec({
             val response = runProviderMethod(
                 method = PDPAuthorizationProvider::authorizeEndUser,
                 headers = authorizationOnlyHeaders(),
-                pdpResponse = endUserResponse(
-                    authInfo = AuthInfo(
-                        actingType = "",
-                        actingId = "",
+                responseBody = json.encodeToString(
+                    endUserResponse(
+                        authInfo = AuthInfo(
+                            actingType = "",
+                            actingId = "",
+                        )
                     )
                 )
             )
@@ -415,7 +470,9 @@ class PDPAuthorizationProviderTest : FunSpec({
             val response = runProviderMethod(
                 method = PDPAuthorizationProvider::authorizeElhubService,
                 headers = authorizationOnlyHeaders(),
-                pdpResponse = endUserResponse()
+                responseBody = json.encodeToString(
+                    endUserResponse()
+                )
             )
 
             response.shouldBeLeft(AuthError.AccessDenied)
@@ -425,7 +482,9 @@ class PDPAuthorizationProviderTest : FunSpec({
             val response = runProviderMethod(
                 method = PDPAuthorizationProvider::authorizeElhubService,
                 headers = authorizationOnlyHeaders(),
-                pdpResponse = elhubServiceResponse(partyId = null)
+                responseBody = json.encodeToString(
+                    elhubServiceResponse(partyId = null)
+                )
             )
 
             response.shouldBeLeft(AuthError.UnexpectedPdpError)
@@ -436,7 +495,9 @@ class PDPAuthorizationProviderTest : FunSpec({
             val response = runProviderMethod(
                 method = PDPAuthorizationProvider::authorizeElhubService,
                 headers = authorizationOnlyHeaders(),
-                pdpResponse = elhubServiceResponse(partyId = partyId)
+                responseBody = json.encodeToString(
+                    elhubServiceResponse(partyId = partyId)
+                )
             )
 
             response.shouldBeRight(AuthorizationParty(id = partyId, type = PartyType.System))
@@ -458,13 +519,13 @@ private fun mockCall(headers: Headers): ApplicationCall {
 private suspend fun <T> runProviderMethod(
     method: suspend PDPAuthorizationProvider.(ApplicationCall) -> Either<AuthError, T>,
     headers: Headers,
-    pdpResponse: PdpResponse = maskinportenResponse(),
+    responseBody: String = json.encodeToString(maskinportenResponse()),
     status: HttpStatusCode = HttpStatusCode.OK
 ): Either<AuthError, T> {
     val client = HttpClient(
         MockEngine { _ ->
             respond(
-                content = json.encodeToString(pdpResponse),
+                content = responseBody,
                 status = status,
                 headers = headersOf(
                     HttpHeaders.ContentType,
