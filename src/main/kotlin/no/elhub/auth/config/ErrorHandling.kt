@@ -31,16 +31,6 @@ fun Application.configureErrorHandling() {
                     call.respond(status, body)
                 }
 
-                is SerializationException -> {
-                    logger.error("Failed to deserialize request body: {}", root.localizedMessage)
-                    val (status, body) = buildApiErrorResponse(
-                        HttpStatusCode.BadRequest,
-                        "Invalid field value in request body",
-                        formatDeserializationDetail(root.message ?: "Invalid request body")
-                    )
-                    call.respond(status, body)
-                }
-
                 else -> {
                     // domain/expected errors are handled via Arrow with Either, so reaching this block
                     // means an unexpected failure, and we return a generic 500 internal server error
@@ -53,19 +43,3 @@ fun Application.configureErrorHandling() {
     }
 }
 
-private fun formatDeserializationDetail(raw: String): String {
-    val singleLine = raw.replace(Regex("\\s+"), " ").trim()
-    val path = Regex("""at path (\S+)""").find(singleLine)?.groupValues?.get(1)
-
-    val enumField = Regex("""at path \S*?\.([A-Za-z0-9_]+)\b""").find(singleLine)?.groupValues?.get(1)
-    val enumValue = Regex("""name '([^']+)'""").find(singleLine)?.groupValues?.get(1)
-
-    return when {
-        enumField != null && path != null && enumValue != null ->
-            "Invalid value '$enumValue' for field '$enumField' at $path"
-
-        else ->
-            singleLine
-                .replace(Regex("""\bno\.elhub\.[\w.]+\.(\w+\.\w+)\b"""), "$1")
-    }
-}
