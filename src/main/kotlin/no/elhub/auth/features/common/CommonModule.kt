@@ -55,7 +55,7 @@ fun Application.commonModule() {
                 engine {
                     maxConnectionsCount = 1000
                     endpoint {
-                        maxConnectionsPerRoute = 1000
+                        maxConnectionsPerRoute = 300
                     }
                 }
                 install(HttpTimeout) {
