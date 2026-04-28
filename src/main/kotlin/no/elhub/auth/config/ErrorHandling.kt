@@ -7,7 +7,6 @@ import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.response.respond
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.MissingFieldException
-import kotlinx.serialization.SerializationException
 import no.elhub.auth.features.common.buildApiErrorResponse
 import no.elhub.auth.features.common.toInternalServerApiErrorResponse
 import org.slf4j.LoggerFactory
@@ -42,4 +41,3 @@ fun Application.configureErrorHandling() {
         }
     }
 }
-
