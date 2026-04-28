@@ -3,6 +3,7 @@ package no.elhub.auth.features.common
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.ProxyBuilder
 import io.ktor.client.engine.cio.CIO
+import io.ktor.client.engine.cio.endpoint
 import io.ktor.client.engine.http
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -31,6 +32,12 @@ fun Application.commonModule() {
         }
         provide<HttpClient>(name = "commonHttpClient") {
             HttpClient(CIO) {
+                engine {
+                    maxConnectionsCount = 1000
+                    endpoint {
+                        maxConnectionsPerRoute = 1000
+                    }
+                }
                 install(HttpTimeout) {
                     requestTimeoutMillis = 10_000
                     connectTimeoutMillis = 10_000
@@ -51,6 +58,12 @@ fun Application.commonModule() {
         }
         provide<HttpClient>(name = "pdpHttpClient") {
             HttpClient(CIO) {
+                engine {
+                    maxConnectionsCount = 1000
+                    endpoint {
+                        maxConnectionsPerRoute = 1000
+                    }
+                }
                 install(HttpTimeout) {
                     requestTimeoutMillis = 10_000
                     connectTimeoutMillis = 10_000
@@ -84,6 +97,13 @@ fun Application.commonModule() {
                     logger.info("Configuring HTTP proxy: {}", it)
                     engine { proxy = ProxyBuilder.http(it.toString()) }
                 } ?: logger.info("No HTTP proxy configured (HTTP_PROXY_URL not set)")
+
+                engine {
+                    maxConnectionsCount = 1000
+                    endpoint {
+                        maxConnectionsPerRoute = 1000
+                    }
+                }
 
                 install(HttpTimeout) {
                     requestTimeoutMillis = 10_000
