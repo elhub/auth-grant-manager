@@ -2,7 +2,6 @@ package no.elhub.auth.features.businessprocesses.structuredata.organisations
 
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
-import io.ktor.client.engine.cio.endpoint
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.UserAgent
 import io.ktor.client.plugins.auth.Auth
@@ -35,12 +34,6 @@ fun Application.organisationsServiceModule() {
             val basicAuthPassword = organisationsApiConfig.basicAuthConfig.password
 
             HttpClient(CIO) {
-                engine {
-                    maxConnectionsCount = 1000
-                    endpoint {
-                        maxConnectionsPerRoute = 1000
-                    }
-                }
                 install(HttpTimeout) {
                     connectTimeoutMillis = 30_000
                     requestTimeoutMillis = 40_000
