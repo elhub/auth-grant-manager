@@ -2,12 +2,12 @@ package no.elhub.auth.features.requests.update
 
 import arrow.core.getOrElse
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.patch
 import no.elhub.auth.features.common.auth.AuthorizationProvider
 import no.elhub.auth.features.common.auth.toApiErrorResponse
+import no.elhub.auth.features.common.receiveEither
 import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.common.toTypeMismatchApiErrorResponse
 import no.elhub.auth.features.common.validateDataId
@@ -38,7 +38,12 @@ fun Route.route(
                 return@patch
             }
 
-        val requestBody = call.receive<JsonApiUpdateRequest>()
+        val requestBody = call.receiveEither<JsonApiUpdateRequest>()
+            .getOrElse { error ->
+                val (status, body) = error.toApiErrorResponse()
+                call.respond(status, body)
+                return@patch
+            }
 
         validateDataId(requestBody.data.id, requestId)
             .getOrElse { err ->

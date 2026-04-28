@@ -2,12 +2,13 @@ package no.elhub.auth.features.requests.create
 
 import arrow.core.getOrElse
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
 import no.elhub.auth.features.common.auth.AuthorizationProvider
 import no.elhub.auth.features.common.auth.toApiErrorResponse
+import no.elhub.auth.features.common.receiveEither
+import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.common.toTypeMismatchApiErrorResponse
 import no.elhub.auth.features.requests.create.dto.JsonApiCreateRequest
 import no.elhub.auth.features.requests.create.dto.toCreateResponse
@@ -29,7 +30,12 @@ fun Route.route(
                 return@post
             }
 
-        val requestBody = call.receive<JsonApiCreateRequest>()
+        val requestBody = call.receiveEither<JsonApiCreateRequest>()
+            .getOrElse { error ->
+                val (status, body) = error.toApiErrorResponse()
+                call.respond(status, body)
+                return@post
+            }
 
         if (requestBody.data.type != "AuthorizationRequest") {
             val (status, message) = toTypeMismatchApiErrorResponse(
