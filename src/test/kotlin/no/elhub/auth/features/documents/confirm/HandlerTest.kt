@@ -248,7 +248,7 @@ class HandlerTest : FunSpec({
 
         coEvery { documentRepository.find(documentId) } returns document.right()
         every { signatureService.validateSignaturesAndReturnSignatory(signedFile, document.file) } returns
-                SignatureValidationError.MissingElhubSignature.left()
+            SignatureValidationError.MissingElhubSignature.left()
 
         val result = handler(documentRepository, partyService, signatureService)(
             Command(
@@ -277,7 +277,7 @@ class HandlerTest : FunSpec({
 
         coEvery { documentRepository.find(documentId) } returns document.right()
         every { signatureService.validateSignaturesAndReturnSignatory(signedFile, document.file) } returns
-                signatoryIdentifier.right()
+            signatoryIdentifier.right()
         coEvery { partyService.resolve(signatoryIdentifier) } returns PartyError.PersonResolutionError.left()
 
         val result = handler(documentRepository, partyService, signatureService)(
@@ -305,7 +305,7 @@ class HandlerTest : FunSpec({
 
         coEvery { documentRepository.find(documentId) } returns document.right()
         every { signatureService.validateSignaturesAndReturnSignatory(signedFile, document.file) } returns
-                signatoryIdentifier.right()
+            signatoryIdentifier.right()
         coEvery { partyService.resolve(signatoryIdentifier) } returns AuthorizationParty(
             id = "another",
             type = PartyType.Person
@@ -336,10 +336,10 @@ class HandlerTest : FunSpec({
 
         coEvery { documentRepository.find(documentId) } returns document.right()
         every { signatureService.validateSignaturesAndReturnSignatory(signedFile, document.file) } returns
-                signatoryIdentifier.right()
+            signatoryIdentifier.right()
         coEvery { partyService.resolve(signatoryIdentifier) } returns requestedTo.right()
         coEvery { documentRepository.findScopeIds(documentId) } returns
-                RepositoryReadError.UnexpectedError.left()
+            RepositoryReadError.UnexpectedError.left()
 
         val result = handler(documentRepository, partyService, signatureService)(
             Command(
@@ -369,7 +369,7 @@ class HandlerTest : FunSpec({
         )
         coEvery { documentRepository.find(documentId) } returns document.right()
         every { signatureService.validateSignaturesAndReturnSignatory(signedFile, document.file) } returns
-                signatoryIdentifier.right()
+            signatoryIdentifier.right()
         coEvery { partyService.resolve(signatoryIdentifier) } returns requestedTo.right()
         coEvery { documentRepository.findScopeIds(documentId) } returns listOf(scopeId).right()
         coEvery {
@@ -401,7 +401,7 @@ class HandlerTest : FunSpec({
         )
         coEvery { documentRepository.find(documentId) } returns document.right()
         every { signatureService.validateSignaturesAndReturnSignatory(signedFile, document.file) } returns
-                signatoryIdentifier.right()
+            signatoryIdentifier.right()
         coEvery { partyService.resolve(signatoryIdentifier) } returns requestedTo.right()
         coEvery { documentRepository.findScopeIds(documentId) } returns listOf(scopeId).right()
         coEvery {
@@ -433,7 +433,7 @@ class HandlerTest : FunSpec({
         )
         coEvery { documentRepository.find(documentId) } returns document.right()
         every { signatureService.validateSignaturesAndReturnSignatory(signedFile, document.file) } returns
-                signatoryIdentifier.right()
+            signatoryIdentifier.right()
         coEvery { partyService.resolve(signatoryIdentifier) } returns requestedTo.right()
         coEvery { documentRepository.findScopeIds(documentId) } returns listOf(scopeId).right()
         coEvery {
@@ -468,7 +468,7 @@ class HandlerTest : FunSpec({
         )
         coEvery { documentRepository.find(documentId) } returns document.right()
         every { signatureService.validateSignaturesAndReturnSignatory(signedFile, document.file) } returns
-                signatoryIdentifier.right()
+            signatoryIdentifier.right()
         coEvery { partyService.resolve(signatoryIdentifier) } returns requestedTo.right()
         coEvery { documentRepository.findScopeIds(documentId) } returns scopeIds.right()
         coEvery {
@@ -496,13 +496,13 @@ class HandlerTest : FunSpec({
                 requestedTo,
                 match { grant ->
                     grant.grantedFor == document.requestedFrom &&
-                            grant.grantedBy == requestedTo &&
-                            grant.grantedTo == document.requestedBy &&
-                            grant.sourceType == AuthorizationGrant.SourceType.Document &&
-                            grant.sourceId == document.id &&
-                            grant.scopeIds == scopeIds &&
-                            grant.validFrom == validFrom.toTimeZoneOffsetDateTimeAtStartOfDay() &&
-                            grant.validTo == validTo.toTimeZoneOffsetDateTimeAtStartOfDay()
+                        grant.grantedBy == requestedTo &&
+                        grant.grantedTo == document.requestedBy &&
+                        grant.sourceType == AuthorizationGrant.SourceType.Document &&
+                        grant.sourceId == document.id &&
+                        grant.scopeIds == scopeIds &&
+                        grant.validFrom == validFrom.toTimeZoneOffsetDateTimeAtStartOfDay() &&
+                        grant.validTo == validTo.toTimeZoneOffsetDateTimeAtStartOfDay()
                 },
                 any()
             )

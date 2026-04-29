@@ -59,7 +59,7 @@ fun ConfirmError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollecti
         ConfirmError.ScopeReadError,
         ConfirmError.GrantCreationError,
         ConfirmError.RequestedByResolutionError,
-            -> toInternalServerApiErrorResponse()
+        -> toInternalServerApiErrorResponse()
     }
 
 fun handleValidateSignatureError(error: ConfirmError.ValidateSignaturesError): Pair<HttpStatusCode, JsonApiErrorCollection> =
