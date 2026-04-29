@@ -37,7 +37,7 @@ class ConfirmErrorJsonApiResponseTest : FunSpec({
             title = "Party not authorized",
             detail = "RequestedBy must match the authorized party."
         ),
-        ConfirmError.IllegalStateError to Expectation(
+        ConfirmError.IllegalStateError("AuthorizationDocument must be in 'Pending' status to confirm.") to Expectation(
             status = HttpStatusCode.UnprocessableEntity,
             title = "Invalid status state",
             detail = "AuthorizationDocument must be in 'Pending' status to confirm."

@@ -13,6 +13,7 @@ import io.mockk.verify
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.plus
 import no.elhub.auth.features.common.RepositoryReadError
+import no.elhub.auth.features.common.currentTimeUtc
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyError
 import no.elhub.auth.features.common.party.PartyIdentifier
@@ -49,20 +50,24 @@ class HandlerTest : FunSpec({
         validTo: OffsetDateTime = todayOslo().plus(DatePeriod(days = 30)).toTimeZoneOffsetDateTimeAtStartOfDay(),
         requestedBy: AuthorizationParty = authorizationParty,
         requestedFromParty: AuthorizationParty = requestedFrom,
-        requestedToParty: AuthorizationParty = requestedTo
-    ): AuthorizationDocument =
-        AuthorizationDocument.create(
-            type = AuthorizationDocument.Type.ChangeOfBalanceSupplierForPerson,
-            file = "file".toByteArray(),
-            requestedBy = requestedBy,
-            requestedFrom = requestedFromParty,
-            requestedTo = requestedToParty,
-            properties = emptyList(),
-            validTo = validTo
-        ).copy(
-            id = documentId,
-            status = status
-        )
+        requestedToParty: AuthorizationParty = requestedTo,
+        signedBy: AuthorizationParty? = null,
+    ): AuthorizationDocument = AuthorizationDocument(
+        id = UUID.randomUUID(),
+        type = AuthorizationDocument.Type.ChangeOfBalanceSupplierForPerson,
+        status = status,
+        file = "file".toByteArray(),
+        requestedBy = requestedBy,
+        requestedFrom = requestedFrom,
+        requestedTo = requestedTo,
+        properties = emptyList(),
+        validTo = validTo,
+        createdAt = currentTimeUtc(),
+        updatedAt = currentTimeUtc(),
+        signedBy = signedBy,
+    ).copy(
+        id = documentId,
+    )
 
     fun handler(
         documentRepository: DocumentRepository,
@@ -148,7 +153,7 @@ class HandlerTest : FunSpec({
         coVerify(exactly = 0) { documentRepository.confirmWithGrant(any(), any(), any(), any(), any(), any()) }
     }
 
-    test("returns IllegalTransitionError when document is not pending") {
+    test("returns IllegalStateError when document is not pending") {
         val documentId = UUID.randomUUID()
         val document = createDocument(
             documentId = documentId,
@@ -169,7 +174,36 @@ class HandlerTest : FunSpec({
             )
         )
 
-        result.shouldBeLeft(ConfirmError.IllegalStateError)
+        result.shouldBeLeft(ConfirmError.IllegalStateError("AuthorizationDocument must be in 'Pending' status to confirm."))
+        coVerify(exactly = 1) { documentRepository.find(documentId) }
+        verify(exactly = 0) { signatureService.validateSignaturesAndReturnSignatory(any(), any()) }
+        coVerify(exactly = 0) { documentRepository.findScopeIds(any()) }
+        coVerify(exactly = 0) { documentRepository.confirmWithGrant(any(), any(), any(), any(), any(), any()) }
+    }
+
+    test("returns IllegalStateError when document is already signed") {
+        val documentId = UUID.randomUUID()
+        val document = createDocument(
+            documentId = documentId,
+            status = AuthorizationDocument.Status.Pending,
+            signedBy = AuthorizationParty("some-id", PartyType.Person),
+        )
+
+        val documentRepository = mockk<DocumentRepository>()
+        val partyService = mockk<PartyService>()
+        val signatureService = mockk<SignatureService>()
+
+        coEvery { documentRepository.find(documentId) } returns document.right()
+
+        val result = handler(documentRepository, partyService, signatureService)(
+            Command(
+                documentId = documentId,
+                authorizedParty = authorizationParty,
+                signedFile = signedFile
+            )
+        )
+
+        result.shouldBeLeft(ConfirmError.IllegalStateError("AuthorizationDocument has already been signed."))
         coVerify(exactly = 1) { documentRepository.find(documentId) }
         verify(exactly = 0) { signatureService.validateSignaturesAndReturnSignatory(any(), any()) }
         coVerify(exactly = 0) { documentRepository.findScopeIds(any()) }
