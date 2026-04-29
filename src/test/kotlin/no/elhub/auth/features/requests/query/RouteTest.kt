@@ -32,6 +32,7 @@ import no.elhub.auth.features.requests.query.dto.GetRequestCollectionResponse
 import no.elhub.auth.setupAppWith
 import no.elhub.auth.validateForbiddenResponse
 import no.elhub.auth.validateNotAuthorizedResponse
+import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import java.util.UUID
 
 class RouteTest : FunSpec({
@@ -193,12 +194,46 @@ class RouteTest : FunSpec({
 
     test("GET with page params passes correct Pagination to handler") {
         coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
-        coEvery { handler.invoke(any()) } returns Page(emptyList<AuthorizationRequest>(), 0L, Pagination(page = 1, size = 5)).right()
+        coEvery { handler.invoke(any()) } returns Page(
+            emptyList<AuthorizationRequest>(),
+            0L,
+            Pagination(page = 1, size = 5)
+        ).right()
         testApplication {
             setupAppWith { route(handler, authProvider) }
             client.get("/?page[number]=1&page[size]=5")
         }
         coVerify(exactly = 1) { handler.invoke(match { it.pagination == Pagination(page = 1, size = 5) }) }
+    }
+
+    test("GET with status param passes correct status to handler") {
+        coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
+        coEvery { handler.invoke(any()) } returns Page(
+            emptyList<AuthorizationRequest>(),
+            0L,
+            Pagination(page = 1, size = 5)
+        ).right()
+        testApplication {
+            setupAppWith { route(handler, authProvider) }
+            client.get("/?status=Pending")
+        }
+        coVerify(exactly = 1) { handler.invoke(match { it.status == AuthorizationRequest.Status.Pending }) }
+    }
+
+    test("GET with status param returns BadRequest when supplying invalid status") {
+        coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
+        coEvery { handler.invoke(any()) } returns Page(
+            emptyList<AuthorizationRequest>(),
+            0L,
+            Pagination(page = 1, size = 5)
+        ).right()
+        testApplication {
+            setupAppWith { route(handler, authProvider) }
+            val response = client.get("/?status=Foo")
+            response.status shouldBe HttpStatusCode.BadRequest
+            val resultJson: JsonApiErrorCollection = response.body()
+            resultJson.errors[0].detail shouldBe "Invalid status value 'Foo'. Valid values: Accepted, Expired, Pending, Rejected"
+        }
     }
 
     test("GET response meta and links contain correct pagination fields") {

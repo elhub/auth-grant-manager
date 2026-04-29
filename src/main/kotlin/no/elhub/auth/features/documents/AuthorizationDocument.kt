@@ -44,11 +44,12 @@ data class AuthorizationDocument(
             updatedAt = currentTimeUtc()
         )
     }
+
     enum class Status {
         Expired,
         Pending,
         Rejected,
-        Signed
+        Signed,
     }
 
     enum class Type {

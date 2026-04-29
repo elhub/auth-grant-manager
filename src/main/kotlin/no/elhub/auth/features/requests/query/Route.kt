@@ -1,14 +1,19 @@
 package no.elhub.auth.features.requests.query
 
+import arrow.core.Either
 import arrow.core.getOrElse
+import arrow.core.right
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
+import no.elhub.auth.features.common.InputError
 import no.elhub.auth.features.common.Pagination
 import no.elhub.auth.features.common.auth.AuthorizationProvider
 import no.elhub.auth.features.common.auth.toApiErrorResponse
+import no.elhub.auth.features.common.buildApiErrorResponse
 import no.elhub.auth.features.common.toApiErrorResponse
+import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.query.dto.toGetCollectionResponse
 import org.slf4j.LoggerFactory
 
@@ -28,7 +33,14 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
             sizeParam = call.request.queryParameters["page[size]"],
         )
 
-        val query = Query(authorizedParty = authorizedParty, pagination = pagination)
+        val status = validateStatusParam(call.request.queryParameters["status"])
+            .getOrElse { err ->
+                val (status, body) = err.toApiErrorResponse()
+                call.respond(status, body)
+                return@get
+            }
+
+        val query = Query(authorizedParty = authorizedParty, pagination = pagination, status = status)
 
         val page = handler(query)
             .getOrElse { error ->
@@ -40,3 +52,13 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
         call.respond(HttpStatusCode.OK, page.toGetCollectionResponse())
     }
 }
+
+private fun validateStatusParam(status: String?): Either<InputError.MalformedInputError, AuthorizationRequest.Status?> =
+    Either.catch {
+        if (status.isNullOrBlank()) {
+            return null.right()
+        }
+        AuthorizationRequest.Status.valueOf(status)
+    }.mapLeft {
+        InputError.MalformedInputError("Invalid status value '$status'. Valid values: ${AuthorizationRequest.Status.entries.joinToString()}")
+    }

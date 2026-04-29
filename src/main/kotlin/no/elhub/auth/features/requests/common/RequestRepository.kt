@@ -35,6 +35,10 @@ import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.java.javaUUID
+import org.jetbrains.exposed.v1.core.Op
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.greater
+import org.jetbrains.exposed.v1.core.lessEq
 import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.javatime.timestampWithTimeZone
 import org.jetbrains.exposed.v1.jdbc.batchInsert
@@ -57,7 +61,12 @@ sealed interface AcceptWithGrantError {
 
 interface RequestRepository {
     suspend fun find(requestId: UUID): Either<RepositoryReadError, AuthorizationRequest>
-    suspend fun findAllAndSortByCreatedAt(party: AuthorizationParty, pagination: Pagination): Either<RepositoryReadError, Page<AuthorizationRequest>>
+    suspend fun findAllAndSortByCreatedAt(
+        party: AuthorizationParty,
+        pagination: Pagination,
+        status: AuthorizationRequest.Status?
+    ): Either<RepositoryReadError, Page<AuthorizationRequest>>
+
     suspend fun insert(
         request: AuthorizationRequest,
         scopes: List<CreateScopeData>
@@ -82,7 +91,11 @@ class ExposedRequestRepository(
     private val transactionContext: TransactionContext,
 ) : RequestRepository {
 
-    override suspend fun findAllAndSortByCreatedAt(party: AuthorizationParty, pagination: Pagination): Either<RepositoryReadError, Page<AuthorizationRequest>> =
+    override suspend fun findAllAndSortByCreatedAt(
+        party: AuthorizationParty,
+        pagination: Pagination,
+        status: AuthorizationRequest.Status?
+    ): Either<RepositoryReadError, Page<AuthorizationRequest>> =
         transactionContext<RepositoryReadError, Page<AuthorizationRequest>>(
             "db_operations",
             "RequestRepository",
@@ -94,7 +107,7 @@ class ExposedRequestRepository(
                 .bind()
                 .id
 
-            val whereClause = { (AuthorizationRequestTable.requestedTo eq partyId) or (AuthorizationRequestTable.requestedBy eq partyId) }
+            val whereClause = generateFindAllCondition(partyId, status)
 
             val totalItems = AuthorizationRequestTable
                 .selectAll()
@@ -142,7 +155,9 @@ class ExposedRequestRepository(
                     ?: raise(RepositoryReadError.UnexpectedError)
                 val requestedTo = partyMap[row[AuthorizationRequestTable.requestedTo]]
                     ?: raise(RepositoryReadError.UnexpectedError)
-                val approvedBy = row[AuthorizationRequestTable.approvedBy]?.let { partyMap[it] ?: raise(RepositoryReadError.UnexpectedError) }
+                val approvedBy = row[AuthorizationRequestTable.approvedBy]?.let {
+                    partyMap[it] ?: raise(RepositoryReadError.UnexpectedError)
+                }
                 val requestId = row[AuthorizationRequestTable.id].value
                 row.toAuthorizationRequest(
                     requestedBy = requestedBy,
@@ -155,6 +170,29 @@ class ExposedRequestRepository(
 
             Page(items = items, totalItems = totalItems, pagination = pagination)
         }
+
+    // Match on party, and optionally status
+    private fun generateFindAllCondition(partyId: UUID, status: AuthorizationRequest.Status?): Op<Boolean> {
+        val partyCondition = (AuthorizationRequestTable.requestedTo eq partyId) or
+                (AuthorizationRequestTable.requestedBy eq partyId)
+        if (status == null) {
+            return partyCondition
+        } else {
+            val statusCondition = when (status) {
+                AuthorizationRequest.Status.Pending ->
+                    (AuthorizationRequestTable.requestStatus eq DatabaseRequestStatus.Pending) and
+                            (AuthorizationRequestTable.validTo greater currentTimeUtc())
+
+                AuthorizationRequest.Status.Expired ->
+                    (AuthorizationRequestTable.requestStatus eq DatabaseRequestStatus.Pending) and
+                            (AuthorizationRequestTable.validTo lessEq currentTimeUtc())
+
+                else -> AuthorizationRequestTable.requestStatus eq status.toDataBaseRequestStatus()
+
+            }
+            return partyCondition and statusCondition
+        }
+    }
 
     override suspend fun find(requestId: UUID): Either<RepositoryReadError, AuthorizationRequest> =
         transactionContext<RepositoryReadError, AuthorizationRequest>(
@@ -312,7 +350,10 @@ class ExposedRequestRepository(
         }
     }
 
-    private suspend fun updateAndFetch(requestId: UUID, rowsUpdated: Int): Either<RepositoryError, AuthorizationRequest> =
+    private suspend fun updateAndFetch(
+        requestId: UUID,
+        rowsUpdated: Int
+    ): Either<RepositoryError, AuthorizationRequest> =
         either {
             if (rowsUpdated == 0) {
                 raise(RepositoryWriteError.UnexpectedError)

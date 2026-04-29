@@ -17,7 +17,9 @@ fun validatePathId(id: String?): Either<InputError, UUID> = Either.catch {
 
     UUID.fromString(id)
 }.mapLeft {
-    return InputError.MalformedInputError.left()
+    return InputError.MalformedInputError(
+        "The provided payload did not satisfy the expected format"
+    ).left()
 }
 
 fun validateDataId(dataId: String?, pathId: UUID): Either<InputError, UUID> {
