@@ -18,7 +18,7 @@ sealed class ConfirmError {
     data object GrantCreationError : ConfirmError()
     data object RequestedByResolutionError : ConfirmError()
     data object InvalidRequestedByError : ConfirmError()
-    data object IllegalStateError : ConfirmError()
+    data class IllegalStateError(val detail: String) : ConfirmError()
     data object ExpiredError : ConfirmError()
 }
 
@@ -41,10 +41,10 @@ fun ConfirmError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollecti
             detail = "RequestedBy must match the authorized party.",
         )
 
-        ConfirmError.IllegalStateError -> buildApiErrorResponse(
+        is ConfirmError.IllegalStateError -> buildApiErrorResponse(
             status = HttpStatusCode.UnprocessableEntity,
             title = "Invalid status state",
-            detail = "AuthorizationDocument must be in 'Pending' status to confirm."
+            detail = this.detail
         )
 
         ConfirmError.ExpiredError -> buildApiErrorResponse(
@@ -59,7 +59,7 @@ fun ConfirmError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollecti
         ConfirmError.ScopeReadError,
         ConfirmError.GrantCreationError,
         ConfirmError.RequestedByResolutionError,
-        -> toInternalServerApiErrorResponse()
+            -> toInternalServerApiErrorResponse()
     }
 
 fun handleValidateSignatureError(error: ConfirmError.ValidateSignaturesError): Pair<HttpStatusCode, JsonApiErrorCollection> =

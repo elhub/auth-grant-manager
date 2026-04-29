@@ -41,7 +41,11 @@ class Handler(
         }
 
         ensure(document.status == AuthorizationDocument.Status.Pending) {
-            ConfirmError.IllegalStateError
+            ConfirmError.IllegalStateError("AuthorizationDocument must be in 'Pending' status to confirm.")
+        }
+
+        ensure(document.signedBy == null) {
+            ConfirmError.IllegalStateError("AuthorizationDocument has already been signed.")
         }
 
         ensure(document.validTo >= currentTimeUtc()) {
