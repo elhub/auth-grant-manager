@@ -11,7 +11,6 @@ import no.elhub.auth.features.common.InputError
 import no.elhub.auth.features.common.Pagination
 import no.elhub.auth.features.common.auth.AuthorizationProvider
 import no.elhub.auth.features.common.auth.toApiErrorResponse
-import no.elhub.auth.features.common.buildApiErrorResponse
 import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.query.dto.toGetCollectionResponse

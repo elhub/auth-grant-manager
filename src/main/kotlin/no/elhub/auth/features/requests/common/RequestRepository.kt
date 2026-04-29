@@ -27,17 +27,17 @@ import no.elhub.auth.features.grants.common.GrantRepository
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.common.AuthorizationRequestScopeTable.authorizationRequestId
 import no.elhub.auth.features.requests.common.AuthorizationRequestScopeTable.authorizationScopeId
+import org.jetbrains.exposed.v1.core.Op
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.greater
 import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.java.javaUUID
-import org.jetbrains.exposed.v1.core.Op
-import org.jetbrains.exposed.v1.core.and
-import org.jetbrains.exposed.v1.core.greater
 import org.jetbrains.exposed.v1.core.lessEq
 import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.javatime.timestampWithTimeZone
@@ -174,21 +174,20 @@ class ExposedRequestRepository(
     // Match on party, and optionally status
     private fun generateFindAllCondition(partyId: UUID, status: AuthorizationRequest.Status?): Op<Boolean> {
         val partyCondition = (AuthorizationRequestTable.requestedTo eq partyId) or
-                (AuthorizationRequestTable.requestedBy eq partyId)
+            (AuthorizationRequestTable.requestedBy eq partyId)
         if (status == null) {
             return partyCondition
         } else {
             val statusCondition = when (status) {
                 AuthorizationRequest.Status.Pending ->
                     (AuthorizationRequestTable.requestStatus eq DatabaseRequestStatus.Pending) and
-                            (AuthorizationRequestTable.validTo greater currentTimeUtc())
+                        (AuthorizationRequestTable.validTo greater currentTimeUtc())
 
                 AuthorizationRequest.Status.Expired ->
                     (AuthorizationRequestTable.requestStatus eq DatabaseRequestStatus.Pending) and
-                            (AuthorizationRequestTable.validTo lessEq currentTimeUtc())
+                        (AuthorizationRequestTable.validTo lessEq currentTimeUtc())
 
                 else -> AuthorizationRequestTable.requestStatus eq status.toDataBaseRequestStatus()
-
             }
             return partyCondition and statusCondition
         }
