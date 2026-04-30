@@ -27,14 +27,18 @@ import no.elhub.auth.features.grants.common.GrantRepository
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.common.AuthorizationRequestScopeTable.authorizationRequestId
 import no.elhub.auth.features.requests.common.AuthorizationRequestScopeTable.authorizationScopeId
+import org.jetbrains.exposed.v1.core.Op
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.greater
 import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.java.javaUUID
+import org.jetbrains.exposed.v1.core.lessEq
 import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.javatime.timestampWithTimeZone
 import org.jetbrains.exposed.v1.jdbc.batchInsert
@@ -57,7 +61,12 @@ sealed interface AcceptWithGrantError {
 
 interface RequestRepository {
     suspend fun find(requestId: UUID): Either<RepositoryReadError, AuthorizationRequest>
-    suspend fun findAllAndSortByCreatedAt(party: AuthorizationParty, pagination: Pagination): Either<RepositoryReadError, Page<AuthorizationRequest>>
+    suspend fun findAndSortByCreatedAt(
+        party: AuthorizationParty,
+        pagination: Pagination,
+        statuses: List<AuthorizationRequest.Status>
+    ): Either<RepositoryReadError, Page<AuthorizationRequest>>
+
     suspend fun insert(
         request: AuthorizationRequest,
         scopes: List<CreateScopeData>
@@ -82,11 +91,15 @@ class ExposedRequestRepository(
     private val transactionContext: TransactionContext,
 ) : RequestRepository {
 
-    override suspend fun findAllAndSortByCreatedAt(party: AuthorizationParty, pagination: Pagination): Either<RepositoryReadError, Page<AuthorizationRequest>> =
+    override suspend fun findAndSortByCreatedAt(
+        party: AuthorizationParty,
+        pagination: Pagination,
+        statuses: List<AuthorizationRequest.Status>
+    ): Either<RepositoryReadError, Page<AuthorizationRequest>> =
         transactionContext<RepositoryReadError, Page<AuthorizationRequest>>(
             "db_operations",
             "RequestRepository",
-            "findAllAndSortByCreatedAt",
+            "findAndSortByCreatedAt",
             { RepositoryReadError.UnexpectedError }
         ) {
             val partyId = partyRepo.findOrInsert(type = party.type, partyId = party.id)
@@ -94,7 +107,7 @@ class ExposedRequestRepository(
                 .bind()
                 .id
 
-            val whereClause = { (AuthorizationRequestTable.requestedTo eq partyId) or (AuthorizationRequestTable.requestedBy eq partyId) }
+            val whereClause = generateFilterByCondition(partyId, statuses)
 
             val totalItems = AuthorizationRequestTable
                 .selectAll()
@@ -142,7 +155,9 @@ class ExposedRequestRepository(
                     ?: raise(RepositoryReadError.UnexpectedError)
                 val requestedTo = partyMap[row[AuthorizationRequestTable.requestedTo]]
                     ?: raise(RepositoryReadError.UnexpectedError)
-                val approvedBy = row[AuthorizationRequestTable.approvedBy]?.let { partyMap[it] ?: raise(RepositoryReadError.UnexpectedError) }
+                val approvedBy = row[AuthorizationRequestTable.approvedBy]?.let {
+                    partyMap[it] ?: raise(RepositoryReadError.UnexpectedError)
+                }
                 val requestId = row[AuthorizationRequestTable.id].value
                 row.toAuthorizationRequest(
                     requestedBy = requestedBy,
@@ -155,6 +170,30 @@ class ExposedRequestRepository(
 
             Page(items = items, totalItems = totalItems, pagination = pagination)
         }
+
+    // Match on party, and statuses if any are provided
+    private fun generateFilterByCondition(partyId: UUID, statuses: List<AuthorizationRequest.Status>): Op<Boolean> {
+        val partyCondition = (AuthorizationRequestTable.requestedTo eq partyId) or
+            (AuthorizationRequestTable.requestedBy eq partyId)
+        if (statuses.isEmpty()) {
+            return partyCondition
+        }
+
+        val statusCondition = statuses.map { status ->
+            when (status) {
+                AuthorizationRequest.Status.Pending ->
+                    (AuthorizationRequestTable.requestStatus eq DatabaseRequestStatus.Pending) and
+                        (AuthorizationRequestTable.validTo greater currentTimeUtc())
+
+                AuthorizationRequest.Status.Expired ->
+                    (AuthorizationRequestTable.requestStatus eq DatabaseRequestStatus.Pending) and
+                        (AuthorizationRequestTable.validTo lessEq currentTimeUtc())
+
+                else -> AuthorizationRequestTable.requestStatus eq status.toDataBaseRequestStatus()
+            }
+        }.reduce { acc, op -> acc or op }
+        return partyCondition and statusCondition
+    }
 
     override suspend fun find(requestId: UUID): Either<RepositoryReadError, AuthorizationRequest> =
         transactionContext<RepositoryReadError, AuthorizationRequest>(
@@ -312,7 +351,10 @@ class ExposedRequestRepository(
         }
     }
 
-    private suspend fun updateAndFetch(requestId: UUID, rowsUpdated: Int): Either<RepositoryError, AuthorizationRequest> =
+    private suspend fun updateAndFetch(
+        requestId: UUID,
+        rowsUpdated: Int
+    ): Either<RepositoryError, AuthorizationRequest> =
         either {
             if (rowsUpdated == 0) {
                 raise(RepositoryWriteError.UnexpectedError)

@@ -45,7 +45,7 @@ class HandlerTest : FunSpec({
 
     fun requestRepoReturning(page: Page<AuthorizationRequest>): RequestRepository =
         mockk<RequestRepository> {
-            coEvery { findAllAndSortByCreatedAt(any(), any()) } returns page.right()
+            coEvery { findAndSortByCreatedAt(any(), any(), any()) } returns page.right()
         }
 
     fun grantRepoReturning(result: Map<UUID, AuthorizationGrant>): GrantRepository =
@@ -61,7 +61,7 @@ class HandlerTest : FunSpec({
 
         val response = handler(Query(authorizedParty = authorizedParty, pagination = pagination))
 
-        coVerify(exactly = 1) { requestRepo.findAllAndSortByCreatedAt(authorizedParty, pagination) }
+        coVerify(exactly = 1) { requestRepo.findAndSortByCreatedAt(authorizedParty, pagination, listOf()) }
         val page = response.shouldBeRight()
         page.pagination shouldBe pagination
         page.totalItems shouldBe 10L

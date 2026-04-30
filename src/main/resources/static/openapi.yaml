@@ -419,6 +419,18 @@ paths:
         - $ref: '#/components/parameters/AuthorizationMaskinportenOrEndUser'
         - $ref: '#/components/parameters/SenderGlnOptional'
         - $ref: '#/components/parameters/OnBehalfOfGlnOptional'
+        - name: filter[status]
+          in: query
+          required: false
+          description: >
+            Filter results by one or more statuses. When omitted, requests of all statuses are returned.
+            Multiple statuses can be specified as a comma-separated list (e.g. `filter[status]=Pending,Expired`).
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              $ref: './schemas/requests/authorization-request-common.schema.json#/$defs/authorizationRequestStatus'
         - name: page[number]
           in: query
           required: false

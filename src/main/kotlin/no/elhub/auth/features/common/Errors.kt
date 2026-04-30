@@ -10,7 +10,7 @@ interface Error
 
 sealed class InputError : Error {
     data object MissingInputError : InputError()
-    data object MalformedInputError : InputError()
+    data class MalformedInputError(val detail: String) : InputError()
     data object IdMismatchError : InputError()
     data class MissingFieldError(val fields: List<String>) : InputError()
     data class InvalidFieldValueError(val detail: String) : InputError()
@@ -118,7 +118,7 @@ fun InputError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection
         is InputError.MalformedInputError -> buildApiErrorResponse(
             status = HttpStatusCode.BadRequest,
             title = "Invalid input",
-            detail = "The provided payload did not satisfy the expected format"
+            detail = this.detail,
         )
 
         is InputError.IdMismatchError -> buildApiErrorResponse(
