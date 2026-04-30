@@ -32,7 +32,7 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
             sizeParam = call.request.queryParameters["page[size]"],
         )
 
-        val status = validateStatusParam(call.request.queryParameters["status"])
+        val status = validateStatusParam(call.request.queryParameters["filter[status]"])
             .getOrElse { err ->
                 val (status, body) = err.toApiErrorResponse()
                 call.respond(status, body)
@@ -52,12 +52,14 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
     }
 }
 
-private fun validateStatusParam(status: String?): Either<InputError.MalformedInputError, AuthorizationRequest.Status?> =
+private fun validateStatusParam(status: String?): Either<InputError.MalformedInputError, List<AuthorizationRequest.Status>> =
     Either.catch {
         if (status.isNullOrBlank()) {
-            return null.right()
+            return emptyList<AuthorizationRequest.Status>().right()
         }
-        AuthorizationRequest.Status.valueOf(status)
+        status.split(',').map {
+            AuthorizationRequest.Status.valueOf(it)
+        }
     }.mapLeft {
         InputError.MalformedInputError("Invalid status value '$status'. Valid values: ${AuthorizationRequest.Status.entries.joinToString()}")
     }

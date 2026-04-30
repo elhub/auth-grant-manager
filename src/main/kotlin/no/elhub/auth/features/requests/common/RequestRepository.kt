@@ -64,7 +64,7 @@ interface RequestRepository {
     suspend fun findAllAndSortByCreatedAt(
         party: AuthorizationParty,
         pagination: Pagination,
-        status: AuthorizationRequest.Status?
+        statuses: List<AuthorizationRequest.Status>
     ): Either<RepositoryReadError, Page<AuthorizationRequest>>
 
     suspend fun insert(
@@ -94,7 +94,7 @@ class ExposedRequestRepository(
     override suspend fun findAllAndSortByCreatedAt(
         party: AuthorizationParty,
         pagination: Pagination,
-        status: AuthorizationRequest.Status?
+        statuses: List<AuthorizationRequest.Status>
     ): Either<RepositoryReadError, Page<AuthorizationRequest>> =
         transactionContext<RepositoryReadError, Page<AuthorizationRequest>>(
             "db_operations",
@@ -107,7 +107,7 @@ class ExposedRequestRepository(
                 .bind()
                 .id
 
-            val whereClause = generateFindAllCondition(partyId, status)
+            val whereClause = generateFindAllCondition(partyId, statuses)
 
             val totalItems = AuthorizationRequestTable
                 .selectAll()
@@ -171,26 +171,28 @@ class ExposedRequestRepository(
             Page(items = items, totalItems = totalItems, pagination = pagination)
         }
 
-    // Match on party, and optionally status
-    private fun generateFindAllCondition(partyId: UUID, status: AuthorizationRequest.Status?): Op<Boolean> {
+    // Match on party, and statuses if any are provided
+    private fun generateFindAllCondition(partyId: UUID, statuses: List<AuthorizationRequest.Status>): Op<Boolean> {
         val partyCondition = (AuthorizationRequestTable.requestedTo eq partyId) or
-            (AuthorizationRequestTable.requestedBy eq partyId)
-        if (status == null) {
+                (AuthorizationRequestTable.requestedBy eq partyId)
+        if (statuses.isEmpty()) {
             return partyCondition
-        } else {
-            val statusCondition = when (status) {
+        }
+
+        val statusCondition = statuses.map { status ->
+            when (status) {
                 AuthorizationRequest.Status.Pending ->
                     (AuthorizationRequestTable.requestStatus eq DatabaseRequestStatus.Pending) and
-                        (AuthorizationRequestTable.validTo greater currentTimeUtc())
+                            (AuthorizationRequestTable.validTo greater currentTimeUtc())
 
                 AuthorizationRequest.Status.Expired ->
                     (AuthorizationRequestTable.requestStatus eq DatabaseRequestStatus.Pending) and
-                        (AuthorizationRequestTable.validTo lessEq currentTimeUtc())
+                            (AuthorizationRequestTable.validTo lessEq currentTimeUtc())
 
                 else -> AuthorizationRequestTable.requestStatus eq status.toDataBaseRequestStatus()
             }
-            return partyCondition and statusCondition
-        }
+        }.reduce { acc, op -> acc or op }
+        return partyCondition and statusCondition
     }
 
     override suspend fun find(requestId: UUID): Either<RepositoryReadError, AuthorizationRequest> =

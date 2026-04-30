@@ -61,7 +61,7 @@ class HandlerTest : FunSpec({
 
         val response = handler(Query(authorizedParty = authorizedParty, pagination = pagination))
 
-        coVerify(exactly = 1) { requestRepo.findAllAndSortByCreatedAt(authorizedParty, pagination, null) }
+        coVerify(exactly = 1) { requestRepo.findAllAndSortByCreatedAt(authorizedParty, pagination, listOf()) }
         val page = response.shouldBeRight()
         page.pagination shouldBe pagination
         page.totalItems shouldBe 10L

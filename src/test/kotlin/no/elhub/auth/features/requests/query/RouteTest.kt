@@ -215,9 +215,16 @@ class RouteTest : FunSpec({
         ).right()
         testApplication {
             setupAppWith { route(handler, authProvider) }
-            client.get("/?status=Pending")
+            client.get("/?filter[status]=Pending,Rejected")
         }
-        coVerify(exactly = 1) { handler.invoke(match { it.status == AuthorizationRequest.Status.Pending }) }
+        coVerify(exactly = 1) {
+            handler.invoke(match {
+                it.status == listOf(
+                    AuthorizationRequest.Status.Pending,
+                    AuthorizationRequest.Status.Rejected
+                )
+            })
+        }
     }
 
     test("GET with status param returns BadRequest when supplying invalid status") {
@@ -229,7 +236,7 @@ class RouteTest : FunSpec({
         ).right()
         testApplication {
             setupAppWith { route(handler, authProvider) }
-            val response = client.get("/?status=Foo")
+            val response = client.get("/?filter[status]=Foo")
             response.status shouldBe HttpStatusCode.BadRequest
             val resultJson: JsonApiErrorCollection = response.body()
             resultJson.errors[0].detail shouldBe "Invalid status value 'Foo'. Valid values: Accepted, Expired, Pending, Rejected"
