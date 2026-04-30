@@ -21,13 +21,13 @@ import no.elhub.devxp.jsonapi.model.JsonApiRelationshipToOne
 import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObjectWithRelationshipsAndMetaAndLinks
 
 typealias GetRequestCollectionResponse = PaginatedCollectionResponse<
-    JsonApiResponseResourceObjectWithRelationshipsAndMetaAndLinks<
-        AuthorizationRequestResponseAttributes,
-        AuthorizationRequestResponseRelationships,
-        JsonApiResourceMetaMap,
-        AuthorizationRequestResponseLinks
+        JsonApiResponseResourceObjectWithRelationshipsAndMetaAndLinks<
+                AuthorizationRequestResponseAttributes,
+                AuthorizationRequestResponseRelationships,
+                JsonApiResourceMetaMap,
+                AuthorizationRequestResponseLinks
+                >
         >
-    >
 
 fun Page<AuthorizationRequest>.toGetCollectionResponse(): GetRequestCollectionResponse {
     val p = this.pagination
@@ -73,6 +73,7 @@ fun Page<AuthorizationRequest>.toGetCollectionResponse(): GetRequestCollectionRe
                 )
             )
         },
+        // TODO fix status param here (and in documents/query)
         links = toPaginationLinks(REQUESTS_PATH),
         meta = buildJsonObject {
             put("createdAt", currentTimeOslo().toTimeZoneOffsetString())

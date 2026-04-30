@@ -9,10 +9,13 @@ import no.elhub.auth.features.common.Pagination
 import no.elhub.auth.features.common.auth.AuthorizationProvider
 import no.elhub.auth.features.common.auth.toApiErrorResponse
 import no.elhub.auth.features.common.toApiErrorResponse
+import no.elhub.auth.features.common.validateEnumListParam
+import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.query.dto.toGetCollectionResponse
 import org.slf4j.LoggerFactory
 
 private val logger = LoggerFactory.getLogger(Route::class.java)
+private const val STATUS_FILTER_PARAM = "filter[status]"
 
 fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
     get {
@@ -28,7 +31,17 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
             sizeParam = call.request.queryParameters["page[size]"],
         )
 
-        val query = Query(authorizedParty = authorizedParty, pagination = pagination)
+        val statuses = validateEnumListParam<AuthorizationDocument.Status>(
+            call.request.queryParameters[STATUS_FILTER_PARAM],
+            STATUS_FILTER_PARAM
+        )
+            .getOrElse { err ->
+                val (status, body) = err.toApiErrorResponse()
+                call.respond(status, body)
+                return@get
+            }
+
+        val query = Query(authorizedParty = authorizedParty, pagination = pagination, statuses = statuses)
 
         val page = handler(query)
             .getOrElse { error ->
@@ -41,3 +54,4 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
         call.respond(HttpStatusCode.OK, page.toGetCollectionResponse())
     }
 }
+

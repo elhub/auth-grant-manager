@@ -15,7 +15,7 @@ class Handler(
     private val grantRepository: GrantRepository
 ) {
     suspend operator fun invoke(query: Query): Either<QueryError, Page<AuthorizationDocument>> = either {
-        val page = repo.findAll(query.authorizedParty, query.pagination)
+        val page = repo.findAndSortByCreatedAt(query.authorizedParty, query.pagination, query.statuses)
             .mapLeft { error ->
                 when (error) {
                     is RepositoryReadError.NotFoundError -> QueryError.ResourceNotFoundError

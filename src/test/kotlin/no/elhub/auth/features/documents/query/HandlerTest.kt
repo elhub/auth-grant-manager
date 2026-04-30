@@ -25,6 +25,8 @@ import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.common.GrantRepository
 import java.util.UUID
 
+//  TODO add test for status param
+
 class HandlerTest : FunSpec({
 
     val requestedBy = AuthorizationParty(id = "org-entity-1", type = PartyType.OrganizationEntity)
@@ -79,7 +81,7 @@ class HandlerTest : FunSpec({
 
     fun documentRepoReturning(result: Either<RepositoryReadError, Page<AuthorizationDocument>>): DocumentRepository =
         mockk<DocumentRepository> {
-            coEvery { findAll(any(), any()) } returns result
+            coEvery { findAndSortByCreatedAt(any(), any(), any()) } returns result
         }
 
     fun grantRepoReturning(result: Either<RepositoryReadError, Map<UUID, AuthorizationGrant>>): GrantRepository =
@@ -101,7 +103,7 @@ class HandlerTest : FunSpec({
             )
         )
 
-        coVerify(exactly = 1) { documentRepo.findAll(requestedBy, pagination) }
+        coVerify(exactly = 1) { documentRepo.findAndSortByCreatedAt(requestedBy, pagination, emptyList()) }
         val page = response.shouldBeRight()
         page.pagination shouldBe pagination
         page.totalItems shouldBe 2L
@@ -122,7 +124,7 @@ class HandlerTest : FunSpec({
             )
         )
 
-        coVerify(exactly = 1) { documentRepo.findAll(requestedBy, pagination) }
+        coVerify(exactly = 1) { documentRepo.findAndSortByCreatedAt(requestedBy, pagination, emptyList()) }
         response.shouldBeRight(
             Page(
                 items = listOf(
