@@ -241,7 +241,6 @@ class ExposedRequestRepositoryTest : FunSpec({
             ).getOrElse { throw AssertionError("Repository read failed: $it") }
                 .totalItems shouldBe numRequestsPending + numRequestsExpired
 
-
         val expectedTotal = numRequestsPending + numRequestsAccepted + numRequestsExpired + numRequestsRejected
         val resultAll =
             requestRepo.findAllAndSortByCreatedAt(party, Pagination(size = 100), listOf())

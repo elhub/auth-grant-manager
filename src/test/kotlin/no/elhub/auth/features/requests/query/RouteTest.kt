@@ -218,12 +218,14 @@ class RouteTest : FunSpec({
             client.get("/?filter[status]=Pending,Rejected")
         }
         coVerify(exactly = 1) {
-            handler.invoke(match {
-                it.status == listOf(
-                    AuthorizationRequest.Status.Pending,
-                    AuthorizationRequest.Status.Rejected
-                )
-            })
+            handler.invoke(
+                match {
+                    it.status == listOf(
+                        AuthorizationRequest.Status.Pending,
+                        AuthorizationRequest.Status.Rejected
+                    )
+                }
+            )
         }
     }
 
