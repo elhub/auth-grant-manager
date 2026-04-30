@@ -83,7 +83,7 @@ class ExposedRequestRepositoryTest : FunSpec({
         }
     }
 
-    test("findAllAndSortByCreatedAt returns all requests matching party") {
+    test("findAndSortByCreatedAt returns all requests matching party") {
         val targetParty1 = AuthorizationParty(type = PartyType.Person, id = "67652749875413695986")
         val targetParty2 = AuthorizationParty(type = PartyType.Person, id = "17652749875413695986")
         val otherParty = AuthorizationParty(type = PartyType.Person, id = "413695986")
@@ -113,20 +113,20 @@ class ExposedRequestRepositoryTest : FunSpec({
         }
 
         val requestsOfTargetParty1 =
-            requestRepo.findAllAndSortByCreatedAt(targetParty1, Pagination(size = 200), listOf())
+            requestRepo.findAndSortByCreatedAt(targetParty1, Pagination(size = 200), listOf())
                 .getOrElse { _ ->
-                    fail("findAllAndSortByCreatedAt failed for target party 1")
+                    fail("findAndSortByCreatedAt failed for target party 1")
                 }
         requestsOfTargetParty1.items.size shouldBe numTargetRequests
 
-        requestRepo.findAllAndSortByCreatedAt(targetParty2, Pagination(size = 200), listOf())
+        requestRepo.findAndSortByCreatedAt(targetParty2, Pagination(size = 200), listOf())
             .getOrElse { _ ->
-                fail("findAllAndSortByCreatedAt failed for target party 2")
+                fail("findAndSortByCreatedAt failed for target party 2")
             }
         requestsOfTargetParty1.items.size shouldBe numTargetRequests
     }
 
-    test("findAllAndSortByCreatedAt returns requests by createdAt DESC") {
+    test("findAndSortByCreatedAt returns requests by createdAt DESC") {
         val party = AuthorizationParty(type = PartyType.Person, id = UUID.randomUUID().toString())
         val numRequests = 10
 
@@ -141,7 +141,7 @@ class ExposedRequestRepositoryTest : FunSpec({
             requestRepo.insert(request, scopes)
         }
 
-        val result = requestRepo.findAllAndSortByCreatedAt(party, Pagination(size = 100), listOf())
+        val result = requestRepo.findAndSortByCreatedAt(party, Pagination(size = 100), listOf())
             .getOrElse { throw AssertionError("Repository read failed: $it") }
 
         val createdAtList = result.items.map { it.createdAt }
@@ -149,7 +149,7 @@ class ExposedRequestRepositoryTest : FunSpec({
         createdAtList shouldBe createdAtList.sortedDescending()
     }
 
-    test("findAllAndSortByCreatedAt filters properly on status and party together") {
+    test("findAndSortByCreatedAt filters properly on status and party together") {
         val party = AuthorizationParty(type = PartyType.Person, id = UUID.randomUUID().toString())
         val numRequestsPending = 10
         val numRequestsAccepted = 8
@@ -198,7 +198,7 @@ class ExposedRequestRepositoryTest : FunSpec({
         }
 
         val resultPending =
-            requestRepo.findAllAndSortByCreatedAt(
+            requestRepo.findAndSortByCreatedAt(
                 party,
                 Pagination(size = 100),
                 listOf(AuthorizationRequest.Status.Pending)
@@ -207,7 +207,7 @@ class ExposedRequestRepositoryTest : FunSpec({
                 .totalItems shouldBe numRequestsPending
 
         val resultAccepted =
-            requestRepo.findAllAndSortByCreatedAt(
+            requestRepo.findAndSortByCreatedAt(
                 party,
                 Pagination(size = 100),
                 listOf(AuthorizationRequest.Status.Accepted)
@@ -216,7 +216,7 @@ class ExposedRequestRepositoryTest : FunSpec({
                 .totalItems shouldBe numRequestsAccepted
 
         val resultExpired =
-            requestRepo.findAllAndSortByCreatedAt(
+            requestRepo.findAndSortByCreatedAt(
                 party,
                 Pagination(size = 100),
                 listOf(AuthorizationRequest.Status.Expired)
@@ -225,7 +225,7 @@ class ExposedRequestRepositoryTest : FunSpec({
                 .totalItems shouldBe numRequestsExpired
 
         val resultRejected =
-            requestRepo.findAllAndSortByCreatedAt(
+            requestRepo.findAndSortByCreatedAt(
                 party,
                 Pagination(size = 100),
                 listOf(AuthorizationRequest.Status.Rejected)
@@ -234,7 +234,7 @@ class ExposedRequestRepositoryTest : FunSpec({
                 .totalItems shouldBe numRequestsRejected
 
         val resultPendingPlusExpired =
-            requestRepo.findAllAndSortByCreatedAt(
+            requestRepo.findAndSortByCreatedAt(
                 party,
                 Pagination(size = 100),
                 listOf(AuthorizationRequest.Status.Pending, AuthorizationRequest.Status.Expired)
@@ -243,14 +243,14 @@ class ExposedRequestRepositoryTest : FunSpec({
 
         val expectedTotal = numRequestsPending + numRequestsAccepted + numRequestsExpired + numRequestsRejected
         val resultAll =
-            requestRepo.findAllAndSortByCreatedAt(party, Pagination(size = 100), listOf())
+            requestRepo.findAndSortByCreatedAt(party, Pagination(size = 100), listOf())
                 .getOrElse { throw AssertionError("Repository read failed: $it") }
                 .totalItems shouldBe expectedTotal
     }
 
-    test("findAllAndSortByCreatedAt returns empty list for party with no requests") {
+    test("findAndSortByCreatedAt returns empty list for party with no requests") {
         val party = AuthorizationParty(type = PartyType.Person, id = UUID.randomUUID().toString())
-        val result = requestRepo.findAllAndSortByCreatedAt(party, Pagination(), listOf())
+        val result = requestRepo.findAndSortByCreatedAt(party, Pagination(), listOf())
             .getOrElse { throw AssertionError("Repository read failed: $it") }
         result.items shouldBe emptyList()
     }
@@ -271,8 +271,8 @@ class ExposedRequestRepositoryTest : FunSpec({
                 )
             }
 
-            val page = requestRepo.findAllAndSortByCreatedAt(party, Pagination(page = 0, size = 2), listOf())
-                .getOrElse { fail("findAllAndSortByCreatedAt failed") }
+            val page = requestRepo.findAndSortByCreatedAt(party, Pagination(page = 0, size = 2), listOf())
+                .getOrElse { fail("findAndSortByCreatedAt failed") }
 
             page.items.size shouldBe 2
             page.totalItems shouldBe 5
@@ -294,8 +294,8 @@ class ExposedRequestRepositoryTest : FunSpec({
                 )
             }
 
-            val page = requestRepo.findAllAndSortByCreatedAt(party, Pagination(page = 1, size = 2), listOf())
-                .getOrElse { fail("findAllAndSortByCreatedAt failed") }
+            val page = requestRepo.findAndSortByCreatedAt(party, Pagination(page = 1, size = 2), listOf())
+                .getOrElse { fail("findAndSortByCreatedAt failed") }
 
             page.items.size shouldBe 2
             page.totalItems shouldBe 5
@@ -316,8 +316,8 @@ class ExposedRequestRepositoryTest : FunSpec({
                 )
             }
 
-            val page = requestRepo.findAllAndSortByCreatedAt(party, Pagination(page = 2, size = 2), listOf())
-                .getOrElse { fail("findAllAndSortByCreatedAt failed") }
+            val page = requestRepo.findAndSortByCreatedAt(party, Pagination(page = 2, size = 2), listOf())
+                .getOrElse { fail("findAndSortByCreatedAt failed") }
 
             page.items.size shouldBe 1
             page.totalItems shouldBe 5
@@ -338,8 +338,8 @@ class ExposedRequestRepositoryTest : FunSpec({
                 )
             }
 
-            val page = requestRepo.findAllAndSortByCreatedAt(party, Pagination(page = 10, size = 2), listOf())
-                .getOrElse { fail("findAllAndSortByCreatedAt failed") }
+            val page = requestRepo.findAndSortByCreatedAt(party, Pagination(page = 10, size = 2), listOf())
+                .getOrElse { fail("findAndSortByCreatedAt failed") }
 
             page.items shouldBe emptyList()
             page.totalItems shouldBe 5
@@ -360,9 +360,9 @@ class ExposedRequestRepositoryTest : FunSpec({
                 )
             }
 
-            val page0 = requestRepo.findAllAndSortByCreatedAt(party, Pagination(page = 0, size = 2), listOf())
+            val page0 = requestRepo.findAndSortByCreatedAt(party, Pagination(page = 0, size = 2), listOf())
                 .getOrElse { fail("page 0 failed") }
-            val page1 = requestRepo.findAllAndSortByCreatedAt(party, Pagination(page = 1, size = 2), listOf())
+            val page1 = requestRepo.findAndSortByCreatedAt(party, Pagination(page = 1, size = 2), listOf())
                 .getOrElse { fail("page 1 failed") }
 
             (page0.items.map { it.id }.toSet() intersect page1.items.map { it.id }.toSet()) shouldBe emptySet()

@@ -18,7 +18,7 @@ class Handler(
     private val logger = LoggerFactory.getLogger(Handler::class.java)
 
     suspend operator fun invoke(query: Query): Either<QueryError, Page<AuthorizationRequest>> = either {
-        val page = requestRepository.findAllAndSortByCreatedAt(query.authorizedParty, query.pagination, query.status)
+        val page = requestRepository.findAndSortByCreatedAt(query.authorizedParty, query.pagination, query.status)
             .mapLeft { QueryError.ResourceNotFoundError }
             .bind()
 

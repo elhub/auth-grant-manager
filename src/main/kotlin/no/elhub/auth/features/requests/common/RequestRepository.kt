@@ -61,7 +61,7 @@ sealed interface AcceptWithGrantError {
 
 interface RequestRepository {
     suspend fun find(requestId: UUID): Either<RepositoryReadError, AuthorizationRequest>
-    suspend fun findAllAndSortByCreatedAt(
+    suspend fun findAndSortByCreatedAt(
         party: AuthorizationParty,
         pagination: Pagination,
         statuses: List<AuthorizationRequest.Status>
@@ -91,7 +91,7 @@ class ExposedRequestRepository(
     private val transactionContext: TransactionContext,
 ) : RequestRepository {
 
-    override suspend fun findAllAndSortByCreatedAt(
+    override suspend fun findAndSortByCreatedAt(
         party: AuthorizationParty,
         pagination: Pagination,
         statuses: List<AuthorizationRequest.Status>
@@ -99,7 +99,7 @@ class ExposedRequestRepository(
         transactionContext<RepositoryReadError, Page<AuthorizationRequest>>(
             "db_operations",
             "RequestRepository",
-            "findAllAndSortByCreatedAt",
+            "findAndSortByCreatedAt",
             { RepositoryReadError.UnexpectedError }
         ) {
             val partyId = partyRepo.findOrInsert(type = party.type, partyId = party.id)
