@@ -15,6 +15,9 @@ import io.ktor.server.application.Application
 import io.ktor.server.config.ApplicationConfig
 import io.ktor.server.plugins.di.dependencies
 import kotlinx.serialization.json.Json
+import no.elhub.auth.features.businessprocesses.common.AuthConfig
+import no.elhub.auth.features.businessprocesses.common.JwtTokenProvider
+import no.elhub.auth.features.businessprocesses.common.JwtTokenProviderImpl
 import no.elhub.auth.features.common.auth.PDPAuthorizationProvider
 import no.elhub.auth.features.common.party.ExposedPartyRepository
 import no.elhub.auth.features.common.party.PartyRepository
@@ -119,11 +122,30 @@ fun Application.commonModule() {
         provide<PartyRepository> { ExposedPartyRepository() }
 
         provide<PersonService> {
-            ApiPersonService(cfg = resolve(), client = resolve("commonHttpClient"))
+            ApiPersonService(cfg = resolve(), client = resolve("commonHttpClient"), tokenProvider = resolve("authPersonsTokenProvider"))
         }
 
         provide<PartyService> {
             PartyService(resolve())
+        }
+    }
+}
+
+fun Application.personServiceModule() {
+    val appEnvironment = environment
+    dependencies {
+        provide<JwtTokenProvider>(name = "authPersonsTokenProvider") {
+            val appConfig = resolve<ApplicationConfig>()
+            val authPersonsConfig = appConfig.config("authPersons")
+            val idpTokenUrl = appConfig.config("idp").property("tokenUrl").getString()
+            JwtTokenProviderImpl(
+                httpClient = resolve("commonHttpClient"),
+                authConfig = AuthConfig(
+                    clientId = authPersonsConfig.property("idp.clientId").getString(),
+                    clientSecret = authPersonsConfig.property("idp.clientSecret").getString(),
+                    tokenUrl = idpTokenUrl
+                )
+            )
         }
     }
 }

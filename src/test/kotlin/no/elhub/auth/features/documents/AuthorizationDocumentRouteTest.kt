@@ -45,6 +45,7 @@ import no.elhub.auth.features.common.commonModule
 import no.elhub.auth.features.common.currentTimeOslo
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
+import no.elhub.auth.features.common.stubAuthPersonsTokenProvider
 import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
 import no.elhub.auth.features.common.todayOslo
 import no.elhub.auth.features.documents.common.CreateDocumentBusinessModel
@@ -118,6 +119,7 @@ class AuthorizationDocumentRouteTest :
                     applicationModule()
                     testBusinessProcessesModule()
                     commonModule()
+                    stubAuthPersonsTokenProvider()
                     grantsModule()
                     documentsModule()
                 }
@@ -139,6 +141,9 @@ class AuthorizationDocumentRouteTest :
                         "pdfSigner.certificate.tsaRootDir" to TestCertificateUtil.Constants.TSA_ROOT_CERTIFICATES_DIR,
                         "featureToggle.enableEndpoints" to "true",
                         "authPersons.baseUri" to AuthPersonsTestContainer.baseUri(),
+                        "authPersons.idp.clientId" to "test-client-id",
+                        "authPersons.idp.clientSecret" to "test-client-secret",
+                        "idp.tokenUrl" to "http://localhost:9999/token",
                         "pdp.baseUrl" to "http://localhost:8085"
                     )
                 }
@@ -704,6 +709,7 @@ class AuthorizationDocumentRouteTest :
                     applicationModule()
                     testBusinessProcessesModule()
                     commonModule()
+                    stubAuthPersonsTokenProvider()
                     grantsModule()
                     documentsModule()
                 }
@@ -726,6 +732,9 @@ class AuthorizationDocumentRouteTest :
                         "pdfSigner.certificate.tsaRootDir" to TestCertificateUtil.Constants.TSA_ROOT_CERTIFICATES_DIR,
                         "featureToggle.enableEndpoints" to "true",
                         "authPersons.baseUri" to AuthPersonsTestContainer.baseUri(),
+                        "authPersons.idp.clientId" to "test-client-id",
+                        "authPersons.idp.clientSecret" to "test-client-secret",
+                        "idp.tokenUrl" to "http://localhost:9999/token",
                         "pdp.baseUrl" to "http://localhost:8085"
                     )
                 }
@@ -791,6 +800,7 @@ class AuthorizationDocumentRouteTest :
                     applicationModule()
                     testBusinessProcessesModule()
                     commonModule()
+                    stubAuthPersonsTokenProvider()
                     grantsModule()
                     documentsModule()
                 }
@@ -812,6 +822,9 @@ class AuthorizationDocumentRouteTest :
                         "pdfSigner.certificate.tsaRootDir" to TestCertificateUtil.Constants.TSA_ROOT_CERTIFICATES_DIR,
                         "featureToggle.enableEndpoints" to "true",
                         "authPersons.baseUri" to AuthPersonsTestContainer.baseUri(),
+                        "authPersons.idp.clientId" to "test-client-id",
+                        "authPersons.idp.clientSecret" to "test-client-secret",
+                        "idp.tokenUrl" to "http://localhost:9999/token",
                         "pdp.baseUrl" to "http://localhost:8085"
                     )
                 }
