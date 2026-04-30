@@ -6,198 +6,137 @@ description: >
   Module.kt wiring, and shared kernel structure.
   Load before generating any new feature, action slice, or module.
 ---
-
 # Vertical Slice Architecture
 
-Code is organised by **feature**, not by technical layer. Each action slice contains everything needed to implement one use case — Route, Handler, DTOs, errors,
-and models — colocated in a single directory.
+Code is organised by **feature/action**, not by layer. Each action slice contains Route, Handler, DTOs, and errors — colocated.
 
 ## Directory layout
 
 ```text
-src/main/kotlin/no/elhub/auth/
-├── Application.kt
-├── config/                         # Cross-cutting: Database, Serialization, ErrorHandling, Logging
-└── features/
-    ├── common/                     # Cross-feature kernel (see Shared Code below)
-    ├── openapi/
-    ├── requests/                   # Feature domain
-    │   ├── Module.kt               # Koin bindings + route mounting for this domain
-    │   ├── AuthorizationRequest.kt # Domain model
-    │   ├── common/                 # Repository interface + Exposed Table objects
-    │   ├── create/                 # Action slice
-    │   ├── get/
-    │   ├── update/
-    │   └── query/
-    ├── documents/
-    ├── grants/
-    ├── businessprocesses/
-    └── filegenerator/
-```
-
-## Action slice layout
-
-```text
-features/requests/create/
-├── Route.kt
-├── Handler.kt
-├── CreateError.kt
-├── dto/
-│   ├── JsonApiCreateRequest.kt
-│   └── JsonApiCreateResponse.kt
-└── model/
-    └── CreateRequestModel.kt
+features/
+├── common/                      # Cross-feature kernel
+├── requests/                    # feature name, e.g. documents, common,
+│   ├── Module.kt                # DI bindings + route mounting
+│   ├── AuthorizationRequest.kt  # Domain model
+│   ├── common/                  # Repository interface + Exposed Table objects
+│   ├── create/                  # Action slice: Route, Handler, CreateError, dto/
+│   ├── get/
+│   ├── update/
+│   └── query/
 ```
 
 ## Layer responsibilities
 
 ### Route.kt — HTTP only
 
-- Authenticates, deserialises, delegates, maps the `Either` result to HTTP. Contains no business logic.
-- Handler methods only accept business objects, and not care about ktor implementation details.
-- All routes must have an authProvider and a handlerInterface as input to the route.
+Authenticates → deserialises → delegates to Handler → maps `Either` to HTTP. No business logic.
+
+#### Auth method selection
+
+| Method | Use when |
+| ------ | -------- |
+| `authorizeMaskinporten(call)` | Machine-to-machine only (orgs via Maskinporten) |
+| `authorizeEndUser(call)` | End-users only (persons, e.g. BankID) |
+| `authorizeEndUserOrMaskinporten(call)` | Both allowed |
+
+Examples: `POST /authorization-documents` → `authorizeMaskinporten`.
+`GET /authorization-documents/{id}` → `authorizeEndUserOrMaskinporten`.
+`PATCH /authorization-requests/{id}` → `authorizeEndUser`.
 
 ```kotlin
 fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
     post {
         val actor = authProvider.authorizeMaskinporten(call)
             .getOrElse { return@post call.respond(HttpStatusCode.Unauthorized, it.toApiErrorResponse()) }
-
         val body = call.receive<JsonApiCreateRequest>()
-
         handler(body.toModel(actor))
             .fold(
-                ifLeft = { error ->
-                    val (status, apiError) = error.toApiErrorResponse()
-                    call.respond(status, apiError)
-                },
-                ifRight = { result ->
-                    call.respond(HttpStatusCode.Created, result.toCreateResponse())
-                }
+                ifLeft  = { call.respond(it.toApiErrorResponse().first, it.toApiErrorResponse().second) },
+                ifRight = { call.respond(HttpStatusCode.Created, it.toCreateResponse()) }
             )
     }
 }
 ```
 
-- **Rules:** No business logic. No database access. Always responds with JSON:API-compliant bodies, including errors.
-
 ### Handler.kt — business logic
 
-- Orchestrates services and repositories using `either { }`. Never imports Ktor types.
-- Core logic is always in the Handler
-- Service can be seen as a repository or a client which collects data from external apps.
-
+Orchestrates services/repos with `either { }`. Never imports Ktor types. Returns `Either<FeatureError, Result>`. All IO `suspend`.
 
 ```kotlin
-class Handler(
-    private val partyService: PartyService,
-    private val repo: RequestRepository,
-) {
+class Handler(private val partyService: PartyService, private val repo: RequestRepository) {
     suspend operator fun invoke(model: CreateRequestModel): Either<CreateError, AuthorizationRequest> = either {
-        val party = partyService.resolve(model.requestedBy)
-            .mapLeft { CreateError.PartyResolutionFailed }
-            .bind()
-
+        val party = partyService.resolve(model.requestedBy).mapLeft { CreateError.PartyResolutionFailed }.bind()
         ensure(model.authorizedParty == party) { CreateError.AuthorizationError }
-
-        repo.insert(model.toRequest())
-            .mapLeft { CreateError.PersistenceError }
-            .bind()
+        repo.insert(model.toRequest()).mapLeft { CreateError.PersistenceError }.bind()
     }
 }
 ```
 
-**Rules:** Returns `Either<FeatureError, Result>`. All IO is `suspend`. No `runBlocking`.
-
 ### CreateError.kt — sealed error type
 
-One sealed interface per action. Provides mapping to JSON:API error responses.
+One sealed interface per action slice with `toApiErrorResponse()`:
 
 ```kotlin
 sealed interface CreateError {
     data object AuthorizationError : CreateError
     data object PersistenceError : CreateError
-    data class BusinessError(val cause: BusinessProcessError) : CreateError
 }
 
 fun CreateError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> = when (this) {
     CreateError.AuthorizationError -> buildApiErrorResponse(HttpStatusCode.Forbidden, "Forbidden", "...")
-    CreateError.PersistenceError -> toInternalServerApiErrorResponse()
-    is CreateError.BusinessError -> buildApiErrorResponse(HttpStatusCode.UnprocessableEntity, "...", "...")
+    CreateError.PersistenceError   -> toInternalServerApiErrorResponse()
 }
 ```
 
-### DTOs — JSON:API serialisation only
+### DTOs
 
-Live in `dto/` within the action slice. Provide `toModel()` and `toResponse()` extension functions. Never referenced outside their slice.
+Live in `dto/` within the action slice. Provide `toModel()` / `toResponse()` extensions. Not referenced outside their slice.
 
 ## Module.kt — DI + routing
-
-- Each feature domain has one `Module.kt` that registers bindings and mounts routes.
-- Each module needs to be in application.yml under ktor.application.modules list.
 
 ```kotlin
 fun Application.requestsModule() {
     dependencies {
-        provide<ExposedRequestRepository> {
-            ExposedRequestRepository(resolve(), resolve()) // resolve resolves from Ktor Native Dependency registry
-        }
-        provide<CreateHandler> {
-            CreateHandler(resolve(), resolve(), resolve(), resolve())
-        }
-        provide<GetHandler> {
-            GetHandler(resolve())
-        }
+        provide<RequestRepository> { ExposedRequestRepository(resolve()) }
+        provide<CreateHandler> { CreateHandler(resolve(), resolve()) }
+        provide<GetHandler> { GetHandler(resolve()) }
     }
-
     val createHandler: CreateHandler by dependencies
     val getHandler: GetHandler by dependencies
-    val authorizationProvider: AuthorizationProvider by dependencies
-
+    val authProvider: AuthorizationProvider by dependencies
     routing {
         route(REQUESTS_PATH) {
-            createRoute(createHandler, authorizationProvider)
-            getRoute(getHandler, authorizationProvider)
+            createRoute(createHandler, authProvider)
+            getRoute(getHandler, authProvider)
         }
     }
 }
 ```
 
-When multiple action handlers exist, alias imports avoid name collisions:
+Use aliased imports to avoid name collisions: `import ...create.Handler as CreateHandler`.
 
-```kotlin
-import no.elhub.auth.features.requests.create.Handler as CreateHandler
-import no.elhub.auth.features.requests.create.route  as createRoute
-```
+## Shared kernel (`features/common/`)
 
-## Shared code
+| File / Package | Contents |
+| -------------- | -------- |
+| `Errors.kt` | `RepositoryReadError`, `RepositoryWriteError`, JSON:API error builders |
+| `auth/` | `AuthorizationProvider`, auth types |
+| `party/` | `PartyService`, `AuthorizationParty`, `PartyRepository` |
+| `person/` | External person-resolution client |
 
-### Feature-level (`features/{domain}/common/`)
+## Adding a new action slice
 
-Repository interfaces and Exposed Table objects for that domain.
-
-### Cross-feature (`features/common/`)
-
-| File / Package | Contents                                                                                     |
-|----------------|----------------------------------------------------------------------------------------------|
-| `Errors.kt`    | Base error types (`RepositoryReadError`, `RepositoryWriteError`) and JSON:API error builders |
-| `auth/`        | `AuthorizationProvider`, auth-related types                                                  |
-| `party/`       | `PartyService`, `AuthorizationParty`, `PartyRepository`                                      |
-| `person/`      | External person-resolution client                                                            |
-
-## Adding a new action
-
-Whenever a new feature is getting implemented
-
-Example: `DELETE /authorization-requests/{id}`
-
-1. Create `features/requests/delete/`
-2. Add `Handler.kt` returning `Either<DeleteError, Unit>`
-3. Add `DeleteError.kt` sealed interface with `toApiErrorResponse()`
+1. Create `features/{domain}/{action}/`
+2. Add `Handler.kt` → `Either<ActionError, Result>`
+3. Add `ActionError.kt` sealed interface with `toApiErrorResponse()`
 4. Add `Route.kt` — HTTP wiring only
-5. Add DTOs if the endpoint has a request/response body
-6. Register `DeleteHandler` in `features/requests/Module.kt`
-7. Mount `deleteRoute(get(), get())` in the routing block
+5. Add DTOs under `dto/` if needed
+6. Register handler in `features/{domain}/Module.kt` and mount route
+7. **Update `src/main/resources/static/openapi.yaml`**
+8. If new domain: register in `src/main/resources/application.yaml` under `ktor.application.modules`, before `no.elhub.auth.features.common.ModuleKt.module`
 
-**Do not** add the handler to an existing file. **Do not** create a shared `RequestService` to hold logic from multiple slices. Each action slice is
-self-contained.
+Each action slice is self-contained. Never share a Handler across slices.
+
+## OpenAPI spec (non-negotiable)
+
+`src/main/resources/static/openapi.yaml` **must** be updated for every route change (add, modify, remove).
