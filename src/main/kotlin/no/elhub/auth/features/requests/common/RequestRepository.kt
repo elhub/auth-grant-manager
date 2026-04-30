@@ -107,7 +107,7 @@ class ExposedRequestRepository(
                 .bind()
                 .id
 
-            val whereClause = generateFindAllCondition(partyId, statuses)
+            val whereClause = generateFilterByCondition(partyId, statuses)
 
             val totalItems = AuthorizationRequestTable
                 .selectAll()
@@ -172,7 +172,7 @@ class ExposedRequestRepository(
         }
 
     // Match on party, and statuses if any are provided
-    private fun generateFindAllCondition(partyId: UUID, statuses: List<AuthorizationRequest.Status>): Op<Boolean> {
+    private fun generateFilterByCondition(partyId: UUID, statuses: List<AuthorizationRequest.Status>): Op<Boolean> {
         val partyCondition = (AuthorizationRequestTable.requestedTo eq partyId) or
             (AuthorizationRequestTable.requestedBy eq partyId)
         if (statuses.isEmpty()) {
