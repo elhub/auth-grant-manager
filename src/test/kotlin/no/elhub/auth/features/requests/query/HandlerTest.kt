@@ -90,6 +90,7 @@ class HandlerTest : FunSpec({
         val page = response.shouldBeRight()
         page.items[0].grantId shouldBe grant.id
     }
+    // TODO  add test or change a test to include status param
 
     test("leaves grant id null for unapproved request") {
         val pagination = Pagination()

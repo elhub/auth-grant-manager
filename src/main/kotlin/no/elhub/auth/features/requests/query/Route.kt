@@ -12,11 +12,13 @@ import no.elhub.auth.features.common.Pagination
 import no.elhub.auth.features.common.auth.AuthorizationProvider
 import no.elhub.auth.features.common.auth.toApiErrorResponse
 import no.elhub.auth.features.common.toApiErrorResponse
+import no.elhub.auth.features.common.validateEnumListParam
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.query.dto.toGetCollectionResponse
 import org.slf4j.LoggerFactory
 
 private val logger = LoggerFactory.getLogger(Route::class.java)
+private const val STATUS_FILTER_PARAM = "filter[status]"
 
 fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
     get {
@@ -32,14 +34,17 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
             sizeParam = call.request.queryParameters["page[size]"],
         )
 
-        val status = validateStatusParam(call.request.queryParameters["filter[status]"])
+        val statuses = validateEnumListParam<AuthorizationRequest.Status>(
+            call.request.queryParameters[STATUS_FILTER_PARAM],
+            STATUS_FILTER_PARAM
+        )
             .getOrElse { err ->
                 val (status, body) = err.toApiErrorResponse()
                 call.respond(status, body)
                 return@get
             }
 
-        val query = Query(authorizedParty = authorizedParty, pagination = pagination, status = status)
+        val query = Query(authorizedParty = authorizedParty, pagination = pagination, statuses = statuses)
 
         val page = handler(query)
             .getOrElse { error ->
@@ -52,14 +57,3 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
     }
 }
 
-private fun validateStatusParam(status: String?): Either<InputError.MalformedInputError, List<AuthorizationRequest.Status>> =
-    Either.catch {
-        if (status.isNullOrBlank()) {
-            return emptyList<AuthorizationRequest.Status>().right()
-        }
-        status.split(',').map {
-            AuthorizationRequest.Status.valueOf(it)
-        }
-    }.mapLeft {
-        InputError.MalformedInputError("Invalid status value '$status'. Valid values: ${AuthorizationRequest.Status.entries.joinToString()}")
-    }
