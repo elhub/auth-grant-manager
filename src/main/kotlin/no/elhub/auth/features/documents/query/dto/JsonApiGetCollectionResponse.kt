@@ -29,8 +29,11 @@ fun Page<AuthorizationDocument>.toGetCollectionResponse(
     statuses: List<AuthorizationDocument.Status> = emptyList(),
 ): GetDocumentCollectionResponse {
     val p = this.pagination
-    val extraParams = if (statuses.isEmpty()) emptyMap()
-        else mapOf("filter[status]" to statuses.joinToString(","))
+    val extraParams = if (statuses.isEmpty()) {
+        emptyMap()
+    } else {
+        mapOf("filter[status]" to statuses.joinToString(","))
+    }
 
     return GetDocumentCollectionResponse(
         data = this.items.map { it.toGetSingleResponse().data },

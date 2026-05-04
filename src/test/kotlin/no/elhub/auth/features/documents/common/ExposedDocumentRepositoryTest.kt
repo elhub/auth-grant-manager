@@ -1,6 +1,5 @@
 package no.elhub.auth.features.documents.common
 
-import java.time.ZoneOffset
 import arrow.core.getOrElse
 import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
@@ -38,6 +37,7 @@ import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import java.util.UUID
 
 class ExposedDocumentRepositoryTest :
@@ -173,7 +173,9 @@ class ExposedDocumentRepositoryTest :
                         AuthorizationParty(
                             matchingRequestedBy.id,
                             PartyType.Organization
-                        ), Pagination(), statuses = emptyList()
+                        ),
+                        Pagination(),
+                        statuses = emptyList()
                     )
                         .getOrElse { error -> fail("Failed to fetch documents: $error") }
                 val documentIds = documents.items.map { it.id }

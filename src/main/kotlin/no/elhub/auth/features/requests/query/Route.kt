@@ -1,13 +1,10 @@
 package no.elhub.auth.features.requests.query
 
-import arrow.core.Either
 import arrow.core.getOrElse
-import arrow.core.right
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
-import no.elhub.auth.features.common.InputError
 import no.elhub.auth.features.common.Pagination
 import no.elhub.auth.features.common.auth.AuthorizationProvider
 import no.elhub.auth.features.common.auth.toApiErrorResponse
@@ -56,4 +53,3 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
         call.respond(HttpStatusCode.OK, page.toGetCollectionResponse(statuses))
     }
 }
-

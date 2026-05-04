@@ -1,7 +1,5 @@
 package no.elhub.auth.features.documents.common
 
-import org.jetbrains.exposed.v1.core.greater
-import org.jetbrains.exposed.v1.core.lessEq
 import arrow.core.Either
 import no.elhub.auth.config.TransactionContext
 import no.elhub.auth.features.common.CreateScopeData
@@ -29,17 +27,17 @@ import no.elhub.auth.features.grants.common.GrantPropertiesRepository
 import no.elhub.auth.features.grants.common.GrantRepository
 import org.jetbrains.exposed.v1.core.Op
 import org.jetbrains.exposed.v1.core.ReferenceOption
-import org.jetbrains.exposed.v1.core.exists
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.greater
 import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.inSubQuery
 import org.jetbrains.exposed.v1.core.java.javaUUID
-import org.jetbrains.exposed.v1.core.notExists
+import org.jetbrains.exposed.v1.core.lessEq
 import org.jetbrains.exposed.v1.core.notInSubQuery
 import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.javatime.timestampWithTimeZone
@@ -163,7 +161,7 @@ class ExposedDocumentRepository(
                 .select(listOf(SignatoriesTable.signedBy))
                 .where {
                     (SignatoriesTable.authorizationDocumentId eq id) and
-                            (SignatoriesTable.requestedFrom eq documentRow[AuthorizationDocumentTable.requestedFrom])
+                        (SignatoriesTable.requestedFrom eq documentRow[AuthorizationDocumentTable.requestedFrom])
                 }
                 .singleOrNull()
                 ?.let { resolveParty(it[SignatoriesTable.signedBy]).bind() }
@@ -326,17 +324,17 @@ class ExposedDocumentRepository(
             when (status) {
                 AuthorizationDocument.Status.Signed ->
                     (AuthorizationDocumentTable.status eq DatabaseStatus.Pending) and
-                            (AuthorizationDocumentTable.id inSubQuery signedDocIds)
+                        (AuthorizationDocumentTable.id inSubQuery signedDocIds)
 
                 AuthorizationDocument.Status.Pending ->
                     (AuthorizationDocumentTable.status eq DatabaseStatus.Pending) and
-                            (AuthorizationDocumentTable.validTo greater currentTimeUtc()) and
-                            (AuthorizationDocumentTable.id notInSubQuery signedDocIds)
+                        (AuthorizationDocumentTable.validTo greater currentTimeUtc()) and
+                        (AuthorizationDocumentTable.id notInSubQuery signedDocIds)
 
                 AuthorizationDocument.Status.Expired ->
                     (AuthorizationDocumentTable.status eq DatabaseStatus.Pending) and
-                            (AuthorizationDocumentTable.validTo lessEq currentTimeUtc()) and
-                            (AuthorizationDocumentTable.id notInSubQuery signedDocIds)
+                        (AuthorizationDocumentTable.validTo lessEq currentTimeUtc()) and
+                        (AuthorizationDocumentTable.id notInSubQuery signedDocIds)
 
                 AuthorizationDocument.Status.Rejected ->
                     AuthorizationDocumentTable.status eq DatabaseStatus.Rejected

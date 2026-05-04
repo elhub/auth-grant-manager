@@ -21,20 +21,23 @@ import no.elhub.devxp.jsonapi.model.JsonApiRelationshipToOne
 import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObjectWithRelationshipsAndMetaAndLinks
 
 typealias GetRequestCollectionResponse = PaginatedCollectionResponse<
-        JsonApiResponseResourceObjectWithRelationshipsAndMetaAndLinks<
-                AuthorizationRequestResponseAttributes,
-                AuthorizationRequestResponseRelationships,
-                JsonApiResourceMetaMap,
-                AuthorizationRequestResponseLinks
-                >
+    JsonApiResponseResourceObjectWithRelationshipsAndMetaAndLinks<
+        AuthorizationRequestResponseAttributes,
+        AuthorizationRequestResponseRelationships,
+        JsonApiResourceMetaMap,
+        AuthorizationRequestResponseLinks
         >
+    >
 
 fun Page<AuthorizationRequest>.toGetCollectionResponse(
     statuses: List<AuthorizationRequest.Status> = emptyList(),
 ): GetRequestCollectionResponse {
     val p = this.pagination
-    val extraParams = if (statuses.isEmpty()) emptyMap()
-        else mapOf("filter[status]" to statuses.joinToString(","))
+    val extraParams = if (statuses.isEmpty()) {
+        emptyMap()
+    } else {
+        mapOf("filter[status]" to statuses.joinToString(","))
+    }
 
     return GetRequestCollectionResponse(
         data = this.items.map { request ->
