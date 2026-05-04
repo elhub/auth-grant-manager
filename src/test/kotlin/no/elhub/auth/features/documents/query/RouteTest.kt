@@ -31,6 +31,7 @@ import no.elhub.auth.features.documents.query.dto.GetDocumentCollectionResponse
 import no.elhub.auth.setupAppWith
 import no.elhub.auth.validateForbiddenResponse
 import no.elhub.auth.validateInternalServerErrorResponse
+import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import java.util.UUID
 import kotlin.random.Random
 
@@ -131,7 +132,11 @@ class RouteTest : FunSpec({
 
     test("GET with page params passes correct Pagination to handler") {
         coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
-        coEvery { handler.invoke(any()) } returns Page(emptyList<AuthorizationDocument>(), 0L, Pagination(page = 2, size = 5)).right()
+        coEvery { handler.invoke(any()) } returns Page(
+            emptyList<AuthorizationDocument>(),
+            0L,
+            Pagination(page = 2, size = 5)
+        ).right()
         testApplication {
             setupAppWith { route(handler, authProvider) }
             client.get("/?page[number]=2&page[size]=5")
@@ -139,13 +144,51 @@ class RouteTest : FunSpec({
         coVerify(exactly = 1) { handler.invoke(match { it.pagination == Pagination(page = 2, size = 5) }) }
     }
 
-    test("GET response meta and links contain correct pagination fields") {
+    test("GET with status param passes correct status to handler") {
+        coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
+        coEvery { handler.invoke(any()) } returns Page(
+            emptyList<AuthorizationDocument>(),
+            0L,
+            Pagination(page = 2, size = 5)
+        ).right()
+        testApplication {
+            setupAppWith { route(handler, authProvider) }
+            client.get("/?filter[status]=Expired,Signed")
+        }
+        coVerify(exactly = 1) {
+            handler.invoke(
+                match {
+                    it.statuses == listOf(
+                        AuthorizationDocument.Status.Expired,
+                        AuthorizationDocument.Status.Signed,
+                    )
+                }
+            )
+        }
+    }
+
+    test("GET with status param returns BadRequest when supplying invalid status") {
+        coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
+        coEvery { handler.invoke(any()) } returns Page(
+            emptyList<AuthorizationDocument>(),
+            0L,
+            Pagination(page = 2, size = 5)
+        ).right()
+        testApplication {
+            setupAppWith { route(handler, authProvider) }
+            val response = client.get("/?filter[status]=Foo,Pending")
+            response.status shouldBe HttpStatusCode.BadRequest
+            val resultJson: JsonApiErrorCollection = response.body()
+            resultJson.errors[0].detail shouldBe "Invalid filter[status] value 'Foo,Pending'. Valid values: Expired, Pending, Rejected, Signed"
+        }
+    }
+    test("GET response meta and links contain correct pagination and status fields") {
         val pagination = Pagination(page = 0, size = 10)
         coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
         coEvery { handler.invoke(any()) } returns Page(emptyList<AuthorizationDocument>(), 4L, pagination).right()
         testApplication {
             setupAppWith { route(handler, authProvider) }
-            val response = client.get("/")
+            val response = client.get("/?filter[status]=Pending,Expired")
             response.status shouldBe HttpStatusCode.OK
             val body = response.body<JsonObject>()
             val meta = body["meta"]!!.jsonObject
@@ -154,9 +197,9 @@ class RouteTest : FunSpec({
             meta["page"]!!.jsonPrimitive.content shouldBe "0"
             meta["pageSize"]!!.jsonPrimitive.content shouldBe "10"
             val links = body["links"]!!.jsonObject
-            links["self"]!!.jsonPrimitive.content shouldBe "$DOCUMENTS_PATH?page[number]=0&page[size]=10"
-            links["first"]!!.jsonPrimitive.content shouldBe "$DOCUMENTS_PATH?page[number]=0&page[size]=10"
-            links["last"]!!.jsonPrimitive.content shouldBe "$DOCUMENTS_PATH?page[number]=0&page[size]=10"
+            links["self"]!!.jsonPrimitive.content shouldBe "$DOCUMENTS_PATH?page[number]=0&page[size]=10&filter[status]=Pending,Expired"
+            links["first"]!!.jsonPrimitive.content shouldBe "$DOCUMENTS_PATH?page[number]=0&page[size]=10&filter[status]=Pending,Expired"
+            links["last"]!!.jsonPrimitive.content shouldBe "$DOCUMENTS_PATH?page[number]=0&page[size]=10&filter[status]=Pending,Expired"
             links["prev"] shouldBe null
             links["next"] shouldBe null
         }

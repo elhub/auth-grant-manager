@@ -25,6 +25,7 @@ import no.elhub.auth.features.grants.common.AuthorizationScopeTable.authorizedRe
 import no.elhub.auth.features.grants.common.AuthorizationScopeTable.permissionType
 import no.elhub.auth.features.grants.common.GrantPropertiesRepository
 import no.elhub.auth.features.grants.common.GrantRepository
+import org.jetbrains.exposed.v1.core.Op
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
@@ -32,8 +33,12 @@ import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.greater
 import org.jetbrains.exposed.v1.core.inList
+import org.jetbrains.exposed.v1.core.inSubQuery
 import org.jetbrains.exposed.v1.core.java.javaUUID
+import org.jetbrains.exposed.v1.core.lessEq
+import org.jetbrains.exposed.v1.core.notInSubQuery
 import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.javatime.timestampWithTimeZone
 import org.jetbrains.exposed.v1.jdbc.batchInsert
@@ -61,7 +66,11 @@ interface DocumentRepository {
         scopes: List<CreateScopeData>
     ): Either<RepositoryWriteError, AuthorizationDocument>
 
-    suspend fun findAll(requestedBy: AuthorizationParty, pagination: Pagination): Either<RepositoryReadError, Page<AuthorizationDocument>>
+    suspend fun findAndSortByCreatedAt(
+        requestedBy: AuthorizationParty,
+        pagination: Pagination,
+        statuses: List<AuthorizationDocument.Status>,
+    ): Either<RepositoryReadError, Page<AuthorizationDocument>>
 
     suspend fun findScopeIds(documentId: UUID): Either<RepositoryReadError, List<UUID>>
 
@@ -212,7 +221,7 @@ class ExposedDocumentRepository(
     override suspend fun findScopeIds(documentId: UUID): Either<RepositoryReadError, List<UUID>> =
         transactionContext(
             "db_operations",
-            "DocumenRepository",
+            "DocumentRepository",
             "findScopeIds",
             { RepositoryReadError.UnexpectedError }
         ) {
@@ -222,18 +231,22 @@ class ExposedDocumentRepository(
                 .map { row -> row[AuthorizationScopeTable.id].value }
         }
 
-    override suspend fun findAll(requestedBy: AuthorizationParty, pagination: Pagination): Either<RepositoryReadError, Page<AuthorizationDocument>> =
+    override suspend fun findAndSortByCreatedAt(
+        requestedBy: AuthorizationParty,
+        pagination: Pagination,
+        statuses: List<AuthorizationDocument.Status>,
+    ): Either<RepositoryReadError, Page<AuthorizationDocument>> =
         transactionContext<RepositoryReadError, Page<AuthorizationDocument>>(
             "db_operations",
-            "DocumenRepository",
-            "findAll",
+            "DocumentRepository",
+            "findAndSortByCreatedAt",
             { RepositoryReadError.UnexpectedError }
         ) {
             val partyRecord = partyRepo.findOrInsert(type = requestedBy.type, partyId = requestedBy.id)
                 .mapLeft { RepositoryReadError.UnexpectedError }
                 .bind()
 
-            val whereClause = { (AuthorizationDocumentTable.requestedBy eq partyRecord.id) or (AuthorizationDocumentTable.requestedFrom eq partyRecord.id) }
+            val whereClause = generateFilterByCondition(partyRecord.id, statuses)
 
             val totalItems = AuthorizationDocumentTable
                 .selectAll()
@@ -296,6 +309,39 @@ class ExposedDocumentRepository(
             Page(items = items, totalItems = totalItems, pagination = pagination)
         }
 
+    // Match on party, and statuses if any are provided
+    private fun generateFilterByCondition(partyId: UUID, statuses: List<AuthorizationDocument.Status>): Op<Boolean> {
+        val partyCondition =
+            (AuthorizationDocumentTable.requestedBy eq partyId) or (AuthorizationDocumentTable.requestedFrom eq partyId)
+        if (statuses.isEmpty()) {
+            return partyCondition
+        }
+
+        val now = currentTimeUtc()
+        val statusCondition = statuses.map { status ->
+            val signedDocIds = SignatoriesTable.select(SignatoriesTable.authorizationDocumentId)
+            when (status) {
+                AuthorizationDocument.Status.Signed ->
+                    (AuthorizationDocumentTable.status eq DatabaseStatus.Pending) and
+                        (AuthorizationDocumentTable.id inSubQuery signedDocIds)
+
+                AuthorizationDocument.Status.Pending ->
+                    (AuthorizationDocumentTable.status eq DatabaseStatus.Pending) and
+                        (AuthorizationDocumentTable.validTo greater now) and
+                        (AuthorizationDocumentTable.id notInSubQuery signedDocIds)
+
+                AuthorizationDocument.Status.Expired ->
+                    (AuthorizationDocumentTable.status eq DatabaseStatus.Pending) and
+                        (AuthorizationDocumentTable.validTo lessEq now) and
+                        (AuthorizationDocumentTable.id notInSubQuery signedDocIds)
+
+                AuthorizationDocument.Status.Rejected ->
+                    AuthorizationDocumentTable.status eq DatabaseStatus.Rejected
+            }
+        }.reduce { acc, op -> acc or op }
+        return partyCondition and statusCondition
+    }
+
     private suspend fun resolveParty(partyId: UUID): Either<RepositoryReadError.UnexpectedError, AuthorizationPartyRecord> =
         partyRepo.find(partyId).mapLeft { RepositoryReadError.UnexpectedError }
 
@@ -309,7 +355,7 @@ class ExposedDocumentRepository(
     ): Either<ConfirmWithGrantError, AuthorizationDocument> =
         transactionContext<ConfirmWithGrantError, AuthorizationDocument>(
             "db_operations",
-            "DocumenRepository",
+            "DocumentRepository",
             "confirmWithGrant",
             { ConfirmWithGrantError.DocumentError.Unexpected }
         ) {

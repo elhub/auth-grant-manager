@@ -220,7 +220,7 @@ class RouteTest : FunSpec({
         coVerify(exactly = 1) {
             handler.invoke(
                 match {
-                    it.status == listOf(
+                    it.statuses == listOf(
                         AuthorizationRequest.Status.Pending,
                         AuthorizationRequest.Status.Rejected
                     )
@@ -241,7 +241,7 @@ class RouteTest : FunSpec({
             val response = client.get("/?filter[status]=Foo")
             response.status shouldBe HttpStatusCode.BadRequest
             val resultJson: JsonApiErrorCollection = response.body()
-            resultJson.errors[0].detail shouldBe "Invalid status value 'Foo'. Valid values: Accepted, Expired, Pending, Rejected"
+            resultJson.errors[0].detail shouldBe "Invalid filter[status] value 'Foo'. Valid values: Accepted, Expired, Pending, Rejected"
         }
     }
 

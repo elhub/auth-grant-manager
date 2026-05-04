@@ -39,10 +39,14 @@ data class PaginationLinks(
     val next: String? = null,
 ) : JsonApiResourceLinks
 
-fun <T> Page<T>.toPaginationLinks(basePath: String): PaginationLinks {
+fun <T> Page<T>.toPaginationLinks(
+    basePath: String,
+    extraParams: Map<String, String> = emptyMap(),
+): PaginationLinks {
     val p = pagination
     val lastPage = (totalPages - 1).coerceAtLeast(0)
-    fun pageUrl(pageNum: Int) = "$basePath?page[number]=$pageNum&page[size]=${p.size}"
+    val extra = extraParams.entries.joinToString("") { (k, v) -> "&$k=$v" }
+    fun pageUrl(pageNum: Int) = "$basePath?page[number]=$pageNum&page[size]=${p.size}$extra"
     return PaginationLinks(
         self = pageUrl(p.page),
         first = pageUrl(0),
