@@ -221,7 +221,7 @@ class ExposedDocumentRepository(
     override suspend fun findScopeIds(documentId: UUID): Either<RepositoryReadError, List<UUID>> =
         transactionContext(
             "db_operations",
-            "DocumenRepository",
+            "DocumentRepository",
             "findScopeIds",
             { RepositoryReadError.UnexpectedError }
         ) {
@@ -238,7 +238,7 @@ class ExposedDocumentRepository(
     ): Either<RepositoryReadError, Page<AuthorizationDocument>> =
         transactionContext<RepositoryReadError, Page<AuthorizationDocument>>(
             "db_operations",
-            "DocumenRepository",
+            "DocumentRepository",
             "findAndSortByCreatedAt",
             { RepositoryReadError.UnexpectedError }
         ) {
@@ -355,7 +355,7 @@ class ExposedDocumentRepository(
     ): Either<ConfirmWithGrantError, AuthorizationDocument> =
         transactionContext<ConfirmWithGrantError, AuthorizationDocument>(
             "db_operations",
-            "DocumenRepository",
+            "DocumentRepository",
             "confirmWithGrant",
             { ConfirmWithGrantError.DocumentError.Unexpected }
         ) {
