@@ -155,13 +155,14 @@ class ExposedDocumentRepository(
             val requestedByParty = resolveParty(documentRow[AuthorizationDocumentTable.requestedBy]).bind()
             val requestedFromParty = resolveParty(documentRow[AuthorizationDocumentTable.requestedFrom]).bind()
             val requestedToParty = resolveParty(documentRow[AuthorizationDocumentTable.requestedTo]).bind()
-            val properties = documentPropertiesRepository.find(id)
+            val properties = documentPropertiesRepository.find(listOf(id)).values.firstOrNull() ?: emptyList()
+
 
             val signatory = SignatoriesTable
                 .select(listOf(SignatoriesTable.signedBy))
                 .where {
                     (SignatoriesTable.authorizationDocumentId eq id) and
-                        (SignatoriesTable.requestedFrom eq documentRow[AuthorizationDocumentTable.requestedFrom])
+                            (SignatoriesTable.requestedFrom eq documentRow[AuthorizationDocumentTable.requestedFrom])
                 }
                 .singleOrNull()
                 ?.let { resolveParty(it[SignatoriesTable.signedBy]).bind() }
@@ -286,6 +287,8 @@ class ExposedDocumentRepository(
                     party.id to party
                 }
 
+            val propertiesByDocumentId = documentPropertiesRepository.find(documentIds)
+
             val items = documentRows.map { row ->
                 val requestedByParty = partiesById[row[AuthorizationDocumentTable.requestedBy]]
                     ?: raise(RepositoryReadError.UnexpectedError)
@@ -295,7 +298,7 @@ class ExposedDocumentRepository(
                     ?: raise(RepositoryReadError.UnexpectedError)
                 val docId = row[AuthorizationDocumentTable.id].value
                 val signedByParty = signatoryByDocumentId[docId]?.let { partiesById[it] }
-                val properties = documentPropertiesRepository.find(docId)
+                val properties = propertiesByDocumentId[row[AuthorizationDocumentTable.id].value] ?: emptyList()
 
                 row.toAuthorizationDocument(
                     requestedByParty,
@@ -323,17 +326,17 @@ class ExposedDocumentRepository(
             when (status) {
                 AuthorizationDocument.Status.Signed ->
                     (AuthorizationDocumentTable.status eq DatabaseStatus.Pending) and
-                        (AuthorizationDocumentTable.id inSubQuery signedDocIds)
+                            (AuthorizationDocumentTable.id inSubQuery signedDocIds)
 
                 AuthorizationDocument.Status.Pending ->
                     (AuthorizationDocumentTable.status eq DatabaseStatus.Pending) and
-                        (AuthorizationDocumentTable.validTo greater now) and
-                        (AuthorizationDocumentTable.id notInSubQuery signedDocIds)
+                            (AuthorizationDocumentTable.validTo greater now) and
+                            (AuthorizationDocumentTable.id notInSubQuery signedDocIds)
 
                 AuthorizationDocument.Status.Expired ->
                     (AuthorizationDocumentTable.status eq DatabaseStatus.Pending) and
-                        (AuthorizationDocumentTable.validTo lessEq now) and
-                        (AuthorizationDocumentTable.id notInSubQuery signedDocIds)
+                            (AuthorizationDocumentTable.validTo lessEq now) and
+                            (AuthorizationDocumentTable.id notInSubQuery signedDocIds)
 
                 AuthorizationDocument.Status.Rejected ->
                     AuthorizationDocumentTable.status eq DatabaseStatus.Rejected

@@ -4,7 +4,7 @@ import no.elhub.auth.config.withTransaction
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.Table
-import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.jdbc.batchInsert
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -12,7 +12,7 @@ import java.util.UUID
 
 interface DocumentPropertiesRepository {
     suspend fun insert(properties: List<AuthorizationDocumentProperty>, documentId: UUID)
-    suspend fun find(documentId: UUID): List<AuthorizationDocumentProperty>
+    suspend fun find(documentIds: List<UUID>): Map<UUID, List<AuthorizationDocumentProperty>>
 }
 
 class ExposedDocumentPropertiesRepository : DocumentPropertiesRepository {
@@ -27,12 +27,15 @@ class ExposedDocumentPropertiesRepository : DocumentPropertiesRepository {
         }
     }
 
-    override suspend fun find(documentId: UUID): List<AuthorizationDocumentProperty> =
+    override suspend fun find(documentIds: List<UUID>): Map<UUID, List<AuthorizationDocumentProperty>> =
         withTransaction {
             AuthorizationDocumentPropertyTable
                 .selectAll()
-                .where { AuthorizationDocumentPropertyTable.documentId eq documentId }
-                .map { it.toAuthorizationDocumentProperty() }
+                .where { AuthorizationDocumentPropertyTable.documentId inList documentIds }
+                .groupBy(
+                    { it[AuthorizationDocumentPropertyTable.documentId] },
+                    { it.toAuthorizationDocumentProperty() }
+                )
         }
 }
 

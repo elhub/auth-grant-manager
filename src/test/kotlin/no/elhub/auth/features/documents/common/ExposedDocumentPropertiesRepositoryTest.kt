@@ -87,11 +87,12 @@ class ExposedDocumentPropertiesRepositoryTest : FunSpec({
             )
 
             repository.insert(properties, document.id)
-            repository.find(document.id) shouldContainExactlyInAnyOrder properties
+            val result = repository.find(listOf(document.id))
+            result.values.single() shouldContainExactlyInAnyOrder properties
         }
 
         test("find returns empty list when no properties exist for document") {
-            repository.find(UUID.randomUUID()).shouldBeEmpty()
+            repository.find(listOf(UUID.randomUUID())) shouldBe mapOf()
         }
     }
 })
