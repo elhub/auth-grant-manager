@@ -204,8 +204,9 @@ class ExposedDocumentRepositoryTest :
                 val numDocsPending = 12
                 val numDocsExpired = 8
                 val numDocsSigned = 10
+                val numDocsOtherParty = 9
 
-                repeat(9) {
+                repeat(numDocsOtherParty) {
                     val party2 = AuthorizationParty(id = "🐟", type = PartyType.OrganizationEntity)
                     val doc = dummyDocument.copy(id = UUID.randomUUID(), requestedBy = party2, requestedFrom = party2)
                     repository.insert(doc, emptyList())
