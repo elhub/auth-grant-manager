@@ -10,7 +10,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
+import org.slf4j.LoggerFactory
+import java.sql.SQLException
 import java.util.concurrent.TimeUnit
+
+private val logger = LoggerFactory.getLogger("DatabaseTransaction")
 
 class TransactionContext(private val meterRegistry: PrometheusMeterRegistry) {
 
@@ -23,15 +27,20 @@ class TransactionContext(private val meterRegistry: PrometheusMeterRegistry) {
     ): Either<E, A> =
         meterRegistry.measureTransaction(metricName, className, methodName) {
             Either.catch { withTransaction { either<E, A> { block(this) } } }
+                .onLeft { e ->
+                    val sql = e as? SQLException
+                    logger.error("Transaction error [class={}, sqlState={}, errorCode={}]", e::class.qualifiedName, sql?.sqlState, sql?.errorCode)
+                }
                 .mapLeft(onException)
                 .fold({ it.left() }, { it })
         }
 }
+
 suspend fun <T> withTransaction(block: suspend JdbcTransaction.() -> T): T = withContext(Dispatchers.IO) {
     suspendTransaction { block() }
 }
 
-suspend fun <T> PrometheusMeterRegistry.measureTransaction(
+private suspend fun <T> PrometheusMeterRegistry.measureTransaction(
     metricName: String,
     className: String,
     methodName: String,
