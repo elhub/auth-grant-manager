@@ -317,6 +317,7 @@ class ExposedDocumentRepository(
             return partyCondition
         }
 
+        val now = currentTimeUtc()
         val statusCondition = statuses.map { status ->
             val signedDocIds = SignatoriesTable.select(SignatoriesTable.authorizationDocumentId)
             when (status) {
@@ -326,12 +327,12 @@ class ExposedDocumentRepository(
 
                 AuthorizationDocument.Status.Pending ->
                     (AuthorizationDocumentTable.status eq DatabaseStatus.Pending) and
-                        (AuthorizationDocumentTable.validTo greater currentTimeUtc()) and
+                        (AuthorizationDocumentTable.validTo greater now) and
                         (AuthorizationDocumentTable.id notInSubQuery signedDocIds)
 
                 AuthorizationDocument.Status.Expired ->
                     (AuthorizationDocumentTable.status eq DatabaseStatus.Pending) and
-                        (AuthorizationDocumentTable.validTo lessEq currentTimeUtc()) and
+                        (AuthorizationDocumentTable.validTo lessEq now) and
                         (AuthorizationDocumentTable.id notInSubQuery signedDocIds)
 
                 AuthorizationDocument.Status.Rejected ->
