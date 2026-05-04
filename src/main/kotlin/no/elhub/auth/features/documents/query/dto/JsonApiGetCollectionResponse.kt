@@ -25,12 +25,16 @@ typealias GetDocumentCollectionResponse = PaginatedCollectionResponse<
         >
     >
 
-fun Page<AuthorizationDocument>.toGetCollectionResponse(): GetDocumentCollectionResponse {
+fun Page<AuthorizationDocument>.toGetCollectionResponse(
+    statuses: List<AuthorizationDocument.Status> = emptyList(),
+): GetDocumentCollectionResponse {
     val p = this.pagination
+    val extraParams = if (statuses.isEmpty()) emptyMap()
+        else mapOf("filter[status]" to statuses.joinToString(","))
 
     return GetDocumentCollectionResponse(
         data = this.items.map { it.toGetSingleResponse().data },
-        links = toPaginationLinks(DOCUMENTS_PATH),
+        links = toPaginationLinks(DOCUMENTS_PATH, extraParams),
         meta = buildJsonObject {
             put("createdAt", currentTimeOslo().toTimeZoneOffsetString())
             put("totalItems", this@toGetCollectionResponse.totalItems)

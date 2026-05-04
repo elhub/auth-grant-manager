@@ -53,7 +53,7 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
                 call.respond(status, body)
                 return@get
             }
-        call.respond(HttpStatusCode.OK, page.toGetCollectionResponse())
+        call.respond(HttpStatusCode.OK, page.toGetCollectionResponse(statuses))
     }
 }
 
