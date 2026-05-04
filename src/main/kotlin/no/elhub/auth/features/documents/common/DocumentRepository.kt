@@ -317,8 +317,6 @@ class ExposedDocumentRepository(
             return partyCondition
         }
 
-        // TODO inspect underlying  query with exposed dbg logging as well
-        //
         val statusCondition = statuses.map { status ->
             val signedDocIds = SignatoriesTable.select(SignatoriesTable.authorizationDocumentId)
             when (status) {
