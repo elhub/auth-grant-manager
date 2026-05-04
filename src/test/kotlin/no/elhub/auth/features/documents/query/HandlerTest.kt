@@ -25,8 +25,6 @@ import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.common.GrantRepository
 import java.util.UUID
 
-//  TODO add test for status param
-
 class HandlerTest : FunSpec({
 
     val requestedBy = AuthorizationParty(id = "org-entity-1", type = PartyType.OrganizationEntity)
@@ -91,19 +89,20 @@ class HandlerTest : FunSpec({
             } returns result
         }
 
-    test("passes pagination from query to repository and preserves page metadata") {
+    test("passes pagination and status filter from query to repository and preserves page metadata") {
         val pagination = Pagination(page = 1, size = 1)
         val documentRepo = documentRepoReturning(Page(listOf(firstDocument), 2L, pagination).right())
         val handler = Handler(documentRepo, grantRepoReturning(emptyMap<UUID, AuthorizationGrant>().right()))
-
+        val statuses = listOf(AuthorizationDocument.Status.Expired)
         val response = handler(
             Query(
                 authorizedParty = requestedBy,
                 pagination = pagination,
+                statuses = statuses,
             )
         )
 
-        coVerify(exactly = 1) { documentRepo.findAndSortByCreatedAt(requestedBy, pagination, emptyList()) }
+        coVerify(exactly = 1) { documentRepo.findAndSortByCreatedAt(requestedBy, pagination, statuses) }
         val page = response.shouldBeRight()
         page.pagination shouldBe pagination
         page.totalItems shouldBe 2L
