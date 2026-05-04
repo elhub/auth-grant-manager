@@ -81,14 +81,25 @@ class ExposedDocumentPropertiesRepositoryTest : FunSpec({
 
             documentRepository.insert(document, listOf())
 
+
             val properties = listOf(
                 AuthorizationDocumentProperty("requestedFromName", "Ola Normann"),
                 AuthorizationDocumentProperty("meteringPointId", "1234")
             )
 
             repository.insert(properties, document.id)
-            val result = repository.find(listOf(document.id))
-            result.values.single() shouldContainExactlyInAnyOrder properties
+
+
+            val document2 = document.copy(id = UUID.randomUUID())
+            documentRepository.insert(document2, listOf())
+            val propertiesDoc2 = listOf(
+                AuthorizationDocumentProperty("requestedFromName", "Alberto Balsalm"),
+                AuthorizationDocumentProperty("meteringPointId", "666")
+            )
+
+            val result = repository.find(listOf(document.id, document2.id))
+            result[document.id] shouldContainExactlyInAnyOrder properties
+            result[document2.id] shouldContainExactlyInAnyOrder propertiesDoc2
         }
 
         test("find returns empty list when no properties exist for document") {
