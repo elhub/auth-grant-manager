@@ -174,7 +174,7 @@ class ExposedRequestRepository(
     // Match on party, and statuses if any are provided
     private fun generateFilterByCondition(partyId: UUID, statuses: List<AuthorizationRequest.Status>): Op<Boolean> {
         val partyCondition = (AuthorizationRequestTable.requestedTo eq partyId) or
-                (AuthorizationRequestTable.requestedBy eq partyId)
+            (AuthorizationRequestTable.requestedBy eq partyId)
         if (statuses.isEmpty()) {
             return partyCondition
         }
@@ -184,11 +184,11 @@ class ExposedRequestRepository(
             when (status) {
                 AuthorizationRequest.Status.Pending ->
                     (AuthorizationRequestTable.requestStatus eq DatabaseRequestStatus.Pending) and
-                            (AuthorizationRequestTable.validTo greater now)
+                        (AuthorizationRequestTable.validTo greater now)
 
                 AuthorizationRequest.Status.Expired ->
                     (AuthorizationRequestTable.requestStatus eq DatabaseRequestStatus.Pending) and
-                            (AuthorizationRequestTable.validTo lessEq now)
+                        (AuthorizationRequestTable.validTo lessEq now)
 
                 else -> AuthorizationRequestTable.requestStatus eq status.toDataBaseRequestStatus()
             }

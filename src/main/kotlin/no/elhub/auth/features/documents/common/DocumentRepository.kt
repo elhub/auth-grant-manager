@@ -157,12 +157,11 @@ class ExposedDocumentRepository(
             val requestedToParty = resolveParty(documentRow[AuthorizationDocumentTable.requestedTo]).bind()
             val properties = documentPropertiesRepository.find(listOf(id)).values.firstOrNull() ?: emptyList()
 
-
             val signatory = SignatoriesTable
                 .select(listOf(SignatoriesTable.signedBy))
                 .where {
                     (SignatoriesTable.authorizationDocumentId eq id) and
-                            (SignatoriesTable.requestedFrom eq documentRow[AuthorizationDocumentTable.requestedFrom])
+                        (SignatoriesTable.requestedFrom eq documentRow[AuthorizationDocumentTable.requestedFrom])
                 }
                 .singleOrNull()
                 ?.let { resolveParty(it[SignatoriesTable.signedBy]).bind() }
@@ -326,17 +325,17 @@ class ExposedDocumentRepository(
             when (status) {
                 AuthorizationDocument.Status.Signed ->
                     (AuthorizationDocumentTable.status eq DatabaseStatus.Pending) and
-                            (AuthorizationDocumentTable.id inSubQuery signedDocIds)
+                        (AuthorizationDocumentTable.id inSubQuery signedDocIds)
 
                 AuthorizationDocument.Status.Pending ->
                     (AuthorizationDocumentTable.status eq DatabaseStatus.Pending) and
-                            (AuthorizationDocumentTable.validTo greater now) and
-                            (AuthorizationDocumentTable.id notInSubQuery signedDocIds)
+                        (AuthorizationDocumentTable.validTo greater now) and
+                        (AuthorizationDocumentTable.id notInSubQuery signedDocIds)
 
                 AuthorizationDocument.Status.Expired ->
                     (AuthorizationDocumentTable.status eq DatabaseStatus.Pending) and
-                            (AuthorizationDocumentTable.validTo lessEq now) and
-                            (AuthorizationDocumentTable.id notInSubQuery signedDocIds)
+                        (AuthorizationDocumentTable.validTo lessEq now) and
+                        (AuthorizationDocumentTable.id notInSubQuery signedDocIds)
 
                 AuthorizationDocument.Status.Rejected ->
                     AuthorizationDocumentTable.status eq DatabaseStatus.Rejected

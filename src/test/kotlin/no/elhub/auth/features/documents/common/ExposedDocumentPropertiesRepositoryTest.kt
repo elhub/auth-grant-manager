@@ -1,7 +1,6 @@
 package no.elhub.auth.features.documents.common
 
 import io.kotest.core.spec.style.FunSpec
-import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
 import io.micrometer.prometheusmetrics.PrometheusConfig
@@ -81,14 +80,12 @@ class ExposedDocumentPropertiesRepositoryTest : FunSpec({
 
             documentRepository.insert(document, listOf())
 
-
             val properties = listOf(
                 AuthorizationDocumentProperty("requestedFromName", "Ola Normann"),
                 AuthorizationDocumentProperty("meteringPointId", "1234")
             )
 
             repository.insert(properties, document.id)
-
 
             val document2 = document.copy(id = UUID.randomUUID())
             documentRepository.insert(document2, listOf())
