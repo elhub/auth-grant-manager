@@ -159,10 +159,7 @@ class ExposedDocumentRepository(
 
             val signatory = SignatoriesTable
                 .select(listOf(SignatoriesTable.signedBy))
-                .where {
-                    (SignatoriesTable.authorizationDocumentId eq id) and
-                        (SignatoriesTable.requestedFrom eq documentRow[AuthorizationDocumentTable.requestedFrom])
-                }
+                .where { (SignatoriesTable.authorizationDocumentId eq id) }
                 .singleOrNull()
                 ?.let { resolveParty(it[SignatoriesTable.signedBy]).bind() }
 
@@ -196,7 +193,6 @@ class ExposedDocumentRepository(
 
             SignatoriesTable.insert {
                 it[authorizationDocumentId] = documentId
-                it[this.requestedFrom] = requestedFromRecord.id
                 it[signedBy] = signatoryRecord.id
             }
 
@@ -426,13 +422,11 @@ object AuthorizationDocumentScopeTable : Table("auth.authorization_document_scop
 object SignatoriesTable : Table("auth.authorization_document_signatories") {
     val authorizationDocumentId = javaUUID("authorization_document_id")
         .references(AuthorizationDocumentTable.id, onDelete = ReferenceOption.CASCADE)
-    val requestedFrom = javaUUID("requested_from")
-        .references(AuthorizationPartyTable.id)
     val signedBy = javaUUID("signed_by")
         .references(AuthorizationPartyTable.id)
     val signedAt = timestampWithTimeZone("signed_at").clientDefault { currentTimeUtc() }
 
-    override val primaryKey = PrimaryKey(authorizationDocumentId, requestedFrom)
+    override val primaryKey = PrimaryKey(authorizationDocumentId)
 }
 
 fun ResultRow.toAuthorizationDocument(
