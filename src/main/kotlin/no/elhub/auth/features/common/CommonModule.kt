@@ -2,8 +2,8 @@ package no.elhub.auth.features.common
 
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.ProxyBuilder
+import io.ktor.client.engine.apache5.Apache5
 import io.ktor.client.engine.cio.CIO
-import io.ktor.client.engine.cio.endpoint
 import io.ktor.client.engine.http
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -51,13 +51,7 @@ fun Application.commonModule() {
             }
         }
         provide<HttpClient>(name = "pdpHttpClient") {
-            HttpClient(CIO) {
-                engine {
-                    maxConnectionsCount = 1000
-                    endpoint {
-                        maxConnectionsPerRoute = 300
-                    }
-                }
+            HttpClient(Apache5) {
                 install(HttpTimeout) {
                     requestTimeoutMillis = 10_000
                     connectTimeoutMillis = 10_000
