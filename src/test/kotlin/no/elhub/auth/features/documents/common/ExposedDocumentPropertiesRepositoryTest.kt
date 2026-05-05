@@ -93,6 +93,7 @@ class ExposedDocumentPropertiesRepositoryTest : FunSpec({
                 AuthorizationDocumentProperty("requestedFromName", "Alberto Balsalm"),
                 AuthorizationDocumentProperty("meteringPointId", "666")
             )
+            repository.insert(propertiesDoc2, document2.id)
 
             val result = repository.find(listOf(document.id, document2.id))
             result[document.id] shouldContainExactlyInAnyOrder properties
