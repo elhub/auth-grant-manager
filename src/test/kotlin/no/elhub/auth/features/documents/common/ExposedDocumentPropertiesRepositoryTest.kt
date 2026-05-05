@@ -1,7 +1,6 @@
 package no.elhub.auth.features.documents.common
 
 import io.kotest.core.spec.style.FunSpec
-import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
 import io.micrometer.prometheusmetrics.PrometheusConfig
@@ -87,11 +86,22 @@ class ExposedDocumentPropertiesRepositoryTest : FunSpec({
             )
 
             repository.insert(properties, document.id)
-            repository.find(document.id) shouldContainExactlyInAnyOrder properties
+
+            val document2 = document.copy(id = UUID.randomUUID())
+            documentRepository.insert(document2, listOf())
+            val propertiesDoc2 = listOf(
+                AuthorizationDocumentProperty("requestedFromName", "Alberto Balsalm"),
+                AuthorizationDocumentProperty("meteringPointId", "666")
+            )
+            repository.insert(propertiesDoc2, document2.id)
+
+            val result = repository.find(listOf(document.id, document2.id))
+            result[document.id] shouldContainExactlyInAnyOrder properties
+            result[document2.id] shouldContainExactlyInAnyOrder propertiesDoc2
         }
 
-        test("find returns empty list when no properties exist for document") {
-            repository.find(UUID.randomUUID()).shouldBeEmpty()
+        test("find returns empty map when no properties exist for document") {
+            repository.find(listOf(UUID.randomUUID())) shouldBe mapOf()
         }
     }
 })

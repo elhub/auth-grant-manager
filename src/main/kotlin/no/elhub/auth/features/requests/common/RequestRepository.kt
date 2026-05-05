@@ -179,15 +179,16 @@ class ExposedRequestRepository(
             return partyCondition
         }
 
+        val now = currentTimeUtc()
         val statusCondition = statuses.map { status ->
             when (status) {
                 AuthorizationRequest.Status.Pending ->
                     (AuthorizationRequestTable.requestStatus eq DatabaseRequestStatus.Pending) and
-                        (AuthorizationRequestTable.validTo greater currentTimeUtc())
+                        (AuthorizationRequestTable.validTo greater now)
 
                 AuthorizationRequest.Status.Expired ->
                     (AuthorizationRequestTable.requestStatus eq DatabaseRequestStatus.Pending) and
-                        (AuthorizationRequestTable.validTo lessEq currentTimeUtc())
+                        (AuthorizationRequestTable.validTo lessEq now)
 
                 else -> AuthorizationRequestTable.requestStatus eq status.toDataBaseRequestStatus()
             }

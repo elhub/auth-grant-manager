@@ -155,7 +155,7 @@ class ExposedDocumentRepository(
             val requestedByParty = resolveParty(documentRow[AuthorizationDocumentTable.requestedBy]).bind()
             val requestedFromParty = resolveParty(documentRow[AuthorizationDocumentTable.requestedFrom]).bind()
             val requestedToParty = resolveParty(documentRow[AuthorizationDocumentTable.requestedTo]).bind()
-            val properties = documentPropertiesRepository.find(id)
+            val properties = documentPropertiesRepository.find(listOf(id)).values.firstOrNull() ?: emptyList()
 
             val signatory = SignatoriesTable
                 .select(listOf(SignatoriesTable.signedBy))
@@ -286,6 +286,8 @@ class ExposedDocumentRepository(
                     party.id to party
                 }
 
+            val propertiesByDocumentId = documentPropertiesRepository.find(documentIds)
+
             val items = documentRows.map { row ->
                 val requestedByParty = partiesById[row[AuthorizationDocumentTable.requestedBy]]
                     ?: raise(RepositoryReadError.UnexpectedError)
@@ -295,7 +297,7 @@ class ExposedDocumentRepository(
                     ?: raise(RepositoryReadError.UnexpectedError)
                 val docId = row[AuthorizationDocumentTable.id].value
                 val signedByParty = signatoryByDocumentId[docId]?.let { partiesById[it] }
-                val properties = documentPropertiesRepository.find(docId)
+                val properties = propertiesByDocumentId[row[AuthorizationDocumentTable.id].value] ?: emptyList()
 
                 row.toAuthorizationDocument(
                     requestedByParty,
