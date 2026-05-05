@@ -243,7 +243,6 @@ class ExposedDocumentRepositoryTest :
                     repository.confirmWithGrant(
                         documentId = doc.id,
                         signedFile = "signed".toByteArray(),
-                        requestedFrom = party,
                         signatory = party,
                         grant = grant,
                         grantProperties = grantProperties,
@@ -430,7 +429,6 @@ class ExposedDocumentRepositoryTest :
                 val result = repository.confirmWithGrant(
                     documentId = document.id,
                     signedFile = "signed".toByteArray(),
-                    requestedFrom = requestedFrom,
                     signatory = signatory,
                     grant = grant,
                     grantProperties = grantProperties,

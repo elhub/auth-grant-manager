@@ -261,9 +261,6 @@ private suspend fun validateCreateDocumentResponse(response: HttpResponse, creat
 
             validTo shouldBe defaultValidTo
 
-            println(createdAt)
-            println(currentTimeOslo())
-            println(updatedAt)
             (Duration.between(createdAt, currentTimeOslo()).abs() < nowTolerance).shouldBeTrue()
             (Duration.between(updatedAt, currentTimeOslo()).abs() < nowTolerance).shouldBeTrue()
         }

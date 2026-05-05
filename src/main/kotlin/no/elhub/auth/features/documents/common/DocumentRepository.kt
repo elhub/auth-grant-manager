@@ -77,7 +77,6 @@ interface DocumentRepository {
     suspend fun confirmWithGrant(
         documentId: UUID,
         signedFile: ByteArray,
-        requestedFrom: AuthorizationParty,
         signatory: AuthorizationParty,
         grant: AuthorizationGrant,
         grantProperties: List<AuthorizationGrantProperty>
@@ -175,7 +174,6 @@ class ExposedDocumentRepository(
     private suspend fun confirm(
         documentId: UUID,
         signedFile: ByteArray,
-        requestedFrom: AuthorizationParty,
         signatory: AuthorizationParty
     ): Either<RepositoryWriteError, AuthorizationDocument> =
         transactionContext<RepositoryWriteError, AuthorizationDocument>(
@@ -185,9 +183,6 @@ class ExposedDocumentRepository(
             { RepositoryWriteError.UnexpectedError }
         ) {
             val signatoryRecord = partyRepo.findOrInsert(signatory.type, signatory.id)
-                .mapLeft { RepositoryWriteError.UnexpectedError }
-                .bind()
-            val requestedFromRecord = partyRepo.findOrInsert(requestedFrom.type, requestedFrom.id)
                 .mapLeft { RepositoryWriteError.UnexpectedError }
                 .bind()
 
@@ -346,7 +341,6 @@ class ExposedDocumentRepository(
     override suspend fun confirmWithGrant(
         documentId: UUID,
         signedFile: ByteArray,
-        requestedFrom: AuthorizationParty,
         signatory: AuthorizationParty,
         grant: AuthorizationGrant,
         grantProperties: List<AuthorizationGrantProperty>
@@ -357,7 +351,7 @@ class ExposedDocumentRepository(
             "confirmWithGrant",
             { ConfirmWithGrantError.DocumentError.Unexpected }
         ) {
-            val confirmedDocument = confirm(documentId, signedFile, requestedFrom, signatory)
+            val confirmedDocument = confirm(documentId, signedFile, signatory)
                 .mapLeft { writeError ->
                     when (writeError) {
                         is RepositoryWriteError.NotFoundError -> ConfirmWithGrantError.DocumentError.NotFound

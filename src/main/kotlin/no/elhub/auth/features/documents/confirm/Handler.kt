@@ -97,7 +97,6 @@ class Handler(
         val confirmedDocument = documentRepository.confirmWithGrant(
             documentId = document.id,
             signedFile = command.signedFile,
-            requestedFrom = document.requestedFrom,
             signatory = expectedSignatoryParty,
             grant = grantToCreate,
             grantProperties = grantMetaProperties
