@@ -7,6 +7,7 @@ import io.ktor.client.engine.cio.endpoint
 import io.ktor.client.engine.http
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.engine.apache5.Apache5
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.plugins.logging.LoggingFormat
@@ -51,13 +52,7 @@ fun Application.commonModule() {
             }
         }
         provide<HttpClient>(name = "pdpHttpClient") {
-            HttpClient(CIO) {
-                engine {
-                    maxConnectionsCount = 1000
-                    endpoint {
-                        maxConnectionsPerRoute = 300
-                    }
-                }
+            HttpClient(Apache5) {
                 install(HttpTimeout) {
                     requestTimeoutMillis = 10_000
                     connectTimeoutMillis = 10_000
