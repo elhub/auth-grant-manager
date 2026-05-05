@@ -5,6 +5,7 @@ import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.assertions.fail
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.inspectors.forAll
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.collections.shouldHaveSize
@@ -256,7 +257,12 @@ class ExposedDocumentRepositoryTest :
                         listOf(AuthorizationDocument.Status.Pending)
                     )
                         .getOrElse { throw AssertionError("Repository read failed: $it") }
-                        .totalItems shouldBe numDocsPending
+                        .apply {
+                            totalItems shouldBe numDocsPending
+                            items.forAll {
+                                it.status shouldBe AuthorizationDocument.Status.Pending
+                            }
+                        }
 
                 val resultSigned =
                     repository.findAndSortByCreatedAt(
@@ -265,7 +271,12 @@ class ExposedDocumentRepositoryTest :
                         listOf(AuthorizationDocument.Status.Signed)
                     )
                         .getOrElse { throw AssertionError("Repository read failed: $it") }
-                        .totalItems shouldBe numDocsSigned
+                        .apply {
+                            totalItems shouldBe numDocsSigned
+                            items.forAll {
+                                it.status shouldBe AuthorizationDocument.Status.Signed
+                            }
+                        }
 
                 val resultExpired =
                     repository.findAndSortByCreatedAt(
@@ -274,7 +285,12 @@ class ExposedDocumentRepositoryTest :
                         listOf(AuthorizationDocument.Status.Expired)
                     )
                         .getOrElse { throw AssertionError("Repository read failed: $it") }
-                        .totalItems shouldBe numDocsExpired
+                        .apply {
+                            totalItems shouldBe numDocsExpired
+                            items.forAll {
+                                it.status shouldBe AuthorizationDocument.Status.Expired
+                            }
+                        }
 
                 val resultPendingPlusExpired =
                     repository.findAndSortByCreatedAt(

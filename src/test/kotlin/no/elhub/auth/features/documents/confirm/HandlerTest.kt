@@ -185,7 +185,7 @@ class HandlerTest : FunSpec({
         val documentId = UUID.randomUUID()
         val document = createDocument(
             documentId = documentId,
-            status = AuthorizationDocument.Status.Pending,
+            status = AuthorizationDocument.Status.Signed,
             signedBy = AuthorizationParty("some-id", PartyType.Person),
         )
 
@@ -203,7 +203,7 @@ class HandlerTest : FunSpec({
             )
         )
 
-        result.shouldBeLeft(ConfirmError.IllegalStateError("AuthorizationDocument has already been signed."))
+        result.shouldBeLeft(ConfirmError.IllegalStateError("AuthorizationDocument must be in 'Pending' status to confirm."))
         coVerify(exactly = 1) { documentRepository.find(documentId) }
         verify(exactly = 0) { signatureService.validateSignaturesAndReturnSignatory(any(), any()) }
         coVerify(exactly = 0) { documentRepository.findScopeIds(any()) }
