@@ -102,7 +102,7 @@ dockerCompose {
 }
 
 openApiValidate {
-    inputSpec = "$projectDir/src/main/resources/static/openapi.yaml"
+    inputSpec.set(file("$projectDir/src/main/resources/static/openapi.yaml"))
     recommend = true
 }
 
