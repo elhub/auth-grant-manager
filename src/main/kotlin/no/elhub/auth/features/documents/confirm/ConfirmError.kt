@@ -9,6 +9,7 @@ import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 
 sealed class ConfirmError {
     data class ValidateSignaturesError(val cause: SignatureValidationError) : ConfirmError()
+    data object InvalidPartyTypeError : ConfirmError()
     data object SignatoryNotAllowedToSignDocument : ConfirmError()
     data object SignatoryResolutionError : ConfirmError()
     data object DocumentNotFoundError : ConfirmError()
@@ -25,6 +26,12 @@ sealed class ConfirmError {
 fun ConfirmError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> =
     when (this) {
         ConfirmError.DocumentNotFoundError -> toNotFoundApiErrorResponse("AuthorizationDocument could not be found.")
+
+        ConfirmError.InvalidPartyTypeError -> buildApiErrorResponse(
+            status = HttpStatusCode.Forbidden,
+            title = "Party not authorized",
+            detail = "The authorized party is not permitted to perform this action.",
+        )
 
         is ConfirmError.ValidateSignaturesError -> handleValidateSignatureError(this)
 

@@ -5,6 +5,7 @@ import arrow.core.raise.either
 import arrow.core.raise.ensure
 import no.elhub.auth.features.common.party.PartyError
 import no.elhub.auth.features.common.party.PartyService
+import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.AuthorizationDocumentProperty
 import no.elhub.auth.features.documents.common.CreateDocumentBusinessModel
@@ -26,6 +27,10 @@ class Handler(
     suspend operator fun invoke(model: CreateDocumentModel): Either<CreateError, AuthorizationDocument> =
         either {
             logger.info("event=authorization_document_creation type=${model.documentType}")
+
+            ensure(model.authorizedParty.type == PartyType.OrganizationEntity) {
+                CreateError.InvalidPartyTypeError
+            }
 
             val requestedByParty =
                 partyService

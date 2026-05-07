@@ -44,11 +44,7 @@ enum class TokenType(val value: String) {
 }
 
 interface AuthorizationProvider {
-    suspend fun authorizeAll(call: ApplicationCall): Either<AuthError, AuthorizationParty>
-    suspend fun authorizeEndUserOrMaskinporten(call: ApplicationCall): Either<AuthError, AuthorizationParty>
-    suspend fun authorizeMaskinporten(call: ApplicationCall): Either<AuthError, AuthorizationParty>
-    suspend fun authorizeEndUser(call: ApplicationCall): Either<AuthError, AuthorizationParty>
-    suspend fun authorizeElhubService(call: ApplicationCall): Either<AuthError, AuthorizationParty>
+    suspend fun authorize(call: ApplicationCall): Either<AuthError, AuthorizationParty>
 }
 
 class PDPAuthorizationProvider(
@@ -71,81 +67,22 @@ class PDPAuthorizationProvider(
         }
     }
 
-    override suspend fun authorizeAll(call: ApplicationCall): Either<AuthError, AuthorizationParty> = either {
+    override suspend fun authorize(call: ApplicationCall): Either<AuthError, AuthorizationParty> = either {
         val traceId = resolveTraceId(call)
         val pdpBody: PdpResponse = pdpRequestAndValidate(call, traceId).bind()
 
         when (pdpBody.result.tokenInfo.tokenType) {
-            TokenType.MASKINPORTEN.value -> {
-                authorizeMaskinporten(call, pdpBody, traceId).bind()
-            }
+            TokenType.MASKINPORTEN.value -> authorizeMaskinporten(call, pdpBody).bind()
 
-            TokenType.ENDUSER.value -> {
-                authorizeEndUser(pdpBody, traceId).bind()
-            }
+            TokenType.ENDUSER.value -> authorizeEndUser(pdpBody).bind()
 
-            TokenType.ELHUB_SERVICE.value -> {
-                authorizeSystem(pdpBody, traceId).bind()
-            }
+            TokenType.ELHUB_SERVICE.value -> authorizeSystem(pdpBody).bind()
 
             else -> {
-                log.warn(
-                    "Unexpected tokenType for traceId={} tokenType={}",
-                    traceId,
-                    pdpBody.result.tokenInfo.tokenType
-                )
+                log.warn("Unexpected tokenType={}", pdpBody.result.tokenInfo.tokenType)
                 raise(AuthError.InvalidToken)
             }
         }
-    }
-
-    override suspend fun authorizeEndUserOrMaskinporten(call: ApplicationCall): Either<AuthError, AuthorizationParty> =
-        either {
-            val traceId = resolveTraceId(call)
-            val pdpBody: PdpResponse = pdpRequestAndValidate(call, traceId).bind()
-
-            when (pdpBody.result.tokenInfo.tokenType) {
-                TokenType.MASKINPORTEN.value -> {
-                    authorizeMaskinporten(call, pdpBody, traceId).bind()
-                }
-
-                TokenType.ENDUSER.value -> {
-                    authorizeEndUser(pdpBody, traceId).bind()
-                }
-
-                else -> {
-                    log.warn(
-                        "Unexpected tokenType for traceId={} tokenType={}",
-                        traceId,
-                        pdpBody.result.tokenInfo.tokenType
-                    )
-                    raise(AuthError.InvalidToken)
-                }
-            }
-        }
-
-    override suspend fun authorizeMaskinporten(call: ApplicationCall): Either<AuthError, AuthorizationParty> = either {
-        val traceId = resolveTraceId(call)
-        val pdpBody: PdpResponse = pdpRequestAndValidate(call, traceId).bind()
-        authorizeMaskinporten(call, pdpBody, traceId).bind()
-    }
-
-    override suspend fun authorizeEndUser(call: ApplicationCall): Either<AuthError, AuthorizationParty> = either {
-        val traceId = resolveTraceId(call)
-        val pdpBody: PdpResponse = pdpRequestAndValidate(call, traceId).bind()
-
-        if (pdpBody.result.tokenInfo.tokenType == TokenType.ENDUSER.value) {
-            authorizeEndUser(pdpBody, traceId).bind()
-        } else {
-            log.warn("Unexpected tokenType for traceId={} tokenType={}", traceId, pdpBody.result.tokenInfo.tokenType)
-            raise(AuthError.ActingFunctionNotSupported)
-        }
-    }
-
-    override suspend fun authorizeElhubService(call: ApplicationCall): Either<AuthError, AuthorizationParty> = either {
-        val traceId = resolveTraceId(call)
-        val pdpResponse = pdpRequestAndValidate(call, traceId).bind()
-        authorizeSystem(pdpResponse, traceId).bind()
     }
 
     private suspend fun pdpRequestAndValidate(call: ApplicationCall, traceId: UUID): Either<AuthError, PdpResponse> =
@@ -185,7 +122,7 @@ class PDPAuthorizationProvider(
                     setBody(request)
                 }
             }.mapLeft {
-                log.error("PDP request failed for traceId={}", traceId, it)
+                log.error("PDP request failed", it)
                 raise(AuthError.UnexpectedPdpError)
             }.bind()
 
@@ -193,17 +130,13 @@ class PDPAuthorizationProvider(
                 response.status.isSuccess() -> Either.catch {
                     response.body<PdpResponse>()
                 }.getOrElse {
-                    log.error(
-                        "Failed to deserialize PDP response for traceId={}, response={}",
-                        traceId,
-                        response.bodyAsText()
-                    )
+                    log.error("Failed to deserialize PDP response response={}", response.bodyAsText())
                     raise(AuthError.UnexpectedPdpError)
                 }
 
                 else -> {
                     val err = response.bodyAsText()
-                    log.warn("PDP non-2xx for traceId={} status={} body={}", traceId, response.status, err)
+                    log.warn("PDP non-2xx status={} body={}", response.status, err)
                     raise(AuthError.UnexpectedPdpError)
                 }
             }
@@ -211,7 +144,7 @@ class PDPAuthorizationProvider(
             val tokenInfo = pdpBody.result.tokenInfo
             val status = tokenInfo.tokenStatus
             if (status != "verified") {
-                log.warn("Invalid token status for traceId={} status={}", traceId, status)
+                log.warn("Invalid token status={}", status)
                 raise(AuthError.InvalidToken)
             }
             pdpBody
@@ -220,34 +153,25 @@ class PDPAuthorizationProvider(
     private fun authorizeMaskinporten(
         call: ApplicationCall,
         pdpBody: PdpResponse,
-        traceId: UUID
     ): Either<AuthError, AuthorizationParty> = either {
-        val tokenInfo = pdpBody.result.tokenInfo
-        if (!TokenType.MASKINPORTEN.value.equals(tokenInfo.tokenType)) {
-            raise(AuthError.AccessDenied)
-        }
         call.request.headers[Headers.SENDER_GLN] ?: raise(AuthError.MissingSenderGlnHeader)
         val authInfo = pdpBody.result.authInfo ?: raise(AuthError.InvalidPdpResponseAuthInfoMissing)
         if (authInfo.inputFailed != null) {
-            log.error("PDP input validation failed for traceId={} msg={}", traceId, authInfo.inputFailed)
+            log.error("PDP input validation failed msg={}", authInfo.inputFailed)
             raise(AuthError.AccessDenied)
         }
         val actingGLN = authInfo.actingGLN ?: raise(AuthError.InvalidPdpResponseActingGlnMissing)
         val authorizedFunctions = authInfo.authorizedFunctions
             ?.takeIf { it.isNotEmpty() }
             ?: run {
-                log.warn("PDP response missing authorizedFunctions for traceId={}", traceId)
+                log.warn("PDP response missing authorizedFunctions")
                 raise(AuthError.InvalidPdpResponseAuthorizedFunctionsMissing)
             }
 
         authorizedFunctions
             .firstOrNull { it.functionName == RoleType.BalanceSupplier.name }
             ?: run {
-                log.warn(
-                    "Unsupported authorizedFunctions for traceId={} authorizedFunctions={}",
-                    traceId,
-                    authorizedFunctions
-                )
+                log.warn("Unsupported authorizedFunctions={}", authorizedFunctions)
                 raise(AuthError.ActingFunctionNotSupported)
             }
         val authorizedParty = AuthorizationParty(id = actingGLN, type = PartyType.OrganizationEntity)
@@ -257,13 +181,7 @@ class PDPAuthorizationProvider(
 
     private fun authorizeEndUser(
         pdpBody: PdpResponse,
-        traceId: UUID
     ): Either<AuthError, AuthorizationParty> = either {
-        val tokenInfo = pdpBody.result.tokenInfo
-        if (!TokenType.ENDUSER.value.equals(tokenInfo.tokenType)) {
-            log.warn("Unexpected tokenType for traceId={} tokenType={}", traceId, tokenInfo.tokenType)
-            raise(AuthError.AccessDenied)
-        }
         val authInfo = pdpBody.result.authInfo
         if (authInfo?.error != null) {
             log.warn("PDP authInfo error={}", authInfo.error)
@@ -290,14 +208,8 @@ class PDPAuthorizationProvider(
 
     private fun authorizeSystem(
         pdpResponse: PdpResponse,
-        traceId: UUID
     ): Either<AuthError, AuthorizationParty> = either {
-        val tokenInfo = pdpResponse.result.tokenInfo
-        if (!TokenType.ELHUB_SERVICE.value.equals(tokenInfo.tokenType)) {
-            log.warn("Unexpected tokenType for traceId={} tokenType={}", traceId, tokenInfo.tokenType)
-            raise(AuthError.AccessDenied)
-        }
-        val partyId = tokenInfo.partyId ?: raise(AuthError.UnexpectedPdpError)
+        val partyId = pdpResponse.result.tokenInfo.partyId ?: raise(AuthError.UnexpectedPdpError)
         val authorizedParty = AuthorizationParty(id = partyId, type = PartyType.System)
         log.info("Authorized party is $authorizedParty")
         authorizedParty

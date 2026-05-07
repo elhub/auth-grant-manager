@@ -24,7 +24,7 @@ fun Route.route(
     authProvider: AuthorizationProvider
 ) {
     patch("/{$REQUEST_ID_PARAM}") {
-        val resolvedActor = authProvider.authorizeEndUser(call)
+        val resolvedActor = authProvider.authorize(call)
             .getOrElse {
                 val error = it.toApiErrorResponse()
                 call.respond(error.first, error.second)

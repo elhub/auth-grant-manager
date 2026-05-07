@@ -51,7 +51,7 @@ class RouteTest : FunSpec({
     }
 
     test("GET /{id} should return forbidden when access is denied") {
-        coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns AuthError.AccessDenied.left()
+        coEvery { authProvider.authorize(any()) } returns AuthError.AccessDenied.left()
         testApplication {
             setupAppWith { route(handler, authProvider) }
             val response = client.get("/$validUuid")
@@ -61,7 +61,7 @@ class RouteTest : FunSpec({
     }
 
     test("GET /{id} should return unauthorized when not authorized") {
-        coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns AuthError.NotAuthorized.left()
+        coEvery { authProvider.authorize(any()) } returns AuthError.NotAuthorized.left()
         testApplication {
             setupAppWith { route(handler, authProvider) }
             val response = client.get("/$validUuid")
@@ -71,7 +71,7 @@ class RouteTest : FunSpec({
     }
 
     test("GET /{id} should return bad request when having an invalid request ID") {
-        coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedPerson.right()
         testApplication {
             setupAppWith { route(handler, authProvider) }
             val response = client.get("/not-a-uuid")
@@ -81,7 +81,7 @@ class RouteTest : FunSpec({
     }
 
     test("GET /{id} should return not found when handler returns ResourceNotFoundError") {
-        coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedPerson.right()
         coEvery { handler.invoke(any()) } returns QueryError.ResourceNotFoundError.left()
         testApplication {
             setupAppWith { route(handler, authProvider) }
@@ -92,7 +92,7 @@ class RouteTest : FunSpec({
     }
 
     test("GET /{id} should return forbidden when handler returns NotAuthorizedError") {
-        coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedPerson.right()
         coEvery { handler.invoke(any()) } returns QueryError.NotAuthorizedError.left()
         testApplication {
             setupAppWith { route(handler, authProvider) }
@@ -103,7 +103,7 @@ class RouteTest : FunSpec({
     }
 
     test("GET /{id} should return 500 when handler throws exception") {
-        coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedPerson.right()
         coEvery { handler.invoke(any()) } throws RuntimeException("Unexpected error")
         testApplication {
             setupAppWith { route(handler, authProvider) }
@@ -114,7 +114,7 @@ class RouteTest : FunSpec({
     }
 
     test("GET /{id} should return OK with correct body when authorized as Person") {
-        coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedPerson.right()
         val authorizationRequest = AuthorizationRequest(
             id = UUID.fromString(validUuid),
             type = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
@@ -156,7 +156,7 @@ class RouteTest : FunSpec({
     }
 
     test("GET /{id} should return OK with correct body when authorized as OrganizationEntity") {
-        coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedOrganization.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedOrganization.right()
         val authorizationRequest = AuthorizationRequest(
             id = UUID.fromString(validUuid),
             type = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,

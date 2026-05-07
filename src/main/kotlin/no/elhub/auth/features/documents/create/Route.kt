@@ -22,7 +22,7 @@ fun Route.route(
     authProvider: AuthorizationProvider,
 ) {
     post {
-        val resolvedActor = authProvider.authorizeMaskinporten(call)
+        val resolvedActor = authProvider.authorize(call)
             .getOrElse {
                 val error = it.toApiErrorResponse()
                 call.respond(error.first, error.second)

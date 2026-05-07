@@ -68,7 +68,7 @@ class RouteTest : FunSpec({
     }
 
     test("GET /{id}[.pdf] returns 200 when authorized as person and handler succeeds") {
-        coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedPerson.right()
         coEvery { handler.invoke(any()) } returns document.right()
         testApplication {
             setupAppWith { route(handler, authProvider) }
@@ -88,7 +88,7 @@ class RouteTest : FunSpec({
         }
     }
     test("GET /{id}[.pdf] returns 200 when authorized as org and handler succeeds") {
-        coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedOrg.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedOrg.right()
         coEvery { handler.invoke(any()) } returns document.right()
         testApplication {
             setupAppWith { route(handler, authProvider) }
@@ -109,7 +109,7 @@ class RouteTest : FunSpec({
     }
 
     test("GET /{id}.pdf returns not accepted on unsupported accept header") {
-        coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedPerson.right()
         coEvery { handler.invoke(any()) } returns document.right()
         testApplication {
             setupAppWith { route(handler, authProvider) }
@@ -120,7 +120,7 @@ class RouteTest : FunSpec({
     }
 
     test("GET /{id}[.pdf] returns 400 when UUID is invalid") {
-        coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedPerson.right()
         coEvery { handler.invoke(any()) } returns document.right()
         testApplication {
             setupAppWith { route(handler, authProvider) }
@@ -131,7 +131,7 @@ class RouteTest : FunSpec({
         }
     }
     test("GET /{id}[.pdf] returns 401 Not authorized when authorization fails") {
-        coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns AuthError.NotAuthorized.left()
+        coEvery { authProvider.authorize(any()) } returns AuthError.NotAuthorized.left()
         coEvery { handler.invoke(any()) } returns document.right()
         testApplication {
             setupAppWith { route(handler, authProvider) }
@@ -142,7 +142,7 @@ class RouteTest : FunSpec({
         }
     }
     test("GET /{id}[.pdf] returns 500 Internal server error when handler fails with IOError") {
-        coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedPerson.right()
         coEvery { handler.invoke(any()) } returns QueryError.IOError.left()
         testApplication {
             setupAppWith { route(handler, authProvider) }

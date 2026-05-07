@@ -90,7 +90,7 @@ class RouteTest : FunSpec({
     }
 
     test("GET / returns 200 when authorized as person and handler succeeds") {
-        coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedPerson.right()
         coEvery { handler.invoke(any()) } returns Page(documents, documents.size.toLong(), Pagination()).right()
         testApplication {
             setupAppWith { route(handler, authProvider) }
@@ -101,7 +101,7 @@ class RouteTest : FunSpec({
     }
 
     test("GET / returns 200 when authorized as org and handler succeeds") {
-        coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedOrg.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedOrg.right()
         coEvery { handler.invoke(any()) } returns Page(documents, documents.size.toLong(), Pagination()).right()
         testApplication {
             setupAppWith { route(handler, authProvider) }
@@ -111,7 +111,7 @@ class RouteTest : FunSpec({
         }
     }
     test("GET / returns 403 'Forbidden' when authorization fails with AccessDenied error") {
-        coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns AuthError.AccessDenied.left()
+        coEvery { authProvider.authorize(any()) } returns AuthError.AccessDenied.left()
         coEvery { handler.invoke(any()) } returns Page(documents, documents.size.toLong(), Pagination()).right()
         testApplication {
             setupAppWith { route(handler, authProvider) }
@@ -120,7 +120,7 @@ class RouteTest : FunSpec({
         }
     }
     test("GET / returns 500 Internal server error when authorized as org and handler fails with IOError") {
-        coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedOrg.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedOrg.right()
         coEvery { handler.invoke(any()) } returns QueryError.IOError.left()
         testApplication {
             setupAppWith { route(handler, authProvider) }
@@ -131,7 +131,7 @@ class RouteTest : FunSpec({
     }
 
     test("GET with page params passes correct Pagination to handler") {
-        coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedPerson.right()
         coEvery { handler.invoke(any()) } returns Page(
             emptyList<AuthorizationDocument>(),
             0L,
@@ -145,7 +145,7 @@ class RouteTest : FunSpec({
     }
 
     test("GET with status param passes correct status to handler") {
-        coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedPerson.right()
         coEvery { handler.invoke(any()) } returns Page(
             emptyList<AuthorizationDocument>(),
             0L,
@@ -168,7 +168,7 @@ class RouteTest : FunSpec({
     }
 
     test("GET with status param returns BadRequest when supplying invalid status") {
-        coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedPerson.right()
         coEvery { handler.invoke(any()) } returns Page(
             emptyList<AuthorizationDocument>(),
             0L,
@@ -184,7 +184,7 @@ class RouteTest : FunSpec({
     }
     test("GET response meta and links contain correct pagination and status fields") {
         val pagination = Pagination(page = 0, size = 10)
-        coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedPerson.right()
         coEvery { handler.invoke(any()) } returns Page(emptyList<AuthorizationDocument>(), 4L, pagination).right()
         testApplication {
             setupAppWith { route(handler, authProvider) }
@@ -207,7 +207,7 @@ class RouteTest : FunSpec({
 
     test("GET links on a middle page contain prev and next") {
         val pagination = Pagination(page = 1, size = 5)
-        coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedPerson.right()
         coEvery { handler.invoke(any()) } returns Page(emptyList<AuthorizationDocument>(), 15L, pagination).right()
         testApplication {
             setupAppWith { route(handler, authProvider) }

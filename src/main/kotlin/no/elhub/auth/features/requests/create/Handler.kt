@@ -5,6 +5,7 @@ import arrow.core.raise.either
 import arrow.core.raise.ensure
 import no.elhub.auth.features.common.party.PartyError
 import no.elhub.auth.features.common.party.PartyService
+import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.common.AuthorizationRequestProperty
 import no.elhub.auth.features.requests.common.CreateRequestBusinessModel
@@ -22,6 +23,11 @@ class Handler(
 
     suspend operator fun invoke(model: CreateRequestModel): Either<CreateError, AuthorizationRequest> = either {
         logger.info("event=authorization_request_creation type=${model.requestType}")
+
+        ensure(model.authorizedParty.type == PartyType.OrganizationEntity) {
+            CreateError.InvalidPartyTypeError
+        }
+
         val requestedByParty =
             partyService
                 .resolve(model.coreMeta.requestedBy)

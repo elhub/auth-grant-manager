@@ -22,7 +22,7 @@ const val GRANT_ID_PARAM = "id"
 
 fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
     patch("/{$GRANT_ID_PARAM}") {
-        val authorizedSystem = authProvider.authorizeElhubService(call)
+        val authorizedSystem = authProvider.authorize(call)
             .getOrElse { err ->
                 val (status, body) = err.toApiErrorResponse()
                 call.respond(status, body)

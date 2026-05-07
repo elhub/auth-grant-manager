@@ -18,7 +18,7 @@ private val logger = LoggerFactory.getLogger(Route::class.java)
 
 fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
     get("/{$GRANT_ID_PARAM}") {
-        val authorizedParty = authProvider.authorizeAll(call)
+        val authorizedParty = authProvider.authorize(call)
             .getOrElse { err ->
                 val (status, body) = err.toApiErrorResponse()
                 call.respond(status, body)

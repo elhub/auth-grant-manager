@@ -80,6 +80,25 @@ class HandlerTest : FunSpec({
         signatureService = signatureService,
     )
 
+    test("returns InvalidPartyTypeError when authorized party is not an OrganizationEntity") {
+        val documentId = UUID.randomUUID()
+        val documentRepository = mockk<DocumentRepository>(relaxed = true)
+        val partyService = mockk<PartyService>(relaxed = true)
+        val signatureService = mockk<SignatureService>(relaxed = true)
+
+        val result = handler(documentRepository, partyService, signatureService)(
+            Command(
+                documentId = documentId,
+                authorizedParty = AuthorizationParty(id = "person-1", type = PartyType.Person),
+                signedFile = signedFile
+            )
+        )
+
+        result.shouldBeLeft(ConfirmError.InvalidPartyTypeError)
+        coVerify(exactly = 0) { documentRepository.find(any()) }
+        coVerify(exactly = 0) { documentRepository.confirmWithGrant(any(), any(), any(), any(), any()) }
+    }
+
     test("returns DocumentNotFoundError when document is missing") {
         val documentId = UUID.randomUUID()
         val documentRepository = mockk<DocumentRepository>()
@@ -140,7 +159,7 @@ class HandlerTest : FunSpec({
         val result = handler(documentRepository, partyService, signatureService)(
             Command(
                 documentId = documentId,
-                authorizedParty = AuthorizationParty(id = "different", type = PartyType.Person),
+                authorizedParty = AuthorizationParty(id = "different", type = PartyType.OrganizationEntity),
                 signedFile = signedFile
             )
         )
