@@ -13,6 +13,7 @@ import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import no.elhub.auth.config.TransactionContext
 import no.elhub.auth.config.withTransaction
 import no.elhub.auth.features.common.CreateScopeData
+import no.elhub.auth.features.common.Pagination
 import no.elhub.auth.features.common.PostgresTestContainer
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.RunPostgresScriptExtension
@@ -82,7 +83,7 @@ class ExposedRequestRepositoryTest : FunSpec({
         }
     }
 
-    test("findAllAndSortByCreatedAt returns all requests matching party") {
+    test("findAndSortByCreatedAt returns all requests matching party") {
         val targetParty1 = AuthorizationParty(type = PartyType.Person, id = "67652749875413695986")
         val targetParty2 = AuthorizationParty(type = PartyType.Person, id = "17652749875413695986")
         val otherParty = AuthorizationParty(type = PartyType.Person, id = "413695986")
@@ -111,20 +112,21 @@ class ExposedRequestRepositoryTest : FunSpec({
             requestRepo.insert(request, scopes)
         }
 
-        val requestsOfTargetParty1 = requestRepo.findAllAndSortByCreatedAt(targetParty1)
-            .getOrElse { _ ->
-                fail("findAllAndSortByCreatedAt failed for target party 1")
-            }
-        requestsOfTargetParty1.size shouldBe numTargetRequests
+        val requestsOfTargetParty1 =
+            requestRepo.findAndSortByCreatedAt(targetParty1, Pagination(size = 200), listOf())
+                .getOrElse { _ ->
+                    fail("findAndSortByCreatedAt failed for target party 1")
+                }
+        requestsOfTargetParty1.items.size shouldBe numTargetRequests
 
-        requestRepo.findAllAndSortByCreatedAt(targetParty2)
+        requestRepo.findAndSortByCreatedAt(targetParty2, Pagination(size = 200), listOf())
             .getOrElse { _ ->
-                fail("findAllAndSortByCreatedAt failed for target party 2")
+                fail("findAndSortByCreatedAt failed for target party 2")
             }
-        requestsOfTargetParty1.size shouldBe numTargetRequests
+        requestsOfTargetParty1.items.size shouldBe numTargetRequests
     }
 
-    test("findAllAndSortByCreatedAt returns requests by createdAt DESC") {
+    test("findAndSortByCreatedAt returns requests by createdAt DESC") {
         val party = AuthorizationParty(type = PartyType.Person, id = UUID.randomUUID().toString())
         val numRequests = 10
 
@@ -139,19 +141,232 @@ class ExposedRequestRepositoryTest : FunSpec({
             requestRepo.insert(request, scopes)
         }
 
-        val result = requestRepo.findAllAndSortByCreatedAt(party)
+        val result = requestRepo.findAndSortByCreatedAt(party, Pagination(size = 100), listOf())
             .getOrElse { throw AssertionError("Repository read failed: $it") }
 
-        val createdAtList = result.map { it.createdAt }
+        val createdAtList = result.items.map { it.createdAt }
 
         createdAtList shouldBe createdAtList.sortedDescending()
     }
 
-    test("findAllAndSortByCreatedAt returns empty list for party with no requests") {
+    test("findAndSortByCreatedAt filters properly on status and party together") {
         val party = AuthorizationParty(type = PartyType.Person, id = UUID.randomUUID().toString())
-        val result = requestRepo.findAllAndSortByCreatedAt(party)
+        val numRequestsPending = 10
+        val numRequestsAccepted = 8
+        val numRequestsExpired = 3
+        val numRequestsRejected = 11
+
+        val dummyRequest = AuthorizationRequest.create(
+            type = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
+            requestedBy = party,
+            requestedFrom = party,
+            requestedTo = party,
+            validTo = OffsetDateTime.now(ZoneOffset.UTC).plusDays(30),
+        )
+
+        // insert some requests for other party that we expect not to get returned
+        repeat(5) {
+            val party2 = AuthorizationParty(type = PartyType.Person, id = UUID.randomUUID().toString())
+            val request = dummyRequest.copy(
+                id = UUID.randomUUID(),
+                requestedBy = party2,
+                requestedFrom = party2,
+                requestedTo = party2,
+            )
+            requestRepo.insert(request, scopes)
+        }
+
+        repeat(numRequestsPending) {
+            val request = dummyRequest.copy(id = UUID.randomUUID(), status = AuthorizationRequest.Status.Pending)
+            requestRepo.insert(request, scopes)
+        }
+        repeat(numRequestsAccepted) {
+            val request = dummyRequest.copy(id = UUID.randomUUID(), status = AuthorizationRequest.Status.Accepted)
+            requestRepo.insert(request, scopes)
+        }
+        repeat(numRequestsExpired) {
+            val request = dummyRequest.copy(
+                id = UUID.randomUUID(),
+                status = AuthorizationRequest.Status.Pending,
+                validTo = OffsetDateTime.now(ZoneOffset.UTC).minusDays(1)
+            )
+            requestRepo.insert(request, scopes)
+        }
+        repeat(numRequestsRejected) {
+            val request = dummyRequest.copy(id = UUID.randomUUID(), status = AuthorizationRequest.Status.Rejected)
+            requestRepo.insert(request, scopes)
+        }
+
+        val resultPending =
+            requestRepo.findAndSortByCreatedAt(
+                party,
+                Pagination(size = 100),
+                listOf(AuthorizationRequest.Status.Pending)
+            )
+                .getOrElse { throw AssertionError("Repository read failed: $it") }
+                .totalItems shouldBe numRequestsPending
+
+        val resultAccepted =
+            requestRepo.findAndSortByCreatedAt(
+                party,
+                Pagination(size = 100),
+                listOf(AuthorizationRequest.Status.Accepted)
+            )
+                .getOrElse { throw AssertionError("Repository read failed: $it") }
+                .totalItems shouldBe numRequestsAccepted
+
+        val resultExpired =
+            requestRepo.findAndSortByCreatedAt(
+                party,
+                Pagination(size = 100),
+                listOf(AuthorizationRequest.Status.Expired)
+            )
+                .getOrElse { throw AssertionError("Repository read failed: $it") }
+                .totalItems shouldBe numRequestsExpired
+
+        val resultRejected =
+            requestRepo.findAndSortByCreatedAt(
+                party,
+                Pagination(size = 100),
+                listOf(AuthorizationRequest.Status.Rejected)
+            )
+                .getOrElse { throw AssertionError("Repository read failed: $it") }
+                .totalItems shouldBe numRequestsRejected
+
+        val resultPendingPlusExpired =
+            requestRepo.findAndSortByCreatedAt(
+                party,
+                Pagination(size = 100),
+                listOf(AuthorizationRequest.Status.Pending, AuthorizationRequest.Status.Expired)
+            ).getOrElse { throw AssertionError("Repository read failed: $it") }
+                .totalItems shouldBe numRequestsPending + numRequestsExpired
+
+        val expectedTotal = numRequestsPending + numRequestsAccepted + numRequestsExpired + numRequestsRejected
+        val resultAll =
+            requestRepo.findAndSortByCreatedAt(party, Pagination(size = 100), listOf())
+                .getOrElse { throw AssertionError("Repository read failed: $it") }
+                .totalItems shouldBe expectedTotal
+    }
+
+    test("findAndSortByCreatedAt returns empty list for party with no requests") {
+        val party = AuthorizationParty(type = PartyType.Person, id = UUID.randomUUID().toString())
+        val result = requestRepo.findAndSortByCreatedAt(party, Pagination(), listOf())
             .getOrElse { throw AssertionError("Repository read failed: $it") }
-        result shouldBe emptyList()
+        result.items shouldBe emptyList()
+    }
+
+    context("pagination") {
+        test("returns correct page size and totalItems") {
+            val party = AuthorizationParty(type = PartyType.Person, id = UUID.randomUUID().toString())
+            repeat(5) {
+                requestRepo.insert(
+                    AuthorizationRequest.create(
+                        type = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
+                        requestedBy = party,
+                        requestedFrom = party,
+                        requestedTo = party,
+                        validTo = OffsetDateTime.now(ZoneOffset.UTC).plusDays(30),
+                    ),
+                    scopes
+                )
+            }
+
+            val page = requestRepo.findAndSortByCreatedAt(party, Pagination(page = 0, size = 2), listOf())
+                .getOrElse { fail("findAndSortByCreatedAt failed") }
+
+            page.items.size shouldBe 2
+            page.totalItems shouldBe 5
+            page.totalPages shouldBe 3
+        }
+
+        test("returns next page when page=1") {
+            val party = AuthorizationParty(type = PartyType.Person, id = UUID.randomUUID().toString())
+            repeat(5) {
+                requestRepo.insert(
+                    AuthorizationRequest.create(
+                        type = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
+                        requestedBy = party,
+                        requestedFrom = party,
+                        requestedTo = party,
+                        validTo = OffsetDateTime.now(ZoneOffset.UTC).plusDays(30),
+                    ),
+                    scopes
+                )
+            }
+
+            val page = requestRepo.findAndSortByCreatedAt(party, Pagination(page = 1, size = 2), listOf())
+                .getOrElse { fail("findAndSortByCreatedAt failed") }
+
+            page.items.size shouldBe 2
+            page.totalItems shouldBe 5
+        }
+
+        test("returns partial last page") {
+            val party = AuthorizationParty(type = PartyType.Person, id = UUID.randomUUID().toString())
+            repeat(5) {
+                requestRepo.insert(
+                    AuthorizationRequest.create(
+                        type = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
+                        requestedBy = party,
+                        requestedFrom = party,
+                        requestedTo = party,
+                        validTo = OffsetDateTime.now(ZoneOffset.UTC).plusDays(30),
+                    ),
+                    scopes
+                )
+            }
+
+            val page = requestRepo.findAndSortByCreatedAt(party, Pagination(page = 2, size = 2), listOf())
+                .getOrElse { fail("findAndSortByCreatedAt failed") }
+
+            page.items.size shouldBe 1
+            page.totalItems shouldBe 5
+        }
+
+        test("returns empty items but correct totalItems when page is beyond data") {
+            val party = AuthorizationParty(type = PartyType.Person, id = UUID.randomUUID().toString())
+            repeat(5) {
+                requestRepo.insert(
+                    AuthorizationRequest.create(
+                        type = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
+                        requestedBy = party,
+                        requestedFrom = party,
+                        requestedTo = party,
+                        validTo = OffsetDateTime.now(ZoneOffset.UTC).plusDays(30),
+                    ),
+                    scopes
+                )
+            }
+
+            val page = requestRepo.findAndSortByCreatedAt(party, Pagination(page = 10, size = 2), listOf())
+                .getOrElse { fail("findAndSortByCreatedAt failed") }
+
+            page.items shouldBe emptyList()
+            page.totalItems shouldBe 5
+        }
+
+        test("pages do not overlap") {
+            val party = AuthorizationParty(type = PartyType.Person, id = UUID.randomUUID().toString())
+            repeat(5) {
+                requestRepo.insert(
+                    AuthorizationRequest.create(
+                        type = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
+                        requestedBy = party,
+                        requestedFrom = party,
+                        requestedTo = party,
+                        validTo = OffsetDateTime.now(ZoneOffset.UTC).plusDays(30),
+                    ),
+                    scopes
+                )
+            }
+
+            val page0 = requestRepo.findAndSortByCreatedAt(party, Pagination(page = 0, size = 2), listOf())
+                .getOrElse { fail("page 0 failed") }
+            val page1 = requestRepo.findAndSortByCreatedAt(party, Pagination(page = 1, size = 2), listOf())
+                .getOrElse { fail("page 1 failed") }
+
+            (page0.items.map { it.id }.toSet() intersect page1.items.map { it.id }.toSet()) shouldBe emptySet()
+        }
     }
 
     test("find returns correct request") {

@@ -6,6 +6,7 @@ import arrow.core.raise.ensure
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.currentTimeUtc
 import no.elhub.auth.features.common.party.PartyService
+import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.common.ConfirmWithGrantError
@@ -28,6 +29,10 @@ class Handler(
     suspend operator fun invoke(command: Command): Either<ConfirmError, Unit> = either {
         val authorizationParty = command.authorizedParty
 
+        ensure(authorizationParty.type == PartyType.OrganizationEntity) {
+            ConfirmError.InvalidPartyTypeError
+        }
+
         val document = documentRepository.find(command.documentId)
             .mapLeft { error ->
                 when (error) {
@@ -41,7 +46,7 @@ class Handler(
         }
 
         ensure(document.status == AuthorizationDocument.Status.Pending) {
-            ConfirmError.IllegalStateError
+            ConfirmError.IllegalStateError("AuthorizationDocument must be in 'Pending' status to confirm.")
         }
 
         ensure(document.validTo >= currentTimeUtc()) {
@@ -97,7 +102,6 @@ class Handler(
         val confirmedDocument = documentRepository.confirmWithGrant(
             documentId = document.id,
             signedFile = command.signedFile,
-            requestedFrom = document.requestedFrom,
             signatory = expectedSignatoryParty,
             grant = grantToCreate,
             grantProperties = grantMetaProperties

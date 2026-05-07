@@ -13,14 +13,31 @@
       "pattern": "^[a-zA-Z0-9]{1}(?:[-\\w]*[a-zA-Z0-9])?$"
     },
     "topLevelLinks": {
-      "description": "The top-level links object **may** contain the following members: self, related, pagination links. Currently, only self is defined.",
+      "description": "The top-level links object for a collection response, including self and pagination links.",
       "type": "object",
       "properties": {
         "self": {
           "description": "The link that generated the current JSON document.",
           "$ref": "#/$defs/linkUrl"
+        },
+        "first": {
+          "description": "The link to the first page of data.",
+          "$ref": "#/$defs/linkUrl"
+        },
+        "last": {
+          "description": "The link to the last page of data.",
+          "$ref": "#/$defs/linkUrl"
+        },
+        "prev": {
+          "description": "The link to the previous page of data. Absent when on the first page.",
+          "$ref": "#/$defs/linkUrl"
+        },
+        "next": {
+          "description": "The link to the next page of data. Absent when on the last page.",
+          "$ref": "#/$defs/linkUrl"
         }
-      }
+      },
+      "required": ["self", "first", "last"]
     },
     "topLevelMeta": {
       "description": "Meta-information for the JSON document.",
@@ -30,9 +47,7 @@
           "type": "string",
           "format": "date-time",
           "description": "The date and time when the document was created.",
-          "examples": [
-            "2025-12-17T12:51:57+01:00"
-          ]
+          "examples": ["2025-12-17T12:51:57+01:00"]
         }
       }
     },
@@ -40,15 +55,11 @@
       "anyOf": [
         {
           "type": "object",
-          "required": [
-            "meta"
-          ]
+          "required": ["meta"]
         },
         {
           "type": "object",
-          "required": [
-            "data"
-          ]
+          "required": ["data"]
         }
       ]
     }

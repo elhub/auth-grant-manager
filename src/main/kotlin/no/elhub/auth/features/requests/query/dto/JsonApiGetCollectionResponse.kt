@@ -2,9 +2,12 @@ package no.elhub.auth.features.requests.query.dto
 
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import no.elhub.auth.features.common.Page
 import no.elhub.auth.features.common.currentTimeOslo
 import no.elhub.auth.features.common.dto.JsonApiResourceMetaMap
+import no.elhub.auth.features.common.dto.PaginatedCollectionResponse
 import no.elhub.auth.features.common.party.dto.toJsonApiRelationship
+import no.elhub.auth.features.common.toPaginationLinks
 import no.elhub.auth.features.common.toTimeZoneOffsetString
 import no.elhub.auth.features.grants.GRANTS_PATH
 import no.elhub.auth.features.requests.AuthorizationRequest
@@ -13,22 +16,31 @@ import no.elhub.auth.features.requests.common.dto.AuthorizationRequestResponseAt
 import no.elhub.auth.features.requests.common.dto.AuthorizationRequestResponseLinks
 import no.elhub.auth.features.requests.common.dto.AuthorizationRequestResponseRelationships
 import no.elhub.devxp.jsonapi.model.JsonApiLinks
-import no.elhub.devxp.jsonapi.model.JsonApiMeta
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipData
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipToOne
-import no.elhub.devxp.jsonapi.response.JsonApiResponse
 import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObjectWithRelationshipsAndMetaAndLinks
 
-typealias GetRequestCollectionResponse = JsonApiResponse.CollectionDocumentWithRelationshipsAndMetaAndLinks<
-    AuthorizationRequestResponseAttributes,
-    AuthorizationRequestResponseRelationships,
-    JsonApiResourceMetaMap,
-    AuthorizationRequestResponseLinks
+typealias GetRequestCollectionResponse = PaginatedCollectionResponse<
+    JsonApiResponseResourceObjectWithRelationshipsAndMetaAndLinks<
+        AuthorizationRequestResponseAttributes,
+        AuthorizationRequestResponseRelationships,
+        JsonApiResourceMetaMap,
+        AuthorizationRequestResponseLinks
+        >
     >
 
-fun List<AuthorizationRequest>.toGetCollectionResponse() =
-    GetRequestCollectionResponse(
-        data = this.map { request ->
+fun Page<AuthorizationRequest>.toGetCollectionResponse(
+    statuses: List<AuthorizationRequest.Status> = emptyList(),
+): GetRequestCollectionResponse {
+    val p = this.pagination
+    val extraParams = if (statuses.isEmpty()) {
+        emptyMap()
+    } else {
+        mapOf("filter[status]" to statuses.joinToString(","))
+    }
+
+    return GetRequestCollectionResponse(
+        data = this.items.map { request ->
             JsonApiResponseResourceObjectWithRelationshipsAndMetaAndLinks(
                 id = request.id.toString(),
                 type = "AuthorizationRequest",
@@ -64,14 +76,17 @@ fun List<AuthorizationRequest>.toGetCollectionResponse() =
                     }
                 ),
                 links = AuthorizationRequestResponseLinks(
-                    self = "${REQUESTS_PATH}/${request.id}",
+                    self = "$REQUESTS_PATH/${request.id}",
                 )
             )
         },
-        links = JsonApiLinks.ResourceObjectLink(REQUESTS_PATH),
-        meta = JsonApiMeta(
-            buildJsonObject {
-                put("createdAt", currentTimeOslo().toTimeZoneOffsetString())
-            }
-        )
+        links = toPaginationLinks(REQUESTS_PATH, extraParams),
+        meta = buildJsonObject {
+            put("createdAt", currentTimeOslo().toTimeZoneOffsetString())
+            put("totalItems", this@toGetCollectionResponse.totalItems)
+            put("totalPages", this@toGetCollectionResponse.totalPages)
+            put("page", p.page)
+            put("pageSize", p.size)
+        }
     )
+}

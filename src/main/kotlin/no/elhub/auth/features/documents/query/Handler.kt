@@ -2,6 +2,7 @@ package no.elhub.auth.features.documents.query
 
 import arrow.core.Either
 import arrow.core.raise.either
+import no.elhub.auth.features.common.Page
 import no.elhub.auth.features.common.QueryError
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.documents.AuthorizationDocument
@@ -13,8 +14,8 @@ class Handler(
     private val repo: DocumentRepository,
     private val grantRepository: GrantRepository
 ) {
-    suspend operator fun invoke(query: Query): Either<QueryError, List<AuthorizationDocument>> = either {
-        val documents = repo.findAll(query.authorizedParty)
+    suspend operator fun invoke(query: Query): Either<QueryError, Page<AuthorizationDocument>> = either {
+        val page = repo.findAndSortByCreatedAt(query.authorizedParty, query.pagination, query.statuses)
             .mapLeft { error ->
                 when (error) {
                     is RepositoryReadError.NotFoundError -> QueryError.ResourceNotFoundError
@@ -22,7 +23,7 @@ class Handler(
                 }
             }.bind()
 
-        val documentIds = documents.map { it.id }
+        val documentIds = page.items.map { it.id }
         val grantsBySourceId = grantRepository.findBySourceIds(AuthorizationGrant.SourceType.Document, documentIds)
             .mapLeft { error ->
                 when (error) {
@@ -31,8 +32,10 @@ class Handler(
                 }
             }.bind()
 
-        documents.map { document ->
-            document.copy(grantId = grantsBySourceId[document.id]?.id)
-        }
+        page.copy(
+            items = page.items.map { document ->
+                document.copy(grantId = grantsBySourceId[document.id]?.id)
+            }
+        )
     }
 }

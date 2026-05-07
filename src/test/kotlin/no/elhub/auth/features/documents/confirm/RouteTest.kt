@@ -50,7 +50,7 @@ class RouteTest : FunSpec({
     }
 
     test("PUT /{id}.pdf returns 204 when authorized as org and handler succeeds") {
-        coEvery { authProvider.authorizeMaskinporten(any()) } returns authorizedOrg.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedOrg.right()
         coEvery { handler.invoke(any()) } returns Unit.right()
 
         testApplication {
@@ -62,7 +62,7 @@ class RouteTest : FunSpec({
         }
     }
     test("PUT /{id}.pdf returns 422 with missing signature message when handler fails to validate signature") {
-        coEvery { authProvider.authorizeMaskinporten(any()) } returns authorizedOrg.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedOrg.right()
         coEvery { handler.invoke(any()) } returns ConfirmError.ValidateSignaturesError(
             SignatureValidationError.MissingBankIdSignature
         ).left()
@@ -84,7 +84,7 @@ class RouteTest : FunSpec({
     }
 
     test("PUT /{id}.pdf returns 400 Invalid token when authorization fails with InvalidToken error") {
-        coEvery { authProvider.authorizeMaskinporten(any()) } returns AuthError.InvalidToken.left()
+        coEvery { authProvider.authorize(any()) } returns AuthError.InvalidToken.left()
         coEvery { handler.invoke(any()) } returns Unit.right()
 
         testApplication {
@@ -104,7 +104,7 @@ class RouteTest : FunSpec({
     }
 
     test("PUT /{id}.pdf returns 400 'Invalid input' when id is invalid") {
-        coEvery { authProvider.authorizeMaskinporten(any()) } returns authorizedOrg.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedOrg.right()
         coEvery { handler.invoke(any()) } returns Unit.right()
 
         testApplication {
@@ -123,7 +123,7 @@ class RouteTest : FunSpec({
         }
     }
     test("PUT /{id}.pdf returns 400 'Missing input' when document is empty") {
-        coEvery { authProvider.authorizeMaskinporten(any()) } returns authorizedOrg.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedOrg.right()
         coEvery { handler.invoke(any()) } returns Unit.right()
 
         testApplication {

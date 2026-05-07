@@ -4,11 +4,14 @@ import arrow.core.Either
 import arrow.core.right
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.plus
+import no.elhub.auth.features.common.Page
+import no.elhub.auth.features.common.Pagination
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.currentTimeUtc
 import no.elhub.auth.features.common.party.AuthorizationParty
@@ -74,9 +77,9 @@ class HandlerTest : FunSpec({
         validTo = grantValidTo.toTimeZoneOffsetDateTimeAtStartOfDay()
     )
 
-    fun documentRepoReturning(result: Either<RepositoryReadError, List<AuthorizationDocument>>): DocumentRepository =
+    fun documentRepoReturning(result: Either<RepositoryReadError, Page<AuthorizationDocument>>): DocumentRepository =
         mockk<DocumentRepository> {
-            coEvery { findAll(any()) } returns result
+            coEvery { findAndSortByCreatedAt(any(), any(), any()) } returns result
         }
 
     fun grantRepoReturning(result: Either<RepositoryReadError, Map<UUID, AuthorizationGrant>>): GrantRepository =
@@ -86,23 +89,49 @@ class HandlerTest : FunSpec({
             } returns result
         }
 
+    test("passes pagination and status filter from query to repository and preserves page metadata") {
+        val pagination = Pagination(page = 1, size = 1)
+        val documentRepo = documentRepoReturning(Page(listOf(firstDocument), 2L, pagination).right())
+        val handler = Handler(documentRepo, grantRepoReturning(emptyMap<UUID, AuthorizationGrant>().right()))
+        val statuses = listOf(AuthorizationDocument.Status.Expired)
+        val response = handler(
+            Query(
+                authorizedParty = requestedBy,
+                pagination = pagination,
+                statuses = statuses,
+            )
+        )
+
+        coVerify(exactly = 1) { documentRepo.findAndSortByCreatedAt(requestedBy, pagination, statuses) }
+        val page = response.shouldBeRight()
+        page.pagination shouldBe pagination
+        page.totalItems shouldBe 2L
+        page.totalPages shouldBe 2
+    }
+
     test("returns documents with grant ids resolved for authorized party") {
-        val documentRepo = documentRepoReturning(listOf(firstDocument, secondDocument).right())
+        val pagination = Pagination()
+        val documentRepo = documentRepoReturning(Page(listOf(firstDocument, secondDocument), 2L, pagination).right())
         // first document has a grant, second does not
         val grantMap = mapOf(firstDocumentId to grant)
         val handler = Handler(documentRepo, grantRepoReturning(grantMap.right()))
 
         val response = handler(
             Query(
-                authorizedParty = requestedBy
+                authorizedParty = requestedBy,
+                pagination = pagination,
             )
         )
 
-        coVerify(exactly = 1) { documentRepo.findAll(requestedBy) }
+        coVerify(exactly = 1) { documentRepo.findAndSortByCreatedAt(requestedBy, pagination, emptyList()) }
         response.shouldBeRight(
-            listOf(
-                firstDocument.copy(grantId = grant.id),
-                secondDocument.copy(grantId = null)
+            Page(
+                items = listOf(
+                    firstDocument.copy(grantId = grant.id),
+                    secondDocument.copy(grantId = null)
+                ),
+                totalItems = 2L,
+                pagination = pagination,
             )
         )
     }

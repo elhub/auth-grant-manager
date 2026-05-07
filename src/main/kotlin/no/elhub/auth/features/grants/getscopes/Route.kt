@@ -18,7 +18,7 @@ const val GRANT_ID_PARAM = "id"
 
 fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
     get("/{$GRANT_ID_PARAM}/scopes") {
-        val authorizedParty = authProvider.authorizeAll(call)
+        val authorizedParty = authProvider.authorize(call)
             .getOrElse { err ->
                 val (status, body) = err.toApiErrorResponse()
                 call.respond(status, body)

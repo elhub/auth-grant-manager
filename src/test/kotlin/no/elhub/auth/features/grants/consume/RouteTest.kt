@@ -43,7 +43,7 @@ class RouteTest : FunSpec({
     }
 
     test("PATCH /{id} with invalid uuid returns 400") {
-        coEvery { authProvider.authorizeElhubService(any()) } returns authorizedSystem.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedSystem.right()
 
         testApplication {
             setupAppWith { route(handler, authProvider) }
@@ -56,7 +56,7 @@ class RouteTest : FunSpec({
     }
 
     test("PATCH /{id} returns 400 Invalid token when authorization fails with Invalid token error") {
-        coEvery { authProvider.authorizeElhubService(any()) } returns AuthError.InvalidToken.left()
+        coEvery { authProvider.authorize(any()) } returns AuthError.InvalidToken.left()
 
         testApplication {
             setupAppWith { route(handler, authProvider) }
@@ -69,7 +69,7 @@ class RouteTest : FunSpec({
     }
 
     test("PATCH /{id} returns 403 Forbidden when auth fails with unauthorized") {
-        coEvery { authProvider.authorizeElhubService(any()) } returns AuthError.AccessDenied.left()
+        coEvery { authProvider.authorize(any()) } returns AuthError.AccessDenied.left()
 
         testApplication {
             setupAppWith { route(handler, authProvider) }
@@ -81,7 +81,7 @@ class RouteTest : FunSpec({
     }
 
     test("PATCH /{id} returns Bad Request when body contains an blank id in request body") {
-        coEvery { authProvider.authorizeElhubService(any()) } returns authorizedSystem.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedSystem.right()
         testApplication {
             setupAppWith { route(handler, authProvider) }
             val response = client.patchJson<JsonApiConsumeRequest>("/$validUuid", patchGrantBody(id = ""))
@@ -90,7 +90,7 @@ class RouteTest : FunSpec({
         }
     }
     test("PATCH /{id} returns Bad Request when body contains an invalid uuid in request body") {
-        coEvery { authProvider.authorizeElhubService(any()) } returns authorizedSystem.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedSystem.right()
         testApplication {
             setupAppWith { route(handler, authProvider) }
             val response = client.patchJson("/$validUuid", patchGrantBody(id = "not-a-uuid"))
@@ -100,7 +100,7 @@ class RouteTest : FunSpec({
         }
     }
     test("PATCH /{id} returns Conflict when type is not AuthorizationGrant") {
-        coEvery { authProvider.authorizeElhubService(any()) } returns authorizedSystem.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedSystem.right()
         testApplication {
             setupAppWith { route(handler, authProvider) }
             val response = client.patchJson("/$validUuid", patchGrantBody(id = validUuid, type = "WrongType"))
@@ -110,7 +110,7 @@ class RouteTest : FunSpec({
         }
     }
     test("PATCH /{id} returns Bad Request when status is missing in attributes") {
-        coEvery { authProvider.authorizeElhubService(any()) } returns authorizedSystem.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedSystem.right()
         testApplication {
             setupAppWith { route(handler, authProvider) }
 
@@ -132,7 +132,7 @@ class RouteTest : FunSpec({
     }
 
     test("PATCH /{id} returns bad request when id in path is correct, but not in the requestbody") {
-        coEvery { authProvider.authorizeElhubService(any()) } returns authorizedSystem.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedSystem.right()
         testApplication {
             setupAppWith { route(handler, authProvider) }
             val invalidUuid = "invalid-uuid"
@@ -155,7 +155,7 @@ class RouteTest : FunSpec({
     }
 
     test("PATCH /{id} returns OK and calls handler on valid request") {
-        coEvery { authProvider.authorizeElhubService(any()) } returns authorizedSystem.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedSystem.right()
         val party = no.elhub.auth.features.common.party.AuthorizationParty("test", no.elhub.auth.features.common.party.PartyType.Person)
         val expectedGrant = AuthorizationGrant(
             id = UUID.fromString(validUuid),

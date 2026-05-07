@@ -2,6 +2,7 @@ package no.elhub.auth.features.requests.query
 
 import arrow.core.Either
 import arrow.core.raise.either
+import no.elhub.auth.features.common.Page
 import no.elhub.auth.features.common.QueryError
 import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.common.GrantRepository
@@ -16,12 +17,12 @@ class Handler(
 
     private val logger = LoggerFactory.getLogger(Handler::class.java)
 
-    suspend operator fun invoke(query: Query): Either<QueryError, List<AuthorizationRequest>> = either {
-        val list = requestRepository.findAllAndSortByCreatedAt(query.authorizedParty)
+    suspend operator fun invoke(query: Query): Either<QueryError, Page<AuthorizationRequest>> = either {
+        val page = requestRepository.findAndSortByCreatedAt(query.authorizedParty, query.pagination, query.statuses)
             .mapLeft { QueryError.ResourceNotFoundError }
             .bind()
 
-        val approvedRequestIds = list.mapNotNull { request ->
+        val approvedRequestIds = page.items.mapNotNull { request ->
             request.id.takeIf { request.approvedBy != null }
         }
 
@@ -33,16 +34,18 @@ class Handler(
             QueryError.IOError
         }.bind()
 
-        list.map { request ->
-            if (request.approvedBy == null) {
-                request
-            } else {
-                val grant = grantsBySourceId[request.id]
-                if (grant == null) {
-                    logger.error("approvedBy is present but grant not found for request ${request.id}")
+        page.copy(
+            items = page.items.map { request ->
+                if (request.approvedBy == null) {
+                    request
+                } else {
+                    val grant = grantsBySourceId[request.id]
+                    if (grant == null) {
+                        logger.error("approvedBy is present but grant not found for request ${request.id}")
+                    }
+                    grant?.let { request.copy(grantId = it.id) } ?: request
                 }
-                grant?.let { request.copy(grantId = it.id) } ?: request
             }
-        }
+        )
     }
 }

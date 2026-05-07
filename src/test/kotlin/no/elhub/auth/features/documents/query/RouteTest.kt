@@ -12,6 +12,11 @@ import io.ktor.server.testing.testApplication
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import no.elhub.auth.features.common.Page
+import no.elhub.auth.features.common.Pagination
 import no.elhub.auth.features.common.QueryError
 import no.elhub.auth.features.common.auth.AuthError
 import no.elhub.auth.features.common.auth.AuthorizationProvider
@@ -20,11 +25,13 @@ import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toTimeZoneOffsetString
 import no.elhub.auth.features.documents.AuthorizationDocument
+import no.elhub.auth.features.documents.DOCUMENTS_PATH
 import no.elhub.auth.features.documents.common.AuthorizationDocumentProperty
 import no.elhub.auth.features.documents.query.dto.GetDocumentCollectionResponse
 import no.elhub.auth.setupAppWith
 import no.elhub.auth.validateForbiddenResponse
 import no.elhub.auth.validateInternalServerErrorResponse
+import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import java.util.UUID
 import kotlin.random.Random
 
@@ -83,8 +90,8 @@ class RouteTest : FunSpec({
     }
 
     test("GET / returns 200 when authorized as person and handler succeeds") {
-        coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
-        coEvery { handler.invoke(any()) } returns documents.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedPerson.right()
+        coEvery { handler.invoke(any()) } returns Page(documents, documents.size.toLong(), Pagination()).right()
         testApplication {
             setupAppWith { route(handler, authProvider) }
             var response = client.get("/")
@@ -94,8 +101,8 @@ class RouteTest : FunSpec({
     }
 
     test("GET / returns 200 when authorized as org and handler succeeds") {
-        coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedOrg.right()
-        coEvery { handler.invoke(any()) } returns documents.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedOrg.right()
+        coEvery { handler.invoke(any()) } returns Page(documents, documents.size.toLong(), Pagination()).right()
         testApplication {
             setupAppWith { route(handler, authProvider) }
             var response = client.get("/")
@@ -104,8 +111,8 @@ class RouteTest : FunSpec({
         }
     }
     test("GET / returns 403 'Forbidden' when authorization fails with AccessDenied error") {
-        coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns AuthError.AccessDenied.left()
-        coEvery { handler.invoke(any()) } returns documents.right()
+        coEvery { authProvider.authorize(any()) } returns AuthError.AccessDenied.left()
+        coEvery { handler.invoke(any()) } returns Page(documents, documents.size.toLong(), Pagination()).right()
         testApplication {
             setupAppWith { route(handler, authProvider) }
             validateForbiddenResponse(client.get("/"))
@@ -113,13 +120,105 @@ class RouteTest : FunSpec({
         }
     }
     test("GET / returns 500 Internal server error when authorized as org and handler fails with IOError") {
-        coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedOrg.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedOrg.right()
         coEvery { handler.invoke(any()) } returns QueryError.IOError.left()
         testApplication {
             setupAppWith { route(handler, authProvider) }
             val response = client.get("/")
             validateInternalServerErrorResponse(response)
             coVerify(exactly = 1) { handler.invoke(any()) }
+        }
+    }
+
+    test("GET with page params passes correct Pagination to handler") {
+        coEvery { authProvider.authorize(any()) } returns authorizedPerson.right()
+        coEvery { handler.invoke(any()) } returns Page(
+            emptyList<AuthorizationDocument>(),
+            0L,
+            Pagination(page = 2, size = 5)
+        ).right()
+        testApplication {
+            setupAppWith { route(handler, authProvider) }
+            client.get("/?page[number]=2&page[size]=5")
+        }
+        coVerify(exactly = 1) { handler.invoke(match { it.pagination == Pagination(page = 2, size = 5) }) }
+    }
+
+    test("GET with status param passes correct status to handler") {
+        coEvery { authProvider.authorize(any()) } returns authorizedPerson.right()
+        coEvery { handler.invoke(any()) } returns Page(
+            emptyList<AuthorizationDocument>(),
+            0L,
+            Pagination(page = 2, size = 5)
+        ).right()
+        testApplication {
+            setupAppWith { route(handler, authProvider) }
+            client.get("/?filter[status]=Expired,Signed")
+        }
+        coVerify(exactly = 1) {
+            handler.invoke(
+                match {
+                    it.statuses == listOf(
+                        AuthorizationDocument.Status.Expired,
+                        AuthorizationDocument.Status.Signed,
+                    )
+                }
+            )
+        }
+    }
+
+    test("GET with status param returns BadRequest when supplying invalid status") {
+        coEvery { authProvider.authorize(any()) } returns authorizedPerson.right()
+        coEvery { handler.invoke(any()) } returns Page(
+            emptyList<AuthorizationDocument>(),
+            0L,
+            Pagination(page = 2, size = 5)
+        ).right()
+        testApplication {
+            setupAppWith { route(handler, authProvider) }
+            val response = client.get("/?filter[status]=Foo,Pending")
+            response.status shouldBe HttpStatusCode.BadRequest
+            val resultJson: JsonApiErrorCollection = response.body()
+            resultJson.errors[0].detail shouldBe "Invalid filter[status] value 'Foo,Pending'. Valid values: Expired, Pending, Rejected, Signed"
+        }
+    }
+    test("GET response meta and links contain correct pagination and status fields") {
+        val pagination = Pagination(page = 0, size = 10)
+        coEvery { authProvider.authorize(any()) } returns authorizedPerson.right()
+        coEvery { handler.invoke(any()) } returns Page(emptyList<AuthorizationDocument>(), 4L, pagination).right()
+        testApplication {
+            setupAppWith { route(handler, authProvider) }
+            val response = client.get("/?filter[status]=Pending,Expired")
+            response.status shouldBe HttpStatusCode.OK
+            val body = response.body<JsonObject>()
+            val meta = body["meta"]!!.jsonObject
+            meta["totalItems"]!!.jsonPrimitive.content shouldBe "4"
+            meta["totalPages"]!!.jsonPrimitive.content shouldBe "1"
+            meta["page"]!!.jsonPrimitive.content shouldBe "0"
+            meta["pageSize"]!!.jsonPrimitive.content shouldBe "10"
+            val links = body["links"]!!.jsonObject
+            links["self"]!!.jsonPrimitive.content shouldBe "$DOCUMENTS_PATH?page[number]=0&page[size]=10&filter[status]=Pending,Expired"
+            links["first"]!!.jsonPrimitive.content shouldBe "$DOCUMENTS_PATH?page[number]=0&page[size]=10&filter[status]=Pending,Expired"
+            links["last"]!!.jsonPrimitive.content shouldBe "$DOCUMENTS_PATH?page[number]=0&page[size]=10&filter[status]=Pending,Expired"
+            links["prev"] shouldBe null
+            links["next"] shouldBe null
+        }
+    }
+
+    test("GET links on a middle page contain prev and next") {
+        val pagination = Pagination(page = 1, size = 5)
+        coEvery { authProvider.authorize(any()) } returns authorizedPerson.right()
+        coEvery { handler.invoke(any()) } returns Page(emptyList<AuthorizationDocument>(), 15L, pagination).right()
+        testApplication {
+            setupAppWith { route(handler, authProvider) }
+            val response = client.get("/")
+            response.status shouldBe HttpStatusCode.OK
+            val links = response.body<JsonObject>()["links"]!!.jsonObject
+            links["self"]!!.jsonPrimitive.content shouldBe "$DOCUMENTS_PATH?page[number]=1&page[size]=5"
+            links["first"]!!.jsonPrimitive.content shouldBe "$DOCUMENTS_PATH?page[number]=0&page[size]=5"
+            links["last"]!!.jsonPrimitive.content shouldBe "$DOCUMENTS_PATH?page[number]=2&page[size]=5"
+            links["prev"]!!.jsonPrimitive.content shouldBe "$DOCUMENTS_PATH?page[number]=0&page[size]=5"
+            links["next"]!!.jsonPrimitive.content shouldBe "$DOCUMENTS_PATH?page[number]=2&page[size]=5"
         }
     }
 })

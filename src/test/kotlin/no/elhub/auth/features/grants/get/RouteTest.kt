@@ -33,7 +33,7 @@ class RouteTest : FunSpec({
     }
 
     test("GET /{id} should return 400 when having invalid token") {
-        coEvery { authProvider.authorizeAll(any()) } returns AuthError.InvalidToken.left()
+        coEvery { authProvider.authorize(any()) } returns AuthError.InvalidToken.left()
         testApplication {
             setupAppWith { route(handler, authProvider) }
             val response = client.get("/$validUuid")
@@ -43,7 +43,7 @@ class RouteTest : FunSpec({
     }
 
     test("GET /{id} returns forbund when getting unauthorized from authprovider") {
-        coEvery { authProvider.authorizeAll(any()) } returns AuthError.AccessDenied.left()
+        coEvery { authProvider.authorize(any()) } returns AuthError.AccessDenied.left()
         testApplication {
             setupAppWith { route(handler, authProvider) }
             val response = client.get("/$validUuid")
@@ -53,7 +53,7 @@ class RouteTest : FunSpec({
     }
 
     test("GET /{id} with invalid UUID should give bad request response") {
-        coEvery { authProvider.authorizeAll(any()) } returns authorizedSystem.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedSystem.right()
         testApplication {
             setupAppWith { route(handler, authProvider) }
             val malformedUuid = "not-a-uuid"
@@ -64,7 +64,7 @@ class RouteTest : FunSpec({
     }
 
     test("GET /{id} with valid uuid and no errors should give 200 OK") {
-        coEvery { authProvider.authorizeAll(any()) } returns authorizedSystem.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedSystem.right()
         val party = no.elhub.auth.features.common.party.AuthorizationParty("test", no.elhub.auth.features.common.party.PartyType.Person)
         val expectedGrant = AuthorizationGrant(
             id = UUID.fromString(validUuid),
@@ -94,7 +94,7 @@ class RouteTest : FunSpec({
     }
 
     test("GET /{id} returns 500 when handler throws exception") {
-        coEvery { authProvider.authorizeAll(any()) } returns authorizedSystem.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedSystem.right()
         coEvery { handler.invoke(any()) } throws RuntimeException("Handler failure")
         testApplication {
             setupAppWith { route(handler, authProvider) }
@@ -105,7 +105,7 @@ class RouteTest : FunSpec({
     }
 
     test("GET /{id} returns 401 when not authorized as any party") {
-        coEvery { authProvider.authorizeAll(any()) } returns AuthError.NotAuthorized.left()
+        coEvery { authProvider.authorize(any()) } returns AuthError.NotAuthorized.left()
         testApplication {
             setupAppWith { route(handler, authProvider) }
             val response = client.get("/$validUuid")

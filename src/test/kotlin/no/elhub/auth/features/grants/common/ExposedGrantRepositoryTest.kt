@@ -12,6 +12,7 @@ import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.plus
 import no.elhub.auth.config.TransactionContext
 import no.elhub.auth.config.withTransaction
+import no.elhub.auth.features.common.Pagination
 import no.elhub.auth.features.common.PostgresTestContainer
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.RepositoryReadError
@@ -124,15 +125,15 @@ class ExposedGrantRepositoryTest : FunSpec({
         val partyWithGrants = AuthorizationParty(type = PartyType.OrganizationEntity, id = "0107000000021")
         val partyWithoutGrants = AuthorizationParty(type = PartyType.Person, id = "666")
 
-        val resultForPartyWithGrants = grantRepo.findAll(partyWithGrants).getOrElse {
+        val resultForPartyWithGrants = grantRepo.findAll(partyWithGrants, Pagination()).getOrElse {
             fail("Failed to read grants for party with grants")
         }
-        resultForPartyWithGrants.size shouldBe 5
+        resultForPartyWithGrants.items.size shouldBe 5
 
-        val resultForPartyWithoutGrants = grantRepo.findAll(partyWithoutGrants).getOrElse {
+        val resultForPartyWithoutGrants = grantRepo.findAll(partyWithoutGrants, Pagination()).getOrElse {
             fail("Failed to read grants for party without grants")
         }
-        resultForPartyWithoutGrants.size shouldBe 0
+        resultForPartyWithoutGrants.items.size shouldBe 0
     }
 
     test("findBySourceIds returns grant given sourceType and sourceId") {
@@ -172,6 +173,58 @@ class ExposedGrantRepositoryTest : FunSpec({
             fail("Failed to read grants by source ids")
         }
         result.size shouldBe 0
+    }
+
+    test("findAll returns correct page size and totalItems") {
+        insertTestData()
+        val party = AuthorizationParty(type = PartyType.OrganizationEntity, id = "0107000000021")
+
+        val page = grantRepo.findAll(party, Pagination(page = 0, size = 2)).getOrElse { fail("findAll failed") }
+
+        page.items.size shouldBe 2
+        page.totalItems shouldBe 5
+        page.totalPages shouldBe 3
+    }
+
+    test("findAll returns next page when page=1") {
+        insertTestData()
+        val party = AuthorizationParty(type = PartyType.OrganizationEntity, id = "0107000000021")
+
+        val page = grantRepo.findAll(party, Pagination(page = 1, size = 2)).getOrElse { fail("findAll failed") }
+
+        page.items.size shouldBe 2
+        page.totalItems shouldBe 5
+    }
+
+    test("findAll returns partial last page") {
+        insertTestData()
+        val party = AuthorizationParty(type = PartyType.OrganizationEntity, id = "0107000000021")
+
+        val page = grantRepo.findAll(party, Pagination(page = 2, size = 2)).getOrElse { fail("findAll failed") }
+
+        page.items.size shouldBe 1
+        page.totalItems shouldBe 5
+    }
+
+    test("findAll returns empty items but correct totalItems when page is beyond data") {
+        insertTestData()
+        val party = AuthorizationParty(type = PartyType.OrganizationEntity, id = "0107000000021")
+
+        val page =
+            grantRepo.findAll(party, Pagination(page = 10, size = 2)).getOrElse { fail("findAll failed") }
+
+        page.items shouldBe emptyList()
+        page.totalItems shouldBe 5
+    }
+
+    test("findAll pages do not overlap") {
+        insertTestData()
+        val party = AuthorizationParty(type = PartyType.OrganizationEntity, id = "0107000000021")
+
+        val page0 = grantRepo.findAll(party, Pagination(page = 0, size = 2)).getOrElse { fail("page 0 failed") }
+        val page1 = grantRepo.findAll(party, Pagination(page = 1, size = 2)).getOrElse { fail("page 1 failed") }
+
+        (page0.items.map { it.id }.toSet() intersect page1.items.map { it.id }.toSet()) shouldBe emptySet()
     }
 
     test("findScopes returns correct number of scopes given grantId") {

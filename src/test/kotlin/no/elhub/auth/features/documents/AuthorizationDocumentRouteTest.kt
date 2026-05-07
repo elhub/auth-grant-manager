@@ -276,7 +276,7 @@ class AuthorizationDocumentRouteTest :
                         this[0].apply {
                             status shouldBe "400"
                             title shouldBe "Invalid field value in request body"
-                            detail shouldBe "Invalid value 'TEST' for field 'data' at $.data.meta.requestedBy.idType"
+                            detail shouldBe "Invalid value 'TEST' for field 'idType' at $.data.meta.requestedBy.idType"
                         }
                     }
                     responseJson.meta.apply {

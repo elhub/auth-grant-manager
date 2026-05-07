@@ -22,7 +22,7 @@ private val logger = LoggerFactory.getLogger(Route::class.java)
 
 fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
     get("/{$DOCUMENT_ID_PARAM}") {
-        val authorizedParty = authProvider.authorizeEndUserOrMaskinporten(call)
+        val authorizedParty = authProvider.authorize(call)
             .getOrElse { err ->
                 val (status, body) = err.toApiErrorResponse()
                 call.respond(status, body)
@@ -64,7 +64,7 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
             return@get
         }
 
-        val authorizedParty = authProvider.authorizeEndUserOrMaskinporten(call)
+        val authorizedParty = authProvider.authorize(call)
             .getOrElse { err ->
                 val (status, body) = err.toApiErrorResponse()
                 call.respond(status, body)

@@ -3,7 +3,10 @@ package no.elhub.auth.features.grants.common.dto
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import no.elhub.auth.features.common.Page
 import no.elhub.auth.features.common.currentTimeOslo
+import no.elhub.auth.features.common.dto.PaginatedCollectionResponse
+import no.elhub.auth.features.common.toPaginationLinks
 import no.elhub.auth.features.common.toTimeZoneOffsetString
 import no.elhub.auth.features.documents.DOCUMENTS_PATH
 import no.elhub.auth.features.grants.AuthorizationGrant
@@ -18,7 +21,6 @@ import no.elhub.devxp.jsonapi.model.JsonApiRelationshipToOne
 import no.elhub.devxp.jsonapi.model.JsonApiRelationships
 import no.elhub.devxp.jsonapi.response.JsonApiResponse
 import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObjectWithRelationships
-
 @Serializable
 data class GrantResponseAttributes(
     val status: String,
@@ -43,9 +45,8 @@ typealias SingleGrantResponse = JsonApiResponse.SingleDocumentWithRelationships<
     GrantResponseRelationShips,
     >
 
-typealias CollectionGrantResponse = JsonApiResponse.CollectionDocumentWithRelationships<
-    GrantResponseAttributes,
-    GrantResponseRelationShips,
+typealias CollectionGrantResponse = PaginatedCollectionResponse<
+    JsonApiResponseResourceObjectWithRelationships<GrantResponseAttributes, GrantResponseRelationShips>
     >
 
 fun AuthorizationGrant.toSingleGrantResponse() =
@@ -123,9 +124,11 @@ fun AuthorizationGrant.toSingleGrantResponse() =
         )
     )
 
-fun List<AuthorizationGrant>.toCollectionGrantResponse() =
-    CollectionGrantResponse(
-        data = this.map { grant ->
+fun Page<AuthorizationGrant>.toCollectionGrantResponse(): CollectionGrantResponse {
+    val p = this.pagination
+
+    return CollectionGrantResponse(
+        data = this.items.map { grant ->
             JsonApiResponseResourceObjectWithRelationships(
                 type = "AuthorizationGrant",
                 id = grant.id.toString(),
@@ -180,22 +183,15 @@ fun List<AuthorizationGrant>.toCollectionGrantResponse() =
                         }
                     )
                 ),
-                meta = grant.properties.takeIf { it.isNotEmpty() }?.let {
-                    JsonApiMeta(
-                        buildJsonObject {
-                            grant.properties.forEach { prop ->
-                                put(prop.key, prop.value)
-                            }
-                        }
-                    )
-                },
-                links = JsonApiLinks.ResourceObjectLink("$GRANTS_PATH/${grant.id}"),
             )
         },
-        links = JsonApiLinks.ResourceObjectLink(GRANTS_PATH),
-        meta = JsonApiMeta(
-            buildJsonObject {
-                put("createdAt", currentTimeOslo().toTimeZoneOffsetString())
-            }
-        )
+        links = toPaginationLinks(GRANTS_PATH),
+        meta = buildJsonObject {
+            put("createdAt", currentTimeOslo().toTimeZoneOffsetString())
+            put("totalItems", this@toCollectionGrantResponse.totalItems)
+            put("totalPages", this@toCollectionGrantResponse.totalPages)
+            put("page", p.page)
+            put("pageSize", p.size)
+        }
     )
+}

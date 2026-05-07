@@ -1,10 +1,12 @@
-# auth-grant-manager
+# Auth Grant Manager
 
 ## About
 
-The auth-grant-manager is designed to manage and track user authorizations across Elhub applications, services,
+Auth Grant Manager, the service behind Access API, is designed to manage and track user authorizations across Elhub applications, services,
 and data processing activities. The goal is to provide a centralized platform for collecting, storing, and
-processing user authorization data. The main objectives are to:
+processing user authorization data.
+
+The main objectives are to:
 
 * Facilitate the collection of explicit authorization/consent from users for a variety of business and data
     processing activities.

@@ -48,6 +48,23 @@ paths:
         - $ref: '#/components/parameters/AuthorizationMaskinporten'
         - $ref: '#/components/parameters/SenderGlnRequired'
         - $ref: '#/components/parameters/OnBehalfOfGlnOptional'
+        - name: page[number]
+          in: query
+          required: false
+          description: Zero-based page number. Defaults to 0.
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: page[size]
+          in: query
+          required: false
+          description: Number of items per page. Defaults to 100, maximum 100.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 100
       responses:
         '200':
           description: A list of authorization document objects.
@@ -226,12 +243,30 @@ paths:
       summary: List authorization grants
       description: >
         Retrieve a list of authorization grants available to the caller. The result is constrained
-        by the caller's token and GLN context.
+        by the caller's token and GLN context. Results are returned ordered by createdAt DESC
+        (newest first) and support offset-based pagination.
       parameters:
         - $ref: '#/components/parameters/UserAgent'
         - $ref: '#/components/parameters/AuthorizationMaskinportenOrEndUser'
         - $ref: '#/components/parameters/SenderGlnOptional'
         - $ref: '#/components/parameters/OnBehalfOfGlnOptional'
+        - name: page[number]
+          in: query
+          required: false
+          description: Zero-based page number. Defaults to 0.
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: page[size]
+          in: query
+          required: false
+          description: Number of items per page. Defaults to 100, maximum 100.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 100
       responses:
         '200':
           description: A list of authorization grants.
@@ -377,12 +412,42 @@ paths:
       summary: List authorization requests
       description: >
         Retrieve a list of authorization requests. The result is constrained by the caller's
-        token and, where applicable, GLN context. Results are returned ordered by createdAt DESC (newest first).
+        token and, where applicable, GLN context. Results are returned ordered by createdAt DESC
+        (newest first) and support offset-based pagination.
       parameters:
         - $ref: '#/components/parameters/UserAgent'
         - $ref: '#/components/parameters/AuthorizationMaskinportenOrEndUser'
         - $ref: '#/components/parameters/SenderGlnOptional'
         - $ref: '#/components/parameters/OnBehalfOfGlnOptional'
+        - name: filter[status]
+          in: query
+          required: false
+          description: >
+            Filter results by one or more statuses. When omitted, requests of all statuses are returned.
+            Multiple statuses can be specified as a comma-separated list (e.g. `filter[status]=Pending,Expired`).
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              $ref: './schemas/requests/authorization-request-common.schema.json#/$defs/authorizationRequestStatus'
+        - name: page[number]
+          in: query
+          required: false
+          description: Zero-based page number. Defaults to 0.
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: page[size]
+          in: query
+          required: false
+          description: Number of items per page. Defaults to 100, maximum 100.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 100
       responses:
         '200':
           description: A list of authorization requests.

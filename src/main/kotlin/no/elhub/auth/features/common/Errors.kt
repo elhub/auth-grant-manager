@@ -10,8 +10,10 @@ interface Error
 
 sealed class InputError : Error {
     data object MissingInputError : InputError()
-    data object MalformedInputError : InputError()
+    data class MalformedInputError(val detail: String) : InputError()
     data object IdMismatchError : InputError()
+    data class MissingFieldError(val fields: List<String>) : InputError()
+    data class InvalidFieldValueError(val detail: String) : InputError()
 }
 
 sealed class CommandError : Error {
@@ -113,16 +115,28 @@ fun InputError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection
             detail = "Necessary information was not provided",
         )
 
-        InputError.MalformedInputError -> buildApiErrorResponse(
+        is InputError.MalformedInputError -> buildApiErrorResponse(
             status = HttpStatusCode.BadRequest,
             title = "Invalid input",
-            detail = "The provided payload did not satisfy the expected format"
+            detail = this.detail,
         )
 
-        InputError.IdMismatchError -> buildApiErrorResponse(
+        is InputError.IdMismatchError -> buildApiErrorResponse(
             status = HttpStatusCode.Conflict,
             title = "Resource id mismatch",
             detail = "Expected 'data.id' to be the same as in URL path {id}"
+        )
+
+        is InputError.MissingFieldError -> buildApiErrorResponse(
+            status = HttpStatusCode.BadRequest,
+            title = "Missing required field in request body",
+            detail = "Field '${this.fields}' is missing or invalid"
+        )
+
+        is InputError.InvalidFieldValueError -> buildApiErrorResponse(
+            status = HttpStatusCode.BadRequest,
+            title = "Invalid field value in request body",
+            detail = this.detail
         )
     }
 

@@ -5,6 +5,8 @@ import arrow.core.raise.either
 import no.elhub.auth.config.TransactionContext
 import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.common.PGEnum
+import no.elhub.auth.features.common.Page
+import no.elhub.auth.features.common.Pagination
 import no.elhub.auth.features.common.RepositoryError
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.RepositoryWriteError
@@ -25,14 +27,18 @@ import no.elhub.auth.features.grants.common.GrantRepository
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.common.AuthorizationRequestScopeTable.authorizationRequestId
 import no.elhub.auth.features.requests.common.AuthorizationRequestScopeTable.authorizationScopeId
+import org.jetbrains.exposed.v1.core.Op
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.greater
 import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.java.javaUUID
+import org.jetbrains.exposed.v1.core.lessEq
 import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.javatime.timestampWithTimeZone
 import org.jetbrains.exposed.v1.jdbc.batchInsert
@@ -55,7 +61,12 @@ sealed interface AcceptWithGrantError {
 
 interface RequestRepository {
     suspend fun find(requestId: UUID): Either<RepositoryReadError, AuthorizationRequest>
-    suspend fun findAllAndSortByCreatedAt(party: AuthorizationParty): Either<RepositoryReadError, List<AuthorizationRequest>>
+    suspend fun findAndSortByCreatedAt(
+        party: AuthorizationParty,
+        pagination: Pagination,
+        statuses: List<AuthorizationRequest.Status>
+    ): Either<RepositoryReadError, Page<AuthorizationRequest>>
+
     suspend fun insert(
         request: AuthorizationRequest,
         scopes: List<CreateScopeData>
@@ -80,11 +91,15 @@ class ExposedRequestRepository(
     private val transactionContext: TransactionContext,
 ) : RequestRepository {
 
-    override suspend fun findAllAndSortByCreatedAt(party: AuthorizationParty): Either<RepositoryReadError, List<AuthorizationRequest>> =
-        transactionContext<RepositoryReadError, List<AuthorizationRequest>>(
+    override suspend fun findAndSortByCreatedAt(
+        party: AuthorizationParty,
+        pagination: Pagination,
+        statuses: List<AuthorizationRequest.Status>
+    ): Either<RepositoryReadError, Page<AuthorizationRequest>> =
+        transactionContext<RepositoryReadError, Page<AuthorizationRequest>>(
             "db_operations",
             "RequestRepository",
-            "findAllAndSortByCreatedAt",
+            "findAndSortByCreatedAt",
             { RepositoryReadError.UnexpectedError }
         ) {
             val partyId = partyRepo.findOrInsert(type = party.type, partyId = party.id)
@@ -92,19 +107,25 @@ class ExposedRequestRepository(
                 .bind()
                 .id
 
+            val whereClause = generateFilterByCondition(partyId, statuses)
+
+            val totalItems = AuthorizationRequestTable
+                .selectAll()
+                .where(whereClause)
+                .count()
+
             val requestRows = AuthorizationRequestTable
                 .selectAll()
-                .where {
-                    (AuthorizationRequestTable.requestedTo eq partyId) or (AuthorizationRequestTable.requestedBy eq partyId)
-                }
+                .where(whereClause)
                 .orderBy(AuthorizationRequestTable.createdAt to SortOrder.DESC)
+                .limit(pagination.size)
+                .offset(pagination.offset)
                 .toList()
 
-            if (requestRows.isEmpty()) return@transactionContext emptyList()
+            if (requestRows.isEmpty()) return@transactionContext Page(emptyList(), totalItems, pagination)
 
             val requestIds = requestRows.map { it[AuthorizationRequestTable.id].value }
 
-            // Batch-load all party records needed across all requests in a single query
             val allPartyIds = requestRows.flatMap {
                 listOfNotNull(
                     it[AuthorizationRequestTable.requestedBy],
@@ -118,7 +139,6 @@ class ExposedRequestRepository(
                 .where { AuthorizationPartyTable.id inList allPartyIds }
                 .associate { it[AuthorizationPartyTable.id].value to it.toAuthorizationParty() }
 
-            // Batch-load all properties for all requests in one query
             val propertiesByRequestId: Map<UUID, List<AuthorizationRequestProperty>> =
                 AuthorizationRequestPropertyTable
                     .selectAll()
@@ -128,15 +148,16 @@ class ExposedRequestRepository(
                         { it.toAuthorizationRequestProperty() }
                     )
 
-            requestRows.map { row ->
+            val items = requestRows.map { row ->
                 val requestedBy = partyMap[row[AuthorizationRequestTable.requestedBy]]
                     ?: raise(RepositoryReadError.UnexpectedError)
                 val requestedFrom = partyMap[row[AuthorizationRequestTable.requestedFrom]]
                     ?: raise(RepositoryReadError.UnexpectedError)
                 val requestedTo = partyMap[row[AuthorizationRequestTable.requestedTo]]
                     ?: raise(RepositoryReadError.UnexpectedError)
-                val approvedById = row[AuthorizationRequestTable.approvedBy]
-                val approvedBy = approvedById?.let { partyMap[it] ?: raise(RepositoryReadError.UnexpectedError) }
+                val approvedBy = row[AuthorizationRequestTable.approvedBy]?.let {
+                    partyMap[it] ?: raise(RepositoryReadError.UnexpectedError)
+                }
                 val requestId = row[AuthorizationRequestTable.id].value
                 row.toAuthorizationRequest(
                     requestedBy = requestedBy,
@@ -146,7 +167,34 @@ class ExposedRequestRepository(
                     approvedBy = approvedBy,
                 )
             }
+
+            Page(items = items, totalItems = totalItems, pagination = pagination)
         }
+
+    // Match on party, and statuses if any are provided
+    private fun generateFilterByCondition(partyId: UUID, statuses: List<AuthorizationRequest.Status>): Op<Boolean> {
+        val partyCondition = (AuthorizationRequestTable.requestedTo eq partyId) or
+            (AuthorizationRequestTable.requestedBy eq partyId)
+        if (statuses.isEmpty()) {
+            return partyCondition
+        }
+
+        val now = currentTimeUtc()
+        val statusCondition = statuses.map { status ->
+            when (status) {
+                AuthorizationRequest.Status.Pending ->
+                    (AuthorizationRequestTable.requestStatus eq DatabaseRequestStatus.Pending) and
+                        (AuthorizationRequestTable.validTo greater now)
+
+                AuthorizationRequest.Status.Expired ->
+                    (AuthorizationRequestTable.requestStatus eq DatabaseRequestStatus.Pending) and
+                        (AuthorizationRequestTable.validTo lessEq now)
+
+                else -> AuthorizationRequestTable.requestStatus eq status.toDataBaseRequestStatus()
+            }
+        }.reduce { acc, op -> acc or op }
+        return partyCondition and statusCondition
+    }
 
     override suspend fun find(requestId: UUID): Either<RepositoryReadError, AuthorizationRequest> =
         transactionContext<RepositoryReadError, AuthorizationRequest>(
@@ -304,7 +352,10 @@ class ExposedRequestRepository(
         }
     }
 
-    private suspend fun updateAndFetch(requestId: UUID, rowsUpdated: Int): Either<RepositoryError, AuthorizationRequest> =
+    private suspend fun updateAndFetch(
+        requestId: UUID,
+        rowsUpdated: Int
+    ): Either<RepositoryError, AuthorizationRequest> =
         either {
             if (rowsUpdated == 0) {
                 raise(RepositoryWriteError.UnexpectedError)
