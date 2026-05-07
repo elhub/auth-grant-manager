@@ -8,6 +8,8 @@ import io.ktor.server.response.respond
 import io.ktor.server.response.respondBytes
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
+import io.micrometer.prometheusmetrics.PrometheusConfig
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import no.elhub.auth.features.common.auth.AuthorizationProvider
 import no.elhub.auth.features.common.auth.toApiErrorResponse
 import no.elhub.auth.features.common.toApiErrorResponse
@@ -21,6 +23,7 @@ const val DOCUMENT_ID_PARAM = "id"
 private val logger = LoggerFactory.getLogger(Route::class.java)
 
 fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
+
     get("/{$DOCUMENT_ID_PARAM}") {
         val authorizedParty = authProvider.authorize(call)
             .getOrElse { err ->
