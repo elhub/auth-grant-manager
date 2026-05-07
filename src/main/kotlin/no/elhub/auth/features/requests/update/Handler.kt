@@ -37,7 +37,7 @@ class Handler(
         when (command.newStatus) {
             AuthorizationRequest.Status.Accepted -> handleAccepted(request, command).bind()
             AuthorizationRequest.Status.Rejected -> handleRejected(request).bind()
-            else -> raise(UpdateError.IllegalTransitionError) // consumers can only send Accepted and Rejected statuses
+            else -> raise(UpdateError.IllegalTransitionError)
         }
     }
 

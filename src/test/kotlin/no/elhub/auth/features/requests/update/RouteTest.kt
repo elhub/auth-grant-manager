@@ -56,7 +56,7 @@ class RouteTest : FunSpec({
     }
 
     test("PATCH /{id} Should return unauthorized when endUser is AccessDenied") {
-        coEvery { authProvider.authorizeEndUser(any()) } returns AuthError.AccessDenied.left()
+        coEvery { authProvider.authorize(any()) } returns AuthError.AccessDenied.left()
         testApplication {
             setupAppWith { route(handler, authProvider) }
             val response = client.patchJson("/random-id", "")
@@ -66,7 +66,7 @@ class RouteTest : FunSpec({
     }
 
     test("PATCH /{id} Should return bad request when having an invalid requestID") {
-        coEvery { authProvider.authorizeEndUser(any()) } returns authorizedPerson.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedPerson.right()
         testApplication {
             setupAppWith { route(handler, authProvider) }
             val response = client.patchJson("/random-id", "")
@@ -76,7 +76,7 @@ class RouteTest : FunSpec({
     }
 
     test("PATCH /{id} should return bad request when input body is wrong") {
-        coEvery { authProvider.authorizeEndUser(any()) } returns authorizedPerson.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedPerson.right()
         testApplication {
             setupAppWith { route(handler, authProvider) }
             val response = client.patchJson("/${authorizedPerson.id}", "{\"test\": \"badInput\" }")
@@ -92,7 +92,7 @@ class RouteTest : FunSpec({
         coVerify(exactly = 0) { handler.invoke(any()) }
     }
     test("PATCH /{id} should return bad request when id in path doesnt match the request body") {
-        coEvery { authProvider.authorizeEndUser(any()) } returns authorizedPerson.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedPerson.right()
         testApplication {
             setupAppWith { route(handler, authProvider) }
             val response = client.patchJson("/${UUID.randomUUID()}", requestData)
@@ -110,7 +110,7 @@ class RouteTest : FunSpec({
     }
 
     test("PATCH /{id} should return Conflict when request type is not AuthorizationRequest") {
-        coEvery { authProvider.authorizeEndUser(any()) } returns authorizedPerson.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedPerson.right()
         testApplication {
             setupAppWith { route(handler, authProvider) }
             val response = client.patchJson("/${authorizedPerson.id}", requestBody.copy(data = requestData.copy(type = "InvalidType")))
@@ -120,7 +120,7 @@ class RouteTest : FunSpec({
     }
 
     test("PATCH /{id} should return OK when handler returns") {
-        coEvery { authProvider.authorizeEndUser(any()) } returns authorizedPerson.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedPerson.right()
         val authorizationRequest = AuthorizationRequest(
             type = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
             status = AuthorizationRequest.Status.Accepted,

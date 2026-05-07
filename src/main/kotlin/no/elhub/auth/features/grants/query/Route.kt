@@ -16,7 +16,7 @@ private val logger = LoggerFactory.getLogger(Route::class.java)
 
 fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
     get {
-        val authorizedParty = authProvider.authorizeEndUserOrMaskinporten(call)
+        val authorizedParty = authProvider.authorize(call)
             .getOrElse { err ->
                 val (status, body) = err.toApiErrorResponse()
                 call.respond(status, body)

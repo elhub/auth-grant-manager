@@ -51,7 +51,7 @@ class RouteTest : FunSpec({
     }
 
     test("GET should return forbidden when access is denied") {
-        coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns AuthError.AccessDenied.left()
+        coEvery { authProvider.authorize(any()) } returns AuthError.AccessDenied.left()
         testApplication {
             setupAppWith { route(handler, authProvider) }
             val response = client.get("/")
@@ -61,7 +61,7 @@ class RouteTest : FunSpec({
     }
 
     test("GET should return unauthorized when not authorized") {
-        coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns AuthError.NotAuthorized.left()
+        coEvery { authProvider.authorize(any()) } returns AuthError.NotAuthorized.left()
         testApplication {
             setupAppWith { route(handler, authProvider) }
             val response = client.get("/")
@@ -71,7 +71,7 @@ class RouteTest : FunSpec({
     }
 
     test("GET should return forbidden when handler returns NotAuthorizedError") {
-        coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedPerson.right()
         coEvery { handler.invoke(any()) } returns QueryError.NotAuthorizedError.left()
         testApplication {
             setupAppWith { route(handler, authProvider) }
@@ -82,7 +82,7 @@ class RouteTest : FunSpec({
     }
 
     test("GET should return 500 when handler throws exception") {
-        coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedPerson.right()
         coEvery { handler.invoke(any()) } throws RuntimeException("Unexpected error")
         testApplication {
             setupAppWith { route(handler, authProvider) }
@@ -93,7 +93,7 @@ class RouteTest : FunSpec({
     }
 
     test("GET should return OK with empty list when handler returns no requests") {
-        coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedPerson.right()
         coEvery { handler.invoke(any()) } returns Page(emptyList<AuthorizationRequest>(), 0L, Pagination()).right()
         testApplication {
             setupAppWith { route(handler, authProvider) }
@@ -106,7 +106,7 @@ class RouteTest : FunSpec({
     }
 
     test("GET should return OK with correct body when handler returns") {
-        coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedPerson.right()
         val authorizationRequest = AuthorizationRequest(
             id = UUID.randomUUID(),
             type = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
@@ -149,7 +149,7 @@ class RouteTest : FunSpec({
     }
 
     test("GET should return OK with multiple items when handler returns multiple requests") {
-        coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedPerson.right()
         val request1 = AuthorizationRequest(
             id = UUID.randomUUID(),
             type = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
@@ -193,7 +193,7 @@ class RouteTest : FunSpec({
     }
 
     test("GET with page params passes correct Pagination to handler") {
-        coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedPerson.right()
         coEvery { handler.invoke(any()) } returns Page(
             emptyList<AuthorizationRequest>(),
             0L,
@@ -207,7 +207,7 @@ class RouteTest : FunSpec({
     }
 
     test("GET with status param passes correct status to handler") {
-        coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedPerson.right()
         coEvery { handler.invoke(any()) } returns Page(
             emptyList<AuthorizationRequest>(),
             0L,
@@ -230,7 +230,7 @@ class RouteTest : FunSpec({
     }
 
     test("GET with status param returns BadRequest when supplying invalid status") {
-        coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedPerson.right()
         coEvery { handler.invoke(any()) } returns Page(
             emptyList<AuthorizationRequest>(),
             0L,
@@ -247,7 +247,7 @@ class RouteTest : FunSpec({
 
     test("GET response meta and links contain correct pagination fields") {
         val pagination = Pagination(page = 1, size = 5)
-        coEvery { authProvider.authorizeEndUserOrMaskinporten(any()) } returns authorizedPerson.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedPerson.right()
         coEvery { handler.invoke(any()) } returns Page(emptyList<AuthorizationRequest>(), 15L, pagination).right()
         testApplication {
             setupAppWith { route(handler, authProvider) }

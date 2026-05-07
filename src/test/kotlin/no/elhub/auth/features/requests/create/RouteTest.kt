@@ -89,7 +89,7 @@ class RouteTest : FunSpec({
     }
 
     test("POST / returns 201 when authorized as BalanceSupplier org and handler succeeds") {
-        coEvery { authProvider.authorizeMaskinporten(any()) } returns authorizedOrg.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedOrg.right()
         coEvery { handler.invoke(any()) } returns authorizationRequest.right()
         testApplication {
             setupAppWith { route(handler, authProvider) }
@@ -126,7 +126,7 @@ class RouteTest : FunSpec({
     }
 
     test("POST / returns 201 when redirectURI is omitted from API request") {
-        coEvery { authProvider.authorizeMaskinporten(any()) } returns authorizedOrg.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedOrg.right()
         coEvery { handler.invoke(any()) } returns authorizationRequest.right()
         testApplication {
             setupAppWith { route(handler, authProvider) }
@@ -150,7 +150,7 @@ class RouteTest : FunSpec({
     }
 
     test("POST / returns 401 when authorization fails with InvalidToken") {
-        coEvery { authProvider.authorizeMaskinporten(any()) } returns AuthError.InvalidToken.left()
+        coEvery { authProvider.authorize(any()) } returns AuthError.InvalidToken.left()
         testApplication {
             setupAppWith { route(handler, authProvider) }
             val response = client.postJson("/", examplePostBody)
@@ -160,7 +160,7 @@ class RouteTest : FunSpec({
     }
 
     test("POST / returns 409 Conflict when type in body is not AuthorizationRequest") {
-        coEvery { authProvider.authorizeMaskinporten(any()) } returns authorizedOrg.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedOrg.right()
         testApplication {
             setupAppWith { route(handler, authProvider) }
             val wrongTypeBody = examplePostBody.copy(
@@ -173,7 +173,7 @@ class RouteTest : FunSpec({
     }
 
     test("POST / returns 400 when handler fails with InvalidNinError") {
-        coEvery { authProvider.authorizeMaskinporten(any()) } returns authorizedOrg.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedOrg.right()
         coEvery { handler.invoke(any()) } returns CreateError.InvalidNinError.left()
         testApplication {
             setupAppWith { route(handler, authProvider) }
@@ -193,7 +193,7 @@ class RouteTest : FunSpec({
     }
 
     test("POST / returns 403 when handler fails with AuthorizationError") {
-        coEvery { authProvider.authorizeMaskinporten(any()) } returns authorizedOrg.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedOrg.right()
         coEvery { handler.invoke(any()) } returns CreateError.AuthorizationError.left()
         testApplication {
             setupAppWith { route(handler, authProvider) }
@@ -213,7 +213,7 @@ class RouteTest : FunSpec({
     }
 
     test("POST / returns 500 when handler fails with PersistenceError") {
-        coEvery { authProvider.authorizeMaskinporten(any()) } returns authorizedOrg.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedOrg.right()
         coEvery { handler.invoke(any()) } returns CreateError.PersistenceError.left()
         testApplication {
             setupAppWith { route(handler, authProvider) }
@@ -224,7 +224,7 @@ class RouteTest : FunSpec({
     }
 
     test("POST / returns 500 when handler fails with MappingError") {
-        coEvery { authProvider.authorizeMaskinporten(any()) } returns authorizedOrg.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedOrg.right()
         coEvery { handler.invoke(any()) } returns CreateError.MappingError.left()
         testApplication {
             setupAppWith { route(handler, authProvider) }
@@ -235,7 +235,7 @@ class RouteTest : FunSpec({
     }
 
     test("POST / returns 500 when handler fails with RequestedPartyError") {
-        coEvery { authProvider.authorizeMaskinporten(any()) } returns authorizedOrg.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedOrg.right()
         coEvery { handler.invoke(any()) } returns CreateError.RequestedPartyError.left()
         testApplication {
             setupAppWith { route(handler, authProvider) }

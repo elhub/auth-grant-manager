@@ -51,7 +51,7 @@ class RouteTest : FunSpec({
     }
 
     test("GET /{id}/scopes returns 401 when authorization fails with InvalidToken") {
-        coEvery { authProvider.authorizeAll(any()) } returns AuthError.InvalidToken.left()
+        coEvery { authProvider.authorize(any()) } returns AuthError.InvalidToken.left()
         testApplication {
             setupAppWith { route(handler, authProvider) }
             val response = client.get("/$validUuid/scopes")
@@ -61,7 +61,7 @@ class RouteTest : FunSpec({
     }
 
     test("GET /{id}/scopes returns 401 when authorization fails with NotAuthorized") {
-        coEvery { authProvider.authorizeAll(any()) } returns AuthError.NotAuthorized.left()
+        coEvery { authProvider.authorize(any()) } returns AuthError.NotAuthorized.left()
         testApplication {
             setupAppWith { route(handler, authProvider) }
             val response = client.get("/$validUuid/scopes")
@@ -71,7 +71,7 @@ class RouteTest : FunSpec({
     }
 
     test("GET /{id}/scopes returns 403 when authorization fails with AccessDenied") {
-        coEvery { authProvider.authorizeAll(any()) } returns AuthError.AccessDenied.left()
+        coEvery { authProvider.authorize(any()) } returns AuthError.AccessDenied.left()
         testApplication {
             setupAppWith { route(handler, authProvider) }
             val response = client.get("/$validUuid/scopes")
@@ -81,7 +81,7 @@ class RouteTest : FunSpec({
     }
 
     test("GET /{id}/scopes returns 400 when id is not a valid UUID") {
-        coEvery { authProvider.authorizeAll(any()) } returns authorizedSystem.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedSystem.right()
         testApplication {
             setupAppWith { route(handler, authProvider) }
             validateMalformedInputResponse(client.get("/not-a-uuid/scopes"))
@@ -90,7 +90,7 @@ class RouteTest : FunSpec({
     }
 
     test("GET /{id}/scopes returns 404 when handler returns ResourceNotFoundError") {
-        coEvery { authProvider.authorizeAll(any()) } returns authorizedSystem.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedSystem.right()
         coEvery { handler(any()) } returns QueryError.ResourceNotFoundError.left()
         testApplication {
             setupAppWith { route(handler, authProvider) }
@@ -101,7 +101,7 @@ class RouteTest : FunSpec({
     }
 
     test("GET /{id}/scopes returns 500 when handler returns IOError") {
-        coEvery { authProvider.authorizeAll(any()) } returns authorizedSystem.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedSystem.right()
         coEvery { handler(any()) } returns QueryError.IOError.left()
         testApplication {
             setupAppWith { route(handler, authProvider) }
@@ -112,7 +112,7 @@ class RouteTest : FunSpec({
     }
 
     test("GET /{id}/scopes returns 200 and correct body when authorized as system and handler succeeds") {
-        coEvery { authProvider.authorizeAll(any()) } returns authorizedSystem.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedSystem.right()
         coEvery { handler(any()) } returns expectedScopes.right()
         testApplication {
             setupAppWith { route(handler, authProvider) }
@@ -134,7 +134,7 @@ class RouteTest : FunSpec({
     }
 
     test("GET /{id}/scopes returns 200 and correct body when authorized as person and handler succeeds") {
-        coEvery { authProvider.authorizeAll(any()) } returns authorizedPerson.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedPerson.right()
         coEvery { handler(any()) } returns expectedScopes.right()
         testApplication {
             setupAppWith { route(handler, authProvider) }
@@ -148,7 +148,7 @@ class RouteTest : FunSpec({
     }
 
     test("GET /{id}/scopes returns 200 and correct body when authorized as org and handler succeeds") {
-        coEvery { authProvider.authorizeAll(any()) } returns authorizedOrg.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedOrg.right()
         coEvery { handler(any()) } returns expectedScopes.right()
         testApplication {
             setupAppWith { route(handler, authProvider) }
@@ -162,7 +162,7 @@ class RouteTest : FunSpec({
     }
 
     test("GET /{id}/scopes returns 200 with empty list when handler returns no scopes") {
-        coEvery { authProvider.authorizeAll(any()) } returns authorizedSystem.right()
+        coEvery { authProvider.authorize(any()) } returns authorizedSystem.right()
         coEvery { handler(any()) } returns emptyList<AuthorizationScope>().right()
         testApplication {
             setupAppWith { route(handler, authProvider) }

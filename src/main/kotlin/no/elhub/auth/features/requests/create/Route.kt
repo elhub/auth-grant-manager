@@ -22,9 +22,9 @@ fun Route.route(
     authProvider: AuthorizationProvider
 ) {
     post {
-        val resolvedActor = authProvider.authorizeMaskinporten(call)
+        val resolvedActor = authProvider.authorize(call)
             .getOrElse {
-                logger.error("Failed to authorize Maskinporten token for POST /authorization-requests: {}", it)
+                logger.error("Failed to authorize token for POST /authorization-requests: {}", it)
                 val error = it.toApiErrorResponse()
                 call.respond(error.first, error.second)
                 return@post
