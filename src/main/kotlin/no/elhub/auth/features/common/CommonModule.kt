@@ -3,7 +3,6 @@ package no.elhub.auth.features.common
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.ProxyBuilder
 import io.ktor.client.engine.apache5.Apache5
-import io.ktor.client.engine.cio.CIO
 import io.ktor.client.engine.http
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -31,7 +30,7 @@ fun Application.commonModule() {
             appEnvironment.config
         }
         provide<HttpClient>(name = "commonHttpClient") {
-            HttpClient(CIO) {
+            HttpClient(Apache5) {
                 install(HttpTimeout) {
                     requestTimeoutMillis = 10_000
                     connectTimeoutMillis = 10_000
@@ -80,7 +79,7 @@ fun Application.commonModule() {
         provide(name = "proxyHttpClient") {
             val logger = LoggerFactory.getLogger("proxyHttpClient")
             val proxyUrl = resolve<ApplicationConfig>().propertyOrNull("httpProxy.url")
-            HttpClient(CIO) {
+            HttpClient(Apache5) {
                 proxyUrl?.let {
                     logger.info("Configuring HTTP proxy: {}", it)
                     engine { proxy = ProxyBuilder.http(it.toString()) }

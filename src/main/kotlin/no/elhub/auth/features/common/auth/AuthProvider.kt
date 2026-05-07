@@ -185,6 +185,7 @@ class PDPAuthorizationProvider(
         val authInfo = pdpBody.result.authInfo
         if (authInfo?.error != null) {
             log.warn("PDP authInfo error={}", authInfo.error)
+
             raise(AuthError.EndUserOnBehalfOfOrganisationVerificationFailed)
         }
         val authorizedParty = when (authInfo?.actingType?.trim()?.lowercase()?.ifBlank { null }) {

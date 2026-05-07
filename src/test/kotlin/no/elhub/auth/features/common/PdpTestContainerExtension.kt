@@ -9,7 +9,7 @@ import io.kotest.core.listeners.BeforeSpecListener
 import io.kotest.core.spec.Spec
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
-import io.ktor.client.engine.cio.CIO
+import io.ktor.client.engine.apache5.Apache5
 import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -33,7 +33,7 @@ class PdpTestContainerExtension() : BeforeSpecListener, AfterSpecListener {
     }
 
     suspend fun registerEnduserMapping(token: String, partyId: String) {
-        val client = HttpClient(CIO)
+        val client = HttpClient(Apache5)
         client.post("http://localhost:8085/__admin/mappings") {
             contentType(ContentType.Application.Json)
             setBody(
@@ -73,7 +73,7 @@ class PdpTestContainerExtension() : BeforeSpecListener, AfterSpecListener {
     }
 
     suspend fun registerMaskinportenMapping(token: String, actingGln: String, functionName: String) {
-        val client = HttpClient(CIO)
+        val client = HttpClient(Apache5)
         client.post("http://localhost:8085/__admin/mappings") {
             contentType(ContentType.Application.Json)
             setBody(
@@ -117,7 +117,7 @@ class PdpTestContainerExtension() : BeforeSpecListener, AfterSpecListener {
     }
 
     suspend fun registerElhubServiceTokenMapping(token: String, partyId: String) {
-        val client = HttpClient(CIO)
+        val client = HttpClient(Apache5)
         client.post("http://localhost:8085/__admin/mappings") {
             contentType(ContentType.Application.Json)
             setBody(
@@ -152,7 +152,7 @@ class PdpTestContainerExtension() : BeforeSpecListener, AfterSpecListener {
     }
 
     suspend fun registerInvalidTokenMapping() {
-        val client = HttpClient(CIO)
+        val client = HttpClient(Apache5)
         client.post("http://localhost:8085/__admin/mappings") {
             contentType(ContentType.Application.Json)
             setBody(
@@ -189,7 +189,7 @@ class PdpTestContainerExtension() : BeforeSpecListener, AfterSpecListener {
         actingOrganisationNumber: String,
         originalId: String,
     ) {
-        val client = HttpClient(CIO)
+        val client = HttpClient(Apache5)
         client.post("http://localhost:8085/__admin/mappings") {
             contentType(ContentType.Application.Json)
             setBody(
@@ -230,7 +230,7 @@ class PdpTestContainerExtension() : BeforeSpecListener, AfterSpecListener {
     }
 
     suspend fun getLastRequestBody(): String {
-        val client = HttpClient(CIO)
+        val client = HttpClient(Apache5)
         val response: String = client.get("http://localhost:8085/__admin/requests?limit=1").body()
         client.close()
         return response
