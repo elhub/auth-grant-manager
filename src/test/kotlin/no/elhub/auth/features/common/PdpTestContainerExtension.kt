@@ -44,7 +44,7 @@ class PdpTestContainerExtension() : BeforeSpecListener, AfterSpecListener {
                     "method": "POST",
                     "url": "$AUTHINFO_POLICY_ROUTE",
                     "bodyPatterns": [
-                      { "contains": "\"token\":\"Bearer $token\"" }
+                      { "contains": "\"token\":\"$token\"" }
                     ]
                   },
                   "response": {
@@ -84,7 +84,7 @@ class PdpTestContainerExtension() : BeforeSpecListener, AfterSpecListener {
                     "method": "POST",
                     "url": "$AUTHINFO_POLICY_ROUTE",
                     "bodyPatterns": [
-                      { "contains": "\"token\":\"Bearer $token\"" }
+                      { "contains": "\"token\":\"$token\"" }
                     ]
                   },
                   "response": {
@@ -128,7 +128,7 @@ class PdpTestContainerExtension() : BeforeSpecListener, AfterSpecListener {
                     "method": "POST",
                     "url": "$AUTHINFO_POLICY_ROUTE",
                     "bodyPatterns": [
-                      { "contains": "\"token\":\"Bearer $token\"" }
+                      { "contains": "\"token\":\"$token\"" }
                     ]
                   },
                   "response": {
@@ -162,7 +162,7 @@ class PdpTestContainerExtension() : BeforeSpecListener, AfterSpecListener {
                     "method": "POST",
                     "url": "$AUTHINFO_POLICY_ROUTE",
                     "bodyPatterns": [
-                      { "contains": "\"token\":\"Bearer invalid-token\"" }
+                      { "contains": "\"token\":\"invalid-token\"" }
                     ]
                   },
                   "response": {
@@ -200,7 +200,7 @@ class PdpTestContainerExtension() : BeforeSpecListener, AfterSpecListener {
                     "method": "POST",
                     "url": "$AUTHINFO_POLICY_ROUTE",
                     "bodyPatterns": [
-                      { "contains": "\"token\":\"Bearer $token\"" }
+                      { "contains": "\"token\":\"$token\"" }
                     ]
                   },
                   "response": {
@@ -241,7 +241,7 @@ class PdpTestContainerExtension() : BeforeSpecListener, AfterSpecListener {
                     "method": "POST",
                     "url": "$AUTHINFO_POLICY_ROUTE",
                     "bodyPatterns": [
-                      { "contains": "\"token\":\"Bearer $token\"" }
+                      { "contains": "\"token\":\"$token\"" }
                     ]
                   },
                   "response": {
@@ -268,7 +268,7 @@ class PdpTestContainerExtension() : BeforeSpecListener, AfterSpecListener {
                     "method": "POST",
                     "url": "$AUTHINFO_POLICY_ROUTE",
                     "bodyPatterns": [
-                      { "contains": "\"token\":\"Bearer $token\"" }
+                      { "contains": "\"token\":\"$token\"" }
                     ]
                   },
                   "response": {
@@ -295,7 +295,7 @@ class PdpTestContainerExtension() : BeforeSpecListener, AfterSpecListener {
                     "method": "POST",
                     "url": "$AUTHINFO_POLICY_ROUTE",
                     "bodyPatterns": [
-                      { "contains": "\"token\":\"Bearer $token\"" }
+                      { "contains": "\"token\":\"$token\"" }
                     ]
                   },
                   "response": {
