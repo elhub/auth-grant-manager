@@ -61,15 +61,16 @@ object AuthGrantManagerPolicy : TokenPolicy<AuthGrantManagerPolicy.Request, Auth
  * Resolves an [AuthorizationParty] from the PDP response.
  * Returns null if the party cannot be resolved (enforce will return false → 403).
  */
-fun resolveAuthorizedParty(response: AuthGrantManagerPolicy.Response): AuthorizationParty? {
-    return when (response.tokenInfo?.tokenType) {
-        TokenType.MASKINPORTEN -> resolveMaskinportenParty(response)
-        TokenType.ENDUSER -> resolveEndUserParty(response)
-        TokenType.ELHUB_SERVICE -> resolveSystemParty(response)
-        else -> {
-            log.warn("Unexpected or missing tokenType={}", response.tokenInfo?.tokenType)
-            null
-        }
+fun resolveAuthorizedParty(response: AuthGrantManagerPolicy.Response): AuthorizationParty? = when (response.tokenInfo?.tokenType) {
+    TokenType.MASKINPORTEN -> resolveMaskinportenParty(response)
+
+    TokenType.ENDUSER -> resolveEndUserParty(response)
+
+    TokenType.ELHUB_SERVICE -> resolveSystemParty(response)
+
+    else -> {
+        log.warn("Unexpected or missing tokenType={}", response.tokenInfo?.tokenType)
+        null
     }
 }
 
@@ -112,6 +113,7 @@ private fun resolveEndUserParty(response: AuthGrantManagerPolicy.Response): Auth
             }
             AuthorizationParty(id = actingId, type = PartyType.Person)
         }
+
         "organisation" -> {
             val orgNumber = authInfo.actingOrganisationNumber ?: run {
                 log.warn("PDP response missing actingOrganisationNumber")
@@ -119,6 +121,7 @@ private fun resolveEndUserParty(response: AuthGrantManagerPolicy.Response): Auth
             }
             AuthorizationParty(id = orgNumber, type = PartyType.Organization)
         }
+
         else -> {
             log.warn("Unsupported actingType={}", authInfo?.actingType)
             null

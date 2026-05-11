@@ -26,10 +26,12 @@ fun Application.configureAuthorization() {
             socketTimeoutMillis = 10_000
         }
         install(ContentNegotiation) {
-            json(Json {
-                ignoreUnknownKeys = true
-                explicitNulls = false
-            })
+            json(
+                Json {
+                    ignoreUnknownKeys = true
+                    explicitNulls = false
+                }
+            )
         }
         install(Logging) {
             format = LoggingFormat.OkHttp
