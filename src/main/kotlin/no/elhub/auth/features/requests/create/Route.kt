@@ -2,12 +2,12 @@ package no.elhub.auth.features.requests.create
 
 import arrow.core.getOrElse
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
-import no.elhub.auth.features.common.auth.AuthorizationProvider
-import no.elhub.auth.features.common.auth.toApiErrorResponse
+import no.elhub.auth.features.common.auth.authorizedParty
+import no.elhub.auth.features.common.receiveEither
+import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.common.toTypeMismatchApiErrorResponse
 import no.elhub.auth.features.requests.create.dto.JsonApiCreateRequest
 import no.elhub.auth.features.requests.create.dto.toCreateResponse
@@ -16,20 +16,14 @@ import org.slf4j.LoggerFactory
 
 private val logger = LoggerFactory.getLogger(Route::class.java)
 
-fun Route.route(
-    handler: Handler,
-    authProvider: AuthorizationProvider
-) {
+fun Route.route(handler: Handler) {
     post {
-        val resolvedActor = authProvider.authorizeMaskinporten(call)
-            .getOrElse {
-                logger.error("Failed to authorize Maskinporten token for POST /authorization-requests: {}", it)
-                val error = it.toApiErrorResponse()
-                call.respond(error.first, error.second)
+        val requestBody = call.receiveEither<JsonApiCreateRequest>()
+            .getOrElse { error ->
+                val (status, body) = error.toApiErrorResponse()
+                call.respond(status, body)
                 return@post
             }
-
-        val requestBody = call.receive<JsonApiCreateRequest>()
 
         if (requestBody.data.type != "AuthorizationRequest") {
             val (status, message) = toTypeMismatchApiErrorResponse(
@@ -41,7 +35,7 @@ fun Route.route(
         }
 
         val request =
-            handler(requestBody.toModel(resolvedActor))
+            handler(requestBody.toModel(call.authorizedParty))
                 .getOrElse { error ->
                     logger.error("Failed to create authorization request: {}", error)
                     val (status, error) = error.toApiErrorResponse()

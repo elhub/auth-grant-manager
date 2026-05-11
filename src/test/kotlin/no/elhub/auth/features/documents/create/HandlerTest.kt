@@ -110,6 +110,22 @@ class HandlerTest : FunSpec({
         coEvery { partyService.resolve(requestedToIdentifier) } returns requestedToParty.right()
     }
 
+    test("returns InvalidPartyTypeError when authorized party is not an OrganizationEntity") {
+        val businessHandler = mockk<DocumentBusinessHandler>(relaxed = true)
+        val signatureService = mockk<SignatureService>(relaxed = true)
+        val documentRepository = mockk<DocumentRepository>(relaxed = true)
+        val partyService = mockk<PartyService>(relaxed = true)
+        val fileGenerator = mockk<FileGenerator>(relaxed = true)
+
+        val handler = Handler(businessHandler, signatureService, documentRepository, partyService, fileGenerator)
+
+        val response = handler(model.copy(authorizedParty = AuthorizationParty(id = "person-1", type = PartyType.Person)))
+
+        response.shouldBeLeft(CreateError.InvalidPartyTypeError)
+        coVerify(exactly = 0) { partyService.resolve(any()) }
+        coVerify(exactly = 0) { businessHandler.validateAndReturnDocumentCommand(any()) }
+    }
+
     test("returns saved document when dependencies succeed") {
         val businessHandler = mockk<DocumentBusinessHandler>()
         val signatureService = mockk<SignatureService>()

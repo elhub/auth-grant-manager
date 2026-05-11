@@ -10,6 +10,7 @@ import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 
 sealed class CreateError {
     data object MappingError : CreateError()
+    data object InvalidPartyTypeError : CreateError()
     data object AuthorizationError : CreateError()
     data object PersistenceError : CreateError()
     data object RequestedPartyError : CreateError()
@@ -19,6 +20,12 @@ sealed class CreateError {
 
 fun CreateError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> =
     when (this) {
+        CreateError.InvalidPartyTypeError -> buildApiErrorResponse(
+            status = HttpStatusCode.Forbidden,
+            title = "Party not authorized",
+            detail = "The authorized party is not permitted to perform this action.",
+        )
+
         CreateError.AuthorizationError -> buildApiErrorResponse(
             status = HttpStatusCode.Forbidden,
             title = "Party not authorized",

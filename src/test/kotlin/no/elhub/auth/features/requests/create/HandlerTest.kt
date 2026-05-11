@@ -39,7 +39,7 @@ class HandlerTest : FunSpec({
     val requestedFromIdentifier = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "01010112345")
     val requestedToIdentifier = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "02020212345")
 
-    val requestedByParty = AuthorizationParty(id = requestedByIdentifier.idValue, type = PartyType.Organization)
+    val requestedByParty = AuthorizationParty(id = requestedByIdentifier.idValue, type = PartyType.OrganizationEntity)
     val requestedFromParty = AuthorizationParty(id = "person-1", type = PartyType.Person)
     val requestedToParty = AuthorizationParty(id = "person-2", type = PartyType.Person)
 
@@ -101,6 +101,20 @@ class HandlerTest : FunSpec({
         coEvery { partyService.resolve(requestedByIdentifier) } returns requestedByParty.right()
         coEvery { partyService.resolve(requestedFromIdentifier) } returns requestedFromParty.right()
         coEvery { partyService.resolve(requestedToIdentifier) } returns requestedToParty.right()
+    }
+
+    test("returns InvalidPartyTypeError when authorized party is not an OrganizationEntity") {
+        val businessHandler = mockk<ProxyRequestBusinessHandler>(relaxed = true)
+        val partyService = mockk<PartyService>(relaxed = true)
+        val requestRepo = mockk<RequestRepository>(relaxed = true)
+
+        val handler = Handler(businessHandler, partyService, requestRepo)
+
+        val response = handler(model.copy(authorizedParty = AuthorizationParty(id = "person-1", type = PartyType.Person)))
+
+        response.shouldBeLeft(CreateError.InvalidPartyTypeError)
+        coVerify(exactly = 0) { partyService.resolve(any()) }
+        coVerify(exactly = 0) { businessHandler.validateAndReturnRequestCommand(any()) }
     }
 
     test("returns saved request when dependencies succeed") {
@@ -165,7 +179,7 @@ class HandlerTest : FunSpec({
         coEvery { partyService.resolve(requestedByIdentifier) } returns requestedByParty.right()
 
         val handler = Handler(businessHandler, partyService, requestRepo)
-        val otherAuthorizedParty = AuthorizationParty(id = "other", type = PartyType.Organization)
+        val otherAuthorizedParty = AuthorizationParty(id = "other", type = PartyType.OrganizationEntity)
 
         val response = handler(model.copy(authorizedParty = otherAuthorizedParty))
 

@@ -8,8 +8,7 @@ import io.ktor.server.response.respond
 import io.ktor.server.response.respondBytes
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
-import no.elhub.auth.features.common.auth.AuthorizationProvider
-import no.elhub.auth.features.common.auth.toApiErrorResponse
+import no.elhub.auth.features.common.auth.authorizedParty
 import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.common.toNotAcceptedErrorResponse
 import no.elhub.auth.features.common.validatePathId
@@ -20,15 +19,8 @@ import java.util.UUID
 const val DOCUMENT_ID_PARAM = "id"
 private val logger = LoggerFactory.getLogger(Route::class.java)
 
-fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
+fun Route.route(handler: Handler) {
     get("/{$DOCUMENT_ID_PARAM}") {
-        val authorizedParty = authProvider.authorizeEndUserOrMaskinporten(call)
-            .getOrElse { err ->
-                val (status, body) = err.toApiErrorResponse()
-                call.respond(status, body)
-                return@get
-            }
-
         val id: UUID = validatePathId(call.parameters[DOCUMENT_ID_PARAM])
             .getOrElse { err ->
                 val (status, body) = err.toApiErrorResponse()
@@ -36,7 +28,7 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
                 return@get
             }
 
-        val query = Query(documentId = id, authorizedParty = authorizedParty)
+        val query = Query(documentId = id, authorizedParty = call.authorizedParty)
 
         val document = handler(query)
             .getOrElse { error ->
@@ -64,13 +56,6 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
             return@get
         }
 
-        val authorizedParty = authProvider.authorizeEndUserOrMaskinporten(call)
-            .getOrElse { err ->
-                val (status, body) = err.toApiErrorResponse()
-                call.respond(status, body)
-                return@get
-            }
-
         val id: UUID = validatePathId(call.parameters[DOCUMENT_ID_PARAM])
             .getOrElse { err ->
                 val (status, body) = err.toApiErrorResponse()
@@ -78,7 +63,7 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
                 return@get
             }
 
-        val query = Query(documentId = id, authorizedParty = authorizedParty)
+        val query = Query(documentId = id, authorizedParty = call.authorizedParty)
 
         val document = handler(query)
             .getOrElse { error ->

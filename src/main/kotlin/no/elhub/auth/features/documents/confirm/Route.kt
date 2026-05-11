@@ -11,8 +11,7 @@ import io.ktor.server.routing.put
 import io.ktor.utils.io.readRemaining
 import kotlinx.io.readByteArray
 import no.elhub.auth.features.common.InputError
-import no.elhub.auth.features.common.auth.AuthorizationProvider
-import no.elhub.auth.features.common.auth.toApiErrorResponse
+import no.elhub.auth.features.common.auth.authorizedParty
 import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.common.toUnsupportedErrorResponse
 import no.elhub.auth.features.common.validatePathId
@@ -21,20 +20,13 @@ import org.slf4j.LoggerFactory
 const val DOCUMENT_ID_PARAM = "id"
 private val logger = LoggerFactory.getLogger(Route::class.java)
 
-fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
+fun Route.route(handler: Handler) {
     put("/{$DOCUMENT_ID_PARAM}.pdf") {
         if (!ContentType.Application.Pdf.match(call.request.contentType())) {
             val (status, error) = toUnsupportedErrorResponse(detail = "Unsupported media type, 'application/pdf' is supported.")
             call.respond(status, error)
             return@put
         }
-
-        val resolvedActor = authProvider.authorizeMaskinporten(call)
-            .getOrElse {
-                val error = it.toApiErrorResponse()
-                call.respond(error.first, error.second)
-                return@put
-            }
 
         val documentId = validatePathId(call.parameters[DOCUMENT_ID_PARAM])
             .getOrElse { error ->
@@ -53,7 +45,7 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
         handler(
             Command(
                 documentId = documentId,
-                authorizedParty = resolvedActor,
+                authorizedParty = call.authorizedParty,
                 signedFile = signedDocument
             )
         ).getOrElse { error ->

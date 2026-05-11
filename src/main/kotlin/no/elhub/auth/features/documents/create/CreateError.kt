@@ -12,6 +12,7 @@ import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 sealed class CreateError {
     data object FileGenerationError : CreateError()
     data class SignFileError(val cause: SignatureSigningError) : CreateError()
+    data object InvalidPartyTypeError : CreateError()
     data object MismatchBetweenAuthorizedPartyAndRequestedBy : CreateError()
     data object PersistenceError : CreateError()
     data object RequestedPartyError : CreateError()
@@ -21,6 +22,12 @@ sealed class CreateError {
 
 fun CreateError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> =
     when (this) {
+        is CreateError.InvalidPartyTypeError -> buildApiErrorResponse(
+            status = HttpStatusCode.Forbidden,
+            title = "Party not authorized",
+            detail = "The authorized party is not permitted to perform this action.",
+        )
+
         is CreateError.MismatchBetweenAuthorizedPartyAndRequestedBy -> buildApiErrorResponse(
             status = HttpStatusCode.Forbidden,
             title = "Party not authorized",

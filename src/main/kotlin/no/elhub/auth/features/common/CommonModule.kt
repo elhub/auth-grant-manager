@@ -14,10 +14,6 @@ import io.ktor.server.application.Application
 import io.ktor.server.config.ApplicationConfig
 import io.ktor.server.plugins.di.dependencies
 import kotlinx.serialization.json.Json
-import no.elhub.auth.features.businessprocesses.common.AuthConfig
-import no.elhub.auth.features.businessprocesses.common.JwtTokenProvider
-import no.elhub.auth.features.businessprocesses.common.JwtTokenProviderImpl
-import no.elhub.auth.features.common.auth.PDPAuthorizationProvider
 import no.elhub.auth.features.common.party.ExposedPartyRepository
 import no.elhub.auth.features.common.party.PartyRepository
 import no.elhub.auth.features.common.party.PartyService
@@ -43,29 +39,6 @@ fun Application.commonModule() {
                     json(
                         Json {
                             ignoreUnknownKeys = true
-                        }
-                    )
-                }
-                install(Logging) {
-                    format = LoggingFormat.OkHttp
-                    level = LogLevel.INFO
-                }
-            }
-        }
-        provide<HttpClient>(name = "pdpHttpClient") {
-            HttpClient(CIO) {
-                install(HttpTimeout) {
-                    requestTimeoutMillis = 10_000
-                    connectTimeoutMillis = 10_000
-                    socketTimeoutMillis = 10_000
-                }
-                install(ContentNegotiation) {
-                    json(
-                        Json {
-                            ignoreUnknownKeys = true
-                            // PDP distinguishes between omitted fields and explicit nulls.
-                            // Omit nullable fields so optional values are treated as not provided.
-                            explicitNulls = false
                         }
                     )
                 }
@@ -105,11 +78,6 @@ fun Application.commonModule() {
                     level = LogLevel.INFO
                 }
             }
-        }
-
-        provide<PDPAuthorizationProvider> {
-            val pdpBaseUrl = appEnvironment.config.property("pdp.baseUrl").getString()
-            PDPAuthorizationProvider(httpClient = resolve("pdpHttpClient"), pdpBaseUrl = pdpBaseUrl)
         }
 
         provide<PartyRepository> { ExposedPartyRepository() }

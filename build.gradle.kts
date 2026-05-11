@@ -56,6 +56,7 @@ dependencies {
     // JSON validation
     implementation(libs.json.skema)
     implementation(libs.elhub.jsonapi)
+    implementation(libs.auth.pdp.plugin)
     // Unit Testing
     testImplementation(testFixtures(libs.elhub.jsonapi))
     testImplementation(libs.database.postgresql)
@@ -102,7 +103,7 @@ dockerCompose {
 }
 
 openApiValidate {
-    inputSpec = "$projectDir/src/main/resources/static/openapi.yaml"
+    inputSpec.set(file("$projectDir/src/main/resources/static/openapi.yaml"))
     recommend = true
 }
 

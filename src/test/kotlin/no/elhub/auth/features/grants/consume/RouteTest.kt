@@ -1,6 +1,5 @@
 package no.elhub.auth.features.grants.consume
 
-import arrow.core.left
 import arrow.core.right
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
@@ -14,8 +13,6 @@ import io.ktor.server.testing.testApplication
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
-import no.elhub.auth.features.common.auth.AuthError
-import no.elhub.auth.features.common.auth.AuthorizationProvider
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.grants.AuthorizationGrant
@@ -25,8 +22,6 @@ import no.elhub.auth.features.grants.consume.dto.JsonApiConsumeRequest
 import no.elhub.auth.patchJson
 import no.elhub.auth.setupAppWith
 import no.elhub.auth.validateConflictErrorResponse
-import no.elhub.auth.validateForbiddenResponse
-import no.elhub.auth.validateInvalidTokenResponse
 import no.elhub.auth.validateMalformedInputResponse
 import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObject
 import java.time.OffsetDateTime
@@ -35,95 +30,63 @@ import java.util.UUID
 class RouteTest : FunSpec({
     val authorizedSystem = AuthorizationParty(id = "id", type = PartyType.System)
     val validUuid = "02fe286b-4519-4ba8-9c84-dc18bffc9eb3"
-    lateinit var authProvider: AuthorizationProvider
     lateinit var handler: Handler
+
     beforeAny {
-        authProvider = mockk<AuthorizationProvider>()
         handler = mockk<Handler>()
     }
 
     test("PATCH /{id} with invalid uuid returns 400") {
-        coEvery { authProvider.authorizeElhubService(any()) } returns authorizedSystem.right()
-
         testApplication {
-            setupAppWith { route(handler, authProvider) }
-            val invalidId = "invalid-uuid"
-            val response = client.patch("/$invalidId")
-
+            setupAppWith(authorizedSystem) { route(handler) }
+            val response = client.patch("/invalid-uuid")
             validateMalformedInputResponse(response)
             coVerify(exactly = 0) { handler.invoke(any()) }
         }
     }
 
-    test("PATCH /{id} returns 400 Invalid token when authorization fails with Invalid token error") {
-        coEvery { authProvider.authorizeElhubService(any()) } returns AuthError.InvalidToken.left()
-
+    test("PATCH /{id} returns Bad Request when body contains a blank id") {
         testApplication {
-            setupAppWith { route(handler, authProvider) }
-
-            val response = client.patch("/$validUuid")
-            response.status shouldBe HttpStatusCode.Unauthorized
-            validateInvalidTokenResponse(response)
-            coVerify(exactly = 0) { handler.invoke(any()) }
-        }
-    }
-
-    test("PATCH /{id} returns 403 Forbidden when auth fails with unauthorized") {
-        coEvery { authProvider.authorizeElhubService(any()) } returns AuthError.AccessDenied.left()
-
-        testApplication {
-            setupAppWith { route(handler, authProvider) }
-            val response = client.patch("/$validUuid")
-            response.status shouldBe HttpStatusCode.Forbidden
-            validateForbiddenResponse(response)
-            coVerify(exactly = 0) { handler.invoke(any()) }
-        }
-    }
-
-    test("PATCH /{id} returns Bad Request when body contains an blank id in request body") {
-        coEvery { authProvider.authorizeElhubService(any()) } returns authorizedSystem.right()
-        testApplication {
-            setupAppWith { route(handler, authProvider) }
+            setupAppWith(authorizedSystem) { route(handler) }
             val response = client.patchJson<JsonApiConsumeRequest>("/$validUuid", patchGrantBody(id = ""))
             response.status shouldBe HttpStatusCode.BadRequest
             coVerify(exactly = 0) { handler.invoke(any()) }
         }
     }
-    test("PATCH /{id} returns Bad Request when body contains an invalid uuid in request body") {
-        coEvery { authProvider.authorizeElhubService(any()) } returns authorizedSystem.right()
+
+    test("PATCH /{id} returns Conflict when body contains an invalid uuid") {
         testApplication {
-            setupAppWith { route(handler, authProvider) }
+            setupAppWith(authorizedSystem) { route(handler) }
             val response = client.patchJson("/$validUuid", patchGrantBody(id = "not-a-uuid"))
             response.status shouldBe HttpStatusCode.Conflict
             validateConflictErrorResponse(response)
             coVerify(exactly = 0) { handler.invoke(any()) }
         }
     }
+
     test("PATCH /{id} returns Conflict when type is not AuthorizationGrant") {
-        coEvery { authProvider.authorizeElhubService(any()) } returns authorizedSystem.right()
         testApplication {
-            setupAppWith { route(handler, authProvider) }
+            setupAppWith(authorizedSystem) { route(handler) }
             val response = client.patchJson("/$validUuid", patchGrantBody(id = validUuid, type = "WrongType"))
             response.status shouldBe HttpStatusCode.Conflict
             validateConflictErrorResponse(response)
             coVerify(exactly = 0) { handler.invoke(any()) }
         }
     }
-    test("PATCH /{id} returns Bad Request when status is missing in attributes") {
-        coEvery { authProvider.authorizeElhubService(any()) } returns authorizedSystem.right()
-        testApplication {
-            setupAppWith { route(handler, authProvider) }
 
+    test("PATCH /{id} returns Bad Request when status is missing in attributes") {
+        testApplication {
+            setupAppWith(authorizedSystem) { route(handler) }
             val response = client.patch("/$validUuid") {
                 contentType(ContentType.Application.Json)
                 setBody(
                     """{
-                  \"data\": {
-                    \"id\": \"$validUuid\",
-                    \"type\": \"AuthorizationGrant\",
-                    \"attributes\": {}
-                  }
-                }"""
+                      "data": {
+                        "id": "$validUuid",
+                        "type": "AuthorizationGrant",
+                        "attributes": {}
+                      }
+                    }"""
                 )
             }
             response.status shouldBe HttpStatusCode.BadRequest
@@ -131,32 +94,28 @@ class RouteTest : FunSpec({
         }
     }
 
-    test("PATCH /{id} returns bad request when id in path is correct, but not in the requestbody") {
-        coEvery { authProvider.authorizeElhubService(any()) } returns authorizedSystem.right()
+    test("PATCH /{id} returns Bad Request when id in path does not match request body") {
         testApplication {
-            setupAppWith { route(handler, authProvider) }
-            val invalidUuid = "invalid-uuid"
+            setupAppWith(authorizedSystem) { route(handler) }
             val response = client.patch("/$validUuid") {
                 contentType(ContentType.Application.Json)
                 setBody(
                     """{
-                  \"data\": {
-                    \"id\": \"$invalidUuid\",
-                    \"type\": \"AuthorizationGrant\",
-                    \"attributes\": {}
-                  }
-                }"""
+                      "data": {
+                        "id": "invalid-uuid",
+                        "type": "AuthorizationGrant",
+                        "attributes": {}
+                      }
+                    }"""
                 )
             }
             response.status shouldBe HttpStatusCode.BadRequest
-
             coVerify(exactly = 0) { handler.invoke(any()) }
         }
     }
 
     test("PATCH /{id} returns OK and calls handler on valid request") {
-        coEvery { authProvider.authorizeElhubService(any()) } returns authorizedSystem.right()
-        val party = no.elhub.auth.features.common.party.AuthorizationParty("test", no.elhub.auth.features.common.party.PartyType.Person)
+        val party = AuthorizationParty("test", PartyType.Person)
         val expectedGrant = AuthorizationGrant(
             id = UUID.fromString(validUuid),
             grantStatus = AuthorizationGrant.Status.Exhausted,
@@ -175,7 +134,7 @@ class RouteTest : FunSpec({
         )
         coEvery { handler.invoke(any()) } returns expectedGrant.right()
         testApplication {
-            setupAppWith { route(handler, authProvider) }
+            setupAppWith(authorizedSystem) { route(handler) }
             val response = client.patch("/$validUuid") {
                 contentType(ContentType.Application.Json)
                 setBody(patchGrantBody(id = validUuid))

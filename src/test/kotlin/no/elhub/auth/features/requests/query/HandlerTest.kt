@@ -45,7 +45,7 @@ class HandlerTest : FunSpec({
 
     fun requestRepoReturning(page: Page<AuthorizationRequest>): RequestRepository =
         mockk<RequestRepository> {
-            coEvery { findAllAndSortByCreatedAt(any(), any()) } returns page.right()
+            coEvery { findAndSortByCreatedAt(any(), any(), any()) } returns page.right()
         }
 
     fun grantRepoReturning(result: Map<UUID, AuthorizationGrant>): GrantRepository =
@@ -53,15 +53,16 @@ class HandlerTest : FunSpec({
             coEvery { findBySourceIds(any(), any()) } returns result.right()
         }
 
-    test("passes pagination to repository and preserves page metadata") {
+    test("passes pagination and status to repository and preserves page metadata") {
         val pagination = Pagination(page = 1, size = 5)
         val request = makeRequest()
         val requestRepo = requestRepoReturning(Page(listOf(request), 10L, pagination))
         val handler = Handler(requestRepo, grantRepoReturning(emptyMap()))
 
-        val response = handler(Query(authorizedParty = authorizedParty, pagination = pagination))
+        val statuses = listOf(AuthorizationRequest.Status.Accepted, AuthorizationRequest.Status.Pending)
+        val response = handler(Query(authorizedParty = authorizedParty, pagination = pagination, statuses = statuses))
 
-        coVerify(exactly = 1) { requestRepo.findAllAndSortByCreatedAt(authorizedParty, pagination) }
+        coVerify(exactly = 1) { requestRepo.findAndSortByCreatedAt(authorizedParty, pagination, statuses) }
         val page = response.shouldBeRight()
         page.pagination shouldBe pagination
         page.totalItems shouldBe 10L

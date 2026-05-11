@@ -2,12 +2,12 @@ package no.elhub.auth.features.documents.create
 
 import arrow.core.getOrElse
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
-import no.elhub.auth.features.common.auth.AuthorizationProvider
-import no.elhub.auth.features.common.auth.toApiErrorResponse
+import no.elhub.auth.features.common.auth.authorizedParty
+import no.elhub.auth.features.common.receiveEither
+import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.common.toTypeMismatchApiErrorResponse
 import no.elhub.auth.features.documents.create.dto.JsonApiCreateDocumentRequest
 import no.elhub.auth.features.documents.create.dto.toCreateDocumentResponse
@@ -16,19 +16,14 @@ import org.slf4j.LoggerFactory
 
 private val logger = LoggerFactory.getLogger(Route::class.java)
 
-fun Route.route(
-    handler: Handler,
-    authProvider: AuthorizationProvider,
-) {
+fun Route.route(handler: Handler) {
     post {
-        val resolvedActor = authProvider.authorizeMaskinporten(call)
-            .getOrElse {
-                val error = it.toApiErrorResponse()
-                call.respond(error.first, error.second)
+        val requestBody = call.receiveEither<JsonApiCreateDocumentRequest>()
+            .getOrElse { error ->
+                val (status, body) = error.toApiErrorResponse()
+                call.respond(status, body)
                 return@post
             }
-
-        val requestBody = call.receive<JsonApiCreateDocumentRequest>()
 
         if (requestBody.data.type != "AuthorizationDocument") {
             val (status, message) = toTypeMismatchApiErrorResponse(
@@ -39,7 +34,7 @@ fun Route.route(
             return@post
         }
 
-        val model = requestBody.toModel(resolvedActor)
+        val model = requestBody.toModel(call.authorizedParty)
 
         val document = handler(model)
             .getOrElse { error ->

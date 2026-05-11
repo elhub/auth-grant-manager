@@ -29,8 +29,15 @@ typealias GetRequestCollectionResponse = PaginatedCollectionResponse<
         >
     >
 
-fun Page<AuthorizationRequest>.toGetCollectionResponse(): GetRequestCollectionResponse {
+fun Page<AuthorizationRequest>.toGetCollectionResponse(
+    statuses: List<AuthorizationRequest.Status> = emptyList(),
+): GetRequestCollectionResponse {
     val p = this.pagination
+    val extraParams = if (statuses.isEmpty()) {
+        emptyMap()
+    } else {
+        mapOf("filter[status]" to statuses.joinToString(","))
+    }
 
     return GetRequestCollectionResponse(
         data = this.items.map { request ->
@@ -73,7 +80,7 @@ fun Page<AuthorizationRequest>.toGetCollectionResponse(): GetRequestCollectionRe
                 )
             )
         },
-        links = toPaginationLinks(REQUESTS_PATH),
+        links = toPaginationLinks(REQUESTS_PATH, extraParams),
         meta = buildJsonObject {
             put("createdAt", currentTimeOslo().toTimeZoneOffsetString())
             put("totalItems", this@toGetCollectionResponse.totalItems)

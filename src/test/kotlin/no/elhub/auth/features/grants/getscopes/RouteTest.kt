@@ -12,24 +12,19 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import no.elhub.auth.features.common.QueryError
-import no.elhub.auth.features.common.auth.AuthError
-import no.elhub.auth.features.common.auth.AuthorizationProvider
 import no.elhub.auth.features.common.currentTimeUtc
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.grants.AuthorizationScope
 import no.elhub.auth.features.grants.common.dto.AuthorizationGrantScopesResponse
 import no.elhub.auth.setupAppWith
-import no.elhub.auth.validateForbiddenResponse
 import no.elhub.auth.validateInternalServerErrorResponse
 import no.elhub.auth.validateMalformedInputResponse
-import no.elhub.auth.validateNotAuthorizedResponse
 import no.elhub.auth.validateNotFoundResponse
 import java.util.UUID
 
 class RouteTest : FunSpec({
     lateinit var handler: Handler
-    lateinit var authProvider: AuthorizationProvider
 
     val validUuid = "02fe286b-4519-4ba8-9c84-dc18bffc9eb3"
     val authorizedSystem = AuthorizationParty(id = "id", type = PartyType.System)
@@ -46,76 +41,39 @@ class RouteTest : FunSpec({
     val expectedScopes = listOf(scope)
 
     beforeAny {
-        authProvider = mockk<AuthorizationProvider>()
         handler = mockk<Handler>()
     }
 
-    test("GET /{id}/scopes returns 401 when authorization fails with InvalidToken") {
-        coEvery { authProvider.authorizeAll(any()) } returns AuthError.InvalidToken.left()
-        testApplication {
-            setupAppWith { route(handler, authProvider) }
-            val response = client.get("/$validUuid/scopes")
-            response.status shouldBe HttpStatusCode.Unauthorized
-            coVerify(exactly = 0) { handler(any()) }
-        }
-    }
-
-    test("GET /{id}/scopes returns 401 when authorization fails with NotAuthorized") {
-        coEvery { authProvider.authorizeAll(any()) } returns AuthError.NotAuthorized.left()
-        testApplication {
-            setupAppWith { route(handler, authProvider) }
-            val response = client.get("/$validUuid/scopes")
-            validateNotAuthorizedResponse(response)
-            coVerify(exactly = 0) { handler(any()) }
-        }
-    }
-
-    test("GET /{id}/scopes returns 403 when authorization fails with AccessDenied") {
-        coEvery { authProvider.authorizeAll(any()) } returns AuthError.AccessDenied.left()
-        testApplication {
-            setupAppWith { route(handler, authProvider) }
-            val response = client.get("/$validUuid/scopes")
-            validateForbiddenResponse(response)
-            coVerify(exactly = 0) { handler(any()) }
-        }
-    }
-
     test("GET /{id}/scopes returns 400 when id is not a valid UUID") {
-        coEvery { authProvider.authorizeAll(any()) } returns authorizedSystem.right()
         testApplication {
-            setupAppWith { route(handler, authProvider) }
+            setupAppWith(authorizedSystem) { route(handler) }
             validateMalformedInputResponse(client.get("/not-a-uuid/scopes"))
             coVerify(exactly = 0) { handler(any()) }
         }
     }
 
     test("GET /{id}/scopes returns 404 when handler returns ResourceNotFoundError") {
-        coEvery { authProvider.authorizeAll(any()) } returns authorizedSystem.right()
         coEvery { handler(any()) } returns QueryError.ResourceNotFoundError.left()
         testApplication {
-            setupAppWith { route(handler, authProvider) }
-            val response = client.get("/$validUuid/scopes")
-            validateNotFoundResponse(response)
+            setupAppWith(authorizedSystem) { route(handler) }
+            validateNotFoundResponse(client.get("/$validUuid/scopes"))
             coVerify(exactly = 1) { handler(any()) }
         }
     }
 
     test("GET /{id}/scopes returns 500 when handler returns IOError") {
-        coEvery { authProvider.authorizeAll(any()) } returns authorizedSystem.right()
         coEvery { handler(any()) } returns QueryError.IOError.left()
         testApplication {
-            setupAppWith { route(handler, authProvider) }
-            val response = client.get("/$validUuid/scopes")
-            validateInternalServerErrorResponse(response)
+            setupAppWith(authorizedSystem) { route(handler) }
+            validateInternalServerErrorResponse(client.get("/$validUuid/scopes"))
             coVerify(exactly = 1) { handler(any()) }
         }
     }
 
-    test("GET /{id}/scopes returns 200 and correct body when authorized as system and handler succeeds") {
-        coEvery { authProvider.authorizeAll(any()) } returns authorizedSystem.right()
+    test("GET /{id}/scopes returns 200 and correct body when authorized as system") {
         coEvery { handler(any()) } returns expectedScopes.right()
         testApplication {
-            setupAppWith { route(handler, authProvider) }
+            setupAppWith(authorizedSystem) { route(handler) }
             val response = client.get("/$validUuid/scopes")
             response.status shouldBe HttpStatusCode.OK
             val body = response.body<AuthorizationGrantScopesResponse>()
@@ -133,11 +91,10 @@ class RouteTest : FunSpec({
         }
     }
 
-    test("GET /{id}/scopes returns 200 and correct body when authorized as person and handler succeeds") {
-        coEvery { authProvider.authorizeAll(any()) } returns authorizedPerson.right()
+    test("GET /{id}/scopes returns 200 and correct body when authorized as person") {
         coEvery { handler(any()) } returns expectedScopes.right()
         testApplication {
-            setupAppWith { route(handler, authProvider) }
+            setupAppWith(authorizedPerson) { route(handler) }
             val response = client.get("/$validUuid/scopes")
             response.status shouldBe HttpStatusCode.OK
             val body = response.body<AuthorizationGrantScopesResponse>()
@@ -147,11 +104,10 @@ class RouteTest : FunSpec({
         }
     }
 
-    test("GET /{id}/scopes returns 200 and correct body when authorized as org and handler succeeds") {
-        coEvery { authProvider.authorizeAll(any()) } returns authorizedOrg.right()
+    test("GET /{id}/scopes returns 200 and correct body when authorized as org") {
         coEvery { handler(any()) } returns expectedScopes.right()
         testApplication {
-            setupAppWith { route(handler, authProvider) }
+            setupAppWith(authorizedOrg) { route(handler) }
             val response = client.get("/$validUuid/scopes")
             response.status shouldBe HttpStatusCode.OK
             val body = response.body<AuthorizationGrantScopesResponse>()
@@ -162,10 +118,9 @@ class RouteTest : FunSpec({
     }
 
     test("GET /{id}/scopes returns 200 with empty list when handler returns no scopes") {
-        coEvery { authProvider.authorizeAll(any()) } returns authorizedSystem.right()
         coEvery { handler(any()) } returns emptyList<AuthorizationScope>().right()
         testApplication {
-            setupAppWith { route(handler, authProvider) }
+            setupAppWith(authorizedSystem) { route(handler) }
             val response = client.get("/$validUuid/scopes")
             response.status shouldBe HttpStatusCode.OK
             val body = response.body<AuthorizationGrantScopesResponse>()
