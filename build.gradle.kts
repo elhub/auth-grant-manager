@@ -187,6 +187,8 @@ val localEnvVars = mapOf(
     "EDIEL_USERNAME" to "test",
     "EDIEL_PASSWORD" to "test",
     "EDIEL_SERVICE_URL" to "https://ws.qa1.ediel.no/api/",
+    "AUTH_PERSONS_IDP_CLIENT_ID" to "test",
+    "AUTH_PERSONS_IDP_CLIENT_SECRET" to "test",
 )
 
 tasks.named<JavaExec>("run").configure {

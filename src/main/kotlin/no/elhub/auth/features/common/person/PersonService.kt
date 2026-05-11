@@ -6,6 +6,7 @@ import arrow.core.left
 import arrow.core.right
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
@@ -14,6 +15,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import kotlinx.serialization.json.Json
+import no.elhub.auth.features.businessprocesses.common.JwtTokenProvider
 import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObject
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import no.elhub.devxp.jsonapi.response.JsonApiErrorObject
@@ -28,12 +30,13 @@ interface PersonService {
 class ApiPersonService(
     private val cfg: PersonApiConfig,
     private val client: HttpClient,
+    private val tokenProvider: JwtTokenProvider,
 ) : PersonService {
 
     private val logger = LoggerFactory.getLogger(PersonService::class.java)
 
     private companion object {
-        const val TRACE_HEADER = "Elhub-Trace-Id"
+        const val TRACE_HEADER = "ElhubTraceId"
         const val CALL_ID_MDC_KEY = "traceId"
     }
 
@@ -45,8 +48,10 @@ class ApiPersonService(
         }
 
         return Either.catch {
-            val response = client.post("${cfg.baseUri}/persons") {
+            val jwtToken = tokenProvider.getToken()
+            val response = client.post("${cfg.baseUri}/market-parties/v0/persons") {
                 headers[TRACE_HEADER] = traceHeader.toString()
+                header("Authorization", "Bearer $jwtToken")
                 contentType(ContentType.Application.Json)
                 setBody(
                     PersonRequest(

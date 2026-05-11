@@ -3,13 +3,18 @@ package no.elhub.auth.features.common
 import io.kotest.core.listeners.AfterProjectListener
 import io.kotest.core.listeners.BeforeSpecListener
 import io.kotest.core.spec.Spec
+import io.ktor.server.application.Application
+import io.ktor.server.plugins.di.dependencies
+import no.elhub.auth.features.businessprocesses.common.JwtTokenProvider
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.wait.strategy.Wait
 import org.testcontainers.utility.DockerImageName
 import java.time.Duration
 
 object AuthPersonsTestContainer {
-    private val image = DockerImageName.parse("docker.jfrog.elhub.cloud/frzq0sxltynr/auth/auth-persons-mock:0.1.37-64")
+    private val image = DockerImageName.parse(
+        "docker.jfrog.elhub.cloud/frzq0sxltynr/auth/auth-persons-mock:0.1.52-156"
+    )
     private var container: GenericContainer<*>? = null
 
     fun start() {
@@ -42,4 +47,14 @@ object AuthPersonsTestContainerExtension : BeforeSpecListener {
 
 object StopAuthPersonsTestContainerExtension : AfterProjectListener {
     override suspend fun afterProject() = AuthPersonsTestContainer.stop()
+}
+
+fun Application.stubAuthPersonsTokenProvider() {
+    dependencies {
+        provide<JwtTokenProvider>(name = "authPersonsTokenProvider") {
+            object : JwtTokenProvider {
+                override suspend fun getToken(): String = "stub-test-token"
+            }
+        }
+    }
 }

@@ -26,6 +26,7 @@ import no.elhub.auth.features.common.PdpTestContainerExtension
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.RunPostgresScriptExtension
 import no.elhub.auth.features.common.commonModule
+import no.elhub.auth.features.common.stubAuthPersonsTokenProvider
 import no.elhub.auth.features.grants.common.dto.AuthorizationGrantScopesResponse
 import no.elhub.auth.features.grants.common.dto.CollectionGrantResponse
 import no.elhub.auth.features.grants.common.dto.SingleGrantResponse
@@ -785,6 +786,7 @@ private fun ApplicationTestBuilder.setupAuthorizationGrantTestApplication() {
     application {
         applicationModule()
         commonModule()
+        stubAuthPersonsTokenProvider()
         module()
     }
 
@@ -796,6 +798,9 @@ private fun ApplicationTestBuilder.setupAuthorizationGrantTestApplication() {
             "ktor.database.driverClass" to "org.postgresql.Driver",
             "featureToggle.enableEndpoints" to "true",
             "authPersons.baseUri" to AuthPersonsTestContainer.baseUri(),
+            "authPersons.idp.clientId" to "test-client-id",
+            "authPersons.idp.clientSecret" to "test-client-secret",
+            "idp.tokenUrl" to "http://localhost:9999/token",
             "pdp.baseUrl" to "http://localhost:8085"
         )
     }

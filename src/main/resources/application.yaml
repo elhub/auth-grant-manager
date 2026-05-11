@@ -3,6 +3,7 @@ ktor:
     modules:
       - no.elhub.auth.ApplicationKt.module
       - no.elhub.auth.features.common.CommonModuleKt.commonModule
+      - no.elhub.auth.features.common.CommonModuleKt.personServiceModule
       - no.elhub.auth.features.businessprocesses.datasharing.StromprisServiceModuleKt.stromprisServiceModule
       - no.elhub.auth.features.businessprocesses.ediel.EdielServiceModuleKt.edielServiceModule
       - no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceModuleKt.meteringPointsServiceModule
@@ -44,6 +45,9 @@ pdp:
 
 authPersons:
   baseUri: ${AUTH_PERSONS_URL}
+  idp:
+    clientId: ${AUTH_PERSONS_IDP_CLIENT_ID}
+    clientSecret: ${AUTH_PERSONS_IDP_CLIENT_SECRET}
 
 structureData:
   meteringPointsService:
