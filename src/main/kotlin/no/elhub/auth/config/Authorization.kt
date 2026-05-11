@@ -7,6 +7,7 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.plugins.logging.LoggingFormat
+import io.ktor.http.HttpHeaders
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import io.ktor.server.plugins.callid.callId
@@ -53,6 +54,12 @@ fun Application.configureAuthorization() {
             }
 
             traceIdResolver = { call -> call.callId }
+
+            tokenResolver = { call ->
+                call.request.headers[HttpHeaders.Authorization]
+                    ?.takeIf { it.startsWith("Bearer ") }
+                    ?.removePrefix("Bearer ")
+            }
 
             enforce { response ->
                 // Resolve the AuthorizationParty from the PDP response and store it on call attributes
