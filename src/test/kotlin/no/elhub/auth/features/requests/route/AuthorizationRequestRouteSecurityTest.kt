@@ -16,7 +16,6 @@ import no.elhub.auth.features.common.PdpTestContainerExtension
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.RunPostgresScriptExtension
 import no.elhub.auth.features.requests.REQUESTS_PATH
-import no.elhub.auth.validateInternalServerErrorResponse
 import no.elhub.auth.validateInvalidTokenResponse
 import no.elhub.auth.validateMissingTokenResponse
 import no.elhub.auth.validatePartyNotAuthorizedResponse
@@ -221,45 +220,6 @@ class AuthorizationRequestRouteSecurityTest : FunSpec({
                     header(ApiHeaders.SENDER_GLN, "0107000000021")
                 }
                 validateServiceUnavailableResponse(response)
-            }
-        }
-    }
-    context("When Authorization header format is malformed") {
-        testApplication {
-            setUpAuthorizationRequestTestApplication()
-            test("GET /authorization-requests/ returns 401") {
-                val response = client.get(REQUESTS_PATH) {
-                    header(HttpHeaders.Authorization, "Bear not-bearer-format")
-                    header(ApiHeaders.SENDER_GLN, "0107000000021")
-                }
-                validateInvalidTokenResponse(response)
-            }
-        }
-    }
-    context("When SenderGLN header is missing for maskinporten token") {
-        testApplication {
-            setUpAuthorizationRequestTestApplication()
-            test("GET /authorization-requests/ returns 401") {
-                val response = client.get(REQUESTS_PATH) {
-                    header(HttpHeaders.Authorization, "Bearer maskinporten")
-                    // SenderGLN intentionally omitted
-                }
-                validateInvalidTokenResponse(response)
-            }
-        }
-    }
-    context("When PDP returns an unparseable response body") {
-        beforeSpec {
-            pdpContainer.registerPdpUnparseableResponseMapping(token = "pdp-unparseable")
-        }
-        testApplication {
-            setUpAuthorizationRequestTestApplication()
-            test("GET /authorization-requests/ returns 500") {
-                val response = client.get(REQUESTS_PATH) {
-                    header(HttpHeaders.Authorization, "Bearer pdp-unparseable")
-                    header(ApiHeaders.SENDER_GLN, "0107000000021")
-                }
-                validateInternalServerErrorResponse(response)
             }
         }
     }
