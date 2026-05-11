@@ -14,6 +14,9 @@ import io.ktor.server.application.Application
 import io.ktor.server.config.ApplicationConfig
 import io.ktor.server.plugins.di.dependencies
 import kotlinx.serialization.json.Json
+import no.elhub.auth.features.businessprocesses.common.AuthConfig
+import no.elhub.auth.features.businessprocesses.common.JwtTokenProvider
+import no.elhub.auth.features.businessprocesses.common.JwtTokenProviderImpl
 import no.elhub.auth.features.common.party.ExposedPartyRepository
 import no.elhub.auth.features.common.party.PartyRepository
 import no.elhub.auth.features.common.party.PartyService
@@ -83,7 +86,11 @@ fun Application.commonModule() {
         provide<PartyRepository> { ExposedPartyRepository() }
 
         provide<PersonService> {
-            ApiPersonService(cfg = resolve(), client = resolve("commonHttpClient"), tokenProvider = resolve("authPersonsTokenProvider"))
+            ApiPersonService(
+                cfg = resolve(),
+                client = resolve("commonHttpClient"),
+                tokenProvider = resolve("authPersonsTokenProvider")
+            )
         }
 
         provide<PartyService> {
