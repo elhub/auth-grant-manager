@@ -101,7 +101,14 @@ class RouteTest : FunSpec({
             body.data[0].attributes.status shouldBe "Pending"
             body.data[0].attributes.requestType shouldBe "ChangeOfBalanceSupplierForPerson"
             body.data[0].attributes.validTo.shouldNotBeBlank()
+            body.data[0].attributes.createdAt.shouldNotBeBlank()
+            body.data[0].attributes.updatedAt.shouldNotBeBlank()
             body.data[0].relationships.requestedBy.data.id shouldBe requestedByParty.id
+            body.data[0].relationships.requestedBy.data.type shouldBe requestedByParty.type.name
+            body.data[0].relationships.requestedFrom.data.id shouldBe requestedFromParty.id
+            body.data[0].relationships.requestedFrom.data.type shouldBe requestedFromParty.type.name
+            body.data[0].relationships.requestedTo.data.id shouldBe requestedToParty.id
+            body.data[0].relationships.requestedTo.data.type shouldBe requestedToParty.type.name
             body.data[0].relationships.approvedBy.shouldBeNull()
             body.data[0].relationships.authorizationGrant.shouldBeNull()
             body.data[0].meta.values shouldBe emptyMap()
@@ -134,8 +141,12 @@ class RouteTest : FunSpec({
             response.status shouldBe HttpStatusCode.OK
             val body = response.body<GetRequestCollectionResponse>()
             body.data.shouldHaveSize(2)
+            body.data[0].id shouldBe request1.id.toString()
             body.data[0].attributes.status shouldBe "Pending"
+            body.data[0].attributes.requestType shouldBe "ChangeOfBalanceSupplierForPerson"
+            body.data[1].id shouldBe request2.id.toString()
             body.data[1].attributes.status shouldBe "Accepted"
+            body.data[1].attributes.requestType shouldBe "MoveInAndChangeOfBalanceSupplierForPerson"
         }
         coVerify(exactly = 1) { handler.invoke(any()) }
     }

@@ -150,6 +150,15 @@ class RouteTest : FunSpec({
             body.data.type shouldBe "AuthorizationRequest"
             body.data.attributes.status shouldBe "Accepted"
             body.data.attributes.requestType shouldBe "ChangeOfBalanceSupplierForPerson"
+            body.data.attributes.validTo.shouldNotBeBlank()
+            body.data.attributes.createdAt.shouldNotBeBlank()
+            body.data.attributes.updatedAt.shouldNotBeBlank()
+            body.data.relationships.requestedBy.data.id shouldBe requestedByParty.id
+            body.data.relationships.requestedBy.data.type shouldBe requestedByParty.type.name
+            body.data.relationships.requestedFrom.data.id shouldBe requestedFromParty.id
+            body.data.relationships.requestedFrom.data.type shouldBe requestedFromParty.type.name
+            body.data.relationships.requestedTo.data.id shouldBe requestedToParty.id
+            body.data.relationships.requestedTo.data.type shouldBe requestedToParty.type.name
             body.data.relationships.approvedBy!!.data.id shouldBe "nin1"
             body.data.relationships.approvedBy!!.data.type shouldBe "Person"
             body.data.relationships.authorizationGrant!!.data.id shouldBe authorizationRequest.grantId.toString()

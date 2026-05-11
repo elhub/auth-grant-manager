@@ -122,6 +122,10 @@ class RouteTest : FunSpec({
             body.data.attributes.updatedAt.shouldNotBeBlank()
             body.data.relationships.requestedBy.data.id shouldBe requestedByParty.id
             body.data.relationships.requestedBy.data.type shouldBe requestedByParty.type.name
+            body.data.relationships.requestedFrom.data.id shouldBe requestedFromParty.id
+            body.data.relationships.requestedFrom.data.type shouldBe requestedFromParty.type.name
+            body.data.relationships.requestedTo.data.id shouldBe requestedToParty.id
+            body.data.relationships.requestedTo.data.type shouldBe requestedToParty.type.name
             body.data.relationships.approvedBy.shouldBeNull()
             body.data.relationships.authorizationGrant.shouldBeNull()
             body.data.meta.values shouldBe emptyMap()
