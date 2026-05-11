@@ -229,6 +229,33 @@ class PdpTestContainerExtension() : BeforeSpecListener, AfterSpecListener {
         client.close()
     }
 
+    suspend fun registerPdpUnparseableResponseMapping(token: String) {
+        val client = HttpClient(CIO)
+        client.post("http://localhost:8085/__admin/mappings") {
+            contentType(ContentType.Application.Json)
+            setBody(
+                """
+                {
+                  "priority": 1,
+                  "request": {
+                    "method": "POST",
+                    "url": "$AUTHINFO_POLICY_ROUTE",
+                    "bodyPatterns": [
+                      { "contains": "\"token\":\"Bearer $token\"" }
+                    ]
+                  },
+                  "response": {
+                    "status": 200,
+                    "headers": { "Content-Type": "application/json" },
+                    "body": "this is not valid json {"
+                  }
+                }
+                """.trimIndent()
+            )
+        }
+        client.close()
+    }
+
     suspend fun registerPdpHttpErrorMapping(token: String, statusCode: Int = 500) {
         val client = HttpClient(CIO)
         client.post("http://localhost:8085/__admin/mappings") {
