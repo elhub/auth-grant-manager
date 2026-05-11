@@ -11,8 +11,6 @@ import io.ktor.server.testing.testApplication
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
-import no.elhub.auth.features.common.auth.AuthError
-import no.elhub.auth.features.common.auth.AuthorizationProvider
 import no.elhub.auth.features.common.currentTimeUtc
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyIdentifier
@@ -27,7 +25,6 @@ import no.elhub.auth.features.requests.create.dto.JsonApiCreateRequest
 import no.elhub.auth.postJson
 import no.elhub.auth.setupAppWith
 import no.elhub.auth.validateInternalServerErrorResponse
-import no.elhub.auth.validateInvalidTokenResponse
 import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObjectWithMeta
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import java.util.UUID
@@ -58,18 +55,9 @@ class RouteTest : FunSpec({
                 requestType = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson
             ),
             meta = CreateRequestMeta(
-                requestedBy = PartyIdentifier(
-                    idType = PartyIdentifierType.GlobalLocationNumber,
-                    idValue = requestedByParty.id
-                ),
-                requestedFrom = PartyIdentifier(
-                    idType = PartyIdentifierType.NationalIdentityNumber,
-                    idValue = requestedFromParty.id
-                ),
-                requestedTo = PartyIdentifier(
-                    idType = PartyIdentifierType.NationalIdentityNumber,
-                    idValue = requestedToParty.id
-                ),
+                requestedBy = PartyIdentifier(idType = PartyIdentifierType.GlobalLocationNumber, idValue = requestedByParty.id),
+                requestedFrom = PartyIdentifier(idType = PartyIdentifierType.NationalIdentityNumber, idValue = requestedFromParty.id),
+                requestedTo = PartyIdentifier(idType = PartyIdentifierType.NationalIdentityNumber, idValue = requestedToParty.id),
                 requestedFromName = "John Doe",
                 requestedForMeteringPointId = "123456789012345678",
                 requestedForMeteringPointAddress = "Test Street 1",
@@ -80,19 +68,16 @@ class RouteTest : FunSpec({
         )
     )
 
-    lateinit var authProvider: AuthorizationProvider
     lateinit var handler: Handler
 
     beforeAny {
-        authProvider = mockk<AuthorizationProvider>()
         handler = mockk<Handler>()
     }
 
     test("POST / returns 201 when authorized as BalanceSupplier org and handler succeeds") {
-        coEvery { authProvider.authorize(any()) } returns authorizedOrg.right()
         coEvery { handler.invoke(any()) } returns authorizationRequest.right()
         testApplication {
-            setupAppWith { route(handler, authProvider) }
+            setupAppWith(authorizedOrg) { route(handler) }
             val response = client.postJson("/", examplePostBody)
             response.status shouldBe HttpStatusCode.Created
             val body = response.body<CreateRequestResponse>()
@@ -102,23 +87,12 @@ class RouteTest : FunSpec({
             body.data.attributes.createdAt shouldNotBe null
             body.data.attributes.updatedAt shouldNotBe null
             body.data.attributes.validTo shouldNotBe null
-
             body.data.relationships.requestedBy.data.id shouldBe requestedByParty.id
             body.data.relationships.requestedBy.data.type shouldBe requestedByParty.type.name
-
-            body.data.relationships.requestedFrom.data.id shouldBe requestedFromParty.id
-            body.data.relationships.requestedFrom.data.type shouldBe requestedFromParty.type.name
-
-            body.data.relationships.requestedTo.data.id shouldBe requestedToParty.id
-            body.data.relationships.requestedTo.data.type shouldBe requestedToParty.type.name
-
             body.data.relationships.requestedFrom.data.id shouldBe requestedFromParty.id
             body.data.relationships.requestedFrom.data.type shouldBe requestedFromParty.type.name
             body.data.relationships.requestedTo.data.id shouldBe requestedToParty.id
             body.data.relationships.requestedTo.data.type shouldBe requestedToParty.type.name
-            body.data.relationships.requestedBy.data.id shouldBe requestedByParty.id
-            body.data.relationships.requestedBy.data.type shouldBe requestedByParty.type.name
-
             body.data.meta.values shouldBe authorizationRequest.properties.associate { it.key to it.value }
             body.data.links.self shouldBe "$REQUESTS_PATH/${authorizationRequest.id}"
             coVerify(exactly = 1) { handler.invoke(any()) }
@@ -126,57 +100,31 @@ class RouteTest : FunSpec({
     }
 
     test("POST / returns 201 when redirectURI is omitted from API request") {
-        coEvery { authProvider.authorize(any()) } returns authorizedOrg.right()
         coEvery { handler.invoke(any()) } returns authorizationRequest.right()
         testApplication {
-            setupAppWith { route(handler, authProvider) }
+            setupAppWith(authorizedOrg) { route(handler) }
             val bodyWithoutRedirect = examplePostBody.copy(
-                data = examplePostBody.data.copy(
-                    meta = examplePostBody.data.meta.copy(redirectURI = null)
-                )
+                data = examplePostBody.data.copy(meta = examplePostBody.data.meta.copy(redirectURI = null))
             )
-
             val response = client.postJson("/", bodyWithoutRedirect)
             response.status shouldBe HttpStatusCode.Created
-
-            coVerify(exactly = 1) {
-                handler.invoke(
-                    withArg {
-                        it.businessMeta.redirectURI shouldBe null
-                    }
-                )
-            }
-        }
-    }
-
-    test("POST / returns 401 when authorization fails with InvalidToken") {
-        coEvery { authProvider.authorize(any()) } returns AuthError.InvalidToken.left()
-        testApplication {
-            setupAppWith { route(handler, authProvider) }
-            val response = client.postJson("/", examplePostBody)
-            validateInvalidTokenResponse(response)
-            coVerify(exactly = 0) { handler.invoke(any()) }
+            coVerify(exactly = 1) { handler.invoke(withArg { it.businessMeta.redirectURI shouldBe null }) }
         }
     }
 
     test("POST / returns 409 Conflict when type in body is not AuthorizationRequest") {
-        coEvery { authProvider.authorize(any()) } returns authorizedOrg.right()
         testApplication {
-            setupAppWith { route(handler, authProvider) }
-            val wrongTypeBody = examplePostBody.copy(
-                data = examplePostBody.data.copy(type = "WrongType")
-            )
-            val response = client.postJson("/", wrongTypeBody)
+            setupAppWith(authorizedOrg) { route(handler) }
+            val response = client.postJson("/", examplePostBody.copy(data = examplePostBody.data.copy(type = "WrongType")))
             response.status shouldBe HttpStatusCode.Conflict
         }
         coVerify(exactly = 0) { handler.invoke(any()) }
     }
 
-    test("POST / returns 400 when handler fails with InvalidNinError") {
-        coEvery { authProvider.authorize(any()) } returns authorizedOrg.right()
+    test("POST / returns 422 when handler fails with InvalidNinError") {
         coEvery { handler.invoke(any()) } returns CreateError.InvalidNinError.left()
         testApplication {
-            setupAppWith { route(handler, authProvider) }
+            setupAppWith(authorizedOrg) { route(handler) }
             val response = client.postJson("/", examplePostBody)
             response.status shouldBe HttpStatusCode.UnprocessableEntity
             val responseJson: JsonApiErrorCollection = response.body()
@@ -193,10 +141,9 @@ class RouteTest : FunSpec({
     }
 
     test("POST / returns 403 when handler fails with AuthorizationError") {
-        coEvery { authProvider.authorize(any()) } returns authorizedOrg.right()
         coEvery { handler.invoke(any()) } returns CreateError.AuthorizationError.left()
         testApplication {
-            setupAppWith { route(handler, authProvider) }
+            setupAppWith(authorizedOrg) { route(handler) }
             val response = client.postJson("/", examplePostBody)
             response.status shouldBe HttpStatusCode.Forbidden
             val responseJson: JsonApiErrorCollection = response.body()
@@ -213,34 +160,28 @@ class RouteTest : FunSpec({
     }
 
     test("POST / returns 500 when handler fails with PersistenceError") {
-        coEvery { authProvider.authorize(any()) } returns authorizedOrg.right()
         coEvery { handler.invoke(any()) } returns CreateError.PersistenceError.left()
         testApplication {
-            setupAppWith { route(handler, authProvider) }
-            val response = client.postJson("/", examplePostBody)
-            validateInternalServerErrorResponse(response)
+            setupAppWith(authorizedOrg) { route(handler) }
+            validateInternalServerErrorResponse(client.postJson("/", examplePostBody))
             coVerify(exactly = 1) { handler.invoke(any()) }
         }
     }
 
     test("POST / returns 500 when handler fails with MappingError") {
-        coEvery { authProvider.authorize(any()) } returns authorizedOrg.right()
         coEvery { handler.invoke(any()) } returns CreateError.MappingError.left()
         testApplication {
-            setupAppWith { route(handler, authProvider) }
-            val response = client.postJson("/", examplePostBody)
-            validateInternalServerErrorResponse(response)
+            setupAppWith(authorizedOrg) { route(handler) }
+            validateInternalServerErrorResponse(client.postJson("/", examplePostBody))
             coVerify(exactly = 1) { handler.invoke(any()) }
         }
     }
 
     test("POST / returns 500 when handler fails with RequestedPartyError") {
-        coEvery { authProvider.authorize(any()) } returns authorizedOrg.right()
         coEvery { handler.invoke(any()) } returns CreateError.RequestedPartyError.left()
         testApplication {
-            setupAppWith { route(handler, authProvider) }
-            val response = client.postJson("/", examplePostBody)
-            validateInternalServerErrorResponse(response)
+            setupAppWith(authorizedOrg) { route(handler) }
+            validateInternalServerErrorResponse(client.postJson("/", examplePostBody))
             coVerify(exactly = 1) { handler.invoke(any()) }
         }
     }

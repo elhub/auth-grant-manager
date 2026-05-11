@@ -4,7 +4,7 @@ import io.ktor.server.application.Application
 import io.ktor.server.plugins.di.dependencies
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
-import no.elhub.auth.features.common.auth.AuthorizationProvider
+import no.elhub.auth.features.common.auth.AuthGrantManagerPolicy
 import no.elhub.auth.features.grants.common.ExposedGrantPropertiesRepository
 import no.elhub.auth.features.grants.common.ExposedGrantRepository
 import no.elhub.auth.features.grants.common.GrantPropertiesRepository
@@ -14,6 +14,7 @@ import no.elhub.auth.features.requests.common.ExposedRequestRepository
 import no.elhub.auth.features.requests.common.ProxyRequestBusinessHandler
 import no.elhub.auth.features.requests.common.RequestPropertiesRepository
 import no.elhub.auth.features.requests.common.RequestRepository
+import no.elhub.auth.plugin.tokenAuthorize
 import no.elhub.auth.features.requests.create.Handler as CreateHandler
 import no.elhub.auth.features.requests.create.route as createRoute
 import no.elhub.auth.features.requests.get.Handler as GetHandler
@@ -42,14 +43,15 @@ fun Application.module() {
     val createHandler: CreateHandler by dependencies
     val getHandler: GetHandler by dependencies
     val queryHandler: QueryHandler by dependencies
-    val authorizationProvider: AuthorizationProvider by dependencies
 
     routing {
-        route(REQUESTS_PATH) {
-            updateRoute(updateHandler, authorizationProvider)
-            createRoute(createHandler, authorizationProvider)
-            getRoute(getHandler, authorizationProvider)
-            queryRoute(queryHandler, authorizationProvider)
+        tokenAuthorize(AuthGrantManagerPolicy) {
+            route(REQUESTS_PATH) {
+                updateRoute(updateHandler)
+                createRoute(createHandler)
+                getRoute(getHandler)
+                queryRoute(queryHandler)
+            }
         }
     }
 }

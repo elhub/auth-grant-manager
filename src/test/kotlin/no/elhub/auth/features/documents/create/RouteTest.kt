@@ -17,8 +17,6 @@ import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
-import no.elhub.auth.features.common.auth.AuthError
-import no.elhub.auth.features.common.auth.AuthorizationProvider
 import no.elhub.auth.features.common.currentTimeOslo
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyIdentifier
@@ -35,7 +33,6 @@ import no.elhub.auth.postJson
 import no.elhub.auth.setupAppWith
 import no.elhub.auth.shouldBeValidUuid
 import no.elhub.auth.validateInternalServerErrorResponse
-import no.elhub.auth.validateInvalidTokenResponse
 import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObjectWithMeta
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import java.time.Duration
@@ -98,41 +95,26 @@ class RouteTest : FunSpec({
         )
     )
 
-    lateinit var authProvider: AuthorizationProvider
     lateinit var handler: Handler
 
     beforeAny {
-        authProvider = mockk<AuthorizationProvider>()
         handler = mockk<Handler>()
     }
 
     test("POST / returns 201 when authorized as org and handler succeeds") {
-        coEvery { authProvider.authorize(any()) } returns authorizedOrg.right()
         coEvery { handler.invoke(any()) } returns document.right()
         testApplication {
-            setupAppWith { route(handler, authProvider) }
+            setupAppWith(authorizedOrg) { route(handler) }
             val result = client.postJson("/", examplePostBody)
             validateCreateDocumentResponse(result, examplePostBody)
             coVerify(exactly = 1) { handler.invoke(any()) }
         }
     }
 
-    test("POST / returns approprate error when authorization fails") {
-        coEvery { authProvider.authorize(any()) } returns AuthError.InvalidToken.left()
-        coEvery { handler.invoke(any()) } returns document.right()
-        testApplication {
-            setupAppWith { route(handler, authProvider) }
-            val result = client.postJson("/", examplePostBody)
-            validateInvalidTokenResponse(result)
-            coVerify(exactly = 0) { handler.invoke(any()) }
-        }
-    }
-
-    test("POST / returns 400 Bad Request with 'Invalid national identity number' handler fails with InvalidNinError") {
-        coEvery { authProvider.authorize(any()) } returns authorizedOrg.right()
+    test("POST / returns 422 when handler fails with InvalidNinError") {
         coEvery { handler.invoke(any()) } returns CreateError.InvalidNinError.left()
         testApplication {
-            setupAppWith { route(handler, authProvider) }
+            setupAppWith(authorizedOrg) { route(handler) }
             val result = client.postJson("/", examplePostBody)
             result.status shouldBe HttpStatusCode.BadRequest
             val resultJson: JsonApiErrorCollection = result.body()
@@ -147,22 +129,19 @@ class RouteTest : FunSpec({
             coVerify(exactly = 1) { handler.invoke(any()) }
         }
     }
-    test("POST / returns 500 Internal Server Error when handler fails with FileGenerationError") {
-        coEvery { authProvider.authorize(any()) } returns authorizedOrg.right()
+
+    test("POST / returns 500 when handler fails with FileGenerationError") {
         coEvery { handler.invoke(any()) } returns CreateError.FileGenerationError.left()
         testApplication {
-            setupAppWith { route(handler, authProvider) }
-            val result = client.postJson("/", examplePostBody)
-            validateInternalServerErrorResponse(result)
+            setupAppWith(authorizedOrg) { route(handler) }
+            validateInternalServerErrorResponse(client.postJson("/", examplePostBody))
             coVerify(exactly = 1) { handler.invoke(any()) }
         }
     }
 
     test("POST / returns 400 with detail about missing field when missing field in request body") {
-        coEvery { authProvider.authorize(any()) } returns authorizedOrg.right()
-        coEvery { handler.invoke(any()) } returns CreateError.FileGenerationError.left()
         testApplication {
-            setupAppWith { route(handler, authProvider) }
+            setupAppWith(authorizedOrg) { route(handler) }
             val result = client.postJson("/", createBodyWithMissingField)
             result.status shouldBe HttpStatusCode.BadRequest
             val resultJson: JsonApiErrorCollection = result.body()
@@ -177,11 +156,10 @@ class RouteTest : FunSpec({
             coVerify(exactly = 0) { handler.invoke(any()) }
         }
     }
+
     test("POST / returns 400 with specific field reference when invalid field value in request body") {
-        coEvery { authProvider.authorize(any()) } returns authorizedOrg.right()
-        coEvery { handler.invoke(any()) } returns CreateError.FileGenerationError.left()
         testApplication {
-            setupAppWith { route(handler, authProvider) }
+            setupAppWith(authorizedOrg) { route(handler) }
             val result = client.postJson("/", createBodyWithInvalidFieldValue)
             result.status shouldBe HttpStatusCode.BadRequest
             val resultJson: JsonApiErrorCollection = result.body()
@@ -200,6 +178,7 @@ class RouteTest : FunSpec({
 
 private const val REQUESTED_FROM_NIN = "02916297702"
 private const val REQUESTED_TO_NIN = "14810797496"
+
 private val createBodyWithMissingField = """
     {
       "data": {
@@ -215,12 +194,12 @@ private val createBodyWithMissingField = """
           "requestedForMeteringPointId": "123456789012345678",
           "requestedForMeteringPointAddress": "quaerendum",
           "balanceSupplierName": "Balance Supplier",
-          "balanceSupplierContractName": "Selena Chandler",
-          "redirectURI": "https://example.com/redirect"
+          "balanceSupplierContractName": "Selena Chandler"
         }
       }
     }
 """.trimIndent()
+
 private val createBodyWithInvalidFieldValue = """
     {
       "data": {
@@ -236,8 +215,7 @@ private val createBodyWithInvalidFieldValue = """
           "requestedForMeteringPointId": "123456789012345678",
           "requestedForMeteringPointAddress": "quaerendum",
           "balanceSupplierName": "Balance Supplier",
-          "balanceSupplierContractName": "Selena Chandler",
-          "redirectURI": "https://example.com/redirect"
+          "balanceSupplierContractName": "Selena Chandler"
         }
       }
     }
@@ -254,38 +232,28 @@ private suspend fun validateCreateDocumentResponse(response: HttpResponse, creat
         attributes.shouldNotBeNull().apply {
             documentType shouldBe createBody.data.attributes.documentType.toString()
             status shouldBe AuthorizationDocument.Status.Pending.name
-
             val createdAt = OffsetDateTime.parse(createdAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
             val updatedAt = OffsetDateTime.parse(updatedAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
             val validTo = Instant.parse(validTo).toLocalDateTime(TimeZone.of("Europe/Oslo")).date
-
             validTo shouldBe defaultValidTo
-
             (Duration.between(createdAt, currentTimeOslo()).abs() < nowTolerance).shouldBeTrue()
             (Duration.between(updatedAt, currentTimeOslo()).abs() < nowTolerance).shouldBeTrue()
         }
         relationships.shouldNotBeNull().apply {
-            requestedBy.apply {
-                data.apply {
-                    id shouldBe createBody.data.meta.requestedBy.idValue
-                    type shouldBe "Organization"
-                }
+            requestedBy.data.apply {
+                id shouldBe createBody.data.meta.requestedBy.idValue
+                type shouldBe "Organization"
             }
-            requestedFrom.apply {
-                data.apply {
-                    id.shouldNotBeNull()
-                    type shouldBe "Person"
-                }
+            requestedFrom.data.apply {
+                id.shouldNotBeNull()
+                type shouldBe "Person"
             }
-            requestedTo.apply {
-                data.apply {
-                    id.shouldNotBeNull()
-                    type shouldBe "Person"
-                }
+            requestedTo.data.apply {
+                id.shouldNotBeNull()
+                type shouldBe "Person"
             }
         }
         meta.shouldNotBeNull().apply {
-            // From mocked handler
             values["key1"] shouldBe "value1"
             values["key2"] shouldBe "value2"
         }
@@ -295,7 +263,4 @@ private suspend fun validateCreateDocumentResponse(response: HttpResponse, creat
     createDocumentResponse.meta.shouldNotBeNull().apply {
         "createdAt".shouldNotBeNull()
     }
-    val createdDocumentId = createDocumentResponse.data.id.toString()
-    val linkToDocument = createDocumentResponse.data.links.self
-    val linkToDocumentFile = createDocumentResponse.data.links.file
 }

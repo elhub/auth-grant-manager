@@ -5,8 +5,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
-import no.elhub.auth.features.common.auth.AuthorizationProvider
-import no.elhub.auth.features.common.auth.toApiErrorResponse
+import no.elhub.auth.features.common.auth.authorizedParty
 import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.common.validatePathId
 import no.elhub.auth.features.requests.get.dto.toGetSingleResponse
@@ -16,15 +15,8 @@ import java.util.UUID
 const val REQUEST_ID_PARAM = "id"
 private val logger = LoggerFactory.getLogger(Route::class.java)
 
-fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
+fun Route.route(handler: Handler) {
     get("/{$REQUEST_ID_PARAM}") {
-        val authorizedParty = authProvider.authorize(call)
-            .getOrElse { err ->
-                val (status, body) = err.toApiErrorResponse()
-                call.respond(status, body)
-                return@get
-            }
-
         val id: UUID = validatePathId(call.parameters[REQUEST_ID_PARAM])
             .getOrElse { err ->
                 val (status, body) = err.toApiErrorResponse()
@@ -32,7 +24,7 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
                 return@get
             }
 
-        val query = Query(id = id, authorizedParty = authorizedParty)
+        val query = Query(id = id, authorizedParty = call.authorizedParty)
 
         val request = handler(query)
             .getOrElse { error ->

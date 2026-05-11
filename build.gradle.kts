@@ -56,6 +56,7 @@ dependencies {
     // JSON validation
     implementation(libs.json.skema)
     implementation(libs.elhub.jsonapi)
+    implementation(libs.auth.pdp.plugin)
     // Unit Testing
     testImplementation(testFixtures(libs.elhub.jsonapi))
     testImplementation(libs.database.postgresql)

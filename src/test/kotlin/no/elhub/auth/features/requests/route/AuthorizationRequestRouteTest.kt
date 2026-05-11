@@ -15,11 +15,11 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.server.testing.testApplication
+import no.elhub.auth.features.common.ApiHeaders
 import no.elhub.auth.features.common.AuthPersonsTestContainerExtension
 import no.elhub.auth.features.common.PdpTestContainerExtension
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.RunPostgresScriptExtension
-import no.elhub.auth.features.common.auth.PDPAuthorizationProvider
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
 import no.elhub.auth.features.requests.AuthorizationRequest
@@ -91,7 +91,7 @@ class AuthorizationRequestRouteTest : FunSpec({
             test("GET /authorization-requests/ should return only requests for authenticated organization when using Maskinporten token") {
                 val response = client.get(REQUESTS_PATH) {
                     header(HttpHeaders.Authorization, "Bearer maskinporten")
-                    header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                    header(ApiHeaders.SENDER_GLN, "0107000000021")
                 }
                 response.status shouldBe HttpStatusCode.OK
                 val responseJson: GetRequestCollectionResponse = response.body()
@@ -145,7 +145,7 @@ class AuthorizationRequestRouteTest : FunSpec({
 
                 val response = client.get(REQUESTS_PATH) {
                     header(HttpHeaders.Authorization, "Bearer no-requests")
-                    header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000022")
+                    header(ApiHeaders.SENDER_GLN, "0107000000022")
                 }
 
                 response.status shouldBe HttpStatusCode.OK
@@ -159,7 +159,7 @@ class AuthorizationRequestRouteTest : FunSpec({
             test("GET /authorization-requests/{id} should return the request for authenticated organization when using Maskinporten token") {
                 val response = client.get("$REQUESTS_PATH/4f71d596-99e4-415e-946d-7252c1a40c50") {
                     header(HttpHeaders.Authorization, "Bearer maskinporten")
-                    header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                    header(ApiHeaders.SENDER_GLN, "0107000000021")
                 }
                 response.status shouldBe HttpStatusCode.OK
                 val responseJson: GetRequestSingleResponse = response.body()
@@ -301,7 +301,7 @@ class AuthorizationRequestRouteTest : FunSpec({
             test("POST /authorization-requests/ should return 201 Created") {
                 val result = client.post(REQUESTS_PATH) {
                     header(HttpHeaders.Authorization, "Bearer maskinporten")
-                    header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                    header(ApiHeaders.SENDER_GLN, "0107000000021")
                     contentType(ContentType.Application.Json)
                     setBody(examplePostBody)
                 }
@@ -463,7 +463,7 @@ class AuthorizationRequestRouteTest : FunSpec({
             test("GET /authorization-requests/{id} should return 404 on a nonexistent ID") {
                 val response = client.get("$REQUESTS_PATH/167b1be9-f563-4b31-af1a-50439d567ee5") {
                     header(HttpHeaders.Authorization, "Bearer maskinporten")
-                    header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                    header(ApiHeaders.SENDER_GLN, "0107000000021")
                 }
                 response.status shouldBe HttpStatusCode.NotFound
             }
@@ -506,7 +506,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                 val response =
                     client.post(REQUESTS_PATH) {
                         header(HttpHeaders.Authorization, "Bearer maskinporten")
-                        header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                        header(ApiHeaders.SENDER_GLN, "0107000000021")
                         contentType(ContentType.Application.Json)
                         setBody(
                             """
@@ -651,7 +651,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                 val response =
                     client.post(REQUESTS_PATH) {
                         header(HttpHeaders.Authorization, "Bearer maskinporten")
-                        header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                        header(ApiHeaders.SENDER_GLN, "0107000000021")
                         contentType(ContentType.Application.Json)
                         setBody(
                             """
@@ -698,7 +698,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                 val response =
                     client.post(REQUESTS_PATH) {
                         header(HttpHeaders.Authorization, "Bearer maskinporten")
-                        header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                        header(ApiHeaders.SENDER_GLN, "0107000000021")
                         contentType(ContentType.Application.Json)
                         setBody(
                             """
@@ -745,7 +745,7 @@ class AuthorizationRequestRouteTest : FunSpec({
                 val response =
                     client.post(REQUESTS_PATH) {
                         header(HttpHeaders.Authorization, "Bearer maskinporten")
-                        header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                        header(ApiHeaders.SENDER_GLN, "0107000000021")
                         contentType(ContentType.Application.Json)
                         setBody(
                             JsonApiCreateRequest(
@@ -801,7 +801,7 @@ class AuthorizationRequestRouteTest : FunSpec({
             test("POST /authorization-requests/ should return 422 Unprocessable Entity when requestee has invalid nin in body") {
                 val response = client.post(REQUESTS_PATH) {
                     header(HttpHeaders.Authorization, "Bearer maskinporten")
-                    header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                    header(ApiHeaders.SENDER_GLN, "0107000000021")
                     contentType(ContentType.Application.Json)
                     setBody(
                         JsonApiCreateRequest(
