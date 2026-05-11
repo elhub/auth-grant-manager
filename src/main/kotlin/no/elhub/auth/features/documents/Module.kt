@@ -5,7 +5,7 @@ import io.ktor.server.config.ApplicationConfig
 import io.ktor.server.plugins.di.dependencies
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
-import no.elhub.auth.features.common.auth.AuthorizationProvider
+import no.elhub.auth.features.common.auth.AuthGrantManagerPolicy
 import no.elhub.auth.features.documents.common.DocumentPropertiesRepository
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.documents.common.ExposedDocumentPropertiesRepository
@@ -18,6 +18,7 @@ import no.elhub.auth.features.documents.create.HashicorpVaultSignatureProvider
 import no.elhub.auth.features.documents.create.VaultConfig
 import no.elhub.auth.features.filegenerator.PdfGenerator
 import no.elhub.auth.features.filegenerator.PdfGeneratorConfig
+import no.elhub.auth.plugin.tokenAuthorize
 import no.elhub.auth.features.documents.confirm.Handler as ConfirmHandler
 import no.elhub.auth.features.documents.confirm.route as confirmRoute
 import no.elhub.auth.features.documents.create.Handler as CreateHandler
@@ -83,14 +84,15 @@ fun Application.module() {
     val confirmHandler: ConfirmHandler by dependencies
     val getHandler: GetHandler by dependencies
     val queryHandler: QueryHandler by dependencies
-    val authProvider: AuthorizationProvider by dependencies
 
     routing {
-        route(DOCUMENTS_PATH) {
-            createRoute(createHandler, authProvider)
-            confirmRoute(confirmHandler, authProvider)
-            getRoute(getHandler, authProvider)
-            queryRoute(queryHandler, authProvider)
+        tokenAuthorize(AuthGrantManagerPolicy) {
+            route(DOCUMENTS_PATH) {
+                createRoute(createHandler)
+                confirmRoute(confirmHandler)
+                getRoute(getHandler)
+                queryRoute(queryHandler)
+            }
         }
     }
 }

@@ -19,12 +19,12 @@ import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import kotlinx.serialization.json.jsonPrimitive
+import no.elhub.auth.features.common.ApiHeaders
 import no.elhub.auth.features.common.AuthPersonsTestContainer
 import no.elhub.auth.features.common.AuthPersonsTestContainerExtension
 import no.elhub.auth.features.common.PdpTestContainerExtension
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.RunPostgresScriptExtension
-import no.elhub.auth.features.common.auth.PDPAuthorizationProvider
 import no.elhub.auth.features.common.commonModule
 import no.elhub.auth.features.grants.common.dto.AuthorizationGrantScopesResponse
 import no.elhub.auth.features.grants.common.dto.CollectionGrantResponse
@@ -78,7 +78,7 @@ class AuthorizationGrantRouteTest : FunSpec({
             test("Should return 200 OK on a valid ID") {
                 val response = client.get("$GRANTS_PATH/$grantId") {
                     header(HttpHeaders.Authorization, "Bearer maskinporten")
-                    header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                    header(ApiHeaders.SENDER_GLN, "0107000000021")
                 }
                 response.status shouldBe HttpStatusCode.OK
                 val responseJson: SingleGrantResponse = response.body()
@@ -138,7 +138,7 @@ class AuthorizationGrantRouteTest : FunSpec({
             test("Should return 400 on an invalid ID") {
                 val response = client.get("$GRANTS_PATH/test") {
                     header(HttpHeaders.Authorization, "Bearer maskinporten")
-                    header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                    header(ApiHeaders.SENDER_GLN, "0107000000021")
                 }
                 response.status shouldBe HttpStatusCode.BadRequest
                 val responseJson: JsonApiErrorCollection = response.body()
@@ -158,7 +158,7 @@ class AuthorizationGrantRouteTest : FunSpec({
             test("Should return 403 when the grant does not belong to the requester") {
                 val response = client.get("$GRANTS_PATH/b7f9c2e4-5a3d-4e2b-9c1a-8f6e2d3c4b5a") {
                     header(HttpHeaders.Authorization, "Bearer maskinporten")
-                    header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                    header(ApiHeaders.SENDER_GLN, "0107000000021")
                 }
                 response.status shouldBe HttpStatusCode.Forbidden
                 val responseJson: JsonApiErrorCollection = response.body()
@@ -177,7 +177,7 @@ class AuthorizationGrantRouteTest : FunSpec({
 
             test("Should return 401 when authorization header not set") {
                 val response = client.get("$GRANTS_PATH/b7f9c2e4-5a3d-4e2b-9c1a-8f6e2d3c4b5a") {
-                    header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                    header(ApiHeaders.SENDER_GLN, "0107000000021")
                 }
                 response.status shouldBe HttpStatusCode.Unauthorized
                 val responseJson: JsonApiErrorCollection = response.body()
@@ -185,8 +185,8 @@ class AuthorizationGrantRouteTest : FunSpec({
                     size shouldBe 1
                     this[0].apply {
                         status shouldBe "401"
-                        title shouldBe "Missing authorization"
-                        detail shouldBe "Bearer token is required in the Authorization header."
+                        title shouldBe "Unauthorized"
+                        detail shouldBe "Missing or invalid token."
                     }
                 }
                 responseJson.meta.apply {
@@ -278,7 +278,7 @@ class AuthorizationGrantRouteTest : FunSpec({
             test("Should return 404 on a nonexistent ID") {
                 val response = client.get("$GRANTS_PATH/123e4567-e89b-12d3-a456-426614174001") {
                     header(HttpHeaders.Authorization, "Bearer maskinporten")
-                    header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                    header(ApiHeaders.SENDER_GLN, "0107000000021")
                 }
                 response.status shouldBe HttpStatusCode.NotFound
                 val responseJson: JsonApiErrorCollection = response.body()
@@ -298,7 +298,7 @@ class AuthorizationGrantRouteTest : FunSpec({
             test("Should return 200 OK on a valid ID and a single authorization scope") {
                 val response = client.get("$GRANTS_PATH/$grantId/scopes") {
                     header(HttpHeaders.Authorization, "Bearer maskinporten")
-                    header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                    header(ApiHeaders.SENDER_GLN, "0107000000021")
                 }
                 response.status shouldBe HttpStatusCode.OK
                 val responseJson: AuthorizationGrantScopesResponse = response.body()
@@ -332,7 +332,7 @@ class AuthorizationGrantRouteTest : FunSpec({
             test("Should return 200 OK and an empty list for a grant with no authorization scopes") {
                 val response = client.get("$GRANTS_PATH/a8f9c2e4-5a3d-4e2b-9c1a-8f6e2d3c4b5a/scopes") {
                     header(HttpHeaders.Authorization, "Bearer maskinporten")
-                    header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                    header(ApiHeaders.SENDER_GLN, "0107000000021")
                 }
                 response.status shouldBe HttpStatusCode.OK
                 val responseJson: AuthorizationGrantScopesResponse = response.body()
@@ -342,7 +342,7 @@ class AuthorizationGrantRouteTest : FunSpec({
             test("Should return 200 OK on a valid ID and multiple authorization scope") {
                 val response = client.get("$GRANTS_PATH/d75522ba-0e62-449b-b1de-70b16f12ecaf/scopes") {
                     header(HttpHeaders.Authorization, "Bearer maskinporten")
-                    header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                    header(ApiHeaders.SENDER_GLN, "0107000000021")
                 }
                 response.status shouldBe HttpStatusCode.OK
                 val responseJson: AuthorizationGrantScopesResponse = response.body()
@@ -391,7 +391,7 @@ class AuthorizationGrantRouteTest : FunSpec({
 
             test("Should return 401 when authorization header not set") {
                 val response = client.get("$GRANTS_PATH/$grantId/scopes") {
-                    header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                    header(ApiHeaders.SENDER_GLN, "0107000000021")
                 }
                 response.status shouldBe HttpStatusCode.Unauthorized
                 val responseJson: JsonApiErrorCollection = response.body()
@@ -399,8 +399,8 @@ class AuthorizationGrantRouteTest : FunSpec({
                     size shouldBe 1
                     this[0].apply {
                         status shouldBe "401"
-                        title shouldBe "Missing authorization"
-                        detail shouldBe "Bearer token is required in the Authorization header."
+                        title shouldBe "Unauthorized"
+                        detail shouldBe "Missing or invalid token."
                     }
                 }
                 responseJson.meta.apply {
@@ -411,7 +411,7 @@ class AuthorizationGrantRouteTest : FunSpec({
             test("Should return 403 when the grant does not belong to the requester") {
                 val response = client.get("$GRANTS_PATH/b7f9c2e4-5a3d-4e2b-9c1a-8f6e2d3c4b5a/scopes") {
                     header(HttpHeaders.Authorization, "Bearer maskinporten")
-                    header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                    header(ApiHeaders.SENDER_GLN, "0107000000021")
                 }
                 response.status shouldBe HttpStatusCode.Forbidden
                 val responseJson: JsonApiErrorCollection = response.body()
@@ -461,7 +461,7 @@ class AuthorizationGrantRouteTest : FunSpec({
             test("Should return 400 on an invalid ID") {
                 val response = client.get("$GRANTS_PATH/test/scopes") {
                     header(HttpHeaders.Authorization, "Bearer maskinporten")
-                    header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                    header(ApiHeaders.SENDER_GLN, "0107000000021")
                 }
                 response.status shouldBe HttpStatusCode.BadRequest
                 val responseJson: JsonApiErrorCollection = response.body()
@@ -481,7 +481,7 @@ class AuthorizationGrantRouteTest : FunSpec({
             test("Should return 404 on a nonexistent ID") {
                 val response = client.get("$GRANTS_PATH/123e4567-e89b-12d3-a456-426614174005/scopes") {
                     header(HttpHeaders.Authorization, "Bearer maskinporten")
-                    header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                    header(ApiHeaders.SENDER_GLN, "0107000000021")
                 }
                 response.status shouldBe HttpStatusCode.NotFound
                 val responseJson: JsonApiErrorCollection = response.body()
@@ -504,7 +504,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                 test("GET /authorization-grants/ should return 200 OK") {
                     val response = client.get(GRANTS_PATH) {
                         header(HttpHeaders.Authorization, "Bearer maskinporten")
-                        header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                        header(ApiHeaders.SENDER_GLN, "0107000000021")
                     }
                     response.status shouldBe HttpStatusCode.OK
                     val responseJson: CollectionGrantResponse = response.body()

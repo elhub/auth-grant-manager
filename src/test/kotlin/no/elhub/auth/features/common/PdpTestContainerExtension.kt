@@ -15,7 +15,7 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
-import no.elhub.auth.features.common.auth.PDPAuthorizationProvider
+import no.elhub.auth.features.common.auth.AUTHINFO_POLICY_ROUTE
 import org.testcontainers.containers.GenericContainer
 
 class PdpTestContainerExtension() : BeforeSpecListener, AfterSpecListener {
@@ -42,9 +42,9 @@ class PdpTestContainerExtension() : BeforeSpecListener, AfterSpecListener {
                   "priority": 1,
                   "request": {
                     "method": "POST",
-                    "url": "${PDPAuthorizationProvider.POLICY}",
+                    "url": "$AUTHINFO_POLICY_ROUTE",
                     "bodyPatterns": [
-                      { "contains": "\"token\":\"$token\"" }
+                      { "contains": "\"token\":\"Bearer $token\"" }
                     ]
                   },
                   "response": {
@@ -82,9 +82,9 @@ class PdpTestContainerExtension() : BeforeSpecListener, AfterSpecListener {
                   "priority": 1,
                   "request": {
                     "method": "POST",
-                    "url": "${PDPAuthorizationProvider.POLICY}",
+                    "url": "$AUTHINFO_POLICY_ROUTE",
                     "bodyPatterns": [
-                      { "contains": "\"token\":\"$token\"" }
+                      { "contains": "\"token\":\"Bearer $token\"" }
                     ]
                   },
                   "response": {
@@ -126,9 +126,9 @@ class PdpTestContainerExtension() : BeforeSpecListener, AfterSpecListener {
                   "priority": 1,
                   "request": {
                     "method": "POST",
-                    "url": "${PDPAuthorizationProvider.POLICY}",
+                    "url": "$AUTHINFO_POLICY_ROUTE",
                     "bodyPatterns": [
-                      { "contains": "\"token\":\"$token\"" }
+                      { "contains": "\"token\":\"Bearer $token\"" }
                     ]
                   },
                   "response": {
@@ -160,9 +160,9 @@ class PdpTestContainerExtension() : BeforeSpecListener, AfterSpecListener {
                 {
                   "request": {
                     "method": "POST",
-                    "url": "${PDPAuthorizationProvider.POLICY}",
+                    "url": "$AUTHINFO_POLICY_ROUTE",
                     "bodyPatterns": [
-                      { "contains": "\"token\":\"invalid-token\"" }
+                      { "contains": "\"token\":\"Bearer invalid-token\"" }
                     ]
                   },
                   "response": {
@@ -198,9 +198,9 @@ class PdpTestContainerExtension() : BeforeSpecListener, AfterSpecListener {
                   "priority": 1,
                   "request": {
                     "method": "POST",
-                    "url": "${PDPAuthorizationProvider.POLICY}",
+                    "url": "$AUTHINFO_POLICY_ROUTE",
                     "bodyPatterns": [
-                      { "contains": "\"token\":\"$token\"" }
+                      { "contains": "\"token\":\"Bearer $token\"" }
                     ]
                   },
                   "response": {
@@ -218,6 +218,94 @@ class PdpTestContainerExtension() : BeforeSpecListener, AfterSpecListener {
                           "partyId": "$originalId",
                           "tokenStatus": "verified",
                           "tokenType": "enduser"
+                        }
+                      }
+                    }
+                  }
+                }
+                """.trimIndent()
+            )
+        }
+        client.close()
+    }
+
+    suspend fun registerPdpUnparseableResponseMapping(token: String) {
+        val client = HttpClient(CIO)
+        client.post("http://localhost:8085/__admin/mappings") {
+            contentType(ContentType.Application.Json)
+            setBody(
+                """
+                {
+                  "priority": 1,
+                  "request": {
+                    "method": "POST",
+                    "url": "$AUTHINFO_POLICY_ROUTE",
+                    "bodyPatterns": [
+                      { "contains": "\"token\":\"Bearer $token\"" }
+                    ]
+                  },
+                  "response": {
+                    "status": 200,
+                    "headers": { "Content-Type": "application/json" },
+                    "body": "this is not valid json {"
+                  }
+                }
+                """.trimIndent()
+            )
+        }
+        client.close()
+    }
+
+    suspend fun registerPdpHttpErrorMapping(token: String, statusCode: Int = 500) {
+        val client = HttpClient(CIO)
+        client.post("http://localhost:8085/__admin/mappings") {
+            contentType(ContentType.Application.Json)
+            setBody(
+                """
+                {
+                  "priority": 1,
+                  "request": {
+                    "method": "POST",
+                    "url": "$AUTHINFO_POLICY_ROUTE",
+                    "bodyPatterns": [
+                      { "contains": "\"token\":\"Bearer $token\"" }
+                    ]
+                  },
+                  "response": {
+                    "status": $statusCode,
+                    "headers": { "Content-Type": "application/json" },
+                    "body": "Internal Server Error"
+                  }
+                }
+                """.trimIndent()
+            )
+        }
+        client.close()
+    }
+
+    suspend fun registerPdpBodyErrorMapping(token: String, errorCode: String = "INTERNAL_ERROR", errorMessage: String = "An internal PDP error occurred") {
+        val client = HttpClient(CIO)
+        client.post("http://localhost:8085/__admin/mappings") {
+            contentType(ContentType.Application.Json)
+            setBody(
+                """
+                {
+                  "priority": 1,
+                  "request": {
+                    "method": "POST",
+                    "url": "$AUTHINFO_POLICY_ROUTE",
+                    "bodyPatterns": [
+                      { "contains": "\"token\":\"Bearer $token\"" }
+                    ]
+                  },
+                  "response": {
+                    "status": 200,
+                    "headers": { "Content-Type": "application/json" },
+                    "jsonBody": {
+                      "result": {
+                        "error": {
+                          "code": "$errorCode",
+                          "message": "$errorMessage"
                         }
                       }
                     }

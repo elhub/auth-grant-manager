@@ -10,15 +10,16 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.contentType
 import io.ktor.server.testing.testApplication
+import no.elhub.auth.features.common.ApiHeaders
 import no.elhub.auth.features.common.AuthPersonsTestContainerExtension
 import no.elhub.auth.features.common.PdpTestContainerExtension
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.RunPostgresScriptExtension
-import no.elhub.auth.features.common.auth.PDPAuthorizationProvider
 import no.elhub.auth.features.requests.REQUESTS_PATH
 import no.elhub.auth.validateInvalidTokenResponse
 import no.elhub.auth.validateMissingTokenResponse
 import no.elhub.auth.validatePartyNotAuthorizedResponse
+import no.elhub.auth.validateServiceUnavailableResponse
 import no.elhub.auth.validateUnsupportedPartyResponse
 
 class AuthorizationRequestRouteSecurityTest : FunSpec({
@@ -56,13 +57,13 @@ class AuthorizationRequestRouteSecurityTest : FunSpec({
             setUpAuthorizationRequestTestApplication()
             test("GET /authorization-requests/ returns 401") {
                 val response = client.get(REQUESTS_PATH) {
-                    header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                    header(ApiHeaders.SENDER_GLN, "0107000000021")
                 }
                 validateMissingTokenResponse(response)
             }
             test("GET /authorization-requests/{id} returns 401") {
                 val response = client.get("$REQUESTS_PATH/4f71d596-99e4-415e-946d-7352c1a40c53") {
-                    header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                    header(ApiHeaders.SENDER_GLN, "0107000000021")
                 }
                 validateMissingTokenResponse(response)
             }
@@ -71,7 +72,7 @@ class AuthorizationRequestRouteSecurityTest : FunSpec({
                 val response =
                     client.post(REQUESTS_PATH) {
                         header(
-                            PDPAuthorizationProvider.Companion.Headers.SENDER_GLN,
+                            ApiHeaders.SENDER_GLN,
                             "0107000000021"
                         )
                         contentType(ContentType.Application.Json)
@@ -90,7 +91,7 @@ class AuthorizationRequestRouteSecurityTest : FunSpec({
                     )
                 )
                 val response = client.patch("${REQUESTS_PATH}/$requestId") {
-                    header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000038")
+                    header(ApiHeaders.SENDER_GLN, "0107000000038")
                     contentType(ContentType.Application.Json)
                     setBody(examplePatchBody)
                 }
@@ -103,14 +104,14 @@ class AuthorizationRequestRouteSecurityTest : FunSpec({
             setUpAuthorizationRequestTestApplication()
             test("GET /authorization-requests/ returns 401") {
                 val response = client.get(REQUESTS_PATH) {
-                    header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                    header(ApiHeaders.SENDER_GLN, "0107000000021")
                     header(HttpHeaders.Authorization, "Bearer invalid-token")
                 }
                 validateInvalidTokenResponse(response)
             }
             test("GET /authorization-requests/{id} returns 401") {
                 val response = client.get("$REQUESTS_PATH/4f71d596-99e4-415e-946d-7352c1a40c53") {
-                    header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                    header(ApiHeaders.SENDER_GLN, "0107000000021")
                     header(HttpHeaders.Authorization, "Bearer invalid-token")
                 }
                 validateInvalidTokenResponse(response)
@@ -120,7 +121,7 @@ class AuthorizationRequestRouteSecurityTest : FunSpec({
                 val response =
                     client.post(REQUESTS_PATH) {
                         header(
-                            PDPAuthorizationProvider.Companion.Headers.SENDER_GLN,
+                            ApiHeaders.SENDER_GLN,
                             "0107000000021"
                         )
                         header(HttpHeaders.Authorization, "Bearer invalid-token")
@@ -140,7 +141,7 @@ class AuthorizationRequestRouteSecurityTest : FunSpec({
                     )
                 )
                 val response = client.patch("${REQUESTS_PATH}/$requestId") {
-                    header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000038")
+                    header(ApiHeaders.SENDER_GLN, "0107000000038")
                     header(HttpHeaders.Authorization, "Bearer invalid-token")
                     contentType(ContentType.Application.Json)
                     setBody(examplePatchBody)
@@ -155,7 +156,7 @@ class AuthorizationRequestRouteSecurityTest : FunSpec({
 
             test("GET /authorization-requests/ returns 403 for valid gridowner token") {
                 val response = client.get(REQUESTS_PATH) {
-                    header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                    header(ApiHeaders.SENDER_GLN, "0107000000021")
                     header(HttpHeaders.Authorization, "Bearer gridowner")
                 }
                 validateUnsupportedPartyResponse(response)
@@ -171,7 +172,7 @@ class AuthorizationRequestRouteSecurityTest : FunSpec({
                     )
                 )
                 val response = client.get("$REQUESTS_PATH/$requestId") {
-                    header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                    header(ApiHeaders.SENDER_GLN, "0107000000021")
                     header(HttpHeaders.Authorization, "Bearer gridowner")
                 }
                 validateUnsupportedPartyResponse(response)
@@ -179,7 +180,7 @@ class AuthorizationRequestRouteSecurityTest : FunSpec({
             test("GET /authorization-requests/{id} should return 403 when the request does not belong to the requester using maskinporten token") {
                 val response = client.get("$REQUESTS_PATH/4f71d596-99e4-415e-946d-7352c1a40c53") {
                     header(HttpHeaders.Authorization, "Bearer maskinporten")
-                    header(PDPAuthorizationProvider.Companion.Headers.SENDER_GLN, "0107000000021")
+                    header(ApiHeaders.SENDER_GLN, "0107000000021")
                 }
                 validatePartyNotAuthorizedResponse(response)
             }
@@ -189,6 +190,36 @@ class AuthorizationRequestRouteSecurityTest : FunSpec({
                     header(HttpHeaders.Authorization, "Bearer enduser")
                 }
                 validatePartyNotAuthorizedResponse(response)
+            }
+        }
+    }
+    context("When PDP returns an HTTP error") {
+        beforeSpec {
+            pdpContainer.registerPdpHttpErrorMapping(token = "pdp-http-error", statusCode = 500)
+        }
+        testApplication {
+            setUpAuthorizationRequestTestApplication()
+            test("GET /authorization-requests/ returns 503") {
+                val response = client.get(REQUESTS_PATH) {
+                    header(HttpHeaders.Authorization, "Bearer pdp-http-error")
+                    header(ApiHeaders.SENDER_GLN, "0107000000021")
+                }
+                validateServiceUnavailableResponse(response)
+            }
+        }
+    }
+    context("When PDP returns a body-level error") {
+        beforeSpec {
+            pdpContainer.registerPdpBodyErrorMapping(token = "pdp-body-error")
+        }
+        testApplication {
+            setUpAuthorizationRequestTestApplication()
+            test("GET /authorization-requests/ returns 503") {
+                val response = client.get(REQUESTS_PATH) {
+                    header(HttpHeaders.Authorization, "Bearer pdp-body-error")
+                    header(ApiHeaders.SENDER_GLN, "0107000000021")
+                }
+                validateServiceUnavailableResponse(response)
             }
         }
     }
