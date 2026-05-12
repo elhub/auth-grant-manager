@@ -2,7 +2,7 @@ package no.elhub.auth.features.businessprocesses.structuredata.organisations
 
 import io.kotest.core.listeners.AfterProjectListener
 import io.ktor.client.HttpClient
-import io.ktor.client.engine.cio.CIO
+import io.ktor.client.engine.apache5.Apache5
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.UserAgent
 import io.ktor.client.plugins.auth.Auth
@@ -13,7 +13,7 @@ import io.ktor.http.ContentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 
-val organisationsServiceHttpClient = HttpClient(CIO) {
+val organisationsServiceHttpClient = HttpClient(Apache5) {
     install(HttpTimeout) {
         connectTimeoutMillis = 30_000
         requestTimeoutMillis = 40_000

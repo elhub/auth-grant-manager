@@ -2,13 +2,13 @@ package no.elhub.auth.features.common
 
 import io.kotest.core.listeners.AfterProjectListener
 import io.ktor.client.HttpClient
-import io.ktor.client.engine.cio.CIO
+import io.ktor.client.engine.apache5.Apache5
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 
 val httpTestClient =
-    HttpClient(CIO) {
+    HttpClient(Apache5) {
         install(ContentNegotiation) {
             json(
                 Json {
