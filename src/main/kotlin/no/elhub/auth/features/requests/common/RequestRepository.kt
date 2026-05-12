@@ -379,9 +379,9 @@ class ExposedRequestRepository(
                     .singleOrNull() ?: raise(RepositoryWriteError.NotFoundError)
 
             if (rowsUpdated == 0) {
-                val isExpired = request[AuthorizationRequestTable.validTo] <= currentTimeUtc()
-                if (isExpired) raise(RepositoryWriteError.ExpiredError)
-                raise(RepositoryWriteError.ConflictError)
+                val isNonPending = request[AuthorizationRequestTable.requestStatus] != DatabaseRequestStatus.Pending
+                if (isNonPending) raise(RepositoryWriteError.ConflictError)
+                raise(RepositoryWriteError.ExpiredError)
             }
 
             findInternal(request)
