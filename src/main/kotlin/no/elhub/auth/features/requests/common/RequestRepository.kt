@@ -271,14 +271,17 @@ class ExposedRequestRepository(
             "rejectRequest",
             { RepositoryWriteError.UnexpectedError }
         ) {
+            val now = currentTimeUtc()
             val rowsUpdated = AuthorizationRequestTable.update(
-                where = { AuthorizationRequestTable.id eq requestId }
+                where = {
+                    (AuthorizationRequestTable.id eq requestId) and (AuthorizationRequestTable.requestStatus eq DatabaseRequestStatus.Pending) and (AuthorizationRequestTable.validTo greater now)
+                }
             ) {
                 it[requestStatus] = DatabaseRequestStatus.Rejected
                 it[updatedAt] = currentTimeUtc()
             }
 
-            updateAndFetch(requestId, rowsUpdated).bind()
+            fetchUpdated(requestId, rowsUpdated).bind()
         }
 
     override suspend fun findScopeIds(requestId: UUID): Either<RepositoryReadError, List<UUID>> =
@@ -310,18 +313,27 @@ class ExposedRequestRepository(
                 .mapLeft { AcceptWithGrantError.RequestError.Unexpected }
                 .bind()
 
+            val now = currentTimeUtc()
             val rowsUpdated =
                 AuthorizationRequestTable.update(
-                    where = { AuthorizationRequestTable.id eq requestId }
+                    where = {
+                        (AuthorizationRequestTable.id eq requestId) and
+                            (AuthorizationRequestTable.validTo greater now) and
+                            (AuthorizationRequestTable.requestStatus eq DatabaseRequestStatus.Pending)
+                    }
                 ) {
                     it[requestStatus] = DatabaseRequestStatus.Accepted
                     it[updatedAt] = currentTimeUtc()
                     it[this.approvedBy] = approvedByRecord.id
                 }
 
-            val acceptedRequest = updateAndFetch(requestId, rowsUpdated)
-                .mapLeft { AcceptWithGrantError.RequestError.Unexpected }
-                .bind()
+            val acceptedRequest = fetchUpdated(requestId, rowsUpdated)
+                .mapLeft { error ->
+                    when (error) {
+                        is RepositoryWriteError.ConflictError -> AcceptWithGrantError.RequestError.AlreadyProcessed
+                        else -> AcceptWithGrantError.RequestError.Unexpected
+                    }
+                }.bind()
 
             grantRepository.insert(grant)
                 .mapLeft { AcceptWithGrantError.GrantError }
@@ -352,13 +364,13 @@ class ExposedRequestRepository(
         }
     }
 
-    private suspend fun updateAndFetch(
+    private fun fetchUpdated(
         requestId: UUID,
         rowsUpdated: Int
     ): Either<RepositoryError, AuthorizationRequest> =
         either {
             if (rowsUpdated == 0) {
-                raise(RepositoryWriteError.UnexpectedError)
+                raise(RepositoryWriteError.ConflictError)
             }
 
             val request =
@@ -372,7 +384,7 @@ class ExposedRequestRepository(
                 .bind()
         }
 
-    private suspend fun findInternal(request: ResultRow): Either<RepositoryReadError, AuthorizationRequest> =
+    private fun findInternal(request: ResultRow): Either<RepositoryReadError, AuthorizationRequest> =
         either {
             val requestedByDbId = request[AuthorizationRequestTable.requestedBy]
             val requestedFromDbId = request[AuthorizationRequestTable.requestedFrom]

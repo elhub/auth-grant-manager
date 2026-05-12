@@ -18,6 +18,7 @@ import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
 import no.elhub.auth.features.common.todayOslo
 import no.elhub.auth.features.grants.common.CreateGrantProperties
 import no.elhub.auth.features.requests.AuthorizationRequest
+import no.elhub.auth.features.requests.common.AcceptWithGrantError
 import no.elhub.auth.features.requests.common.RequestBusinessHandler
 import no.elhub.auth.features.requests.common.RequestRepository
 import java.time.OffsetDateTime
@@ -45,7 +46,7 @@ class HandlerTest : FunSpec({
             id = requestId,
         )
 
-    test("returns IllegalStateError when request is not pending") {
+    test("returns AlreadyProcessedError when trying to accept and repo returns AlreadyProcessed") {
         val requestId = UUID.randomUUID()
         val request = createRequest(requestId).copy(
             id = requestId,
@@ -55,6 +56,14 @@ class HandlerTest : FunSpec({
         val businessHandler = mockk<RequestBusinessHandler>()
 
         coEvery { requestRepository.find(requestId) } returns request.right()
+        coEvery {
+            requestRepository.acceptWithGrant(requestId, any(), any(), any())
+        } returns AcceptWithGrantError.RequestError.AlreadyProcessed.left()
+        coEvery { requestRepository.findScopeIds(requestId) } returns listOf<UUID>().right()
+        coEvery { businessHandler.getCreateGrantProperties(any()) } returns CreateGrantProperties(
+            todayOslo(),
+            todayOslo()
+        )
 
         val handler = Handler(
             businessHandler = businessHandler,
@@ -71,7 +80,7 @@ class HandlerTest : FunSpec({
 
         result.shouldBeLeft(UpdateError.AlreadyProcessed)
         coVerify(exactly = 1) { requestRepository.find(requestId) }
-        coVerify(exactly = 0) { requestRepository.acceptWithGrant(any(), any(), any(), any()) }
+        coVerify(exactly = 1) { requestRepository.acceptWithGrant(any(), any(), any(), any()) }
         coVerify(exactly = 0) { requestRepository.rejectRequest(any()) }
     }
 

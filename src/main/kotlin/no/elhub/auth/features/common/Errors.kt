@@ -75,7 +75,7 @@ fun toValidationApiErrorResponse(detail: String? = null): Pair<HttpStatusCode, J
     buildApiErrorResponse(
         status = HttpStatusCode.UnprocessableEntity,
         title = "Validation error",
-        detail = detail.orEmpty().ifEmpty({ "The requested resource could not be found" })
+        detail = detail.orEmpty().ifEmpty { "The requested resource could not be found" }
     )
 
 fun toNotFoundApiErrorResponse(detail: String? = null): Pair<HttpStatusCode, JsonApiErrorCollection> =
