@@ -274,7 +274,9 @@ class ExposedRequestRepository(
             val now = currentTimeUtc()
             val rowsUpdated = AuthorizationRequestTable.update(
                 where = {
-                    (AuthorizationRequestTable.id eq requestId) and (AuthorizationRequestTable.requestStatus eq DatabaseRequestStatus.Pending) and (AuthorizationRequestTable.validTo greater now)
+                    (AuthorizationRequestTable.id eq requestId) and
+                        (AuthorizationRequestTable.requestStatus eq DatabaseRequestStatus.Pending) and
+                        (AuthorizationRequestTable.validTo greater now)
                 }
             ) {
                 it[requestStatus] = DatabaseRequestStatus.Rejected
