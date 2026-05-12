@@ -333,6 +333,7 @@ class ExposedRequestRepository(
                 .mapLeft { error ->
                     when (error) {
                         is RepositoryWriteError.ConflictError -> AcceptWithGrantError.RequestError.AlreadyProcessed
+                        is RepositoryWriteError.ExpiredError -> AcceptWithGrantError.RequestError.Expired
                         else -> AcceptWithGrantError.RequestError.Unexpected
                     }
                 }.bind()
@@ -371,15 +372,17 @@ class ExposedRequestRepository(
         rowsUpdated: Int
     ): Either<RepositoryError, AuthorizationRequest> =
         either {
-            if (rowsUpdated == 0) {
-                raise(RepositoryWriteError.ConflictError)
-            }
-
             val request =
                 AuthorizationRequestTable
                     .selectAll()
                     .where { AuthorizationRequestTable.id eq requestId }
-                    .singleOrNull() ?: raise(RepositoryReadError.NotFoundError)
+                    .singleOrNull() ?: raise(RepositoryWriteError.NotFoundError)
+
+            if (rowsUpdated == 0) {
+                val isExpired = request[AuthorizationRequestTable.validTo] <= currentTimeUtc()
+                if (isExpired) raise(RepositoryWriteError.ExpiredError)
+                raise(RepositoryWriteError.ConflictError)
+            }
 
             findInternal(request)
                 .mapLeft { RepositoryWriteError.UnexpectedError }

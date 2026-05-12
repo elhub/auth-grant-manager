@@ -29,12 +29,6 @@ class Handler(
             UpdateError.AuthorizedPartyNotAllowedToUpdateAuthorizationRequest
         }
 
-        when (request.status) {
-            AuthorizationRequest.Status.Accepted, AuthorizationRequest.Status.Rejected -> raise(UpdateError.AlreadyProcessed)
-            AuthorizationRequest.Status.Expired -> raise(UpdateError.Expired)
-            AuthorizationRequest.Status.Pending -> Unit
-        }
-
         when (command.newStatus) {
             AuthorizationRequest.Status.Accepted -> handleAccepted(request, command).bind()
             AuthorizationRequest.Status.Rejected -> handleRejected(request).bind()
@@ -74,6 +68,7 @@ class Handler(
             when (error) {
                 is AcceptWithGrantError.GrantError -> UpdateError.GrantCreationError
                 is AcceptWithGrantError.RequestError.AlreadyProcessed -> UpdateError.AlreadyProcessed
+                is AcceptWithGrantError.RequestError.Expired -> UpdateError.Expired
                 is AcceptWithGrantError.RequestError -> UpdateError.PersistenceError
             }
         }.bind()
@@ -94,6 +89,7 @@ class Handler(
         ).mapLeft { error ->
             when (error) {
                 is RepositoryWriteError.ConflictError -> UpdateError.AlreadyProcessed
+                is RepositoryWriteError.ExpiredError -> UpdateError.Expired
                 else -> UpdateError.PersistenceError
             }
         }

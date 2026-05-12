@@ -32,6 +32,7 @@ abstract class RepositoryError : Error
 sealed class RepositoryWriteError : RepositoryError() {
     data object ConflictError : RepositoryWriteError()
     data object NotFoundError : RepositoryWriteError()
+    data object ExpiredError : RepositoryWriteError()
     data object UnexpectedError : RepositoryWriteError()
 }
 

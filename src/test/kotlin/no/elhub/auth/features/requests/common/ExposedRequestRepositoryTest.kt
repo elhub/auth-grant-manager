@@ -465,6 +465,39 @@ class ExposedRequestRepositoryTest : FunSpec({
             acceptResult.shouldBeLeft()
             acceptResult.value shouldBe AcceptWithGrantError.RequestError.AlreadyProcessed
         }
+
+        test("updating expired request produces ExpiredError") {
+            val request = generateRequestWithoutProperties().copy(
+                validTo = OffsetDateTime.now(ZoneOffset.UTC).minusDays(1)
+            )
+            val savedRequest = requestRepo
+                .insert(request, scopes)
+                .getOrElse { fail("insert failed") }
+
+            val rejectResult = requestRepo.rejectRequest(savedRequest.id)
+            rejectResult.shouldBeLeft()
+            rejectResult.value shouldBe RepositoryWriteError.ExpiredError
+
+            val party = AuthorizationParty(type = PartyType.Person, id = "🐟")
+            val grant = AuthorizationGrant.create(
+                grantedFor = party,
+                grantedBy = party,
+                grantedTo = party,
+                sourceType = AuthorizationGrant.SourceType.Request,
+                sourceId = savedRequest.id,
+                scopeIds = listOf(),
+                validFrom = currentTimeUtc(),
+                validTo = currentTimeUtc().plusDays(365),
+            )
+            val acceptResult = requestRepo.acceptWithGrant(
+                requestId = savedRequest.id,
+                approvedBy = party,
+                grant = grant,
+                grantProperties = listOf(),
+            )
+            acceptResult.shouldBeLeft()
+            acceptResult.value shouldBe AcceptWithGrantError.RequestError.Expired
+        }
     }
 
     context("acceptWithGrant") {
