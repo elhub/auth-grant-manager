@@ -50,7 +50,7 @@ class HandlerTest : FunSpec({
         val requestId = UUID.randomUUID()
         val request = createRequest(requestId).copy(
             id = requestId,
-            status = AuthorizationRequest.Status.Accepted
+            status = AuthorizationRequest.Status.Pending
         )
         val requestRepository = mockk<RequestRepository>()
         val businessHandler = mockk<RequestBusinessHandler>()
