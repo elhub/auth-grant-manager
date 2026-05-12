@@ -6,6 +6,7 @@ import io.ktor.server.netty.EngineMain
 import io.ktor.server.plugins.di.DI
 import no.elhub.auth.config.HeaderPolicy
 import no.elhub.auth.config.configModule
+import no.elhub.auth.config.configureAuthorization
 import no.elhub.auth.config.configureDatabase
 import no.elhub.auth.config.configureErrorHandling
 import no.elhub.auth.config.configureLogging
@@ -28,4 +29,5 @@ fun Application.module() {
     install(HeaderPolicy)
     configureErrorHandling()
     configModule()
+    configureAuthorization()
 }

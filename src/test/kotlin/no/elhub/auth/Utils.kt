@@ -17,11 +17,15 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
+import io.ktor.server.application.createApplicationPlugin
+import io.ktor.server.application.install
 import io.ktor.server.routing.Routing
 import io.ktor.server.routing.routing
 import io.ktor.server.testing.ApplicationTestBuilder
 import no.elhub.auth.config.configureErrorHandling
 import no.elhub.auth.config.configureSerialization
+import no.elhub.auth.features.common.auth.AuthorizedPartyKey
+import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import java.util.UUID
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation as ClientContentNegotiation
@@ -47,12 +51,8 @@ suspend fun validateMissingTokenResponse(response: HttpResponse) {
         size shouldBe 1
         this[0].apply {
             status shouldBe "401"
-            title shouldBe "Missing authorization"
-            detail shouldBe "Bearer token is required in the Authorization header."
+            title shouldBe "Unauthorized"
         }
-    }
-    responseJson.meta.apply {
-        "createdAt".shouldNotBeNull()
     }
 }
 
@@ -63,12 +63,8 @@ suspend fun validateInvalidTokenResponse(response: HttpResponse) {
         size shouldBe 1
         this[0].apply {
             status shouldBe "401"
-            title shouldBe "Invalid token"
-            detail shouldBe "Token could not be verified."
+            title shouldBe "Unauthorized"
         }
-    }
-    responseJson.meta.apply {
-        "createdAt".shouldNotBeNull()
     }
 }
 
@@ -79,12 +75,8 @@ suspend fun validateUnsupportedPartyResponse(response: HttpResponse) {
         size shouldBe 1
         this[0].apply {
             status shouldBe "403"
-            title shouldBe "Unsupported party type"
-            detail shouldBe "The party type you are authorized as is not supported for this endpoint."
+            title shouldBe "Forbidden"
         }
-    }
-    responseJson.meta.apply {
-        "createdAt".shouldNotBeNull()
     }
 }
 
@@ -160,6 +152,19 @@ suspend fun validateForbiddenResponse(response: HttpResponse) {
     }
 }
 
+suspend fun validateServiceUnavailableResponse(response: HttpResponse) {
+    response.status shouldBe HttpStatusCode.ServiceUnavailable
+    val responseJson: JsonApiErrorCollection = response.body()
+    responseJson.errors.apply {
+        size shouldBe 1
+        this[0].apply {
+            status shouldBe "503"
+            title shouldBe "Service Unavailable"
+            detail shouldBe "Service unavailable; please try again later"
+        }
+    }
+}
+
 suspend fun validatePartyNotAuthorizedResponse(response: HttpResponse) {
     response.status shouldBe HttpStatusCode.Forbidden
     val responseJson: JsonApiErrorCollection = response.body()
@@ -201,6 +206,7 @@ suspend inline fun <reified T> HttpClient.patchJson(
 }
 
 fun ApplicationTestBuilder.setupAppWith(
+    authorizedParty: AuthorizationParty? = null,
     routingConfig: Routing.() -> Unit
 ) {
     client = createClient {
@@ -209,6 +215,12 @@ fun ApplicationTestBuilder.setupAppWith(
     application {
         configureSerialization()
         configureErrorHandling()
+        if (authorizedParty != null) {
+            val injectParty = createApplicationPlugin("InjectAuthorizedParty") {
+                onCall { call -> call.attributes.put(AuthorizedPartyKey, authorizedParty) }
+            }
+            this.install(injectParty)
+        }
         routing {
             routingConfig()
         }

@@ -5,8 +5,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.patch
-import no.elhub.auth.features.common.auth.AuthorizationProvider
-import no.elhub.auth.features.common.auth.toApiErrorResponse
+import no.elhub.auth.features.common.auth.authorizedParty
 import no.elhub.auth.features.common.receiveEither
 import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.common.toTypeMismatchApiErrorResponse
@@ -19,18 +18,8 @@ import org.slf4j.LoggerFactory
 const val REQUEST_ID_PARAM = "id"
 private val logger = LoggerFactory.getLogger(Route::class.java)
 
-fun Route.route(
-    handler: Handler,
-    authProvider: AuthorizationProvider
-) {
+fun Route.route(handler: Handler) {
     patch("/{$REQUEST_ID_PARAM}") {
-        val resolvedActor = authProvider.authorize(call)
-            .getOrElse {
-                val error = it.toApiErrorResponse()
-                call.respond(error.first, error.second)
-                return@patch
-            }
-
         val requestId = validatePathId(call.parameters[REQUEST_ID_PARAM])
             .getOrElse { error ->
                 val (status, body) = error.toApiErrorResponse()
@@ -64,7 +53,7 @@ fun Route.route(
         val command = UpdateCommand(
             requestId = requestId,
             newStatus = requestBody.data.attributes.status,
-            authorizedParty = resolvedActor
+            authorizedParty = call.authorizedParty
         )
 
         val updated = handler(command).getOrElse { error ->

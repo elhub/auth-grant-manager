@@ -18,8 +18,6 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import no.elhub.auth.features.common.QueryError
-import no.elhub.auth.features.common.auth.AuthError
-import no.elhub.auth.features.common.auth.AuthorizationProvider
 import no.elhub.auth.features.common.currentTimeOslo
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
@@ -30,7 +28,6 @@ import no.elhub.auth.features.documents.get.dto.GetDocumentSingleResponse
 import no.elhub.auth.setupAppWith
 import no.elhub.auth.validateInternalServerErrorResponse
 import no.elhub.auth.validateMalformedInputResponse
-import no.elhub.auth.validateNotAuthorizedResponse
 import java.util.UUID
 import kotlin.random.Random
 
@@ -60,59 +57,50 @@ class RouteTest : FunSpec({
     val authorizedPerson = AuthorizationParty(id = "1d024a64-abb0-47d1-9b81-5d98aaa1a8a9", type = PartyType.Person)
     val authorizedOrg = AuthorizationParty(id = "1", type = PartyType.OrganizationEntity)
 
-    lateinit var authProvider: AuthorizationProvider
     lateinit var handler: Handler
+
     beforeAny {
-        authProvider = mockk<AuthorizationProvider>()
         handler = mockk<Handler>()
     }
 
     test("GET /{id}[.pdf] returns 200 when authorized as person and handler succeeds") {
-        coEvery { authProvider.authorize(any()) } returns authorizedPerson.right()
         coEvery { handler.invoke(any()) } returns document.right()
         testApplication {
-            setupAppWith { route(handler, authProvider) }
+            setupAppWith(authorizedPerson) { route(handler) }
             var response = client.get("/${document.id}")
             response.status shouldBe HttpStatusCode.OK
             validateGetByIdResponse(response, document)
-            coVerify(exactly = 1) {
-                handler.invoke(match { it.authorizedParty.id == authorizedPerson.id })
-            }
+            coVerify(exactly = 1) { handler.invoke(match { it.authorizedParty.id == authorizedPerson.id }) }
+
             response = client.get("/${document.id}.pdf") { accept(ContentType.Application.Pdf) }
             response.status shouldBe HttpStatusCode.OK
             response.contentType()?.withoutParameters() shouldBe ContentType.Application.Pdf
             response.bodyAsChannel().toByteArray() shouldBe document.file
-            coVerify(exactly = 2) {
-                handler.invoke(match { it.authorizedParty.id == authorizedPerson.id })
-            }
-        }
-    }
-    test("GET /{id}[.pdf] returns 200 when authorized as org and handler succeeds") {
-        coEvery { authProvider.authorize(any()) } returns authorizedOrg.right()
-        coEvery { handler.invoke(any()) } returns document.right()
-        testApplication {
-            setupAppWith { route(handler, authProvider) }
-            var response = client.get("/${document.id}")
-            response.status shouldBe HttpStatusCode.OK
-            validateGetByIdResponse(response, document)
-            coVerify(exactly = 1) {
-                handler.invoke(match { it.authorizedParty.id == authorizedOrg.id })
-            }
-            response = client.get("/${document.id}.pdf") { accept(ContentType.Application.Pdf) }
-            response.status shouldBe HttpStatusCode.OK
-            response.contentType()?.withoutParameters() shouldBe ContentType.Application.Pdf
-            response.bodyAsChannel().toByteArray() shouldBe document.file
-            coVerify(exactly = 2) {
-                handler.invoke(match { it.authorizedParty.id == authorizedOrg.id })
-            }
+            coVerify(exactly = 2) { handler.invoke(match { it.authorizedParty.id == authorizedPerson.id }) }
         }
     }
 
-    test("GET /{id}.pdf returns not accepted on unsupported accept header") {
-        coEvery { authProvider.authorize(any()) } returns authorizedPerson.right()
+    test("GET /{id}[.pdf] returns 200 when authorized as org and handler succeeds") {
         coEvery { handler.invoke(any()) } returns document.right()
         testApplication {
-            setupAppWith { route(handler, authProvider) }
+            setupAppWith(authorizedOrg) { route(handler) }
+            var response = client.get("/${document.id}")
+            response.status shouldBe HttpStatusCode.OK
+            validateGetByIdResponse(response, document)
+            coVerify(exactly = 1) { handler.invoke(match { it.authorizedParty.id == authorizedOrg.id }) }
+
+            response = client.get("/${document.id}.pdf") { accept(ContentType.Application.Pdf) }
+            response.status shouldBe HttpStatusCode.OK
+            response.contentType()?.withoutParameters() shouldBe ContentType.Application.Pdf
+            response.bodyAsChannel().toByteArray() shouldBe document.file
+            coVerify(exactly = 2) { handler.invoke(match { it.authorizedParty.id == authorizedOrg.id }) }
+        }
+    }
+
+    test("GET /{id}.pdf returns 406 on unsupported accept header") {
+        coEvery { handler.invoke(any()) } returns document.right()
+        testApplication {
+            setupAppWith(authorizedPerson) { route(handler) }
             val response = client.get("/${document.id}.pdf") { accept(ContentType.Application.Json) }
             response.status shouldBe HttpStatusCode.NotAcceptable
             coVerify(exactly = 0) { handler.invoke(any()) }
@@ -120,32 +108,19 @@ class RouteTest : FunSpec({
     }
 
     test("GET /{id}[.pdf] returns 400 when UUID is invalid") {
-        coEvery { authProvider.authorize(any()) } returns authorizedPerson.right()
-        coEvery { handler.invoke(any()) } returns document.right()
         testApplication {
-            setupAppWith { route(handler, authProvider) }
+            setupAppWith(authorizedPerson) { route(handler) }
             val id = "not-a-uuid"
             validateMalformedInputResponse(client.get("/$id"))
             validateMalformedInputResponse(client.get("/$id.pdf") { accept(ContentType.Application.Pdf) })
             coVerify(exactly = 0) { handler.invoke(any()) }
         }
     }
-    test("GET /{id}[.pdf] returns 401 Not authorized when authorization fails") {
-        coEvery { authProvider.authorize(any()) } returns AuthError.NotAuthorized.left()
-        coEvery { handler.invoke(any()) } returns document.right()
-        testApplication {
-            setupAppWith { route(handler, authProvider) }
-            val id = "7b14fcba-c899-4a5c-aecb-6e5abcac2bcf"
-            validateNotAuthorizedResponse(client.get("/$id"))
-            validateNotAuthorizedResponse(client.get("/$id.pdf") { accept(ContentType.Application.Pdf) })
-            coVerify(exactly = 0) { handler.invoke(any()) }
-        }
-    }
-    test("GET /{id}[.pdf] returns 500 Internal server error when handler fails with IOError") {
-        coEvery { authProvider.authorize(any()) } returns authorizedPerson.right()
+
+    test("GET /{id}[.pdf] returns 500 when handler fails with IOError") {
         coEvery { handler.invoke(any()) } returns QueryError.IOError.left()
         testApplication {
-            setupAppWith { route(handler, authProvider) }
+            setupAppWith(authorizedPerson) { route(handler) }
             val id = "7b14fcba-c899-4a5c-aecb-6e5abcac2bcf"
             validateInternalServerErrorResponse(client.get("/$id"))
             validateInternalServerErrorResponse(client.get("/$id.pdf") { accept(ContentType.Application.Pdf) })
@@ -153,7 +128,6 @@ class RouteTest : FunSpec({
     }
 })
 
-// Verifies document response from route matches document returned by handler
 private suspend fun validateGetByIdResponse(response: HttpResponse, handlerDocument: AuthorizationDocument) {
     response.status shouldBe HttpStatusCode.OK
     val documentResponse: GetDocumentSingleResponse = response.body()

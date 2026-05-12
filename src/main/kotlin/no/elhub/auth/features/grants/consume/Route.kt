@@ -5,8 +5,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.patch
-import no.elhub.auth.features.common.auth.AuthorizationProvider
-import no.elhub.auth.features.common.auth.toApiErrorResponse
+import no.elhub.auth.features.common.auth.authorizedParty
 import no.elhub.auth.features.common.receiveEither
 import no.elhub.auth.features.common.toApiErrorResponse
 import no.elhub.auth.features.common.toTypeMismatchApiErrorResponse
@@ -20,15 +19,8 @@ private val logger = LoggerFactory.getLogger(Route::class.java)
 
 const val GRANT_ID_PARAM = "id"
 
-fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
+fun Route.route(handler: Handler) {
     patch("/{$GRANT_ID_PARAM}") {
-        val authorizedSystem = authProvider.authorize(call)
-            .getOrElse { err ->
-                val (status, body) = err.toApiErrorResponse()
-                call.respond(status, body)
-                return@patch
-            }
-
         val grantId = validatePathId(call.parameters[GRANT_ID_PARAM])
             .getOrElse { error ->
                 val (status, body) = error.toApiErrorResponse()
@@ -62,7 +54,7 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
         val command = ConsumeCommand(
             grantId = grantId,
             newStatus = requestBody.data.attributes.status,
-            authorizedParty = authorizedSystem
+            authorizedParty = call.authorizedParty
         )
 
         val updated = handler(command).getOrElse { error ->

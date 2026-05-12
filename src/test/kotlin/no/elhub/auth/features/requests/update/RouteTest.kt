@@ -1,6 +1,5 @@
 package no.elhub.auth.features.requests.update
 
-import arrow.core.left
 import arrow.core.right
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.nulls.shouldBeNull
@@ -12,8 +11,6 @@ import io.ktor.server.testing.testApplication
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
-import no.elhub.auth.features.common.auth.AuthError
-import no.elhub.auth.features.common.auth.AuthorizationProvider
 import no.elhub.auth.features.common.currentTimeUtc
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
@@ -25,7 +22,6 @@ import no.elhub.auth.features.requests.update.dto.UpdateRequestResponse
 import no.elhub.auth.patchJson
 import no.elhub.auth.setupAppWith
 import no.elhub.auth.validateConflictErrorResponse
-import no.elhub.auth.validateForbiddenResponse
 import no.elhub.auth.validateMalformedInputResponse
 import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObject
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
@@ -34,15 +30,11 @@ import java.util.UUID
 class RouteTest : FunSpec({
 
     val authorizedPerson = AuthorizationParty(id = UUID.randomUUID().toString(), type = PartyType.Person)
-    lateinit var authProvider: AuthorizationProvider
-    lateinit var handler: Handler
 
     val requestData = JsonApiRequestResourceObject(
         id = authorizedPerson.id,
         type = "AuthorizationRequest",
-        attributes = UpdateRequestAttributes(
-            status = AuthorizationRequest.Status.Pending
-        )
+        attributes = UpdateRequestAttributes(status = AuthorizationRequest.Status.Pending)
     )
     val requestBody = JsonApiUpdateRequest(data = requestData)
 
@@ -50,77 +42,59 @@ class RouteTest : FunSpec({
     val requestedFromParty = AuthorizationParty("nin1", PartyType.Person)
     val requestedToParty = AuthorizationParty("nin2", PartyType.Person)
 
+    lateinit var handler: Handler
+
     beforeAny {
-        authProvider = mockk<AuthorizationProvider>()
         handler = mockk<Handler>()
     }
 
-    test("PATCH /{id} Should return unauthorized when endUser is AccessDenied") {
-        coEvery { authProvider.authorize(any()) } returns AuthError.AccessDenied.left()
+    test("PATCH /{id} returns 400 when having an invalid requestID") {
         testApplication {
-            setupAppWith { route(handler, authProvider) }
-            val response = client.patchJson("/random-id", "")
-            validateForbiddenResponse(response)
+            setupAppWith(authorizedPerson) { route(handler) }
+            validateMalformedInputResponse(client.patchJson("/random-id", ""))
         }
         coVerify(exactly = 0) { handler.invoke(any()) }
     }
 
-    test("PATCH /{id} Should return bad request when having an invalid requestID") {
-        coEvery { authProvider.authorize(any()) } returns authorizedPerson.right()
+    test("PATCH /{id} returns 400 when input body is wrong") {
         testApplication {
-            setupAppWith { route(handler, authProvider) }
-            val response = client.patchJson("/random-id", "")
-            validateMalformedInputResponse(response)
-        }
-        coVerify(exactly = 0) { handler.invoke(any()) }
-    }
-
-    test("PATCH /{id} should return bad request when input body is wrong") {
-        coEvery { authProvider.authorize(any()) } returns authorizedPerson.right()
-        testApplication {
-            setupAppWith { route(handler, authProvider) }
-            val response = client.patchJson("/${authorizedPerson.id}", "{\"test\": \"badInput\" }")
+            setupAppWith(authorizedPerson) { route(handler) }
+            val response = client.patchJson("/${authorizedPerson.id}", """{"test": "badInput"}""")
             response.status shouldBe HttpStatusCode.BadRequest
             val responseJson: JsonApiErrorCollection = response.body()
             responseJson.errors.apply {
                 size shouldBe 1
-                this[0].apply {
-                    title shouldBe "Missing required field in request body"
-                }
+                this[0].title shouldBe "Missing required field in request body"
             }
         }
         coVerify(exactly = 0) { handler.invoke(any()) }
     }
-    test("PATCH /{id} should return bad request when id in path doesnt match the request body") {
-        coEvery { authProvider.authorize(any()) } returns authorizedPerson.right()
+
+    test("PATCH /{id} returns 400 when id in path doesn't match request body") {
         testApplication {
-            setupAppWith { route(handler, authProvider) }
+            setupAppWith(authorizedPerson) { route(handler) }
             val response = client.patchJson("/${UUID.randomUUID()}", requestData)
             response.status shouldBe HttpStatusCode.BadRequest
             val responseJson: JsonApiErrorCollection = response.body()
             responseJson.errors.apply {
                 size shouldBe 1
-
-                this[0].apply {
-                    title shouldBe "Missing required field in request body"
-                }
+                this[0].title shouldBe "Missing required field in request body"
             }
         }
         coVerify(exactly = 0) { handler.invoke(any()) }
     }
 
-    test("PATCH /{id} should return Conflict when request type is not AuthorizationRequest") {
-        coEvery { authProvider.authorize(any()) } returns authorizedPerson.right()
+    test("PATCH /{id} returns Conflict when request type is not AuthorizationRequest") {
         testApplication {
-            setupAppWith { route(handler, authProvider) }
-            val response = client.patchJson("/${authorizedPerson.id}", requestBody.copy(data = requestData.copy(type = "InvalidType")))
-            validateConflictErrorResponse(response)
+            setupAppWith(authorizedPerson) { route(handler) }
+            validateConflictErrorResponse(
+                client.patchJson("/${authorizedPerson.id}", requestBody.copy(data = requestData.copy(type = "InvalidType")))
+            )
         }
         coVerify(exactly = 0) { handler.invoke(any()) }
     }
 
-    test("PATCH /{id} should return OK when handler returns") {
-        coEvery { authProvider.authorize(any()) } returns authorizedPerson.right()
+    test("PATCH /{id} returns OK when handler returns") {
         val authorizationRequest = AuthorizationRequest(
             type = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
             status = AuthorizationRequest.Status.Accepted,
@@ -133,10 +107,9 @@ class RouteTest : FunSpec({
             id = UUID.fromString(authorizedPerson.id),
             properties = emptyList()
         )
-
         coEvery { handler.invoke(any()) } returns authorizationRequest.right()
         testApplication {
-            setupAppWith { route(handler, authProvider) }
+            setupAppWith(authorizedPerson) { route(handler) }
             val response = client.patchJson("/${authorizedPerson.id}", requestBody)
             response.status shouldBe HttpStatusCode.OK
             val body = response.body<UpdateRequestResponse>()
