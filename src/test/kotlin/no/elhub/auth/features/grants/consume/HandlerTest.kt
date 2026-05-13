@@ -9,7 +9,6 @@ import io.kotest.core.spec.style.FunSpec
 import io.mockk.coEvery
 import io.mockk.mockk
 import no.elhub.auth.features.common.RepositoryError
-import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.RepositoryWriteError
 import no.elhub.auth.features.common.currentTimeUtc
 import no.elhub.auth.features.common.party.AuthorizationParty
@@ -77,12 +76,10 @@ class HandlerTest : FunSpec({
     )
 
     fun repoReturning(
-        updateResult: Either<RepositoryError, AuthorizationGrant>,
-        findResult: Either<RepositoryReadError, AuthorizationGrant> = activeGrant.right(),
+        updateResult: Either<RepositoryError, AuthorizationGrant>
     ): GrantRepository =
         mockk<GrantRepository> {
             coEvery { update(grantId, newStatus) } returns updateResult
-            coEvery { find(grantId) } returns findResult
         }
 
     test("maps repository error to PersistenceError") {
@@ -115,17 +112,12 @@ class HandlerTest : FunSpec({
         response.shouldBeRight(updatedGrant)
     }
 
-    test("returns ExpiredError when grant is expired") {
+    test("returns ExpiredError when repo returns ExpiredError") {
         val expiredGrant = activeGrant.copy(
             validTo = OffsetDateTime.now(ZoneOffset.UTC).minusSeconds(1)
         )
 
-        val handler = Handler(
-            repoReturning(
-                findResult = expiredGrant.right(),
-                updateResult = updatedGrant.right()
-            )
-        )
+        val handler = Handler(repoReturning(updateResult = RepositoryWriteError.ExpiredError.left()))
         val response = handler(
             ConsumeCommand(
                 grantId = grantId,
@@ -137,15 +129,10 @@ class HandlerTest : FunSpec({
         response.shouldBeLeft(ConsumeError.ExpiredError)
     }
 
-    test("returns IllegalStateError when grant is not active") {
+    test("returns IllegalStateError when repo returns ConflictError") {
         val exhaustedGrant = activeGrant.copy(grantStatus = Status.Exhausted)
 
-        val handler = Handler(
-            repoReturning(
-                findResult = exhaustedGrant.right(),
-                updateResult = exhaustedGrant.right()
-            )
-        )
+        val handler = Handler(repoReturning(updateResult = RepositoryWriteError.ConflictError.left()))
 
         val response = handler(
             ConsumeCommand(
@@ -159,12 +146,7 @@ class HandlerTest : FunSpec({
     }
 
     test("returns IllegalTransitionError when attempting to update grant to 'Active'") {
-        val handler = Handler(
-            repoReturning(
-                findResult = activeGrant.right(),
-                updateResult = updatedGrant.right()
-            )
-        )
+        val handler = Handler(repoReturning(updateResult = updatedGrant.right()))
         val response = handler(
             ConsumeCommand(
                 grantId = grantId,

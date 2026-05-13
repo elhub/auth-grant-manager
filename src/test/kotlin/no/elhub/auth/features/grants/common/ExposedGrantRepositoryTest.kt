@@ -16,6 +16,7 @@ import no.elhub.auth.features.common.Pagination
 import no.elhub.auth.features.common.PostgresTestContainer
 import no.elhub.auth.features.common.PostgresTestContainerExtension
 import no.elhub.auth.features.common.RepositoryReadError
+import no.elhub.auth.features.common.RepositoryWriteError
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.AuthorizationPartyTable
 import no.elhub.auth.features.common.party.ExposedPartyRepository
@@ -252,6 +253,37 @@ class ExposedGrantRepositoryTest : FunSpec({
         }
 
         grant.grantStatus shouldBe AuthorizationGrant.Status.Exhausted
+    }
+
+    test("update should return ConflictError for already-exhausted grant") {
+        insertTestData()
+        val id = UUID.fromString("456e4567-e89b-12d3-a456-426614174000")
+        val updateResult1 = grantRepo.update(
+            grantId = id,
+            newStatus = AuthorizationGrant.Status.Exhausted
+        ).getOrElse {
+            fail("Failed to update grant")
+        }
+        updateResult1.grantStatus shouldBe AuthorizationGrant.Status.Exhausted
+
+        val updateResult2 = grantRepo.update(
+            grantId = id,
+            newStatus = AuthorizationGrant.Status.Exhausted
+        )
+
+        updateResult2.shouldBeLeft()
+        updateResult2.value shouldBe RepositoryWriteError.ConflictError
+    }
+
+    test("update should return ExpiredError for expired grant") {
+        insertTestData()
+        val id = UUID.fromString("2a28a9dd-d3b3-4dec-a420-3f7d0d0105b7")
+        val updateResult = grantRepo.update(
+            grantId = id,
+            newStatus = AuthorizationGrant.Status.Exhausted
+        )
+        updateResult.shouldBeLeft()
+        updateResult.value shouldBe RepositoryWriteError.ExpiredError
     }
 })
 

@@ -26,6 +26,7 @@ import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.greater
 import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.core.or
@@ -39,9 +40,17 @@ import java.util.UUID
 
 interface GrantRepository {
     suspend fun find(grantId: UUID): Either<RepositoryReadError, AuthorizationGrant>
-    suspend fun findBySourceIds(sourceType: SourceType, sourceIds: List<UUID>): Either<RepositoryReadError, Map<UUID, AuthorizationGrant>>
+    suspend fun findBySourceIds(
+        sourceType: SourceType,
+        sourceIds: List<UUID>
+    ): Either<RepositoryReadError, Map<UUID, AuthorizationGrant>>
+
     suspend fun findScopes(grantId: UUID): Either<RepositoryReadError, List<AuthorizationScope>>
-    suspend fun findAll(party: AuthorizationParty, pagination: Pagination): Either<RepositoryReadError, Page<AuthorizationGrant>>
+    suspend fun findAll(
+        party: AuthorizationParty,
+        pagination: Pagination
+    ): Either<RepositoryReadError, Page<AuthorizationGrant>>
+
     suspend fun insert(grant: AuthorizationGrant): Either<RepositoryWriteError, AuthorizationGrant>
     suspend fun update(grantId: UUID, newStatus: Status): Either<RepositoryError, AuthorizationGrant>
 }
@@ -54,7 +63,10 @@ class ExposedGrantRepository(
 
     private val logger = LoggerFactory.getLogger(ExposedGrantRepository::class.java)
 
-    override suspend fun findAll(party: AuthorizationParty, pagination: Pagination): Either<RepositoryReadError, Page<AuthorizationGrant>> =
+    override suspend fun findAll(
+        party: AuthorizationParty,
+        pagination: Pagination
+    ): Either<RepositoryReadError, Page<AuthorizationGrant>> =
         transactionContext<RepositoryReadError, Page<AuthorizationGrant>>(
             "db_operations",
             "GrantRepository",
@@ -66,7 +78,8 @@ class ExposedGrantRepository(
                 .bind()
                 .id
 
-            val whereClause = { (AuthorizationGrantTable.grantedTo eq partyId) or (AuthorizationGrantTable.grantedFor eq partyId) }
+            val whereClause =
+                { (AuthorizationGrantTable.grantedTo eq partyId) or (AuthorizationGrantTable.grantedFor eq partyId) }
 
             val totalItems = AuthorizationGrantTable
                 .selectAll()
@@ -141,7 +154,12 @@ class ExposedGrantRepository(
             "find",
             { RepositoryReadError.UnexpectedError }
         ) {
-            findInternalGrant(grantId).bind()
+            val row = AuthorizationGrantTable
+                .selectAll()
+                .where { AuthorizationGrantTable.id eq grantId }
+                .singleOrNull() ?: raise(RepositoryReadError.NotFoundError)
+
+            findInternal(row).bind()
         }
 
     override suspend fun findBySourceIds(
@@ -318,27 +336,46 @@ class ExposedGrantRepository(
             "update",
             { RepositoryWriteError.UnexpectedError }
         ) {
+            val now = currentTimeUtc()
             val rowsUpdated =
                 AuthorizationGrantTable.update(
-                    where = { AuthorizationGrantTable.id eq grantId }
+                    where = {
+                        (AuthorizationGrantTable.id eq grantId) and
+                            (AuthorizationGrantTable.grantStatus eq Status.Active) and
+                            (AuthorizationGrantTable.validTo greater now)
+                    }
                 ) {
                     it[grantStatus] = newStatus
                     it[updatedAt] = currentTimeUtc()
                 }
 
-            if (rowsUpdated == 0) raise(RepositoryWriteError.UnexpectedError)
-
-            findInternalGrant(grantId)
-                .mapLeft { RepositoryReadError.UnexpectedError }
-                .bind()
+            fetchUpdated(grantId, rowsUpdated).bind()
         }
 
-    private suspend fun findInternalGrant(grantId: UUID): Either<RepositoryReadError, AuthorizationGrant> =
+    private suspend fun fetchUpdated(
+        grantId: UUID,
+        rowsUpdated: Int
+    ): Either<RepositoryError, AuthorizationGrant> =
         either {
             val grant = AuthorizationGrantTable
                 .selectAll()
                 .where { AuthorizationGrantTable.id eq grantId }
-                .singleOrNull() ?: raise(RepositoryReadError.NotFoundError)
+                .singleOrNull() ?: raise(RepositoryWriteError.NotFoundError)
+
+            if (rowsUpdated == 0) {
+                val isProcessed = grant[AuthorizationGrantTable.grantStatus] != Status.Active
+                if (isProcessed) raise(RepositoryWriteError.ConflictError)
+                raise(RepositoryWriteError.ExpiredError)
+            }
+
+            findInternal(grant)
+                .mapLeft { RepositoryWriteError.UnexpectedError }
+                .bind()
+        }
+
+    private suspend fun findInternal(grant: ResultRow): Either<RepositoryReadError, AuthorizationGrant> =
+        either {
+            val grantId = grant[AuthorizationGrantTable.id].value
 
             val scopes = findScopeIds(grantId).bind()
 
@@ -373,7 +410,7 @@ class ExposedGrantRepository(
                     }
                     .bind()
 
-            val properties = grantPropertiesRepository.findBy(grantId = grant[AuthorizationGrantTable.id].value)
+            val properties = grantPropertiesRepository.findBy(grantId = grantId)
 
             grant.toAuthorizationGrant(
                 grantedBy = grantedByParty,
