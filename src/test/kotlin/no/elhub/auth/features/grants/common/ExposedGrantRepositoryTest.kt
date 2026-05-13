@@ -275,7 +275,7 @@ class ExposedGrantRepositoryTest : FunSpec({
         updateResult2.value shouldBe RepositoryWriteError.ConflictError
     }
 
-    xtest("update should return ExpiredError for expired grant") {
+    test("update should return ExpiredError for expired grant") {
         insertTestData()
         val id = UUID.fromString("2a28a9dd-d3b3-4dec-a420-3f7d0d0105b7")
         val updateResult = grantRepo.update(
