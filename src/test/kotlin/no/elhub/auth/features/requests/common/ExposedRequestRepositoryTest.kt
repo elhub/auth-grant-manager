@@ -1,6 +1,7 @@
 package no.elhub.auth.features.requests.common
 
 import arrow.core.getOrElse
+import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.assertions.fail
 import io.kotest.core.spec.style.FunSpec
@@ -16,6 +17,7 @@ import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.common.Pagination
 import no.elhub.auth.features.common.PostgresTestContainer
 import no.elhub.auth.features.common.PostgresTestContainerExtension
+import no.elhub.auth.features.common.RepositoryWriteError
 import no.elhub.auth.features.common.RunPostgresScriptExtension
 import no.elhub.auth.features.common.currentTimeUtc
 import no.elhub.auth.features.common.party.AuthorizationParty
@@ -427,6 +429,75 @@ class ExposedRequestRepositoryTest : FunSpec({
 
         rejectedRequest.properties.size shouldBe 2
         rejectedRequest.status shouldBe AuthorizationRequest.Status.Rejected
+    }
+
+    context("state validation") {
+        test("updating already-rejected request produces ConflictError") {
+            val request = generateRequestWithoutProperties()
+            val savedRequest = requestRepo
+                .insert(request, scopes)
+                .getOrElse { fail("insert failed") }
+
+            val firstRejectResult = requestRepo.rejectRequest(request.id)
+            firstRejectResult.shouldBeRight()
+
+            val secondRejectResult = requestRepo.rejectRequest(request.id)
+            secondRejectResult.shouldBeLeft()
+            secondRejectResult.value shouldBe RepositoryWriteError.ConflictError
+
+            val party = AuthorizationParty(type = PartyType.Person, id = "🐟")
+            val grant = AuthorizationGrant.create(
+                grantedFor = party,
+                grantedBy = party,
+                grantedTo = party,
+                sourceType = AuthorizationGrant.SourceType.Request,
+                sourceId = savedRequest.id,
+                scopeIds = listOf(),
+                validFrom = currentTimeUtc(),
+                validTo = currentTimeUtc().plusDays(365),
+            )
+            val acceptResult = requestRepo.acceptWithGrant(
+                requestId = savedRequest.id,
+                approvedBy = party,
+                grant = grant,
+                grantProperties = listOf(),
+            )
+            acceptResult.shouldBeLeft()
+            acceptResult.value shouldBe AcceptWithGrantError.RequestError.AlreadyProcessed
+        }
+
+        test("updating expired request produces ExpiredError") {
+            val request = generateRequestWithoutProperties().copy(
+                validTo = OffsetDateTime.now(ZoneOffset.UTC).minusDays(1)
+            )
+            val savedRequest = requestRepo
+                .insert(request, scopes)
+                .getOrElse { fail("insert failed") }
+
+            val rejectResult = requestRepo.rejectRequest(savedRequest.id)
+            rejectResult.shouldBeLeft()
+            rejectResult.value shouldBe RepositoryWriteError.ExpiredError
+
+            val party = AuthorizationParty(type = PartyType.Person, id = "🐟")
+            val grant = AuthorizationGrant.create(
+                grantedFor = party,
+                grantedBy = party,
+                grantedTo = party,
+                sourceType = AuthorizationGrant.SourceType.Request,
+                sourceId = savedRequest.id,
+                scopeIds = listOf(),
+                validFrom = currentTimeUtc(),
+                validTo = currentTimeUtc().plusDays(365),
+            )
+            val acceptResult = requestRepo.acceptWithGrant(
+                requestId = savedRequest.id,
+                approvedBy = party,
+                grant = grant,
+                grantProperties = listOf(),
+            )
+            acceptResult.shouldBeLeft()
+            acceptResult.value shouldBe AcceptWithGrantError.RequestError.Expired
+        }
     }
 
     context("acceptWithGrant") {

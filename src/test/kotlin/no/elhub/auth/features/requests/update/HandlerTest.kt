@@ -11,6 +11,8 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.plus
+import no.elhub.auth.features.common.RepositoryWriteError.ConflictError
+import no.elhub.auth.features.common.RepositoryWriteError.ExpiredError
 import no.elhub.auth.features.common.RepositoryWriteError.UnexpectedError
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
@@ -18,6 +20,7 @@ import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
 import no.elhub.auth.features.common.todayOslo
 import no.elhub.auth.features.grants.common.CreateGrantProperties
 import no.elhub.auth.features.requests.AuthorizationRequest
+import no.elhub.auth.features.requests.common.AcceptWithGrantError
 import no.elhub.auth.features.requests.common.RequestBusinessHandler
 import no.elhub.auth.features.requests.common.RequestRepository
 import java.time.OffsetDateTime
@@ -45,16 +48,24 @@ class HandlerTest : FunSpec({
             id = requestId,
         )
 
-    test("returns IllegalStateError when request is not pending") {
+    test("returns AlreadyProcessedError when trying to accept and repo returns AlreadyProcessed") {
         val requestId = UUID.randomUUID()
         val request = createRequest(requestId).copy(
             id = requestId,
-            status = AuthorizationRequest.Status.Accepted
+            status = AuthorizationRequest.Status.Pending
         )
         val requestRepository = mockk<RequestRepository>()
         val businessHandler = mockk<RequestBusinessHandler>()
 
         coEvery { requestRepository.find(requestId) } returns request.right()
+        coEvery {
+            requestRepository.acceptWithGrant(requestId, any(), any(), any())
+        } returns AcceptWithGrantError.RequestError.AlreadyProcessed.left()
+        coEvery { requestRepository.findScopeIds(requestId) } returns listOf<UUID>().right()
+        coEvery { businessHandler.getCreateGrantProperties(any()) } returns CreateGrantProperties(
+            todayOslo(),
+            todayOslo()
+        )
 
         val handler = Handler(
             businessHandler = businessHandler,
@@ -71,7 +82,7 @@ class HandlerTest : FunSpec({
 
         result.shouldBeLeft(UpdateError.AlreadyProcessed)
         coVerify(exactly = 1) { requestRepository.find(requestId) }
-        coVerify(exactly = 0) { requestRepository.acceptWithGrant(any(), any(), any(), any()) }
+        coVerify(exactly = 1) { requestRepository.acceptWithGrant(any(), any(), any(), any()) }
         coVerify(exactly = 0) { requestRepository.rejectRequest(any()) }
     }
 
@@ -138,5 +149,87 @@ class HandlerTest : FunSpec({
         )
 
         result.shouldBeLeft(UpdateError.PersistenceError)
+    }
+
+    test("returns AlreadyProcessed when rejecting and repo returns ConflictError") {
+        val requestId = UUID.randomUUID()
+        val request = createRequest(requestId)
+        val requestRepository = mockk<RequestRepository>()
+        val businessHandler = mockk<RequestBusinessHandler>()
+
+        coEvery { requestRepository.find(requestId) } returns request.right()
+        coEvery { requestRepository.rejectRequest(requestId) } returns ConflictError.left()
+
+        val handler = Handler(
+            businessHandler = businessHandler,
+            requestRepository = requestRepository,
+        )
+
+        val result = handler(
+            UpdateCommand(
+                requestId = requestId,
+                newStatus = AuthorizationRequest.Status.Rejected,
+                authorizedParty = requestedTo
+            )
+        )
+
+        result.shouldBeLeft(UpdateError.AlreadyProcessed)
+    }
+
+    test("returns Expired when rejecting and repo returns ExpiredError") {
+        val requestId = UUID.randomUUID()
+        val request = createRequest(requestId)
+        val requestRepository = mockk<RequestRepository>()
+        val businessHandler = mockk<RequestBusinessHandler>()
+
+        coEvery { requestRepository.find(requestId) } returns request.right()
+        coEvery { requestRepository.rejectRequest(requestId) } returns ExpiredError.left()
+
+        val handler = Handler(
+            businessHandler = businessHandler,
+            requestRepository = requestRepository,
+        )
+
+        val result = handler(
+            UpdateCommand(
+                requestId = requestId,
+                newStatus = AuthorizationRequest.Status.Rejected,
+                authorizedParty = requestedTo
+            )
+        )
+
+        result.shouldBeLeft(UpdateError.Expired)
+    }
+
+    test("returns Expired when accepting and repo returns Expired") {
+        val requestId = UUID.randomUUID()
+        val request = createRequest(requestId)
+        val requestRepository = mockk<RequestRepository>()
+        val businessHandler = mockk<RequestBusinessHandler>()
+
+        coEvery { requestRepository.find(requestId) } returns request.right()
+        coEvery {
+            requestRepository.acceptWithGrant(requestId, any(), any(), any())
+        } returns AcceptWithGrantError.RequestError.Expired.left()
+        coEvery { requestRepository.findScopeIds(requestId) } returns listOf<UUID>().right()
+        coEvery { businessHandler.getCreateGrantProperties(any()) } returns CreateGrantProperties(
+            todayOslo(),
+            todayOslo()
+        )
+
+        val handler = Handler(
+            businessHandler = businessHandler,
+            requestRepository = requestRepository,
+        )
+
+        val result = handler(
+            UpdateCommand(
+                requestId = requestId,
+                newStatus = AuthorizationRequest.Status.Accepted,
+                authorizedParty = requestedTo
+            )
+        )
+
+        result.shouldBeLeft(UpdateError.Expired)
     }
 })

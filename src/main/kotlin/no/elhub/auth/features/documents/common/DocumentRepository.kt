@@ -356,7 +356,7 @@ class ExposedDocumentRepository(
                     when (writeError) {
                         is RepositoryWriteError.NotFoundError -> ConfirmWithGrantError.DocumentError.NotFound
                         is RepositoryWriteError.ConflictError -> ConfirmWithGrantError.DocumentError.Conflict
-                        is RepositoryWriteError.UnexpectedError -> ConfirmWithGrantError.DocumentError.Unexpected
+                        else -> ConfirmWithGrantError.DocumentError.Unexpected
                     }
                 }.bind()
 

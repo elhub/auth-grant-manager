@@ -3,6 +3,7 @@ package no.elhub.auth.features.requests.update
 import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensure
+import no.elhub.auth.features.common.RepositoryWriteError
 import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
 import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.common.AuthorizationGrantProperty
@@ -26,12 +27,6 @@ class Handler(
 
         ensure(request.requestedTo == command.authorizedParty) {
             UpdateError.AuthorizedPartyNotAllowedToUpdateAuthorizationRequest
-        }
-
-        when (request.status) {
-            AuthorizationRequest.Status.Accepted, AuthorizationRequest.Status.Rejected -> raise(UpdateError.AlreadyProcessed)
-            AuthorizationRequest.Status.Expired -> raise(UpdateError.Expired)
-            AuthorizationRequest.Status.Pending -> Unit
         }
 
         when (command.newStatus) {
@@ -71,8 +66,10 @@ class Handler(
             grantProperties = properties,
         ).mapLeft { error ->
             when (error) {
+                is AcceptWithGrantError.GrantError -> UpdateError.GrantCreationError
+                is AcceptWithGrantError.RequestError.AlreadyProcessed -> UpdateError.AlreadyProcessed
+                is AcceptWithGrantError.RequestError.Expired -> UpdateError.Expired
                 is AcceptWithGrantError.RequestError -> UpdateError.PersistenceError
-                AcceptWithGrantError.GrantError -> UpdateError.GrantCreationError
             }
         }.bind()
 
@@ -89,5 +86,11 @@ class Handler(
     private suspend fun handleRejected(originalRequest: AuthorizationRequest): Either<UpdateError, AuthorizationRequest> =
         requestRepository.rejectRequest(
             requestId = originalRequest.id,
-        ).mapLeft { UpdateError.PersistenceError }
+        ).mapLeft { error ->
+            when (error) {
+                is RepositoryWriteError.ConflictError -> UpdateError.AlreadyProcessed
+                is RepositoryWriteError.ExpiredError -> UpdateError.Expired
+                else -> UpdateError.PersistenceError
+            }
+        }
 }

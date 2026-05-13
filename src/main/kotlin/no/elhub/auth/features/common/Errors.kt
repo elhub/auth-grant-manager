@@ -32,6 +32,7 @@ abstract class RepositoryError : Error
 sealed class RepositoryWriteError : RepositoryError() {
     data object ConflictError : RepositoryWriteError()
     data object NotFoundError : RepositoryWriteError()
+    data object ExpiredError : RepositoryWriteError()
     data object UnexpectedError : RepositoryWriteError()
 }
 
@@ -75,7 +76,7 @@ fun toValidationApiErrorResponse(detail: String? = null): Pair<HttpStatusCode, J
     buildApiErrorResponse(
         status = HttpStatusCode.UnprocessableEntity,
         title = "Validation error",
-        detail = detail.orEmpty().ifEmpty({ "The requested resource could not be found" })
+        detail = detail.orEmpty().ifEmpty { "The requested resource could not be found" }
     )
 
 fun toNotFoundApiErrorResponse(detail: String? = null): Pair<HttpStatusCode, JsonApiErrorCollection> =
