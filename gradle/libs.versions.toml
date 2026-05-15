@@ -4,7 +4,7 @@ format.version = "1.1"
 [versions]
 arrow = "2.2.2.1"
 cohort = "2.9.4"
-auth-pdp-plugin = "7.1.2"
+auth-pdp-plugin = "7.2.0"
 elhub-gradle = "0.10.8"
 elhub-jsonapi-wrapper = "0.4.15"
 exposed = "1.2.0"
