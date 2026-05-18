@@ -7,6 +7,7 @@ import io.ktor.server.plugins.calllogging.CallLogging
 import io.ktor.server.plugins.calllogging.processingTimeMillis
 import io.ktor.server.request.httpMethod
 import io.ktor.server.request.path
+import no.elhub.auth.features.common.TRACE_ID_MDC_KEY
 import no.elhub.auth.features.openapi.API_PATH_OPENAPI
 import org.slf4j.event.Level
 
@@ -18,7 +19,7 @@ fun Application.configureLogging() {
     )
     install(CallLogging) {
         level = Level.INFO
-        callIdMdc("traceId")
+        callIdMdc(TRACE_ID_MDC_KEY)
         mdc("agent") { call ->
             call.request.headers["User-Agent"].orEmpty()
         }
