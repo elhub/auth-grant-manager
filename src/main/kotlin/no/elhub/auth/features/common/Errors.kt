@@ -14,6 +14,7 @@ sealed class InputError : Error {
     data object IdMismatchError : InputError()
     data class MissingFieldError(val fields: List<String>) : InputError()
     data class InvalidFieldValueError(val detail: String) : InputError()
+    data class ContentTooLargeError(val detail: String) : InputError()
 }
 
 sealed class CommandError : Error {
@@ -137,6 +138,12 @@ fun InputError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection
         is InputError.InvalidFieldValueError -> buildApiErrorResponse(
             status = HttpStatusCode.BadRequest,
             title = "Invalid field value in request body",
+            detail = this.detail
+        )
+
+        is InputError.ContentTooLargeError -> buildApiErrorResponse(
+            status = HttpStatusCode.PayloadTooLarge,
+            title = "Content too large",
             detail = this.detail
         )
     }

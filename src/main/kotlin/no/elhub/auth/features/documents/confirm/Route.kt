@@ -18,6 +18,7 @@ import no.elhub.auth.features.common.validatePathId
 import org.slf4j.LoggerFactory
 
 const val DOCUMENT_ID_PARAM = "id"
+const val PDF_MAX_BYTES = 1L * 1024L * 1024L // 1 MB
 private val logger = LoggerFactory.getLogger(Route::class.java)
 
 fun Route.route(handler: Handler) {
@@ -35,7 +36,15 @@ fun Route.route(handler: Handler) {
                 return@put
             }
 
-        val signedDocument = call.receiveChannel().readRemaining().readByteArray()
+        // Read 1 extra byte, then check how much was read
+        val signedDocument = call.receiveChannel().readRemaining(max = PDF_MAX_BYTES + 1).readByteArray()
+        if (signedDocument.size > PDF_MAX_BYTES) {
+            val (status, body) = InputError.ContentTooLargeError(detail = "Signed PDF upload size is limited to 1 MB")
+                .toApiErrorResponse()
+            call.respond(status, body)
+            return@put
+        }
+
         if (signedDocument.isEmpty()) {
             val (status, body) = InputError.MissingInputError.toApiErrorResponse()
             call.respond(status, body)
