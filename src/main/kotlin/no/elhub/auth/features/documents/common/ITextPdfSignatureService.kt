@@ -64,16 +64,16 @@ class ITextPdfSignatureService(
         val certChain = arrayOf<Certificate>(signingCert, certificateProvider.getElhubIntermediateCertificate())
 
         var capturedHash: ByteArray? = null
-        var capturedSh: ByteArray? = null
+        var capturedAuthenticatedAttributes: ByteArray? = null
         var capturedPkcs7: PdfPKCS7? = null
 
         val captureContainer = object : IExternalSignatureContainer {
             override fun sign(data: InputStream): ByteArray {
                 val sgn = PdfPKCS7(null as PrivateKey?, certChain, "SHA-256", null, BouncyCastleDigest(), false)
                 val hash = DigestAlgorithms.digest(data, MessageDigest.getInstance("SHA-256"))
-                val sh = sgn.getAuthenticatedAttributeBytes(hash, PdfSigner.CryptoStandard.CADES, emptyList(), null)
+                val authenticatedAttributes = sgn.getAuthenticatedAttributeBytes(hash, PdfSigner.CryptoStandard.CADES, emptyList(), null)
                 capturedHash = hash
-                capturedSh = sh
+                capturedAuthenticatedAttributes = authenticatedAttributes
                 capturedPkcs7 = sgn
                 return ByteArray(0)
             }
@@ -99,11 +99,11 @@ class ITextPdfSignatureService(
         if (phase1Result.isFailure) raise(SignatureSigningError.SigningDataGenerationError)
 
         val hash = capturedHash ?: raise(SignatureSigningError.SigningDataGenerationError)
-        val sh = capturedSh ?: raise(SignatureSigningError.SigningDataGenerationError)
+        val authenticatedAttributes = capturedAuthenticatedAttributes ?: raise(SignatureSigningError.SigningDataGenerationError)
         val sgn = capturedPkcs7 ?: raise(SignatureSigningError.SigningDataGenerationError)
         val preparedPdf = preparedOutput.toByteArray()
 
-        val extSignature = signatureProvider.fetchSignature(sh).fold(
+        val extSignature = signatureProvider.fetchSignature(authenticatedAttributes).fold(
             ifLeft = { raise(SignatureSigningError.SignatureFetchingError) },
             ifRight = { it }
         )
