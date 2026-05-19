@@ -5,18 +5,19 @@ import arrow.core.raise.Raise
 import arrow.core.raise.either
 import arrow.core.raise.ensure
 import arrow.core.raise.ensureNotNull
+import com.itextpdf.kernel.crypto.DigestAlgorithms
+import com.itextpdf.kernel.pdf.PdfDictionary
 import com.itextpdf.kernel.pdf.PdfDocument
 import com.itextpdf.kernel.pdf.PdfName
 import com.itextpdf.kernel.pdf.PdfReader
 import com.itextpdf.kernel.pdf.PdfRevisionsReader
 import com.itextpdf.kernel.pdf.StampingProperties
 import com.itextpdf.signatures.AccessPermissions
-import com.itextpdf.signatures.IExternalSignature
-import com.itextpdf.signatures.ISignatureMechanismParams
+import com.itextpdf.signatures.BouncyCastleDigest
+import com.itextpdf.signatures.IExternalSignatureContainer
 import com.itextpdf.signatures.PdfPKCS7
 import com.itextpdf.signatures.PdfSigner
 import com.itextpdf.signatures.SignatureUtil
-import kotlinx.coroutines.runBlocking
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
 import no.elhub.auth.features.documents.create.CertificateProvider
@@ -28,9 +29,10 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.slf4j.LoggerFactory
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
+import java.io.InputStream
 import java.math.BigInteger
-import java.security.GeneralSecurityException
 import java.security.MessageDigest
+import java.security.PrivateKey
 import java.security.Security
 import java.security.cert.Certificate
 import java.security.cert.CertificateFactory
@@ -46,6 +48,8 @@ class ITextPdfSignatureService(
         const val NATIONAL_ID_EXTENSION_OID = "2.16.578.1.61.2.4"
         const val EKU_TIME_STAMPING_OID = "1.3.6.1.5.5.7.3.8"
 
+        const val SIGNATURE_ESTIMATED_SIZE = 8192
+
         init {
             if (Security.getProvider("BC") == null) {
                 Security.addProvider(BouncyCastleProvider())
@@ -58,60 +62,73 @@ class ITextPdfSignatureService(
     override suspend fun sign(fileByteArray: ByteArray): Either<SignatureSigningError, ByteArray> = either {
         val signingCert = certificateProvider.getElhubSigningCertificate()
         val certChain = arrayOf<Certificate>(signingCert, certificateProvider.getElhubIntermediateCertificate())
-        var signatureCallbackInvoked = false
-        var signatureFetchFailed = false
 
-        val externalSignature = object : IExternalSignature {
-            override fun getDigestAlgorithmName(): String = "SHA-256"
+        var capturedHash: ByteArray? = null
+        var capturedAuthenticatedAttributes: ByteArray? = null
+        var capturedPkcs7: PdfPKCS7? = null
 
-            override fun getSignatureAlgorithmName(): String = "RSA"
+        val captureContainer = object : IExternalSignatureContainer {
+            override fun sign(data: InputStream): ByteArray {
+                val sgn = PdfPKCS7(null as PrivateKey?, certChain, "SHA-256", null, BouncyCastleDigest(), false)
+                val hash = DigestAlgorithms.digest(data, MessageDigest.getInstance("SHA-256"))
+                val authenticatedAttributes = sgn.getAuthenticatedAttributeBytes(hash, PdfSigner.CryptoStandard.CADES, emptyList(), null)
+                capturedHash = hash
+                capturedAuthenticatedAttributes = authenticatedAttributes
+                capturedPkcs7 = sgn
+                return ByteArray(0)
+            }
 
-            override fun getSignatureMechanismParameters(): ISignatureMechanismParams? = null
-
-            override fun sign(message: ByteArray): ByteArray {
-                signatureCallbackInvoked = true
-                return runBlocking {
-                    signatureProvider.fetchSignature(message).fold(
-                        ifLeft = {
-                            signatureFetchFailed = true
-                            throw SignatureFetchException()
-                        },
-                        ifRight = { it }
-                    )
-                }
+            override fun modifySigningDictionary(signDic: PdfDictionary) {
+                signDic.put(PdfName.Filter, PdfName.Adobe_PPKLite)
+                signDic.put(PdfName.SubFilter, PdfName.ETSI_CAdES_DETACHED)
             }
         }
 
-        val output = ByteArrayOutputStream()
-        val signResult = runCatching {
+        val preparedOutput = ByteArrayOutputStream()
+        val phase1Result = runCatching {
             val signer = PdfSigner(
                 PdfReader(fileByteArray.inputStream()),
-                output,
+                preparedOutput,
                 StampingProperties().useAppendMode()
             )
             signer.signerProperties.setFieldName("Signature1")
             signer.signerProperties.setCertificationLevel(AccessPermissions.FORM_FIELDS_MODIFICATION)
-            signer.signDetached(
-                externalSignature,
-                certChain,
-                null,
-                null,
-                null,
-                0,
-                PdfSigner.CryptoStandard.CADES
-            )
-            output.toByteArray()
+            signer.signExternalContainer(captureContainer, SIGNATURE_ESTIMATED_SIZE)
         }
 
-        signResult.fold(
-            onSuccess = { it },
-            onFailure = {
-                when {
-                    signatureFetchFailed -> raise(SignatureSigningError.SignatureFetchingError)
-                    !signatureCallbackInvoked -> raise(SignatureSigningError.SigningDataGenerationError)
-                    else -> raise(SignatureSigningError.AddSignatureToSignatureError)
-                }
-            }
+        if (phase1Result.isFailure) raise(SignatureSigningError.SigningDataGenerationError)
+
+        val hash = capturedHash ?: raise(SignatureSigningError.SigningDataGenerationError)
+        val authenticatedAttributes = capturedAuthenticatedAttributes ?: raise(SignatureSigningError.SigningDataGenerationError)
+        val sgn = capturedPkcs7 ?: raise(SignatureSigningError.SigningDataGenerationError)
+        val preparedPdf = preparedOutput.toByteArray()
+
+        val extSignature = signatureProvider.fetchSignature(authenticatedAttributes).fold(
+            ifLeft = { raise(SignatureSigningError.SignatureFetchingError) },
+            ifRight = { it }
+        )
+
+        sgn.setExternalSignatureValue(extSignature, null, "RSA", null)
+        val encodedPkcs7 = sgn.getEncodedPKCS7(hash, PdfSigner.CryptoStandard.CADES, null, emptyList(), null)
+
+        val embedContainer = object : IExternalSignatureContainer {
+            override fun sign(data: InputStream): ByteArray = encodedPkcs7
+            override fun modifySigningDictionary(signDic: PdfDictionary) {}
+        }
+
+        val finalOutput = ByteArrayOutputStream()
+        val phase3Result = runCatching {
+            PdfSigner.signDeferred(
+                PdfReader(preparedPdf.inputStream()),
+                "Signature1",
+                finalOutput,
+                embedContainer
+            )
+        }
+
+        phase3Result.fold(
+            onSuccess = { finalOutput.toByteArray() },
+            onFailure = { raise(SignatureSigningError.AddSignatureToSignatureError) }
         )
     }
 
@@ -440,8 +457,6 @@ class ITextPdfSignatureService(
         }
         return MessageDigest.getInstance(normalized)
     }
-
-    private class SignatureFetchException : GeneralSecurityException()
 
     private data class ParsedDocument(
         val signatures: List<ParsedSignature>,
