@@ -21,7 +21,7 @@ fun Application.configureErrorHandling() {
             val (status, body) = buildApiErrorResponse(
                 status = HttpStatusCode.BadRequest,
                 title = "Invalid trace ID",
-                detail = "Header 'ElhubTraceID' must be a valid UUID"
+                detail = "Header 'ElhubTraceId' must be a valid UUID"
             )
             call.respond(status, body)
         }
