@@ -3,6 +3,7 @@ package no.elhub.auth.features.businessprocesses.structuredata.organisations
 import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
@@ -15,11 +16,17 @@ import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 import no.elhub.auth.features.businessprocesses.structuredata.common.ClientError
+import no.elhub.auth.features.common.ELHUB_TRACE_ID_HEADER
+import no.elhub.auth.features.common.TRACE_ID_MDC_KEY
+import org.slf4j.MDC
+import java.util.UUID
 
 class OrganisationsApiTest : FunSpec({
     val validPartyId = "3004300000019"
     val notBalanceSupplierPartyId = "3004300000099"
     val notValidPartyId = "123"
+    val traceId = UUID.randomUUID().toString()
+    var capturedTraceIdHeader: String? = null
     val serviceUrl = "http://localhost:8080/v1/service"
     val config = OrganisationsApiConfig(
         serviceUrl = serviceUrl,
@@ -42,6 +49,7 @@ class OrganisationsApiTest : FunSpec({
 
         engine {
             addHandler { request ->
+                capturedTraceIdHeader = request.headers[ELHUB_TRACE_ID_HEADER]
                 when (request.url.fullPath) {
                     "/v1/service/parties/$validPartyId?partyType=BalanceSupplier" -> {
                         respond(
@@ -95,6 +103,30 @@ class OrganisationsApiTest : FunSpec({
         }
     }
     val service = OrganisationsApi(config, client)
+
+    beforeTest {
+        capturedTraceIdHeader = null
+        MDC.put(TRACE_ID_MDC_KEY, traceId)
+    }
+
+    afterTest {
+        MDC.remove(TRACE_ID_MDC_KEY)
+    }
+
+    test("sends trace header from shared trace context") {
+        service.getPartyByIdAndPartyType(validPartyId, PartyType.BalanceSupplier).shouldBeRight()
+
+        capturedTraceIdHeader shouldBe traceId
+    }
+
+    test("missing trace id does not fail request") {
+        MDC.remove(TRACE_ID_MDC_KEY)
+
+        val response = service.getPartyByIdAndPartyType(validPartyId, PartyType.BalanceSupplier)
+
+        response.shouldBeRight()
+        capturedTraceIdHeader.shouldBeNull()
+    }
 
     test("Valid partyId and corresponding partyType") {
         val response = service.getPartyByIdAndPartyType(validPartyId, PartyType.BalanceSupplier)
