@@ -43,6 +43,7 @@ import no.elhub.auth.features.businessprocesses.structuredata.organisations.Orga
 import no.elhub.auth.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.NOT_BALANCE_SUPPLIER_PARTY_ID
 import no.elhub.auth.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.VALID_PARTY_ID
 import no.elhub.auth.features.businessprocesses.structuredata.organisations.organisationsServiceHttpClient
+import no.elhub.auth.features.common.TRACE_ID_MDC_KEY
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType.Organization
 import no.elhub.auth.features.common.party.PartyType.Person
@@ -57,6 +58,8 @@ import no.elhub.auth.features.requests.common.CreateRequestBusinessMeta
 import no.elhub.auth.features.requests.common.CreateRequestBusinessModel
 import no.elhub.auth.features.requests.create.command.TEXT_VERSION_KEY
 import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObject
+import org.slf4j.MDC
+import java.util.UUID
 
 private val VALID_PARTY = AuthorizationParty(id = VALID_PARTY_ID, type = Organization)
 private val AUTHORIZED_PARTY = VALID_PARTY
@@ -111,6 +114,7 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
         }
 
         beforeTest {
+            MDC.put(TRACE_ID_MDC_KEY, UUID.randomUUID().toString())
             clearMocks(edielService, answers = false, recordedCalls = true)
             coEvery { edielService.getPartyRedirect(any()) } returns Either.Right(
                 EdielPartyRedirectResponseDto(
@@ -119,6 +123,10 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
                     )
                 )
             )
+        }
+
+        afterTest {
+            MDC.remove(TRACE_ID_MDC_KEY)
         }
 
         test("request validation fails on missing requestedFromName") {

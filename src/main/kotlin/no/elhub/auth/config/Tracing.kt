@@ -3,9 +3,9 @@ package no.elhub.auth.config
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.plugins.callid.CallId
+import no.elhub.auth.features.common.ELHUB_TRACE_ID_HEADER
 import java.util.UUID
 
-private const val ELHUB_TRACE_ID_HEADER = "ElhubTraceID"
 private const val ELHUB_TRACE_ID_HEADER_DEPRECATED = "Elhub-Trace-Id"
 
 fun Application.configureRequestTracing() {

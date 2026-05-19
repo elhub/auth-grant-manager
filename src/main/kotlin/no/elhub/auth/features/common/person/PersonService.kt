@@ -16,11 +16,12 @@ import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import kotlinx.serialization.json.Json
 import no.elhub.auth.features.businessprocesses.common.JwtTokenProvider
+import no.elhub.auth.features.common.ELHUB_TRACE_ID_HEADER
+import no.elhub.auth.features.common.TraceIdContext
 import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObject
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import no.elhub.devxp.jsonapi.response.JsonApiErrorObject
 import org.slf4j.LoggerFactory
-import org.slf4j.MDC
 import java.util.UUID
 
 interface PersonService {
@@ -32,16 +33,10 @@ class ApiPersonService(
     private val client: HttpClient,
     private val tokenProvider: JwtTokenProvider,
 ) : PersonService {
-
     private val logger = LoggerFactory.getLogger(PersonService::class.java)
 
-    private companion object {
-        const val TRACE_HEADER = "ElhubTraceId"
-        const val CALL_ID_MDC_KEY = "traceId"
-    }
-
     override suspend fun findOrCreateByNin(nin: String): Either<ClientError, Person> {
-        val traceId = MDC.get(CALL_ID_MDC_KEY)
+        val traceId = TraceIdContext.currentOrNull()
         val traceHeader = traceIdIsValid(traceId).getOrElse {
             logger.error("The required request header to auth-persons is missing! ")
             return ClientError.MissingHeader.left()
@@ -50,7 +45,7 @@ class ApiPersonService(
         return Either.catch {
             val jwtToken = tokenProvider.getToken()
             val response = client.post("${cfg.baseUri}/market-parties/v0/persons") {
-                headers[TRACE_HEADER] = traceHeader.toString()
+                headers[ELHUB_TRACE_ID_HEADER] = traceHeader.toString()
                 header("Authorization", "Bearer $jwtToken")
                 contentType(ContentType.Application.Json)
                 setBody(

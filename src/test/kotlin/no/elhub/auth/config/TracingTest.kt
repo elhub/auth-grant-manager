@@ -14,12 +14,15 @@ import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
 import io.ktor.server.testing.testApplication
+import no.elhub.auth.features.common.ELHUB_TRACE_ID_HEADER
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import java.util.UUID
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation as ClientContentNegotiation
 
+private const val ELHUB_TRACE_ID_HEADER_DEPRECATED = "Elhub-Trace-Id"
+
 class TracingTest : FunSpec({
-    test("uses ElhubTraceID header as call id when present") {
+    test("uses ElhubTraceId header as call id when present") {
         val traceId = "850cf459-d425-409a-a05d-7c6c9d1c0d64"
 
         testApplication {
@@ -33,16 +36,16 @@ class TracingTest : FunSpec({
             }
 
             val response = client.get("/call-id") {
-                headers.append("ElhubTraceID", traceId)
+                headers.append(ELHUB_TRACE_ID_HEADER, traceId)
             }
 
             response.bodyAsText() shouldBe traceId
-            response.headers["ElhubTraceID"] shouldBe traceId
-            response.headers["Elhub-Trace-Id"] shouldBe traceId
+            response.headers[ELHUB_TRACE_ID_HEADER] shouldBe traceId
+            response.headers[ELHUB_TRACE_ID_HEADER_DEPRECATED] shouldBe traceId
         }
     }
 
-    test("generates call id when ElhubTraceID header is missing") {
+    test("generates call id when ElhubTraceId header is missing") {
         testApplication {
             application {
                 configureRequestTracing()
@@ -57,12 +60,12 @@ class TracingTest : FunSpec({
             val generatedTraceId = response.bodyAsText()
 
             UUID.fromString(generatedTraceId).toString() shouldBe generatedTraceId
-            response.headers["ElhubTraceID"] shouldBe generatedTraceId
-            response.headers["Elhub-Trace-Id"] shouldBe generatedTraceId
+            response.headers[ELHUB_TRACE_ID_HEADER] shouldBe generatedTraceId
+            response.headers[ELHUB_TRACE_ID_HEADER_DEPRECATED] shouldBe generatedTraceId
         }
     }
 
-    context("returns 400 when ElhubTraceID header is invalid") {
+    context("returns 400 when ElhubTraceId header is invalid") {
         listOf(
             "not-a-uuid",
             "",
@@ -88,11 +91,11 @@ class TracingTest : FunSpec({
                     }
 
                     val response = jsonClient.get("/call-id") {
-                        headers.append("ElhubTraceID", invalidValue)
+                        headers.append("ElhubTraceId", invalidValue)
                     }
 
                     response.status shouldBe HttpStatusCode.BadRequest
-                    response.headers["ElhubTraceID"].shouldBeNull()
+                    response.headers["ElhubTraceId"].shouldBeNull()
                     response.headers["Elhub-Trace-Id"].shouldBeNull()
                     val responseJson: JsonApiErrorCollection = response.body()
                     responseJson.errors.apply {
@@ -100,7 +103,7 @@ class TracingTest : FunSpec({
                         this[0].apply {
                             status shouldBe "400"
                             title shouldBe "Invalid trace ID"
-                            detail shouldBe "Header 'ElhubTraceID' must be a valid UUID"
+                            detail shouldBe "Header 'ElhubTraceId' must be a valid UUID"
                         }
                     }
                 }
