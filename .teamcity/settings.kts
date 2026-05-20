@@ -16,7 +16,6 @@ elhubProject(group = Group.AUTH, name = "auth-grant-manager") {
     pipeline {
         sequential {
             gradleVerify {
-                disableLint = true
                 lintImage = "docker.jfrog.elhub.cloud/oxsecurity/megalinter:v8"
                 enablePublishMetrics = true
             }
