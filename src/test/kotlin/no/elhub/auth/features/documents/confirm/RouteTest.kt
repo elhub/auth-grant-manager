@@ -45,11 +45,11 @@ class RouteTest : FunSpec({
         }
     }
 
-    test("PUT /{id}.pdf returns 204 when authorized as org and handler succeeds") {
+    test("PUT /{id}.pdf returns 204 when authorized as org, handler succeeds, and PDF size is at limit") {
         coEvery { handler.invoke(any()) } returns Unit.right()
         testApplication {
             setupAppWith(authorizedOrg) { route(handler) }
-            val response = client.putPdf("/02fe286b-4519-4ba8-9c84-dc18bffc9eb3.pdf", Random.nextBytes(256))
+            val response = client.putPdf("/02fe286b-4519-4ba8-9c84-dc18bffc9eb3.pdf", Random.nextBytes(1 * 1024 * 1024))
             response.status shouldBe HttpStatusCode.NoContent
             response.bodyAsText().shouldBeEmpty()
             coVerify(exactly = 1) { handler.invoke(any()) }
@@ -104,6 +104,24 @@ class RouteTest : FunSpec({
                 this[0].apply {
                     title shouldBe "Missing input"
                     detail shouldBe "Necessary information was not provided"
+                }
+            }
+            coVerify(exactly = 0) { handler.invoke(any()) }
+        }
+    }
+
+    test("PUT /{id}.pdf returns 413 when document too big") {
+        testApplication {
+            setupAppWith(authorizedOrg) { route(handler) }
+            val response =
+                client.putPdf("/4803264d-11a4-4d6a-81f4-996986cb7b35.pdf", Random.nextBytes(1 * 1024 * 1024 + 1))
+            response.status shouldBe HttpStatusCode.PayloadTooLarge
+            val responseJson: JsonApiErrorCollection = response.body()
+            responseJson.errors.apply {
+                size shouldBe 1
+                this[0].apply {
+                    title shouldBe "Content too large"
+                    detail shouldBe "Signed PDF upload size is limited to 1 MB"
                 }
             }
             coVerify(exactly = 0) { handler.invoke(any()) }
