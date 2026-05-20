@@ -10,6 +10,8 @@ import io.ktor.http.isSuccess
 import no.elhub.auth.features.businessprocesses.common.JwtTokenProvider
 import no.elhub.auth.features.businessprocesses.structuredata.common.ClientError
 import no.elhub.auth.features.businessprocesses.structuredata.common.mapErrorsFromServer
+import no.elhub.auth.features.common.ELHUB_TRACE_ID_HEADER
+import no.elhub.auth.features.common.TraceIdContext
 import org.slf4j.LoggerFactory
 
 interface MeteringPointsService {
@@ -26,12 +28,18 @@ class MeteringPointsApi(
 ) : MeteringPointsService {
     private val logger = LoggerFactory.getLogger(MeteringPointsService::class.java)
 
-    override suspend fun getMeteringPointByIdAndElhubInternalId(meteringPointId: String, elhubInternalId: String): Either<ClientError, MeteringPointResponse> =
-        Either.catch {
+    override suspend fun getMeteringPointByIdAndElhubInternalId(meteringPointId: String, elhubInternalId: String): Either<ClientError, MeteringPointResponse> {
+        val traceId = TraceIdContext.currentOrNull()
+        if (traceId == null) {
+            logger.error("event=metering_point_lookup_missing_trace_id")
+        }
+
+        return Either.catch {
             val jwtToken = tokenProvider.getToken()
             val response = client.get("${meteringPointsApiConfig.serviceUrl}/metering-points/$meteringPointId?endUserId=$elhubInternalId") {
                 header("Authorization", "Bearer $jwtToken")
                 header("User-Agent", "auth-grant-manager")
+                traceId?.let { header(ELHUB_TRACE_ID_HEADER, it) }
             }
             if (response.status.isSuccess()) {
                 val responseBody: MeteringPointResponse = response.body()
@@ -44,6 +52,7 @@ class MeteringPointsApi(
             logger.error("Failed to fetch metering point: {}", throwable.message)
             ClientError.UnexpectedError(throwable)
         }
+    }
 }
 
 data class MeteringPointsApiConfig(
