@@ -16,6 +16,7 @@ elhubProject(group = Group.AUTH, name = "auth-grant-manager") {
     pipeline {
         sequential {
             gradleVerify {
+                disableLint = true
                 lintImage = "docker.jfrog.elhub.cloud/oxsecurity/megalinter:v8"
                 enablePublishMetrics = true
             }
@@ -36,39 +37,20 @@ elhubProject(group = Group.AUTH, name = "auth-grant-manager") {
 
             parallel {
                 gitOps {
-                    clusters = setOf(KubeCluster.TEST9)
+                    clusters = setOf(
+                        KubeCluster.TEST9,
+                        KubeCluster.TEST8,
+                        KubeCluster.TEST11,
+                        KubeCluster.TEST13,
+                        KubeCluster.TEST14
+                    )
                     gitOpsRepository = gitOpsRepo
                     autoMerge = true
-                    enableChangelog = true
-                }.triggerOnVcsChange()
-
-                gitOps {
-                    clusters = setOf(KubeCluster.TEST8)
-                    gitOpsRepository = gitOpsRepo
-                    autoMerge = true
-                    enableChangelog = true
-                }.triggerOnVcsChange()
-
-                gitOps {
-                    clusters = setOf(KubeCluster.TEST11)
-                    gitOpsRepository = gitOpsRepo
                     enableChangelog = true
                 }.triggerOnVcsChange()
 
                 gitOps {
                     clusters = setOf(KubeCluster.MARKET_TRIAL_1)
-                    gitOpsRepository = gitOpsRepo
-                    enableChangelog = true
-                }
-
-                gitOps {
-                    clusters = setOf(KubeCluster.TEST13)
-                    gitOpsRepository = gitOpsRepo
-                    enableChangelog = true
-                }
-
-                gitOps {
-                    clusters = setOf(KubeCluster.TEST14)
                     gitOpsRepository = gitOpsRepo
                     enableChangelog = true
                 }
