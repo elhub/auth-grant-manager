@@ -5,7 +5,6 @@ import io.ktor.server.config.ApplicationConfig
 import io.ktor.server.plugins.di.dependencies
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
-import no.elhub.auth.features.common.auth.AuthGrantManagerPolicy
 import no.elhub.auth.features.documents.common.DocumentPropertiesRepository
 import no.elhub.auth.features.documents.common.DocumentRepository
 import no.elhub.auth.features.documents.common.ExposedDocumentPropertiesRepository
@@ -18,6 +17,7 @@ import no.elhub.auth.features.documents.create.HashicorpVaultSignatureProvider
 import no.elhub.auth.features.documents.create.VaultConfig
 import no.elhub.auth.features.filegenerator.PdfGenerator
 import no.elhub.auth.features.filegenerator.PdfGeneratorConfig
+import no.elhub.auth.plugin.policies.token.base.authinfo.AuthInfoPolicy
 import no.elhub.auth.plugin.tokenAuthorize
 import no.elhub.auth.features.documents.confirm.Handler as ConfirmHandler
 import no.elhub.auth.features.documents.confirm.route as confirmRoute
@@ -86,7 +86,7 @@ fun Application.module() {
     val queryHandler: QueryHandler by dependencies
 
     routing {
-        tokenAuthorize(AuthGrantManagerPolicy) {
+        tokenAuthorize(AuthInfoPolicy) {
             route(DOCUMENTS_PATH) {
                 createRoute(createHandler)
                 confirmRoute(confirmHandler)
