@@ -4,21 +4,23 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import no.elhub.auth.features.common.party.PartyType
+import no.elhub.auth.plugin.dto.AuthInfoV3
 import no.elhub.auth.plugin.dto.TokenInfo
 import no.elhub.auth.plugin.dto.TokenType
+import no.elhub.auth.plugin.policies.token.base.authinfo.AuthInfoPolicy
 
-class ResolveAuthorizedPartyTest : FunSpec({
+class AuthorizationPartyResolverTest : FunSpec({
 
     fun maskinportenResponse(
         actingGLN: String? = "0107000000021",
         functionName: String? = "BalanceSupplier",
         inputFailed: String? = null,
-        authorizedFunctions: List<AuthGrantManagerPolicy.ResponseAuthorizedFunction>? = listOf(
-            AuthGrantManagerPolicy.ResponseAuthorizedFunction(functionCode = "SELF", functionName = functionName)
+        authorizedFunctions: List<AuthInfoV3.AuthorizedFunction>? = listOf(
+            AuthInfoV3.AuthorizedFunction(functionCode = "SELF", functionName = functionName)
         ),
-    ) = AuthGrantManagerPolicy.Response(
+    ) = AuthInfoPolicy.Response(
         tokenInfo = TokenInfo(tokenStatus = "verified", tokenType = TokenType.MASKINPORTEN),
-        authInfo = AuthGrantManagerPolicy.ResponseAuthInfo(
+        authInfo = AuthInfoV3(
             actingGLN = actingGLN,
             authorizedFunctions = authorizedFunctions,
             inputFailed = inputFailed,
@@ -30,9 +32,9 @@ class ResolveAuthorizedPartyTest : FunSpec({
         actingId: String? = "some-person-id",
         actingOrganisationNumber: String? = null,
         authInfoError: String? = null,
-    ) = AuthGrantManagerPolicy.Response(
+    ) = AuthInfoPolicy.Response(
         tokenInfo = TokenInfo(tokenStatus = "verified", tokenType = TokenType.ENDUSER),
-        authInfo = AuthGrantManagerPolicy.ResponseAuthInfo(
+        authInfo = AuthInfoV3(
             actingType = actingType,
             actingId = actingId,
             actingOrganisationNumber = actingOrganisationNumber,
@@ -40,7 +42,7 @@ class ResolveAuthorizedPartyTest : FunSpec({
         ),
     )
 
-    fun elhubServiceResponse(partyId: String? = "some-service") = AuthGrantManagerPolicy.Response(
+    fun elhubServiceResponse(partyId: String? = "some-service") = AuthInfoPolicy.Response(
         tokenInfo = TokenInfo(tokenStatus = "verified", tokenType = TokenType.ELHUB_SERVICE, partyId = partyId),
     )
 
@@ -72,7 +74,7 @@ class ResolveAuthorizedPartyTest : FunSpec({
         }
 
         test("returns null when authInfo is null") {
-            val response = AuthGrantManagerPolicy.Response(
+            val response = AuthInfoPolicy.Response(
                 tokenInfo = TokenInfo(tokenStatus = "verified", tokenType = TokenType.MASKINPORTEN),
                 authInfo = null,
             )
@@ -122,7 +124,7 @@ class ResolveAuthorizedPartyTest : FunSpec({
         }
 
         test("returns null when authInfo is null") {
-            val response = AuthGrantManagerPolicy.Response(
+            val response = AuthInfoPolicy.Response(
                 tokenInfo = TokenInfo(tokenStatus = "verified", tokenType = TokenType.ENDUSER),
                 authInfo = null,
             )
@@ -144,12 +146,12 @@ class ResolveAuthorizedPartyTest : FunSpec({
 
     context("Unknown or missing tokenType") {
         test("returns null when tokenInfo is null") {
-            val response = AuthGrantManagerPolicy.Response(tokenInfo = null)
+            val response = AuthInfoPolicy.Response(tokenInfo = null)
             resolveAuthorizedParty(response).shouldBeNull()
         }
 
         test("returns null when tokenType is null") {
-            val response = AuthGrantManagerPolicy.Response(
+            val response = AuthInfoPolicy.Response(
                 tokenInfo = TokenInfo(tokenStatus = "verified", tokenType = null)
             )
             resolveAuthorizedParty(response).shouldBeNull()

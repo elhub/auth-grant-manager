@@ -13,10 +13,10 @@ import io.ktor.server.application.Application
 import io.ktor.server.plugins.callid.callId
 import kotlinx.serialization.json.Json
 import no.elhub.auth.features.common.ApiHeaders
-import no.elhub.auth.features.common.auth.AuthGrantManagerPolicy
 import no.elhub.auth.features.common.auth.AuthorizedPartyKey
 import no.elhub.auth.features.common.auth.resolveAuthorizedParty
 import no.elhub.auth.plugin.authorization
+import no.elhub.auth.plugin.policies.token.base.authinfo.AuthInfoPolicy
 
 fun Application.configureAuthorization() {
     val pdpBaseUrl = environment.config.property("pdp.baseUrl").getString()
@@ -41,14 +41,14 @@ fun Application.configureAuthorization() {
     }
 
     authorization {
-        tokenPolicy(AuthGrantManagerPolicy) {
+        tokenPolicy(AuthInfoPolicy) {
             client = pdpHttpClient
             pdpUrl = pdpBaseUrl
 
             buildPayload {
-                AuthGrantManagerPolicy.Request(
-                    senderGLN = request.headers[ApiHeaders.SENDER_GLN]?.ifBlank { null },
-                    onBehalfOfGLN = request.headers[ApiHeaders.ON_BEHALF_OF_GLN]?.ifBlank { null },
+                AuthInfoPolicy.Request(
+                    senderGln = request.headers[ApiHeaders.SENDER_GLN]?.ifBlank { null },
+                    onBehalfOfGln = request.headers[ApiHeaders.ON_BEHALF_OF_GLN]?.ifBlank { null },
                     onBehalfOfOrganisationId = request.headers[ApiHeaders.ON_BEHALF_OF_ORGANISATION]?.ifBlank { null },
                 )
             }

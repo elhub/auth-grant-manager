@@ -1,67 +1,16 @@
 package no.elhub.auth.features.common.auth
 
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
-import no.elhub.auth.plugin.dto.PdpError
-import no.elhub.auth.plugin.dto.TokenInfo
-import no.elhub.auth.plugin.dto.TokenPdpResult
 import no.elhub.auth.plugin.dto.TokenType
-import no.elhub.auth.plugin.policies.token.core.TokenPolicy
+import no.elhub.auth.plugin.policies.token.base.authinfo.AuthInfoPolicy
 import org.slf4j.LoggerFactory
-
-private val log = LoggerFactory.getLogger("AuthGrantManagerPolicy")
 
 const val AUTHINFO_POLICY_ROUTE = "/v1/data/v3/token/authinfo"
 
-object AuthGrantManagerPolicy : TokenPolicy<AuthGrantManagerPolicy.Request, AuthGrantManagerPolicy.Response>(
-    key = "token.authinfo",
-    route = AUTHINFO_POLICY_ROUTE,
-) {
-    @Serializable
-    data class Request(
-        @SerialName("SenderGLN")
-        val senderGLN: String? = null,
-        @SerialName("OnBehalfOfGLN")
-        val onBehalfOfGLN: String? = null,
-        @SerialName("OnBehalfOfOrganisationId")
-        val onBehalfOfOrganisationId: String? = null,
-    )
+private val log = LoggerFactory.getLogger("AuthorizationPartyResolver")
 
-    @Serializable
-    data class Response(
-        override val tokenInfo: TokenInfo? = null,
-        val authInfo: ResponseAuthInfo? = null,
-        override val error: PdpError? = null,
-    ) : TokenPdpResult
-
-    @Serializable
-    data class ResponseAuthInfo(
-        val inputFailed: String? = null,
-        val authorizedFunctions: List<ResponseAuthorizedFunction>? = null,
-        val actingGLN: String? = null,
-        val actingId: String? = null,
-        val actingType: String? = null,
-        val actingOrganisationNumber: String? = null,
-        val error: String? = null,
-    )
-
-    @Serializable
-    data class ResponseAuthorizedFunction(
-        val functionCode: String? = null,
-        val functionName: String? = null,
-    )
-
-    override val requestSerializer = Request.serializer()
-    override val responsePayloadSerializer = Response.serializer()
-}
-
-/**
- * Resolves an [AuthorizationParty] from the PDP response.
- * Returns null if the party cannot be resolved (enforce will return false → 403).
- */
-fun resolveAuthorizedParty(response: AuthGrantManagerPolicy.Response): AuthorizationParty? = when (response.tokenInfo?.tokenType) {
+fun resolveAuthorizedParty(response: AuthInfoPolicy.Response): AuthorizationParty? = when (response.tokenInfo?.tokenType) {
     TokenType.MASKINPORTEN -> resolveMaskinportenParty(response)
 
     TokenType.ENDUSER -> resolveEndUserParty(response)
@@ -74,7 +23,7 @@ fun resolveAuthorizedParty(response: AuthGrantManagerPolicy.Response): Authoriza
     }
 }
 
-private fun resolveMaskinportenParty(response: AuthGrantManagerPolicy.Response): AuthorizationParty? {
+private fun resolveMaskinportenParty(response: AuthInfoPolicy.Response): AuthorizationParty? {
     val authInfo = response.authInfo
     if (authInfo?.inputFailed != null) {
         log.error("PDP input validation failed msg={}", authInfo.inputFailed)
@@ -99,7 +48,7 @@ private fun resolveMaskinportenParty(response: AuthGrantManagerPolicy.Response):
         .also { log.info("Authorized party is $it") }
 }
 
-private fun resolveEndUserParty(response: AuthGrantManagerPolicy.Response): AuthorizationParty? {
+private fun resolveEndUserParty(response: AuthInfoPolicy.Response): AuthorizationParty? {
     val authInfo = response.authInfo
     if (authInfo?.error != null) {
         log.warn("PDP authInfo error={}", authInfo.error)
@@ -129,7 +78,7 @@ private fun resolveEndUserParty(response: AuthGrantManagerPolicy.Response): Auth
     }.also { log.info("Authorized party is $it") }
 }
 
-private fun resolveSystemParty(response: AuthGrantManagerPolicy.Response): AuthorizationParty? {
+private fun resolveSystemParty(response: AuthInfoPolicy.Response): AuthorizationParty? {
     val partyId = response.tokenInfo?.partyId ?: run {
         log.warn("PDP response missing partyId for system token")
         return null

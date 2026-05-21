@@ -4,9 +4,9 @@ import io.ktor.server.application.Application
 import io.ktor.server.plugins.di.dependencies
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
-import no.elhub.auth.features.common.auth.AuthGrantManagerPolicy
 import no.elhub.auth.features.grants.common.ExposedGrantPropertiesRepository
 import no.elhub.auth.features.grants.common.ExposedGrantRepository
+import no.elhub.auth.plugin.policies.token.base.authinfo.AuthInfoPolicy
 import no.elhub.auth.plugin.tokenAuthorize
 import no.elhub.auth.features.grants.consume.Handler as ConsumeHandler
 import no.elhub.auth.features.grants.consume.route as consumeRoute
@@ -49,7 +49,7 @@ fun Application.module() {
     val consumerRouteHandler: ConsumeHandler by dependencies
 
     routing {
-        tokenAuthorize(AuthGrantManagerPolicy) {
+        tokenAuthorize(AuthInfoPolicy) {
             route(GRANTS_PATH) {
                 getRoute(getRouteHandler)
                 getScopesRoute(getScopesHandler)
