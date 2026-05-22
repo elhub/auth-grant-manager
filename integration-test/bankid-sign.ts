@@ -62,9 +62,9 @@ try {
   )
   // Success: the summary page ("Oppsummering") is shown with the document list.
   // Failure: a different heading / error message would appear.
-  const bodyText = await page.locator('body').innerText()
+  const bodyText: string = await page.locator('body').innerText()
   if (!bodyText.includes('Oppsummering')) {
-    const headings = await page.locator('h1, h2, h3').allInnerTexts()
+    const headings: string[] = await page.locator('h1, h2, h3').allInnerTexts()
     throw new Error(`Unexpected completion page. Headings: ${headings.join(' | ')}`)
   }
   console.log('BankID signing completed successfully.')
