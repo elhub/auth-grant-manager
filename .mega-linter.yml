@@ -3,3 +3,5 @@ EXTENDS:
 
 
 EDITORCONFIG_FILTER_REGEX_EXCLUDE: (.*\.icc|.*\.ttf)
+
+TYPESCRIPT_STANDARD_ARGUMENTS: --project integration-test/tsconfig.json
