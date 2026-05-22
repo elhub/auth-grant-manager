@@ -2,10 +2,12 @@ import no.elhub.devxp.build.configuration.pipeline.constants.Group
 import no.elhub.devxp.build.configuration.pipeline.constants.KubeCluster
 import no.elhub.devxp.build.configuration.pipeline.dsl.elhubProject
 import no.elhub.devxp.build.configuration.pipeline.extensions.triggerOnVcsChange
+import no.elhub.devxp.build.configuration.pipeline.jobs.dockerBuild
 import no.elhub.devxp.build.configuration.pipeline.jobs.gitOps
 import no.elhub.devxp.build.configuration.pipeline.jobs.gradleJib
 import no.elhub.devxp.build.configuration.pipeline.jobs.gradleVerify
 import no.elhub.devxp.build.configuration.pipeline.jobs.liquiBuild
+import no.elhub.devxp.build.configuration.pipeline.jobs.common.Source
 
 val imageRepo = "auth/auth-grant-manager"
 val dbDirectory = "./db"
@@ -26,12 +28,25 @@ elhubProject(group = Group.AUTH, name = "auth-grant-manager") {
                 }
             }
 
-            liquiBuild {
-                registrySettings = {
-                    repository = imageRepo
+            parallel {
+                liquiBuild {
+                    registrySettings = {
+                        repository = imageRepo
+                    }
+                    changelogDirectory = dbDirectory
+                    liquibaseEntrypoint = liquiEntryPoint
                 }
-                changelogDirectory = dbDirectory
-                liquibaseEntrypoint = liquiEntryPoint
+
+                dockerBuild {
+                    source = Source.CommitSha
+                    dockerfileName = "integration-test/Dockerfile"
+                    contextDirectory = "."
+                    dockerBuildNameSuffix = "Integration Test"
+                    registrySettings = {
+                        repository = "$imageRepo-test"
+                    }
+                    tags = setOf("latest")
+                }
             }
 
             parallel {
