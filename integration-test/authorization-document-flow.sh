@@ -30,11 +30,12 @@ METERING_POINT_ID="${METERING_POINT_ID:-}"
 ELHUB_ENV="${ELHUB_ENV:-test9}"
 BANKID_SIGNING_API="https://api.preprod.esign-stoetest.cloud/v1/signdoc/pades"
 BANKID_TOKEN_API="https://auth.current.bankid.no/auth/realms/current/protocol/openid-connect/token"
+BANKID_SIGN_BASE_URL="${BANKID_SIGN_BASE_URL:-}"
 
 ELHUB_BASE="https://auth-grant-manager.${ELHUB_ENV}.elhub.cloud/access/v0"
 
 for var in USER_AGENT SENDER_GLN MASKINPORTEN_TOKEN NATIONAL_IDENTITY_NUMBER \
-            BANKID_CLIENT_ID BANKID_CLIENT_SECRET METERING_POINT_ID; do
+            BANKID_CLIENT_ID BANKID_CLIENT_SECRET METERING_POINT_ID BANKID_SIGN_BASE_URL; do
   if [[ -z "${!var}" ]]; then
     echo "ERROR: \$${var} is not set." >&2
     exit 1
@@ -148,14 +149,14 @@ SIGN_RESPONSE=$(curl -sSf \
 
 SIGN_ORDER_ID=$(echo "${SIGN_RESPONSE}" | jq -r '.sign_id')
 echo "    signOrderId = ${SIGN_ORDER_ID}"
-echo "    Approve URL (preprod): https://web.preprod.esign-stoetest.cloud/${SIGN_ORDER_ID}"
+echo "    Approve URL: ${BANKID_SIGN_BASE_URL}/${SIGN_ORDER_ID}"
 
 # ---------------------------------------------------------------------------
 # Step 5: Automate the BankID WYSIWYS signing with Playwright
 # ---------------------------------------------------------------------------
 echo "==> Signing via BankID WYSIWYS..."
 INTEGRATION_TEST_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-BANKID_SIGN_URL="https://web.preprod.esign-stoetest.cloud/${SIGN_ORDER_ID}" \
+BANKID_SIGN_URL="${BANKID_SIGN_BASE_URL}/${SIGN_ORDER_ID}" \
   node "${INTEGRATION_TEST_DIR}/node_modules/.bin/tsx" "${INTEGRATION_TEST_DIR}/bankid-sign.ts"
 
 echo ""
