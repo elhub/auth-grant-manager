@@ -1,7 +1,7 @@
 ---
 openapi: 3.1.1
 info:
-  title: Authorization Grant Manager
+  title: Access API
   version: 0.1.0
   description: >
     The Authorization Grant Manager provides APIs for creating, managing, and retrieving authorization
