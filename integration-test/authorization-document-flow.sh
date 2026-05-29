@@ -7,6 +7,13 @@
 # 2. Run the script: ./authorization-document-flow.sh
 
 set -euo pipefail
+trap 'echo "ERROR: script failed at line ${LINENO}" >&2' ERR
+
+# Install Elhub CA cert if provided (needed when running in containers)
+if [[ -n "${ELHUB_CA_CERT:-}" ]]; then
+  echo "${ELHUB_CA_CERT}" > /usr/local/share/ca-certificates/elhub-ca.crt
+  update-ca-certificates --fresh 2>/dev/null
+fi
 
 # ---------------------------------------------------------------------------
 # Required variables – fill in or export before running
@@ -17,17 +24,15 @@ MASKINPORTEN_TOKEN="${MASKINPORTEN_TOKEN:-}"
 NATIONAL_IDENTITY_NUMBER="${NATIONAL_IDENTITY_NUMBER:-}"
 BANKID_CLIENT_ID="${BANKID_CLIENT_ID:-}"
 BANKID_CLIENT_SECRET="${BANKID_CLIENT_SECRET:-}"
-
 METERING_POINT_ID="${METERING_POINT_ID:-}"
-
-ELHUB_ENV="${ELHUB_ENV:-test9}"
-BANKID_SIGNING_API="https://api.preprod.esign-stoetest.cloud/v1/signdoc/pades"
-BANKID_TOKEN_API="https://auth.current.bankid.no/auth/realms/current/protocol/openid-connect/token"
-
-ELHUB_BASE="https://auth-grant-manager.${ELHUB_ENV}.elhub.cloud/access/v0"
+BANKID_SIGNING_API="${BANKID_SIGNING_API:-}"
+BANKID_TOKEN_API="${BANKID_TOKEN_API:-}"
+BANKID_SIGN_BASE_URL="${BANKID_SIGN_BASE_URL:-}"
+ELHUB_BASE="${ELHUB_BASE:-}"
 
 for var in USER_AGENT SENDER_GLN MASKINPORTEN_TOKEN NATIONAL_IDENTITY_NUMBER \
-            BANKID_CLIENT_ID BANKID_CLIENT_SECRET METERING_POINT_ID; do
+            BANKID_CLIENT_ID BANKID_CLIENT_SECRET METERING_POINT_ID \
+            BANKID_SIGNING_API BANKID_TOKEN_API BANKID_SIGN_BASE_URL ELHUB_BASE; do
   if [[ -z "${!var}" ]]; then
     echo "ERROR: \$${var} is not set." >&2
     exit 1
@@ -38,7 +43,7 @@ done
 # Step 1: Create authorization document
 # ---------------------------------------------------------------------------
 echo "==> Creating authorization document..."
-CREATE_RESPONSE=$(curl --silent \
+CREATE_RESPONSE=$(curl -sSf \
   -X POST "${ELHUB_BASE}/authorization-documents" \
   -H "Accept: application/json" \
   -H "Content-Type: application/json" \
@@ -81,7 +86,7 @@ echo "    documentId = ${DOCUMENT_ID}"
 # Step 2: Download the PDF authorization document (Elhub-signed)
 # ---------------------------------------------------------------------------
 echo "==> Downloading Elhub-signed PDF..."
-curl --silent --fail \
+curl -sSf \
   -X GET "${ELHUB_BASE}/authorization-documents/${DOCUMENT_ID}.pdf" \
   -H "Authorization: Bearer ${MASKINPORTEN_TOKEN}" \
   -H "SenderGln: ${SENDER_GLN}" \
@@ -93,7 +98,7 @@ echo "    Saved to elhub-signed.pdf"
 # Step 3: Obtain BankID token
 # ---------------------------------------------------------------------------
 echo "==> Fetching BankID token..."
-TOKEN_RESPONSE=$(curl --silent --fail \
+TOKEN_RESPONSE=$(curl -sSf \
   -X POST "${BANKID_TOKEN_API}" \
   -H "Content-Type: application/x-www-form-urlencoded" \
   --data-urlencode "grant_type=client_credentials" \
@@ -112,7 +117,7 @@ echo "    Token type: ${SIGNATURES_TOKEN_TYPE}"
 echo "==> Uploading sign order to BankID..."
 BASE64_PDF=$(base64 -w 0 elhub-signed.pdf)
 
-SIGN_RESPONSE=$(curl --silent --fail \
+SIGN_RESPONSE=$(curl -sSf \
   -X POST "${BANKID_SIGNING_API}" \
   -H "Accept: application/json" \
   -H "Content-Type: application/json" \
@@ -141,16 +146,19 @@ SIGN_RESPONSE=$(curl --silent --fail \
 
 SIGN_ORDER_ID=$(echo "${SIGN_RESPONSE}" | jq -r '.sign_id')
 echo "    signOrderId = ${SIGN_ORDER_ID}"
-echo "    Approve URL (preprod): https://web.preprod.esign-stoetest.cloud/${SIGN_ORDER_ID}"
+echo "    Approve URL: ${BANKID_SIGN_BASE_URL}/${SIGN_ORDER_ID}"
 
-read -r -p "Sign via the above URL, and hit Enter when done."
 # ---------------------------------------------------------------------------
-# Step 5: Check status of the sign order
-# Run manually / in a poll loop after the end user has signed.
+# Step 5: Automate the BankID WYSIWYS signing with Playwright
 # ---------------------------------------------------------------------------
+echo "==> Signing via BankID WYSIWYS..."
+INTEGRATION_TEST_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+BANKID_SIGN_URL="${BANKID_SIGN_BASE_URL}/${SIGN_ORDER_ID}" \
+  node "${INTEGRATION_TEST_DIR}/node_modules/.bin/tsx" "${INTEGRATION_TEST_DIR}/bankid-sign.ts"
+
 echo ""
-echo "==> Checking sign order status "
-curl --silent --fail \
+echo "==> Checking sign order status"
+curl -sSf \
   -X GET "${BANKID_SIGNING_API}?sign_id=${SIGN_ORDER_ID}" \
   -H "Accept: application/json" \
   -H "Authorization: ${SIGNATURES_TOKEN_TYPE} ${SIGNATURES_TOKEN}" \
@@ -161,7 +169,7 @@ curl --silent --fail \
 # ---------------------------------------------------------------------------
 echo ""
 echo "==> Downloading signed document from BankID..."
-curl --silent --fail \
+curl -sSf \
   -X DELETE "${BANKID_SIGNING_API}?sign_id=${SIGN_ORDER_ID}" \
   -H "Accept: application/json" \
   -H "Authorization: ${SIGNATURES_TOKEN_TYPE} ${SIGNATURES_TOKEN}" \
@@ -177,7 +185,7 @@ echo "    Decoded signed PDF to bankid-signed.pdf"
 # Step 7: Upload the BankID-signed PDF back to Auth Grant Manager
 # ---------------------------------------------------------------------------
 echo "==> Uploading BankID-signed PDF to Auth Grant Manager..."
-curl --silent --fail \
+curl -sSf \
   -X PUT "${ELHUB_BASE}/authorization-documents/${DOCUMENT_ID}.pdf" \
   -H "Authorization: Bearer ${MASKINPORTEN_TOKEN}" \
   -H "SenderGln: ${SENDER_GLN}" \
@@ -188,7 +196,7 @@ curl --silent --fail \
 # Step 8: Fetch the document to get the created AuthorizationGrant
 # ---------------------------------------------------------------------------
 echo "==> Fetching authorization document..."
-DOC_RESPONSE=$(curl --silent --fail \
+DOC_RESPONSE=$(curl -sSf \
   -X GET "${ELHUB_BASE}/authorization-documents/${DOCUMENT_ID}" \
   -H "Authorization: Bearer ${MASKINPORTEN_TOKEN}" \
   -H "SenderGln: ${SENDER_GLN}")
@@ -200,7 +208,7 @@ echo "    grantId = ${GRANT_ID}"
 # Step 9: Fetch the grant
 # ---------------------------------------------------------------------------
 echo "==> Fetching authorization grant..."
-curl --silent --fail \
+curl -sSf \
   -X GET "${ELHUB_BASE}/authorization-grants/${GRANT_ID}" \
   -H "Authorization: Bearer ${MASKINPORTEN_TOKEN}" \
   -H "SenderGln: ${SENDER_GLN}" \
@@ -210,7 +218,7 @@ curl --silent --fail \
 # Step 10: Fetch the grant scopes
 # ---------------------------------------------------------------------------
 echo "==> Fetching grant scopes..."
-curl --silent --fail \
+curl -sSf \
   -X GET "${ELHUB_BASE}/authorization-grants/${GRANT_ID}/scopes" \
   -H "Authorization: Bearer ${MASKINPORTEN_TOKEN}" \
   -H "SenderGln: ${SENDER_GLN}" \
