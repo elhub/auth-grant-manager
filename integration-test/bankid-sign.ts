@@ -37,14 +37,14 @@ try {
 
   // Step 4: Enter one-time code
   console.log('Entering OTP...')
-  await bankidFrame.locator('#P0-2').waitFor({ state: 'visible' })
-  await bankidFrame.locator('#P0-2').fill(BANKID_TEST_OTP)
+  await bankidFrame.getByLabel('Skriv inn engangskoden din').waitFor({ state: 'visible' })
+  await bankidFrame.getByLabel('Skriv inn engangskoden din').fill(BANKID_TEST_OTP)
   await bankidFrame.getByRole('button', { name: 'Neste' }).click()
 
   // Step 5: Enter BankID password
   console.log('Entering password...')
-  await bankidFrame.locator('#P0-4').waitFor({ state: 'visible' })
-  await bankidFrame.locator('#P0-4').fill(BANKID_TEST_PASSWORD)
+  await bankidFrame.getByLabel('Ditt BankID-passord').waitFor({ state: 'visible' })
+  await bankidFrame.getByLabel('Ditt BankID-passord').fill(BANKID_TEST_PASSWORD)
   await bankidFrame.getByRole('button', { name: 'Neste' }).click()
 
   // Step 6: Accept terms and confirm signing
