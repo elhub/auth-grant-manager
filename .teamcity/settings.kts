@@ -64,6 +64,14 @@ elhubProject(group = Group.AUTH, name = "auth-grant-manager") {
                 }.triggerOnVcsChange()
 
                 gitOps {
+                    clusters = setOf(KubeCluster.TEST9)
+                    projectName = "auth-grant-manager-integration-test"
+                    tagKey = "agmVersion"
+                    gitOpsRepository = gitOpsRepo
+                    autoMerge = true
+                }
+
+                gitOps {
                     clusters = setOf(KubeCluster.MARKET_TRIAL_1)
                     gitOpsRepository = gitOpsRepo
                     enableChangelog = true
