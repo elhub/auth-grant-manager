@@ -9,18 +9,11 @@
 set -euo pipefail
 trap 'echo "ERROR: script failed at line ${LINENO}" >&2' ERR
 
-# Install Elhub CA cert if provided (needed when running in containers)
-if [[ -n "${ELHUB_CA_CERT:-}" ]]; then
-  echo "${ELHUB_CA_CERT}" > /usr/local/share/ca-certificates/elhub-ca.crt
-  update-ca-certificates --fresh 2>/dev/null
-fi
-
 # ---------------------------------------------------------------------------
 # Required variables – fill in or export before running
 # ---------------------------------------------------------------------------
 USER_AGENT="${USER_AGENT:-}"
 SENDER_GLN="${SENDER_GLN:-}"
-MASKINPORTEN_TOKEN="${MASKINPORTEN_TOKEN:-}"
 NATIONAL_IDENTITY_NUMBER="${NATIONAL_IDENTITY_NUMBER:-}"
 BANKID_CLIENT_ID="${BANKID_CLIENT_ID:-}"
 BANKID_CLIENT_SECRET="${BANKID_CLIENT_SECRET:-}"
@@ -29,15 +22,28 @@ BANKID_SIGNING_API="${BANKID_SIGNING_API:-}"
 BANKID_TOKEN_API="${BANKID_TOKEN_API:-}"
 BANKID_SIGN_BASE_URL="${BANKID_SIGN_BASE_URL:-}"
 ELHUB_BASE="${ELHUB_BASE:-}"
+TEST_TOKEN_URL="${TEST_TOKEN_URL:-}"
+MASKINPORTEN_ORG_NUMBER="${MASKINPORTEN_ORG_NUMBER:-}"
+MASKINPORTEN_SCOPE="${MASKINPORTEN_SCOPE:-}"
 
-for var in USER_AGENT SENDER_GLN MASKINPORTEN_TOKEN NATIONAL_IDENTITY_NUMBER \
+for var in USER_AGENT SENDER_GLN NATIONAL_IDENTITY_NUMBER \
             BANKID_CLIENT_ID BANKID_CLIENT_SECRET METERING_POINT_ID \
-            BANKID_SIGNING_API BANKID_TOKEN_API BANKID_SIGN_BASE_URL ELHUB_BASE; do
+            BANKID_SIGNING_API BANKID_TOKEN_API BANKID_SIGN_BASE_URL ELHUB_BASE \
+            TEST_TOKEN_URL MASKINPORTEN_ORG_NUMBER MASKINPORTEN_SCOPE; do
   if [[ -z "${!var}" ]]; then
     echo "ERROR: \$${var} is not set." >&2
     exit 1
   fi
 done
+
+# ---------------------------------------------------------------------------
+# Fetch Maskinporten token from mock service
+# ---------------------------------------------------------------------------
+echo "==> Fetching Maskinporten token..."
+MASKINPORTEN_TOKEN=$(curl -sSf \
+  --location "${TEST_TOKEN_URL}" \
+  --header 'Content-Type: application/json' \
+  --data "{\"scope\":\"${MASKINPORTEN_SCOPE}\",\"orgNumber\":\"${MASKINPORTEN_ORG_NUMBER}\"}")
 
 # ---------------------------------------------------------------------------
 # Step 1: Create authorization document
