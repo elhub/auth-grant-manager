@@ -36,7 +36,9 @@ elhubProject(group = Group.AUTH, name = "auth-grant-manager") {
                     changelogDirectory = dbDirectory
                     liquibaseEntrypoint = liquiEntryPoint
                 }
+            }
 
+            parallel {
                 dockerBuild {
                     source = Source.CommitSha
                     dockerfileName = "integration-test/Dockerfile"
@@ -47,9 +49,7 @@ elhubProject(group = Group.AUTH, name = "auth-grant-manager") {
                     }
                     tags = setOf("latest")
                 }
-            }
 
-            parallel {
                 gitOps {
                     clusters = setOf(
                         KubeCluster.TEST9,
@@ -62,14 +62,6 @@ elhubProject(group = Group.AUTH, name = "auth-grant-manager") {
                     autoMerge = true
                     enableChangelog = true
                 }.triggerOnVcsChange()
-
-                gitOps {
-                    clusters = setOf(KubeCluster.TEST9)
-                    projectName = "auth-grant-manager-integration-test"
-                    tagKey = "agmVersion"
-                    gitOpsRepository = gitOpsRepo
-                    autoMerge = true
-                }
 
                 gitOps {
                     clusters = setOf(KubeCluster.MARKET_TRIAL_1)
