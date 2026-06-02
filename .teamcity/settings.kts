@@ -50,6 +50,7 @@ elhubProject(group = Group.AUTH, name = "auth-grant-manager") {
             }
 
             parallel {
+                gitOps {
                     clusters = setOf(
                         KubeCluster.TEST9,
                         KubeCluster.TEST8,
