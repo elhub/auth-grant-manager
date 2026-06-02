@@ -36,9 +36,7 @@ elhubProject(group = Group.AUTH, name = "auth-grant-manager") {
                     changelogDirectory = dbDirectory
                     liquibaseEntrypoint = liquiEntryPoint
                 }
-            }
 
-            parallel {
                 dockerBuild {
                     source = Source.CommitSha
                     dockerfileName = "integration-test/Dockerfile"
@@ -49,8 +47,9 @@ elhubProject(group = Group.AUTH, name = "auth-grant-manager") {
                     }
                     tags = setOf("latest")
                 }
+            }
 
-                gitOps {
+            parallel {
                     clusters = setOf(
                         KubeCluster.TEST9,
                         KubeCluster.TEST8,
