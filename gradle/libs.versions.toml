@@ -2,7 +2,7 @@
 format.version = "1.1"
 
 [versions]
-auth-pdp-plugin = "8.1.1"
+auth-pdp-plugin = "8.1.3"
 arrow = "2.2.3"
 cohort = "2.9.9"
 elhub-gradle = "0.10.9"
@@ -33,7 +33,7 @@ postgresql = "42.7.11"
 slf4j = "2.0.18"
 snakeyaml = "2.6"
 testcontainers = "2.0.5"
-verapdf = "1.30.1"
+verapdf = "1.30.2"
 bouncycastle = "1.84"
 itext = "9.6.0"
 
