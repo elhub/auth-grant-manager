@@ -60,19 +60,20 @@ elhubProject(group = Group.AUTH, name = "auth-grant-manager") {
                     )
                     gitOpsRepository = gitOpsRepo
                     autoMerge = true
-                    enableChangelog = true
                 }.triggerOnVcsChange()
 
                 gitOps {
                     clusters = setOf(KubeCluster.MARKET_TRIAL_1)
                     gitOpsRepository = gitOpsRepo
-                    enableChangelog = true
                 }
 
                 gitOps {
                     clusters = setOf(KubeCluster.PROD1)
                     gitOpsRepository = gitOpsRepo
-                    enableChangelog = true
+                    deploymentTicketSettings = {
+                        enabled = true
+                        deploymentEpic = "TDX-1337"
+                    }
                 }
             }
         }
