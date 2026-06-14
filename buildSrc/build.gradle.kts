@@ -9,7 +9,7 @@ repositories {
 dependencies {
     implementation("org.bouncycastle:bcprov-jdk18on:1.84")
     implementation("org.bouncycastle:bcpkix-jdk18on:1.84")
-    implementation("com.networknt:json-schema-validator:3.0.3")
+    implementation("com.networknt:json-schema-validator:3.0.4")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.22.0")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.22.0")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.22.0")
