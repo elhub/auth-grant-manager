@@ -35,9 +35,7 @@ echo "Do the things!"
 #   OPSLEVEL_INTEGRATION_URL                         — OpsLevel custom event integration webhook URL
 #   SONAR_TOKEN, SONAR_HOST_URL                      — required for SonarQube metrics
 #   SKIP_CODE_COVERAGE=true                           — omit unit test coverage metric
-
-set -euo pipefail
-
+set -eu
 # Constants
 readonly OPSLEVEL_FILE="opslevel.yml"
 readonly CURL_RETRY_ARGS=(--retry 3 --retry-delay 1 --connect-timeout 10 --max-time 30)
