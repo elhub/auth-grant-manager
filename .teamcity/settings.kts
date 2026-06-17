@@ -1,13 +1,10 @@
+import jetbrains.buildServer.configs.kotlin.buildSteps.script
+import jetbrains.buildServer.configs.kotlin.toId
+import no.elhub.devxp.build.configuration.pipeline.constants.AgentScope
 import no.elhub.devxp.build.configuration.pipeline.constants.Group
-import no.elhub.devxp.build.configuration.pipeline.constants.KubeCluster
 import no.elhub.devxp.build.configuration.pipeline.dsl.elhubProject
-import no.elhub.devxp.build.configuration.pipeline.extensions.triggerOnVcsChange
-import no.elhub.devxp.build.configuration.pipeline.jobs.common.Source
-import no.elhub.devxp.build.configuration.pipeline.jobs.dockerBuild
-import no.elhub.devxp.build.configuration.pipeline.jobs.gitOps
-import no.elhub.devxp.build.configuration.pipeline.jobs.gradleJib
+import no.elhub.devxp.build.configuration.pipeline.jobs.customJob
 import no.elhub.devxp.build.configuration.pipeline.jobs.gradleVerify
-import no.elhub.devxp.build.configuration.pipeline.jobs.liquiBuild
 
 val imageRepo = "auth/auth-grant-manager"
 val dbDirectory = "./db"
@@ -16,63 +13,22 @@ val gitOpsRepo = "https://github.com/elhub/auth"
 
 elhubProject(group = Group.AUTH, name = "auth-grant-manager") {
     pipeline {
+
         sequential {
             gradleVerify {
                 lintImage = "docker.jfrog.elhub.cloud/oxsecurity/megalinter:v8"
-                enablePublishMetrics = true
+                enablePublishMetrics = false
             }
-
-            gradleJib {
-                registrySettings = {
-                    repository = imageRepo
-                }
-            }
-
-            parallel {
-                liquiBuild {
-                    registrySettings = {
-                        repository = imageRepo
+            customJob(AgentScope.LinuxAgentContext) {
+                name = "Publish metrics to Opslevel"
+                id(name.toId())
+                steps {
+                    script {
+                        name = "OpsLevel Push"
+                        scriptContent = """
+                            echo "Do the things!"
+                        """.trimIndent()
                     }
-                    changelogDirectory = dbDirectory
-                    liquibaseEntrypoint = liquiEntryPoint
-                }
-
-                dockerBuild {
-                    source = Source.CommitSha
-                    dockerfileName = "integration-test/Dockerfile"
-                    contextDirectory = "."
-                    dockerBuildNameSuffix = "Integration Test"
-                    registrySettings = {
-                        repository = "$imageRepo-test"
-                    }
-                    tags = setOf("latest")
-                }
-            }
-
-            parallel {
-                gitOps {
-                    clusters = setOf(
-                        KubeCluster.TEST9,
-                        KubeCluster.TEST8,
-                        KubeCluster.TEST11,
-                        KubeCluster.TEST13,
-                        KubeCluster.TEST14
-                    )
-                    gitOpsRepository = gitOpsRepo
-                    autoMerge = true
-                    enableChangelog = true
-                }.triggerOnVcsChange()
-
-                gitOps {
-                    clusters = setOf(KubeCluster.MARKET_TRIAL_1)
-                    gitOpsRepository = gitOpsRepo
-                    enableChangelog = true
-                }
-
-                gitOps {
-                    clusters = setOf(KubeCluster.PROD1)
-                    gitOpsRepository = gitOpsRepo
-                    enableChangelog = true
                 }
             }
         }
