@@ -46,7 +46,7 @@ readonly OPSLEVEL_INTEGRATION_URL=https://app.opslevel.com
 
 # Logging
 log() {
-  echo "$(date '+%Y-%m-%d %H:%M:%S') - $*" >&2
+  echo "$(date '+%%Y-%%m-%%d %%H:%%M:%%S') - $*" >&2
 }
 
 # Validation
@@ -155,7 +155,7 @@ read_sonar_properties() {
     exit 1
   fi
 
-  printf '%s|%s' "${'$'}ce_task_url" "${'$'}project_key"
+  printf '%%s|%%s' "${'$'}ce_task_url" "${'$'}project_key"
 }
 
 poll_sonarqube_task() {
@@ -163,7 +163,7 @@ poll_sonarqube_task() {
   local max_wait=30
   local start_time status elapsed response
 
-  start_time=$(date +%s)
+  start_time=$(date +%%s)
   log "Polling SonarQube task: ${'$'}ce_task_url"
 
   while true; do
@@ -175,7 +175,7 @@ poll_sonarqube_task() {
 
     [[ "${'$'}status" == "SUCCESS" ]] && { log "SonarQube task succeeded."; break; }
 
-    elapsed=$(( $(date +%s) - start_time ))
+    elapsed=$(( $(date +%%s) - start_time ))
     if (( elapsed >= max_wait )); then
       log "Timeout: task did not succeed within ${'$'}{max_wait}s."
       exit 1
@@ -219,12 +219,12 @@ compute_quality_gate() {
 
   # Reliability rating: (5 - rating) * 10 when present
   if [[ -n "${'$'}reliability_rating" && "${'$'}reliability_rating" != "null" ]]; then
-    percentage=$((percentage + ((5 - ${'$'}{reliability_rating%%.*}) * 10)))
+    percentage=$((percentage + ((5 - ${'$'}{reliability_rating%%%%.*}) * 10)))
   fi
 
   # Maintainability rating: (5 - rating) * 10 when present
   if [[ -n "${'$'}maintainability_rating" && "${'$'}maintainability_rating" != "null" ]]; then
-    percentage=$((percentage + ((5 - ${'$'}{maintainability_rating%%.*}) * 10)))
+    percentage=$((percentage + ((5 - ${'$'}{maintainability_rating%%%%.*}) * 10)))
   fi
 
   # Duplicated lines density: missing => +20, <3 => +20, <10 => +10, otherwise +0
@@ -248,12 +248,12 @@ compute_security_gate() {
 
   # Security rating: (5 - rating) * 20 when present
   if [[ -n "${'$'}security_rating" && "${'$'}security_rating" != "null" ]]; then
-    percentage=$((percentage + ((5 - ${'$'}{security_rating%%.*}) * 20)))
+    percentage=$((percentage + ((5 - ${'$'}{security_rating%%%%.*}) * 20)))
   fi
 
   # Security review rating: 1 => +20, 2 => +10, above 2 => +0
   if [[ -n "${'$'}security_review_rating" && "${'$'}security_review_rating" != "null" ]]; then
-    case "${'$'}{security_review_rating%%.*}" in
+    case "${'$'}{security_review_rating%%%%.*}" in
       1) percentage=$((percentage + 20)) ;;
       2) percentage=$((percentage + 10)) ;;
     esac
@@ -315,18 +315,18 @@ main() {
     log "Security rating:        ${'$'}{security_rating:-n/a}"
     log "Reliability rating:     ${'$'}{reliability_rating:-n/a}"
     log "Maintainability rating: ${'$'}{maintainability_rating:-n/a}"
-    log "Duplicated lines:       ${'$'}{duplicated_lines_density:-n/a}%"
+    log "Duplicated lines:       ${'$'}{duplicated_lines_density:-n/a}%%"
     log "Security hotspots:      ${'$'}{security_hotspots:-n/a}"
     log "Security review rating: ${'$'}{security_review_rating:-n/a}"
-    log "Quality gate score:     ${'$'}{quality_gate}%"
-    log "Security gate score:    ${'$'}{security_gate}%"
+    log "Quality gate score:     ${'$'}{quality_gate}%%"
+    log "Security gate score:    ${'$'}{security_gate}%%"
   fi
 
   # Build JSON payload
   # All numeric fields use jq --argjson to preserve number types;
   # absent values are omitted via 'if ${'$'}x != "" then ... else empty end'.
   local timestamp
-  timestamp=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+  timestamp=$(date -u +%%Y-%%m-%%dT%%H:%%M:%%SZ)
 
   local payload
   payload=$(jq -n \
