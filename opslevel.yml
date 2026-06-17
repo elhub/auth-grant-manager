@@ -1,0 +1,62 @@
+---
+version: 1
+component:
+  name: Auth Grant Manager
+  type: service
+  lifecycle: generally_available
+  tier: tier_2
+  product: Access API
+  owner: team-devxp
+  system: auth-platform
+  language: Kotlin
+  framework: Ktor
+  description: Manages and tracks user authorization grants for Access API across Elhub applications and data processing activities.
+  aliases:
+    - auth-grant-manager
+    - agm
+  tags:
+    - key: domain
+      value: authorization
+    - key: runtime
+      value: ktor
+    - key: datastore
+      value: postgresql
+    - key: api-style
+      value: rest
+    - key: docs
+      value: openapi
+    - key: compliance
+      value: consent-management
+  repositories:
+    - name: elhub/auth-grant-manager
+      path: "/"
+      provider: github
+      display_name: Auth Grant Manager
+  tools:
+    - name: Source Code
+      category: code
+      url: https://github.com/elhub/auth-grant-manager
+      environment: Production
+    - name: GitHub Actions
+      category: continuous_integration
+      url: https://github.com/elhub/auth-grant-manager/actions
+      environment: Production
+    - name: OpenAPI Spec
+      category: api_documentation
+      url: https://github.com/elhub/auth-grant-manager/blob/main/src/main/resources/static/openapi.yaml
+      environment: Production
+    - name: Architecture Docs
+      category: wiki
+      url: https://github.com/elhub/auth-grant-manager/blob/main/docs/architecture.md
+      environment: Production
+    - name: Usage Docs
+      category: wiki
+      url: https://github.com/elhub/auth-grant-manager/blob/main/docs/usage.md
+      environment: Production
+  dependencies:
+    - alias: auth-policy-decision-point
+      notes: Used to evaluate authorization and policy decisions.
+    - alias: auth-persons
+      notes: Used to resolve person and identity data during authorization flows.
+  alert_sources: []
+  properties: {}
