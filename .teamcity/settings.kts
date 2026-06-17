@@ -26,7 +26,7 @@ elhubProject(group = Group.AUTH, name = "auth-grant-manager") {
                     script {
                         name = "OpsLevel Push"
                         scriptContent = """
-
+#!/bin/bash
 echo "Do the things!"
 
 # Posts SonarQube metrics to OpsLevel via a custom event integration.
