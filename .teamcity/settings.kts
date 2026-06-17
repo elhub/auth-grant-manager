@@ -32,5 +32,6 @@ elhubProject(group = Group.AUTH, name = "auth-grant-manager") {
                 }
             }
         }
+
     }
 }
