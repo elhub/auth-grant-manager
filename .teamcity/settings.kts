@@ -41,7 +41,6 @@ readonly OPSLEVEL_FILE="opslevel.yml"
 readonly CURL_RETRY_ARGS=(--retry 3 --retry-delay 1 --connect-timeout 10 --max-time 30)
 readonly OPSLEVEL_INTEGRATION_URL="https://upload.opslevel.com/integrations/custom_event/88240eea-7f30-4f77-a2c7-a830c4777ce4"
 readonly OPSLEVEL_TOKEN="${'$'}{OPSLEVEL_TOKEN}"
-
 # Logging
 log() {
   echo "$(date '+%%Y-%%m-%%d %%H:%%M:%%S') - $*" >&2
