@@ -32,7 +32,6 @@ echo "Do the things!"
 # Posts SonarQube metrics to OpsLevel via a custom event integration.
 #
 # Required environment variables:
-#   OPSLEVEL_INTEGRATION_URL                         — OpsLevel custom event integration webhook URL
 #   OPSLEVEL_TOKEN                                   — Bearer token for OpsLevel integration
 #   SONAR_TOKEN, SONAR_HOST_URL                      — required for SonarQube metrics
 #   SKIP_CODE_COVERAGE=true                           — omit unit test coverage metric
@@ -40,7 +39,7 @@ set -eu
 # Constants
 readonly OPSLEVEL_FILE="opslevel.yml"
 readonly CURL_RETRY_ARGS=(--retry 3 --retry-delay 1 --connect-timeout 10 --max-time 30)
-readonly OPSLEVEL_INTEGRATION_URL="${'$'}{OPSLEVEL_INTEGRATION_URL}"
+readonly OPSLEVEL_INTEGRATION_URL="https://app.opslevel.com/"
 readonly OPSLEVEL_TOKEN="${'$'}{OPSLEVEL_TOKEN}"
 
 # Logging
@@ -51,7 +50,6 @@ log() {
 # Validation
 validate_required_env_vars() {
   local -a missing=()
-  [[ -z "${'$'}{OPSLEVEL_INTEGRATION_URL:-}" ]] && missing+=(OPSLEVEL_INTEGRATION_URL)
   [[ -z "${'$'}{OPSLEVEL_TOKEN:-}" ]]           && missing+=(OPSLEVEL_TOKEN)
   [[ -z "${'$'}{SONAR_TOKEN:-}" ]]             && missing+=(SONAR_TOKEN)
   [[ -z "${'$'}{SONAR_HOST_URL:-}" ]]          && missing+=(SONAR_HOST_URL)
