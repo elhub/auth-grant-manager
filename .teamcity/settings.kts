@@ -58,7 +58,6 @@ validate_required_env_vars() {
     exit 1
   fi
 }
-
 validate_dependencies() {
   local -a missing=()
   local cmd
