@@ -320,15 +320,15 @@ main() {
     --arg security_hotspots "${'$'}{security_hotspots:-}" \
     --argjson skip_coverage "$( [[ "${'$'}skip_coverage" == "true" ]] && echo true || echo false )" \
     '{
-      service: $service,
-      timestamp: $timestamp
+      service: ${'$'}service,
+      timestamp: ${'$'}timestamp
     }
-    + (if $coverage != "" and $skip_coverage == false then { coverage: ($coverage | tonumber) } else {} end)
-    + (if $cyclomatic_complexity != "" then { cyclomatic_complexity: ($cyclomatic_complexity | tonumber) } else {} end)
-    + (if $security_issues != "" then { security_issues: ($security_issues | tonumber) } else {} end)
-    + (if $quality_gate != "" then { quality_gate: ($quality_gate | tonumber) } else {} end)
-    + (if $security_gate != "" then { security_gate: ($security_gate | tonumber) } else {} end)
-    + (if $security_hotspots != "" then { security_hotspots: ($security_hotspots | tonumber) } else {} end)
+    + (if ${'$'}coverage != "" and ${'$'}skip_coverage == false then { coverage: (${'$'}coverage | tonumber) } else {} end)
+    + (if ${'$'}cyclomatic_complexity != "" then { cyclomatic_complexity: (${'$'}cyclomatic_complexity | tonumber) } else {} end)
+    + (if ${'$'}security_issues != "" then { security_issues: (${'$'}security_issues | tonumber) } else {} end)
+    + (if ${'$'}quality_gate != "" then { quality_gate: (${'$'}quality_gate | tonumber) } else {} end)
+    + (if ${'$'}security_gate != "" then { security_gate: (${'$'}security_gate | tonumber) } else {} end)
+    + (if ${'$'}security_hotspots != "" then { security_hotspots: (${'$'}security_hotspots | tonumber) } else {} end)
     ')
 
   local response
