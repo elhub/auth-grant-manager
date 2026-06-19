@@ -17,7 +17,6 @@ val gitOpsRepo = "https://github.com/elhub/auth"
 
 elhubProject(group = Group.AUTH, name = "auth-grant-manager") {
     pipeline {
-
         sequential {
             val verify = gradleVerify {
                 lintImage = "docker.jfrog.elhub.cloud/oxsecurity/megalinter:v8"
@@ -59,7 +58,7 @@ echo "Collecting SonarQube metrics and posting to OpsLevel"
 
 readonly OPSLEVEL_FILE="opslevel.yml"
 readonly CURL_RETRY_ARGS=(--retry 3 --retry-delay 1 --connect-timeout 10 --max-time 30)
-readonly OPSLEVEL_INTEGRATION_URL="https://upload.opslevel.com/integrations/custom_event/2b67ef4f-73ee-49d3-b594-2695cecd27ee"
+readonly OPSLEVEL_INTEGRATION_URL="https://upload.opslevel.com/integrations/custom_event/0b4b4bdf-21fb-473d-9a35-1fcdae67ef39"
 readonly OPSLEVEL_TOKEN="${'$'}{OPSLEVEL_TOKEN}"
 readonly SONAR_HOST_URL="${'$'}{SONAR_HOST_URL:-https://sonar.elhub.cloud}"
 
