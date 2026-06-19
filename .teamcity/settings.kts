@@ -1,3 +1,6 @@
+import jetbrains.buildServer.configs.kotlin.ArtifactRule
+import jetbrains.buildServer.configs.kotlin.FailureAction
+import jetbrains.buildServer.configs.kotlin.ReuseBuilds
 import jetbrains.buildServer.configs.kotlin.buildSteps.script
 import jetbrains.buildServer.configs.kotlin.toId
 import no.elhub.devxp.build.configuration.pipeline.constants.AgentScope
@@ -16,11 +19,23 @@ elhubProject(group = Group.AUTH, name = "auth-grant-manager") {
     pipeline {
 
         sequential {
-            gradleVerify {
+            val verify = gradleVerify {
                 lintImage = "docker.jfrog.elhub.cloud/oxsecurity/megalinter:v8"
                 enablePublishMetrics = false
             }
             customJob(AgentScope.LinuxAgentContext) {
+                dependencies {
+                    artifacts(buildTypeId = verify.sonarScanBuildType!!.id!!) {
+                        buildRule = lastFinished()
+                        rules = listOf(ArtifactRule.include("report-task.zip!**", ".scannerwork"))
+                        cleanDestination = true
+                    }
+                    snapshot(verify.sonarScanBuildType!!) {
+                        onDependencyFailure = FailureAction.FAIL_TO_START
+                        reuseBuilds = ReuseBuilds.NO
+                    }
+                }
+
                 addPrFeature()
                 name = "Publish metrics to Opslevel"
                 id(name.toId())
@@ -135,13 +150,8 @@ read_opslevel_alias() {
 read_sonar_properties() {
   local file=".scannerwork/report-task.txt"
 
-  if [[ -n "${'$'}{SONAR_CE_TASK_URL:-}" && -n "${'$'}{SONAR_PROJECT_KEY:-}" ]]; then
-    echo "${'$'}SONAR_CE_TASK_URL|${'$'}SONAR_PROJECT_KEY"
-    return 0
-  fi
-
   if [[ ! -f "${'$'}file" ]]; then
-    log "${'$'}file not found and SONAR_CE_TASK_URL/SONAR_PROJECT_KEY not provided."
+    log "${'$'}file not found — skipping SonarQube metrics."
     return 1
   fi
 
@@ -149,16 +159,12 @@ read_sonar_properties() {
   ce_task_url=$(grep '^ceTaskUrl=' "${'$'}file" | cut -d'=' -f2-)
   project_key=$(grep '^projectKey=' "${'$'}file" | cut -d'=' -f2-)
 
-  if [[ -n "${'$'}{SONAR_PROJECT_KEY:-}" ]]; then
-    project_key="${'$'}SONAR_PROJECT_KEY"
-  fi
-
   if [[ -z "${'$'}ce_task_url" || -z "${'$'}project_key" ]]; then
-    log "ceTaskUrl or projectKey missing."
+    log "ceTaskUrl or projectKey missing from ${'$'}file."
     exit 1
   fi
 
-  echo "${'$'}ce_task_url|${'$'}project_key"
+  printf '%s|%s' "${'$'}ce_task_url" "${'$'}project_key"
 }
 
 poll_sonarqube_task() {
