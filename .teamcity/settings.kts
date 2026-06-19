@@ -305,8 +305,6 @@ main() {
   quality_gate=$(compute_quality_gate "${'$'}reliability_rating" "${'$'}maintainability_rating" "${'$'}duplicated_lines_density")
   security_gate=$(compute_security_gate "${'$'}security_rating" "${'$'}security_review_rating")
 
-  log "coverage=${'$'}{coverage:-n/a} complexity=${'$'}{cyclomatic_complexity:-n/a} security_issues=${'$'}{security_issues:-n/a} quality_gate=${'$'}quality_gate security_gate=${'$'}security_gate"
-
   local timestamp
   timestamp=$(date -u +%%Y-%%m-%%dT%%H:%%M:%%SZ)
 
