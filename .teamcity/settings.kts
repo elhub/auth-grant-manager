@@ -59,6 +59,7 @@ validate_required_env_vars() {
     log "Missing required environment variables: ${'$'}{missing[*]}"
     exit 1
   fi
+}
 
 validate_dependencies() {
   local -a missing=()
