@@ -45,7 +45,7 @@ readonly SONAR_HOST_URL="${'$'}{SONAR_HOST_URL:-https://sonar.elhub.cloud}"
 readonly SONAR_PROJECT_KEY="${'$'}{SONAR_PROJECT_KEY:-no.elhub.auth.auth-grant-manager}"
 
 log() {
-  echo "$(date '+%Y-%m-%d %H:%M:%S') - ${'$'}*" >&2
+  echo "$(date '+%%Y-%%m-%%d %%H:%%M:%%S') - ${'$'}*" >&2
 }
 
 validate_required_env_vars() {
