@@ -39,7 +39,7 @@ echo "Fetching Sonar quality gate and forwarding it to OpsLevel"
 #   SONAR_PROJECT_KEY                                — defaults to no.elhub.auth.auth-grant-manager
 
 readonly CURL_RETRY_ARGS=(--retry 3 --retry-delay 1 --connect-timeout 10 --max-time 30)
-readonly OPSLEVEL_INTEGRATION_URL="https://upload.opslevel.com/integrations/custom_event/88240eea-7f30-4f77-a2c7-a830c4777ce4"
+readonly OPSLEVEL_INTEGRATION_URL="https://upload.opslevel.com/integrations/custom_event/2b67ef4f-73ee-49d3-b594-2695cecd27ee"
 readonly OPSLEVEL_TOKEN="${'$'}{OPSLEVEL_TOKEN}"
 readonly SONAR_HOST_URL="${'$'}{SONAR_HOST_URL:-https://sonar.elhub.cloud}"
 readonly SONAR_PROJECT_KEY="${'$'}{SONAR_PROJECT_KEY:-no.elhub.auth.auth-grant-manager}"
