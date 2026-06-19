@@ -332,6 +332,7 @@ main() {
     + (if ${'$'}security_hotspots != "" then { security_hotspots: (${'$'}security_hotspots | tonumber) } else {} end)
     ')
 
+
   local response
   response=$(post_opslevel_event "${'$'}payload")
   log "OpsLevel response: ${'$'}response"
