@@ -3,6 +3,7 @@ import jetbrains.buildServer.configs.kotlin.toId
 import no.elhub.devxp.build.configuration.pipeline.constants.AgentScope
 import no.elhub.devxp.build.configuration.pipeline.constants.Group
 import no.elhub.devxp.build.configuration.pipeline.dsl.elhubProject
+import no.elhub.devxp.build.configuration.pipeline.extensions.addPrFeature
 import no.elhub.devxp.build.configuration.pipeline.jobs.customJob
 import no.elhub.devxp.build.configuration.pipeline.jobs.gradleVerify
 
@@ -20,6 +21,7 @@ elhubProject(group = Group.AUTH, name = "auth-grant-manager") {
                 enablePublishMetrics = false
             }
             customJob(AgentScope.LinuxAgentContext) {
+                addPrFeature()
                 name = "Publish metrics to Opslevel"
                 id(name.toId())
                 steps {
