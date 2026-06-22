@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/playwright:v1.60.0-jammy
+FROM mcr.microsoft.com/playwright:v1.61.0-jammy
 
 RUN apt-get update && apt-get install -y curl jq ca-certificates && rm -rf /var/lib/apt/lists/* \
   && curl -fsSL https://vault.elhub.cloud/v1/pki_root/ca/pem \
