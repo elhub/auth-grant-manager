@@ -1,0 +1,9 @@
+openapi: 3.0.1
+info:
+  title: elhub-auth-grant-manager
+  x-cortex-tag: elhub-auth-grant-manager
+  x-cortex-type: service
+
+x-cortex-static-analysis:
+  sonarqube:
+    project: auth-grant-manager
