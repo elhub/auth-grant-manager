@@ -2,5 +2,6 @@ EXTENDS:
   - https://raw.githubusercontent.com/elhub/devxp-lint-configuration/main/resources/.mega-linter.yml
 
 EDITORCONFIG_FILTER_REGEX_EXCLUDE: (.*\.icc|.*\.ttf)
+API_SPECTRAL_FILTER_REGEX_EXCLUDE: (^|.*/)cortex\.ya?ml$
 
 TYPESCRIPT_STANDARD_ARGUMENTS: --project integration-test/tsconfig.json
