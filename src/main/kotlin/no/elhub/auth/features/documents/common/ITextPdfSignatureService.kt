@@ -115,8 +115,9 @@ class ITextPdfSignatureService(
         val embedContainer = object : IExternalSignatureContainer {
             override fun sign(data: InputStream): ByteArray = encodedPkcs7
 
-            // The signature dictionary is finalized in the preparation step above.
-            override fun modifySigningDictionary(signDic: PdfDictionary) {}
+            override fun modifySigningDictionary(signDic: PdfDictionary) {
+                // The signature dictionary is finalized in the preparation step above.
+            }
         }
 
         val finalOutput = ByteArrayOutputStream()
@@ -450,7 +451,7 @@ class ITextPdfSignatureService(
 
     private fun messageDigest(algorithm: String): MessageDigest {
         val normalized = when (algorithm.uppercase()) {
-            "SHA256", "SHA-256" -> "SHA-256"
+            "SHA256", SHA_256 -> SHA_256
             "SHA384", "SHA-384" -> "SHA-384"
             "SHA512", "SHA-512" -> "SHA-512"
             else -> algorithm
