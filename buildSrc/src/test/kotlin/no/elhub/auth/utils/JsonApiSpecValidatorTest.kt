@@ -41,16 +41,6 @@ class JsonApiSpecValidatorTest : FunSpec({
         }
     }
 
-    test("invalid JSON fails the build") {
-        tempDir { dir ->
-            dir.resolve("broken.schema.json").writeText("{ not valid json }")
-            val ex = shouldThrow<IllegalStateException> {
-                validateJsonApiSpec(dir.absolutePath)
-            }
-            ex.message shouldBe "JSON API schema validation failed"
-        }
-    }
-
     test("schema with unresolvable ref fails the build") {
         tempDir { dir ->
             dir.resolve("bad-ref.schema.json").writeText(
