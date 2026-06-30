@@ -1,0 +1,41 @@
+# This is a Gradle generated file for dependency locking.
+# Manual edits can break the build and are not advised.
+# This file is expected to be part of source control.
+com.ethlo.time:itu:1.14.0=buildScriptClasspath,compileClasspath
+com.fasterxml.jackson.core:jackson-annotations:2.21=buildScriptClasspath,compileClasspath
+com.fasterxml.jackson.core:jackson-core:2.21.3=buildScriptClasspath,compileClasspath
+com.fasterxml.jackson.core:jackson-databind:2.21.3=buildScriptClasspath,compileClasspath
+com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.21.3=buildScriptClasspath,compileClasspath
+com.fasterxml.jackson.module:jackson-module-kotlin:2.21.3=buildScriptClasspath,compileClasspath
+com.fasterxml.jackson:jackson-bom:2.21.3=buildScriptClasspath,compileClasspath
+com.networknt:json-schema-validator:3.0.3=buildScriptClasspath,compileClasspath
+org.bouncycastle:bcpkix-jdk18on:1.84=buildScriptClasspath,compileClasspath
+org.bouncycastle:bcprov-jdk18on:1.84=buildScriptClasspath,compileClasspath
+org.bouncycastle:bcutil-jdk18on:1.84=buildScriptClasspath,compileClasspath
+org.jetbrains.kotlin:kotlin-build-tools-api:2.3.21=kotlinBuildToolsApiClasspath
+org.jetbrains.kotlin:kotlin-build-tools-compat:2.3.21=kotlinBuildToolsApiClasspath
+org.jetbrains.kotlin:kotlin-build-tools-cri-impl:2.3.21=kotlinBuildToolsApiClasspath
+org.jetbrains.kotlin:kotlin-build-tools-impl:2.3.21=kotlinBuildToolsApiClasspath
+org.jetbrains.kotlin:kotlin-compiler-embeddable:2.3.21=kotlinBuildToolsApiClasspath
+org.jetbrains.kotlin:kotlin-compiler-runner:2.3.21=kotlinBuildToolsApiClasspath
+org.jetbrains.kotlin:kotlin-daemon-client:2.3.21=kotlinBuildToolsApiClasspath
+org.jetbrains.kotlin:kotlin-daemon-embeddable:2.3.21=kotlinBuildToolsApiClasspath
+org.jetbrains.kotlin:kotlin-reflect:1.6.10=kotlinBuildToolsApiClasspath
+org.jetbrains.kotlin:kotlin-reflect:2.1.21=buildScriptClasspath,compileClasspath
+org.jetbrains.kotlin:kotlin-script-runtime:2.3.21=kotlinBuildToolsApiClasspath,kotlinCompilerPluginClasspathMain
+org.jetbrains.kotlin:kotlin-scripting-common:2.3.21=kotlinCompilerPluginClasspathMain
+org.jetbrains.kotlin:kotlin-scripting-compiler-embeddable:2.3.21=kotlinCompilerPluginClasspathMain
+org.jetbrains.kotlin:kotlin-scripting-compiler-impl-embeddable:2.3.21=kotlinCompilerPluginClasspathMain
+org.jetbrains.kotlin:kotlin-scripting-jvm:2.3.21=kotlinCompilerPluginClasspathMain
+org.jetbrains.kotlin:kotlin-stdlib:2.3.21=buildScriptClasspath,compileClasspath,kotlinBuildToolsApiClasspath,kotlinCompilerPluginClasspathMain
+org.jetbrains.kotlin:kotlin-tooling-core:2.3.21=kotlinBuildToolsApiClasspath
+org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.8.0=kotlinBuildToolsApiClasspath
+org.jetbrains:annotations:13.0=buildScriptClasspath,compileClasspath,kotlinBuildToolsApiClasspath,kotlinCompilerPluginClasspathMain
+org.slf4j:slf4j-api:2.0.17=buildScriptClasspath,compileClasspath
+org.snakeyaml:snakeyaml-engine:3.0.1=buildScriptClasspath,compileClasspath
+org.yaml:snakeyaml:2.5=buildScriptClasspath,compileClasspath
+tools.jackson.core:jackson-core:3.1.1=buildScriptClasspath,compileClasspath
+tools.jackson.core:jackson-databind:3.1.1=buildScriptClasspath,compileClasspath
+tools.jackson.dataformat:jackson-dataformat-yaml:3.1.1=buildScriptClasspath,compileClasspath
+tools.jackson:jackson-bom:3.1.1=buildScriptClasspath,compileClasspath
+empty=kotlinScriptDefExtensions
