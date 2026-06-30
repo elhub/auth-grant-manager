@@ -47,6 +47,7 @@ class ITextPdfSignatureService(
     companion object {
         const val NATIONAL_ID_EXTENSION_OID = "2.16.578.1.61.2.4"
         const val EKU_TIME_STAMPING_OID = "1.3.6.1.5.5.7.3.8"
+        const val SHA_256 = "SHA-256"
 
         const val SIGNATURE_ESTIMATED_SIZE = 8192
 
@@ -69,8 +70,8 @@ class ITextPdfSignatureService(
 
         val captureContainer = object : IExternalSignatureContainer {
             override fun sign(data: InputStream): ByteArray {
-                val sgn = PdfPKCS7(null as PrivateKey?, certChain, "SHA-256", null, BouncyCastleDigest(), false)
-                val hash = DigestAlgorithms.digest(data, MessageDigest.getInstance("SHA-256"))
+                val sgn = PdfPKCS7(null as PrivateKey?, certChain, SHA_256, null, BouncyCastleDigest(), false)
+                val hash = DigestAlgorithms.digest(data, MessageDigest.getInstance(SHA_256))
                 val authenticatedAttributes = sgn.getAuthenticatedAttributeBytes(hash, PdfSigner.CryptoStandard.CADES, emptyList(), null)
                 capturedHash = hash
                 capturedAuthenticatedAttributes = authenticatedAttributes
@@ -113,6 +114,8 @@ class ITextPdfSignatureService(
 
         val embedContainer = object : IExternalSignatureContainer {
             override fun sign(data: InputStream): ByteArray = encodedPkcs7
+
+            // The signature dictionary is finalized in the preparation step above.
             override fun modifySigningDictionary(signDic: PdfDictionary) {}
         }
 
@@ -393,9 +396,6 @@ class ITextPdfSignatureService(
         return cert.issuerX500Principal.name == expected.issuerX500Principal.name &&
             cert.serialNumber == expected.serialNumber
     }
-
-    private fun hasIssuerAndSerialAny(cert: X509Certificate?, expected: List<X509Certificate>): Boolean =
-        expected.any { hasIssuerAndSerial(cert, it) }
 
     private fun isIssuedByExpectedRoot(
         signingCert: X509Certificate,

@@ -23,6 +23,8 @@ sealed class ConfirmError {
     data object ExpiredError : ConfirmError()
 }
 
+private const val END_USER_SIGNATURE_VALIDATION_FAILED = "End user signature validation failed"
+
 fun ConfirmError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> =
     when (this) {
         ConfirmError.DocumentNotFoundError -> toNotFoundApiErrorResponse("AuthorizationDocument could not be found.")
@@ -83,7 +85,7 @@ fun handleValidateSignatureError(error: ConfirmError.ValidateSignaturesError): P
         SignatureValidationError.BankIdSigningCertNotFromExpectedRoot ->
             buildApiErrorResponse(
                 status = HttpStatusCode.UnprocessableEntity,
-                title = "End user signature validation failed",
+                title = END_USER_SIGNATURE_VALIDATION_FAILED,
                 detail = "The end user signing certificate is not trusted."
             )
 
@@ -94,21 +96,21 @@ fun handleValidateSignatureError(error: ConfirmError.ValidateSignaturesError): P
         SignatureValidationError.InvalidBankIdSignature ->
             buildApiErrorResponse(
                 status = HttpStatusCode.UnprocessableEntity,
-                title = "End user signature validation failed",
+                title = END_USER_SIGNATURE_VALIDATION_FAILED,
                 detail = "The end user signature is invalid."
             )
 
         SignatureValidationError.MissingBankIdSignature ->
             buildApiErrorResponse(
                 status = HttpStatusCode.UnprocessableEntity,
-                title = "End user signature validation failed",
+                title = END_USER_SIGNATURE_VALIDATION_FAILED,
                 detail = "The AuthorizationDocument is missing the end user signature."
             )
 
         SignatureValidationError.MissingNationalId ->
             buildApiErrorResponse(
                 status = HttpStatusCode.UnprocessableEntity,
-                title = "End user signature validation failed",
+                title = END_USER_SIGNATURE_VALIDATION_FAILED,
                 detail = "Could not extract the Norwegian national identity number from the end user signing certificate."
             )
 

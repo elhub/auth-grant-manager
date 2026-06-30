@@ -17,7 +17,7 @@ class InvalidTraceIdException : Exception()
 @OptIn(ExperimentalSerializationApi::class)
 fun Application.configureErrorHandling() {
     install(StatusPages) {
-        exception<InvalidTraceIdException> { call, cause ->
+        exception<InvalidTraceIdException> { call, _ ->
             val (status, body) = buildApiErrorResponse(
                 status = HttpStatusCode.BadRequest,
                 title = "Invalid trace ID",
@@ -26,7 +26,6 @@ fun Application.configureErrorHandling() {
             call.respond(status, body)
         }
         exception<Throwable> { call, cause ->
-            val root = generateSequence(cause) { it.cause }.last()
             logger.error("Unhandled exception", cause)
             val (status, body) = toInternalServerApiErrorResponse()
             call.respond(status, body)

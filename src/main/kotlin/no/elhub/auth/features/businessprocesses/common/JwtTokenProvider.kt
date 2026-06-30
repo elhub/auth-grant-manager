@@ -7,6 +7,7 @@ import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.Parameters
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.time.Instant
 
@@ -39,8 +40,8 @@ class JwtTokenProviderImpl(
             )
         }
         val tokenResponse: TokenResponse = response.body()
-        cachedToken = tokenResponse.access_token
-        expirationInstant = now.plusSeconds(tokenResponse.expires_in - 20)
+        cachedToken = tokenResponse.accessToken
+        expirationInstant = now.plusSeconds(tokenResponse.expiresIn - 20)
         return cachedToken!!
     }
 }
@@ -53,6 +54,8 @@ data class AuthConfig(
 
 @Serializable
 data class TokenResponse(
-    val access_token: String,
-    val expires_in: Long
+    @SerialName("access_token")
+    val accessToken: String,
+    @SerialName("expires_in")
+    val expiresIn: Long
 )

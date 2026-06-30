@@ -26,7 +26,7 @@ fun validateDataId(dataId: String?, pathId: UUID): Either<InputError, UUID> {
     if (dataId.isNullOrBlank()) return InputError.MissingInputError.left()
     return Either.catch {
         val parsed = UUID.fromString(dataId)
-        if (parsed != pathId) throw IllegalArgumentException()
+        require(parsed == pathId)
         parsed
     }.mapLeft { InputError.IdMismatchError }
 }

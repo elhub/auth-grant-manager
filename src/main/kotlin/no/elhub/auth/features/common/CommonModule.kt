@@ -100,7 +100,6 @@ fun Application.commonModule() {
 }
 
 fun Application.personServiceModule() {
-    val appEnvironment = environment
     dependencies {
         provide<JwtTokenProvider>(name = "authPersonsTokenProvider") {
             val appConfig = resolve<ApplicationConfig>()
