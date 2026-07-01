@@ -10,7 +10,7 @@ import java.net.URI
 import java.nio.file.Files
 import kotlin.io.path.Path
 
-fun validateJsonApiSpec(schemasLocation: String) {
+fun validateJsonSchemas(schemasLocation: String) {
     val schemasToCheck = Files.list(Path(schemasLocation))
         .filter { Files.isRegularFile(it) && it.fileName.toString().endsWith(".schema.json") }
         .map { it.fileName.toString() }
@@ -41,7 +41,7 @@ fun validateJsonApiSpec(schemasLocation: String) {
             println("👮 Found errors in $fileName:")
             fileErrors.forEach { error -> println(" ❌ $error") }
         }
-        error("JSON API schema validation failed")
+        error("JSON schema validation failed")
     } else {
         println("🎉 All JSON API schemas are valid.")
     }

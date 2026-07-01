@@ -6,7 +6,7 @@ import io.kotest.matchers.shouldBe
 import java.io.File
 import java.nio.file.Files
 
-class JsonApiSpecValidatorTest : FunSpec({
+class JsonSchemaValidatorTest : FunSpec({
 
     fun tempDir(block: (File) -> Unit) {
         val dir = Files.createTempDirectory("schema-validator-test").toFile()
@@ -30,13 +30,13 @@ class JsonApiSpecValidatorTest : FunSpec({
                 }
                 """.trimIndent()
             )
-            validateJsonApiSpec(dir.absolutePath)
+            validateJsonSchemas(dir.absolutePath)
         }
     }
 
     test("empty directory passes without error") {
         tempDir { dir ->
-            validateJsonApiSpec(dir.absolutePath)
+            validateJsonSchemas(dir.absolutePath)
         }
     }
 
@@ -51,7 +51,7 @@ class JsonApiSpecValidatorTest : FunSpec({
                 """.trimIndent()
             )
             shouldThrow<IllegalStateException> {
-                validateJsonApiSpec(dir.absolutePath)
+                validateJsonSchemas(dir.absolutePath)
             }
         }
     }
@@ -78,7 +78,7 @@ class JsonApiSpecValidatorTest : FunSpec({
                 }
                 """.trimIndent()
             )
-            validateJsonApiSpec(dir.absolutePath)
+            validateJsonSchemas(dir.absolutePath)
         }
     }
 
@@ -88,9 +88,9 @@ class JsonApiSpecValidatorTest : FunSpec({
             dir.resolve("broken-2.schema.json").writeText("[ also invalid")
             val output = StringBuilder()
             val ex = shouldThrow<IllegalStateException> {
-                validateJsonApiSpec(dir.absolutePath)
+                validateJsonSchemas(dir.absolutePath)
             }
-            ex.message shouldBe "JSON API schema validation failed"
+            ex.message shouldBe "JSON schema validation failed"
         }
     }
 })
