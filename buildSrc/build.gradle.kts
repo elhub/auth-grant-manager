@@ -9,8 +9,12 @@ repositories {
 dependencies {
     implementation("org.bouncycastle:bcprov-jdk18on:1.84")
     implementation("org.bouncycastle:bcpkix-jdk18on:1.84")
-    implementation("com.networknt:json-schema-validator:3.0.5")
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.22.0")
-    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.22.0")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.22.0")
+    implementation("com.github.erosb:json-sKema:0.31.0")
+
+    testImplementation("io.kotest:kotest-runner-junit5:6.2.1")
+    testImplementation("io.kotest:kotest-assertions-core:6.2.1")
+}
+
+tasks.test {
+    useJUnitPlatform()
 }
