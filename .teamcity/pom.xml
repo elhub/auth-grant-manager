@@ -13,7 +13,7 @@
     </parent>
 
     <properties>
-        <devxp-build-configuration.version>1.77.18-pull752-138-SNAPSHOT</devxp-build-configuration.version>
+        <devxp-build-configuration.version>1.77.18-138-SNAPSHOT</devxp-build-configuration.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -27,7 +27,7 @@
         </repository>
         <repository>
             <id>artifactory</id>
-            <url>https://jfrog.elhub.cloud:443/artifactory/elhub-mvn-dev-local/</url>
+            <url>https://jfrog.elhub.cloud:443/artifactory/elhub-mvn/</url>
             <snapshots>
                 <enabled>true</enabled>
             </snapshots>
