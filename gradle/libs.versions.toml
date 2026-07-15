@@ -34,8 +34,8 @@ slf4j = "2.0.18"
 snakeyaml = "2.6"
 testcontainers = "2.0.5"
 verapdf = "1.30.2"
-bouncycastle = "1.84"
-itext = "9.6.0"
+bouncycastle = "1.85"
+itext = "9.7.0"
 
 [plugins]
 elhub-gradle-plugin = { id = "no.elhub.devxp.kotlin-service", version.ref = "elhub-gradle" }
