@@ -45,8 +45,13 @@ class Handler(
             ConfirmError.InvalidRequestedByError
         }
 
-        ensure(document.status == AuthorizationDocument.Status.Pending) {
-            ConfirmError.IllegalStateError("AuthorizationDocument must be in 'Pending' status to confirm.")
+        if (document.status != AuthorizationDocument.Status.Pending) {
+            log.info(
+                "event=authorization_document_confirm_invalid_status documentId={} status={}",
+                document.id,
+                document.status,
+            )
+            raise(ConfirmError.IllegalStateError("AuthorizationDocument must be in 'Pending' status to confirm."))
         }
 
         ensure(document.validTo >= currentTimeUtc()) {
