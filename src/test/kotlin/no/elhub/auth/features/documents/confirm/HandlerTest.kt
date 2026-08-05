@@ -193,7 +193,11 @@ class HandlerTest : FunSpec({
             )
         )
 
-        result.shouldBeLeft(ConfirmError.IllegalStateError("AuthorizationDocument must be in 'Pending' status to confirm."))
+        result.shouldBeLeft(
+            ConfirmError.IllegalStateError(
+                "AuthorizationDocument cannot be confirmed from status 'Signed'. Only 'Pending' documents can be confirmed."
+            )
+        )
         coVerify(exactly = 1) { documentRepository.find(documentId) }
         verify(exactly = 0) { signatureService.validateSignaturesAndReturnSignatory(any(), any()) }
         coVerify(exactly = 0) { documentRepository.findScopeIds(any()) }
@@ -222,7 +226,11 @@ class HandlerTest : FunSpec({
             )
         )
 
-        result.shouldBeLeft(ConfirmError.IllegalStateError("AuthorizationDocument must be in 'Pending' status to confirm."))
+        result.shouldBeLeft(
+            ConfirmError.IllegalStateError(
+                "AuthorizationDocument cannot be confirmed from status 'Signed'. Only 'Pending' documents can be confirmed."
+            )
+        )
         coVerify(exactly = 1) { documentRepository.find(documentId) }
         verify(exactly = 0) { signatureService.validateSignaturesAndReturnSignatory(any(), any()) }
         coVerify(exactly = 0) { documentRepository.findScopeIds(any()) }

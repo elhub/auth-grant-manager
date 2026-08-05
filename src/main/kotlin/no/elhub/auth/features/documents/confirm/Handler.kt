@@ -51,7 +51,11 @@ class Handler(
                 document.id,
                 document.status,
             )
-            raise(ConfirmError.IllegalStateError("AuthorizationDocument must be in 'Pending' status to confirm."))
+            raise(
+                ConfirmError.IllegalStateError(
+                    "AuthorizationDocument cannot be confirmed from status '${document.status.name}'. Only 'Pending' documents can be confirmed."
+                )
+            )
         }
 
         ensure(document.validTo >= currentTimeUtc()) {
