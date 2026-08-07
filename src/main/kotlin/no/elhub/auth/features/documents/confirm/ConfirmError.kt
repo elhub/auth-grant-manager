@@ -20,7 +20,6 @@ sealed class ConfirmError {
     data object RequestedByResolutionError : ConfirmError()
     data object InvalidRequestedByError : ConfirmError()
     data class IllegalStateError(val detail: String) : ConfirmError()
-    data object ExpiredError : ConfirmError()
 }
 
 private const val END_USER_SIGNATURE_VALIDATION_FAILED = "End user signature validation failed"
@@ -54,12 +53,6 @@ fun ConfirmError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollecti
             status = HttpStatusCode.UnprocessableEntity,
             title = "Invalid status state",
             detail = this.detail
-        )
-
-        ConfirmError.ExpiredError -> buildApiErrorResponse(
-            status = HttpStatusCode.UnprocessableEntity,
-            title = "AuthorizationDocument has expired",
-            detail = "Validity period has passed."
         )
 
         ConfirmError.SignatoryResolutionError,
