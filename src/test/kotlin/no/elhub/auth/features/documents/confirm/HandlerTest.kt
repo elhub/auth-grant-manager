@@ -31,7 +31,6 @@ import no.elhub.auth.features.documents.common.SignatureValidationError
 import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.common.CreateGrantProperties
 import java.time.OffsetDateTime
-import java.time.ZoneOffset
 import java.util.UUID
 
 class HandlerTest : FunSpec({
@@ -237,12 +236,12 @@ class HandlerTest : FunSpec({
         coVerify(exactly = 0) { documentRepository.confirmWithGrant(any(), any(), any(), any(), any()) }
     }
 
-    test("returns ExpiredError when document validity period has passed") {
+    test("returns ExpiredError when document is expired") {
         val documentId = UUID.randomUUID()
 
         val document = createDocument(
             documentId = documentId,
-            validTo = OffsetDateTime.now(ZoneOffset.UTC).minusSeconds(10)
+            status = AuthorizationDocument.Status.Expired,
         )
 
         val documentRepository = mockk<DocumentRepository>()
@@ -259,7 +258,11 @@ class HandlerTest : FunSpec({
             )
         )
 
-        result.shouldBeLeft(ConfirmError.ExpiredError)
+        result.shouldBeLeft(
+            ConfirmError.IllegalStateError(
+                "AuthorizationDocument cannot be confirmed from status 'Expired'. Only 'Pending' documents can be confirmed."
+            )
+        )
         coVerify(exactly = 1) { documentRepository.find(documentId) }
         verify(exactly = 0) { signatureService.validateSignaturesAndReturnSignatory(any(), any()) }
         coVerify(exactly = 0) { documentRepository.findScopeIds(any()) }

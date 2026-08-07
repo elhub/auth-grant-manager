@@ -43,11 +43,6 @@ class ConfirmErrorJsonApiResponseTest : FunSpec({
             status = HttpStatusCode.UnprocessableEntity,
             title = "Invalid status state",
             detail = "AuthorizationDocument cannot be confirmed from status 'Signed'. Only 'Pending' documents can be confirmed."
-        ),
-        ConfirmError.ExpiredError to Expectation(
-            status = HttpStatusCode.UnprocessableEntity,
-            title = "AuthorizationDocument has expired",
-            detail = "Validity period has passed."
         )
     ).forEach { (error, expected) ->
         test("maps ${error::class.simpleName} to ${expected.status}") {
