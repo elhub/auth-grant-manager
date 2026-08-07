@@ -31,7 +31,6 @@ import no.elhub.auth.features.documents.common.SignatureValidationError
 import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.common.CreateGrantProperties
 import java.time.OffsetDateTime
-import java.time.ZoneOffset
 import java.util.UUID
 
 class HandlerTest : FunSpec({
