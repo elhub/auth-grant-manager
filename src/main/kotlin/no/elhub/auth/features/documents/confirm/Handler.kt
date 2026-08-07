@@ -58,10 +58,6 @@ class Handler(
             )
         }
 
-        ensure(document.validTo >= currentTimeUtc()) {
-            ConfirmError.ExpiredError
-        }
-
         val signatoryIdentifier =
             signatureService.validateSignaturesAndReturnSignatory(command.signedFile, document.file)
                 .mapLeft {
