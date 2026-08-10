@@ -4,7 +4,9 @@
   "customManagers": [
     {
       "customType": "regex",
-      "fileMatch": ["^integration-test/Dockerfile$"],
+      "managerFilePatterns": [
+        "/^integration-test/Dockerfile$/"
+      ],
       "matchStrings": [
         "FROM mcr\\.microsoft\\.com/playwright:v(?<currentValue>\\d+\\.\\d+\\.\\d+)(?:-[a-z]+)?\\b"
       ],
