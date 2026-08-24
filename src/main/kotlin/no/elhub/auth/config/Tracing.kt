@@ -6,13 +6,9 @@ import io.ktor.server.plugins.callid.CallId
 import no.elhub.auth.features.common.ELHUB_TRACE_ID_HEADER
 import java.util.UUID
 
-private const val ELHUB_TRACE_ID_HEADER_DEPRECATED = "Elhub-Trace-Id"
-
 fun Application.configureRequestTracing() {
     install(CallId) {
-        retrieve { call ->
-            call.request.headers[ELHUB_TRACE_ID_HEADER]?.ifBlank { throw InvalidTraceIdException() }
-        }
+        header(ELHUB_TRACE_ID_HEADER)
         verify { callId ->
             try {
                 UUID.fromString(callId)
@@ -22,8 +18,5 @@ fun Application.configureRequestTracing() {
             }
         }
         generate { UUID.randomUUID().toString() }
-        // Reply with both headers until Marked has been informed about the response header name change.
-        replyToHeader(ELHUB_TRACE_ID_HEADER)
-        replyToHeader(ELHUB_TRACE_ID_HEADER_DEPRECATED)
     }
 }
