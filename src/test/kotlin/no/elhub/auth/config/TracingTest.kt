@@ -19,8 +19,6 @@ import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import java.util.UUID
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation as ClientContentNegotiation
 
-private const val ELHUB_TRACE_ID_HEADER_DEPRECATED = "Elhub-Trace-Id"
-
 class TracingTest : FunSpec({
     test("uses ElhubTraceId header as call id when present") {
         val traceId = "850cf459-d425-409a-a05d-7c6c9d1c0d64"
@@ -41,7 +39,6 @@ class TracingTest : FunSpec({
 
             response.bodyAsText() shouldBe traceId
             response.headers[ELHUB_TRACE_ID_HEADER] shouldBe traceId
-            response.headers[ELHUB_TRACE_ID_HEADER_DEPRECATED] shouldBe traceId
         }
     }
 
@@ -61,7 +58,6 @@ class TracingTest : FunSpec({
 
             UUID.fromString(generatedTraceId).toString() shouldBe generatedTraceId
             response.headers[ELHUB_TRACE_ID_HEADER] shouldBe generatedTraceId
-            response.headers[ELHUB_TRACE_ID_HEADER_DEPRECATED] shouldBe generatedTraceId
         }
     }
 

@@ -7,10 +7,8 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.plugins.logging.LoggingFormat
-import io.ktor.http.HttpHeaders
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
-import io.ktor.server.plugins.callid.callId
 import kotlinx.serialization.json.Json
 import no.elhub.auth.features.common.ApiHeaders
 import no.elhub.auth.features.common.auth.AuthorizedPartyKey
@@ -19,7 +17,6 @@ import no.elhub.auth.plugin.authorization
 import no.elhub.auth.plugin.policies.token.base.authinfo.AuthInfoPolicy
 
 fun Application.configureAuthorization() {
-    val pdpBaseUrl = environment.config.property("pdp.baseUrl").getString()
     val pdpHttpClient = HttpClient(Apache5) {
         install(HttpTimeout) {
             requestTimeoutMillis = 10_000
@@ -41,24 +38,16 @@ fun Application.configureAuthorization() {
     }
 
     authorization {
-        tokenPolicy(AuthInfoPolicy) {
-            client = pdpHttpClient
-            pdpUrl = pdpBaseUrl
+        client = pdpHttpClient
+        pdpUrl = environment.config.property("pdp.baseUrl").getString()
 
+        tokenPolicy(AuthInfoPolicy) {
             buildPayload {
                 AuthInfoPolicy.Request(
                     senderGln = request.headers[ApiHeaders.SENDER_GLN]?.ifBlank { null },
                     onBehalfOfGln = request.headers[ApiHeaders.ON_BEHALF_OF_GLN]?.ifBlank { null },
                     onBehalfOfOrganisationId = request.headers[ApiHeaders.ON_BEHALF_OF_ORGANISATION]?.ifBlank { null },
                 )
-            }
-
-            traceIdResolver = { call -> call.callId }
-
-            tokenResolver = { call ->
-                call.request.headers[HttpHeaders.Authorization]
-                    ?.takeIf { it.startsWith("Bearer ") }
-                    ?.removePrefix("Bearer ")
             }
 
             enforce { response ->
