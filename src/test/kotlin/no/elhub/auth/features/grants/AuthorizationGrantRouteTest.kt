@@ -30,8 +30,8 @@ import no.elhub.auth.features.common.stubAuthPersonsTokenProvider
 import no.elhub.auth.features.grants.common.dto.AuthorizationGrantScopesResponse
 import no.elhub.auth.features.grants.common.dto.CollectionGrantResponse
 import no.elhub.auth.features.grants.common.dto.SingleGrantResponse
-import no.elhub.auth.features.grants.update.dto.UpdateRequestAttributes
 import no.elhub.auth.features.grants.update.dto.JsonApiUpdateRequest
+import no.elhub.auth.features.grants.update.dto.UpdateRequestAttributes
 import no.elhub.auth.features.requests.REQUESTS_PATH
 import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObject
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection

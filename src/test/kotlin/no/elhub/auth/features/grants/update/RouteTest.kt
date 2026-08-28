@@ -17,8 +17,8 @@ import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.common.dto.SingleGrantResponse
-import no.elhub.auth.features.grants.update.dto.UpdateRequestAttributes
 import no.elhub.auth.features.grants.update.dto.JsonApiUpdateRequest
+import no.elhub.auth.features.grants.update.dto.UpdateRequestAttributes
 import no.elhub.auth.patchJson
 import no.elhub.auth.setupAppWith
 import no.elhub.auth.validateConflictErrorResponse
