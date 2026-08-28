@@ -46,7 +46,7 @@ fun Application.module() {
     val getRouteHandler: GetHandler by dependencies
     val getScopesHandler: GetScopesHandler by dependencies
     val queryRouteHandler: QueryHandler by dependencies
-    val consumerRouteHandler: UpdateHandler by dependencies
+    val updateRouteHandler: UpdateHandler by dependencies
 
     routing {
         tokenAuthorize(AuthInfoPolicy) {
@@ -54,7 +54,7 @@ fun Application.module() {
                 getRoute(getRouteHandler)
                 getScopesRoute(getScopesHandler)
                 queryRoute(queryRouteHandler)
-                updateRoute(consumerRouteHandler)
+                updateRoute(updateRouteHandler)
             }
         }
     }
