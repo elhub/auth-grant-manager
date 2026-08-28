@@ -30,8 +30,8 @@ import no.elhub.auth.features.common.stubAuthPersonsTokenProvider
 import no.elhub.auth.features.grants.common.dto.AuthorizationGrantScopesResponse
 import no.elhub.auth.features.grants.common.dto.CollectionGrantResponse
 import no.elhub.auth.features.grants.common.dto.SingleGrantResponse
-import no.elhub.auth.features.grants.update.dto.ConsumeRequestAttributes
-import no.elhub.auth.features.grants.update.dto.JsonApiConsumeRequest
+import no.elhub.auth.features.grants.update.dto.UpdateRequestAttributes
+import no.elhub.auth.features.grants.update.dto.JsonApiUpdateRequest
 import no.elhub.auth.features.requests.REQUESTS_PATH
 import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObject
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
@@ -655,11 +655,11 @@ class AuthorizationGrantRouteTest : FunSpec({
                         header(HttpHeaders.Authorization, "Bearer elhub-service")
                         contentType(ContentType.Application.Json)
                         setBody(
-                            JsonApiConsumeRequest(
+                            JsonApiUpdateRequest(
                                 data = JsonApiRequestResourceObject(
                                     id = id,
                                     type = "AuthorizationGrant",
-                                    attributes = ConsumeRequestAttributes(
+                                    attributes = UpdateRequestAttributes(
                                         status = AuthorizationGrant.Status.Exhausted
                                     )
                                 )
@@ -684,11 +684,11 @@ class AuthorizationGrantRouteTest : FunSpec({
                         header(HttpHeaders.Authorization, "Bearer elhub-service")
                         contentType(ContentType.Application.Json)
                         setBody(
-                            JsonApiConsumeRequest(
+                            JsonApiUpdateRequest(
                                 data = JsonApiRequestResourceObject(
                                     id = id,
                                     type = "AuthorizationGrant",
-                                    attributes = ConsumeRequestAttributes(
+                                    attributes = UpdateRequestAttributes(
                                         status = AuthorizationGrant.Status.Exhausted
                                     )
                                 )
@@ -703,7 +703,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                         this[0].apply {
                             status shouldBe "422"
                             title shouldBe "Illegal status state"
-                            detail shouldBe "AuthorizationGrant must be 'Active' to get consumed."
+                            detail shouldBe "AuthorizationGrant must be 'Active' to get updated."
                         }
                     }
                     responseJson.meta.apply {
@@ -716,11 +716,11 @@ class AuthorizationGrantRouteTest : FunSpec({
                         header(HttpHeaders.Authorization, "Bearer elhub-service")
                         contentType(ContentType.Application.Json)
                         setBody(
-                            JsonApiConsumeRequest(
+                            JsonApiUpdateRequest(
                                 data = JsonApiRequestResourceObject(
                                     id = id,
                                     type = "AuthorizationGrant",
-                                    attributes = ConsumeRequestAttributes(
+                                    attributes = UpdateRequestAttributes(
                                         status = AuthorizationGrant.Status.Exhausted
                                     )
                                 )
@@ -749,11 +749,11 @@ class AuthorizationGrantRouteTest : FunSpec({
                         header(HttpHeaders.Authorization, "Bearer elhub-service")
                         contentType(ContentType.Application.Json)
                         setBody(
-                            JsonApiConsumeRequest(
+                            JsonApiUpdateRequest(
                                 data = JsonApiRequestResourceObject(
                                     id = id,
                                     type = "AuthorizationGrant",
-                                    attributes = ConsumeRequestAttributes(
+                                    attributes = UpdateRequestAttributes(
                                         status = AuthorizationGrant.Status.Active
                                     )
                                 )

@@ -17,8 +17,8 @@ import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.common.dto.SingleGrantResponse
-import no.elhub.auth.features.grants.update.dto.ConsumeRequestAttributes
-import no.elhub.auth.features.grants.update.dto.JsonApiConsumeRequest
+import no.elhub.auth.features.grants.update.dto.UpdateRequestAttributes
+import no.elhub.auth.features.grants.update.dto.JsonApiUpdateRequest
 import no.elhub.auth.patchJson
 import no.elhub.auth.setupAppWith
 import no.elhub.auth.validateConflictErrorResponse
@@ -48,7 +48,7 @@ class RouteTest : FunSpec({
     test("PATCH /{id} returns Bad Request when body contains a blank id") {
         testApplication {
             setupAppWith(authorizedSystem) { route(handler) }
-            val response = client.patchJson<JsonApiConsumeRequest>("/$validUuid", patchGrantBody(id = ""))
+            val response = client.patchJson<JsonApiUpdateRequest>("/$validUuid", patchGrantBody(id = ""))
             response.status shouldBe HttpStatusCode.BadRequest
             coVerify(exactly = 0) { handler.invoke(any()) }
         }
@@ -153,9 +153,9 @@ class RouteTest : FunSpec({
 
 fun patchGrantBody(
     id: String,
-    attributes: ConsumeRequestAttributes = ConsumeRequestAttributes(status = AuthorizationGrant.Status.Exhausted),
+    attributes: UpdateRequestAttributes = UpdateRequestAttributes(status = AuthorizationGrant.Status.Exhausted),
     type: String = "AuthorizationGrant"
-) = JsonApiConsumeRequest(
+) = JsonApiUpdateRequest(
     data = JsonApiRequestResourceObject(
         id = id,
         type = type,

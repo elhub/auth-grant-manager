@@ -95,7 +95,7 @@ class HandlerTest : FunSpec({
             )
         )
 
-        response.shouldBeLeft(ConsumeError.PersistenceError)
+        response.shouldBeLeft(UpdateError.PersistenceError)
     }
 
     test("returns updated grant when authorized party is consent management system") {
@@ -131,7 +131,6 @@ class HandlerTest : FunSpec({
         )
 
         response.shouldBeRight(revokedGrant)
-
     }
     test("returns ExpiredError when repo returns ExpiredError") {
         val expiredGrant = activeGrant.copy(
@@ -147,7 +146,7 @@ class HandlerTest : FunSpec({
             )
         )
 
-        response.shouldBeLeft(ConsumeError.ExpiredError)
+        response.shouldBeLeft(UpdateError.ExpiredError)
     }
 
     test("returns IllegalStateError when repo returns ConflictError") {
@@ -161,7 +160,7 @@ class HandlerTest : FunSpec({
             )
         )
 
-        response.shouldBeLeft(ConsumeError.IllegalStateError)
+        response.shouldBeLeft(UpdateError.IllegalStateError)
     }
 
     test("returns IllegalTransitionError when attempting to update grant to 'Active'") {
@@ -175,7 +174,7 @@ class HandlerTest : FunSpec({
         )
 
         response.shouldBeLeft(
-            ConsumeError.IllegalTransitionError(
+            UpdateError.IllegalTransitionError(
                 "Cannot update authorization grant to status 'Active'. Allowed statuses are 'Exhausted', 'Revoked'."
             )
         )

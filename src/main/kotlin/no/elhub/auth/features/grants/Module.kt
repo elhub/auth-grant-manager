@@ -8,14 +8,14 @@ import no.elhub.auth.features.grants.common.ExposedGrantPropertiesRepository
 import no.elhub.auth.features.grants.common.ExposedGrantRepository
 import no.elhub.auth.plugin.policies.token.base.authinfo.AuthInfoPolicy
 import no.elhub.auth.plugin.tokenAuthorize
-import no.elhub.auth.features.grants.update.Handler as ConsumeHandler
-import no.elhub.auth.features.grants.update.route as consumeRoute
 import no.elhub.auth.features.grants.get.Handler as GetHandler
 import no.elhub.auth.features.grants.get.route as getRoute
 import no.elhub.auth.features.grants.getscopes.Handler as GetScopesHandler
 import no.elhub.auth.features.grants.getscopes.route as getScopesRoute
 import no.elhub.auth.features.grants.query.Handler as QueryHandler
 import no.elhub.auth.features.grants.query.route as queryRoute
+import no.elhub.auth.features.grants.update.Handler as UpdateHandler
+import no.elhub.auth.features.grants.update.route as updateRoute
 
 const val GRANTS_PATH = "/access/v0/authorization-grants"
 
@@ -38,15 +38,15 @@ fun Application.module() {
         provide<QueryHandler> {
             QueryHandler(resolve())
         }
-        provide<ConsumeHandler> {
-            ConsumeHandler(resolve())
+        provide<UpdateHandler> {
+            UpdateHandler(resolve())
         }
     }
 
     val getRouteHandler: GetHandler by dependencies
     val getScopesHandler: GetScopesHandler by dependencies
     val queryRouteHandler: QueryHandler by dependencies
-    val consumerRouteHandler: ConsumeHandler by dependencies
+    val consumerRouteHandler: UpdateHandler by dependencies
 
     routing {
         tokenAuthorize(AuthInfoPolicy) {
@@ -54,7 +54,7 @@ fun Application.module() {
                 getRoute(getRouteHandler)
                 getScopesRoute(getScopesHandler)
                 queryRoute(queryRouteHandler)
-                consumeRoute(consumerRouteHandler)
+                updateRoute(consumerRouteHandler)
             }
         }
     }

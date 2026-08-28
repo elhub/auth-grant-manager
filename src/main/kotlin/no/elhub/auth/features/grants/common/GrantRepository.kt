@@ -441,7 +441,6 @@ enum class DatabaseStatus {
     Revoked,
 }
 
-
 private fun DatabaseStatus.toAuthorizationGrantStatus() =
     when (this) {
         DatabaseStatus.Active -> AuthorizationGrant.Status.Active
@@ -523,6 +522,5 @@ fun ResultRow.toAuthorizationGrant(
         properties = properties
     )
 }
-
 
 fun AuthorizationPartyRecord.toAuthorizationParty() = AuthorizationParty(id = this.resourceId, type = this.type)

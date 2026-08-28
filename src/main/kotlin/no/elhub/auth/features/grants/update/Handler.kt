@@ -12,20 +12,20 @@ import no.elhub.auth.features.grants.common.GrantRepository
 class Handler(
     private val repo: GrantRepository
 ) {
-    suspend operator fun invoke(command: UpdateCommand): Either<ConsumeError, AuthorizationGrant> = either {
+    suspend operator fun invoke(command: UpdateCommand): Either<UpdateError, AuthorizationGrant> = either {
         ensure(command.authorizedParty.type == PartyType.System) {
-            ConsumeError.NotAuthorized
+            UpdateError.NotAuthorized
         }
         ensure(command.newStatus == Status.Exhausted || command.newStatus == Status.Revoked) {
-            ConsumeError.IllegalTransitionError("Cannot update authorization grant to status '${command.newStatus}'. Allowed statuses are 'Exhausted', 'Revoked'.")
+            UpdateError.IllegalTransitionError("Cannot update authorization grant to status '${command.newStatus}'. Allowed statuses are 'Exhausted', 'Revoked'.")
         }
 
         repo.update(command.grantId, command.newStatus)
             .mapLeft { error ->
                 when (error) {
-                    is RepositoryWriteError.ConflictError -> ConsumeError.IllegalStateError
-                    is RepositoryWriteError.ExpiredError -> ConsumeError.ExpiredError
-                    else -> ConsumeError.PersistenceError
+                    is RepositoryWriteError.ConflictError -> UpdateError.IllegalStateError
+                    is RepositoryWriteError.ExpiredError -> UpdateError.ExpiredError
+                    else -> UpdateError.PersistenceError
                 }
             }
             .bind()
