@@ -17,7 +17,9 @@ class Handler(
             UpdateError.NotAuthorized
         }
         ensure(command.newStatus == Status.Exhausted || command.newStatus == Status.Revoked) {
-            UpdateError.IllegalTransitionError("Cannot update authorization grant to status '${command.newStatus}'. Allowed statuses are 'Exhausted', 'Revoked'.")
+            UpdateError.IllegalTransitionError(
+                "Cannot update authorization grant to status '${command.newStatus}'. Allowed statuses are 'Exhausted', 'Revoked'."
+            )
         }
 
         repo.update(command.grantId, command.newStatus)
