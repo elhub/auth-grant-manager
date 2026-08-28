@@ -1,4 +1,4 @@
-package no.elhub.auth.features.grants.consume
+package no.elhub.auth.features.grants.update
 
 import io.ktor.http.HttpStatusCode
 import no.elhub.auth.features.common.buildApiErrorResponse
@@ -11,35 +11,35 @@ sealed class ConsumeError {
     data object PersistenceError : ConsumeError()
     data object NotAuthorized : ConsumeError()
     data object ExpiredError : ConsumeError()
-    data object IllegalTransitionError : ConsumeError()
+    data class IllegalTransitionError(val detail: String) : ConsumeError()
     data object IllegalStateError : ConsumeError()
 }
 
 fun ConsumeError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> =
     when (this) {
-        ConsumeError.GrantNotFound -> toNotFoundApiErrorResponse("AuthorizationGrant could not be found")
+        is ConsumeError.GrantNotFound -> toNotFoundApiErrorResponse("AuthorizationGrant could not be found")
 
-        ConsumeError.PersistenceError -> toInternalServerApiErrorResponse()
+        is ConsumeError.PersistenceError -> toInternalServerApiErrorResponse()
 
-        ConsumeError.NotAuthorized -> buildApiErrorResponse(
+        is ConsumeError.NotAuthorized -> buildApiErrorResponse(
             status = HttpStatusCode.Unauthorized,
             title = "Not authorized",
             detail = "Not authorized for this endpoint."
         )
 
-        ConsumeError.IllegalStateError -> buildApiErrorResponse(
+        is ConsumeError.IllegalStateError -> buildApiErrorResponse(
             status = HttpStatusCode.UnprocessableEntity,
             title = "Illegal status state",
             detail = "AuthorizationGrant must be 'Active' to get consumed."
         )
 
-        ConsumeError.IllegalTransitionError -> buildApiErrorResponse(
+        is ConsumeError.IllegalTransitionError -> buildApiErrorResponse(
             status = HttpStatusCode.UnprocessableEntity,
             title = "Invalid status transition",
-            detail = "Only 'Exhausted' status is allowed."
+            detail = this.detail
         )
 
-        ConsumeError.ExpiredError -> buildApiErrorResponse(
+        is ConsumeError.ExpiredError -> buildApiErrorResponse(
             status = HttpStatusCode.UnprocessableEntity,
             title = "AuthorizationGrant has expired",
             detail = "Validity period has passed."

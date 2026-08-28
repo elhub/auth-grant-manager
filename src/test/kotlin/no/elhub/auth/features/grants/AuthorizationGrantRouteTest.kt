@@ -30,8 +30,8 @@ import no.elhub.auth.features.common.stubAuthPersonsTokenProvider
 import no.elhub.auth.features.grants.common.dto.AuthorizationGrantScopesResponse
 import no.elhub.auth.features.grants.common.dto.CollectionGrantResponse
 import no.elhub.auth.features.grants.common.dto.SingleGrantResponse
-import no.elhub.auth.features.grants.consume.dto.ConsumeRequestAttributes
-import no.elhub.auth.features.grants.consume.dto.JsonApiConsumeRequest
+import no.elhub.auth.features.grants.update.dto.ConsumeRequestAttributes
+import no.elhub.auth.features.grants.update.dto.JsonApiConsumeRequest
 import no.elhub.auth.features.requests.REQUESTS_PATH
 import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObject
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
@@ -767,7 +767,7 @@ class AuthorizationGrantRouteTest : FunSpec({
                         this[0].apply {
                             status shouldBe "422"
                             title shouldBe "Invalid status transition"
-                            detail shouldBe "Only 'Exhausted' status is allowed."
+                            detail shouldBe "Cannot update authorization grant to status 'Active'. Allowed statuses are 'Exhausted', 'Revoked'."
                         }
                     }
                 }

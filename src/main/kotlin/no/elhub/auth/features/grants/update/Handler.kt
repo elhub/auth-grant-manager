@@ -1,4 +1,4 @@
-package no.elhub.auth.features.grants.consume
+package no.elhub.auth.features.grants.update
 
 import arrow.core.Either
 import arrow.core.raise.either
@@ -12,12 +12,12 @@ import no.elhub.auth.features.grants.common.GrantRepository
 class Handler(
     private val repo: GrantRepository
 ) {
-    suspend operator fun invoke(command: ConsumeCommand): Either<ConsumeError, AuthorizationGrant> = either {
+    suspend operator fun invoke(command: UpdateCommand): Either<ConsumeError, AuthorizationGrant> = either {
         ensure(command.authorizedParty.type == PartyType.System) {
             ConsumeError.NotAuthorized
         }
-        ensure(command.newStatus == Status.Exhausted) {
-            ConsumeError.IllegalTransitionError
+        ensure(command.newStatus == Status.Exhausted || command.newStatus == Status.Revoked) {
+            ConsumeError.IllegalTransitionError("Cannot update authorization grant to status '${command.newStatus}'. Allowed statuses are 'Exhausted', 'Revoked'.")
         }
 
         repo.update(command.grantId, command.newStatus)

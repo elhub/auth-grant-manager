@@ -1,4 +1,4 @@
-package no.elhub.auth.features.grants.consume
+package no.elhub.auth.features.grants.update
 
 import arrow.core.right
 import io.kotest.core.spec.style.FunSpec
@@ -17,8 +17,8 @@ import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.grants.AuthorizationGrant
 import no.elhub.auth.features.grants.common.dto.SingleGrantResponse
-import no.elhub.auth.features.grants.consume.dto.ConsumeRequestAttributes
-import no.elhub.auth.features.grants.consume.dto.JsonApiConsumeRequest
+import no.elhub.auth.features.grants.update.dto.ConsumeRequestAttributes
+import no.elhub.auth.features.grants.update.dto.JsonApiConsumeRequest
 import no.elhub.auth.patchJson
 import no.elhub.auth.setupAppWith
 import no.elhub.auth.validateConflictErrorResponse

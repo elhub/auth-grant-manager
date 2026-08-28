@@ -1,4 +1,4 @@
-package no.elhub.auth.features.grants.consume.dto
+package no.elhub.auth.features.grants.update.dto
 
 import kotlinx.serialization.Serializable
 import no.elhub.auth.features.grants.AuthorizationGrant

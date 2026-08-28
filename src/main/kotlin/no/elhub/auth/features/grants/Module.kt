@@ -8,8 +8,8 @@ import no.elhub.auth.features.grants.common.ExposedGrantPropertiesRepository
 import no.elhub.auth.features.grants.common.ExposedGrantRepository
 import no.elhub.auth.plugin.policies.token.base.authinfo.AuthInfoPolicy
 import no.elhub.auth.plugin.tokenAuthorize
-import no.elhub.auth.features.grants.consume.Handler as ConsumeHandler
-import no.elhub.auth.features.grants.consume.route as consumeRoute
+import no.elhub.auth.features.grants.update.Handler as ConsumeHandler
+import no.elhub.auth.features.grants.update.route as consumeRoute
 import no.elhub.auth.features.grants.get.Handler as GetHandler
 import no.elhub.auth.features.grants.get.route as getRoute
 import no.elhub.auth.features.grants.getscopes.Handler as GetScopesHandler

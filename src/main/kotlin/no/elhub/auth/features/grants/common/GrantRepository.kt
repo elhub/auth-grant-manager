@@ -337,6 +337,7 @@ class ExposedGrantRepository(
             { RepositoryWriteError.UnexpectedError }
         ) {
             val now = currentTimeUtc()
+
             val rowsUpdated =
                 AuthorizationGrantTable.update(
                     where = {
@@ -345,7 +346,11 @@ class ExposedGrantRepository(
                             (AuthorizationGrantTable.validTo greater now)
                     }
                 ) {
-                    it[grantStatus] = newStatus
+                    if (newStatus == AuthorizationGrant.Status.Revoked) {
+                        it[validTo] = now
+                    } else {
+                        it[grantStatus] = newStatus
+                    }
                     it[updatedAt] = currentTimeUtc()
                 }
 
@@ -479,21 +484,28 @@ fun ResultRow.toAuthorizationGrant(
     grantedTo: AuthorizationPartyRecord,
     scopeIds: List<UUID>,
     properties: List<AuthorizationGrantProperty>
-) = AuthorizationGrant(
-    id = this[AuthorizationGrantTable.id].value,
-    grantStatus = this[AuthorizationGrantTable.grantStatus],
-    grantedFor = grantedFor.toAuthorizationParty(),
-    grantedBy = grantedBy.toAuthorizationParty(),
-    grantedTo = grantedTo.toAuthorizationParty(),
-    grantedAt = this[AuthorizationGrantTable.grantedAt],
-    validFrom = this[AuthorizationGrantTable.validFrom],
-    createdAt = this[AuthorizationGrantTable.createdAt],
-    updatedAt = this[AuthorizationGrantTable.updatedAt],
-    validTo = this[AuthorizationGrantTable.validTo],
-    sourceType = this[AuthorizationGrantTable.sourceType],
-    sourceId = this[AuthorizationGrantTable.sourceId],
-    scopeIds = scopeIds,
-    properties = properties
-)
+): AuthorizationGrant {
+    val dbStatus = this[AuthorizationGrantTable.grantStatus]
+    val validTo = this[AuthorizationGrantTable.validTo]
+    return AuthorizationGrant(
+        id = this[AuthorizationGrantTable.id].value,
+        grantStatus = when {
+            dbStatus == AuthorizationGrant.Status.Active && validTo <= currentTimeUtc() -> AuthorizationGrant.Status.Revoked
+            else -> dbStatus
+        },
+        grantedFor = grantedFor.toAuthorizationParty(),
+        grantedBy = grantedBy.toAuthorizationParty(),
+        grantedTo = grantedTo.toAuthorizationParty(),
+        grantedAt = this[AuthorizationGrantTable.grantedAt],
+        validFrom = this[AuthorizationGrantTable.validFrom],
+        createdAt = this[AuthorizationGrantTable.createdAt],
+        updatedAt = this[AuthorizationGrantTable.updatedAt],
+        validTo = this[AuthorizationGrantTable.validTo],
+        sourceType = this[AuthorizationGrantTable.sourceType],
+        sourceId = this[AuthorizationGrantTable.sourceId],
+        scopeIds = scopeIds,
+        properties = properties
+    )
+}
 
 fun AuthorizationPartyRecord.toAuthorizationParty() = AuthorizationParty(id = this.resourceId, type = this.type)

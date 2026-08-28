@@ -1,4 +1,4 @@
-package no.elhub.auth.features.grants.consume
+package no.elhub.auth.features.grants.update
 
 import arrow.core.Either
 import arrow.core.left
@@ -31,7 +31,7 @@ class HandlerTest : FunSpec({
     val grantedTo = AuthorizationParty(id = "org-entity-1", type = PartyType.OrganizationEntity)
     val scopeIds = listOf(UUID.randomUUID(), UUID.randomUUID())
 
-    val updatedGrant = AuthorizationGrant(
+    val exhaustedGrant = AuthorizationGrant(
         id = grantId,
         grantStatus = newStatus,
         grantedFor = grantedFor,
@@ -88,7 +88,7 @@ class HandlerTest : FunSpec({
         val handler = Handler(repoReturning(updateResult = error.left()))
 
         val response = handler(
-            ConsumeCommand(
+            UpdateCommand(
                 grantId = grantId,
                 newStatus = newStatus,
                 authorizedParty = consentManagementSystem
@@ -99,19 +99,40 @@ class HandlerTest : FunSpec({
     }
 
     test("returns updated grant when authorized party is consent management system") {
-        val handler = Handler(repoReturning(updateResult = updatedGrant.right()))
+        val handler = Handler(repoReturning(updateResult = exhaustedGrant.right()))
 
         val response = handler(
-            ConsumeCommand(
+            UpdateCommand(
                 grantId = grantId,
                 newStatus = newStatus,
                 authorizedParty = consentManagementSystem
             )
         )
 
-        response.shouldBeRight(updatedGrant)
+        response.shouldBeRight(exhaustedGrant)
     }
 
+    test("supports revoking grant") {
+
+        val revokedGrant = exhaustedGrant.copy(
+            grantStatus = AuthorizationGrant.Status.Revoked,
+            validTo = currentTimeUtc()
+        )
+        val repo = mockk<GrantRepository> {
+            coEvery { update(grantId, Status.Revoked) } returns revokedGrant.right()
+        }
+        val handler = Handler(repo)
+        val response = handler(
+            UpdateCommand(
+                grantId = grantId,
+                newStatus = Status.Revoked,
+                authorizedParty = consentManagementSystem
+            )
+        )
+
+        response.shouldBeRight(revokedGrant)
+
+    }
     test("returns ExpiredError when repo returns ExpiredError") {
         val expiredGrant = activeGrant.copy(
             validTo = OffsetDateTime.now(ZoneOffset.UTC).minusSeconds(1)
@@ -119,7 +140,7 @@ class HandlerTest : FunSpec({
 
         val handler = Handler(repoReturning(updateResult = RepositoryWriteError.ExpiredError.left()))
         val response = handler(
-            ConsumeCommand(
+            UpdateCommand(
                 grantId = grantId,
                 newStatus = newStatus,
                 authorizedParty = consentManagementSystem
@@ -130,12 +151,10 @@ class HandlerTest : FunSpec({
     }
 
     test("returns IllegalStateError when repo returns ConflictError") {
-        val exhaustedGrant = activeGrant.copy(grantStatus = Status.Exhausted)
-
         val handler = Handler(repoReturning(updateResult = RepositoryWriteError.ConflictError.left()))
 
         val response = handler(
-            ConsumeCommand(
+            UpdateCommand(
                 grantId = grantId,
                 newStatus = newStatus,
                 authorizedParty = consentManagementSystem
@@ -146,15 +165,19 @@ class HandlerTest : FunSpec({
     }
 
     test("returns IllegalTransitionError when attempting to update grant to 'Active'") {
-        val handler = Handler(repoReturning(updateResult = updatedGrant.right()))
+        val handler = Handler(repoReturning(updateResult = exhaustedGrant.right()))
         val response = handler(
-            ConsumeCommand(
+            UpdateCommand(
                 grantId = grantId,
                 newStatus = Status.Active,
                 authorizedParty = consentManagementSystem
             )
         )
 
-        response.shouldBeLeft(ConsumeError.IllegalTransitionError)
+        response.shouldBeLeft(
+            ConsumeError.IllegalTransitionError(
+                "Cannot update authorization grant to status 'Active'. Allowed statuses are 'Exhausted', 'Revoked'."
+            )
+        )
     }
 })
