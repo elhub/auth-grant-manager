@@ -298,7 +298,7 @@ class ExposedGrantRepository(
             val authorizationGrant = AuthorizationGrantTable
                 .insertReturning {
                     it[id] = grant.id
-                    it[grantStatus] = grant.grantStatus
+                    it[grantStatus] = DatabaseStatus.Active
                     it[grantedBy] = grantedByParty.id
                     it[grantedFor] = grantedForParty.id
                     it[grantedTo] = grantedToParty.id
@@ -342,14 +342,14 @@ class ExposedGrantRepository(
                 AuthorizationGrantTable.update(
                     where = {
                         (AuthorizationGrantTable.id eq grantId) and
-                            (AuthorizationGrantTable.grantStatus eq Status.Active) and
+                            (AuthorizationGrantTable.grantStatus eq DatabaseStatus.Active) and
                             (AuthorizationGrantTable.validTo greater now)
                     }
                 ) {
-                    if (newStatus == AuthorizationGrant.Status.Revoked) {
-                        it[validTo] = now
-                    } else {
-                        it[grantStatus] = newStatus
+                    it[grantStatus] = when (newStatus) {
+                        Status.Exhausted -> DatabaseStatus.Exhausted
+                        Status.Revoked -> DatabaseStatus.Revoked
+                        Status.Active, Status.Expired -> raise(RepositoryWriteError.ConflictError)
                     }
                     it[updatedAt] = currentTimeUtc()
                 }
@@ -368,7 +368,7 @@ class ExposedGrantRepository(
                 .singleOrNull() ?: raise(RepositoryWriteError.NotFoundError)
 
             if (rowsUpdated == 0) {
-                val isProcessed = grant[AuthorizationGrantTable.grantStatus] != Status.Active
+                val isProcessed = grant[AuthorizationGrantTable.grantStatus] != DatabaseStatus.Active
                 if (isProcessed) raise(RepositoryWriteError.ConflictError)
                 raise(RepositoryWriteError.ExpiredError)
             }
@@ -435,12 +435,26 @@ object AuthorizationGrantScopeTable : Table("auth.authorization_grant_scope") {
     override val primaryKey = PrimaryKey(authorizationGrantId, authorizationScopeId)
 }
 
+enum class DatabaseStatus {
+    Active,
+    Exhausted,
+    Revoked,
+}
+
+
+private fun DatabaseStatus.toAuthorizationGrantStatus() =
+    when (this) {
+        DatabaseStatus.Active -> AuthorizationGrant.Status.Active
+        DatabaseStatus.Exhausted -> AuthorizationGrant.Status.Exhausted
+        DatabaseStatus.Revoked -> AuthorizationGrant.Status.Revoked
+    }
+
 object AuthorizationGrantTable : UUIDTable("auth.authorization_grant") {
     val grantStatus =
         customEnumeration(
             name = "status",
             sql = "auth.authorization_grant_status",
-            fromDb = { value -> Status.valueOf(value as String) },
+            fromDb = { value -> DatabaseStatus.valueOf(value as String) },
             toDb = { PGEnum("authorization_grant_status", it) },
         )
     val grantedFor = javaUUID("granted_for").references(AuthorizationPartyTable.id)
@@ -487,12 +501,14 @@ fun ResultRow.toAuthorizationGrant(
 ): AuthorizationGrant {
     val dbStatus = this[AuthorizationGrantTable.grantStatus]
     val validTo = this[AuthorizationGrantTable.validTo]
+    val now = currentTimeUtc()
+    val status = when {
+        dbStatus == DatabaseStatus.Active && validTo <= now -> Status.Expired
+        else -> dbStatus.toAuthorizationGrantStatus()
+    }
     return AuthorizationGrant(
         id = this[AuthorizationGrantTable.id].value,
-        grantStatus = when {
-            dbStatus == AuthorizationGrant.Status.Active && validTo <= currentTimeUtc() -> AuthorizationGrant.Status.Revoked
-            else -> dbStatus
-        },
+        grantStatus = status,
         grantedFor = grantedFor.toAuthorizationParty(),
         grantedBy = grantedBy.toAuthorizationParty(),
         grantedTo = grantedTo.toAuthorizationParty(),
@@ -507,5 +523,6 @@ fun ResultRow.toAuthorizationGrant(
         properties = properties
     )
 }
+
 
 fun AuthorizationPartyRecord.toAuthorizationParty() = AuthorizationParty(id = this.resourceId, type = this.type)

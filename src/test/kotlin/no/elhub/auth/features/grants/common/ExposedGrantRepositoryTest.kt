@@ -1,5 +1,6 @@
 package no.elhub.auth.features.grants.common
 
+import no.elhub.auth.features.common.currentTimeUtc
 import arrow.core.getOrElse
 import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.fail
@@ -108,6 +109,16 @@ class ExposedGrantRepositoryTest : FunSpec({
                 .getOrElse { error(it) }
 
         updated.grantStatus shouldBe AuthorizationGrant.Status.Revoked
+    }
+
+    test("returns status Expired for expired grant") {
+        // insert a grant
+        val expiredGrant = exampleGrantWithoutScopeIds.copy(id = UUID.randomUUID(), validTo = currentTimeUtc())
+        grantRepo.insert(expiredGrant).getOrElse { error(it) }
+
+        val result = grantRepo.find(expiredGrant.id).getOrElse { error(it) }
+
+        result.grantStatus shouldBe AuthorizationGrant.Status.Expired
     }
 
     test("insert with non-empty scope list") {
