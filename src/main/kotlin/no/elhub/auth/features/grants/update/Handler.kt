@@ -25,6 +25,7 @@ class Handler(
         repo.update(command.grantId, command.newStatus)
             .mapLeft { error ->
                 when (error) {
+                    is RepositoryWriteError.NotFoundError -> UpdateError.GrantNotFound
                     is RepositoryWriteError.ConflictError -> UpdateError.IllegalStateError
                     is RepositoryWriteError.ExpiredError -> UpdateError.ExpiredError
                     else -> UpdateError.PersistenceError
