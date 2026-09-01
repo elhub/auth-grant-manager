@@ -6,26 +6,86 @@
   "properties": {
     "data": {
       "description": "The authorization request to be created.",
-      "type": "object",
-      "required": ["type", "attributes", "meta"],
-      "properties": {
-        "type": {
-          "$ref": "authorization-request-common.schema.json#/$defs/type"
+      "oneOf": [
+        {
+          "$ref": "#/$defs/changeOfBalanceSupplierData"
         },
-        "attributes": {
+        {
+          "$ref": "#/$defs/moveInAndChangeOfBalanceSupplierData"
+        }
+      ]
+    }
+  },
+  "required": ["data"],
+  "$defs": {
+    "partyMeta": {
+      "type": "object",
+      "required": ["requestedBy", "requestedFrom", "requestedTo"],
+      "properties": {
+        "requestedBy": {
+          "$ref": "../authorization-common.schema.json#/$defs/requestedBy"
+        },
+        "requestedFrom": {
+          "$ref": "../authorization-common.schema.json#/$defs/requestedFrom"
+        },
+        "requestedTo": {
+          "$ref": "../authorization-common.schema.json#/$defs/requestedTo"
+        }
+      }
+    },
+    "changeOfBalanceSupplierMeta": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/partyMeta"
+        },
+        {
           "type": "object",
-          "description": "The attributes of the authorization request.",
-          "required": ["requestType"],
+          "description": "Metadata required for ChangeOfBalanceSupplierForPerson.",
+          "required": [
+            "requestedFromName",
+            "requestedForMeteringPointId",
+            "requestedForMeteringPointAddress",
+            "balanceSupplierName",
+            "balanceSupplierContractName"
+          ],
           "properties": {
-            "requestType": {
-              "$ref": "authorization-request-common.schema.json#/$defs/requestType"
+            "requestedFromName": {
+              "$ref": "../authorization-common.schema.json#/$defs/requestedFromName"
+            },
+            "requestedForMeteringPointId": {
+              "$ref": "../authorization-common.schema.json#/$defs/requestedForMeteringPointId"
+            },
+            "requestedForMeteringPointAddress": {
+              "$ref": "../authorization-common.schema.json#/$defs/requestedForMeteringPointAddress"
+            },
+            "balanceSupplierName": {
+              "$ref": "../authorization-common.schema.json#/$defs/balanceSupplierName"
+            },
+            "balanceSupplierContractName": {
+              "$ref": "../authorization-common.schema.json#/$defs/balanceSupplierContractName"
+            },
+            "redirectURI": {
+              "$ref": "../authorization-common.schema.json#/$defs/redirectURI"
             }
           }
+        }
+      ]
+    },
+    "moveInAndChangeOfBalanceSupplierMeta": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/partyMeta"
         },
-        "meta": {
+        {
           "type": "object",
-          "required": ["requestedBy", "requestedFrom", "requestedTo"],
-          "description": "Additional meta-information related to the resource. Most of this information is used for informational purposes.",
+          "description": "Metadata required for MoveInAndChangeOfBalanceSupplierForPerson.",
+          "required": [
+            "requestedFromName",
+            "requestedForMeteringPointId",
+            "requestedForMeteringPointAddress",
+            "balanceSupplierName",
+            "balanceSupplierContractName"
+          ],
           "properties": {
             "requestedFromName": {
               "$ref": "../authorization-common.schema.json#/$defs/requestedFromName"
@@ -45,22 +105,56 @@
             "moveInDate": {
               "$ref": "../authorization-common.schema.json#/$defs/moveInDate"
             },
-            "requestedBy": {
-              "$ref": "../authorization-common.schema.json#/$defs/requestedBy"
-            },
-            "requestedFrom": {
-              "$ref": "../authorization-common.schema.json#/$defs/requestedFrom"
-            },
-            "requestedTo": {
-              "$ref": "../authorization-common.schema.json#/$defs/requestedTo"
-            },
             "redirectURI": {
               "$ref": "../authorization-common.schema.json#/$defs/redirectURI"
             }
           }
         }
+      ]
+    },
+    "changeOfBalanceSupplierData": {
+      "title": "ChangeOfBalanceSupplierForPerson",
+      "type": "object",
+      "required": ["type", "attributes", "meta"],
+      "properties": {
+        "type": {
+          "$ref": "authorization-request-common.schema.json#/$defs/type"
+        },
+        "attributes": {
+          "type": "object",
+          "required": ["requestType"],
+          "properties": {
+            "requestType": {
+              "const": "ChangeOfBalanceSupplierForPerson"
+            }
+          }
+        },
+        "meta": {
+          "$ref": "#/$defs/changeOfBalanceSupplierMeta"
+        }
+      }
+    },
+    "moveInAndChangeOfBalanceSupplierData": {
+      "title": "MoveInAndChangeOfBalanceSupplierForPerson",
+      "type": "object",
+      "required": ["type", "attributes", "meta"],
+      "properties": {
+        "type": {
+          "$ref": "authorization-request-common.schema.json#/$defs/type"
+        },
+        "attributes": {
+          "type": "object",
+          "required": ["requestType"],
+          "properties": {
+            "requestType": {
+              "const": "MoveInAndChangeOfBalanceSupplierForPerson"
+            }
+          }
+        },
+        "meta": {
+          "$ref": "#/$defs/moveInAndChangeOfBalanceSupplierMeta"
+        }
       }
     }
-  },
-  "required": ["data"]
+  }
 }
