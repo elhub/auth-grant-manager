@@ -55,6 +55,7 @@ data class AuthorizationGrant(
         Active,
         Exhausted,
         Revoked,
+        Expired,
     }
 
     enum class SourceType {
