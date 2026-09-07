@@ -1,5 +1,7 @@
 FROM docker.jfrog.elhub.cloud/frzq0sxltynr/devxp/elhub-playwright:latest
 
+RUN apt-get update && apt-get install -y jq && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
 COPY integration-test/package.json integration-test/package-lock.json integration-test/
