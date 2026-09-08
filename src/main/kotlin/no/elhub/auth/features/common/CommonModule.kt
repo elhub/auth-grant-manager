@@ -57,11 +57,11 @@ fun Application.commonModule() {
         }
         provide(name = "proxyHttpClient") {
             val logger = LoggerFactory.getLogger("proxyHttpClient")
-            val proxyUrl = resolve<ApplicationConfig>().propertyOrNull("httpProxy.url")
+            val proxyUrl = resolve<ApplicationConfig>().httpProxyUrlOrNull()
             HttpClient(Apache5) {
                 proxyUrl?.let {
                     logger.info("Configuring HTTP proxy: {}", it)
-                    engine { proxy = ProxyBuilder.http(it.toString()) }
+                    engine { proxy = ProxyBuilder.http(it) }
                 } ?: logger.info("No HTTP proxy configured (HTTP_PROXY_URL not set)")
 
                 install(HttpTimeout) {
@@ -98,6 +98,9 @@ fun Application.commonModule() {
         }
     }
 }
+
+internal fun ApplicationConfig.httpProxyUrlOrNull(): String? =
+    propertyOrNull("httpProxy.url")?.getString()?.trim()?.takeIf { it.isNotEmpty() }
 
 fun Application.personServiceModule() {
     dependencies {
