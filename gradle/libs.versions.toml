@@ -33,6 +33,7 @@ postgresql = "42.7.12"
 slf4j = "2.0.18"
 snakeyaml = "2.6"
 testcontainers = "2.0.5"
+unleash = "12.2.3"
 verapdf = "1.30.2"
 bouncycastle = "1.85"
 itext = "9.7.1"
@@ -98,6 +99,7 @@ test-testcontainers = { group = "org.testcontainers", name = "testcontainers", v
 test-testcontainers-postgres = { group = "org.testcontainers", name = "testcontainers-postgresql", version.ref = "testcontainers" }
 test-mybatis = { group = "org.mybatis", name = "mybatis", version.ref = "mybatis" }
 templating-mustache = { group = "com.github.spullara.mustache.java", name = "compiler", version.ref = "mustache" }
+unleash-client = { group = "io.getunleash", name = "unleash-client-java", version.ref = "unleash" }
 pdf-openhtmltopdf-pdfbox = { group = "io.github.openhtmltopdf", name = "openhtmltopdf-pdfbox", version.ref = "openhtmltopdf" }
 pdf-pdfbox = { group = "org.apache.pdfbox", name = "pdfbox", version.ref = "pdfbox" }
 test-verapdf-validation-model = { group = "org.verapdf", name = "validation-model", version.ref = "verapdf" }
