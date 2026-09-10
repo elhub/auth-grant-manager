@@ -377,7 +377,7 @@ enum class DatabaseStatus {
     Rejected
 }
 
-fun DatabaseStatus.toDocumentStatus() =
+private fun DatabaseStatus.toDocumentStatus() =
     when (this) {
         DatabaseStatus.Pending -> AuthorizationDocument.Status.Pending
         DatabaseStatus.Rejected -> AuthorizationDocument.Status.Rejected
