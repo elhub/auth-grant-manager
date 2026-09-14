@@ -52,12 +52,17 @@ interface GrantRepository {
     ): Either<RepositoryReadError, Page<AuthorizationGrant>>
 
     suspend fun insert(grant: AuthorizationGrant): Either<RepositoryWriteError, AuthorizationGrant>
-    suspend fun update(grantId: UUID, newStatus: Status): Either<RepositoryError, AuthorizationGrant>
+    suspend fun update(
+        grantId: UUID,
+        newStatus: Status,
+        changedBy: AuthorizationParty,
+    ): Either<RepositoryError, AuthorizationGrant>
 }
 
 class ExposedGrantRepository(
     private val partyRepository: PartyRepository,
     private val grantPropertiesRepository: GrantPropertiesRepository,
+    private val auditLogRepository: AuditLogRepository,
     private val transactionContext: TransactionContext,
 ) : GrantRepository {
 
@@ -329,7 +334,11 @@ class ExposedGrantRepository(
             authorizationGrant
         }
 
-    override suspend fun update(grantId: UUID, newStatus: Status): Either<RepositoryError, AuthorizationGrant> =
+    override suspend fun update(
+        grantId: UUID,
+        newStatus: Status,
+        changedBy: AuthorizationParty,
+    ): Either<RepositoryError, AuthorizationGrant> =
         transactionContext<RepositoryError, AuthorizationGrant>(
             "db_operations",
             "GrantRepository",
@@ -337,6 +346,11 @@ class ExposedGrantRepository(
             { RepositoryWriteError.UnexpectedError }
         ) {
             val now = currentTimeUtc()
+            val newDatabaseStatus = when (newStatus) {
+                Status.Exhausted -> DatabaseStatus.Exhausted
+                Status.Revoked -> DatabaseStatus.Revoked
+                Status.Active, Status.Expired -> raise(RepositoryWriteError.ConflictError)
+            }
 
             val rowsUpdated =
                 AuthorizationGrantTable.update(
@@ -346,15 +360,22 @@ class ExposedGrantRepository(
                             (AuthorizationGrantTable.validTo greater now)
                     }
                 ) {
-                    it[grantStatus] = when (newStatus) {
-                        Status.Exhausted -> DatabaseStatus.Exhausted
-                        Status.Revoked -> DatabaseStatus.Revoked
-                        Status.Active, Status.Expired -> raise(RepositoryWriteError.ConflictError)
-                    }
-                    it[updatedAt] = currentTimeUtc()
+                    it[grantStatus] = newDatabaseStatus
+                    it[updatedAt] = now
                 }
 
-            fetchUpdated(grantId, rowsUpdated).bind()
+            val updatedGrant = fetchUpdated(grantId, rowsUpdated).bind()
+            auditLogRepository.insert(
+                AuthorizationAuditLog(
+                    grantId = grantId,
+                    changedAt = now,
+                    changedBy = changedBy.id,
+                    valueChanged = "status",
+                    valueBefore = DatabaseStatus.Active.name,
+                    valueAfter = newDatabaseStatus.name,
+                )
+            ).bind()
+            updatedGrant
         }
 
     private suspend fun fetchUpdated(

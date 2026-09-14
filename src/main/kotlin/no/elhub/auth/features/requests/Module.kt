@@ -4,6 +4,8 @@ import io.ktor.server.application.Application
 import io.ktor.server.plugins.di.dependencies
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
+import no.elhub.auth.features.grants.common.AuditLogRepository
+import no.elhub.auth.features.grants.common.ExposedAuditLogRepository
 import no.elhub.auth.features.grants.common.ExposedGrantPropertiesRepository
 import no.elhub.auth.features.grants.common.ExposedGrantRepository
 import no.elhub.auth.features.grants.common.GrantPropertiesRepository
@@ -28,7 +30,8 @@ const val REQUESTS_PATH = "/access/v0/authorization-requests"
 
 fun Application.module() {
     dependencies {
-        provide<GrantRepository> { ExposedGrantRepository(resolve(), resolve(), resolve()) }
+        provide<GrantRepository> { ExposedGrantRepository(resolve(), resolve(), resolve(), resolve()) }
+        provide<AuditLogRepository> { ExposedAuditLogRepository(resolve()) }
         provide<GrantPropertiesRepository> { ExposedGrantPropertiesRepository(resolve()) }
         provide<RequestPropertiesRepository> { ExposedRequestPropertiesRepository() }
         provide<RequestRepository> { ExposedRequestRepository(resolve(), resolve(), resolve(), resolve(), resolve()) }

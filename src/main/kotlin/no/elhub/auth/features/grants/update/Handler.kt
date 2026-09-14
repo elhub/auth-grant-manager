@@ -22,7 +22,7 @@ class Handler(
             )
         }
 
-        repo.update(command.grantId, command.newStatus)
+        repo.update(command.grantId, command.newStatus, command.authorizedParty)
             .mapLeft { error ->
                 when (error) {
                     is RepositoryWriteError.NotFoundError -> UpdateError.GrantNotFound

@@ -4,6 +4,7 @@ import io.ktor.server.application.Application
 import io.ktor.server.plugins.di.dependencies
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
+import no.elhub.auth.features.grants.common.ExposedAuditLogRepository
 import no.elhub.auth.features.grants.common.ExposedGrantPropertiesRepository
 import no.elhub.auth.features.grants.common.ExposedGrantRepository
 import no.elhub.auth.plugin.policies.token.base.authinfo.AuthInfoPolicy
@@ -22,8 +23,9 @@ const val GRANTS_PATH = "/access/v0/authorization-grants"
 fun Application.module() {
     dependencies {
         provide<ExposedGrantRepository> {
-            ExposedGrantRepository(resolve(), resolve(), resolve())
+            ExposedGrantRepository(resolve(), resolve(), resolve(), resolve())
         }
+        provide<ExposedAuditLogRepository> { ExposedAuditLogRepository(resolve()) }
         provide<ExposedGrantPropertiesRepository> {
             ExposedGrantPropertiesRepository(resolve())
         }

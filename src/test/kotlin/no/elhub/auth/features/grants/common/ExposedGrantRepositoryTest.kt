@@ -1,6 +1,7 @@
 package no.elhub.auth.features.grants.common
 
 import arrow.core.getOrElse
+import arrow.core.left
 import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.fail
 import io.kotest.core.spec.style.FunSpec
@@ -8,6 +9,8 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
+import io.mockk.coEvery
+import io.mockk.mockk
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.plus
 import no.elhub.auth.config.TransactionContext
@@ -27,6 +30,7 @@ import no.elhub.auth.features.common.todayOslo
 import no.elhub.auth.features.grants.AuthorizationGrant
 import org.apache.ibatis.io.Resources
 import org.apache.ibatis.jdbc.ScriptRunner
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.deleteAll
@@ -39,7 +43,9 @@ class ExposedGrantRepositoryTest : FunSpec({
     val transactionContext = TransactionContext(PrometheusMeterRegistry(PrometheusConfig.DEFAULT))
     val partyRepo = ExposedPartyRepository()
     val grantPropertiesRepo = ExposedGrantPropertiesRepository(transactionContext)
-    val grantRepo = ExposedGrantRepository(partyRepo, grantPropertiesRepo, transactionContext)
+    val auditLogRepo = ExposedAuditLogRepository(transactionContext)
+    val grantRepo = ExposedGrantRepository(partyRepo, grantPropertiesRepo, auditLogRepo, transactionContext)
+    val updatingSystem = AuthorizationParty(type = PartyType.System, id = "consent-management-system")
     val scopeIds = listOf(
         UUID.fromString("75ad606f-4ac9-4d4f-acd5-20d6862ec198"),
         UUID.fromString("0feefd01-36c7-403b-9bf1-c11d6458f639"),
@@ -96,6 +102,7 @@ class ExposedGrantRepositoryTest : FunSpec({
         withTransaction {
             // Should only have 1 grant in database
             AuthorizationGrantTable.selectAll().count() shouldBe 1
+            AuthorizationAuditLogTable.selectAll().count() shouldBe 0
         }
     }
 
@@ -105,10 +112,39 @@ class ExposedGrantRepositoryTest : FunSpec({
 
         // update the grant
         val updated =
-            grantRepo.update(exampleGrantWithoutScopeIds.id, AuthorizationGrant.Status.Revoked)
+            grantRepo.update(exampleGrantWithoutScopeIds.id, AuthorizationGrant.Status.Revoked, updatingSystem)
                 .getOrElse { error(it) }
 
         updated.grantStatus shouldBe AuthorizationGrant.Status.Revoked
+        withTransaction {
+            val auditRows = AuthorizationAuditLogTable.selectAll()
+                .where { AuthorizationAuditLogTable.authorizationGrantId eq exampleGrantWithoutScopeIds.id }
+                .toList()
+
+            auditRows.single().apply {
+                this[AuthorizationAuditLogTable.changedAt] shouldBe updated.updatedAt
+                this[AuthorizationAuditLogTable.changedBy] shouldBe updatingSystem.id
+                this[AuthorizationAuditLogTable.valueChanged] shouldBe "status"
+                this[AuthorizationAuditLogTable.valueBefore] shouldBe AuthorizationGrant.Status.Active.name
+                this[AuthorizationAuditLogTable.valueAfter] shouldBe AuthorizationGrant.Status.Revoked.name
+            }
+        }
+    }
+
+    test("returns audit log insert failure") {
+        grantRepo.insert(exampleGrantWithoutScopeIds).getOrElse { error(it) }
+        val failingAuditLogRepo = mockk<AuditLogRepository> {
+            coEvery { insert(any()) } returns RepositoryWriteError.UnexpectedError.left()
+        }
+        val repo = ExposedGrantRepository(
+            partyRepo,
+            grantPropertiesRepo,
+            failingAuditLogRepo,
+            transactionContext,
+        )
+
+        repo.update(exampleGrantWithoutScopeIds.id, AuthorizationGrant.Status.Revoked, updatingSystem)
+            .shouldBeLeft(RepositoryWriteError.UnexpectedError)
     }
 
     test("returns status Expired for expired grant") {
@@ -258,7 +294,8 @@ class ExposedGrantRepositoryTest : FunSpec({
         insertTestData()
         val grant = grantRepo.update(
             grantId = UUID.fromString("456e4567-e89b-12d3-a456-426614174000"),
-            newStatus = AuthorizationGrant.Status.Exhausted
+            newStatus = AuthorizationGrant.Status.Exhausted,
+            changedBy = updatingSystem,
         ).getOrElse {
             fail("Failed to update grant")
         }
@@ -271,7 +308,8 @@ class ExposedGrantRepositoryTest : FunSpec({
         val id = UUID.fromString("456e4567-e89b-12d3-a456-426614174000")
         val updateResult1 = grantRepo.update(
             grantId = id,
-            newStatus = AuthorizationGrant.Status.Exhausted
+            newStatus = AuthorizationGrant.Status.Exhausted,
+            changedBy = updatingSystem,
         ).getOrElse {
             fail("Failed to update grant")
         }
@@ -279,11 +317,17 @@ class ExposedGrantRepositoryTest : FunSpec({
 
         val updateResult2 = grantRepo.update(
             grantId = id,
-            newStatus = AuthorizationGrant.Status.Exhausted
+            newStatus = AuthorizationGrant.Status.Exhausted,
+            changedBy = updatingSystem,
         )
 
         updateResult2.shouldBeLeft()
         updateResult2.value shouldBe RepositoryWriteError.ConflictError
+        withTransaction {
+            AuthorizationAuditLogTable.selectAll()
+                .where { AuthorizationAuditLogTable.authorizationGrantId eq id }
+                .count() shouldBe 1
+        }
     }
 
     test("update should return ExpiredError for expired grant") {
@@ -291,7 +335,8 @@ class ExposedGrantRepositoryTest : FunSpec({
         val id = UUID.fromString("2a28a9dd-d3b3-4dec-a420-3f7d0d0105b7")
         val updateResult = grantRepo.update(
             grantId = id,
-            newStatus = AuthorizationGrant.Status.Exhausted
+            newStatus = AuthorizationGrant.Status.Exhausted,
+            changedBy = updatingSystem,
         )
         updateResult.shouldBeLeft()
         updateResult.value shouldBe RepositoryWriteError.ExpiredError

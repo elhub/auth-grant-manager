@@ -24,7 +24,11 @@
         },
         "meta": {
           "type": "object",
-          "required": ["requestedBy", "requestedFrom", "requestedTo"],
+          "required": [
+            "requestedBy",
+            "requestedFrom",
+            "requestedTo"
+          ],
           "description": "Additional meta-information related to the resource. Most of this information is used for informational purposes.",
           "properties": {
             "requestedFromName": {

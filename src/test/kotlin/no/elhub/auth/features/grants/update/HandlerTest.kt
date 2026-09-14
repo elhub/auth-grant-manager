@@ -79,7 +79,7 @@ class HandlerTest : FunSpec({
         updateResult: Either<RepositoryError, AuthorizationGrant>
     ): GrantRepository =
         mockk<GrantRepository> {
-            coEvery { update(grantId, newStatus) } returns updateResult
+            coEvery { update(grantId, newStatus, consentManagementSystem) } returns updateResult
         }
 
     test("maps repository error to PersistenceError") {
@@ -119,7 +119,7 @@ class HandlerTest : FunSpec({
             validTo = currentTimeUtc()
         )
         val repo = mockk<GrantRepository> {
-            coEvery { update(grantId, Status.Revoked) } returns revokedGrant.right()
+            coEvery { update(grantId, Status.Revoked, consentManagementSystem) } returns revokedGrant.right()
         }
         val handler = Handler(repo)
         val response = handler(
