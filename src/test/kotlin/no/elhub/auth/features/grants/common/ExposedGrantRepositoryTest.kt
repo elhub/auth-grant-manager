@@ -131,8 +131,8 @@ class ExposedGrantRepositoryTest : FunSpec({
         }
     }
 
-    test("returns audit log insert failure") {
-        grantRepo.insert(exampleGrantWithoutScopeIds).getOrElse { error(it) }
+    test("rolls back grant update when audit log insert returns a failure") {
+        val original = grantRepo.insert(exampleGrantWithoutScopeIds).getOrElse { error(it) }
         val failingAuditLogRepo = mockk<AuditLogRepository> {
             coEvery { insert(any()) } returns RepositoryWriteError.UnexpectedError.left()
         }
@@ -145,6 +145,29 @@ class ExposedGrantRepositoryTest : FunSpec({
 
         repo.update(exampleGrantWithoutScopeIds.id, AuthorizationGrant.Status.Revoked, updatingSystem)
             .shouldBeLeft(RepositoryWriteError.UnexpectedError)
+
+        val unchanged = grantRepo.find(original.id).getOrElse { error(it) }
+        unchanged.grantStatus shouldBe original.grantStatus
+        unchanged.updatedAt shouldBe original.updatedAt
+        withTransaction {
+            AuthorizationAuditLogTable.selectAll().count() shouldBe 0
+        }
+    }
+
+    test("rolls back grant update when audit log insert throws a validation exception") {
+        val original = grantRepo.insert(exampleGrantWithoutScopeIds).getOrElse { error(it) }
+        // Exceeds the audit changed_by column length, triggering Exposed validation.
+        val invalidSystem = updatingSystem.copy(id = "x".repeat(65))
+
+        grantRepo.update(original.id, AuthorizationGrant.Status.Revoked, invalidSystem)
+            .shouldBeLeft(RepositoryWriteError.UnexpectedError)
+
+        val unchanged = grantRepo.find(original.id).getOrElse { error(it) }
+        unchanged.grantStatus shouldBe original.grantStatus
+        unchanged.updatedAt shouldBe original.updatedAt
+        withTransaction {
+            AuthorizationAuditLogTable.selectAll().count() shouldBe 0
+        }
     }
 
     test("returns status Expired for expired grant") {
