@@ -1,9 +1,6 @@
-FROM mcr.microsoft.com/playwright:v1.62.1-resolute
+FROM docker.jfrog.elhub.cloud/frzq0sxltynr/devxp/elhub-playwright:latest
 
-RUN apt-get update && apt-get install -y curl jq ca-certificates && rm -rf /var/lib/apt/lists/* \
-  && curl -fsSL https://vault.elhub.cloud/v1/pki_root/ca/pem \
-       -o /usr/local/share/ca-certificates/elhub-ca.crt \
-  && update-ca-certificates
+RUN apt-get update && apt-get install -y jq && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
