@@ -213,10 +213,6 @@ class ChangeOfBalanceSupplierBusinessHandler(
             return ChangeOfBalanceSupplierValidationError.NotActiveRequestedBy.left()
         }
 
-        if (model.requestedTo.id != model.requestedFrom.id) {
-            return ChangeOfBalanceSupplierValidationError.RequestedToRequestedFromMismatch.left()
-        }
-
         if (validateBalanceSupplierContractName) {
             val organizationNumber =
                 party.data.relationships.organizationNumber?.data?.id

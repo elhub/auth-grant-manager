@@ -42,11 +42,11 @@ class HandlerTest : FunSpec({
 
     val requestedByIdentifier = PartyIdentifier(PartyIdentifierType.GlobalLocationNumber, "1234567890123")
     val requestedFromIdentifier = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "01010112345")
-    val requestedToIdentifier = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "02020212345")
+    val requestedToIdentifier = requestedFromIdentifier
 
     val requestedByParty = AuthorizationParty(id = requestedByIdentifier.idValue, type = PartyType.OrganizationEntity)
     val requestedFromParty = AuthorizationParty(id = "person-1", type = PartyType.Person)
-    val requestedToParty = AuthorizationParty(id = "person-2", type = PartyType.Person)
+    val requestedToParty = requestedFromParty
 
     val coreMeta =
         CreateDocumentCoreMeta(
@@ -78,7 +78,6 @@ class HandlerTest : FunSpec({
             documentType = AuthorizationDocument.Type.ChangeOfBalanceSupplierForPerson,
             requestedBy = requestedByParty,
             requestedFrom = requestedFromParty,
-            requestedTo = requestedToParty,
             meta = businessMeta,
         )
 
@@ -111,11 +110,11 @@ class HandlerTest : FunSpec({
     }
 
     test("returns InvalidPartyTypeError when authorized party is not an OrganizationEntity") {
-        val businessHandler = mockk<DocumentBusinessHandler>(relaxed = true)
-        val signatureService = mockk<SignatureService>(relaxed = true)
-        val documentRepository = mockk<DocumentRepository>(relaxed = true)
+        val businessHandler = mockk<DocumentBusinessHandler>()
+        val signatureService = mockk<SignatureService>()
+        val documentRepository = mockk<DocumentRepository>()
         val partyService = mockk<PartyService>(relaxed = true)
-        val fileGenerator = mockk<FileGenerator>(relaxed = true)
+        val fileGenerator = mockk<FileGenerator>()
 
         val handler = Handler(businessHandler, signatureService, documentRepository, partyService, fileGenerator)
 
@@ -169,7 +168,7 @@ class HandlerTest : FunSpec({
     test("returns RequestedPartyError when requestedBy cannot be resolved") {
         val businessHandler = mockk<DocumentBusinessHandler>(relaxed = true)
         val signatureService = mockk<SignatureService>(relaxed = true)
-        val documentRepository = mockk<DocumentRepository>(relaxed = true)
+        val documentRepository = mockk<DocumentRepository>()
         val partyService = mockk<PartyService>()
         val fileGenerator = mockk<FileGenerator>()
 
@@ -184,9 +183,9 @@ class HandlerTest : FunSpec({
     }
 
     test("returns AuthorizationError when requestedBy does not match authorized party") {
-        val businessHandler = mockk<DocumentBusinessHandler>(relaxed = true)
-        val signatureService = mockk<SignatureService>(relaxed = true)
-        val documentRepository = mockk<DocumentRepository>(relaxed = true)
+        val businessHandler = mockk<DocumentBusinessHandler>()
+        val signatureService = mockk<SignatureService>()
+        val documentRepository = mockk<DocumentRepository>()
         val partyService = mockk<PartyService>()
         val fileGenerator = mockk<FileGenerator>()
 
@@ -237,6 +236,32 @@ class HandlerTest : FunSpec({
 
         response.shouldBeLeft(CreateError.RequestedPartyError)
         coVerify(exactly = 0) { businessHandler.validateAndReturnDocumentCommand(any()) }
+    }
+
+    test("returns RequestedToRequestedFromMismatch when requestedTo differs from requestedFrom") {
+        val businessHandler = mockk<DocumentBusinessHandler>(relaxed = true)
+        val signatureService = mockk<SignatureService>(relaxed = true)
+        val documentRepository = mockk<DocumentRepository>(relaxed = true)
+        val partyService = mockk<PartyService>()
+        val fileGenerator = mockk<FileGenerator>()
+        val mismatchingRequestedToParty = AuthorizationParty(id = "person-2", type = PartyType.Person)
+
+        stubPartyResolution(partyService)
+        coEvery { partyService.resolve(PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "02020212345")) } returns
+            mismatchingRequestedToParty.right()
+
+        val handler = Handler(businessHandler, signatureService, documentRepository, partyService, fileGenerator)
+
+        val mismatchModel = model.copy(
+            coreMeta = model.coreMeta.copy(
+                requestedTo = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "02020212345")
+            )
+        )
+        val response = handler(mismatchModel)
+
+        response.shouldBeLeft(CreateError.RequestedToRequestedFromMismatch)
+        coVerify(exactly = 0) { businessHandler.validateAndReturnDocumentCommand(any()) }
+        coVerify(exactly = 0) { documentRepository.insert(any(), any()) }
     }
 
     test("returns BusinessValidationError when validation fails") {

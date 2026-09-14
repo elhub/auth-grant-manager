@@ -48,7 +48,7 @@ import java.util.UUID
 import no.elhub.auth.module as applicationModule
 
 const val REQUESTED_FROM_NIN = "02916297702"
-const val REQUESTED_TO_NIN = "14810797496"
+const val REQUESTED_TO_NIN = REQUESTED_FROM_NIN
 private const val CHANGE_OF_BALANCE_SUPPLIER_TEXT_VERSION = "v1"
 
 fun ApplicationTestBuilder.setUpAuthorizationRequestTestApplication() {

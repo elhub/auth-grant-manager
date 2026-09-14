@@ -114,13 +114,6 @@ sealed class MoveInAndChangeOfBalanceSupplierValidationError(
         )
 
     @Serializable
-    data object RequestedToRequestedFromMismatch :
-        MoveInAndChangeOfBalanceSupplierValidationError(
-            "requested_to_requested_from_mismatch",
-            "Requested to and requested from are not the same party"
-        )
-
-    @Serializable
     data object RequestedByNotFound :
         MoveInAndChangeOfBalanceSupplierValidationError("requested_by_not_found", "Requested by not found")
 

@@ -65,12 +65,15 @@ class Handler(
                 }
                 .bind()
 
+        ensure(requestedFromParty == requestedToParty) {
+            CreateError.RequestedToRequestedFromMismatch
+        }
+
         val businessModel = CreateRequestBusinessModel(
             authorizedParty = model.authorizedParty,
             requestType = model.requestType,
             requestedBy = requestedByParty,
             requestedFrom = requestedFromParty,
-            requestedTo = requestedToParty,
             meta = model.businessMeta
         )
 

@@ -37,11 +37,11 @@ class HandlerTest : FunSpec({
 
     val requestedByIdentifier = PartyIdentifier(PartyIdentifierType.OrganizationNumber, "987654321")
     val requestedFromIdentifier = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "01010112345")
-    val requestedToIdentifier = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "02020212345")
+    val requestedToIdentifier = requestedFromIdentifier
 
     val requestedByParty = AuthorizationParty(id = requestedByIdentifier.idValue, type = PartyType.OrganizationEntity)
     val requestedFromParty = AuthorizationParty(id = "person-1", type = PartyType.Person)
-    val requestedToParty = AuthorizationParty(id = "person-2", type = PartyType.Person)
+    val requestedToParty = requestedFromParty
 
     val coreMeta =
         CreateRequestCoreMeta(
@@ -74,7 +74,6 @@ class HandlerTest : FunSpec({
             requestType = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
             requestedBy = requestedByParty,
             requestedFrom = requestedFromParty,
-            requestedTo = requestedToParty,
             meta = businessMeta,
         )
 
@@ -104,9 +103,9 @@ class HandlerTest : FunSpec({
     }
 
     test("returns InvalidPartyTypeError when authorized party is not an OrganizationEntity") {
-        val businessHandler = mockk<ProxyRequestBusinessHandler>(relaxed = true)
+        val businessHandler = mockk<ProxyRequestBusinessHandler>()
         val partyService = mockk<PartyService>(relaxed = true)
-        val requestRepo = mockk<RequestRepository>(relaxed = true)
+        val requestRepo = mockk<RequestRepository>()
 
         val handler = Handler(businessHandler, partyService, requestRepo)
 
@@ -157,9 +156,9 @@ class HandlerTest : FunSpec({
     }
 
     test("returns RequestedPartyError when requestedBy cannot be resolved") {
-        val businessHandler = mockk<ProxyRequestBusinessHandler>(relaxed = true)
+        val businessHandler = mockk<ProxyRequestBusinessHandler>()
         val partyService = mockk<PartyService>()
-        val requestRepo = mockk<RequestRepository>(relaxed = true)
+        val requestRepo = mockk<RequestRepository>()
 
         coEvery { partyService.resolve(requestedByIdentifier) } returns PartyError.PersonResolutionError.left()
 
@@ -174,7 +173,7 @@ class HandlerTest : FunSpec({
     test("returns AuthorizationError when requestedBy does not match authorized party") {
         val businessHandler = mockk<ProxyRequestBusinessHandler>(relaxed = true)
         val partyService = mockk<PartyService>()
-        val requestRepo = mockk<RequestRepository>(relaxed = true)
+        val requestRepo = mockk<RequestRepository>()
 
         coEvery { partyService.resolve(requestedByIdentifier) } returns requestedByParty.right()
 
@@ -219,6 +218,30 @@ class HandlerTest : FunSpec({
 
         response.shouldBeLeft(CreateError.RequestedPartyError)
         coVerify(exactly = 0) { businessHandler.validateAndReturnRequestCommand(any()) }
+    }
+
+    test("returns RequestedToRequestedFromMismatch when requestedTo differs from requestedFrom") {
+        val businessHandler = mockk<ProxyRequestBusinessHandler>(relaxed = true)
+        val partyService = mockk<PartyService>()
+        val requestRepo = mockk<RequestRepository>(relaxed = true)
+        val mismatchingRequestedToParty = AuthorizationParty(id = "person-2", type = PartyType.Person)
+
+        stubPartyResolution(partyService)
+        coEvery { partyService.resolve(PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "02020212345")) } returns
+            mismatchingRequestedToParty.right()
+
+        val handler = Handler(businessHandler, partyService, requestRepo)
+
+        val mismatchModel = model.copy(
+            coreMeta = model.coreMeta.copy(
+                requestedTo = PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "02020212345")
+            )
+        )
+        val response = handler(mismatchModel)
+
+        response.shouldBeLeft(CreateError.RequestedToRequestedFromMismatch)
+        coVerify(exactly = 0) { businessHandler.validateAndReturnRequestCommand(any()) }
+        coVerify(exactly = 0) { requestRepo.insert(any(), any()) }
     }
 
     test("returns ValidationError when business validation fails") {
