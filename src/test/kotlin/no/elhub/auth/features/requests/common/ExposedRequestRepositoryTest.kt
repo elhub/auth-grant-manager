@@ -29,6 +29,7 @@ import no.elhub.auth.features.grants.AuthorizationScope
 import no.elhub.auth.features.grants.common.AuthorizationGrantProperty
 import no.elhub.auth.features.grants.common.AuthorizationGrantPropertyTable
 import no.elhub.auth.features.grants.common.AuthorizationScopeTable
+import no.elhub.auth.features.grants.common.ExposedAuditLogRepository
 import no.elhub.auth.features.grants.common.ExposedGrantPropertiesRepository
 import no.elhub.auth.features.grants.common.ExposedGrantRepository
 import no.elhub.auth.features.requests.AuthorizationRequest
@@ -53,7 +54,13 @@ class ExposedRequestRepositoryTest : FunSpec({
     val partyRepo = ExposedPartyRepository()
     val requestPropertiesRepo = ExposedRequestPropertiesRepository()
     val grantPropertiesRepository = ExposedGrantPropertiesRepository(transactionContext)
-    val grantRepository = ExposedGrantRepository(partyRepo, grantPropertiesRepository, transactionContext)
+    val auditLogRepository = ExposedAuditLogRepository(transactionContext)
+    val grantRepository = ExposedGrantRepository(
+        partyRepo,
+        grantPropertiesRepository,
+        auditLogRepository,
+        transactionContext,
+    )
     val requestRepo = ExposedRequestRepository(
         partyRepo,
         requestPropertiesRepo,

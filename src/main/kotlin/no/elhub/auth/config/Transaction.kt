@@ -1,7 +1,6 @@
 package no.elhub.auth.config
 
 import arrow.core.Either
-import arrow.core.left
 import arrow.core.raise.Raise
 import arrow.core.raise.either
 import io.micrometer.core.instrument.Tags
@@ -25,14 +24,18 @@ class TransactionContext(private val meterRegistry: PrometheusMeterRegistry) {
         onException: (Throwable) -> E,
         block: suspend Raise<E>.() -> A
     ): Either<E, A> =
+        // Run a db operation inside a transaction and record its elapsed time.
+        // On exception, trigger a rollback before mapping left.
         meterRegistry.measureTransaction(metricName, className, methodName) {
-            Either.catch { withTransaction { either<E, A> { block(this) } } }
-                .onLeft { e ->
-                    val sql = e as? SQLException
-                    logger.error("Transaction error [class={}, sqlState={}, errorCode={}]", e::class.qualifiedName, sql?.sqlState, sql?.errorCode)
-                }
-                .mapLeft(onException)
-                .fold({ it.left() }, { it })
+            either<E, A> {
+                Either.catch { withTransaction { block(this@either) } }
+                    .onLeft { e ->
+                        val sql = e as? SQLException
+                        logger.error("Transaction error [class={}, sqlState={}, errorCode={}]", e::class.qualifiedName, sql?.sqlState, sql?.errorCode)
+                    }
+                    .mapLeft(onException)
+                    .bind()
+            }
         }
 }
 
