@@ -57,6 +57,8 @@ dependencies {
     implementation(libs.json.skema)
     implementation(libs.elhub.jsonapi)
     implementation(libs.auth.pdp.plugin)
+    // Feature toggles
+    implementation(libs.unleash.client)
     // Unit Testing
     testImplementation(testFixtures(libs.elhub.jsonapi))
     testImplementation(libs.database.postgresql)
