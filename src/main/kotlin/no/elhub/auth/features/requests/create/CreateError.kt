@@ -12,6 +12,7 @@ sealed class CreateError {
     data object MappingError : CreateError()
     data object InvalidPartyTypeError : CreateError()
     data object AuthorizationError : CreateError()
+    data object RequestedToRequestedFromMismatch : CreateError()
     data object PersistenceError : CreateError()
     data object RequestedPartyError : CreateError()
     data object InvalidNinError : CreateError()
@@ -30,6 +31,12 @@ fun CreateError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollectio
             status = HttpStatusCode.Forbidden,
             title = "Party not authorized",
             detail = "RequestedBy must match the authorized party",
+        )
+
+        CreateError.RequestedToRequestedFromMismatch -> buildApiErrorResponse(
+            status = HttpStatusCode.UnprocessableEntity,
+            title = "Invalid authorization recipient",
+            detail = "RequestedTo is not allowed to represent RequestedFrom",
         )
 
         CreateError.InvalidNinError -> buildApiErrorResponse(

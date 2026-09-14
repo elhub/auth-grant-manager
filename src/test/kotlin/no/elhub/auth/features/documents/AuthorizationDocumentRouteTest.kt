@@ -495,10 +495,10 @@ class AuthorizationDocumentRouteTest :
                     enduserDocumentResponse == getDocumentResponse
                 }
 
-                test("Get created document should return 403 Not Authorized when authorized party is requestedTo") {
+                test("Get created document should return 403 Not Authorized for an unrelated party") {
                     pdpContainer.registerEnduserMapping(
                         token = "not-authorized",
-                        partyId = requestedToId
+                        partyId = "unrelated-person"
                     )
 
                     val response = client.get(linkToDocument) {
@@ -857,7 +857,7 @@ class AuthorizationDocumentRouteTest :
     })
 
 private const val REQUESTED_FROM_NIN = "02916297702"
-private const val REQUESTED_TO_NIN = "14810797496"
+private const val REQUESTED_TO_NIN = REQUESTED_FROM_NIN
 
 private class TestDocumentBusinessHandler : DocumentBusinessHandler {
     override suspend fun validateAndReturnDocumentCommand(
