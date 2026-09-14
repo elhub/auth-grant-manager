@@ -3,6 +3,7 @@ ktor:
     modules:
       - no.elhub.auth.ApplicationKt.module
       - no.elhub.auth.features.common.CommonModuleKt.commonModule
+      - no.elhub.auth.features.featuretoggles.ModuleKt.unleashModule
       - no.elhub.auth.features.common.CommonModuleKt.personServiceModule
       - no.elhub.auth.features.businessprocesses.datasharing.StromprisServiceModuleKt.stromprisServiceModule
       - no.elhub.auth.features.businessprocesses.ediel.EdielServiceModuleKt.edielServiceModule
@@ -75,6 +76,12 @@ idp:
 
 httpProxy:
   url: ${HTTP_PROXY_URL:}
+
+unleash:
+  enabled: ${UNLEASH_ENABLED:false}
+  url: ${UNLEASH_API_URL:}
+  apiToken: ${UNLEASH_API_TOKEN:}
+  appName: auth-grant-manager
 
 ediel:
   validateRedirectUriFeature: ${VALIDATE_REDIRECT_URI_FEATURE:true}
