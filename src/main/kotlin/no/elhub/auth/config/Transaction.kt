@@ -24,8 +24,8 @@ class TransactionContext(private val meterRegistry: PrometheusMeterRegistry) {
         onException: (Throwable) -> E,
         block: suspend Raise<E>.() -> A
     ): Either<E, A> =
-    // Run a db operation inside a transaction and record its elapsed time.
-    // On exception, trigger a rollback before mapping left.
+        // Run a db operation inside a transaction and record its elapsed time.
+        // On exception, trigger a rollback before mapping left.
         meterRegistry.measureTransaction(metricName, className, methodName) {
             either<E, A> {
                 Either.catch { withTransaction { block(this@either) } }
