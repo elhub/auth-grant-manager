@@ -13,6 +13,7 @@ import io.ktor.server.testing.testApplication
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import kotlinx.serialization.json.JsonPrimitive
 import no.elhub.auth.features.common.QueryError
 import no.elhub.auth.features.common.currentTimeUtc
 import no.elhub.auth.features.common.party.AuthorizationParty
@@ -135,9 +136,9 @@ class RouteTest : FunSpec({
             approvedBy = AuthorizationParty("nin1", PartyType.Person),
             grantId = UUID.randomUUID(),
             properties = listOf(
-                AuthorizationRequestProperty(UUID.fromString(validUuid), "requestedFromName", "Test Person"),
-                AuthorizationRequestProperty(UUID.fromString(validUuid), "balanceSupplierName", "Power AS"),
-                AuthorizationRequestProperty(UUID.fromString(validUuid), TEXT_VERSION_KEY, "v1")
+                AuthorizationRequestProperty(UUID.fromString(validUuid), "requestedFromName", JsonPrimitive("Test Person")),
+                AuthorizationRequestProperty(UUID.fromString(validUuid), "balanceSupplierName", JsonPrimitive("Power AS")),
+                AuthorizationRequestProperty(UUID.fromString(validUuid), TEXT_VERSION_KEY, JsonPrimitive("v1"))
             )
         )
         coEvery { handler.invoke(any()) } returns authorizationRequest.right()
@@ -163,9 +164,9 @@ class RouteTest : FunSpec({
             body.data.relationships.approvedBy!!.data.type shouldBe "Person"
             body.data.relationships.authorizationGrant!!.data.id shouldBe authorizationRequest.grantId.toString()
             body.data.relationships.authorizationGrant!!.data.type shouldBe "AuthorizationGrant"
-            body.data.meta.values["requestedFromName"] shouldBe "Test Person"
-            body.data.meta.values["balanceSupplierName"] shouldBe "Power AS"
-            body.data.meta.values[TEXT_VERSION_KEY] shouldBe "v1"
+            body.data.meta.values["requestedFromName"] shouldBe JsonPrimitive("Test Person")
+            body.data.meta.values["balanceSupplierName"] shouldBe JsonPrimitive("Power AS")
+            body.data.meta.values[TEXT_VERSION_KEY] shouldBe JsonPrimitive("v1")
             body.data.links.self shouldBe "$REQUESTS_PATH/${authorizationRequest.id}"
         }
         coVerify(exactly = 1) { handler.invoke(any()) }

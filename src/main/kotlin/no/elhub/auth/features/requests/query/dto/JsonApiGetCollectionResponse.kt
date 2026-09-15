@@ -15,6 +15,7 @@ import no.elhub.auth.features.requests.REQUESTS_PATH
 import no.elhub.auth.features.requests.common.dto.AuthorizationRequestResponseAttributes
 import no.elhub.auth.features.requests.common.dto.AuthorizationRequestResponseLinks
 import no.elhub.auth.features.requests.common.dto.AuthorizationRequestResponseRelationships
+import no.elhub.auth.features.requests.common.dto.toRequestResponseMetadata
 import no.elhub.devxp.jsonapi.model.JsonApiLinks
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipData
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipToOne
@@ -69,11 +70,7 @@ fun Page<AuthorizationRequest>.toGetCollectionResponse(
                     }
                 ),
                 meta = JsonApiResourceMetaMap(
-                    buildMap {
-                        request.properties.forEach { prop ->
-                            put(prop.key, prop.value)
-                        }
-                    }
+                    request.properties.toRequestResponseMetadata(request.type)
                 ),
                 links = AuthorizationRequestResponseLinks(
                     self = "$REQUESTS_PATH/${request.id}",

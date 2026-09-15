@@ -108,8 +108,8 @@ fun AuthorizationGrant.toSingleGrantResponse() =
             meta = this.properties.takeIf { it.isNotEmpty() }?.let {
                 JsonApiMeta(
                     buildJsonObject {
-                        this@toSingleGrantResponse.properties.forEach { prop ->
-                            put(prop.key, prop.value)
+                        this@toSingleGrantResponse.properties.toGrantResponseMetadata().forEach { (key, value) ->
+                            put(key, value)
                         }
                     }
                 )

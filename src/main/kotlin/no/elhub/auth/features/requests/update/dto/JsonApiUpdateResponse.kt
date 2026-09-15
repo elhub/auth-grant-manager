@@ -10,6 +10,7 @@ import no.elhub.auth.features.requests.REQUESTS_PATH
 import no.elhub.auth.features.requests.common.dto.AuthorizationRequestResponseAttributes
 import no.elhub.auth.features.requests.common.dto.AuthorizationRequestResponseLinks
 import no.elhub.auth.features.requests.common.dto.AuthorizationRequestResponseRelationships
+import no.elhub.auth.features.requests.common.dto.toRequestResponseMetadata
 import no.elhub.devxp.jsonapi.model.JsonApiLinks
 import no.elhub.devxp.jsonapi.model.JsonApiMeta
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipData
@@ -74,13 +75,7 @@ fun AuthorizationRequest.toUpdateResponse() = UpdateRequestResponse(
                 )
             },
         ),
-        meta = JsonApiResourceMetaMap(
-            buildMap {
-                this@toUpdateResponse.properties.forEach { prop ->
-                    put(prop.key, prop.value)
-                }
-            }
-        ),
+        meta = JsonApiResourceMetaMap(properties.toRequestResponseMetadata(type)),
         links = AuthorizationRequestResponseLinks(
             self = "${REQUESTS_PATH}/${this.id}"
         ),

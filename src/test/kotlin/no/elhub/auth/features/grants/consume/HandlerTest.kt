@@ -8,6 +8,7 @@ import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.core.spec.style.FunSpec
 import io.mockk.coEvery
 import io.mockk.mockk
+import kotlinx.serialization.json.JsonPrimitive
 import no.elhub.auth.features.common.RepositoryError
 import no.elhub.auth.features.common.RepositoryWriteError
 import no.elhub.auth.features.common.currentTimeUtc
@@ -49,7 +50,7 @@ class HandlerTest : FunSpec({
             AuthorizationGrantProperty(
                 grantId = grantId,
                 key = "moveInDate",
-                value = "2024-01-01"
+                value = JsonPrimitive("2024-01-01")
             )
         )
     )

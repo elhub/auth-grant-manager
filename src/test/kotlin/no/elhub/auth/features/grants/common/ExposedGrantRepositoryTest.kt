@@ -10,6 +10,9 @@ import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.plus
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import no.elhub.auth.config.TransactionContext
 import no.elhub.auth.config.withTransaction
 import no.elhub.auth.features.common.Pagination
@@ -96,6 +99,26 @@ class ExposedGrantRepositoryTest : FunSpec({
             // Should only have 1 grant in database
             AuthorizationGrantTable.selectAll().count() shouldBe 1
         }
+    }
+
+    test("grant properties preserve structured JSON values") {
+        grantRepo.insert(exampleGrantWithoutScopeIds).getOrElse { error(it) }
+        val meteringPoints = buildJsonArray {
+            add(buildJsonObject { put("id", "707057500000000001") })
+            add(buildJsonObject { put("id", "707057500000000002") })
+        }
+
+        grantPropertiesRepo.insert(
+            listOf(
+                AuthorizationGrantProperty(
+                    grantId = exampleGrantWithoutScopeIds.id,
+                    key = "meteringPoints",
+                    value = meteringPoints,
+                )
+            )
+        ).getOrElse { error(it) }
+
+        grantPropertiesRepo.findBy(exampleGrantWithoutScopeIds.id).single().value shouldBe meteringPoints
     }
 
     test("update grant status") {

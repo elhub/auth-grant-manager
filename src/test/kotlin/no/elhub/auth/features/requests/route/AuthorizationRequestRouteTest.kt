@@ -15,6 +15,7 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.server.testing.testApplication
+import kotlinx.serialization.json.JsonPrimitive
 import no.elhub.auth.features.common.ApiHeaders
 import no.elhub.auth.features.common.AuthPersonsTestContainerExtension
 import no.elhub.auth.features.common.PdpTestContainerExtension
@@ -217,11 +218,11 @@ class AuthorizationRequestRouteTest : FunSpec({
                         self.shouldNotBeNull()
                     }
                     meta.shouldNotBeNull().apply {
-                        values["requestedFromName"] shouldBe "Kari Normann"
-                        values["requestedForMeteringPointId"] shouldBe "1234567890123"
-                        values["requestedForMeteringPointAddress"] shouldBe "Example Street 1, 1234 Oslo"
-                        values["balanceSupplierName"] shouldBe "Example Energy AS"
-                        values["balanceSupplierContractName"] shouldBe "ExampleSupplierContract"
+                        values["requestedFromName"] shouldBe JsonPrimitive("Kari Normann")
+                        values["requestedForMeteringPointId"] shouldBe JsonPrimitive("1234567890123")
+                        values["requestedForMeteringPointAddress"] shouldBe JsonPrimitive("Example Street 1, 1234 Oslo")
+                        values["balanceSupplierName"] shouldBe JsonPrimitive("Example Energy AS")
+                        values["balanceSupplierContractName"] shouldBe JsonPrimitive("ExampleSupplierContract")
                     }
                 }
                 responseJson.links.shouldNotBeNull().apply {
@@ -279,12 +280,12 @@ class AuthorizationRequestRouteTest : FunSpec({
                         self.shouldNotBeNull()
                     }
                     meta.shouldNotBeNull().apply {
-                        values["requestedFromName"] shouldBe "Ola Normann"
-                        values["requestedForMeteringPointId"] shouldBe "1234567890123"
-                        values["requestedForMeteringPointAddress"] shouldBe "Example Street 1, 1234 Oslo"
-                        values["balanceSupplierName"] shouldBe "Example Energy AS"
-                        values["balanceSupplierContractName"] shouldBe "ExampleSupplierContract"
-                        values["redirectURI"] shouldBe "https://example.com/redirect"
+                        values["requestedFromName"] shouldBe JsonPrimitive("Ola Normann")
+                        values["requestedForMeteringPointId"] shouldBe JsonPrimitive("1234567890123")
+                        values["requestedForMeteringPointAddress"] shouldBe JsonPrimitive("Example Street 1, 1234 Oslo")
+                        values["balanceSupplierName"] shouldBe JsonPrimitive("Example Energy AS")
+                        values["balanceSupplierContractName"] shouldBe JsonPrimitive("ExampleSupplierContract")
+                        values["redirectURI"] shouldBe JsonPrimitive("https://example.com/redirect")
                     }
                     links.shouldNotBeNull().apply {
                         self.shouldNotBeNull()
@@ -347,12 +348,12 @@ class AuthorizationRequestRouteTest : FunSpec({
                         }
                     }
                     meta.shouldNotBeNull().apply {
-                        values["requestedFromName"] shouldBe "Hillary Orr"
-                        values["requestedForMeteringPointId"] shouldBe "123456789012345678"
-                        values["requestedForMeteringPointAddress"] shouldBe "quaerendum"
-                        values["balanceSupplierName"] shouldBe "Balance Supplier"
-                        values["balanceSupplierContractName"] shouldBe "Selena Chandler"
-                        values["redirectURI"] shouldBe "https://example.com/redirect"
+                        values["requestedFromName"] shouldBe JsonPrimitive("Hillary Orr")
+                        values["requestedForMeteringPointId"] shouldBe JsonPrimitive("123456789012345678")
+                        values["requestedForMeteringPointAddress"] shouldBe JsonPrimitive("quaerendum")
+                        values["balanceSupplierName"] shouldBe JsonPrimitive("Balance Supplier")
+                        values["balanceSupplierContractName"] shouldBe JsonPrimitive("Selena Chandler")
+                        values["redirectURI"] shouldBe JsonPrimitive("https://example.com/redirect")
                     }
                     links.shouldNotBeNull().apply {
                         self.shouldNotBeNull()
@@ -443,12 +444,12 @@ class AuthorizationRequestRouteTest : FunSpec({
                                 links.shouldNotBeNull()
                             }
                             meta.shouldNotBeNull().apply {
-                                values["requestedFromName"] shouldBe "Kasper Lind"
-                                values["requestedForMeteringPointId"] shouldBe "1234567890555"
-                                values["requestedForMeteringPointAddress"] shouldBe "Example Street 2, 0654 Oslo"
-                                values["balanceSupplierName"] shouldBe "Power AS"
-                                values["balanceSupplierContractName"] shouldBe "ExampleSupplierContract"
-                                values["textVersion"] shouldBe "v1"
+                                values["requestedFromName"] shouldBe JsonPrimitive("Kasper Lind")
+                                values["requestedForMeteringPointId"] shouldBe JsonPrimitive("1234567890555")
+                                values["requestedForMeteringPointAddress"] shouldBe JsonPrimitive("Example Street 2, 0654 Oslo")
+                                values["balanceSupplierName"] shouldBe JsonPrimitive("Power AS")
+                                values["balanceSupplierContractName"] shouldBe JsonPrimitive("ExampleSupplierContract")
+                                values["textVersion"] shouldBe JsonPrimitive("v1")
                             }
                         }
                     }

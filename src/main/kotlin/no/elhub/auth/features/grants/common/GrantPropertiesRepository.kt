@@ -1,6 +1,8 @@
 package no.elhub.auth.features.grants.common
 
 import arrow.core.Either
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
 import no.elhub.auth.config.TransactionContext
 import no.elhub.auth.features.common.RepositoryError
 import no.elhub.auth.features.common.RepositoryReadError
@@ -11,6 +13,7 @@ import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.jdbc.batchInsert
 import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.json.jsonb
 import java.util.UUID
 
 interface GrantPropertiesRepository {
@@ -55,7 +58,7 @@ class ExposedGrantPropertiesRepository(
 object AuthorizationGrantPropertyTable : Table("auth.authorization_grant_property") {
     val grantId = javaUUID("authorization_grant_id").references(AuthorizationGrantTable.id)
     val key = varchar("key", 64)
-    val value = text("value")
+    val value = jsonb<JsonElement>("value", Json)
 }
 
 internal fun ResultRow.toAuthorizationGrantProperty() = AuthorizationGrantProperty(

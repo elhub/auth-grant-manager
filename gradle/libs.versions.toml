@@ -55,6 +55,7 @@ database-exposed-core = { module = "org.jetbrains.exposed:exposed-core", version
 database-exposed-dao = { module = "org.jetbrains.exposed:exposed-dao", version.ref = "exposed" }
 database-exposed-java-time = { module = "org.jetbrains.exposed:exposed-java-time", version.ref = "exposed" }
 database-exposed-jdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposed" }
+database-exposed-json = { module = "org.jetbrains.exposed:exposed-json", version.ref = "exposed" }
 database-hikari = { group = "com.zaxxer", name = "HikariCP", version.ref = "hikari" }
 ktor-server-di = { group = "io.ktor", name = "ktor-server-di", version.ref = "ktor" }
 database-liquibase-core = { group = "org.liquibase", name = "liquibase-core", version.ref = "liquibase" }
@@ -110,7 +111,7 @@ itext-bouncy-castle-adapter = { group = "com.itextpdf", name = "bouncy-castle-ad
 
 # Bundles should be used to group dependencies that are frequently used together.
 [bundles]
-database = ["database-exposed-core", "database-exposed-dao", "database-exposed-java-time", "database-exposed-jdbc", "database-hikari",
+database = ["database-exposed-core", "database-exposed-dao", "database-exposed-java-time", "database-exposed-jdbc", "database-exposed-json", "database-hikari",
   "database-liquibase-core", "database-postgresql"]
 documentation = ["ktor-server-swagger"]
 functional-programming = ["fp-arrow-core", "fp-arrow-core-high-arity", "fp-arrow-fx-coroutines"]

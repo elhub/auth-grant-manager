@@ -17,6 +17,7 @@ import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
+import kotlinx.serialization.json.JsonPrimitive
 import no.elhub.auth.features.common.currentTimeOslo
 import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyIdentifier
@@ -59,8 +60,8 @@ class RouteTest : FunSpec({
         signedBy = null,
         grantId = UUID.fromString("8844261a-5221-455c-a6cd-12a0d60724c2"),
         properties = listOf(
-            AuthorizationDocumentProperty("key1", "value1"),
-            AuthorizationDocumentProperty("key2", "value2"),
+            AuthorizationDocumentProperty("requestedFromName", JsonPrimitive("value1")),
+            AuthorizationDocumentProperty("balanceSupplierName", JsonPrimitive("value2")),
         ),
         validTo = currentTimeOslo().plusDays(30),
         createdAt = currentTimeOslo(),
@@ -254,8 +255,8 @@ private suspend fun validateCreateDocumentResponse(response: HttpResponse, creat
             }
         }
         meta.shouldNotBeNull().apply {
-            values["key1"] shouldBe "value1"
-            values["key2"] shouldBe "value2"
+            values["requestedFromName"] shouldBe JsonPrimitive("value1")
+            values["balanceSupplierName"] shouldBe JsonPrimitive("value2")
         }
         links.self shouldBe "$DOCUMENTS_PATH/$id"
         links.file shouldBe "$DOCUMENTS_PATH/$id.pdf"
