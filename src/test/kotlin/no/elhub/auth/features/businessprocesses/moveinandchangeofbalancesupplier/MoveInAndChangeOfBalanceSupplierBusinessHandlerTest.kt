@@ -12,6 +12,7 @@ import io.mockk.mockk
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.plus
+import kotlinx.serialization.json.JsonPrimitive
 import no.elhub.auth.features.businessprocesses.BusinessProcessError
 import no.elhub.auth.features.businessprocesses.common.JwtTokenProvider
 import no.elhub.auth.features.businessprocesses.datasharing.Attributes
@@ -147,7 +148,7 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
 
             val command = handler.validateAndReturnRequestCommand(model).shouldBeRight()
             command.meta.toRequestMetaAttributes()["moveInDate"] shouldBe null
-            command.meta.toRequestMetaAttributes()[TEXT_VERSION_KEY] shouldBe "v1"
+            command.meta.toRequestMetaAttributes()[TEXT_VERSION_KEY] shouldBe JsonPrimitive("v1")
         }
 
         test("request validation fails on future moveInDate") {
@@ -740,9 +741,9 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
 
             command.type shouldBe AuthorizationRequest.Type.MoveInAndChangeOfBalanceSupplierForPerson
             command.validTo shouldBe todayOslo().plus(DatePeriod(days = 28)).toTimeZoneOffsetDateTimeAtStartOfDay()
-            command.meta.toRequestMetaAttributes()["moveInDate"] shouldBe VALID_MOVEIN_DATE.toString()
-            command.meta.toRequestMetaAttributes()["redirectURI"] shouldBe "https://example.com"
-            command.meta.toRequestMetaAttributes()[TEXT_VERSION_KEY] shouldBe "v1"
+            command.meta.toRequestMetaAttributes()["moveInDate"] shouldBe JsonPrimitive(VALID_MOVEIN_DATE.toString())
+            command.meta.toRequestMetaAttributes()["redirectURI"] shouldBe JsonPrimitive("https://example.com")
+            command.meta.toRequestMetaAttributes()[TEXT_VERSION_KEY] shouldBe JsonPrimitive("v1")
             command.meta.toRequestMetaAttributes().containsKey("requestedForMeterNumber") shouldBe true
         }
 
@@ -759,14 +760,14 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
                     AuthorizationRequestProperty(
                         requestId = UUID.randomUUID(),
                         key = "moveInDate",
-                        value = "2024-01-01"
+                        value = JsonPrimitive("2024-01-01")
                     )
                 )
             )
 
             val properties = handler.getCreateGrantProperties(request)
 
-            properties.meta.getValue("moveInDate") shouldBe "2024-01-01"
+            properties.meta.getValue("moveInDate") shouldBe JsonPrimitive("2024-01-01")
             properties.validFrom shouldBe todayOslo()
             properties.validTo shouldBe todayOslo().plus(DatePeriod(years = 1))
         }
@@ -790,8 +791,10 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
                 )
 
             val command = handler.validateAndReturnDocumentCommand(model).shouldBeRight()
-            command.meta.toMetaAttributes()["moveInDate"] shouldBe VALID_MOVEIN_DATE.toString()
-            command.meta.toMetaAttributes()["language"] shouldBe SupportedLanguage.DEFAULT.code
+            command.meta.toMetaAttributes()["moveInDate"] shouldBe
+                JsonPrimitive(VALID_MOVEIN_DATE.toString())
+            command.meta.toMetaAttributes()["language"] shouldBe
+                JsonPrimitive(SupportedLanguage.DEFAULT.code)
             command.meta.toMetaAttributes().containsKey("requestedForMeterNumber") shouldBe true
         }
     })

@@ -1,7 +1,11 @@
 package no.elhub.auth.features.businessprocesses.changeofbalancesupplier.domain
 
 import kotlinx.datetime.LocalDate
+import kotlinx.serialization.json.JsonPrimitive
+import no.elhub.auth.features.common.AuthorizationMetadata
+import no.elhub.auth.features.common.AuthorizationMetadataKeys
 import no.elhub.auth.features.common.CreateScopeData
+import no.elhub.auth.features.common.toStringAuthorizationMetadata
 import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.create.command.DocumentCommand
@@ -31,22 +35,24 @@ data class ChangeOfBalanceSupplierBusinessMeta(
     val redirectURI: String? = null,
 ) : RequestMetaMarker,
     DocumentMetaMarker {
-    private fun commonMetaAttributes(): Map<String, String> =
+    private fun commonMetaAttributes(): AuthorizationMetadata =
         buildMap {
-            put("requestedFromName", requestedFromName)
-            put("requestedForMeteringPointId", requestedForMeteringPointId)
-            put("requestedForMeterNumber", requestedForMeterNumber)
-            put("requestedForMeteringPointAddress", requestedForMeteringPointAddress)
-            put("balanceSupplierContractName", balanceSupplierContractName)
-            put("balanceSupplierName", balanceSupplierName)
-            language?.let { put("language", it.code) }
-            redirectURI?.let { put("redirectURI", it) }
-        }
+            put(AuthorizationMetadataKeys.REQUESTED_FROM_NAME, requestedFromName)
+            put(AuthorizationMetadataKeys.REQUESTED_FOR_METERING_POINT_ID, requestedForMeteringPointId)
+            put(AuthorizationMetadataKeys.REQUESTED_FOR_METER_NUMBER, requestedForMeterNumber)
+            put(AuthorizationMetadataKeys.REQUESTED_FOR_METERING_POINT_ADDRESS, requestedForMeteringPointAddress)
+            put(AuthorizationMetadataKeys.BALANCE_SUPPLIER_CONTRACT_NAME, balanceSupplierContractName)
+            put(AuthorizationMetadataKeys.BALANCE_SUPPLIER_NAME, balanceSupplierName)
+            language?.let { put(AuthorizationMetadataKeys.LANGUAGE, it.code) }
+        }.toStringAuthorizationMetadata()
 
-    override fun toRequestMetaAttributes(): Map<String, String> =
-        commonMetaAttributes().withTextVersion(CHANGE_OF_BALANCE_SUPPLIER_TEXT_VERSION)
+    override fun toRequestMetaAttributes(): AuthorizationMetadata =
+        buildMap {
+            putAll(commonMetaAttributes())
+            redirectURI?.let { put(AuthorizationMetadataKeys.REDIRECT_URI, JsonPrimitive(it)) }
+        }.withTextVersion(CHANGE_OF_BALANCE_SUPPLIER_TEXT_VERSION)
 
-    override fun toMetaAttributes(): Map<String, String> = commonMetaAttributes()
+    override fun toMetaAttributes(): AuthorizationMetadata = commonMetaAttributes()
 }
 
 fun ChangeOfBalanceSupplierBusinessCommand.toRequestCommand(): RequestCommand =

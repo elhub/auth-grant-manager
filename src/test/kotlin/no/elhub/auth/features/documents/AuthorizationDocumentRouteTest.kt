@@ -32,6 +32,7 @@ import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
+import kotlinx.serialization.json.JsonPrimitive
 import no.elhub.auth.features.businessprocesses.BusinessProcessError
 import no.elhub.auth.features.businessprocesses.changeofbalancesupplier.domain.ChangeOfBalanceSupplierBusinessMeta
 import no.elhub.auth.features.common.ApiHeaders
@@ -400,12 +401,12 @@ class AuthorizationDocumentRouteTest :
                             }
                         }
                         meta.shouldNotBeNull().apply {
-                            values["requestedFromName"] shouldBe "Hillary Orr"
-                            values["requestedForMeteringPointId"] shouldBe "123456789012345678"
-                            values["requestedForMeteringPointAddress"] shouldBe "quaerendum"
-                            values["balanceSupplierName"] shouldBe "Jami Wade"
-                            values["balanceSupplierContractName"] shouldBe "Selena Chandler"
-                            values["language"] shouldBe "nb"
+                            values["requestedFromName"] shouldBe JsonPrimitive("Hillary Orr")
+                            values["requestedForMeteringPointId"] shouldBe JsonPrimitive("123456789012345678")
+                            values["requestedForMeteringPointAddress"] shouldBe JsonPrimitive("quaerendum")
+                            values["balanceSupplierName"] shouldBe JsonPrimitive("Jami Wade")
+                            values["balanceSupplierContractName"] shouldBe JsonPrimitive("Selena Chandler")
+                            values["language"] shouldBe JsonPrimitive("nb")
                         }
                         links.self shouldBe "$DOCUMENTS_PATH/$id"
                         links.file shouldBe "$DOCUMENTS_PATH/$id.pdf"
@@ -463,11 +464,11 @@ class AuthorizationDocumentRouteTest :
                                 authorizationGrant.shouldBeNull()
                             }
                             meta.shouldNotBeNull().apply {
-                                values["requestedFromName"] shouldBe "Hillary Orr"
-                                values["requestedForMeteringPointId"] shouldBe "123456789012345678"
-                                values["requestedForMeteringPointAddress"] shouldBe "quaerendum"
-                                values["balanceSupplierName"] shouldBe "Jami Wade"
-                                values["balanceSupplierContractName"] shouldBe "Selena Chandler"
+                                values["requestedFromName"] shouldBe JsonPrimitive("Hillary Orr")
+                                values["requestedForMeteringPointId"] shouldBe JsonPrimitive("123456789012345678")
+                                values["requestedForMeteringPointAddress"] shouldBe JsonPrimitive("quaerendum")
+                                values["balanceSupplierName"] shouldBe JsonPrimitive("Jami Wade")
+                                values["balanceSupplierContractName"] shouldBe JsonPrimitive("Selena Chandler")
                             }
                             links.self shouldBe "$DOCUMENTS_PATH/$id"
                             links.file shouldBe "$DOCUMENTS_PATH/$id.pdf"
@@ -782,7 +783,7 @@ class AuthorizationDocumentRouteTest :
                     response.status shouldBe HttpStatusCode.Created
                     val createDocumentResponse: CreateDocumentResponse = response.body()
                     createDocumentResponse.data.meta.shouldNotBeNull().apply {
-                        values["language"] shouldBe "en"
+                        values["language"] shouldBe JsonPrimitive("en")
                     }
                 }
             }

@@ -11,6 +11,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
+import kotlinx.serialization.json.JsonPrimitive
 import no.elhub.auth.config.TransactionContext
 import no.elhub.auth.config.withTransaction
 import no.elhub.auth.features.common.CreateScopeData
@@ -419,8 +420,8 @@ class ExposedRequestRepositoryTest : FunSpec({
 
         requestPropertiesRepo.insert(
             listOf(
-                AuthorizationRequestProperty(savedRequest.id, "key1", "value1"),
-                AuthorizationRequestProperty(savedRequest.id, "key2", "value2"),
+                AuthorizationRequestProperty(savedRequest.id, "key1", JsonPrimitive("value1")),
+                AuthorizationRequestProperty(savedRequest.id, "key2", JsonPrimitive("value2")),
             )
         )
 
@@ -531,7 +532,11 @@ class ExposedRequestRepositoryTest : FunSpec({
                 validTo = currentTimeUtc().plusDays(365),
             )
             val grantProperties = listOf(
-                AuthorizationGrantProperty(grantId = grant.id, key = "meta-key", value = "meta-value"),
+                AuthorizationGrantProperty(
+                    grantId = grant.id,
+                    key = "meta-key",
+                    value = JsonPrimitive("meta-value"),
+                ),
             )
 
             val result = requestRepo.acceptWithGrant(
@@ -555,7 +560,8 @@ class ExposedRequestRepositoryTest : FunSpec({
                     .selectAll()
                     .where { AuthorizationGrantPropertyTable.grantId eq grant.id }
                     .map { it[AuthorizationGrantPropertyTable.key] to it[AuthorizationGrantPropertyTable.value] }
-                storedProperties shouldContainExactlyInAnyOrder listOf("meta-key" to "meta-value")
+                storedProperties shouldContainExactlyInAnyOrder
+                    listOf("meta-key" to JsonPrimitive("meta-value"))
             }
         }
 
@@ -577,8 +583,8 @@ class ExposedRequestRepositoryTest : FunSpec({
 
             requestPropertiesRepo.insert(
                 listOf(
-                    AuthorizationRequestProperty(savedRequest.id, "prop-key1", "prop-val1"),
-                    AuthorizationRequestProperty(savedRequest.id, "prop-key2", "prop-val2"),
+                    AuthorizationRequestProperty(savedRequest.id, "prop-key1", JsonPrimitive("prop-val1")),
+                    AuthorizationRequestProperty(savedRequest.id, "prop-key2", JsonPrimitive("prop-val2")),
                 )
             )
 

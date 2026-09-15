@@ -5,6 +5,9 @@ import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import no.elhub.auth.config.TransactionContext
 import no.elhub.auth.config.withTransaction
 import no.elhub.auth.features.common.PostgresTestContainer
@@ -81,8 +84,8 @@ class ExposedDocumentPropertiesRepositoryTest : FunSpec({
             documentRepository.insert(document, listOf())
 
             val properties = listOf(
-                AuthorizationDocumentProperty("requestedFromName", "Ola Normann"),
-                AuthorizationDocumentProperty("meteringPointId", "1234")
+                AuthorizationDocumentProperty("requestedFromName", JsonPrimitive("Ola Normann")),
+                AuthorizationDocumentProperty("meteringPointId", JsonPrimitive("1234"))
             )
 
             repository.insert(properties, document.id)
@@ -90,8 +93,8 @@ class ExposedDocumentPropertiesRepositoryTest : FunSpec({
             val document2 = document.copy(id = UUID.randomUUID())
             documentRepository.insert(document2, listOf())
             val propertiesDoc2 = listOf(
-                AuthorizationDocumentProperty("requestedFromName", "Alberto Balsalm"),
-                AuthorizationDocumentProperty("meteringPointId", "666")
+                AuthorizationDocumentProperty("requestedFromName", JsonPrimitive("Alberto Balsalm")),
+                AuthorizationDocumentProperty("meteringPointId", JsonPrimitive("666"))
             )
             repository.insert(propertiesDoc2, document2.id)
 
@@ -102,6 +105,34 @@ class ExposedDocumentPropertiesRepositoryTest : FunSpec({
 
         test("find returns empty map when no properties exist for document") {
             repository.find(listOf(UUID.randomUUID())) shouldBe mapOf()
+        }
+
+        test("insert structured property should preserve its JSON type") {
+            val document = AuthorizationDocument(
+                id = UUID.randomUUID(),
+                file = byteArrayOf(),
+                type = AuthorizationDocument.Type.ChangeOfBalanceSupplierForPerson,
+                status = AuthorizationDocument.Status.Pending,
+                requestedBy = AuthorizationParty(type = PartyType.Person, id = "1234567890"),
+                requestedFrom = AuthorizationParty(type = PartyType.Person, id = "1234567890"),
+                requestedTo = AuthorizationParty(type = PartyType.Person, id = "1234567890"),
+                properties = emptyList(),
+                validTo = currentTimeUtc().plusDays(1),
+                createdAt = currentTimeUtc(),
+                updatedAt = currentTimeUtc(),
+            )
+            documentRepository.insert(document, emptyList())
+            val agreement = buildJsonObject {
+                put("reference", "agreement-1")
+                put("name", "Framework agreement")
+            }
+
+            repository.insert(
+                listOf(AuthorizationDocumentProperty("agreement", agreement)),
+                document.id,
+            )
+
+            repository.find(listOf(document.id)).getValue(document.id).single().value shouldBe agreement
         }
     }
 })

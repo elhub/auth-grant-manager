@@ -10,6 +10,7 @@ import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.plus
+import kotlinx.serialization.json.JsonPrimitive
 import no.elhub.auth.features.common.QueryError
 import no.elhub.auth.features.common.RepositoryReadError
 import no.elhub.auth.features.common.currentTimeUtc
@@ -43,7 +44,7 @@ class HandlerTest : FunSpec({
         requestedBy = requestedBy,
         requestedFrom = requestedFrom,
         requestedTo = requestedTo,
-        properties = listOf(AuthorizationDocumentProperty(key = "k", value = "v")),
+        properties = listOf(AuthorizationDocumentProperty(key = "k", value = JsonPrimitive("v"))),
         validTo = validTo,
         createdAt = currentTimeUtc(),
         updatedAt = currentTimeUtc()

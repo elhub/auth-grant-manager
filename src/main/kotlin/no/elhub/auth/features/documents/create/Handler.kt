@@ -3,6 +3,7 @@ package no.elhub.auth.features.documents.create
 import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensure
+import no.elhub.auth.features.common.AuthorizationMetadata
 import no.elhub.auth.features.common.party.PartyError
 import no.elhub.auth.features.common.party.PartyService
 import no.elhub.auth.features.common.party.PartyType
@@ -130,7 +131,7 @@ class Handler(
         }
 }
 
-fun Map<String, String>.toDocumentProperties() =
+fun AuthorizationMetadata.toDocumentProperties() =
     this
         .map { (key, value) ->
             AuthorizationDocumentProperty(

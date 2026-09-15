@@ -26,6 +26,7 @@ import no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.Met
 import no.elhub.auth.features.businessprocesses.structuredata.organisations.OrganisationsService
 import no.elhub.auth.features.businessprocesses.structuredata.organisations.PartyStatus
 import no.elhub.auth.features.businessprocesses.structuredata.organisations.PartyType
+import no.elhub.auth.features.common.AuthorizationMetadata
 import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.common.todayOslo
 import no.elhub.auth.features.documents.AuthorizationDocument
@@ -132,7 +133,7 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandler(
     }
 
     private fun buildCreateGrantProperties(
-        propertyMap: Map<String, String>,
+        propertyMap: AuthorizationMetadata,
         allowedKeys: Set<String>
     ): CreateGrantProperties {
         val meta = propertyMap.filterKeys { it in allowedKeys }

@@ -17,6 +17,7 @@ import io.ktor.utils.io.toByteArray
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import kotlinx.serialization.json.JsonPrimitive
 import no.elhub.auth.features.common.QueryError
 import no.elhub.auth.features.common.currentTimeOslo
 import no.elhub.auth.features.common.party.AuthorizationParty
@@ -47,8 +48,8 @@ class RouteTest : FunSpec({
         signedBy = null,
         grantId = UUID.fromString("8844261a-5221-455c-a6cd-12a0d60724c2"),
         properties = listOf(
-            AuthorizationDocumentProperty("key1", "value1"),
-            AuthorizationDocumentProperty("key2", "value2"),
+            AuthorizationDocumentProperty("requestedFromName", JsonPrimitive("value1")),
+            AuthorizationDocumentProperty("balanceSupplierName", JsonPrimitive("value2")),
         ),
         validTo = currentTimeOslo().plusDays(30),
         createdAt = currentTimeOslo(),

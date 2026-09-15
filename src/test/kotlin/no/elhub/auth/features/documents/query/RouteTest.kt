@@ -13,6 +13,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import no.elhub.auth.features.common.Page
@@ -49,8 +50,8 @@ class RouteTest : FunSpec({
             signedBy = null,
             grantId = UUID.fromString("e6c038c6-4cba-41dc-af3b-ed027058504b"),
             properties = listOf(
-                AuthorizationDocumentProperty("key1", "value1"),
-                AuthorizationDocumentProperty("key2", "value2"),
+                AuthorizationDocumentProperty("requestedFromName", JsonPrimitive("value1")),
+                AuthorizationDocumentProperty("balanceSupplierName", JsonPrimitive("value2")),
             ),
             validTo = currentTimeOslo().plusDays(30),
             createdAt = currentTimeOslo(),
@@ -67,9 +68,9 @@ class RouteTest : FunSpec({
             signedBy = null,
             grantId = UUID.fromString("14b87e56-3070-4f8c-a1de-920b6b3b5cd7"),
             properties = listOf(
-                AuthorizationDocumentProperty("key1", "value1"),
-                AuthorizationDocumentProperty("key2", "value2"),
-                AuthorizationDocumentProperty("key3", "value3"),
+                AuthorizationDocumentProperty("requestedFromName", JsonPrimitive("value1")),
+                AuthorizationDocumentProperty("balanceSupplierName", JsonPrimitive("value2")),
+                AuthorizationDocumentProperty("language", JsonPrimitive("value3")),
             ),
             validTo = currentTimeOslo().plusDays(30),
             createdAt = currentTimeOslo(),
