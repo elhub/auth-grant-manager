@@ -9,6 +9,7 @@ import no.elhub.auth.features.documents.DOCUMENTS_PATH
 import no.elhub.auth.features.documents.common.dto.AuthorizationDocumentResponseAttributes
 import no.elhub.auth.features.documents.common.dto.AuthorizationDocumentResponseLinks
 import no.elhub.auth.features.documents.common.dto.AuthorizationDocumentResponseRelationships
+import no.elhub.auth.features.documents.common.dto.toDocumentResponseMetadata
 import no.elhub.devxp.jsonapi.model.JsonApiLinks
 import no.elhub.devxp.jsonapi.model.JsonApiMeta
 import no.elhub.devxp.jsonapi.model.JsonApiRelationshipData
@@ -54,13 +55,7 @@ fun AuthorizationDocument.toCreateDocumentResponse() = CreateDocumentResponse(
                 )
             )
         ),
-        meta = JsonApiResourceMetaMap(
-            buildMap {
-                this@toCreateDocumentResponse.properties.forEach { properties ->
-                    put(properties.key, properties.value)
-                }
-            }
-        ),
+        meta = JsonApiResourceMetaMap(properties.toDocumentResponseMetadata(type)),
         links = AuthorizationDocumentResponseLinks(
             self = "${DOCUMENTS_PATH}/${this.id}",
             file = "${DOCUMENTS_PATH}/${this.id}.pdf"

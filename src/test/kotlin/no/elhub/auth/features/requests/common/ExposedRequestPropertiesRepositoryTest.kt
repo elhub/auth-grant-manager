@@ -2,6 +2,10 @@ package no.elhub.auth.features.requests.common
 
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import no.elhub.auth.config.withTransaction
 import no.elhub.auth.features.common.PostgresTestContainer
 import no.elhub.auth.features.common.PostgresTestContainerExtension
@@ -59,8 +63,8 @@ class ExposedRequestPropertiesRepositoryTest : FunSpec({
 
         test("insert properties should persist to database") {
             val properties = listOf(
-                AuthorizationRequestProperty(requestId, "key1", "value1"),
-                AuthorizationRequestProperty(requestId, "key2", "value2"),
+                AuthorizationRequestProperty(requestId, "key1", JsonPrimitive("value1")),
+                AuthorizationRequestProperty(requestId, "key2", JsonPrimitive("value2")),
             )
 
             propertyRepo.insert(properties)
@@ -77,15 +81,15 @@ class ExposedRequestPropertiesRepositoryTest : FunSpec({
                         )
                     }
                 stored.size shouldBe 2
-                stored[0].value shouldBe "value1"
-                stored[1].value shouldBe "value2"
+                stored[0].value shouldBe JsonPrimitive("value1")
+                stored[1].value shouldBe JsonPrimitive("value2")
             }
         }
 
         test("insert properties with special characters should persist correctly") {
             val properties = listOf(
-                AuthorizationRequestProperty(requestId, "address", "Main Street 42, 5000 Bergen"),
-                AuthorizationRequestProperty(requestId, "name", "Kari Normann AS"),
+                AuthorizationRequestProperty(requestId, "address", JsonPrimitive("Main Street 42, 5000 Bergen")),
+                AuthorizationRequestProperty(requestId, "name", JsonPrimitive("Kari Normann AS")),
             )
 
             propertyRepo.insert(properties)
@@ -103,8 +107,23 @@ class ExposedRequestPropertiesRepositoryTest : FunSpec({
                     }
 
                 stored.size shouldBe 2
-                stored[0].value shouldBe "Main Street 42, 5000 Bergen"
-                stored[1].value shouldBe "Kari Normann AS"
+                stored[0].value shouldBe JsonPrimitive("Main Street 42, 5000 Bergen")
+                stored[1].value shouldBe JsonPrimitive("Kari Normann AS")
+            }
+        }
+
+        test("insert structured property should preserve its JSON type") {
+            val meteringPoints = buildJsonArray {
+                add(buildJsonObject { put("id", "707057500000000001") })
+                add(buildJsonObject { put("id", "707057500000000002") })
+            }
+
+            propertyRepo.insert(
+                listOf(AuthorizationRequestProperty(requestId, "meteringPoints", meteringPoints))
+            )
+
+            withTransaction {
+                propertyRepo.findBy(requestId).single().value shouldBe meteringPoints
             }
         }
     }

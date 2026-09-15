@@ -11,6 +11,7 @@ import io.mockk.mockk
 import kotlinx.datetime.LocalDate
 import no.elhub.auth.features.businessprocesses.BusinessProcessError
 import no.elhub.auth.features.businessprocesses.changeofbalancesupplier.ChangeOfBalanceSupplierValidationError
+import no.elhub.auth.features.common.AuthorizationMetadata
 import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.common.RepositoryWriteError
 import no.elhub.auth.features.common.party.AuthorizationParty
@@ -19,6 +20,7 @@ import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
 import no.elhub.auth.features.common.party.PartyService
 import no.elhub.auth.features.common.party.PartyType
+import no.elhub.auth.features.common.toStringAuthorizationMetadata
 import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
 import no.elhub.auth.features.grants.AuthorizationScope
 import no.elhub.auth.features.requests.AuthorizationRequest
@@ -79,8 +81,8 @@ class HandlerTest : FunSpec({
         )
 
     val commandMeta = object : RequestMetaMarker {
-        override fun toRequestMetaAttributes(): Map<String, String> =
-            mapOf("k" to "v").withTextVersion("v1")
+        override fun toRequestMetaAttributes(): AuthorizationMetadata =
+            mapOf("k" to "v").toStringAuthorizationMetadata().withTextVersion("v1")
     }
 
     val command =

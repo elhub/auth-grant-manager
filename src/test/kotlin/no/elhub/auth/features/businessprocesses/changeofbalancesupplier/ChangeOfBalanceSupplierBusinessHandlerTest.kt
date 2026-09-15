@@ -11,6 +11,7 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.plus
+import kotlinx.serialization.json.JsonPrimitive
 import no.elhub.auth.features.businessprocesses.BusinessProcessError
 import no.elhub.auth.features.businessprocesses.common.JwtTokenProvider
 import no.elhub.auth.features.businessprocesses.datasharing.Attributes
@@ -705,8 +706,8 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
 
             command.type shouldBe AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson
             command.validTo shouldBe todayOslo().plus(DatePeriod(days = 28)).toTimeZoneOffsetDateTimeAtStartOfDay()
-            command.meta.toRequestMetaAttributes()["redirectURI"] shouldBe "https://example.com"
-            command.meta.toRequestMetaAttributes()[TEXT_VERSION_KEY] shouldBe "v1"
+            command.meta.toRequestMetaAttributes()["redirectURI"] shouldBe JsonPrimitive("https://example.com")
+            command.meta.toRequestMetaAttributes()[TEXT_VERSION_KEY] shouldBe JsonPrimitive("v1")
             command.meta.toRequestMetaAttributes().containsKey("requestedForMeterNumber") shouldBe true
         }
 
@@ -745,8 +746,8 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
                 )
 
             val command = handler.validateAndReturnDocumentCommand(model).shouldBeRight()
-            command.meta.toMetaAttributes()["requestedFromName"] shouldBe "From"
-            command.meta.toMetaAttributes()["language"] shouldBe SupportedLanguage.DEFAULT.code
+            command.meta.toMetaAttributes()["requestedFromName"] shouldBe JsonPrimitive("From")
+            command.meta.toMetaAttributes()["language"] shouldBe JsonPrimitive(SupportedLanguage.DEFAULT.code)
             command.meta.toMetaAttributes().containsKey("requestedForMeterNumber") shouldBe true
         }
     })

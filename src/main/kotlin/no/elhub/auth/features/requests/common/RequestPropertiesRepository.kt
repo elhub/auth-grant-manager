@@ -1,5 +1,7 @@
 package no.elhub.auth.features.requests.common
 
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
 import no.elhub.auth.config.withTransaction
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.Table
@@ -7,6 +9,7 @@ import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.jdbc.batchInsert
 import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.json.jsonb
 import java.util.UUID
 
 interface RequestPropertiesRepository {
@@ -37,7 +40,7 @@ class ExposedRequestPropertiesRepository : RequestPropertiesRepository {
 object AuthorizationRequestPropertyTable : Table("auth.authorization_request_property") {
     val requestId = javaUUID("authorization_request_id").references(AuthorizationRequestTable.id)
     val key = varchar("key", 64)
-    val value = text("value")
+    val value = jsonb<JsonElement>("value", Json)
 }
 
 internal fun ResultRow.toAuthorizationRequestProperty() = AuthorizationRequestProperty(

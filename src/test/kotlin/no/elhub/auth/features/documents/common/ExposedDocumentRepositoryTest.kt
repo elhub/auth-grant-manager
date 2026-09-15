@@ -15,6 +15,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
+import kotlinx.serialization.json.JsonPrimitive
 import no.elhub.auth.config.TransactionContext
 import no.elhub.auth.config.withTransaction
 import no.elhub.auth.features.common.CreateScopeData
@@ -238,7 +239,11 @@ class ExposedDocumentRepositoryTest :
                         validTo = currentTimeUtc().plusDays(365)
                     )
                     val grantProperties = listOf(
-                        AuthorizationGrantProperty(grantId = grant.id, key = "meta-key", value = "meta-value")
+                        AuthorizationGrantProperty(
+                            grantId = grant.id,
+                            key = "meta-key",
+                            value = JsonPrimitive("meta-value"),
+                        )
                     )
                     repository.confirmWithGrant(
                         documentId = doc.id,
@@ -423,7 +428,11 @@ class ExposedDocumentRepositoryTest :
                     validTo = currentTimeUtc().plusDays(365)
                 )
                 val grantProperties = listOf(
-                    AuthorizationGrantProperty(grantId = grant.id, key = "meta-key", value = "meta-value")
+                    AuthorizationGrantProperty(
+                        grantId = grant.id,
+                        key = "meta-key",
+                        value = JsonPrimitive("meta-value"),
+                    )
                 )
 
                 val result = repository.confirmWithGrant(
@@ -448,7 +457,8 @@ class ExposedDocumentRepositoryTest :
                         .selectAll()
                         .where { AuthorizationGrantPropertyTable.grantId eq grant.id }
                         .map { it[AuthorizationGrantPropertyTable.key] to it[AuthorizationGrantPropertyTable.value] }
-                    storedProperties shouldContainExactlyInAnyOrder listOf("meta-key" to "meta-value")
+                    storedProperties shouldContainExactlyInAnyOrder
+                        listOf("meta-key" to JsonPrimitive("meta-value"))
                 }
             }
         }

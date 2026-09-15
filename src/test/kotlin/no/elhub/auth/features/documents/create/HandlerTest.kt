@@ -12,8 +12,10 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.plus
+import kotlinx.serialization.json.JsonPrimitive
 import no.elhub.auth.features.businessprocesses.BusinessProcessError
 import no.elhub.auth.features.businessprocesses.changeofbalancesupplier.ChangeOfBalanceSupplierValidationError
+import no.elhub.auth.features.common.AuthorizationMetadata
 import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.common.RepositoryWriteError
 import no.elhub.auth.features.common.party.AuthorizationParty
@@ -22,6 +24,7 @@ import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
 import no.elhub.auth.features.common.party.PartyService
 import no.elhub.auth.features.common.party.PartyType
+import no.elhub.auth.features.common.toStringAuthorizationMetadata
 import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
 import no.elhub.auth.features.common.todayOslo
 import no.elhub.auth.features.documents.AuthorizationDocument
@@ -83,8 +86,8 @@ class HandlerTest : FunSpec({
         )
 
     val commandMeta = object : DocumentMetaMarker {
-        override fun toMetaAttributes(): Map<String, String> =
-            mapOf("k" to "v", "language" to SupportedLanguage.DEFAULT.code)
+        override fun toMetaAttributes(): AuthorizationMetadata =
+            mapOf("k" to "v", "language" to SupportedLanguage.DEFAULT.code).toStringAuthorizationMetadata()
     }
 
     val command =
@@ -159,7 +162,9 @@ class HandlerTest : FunSpec({
         coVerify(exactly = 1) {
             documentRepository.insert(
                 match { document ->
-                    document.properties.any { it.key == "language" && it.value == SupportedLanguage.DEFAULT.code }
+                    document.properties.any {
+                        it.key == "language" && it.value == JsonPrimitive(SupportedLanguage.DEFAULT.code)
+                    }
                 },
                 command.scopes
             )

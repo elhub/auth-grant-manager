@@ -12,11 +12,13 @@ import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.plus
 import no.elhub.auth.features.businessprocesses.BusinessProcessError
 import no.elhub.auth.features.common.AuthPersonsTestContainer
+import no.elhub.auth.features.common.AuthorizationMetadata
 import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.common.commonModule
 import no.elhub.auth.features.common.party.PartyIdentifier
 import no.elhub.auth.features.common.party.PartyIdentifierType
 import no.elhub.auth.features.common.stubAuthPersonsTokenProvider
+import no.elhub.auth.features.common.toStringAuthorizationMetadata
 import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
 import no.elhub.auth.features.common.todayOslo
 import no.elhub.auth.features.grants.AuthorizationScope
@@ -151,7 +153,8 @@ fun insertAuthorizationRequest(
             it[validTo] = validToDate
         }
 
-        val requestProperties = properties.withTextVersion(CHANGE_OF_BALANCE_SUPPLIER_TEXT_VERSION)
+        val requestProperties =
+            properties.toStringAuthorizationMetadata().withTextVersion(CHANGE_OF_BALANCE_SUPPLIER_TEXT_VERSION)
         if (requestProperties.isNotEmpty()) {
             AuthorizationRequestPropertyTable.batchInsert(requestProperties.entries) { (key, value) ->
                 this[AuthorizationRequestPropertyTable.requestId] = requestId
@@ -184,7 +187,7 @@ data class TestRequestMeta(
     val balanceSupplierContractName: String,
     val redirectURI: String? = null,
 ) : RequestMetaMarker {
-    override fun toRequestMetaAttributes(): Map<String, String> =
+    override fun toRequestMetaAttributes(): AuthorizationMetadata =
         buildMap {
             put("requestedFromName", requestedFromName)
             put("requestedForMeteringPointId", requestedForMeteringPointId)
@@ -192,7 +195,7 @@ data class TestRequestMeta(
             put("balanceSupplierName", balanceSupplierName)
             put("balanceSupplierContractName", balanceSupplierContractName)
             redirectURI?.let { put("redirectURI", it) }
-        }.withTextVersion(CHANGE_OF_BALANCE_SUPPLIER_TEXT_VERSION)
+        }.toStringAuthorizationMetadata().withTextVersion(CHANGE_OF_BALANCE_SUPPLIER_TEXT_VERSION)
 }
 
 val examplePostBody = JsonApiCreateRequest(

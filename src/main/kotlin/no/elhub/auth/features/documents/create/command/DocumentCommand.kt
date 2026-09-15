@@ -1,11 +1,12 @@
 package no.elhub.auth.features.documents.create.command
 
+import no.elhub.auth.features.common.AuthorizationMetadata
 import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.documents.AuthorizationDocument
 import java.time.OffsetDateTime
 
 interface DocumentMetaMarker {
-    fun toMetaAttributes(): Map<String, String>
+    fun toMetaAttributes(): AuthorizationMetadata
 }
 
 data class DocumentCommand(

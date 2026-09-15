@@ -8,6 +8,7 @@ import com.openhtmltopdf.extend.FSSupplier
 import com.openhtmltopdf.outputdevice.helper.BaseRendererBuilder
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder
 import kotlinx.datetime.number
+import kotlinx.serialization.json.jsonPrimitive
 import no.elhub.auth.features.businessprocesses.changeofbalancesupplier.domain.ChangeOfBalanceSupplierBusinessMeta
 import no.elhub.auth.features.businessprocesses.moveinandchangeofbalancesupplier.domain.MoveInAndChangeOfBalanceSupplierBusinessMeta
 import no.elhub.auth.features.documents.create.DocumentGenerationError
@@ -255,6 +256,8 @@ class PdfGenerator(
     private fun resolveLanguage(documentMeta: DocumentMetaMarker): SupportedLanguage =
         documentMeta
             .toMetaAttributes()["language"]
+            ?.jsonPrimitive
+            ?.content
             ?.let { languageCode -> SupportedLanguage.entries.firstOrNull { it.code == languageCode } }
             ?: SupportedLanguage.DEFAULT
 
