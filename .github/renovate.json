@@ -1,5 +1,6 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["github>elhub/devxp-renovate"],
   "packageRules": [
     {
       "description": "Only propose paired Playwright updates targeting the same major.minor; wait if the image lags npm.",
