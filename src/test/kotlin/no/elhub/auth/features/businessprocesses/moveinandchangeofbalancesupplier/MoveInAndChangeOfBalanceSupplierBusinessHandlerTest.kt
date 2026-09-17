@@ -133,7 +133,6 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
                     requestType = AuthorizationRequest.Type.MoveInAndChangeOfBalanceSupplierForPerson,
                     requestedBy = VALID_PARTY,
                     requestedFrom = ANOTHER_END_USER,
-                    requestedTo = ANOTHER_END_USER,
                     meta =
                     CreateRequestBusinessMeta(
                         requestedFromName = "From",
@@ -158,7 +157,6 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
                     requestType = AuthorizationRequest.Type.MoveInAndChangeOfBalanceSupplierForPerson,
                     requestedBy = VALID_PARTY,
                     requestedFrom = ANOTHER_END_USER,
-                    requestedTo = ANOTHER_END_USER,
                     meta =
                     CreateRequestBusinessMeta(
                         requestedFromName = "From",
@@ -182,7 +180,6 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
                     requestType = AuthorizationRequest.Type.MoveInAndChangeOfBalanceSupplierForPerson,
                     requestedBy = VALID_PARTY,
                     requestedFrom = ANOTHER_END_USER,
-                    requestedTo = ANOTHER_END_USER,
                     meta =
                     CreateRequestBusinessMeta(
                         requestedFromName = "From",
@@ -205,7 +202,6 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
                     requestType = AuthorizationRequest.Type.MoveInAndChangeOfBalanceSupplierForPerson,
                     requestedBy = VALID_PARTY,
                     requestedFrom = ANOTHER_END_USER,
-                    requestedTo = ANOTHER_END_USER,
                     meta =
                     CreateRequestBusinessMeta(
                         requestedFromName = "From",
@@ -229,7 +225,6 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
                     requestType = AuthorizationRequest.Type.MoveInAndChangeOfBalanceSupplierForPerson,
                     requestedBy = VALID_PARTY,
                     requestedFrom = ANOTHER_END_USER,
-                    requestedTo = ANOTHER_END_USER,
                     meta =
                     CreateRequestBusinessMeta(
                         requestedFromName = "From",
@@ -253,7 +248,6 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
                     requestType = AuthorizationRequest.Type.MoveInAndChangeOfBalanceSupplierForPerson,
                     requestedBy = VALID_PARTY,
                     requestedFrom = ANOTHER_END_USER,
-                    requestedTo = ANOTHER_END_USER,
                     meta =
                     CreateRequestBusinessMeta(
                         requestedFromName = "From",
@@ -279,7 +273,6 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
                     requestType = AuthorizationRequest.Type.MoveInAndChangeOfBalanceSupplierForPerson,
                     requestedBy = VALID_PARTY,
                     requestedFrom = ANOTHER_END_USER,
-                    requestedTo = ANOTHER_END_USER,
                     meta =
                     CreateRequestBusinessMeta(
                         requestedFromName = "From",
@@ -317,7 +310,6 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
                     requestType = AuthorizationRequest.Type.MoveInAndChangeOfBalanceSupplierForPerson,
                     requestedBy = VALID_PARTY,
                     requestedFrom = ANOTHER_END_USER,
-                    requestedTo = ANOTHER_END_USER,
                     meta =
                     CreateRequestBusinessMeta(
                         requestedFromName = "From",
@@ -350,7 +342,6 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
                     requestType = AuthorizationRequest.Type.MoveInAndChangeOfBalanceSupplierForPerson,
                     requestedBy = VALID_PARTY,
                     requestedFrom = ANOTHER_END_USER,
-                    requestedTo = ANOTHER_END_USER,
                     meta =
                     CreateRequestBusinessMeta(
                         requestedFromName = "From",
@@ -375,7 +366,6 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
                     requestType = AuthorizationRequest.Type.MoveInAndChangeOfBalanceSupplierForPerson,
                     requestedBy = VALID_PARTY,
                     requestedFrom = ANOTHER_END_USER,
-                    requestedTo = ANOTHER_END_USER,
                     meta =
                     CreateRequestBusinessMeta(
                         requestedFromName = "From",
@@ -399,7 +389,6 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
                     requestType = AuthorizationRequest.Type.MoveInAndChangeOfBalanceSupplierForPerson,
                     requestedBy = VALID_PARTY,
                     requestedFrom = ANOTHER_END_USER,
-                    requestedTo = ANOTHER_END_USER,
                     meta =
                     CreateRequestBusinessMeta(
                         requestedFromName = "From",
@@ -423,7 +412,6 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
                     requestType = AuthorizationRequest.Type.MoveInAndChangeOfBalanceSupplierForPerson,
                     requestedBy = VALID_PARTY,
                     requestedFrom = ANOTHER_END_USER,
-                    requestedTo = ANOTHER_END_USER,
                     meta =
                     CreateRequestBusinessMeta(
                         requestedFromName = "From",
@@ -447,7 +435,6 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
                     requestType = AuthorizationRequest.Type.MoveInAndChangeOfBalanceSupplierForPerson,
                     requestedBy = VALID_PARTY,
                     requestedFrom = ANOTHER_END_USER,
-                    requestedTo = ANOTHER_END_USER,
                     meta =
                     CreateRequestBusinessMeta(
                         requestedFromName = "From",
@@ -471,7 +458,6 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
                     requestType = AuthorizationRequest.Type.MoveInAndChangeOfBalanceSupplierForPerson,
                     requestedBy = VALID_PARTY,
                     requestedFrom = END_USER,
-                    requestedTo = END_USER,
                     meta =
                     CreateRequestBusinessMeta(
                         requestedFromName = "From",
@@ -495,7 +481,6 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
                     requestType = AuthorizationRequest.Type.MoveInAndChangeOfBalanceSupplierForPerson,
                     requestedBy = VALID_PARTY,
                     requestedFrom = SHARED_END_USER,
-                    requestedTo = SHARED_END_USER,
                     meta =
                     CreateRequestBusinessMeta(
                         requestedFromName = "From",
@@ -518,7 +503,6 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
                     requestType = AuthorizationRequest.Type.MoveInAndChangeOfBalanceSupplierForPerson,
                     requestedBy = NOT_VALID_PARTY,
                     requestedFrom = ANOTHER_END_USER,
-                    requestedTo = ANOTHER_END_USER,
                     meta =
                     CreateRequestBusinessMeta(
                         requestedFromName = "From",
@@ -542,7 +526,6 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
                     requestType = AuthorizationRequest.Type.MoveInAndChangeOfBalanceSupplierForPerson,
                     requestedBy = NON_EXISTING_PARTY,
                     requestedFrom = ANOTHER_END_USER,
-                    requestedTo = ANOTHER_END_USER,
                     meta =
                     CreateRequestBusinessMeta(
                         requestedFromName = "From",
@@ -566,7 +549,6 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
                     requestType = AuthorizationRequest.Type.MoveInAndChangeOfBalanceSupplierForPerson,
                     requestedBy = INACTIVE_PARTY,
                     requestedFrom = ANOTHER_END_USER,
-                    requestedTo = ANOTHER_END_USER,
                     meta =
                     CreateRequestBusinessMeta(
                         requestedFromName = "From",
@@ -607,7 +589,6 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
                     requestType = AuthorizationRequest.Type.MoveInAndChangeOfBalanceSupplierForPerson,
                     requestedBy = VALID_PARTY,
                     requestedFrom = ANOTHER_END_USER,
-                    requestedTo = ANOTHER_END_USER,
                     meta =
                     CreateRequestBusinessMeta(
                         requestedFromName = "From",
@@ -648,7 +629,6 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
                     requestType = AuthorizationRequest.Type.MoveInAndChangeOfBalanceSupplierForPerson,
                     requestedBy = VALID_PARTY,
                     requestedFrom = ANOTHER_END_USER,
-                    requestedTo = ANOTHER_END_USER,
                     meta =
                     CreateRequestBusinessMeta(
                         requestedFromName = "From",
@@ -665,30 +645,6 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
                 .shouldBeLeft(BusinessProcessError.Unexpected(MoveInAndChangeOfBalanceSupplierValidationError.UnexpectedError.message))
         }
 
-        test("request validation fails on requested to not matching requested from") {
-            val model =
-                CreateRequestBusinessModel(
-                    authorizedParty = AUTHORIZED_PARTY,
-                    requestType = AuthorizationRequest.Type.MoveInAndChangeOfBalanceSupplierForPerson,
-                    requestedBy = VALID_PARTY,
-                    requestedFrom = SHARED_END_USER,
-                    requestedTo = ANOTHER_END_USER,
-                    meta =
-                    CreateRequestBusinessMeta(
-                        requestedFromName = "From",
-                        requestedForMeteringPointId = VALID_METERING_POINT_1,
-                        requestedForMeteringPointAddress = "addr",
-                        balanceSupplierName = "Supplier",
-                        balanceSupplierContractName = "Contract",
-                        moveInDate = VALID_MOVEIN_DATE,
-                        redirectURI = "https://example.com",
-                    ),
-                )
-
-            handler.validateAndReturnRequestCommand(model)
-                .shouldBeLeft(BusinessProcessError.Validation(MoveInAndChangeOfBalanceSupplierValidationError.RequestedToRequestedFromMismatch.message))
-        }
-
         test("strompris service is not called if validateBalanceSupplierContractName is false, assuming all previous validations pass") {
             val model =
                 CreateRequestBusinessModel(
@@ -696,7 +652,6 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
                     requestType = AuthorizationRequest.Type.MoveInAndChangeOfBalanceSupplierForPerson,
                     requestedBy = VALID_PARTY,
                     requestedFrom = ANOTHER_END_USER,
-                    requestedTo = ANOTHER_END_USER,
                     meta =
                     CreateRequestBusinessMeta(
                         requestedFromName = "From",
@@ -746,7 +701,6 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
                     requestType = AuthorizationRequest.Type.MoveInAndChangeOfBalanceSupplierForPerson,
                     requestedBy = VALID_PARTY,
                     requestedFrom = ANOTHER_END_USER,
-                    requestedTo = ANOTHER_END_USER,
                     meta =
                     CreateRequestBusinessMeta(
                         requestedFromName = "From",
@@ -770,7 +724,6 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
                     requestType = AuthorizationRequest.Type.MoveInAndChangeOfBalanceSupplierForPerson,
                     requestedBy = VALID_PARTY,
                     requestedFrom = ANOTHER_END_USER,
-                    requestedTo = ANOTHER_END_USER,
                     meta =
                     CreateRequestBusinessMeta(
                         requestedFromName = "From",
@@ -825,7 +778,6 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
                     documentType = AuthorizationDocument.Type.MoveInAndChangeOfBalanceSupplierForPerson,
                     requestedBy = VALID_PARTY,
                     requestedFrom = ANOTHER_END_USER,
-                    requestedTo = ANOTHER_END_USER,
                     meta =
                     CreateDocumentBusinessMeta(
                         requestedFromName = "From",

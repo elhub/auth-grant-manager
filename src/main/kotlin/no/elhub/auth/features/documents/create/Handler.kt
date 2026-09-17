@@ -69,12 +69,15 @@ class Handler(
                     }
                     .bind()
 
+            ensure(requestedFromParty == requestedToParty) {
+                CreateError.RequestedToRequestedFromMismatch
+            }
+
             val businessModel = CreateDocumentBusinessModel(
                 authorizedParty = model.authorizedParty,
                 documentType = model.documentType,
                 requestedBy = requestedByParty,
                 requestedFrom = requestedFromParty,
-                requestedTo = requestedToParty,
                 meta = model.businessMeta
             )
 

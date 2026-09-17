@@ -10,7 +10,6 @@ data class CreateDocumentBusinessModel(
     val documentType: AuthorizationDocument.Type,
     val requestedBy: AuthorizationParty,
     val requestedFrom: AuthorizationParty,
-    val requestedTo: AuthorizationParty,
     val meta: CreateDocumentBusinessMeta,
 )
 

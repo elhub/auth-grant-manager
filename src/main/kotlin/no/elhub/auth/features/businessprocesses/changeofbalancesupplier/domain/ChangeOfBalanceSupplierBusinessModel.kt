@@ -10,7 +10,6 @@ data class ChangeOfBalanceSupplierBusinessModel(
     val language: SupportedLanguage = SupportedLanguage.DEFAULT,
     val requestedBy: AuthorizationParty,
     val requestedFrom: AuthorizationParty,
-    val requestedTo: AuthorizationParty,
     val requestedFromName: String,
     val requestedForMeteringPointId: String,
     val requestedForMeteringPointAddress: String,
@@ -23,7 +22,6 @@ fun CreateRequestBusinessModel.toChangeOfBalanceSupplierBusinessModel(): ChangeO
     ChangeOfBalanceSupplierBusinessModel(
         requestedBy = this.requestedBy,
         requestedFrom = this.requestedFrom,
-        requestedTo = this.requestedTo,
         requestedFromName = this.meta.requestedFromName,
         requestedForMeteringPointId = this.meta.requestedForMeteringPointId,
         requestedForMeteringPointAddress = this.meta.requestedForMeteringPointAddress,
@@ -37,7 +35,6 @@ fun CreateDocumentBusinessModel.toChangeOfBalanceSupplierBusinessModel(): Change
         language = this.meta.language.toSupportedLanguage(),
         requestedBy = this.requestedBy,
         requestedFrom = this.requestedFrom,
-        requestedTo = this.requestedTo,
         requestedFromName = this.meta.requestedFromName,
         requestedForMeteringPointId = this.meta.requestedForMeteringPointId,
         requestedForMeteringPointAddress = this.meta.requestedForMeteringPointAddress,

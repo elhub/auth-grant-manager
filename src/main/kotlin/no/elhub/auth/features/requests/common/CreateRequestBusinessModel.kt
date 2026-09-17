@@ -9,7 +9,6 @@ data class CreateRequestBusinessModel(
     val requestType: AuthorizationRequest.Type,
     val requestedBy: AuthorizationParty,
     val requestedFrom: AuthorizationParty,
-    val requestedTo: AuthorizationParty,
     val meta: CreateRequestBusinessMeta,
 )
 
