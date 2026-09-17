@@ -7,7 +7,6 @@ import no.elhub.auth.features.common.party.PartyError
 import no.elhub.auth.features.common.party.PartyService
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.documents.AuthorizationDocument
-import no.elhub.auth.features.documents.common.AuthorizationDocumentProperty
 import no.elhub.auth.features.documents.common.CreateDocumentBusinessModel
 import no.elhub.auth.features.documents.common.DocumentBusinessHandler
 import no.elhub.auth.features.documents.common.DocumentRepository
@@ -102,10 +101,7 @@ class Handler(
                 .mapLeft { CreateError.SignFileError(cause = it) }
                 .bind()
 
-            val documentProperties =
-                command.meta
-                    .toMetaAttributes()
-                    .toDocumentProperties()
+            val documentProperties = command.meta.toMetaAttributes()
 
             val documentToCreate =
                 AuthorizationDocument.create(
@@ -129,12 +125,3 @@ class Handler(
             savedDocument
         }
 }
-
-fun Map<String, String>.toDocumentProperties() =
-    this
-        .map { (key, value) ->
-            AuthorizationDocumentProperty(
-                key = key,
-                value = value,
-            )
-        }.toList()

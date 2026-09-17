@@ -24,7 +24,6 @@ import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toTimeZoneOffsetString
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.DOCUMENTS_PATH
-import no.elhub.auth.features.documents.common.AuthorizationDocumentProperty
 import no.elhub.auth.features.documents.query.dto.GetDocumentCollectionResponse
 import no.elhub.auth.setupAppWith
 import no.elhub.auth.validateInternalServerErrorResponse
@@ -48,9 +47,9 @@ class RouteTest : FunSpec({
             requestedTo = toAuthParty,
             signedBy = null,
             grantId = UUID.fromString("e6c038c6-4cba-41dc-af3b-ed027058504b"),
-            properties = listOf(
-                AuthorizationDocumentProperty("key1", "value1"),
-                AuthorizationDocumentProperty("key2", "value2"),
+            properties = mapOf(
+                "key1" to "value1",
+                "key2" to "value2",
             ),
             validTo = currentTimeOslo().plusDays(30),
             createdAt = currentTimeOslo(),
@@ -66,10 +65,10 @@ class RouteTest : FunSpec({
             requestedTo = toAuthParty,
             signedBy = null,
             grantId = UUID.fromString("14b87e56-3070-4f8c-a1de-920b6b3b5cd7"),
-            properties = listOf(
-                AuthorizationDocumentProperty("key1", "value1"),
-                AuthorizationDocumentProperty("key2", "value2"),
-                AuthorizationDocumentProperty("key3", "value3"),
+            properties = mapOf(
+                "key1" to "value1",
+                "key2" to "value2",
+                "key3" to "value3",
             ),
             validTo = currentTimeOslo().plusDays(30),
             createdAt = currentTimeOslo(),
@@ -210,7 +209,7 @@ private suspend fun validateQueryResponse(response: HttpResponse, handlerDocumen
                 }
             }
             meta.apply {
-                values.map { it.key to it.value } shouldBe handlerDocuments[i].properties.map { it.key to it.value }
+                values shouldBe handlerDocuments[i].properties
             }
         }
     }

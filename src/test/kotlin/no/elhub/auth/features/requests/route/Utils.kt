@@ -22,7 +22,6 @@ import no.elhub.auth.features.common.todayOslo
 import no.elhub.auth.features.grants.AuthorizationScope
 import no.elhub.auth.features.grants.common.CreateGrantProperties
 import no.elhub.auth.features.requests.AuthorizationRequest
-import no.elhub.auth.features.requests.common.AuthorizationRequestPropertyTable
 import no.elhub.auth.features.requests.common.AuthorizationRequestTable
 import no.elhub.auth.features.requests.common.CreateRequestBusinessModel
 import no.elhub.auth.features.requests.common.DatabaseRequestStatus
@@ -39,7 +38,6 @@ import no.elhub.auth.features.requests.update.dto.JsonApiUpdateRequest
 import no.elhub.auth.features.requests.update.dto.UpdateRequestAttributes
 import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObject
 import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObjectWithMeta
-import org.jetbrains.exposed.v1.jdbc.batchInsert
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.time.OffsetDateTime
@@ -140,6 +138,7 @@ fun insertAuthorizationRequest(
     val requestedToId = UUID.fromString("11111111-1111-1111-1111-111111111111")
 
     transaction {
+        val requestProperties = properties.withTextVersion(CHANGE_OF_BALANCE_SUPPLIER_TEXT_VERSION)
         AuthorizationRequestTable.insert {
             it[id] = requestId
             it[requestType] = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson
@@ -149,15 +148,7 @@ fun insertAuthorizationRequest(
             it[requestedTo] = requestedToId
             it[approvedBy] = null
             it[validTo] = validToDate
-        }
-
-        val requestProperties = properties.withTextVersion(CHANGE_OF_BALANCE_SUPPLIER_TEXT_VERSION)
-        if (requestProperties.isNotEmpty()) {
-            AuthorizationRequestPropertyTable.batchInsert(requestProperties.entries) { (key, value) ->
-                this[AuthorizationRequestPropertyTable.requestId] = requestId
-                this[AuthorizationRequestPropertyTable.key] = key
-                this[AuthorizationRequestPropertyTable.value] = value
-            }
+            it[metadata] = requestProperties
         }
     }
 

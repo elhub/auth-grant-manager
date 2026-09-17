@@ -87,7 +87,7 @@ class RouteTest : FunSpec({
             requestedBy = requestedByParty,
             requestedTo = requestedToParty,
             requestedFrom = requestedFromParty,
-            properties = emptyList()
+            properties = emptyMap()
         )
         coEvery { handler.invoke(any()) } returns Page(listOf(authorizationRequest), 1L, Pagination()).right()
         testApplication {
@@ -124,7 +124,7 @@ class RouteTest : FunSpec({
             status = AuthorizationRequest.Status.Pending,
             validTo = currentTimeUtc(), createdAt = currentTimeUtc(), updatedAt = currentTimeUtc(),
             requestedBy = requestedByParty, requestedTo = requestedToParty, requestedFrom = requestedFromParty,
-            properties = emptyList()
+            properties = emptyMap()
         )
         val request2 = AuthorizationRequest(
             id = UUID.randomUUID(),
@@ -132,7 +132,7 @@ class RouteTest : FunSpec({
             status = AuthorizationRequest.Status.Accepted,
             validTo = currentTimeUtc(), createdAt = currentTimeUtc(), updatedAt = currentTimeUtc(),
             requestedBy = requestedByParty, requestedTo = requestedToParty, requestedFrom = requestedFromParty,
-            properties = emptyList()
+            properties = emptyMap()
         )
         coEvery { handler.invoke(any()) } returns Page(listOf(request1, request2), 2L, Pagination()).right()
         testApplication {

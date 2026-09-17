@@ -68,13 +68,7 @@ fun Page<AuthorizationRequest>.toGetCollectionResponse(
                         )
                     }
                 ),
-                meta = JsonApiResourceMetaMap(
-                    buildMap {
-                        request.properties.forEach { prop ->
-                            put(prop.key, prop.value)
-                        }
-                    }
-                ),
+                meta = JsonApiResourceMetaMap(request.properties),
                 links = AuthorizationRequestResponseLinks(
                     self = "$REQUESTS_PATH/${request.id}",
                 )

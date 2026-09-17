@@ -2,7 +2,6 @@ package no.elhub.auth.features.documents
 
 import no.elhub.auth.features.common.currentTimeUtc
 import no.elhub.auth.features.common.party.AuthorizationParty
-import no.elhub.auth.features.documents.common.AuthorizationDocumentProperty
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -16,7 +15,7 @@ data class AuthorizationDocument(
     val requestedTo: AuthorizationParty,
     val signedBy: AuthorizationParty? = null,
     val grantId: UUID? = null,
-    val properties: List<AuthorizationDocumentProperty>,
+    val properties: Map<String, String>,
     val validTo: OffsetDateTime,
     val createdAt: OffsetDateTime,
     val updatedAt: OffsetDateTime
@@ -29,7 +28,7 @@ data class AuthorizationDocument(
             requestedFrom: AuthorizationParty,
             requestedTo: AuthorizationParty,
             validTo: OffsetDateTime,
-            properties: List<AuthorizationDocumentProperty>,
+            properties: Map<String, String>,
         ): AuthorizationDocument = AuthorizationDocument(
             id = UUID.randomUUID(),
             type = type,

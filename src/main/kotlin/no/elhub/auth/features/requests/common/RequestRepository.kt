@@ -2,6 +2,7 @@ package no.elhub.auth.features.requests.common
 
 import arrow.core.Either
 import arrow.core.raise.either
+import kotlinx.serialization.json.Json
 import no.elhub.auth.config.TransactionContext
 import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.common.PGEnum
@@ -45,6 +46,7 @@ import org.jetbrains.exposed.v1.jdbc.batchInsert
 import org.jetbrains.exposed.v1.jdbc.insertReturning
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.update
+import org.jetbrains.exposed.v1.json.jsonb
 import java.util.UUID
 
 sealed interface AcceptWithGrantError {
@@ -85,7 +87,6 @@ interface RequestRepository {
 
 class ExposedRequestRepository(
     private val partyRepo: PartyRepository,
-    private val requestPropertiesRepository: RequestPropertiesRepository,
     private val grantRepository: GrantRepository,
     private val grantPropertiesRepository: GrantPropertiesRepository,
     private val transactionContext: TransactionContext,
@@ -124,8 +125,6 @@ class ExposedRequestRepository(
 
             if (requestRows.isEmpty()) return@transactionContext Page(emptyList(), totalItems, pagination)
 
-            val requestIds = requestRows.map { it[AuthorizationRequestTable.id].value }
-
             val allPartyIds = requestRows.flatMap {
                 listOfNotNull(
                     it[AuthorizationRequestTable.requestedBy],
@@ -139,15 +138,6 @@ class ExposedRequestRepository(
                 .where { AuthorizationPartyTable.id inList allPartyIds }
                 .associate { it[AuthorizationPartyTable.id].value to it.toAuthorizationParty() }
 
-            val propertiesByRequestId: Map<UUID, List<AuthorizationRequestProperty>> =
-                AuthorizationRequestPropertyTable
-                    .selectAll()
-                    .where { AuthorizationRequestPropertyTable.requestId inList requestIds }
-                    .groupBy(
-                        { it[AuthorizationRequestPropertyTable.requestId] },
-                        { it.toAuthorizationRequestProperty() }
-                    )
-
             val items = requestRows.map { row ->
                 val requestedBy = partyMap[row[AuthorizationRequestTable.requestedBy]]
                     ?: raise(RepositoryReadError.UnexpectedError)
@@ -158,12 +148,10 @@ class ExposedRequestRepository(
                 val approvedBy = row[AuthorizationRequestTable.approvedBy]?.let {
                     partyMap[it] ?: raise(RepositoryReadError.UnexpectedError)
                 }
-                val requestId = row[AuthorizationRequestTable.id].value
                 row.toAuthorizationRequest(
                     requestedBy = requestedBy,
                     requestedFrom = requestedFrom,
                     requestedTo = requestedTo,
-                    properties = propertiesByRequestId[requestId] ?: emptyList(),
                     approvedBy = approvedBy,
                 )
             }
@@ -250,17 +238,15 @@ class ExposedRequestRepository(
                         it[requestedTo] = requestedToParty.id
                         it[validTo] = request.validTo
                         it[createdAt] = request.createdAt
+                        it[metadata] = request.properties
                     }.single()
 
             handleScopes(scopes, insertedRequest)
-
-            requestPropertiesRepository.insert(request.properties)
 
             insertedRequest.toAuthorizationRequest(
                 requestedBy = requestedByParty,
                 requestedFrom = requestedFromParty,
                 requestedTo = requestedToParty,
-                properties = request.properties,
             )
         }
 
@@ -421,14 +407,10 @@ class ExposedRequestRepository(
                     .bind()
             }
 
-            val properties =
-                requestPropertiesRepository.findBy(requestId = request[AuthorizationRequestTable.id].value)
-
             request.toAuthorizationRequest(
                 requestedByParty,
                 requestedFromParty,
                 requestedToParty,
-                properties,
                 approvedByParty
             )
         }
@@ -464,6 +446,7 @@ object AuthorizationRequestTable : UUIDTable("auth.authorization_request") {
     val createdAt = timestampWithTimeZone("created_at").clientDefault { currentTimeUtc() }
     val updatedAt = timestampWithTimeZone("updated_at").clientDefault { currentTimeUtc() }
     val validTo = timestampWithTimeZone("valid_to").clientDefault { currentTimeUtc() }
+    val metadata = jsonb<Map<String, String>>("metadata", Json)
 }
 
 enum class DatabaseRequestStatus {
@@ -483,7 +466,6 @@ fun ResultRow.toAuthorizationRequest(
     requestedBy: AuthorizationPartyRecord,
     requestedFrom: AuthorizationPartyRecord,
     requestedTo: AuthorizationPartyRecord,
-    properties: List<AuthorizationRequestProperty>,
     approvedBy: AuthorizationPartyRecord? = null
 ): AuthorizationRequest {
     val dbStatus = this[AuthorizationRequestTable.requestStatus]
@@ -506,6 +488,6 @@ fun ResultRow.toAuthorizationRequest(
         createdAt = this[AuthorizationRequestTable.createdAt],
         updatedAt = this[AuthorizationRequestTable.updatedAt],
         validTo = validTo,
-        properties = properties
+        properties = this[AuthorizationRequestTable.metadata]
     )
 }

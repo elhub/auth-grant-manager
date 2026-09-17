@@ -24,7 +24,6 @@ import no.elhub.auth.features.common.party.PartyIdentifierType
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.documents.AuthorizationDocument
 import no.elhub.auth.features.documents.DOCUMENTS_PATH
-import no.elhub.auth.features.documents.common.AuthorizationDocumentProperty
 import no.elhub.auth.features.documents.create.dto.CreateDocumentMeta
 import no.elhub.auth.features.documents.create.dto.CreateDocumentRequestAttributes
 import no.elhub.auth.features.documents.create.dto.CreateDocumentResponse
@@ -58,9 +57,9 @@ class RouteTest : FunSpec({
         requestedTo = toAuthParty,
         signedBy = null,
         grantId = UUID.fromString("8844261a-5221-455c-a6cd-12a0d60724c2"),
-        properties = listOf(
-            AuthorizationDocumentProperty("key1", "value1"),
-            AuthorizationDocumentProperty("key2", "value2"),
+        properties = mapOf(
+            "key1" to "value1",
+            "key2" to "value2",
         ),
         validTo = currentTimeOslo().plusDays(30),
         createdAt = currentTimeOslo(),

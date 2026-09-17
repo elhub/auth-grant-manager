@@ -53,7 +53,6 @@ import no.elhub.auth.features.documents.common.CreateDocumentBusinessMeta
 import no.elhub.auth.features.documents.common.CreateDocumentBusinessModel
 import no.elhub.auth.features.filegenerator.SupportedLanguage
 import no.elhub.auth.features.requests.AuthorizationRequest
-import no.elhub.auth.features.requests.common.AuthorizationRequestProperty
 import no.elhub.auth.features.requests.common.CreateRequestBusinessMeta
 import no.elhub.auth.features.requests.common.CreateRequestBusinessModel
 import no.elhub.auth.features.requests.create.command.TEXT_VERSION_KEY
@@ -755,13 +754,7 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
                 requestedTo = party,
                 validTo = todayOslo().toTimeZoneOffsetDateTimeAtStartOfDay(),
             ).copy(
-                properties = listOf(
-                    AuthorizationRequestProperty(
-                        requestId = UUID.randomUUID(),
-                        key = "moveInDate",
-                        value = "2024-01-01"
-                    )
-                )
+                properties = mapOf("moveInDate" to "2024-01-01")
             )
 
             val properties = handler.getCreateGrantProperties(request)

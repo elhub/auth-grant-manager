@@ -74,13 +74,7 @@ fun AuthorizationRequest.toUpdateResponse() = UpdateRequestResponse(
                 )
             },
         ),
-        meta = JsonApiResourceMetaMap(
-            buildMap {
-                this@toUpdateResponse.properties.forEach { prop ->
-                    put(prop.key, prop.value)
-                }
-            }
-        ),
+        meta = JsonApiResourceMetaMap(properties),
         links = AuthorizationRequestResponseLinks(
             self = "${REQUESTS_PATH}/${this.id}"
         ),

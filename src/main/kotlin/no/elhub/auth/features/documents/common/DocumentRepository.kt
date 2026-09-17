@@ -1,6 +1,7 @@
 package no.elhub.auth.features.documents.common
 
 import arrow.core.Either
+import kotlinx.serialization.json.Json
 import no.elhub.auth.config.TransactionContext
 import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.common.PGEnum
@@ -47,6 +48,7 @@ import org.jetbrains.exposed.v1.jdbc.insertReturning
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.update
+import org.jetbrains.exposed.v1.json.jsonb
 import java.util.UUID
 
 sealed interface ConfirmWithGrantError {
@@ -86,7 +88,6 @@ interface DocumentRepository {
 class ExposedDocumentRepository(
     private val partyRepo: PartyRepository,
     private val grantRepo: GrantRepository,
-    private val documentPropertiesRepository: DocumentPropertiesRepository,
     private val grantPropertiesRepository: GrantPropertiesRepository,
     private val transactionContext: TransactionContext,
 ) : DocumentRepository {
@@ -119,9 +120,8 @@ class ExposedDocumentRepository(
                 it[validTo] = doc.validTo
                 it[createdAt] = doc.createdAt
                 it[updatedAt] = doc.updatedAt
+                it[metadata] = doc.properties
             }.single()
-
-            documentPropertiesRepository.insert(doc.properties, doc.id)
 
             val scopeIds: List<UUID> = AuthorizationScopeTable
                 .batchInsert(scopes) { scope ->
@@ -136,7 +136,7 @@ class ExposedDocumentRepository(
                 this[authorizationDocumentId] = documentRow[AuthorizationDocumentTable.id].value
                 this[authorizationScopeId] = scopeId
             }
-            documentRow.toAuthorizationDocument(requestedByParty, requestedFromParty, requestedToParty, doc.properties)
+            documentRow.toAuthorizationDocument(requestedByParty, requestedFromParty, requestedToParty)
         }
 
     override suspend fun find(id: UUID): Either<RepositoryReadError, AuthorizationDocument> =
@@ -154,8 +154,6 @@ class ExposedDocumentRepository(
             val requestedByParty = resolveParty(documentRow[AuthorizationDocumentTable.requestedBy]).bind()
             val requestedFromParty = resolveParty(documentRow[AuthorizationDocumentTable.requestedFrom]).bind()
             val requestedToParty = resolveParty(documentRow[AuthorizationDocumentTable.requestedTo]).bind()
-            val properties = documentPropertiesRepository.find(listOf(id)).values.firstOrNull() ?: emptyList()
-
             val signatory = SignatoriesTable
                 .select(listOf(SignatoriesTable.signedBy))
                 .where { (SignatoriesTable.authorizationDocumentId eq id) }
@@ -166,7 +164,6 @@ class ExposedDocumentRepository(
                 requestedBy = requestedByParty,
                 requestedFrom = requestedFromParty,
                 requestedTo = requestedToParty,
-                properties = properties,
                 signedBy = signatory
             )
         }
@@ -277,8 +274,6 @@ class ExposedDocumentRepository(
                     party.id to party
                 }
 
-            val propertiesByDocumentId = documentPropertiesRepository.find(documentIds)
-
             val items = documentRows.map { row ->
                 val requestedByParty = partiesById[row[AuthorizationDocumentTable.requestedBy]]
                     ?: raise(RepositoryReadError.UnexpectedError)
@@ -288,13 +283,10 @@ class ExposedDocumentRepository(
                     ?: raise(RepositoryReadError.UnexpectedError)
                 val docId = row[AuthorizationDocumentTable.id].value
                 val signedByParty = signatoryByDocumentId[docId]?.let { partiesById[it] }
-                val properties = propertiesByDocumentId[row[AuthorizationDocumentTable.id].value] ?: emptyList()
-
                 row.toAuthorizationDocument(
                     requestedByParty,
                     requestedFromParty,
                     requestedToParty,
-                    properties,
                     signedByParty
                 )
             }
@@ -403,6 +395,7 @@ object AuthorizationDocumentTable : UUIDTable("auth.authorization_document") {
     val validTo = timestampWithTimeZone("valid_to").clientDefault { currentTimeUtc() }
     val createdAt = timestampWithTimeZone("created_at").clientDefault { currentTimeUtc() }
     val updatedAt = timestampWithTimeZone("updated_at").clientDefault { currentTimeUtc() }
+    val metadata = jsonb<Map<String, String>>("metadata", Json)
 }
 
 object AuthorizationDocumentScopeTable : Table("auth.authorization_document_scope") {
@@ -427,7 +420,6 @@ fun ResultRow.toAuthorizationDocument(
     requestedBy: AuthorizationPartyRecord,
     requestedFrom: AuthorizationPartyRecord,
     requestedTo: AuthorizationPartyRecord,
-    properties: List<AuthorizationDocumentProperty>,
     signedBy: AuthorizationPartyRecord? = null
 ): AuthorizationDocument {
     val dbStatus = this[AuthorizationDocumentTable.status]
@@ -452,6 +444,6 @@ fun ResultRow.toAuthorizationDocument(
         createdAt = this[AuthorizationDocumentTable.createdAt],
         updatedAt = this[AuthorizationDocumentTable.updatedAt],
         validTo = validTo,
-        properties = properties
+        properties = this[AuthorizationDocumentTable.metadata]
     )
 }

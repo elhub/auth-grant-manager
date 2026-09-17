@@ -5,9 +5,7 @@ import io.ktor.server.config.ApplicationConfig
 import io.ktor.server.plugins.di.dependencies
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
-import no.elhub.auth.features.documents.common.DocumentPropertiesRepository
 import no.elhub.auth.features.documents.common.DocumentRepository
-import no.elhub.auth.features.documents.common.ExposedDocumentPropertiesRepository
 import no.elhub.auth.features.documents.common.ExposedDocumentRepository
 import no.elhub.auth.features.documents.common.ITextPdfSignatureService
 import no.elhub.auth.features.documents.create.FileCertificateProvider
@@ -72,8 +70,7 @@ fun Application.module() {
             )
         }
         provide<FileGenerator> { PdfGenerator(resolve()) }
-        provide<DocumentRepository> { ExposedDocumentRepository(resolve(), resolve(), resolve(), resolve(), resolve()) }
-        provide<DocumentPropertiesRepository> { ExposedDocumentPropertiesRepository() }
+        provide<DocumentRepository> { ExposedDocumentRepository(resolve(), resolve(), resolve(), resolve()) }
         provide<ConfirmHandler> { ConfirmHandler(resolve(), resolve(), resolve(), resolve()) }
         provide<CreateHandler> { CreateHandler(resolve(), resolve(), resolve(), resolve(), resolve()) }
         provide<GetHandler> { GetHandler(resolve(), resolve()) }

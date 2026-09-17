@@ -54,13 +54,7 @@ fun AuthorizationDocument.toCreateDocumentResponse() = CreateDocumentResponse(
                 )
             )
         ),
-        meta = JsonApiResourceMetaMap(
-            buildMap {
-                this@toCreateDocumentResponse.properties.forEach { properties ->
-                    put(properties.key, properties.value)
-                }
-            }
-        ),
+        meta = JsonApiResourceMetaMap(properties),
         links = AuthorizationDocumentResponseLinks(
             self = "${DOCUMENTS_PATH}/${this.id}",
             file = "${DOCUMENTS_PATH}/${this.id}.pdf"

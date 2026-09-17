@@ -45,7 +45,7 @@ class RouteTest : FunSpec({
         createdAt = currentTimeUtc(),
         updatedAt = currentTimeUtc(),
         validTo = currentTimeUtc().plusDays(30),
-        properties = emptyList()
+        properties = emptyMap()
     )
 
     val examplePostBody = JsonApiCreateRequest(
@@ -93,7 +93,7 @@ class RouteTest : FunSpec({
             body.data.relationships.requestedFrom.data.type shouldBe requestedFromParty.type.name
             body.data.relationships.requestedTo.data.id shouldBe requestedToParty.id
             body.data.relationships.requestedTo.data.type shouldBe requestedToParty.type.name
-            body.data.meta.values shouldBe authorizationRequest.properties.associate { it.key to it.value }
+            body.data.meta.values shouldBe authorizationRequest.properties
             body.data.links.self shouldBe "$REQUESTS_PATH/${authorizationRequest.id}"
             coVerify(exactly = 1) { handler.invoke(any()) }
         }

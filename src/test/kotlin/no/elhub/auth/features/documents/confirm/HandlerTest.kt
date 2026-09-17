@@ -59,7 +59,7 @@ class HandlerTest : FunSpec({
         requestedBy = requestedBy,
         requestedFrom = requestedFrom,
         requestedTo = requestedTo,
-        properties = emptyList(),
+        properties = emptyMap(),
         validTo = validTo,
         createdAt = currentTimeUtc(),
         updatedAt = currentTimeUtc(),

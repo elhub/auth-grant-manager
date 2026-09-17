@@ -61,13 +61,7 @@ fun AuthorizationDocument.toGetSingleResponse() =
                     )
                 },
             ),
-            meta = JsonApiResourceMetaMap(
-                buildMap {
-                    this@toGetSingleResponse.properties.forEach {
-                        put(it.key, it.value)
-                    }
-                }
-            ),
+            meta = JsonApiResourceMetaMap(properties),
             links = AuthorizationDocumentResponseLinks(
                 self = "${DOCUMENTS_PATH}/${this.id}",
                 file = "${DOCUMENTS_PATH}/${this.id}.pdf"

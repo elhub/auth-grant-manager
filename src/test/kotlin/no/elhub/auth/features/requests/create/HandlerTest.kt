@@ -22,7 +22,6 @@ import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
 import no.elhub.auth.features.grants.AuthorizationScope
 import no.elhub.auth.features.requests.AuthorizationRequest
-import no.elhub.auth.features.requests.common.AuthorizationRequestProperty
 import no.elhub.auth.features.requests.common.CreateRequestBusinessMeta
 import no.elhub.auth.features.requests.common.CreateRequestBusinessModel
 import no.elhub.auth.features.requests.common.ProxyRequestBusinessHandler
@@ -133,16 +132,7 @@ class HandlerTest : FunSpec({
                 validTo = command.validTo,
             )
 
-        val expectedProperties =
-            commandMeta
-                .toRequestMetaAttributes()
-                .map { (key, value) ->
-                    AuthorizationRequestProperty(
-                        requestId = savedRequest.id,
-                        key = key,
-                        value = value,
-                    )
-                }
+        val expectedProperties = commandMeta.toRequestMetaAttributes()
 
         coEvery { requestRepo.insert(any(), any()) } returns savedRequest.copy(properties = expectedProperties).right()
 

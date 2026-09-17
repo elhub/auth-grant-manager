@@ -8,10 +8,8 @@ import no.elhub.auth.features.grants.common.ExposedGrantPropertiesRepository
 import no.elhub.auth.features.grants.common.ExposedGrantRepository
 import no.elhub.auth.features.grants.common.GrantPropertiesRepository
 import no.elhub.auth.features.grants.common.GrantRepository
-import no.elhub.auth.features.requests.common.ExposedRequestPropertiesRepository
 import no.elhub.auth.features.requests.common.ExposedRequestRepository
 import no.elhub.auth.features.requests.common.ProxyRequestBusinessHandler
-import no.elhub.auth.features.requests.common.RequestPropertiesRepository
 import no.elhub.auth.features.requests.common.RequestRepository
 import no.elhub.auth.plugin.policies.token.base.authinfo.AuthInfoPolicy
 import no.elhub.auth.plugin.tokenAuthorize
@@ -30,8 +28,7 @@ fun Application.module() {
     dependencies {
         provide<GrantRepository> { ExposedGrantRepository(resolve(), resolve(), resolve()) }
         provide<GrantPropertiesRepository> { ExposedGrantPropertiesRepository(resolve()) }
-        provide<RequestPropertiesRepository> { ExposedRequestPropertiesRepository() }
-        provide<RequestRepository> { ExposedRequestRepository(resolve(), resolve(), resolve(), resolve(), resolve()) }
+        provide<RequestRepository> { ExposedRequestRepository(resolve(), resolve(), resolve(), resolve()) }
         provide<ProxyRequestBusinessHandler> { ProxyRequestBusinessHandler(resolve(), resolve()) }
         provide<UpdateHandler> { UpdateHandler(resolve(), resolve()) }
         provide<CreateHandler> { CreateHandler(resolve(), resolve(), resolve()) }

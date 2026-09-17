@@ -19,7 +19,6 @@ import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.requests.AuthorizationRequest
 import no.elhub.auth.features.requests.REQUESTS_PATH
-import no.elhub.auth.features.requests.common.AuthorizationRequestProperty
 import no.elhub.auth.features.requests.get.dto.GetRequestSingleResponse
 import no.elhub.auth.setupAppWith
 import no.elhub.auth.validateMalformedInputResponse
@@ -92,7 +91,7 @@ class RouteTest : FunSpec({
             requestedBy = requestedByParty,
             requestedTo = requestedToParty,
             requestedFrom = requestedFromParty,
-            properties = emptyList()
+            properties = emptyMap()
         )
         coEvery { handler.invoke(any()) } returns authorizationRequest.right()
         testApplication {
@@ -134,10 +133,10 @@ class RouteTest : FunSpec({
             requestedFrom = requestedFromParty,
             approvedBy = AuthorizationParty("nin1", PartyType.Person),
             grantId = UUID.randomUUID(),
-            properties = listOf(
-                AuthorizationRequestProperty(UUID.fromString(validUuid), "requestedFromName", "Test Person"),
-                AuthorizationRequestProperty(UUID.fromString(validUuid), "balanceSupplierName", "Power AS"),
-                AuthorizationRequestProperty(UUID.fromString(validUuid), TEXT_VERSION_KEY, "v1")
+            properties = mapOf(
+                "requestedFromName" to "Test Person",
+                "balanceSupplierName" to "Power AS",
+                TEXT_VERSION_KEY to "v1",
             )
         )
         coEvery { handler.invoke(any()) } returns authorizationRequest.right()

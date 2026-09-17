@@ -55,13 +55,7 @@ fun AuthorizationRequest.toCreateResponse() =
                     )
                 ),
             ),
-            meta = JsonApiResourceMetaMap(
-                buildMap {
-                    this@toCreateResponse.properties.forEach { prop ->
-                        put(prop.key, prop.value)
-                    }
-                }
-            ),
+            meta = JsonApiResourceMetaMap(properties),
             links = AuthorizationRequestResponseLinks(
                 self = "${REQUESTS_PATH}/${this.id}"
             ),

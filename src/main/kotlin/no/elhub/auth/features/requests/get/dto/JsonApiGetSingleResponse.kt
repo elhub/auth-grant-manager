@@ -54,13 +54,7 @@ fun AuthorizationRequest.toGetSingleResponse() =
                     )
                 }
             ),
-            meta = JsonApiResourceMetaMap(
-                buildMap {
-                    this@toGetSingleResponse.properties.forEach { prop ->
-                        put(prop.key, prop.value)
-                    }
-                }
-            ),
+            meta = JsonApiResourceMetaMap(properties),
             links = AuthorizationRequestResponseLinks(
                 self = "${REQUESTS_PATH}/${this.id}"
             ),

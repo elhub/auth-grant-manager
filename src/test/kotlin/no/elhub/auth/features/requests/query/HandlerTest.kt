@@ -40,7 +40,7 @@ class HandlerTest : FunSpec({
         requestedFrom = requestedFromParty,
         approvedBy = approvedBy,
         grantId = grantId,
-        properties = emptyList()
+        properties = emptyMap()
     )
 
     fun requestRepoReturning(page: Page<AuthorizationRequest>): RequestRepository =

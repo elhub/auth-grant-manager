@@ -46,14 +46,12 @@ class ExposedDocumentRepositoryTest :
         extensions(PostgresTestContainerExtension())
         val transactionContext = TransactionContext(PrometheusMeterRegistry(PrometheusConfig.DEFAULT))
         val partyRepository = ExposedPartyRepository()
-        val propertiesRepository = ExposedDocumentPropertiesRepository()
         val grantPropertiesRepository = ExposedGrantPropertiesRepository(transactionContext)
         val grantRepository = ExposedGrantRepository(partyRepository, grantPropertiesRepository, transactionContext)
         val repository =
             ExposedDocumentRepository(
                 partyRepository,
                 grantRepository,
-                propertiesRepository,
                 grantPropertiesRepository,
                 transactionContext,
             )
@@ -86,7 +84,7 @@ class ExposedDocumentRepositoryTest :
                         requestedFrom = AuthorizationParty(type = PartyType.Person, id = "1234567890"),
                         requestedTo = AuthorizationParty(type = PartyType.Person, id = "1234567890"),
                         signedBy = AuthorizationParty(type = PartyType.Person, id = "1234567890"),
-                        properties = emptyList(),
+                        properties = mapOf("language" to "nb", "moveInDate" to "2026-09-17"),
                         validTo = currentTimeUtc().plusDays(1),
                         createdAt = currentTimeUtc(),
                         updatedAt = currentTimeUtc()
@@ -107,6 +105,7 @@ class ExposedDocumentRepositoryTest :
                 // Then
                 val documentExists = repository.find(document.id)
                 documentExists shouldNotBe null
+                documentExists.getOrNull()?.properties shouldBe document.properties
 
                 withTransaction {
                     val authorizationDocumentScopeRow =
@@ -145,7 +144,7 @@ class ExposedDocumentRepositoryTest :
                     requestedFrom = AuthorizationParty(type = PartyType.Person, id = "from-1"),
                     requestedTo = AuthorizationParty(type = PartyType.Person, id = "to-1"),
                     signedBy = AuthorizationParty(type = PartyType.Person, id = "signer-1"),
-                    properties = emptyList(),
+                    properties = emptyMap(),
                     validTo = currentTimeUtc().plusDays(1),
                     createdAt = currentTimeUtc(),
                     updatedAt = currentTimeUtc()
@@ -161,7 +160,7 @@ class ExposedDocumentRepositoryTest :
                     requestedTo = AuthorizationParty(type = PartyType.Person, id = "to-2"),
                     signedBy = AuthorizationParty(type = PartyType.Person, id = "signer-2"),
                     createdAt = currentTimeUtc(),
-                    properties = emptyList(),
+                    properties = emptyMap(),
                     validTo = currentTimeUtc().plusDays(1),
                     updatedAt = currentTimeUtc()
                 )
@@ -197,7 +196,7 @@ class ExposedDocumentRepositoryTest :
                     requestedFrom = party,
                     requestedTo = party,
                     signedBy = party,
-                    properties = emptyList(),
+                    properties = emptyMap(),
                     validTo = currentTimeUtc().plusDays(1),
                     createdAt = currentTimeUtc(),
                     updatedAt = currentTimeUtc()
@@ -316,7 +315,7 @@ class ExposedDocumentRepositoryTest :
                 requestedBy = requestedBy,
                 requestedFrom = AuthorizationParty(type = PartyType.Person, id = "from-p"),
                 requestedTo = AuthorizationParty(type = PartyType.Person, id = "to-p"),
-                properties = emptyList(),
+                properties = emptyMap(),
                 validTo = currentTimeUtc().plusDays(1),
                 createdAt = currentTimeUtc(),
                 updatedAt = currentTimeUtc()
@@ -405,7 +404,7 @@ class ExposedDocumentRepositoryTest :
                     requestedFrom = requestedFrom,
                     requestedTo = requestedTo,
                     signedBy = null,
-                    properties = emptyList(),
+                    properties = emptyMap(),
                     validTo = currentTimeUtc().plusDays(30),
                     createdAt = currentTimeUtc(),
                     updatedAt = currentTimeUtc()

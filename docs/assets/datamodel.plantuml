@@ -96,16 +96,10 @@ entity AuthorizationRequest {
   requestedBy: UUID, FK→AuthorizationParty  /' The party that made the request '/
   requestedFrom: UUID, FK→AuthorizationParty /' The party that the request is made to '/
   requestedTo: UUID, FK→AuthorizationParty   /' The party that is expected to respond to the request '/
+  metadata: JSONB
   createdAt: DateTime
   updatedAt: DateTime
   validTo: Date
-}
-
-entity AuthorizationRequestProperty {
-  authorizationRequestId: UUID, FK→AuthorizationRequest
-  key: String
-  --
-  value: String
 }
 
 ' In this model it is assumed that the metadata is stored in the document.
@@ -119,16 +113,9 @@ entity AuthorizationDocument {
   requestedBy: UUID, FK→AuthorizationParty  /' The party that requested the document '/
   requestedFrom: UUID, FK→AuthorizationParty /' The party that the document is issued for '/
   requestedTo: UUID, FK→AuthorizationParty   /' The party that is expected to sign the document '/
+  metadata: JSONB
   createdAt: DateTime
   updatedAt: DateTime
-}
-
-entity AuthorizationDocumentProperty {
-  authorizationDocumentId: UUID, FK→AuthorizationDocument
-  key: String
-  --
-  value: String
-  createdAt: DateTime
 }
 
 entity AuthorizationDocumentSignatories {
@@ -182,14 +169,12 @@ AuthorizationScope --> PermissionType
 AuthorizationScope "1" *-- "0..*" AuthorizationGrantScope
 AuthorizationScope "1" *-- "0..*" AuthorizationRequestScope
 AuthorizationScope "1" *-- "0..*" AuthorizationDocumentScope
-AuthorizationDocument "1" *-- "0..*" AuthorizationDocumentProperty
 AuthorizationDocument "1" *-- AuthorizationDocumentSignatories
 AuthorizationDocument "1..*" *-- "*" AuthorizationDocumentScope
 AuthorizationDocument --> DocumentType
 AuthorizationDocument --> AuthorizationDocumentStatus
 AuthorizationDocument --> AuthorizationParty
 AuthorizationDocumentSignatories -> AuthorizationParty
-AuthorizationRequest "1" *-- "0..*" AuthorizationRequestProperty
 AuthorizationRequest "1" *-- "1..*" AuthorizationRequestScope
 AuthorizationRequest --> RequestType
 AuthorizationRequest --> RequestStatus

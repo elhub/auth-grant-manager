@@ -143,7 +143,7 @@ class HandlerTest : FunSpec({
             requestedBy = requestedByParty,
             requestedFrom = requestedFromParty,
             requestedTo = requestedToParty,
-            properties = commandMeta.toMetaAttributes().toDocumentProperties(),
+            properties = commandMeta.toMetaAttributes(),
             validTo = command.validTo,
         )
         coEvery { documentRepository.insert(any(), command.scopes) } returns savedDocument.right()
@@ -158,7 +158,7 @@ class HandlerTest : FunSpec({
         coVerify(exactly = 1) {
             documentRepository.insert(
                 match { document ->
-                    document.properties.any { it.key == "language" && it.value == SupportedLanguage.DEFAULT.code }
+                    document.properties["language"] == SupportedLanguage.DEFAULT.code
                 },
                 command.scopes
             )

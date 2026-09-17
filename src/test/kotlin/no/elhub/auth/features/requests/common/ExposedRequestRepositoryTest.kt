@@ -51,12 +51,10 @@ class ExposedRequestRepositoryTest : FunSpec({
     )
     val transactionContext = TransactionContext(PrometheusMeterRegistry(PrometheusConfig.DEFAULT))
     val partyRepo = ExposedPartyRepository()
-    val requestPropertiesRepo = ExposedRequestPropertiesRepository()
     val grantPropertiesRepository = ExposedGrantPropertiesRepository(transactionContext)
     val grantRepository = ExposedGrantRepository(partyRepo, grantPropertiesRepository, transactionContext)
     val requestRepo = ExposedRequestRepository(
         partyRepo,
-        requestPropertiesRepo,
         grantRepository,
         grantPropertiesRepository,
         transactionContext
@@ -407,27 +405,21 @@ class ExposedRequestRepositoryTest : FunSpec({
         val rejectedRequest = requestRepo.rejectRequest(savedRequest.id)
             .getOrElse { fail("reject failed") }
 
-        rejectedRequest.properties.size shouldBe 0
+        rejectedRequest.properties shouldBe emptyMap()
         rejectedRequest.status shouldBe AuthorizationRequest.Status.Rejected
     }
 
     test("reject authorization request with properties") {
-        val request = generateRequestWithoutProperties()
+        val properties = mapOf("key1" to "value1", "key2" to "value2")
+        val request = generateRequestWithoutProperties().copy(properties = properties)
         val savedRequest = requestRepo
             .insert(request, scopes)
             .getOrElse { fail("insert failed") }
 
-        requestPropertiesRepo.insert(
-            listOf(
-                AuthorizationRequestProperty(savedRequest.id, "key1", "value1"),
-                AuthorizationRequestProperty(savedRequest.id, "key2", "value2"),
-            )
-        )
-
         val rejectedRequest = requestRepo.rejectRequest(savedRequest.id)
             .getOrElse { fail("reject failed") }
 
-        rejectedRequest.properties.size shouldBe 2
+        rejectedRequest.properties shouldBe properties
         rejectedRequest.status shouldBe AuthorizationRequest.Status.Rejected
     }
 
@@ -571,16 +563,11 @@ class ExposedRequestRepositoryTest : FunSpec({
                     requestedFrom = requestedFrom,
                     requestedTo = approvedBy,
                     validTo = OffsetDateTime.now(ZoneOffset.UTC).plusDays(30),
+                ).copy(
+                    properties = mapOf("prop-key1" to "prop-val1", "prop-key2" to "prop-val2")
                 ),
                 scopes
             ).getOrElse { fail("insert failed") }
-
-            requestPropertiesRepo.insert(
-                listOf(
-                    AuthorizationRequestProperty(savedRequest.id, "prop-key1", "prop-val1"),
-                    AuthorizationRequestProperty(savedRequest.id, "prop-key2", "prop-val2"),
-                )
-            )
 
             val grant = AuthorizationGrant.create(
                 grantedFor = requestedFrom,
@@ -601,7 +588,7 @@ class ExposedRequestRepositoryTest : FunSpec({
             ).getOrElse { fail("acceptWithGrant failed") }
 
             acceptedRequest.status shouldBe AuthorizationRequest.Status.Accepted
-            acceptedRequest.properties.size shouldBe 2
+            acceptedRequest.properties shouldBe mapOf("prop-key1" to "prop-val1", "prop-key2" to "prop-val2")
             acceptedRequest.approvedBy shouldNotBe null
         }
     }

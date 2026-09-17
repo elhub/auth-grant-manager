@@ -105,7 +105,7 @@ class RouteTest : FunSpec({
             requestedTo = requestedToParty,
             requestedFrom = requestedFromParty,
             id = UUID.fromString(authorizedPerson.id),
-            properties = emptyList()
+            properties = emptyMap()
         )
         coEvery { handler.invoke(any()) } returns authorizationRequest.right()
         testApplication {

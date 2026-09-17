@@ -23,7 +23,6 @@ import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.common.toTimeZoneOffsetString
 import no.elhub.auth.features.documents.AuthorizationDocument
-import no.elhub.auth.features.documents.common.AuthorizationDocumentProperty
 import no.elhub.auth.features.documents.get.dto.GetDocumentSingleResponse
 import no.elhub.auth.setupAppWith
 import no.elhub.auth.validateInternalServerErrorResponse
@@ -46,9 +45,9 @@ class RouteTest : FunSpec({
         requestedTo = toAuthParty,
         signedBy = null,
         grantId = UUID.fromString("8844261a-5221-455c-a6cd-12a0d60724c2"),
-        properties = listOf(
-            AuthorizationDocumentProperty("key1", "value1"),
-            AuthorizationDocumentProperty("key2", "value2"),
+        properties = mapOf(
+            "key1" to "value1",
+            "key2" to "value2",
         ),
         validTo = currentTimeOslo().plusDays(30),
         createdAt = currentTimeOslo(),
@@ -156,7 +155,7 @@ private suspend fun validateGetByIdResponse(response: HttpResponse, handlerDocum
             }
         }
         meta.apply {
-            values.map { it.key to it.value } shouldBe handlerDocument.properties.map { it.key to it.value }
+            values shouldBe handlerDocument.properties
         }
     }
 }

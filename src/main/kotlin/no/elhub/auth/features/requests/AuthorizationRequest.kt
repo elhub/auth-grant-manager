@@ -2,7 +2,6 @@ package no.elhub.auth.features.requests
 
 import no.elhub.auth.features.common.currentTimeUtc
 import no.elhub.auth.features.common.party.AuthorizationParty
-import no.elhub.auth.features.requests.common.AuthorizationRequestProperty
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -18,7 +17,7 @@ data class AuthorizationRequest(
     val createdAt: OffsetDateTime,
     val updatedAt: OffsetDateTime,
     val validTo: OffsetDateTime,
-    val properties: List<AuthorizationRequestProperty>,
+    val properties: Map<String, String>,
 ) {
     companion object {
         fun create(
@@ -38,7 +37,7 @@ data class AuthorizationRequest(
                 createdAt = currentTimeUtc(),
                 updatedAt = currentTimeUtc(),
                 validTo = validTo,
-                properties = emptyList(),
+                properties = emptyMap(),
             )
     }
 

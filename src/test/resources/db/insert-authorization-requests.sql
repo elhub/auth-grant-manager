@@ -198,72 +198,29 @@ VALUES (
   '2026-10-28 11:10:22.000000+00'
 );
 
-INSERT INTO auth.authorization_request_property(authorization_request_id, key, value)
-VALUES ('d81e5bf2-8a0c-4348-a788-2a3fab4e77d6', 'requestedFromName', 'Kasper Lind');
-INSERT INTO auth.authorization_request_property(authorization_request_id, key, value)
-VALUES ('d81e5bf2-8a0c-4348-a788-2a3fab4e77d6', 'requestedForMeteringPointId', '1234567890555');
-INSERT INTO auth.authorization_request_property(authorization_request_id, key, value)
-VALUES ('d81e5bf2-8a0c-4348-a788-2a3fab4e77d6', 'requestedForMeteringPointAddress', 'Example Street 2, 0654 Oslo');
-INSERT INTO auth.authorization_request_property(authorization_request_id, key, value)
-VALUES ('d81e5bf2-8a0c-4348-a788-2a3fab4e77d6', 'balanceSupplierName', 'Power AS');
-INSERT INTO auth.authorization_request_property(authorization_request_id, key, value)
-VALUES ('d81e5bf2-8a0c-4348-a788-2a3fab4e77d6', 'balanceSupplierContractName', 'ExampleSupplierContract');
+UPDATE auth.authorization_request
+SET metadata = '{"requestedFromName":"Kasper Lind","requestedForMeteringPointId":"1234567890555","requestedForMeteringPointAddress":"Example Street 2, 0654 Oslo","balanceSupplierName":"Power AS","balanceSupplierContractName":"ExampleSupplierContract"}'::jsonb
+WHERE id = 'd81e5bf2-8a0c-4348-a788-2a3fab4e77d6';
 
-INSERT INTO auth.authorization_request_property(authorization_request_id, key, value)
-VALUES ('4f71d596-99e4-415e-946d-7352c1a40c53', 'requestedFromName', 'Ola Normann');
-INSERT INTO auth.authorization_request_property(authorization_request_id, key, value)
-VALUES ('4f71d596-99e4-415e-946d-7352c1a40c53', 'requestedForMeteringPointId', '1234567890123');
-INSERT INTO auth.authorization_request_property(authorization_request_id, key, value)
-VALUES ('4f71d596-99e4-415e-946d-7352c1a40c53', 'requestedForMeteringPointAddress', 'Example Street 1, 1234 Oslo');
-INSERT INTO auth.authorization_request_property(authorization_request_id, key, value)
-VALUES ('4f71d596-99e4-415e-946d-7352c1a40c53', 'balanceSupplierName', 'Example Energy AS');
-INSERT INTO auth.authorization_request_property(authorization_request_id, key, value)
-VALUES ('4f71d596-99e4-415e-946d-7352c1a40c53', 'balanceSupplierContractName', 'ExampleSupplierContract'),
-      ('4f71d596-99e4-415e-946d-7352c1a40c53', 'redirectURI', 'https://example.com/redirect');
+UPDATE auth.authorization_request
+SET metadata = '{"requestedFromName":"Ola Normann","requestedForMeteringPointId":"1234567890123","requestedForMeteringPointAddress":"Example Street 1, 1234 Oslo","balanceSupplierName":"Example Energy AS","balanceSupplierContractName":"ExampleSupplierContract","redirectURI":"https://example.com/redirect"}'::jsonb
+WHERE id = '4f71d596-99e4-415e-946d-7352c1a40c53';
 
-INSERT INTO auth.authorization_request_property(authorization_request_id, key, value)
-VALUES ('4f71d596-99e4-415e-946d-7252c1a40c50', 'requestedFromName', 'Kari Normann');
-INSERT INTO auth.authorization_request_property(authorization_request_id, key, value)
-VALUES ('4f71d596-99e4-415e-946d-7252c1a40c50', 'requestedForMeteringPointId', '1234567890123');
-INSERT INTO auth.authorization_request_property(authorization_request_id, key, value)
-VALUES ('4f71d596-99e4-415e-946d-7252c1a40c50', 'requestedForMeteringPointAddress', 'Example Street 1, 1234 Oslo');
-INSERT INTO auth.authorization_request_property(authorization_request_id, key, value)
-VALUES ('4f71d596-99e4-415e-946d-7252c1a40c50', 'balanceSupplierName', 'Example Energy AS');
-INSERT INTO auth.authorization_request_property(authorization_request_id, key, value)
-VALUES ('4f71d596-99e4-415e-946d-7252c1a40c50', 'balanceSupplierContractName', 'ExampleSupplierContract');
+UPDATE auth.authorization_request
+SET metadata = '{"requestedFromName":"Kari Normann","requestedForMeteringPointId":"1234567890123","requestedForMeteringPointAddress":"Example Street 1, 1234 Oslo","balanceSupplierName":"Example Energy AS","balanceSupplierContractName":"ExampleSupplierContract"}'::jsonb
+WHERE id = '4f71d596-99e4-415e-946d-7252c1a40c50';
 
-INSERT INTO auth.authorization_request_property(authorization_request_id, key, value)
-VALUES ('4f71d596-99e4-415e-946d-7252c1a40c51', 'requestedFromName', 'Per Hansen');
-INSERT INTO auth.authorization_request_property(authorization_request_id, key, value)
-VALUES ('4f71d596-99e4-415e-946d-7252c1a40c51', 'requestedForMeteringPointId', '9876543210987');
-INSERT INTO auth.authorization_request_property(authorization_request_id, key, value)
-VALUES ('4f71d596-99e4-415e-946d-7252c1a40c51', 'requestedForMeteringPointAddress', 'Main Street 42, 5000 Bergen');
-INSERT INTO auth.authorization_request_property(authorization_request_id, key, value)
-VALUES ('4f71d596-99e4-415e-946d-7252c1a40c51', 'balanceSupplierName', 'Green Power Ltd');
-INSERT INTO auth.authorization_request_property(authorization_request_id, key, value)
-VALUES ('4f71d596-99e4-415e-946d-7252c1a40c51', 'balanceSupplierContractName', 'GreenPowerContract2025');
+UPDATE auth.authorization_request
+SET metadata = '{"requestedFromName":"Per Hansen","requestedForMeteringPointId":"9876543210987","requestedForMeteringPointAddress":"Main Street 42, 5000 Bergen","balanceSupplierName":"Green Power Ltd","balanceSupplierContractName":"GreenPowerContract2025"}'::jsonb
+WHERE id = '4f71d596-99e4-415e-946d-7252c1a40c51';
 
-INSERT INTO auth.authorization_request_property(authorization_request_id, key, value)
-VALUES ('4f71d596-99e4-415e-946d-7252c1a40c52', 'requestedFromName', 'Anna Johansen');
-INSERT INTO auth.authorization_request_property(authorization_request_id, key, value)
-VALUES ('4f71d596-99e4-415e-946d-7252c1a40c52', 'requestedForMeteringPointId', '5555555555555');
-INSERT INTO auth.authorization_request_property(authorization_request_id, key, value)
-VALUES ('4f71d596-99e4-415e-946d-7252c1a40c52', 'requestedForMeteringPointAddress', 'Sunset Avenue 10, 0150 Oslo');
-INSERT INTO auth.authorization_request_property(authorization_request_id, key, value)
-VALUES ('4f71d596-99e4-415e-946d-7252c1a40c52', 'balanceSupplierName', 'Nordic Energy Group');
-INSERT INTO auth.authorization_request_property(authorization_request_id, key, value)
-VALUES ('4f71d596-99e4-415e-946d-7252c1a40c52', 'balanceSupplierContractName', 'NordicEnergyQ1-2025');
+UPDATE auth.authorization_request
+SET metadata = '{"requestedFromName":"Anna Johansen","requestedForMeteringPointId":"5555555555555","requestedForMeteringPointAddress":"Sunset Avenue 10, 0150 Oslo","balanceSupplierName":"Nordic Energy Group","balanceSupplierContractName":"NordicEnergyQ1-2025"}'::jsonb
+WHERE id = '4f71d596-99e4-415e-946d-7252c1a40c52';
 
-INSERT INTO auth.authorization_request_property(authorization_request_id, key, value)
-VALUES ('3f2c9e6b-7a4d-4f1a-9b6e-8c1d2a5e9f47', 'requestedFromName', 'Hans Tobiassen');
-INSERT INTO auth.authorization_request_property(authorization_request_id, key, value)
-VALUES ('3f2c9e6b-7a4d-4f1a-9b6e-8c1d2a5e9f47', 'requestedForMeteringPointId', '666666666666');
-INSERT INTO auth.authorization_request_property(authorization_request_id, key, value)
-VALUES ('3f2c9e6b-7a4d-4f1a-9b6e-8c1d2a5e9f47', 'requestedForMeteringPointAddress', 'Test Street 16, 0674 Oslo');
-INSERT INTO auth.authorization_request_property(authorization_request_id, key, value)
-VALUES ('3f2c9e6b-7a4d-4f1a-9b6e-8c1d2a5e9f47', 'balanceSupplierName', 'Test Energy Group');
-INSERT INTO auth.authorization_request_property(authorization_request_id, key, value)
-VALUES ('3f2c9e6b-7a4d-4f1a-9b6e-8c1d2a5e9f47', 'balanceSupplierContractName', 'NordicEnergyQ1-2026');
+UPDATE auth.authorization_request
+SET metadata = '{"requestedFromName":"Hans Tobiassen","requestedForMeteringPointId":"666666666666","requestedForMeteringPointAddress":"Test Street 16, 0674 Oslo","balanceSupplierName":"Test Energy Group","balanceSupplierContractName":"NordicEnergyQ1-2026"}'::jsonb
+WHERE id = '3f2c9e6b-7a4d-4f1a-9b6e-8c1d2a5e9f47';
 INSERT INTO auth.authorization_request (
   id,
   request_type,

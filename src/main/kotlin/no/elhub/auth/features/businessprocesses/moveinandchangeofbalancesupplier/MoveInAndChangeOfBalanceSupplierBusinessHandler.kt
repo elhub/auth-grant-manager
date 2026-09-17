@@ -113,8 +113,7 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandler(
 
     override fun getCreateGrantProperties(request: AuthorizationRequest): CreateGrantProperties {
         val propertyMap = request.properties
-            .filter { it.key in ALLOWED_GRANT_PROPERTY_KEYS }
-            .associate { it.key to it.value }
+            .filterKeys { it in ALLOWED_GRANT_PROPERTY_KEYS }
         return buildCreateGrantProperties(propertyMap, ALLOWED_GRANT_PROPERTY_KEYS)
     }
 
@@ -126,8 +125,7 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandler(
 
     override fun getCreateGrantProperties(document: AuthorizationDocument): CreateGrantProperties {
         val propertyMap = document.properties
-            .filter { it.key in ALLOWED_GRANT_PROPERTY_KEYS }
-            .associate { it.key to it.value }
+            .filterKeys { it in ALLOWED_GRANT_PROPERTY_KEYS }
         return buildCreateGrantProperties(propertyMap, ALLOWED_GRANT_PROPERTY_KEYS)
     }
 

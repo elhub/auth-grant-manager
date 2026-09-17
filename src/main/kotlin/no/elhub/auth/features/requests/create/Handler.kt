@@ -7,7 +7,6 @@ import no.elhub.auth.features.common.party.PartyError
 import no.elhub.auth.features.common.party.PartyService
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.requests.AuthorizationRequest
-import no.elhub.auth.features.requests.common.AuthorizationRequestProperty
 import no.elhub.auth.features.requests.common.CreateRequestBusinessModel
 import no.elhub.auth.features.requests.common.RequestBusinessHandler
 import no.elhub.auth.features.requests.common.RequestRepository
@@ -97,16 +96,8 @@ class Handler(
                 validTo = businessCommand.validTo,
             )
 
-        val requestProperties: List<AuthorizationRequestProperty> = metaAttributes.map {
-            AuthorizationRequestProperty(
-                requestId = requestToCreate.id,
-                key = it.key,
-                value = it.value,
-            )
-        }
-
         val savedRequest = requestRepo
-            .insert(requestToCreate.copy(properties = requestProperties), businessCommand.scopes)
+            .insert(requestToCreate.copy(properties = metaAttributes), businessCommand.scopes)
             .mapLeft { CreateError.PersistenceError }
             .bind()
 
