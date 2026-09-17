@@ -4,6 +4,7 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import no.elhub.auth.features.businessprocesses.changeofbalancesupplier.domain.ChangeOfBalanceSupplierBusinessMeta
 import no.elhub.auth.features.filegenerator.SupportedLanguage
+import no.elhub.auth.jsonObjectOf
 
 class DocumentMetaMarkerTest : FunSpec({
 
@@ -18,7 +19,7 @@ class DocumentMetaMarkerTest : FunSpec({
             requestedFromName = "Requester",
         )
 
-        meta.toMetaAttributes() shouldBe mapOf(
+        meta.toMetaAttributes() shouldBe jsonObjectOf(
             "language" to SupportedLanguage.DEFAULT.code,
             "balanceSupplierName" to "Balance Supplier",
             "balanceSupplierContractName" to "Contract Name",

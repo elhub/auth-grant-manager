@@ -1,5 +1,6 @@
 package no.elhub.auth.features.requests.query
 
+import no.elhub.auth.emptyJsonObject
 import arrow.core.left
 import arrow.core.right
 import io.kotest.core.spec.style.FunSpec
@@ -87,7 +88,7 @@ class RouteTest : FunSpec({
             requestedBy = requestedByParty,
             requestedTo = requestedToParty,
             requestedFrom = requestedFromParty,
-            properties = emptyMap()
+            properties = emptyJsonObject()
         )
         coEvery { handler.invoke(any()) } returns Page(listOf(authorizationRequest), 1L, Pagination()).right()
         testApplication {
@@ -111,7 +112,7 @@ class RouteTest : FunSpec({
             body.data[0].relationships.requestedTo.data.type shouldBe requestedToParty.type.name
             body.data[0].relationships.approvedBy.shouldBeNull()
             body.data[0].relationships.authorizationGrant.shouldBeNull()
-            body.data[0].meta.values shouldBe emptyMap()
+            body.data[0].meta.values shouldBe emptyJsonObject()
             body.data[0].links.self shouldBe "$REQUESTS_PATH/${authorizationRequest.id}"
         }
         coVerify(exactly = 1) { handler.invoke(any()) }
@@ -124,7 +125,7 @@ class RouteTest : FunSpec({
             status = AuthorizationRequest.Status.Pending,
             validTo = currentTimeUtc(), createdAt = currentTimeUtc(), updatedAt = currentTimeUtc(),
             requestedBy = requestedByParty, requestedTo = requestedToParty, requestedFrom = requestedFromParty,
-            properties = emptyMap()
+            properties = emptyJsonObject()
         )
         val request2 = AuthorizationRequest(
             id = UUID.randomUUID(),
@@ -132,7 +133,7 @@ class RouteTest : FunSpec({
             status = AuthorizationRequest.Status.Accepted,
             validTo = currentTimeUtc(), createdAt = currentTimeUtc(), updatedAt = currentTimeUtc(),
             requestedBy = requestedByParty, requestedTo = requestedToParty, requestedFrom = requestedFromParty,
-            properties = emptyMap()
+            properties = emptyJsonObject()
         )
         coEvery { handler.invoke(any()) } returns Page(listOf(request1, request2), 2L, Pagination()).right()
         testApplication {

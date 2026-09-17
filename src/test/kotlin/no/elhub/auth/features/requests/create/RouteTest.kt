@@ -1,5 +1,6 @@
 package no.elhub.auth.features.requests.create
 
+import no.elhub.auth.emptyJsonObject
 import arrow.core.left
 import arrow.core.right
 import io.kotest.core.spec.style.FunSpec
@@ -45,7 +46,7 @@ class RouteTest : FunSpec({
         createdAt = currentTimeUtc(),
         updatedAt = currentTimeUtc(),
         validTo = currentTimeUtc().plusDays(30),
-        properties = emptyMap()
+        properties = emptyJsonObject()
     )
 
     val examplePostBody = JsonApiCreateRequest(

@@ -1,5 +1,9 @@
 package no.elhub.auth.features.requests.route
 
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import arrow.core.left
 import arrow.core.right
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -138,7 +142,8 @@ fun insertAuthorizationRequest(
     val requestedToId = UUID.fromString("11111111-1111-1111-1111-111111111111")
 
     transaction {
-        val requestProperties = properties.withTextVersion(CHANGE_OF_BALANCE_SUPPLIER_TEXT_VERSION)
+        val requestProperties = JsonObject(properties.mapValues { JsonPrimitive(it.value) })
+            .withTextVersion(CHANGE_OF_BALANCE_SUPPLIER_TEXT_VERSION)
         AuthorizationRequestTable.insert {
             it[id] = requestId
             it[requestType] = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson
@@ -175,8 +180,8 @@ data class TestRequestMeta(
     val balanceSupplierContractName: String,
     val redirectURI: String? = null,
 ) : RequestMetaMarker {
-    override fun toRequestMetaAttributes(): Map<String, String> =
-        buildMap {
+    override fun toRequestMetaAttributes(): JsonObject =
+        buildJsonObject {
             put("requestedFromName", requestedFromName)
             put("requestedForMeteringPointId", requestedForMeteringPointId)
             put("requestedForMeteringPointAddress", requestedForMeteringPointAddress)

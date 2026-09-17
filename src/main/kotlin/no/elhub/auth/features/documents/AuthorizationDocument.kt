@@ -1,5 +1,6 @@
 package no.elhub.auth.features.documents
 
+import kotlinx.serialization.json.JsonObject
 import no.elhub.auth.features.common.currentTimeUtc
 import no.elhub.auth.features.common.party.AuthorizationParty
 import java.time.OffsetDateTime
@@ -15,7 +16,7 @@ data class AuthorizationDocument(
     val requestedTo: AuthorizationParty,
     val signedBy: AuthorizationParty? = null,
     val grantId: UUID? = null,
-    val properties: Map<String, String>,
+    val properties: JsonObject,
     val validTo: OffsetDateTime,
     val createdAt: OffsetDateTime,
     val updatedAt: OffsetDateTime
@@ -28,7 +29,7 @@ data class AuthorizationDocument(
             requestedFrom: AuthorizationParty,
             requestedTo: AuthorizationParty,
             validTo: OffsetDateTime,
-            properties: Map<String, String>,
+            properties: JsonObject,
         ): AuthorizationDocument = AuthorizationDocument(
             id = UUID.randomUUID(),
             type = type,

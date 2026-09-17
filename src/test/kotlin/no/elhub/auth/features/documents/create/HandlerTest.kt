@@ -12,6 +12,8 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.plus
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import no.elhub.auth.features.businessprocesses.BusinessProcessError
 import no.elhub.auth.features.businessprocesses.changeofbalancesupplier.ChangeOfBalanceSupplierValidationError
 import no.elhub.auth.features.common.CreateScopeData
@@ -37,6 +39,7 @@ import no.elhub.auth.features.documents.create.model.CreateDocumentCoreMeta
 import no.elhub.auth.features.documents.create.model.CreateDocumentModel
 import no.elhub.auth.features.filegenerator.SupportedLanguage
 import no.elhub.auth.features.grants.AuthorizationScope
+import no.elhub.auth.jsonObjectOf
 
 class HandlerTest : FunSpec({
 
@@ -82,8 +85,8 @@ class HandlerTest : FunSpec({
         )
 
     val commandMeta = object : DocumentMetaMarker {
-        override fun toMetaAttributes(): Map<String, String> =
-            mapOf("k" to "v", "language" to SupportedLanguage.DEFAULT.code)
+        override fun toMetaAttributes(): JsonObject =
+            jsonObjectOf("k" to "v", "language" to SupportedLanguage.DEFAULT.code)
     }
 
     val command =
@@ -158,7 +161,7 @@ class HandlerTest : FunSpec({
         coVerify(exactly = 1) {
             documentRepository.insert(
                 match { document ->
-                    document.properties["language"] == SupportedLanguage.DEFAULT.code
+                    document.properties["language"] == JsonPrimitive(SupportedLanguage.DEFAULT.code)
                 },
                 command.scopes
             )

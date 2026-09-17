@@ -1,5 +1,8 @@
 package no.elhub.auth.features.requests.get
 
+import kotlinx.serialization.json.JsonPrimitive
+import no.elhub.auth.emptyJsonObject
+import no.elhub.auth.jsonObjectOf
 import arrow.core.left
 import arrow.core.right
 import io.kotest.core.spec.style.FunSpec
@@ -91,7 +94,7 @@ class RouteTest : FunSpec({
             requestedBy = requestedByParty,
             requestedTo = requestedToParty,
             requestedFrom = requestedFromParty,
-            properties = emptyMap()
+            properties = emptyJsonObject()
         )
         coEvery { handler.invoke(any()) } returns authorizationRequest.right()
         testApplication {
@@ -114,7 +117,7 @@ class RouteTest : FunSpec({
             body.data.relationships.requestedTo.data.type shouldBe requestedToParty.type.name
             body.data.relationships.approvedBy.shouldBeNull()
             body.data.relationships.authorizationGrant.shouldBeNull()
-            body.data.meta.values shouldBe emptyMap()
+            body.data.meta.values shouldBe emptyJsonObject()
             body.data.links.self shouldBe "$REQUESTS_PATH/${authorizationRequest.id}"
         }
         coVerify(exactly = 1) { handler.invoke(any()) }
@@ -133,7 +136,7 @@ class RouteTest : FunSpec({
             requestedFrom = requestedFromParty,
             approvedBy = AuthorizationParty("nin1", PartyType.Person),
             grantId = UUID.randomUUID(),
-            properties = mapOf(
+            properties = jsonObjectOf(
                 "requestedFromName" to "Test Person",
                 "balanceSupplierName" to "Power AS",
                 TEXT_VERSION_KEY to "v1",
@@ -162,9 +165,9 @@ class RouteTest : FunSpec({
             body.data.relationships.approvedBy!!.data.type shouldBe "Person"
             body.data.relationships.authorizationGrant!!.data.id shouldBe authorizationRequest.grantId.toString()
             body.data.relationships.authorizationGrant!!.data.type shouldBe "AuthorizationGrant"
-            body.data.meta.values["requestedFromName"] shouldBe "Test Person"
-            body.data.meta.values["balanceSupplierName"] shouldBe "Power AS"
-            body.data.meta.values[TEXT_VERSION_KEY] shouldBe "v1"
+            body.data.meta.values["requestedFromName"] shouldBe JsonPrimitive("Test Person")
+            body.data.meta.values["balanceSupplierName"] shouldBe JsonPrimitive("Power AS")
+            body.data.meta.values[TEXT_VERSION_KEY] shouldBe JsonPrimitive("v1")
             body.data.links.self shouldBe "$REQUESTS_PATH/${authorizationRequest.id}"
         }
         coVerify(exactly = 1) { handler.invoke(any()) }

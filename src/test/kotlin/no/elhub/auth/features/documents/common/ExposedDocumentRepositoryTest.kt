@@ -1,5 +1,7 @@
 package no.elhub.auth.features.documents.common
 
+import no.elhub.auth.emptyJsonObject
+import no.elhub.auth.jsonObjectOf
 import arrow.core.getOrElse
 import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
@@ -15,6 +17,8 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import no.elhub.auth.config.TransactionContext
 import no.elhub.auth.config.withTransaction
 import no.elhub.auth.features.common.CreateScopeData
@@ -84,7 +88,18 @@ class ExposedDocumentRepositoryTest :
                         requestedFrom = AuthorizationParty(type = PartyType.Person, id = "1234567890"),
                         requestedTo = AuthorizationParty(type = PartyType.Person, id = "1234567890"),
                         signedBy = AuthorizationParty(type = PartyType.Person, id = "1234567890"),
-                        properties = mapOf("language" to "nb", "moveInDate" to "2026-09-17"),
+                        properties = JsonObject(
+                            mapOf(
+                                "language" to JsonPrimitive("nb"),
+                                "moveInDate" to JsonPrimitive("2026-09-17"),
+                                "details" to JsonObject(
+                                    mapOf(
+                                        "source" to JsonPrimitive("business-model"),
+                                        "verified" to JsonPrimitive(true),
+                                    )
+                                ),
+                            )
+                        ),
                         validTo = currentTimeUtc().plusDays(1),
                         createdAt = currentTimeUtc(),
                         updatedAt = currentTimeUtc()
@@ -144,7 +159,7 @@ class ExposedDocumentRepositoryTest :
                     requestedFrom = AuthorizationParty(type = PartyType.Person, id = "from-1"),
                     requestedTo = AuthorizationParty(type = PartyType.Person, id = "to-1"),
                     signedBy = AuthorizationParty(type = PartyType.Person, id = "signer-1"),
-                    properties = emptyMap(),
+                    properties = emptyJsonObject(),
                     validTo = currentTimeUtc().plusDays(1),
                     createdAt = currentTimeUtc(),
                     updatedAt = currentTimeUtc()
@@ -160,7 +175,7 @@ class ExposedDocumentRepositoryTest :
                     requestedTo = AuthorizationParty(type = PartyType.Person, id = "to-2"),
                     signedBy = AuthorizationParty(type = PartyType.Person, id = "signer-2"),
                     createdAt = currentTimeUtc(),
-                    properties = emptyMap(),
+                    properties = emptyJsonObject(),
                     validTo = currentTimeUtc().plusDays(1),
                     updatedAt = currentTimeUtc()
                 )
@@ -196,7 +211,7 @@ class ExposedDocumentRepositoryTest :
                     requestedFrom = party,
                     requestedTo = party,
                     signedBy = party,
-                    properties = emptyMap(),
+                    properties = emptyJsonObject(),
                     validTo = currentTimeUtc().plusDays(1),
                     createdAt = currentTimeUtc(),
                     updatedAt = currentTimeUtc()
@@ -315,7 +330,7 @@ class ExposedDocumentRepositoryTest :
                 requestedBy = requestedBy,
                 requestedFrom = AuthorizationParty(type = PartyType.Person, id = "from-p"),
                 requestedTo = AuthorizationParty(type = PartyType.Person, id = "to-p"),
-                properties = emptyMap(),
+                properties = emptyJsonObject(),
                 validTo = currentTimeUtc().plusDays(1),
                 createdAt = currentTimeUtc(),
                 updatedAt = currentTimeUtc()
@@ -404,7 +419,7 @@ class ExposedDocumentRepositoryTest :
                     requestedFrom = requestedFrom,
                     requestedTo = requestedTo,
                     signedBy = null,
-                    properties = emptyMap(),
+                    properties = emptyJsonObject(),
                     validTo = currentTimeUtc().plusDays(30),
                     createdAt = currentTimeUtc(),
                     updatedAt = currentTimeUtc()

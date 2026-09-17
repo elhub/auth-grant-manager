@@ -1,5 +1,7 @@
 package no.elhub.auth.features.requests.common
 
+import no.elhub.auth.emptyJsonObject
+import no.elhub.auth.jsonObjectOf
 import arrow.core.getOrElse
 import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
@@ -11,6 +13,8 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import no.elhub.auth.config.TransactionContext
 import no.elhub.auth.config.withTransaction
 import no.elhub.auth.features.common.CreateScopeData
@@ -405,12 +409,22 @@ class ExposedRequestRepositoryTest : FunSpec({
         val rejectedRequest = requestRepo.rejectRequest(savedRequest.id)
             .getOrElse { fail("reject failed") }
 
-        rejectedRequest.properties shouldBe emptyMap()
+        rejectedRequest.properties shouldBe emptyJsonObject()
         rejectedRequest.status shouldBe AuthorizationRequest.Status.Rejected
     }
 
     test("reject authorization request with properties") {
-        val properties = mapOf("key1" to "value1", "key2" to "value2")
+        val properties = JsonObject(
+            mapOf(
+                "key1" to JsonPrimitive("value1"),
+                "nested" to JsonObject(
+                    mapOf(
+                        "count" to JsonPrimitive(2),
+                        "enabled" to JsonPrimitive(true),
+                    )
+                ),
+            )
+        )
         val request = generateRequestWithoutProperties().copy(properties = properties)
         val savedRequest = requestRepo
             .insert(request, scopes)
@@ -564,7 +578,7 @@ class ExposedRequestRepositoryTest : FunSpec({
                     requestedTo = approvedBy,
                     validTo = OffsetDateTime.now(ZoneOffset.UTC).plusDays(30),
                 ).copy(
-                    properties = mapOf("prop-key1" to "prop-val1", "prop-key2" to "prop-val2")
+                    properties = jsonObjectOf("prop-key1" to "prop-val1", "prop-key2" to "prop-val2")
                 ),
                 scopes
             ).getOrElse { fail("insert failed") }
@@ -588,7 +602,7 @@ class ExposedRequestRepositoryTest : FunSpec({
             ).getOrElse { fail("acceptWithGrant failed") }
 
             acceptedRequest.status shouldBe AuthorizationRequest.Status.Accepted
-            acceptedRequest.properties shouldBe mapOf("prop-key1" to "prop-val1", "prop-key2" to "prop-val2")
+            acceptedRequest.properties shouldBe jsonObjectOf("prop-key1" to "prop-val1", "prop-key2" to "prop-val2")
             acceptedRequest.approvedBy shouldNotBe null
         }
     }

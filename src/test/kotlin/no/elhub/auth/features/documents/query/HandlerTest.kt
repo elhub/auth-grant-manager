@@ -1,5 +1,6 @@
 package no.elhub.auth.features.documents.query
 
+import no.elhub.auth.jsonObjectOf
 import arrow.core.Either
 import arrow.core.right
 import io.kotest.assertions.arrow.core.shouldBeRight
@@ -45,7 +46,7 @@ class HandlerTest : FunSpec({
         requestedBy = requestedBy,
         requestedFrom = requestedFrom,
         requestedTo = requestedTo,
-        properties = mapOf("k1" to "v1"),
+        properties = jsonObjectOf("k1" to "v1"),
         validTo = validTo,
         createdAt = currentTimeUtc(),
         updatedAt = currentTimeUtc()
@@ -59,7 +60,7 @@ class HandlerTest : FunSpec({
         requestedBy = requestedBy,
         requestedFrom = requestedFrom,
         requestedTo = requestedTo,
-        properties = mapOf("k2" to "v2"),
+        properties = jsonObjectOf("k2" to "v2"),
         validTo = validTo,
         createdAt = currentTimeUtc(),
         updatedAt = currentTimeUtc()

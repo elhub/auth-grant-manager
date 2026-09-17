@@ -1,5 +1,6 @@
 package no.elhub.auth.features.documents.confirm
 
+import no.elhub.auth.emptyJsonObject
 import arrow.core.left
 import arrow.core.right
 import io.kotest.assertions.arrow.core.shouldBeLeft
@@ -59,7 +60,7 @@ class HandlerTest : FunSpec({
         requestedBy = requestedBy,
         requestedFrom = requestedFrom,
         requestedTo = requestedTo,
-        properties = emptyMap(),
+        properties = emptyJsonObject(),
         validTo = validTo,
         createdAt = currentTimeUtc(),
         updatedAt = currentTimeUtc(),

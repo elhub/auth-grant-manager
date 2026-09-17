@@ -3,6 +3,7 @@ package no.elhub.auth.features.filegenerator
 import arrow.core.Either
 import arrow.core.raise.either
 import com.github.mustachejava.DefaultMustacheFactory
+import kotlinx.serialization.json.JsonPrimitive
 import com.github.mustachejava.TemplateFunction
 import com.openhtmltopdf.extend.FSSupplier
 import com.openhtmltopdf.outputdevice.helper.BaseRendererBuilder
@@ -255,6 +256,9 @@ class PdfGenerator(
     private fun resolveLanguage(documentMeta: DocumentMetaMarker): SupportedLanguage =
         documentMeta
             .toMetaAttributes()["language"]
+            ?.let { it as? JsonPrimitive }
+            ?.takeIf { it.isString }
+            ?.content
             ?.let { languageCode -> SupportedLanguage.entries.firstOrNull { it.code == languageCode } }
             ?: SupportedLanguage.DEFAULT
 

@@ -22,6 +22,8 @@ import io.ktor.server.application.install
 import io.ktor.server.routing.Routing
 import io.ktor.server.routing.routing
 import io.ktor.server.testing.ApplicationTestBuilder
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import no.elhub.auth.config.configureErrorHandling
 import no.elhub.auth.config.configureSerialization
 import no.elhub.auth.features.common.auth.AuthorizedPartyKey
@@ -29,6 +31,11 @@ import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import java.util.UUID
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation as ClientContentNegotiation
+
+fun jsonObjectOf(vararg properties: Pair<String, String>): JsonObject =
+    JsonObject(properties.associate { (key, value) -> key to JsonPrimitive(value) })
+
+fun emptyJsonObject(): JsonObject = JsonObject(emptyMap())
 
 fun String.shouldBeValidUuid() {
     this should beValidUuid()

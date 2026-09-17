@@ -2,6 +2,7 @@ package no.elhub.auth.features.documents.common
 
 import arrow.core.Either
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
 import no.elhub.auth.config.TransactionContext
 import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.common.PGEnum
@@ -395,7 +396,7 @@ object AuthorizationDocumentTable : UUIDTable("auth.authorization_document") {
     val validTo = timestampWithTimeZone("valid_to").clientDefault { currentTimeUtc() }
     val createdAt = timestampWithTimeZone("created_at").clientDefault { currentTimeUtc() }
     val updatedAt = timestampWithTimeZone("updated_at").clientDefault { currentTimeUtc() }
-    val metadata = jsonb<Map<String, String>>("metadata", Json)
+    val metadata = jsonb<JsonObject>("metadata", Json)
 }
 
 object AuthorizationDocumentScopeTable : Table("auth.authorization_document_scope") {

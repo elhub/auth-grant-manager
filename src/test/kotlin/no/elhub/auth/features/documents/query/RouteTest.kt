@@ -1,5 +1,6 @@
 package no.elhub.auth.features.documents.query
 
+import no.elhub.auth.jsonObjectOf
 import arrow.core.left
 import arrow.core.right
 import io.kotest.core.spec.style.FunSpec
@@ -47,7 +48,7 @@ class RouteTest : FunSpec({
             requestedTo = toAuthParty,
             signedBy = null,
             grantId = UUID.fromString("e6c038c6-4cba-41dc-af3b-ed027058504b"),
-            properties = mapOf(
+            properties = jsonObjectOf(
                 "key1" to "value1",
                 "key2" to "value2",
             ),
@@ -65,7 +66,7 @@ class RouteTest : FunSpec({
             requestedTo = toAuthParty,
             signedBy = null,
             grantId = UUID.fromString("14b87e56-3070-4f8c-a1de-920b6b3b5cd7"),
-            properties = mapOf(
+            properties = jsonObjectOf(
                 "key1" to "value1",
                 "key2" to "value2",
                 "key3" to "value3",

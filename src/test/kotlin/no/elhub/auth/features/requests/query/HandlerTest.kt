@@ -1,5 +1,6 @@
 package no.elhub.auth.features.requests.query
 
+import no.elhub.auth.emptyJsonObject
 import arrow.core.right
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.core.spec.style.FunSpec
@@ -40,7 +41,7 @@ class HandlerTest : FunSpec({
         requestedFrom = requestedFromParty,
         approvedBy = approvedBy,
         grantId = grantId,
-        properties = emptyMap()
+        properties = emptyJsonObject()
     )
 
     fun requestRepoReturning(page: Page<AuthorizationRequest>): RequestRepository =

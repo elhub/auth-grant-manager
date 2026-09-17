@@ -1,5 +1,9 @@
 package no.elhub.auth.features.businessprocesses.moveinandchangeofbalancesupplier
 
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonPrimitive
+import no.elhub.auth.jsonObjectOf
 import arrow.core.Either
 import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
@@ -146,7 +150,7 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
 
             val command = handler.validateAndReturnRequestCommand(model).shouldBeRight()
             command.meta.toRequestMetaAttributes()["moveInDate"] shouldBe null
-            command.meta.toRequestMetaAttributes()[TEXT_VERSION_KEY] shouldBe "v1"
+            command.meta.toRequestMetaAttributes()[TEXT_VERSION_KEY]?.jsonPrimitive?.content shouldBe "v1"
         }
 
         test("request validation fails on future moveInDate") {
@@ -739,9 +743,9 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
 
             command.type shouldBe AuthorizationRequest.Type.MoveInAndChangeOfBalanceSupplierForPerson
             command.validTo shouldBe todayOslo().plus(DatePeriod(days = 28)).toTimeZoneOffsetDateTimeAtStartOfDay()
-            command.meta.toRequestMetaAttributes()["moveInDate"] shouldBe VALID_MOVEIN_DATE.toString()
-            command.meta.toRequestMetaAttributes()["redirectURI"] shouldBe "https://example.com"
-            command.meta.toRequestMetaAttributes()[TEXT_VERSION_KEY] shouldBe "v1"
+            command.meta.toRequestMetaAttributes()["moveInDate"]?.jsonPrimitive?.content shouldBe VALID_MOVEIN_DATE.toString()
+            command.meta.toRequestMetaAttributes()["redirectURI"]?.jsonPrimitive?.content shouldBe "https://example.com"
+            command.meta.toRequestMetaAttributes()[TEXT_VERSION_KEY]?.jsonPrimitive?.content shouldBe "v1"
             command.meta.toRequestMetaAttributes().containsKey("requestedForMeterNumber") shouldBe true
         }
 
@@ -754,7 +758,7 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
                 requestedTo = party,
                 validTo = todayOslo().toTimeZoneOffsetDateTimeAtStartOfDay(),
             ).copy(
-                properties = mapOf("moveInDate" to "2024-01-01")
+                properties = jsonObjectOf("moveInDate" to "2024-01-01")
             )
 
             val properties = handler.getCreateGrantProperties(request)
@@ -762,6 +766,26 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
             properties.meta.getValue("moveInDate") shouldBe "2024-01-01"
             properties.validFrom shouldBe todayOslo()
             properties.validTo shouldBe todayOslo().plus(DatePeriod(years = 1))
+        }
+
+        test("grant properties ignore non-string and nested metadata") {
+            val party = AuthorizationParty(id = "party-1", type = PartyType.Organization)
+            val request = AuthorizationRequest.create(
+                type = AuthorizationRequest.Type.MoveInAndChangeOfBalanceSupplierForPerson,
+                requestedBy = party,
+                requestedFrom = party,
+                requestedTo = party,
+                validTo = todayOslo().toTimeZoneOffsetDateTimeAtStartOfDay(),
+            ).copy(
+                properties = JsonObject(
+                    mapOf(
+                        "moveInDate" to JsonPrimitive(20240101),
+                        "details" to JsonObject(mapOf("source" to JsonPrimitive("business-model"))),
+                    )
+                )
+            )
+
+            handler.getCreateGrantProperties(request).meta shouldBe emptyMap()
         }
 
         test("document produces DocumentCommand for valid input") {
@@ -783,8 +807,8 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
                 )
 
             val command = handler.validateAndReturnDocumentCommand(model).shouldBeRight()
-            command.meta.toMetaAttributes()["moveInDate"] shouldBe VALID_MOVEIN_DATE.toString()
-            command.meta.toMetaAttributes()["language"] shouldBe SupportedLanguage.DEFAULT.code
+            command.meta.toMetaAttributes()["moveInDate"]?.jsonPrimitive?.content shouldBe VALID_MOVEIN_DATE.toString()
+            command.meta.toMetaAttributes()["language"]?.jsonPrimitive?.content shouldBe SupportedLanguage.DEFAULT.code
             command.meta.toMetaAttributes().containsKey("requestedForMeterNumber") shouldBe true
         }
     })

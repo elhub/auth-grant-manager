@@ -1,5 +1,7 @@
 package no.elhub.auth.features.documents.create
 
+import kotlinx.serialization.json.JsonPrimitive
+import no.elhub.auth.jsonObjectOf
 import arrow.core.left
 import arrow.core.right
 import io.kotest.core.spec.style.FunSpec
@@ -57,7 +59,7 @@ class RouteTest : FunSpec({
         requestedTo = toAuthParty,
         signedBy = null,
         grantId = UUID.fromString("8844261a-5221-455c-a6cd-12a0d60724c2"),
-        properties = mapOf(
+        properties = jsonObjectOf(
             "key1" to "value1",
             "key2" to "value2",
         ),
@@ -253,8 +255,8 @@ private suspend fun validateCreateDocumentResponse(response: HttpResponse, creat
             }
         }
         meta.shouldNotBeNull().apply {
-            values["key1"] shouldBe "value1"
-            values["key2"] shouldBe "value2"
+            values["key1"] shouldBe JsonPrimitive("value1")
+            values["key2"] shouldBe JsonPrimitive("value2")
         }
         links.self shouldBe "$DOCUMENTS_PATH/$id"
         links.file shouldBe "$DOCUMENTS_PATH/$id.pdf"

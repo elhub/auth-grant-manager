@@ -3,6 +3,7 @@ package no.elhub.auth.features.requests.common
 import arrow.core.Either
 import arrow.core.raise.either
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
 import no.elhub.auth.config.TransactionContext
 import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.common.PGEnum
@@ -446,7 +447,7 @@ object AuthorizationRequestTable : UUIDTable("auth.authorization_request") {
     val createdAt = timestampWithTimeZone("created_at").clientDefault { currentTimeUtc() }
     val updatedAt = timestampWithTimeZone("updated_at").clientDefault { currentTimeUtc() }
     val validTo = timestampWithTimeZone("valid_to").clientDefault { currentTimeUtc() }
-    val metadata = jsonb<Map<String, String>>("metadata", Json)
+    val metadata = jsonb<JsonObject>("metadata", Json)
 }
 
 enum class DatabaseRequestStatus {

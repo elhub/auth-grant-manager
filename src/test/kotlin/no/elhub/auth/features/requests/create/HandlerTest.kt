@@ -9,6 +9,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.datetime.LocalDate
+import kotlinx.serialization.json.JsonObject
 import no.elhub.auth.features.businessprocesses.BusinessProcessError
 import no.elhub.auth.features.businessprocesses.changeofbalancesupplier.ChangeOfBalanceSupplierValidationError
 import no.elhub.auth.features.common.CreateScopeData
@@ -31,6 +32,7 @@ import no.elhub.auth.features.requests.create.command.RequestMetaMarker
 import no.elhub.auth.features.requests.create.command.withTextVersion
 import no.elhub.auth.features.requests.create.model.CreateRequestCoreMeta
 import no.elhub.auth.features.requests.create.model.CreateRequestModel
+import no.elhub.auth.jsonObjectOf
 
 class HandlerTest : FunSpec({
 
@@ -77,8 +79,8 @@ class HandlerTest : FunSpec({
         )
 
     val commandMeta = object : RequestMetaMarker {
-        override fun toRequestMetaAttributes(): Map<String, String> =
-            mapOf("k" to "v").withTextVersion("v1")
+        override fun toRequestMetaAttributes(): JsonObject =
+            jsonObjectOf("k" to "v").withTextVersion("v1")
     }
 
     val command =

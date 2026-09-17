@@ -1,5 +1,6 @@
 package no.elhub.auth.features.businessprocesses.changeofbalancesupplier
 
+import kotlinx.serialization.json.jsonPrimitive
 import arrow.core.Either
 import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
@@ -662,8 +663,8 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
 
             command.type shouldBe AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson
             command.validTo shouldBe todayOslo().plus(DatePeriod(days = 28)).toTimeZoneOffsetDateTimeAtStartOfDay()
-            command.meta.toRequestMetaAttributes()["redirectURI"] shouldBe "https://example.com"
-            command.meta.toRequestMetaAttributes()[TEXT_VERSION_KEY] shouldBe "v1"
+            command.meta.toRequestMetaAttributes()["redirectURI"]?.jsonPrimitive?.content shouldBe "https://example.com"
+            command.meta.toRequestMetaAttributes()[TEXT_VERSION_KEY]?.jsonPrimitive?.content shouldBe "v1"
             command.meta.toRequestMetaAttributes().containsKey("requestedForMeterNumber") shouldBe true
         }
 
@@ -701,8 +702,8 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
                 )
 
             val command = handler.validateAndReturnDocumentCommand(model).shouldBeRight()
-            command.meta.toMetaAttributes()["requestedFromName"] shouldBe "From"
-            command.meta.toMetaAttributes()["language"] shouldBe SupportedLanguage.DEFAULT.code
+            command.meta.toMetaAttributes()["requestedFromName"]?.jsonPrimitive?.content shouldBe "From"
+            command.meta.toMetaAttributes()["language"]?.jsonPrimitive?.content shouldBe SupportedLanguage.DEFAULT.code
             command.meta.toMetaAttributes().containsKey("requestedForMeterNumber") shouldBe true
         }
     })

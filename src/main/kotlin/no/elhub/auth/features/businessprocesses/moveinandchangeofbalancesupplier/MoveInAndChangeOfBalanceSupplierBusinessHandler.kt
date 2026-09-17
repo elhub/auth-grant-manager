@@ -7,6 +7,8 @@ import arrow.core.raise.either
 import arrow.core.right
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.plus
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import no.elhub.auth.features.businessprocesses.BusinessProcessError
 import no.elhub.auth.features.businessprocesses.datasharing.StromprisService
 import no.elhub.auth.features.businessprocesses.ediel.EdielEnvironment
@@ -112,8 +114,7 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandler(
     }
 
     override fun getCreateGrantProperties(request: AuthorizationRequest): CreateGrantProperties {
-        val propertyMap = request.properties
-            .filterKeys { it in ALLOWED_GRANT_PROPERTY_KEYS }
+        val propertyMap = request.properties.toGrantPropertyMap(ALLOWED_GRANT_PROPERTY_KEYS)
         return buildCreateGrantProperties(propertyMap, ALLOWED_GRANT_PROPERTY_KEYS)
     }
 
@@ -124,8 +125,7 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandler(
         }
 
     override fun getCreateGrantProperties(document: AuthorizationDocument): CreateGrantProperties {
-        val propertyMap = document.properties
-            .filterKeys { it in ALLOWED_GRANT_PROPERTY_KEYS }
+        val propertyMap = document.properties.toGrantPropertyMap(ALLOWED_GRANT_PROPERTY_KEYS)
         return buildCreateGrantProperties(propertyMap, ALLOWED_GRANT_PROPERTY_KEYS)
     }
 
@@ -140,6 +140,12 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandler(
             meta = meta
         )
     }
+
+    private fun JsonObject.toGrantPropertyMap(allowedKeys: Set<String>): Map<String, String> =
+        mapNotNull { (key, value) ->
+            val stringValue = (value as? JsonPrimitive)?.takeIf { it.isString }?.content
+            stringValue?.takeIf { key in allowedKeys }?.let { key to it }
+        }.toMap()
 
     private suspend fun validate(
         model: MoveInAndChangeOfBalanceSupplierBusinessModel

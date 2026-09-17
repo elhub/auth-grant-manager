@@ -1,6 +1,9 @@
 package no.elhub.auth.features.businessprocesses.changeofbalancesupplier.domain
 
 import kotlinx.datetime.LocalDate
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import no.elhub.auth.features.common.CreateScopeData
 import no.elhub.auth.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
 import no.elhub.auth.features.documents.AuthorizationDocument
@@ -31,8 +34,8 @@ data class ChangeOfBalanceSupplierBusinessMeta(
     val redirectURI: String? = null,
 ) : RequestMetaMarker,
     DocumentMetaMarker {
-    private fun commonMetaAttributes(): Map<String, String> =
-        buildMap {
+    private fun commonMetaAttributes(): JsonObject =
+        buildJsonObject {
             put("requestedFromName", requestedFromName)
             put("requestedForMeteringPointId", requestedForMeteringPointId)
             put("requestedForMeterNumber", requestedForMeterNumber)
@@ -43,10 +46,10 @@ data class ChangeOfBalanceSupplierBusinessMeta(
             redirectURI?.let { put("redirectURI", it) }
         }
 
-    override fun toRequestMetaAttributes(): Map<String, String> =
+    override fun toRequestMetaAttributes(): JsonObject =
         commonMetaAttributes().withTextVersion(CHANGE_OF_BALANCE_SUPPLIER_TEXT_VERSION)
 
-    override fun toMetaAttributes(): Map<String, String> = commonMetaAttributes()
+    override fun toMetaAttributes(): JsonObject = commonMetaAttributes()
 }
 
 fun ChangeOfBalanceSupplierBusinessCommand.toRequestCommand(): RequestCommand =

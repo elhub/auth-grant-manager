@@ -1,5 +1,6 @@
 package no.elhub.auth.features.requests.update
 
+import no.elhub.auth.emptyJsonObject
 import arrow.core.right
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.nulls.shouldBeNull
@@ -105,7 +106,7 @@ class RouteTest : FunSpec({
             requestedTo = requestedToParty,
             requestedFrom = requestedFromParty,
             id = UUID.fromString(authorizedPerson.id),
-            properties = emptyMap()
+            properties = emptyJsonObject()
         )
         coEvery { handler.invoke(any()) } returns authorizationRequest.right()
         testApplication {
@@ -128,7 +129,7 @@ class RouteTest : FunSpec({
             body.data.relationships.requestedTo.data.type shouldBe requestedToParty.type.name
             body.data.relationships.approvedBy.shouldBeNull()
             body.data.relationships.authorizationGrant.shouldBeNull()
-            body.data.meta.values shouldBe emptyMap()
+            body.data.meta.values shouldBe emptyJsonObject()
             body.data.links.self shouldBe "$REQUESTS_PATH/${authorizationRequest.id}"
         }
     }

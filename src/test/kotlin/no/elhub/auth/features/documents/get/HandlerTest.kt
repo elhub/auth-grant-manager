@@ -1,5 +1,6 @@
 package no.elhub.auth.features.documents.get
 
+import no.elhub.auth.jsonObjectOf
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
@@ -42,7 +43,7 @@ class HandlerTest : FunSpec({
         requestedBy = requestedBy,
         requestedFrom = requestedFrom,
         requestedTo = requestedTo,
-        properties = mapOf("k" to "v"),
+        properties = jsonObjectOf("k" to "v"),
         validTo = validTo,
         createdAt = currentTimeUtc(),
         updatedAt = currentTimeUtc()
