@@ -1,4 +1,4 @@
-FROM docker.jfrog.elhub.cloud/frzq0sxltynr/devxp/elhub-playwright:latest
+FROM docker.jfrog.elhub.cloud/frzq0sxltynr/devxp/elhub-playwright:1.63.0-noble
 
 RUN apt-get update && apt-get install -y jq && rm -rf /var/lib/apt/lists/*
 
