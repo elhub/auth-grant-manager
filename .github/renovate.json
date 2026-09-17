@@ -1,0 +1,24 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "packageRules": [
+    {
+      "description": "Only propose paired Playwright updates targeting the same major.minor; wait if the image lags npm.",
+      "matchFileNames": [
+        "integration-test/package.json",
+        "integration-test/Dockerfile"
+      ],
+      "matchDatasources": ["npm", "docker"],
+      "matchPackageNames": [
+        "playwright",
+        "docker.jfrog.elhub.cloud/frzq0sxltynr/devxp/elhub-playwright"
+      ],
+      "groupName": "integration-test Playwright {{newMajor}}.{{newMinor}}",
+      "groupSlug": "integration-test-playwright-{{newMajor}}.{{newMinor}}",
+      "minimumGroupSize": 2,
+      "separateMajorMinor": false,
+      "separateMinorPatch": false,
+      "separateMultipleMajor": false,
+      "separateMultipleMinor": false
+    }
+  ]
+}
