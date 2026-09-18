@@ -29,6 +29,7 @@ Load the relevant skill before generating code. Skills are located alongside thi
 
 | Task                                       | Skill                                                        |
 |--------------------------------------------|--------------------------------------------------------------|
+| Code reviews and pull request reviews      | `code-review`                                                |
 | Any Handler, Service, or Repository        | `functional-error-handling-arrow`                            |
 | Any new feature, action slice, or module   | `vertical-slice-architecture`                                |
 | Any Repository, Table object, or migration | `database-access-exposed-liquibase`                          |
