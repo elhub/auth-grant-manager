@@ -3,17 +3,19 @@
 ## About
 
 Auth Grant Manager, the service behind Access API, is designed to manage and track user authorizations across Elhub applications, services,
-and data processing activities. The goal is to provide a centralized platform for collecting, storing, and
-processing user authorization data.
+and data processing activities. The goal is to provide a centralized platform for collecting, storing, and processing user authorization data.
 
 The main objectives are to:
 
-* Facilitate the collection of explicit authorization/consent from users for a variety of business and data
-    processing activities.
+* Facilitate the collection of explicit authorization/consent from users for a variety of business and data processing activities.
 * Provide a centralized repository for storing and managing user authorization preferences.
-* Enable granular control over authorization grants, allowing users to specify their preferences for different
-    types of data processing activities.
+* Enable granular control over authorization grants, allowing users to specify their preferences for different types of data processing activities.
 * Ensure compliance with regulatory requirements and standards related to data privacy and consent management.
+
+### Production Status
+
+This repository contains the current development version of Auth Grant Manager. Features, fixes, and other changes may be present here before they
+are released to production. Therefore, consumers should not assume that the production service corresponds to the latest commit in this repository.
 
 ## Getting Started
 
@@ -27,12 +29,12 @@ The main objectives are to:
 
 ### Building & Running
 
-You can build and run the application locally  using gradle.
+You can build and run the application locally using gradle.
 
 #### Run Locally
 
-1. Make sure the Liquibase CLI is installed and available on your `PATH` (the Gradle plugin is temporarily removed due
-to [liquibase/liquibase-gradle-plugin#173](https://github.com/liquibase/liquibase-gradle-plugin/issues/173)); verify with `liquibase --version`.
+1. Make sure the Liquibase CLI is installed and available on your `PATH` (the Gradle plugin is temporarily removed due to
+   [liquibase/liquibase-gradle-plugin#173](https://github.com/liquibase/liquibase-gradle-plugin/issues/173)); verify with `liquibase --version`.
 2. Launch the application (Gradle will start Docker services and run the Liquibase update for you):
    ```bash
    ./gradlew run
@@ -65,12 +67,12 @@ Database operations are carried out using Liquibase. To apply changes to the dat
 
 ### Elhub Dependencies
 
-Note that this project is set up to depend on Elhub's internal package manager (see settings.gradle.kts). If you wish
-to build this externally, you will need to substitute this with Maven Central or an alternative with the relevant
-packages. Often, it should be sufficient just to replace the elhub repository with `mavenCentral()`.
+Note that this project is set up to depend on Elhub's internal package manager (see settings.gradle.kts). If you wish to build this externally, you will
+need to substitute this with Maven Central or an alternative with the relevant packages. Often, it should be sufficient just to replace the elhub
+repository with `mavenCentral()`.
 
-You will also need access to Elhub's gradle plugins which are not on Maven Central. The plugins are open source,
-though, so you can either build them yourself or access them through [Jitpack](https://jitpack.io/).
+You will also need access to Elhub's gradle plugins which are not on Maven Central. The plugins are open source, though, so you can either build them
+yourself or access them through [Jitpack](https://jitpack.io/).
 
 ### Configuration
 
@@ -86,13 +88,12 @@ See [the documentation](docs/usage.md) for information on how to use the API.
 
 ## API Endpoints
 
-Review the [OpenAPI spec](https://github.com/elhub/auth-grant-manager/blob/main/src/main/resources/static/openapi.yaml) to
-view the available endpoints.
+Review the [OpenAPI spec](https://github.com/elhub/auth-grant-manager/blob/main/src/main/resources/static/openapi.yaml) to view the available endpoints.
 
 ## Contributing
 
-Contributing, issues and feature requests are welcome. See the
-[Contributing](https://github.com/elhub/auth-grant-manager/blob/main/.github/CONTRIBUTING.md) file.
+Contributing, issues and feature requests are welcome. See the [Contributing](https://github.com/elhub/auth-grant-manager/blob/main/.github/CONTRIBUTING.md)
+file.
 
 ## Owners
 
