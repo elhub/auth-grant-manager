@@ -14,6 +14,7 @@ import no.elhub.auth.features.common.party.AuthorizationParty
 import no.elhub.auth.features.common.party.ExposedPartyRepository
 import no.elhub.auth.features.common.party.PartyType
 import no.elhub.auth.features.documents.AuthorizationDocument
+import no.elhub.auth.features.grants.common.ExposedAuditLogRepository
 import no.elhub.auth.features.grants.common.ExposedGrantPropertiesRepository
 import no.elhub.auth.features.grants.common.ExposedGrantRepository
 import org.jetbrains.exposed.v1.jdbc.Database
@@ -27,7 +28,13 @@ class ExposedDocumentPropertiesRepositoryTest : FunSpec({
     val repository = ExposedDocumentPropertiesRepository()
     val partyRepo = ExposedPartyRepository()
     val grantPropertiesRepository = ExposedGrantPropertiesRepository(transactionContext)
-    val grantRepository = ExposedGrantRepository(partyRepo, grantPropertiesRepository, transactionContext)
+    val auditLogRepository = ExposedAuditLogRepository(transactionContext)
+    val grantRepository = ExposedGrantRepository(
+        partyRepo,
+        grantPropertiesRepository,
+        auditLogRepository,
+        transactionContext,
+    )
     val documentRepository = ExposedDocumentRepository(
         partyRepo = partyRepo,
         grantRepo = grantRepository,

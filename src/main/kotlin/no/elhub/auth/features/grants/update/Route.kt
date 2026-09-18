@@ -1,4 +1,4 @@
-package no.elhub.auth.features.grants.consume
+package no.elhub.auth.features.grants.update
 
 import arrow.core.getOrElse
 import io.ktor.http.HttpStatusCode
@@ -12,7 +12,7 @@ import no.elhub.auth.features.common.toTypeMismatchApiErrorResponse
 import no.elhub.auth.features.common.validateDataId
 import no.elhub.auth.features.common.validatePathId
 import no.elhub.auth.features.grants.common.dto.toSingleGrantResponse
-import no.elhub.auth.features.grants.consume.dto.JsonApiConsumeRequest
+import no.elhub.auth.features.grants.update.dto.JsonApiUpdateRequest
 import org.slf4j.LoggerFactory
 
 private val logger = LoggerFactory.getLogger(Route::class.java)
@@ -28,7 +28,7 @@ fun Route.route(handler: Handler) {
                 return@patch
             }
 
-        val requestBody = call.receiveEither<JsonApiConsumeRequest>()
+        val requestBody = call.receiveEither<JsonApiUpdateRequest>()
             .getOrElse { error ->
                 val (status, body) = error.toApiErrorResponse()
                 call.respond(status, body)
@@ -51,7 +51,7 @@ fun Route.route(handler: Handler) {
             return@patch
         }
 
-        val command = ConsumeCommand(
+        val command = UpdateCommand(
             grantId = grantId,
             newStatus = requestBody.data.attributes.status,
             authorizedParty = call.authorizedParty

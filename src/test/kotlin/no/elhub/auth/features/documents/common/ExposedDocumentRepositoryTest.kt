@@ -32,6 +32,7 @@ import no.elhub.auth.features.grants.AuthorizationScope
 import no.elhub.auth.features.grants.common.AuthorizationGrantProperty
 import no.elhub.auth.features.grants.common.AuthorizationGrantPropertyTable
 import no.elhub.auth.features.grants.common.AuthorizationScopeTable
+import no.elhub.auth.features.grants.common.ExposedAuditLogRepository
 import no.elhub.auth.features.grants.common.ExposedGrantPropertiesRepository
 import no.elhub.auth.features.grants.common.ExposedGrantRepository
 import org.jetbrains.exposed.v1.core.eq
@@ -48,7 +49,13 @@ class ExposedDocumentRepositoryTest :
         val partyRepository = ExposedPartyRepository()
         val propertiesRepository = ExposedDocumentPropertiesRepository()
         val grantPropertiesRepository = ExposedGrantPropertiesRepository(transactionContext)
-        val grantRepository = ExposedGrantRepository(partyRepository, grantPropertiesRepository, transactionContext)
+        val auditLogRepository = ExposedAuditLogRepository(transactionContext)
+        val grantRepository = ExposedGrantRepository(
+            partyRepository,
+            grantPropertiesRepository,
+            auditLogRepository,
+            transactionContext,
+        )
         val repository =
             ExposedDocumentRepository(
                 partyRepository,
