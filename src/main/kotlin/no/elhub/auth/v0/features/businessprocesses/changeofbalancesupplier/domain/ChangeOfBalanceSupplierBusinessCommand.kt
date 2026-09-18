@@ -1,0 +1,66 @@
+package no.elhub.auth.v0.features.businessprocesses.changeofbalancesupplier.domain
+
+import kotlinx.datetime.LocalDate
+import no.elhub.auth.v0.features.common.CreateScopeData
+import no.elhub.auth.v0.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
+import no.elhub.auth.v0.features.documents.AuthorizationDocument
+import no.elhub.auth.v0.features.documents.create.command.DocumentCommand
+import no.elhub.auth.v0.features.documents.create.command.DocumentMetaMarker
+import no.elhub.auth.v0.features.filegenerator.SupportedLanguage
+import no.elhub.auth.v0.features.requests.AuthorizationRequest
+import no.elhub.auth.v0.features.requests.create.command.RequestCommand
+import no.elhub.auth.v0.features.requests.create.command.RequestMetaMarker
+import no.elhub.auth.v0.features.requests.create.command.withTextVersion
+
+private const val CHANGE_OF_BALANCE_SUPPLIER_TEXT_VERSION = "v1"
+
+data class ChangeOfBalanceSupplierBusinessCommand(
+    val validTo: LocalDate,
+    val scopes: List<CreateScopeData>,
+    val meta: ChangeOfBalanceSupplierBusinessMeta,
+)
+
+data class ChangeOfBalanceSupplierBusinessMeta(
+    val requestedFromName: String,
+    val requestedForMeteringPointId: String,
+    val requestedForMeterNumber: String,
+    val requestedForMeteringPointAddress: String,
+    val balanceSupplierName: String,
+    val balanceSupplierContractName: String,
+    val language: SupportedLanguage? = null,
+    val redirectURI: String? = null,
+) : RequestMetaMarker,
+    DocumentMetaMarker {
+    private fun commonMetaAttributes(): Map<String, String> =
+        buildMap {
+            put("requestedFromName", requestedFromName)
+            put("requestedForMeteringPointId", requestedForMeteringPointId)
+            put("requestedForMeterNumber", requestedForMeterNumber)
+            put("requestedForMeteringPointAddress", requestedForMeteringPointAddress)
+            put("balanceSupplierContractName", balanceSupplierContractName)
+            put("balanceSupplierName", balanceSupplierName)
+            language?.let { put("language", it.code) }
+            redirectURI?.let { put("redirectURI", it) }
+        }
+
+    override fun toRequestMetaAttributes(): Map<String, String> =
+        commonMetaAttributes().withTextVersion(CHANGE_OF_BALANCE_SUPPLIER_TEXT_VERSION)
+
+    override fun toMetaAttributes(): Map<String, String> = commonMetaAttributes()
+}
+
+fun ChangeOfBalanceSupplierBusinessCommand.toRequestCommand(): RequestCommand =
+    RequestCommand(
+        type = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
+        scopes = this.scopes,
+        validTo = this.validTo.toTimeZoneOffsetDateTimeAtStartOfDay(),
+        meta = this.meta,
+    )
+
+fun ChangeOfBalanceSupplierBusinessCommand.toDocumentCommand(): DocumentCommand =
+    DocumentCommand(
+        type = AuthorizationDocument.Type.ChangeOfBalanceSupplierForPerson,
+        scopes = this.scopes,
+        validTo = this.validTo.toTimeZoneOffsetDateTimeAtStartOfDay(),
+        meta = this.meta,
+    )

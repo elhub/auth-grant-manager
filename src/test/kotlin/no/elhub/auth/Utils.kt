@@ -1,4 +1,4 @@
-package no.elhub.auth
+package no.elhub.auth.v0
 
 import io.kotest.matchers.Matcher
 import io.kotest.matchers.MatcherResult
@@ -22,10 +22,10 @@ import io.ktor.server.application.install
 import io.ktor.server.routing.Routing
 import io.ktor.server.routing.routing
 import io.ktor.server.testing.ApplicationTestBuilder
-import no.elhub.auth.config.configureErrorHandling
-import no.elhub.auth.config.configureSerialization
-import no.elhub.auth.features.common.auth.AuthorizedPartyKey
-import no.elhub.auth.features.common.party.AuthorizationParty
+import no.elhub.auth.v0.config.configureErrorHandling
+import no.elhub.auth.v0.config.configureSerialization
+import no.elhub.auth.v0.features.common.auth.AuthorizedPartyKey
+import no.elhub.auth.v0.features.common.party.AuthorizationParty
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import java.util.UUID
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation as ClientContentNegotiation

@@ -1,0 +1,140 @@
+package no.elhub.auth.v0.features.documents.create
+
+import arrow.core.Either
+import arrow.core.raise.either
+import arrow.core.raise.ensure
+import no.elhub.auth.v0.features.common.party.PartyError
+import no.elhub.auth.v0.features.common.party.PartyService
+import no.elhub.auth.v0.features.common.party.PartyType
+import no.elhub.auth.v0.features.documents.AuthorizationDocument
+import no.elhub.auth.v0.features.documents.common.AuthorizationDocumentProperty
+import no.elhub.auth.v0.features.documents.common.CreateDocumentBusinessModel
+import no.elhub.auth.v0.features.documents.common.DocumentBusinessHandler
+import no.elhub.auth.v0.features.documents.common.DocumentRepository
+import no.elhub.auth.v0.features.documents.common.SignatureService
+import no.elhub.auth.v0.features.documents.create.model.CreateDocumentModel
+import org.slf4j.LoggerFactory
+
+class Handler(
+    private val businessHandler: DocumentBusinessHandler,
+    private val signatureService: SignatureService,
+    private val documentRepository: DocumentRepository,
+    private val partyService: PartyService,
+    private val fileGenerator: FileGenerator
+) {
+    private val logger = LoggerFactory.getLogger(Handler::class.java)
+
+    suspend operator fun invoke(model: CreateDocumentModel): Either<CreateError, AuthorizationDocument> =
+        either {
+            logger.info("event=authorization_document_creation type=${model.documentType}")
+
+            ensure(model.authorizedParty.type == PartyType.OrganizationEntity) {
+                CreateError.InvalidPartyTypeError
+            }
+
+            val requestedByParty =
+                partyService
+                    .resolve(model.coreMeta.requestedBy)
+                    .mapLeft { error ->
+                        when (error) {
+                            PartyError.InvalidNin -> CreateError.InvalidNinError
+                            is PartyError.PersonResolutionError -> CreateError.RequestedPartyError
+                        }
+                    }
+                    .bind()
+
+            ensure(model.authorizedParty == requestedByParty) {
+                CreateError.MismatchBetweenAuthorizedPartyAndRequestedBy
+            }
+
+            val requestedFromParty =
+                partyService
+                    .resolve(model.coreMeta.requestedFrom)
+                    .mapLeft { error ->
+                        when (error) {
+                            PartyError.InvalidNin -> CreateError.InvalidNinError
+                            is PartyError.PersonResolutionError -> CreateError.RequestedPartyError
+                        }
+                    }
+                    .bind()
+
+            val requestedToParty =
+                partyService
+                    .resolve(model.coreMeta.requestedTo)
+                    .mapLeft { error ->
+                        when (error) {
+                            PartyError.InvalidNin -> CreateError.InvalidNinError
+                            is PartyError.PersonResolutionError -> CreateError.RequestedPartyError
+                        }
+                    }
+                    .bind()
+
+            ensure(requestedFromParty == requestedToParty) {
+                CreateError.RequestedToRequestedFromMismatch
+            }
+
+            val businessModel = CreateDocumentBusinessModel(
+                authorizedParty = model.authorizedParty,
+                documentType = model.documentType,
+                requestedBy = requestedByParty,
+                requestedFrom = requestedFromParty,
+                meta = model.businessMeta
+            )
+
+            val command =
+                businessHandler
+                    .validateAndReturnDocumentCommand(businessModel)
+                    .mapLeft { err ->
+                        logger.info("event=authorization_document_business_validation_error kind=${err.kind} detail=${err.detail}")
+                        CreateError.BusinessError(err)
+                    }
+                    .bind()
+
+            val file =
+                fileGenerator
+                    .generate(command.meta)
+                    .mapLeft {
+                        CreateError.FileGenerationError
+                    }
+                    .bind()
+
+            val signedFile = signatureService.sign(file)
+                .mapLeft { CreateError.SignFileError(cause = it) }
+                .bind()
+
+            val documentProperties =
+                command.meta
+                    .toMetaAttributes()
+                    .toDocumentProperties()
+
+            val documentToCreate =
+                AuthorizationDocument.create(
+                    type = command.type,
+                    file = signedFile,
+                    requestedBy = requestedByParty,
+                    requestedFrom = requestedFromParty,
+                    requestedTo = requestedToParty,
+                    properties = documentProperties,
+                    validTo = command.validTo,
+                )
+
+            val savedDocument = documentRepository
+                .insert(documentToCreate, command.scopes)
+                .mapLeft { CreateError.PersistenceError }
+                .bind()
+                .also { document ->
+                    logger.info("event=authorization_document_created id=${document.id} type=${document.type}")
+                }
+
+            savedDocument
+        }
+}
+
+fun Map<String, String>.toDocumentProperties() =
+    this
+        .map { (key, value) ->
+            AuthorizationDocumentProperty(
+                key = key,
+                value = value,
+            )
+        }.toList()

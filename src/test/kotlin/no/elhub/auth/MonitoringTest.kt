@@ -1,4 +1,4 @@
-package no.elhub.auth
+package no.elhub.auth.v0
 
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe

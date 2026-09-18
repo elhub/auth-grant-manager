@@ -1,20 +1,20 @@
 ktor:
   application:
     modules:
-      - no.elhub.auth.ApplicationKt.module
-      - no.elhub.auth.features.common.CommonModuleKt.commonModule
-      - no.elhub.auth.features.featuretoggles.ModuleKt.unleashModule
-      - no.elhub.auth.features.common.CommonModuleKt.personServiceModule
-      - no.elhub.auth.features.businessprocesses.datasharing.StromprisServiceModuleKt.stromprisServiceModule
-      - no.elhub.auth.features.businessprocesses.ediel.EdielServiceModuleKt.edielServiceModule
-      - no.elhub.auth.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceModuleKt.meteringPointsServiceModule
-      - no.elhub.auth.features.businessprocesses.structuredata.organisations.OrganisationsServiceModuleKt.organisationsServiceModule
-      - no.elhub.auth.features.businessprocesses.BusinessProcessesModuleKt.businessProcessesModule
-      - no.elhub.auth.features.openapi.ModuleKt.module
-      - no.elhub.auth.features.grants.ModuleKt.module
-      - no.elhub.auth.features.documents.ModuleKt.module
-      - no.elhub.auth.features.requests.ModuleKt.module
-      - no.elhub.auth.features.common.ModuleKt.module
+      - no.elhub.auth.v0.ApplicationModuleKt.module
+      - no.elhub.auth.v0.features.common.CommonModuleKt.commonModule
+      - no.elhub.auth.v0.features.featuretoggles.ModuleKt.unleashModule
+      - no.elhub.auth.v0.features.common.CommonModuleKt.personServiceModule
+      - no.elhub.auth.v0.features.businessprocesses.datasharing.StromprisServiceModuleKt.stromprisServiceModule
+      - no.elhub.auth.v0.features.businessprocesses.ediel.EdielServiceModuleKt.edielServiceModule
+      - no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceModuleKt.meteringPointsServiceModule
+      - no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceModuleKt.organisationsServiceModule
+      - no.elhub.auth.v0.features.businessprocesses.BusinessProcessesModuleKt.businessProcessesModule
+      - no.elhub.auth.v0.features.openapi.ModuleKt.module
+      - no.elhub.auth.v0.features.grants.ModuleKt.module
+      - no.elhub.auth.v0.features.documents.ModuleKt.module
+      - no.elhub.auth.v0.features.requests.ModuleKt.module
+      - no.elhub.auth.v0.features.common.ModuleKt.module
   deployment:
     port: 8080
   database:

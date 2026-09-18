@@ -1,12 +1,13 @@
-package no.elhub.auth
+package no.elhub.auth.v0
 
 import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.testing.TestApplication
-import no.elhub.auth.features.documents.TestCertificateUtil
-import no.elhub.auth.features.documents.module as documentsModule
-import no.elhub.auth.features.grants.module as grantsModule
-import no.elhub.auth.features.openapi.module as openapiModule
-import no.elhub.auth.features.requests.module as requestsModule
+import no.elhub.auth.v0.features.documents.TestCertificateUtil
+import no.elhub.auth.v0.module
+import no.elhub.auth.v0.features.documents.module as documentsModule
+import no.elhub.auth.v0.features.grants.module as grantsModule
+import no.elhub.auth.v0.features.openapi.module as openapiModule
+import no.elhub.auth.v0.features.requests.module as requestsModule
 
 fun defaultTestApplication(): TestApplication = TestApplication {
     application {
