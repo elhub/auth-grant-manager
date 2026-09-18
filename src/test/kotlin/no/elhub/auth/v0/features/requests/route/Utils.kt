@@ -1,0 +1,234 @@
+package no.elhub.auth.v0.features.requests.route
+
+import arrow.core.left
+import arrow.core.right
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.serialization.kotlinx.json.json
+import io.ktor.server.application.Application
+import io.ktor.server.config.MapApplicationConfig
+import io.ktor.server.plugins.di.dependencies
+import io.ktor.server.testing.ApplicationTestBuilder
+import kotlinx.datetime.DatePeriod
+import kotlinx.datetime.plus
+import no.elhub.auth.v0.features.businessprocesses.BusinessProcessError
+import no.elhub.auth.v0.features.common.AuthPersonsTestContainer
+import no.elhub.auth.v0.features.common.CreateScopeData
+import no.elhub.auth.v0.features.common.commonModule
+import no.elhub.auth.v0.features.common.party.PartyIdentifier
+import no.elhub.auth.v0.features.common.party.PartyIdentifierType
+import no.elhub.auth.v0.features.common.stubAuthPersonsTokenProvider
+import no.elhub.auth.v0.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
+import no.elhub.auth.v0.features.common.todayOslo
+import no.elhub.auth.v0.features.grants.AuthorizationScope
+import no.elhub.auth.v0.features.grants.common.CreateGrantProperties
+import no.elhub.auth.v0.features.requests.AuthorizationRequest
+import no.elhub.auth.v0.features.requests.common.AuthorizationRequestPropertyTable
+import no.elhub.auth.v0.features.requests.common.AuthorizationRequestTable
+import no.elhub.auth.v0.features.requests.common.CreateRequestBusinessModel
+import no.elhub.auth.v0.features.requests.common.DatabaseRequestStatus
+import no.elhub.auth.v0.features.requests.common.RequestBusinessHandler
+import no.elhub.auth.v0.features.requests.create.command.RequestCommand
+import no.elhub.auth.v0.features.requests.create.command.RequestMetaMarker
+import no.elhub.auth.v0.features.requests.create.command.withTextVersion
+import no.elhub.auth.v0.features.requests.create.dto.CreateRequestAttributes
+import no.elhub.auth.v0.features.requests.create.dto.CreateRequestMeta
+import no.elhub.auth.v0.features.requests.create.dto.JsonApiCreateRequest
+import no.elhub.auth.v0.features.requests.create.requesttypes.RequestTypeValidationError
+import no.elhub.auth.v0.features.requests.module
+import no.elhub.auth.v0.features.requests.update.dto.JsonApiUpdateRequest
+import no.elhub.auth.v0.features.requests.update.dto.UpdateRequestAttributes
+import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObject
+import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObjectWithMeta
+import org.jetbrains.exposed.v1.jdbc.batchInsert
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
+import java.util.UUID
+import no.elhub.auth.v0.module as applicationModule
+
+const val REQUESTED_FROM_NIN = "02916297702"
+const val REQUESTED_TO_NIN = REQUESTED_FROM_NIN
+private const val CHANGE_OF_BALANCE_SUPPLIER_TEXT_VERSION = "v1"
+
+fun ApplicationTestBuilder.setUpAuthorizationRequestTestApplication() {
+    client = createClient {
+        install(ContentNegotiation) {
+            json()
+        }
+    }
+
+    application {
+        applicationModule()
+        testRequestBusinessModule()
+        commonModule()
+        stubAuthPersonsTokenProvider()
+        module()
+    }
+
+    environment {
+        config =
+            MapApplicationConfig(
+                "ktor.database.username" to "app",
+                "ktor.database.password" to "app",
+                "ktor.database.url" to "jdbc:postgresql://localhost:5432/auth",
+                "ktor.database.driverClass" to "org.postgresql.Driver",
+                "featureToggle.enableEndpoints" to "true",
+                "authPersons.baseUri" to AuthPersonsTestContainer.baseUri(),
+                "authPersons.idp.clientId" to "test-client-id",
+                "authPersons.idp.clientSecret" to "test-client-secret",
+                "idp.tokenUrl" to "http://localhost:9999/token",
+                "pdp.baseUrl" to "http://localhost:8085"
+            )
+    }
+}
+
+fun Application.testRequestBusinessModule() {
+    dependencies {
+        provide<RequestBusinessHandler> { TestRequestBusinessHandler() }
+    }
+}
+
+class TestRequestBusinessHandler : RequestBusinessHandler {
+    override suspend fun validateAndReturnRequestCommand(createRequestModel: CreateRequestBusinessModel) =
+        when (createRequestModel.requestType) {
+            AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson -> {
+                val meta = createRequestModel.meta
+                if (meta.requestedFromName.isBlank()) {
+                    BusinessProcessError.Validation(TestRequestValidationError.MissingRequestedFromName.message).left()
+                } else {
+                    RequestCommand(
+                        type = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
+                        validTo = todayOslo().plus(DatePeriod(days = 30)).toTimeZoneOffsetDateTimeAtStartOfDay(),
+                        scopes = listOf(
+                            CreateScopeData(
+                                authorizedResourceType = AuthorizationScope.AuthorizationResource.MeteringPoint,
+                                authorizedResourceId = meta.requestedForMeteringPointId,
+                                permissionType = AuthorizationScope.PermissionType.ChangeOfBalanceSupplierForPerson
+                            )
+                        ),
+                        meta = TestRequestMeta(
+                            requestedFromName = meta.requestedFromName,
+                            requestedForMeteringPointId = meta.requestedForMeteringPointId,
+                            requestedForMeteringPointAddress = meta.requestedForMeteringPointAddress,
+                            balanceSupplierName = meta.balanceSupplierName,
+                            balanceSupplierContractName = meta.balanceSupplierContractName,
+                            redirectURI = meta.redirectURI,
+                        ),
+                    ).right()
+                }
+            }
+
+            else -> BusinessProcessError.Validation(TestRequestValidationError.UnsupportedRequestType.message).left()
+        }
+
+    override fun getCreateGrantProperties(request: AuthorizationRequest): CreateGrantProperties =
+        CreateGrantProperties(
+            validFrom = todayOslo(),
+            validTo = todayOslo().plus(DatePeriod(days = 30)),
+        )
+}
+
+fun insertAuthorizationRequest(
+    status: DatabaseRequestStatus = DatabaseRequestStatus.Pending,
+    validToDate: OffsetDateTime = OffsetDateTime.now(ZoneOffset.UTC).plusDays(10),
+    properties: Map<String, String> = emptyMap()
+): UUID {
+    val requestId = UUID.randomUUID()
+    val requestedById = UUID.fromString("22222222-2222-2222-2222-222222222222")
+    val requestedFromId = UUID.fromString("11111111-1111-1111-1111-111111111111")
+    val requestedToId = UUID.fromString("11111111-1111-1111-1111-111111111111")
+
+    transaction {
+        AuthorizationRequestTable.insert {
+            it[id] = requestId
+            it[requestType] = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson
+            it[requestStatus] = status
+            it[requestedBy] = requestedById
+            it[requestedFrom] = requestedFromId
+            it[requestedTo] = requestedToId
+            it[approvedBy] = null
+            it[validTo] = validToDate
+        }
+
+        val requestProperties = properties.withTextVersion(CHANGE_OF_BALANCE_SUPPLIER_TEXT_VERSION)
+        if (requestProperties.isNotEmpty()) {
+            AuthorizationRequestPropertyTable.batchInsert(requestProperties.entries) { (key, value) ->
+                this[AuthorizationRequestPropertyTable.requestId] = requestId
+                this[AuthorizationRequestPropertyTable.key] = key
+                this[AuthorizationRequestPropertyTable.value] = value
+            }
+        }
+    }
+
+    return requestId
+}
+
+sealed class TestRequestValidationError : RequestTypeValidationError {
+    data object MissingRequestedFromName : TestRequestValidationError() {
+        override val code: String = "missing_requested_from_name"
+        override val message: String = "Requested from name is missing"
+    }
+
+    data object UnsupportedRequestType : TestRequestValidationError() {
+        override val code: String = "unsupported_request_type"
+        override val message: String = "Unsupported request type"
+    }
+}
+
+data class TestRequestMeta(
+    val requestedFromName: String,
+    val requestedForMeteringPointId: String,
+    val requestedForMeteringPointAddress: String,
+    val balanceSupplierName: String,
+    val balanceSupplierContractName: String,
+    val redirectURI: String? = null,
+) : RequestMetaMarker {
+    override fun toRequestMetaAttributes(): Map<String, String> =
+        buildMap {
+            put("requestedFromName", requestedFromName)
+            put("requestedForMeteringPointId", requestedForMeteringPointId)
+            put("requestedForMeteringPointAddress", requestedForMeteringPointAddress)
+            put("balanceSupplierName", balanceSupplierName)
+            put("balanceSupplierContractName", balanceSupplierContractName)
+            redirectURI?.let { put("redirectURI", it) }
+        }.withTextVersion(CHANGE_OF_BALANCE_SUPPLIER_TEXT_VERSION)
+}
+
+val examplePostBody = JsonApiCreateRequest(
+    data = JsonApiRequestResourceObjectWithMeta(
+        type = "AuthorizationRequest",
+        attributes =
+        CreateRequestAttributes(requestType = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson),
+        meta = CreateRequestMeta(
+            requestedBy = PartyIdentifier(
+                PartyIdentifierType.GlobalLocationNumber,
+                "0107000000021"
+            ),
+            requestedFrom = PartyIdentifier(
+                PartyIdentifierType.NationalIdentityNumber,
+                REQUESTED_FROM_NIN,
+            ),
+            requestedFromName = "Hillary Orr",
+            requestedTo = PartyIdentifier(
+                PartyIdentifierType.NationalIdentityNumber,
+                REQUESTED_TO_NIN
+            ),
+            requestedForMeteringPointId = "123456789012345678",
+            requestedForMeteringPointAddress = "quaerendum",
+            balanceSupplierName = "Balance Supplier",
+            balanceSupplierContractName = "Selena Chandler",
+            redirectURI = "https://example.com/redirect",
+        ),
+    ),
+)
+
+val examplePatchBody = JsonApiUpdateRequest(
+    data = JsonApiRequestResourceObject(
+        id = "427c1432-664e-46f8-8b8d-5599916cb3cf",
+        type = "AuthorizationRequest",
+        attributes = UpdateRequestAttributes(
+            status = AuthorizationRequest.Status.Accepted
+        )
+    )
+)

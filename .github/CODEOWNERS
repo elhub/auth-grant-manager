@@ -8,13 +8,13 @@
 * @elhub/team-devxp @elhub/chapter-auth
 
 # Business process modules
-/src/main/kotlin/no/elhub/auth/features/businessprocesses/changeofbalancesupplier/ @elhub/team-wow
-/src/test/kotlin/no/elhub/auth/features/businessprocesses/changeofbalancesupplier/ @elhub/team-wow
-/src/main/kotlin/no/elhub/auth/features/businessprocesses/moveinandchangeofbalancesupplier/ @elhub/team-wow
-/src/test/kotlin/no/elhub/auth/features/businessprocesses/moveinandchangeofbalancesupplier/ @elhub/team-wow
-/src/main/kotlin/no/elhub/auth/features/businessprocesses/structuredata/ @elhub/team-wow
-/src/test/kotlin/no/elhub/auth/features/businessprocesses/structuredata/ @elhub/team-wow
-/src/main/kotlin/no/elhub/auth/features/businessprocesses/datasharing/ @elhub/team-wow
-/src/test/kotlin/no/elhub/auth/features/businessprocesses/datasharing/ @elhub/team-wow
-/src/main/kotlin/no/elhub/auth/features/businessprocesses/ediel/ @elhub/team-wow
-/src/test/kotlin/no/elhub/auth/features/businessprocesses/ediel/ @elhub/team-wow
+/src/main/kotlin/no/elhub/auth/v0/features/businessprocesses/changeofbalancesupplier/ @elhub/team-wow
+/src/test/kotlin/no/elhub/auth/v0/features/businessprocesses/changeofbalancesupplier/ @elhub/team-wow
+/src/main/kotlin/no/elhub/auth/v0/features/businessprocesses/moveinandchangeofbalancesupplier/ @elhub/team-wow
+/src/test/kotlin/no/elhub/auth/v0/features/businessprocesses/moveinandchangeofbalancesupplier/ @elhub/team-wow
+/src/main/kotlin/no/elhub/auth/v0/features/businessprocesses/structuredata/ @elhub/team-wow
+/src/test/kotlin/no/elhub/auth/v0/features/businessprocesses/structuredata/ @elhub/team-wow
+/src/main/kotlin/no/elhub/auth/v0/features/businessprocesses/datasharing/ @elhub/team-wow
+/src/test/kotlin/no/elhub/auth/v0/features/businessprocesses/datasharing/ @elhub/team-wow
+/src/main/kotlin/no/elhub/auth/v0/features/businessprocesses/ediel/ @elhub/team-wow
+/src/test/kotlin/no/elhub/auth/v0/features/businessprocesses/ediel/ @elhub/team-wow

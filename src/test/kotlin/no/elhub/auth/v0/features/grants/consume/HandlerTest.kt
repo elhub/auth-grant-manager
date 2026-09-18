@@ -1,0 +1,160 @@
+package no.elhub.auth.v0.features.grants.consume
+
+import arrow.core.Either
+import arrow.core.left
+import arrow.core.right
+import io.kotest.assertions.arrow.core.shouldBeLeft
+import io.kotest.assertions.arrow.core.shouldBeRight
+import io.kotest.core.spec.style.FunSpec
+import io.mockk.coEvery
+import io.mockk.mockk
+import no.elhub.auth.v0.features.common.RepositoryError
+import no.elhub.auth.v0.features.common.RepositoryWriteError
+import no.elhub.auth.v0.features.common.currentTimeUtc
+import no.elhub.auth.v0.features.common.party.AuthorizationParty
+import no.elhub.auth.v0.features.common.party.PartyType
+import no.elhub.auth.v0.features.grants.AuthorizationGrant
+import no.elhub.auth.v0.features.grants.AuthorizationGrant.SourceType
+import no.elhub.auth.v0.features.grants.AuthorizationGrant.Status
+import no.elhub.auth.v0.features.grants.common.AuthorizationGrantProperty
+import no.elhub.auth.v0.features.grants.common.GrantRepository
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
+import java.util.UUID
+
+class HandlerTest : FunSpec({
+
+    val grantId = UUID.randomUUID()
+    val newStatus = Status.Exhausted
+    val grantedFor = AuthorizationParty(id = "person-1", type = PartyType.Person)
+    val grantedBy = AuthorizationParty(id = "issuer-1", type = PartyType.Organization)
+    val grantedTo = AuthorizationParty(id = "org-entity-1", type = PartyType.OrganizationEntity)
+    val scopeIds = listOf(UUID.randomUUID(), UUID.randomUUID())
+
+    val updatedGrant = AuthorizationGrant(
+        id = grantId,
+        grantStatus = newStatus,
+        grantedFor = grantedFor,
+        grantedBy = grantedBy,
+        grantedTo = grantedTo,
+        grantedAt = currentTimeUtc(),
+        validFrom = currentTimeUtc(),
+        createdAt = currentTimeUtc(),
+        updatedAt = currentTimeUtc(),
+        validTo = currentTimeUtc().plusYears(1),
+        sourceType = SourceType.Document,
+        sourceId = UUID.randomUUID(),
+        scopeIds = scopeIds,
+        properties = listOf(
+            AuthorizationGrantProperty(
+                grantId = grantId,
+                key = "moveInDate",
+                value = "2024-01-01"
+            )
+        )
+    )
+    val activeGrant = AuthorizationGrant(
+        id = grantId,
+        grantStatus = Status.Active,
+        grantedFor = grantedFor,
+        grantedBy = grantedBy,
+        grantedTo = grantedTo,
+        grantedAt = currentTimeUtc(),
+        createdAt = currentTimeUtc(),
+        updatedAt = currentTimeUtc(),
+        validFrom = currentTimeUtc().minusDays(1),
+        validTo = currentTimeUtc().plusYears(1),
+        sourceType = SourceType.Document,
+        sourceId = UUID.randomUUID(),
+        scopeIds = scopeIds,
+        properties = emptyList()
+    )
+
+    val consentManagementSystem = AuthorizationParty(
+        id = "osb-to-consent-management",
+        type = PartyType.System,
+    )
+
+    fun repoReturning(
+        updateResult: Either<RepositoryError, AuthorizationGrant>
+    ): GrantRepository =
+        mockk<GrantRepository> {
+            coEvery { update(grantId, newStatus) } returns updateResult
+        }
+
+    test("maps repository error to PersistenceError") {
+
+        val error: RepositoryError = RepositoryWriteError.UnexpectedError
+        val handler = Handler(repoReturning(updateResult = error.left()))
+
+        val response = handler(
+            ConsumeCommand(
+                grantId = grantId,
+                newStatus = newStatus,
+                authorizedParty = consentManagementSystem
+            )
+        )
+
+        response.shouldBeLeft(ConsumeError.PersistenceError)
+    }
+
+    test("returns updated grant when authorized party is consent management system") {
+        val handler = Handler(repoReturning(updateResult = updatedGrant.right()))
+
+        val response = handler(
+            ConsumeCommand(
+                grantId = grantId,
+                newStatus = newStatus,
+                authorizedParty = consentManagementSystem
+            )
+        )
+
+        response.shouldBeRight(updatedGrant)
+    }
+
+    test("returns ExpiredError when repo returns ExpiredError") {
+        val expiredGrant = activeGrant.copy(
+            validTo = OffsetDateTime.now(ZoneOffset.UTC).minusSeconds(1)
+        )
+
+        val handler = Handler(repoReturning(updateResult = RepositoryWriteError.ExpiredError.left()))
+        val response = handler(
+            ConsumeCommand(
+                grantId = grantId,
+                newStatus = newStatus,
+                authorizedParty = consentManagementSystem
+            )
+        )
+
+        response.shouldBeLeft(ConsumeError.ExpiredError)
+    }
+
+    test("returns IllegalStateError when repo returns ConflictError") {
+        val exhaustedGrant = activeGrant.copy(grantStatus = Status.Exhausted)
+
+        val handler = Handler(repoReturning(updateResult = RepositoryWriteError.ConflictError.left()))
+
+        val response = handler(
+            ConsumeCommand(
+                grantId = grantId,
+                newStatus = newStatus,
+                authorizedParty = consentManagementSystem
+            )
+        )
+
+        response.shouldBeLeft(ConsumeError.IllegalStateError)
+    }
+
+    test("returns IllegalTransitionError when attempting to update grant to 'Active'") {
+        val handler = Handler(repoReturning(updateResult = updatedGrant.right()))
+        val response = handler(
+            ConsumeCommand(
+                grantId = grantId,
+                newStatus = Status.Active,
+                authorizedParty = consentManagementSystem
+            )
+        )
+
+        response.shouldBeLeft(ConsumeError.IllegalTransitionError)
+    }
+})

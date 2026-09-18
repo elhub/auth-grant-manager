@@ -1,0 +1,228 @@
+package no.elhub.auth.v0
+
+import io.kotest.matchers.Matcher
+import io.kotest.matchers.MatcherResult
+import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.should
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.request.patch
+import io.ktor.client.request.post
+import io.ktor.client.request.put
+import io.ktor.client.request.setBody
+import io.ktor.client.statement.HttpResponse
+import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.contentType
+import io.ktor.serialization.kotlinx.json.json
+import io.ktor.server.application.createApplicationPlugin
+import io.ktor.server.application.install
+import io.ktor.server.routing.Routing
+import io.ktor.server.routing.routing
+import io.ktor.server.testing.ApplicationTestBuilder
+import no.elhub.auth.v0.config.configureErrorHandling
+import no.elhub.auth.v0.config.configureSerialization
+import no.elhub.auth.v0.features.common.auth.AuthorizedPartyKey
+import no.elhub.auth.v0.features.common.party.AuthorizationParty
+import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
+import java.util.UUID
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation as ClientContentNegotiation
+
+fun String.shouldBeValidUuid() {
+    this should beValidUuid()
+}
+
+private fun beValidUuid() = Matcher<String> { s ->
+    val ok = try {
+        UUID.fromString(s)
+        true
+    } catch (_: IllegalArgumentException) {
+        false
+    }
+    MatcherResult(ok, { "Expected a valid UUID but got '$s'" }, { "Expected not to be a valid UUID" })
+}
+
+suspend fun validateMissingTokenResponse(response: HttpResponse) {
+    response.status shouldBe HttpStatusCode.Unauthorized
+    val responseJson: JsonApiErrorCollection = response.body()
+    responseJson.errors.apply {
+        size shouldBe 1
+        this[0].apply {
+            status shouldBe "401"
+            title shouldBe "Unauthorized"
+        }
+    }
+}
+
+suspend fun validateInvalidTokenResponse(response: HttpResponse) {
+    response.status shouldBe HttpStatusCode.Unauthorized
+    val responseJson: JsonApiErrorCollection = response.body()
+    responseJson.errors.apply {
+        size shouldBe 1
+        this[0].apply {
+            status shouldBe "401"
+            title shouldBe "Unauthorized"
+        }
+    }
+}
+
+suspend fun validateUnsupportedPartyResponse(response: HttpResponse) {
+    response.status shouldBe HttpStatusCode.Forbidden
+    val responseJson: JsonApiErrorCollection = response.body()
+    responseJson.errors.apply {
+        size shouldBe 1
+        this[0].apply {
+            status shouldBe "403"
+            title shouldBe "Forbidden"
+        }
+    }
+}
+
+suspend fun validateMalformedInputResponse(response: HttpResponse) {
+    response.status.value shouldBe 400
+    val responseJson: JsonApiErrorCollection = response.body()
+    responseJson.errors.apply {
+        size shouldBe 1
+
+        this[0].apply {
+            title shouldBe "Invalid input"
+            detail shouldBe "The provided payload did not satisfy the expected format"
+        }
+    }
+}
+
+suspend fun validateNotFoundResponse(response: HttpResponse) {
+    response.status.value shouldBe 404
+    val responseJson: JsonApiErrorCollection = response.body()
+    responseJson.errors.apply {
+        size shouldBe 1
+        this[0].apply {
+            title shouldBe "Not found error"
+            detail shouldBe "The requested resource could not be found"
+        }
+    }
+}
+
+suspend fun validateInternalServerErrorResponse(response: HttpResponse) {
+    response.status.value shouldBe 500
+    val responseJson: JsonApiErrorCollection = response.body()
+    responseJson.errors.apply {
+        size shouldBe 1
+        this[0].apply {
+            title shouldBe "Internal server error"
+            detail shouldBe "An internal server error occurred"
+        }
+    }
+}
+
+suspend fun validateConflictErrorResponse(response: HttpResponse) {
+    response.status shouldBe HttpStatusCode.Conflict
+    val responseJson: JsonApiErrorCollection = response.body()
+    responseJson.errors.apply {
+        size shouldBe 1
+        this[0].apply {
+            title shouldContain "mismatch"
+        }
+    }
+}
+
+suspend fun validateNotAuthorizedResponse(response: HttpResponse) {
+    response.status.value shouldBe 401
+    val responseJson: JsonApiErrorCollection = response.body()
+    responseJson.errors.apply {
+        size shouldBe 1
+        this[0].apply {
+            title shouldBe "Not authorized"
+            detail shouldBe "Authentication is required or invalid."
+        }
+    }
+}
+
+suspend fun validateForbiddenResponse(response: HttpResponse) {
+    response.status.value shouldBe 403
+    val responseJson: JsonApiErrorCollection = response.body()
+    responseJson.errors.apply {
+        size shouldBe 1
+        this[0].apply {
+            title shouldBe "Forbidden"
+            detail shouldBe "Access is denied for this endpoint."
+        }
+    }
+}
+
+suspend fun validateServiceUnavailableResponse(response: HttpResponse) {
+    response.status shouldBe HttpStatusCode.ServiceUnavailable
+    val responseJson: JsonApiErrorCollection = response.body()
+    responseJson.errors.apply {
+        size shouldBe 1
+        this[0].apply {
+            status shouldBe "503"
+            title shouldBe "Service Unavailable"
+            detail shouldBe "Service unavailable; please try again later"
+        }
+    }
+}
+
+suspend fun validatePartyNotAuthorizedResponse(response: HttpResponse) {
+    response.status shouldBe HttpStatusCode.Forbidden
+    val responseJson: JsonApiErrorCollection = response.body()
+    responseJson.errors.apply {
+        size shouldBe 1
+        this[0].apply {
+            status shouldBe "403"
+            title shouldBe "Party not authorized"
+            detail shouldBe "The party is not allowed to access this resource"
+        }
+    }
+    responseJson.meta.apply {
+        "createdAt".shouldNotBeNull()
+    }
+}
+
+suspend inline fun <reified T> HttpClient.postJson(
+    path: String,
+    body: T
+) = post(path) {
+    contentType(ContentType.Application.Json)
+    setBody(body)
+}
+
+suspend inline fun HttpClient.putPdf(
+    path: String,
+    body: ByteArray
+) = put(path) {
+    contentType(ContentType.Application.Pdf)
+    setBody(body)
+}
+
+suspend inline fun <reified T> HttpClient.patchJson(
+    path: String,
+    body: T
+) = patch(path) {
+    contentType(ContentType.Application.Json)
+    setBody(body)
+}
+
+fun ApplicationTestBuilder.setupAppWith(
+    authorizedParty: AuthorizationParty? = null,
+    routingConfig: Routing.() -> Unit
+) {
+    client = createClient {
+        install(ClientContentNegotiation) { json() }
+    }
+    application {
+        configureSerialization()
+        configureErrorHandling()
+        if (authorizedParty != null) {
+            val injectParty = createApplicationPlugin("InjectAuthorizedParty") {
+                onCall { call -> call.attributes.put(AuthorizedPartyKey, authorizedParty) }
+            }
+            this.install(injectParty)
+        }
+        routing {
+            routingConfig()
+        }
+    }
+}

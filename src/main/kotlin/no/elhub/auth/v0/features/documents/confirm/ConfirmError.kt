@@ -1,0 +1,116 @@
+package no.elhub.auth.v0.features.documents.confirm
+
+import io.ktor.http.HttpStatusCode
+import no.elhub.auth.v0.features.common.buildApiErrorResponse
+import no.elhub.auth.v0.features.common.toInternalServerApiErrorResponse
+import no.elhub.auth.v0.features.common.toNotFoundApiErrorResponse
+import no.elhub.auth.v0.features.documents.common.SignatureValidationError
+import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
+
+sealed class ConfirmError {
+    data class ValidateSignaturesError(val cause: SignatureValidationError) : ConfirmError()
+    data object InvalidPartyTypeError : ConfirmError()
+    data object SignatoryNotAllowedToSignDocument : ConfirmError()
+    data object SignatoryResolutionError : ConfirmError()
+    data object DocumentNotFoundError : ConfirmError()
+    data object DocumentReadError : ConfirmError()
+    data object DocumentUpdateError : ConfirmError()
+    data object ScopeReadError : ConfirmError()
+    data object GrantCreationError : ConfirmError()
+    data object RequestedByResolutionError : ConfirmError()
+    data object InvalidRequestedByError : ConfirmError()
+    data class IllegalStateError(val detail: String) : ConfirmError()
+}
+
+private const val END_USER_SIGNATURE_VALIDATION_FAILED = "End user signature validation failed"
+
+fun ConfirmError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> =
+    when (this) {
+        ConfirmError.DocumentNotFoundError -> toNotFoundApiErrorResponse("AuthorizationDocument could not be found.")
+
+        ConfirmError.InvalidPartyTypeError -> buildApiErrorResponse(
+            status = HttpStatusCode.Forbidden,
+            title = "Party not authorized",
+            detail = "The authorized party is not permitted to perform this action.",
+        )
+
+        is ConfirmError.ValidateSignaturesError -> handleValidateSignatureError(this)
+
+        ConfirmError.SignatoryNotAllowedToSignDocument -> buildApiErrorResponse(
+            status = HttpStatusCode.Forbidden,
+            title = "Signatory is not allowed to sign",
+            detail = "The signer is not authorized for this AuthorizationDocument."
+
+        )
+
+        ConfirmError.InvalidRequestedByError -> buildApiErrorResponse(
+            status = HttpStatusCode.Forbidden,
+            title = "Party not authorized",
+            detail = "RequestedBy must match the authorized party.",
+        )
+
+        is ConfirmError.IllegalStateError -> buildApiErrorResponse(
+            status = HttpStatusCode.UnprocessableEntity,
+            title = "Invalid status state",
+            detail = this.detail
+        )
+
+        ConfirmError.SignatoryResolutionError,
+        ConfirmError.DocumentReadError,
+        ConfirmError.DocumentUpdateError,
+        ConfirmError.ScopeReadError,
+        ConfirmError.GrantCreationError,
+        ConfirmError.RequestedByResolutionError,
+        -> toInternalServerApiErrorResponse()
+    }
+
+fun handleValidateSignatureError(error: ConfirmError.ValidateSignaturesError): Pair<HttpStatusCode, JsonApiErrorCollection> =
+    when (error.cause) {
+        SignatureValidationError.ElhubSigningCertNotTrusted,
+        SignatureValidationError.InvalidElhubSignature,
+        SignatureValidationError.ElhubSignatureModifiedAfterSigning,
+        SignatureValidationError.MissingElhubSignature -> buildApiErrorResponse(
+            status = HttpStatusCode.UnprocessableEntity,
+            title = "Elhub signature is not valid",
+            detail = "The Elhub signature could not be validated. The AuthorizationDocument may have been tampered with."
+        )
+
+        SignatureValidationError.BankIdSigningCertNotFromExpectedRoot ->
+            buildApiErrorResponse(
+                status = HttpStatusCode.UnprocessableEntity,
+                title = END_USER_SIGNATURE_VALIDATION_FAILED,
+                detail = "The end user signing certificate is not trusted."
+            )
+
+        SignatureValidationError.MissingBankIdTrustedTimestamp,
+        SignatureValidationError.BankIdSigningCertNotValidAtTimestamp,
+        SignatureValidationError.BankIdCertificateRevoked,
+        SignatureValidationError.BankIdSignatureNotPadesLT,
+        SignatureValidationError.InvalidBankIdSignature ->
+            buildApiErrorResponse(
+                status = HttpStatusCode.UnprocessableEntity,
+                title = END_USER_SIGNATURE_VALIDATION_FAILED,
+                detail = "The end user signature is invalid."
+            )
+
+        SignatureValidationError.MissingBankIdSignature ->
+            buildApiErrorResponse(
+                status = HttpStatusCode.UnprocessableEntity,
+                title = END_USER_SIGNATURE_VALIDATION_FAILED,
+                detail = "The AuthorizationDocument is missing the end user signature."
+            )
+
+        SignatureValidationError.MissingNationalId ->
+            buildApiErrorResponse(
+                status = HttpStatusCode.UnprocessableEntity,
+                title = END_USER_SIGNATURE_VALIDATION_FAILED,
+                detail = "Could not extract the Norwegian national identity number from the end user signing certificate."
+            )
+
+        SignatureValidationError.OriginalDocumentMismatch ->
+            buildApiErrorResponse(
+                status = HttpStatusCode.UnprocessableEntity,
+                title = "Original AuthorizationDocument mismatch",
+                detail = "The AuthorizationDocument provided for confirmation differs from the original generated AuthorizationDocument."
+            )
+    }
