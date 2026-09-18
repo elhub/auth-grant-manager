@@ -4,10 +4,10 @@ import io.ktor.server.application.Application
 import io.ktor.server.plugins.di.dependencies
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
-import no.elhub.auth.v0.features.grants.common.ExposedGrantPropertiesRepository
-import no.elhub.auth.v0.features.grants.common.ExposedGrantRepository
 import no.elhub.auth.plugin.policies.token.base.authinfo.AuthInfoPolicy
 import no.elhub.auth.plugin.tokenAuthorize
+import no.elhub.auth.v0.features.grants.common.ExposedGrantPropertiesRepository
+import no.elhub.auth.v0.features.grants.common.ExposedGrantRepository
 import no.elhub.auth.v0.features.grants.consume.Handler as ConsumeHandler
 import no.elhub.auth.v0.features.grants.consume.route as consumeRoute
 import no.elhub.auth.v0.features.grants.get.Handler as GetHandler

@@ -5,6 +5,8 @@ import io.ktor.server.config.ApplicationConfig
 import io.ktor.server.plugins.di.dependencies
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
+import no.elhub.auth.plugin.policies.token.base.authinfo.AuthInfoPolicy
+import no.elhub.auth.plugin.tokenAuthorize
 import no.elhub.auth.v0.features.documents.common.DocumentPropertiesRepository
 import no.elhub.auth.v0.features.documents.common.DocumentRepository
 import no.elhub.auth.v0.features.documents.common.ExposedDocumentPropertiesRepository
@@ -17,8 +19,6 @@ import no.elhub.auth.v0.features.documents.create.HashicorpVaultSignatureProvide
 import no.elhub.auth.v0.features.documents.create.VaultConfig
 import no.elhub.auth.v0.features.filegenerator.PdfGenerator
 import no.elhub.auth.v0.features.filegenerator.PdfGeneratorConfig
-import no.elhub.auth.plugin.policies.token.base.authinfo.AuthInfoPolicy
-import no.elhub.auth.plugin.tokenAuthorize
 import no.elhub.auth.v0.features.documents.confirm.Handler as ConfirmHandler
 import no.elhub.auth.v0.features.documents.confirm.route as confirmRoute
 import no.elhub.auth.v0.features.documents.create.Handler as CreateHandler

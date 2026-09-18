@@ -1,9 +1,9 @@
 package no.elhub.auth.v0.features.common.auth
 
-import no.elhub.auth.v0.features.common.party.AuthorizationParty
-import no.elhub.auth.v0.features.common.party.PartyType
 import no.elhub.auth.plugin.dto.TokenType
 import no.elhub.auth.plugin.policies.token.base.authinfo.AuthInfoPolicy
+import no.elhub.auth.v0.features.common.party.AuthorizationParty
+import no.elhub.auth.v0.features.common.party.PartyType
 import org.slf4j.LoggerFactory
 
 const val AUTHINFO_POLICY_ROUTE = "/v1/data/v3/token/authinfo"

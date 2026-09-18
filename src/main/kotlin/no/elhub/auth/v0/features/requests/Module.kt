@@ -4,6 +4,8 @@ import io.ktor.server.application.Application
 import io.ktor.server.plugins.di.dependencies
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
+import no.elhub.auth.plugin.policies.token.base.authinfo.AuthInfoPolicy
+import no.elhub.auth.plugin.tokenAuthorize
 import no.elhub.auth.v0.features.grants.common.ExposedGrantPropertiesRepository
 import no.elhub.auth.v0.features.grants.common.ExposedGrantRepository
 import no.elhub.auth.v0.features.grants.common.GrantPropertiesRepository
@@ -13,8 +15,6 @@ import no.elhub.auth.v0.features.requests.common.ExposedRequestRepository
 import no.elhub.auth.v0.features.requests.common.ProxyRequestBusinessHandler
 import no.elhub.auth.v0.features.requests.common.RequestPropertiesRepository
 import no.elhub.auth.v0.features.requests.common.RequestRepository
-import no.elhub.auth.plugin.policies.token.base.authinfo.AuthInfoPolicy
-import no.elhub.auth.plugin.tokenAuthorize
 import no.elhub.auth.v0.features.requests.create.Handler as CreateHandler
 import no.elhub.auth.v0.features.requests.create.route as createRoute
 import no.elhub.auth.v0.features.requests.get.Handler as GetHandler

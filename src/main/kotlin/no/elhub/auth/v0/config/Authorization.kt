@@ -10,11 +10,11 @@ import io.ktor.client.plugins.logging.LoggingFormat
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import kotlinx.serialization.json.Json
+import no.elhub.auth.plugin.authorization
+import no.elhub.auth.plugin.policies.token.base.authinfo.AuthInfoPolicy
 import no.elhub.auth.v0.features.common.ApiHeaders
 import no.elhub.auth.v0.features.common.auth.AuthorizedPartyKey
 import no.elhub.auth.v0.features.common.auth.resolveAuthorizedParty
-import no.elhub.auth.plugin.authorization
-import no.elhub.auth.plugin.policies.token.base.authinfo.AuthInfoPolicy
 
 fun Application.configureAuthorization() {
     val pdpHttpClient = HttpClient(Apache5) {
