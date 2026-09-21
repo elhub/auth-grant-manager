@@ -11,7 +11,6 @@ import no.elhub.auth.v0.config.configureLogging
 import no.elhub.auth.v0.config.configureMonitoring
 import no.elhub.auth.v0.config.configureRequestTracing
 import no.elhub.auth.v0.config.configureSerialization
-import no.elhub.auth.v1.features.documents.module as v1DocumentsModule
 
 fun Application.module() {
     install(DI)
@@ -25,5 +24,4 @@ fun Application.module() {
     configureErrorHandling()
     configModule()
     configureAuthorization()
-    v1DocumentsModule()
 }

@@ -2,9 +2,9 @@ package no.elhub.auth.v1.features.documents.create.dto
 
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
+import no.elhub.auth.v0.features.common.party.PartyIdentifier
 import no.elhub.auth.v1.domain.AuthorizationDocumentType
 import no.elhub.auth.v1.domain.DocumentLanguage
-import no.elhub.auth.v0.features.common.party.PartyIdentifier
 import no.elhub.devxp.jsonapi.model.JsonApiAttributes
 
 @Serializable

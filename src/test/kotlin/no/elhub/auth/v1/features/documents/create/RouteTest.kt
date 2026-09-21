@@ -1,5 +1,6 @@
 package no.elhub.auth.v1.features.documents.create
 
+import arrow.core.right
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.ktor.client.call.body
@@ -8,15 +9,19 @@ import io.ktor.server.testing.testApplication
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
-import arrow.core.right
-import no.elhub.auth.v0.features.common.party.PartyService
+import kotlinx.datetime.Clock
 import no.elhub.auth.v0.features.common.party.AuthorizationParty
+import no.elhub.auth.v0.features.common.party.PartyService
 import no.elhub.auth.v0.features.common.party.PartyType
-import no.elhub.auth.v0.setupAppWith
 import no.elhub.auth.v0.postJson
-import no.elhub.auth.v0.validateInternalServerErrorResponse
-import no.elhub.auth.v1.domain.DocumentLanguage
+import no.elhub.auth.v0.setupAppWith
+import no.elhub.auth.v1.domain.AuthorizationDocument
+import no.elhub.auth.v1.domain.AuthorizationDocumentStatus
 import no.elhub.auth.v1.domain.AuthorizationDocumentType
+import no.elhub.auth.v1.domain.DocumentLanguage
+import no.elhub.auth.v1.domain.MeteringPointId
+import no.elhub.auth.v1.domain.ResourceConstraint
+import no.elhub.auth.v1.features.documents.create.dto.JsonApiCreateAuthorizationDocumentResponse
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 
 class RouteTest : FunSpec({
@@ -53,6 +58,26 @@ class RouteTest : FunSpec({
     lateinit var partyService: PartyService
     lateinit var payloadValidator: CreateAuthorizationDocumentPayloadValidator
 
+    fun responseDocument() = AuthorizationDocument(
+        id = "123e4567-e89b-12d3-a456-426614174000",
+        documentType = AuthorizationDocumentType.ChangeOfEnergySupplierForOrganization,
+        status = AuthorizationDocumentStatus.Pending,
+        resourceConstraints = listOf(
+            ResourceConstraint.MeteringPoints(setOf(MeteringPointId.create("707057500000000001"))),
+        ),
+        allowedChanges = emptyList(),
+        externalReference = "contract-123",
+        validTo = null,
+        createdAt = Clock.System.now(),
+        updatedAt = Clock.System.now(),
+        requestedBy = authorizedParty,
+        requestedFrom = AuthorizationParty("999888777", PartyType.OrganizationEntity),
+        requestedTo = AuthorizationParty("person-1", PartyType.Person),
+        signedBy = null,
+        authorizationGrant = null,
+        pdfBytes = ByteArray(0),
+    )
+
     beforeAny {
         handler = mockk()
         partyService = mockk()
@@ -60,7 +85,9 @@ class RouteTest : FunSpec({
     }
 
     test("POST / returns 201 and passes the authorized party to the handler") {
-        coEvery { handler.invoke(any()) } returns mockk()
+        coEvery {
+            handler.createAuthorizationDocument(any(), any(), any(), any(), any(), any())
+        } returns responseDocument()
         coEvery { partyService.resolve(any()) } returnsMany listOf(
             AuthorizationParty("999888777", PartyType.OrganizationEntity).right(),
             AuthorizationParty("person-1", PartyType.Person).right(),
@@ -72,16 +99,23 @@ class RouteTest : FunSpec({
             val response = client.postJson("/", requestBody)
 
             response.status shouldBe HttpStatusCode.Created
+            val body: JsonApiCreateAuthorizationDocumentResponse = response.body()
+            body.data.type shouldBe "AuthorizationDocument"
+            body.data.id shouldBe body.data.links.self.substringAfterLast('/')
+            body.data.attributes.documentType shouldBe AuthorizationDocumentType.ChangeOfEnergySupplierForOrganization
+            body.data.attributes.status.name shouldBe "Pending"
+            body.data.meta.language shouldBe DocumentLanguage.Nb
             coVerify(exactly = 1) {
-                handler.invoke(match {
-                    it.requestedBy == authorizedParty &&
-                        it.requestedScope.documentType == AuthorizationDocumentType.ChangeOfEnergySupplierForOrganization &&
-                    it.requestedFrom.id == "999888777" &&
-                        it.requestedTo.id == "person-1" &&
-                        it.language == DocumentLanguage.Nb &&
-                        it.requestedFrom == AuthorizationParty("999888777", PartyType.OrganizationEntity) &&
-                        it.requestedTo == AuthorizationParty("person-1", PartyType.Person)
-                })
+                handler.createAuthorizationDocument(
+                    requestedScope = match {
+                        it.documentType == AuthorizationDocumentType.ChangeOfEnergySupplierForOrganization
+                    },
+                    externalReference = "contract-123",
+                    requestedBy = authorizedParty,
+                    requestedFrom = AuthorizationParty("999888777", PartyType.OrganizationEntity),
+                    requestedTo = AuthorizationParty("person-1", PartyType.Person),
+                    language = DocumentLanguage.Nb,
+                )
             }
         }
     }
@@ -95,7 +129,9 @@ class RouteTest : FunSpec({
             response.status shouldBe HttpStatusCode.Conflict
             val body: JsonApiErrorCollection = response.body()
             body.errors.single().detail shouldBe "Expected 'data.type' to be 'AuthorizationDocument', but received 'OtherResource'"
-            coVerify(exactly = 0) { handler.invoke(any()) }
+            coVerify(exactly = 0) {
+                handler.createAuthorizationDocument(any(), any(), any(), any(), any(), any())
+            }
         }
     }
 
@@ -108,12 +144,16 @@ class RouteTest : FunSpec({
             response.status shouldBe HttpStatusCode.BadRequest
             val body: JsonApiErrorCollection = response.body()
             body.errors.single().title shouldBe "Invalid request body"
-            coVerify(exactly = 0) { handler.invoke(any()) }
+            coVerify(exactly = 0) {
+                handler.createAuthorizationDocument(any(), any(), any(), any(), any(), any())
+            }
         }
     }
 
     test("POST / ignores allowed changes that are not used by change of supplier") {
-        coEvery { handler.invoke(any()) } returns mockk()
+        coEvery {
+            handler.createAuthorizationDocument(any(), any(), any(), any(), any(), any())
+        } returns responseDocument()
         coEvery { partyService.resolve(any()) } returnsMany listOf(
             AuthorizationParty("999888777", PartyType.OrganizationEntity).right(),
             AuthorizationParty("person-1", PartyType.Person).right(),
@@ -122,19 +162,32 @@ class RouteTest : FunSpec({
         testApplication {
             setupAppWith(authorizedParty) { route(partyService, handler, payloadValidator) }
 
+            val requestedScope = """
+                "requestedScope": {
+                  "appliesTo": {
+                    "meteringPointIds": ["707057500000000001"]
+                  },
+                  "allowedChanges": { "validFrom": ["2026-10-01"] }
+                }
+            """.trimIndent()
             val response = client.postJson(
                 "/",
                 requestBody.replace(
                     "\"externalReference\": \"contract-123\"",
-                    "\"externalReference\": \"contract-123\",\n              \"requestedScope\": {\n                \"appliesTo\": {\n                  \"meteringPointIds\": [\"707057500000000001\"]\n                },\n                \"allowedChanges\": { \"validFrom\": [\"2026-10-01\"] }\n              }",
+                    "\"externalReference\": \"contract-123\",$requestedScope",
                 ),
             )
 
             response.status shouldBe HttpStatusCode.Created
             coVerify(exactly = 1) {
-                handler.invoke(match {
-                    it.requestedScope is RequestedScope.ChangeOfEnergySupplierForOrganization
-                })
+                handler.createAuthorizationDocument(
+                    requestedScope = match { it is RequestedScope.ChangeOfEnergySupplierForOrganization },
+                    externalReference = any(),
+                    requestedBy = any(),
+                    requestedFrom = any(),
+                    requestedTo = any(),
+                    language = any(),
+                )
             }
         }
     }
@@ -143,16 +196,26 @@ class RouteTest : FunSpec({
         testApplication {
             setupAppWith(authorizedParty) { route(partyService, handler, payloadValidator) }
 
+            val requestedScope = """
+                "requestedScope": {
+                  "appliesTo": {
+                    "meteringPointIds": ["707057500000000001"]
+                  },
+                  "allowedChanges": { "validFrom": ["2026-10-01", "2026-11-01"] }
+                }
+            """.trimIndent()
             val response = client.postJson(
                 "/",
                 requestBody
                     .replace("ChangeOfEnergySupplierForOrganization", "MoveInAndChangeOfEnergySupplierForOrganization")
-                    .replace("\"externalReference\": \"contract-123\"", "\"externalReference\": \"contract-123\",\n              \"requestedScope\": {\n                \"appliesTo\": {\n                  \"meteringPointIds\": [\"707057500000000001\"]\n                },\n                \"allowedChanges\": { \"validFrom\": [\"2026-10-01\", \"2026-11-01\"] }\n              }")
+                    .replace("\"externalReference\": \"contract-123\"", "\"externalReference\": \"contract-123\",$requestedScope")
             )
 
             response.status shouldBe HttpStatusCode.UnprocessableEntity
             coVerify(exactly = 0) { partyService.resolve(any()) }
-            coVerify(exactly = 0) { handler.invoke(any()) }
+            coVerify(exactly = 0) {
+                handler.createAuthorizationDocument(any(), any(), any(), any(), any(), any())
+            }
         }
     }
 
@@ -170,7 +233,9 @@ class RouteTest : FunSpec({
             body.errors.single().detail shouldBe
                 "requestedScope.appliesTo.meteringPointIds must contain only valid 18-digit metering-point IDs"
             coVerify(exactly = 0) { partyService.resolve(any()) }
-            coVerify(exactly = 0) { handler.invoke(any()) }
+            coVerify(exactly = 0) {
+                handler.createAuthorizationDocument(any(), any(), any(), any(), any(), any())
+            }
         }
     }
 })

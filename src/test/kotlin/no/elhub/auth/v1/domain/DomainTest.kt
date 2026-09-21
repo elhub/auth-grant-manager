@@ -9,11 +9,15 @@ import no.elhub.auth.v1.features.documents.create.RequestedScope
 class DomainTest : FunSpec({
     test("requested scope owns its document type") {
         RequestedScope.ChangeOfEnergySupplierForOrganization(
-            meteringPointIds = setOf(MeteringPointId.create("707057500000000001")),
+            meteringPointIds = ResourceConstraint.MeteringPoints(
+                setOf(MeteringPointId.create("707057500000000001")),
+            ),
         ).documentType shouldBe AuthorizationDocumentType.ChangeOfEnergySupplierForOrganization
 
         RequestedScope.MoveInAndChangeOfEnergySupplierForOrganization(
-            meteringPointIds = setOf(MeteringPointId.create("707057500000000001")),
+            meteringPointIds = ResourceConstraint.MeteringPoints(
+                setOf(MeteringPointId.create("707057500000000001")),
+            ),
             validFrom = kotlinx.datetime.LocalDate(2026, 10, 1),
         ).documentType shouldBe AuthorizationDocumentType.MoveInAndChangeOfEnergySupplierForOrganization
     }

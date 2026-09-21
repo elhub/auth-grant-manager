@@ -12,6 +12,7 @@ import no.elhub.auth.v0.features.common.party.PartyError
 import no.elhub.auth.v0.features.common.party.PartyService
 import no.elhub.auth.v0.features.common.toTypeMismatchApiErrorResponse
 import no.elhub.auth.v1.features.documents.create.dto.JsonApiCreateAuthorizationDocumentRequest
+import no.elhub.auth.v1.features.documents.create.dto.toCreateResponse
 
 fun Route.route(
     partyService: PartyService,
@@ -60,17 +61,15 @@ fun Route.route(
 
         val requestedBy = call.authorizedParty
 
-        handler(
-            CreateAuthorizationDocumentCommand(
-                requestedScope = requestedScope,
-                externalReference = request.data.attributes.externalReference,
-                requestedBy = requestedBy,
-                requestedFrom = requestedFrom,
-                requestedTo = requestedTo,
-                language = request.data.meta.language,
-            ),
+        val document = handler.createAuthorizationDocument(
+            requestedScope = requestedScope,
+            externalReference = request.data.attributes.externalReference,
+            requestedBy = requestedBy,
+            requestedFrom = requestedFrom,
+            requestedTo = requestedTo,
+            language = request.data.meta.language,
         )
-        call.respond(HttpStatusCode.Created)
+        call.respond(HttpStatusCode.Created, document.toCreateResponse(request.data.meta.language))
     }
 }
 

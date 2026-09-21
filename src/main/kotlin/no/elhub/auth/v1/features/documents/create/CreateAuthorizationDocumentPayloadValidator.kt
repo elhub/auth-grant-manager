@@ -1,8 +1,9 @@
 package no.elhub.auth.v1.features.documents.create
 
+import no.elhub.auth.v1.Errors
 import no.elhub.auth.v1.domain.AuthorizationDocumentType
 import no.elhub.auth.v1.domain.MeteringPointId
-import no.elhub.auth.v1.Errors
+import no.elhub.auth.v1.domain.ResourceConstraint
 import no.elhub.auth.v1.features.documents.create.dto.JsonApiCreateAuthorizationDocumentRequest
 
 class CreateAuthorizationDocumentPayloadValidator {
@@ -26,9 +27,13 @@ class CreateAuthorizationDocumentPayloadValidator {
             )
         }
 
+        val appliesTo = ResourceConstraint.MeteringPoints(meteringPointIds)
+
         val requestedScope = when (documentType) {
             AuthorizationDocumentType.ChangeOfEnergySupplierForOrganization ->
-                RequestedScope.ChangeOfEnergySupplierForOrganization(meteringPointIds)
+                RequestedScope.ChangeOfEnergySupplierForOrganization(
+                    meteringPointIds = appliesTo,
+                )
 
             AuthorizationDocumentType.MoveInAndChangeOfEnergySupplierForOrganization -> {
                 val allowedChanges = scope.allowedChanges
@@ -43,7 +48,7 @@ class CreateAuthorizationDocumentPayloadValidator {
                 }
 
                 RequestedScope.MoveInAndChangeOfEnergySupplierForOrganization(
-                    meteringPointIds = meteringPointIds,
+                    meteringPointIds = appliesTo,
                     validFrom = allowedChanges.validFrom.single(),
                 )
             }
