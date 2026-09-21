@@ -21,8 +21,8 @@ class CreateRouteTest : FunSpec({
 
     beforeTest { clearMocks(handler) }
 
-    test("responds 201 when handler returns Right") {
-        coEvery { handler.invoke(any()) } returns CreatedGrant(...).right()
+     test("responds 201 when handler succeeds") {
+         coEvery { handler.invoke(any()) } returns CreateResult.Success(CreatedGrant(...))
 
         testApplication {
             application { configureCreateRoute(handler) }
@@ -34,8 +34,8 @@ class CreateRouteTest : FunSpec({
         }
     }
 
-    test("responds 422 when handler returns Left(ValidationError)") {
-        coEvery { handler.invoke(any()) } returns CreateError.ValidationError("bad input").left()
+     test("responds 422 when handler returns a validation error") {
+         coEvery { handler.invoke(any()) } returns CreateResult.Failure(CreateError.ValidationError("bad input"))
 
         testApplication {
             application { configureCreateRoute(handler) }
@@ -63,7 +63,7 @@ What not to assert:
 ## Handler tests
 
 Handlers are tested in isolation. All dependencies (Services, Repositories) are mocked.
- The test verifies orchestration logic: which dependencies are called, in what order, and what Either value is returned.
+ The test verifies orchestration logic: which dependencies are called, in what order, and what success or error outcome is returned.
 ```kotlin
 class CreateHandlerTest : FunSpec({
 val repo = mockk<GrantRepository>()
@@ -72,26 +72,26 @@ val handler = CreateHandler(repo, partyService)
 
     beforeTest { clearMocks(repo, partyService) }
 
-    test("returns Right(CreatedGrant) when all dependencies succeed") {
-        coEvery { partyService.resolve(any()) } returns validParty.right()
-        coEvery { repo.insert(any()) } returns createdGrant.right()
+     test("returns a created grant when all dependencies succeed") {
+         coEvery { partyService.resolve(any()) } returns validParty
+         coEvery { repo.insert(any()) } returns createdGrant
 
-        handler.invoke(validModel).shouldBeRight(createdGrant)
+        handler.invoke(validModel) shouldBe CreateResult.Success(createdGrant)
     }
 
-    test("returns Left(AuthorizationError) when party does not match model") {
-        coEvery { partyService.resolve(any()) } returns mismatchedParty.right()
+     test("returns an authorization error when party does not match model") {
+         coEvery { partyService.resolve(any()) } returns mismatchedParty
 
-        handler.invoke(validModel).shouldBeLeft(CreateError.AuthorizationError)
+        handler.invoke(validModel) shouldBe CreateResult.Failure(CreateError.AuthorizationError)
 
         coVerify(exactly = 0) { repo.insert(any()) }
     }
 
-    test("returns Left(RepositoryError) when repo fails") {
-        coEvery { partyService.resolve(any()) } returns validParty.right()
-        coEvery { repo.insert(any()) } returns CreateError.RepositoryError.left()
+     test("returns a repository error when repo fails") {
+         coEvery { partyService.resolve(any()) } returns validParty
+         coEvery { repo.insert(any()) } returns RepositoryError.Unexpected
 
-        handler.invoke(validModel).shouldBeLeft(CreateError.RepositoryError)
+        handler.invoke(validModel) shouldBe CreateResult.Failure(CreateError.RepositoryError)
     }
 })
 ```
@@ -114,20 +114,19 @@ extensions(TestDatabaseExtension)
 
     val repo = GrantRepository()
 
-    test("insert returns Right(Grant) with a generated id") {
+     test("insert returns a grant with a generated id") {
         val result = repo.insert(newGrantData)
 
-        result.shouldBeRight()
-        result.getOrNull()?.id shouldNotBe null
+         result shouldBeInstanceOf RepositoryInsertResult.Success::class
     }
 
-    test("findById returns Left(NotFound) when row does not exist") {
-        repo.findById(nonExistentId).shouldBeLeft(GrantError.NotFound)
+     test("findById returns NotFound when row does not exist") {
+         repo.findById(nonExistentId) shouldBe GrantError.NotFound
     }
 
-    test("insert returns Left(Conflict) when duplicate key exists") {
+     test("insert returns Conflict when duplicate key exists") {
         repo.insert(newGrantData)
-        repo.insert(newGrantData).shouldBeLeft(GrantError.Conflict)
+         repo.insert(newGrantData) shouldBe GrantError.Conflict
     }
 })
 ```
@@ -151,21 +150,21 @@ class PartyServiceTest : FunSpec({
 
     beforeTest { clearMocks(client) }
 
-    test("returns Right(Party) when client returns a valid response") {
-        coEvery { client.fetch(partyId) } returns partyResponse.right()
+     test("returns a party when client returns a valid response") {
+         coEvery { client.fetch(partyId) } returns partyResponse
 
-        service.resolve(partyId).shouldBeRight(expectedParty)
+        service.resolve(partyId) shouldBe expectedParty
     }
 
-    test("returns Left(NotFound) when client returns 404") {
-        coEvery { client.fetch(partyId) } returns PartyError.NotFound.left()
+     test("returns NotFound when client returns 404") {
+         coEvery { client.fetch(partyId) } returns PartyError.NotFound
 
-        service.resolve(partyId).shouldBeLeft(PartyError.NotFound)
+        service.resolve(partyId) shouldBe PartyError.NotFound
     }
 })
 ```
 What to assert in service tests:
-- The Either value returned
+- The success or error outcome returned
 - Domain transformations and mapping logic
 - Validation rules enforced by the service
 
@@ -180,7 +179,7 @@ What not to assert:
 | Layer      | Dependencies     | Database | What is verified                          |
 |------------|------------------|----------|-------------------------------------------|
 | Route      | Handler mocked   | No       | HTTP mechanics, JSON:API shape            |
-| Handler    | All mocked       | No       | Orchestration, Either value, call order   |
+| Handler    | All mocked       | No       | Orchestration, outcome, call order        |
 | Service    | All mocked       | No       | Domain rules, transformations             |
 | Repository | None mocked      | Real     | SQL correctness, constraint mapping       |
 | E2E        | Nothing mocked   | Real     | Full observable behaviour from outside   |

@@ -29,15 +29,15 @@ Write one test covering one behaviour. The test must fail before any implementat
 
 ```kotlin
 class CreateHandlerTest : FunSpec({
-    test("returns Left(AuthorizationError) when party does not match model") {
+    test("returns an authorization error when party does not match model") {
         val repo = mockk<RequestRepository>()
         val partyService = mockk<PartyService>()
 
-        coEvery { partyService.resolve(any()) } returns mismatchedParty.right()
+        coEvery { partyService.resolve(any()) } returns mismatchedParty
 
         val result = CreateHandler(repo, partyService).invoke(validModel)
 
-        result.shouldBeLeft(CreateError.AuthorizationError)
+        result shouldBe CreateResult.Failure(CreateError.AuthorizationError)
     }
 })
 ```

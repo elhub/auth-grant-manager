@@ -2,7 +2,7 @@
 name: testing-kotest
 description: >
   Use when writing any test.Defines FunSpec structure, MockK patterns for suspend functions, clearMocks usage,
-  Arrow assertions, route test wiring, and integration test extensions.
+  Result assertions, route test wiring, and integration test extensions.
   Load before generating any test class.
 ---
 
@@ -37,31 +37,31 @@ class CreateHandlerTest : FunSpec({
         clearMocks(repo, partyService)
     }
 
-    test("returns Right when request is valid") {
-        coEvery { partyService.resolve(any()) } returns validParty.right()
-        coEvery { repo.insert(any()) } returns createdRequest.right()
+    test("returns success when request is valid") {
+        coEvery { partyService.resolve(any()) } returns validParty
+        coEvery { repo.insert(any()) } returns createdRequest
 
-        handler(validModel).shouldBeRight()
+        handler(validModel) shouldBe CreateResult.Success(createdRequest)
     }
 
-    test("returns Left(AuthorizationError) when party mismatch") {
-        coEvery { partyService.resolve(any()) } returns mismatchedParty.right()
+    test("returns an authorization error when party mismatch") {
+        coEvery { partyService.resolve(any()) } returns mismatchedParty
 
-        handler(validModel).shouldBeLeft(CreateError.AuthorizationError)
+        handler(validModel) shouldBe CreateResult.Failure(CreateError.AuthorizationError)
     }
 
-    test("returns Left(PersistenceError) when repo fails") {
-        coEvery { partyService.resolve(any()) } returns validParty.right()
-        coEvery { repo.insert(any()) } returns RepositoryWriteError.UnexpectedError.left()
+    test("returns a persistence error when repo fails") {
+        coEvery { partyService.resolve(any()) } returns validParty
+        coEvery { repo.insert(any()) } returns RepositoryWriteError.UnexpectedError
 
-        handler(validModel).shouldBeLeft(CreateError.PersistenceError)
+        handler(validModel) shouldBe CreateResult.Failure(CreateError.PersistenceError)
     }
 })
 ```
 
 **Rules:**
 
-- Use `shouldBeRight()` / `shouldBeLeft()` from `io.kotest.assertions.arrow.core`
+- Assert the explicit success or error outcome returned by the handler.
 - Always call `clearMocks(...)` in `beforeTest` when mocks are shared across tests
 - Use `coEvery` for all `suspend` functions — `every` will silently fail to stub them
 
@@ -77,8 +77,8 @@ class CreateRouteTest : FunSpec({
     beforeTest { clearMocks(authProvider, handler) }
 
     test("POST returns 201 when handler succeeds") {
-        coEvery { authProvider.authorizeMaskinporten(any()) } returns authorizedActor.right()
-        coEvery { handler(any()) } returns createdRequest.right()
+        coEvery { authProvider.authorizeMaskinporten(any()) } returns authorizedActor
+        coEvery { handler(any()) } returns CreateResult.Success(createdRequest)
 
         testApplication {
             application { createRouteModule(handler, authProvider) }
@@ -94,7 +94,7 @@ class CreateRouteTest : FunSpec({
     }
 
     test("POST returns 403 when auth fails") {
-        coEvery { authProvider.authorizeMaskinporten(any()) } returns AuthError.Unauthorized.left()
+        coEvery { authProvider.authorizeMaskinporten(any()) } returns AuthError.Unauthorized
 
         testApplication {
             application { createRouteModule(handler, authProvider) }
@@ -155,10 +155,8 @@ Located in `no.elhub.auth.features.common` test sources:
 ## Assertions reference
 
 ```kotlin
-// Arrow
-result.shouldBeRight()
-result.shouldBeLeft()
-result.shouldBeRight { value -> value.id shouldBe expectedId }
+// Domain outcome
+result shouldBe expected
 
 // HTTP
 response.status shouldBe HttpStatusCode.OK
