@@ -18,9 +18,9 @@ info:
     url: https://github.com/elhub/auth-grant-manager?tab=MIT-1-ov-file
 
 servers:
-  - url: https://api.elhub.no/access/v0
+  - url: https://api.elhub.no
     description: Production
-  - url: https://api-mt1.elhub.no/access/v0
+  - url: https://api-mt1.elhub.no
     description: MT1
 
 tags:
@@ -35,7 +35,7 @@ security:
   - bearerAuth: []
 
 paths:
-  '/authorization-documents':
+  '/access/v0/authorization-documents':
     get:
       tags:
         - Authorization Documents
@@ -117,7 +117,101 @@ paths:
         '500':
           $ref: '#/components/responses/500InternalServerError'
 
-  '/authorization-documents/{id}':
+  '/access/v1/authorization-documents':
+    post:
+      tags:
+        - Authorization Documents
+      summary: '[WIP] Create a v1 authorization document for signing'
+      description: >
+        Work in progress. This endpoint is currently specified for development and testing only.
+        It is not deployed to Production or MT1, is not part of either environment's API contract,
+        and may change without backward-compatibility guarantees before release.
+
+        Create an authorization document from a general requested-scope contract. The selected
+        document type determines which resource keys, allowed-change keys, values, and party
+        identifiers are supported. Scope values are lists and apply as sets; values are not paired
+        by their array positions.
+      operationId: createV1AuthorizationDocument
+      x-status: Work in progress
+      x-availability: Not deployed to Production or MT1
+      parameters:
+        - $ref: '#/components/parameters/UserAgent'
+        - $ref: '#/components/parameters/AuthorizationMaskinporten'
+        - $ref: '#/components/parameters/SenderGlnRequired'
+        - $ref: '#/components/parameters/OnBehalfOfGlnOptional'
+      requestBody:
+        required: true
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '#/components/schemas/V1AuthorizationDocumentSubmission'
+            examples:
+              changeOfEnergySupplierForOrganization:
+                summary: Energy supplier change for an organization
+                description: >
+                  Requests authorization to change energy supplier for an organization's metering
+                  points. This document type does not include allowed changes.
+                value:
+                  data:
+                    type: AuthorizationDocument
+                    attributes:
+                      documentType: ChangeOfEnergySupplierForOrganization
+                      requestedScope:
+                        appliesTo:
+                          meteringPointId:
+                            - '707057500000000001'
+                            - '707057500000000002'
+                      externalReference: contract-123
+                    meta:
+                      requestedFrom: '999888777'
+                      requestedTo: '01019012345'
+                      language: nb
+              moveInAndChangeOfEnergySupplierForOrganization:
+                summary: Move-in and energy supplier change for an organization
+                description: >
+                  Requests authorization for changes to multiple metering points and multiple
+                  valid-from values. The requested-from party is the organization and the
+                  requested-to party is its representative.
+                value:
+                  data:
+                    type: AuthorizationDocument
+                    attributes:
+                      documentType: MoveInAndChangeOfEnergySupplierForOrganization
+                      requestedScope:
+                        appliesTo:
+                          meteringPointId:
+                            - '707057500000000001'
+                            - '707057500000000002'
+                        allowedChanges:
+                          validFrom:
+                            - '2026-10-01'
+                            - '2026-11-01'
+                      externalReference: contract-123
+                    meta:
+                      requestedFrom: '999888777'
+                      requestedTo: '01019012345'
+                      language: nb
+      responses:
+        '201':
+          description: The authorization document was created successfully.
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/V1AuthorizationDocumentResource'
+        '400':
+          $ref: '#/components/responses/400BadRequestError'
+        '401':
+          $ref: '#/components/responses/401UnauthorizedError'
+        '409':
+          $ref: '#/components/responses/409ConflictError'
+        '415':
+          $ref: '#/components/responses/415UnsupportedMediaTypeError'
+        '422':
+          $ref: '#/components/responses/422UnprocessableEntityError'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
+
+  '/access/v0/authorization-documents/{id}':
     get:
       tags:
         - Authorization Documents
@@ -152,7 +246,7 @@ paths:
         '500':
           $ref: '#/components/responses/500InternalServerError'
 
-  '/authorization-documents/{id}.pdf':
+  '/access/v0/authorization-documents/{id}.pdf':
     get:
       tags:
         - Authorization Documents
@@ -238,7 +332,7 @@ paths:
         '500':
           $ref: '#/components/responses/500InternalServerError'
 
-  '/authorization-grants':
+  '/access/v0/authorization-grants':
     get:
       tags:
         - Authorization Grants
@@ -287,7 +381,7 @@ paths:
         '500':
           $ref: '#/components/responses/500InternalServerError'
 
-  '/authorization-grants/{id}':
+  '/access/v0/authorization-grants/{id}':
     get:
       tags:
         - Authorization Grants
@@ -367,7 +461,7 @@ paths:
         '500':
           $ref: '#/components/responses/500InternalServerError'
 
-  '/authorization-grants/{id}/scopes':
+  '/access/v0/authorization-grants/{id}/scopes':
     get:
       tags:
         - Authorization Grants
@@ -407,7 +501,7 @@ paths:
         '500':
           $ref: '#/components/responses/500InternalServerError'
 
-  '/authorization-requests':
+  '/access/v0/authorization-requests':
     get:
       tags:
         - Authorization Requests
@@ -512,7 +606,7 @@ paths:
         '500':
           $ref: '#/components/responses/500InternalServerError'
 
-  '/authorization-requests/{id}':
+  '/access/v0/authorization-requests/{id}':
     get:
       tags:
         - Authorization Requests
@@ -600,6 +694,227 @@ paths:
           $ref: '#/components/responses/500InternalServerError'
 
 components:
+  schemas:
+    V1AuthorizationDocumentSubmission:
+      type: object
+      additionalProperties: false
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/V1AuthorizationDocumentSubmissionData'
+
+    V1AuthorizationDocumentSubmissionData:
+      type: object
+      additionalProperties: false
+      required:
+        - type
+        - attributes
+        - meta
+      properties:
+        type:
+          type: string
+          const: AuthorizationDocument
+        attributes:
+          $ref: '#/components/schemas/V1AuthorizationDocumentSubmissionAttributes'
+        meta:
+          $ref: '#/components/schemas/V1AuthorizationDocumentMeta'
+
+    V1AuthorizationDocumentSubmissionAttributes:
+      type: object
+      additionalProperties: false
+      allOf:
+        - $ref: '#/components/schemas/V1AuthorizationDocumentScopeProfile'
+      required:
+        - documentType
+        - requestedScope
+        - externalReference
+      properties:
+        documentType:
+          type: string
+          description: >
+            Selects the document-type profile that validates the requested scope and party identifiers.
+          enum:
+            - ChangeOfEnergySupplierForOrganization
+            - MoveInAndChangeOfEnergySupplierForOrganization
+        requestedScope:
+          $ref: '#/components/schemas/V1RequestedScope'
+        externalReference:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: Reference assigned by the requesting party to the underlying contract or process.
+
+    V1RequestedScope:
+      type: object
+      additionalProperties: false
+      required:
+        - appliesTo
+      properties:
+        appliesTo:
+          type: object
+          additionalProperties: false
+          minProperties: 1
+          description: >
+            Resources to which the authorization applies. For the currently supported document
+            types, meteringPointId is required and contains one or more metering point identifiers.
+          required:
+            - meteringPointId
+          properties:
+            meteringPointId:
+              type: array
+              minItems: 1
+              uniqueItems: true
+              items:
+                type: string
+                minLength: 1
+        allowedChanges:
+          type: object
+          additionalProperties: false
+          minProperties: 1
+          description: >
+            Changes authorized for the listed resources. This property is required for
+            MoveInAndChangeOfEnergySupplierForOrganization and must be omitted for
+            ChangeOfEnergySupplierForOrganization.
+          required:
+            - validFrom
+          properties:
+            validFrom:
+              type: array
+              minItems: 1
+              uniqueItems: true
+              items:
+                type: string
+                format: date
+
+    V1AuthorizationDocumentScopeProfile:
+      allOf:
+        - if:
+            properties:
+              documentType:
+                const: ChangeOfEnergySupplierForOrganization
+            required:
+              - documentType
+          then:
+            properties:
+              requestedScope:
+                not:
+                  required:
+                    - allowedChanges
+        - if:
+            properties:
+              documentType:
+                const: MoveInAndChangeOfEnergySupplierForOrganization
+            required:
+              - documentType
+          then:
+            properties:
+              requestedScope:
+                required:
+                  - allowedChanges
+
+    V1AuthorizationDocumentMeta:
+      type: object
+      additionalProperties: false
+      required:
+        - requestedFrom
+        - requestedTo
+        - language
+      properties:
+        requestedFrom:
+          type: string
+          minLength: 1
+          description: >
+            External identifier of the party from which authorization is requested. Its identifier
+            type and format are defined by the selected document-type profile.
+        requestedTo:
+          type: string
+          minLength: 1
+          description: >
+            External identifier of the person or party expected to sign the document. Its identifier
+            type and format are defined by the selected document-type profile.
+        language:
+          type: string
+          description: Language used for the generated authorization document.
+          enum:
+            - nb
+            - nn
+            - en
+
+    V1AuthorizationDocumentResource:
+      type: object
+      additionalProperties: false
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          additionalProperties: false
+          required:
+            - id
+            - type
+            - attributes
+            - meta
+            - links
+          properties:
+            id:
+              type: string
+              format: uuid
+            type:
+              type: string
+              const: AuthorizationDocument
+            attributes:
+              type: object
+              additionalProperties: false
+              allOf:
+                - $ref: '#/components/schemas/V1AuthorizationDocumentScopeProfile'
+              required:
+                - documentType
+                - requestedScope
+                - externalReference
+                - status
+                - createdAt
+                - validTo
+              properties:
+                documentType:
+                  type: string
+                  enum:
+                    - ChangeOfEnergySupplierForOrganization
+                    - MoveInAndChangeOfEnergySupplierForOrganization
+                requestedScope:
+                  $ref: '#/components/schemas/V1RequestedScope'
+                externalReference:
+                  type: string
+                  minLength: 1
+                  maxLength: 255
+                status:
+                  type: string
+                  enum:
+                    - Pending
+                createdAt:
+                  type: string
+                  format: date-time
+                validTo:
+                  type: string
+                  format: date-time
+            meta:
+              $ref: '#/components/schemas/V1AuthorizationDocumentMeta'
+            links:
+              type: object
+              additionalProperties: false
+              required:
+                - self
+                - file
+              properties:
+                self:
+                  type: string
+                  format: uri-reference
+                  example: /access/v1/authorization-documents/123e4567-e89b-12d3-a456-426614174000
+                file:
+                  type: string
+                  format: uri-reference
+                  example: /access/v1/authorization-documents/123e4567-e89b-12d3-a456-426614174000.pdf
+
   parameters:
     UserAgent:
       name: User-Agent

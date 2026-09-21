@@ -1,19 +1,19 @@
 ---
-name: functional-error-handling-arrow
+name: explicit-error-handling
 description: >
   Use when writing or reviewing any Handler, Service, or Repository.
-  Defines how Either, bind(), mapLeft, ensure, and Either.catch are used in this codebase.
-  Load before writing any business logic or database access code.
+  Defines explicit domain error handling for business logic and database access.
+  Load before writing or reviewing any Handler, Service, or Repository.
 ---
-# Functional Error Handling with Arrow
+# Explicit Error Handling
 
-All business logic returns `Either<Failure, Success>`. Exceptions are never used for domain errors.
+Expected domain failures are represented explicitly. Exceptions are never used for expected domain errors.
 
-## The `Either` contract
+## Error contract
 
 ```kotlin
-// ✅
-suspend fun findUser(id: UserId): Either<UserError, User>
+// ✅ Return a result that makes success and expected failure explicit.
+suspend fun findUser(id: UserId): UserResult
 
 // ❌ — nullable loses error context
 suspend fun findUser(id: UserId): User?
@@ -24,46 +24,29 @@ suspend fun findUser(id: UserId): User
 
 This applies to every Handler, Service, and Repository in the codebase.
 
-## Composing with `either { }` and `bind()`
+## Composing operations
 
 ```kotlin
-suspend fun createRequest(model: CreateRequestModel): Either<CreateError, AuthorizationRequest> = either {
-    // bind() unwraps Right or short-circuits with Left
-    val party = partyService.resolve(model.requestedBy)
-        .mapLeft { CreateError.PartyResolutionFailed }
-        .bind()
+val party = partyService.resolve(model.requestedBy)
+    ?: return CreateError.PartyResolutionFailed
 
-    // ensure() short-circuits if condition is false
-    ensure(model.authorizedParty == party) { CreateError.AuthorizationError }
-
-    repo.insert(model.toRequest())
-        .mapLeft { CreateError.PersistenceError }
-        .bind()
+if (model.authorizedParty != party) {
+    return CreateError.AuthorizationError
 }
+
+return repo.insert(model.toRequest())
+    ?: CreateError.PersistenceError
 ```
 
-`bind()` is the only way to unwrap inside `either { }`. Never use `getOrThrow()` or `!!`.
-
-## Mapping errors across boundaries (`mapLeft`)
-
-Dependencies return their own error types. Map them before binding:
-
-```kotlin
-repository.getData()
-    .mapLeft { DomainError.InfrastructureError(it) }
-    .bind()
-```
-
-The caller's sealed error type is the only error type that escapes the function boundary.
+Map dependency failures to the caller's domain error type at the boundary. Keep the caller's error type explicit.
 
 ## List operations
 
 ```kotlin
-// Fail fast — stop on first error
-val results = items.map { item -> process(item).bind() }
-
-// Accumulate all errors — use for validation
-val results = items.mapOrAccumulate { item -> process(item).bind() }
+// Fail fast — stop on the first error.
+for (item in items) {
+    process(item) ?: return ValidationError.InvalidItem
+}
 ```
 
 ## Domain error types
@@ -85,10 +68,14 @@ Sealed interfaces enforce exhaustive `when` handling at call sites. Do not use `
 Database calls can throw. Wrap them:
 
 ```kotlin
-suspend fun insert(entity: Entity): Either<RepositoryWriteError, Entity> =
-    Either.catch {
-        withTranaction { /* Exposed DSL */ }
-    }.mapLeft { RepositoryWriteError.UnexpectedError }
+suspend fun insert(entity: Entity): RepositoryResult {
+    return try {
+        withTransaction { /* Exposed DSL */ }
+        RepositoryResult.Success(entity)
+    } catch (exception: Exception) {
+        RepositoryResult.Failure(RepositoryWriteError.UnexpectedError)
+    }
+}
 ```
 
 Never call `transaction { }` (blocking). Use `withTransaction { }` from ``Database.kt``.
@@ -97,8 +84,7 @@ Never call `transaction { }` (blocking). Use `withTransaction { }` from ``Databa
 
 | Situation                       | Rule                                                      |
 |---------------------------------|-----------------------------------------------------------|
-| Domain or expected errors       | Return `Left`, never throw                                |
-| Unwrapping inside `either { }`  | `bind()` only                                             |
-| Unwrapping outside `either { }` | `fold`, `getOrElse`, or `map` — never `getOrThrow()`      |
-| Exception from infrastructure   | `Either.catch { }` then `mapLeft`                         |
+| Domain or expected errors       | Return an explicit error, never throw                    |
+| Dependency errors               | Map to the caller's domain error type                    |
+| Exception from infrastructure   | Catch and map to a repository error                      |
 | Truly unrecoverable failure     | Allowed to throw (e.g., OOM, misconfiguration at startup) |

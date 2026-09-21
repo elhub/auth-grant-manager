@@ -13,6 +13,7 @@ import io.ktor.server.plugins.callid.callId
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
+import no.elhub.auth.common.configureErrorHandling
 import io.ktor.server.testing.testApplication
 import no.elhub.auth.v0.features.common.ELHUB_TRACE_ID_HEADER
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
