@@ -5,6 +5,8 @@ import io.kotest.matchers.shouldBe
 import no.elhub.auth.v0.features.documents.TempBankIdCertificatesLocation
 import no.elhub.auth.v0.features.documents.TestCertificateUtil
 import java.io.File
+import java.security.cert.CertificateFactory
+import java.security.cert.X509Certificate
 
 class FileCertificateProviderTest : FunSpec({
     test("loads configured signing and trust certificates") {
@@ -18,10 +20,12 @@ class FileCertificateProviderTest : FunSpec({
             )
         )
 
-        provider.getElhubSigningCertificate().serialNumber shouldBe
-            provider.getElhubSigningCertificate().serialNumber
-        provider.getElhubIntermediateCertificate().serialNumber shouldBe
-            provider.getElhubIntermediateCertificate().serialNumber
+        val expectedSigningCertificate = loadCertificate(TestCertificateUtil.Constants.CERTIFICATE_LOCATION)
+        val expectedIntermediateCertificate =
+            loadCertificate(TestCertificateUtil.Constants.INTERMEDIATE_CERTIFICATE_LOCATION)
+
+        provider.getElhubSigningCertificate().encoded shouldBe expectedSigningCertificate.encoded
+        provider.getElhubIntermediateCertificate().encoded shouldBe expectedIntermediateCertificate.encoded
         provider.getBankIdRootCertificates().isNotEmpty() shouldBe true
         provider.getTsaRootCertificates().isNotEmpty() shouldBe true
     }
@@ -41,3 +45,8 @@ class FileCertificateProviderTest : FunSpec({
         }
     }
 })
+
+private fun loadCertificate(path: String): X509Certificate =
+    File(path).inputStream().use { input ->
+        CertificateFactory.getInstance("X.509").generateCertificate(input) as X509Certificate
+    }

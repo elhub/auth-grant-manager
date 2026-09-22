@@ -6,6 +6,7 @@ import com.itextpdf.kernel.pdf.PdfReader
 import com.itextpdf.signatures.SignatureUtil
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import no.elhub.auth.v0.features.common.httpTestClient
@@ -15,6 +16,7 @@ import no.elhub.auth.v0.features.documents.TestCertificateFactory
 import no.elhub.auth.v0.features.documents.TestCertificateUtil
 import no.elhub.auth.v0.features.documents.TestPdfSigner
 import no.elhub.auth.v0.features.documents.VaultTransitTestContainerExtension
+import java.nio.file.Files
 
 class ITextPdfSignatureServiceTest : FunSpec({
     extensions(VaultTransitTestContainerExtension)
@@ -45,8 +47,54 @@ class ITextPdfSignatureServiceTest : FunSpec({
             val signatureUtil = SignatureUtil(document)
             val signatureName = signatureUtil.signatureNames.single()
             val signature = signatureUtil.getSignature(signatureName)
+            val pkcs7 = signatureUtil.readSignatureData(signatureName)
+
+            signatureUtil.signatureCoversWholeDocument(signatureName) shouldBe true
             signature.subFilter shouldBe PdfName.ETSI_CAdES_DETACHED
-            signatureUtil.readSignatureData(signatureName).verifySignatureIntegrityAndAuthenticity() shouldBe true
+            pkcs7.digestAlgorithmName shouldBe "SHA256"
+            pkcs7.signatureMechanismName shouldBe "SHA256withRSA"
+            pkcs7.verifySignatureIntegrityAndAuthenticity() shouldBe true
+
+            val docMdpSignature = document.catalog.pdfObject
+                .getAsDictionary(PdfName.Perms)
+                ?.getAsDictionary(PdfName.DocMDP)
+                .shouldNotBeNull()
+            val docMdpReference = docMdpSignature
+                .getAsArray(PdfName.Reference)
+                .asSequence()
+                .mapNotNull { it as? com.itextpdf.kernel.pdf.PdfDictionary }
+                .first { it.getAsName(PdfName.TransformMethod) == PdfName.DocMDP }
+            val transformParams = docMdpReference
+                .getAsDictionary(PdfName.TransformParams)
+                .shouldNotBeNull()
+            transformParams.getAsNumber(PdfName.P).intValue() shouldBe 2
+
+            val signingCertificate = pkcs7.signingCertificate.shouldNotBeNull()
+            signingCertificate.serialNumber shouldBe certificateProvider.getElhubSigningCertificate().serialNumber
+            signingCertificate.issuerX500Principal shouldBe
+                certificateProvider.getElhubSigningCertificate().issuerX500Principal
+        }
+    }
+
+    test("invalidates the signature when the signed PDF is tampered with") {
+        val signedPdf = service.sign(unsignedPdf)
+        val originalByteRange = PdfDocument(PdfReader(signedPdf.inputStream())).use { document ->
+            val signatureUtil = SignatureUtil(document)
+            val signatureName = signatureUtil.signatureNames.single()
+            signatureUtil.getSignature(signatureName).byteRange.toLongArray().toList()
+        }
+        val tamperedPdf = signedPdf.copyOf().apply {
+            this[100] = (this[100] + 1).toByte()
+        }
+
+        PdfDocument(PdfReader(tamperedPdf.inputStream())).use { document ->
+            val signatureUtil = SignatureUtil(document)
+            val signatureName = signatureUtil.signatureNames.single()
+            val signature = signatureUtil.getSignature(signatureName)
+
+            signature.byteRange.toLongArray().toList() shouldBe originalByteRange
+            signatureUtil.readSignatureData(signatureName)
+                .verifySignatureIntegrityAndAuthenticity() shouldBe false
         }
     }
 
@@ -247,7 +295,68 @@ class ITextPdfSignatureServiceTest : FunSpec({
             service.validateSignaturesAndReturnSignatory(elhubSignedPdf, elhubSignedPdf)
         }
     }
+
+    test("accepts a BankID test-environment signed document") {
+        val (service, pdf) = loadSignedBankIdDocument(
+            signedDocumentResource = "bankid-signed-with-seal.pdf",
+            elhubCertificateResource = "elhub-public-key-mt1.pem",
+            bankIdCertificateResource = "bankid-public-key-preprod.pem",
+            tsaCertificateResource = "bankid-public-key-preprod.pem",
+        )
+
+        service.validateSignaturesAndReturnSignatory(pdf, pdf) shouldBe PdfSignatory("01827535970")
+    }
+
+    test("accepts a Signicat test-environment signed document") {
+        val (service, pdf) = loadSignedBankIdDocument(
+            signedDocumentResource = "bankid-signed-signicat.pdf",
+            elhubCertificateResource = "elhub-public-key-prod.pem",
+            bankIdCertificateResource = "bankid-public-key-preprod.pem",
+            tsaCertificateResource = "buypass-class3-root-ca-g2-ht.pem",
+        )
+
+        service.validateSignaturesAndReturnSignatory(pdf, pdf) shouldBe PdfSignatory("10105000141")
+    }
 })
+
+private fun loadSignedBankIdDocument(
+    signedDocumentResource: String,
+    elhubCertificateResource: String,
+    bankIdCertificateResource: String,
+    tsaCertificateResource: String,
+): Pair<PdfSignatureValidator, ByteArray> {
+    val classLoader = ITextPdfSignatureServiceTest::class.java.classLoader
+    val elhubDirectory = Files.createTempDirectory("elhub-certs")
+    val bankIdDirectory = Files.createTempDirectory("bankid-certs")
+    val tsaDirectory = Files.createTempDirectory("tsa-certs")
+
+    fun copyResource(resource: String, directory: java.nio.file.Path) {
+        val target = directory.resolve(resource)
+        classLoader.getResourceAsStream(resource)!!.use { input ->
+            Files.copy(input, target)
+        }
+    }
+
+    copyResource(elhubCertificateResource, elhubDirectory)
+    copyResource(bankIdCertificateResource, bankIdDirectory)
+    copyResource(tsaCertificateResource, tsaDirectory)
+
+    val certificateProvider = FileCertificateProvider(
+        FileCertificateProviderConfig(
+            pathToIntermSigningCertificate = elhubDirectory.resolve(elhubCertificateResource).toString(),
+            pathToSigningCertificate = elhubDirectory.resolve(elhubCertificateResource).toString(),
+            pathToBankIdRootCertificatesDir = bankIdDirectory.toString(),
+            pathToTsaRootCertificatesDir = tsaDirectory.toString(),
+        )
+    )
+    val service = ITextPdfSignatureService(
+        certificateProvider,
+        HashicorpVaultSignatureProvider(httpTestClient, localVaultConfig()),
+    )
+
+    val signedDocument = classLoader.getResourceAsStream(signedDocumentResource)!!.readAllBytes()
+    return service to signedDocument
+}
 
 private fun localVaultConfig() = VaultConfig(
     url = "http://localhost:8200/v1/transit",
