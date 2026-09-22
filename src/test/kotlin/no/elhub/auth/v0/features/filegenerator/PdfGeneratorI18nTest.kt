@@ -6,14 +6,19 @@ import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
+import no.elhub.auth.common.documents.pdf.MustachePdfGenerator
+import no.elhub.auth.common.documents.pdf.PdfGeneratorConfig
 import no.elhub.auth.v0.features.businessprocesses.changeofbalancesupplier.domain.ChangeOfBalanceSupplierBusinessMeta
+import no.elhub.auth.v0.features.documents.create.V0FileGeneratorAdapter
 
 class PdfGeneratorI18nTest : FunSpec({
     test("should generate localized pdf text with default language") {
-        val generator = PdfGenerator(
-            PdfGeneratorConfig(
-                mustacheResourcePath = "templates",
-                useTestPdfNotice = false,
+        val generator = V0FileGeneratorAdapter(
+            MustachePdfGenerator(
+                PdfGeneratorConfig(
+                    mustacheResourcePath = "templates",
+                    useTestPdfNotice = false,
+                )
             )
         )
         val meta = ChangeOfBalanceSupplierBusinessMeta(
@@ -44,10 +49,12 @@ class PdfGeneratorI18nTest : FunSpec({
     }
 
     test("should use provided language instead of default language") {
-        val generator = PdfGenerator(
-            PdfGeneratorConfig(
-                mustacheResourcePath = "templates",
-                useTestPdfNotice = false,
+        val generator = V0FileGeneratorAdapter(
+            MustachePdfGenerator(
+                PdfGeneratorConfig(
+                    mustacheResourcePath = "templates",
+                    useTestPdfNotice = false,
+                )
             )
         )
         val meta = ChangeOfBalanceSupplierBusinessMeta(

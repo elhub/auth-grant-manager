@@ -1,10 +1,5 @@
-package no.elhub.auth.v0.features.documents.common
+package no.elhub.auth.common.documents.pdf
 
-import arrow.core.Either
-import arrow.core.raise.Raise
-import arrow.core.raise.either
-import arrow.core.raise.ensure
-import arrow.core.raise.ensureNotNull
 import com.itextpdf.kernel.crypto.DigestAlgorithms
 import com.itextpdf.kernel.pdf.PdfDictionary
 import com.itextpdf.kernel.pdf.PdfDocument
@@ -16,12 +11,7 @@ import com.itextpdf.signatures.AccessPermissions
 import com.itextpdf.signatures.BouncyCastleDigest
 import com.itextpdf.signatures.IExternalSignatureContainer
 import com.itextpdf.signatures.PdfPKCS7
-import com.itextpdf.signatures.PdfSigner
 import com.itextpdf.signatures.SignatureUtil
-import no.elhub.auth.v0.features.common.party.PartyIdentifier
-import no.elhub.auth.v0.features.common.party.PartyIdentifierType
-import no.elhub.auth.v0.features.documents.create.CertificateProvider
-import no.elhub.auth.v0.features.documents.create.SignatureProvider
 import org.bouncycastle.asn1.ASN1OctetString
 import org.bouncycastle.asn1.ASN1Primitive
 import org.bouncycastle.asn1.ASN1String
@@ -39,11 +29,12 @@ import java.security.cert.CertificateFactory
 import java.security.cert.X509CRL
 import java.security.cert.X509Certificate
 import java.util.Date
+import com.itextpdf.signatures.PdfSigner as ITextPdfSigner
 
 class ITextPdfSignatureService(
     private val certificateProvider: CertificateProvider,
     private val signatureProvider: SignatureProvider,
-) : SignatureService {
+) : PdfSigner, PdfSignatureValidator {
     companion object {
         const val NATIONAL_ID_EXTENSION_OID = "2.16.578.1.61.2.4"
         const val EKU_TIME_STAMPING_OID = "1.3.6.1.5.5.7.3.8"
@@ -60,7 +51,7 @@ class ITextPdfSignatureService(
 
     private val log = LoggerFactory.getLogger(ITextPdfSignatureService::class.java)
 
-    override suspend fun sign(fileByteArray: ByteArray): Either<SignatureSigningError, ByteArray> = either {
+    override suspend fun sign(fileByteArray: ByteArray): ByteArray {
         val signingCert = certificateProvider.getElhubSigningCertificate()
         val certChain = arrayOf<Certificate>(signingCert, certificateProvider.getElhubIntermediateCertificate())
 
@@ -72,7 +63,7 @@ class ITextPdfSignatureService(
             override fun sign(data: InputStream): ByteArray {
                 val sgn = PdfPKCS7(null as PrivateKey?, certChain, SHA_256, null, BouncyCastleDigest(), false)
                 val hash = DigestAlgorithms.digest(data, MessageDigest.getInstance(SHA_256))
-                val authenticatedAttributes = sgn.getAuthenticatedAttributeBytes(hash, PdfSigner.CryptoStandard.CADES, emptyList(), null)
+                val authenticatedAttributes = sgn.getAuthenticatedAttributeBytes(hash, ITextPdfSigner.CryptoStandard.CADES, emptyList(), null)
                 capturedHash = hash
                 capturedAuthenticatedAttributes = authenticatedAttributes
                 capturedPkcs7 = sgn
@@ -87,7 +78,7 @@ class ITextPdfSignatureService(
 
         val preparedOutput = ByteArrayOutputStream()
         val phase1Result = runCatching {
-            val signer = PdfSigner(
+            val signer = ITextPdfSigner(
                 PdfReader(fileByteArray.inputStream()),
                 preparedOutput,
                 StampingProperties().useAppendMode()
@@ -97,20 +88,17 @@ class ITextPdfSignatureService(
             signer.signExternalContainer(captureContainer, SIGNATURE_ESTIMATED_SIZE)
         }
 
-        if (phase1Result.isFailure) raise(SignatureSigningError.SigningDataGenerationError)
+        if (phase1Result.isFailure) throw PdfSigningException.SigningDataGenerationError
 
-        val hash = capturedHash ?: raise(SignatureSigningError.SigningDataGenerationError)
-        val authenticatedAttributes = capturedAuthenticatedAttributes ?: raise(SignatureSigningError.SigningDataGenerationError)
-        val sgn = capturedPkcs7 ?: raise(SignatureSigningError.SigningDataGenerationError)
+        val hash = capturedHash ?: throw PdfSigningException.SigningDataGenerationError
+        val authenticatedAttributes = capturedAuthenticatedAttributes ?: throw PdfSigningException.SigningDataGenerationError
+        val sgn = capturedPkcs7 ?: throw PdfSigningException.SigningDataGenerationError
         val preparedPdf = preparedOutput.toByteArray()
 
-        val extSignature = signatureProvider.fetchSignature(authenticatedAttributes).fold(
-            ifLeft = { raise(SignatureSigningError.SignatureFetchingError) },
-            ifRight = { it }
-        )
+        val extSignature = signatureProvider.fetchSignature(authenticatedAttributes)
 
         sgn.setExternalSignatureValue(extSignature, null, "RSA", null)
-        val encodedPkcs7 = sgn.getEncodedPKCS7(hash, PdfSigner.CryptoStandard.CADES, null, emptyList(), null)
+        val encodedPkcs7 = sgn.getEncodedPKCS7(hash, ITextPdfSigner.CryptoStandard.CADES, null, emptyList(), null)
 
         val embedContainer = object : IExternalSignatureContainer {
             override fun sign(data: InputStream): ByteArray = encodedPkcs7
@@ -122,7 +110,7 @@ class ITextPdfSignatureService(
 
         val finalOutput = ByteArrayOutputStream()
         val phase3Result = runCatching {
-            PdfSigner.signDeferred(
+            ITextPdfSigner.signDeferred(
                 PdfReader(preparedPdf.inputStream()),
                 "Signature1",
                 finalOutput,
@@ -130,49 +118,43 @@ class ITextPdfSignatureService(
             )
         }
 
-        phase3Result.fold(
+        return phase3Result.fold(
             onSuccess = { finalOutput.toByteArray() },
-            onFailure = { raise(SignatureSigningError.AddSignatureToSignatureError) }
+            onFailure = { throw PdfSigningException.AddSignatureToSignatureError }
         )
     }
 
     override fun validateSignaturesAndReturnSignatory(
         file: ByteArray,
         originalFile: ByteArray
-    ): Either<SignatureValidationError, PartyIdentifier> = either {
-        val parsedDocument = ensureNotNull(parseDocument(file)) {
-            SignatureValidationError.MissingElhubSignature
-        }
+    ): PdfSignatory {
+        val parsedDocument = parseDocument(file) ?: throw PdfValidationException.MissingElhubSignature
 
         val elhubExpectedCert = certificateProvider.getElhubSigningCertificate()
 
-        val elhubSignature = ensureNotNull(parsedDocument.signatures.firstOrNull()) {
-            SignatureValidationError.MissingElhubSignature
+        val elhubSignature = parsedDocument.signatures.firstOrNull() ?: throw PdfValidationException.MissingElhubSignature
+
+        if (!hasIssuerAndSerial(elhubSignature.signingCertificate, elhubExpectedCert)) {
+            throw PdfValidationException.MissingElhubSignature
         }
 
-        ensure(hasIssuerAndSerial(elhubSignature.signingCertificate, elhubExpectedCert)) {
-            SignatureValidationError.MissingElhubSignature
-        }
-
-        validateElhubSignature(elhubSignature, elhubExpectedCert).bind()
-        verifyNewMatchesOriginalByByteRange(elhubSignature, originalFile, file).bind()
+        validateElhubSignature(elhubSignature, elhubExpectedCert)
+        verifyNewMatchesOriginalByByteRange(elhubSignature, originalFile, file)
 
         val expectedBankIdRoots = certificateProvider.getBankIdRootCertificates()
-        val bankIdSignature = ensureNotNull(parsedDocument.signatures.getOrNull(1)) {
-            SignatureValidationError.MissingBankIdSignature
-        }
+        val bankIdSignature = parsedDocument.signatures.getOrNull(1) ?: throw PdfValidationException.MissingBankIdSignature
 
         ensureNoDisallowedChangesBetweenSignatures(
             elhubSignature,
             bankIdSignature,
             parsedDocument.allRevisionEofs
-        ).bind()
+        )
 
-        validateBankIdSignatureAndReturnSignatory(
+        return validateBankIdSignatureAndReturnSignatory(
             signature = bankIdSignature,
             expectedRoots = expectedBankIdRoots,
             dssCrls = parsedDocument.dssCrls
-        ).bind()
+        )
     }
 
     private fun parseDocument(file: ByteArray): ParsedDocument? = runCatching {
@@ -224,16 +206,14 @@ class ITextPdfSignatureService(
     private fun validateElhubSignature(
         signature: ParsedSignature,
         expectedElhubCert: X509Certificate,
-    ): Either<SignatureValidationError, Unit> = either {
-        ensure(
-            runCatching { signature.pkcs7.verifySignatureIntegrityAndAuthenticity() }.getOrDefault(false)
-        ) {
-            SignatureValidationError.InvalidElhubSignature
+    ) {
+        if (!runCatching { signature.pkcs7.verifySignatureIntegrityAndAuthenticity() }.getOrDefault(false)) {
+            throw PdfValidationException.InvalidElhubSignature
         }
 
         val signingCert = signature.signingCertificate
-        ensure(signingCert != null && areSameCertificate(signingCert, expectedElhubCert)) {
-            SignatureValidationError.ElhubSigningCertNotTrusted
+        if (signingCert == null || !areSameCertificate(signingCert, expectedElhubCert)) {
+            throw PdfValidationException.ElhubSigningCertNotTrusted
         }
     }
 
@@ -241,14 +221,14 @@ class ITextPdfSignatureService(
         elhubSignature: ParsedSignature,
         bankIdSignature: ParsedSignature,
         allRevisionEofs: List<Long>,
-    ): Either<SignatureValidationError, Unit> = either {
+    ) {
         // allRevisionEofs (from PdfRevisionsReader) and revisionEof (from ByteRange) can differ by a few bytes
         // due to iText 9's getNextEof() including trailing EOL bytes that the ByteRange does not.
         // Use >= to match each signature to its revision by index, then verify they are consecutive.
         val elhubIdx = allRevisionEofs.indexOfFirst { it >= elhubSignature.revisionEof }
         val bankIdIdx = allRevisionEofs.indexOfFirst { it >= bankIdSignature.revisionEof }
-        ensure(elhubIdx >= 0 && bankIdIdx == elhubIdx + 1) {
-            SignatureValidationError.ElhubSignatureModifiedAfterSigning
+        if (elhubIdx < 0 || bankIdIdx != elhubIdx + 1) {
+            throw PdfValidationException.ElhubSignatureModifiedAfterSigning
         }
     }
 
@@ -256,9 +236,9 @@ class ITextPdfSignatureService(
         signature: ParsedSignature,
         originalElhubSignedPdf: ByteArray,
         newPdf: ByteArray
-    ): Either<SignatureValidationError, Unit> = either {
+    ) {
         val byteRange = signature.byteRange
-        ensure(byteRange.size == 4) { SignatureValidationError.OriginalDocumentMismatch }
+        if (byteRange.size != 4) throw PdfValidationException.OriginalDocumentMismatch
 
         val digestAlgorithm = signature.pkcs7.digestAlgorithmName
         val originalDigest = runCatching {
@@ -268,8 +248,8 @@ class ITextPdfSignatureService(
             digestOverByteRange(newPdf, byteRange, digestAlgorithm)
         }.getOrNull()
 
-        ensure(originalDigest != null && newDigest != null && originalDigest.contentEquals(newDigest)) {
-            SignatureValidationError.OriginalDocumentMismatch
+        if (originalDigest == null || newDigest == null || !originalDigest.contentEquals(newDigest)) {
+            throw PdfValidationException.OriginalDocumentMismatch
         }
     }
 
@@ -277,29 +257,22 @@ class ITextPdfSignatureService(
         signature: ParsedSignature,
         expectedRoots: List<X509Certificate>,
         dssCrls: List<X509CRL>
-    ): Either<SignatureValidationError, PartyIdentifier> = either {
-        val signingCert = ensureNotNull(signature.signingCertificate) {
-            SignatureValidationError.InvalidBankIdSignature
+    ): PdfSignatory {
+        val signingCert = signature.signingCertificate ?: throw PdfValidationException.InvalidBankIdSignature
+
+        if (!isIssuedByExpectedRoot(signingCert, signature.certificateChain, expectedRoots)) {
+            throw PdfValidationException.BankIdSigningCertNotFromExpectedRoot
         }
 
-        ensure(isIssuedByExpectedRoot(signingCert, signature.certificateChain, expectedRoots)) {
-            SignatureValidationError.BankIdSigningCertNotFromExpectedRoot
+        if (!runCatching { signature.pkcs7.verifySignatureIntegrityAndAuthenticity() }.getOrDefault(false)) {
+            throw PdfValidationException.InvalidBankIdSignature
         }
 
-        ensure(
-            runCatching { signature.pkcs7.verifySignatureIntegrityAndAuthenticity() }.getOrDefault(false)
-        ) {
-            SignatureValidationError.InvalidBankIdSignature
-        }
+        val trustedTimestampTime = findTrustedTimestampTime(signature.pkcs7, certificateProvider.getTsaRootCertificates())
+            ?: throw PdfValidationException.MissingTrustedTimestamp
 
-        val trustedTimestampTime = ensureNotNull(
-            findTrustedTimestampTime(signature.pkcs7, certificateProvider.getTsaRootCertificates())
-        ) {
-            SignatureValidationError.MissingBankIdTrustedTimestamp
-        }
-
-        ensure(!trustedTimestampTime.before(signingCert.notBefore) && !trustedTimestampTime.after(signingCert.notAfter)) {
-            SignatureValidationError.BankIdSigningCertNotValidAtTimestamp
+        if (trustedTimestampTime.before(signingCert.notBefore) || trustedTimestampTime.after(signingCert.notAfter)) {
+            throw PdfValidationException.BankIdSigningCertNotValidAtTimestamp
         }
 
         ensureNoRevokedCertificateAt(
@@ -309,14 +282,10 @@ class ITextPdfSignatureService(
             dssCrls = dssCrls
         )
 
-        val nationalIdentityNumber = ensureNotNull(decodeNationalIdentityNumber(signingCert)) {
-            SignatureValidationError.MissingNationalId
-        }
+        val nationalIdentityNumber = decodeNationalIdentityNumber(signingCert)
+            ?: throw PdfValidationException.MissingNationalId
 
-        PartyIdentifier(
-            idType = PartyIdentifierType.NationalIdentityNumber,
-            idValue = nationalIdentityNumber
-        )
+        return PdfSignatory(nationalIdentityNumber)
     }
 
     private fun findTrustedTimestampTime(
@@ -356,7 +325,7 @@ class ITextPdfSignatureService(
         return runCatching { signature.timeStampDate.time }.getOrNull()
     }
 
-    private fun Raise<SignatureValidationError>.ensureNoRevokedCertificateAt(
+    private fun ensureNoRevokedCertificateAt(
         timestampTime: Date,
         certificateChain: List<X509Certificate>,
         pkcs7: PdfPKCS7,
@@ -368,9 +337,7 @@ class ITextPdfSignatureService(
             addAll(dssCrls)
         }
 
-        ensure(revocations.any()) {
-            SignatureValidationError.BankIdSignatureNotPadesLT
-        }
+        if (revocations.isEmpty()) throw PdfValidationException.BankIdSignatureNotPadesLT
 
         val revokedCertificate = certificateChain.firstOrNull { cert ->
             revocations.any { crl ->
@@ -379,9 +346,7 @@ class ITextPdfSignatureService(
             }
         }
 
-        ensure(revokedCertificate == null) {
-            SignatureValidationError.BankIdCertificateRevoked
-        }
+        if (revokedCertificate != null) throw PdfValidationException.BankIdCertificateRevoked
     }
 
     private fun decodeNationalIdentityNumber(certificate: X509Certificate): String? {

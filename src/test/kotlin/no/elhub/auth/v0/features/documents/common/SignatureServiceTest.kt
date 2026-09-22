@@ -9,6 +9,10 @@ import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import no.elhub.auth.common.documents.pdf.FileCertificateProvider
+import no.elhub.auth.common.documents.pdf.FileCertificateProviderConfig
+import no.elhub.auth.common.documents.pdf.HashicorpVaultSignatureProvider
+import no.elhub.auth.common.documents.pdf.ITextPdfSignatureService
 import no.elhub.auth.v0.features.common.httpTestClient
 import no.elhub.auth.v0.features.common.party.PartyIdentifier
 import no.elhub.auth.v0.features.common.party.PartyIdentifierType
@@ -18,9 +22,6 @@ import no.elhub.auth.v0.features.documents.TestCertificateFactory
 import no.elhub.auth.v0.features.documents.TestCertificateUtil
 import no.elhub.auth.v0.features.documents.TestPdfSigner
 import no.elhub.auth.v0.features.documents.VaultTransitTestContainerExtension
-import no.elhub.auth.v0.features.documents.create.FileCertificateProvider
-import no.elhub.auth.v0.features.documents.create.FileCertificateProviderConfig
-import no.elhub.auth.v0.features.documents.create.HashicorpVaultSignatureProvider
 import no.elhub.auth.v0.features.documents.localVaultConfig
 import java.nio.file.Files
 
@@ -47,7 +48,8 @@ class SignatureServiceTest : FunSpec({
         bankIdRootPrivateKeyPath = tempBankIdCerts.bankIdRootPrivateKeyPath
     )
 
-    val signingService = ITextPdfSignatureService(certProvider, vaultSignatureProvider)
+    val commonSignatureService = ITextPdfSignatureService(certProvider, vaultSignatureProvider)
+    val signingService = V0SignatureServiceAdapter(commonSignatureService, commonSignatureService)
 
     val unsignedPdfBytes = this::class.java.classLoader.getResourceAsStream("unsigned.pdf")!!.readAllBytes()
     val nationalIdentityNumber = "01827535970"
@@ -404,7 +406,8 @@ class SignatureServiceTest : FunSpec({
                     )
                 )
 
-                val signatureService = ITextPdfSignatureService(realCertProvider, vaultSignatureProvider)
+                val commonSignatureService = ITextPdfSignatureService(realCertProvider, vaultSignatureProvider)
+                val signatureService = V0SignatureServiceAdapter(commonSignatureService, commonSignatureService)
                 signatureService.validateSignaturesAndReturnSignatory(pdfBytes, pdfBytes).shouldBeRight()
             }
 
@@ -439,8 +442,8 @@ class SignatureServiceTest : FunSpec({
                     )
                 )
 
-                val signatureService =
-                    ITextPdfSignatureService(realCertProvider, vaultSignatureProvider)
+                val commonSignatureService = ITextPdfSignatureService(realCertProvider, vaultSignatureProvider)
+                val signatureService = V0SignatureServiceAdapter(commonSignatureService, commonSignatureService)
                 signatureService.validateSignaturesAndReturnSignatory(pdfBytes, pdfBytes)
                     .shouldBeRight()
             }

@@ -7,8 +7,11 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
 import kotlinx.datetime.LocalDate
+import no.elhub.auth.common.documents.pdf.MustachePdfGenerator
+import no.elhub.auth.common.documents.pdf.PdfGeneratorConfig
 import no.elhub.auth.v0.features.businessprocesses.changeofbalancesupplier.domain.ChangeOfBalanceSupplierBusinessMeta
 import no.elhub.auth.v0.features.businessprocesses.moveinandchangeofbalancesupplier.domain.MoveInAndChangeOfBalanceSupplierBusinessMeta
+import no.elhub.auth.v0.features.documents.create.V0FileGeneratorAdapter
 import org.apache.pdfbox.Loader
 import org.apache.pdfbox.pdmodel.PDDocumentInformation
 import org.apache.pdfbox.text.PDFTextStripper
@@ -41,7 +44,7 @@ class PdfGeneratorTest :
                 mustacheResourcePath = "templates",
                 useTestPdfNotice = false,
             )
-            val pdfGenerator = PdfGenerator(cfg)
+            val pdfGenerator = V0FileGeneratorAdapter(MustachePdfGenerator(cfg))
 
             val result = pdfGenerator.generate(
                 documentMeta = cosMeta,
@@ -59,7 +62,7 @@ class PdfGeneratorTest :
                 mustacheResourcePath = "templates",
                 useTestPdfNotice = true,
             )
-            val pdfGenerator = PdfGenerator(cfg)
+            val pdfGenerator = V0FileGeneratorAdapter(MustachePdfGenerator(cfg))
 
             val result = pdfGenerator.generate(
                 documentMeta = cosMeta,
@@ -82,7 +85,7 @@ class PdfGeneratorTest :
                 mustacheResourcePath = "templates",
                 useTestPdfNotice = false,
             )
-            val pdfGenerator = PdfGenerator(cfg)
+            val pdfGenerator = V0FileGeneratorAdapter(MustachePdfGenerator(cfg))
 
             val result = pdfGenerator.generate(
                 documentMeta = cosMeta,
@@ -105,7 +108,7 @@ class PdfGeneratorTest :
                 mustacheResourcePath = "templates",
                 useTestPdfNotice = true,
             )
-            val pdfGenerator = PdfGenerator(cfg)
+            val pdfGenerator = V0FileGeneratorAdapter(MustachePdfGenerator(cfg))
 
             val result = pdfGenerator.generate(
                 documentMeta = moveInMeta,
@@ -128,7 +131,7 @@ class PdfGeneratorTest :
                 mustacheResourcePath = "templates",
                 useTestPdfNotice = false,
             )
-            val pdfGenerator = PdfGenerator(cfg)
+            val pdfGenerator = V0FileGeneratorAdapter(MustachePdfGenerator(cfg))
 
             val result = pdfGenerator.generate(
                 documentMeta = moveInMeta,

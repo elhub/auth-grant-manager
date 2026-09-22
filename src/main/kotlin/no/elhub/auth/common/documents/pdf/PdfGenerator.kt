@@ -1,18 +1,11 @@
-package no.elhub.auth.v0.features.filegenerator
+package no.elhub.auth.common.documents.pdf
 
-import arrow.core.Either
-import arrow.core.raise.either
 import com.github.mustachejava.DefaultMustacheFactory
 import com.github.mustachejava.TemplateFunction
 import com.openhtmltopdf.extend.FSSupplier
 import com.openhtmltopdf.outputdevice.helper.BaseRendererBuilder
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder
 import kotlinx.datetime.number
-import no.elhub.auth.v0.features.businessprocesses.changeofbalancesupplier.domain.ChangeOfBalanceSupplierBusinessMeta
-import no.elhub.auth.v0.features.businessprocesses.moveinandchangeofbalancesupplier.domain.MoveInAndChangeOfBalanceSupplierBusinessMeta
-import no.elhub.auth.v0.features.documents.create.DocumentGenerationError
-import no.elhub.auth.v0.features.documents.create.FileGenerator
-import no.elhub.auth.v0.features.documents.create.command.DocumentMetaMarker
 import org.apache.pdfbox.Loader
 import org.apache.pdfbox.pdmodel.PDDocumentInformation
 import org.apache.pdfbox.pdmodel.PDPageContentStream
@@ -40,9 +33,9 @@ data class PdfGeneratorConfig(
     val useTestPdfNotice: Boolean,
 )
 
-class PdfGenerator(
+class MustachePdfGenerator(
     cfg: PdfGeneratorConfig,
-) : FileGenerator {
+) : PdfGenerator {
     private val mustacheFactory: DefaultMustacheFactory = DefaultMustacheFactory(cfg.mustacheResourcePath)
     private val useTestPdfNotice = cfg.useTestPdfNotice
 
@@ -92,102 +85,62 @@ class PdfGenerator(
         internal const val PDF_METADATA_KEY_TESTDOCUMENT = "testDocument"
     }
 
-    override fun generate(
-        documentMeta: DocumentMetaMarker,
-    ): Either<DocumentGenerationError.ContentGenerationError, ByteArray> = either {
-        val language = resolveLanguage(documentMeta)
-        val contractHtmlString = when (documentMeta) {
-            is ChangeOfBalanceSupplierBusinessMeta -> generateChangeOfBalanceSupplierHtml(
-                customerName = documentMeta.requestedFromName,
-                meteringPointAddress = documentMeta.requestedForMeteringPointAddress,
-                meteringPointId = documentMeta.requestedForMeteringPointId,
-                meterNumber = documentMeta.requestedForMeterNumber,
-                balanceSupplierName = documentMeta.balanceSupplierName,
-                balanceSupplierContractName = documentMeta.balanceSupplierContractName,
-                language = language
-            )
-
-            is MoveInAndChangeOfBalanceSupplierBusinessMeta -> generateMoveInAndChangeOfBalanceSupplierHtml(
-                customerName = documentMeta.requestedFromName,
-                meteringPointAddress = documentMeta.requestedForMeteringPointAddress,
-                meteringPointId = documentMeta.requestedForMeteringPointId,
-                balanceSupplierName = documentMeta.balanceSupplierName,
-                meterNumber = documentMeta.requestedForMeterNumber,
-                balanceSupplierContractName = documentMeta.balanceSupplierContractName,
-                moveInDate = documentMeta.moveInDate?.let { formatNorwegianDate(it.year, it.month.number, it.day) },
-                language = language
-            )
-
-            else -> raise(DocumentGenerationError.ContentGenerationError)
+    override fun generate(content: AuthorizationDocumentPdfContent): ByteArray =
+        try {
+            val contractHtmlString = when (content) {
+                is AuthorizationDocumentPdfContent.ChangeOfBalanceSupplier -> generateChangeOfBalanceSupplierHtml(content)
+                is AuthorizationDocumentPdfContent.MoveInAndChangeOfBalanceSupplier -> generateMoveInAndChangeOfBalanceSupplierHtml(content)
+            }
+            val pdfBytes = generatePdfFromHtml(contractHtmlString)
+            if (useTestPdfNotice) {
+                pdfBytes.addTestWatermark().addMetadataToPdf(
+                    language = content.language,
+                    customMetadata = mapOf(PdfConstants.PDF_METADATA_KEY_TESTDOCUMENT to "true")
+                )
+            } else {
+                pdfBytes.addMetadataToPdf(language = content.language)
+            }
+        } catch (error: Exception) {
+            throw PdfGenerationException(error)
         }
-            .bind()
 
-        val pdfBytes =
-            generatePdfFromHtml(contractHtmlString).mapLeft { DocumentGenerationError.ContentGenerationError }.bind()
-
-        if (useTestPdfNotice) {
-            pdfBytes.addTestWatermark()
-                .addMetadataToPdf(language = language, customMetadata = mapOf(PdfConstants.PDF_METADATA_KEY_TESTDOCUMENT to "true"))
-                .bind()
-        } else {
-            pdfBytes.addMetadataToPdf(language = language)
-                .bind()
-        }
-    }
-
-    private fun generateChangeOfBalanceSupplierHtml(
-        customerName: String,
-        meteringPointAddress: String,
-        meteringPointId: String,
-        meterNumber: String,
-        balanceSupplierName: String,
-        balanceSupplierContractName: String,
-        language: SupportedLanguage,
-    ): Either<DocumentGenerationError.ContentGenerationError, String> = Either.catch {
-        val i18n = i18nTemplateFunction(language)
-        StringWriter().apply {
+    private fun generateChangeOfBalanceSupplierHtml(content: AuthorizationDocumentPdfContent.ChangeOfBalanceSupplier): String {
+        val i18n = i18nTemplateFunction(content.language)
+        return StringWriter().apply {
             mustacheFactory
                 .compile(MustacheConstants.TEMPLATE_CHANGE_SUPPLIER_CONTRACT)
                 .execute(
                     this,
                     mapOf(
-                        MustacheConstants.VARIABLE_KEY_CUSTOMER_NAME to customerName,
-                        MustacheConstants.VARIABLE_KEY_METERING_POINT_ID to meteringPointId,
-                        MustacheConstants.VARIABLE_KEY_METER_NUMBER to meterNumber,
-                        MustacheConstants.VARIABLE_KEY_METERING_POINT_ADDRESS to meteringPointAddress,
-                        MustacheConstants.VARIABLE_KEY_BALANCE_SUPPLIER_NAME to balanceSupplierName,
-                        MustacheConstants.VARIABLE_KEY_BALANCE_SUPPLIER_CONTRACT_NAME to balanceSupplierContractName,
-                        MustacheConstants.VARIABLE_KEY_HTML_LANG to language.code,
+                        MustacheConstants.VARIABLE_KEY_CUSTOMER_NAME to content.customerName,
+                        MustacheConstants.VARIABLE_KEY_METERING_POINT_ID to content.meteringPointId,
+                        MustacheConstants.VARIABLE_KEY_METER_NUMBER to content.meterNumber,
+                        MustacheConstants.VARIABLE_KEY_METERING_POINT_ADDRESS to content.meteringPointAddress,
+                        MustacheConstants.VARIABLE_KEY_BALANCE_SUPPLIER_NAME to content.balanceSupplierName,
+                        MustacheConstants.VARIABLE_KEY_BALANCE_SUPPLIER_CONTRACT_NAME to content.balanceSupplierContractName,
+                        MustacheConstants.VARIABLE_KEY_HTML_LANG to content.language.code,
                         MustacheConstants.VARIABLE_KEY_I18N to i18n,
                     )
                 ).flush()
         }.toString()
-    }.mapLeft { DocumentGenerationError.ContentGenerationError }
+    }
 
-    private fun generateMoveInAndChangeOfBalanceSupplierHtml(
-        customerName: String,
-        meteringPointAddress: String,
-        meteringPointId: String,
-        meterNumber: String,
-        balanceSupplierName: String,
-        balanceSupplierContractName: String,
-        moveInDate: String?,
-        language: SupportedLanguage,
-    ): Either<DocumentGenerationError.ContentGenerationError, String> = Either.catch {
-        val i18n = i18nTemplateFunction(language)
-        StringWriter().apply {
+    private fun generateMoveInAndChangeOfBalanceSupplierHtml(content: AuthorizationDocumentPdfContent.MoveInAndChangeOfBalanceSupplier): String {
+        val i18n = i18nTemplateFunction(content.language)
+        val moveInDate = content.moveInDate?.let { formatNorwegianDate(it.year, it.month.number, it.day) }
+        return StringWriter().apply {
             mustacheFactory
                 .compile(MustacheConstants.TEMPLATE_MOVE_IN)
                 .execute(
                     this,
                     mapOf(
-                        MustacheConstants.VARIABLE_KEY_CUSTOMER_NAME to customerName,
-                        MustacheConstants.VARIABLE_KEY_METERING_POINT_ID to meteringPointId,
-                        MustacheConstants.VARIABLE_KEY_METER_NUMBER to meterNumber,
-                        MustacheConstants.VARIABLE_KEY_METERING_POINT_ADDRESS to meteringPointAddress,
-                        MustacheConstants.VARIABLE_KEY_BALANCE_SUPPLIER_NAME to balanceSupplierName,
-                        MustacheConstants.VARIABLE_KEY_BALANCE_SUPPLIER_CONTRACT_NAME to balanceSupplierContractName,
-                        MustacheConstants.VARIABLE_KEY_HTML_LANG to language.code,
+                        MustacheConstants.VARIABLE_KEY_CUSTOMER_NAME to content.customerName,
+                        MustacheConstants.VARIABLE_KEY_METERING_POINT_ID to content.meteringPointId,
+                        MustacheConstants.VARIABLE_KEY_METER_NUMBER to content.meterNumber,
+                        MustacheConstants.VARIABLE_KEY_METERING_POINT_ADDRESS to content.meteringPointAddress,
+                        MustacheConstants.VARIABLE_KEY_BALANCE_SUPPLIER_NAME to content.balanceSupplierName,
+                        MustacheConstants.VARIABLE_KEY_BALANCE_SUPPLIER_CONTRACT_NAME to content.balanceSupplierContractName,
+                        MustacheConstants.VARIABLE_KEY_HTML_LANG to content.language.code,
                         MustacheConstants.VARIABLE_KEY_I18N to i18n,
                     )
                         .let { base ->
@@ -199,12 +152,12 @@ class PdfGenerator(
                         }
                 ).flush()
         }.toString()
-    }.mapLeft { DocumentGenerationError.ContentGenerationError }
+    }
 
     private fun formatNorwegianDate(year: Int, month: Int, day: Int): String =
         String.format(Locale.ROOT, "%02d.%02d.%04d", day, month, year)
 
-    private fun generatePdfFromHtml(htmlString: String) = Either.catch {
+    private fun generatePdfFromHtml(htmlString: String): ByteArray =
         ByteArrayOutputStream().use { out ->
             PdfRendererBuilder()
                 .withHtmlContent(htmlString, null)
@@ -215,12 +168,11 @@ class PdfGenerator(
                 .run()
             out.toByteArray()
         }
-    }.mapLeft { DocumentGenerationError.ContentGenerationError }
 
     private fun ByteArray.addMetadataToPdf(
-        language: SupportedLanguage,
+        language: PdfLanguage,
         customMetadata: Map<String, String> = emptyMap()
-    ) = Either.catch {
+    ): ByteArray =
         ByteArrayOutputStream().use { out ->
             Loader.loadPDF(this).use { doc ->
                 doc.documentInformation = PDDocumentInformation().apply {
@@ -235,12 +187,11 @@ class PdfGenerator(
             }
             out.toByteArray()
         }
-    }.mapLeft { DocumentGenerationError.ContentGenerationError }
 
     private fun fontSupplier(bytes: ByteArray): FSSupplier<InputStream> =
         FSSupplier { ByteArrayInputStream(bytes) }
 
-    private fun i18nTemplateFunction(language: SupportedLanguage): TemplateFunction {
+    private fun i18nTemplateFunction(language: PdfLanguage): TemplateFunction {
         val bundle = ResourceBundle.getBundle("templates.i18n.messages", Locale.forLanguageTag(language.code))
         return TemplateFunction { key ->
             val normalizedKey = key.trim()
@@ -251,12 +202,6 @@ class PdfGenerator(
             }
         }
     }
-
-    private fun resolveLanguage(documentMeta: DocumentMetaMarker): SupportedLanguage =
-        documentMeta
-            .toMetaAttributes()["language"]
-            ?.let { languageCode -> SupportedLanguage.entries.firstOrNull { it.code == languageCode } }
-            ?: SupportedLanguage.DEFAULT
 
     private fun PdfRendererBuilder.useFonts(fonts: List<Font>): PdfRendererBuilder {
         fonts.forEach { font ->
