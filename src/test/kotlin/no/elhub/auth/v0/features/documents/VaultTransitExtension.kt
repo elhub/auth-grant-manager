@@ -7,7 +7,7 @@ import com.github.dockerjava.api.model.Ports
 import io.kotest.core.listeners.AfterProjectListener
 import io.kotest.core.listeners.BeforeSpecListener
 import io.kotest.core.spec.Spec
-import no.elhub.auth.v0.features.documents.create.VaultConfig
+import no.elhub.auth.common.documents.pdf.VaultConfig
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.wait.strategy.Wait
 import org.testcontainers.utility.DockerImageName

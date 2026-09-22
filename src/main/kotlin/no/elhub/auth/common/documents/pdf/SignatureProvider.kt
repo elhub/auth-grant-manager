@@ -1,7 +1,5 @@
-package no.elhub.auth.v0.features.documents.create
+package no.elhub.auth.common.documents.pdf
 
-import arrow.core.Either
-import arrow.core.right
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.header
@@ -17,11 +15,7 @@ import java.nio.file.Paths
 import java.util.Base64
 
 interface SignatureProvider {
-    suspend fun fetchSignature(digest: ByteArray): Either<SignatureFetchingError, ByteArray>
-}
-
-sealed class SignatureFetchingError {
-    data object UnexpectedError : SignatureFetchingError()
+    suspend fun fetchSignature(digest: ByteArray): ByteArray
 }
 
 data class VaultConfig(
@@ -71,8 +65,8 @@ class HashicorpVaultSignatureProvider(
             Paths.get(cfg.tokenPath)
         ).trim()
 
-    override suspend fun fetchSignature(digest: ByteArray): Either<SignatureFetchingError, ByteArray> =
-        Either.catch {
+    override suspend fun fetchSignature(digest: ByteArray): ByteArray =
+        try {
             val b64 = Base64.getEncoder().encodeToString(digest)
 
             val resp = client.post("${cfg.url}/sign/${cfg.key}") {
@@ -90,9 +84,9 @@ class HashicorpVaultSignatureProvider(
             }.body<SignResponse>()
 
             val raw = resp.data.signature.removePrefix("vault:v1:")
-            return Base64.getDecoder().decode(raw).right()
-        }.mapLeft {
-            logger.error("Failed to fetch signature from Vault", it)
-            SignatureFetchingError.UnexpectedError
+            Base64.getDecoder().decode(raw)
+        } catch (error: Exception) {
+            logger.error("Failed to fetch signature from Vault", error)
+            throw PdfSigningException.SignatureFetchingError
         }
 }

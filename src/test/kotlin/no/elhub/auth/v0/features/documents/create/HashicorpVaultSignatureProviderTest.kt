@@ -1,6 +1,6 @@
 package no.elhub.auth.v0.features.documents.create
 
-import io.kotest.assertions.arrow.core.shouldBeRight
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.ktor.client.HttpClient
@@ -19,6 +19,9 @@ import io.ktor.utils.io.readRemaining
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import no.elhub.auth.common.documents.pdf.HashicorpVaultSignatureProvider
+import no.elhub.auth.common.documents.pdf.PdfSigningException
+import no.elhub.auth.common.documents.pdf.VaultConfig
 import java.nio.file.Files
 import java.util.Base64
 
@@ -66,7 +69,33 @@ class HashicorpVaultSignatureProviderTest : FunSpec({
             )
         )
 
-        provider.fetchSignature("data".encodeToByteArray()).shouldBeRight() shouldBe expectedSignature
+        provider.fetchSignature("data".encodeToByteArray()) shouldBe expectedSignature
+    }
+
+    test("throws a common PDF signing exception when Vault responds with an error") {
+        val client = HttpClient(
+            MockEngine {
+                respond(
+                    content = "vault unavailable",
+                    status = HttpStatusCode.InternalServerError,
+                    headers = headersOf(HttpHeaders.ContentType, ContentType.Text.Plain.toString()),
+                )
+            }
+        )
+        val tokenFile = Files.createTempFile("vault-token", ".txt")
+        Files.writeString(tokenFile, "test-token")
+        val provider = HashicorpVaultSignatureProvider(
+            client = client,
+            cfg = VaultConfig(
+                url = "http://vault.test/v1/transit",
+                key = "test-key",
+                tokenPath = tokenFile.toString(),
+            )
+        )
+
+        shouldThrow<PdfSigningException.SignatureFetchingError> {
+            provider.fetchSignature("data".encodeToByteArray())
+        }
     }
 })
 
