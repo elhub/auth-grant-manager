@@ -51,6 +51,20 @@ If you prefer to invoke the infrastructure or migrations manually, the `services
 | `./gradlew buildFatJar`       | Build an executable JAR of the server with all dependencies included |
 | `./gradlew buildImage`        | Build the docker image to use with the fat JAR                       |
 
+#### Preview PDFs
+
+Generate sample documents using the application's PDF generator, without starting the application:
+
+```bash
+./gradlew generatePdf
+./gradlew generatePdf -Pdocument=change-of-balance-supplier
+./gradlew generatePdf -Pdocument=move-in-and-change-of-balance-supplier
+```
+
+The PDFs are written to `build/generated-pdfs/`. Without `-Pdocument`, the task generates every sample.
+To preview a new PDF content type, add a sample and its name to
+`src/test/kotlin/no/elhub/auth/common/documents/pdf/PdfPreview.kt`.
+
 If you run this locally, you will need to have a PostgreSQL database running. The following commands allow you
 to set up and tear down the database using Docker (Note that both run and test automatically do this under
 normal circumstances):

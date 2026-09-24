@@ -130,6 +130,19 @@ tasks.withType<Test>().configureEach {
     systemProperty("java.awt.headless", "true")
 }
 
+tasks.register<JavaExec>("generatePdf") {
+    group = "pdf"
+    description = "Generates sample PDFs for visual inspection (use -Pdocument=<name> to select one)."
+    dependsOn(tasks.named("testClasses"))
+    classpath = sourceSets["test"].runtimeClasspath
+    mainClass.set("no.elhub.auth.common.documents.pdf.PdfPreviewKt")
+    systemProperty("java.awt.headless", "true")
+    args(
+        providers.gradleProperty("document").orElse("all").get(),
+        layout.buildDirectory.dir("generated-pdfs").get().asFile.absolutePath,
+    )
+}
+
 tasks.named("test").configure {
     dependsOn(tasks.named("generateTestCerts"))
     dependsOn(tasks.named("openApiValidate"))
