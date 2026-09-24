@@ -605,16 +605,8 @@ paths:
     post:
       tags:
         - Work in Progress
-      summary: '[WIP] Create a v1 authorization document for signing'
-      description: >
-        Work in progress. This endpoint is currently specified for development and testing only.
-        It is not deployed to Production or MT1, is not part of either environment's API contract,
-        and may change without backward-compatibility guarantees before release.
-
-        Create an authorization document from a general requested-scope contract. The selected
-        document type determines which resource keys, allowed-change keys, values, and party
-        identifiers are supported. Scope values are lists and apply as sets; values are not paired
-        by their array positions.
+      summary: '[WIP] Create an authorization document for signing'
+      description: Create an authorization document for signing.
       operationId: createV1AuthorizationDocument
       x-status: Work in progress
       x-availability: Not deployed to Production or MT1
@@ -651,10 +643,8 @@ paths:
     get:
       tags:
         - Work in Progress
-      summary: '[WIP] Get v1 authorization document by id'
-      description: >
-        Retrieve a fully populated authorization document, including its parties,
-        signing information, and associated authorization grants.
+      summary: '[WIP] Get an authorization document by ID'
+      description: Get an authorization document by ID.
       operationId: getV1AuthorizationDocument
       x-status: Work in progress
       x-availability: Not deployed to Production or MT1
@@ -687,9 +677,8 @@ paths:
     get:
       tags:
         - Work in Progress
-      summary: '[WIP] Get v1 authorization grant by id'
-      description: >
-        Retrieve an authorization grant, including its embedded scopes and related parties.
+      summary: '[WIP] Get an authorization grant by ID'
+      description: Get an authorization grant and its permissions.
       operationId: getV1AuthorizationGrant
       x-status: Work in progress
       x-availability: Not deployed to Production or MT1
@@ -819,7 +808,7 @@ components:
             externalReference: contract-123
             status: Pending
             createdAt: '2026-09-24T10:00:00Z'
-            validTo: null
+            validTo: '2026-11-01T10:00:00Z'
           meta:
             language: nb
           relationships:
@@ -1218,6 +1207,7 @@ components:
                   type: string
                   enum:
                     - Pending
+                    - Signed
                 createdAt:
                   type: string
                   format: date-time
