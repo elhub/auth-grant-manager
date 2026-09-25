@@ -814,7 +814,7 @@ paths:
 components:
   examples:
     V1ChangeOfEnergySupplierForOrganizationRequestSubmission:
-      summary: Supplier change through interactive approval instead of PDF signing
+      summary: requestType=ChangeOfEnergySupplierForOrganization
       value:
         data:
           type: AuthorizationRequest
@@ -832,7 +832,7 @@ components:
             redirectURI: https://supplier.example/authorization/return
 
     V1MoveInAndChangeOfEnergySupplierForOrganizationRequestSubmission:
-      summary: Move-in and supplier change with one date applying to all listed points
+      summary: requestType=MoveInAndChangeOfEnergySupplierForOrganization
       value:
         data:
           type: AuthorizationRequest
@@ -889,7 +889,6 @@ components:
               data: []
           links:
             self: /access/v1/authorization-requests/123e4567-e89b-12d3-a456-426614174010
-            approval: https://minside.example/authorization-requests/123e4567-e89b-12d3-a456-426614174010
 
     V1AuthorizationRequestAcceptedResponse:
       summary: Accepted move-in request with its approver and resulting grant
@@ -1435,10 +1434,6 @@ components:
                 self:
                   type: string
                   format: uri-reference
-                approval:
-                  type: string
-                  format: uri
-                  pattern: '^https://'
           allOf:
             - if:
                 properties:
@@ -1466,23 +1461,6 @@ components:
                         properties:
                           data:
                             maxItems: 0
-            - if:
-                properties:
-                  attributes:
-                    properties:
-                      status:
-                        const: Pending
-              then:
-                properties:
-                  links:
-                    required:
-                      - approval
-              else:
-                properties:
-                  links:
-                    properties:
-                      approval:
-                        not: {}
 
     V1AuthorizationDocumentSubmission:
       type: object
