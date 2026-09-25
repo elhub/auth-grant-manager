@@ -853,7 +853,7 @@ components:
             redirectURI: https://supplier.example/authorization/return
 
     V1AuthorizationRequestPendingResponse:
-      summary: Newly created supplier-change request, also returned by GET while Pending
+      summary: requestType=ChangeOfEnergySupplierForOrganization
       value:
         data:
           id: 123e4567-e89b-12d3-a456-426614174010
@@ -891,7 +891,7 @@ components:
             self: /access/v1/authorization-requests/123e4567-e89b-12d3-a456-426614174010
 
     V1AuthorizationRequestAcceptedResponse:
-      summary: Accepted move-in request with its approver and resulting grant
+      summary: requestType=MoveInAndChangeOfEnergySupplierForOrganization
       value:
         data:
           id: 123e4567-e89b-12d3-a456-426614174011
