@@ -42,6 +42,7 @@ paths:
       tags:
         - Authorization Documents
       summary: List authorization documents
+      operationId: listV0AuthorizationDocuments
       description: >
         Retrieve a list of authorization document objects available to the calling party.
         The result is constrained by the caller's authorization context.
@@ -82,6 +83,7 @@ paths:
       tags:
         - Authorization Documents
       summary: Create authorization document for signing
+      operationId: createV0AuthorizationDocument
       description: >
         Create a new authorization document that will later be signed by the appropriate party.
         The response includes the identifier of the document and links to the document resource
@@ -124,6 +126,7 @@ paths:
       tags:
         - Authorization Documents
       summary: Get authorization document by id
+      operationId: getV0AuthorizationDocument
       description: >
         Retrieve information about a specific authorization document. This can be used to
         check the document status and other attributes such as involved parties and validity.
@@ -159,6 +162,7 @@ paths:
       tags:
         - Authorization Documents
       summary: Download authorization document PDF
+      operationId: getV0AuthorizationDocumentPdf
       description: >
         Retrieve the PDF representation of an authorization document. The PDF reflects the
         current state of the document at the time of retrieval.
@@ -195,6 +199,7 @@ paths:
       tags:
         - Authorization Documents
       summary: Submit signed authorization document
+      operationId: submitV0AuthorizationDocument
       description: >
         Submit a signed authorization document as a PDF file. Elhub validates the signature,
         generates any required authorization grants, and stores the document if the validation succeeds.
@@ -245,6 +250,7 @@ paths:
       tags:
         - Authorization Grants
       summary: List authorization grants
+      operationId: listV0AuthorizationGrants
       description: >
         Retrieve a list of authorization grants available to the caller. The result is constrained
         by the caller's token and GLN context. Results are returned ordered by createdAt DESC
@@ -294,6 +300,7 @@ paths:
       tags:
         - Authorization Grants
       summary: Get authorization grant by id
+      operationId: getV0AuthorizationGrant
       description: >
         Retrieve a specific authorization grant by its identifier.
       parameters:
@@ -328,6 +335,7 @@ paths:
       tags:
         - Authorization Grants
       summary: Update authorization grant status
+      operationId: updateV0AuthorizationGrant
       description: >
         Update the status of an authorization grant. This endpoint is intended for internal
         Elhub systems (BRS) and is not available to external integrators.
@@ -374,6 +382,7 @@ paths:
       tags:
         - Authorization Grants
       summary: List scopes for authorization grant
+      operationId: listV0AuthorizationGrantScopes
       description: >
         Retrieve all scopes associated with a specific authorization grant.
       parameters:
@@ -414,6 +423,7 @@ paths:
       tags:
         - Authorization Requests
       summary: List authorization requests
+      operationId: listV0AuthorizationRequests
       description: >
         Retrieve a list of authorization requests. The result is constrained by the caller's
         token and, where applicable, GLN context. Results are returned ordered by createdAt DESC
@@ -473,6 +483,7 @@ paths:
       tags:
         - Authorization Requests
       summary: Create authorization request for MinSide
+      operationId: createV0AuthorizationRequest
       description: >
         Initiate a new authorization request flow. This creates an authorization request that
         is associated with a user in MinSide and returns the created authorization request,
@@ -519,6 +530,7 @@ paths:
       tags:
         - Authorization Requests
       summary: Get authorization request by id
+      operationId: getV0AuthorizationRequest
       description: >
         Retrieve information about a specific authorization request. This can be used to
         check the status of the request.
@@ -558,6 +570,7 @@ paths:
       tags:
         - Authorization Requests
       summary: Update authorization request
+      operationId: updateV0AuthorizationRequest
       description: >
         Update an authorization request. This endpoint is intended for internal MinSide usage
         with an end-user token and is not available to external integrators.
@@ -1076,6 +1089,7 @@ components:
             externalReference: contract-123
             status: Signed
             createdAt: '2026-09-24T10:00:00Z'
+            updatedAt: '2026-09-24T10:15:00Z'
             validTo: '2026-10-24T10:00:00Z'
           meta:
             language: nb
@@ -1123,6 +1137,7 @@ components:
             externalReference: contract-123
             status: Signed
             createdAt: '2026-09-24T10:00:00Z'
+            updatedAt: '2026-09-24T10:15:00Z'
             validTo: '2026-11-01T10:00:00Z'
           meta:
             language: nb
@@ -2197,15 +2212,6 @@ components:
                     detail: 'An unexpected error occurred.'
                     meta:
                       createdAt: '2025-12-17T12:51:57+01:00'
-
-    MetaResponse:
-      description: >
-        Metadata response for informational purposes, typically returned from successful
-        cancel operations.
-      content:
-        application/vnd.api+json:
-          schema:
-            $ref: './schemas/json-api-meta.schema.json'
 
   securitySchemes:
     bearerAuth:
