@@ -910,7 +910,6 @@ components:
             status: Accepted
             createdAt: '2026-09-24T10:00:00Z'
             updatedAt: '2026-09-24T10:15:00Z'
-            decidedAt: '2026-09-24T10:15:00Z'
             validTo: '2026-10-22T00:00:00+02:00'
           meta:
             language: nb
@@ -1400,10 +1399,6 @@ components:
                 validTo:
                   type: string
                   format: date-time
-                decidedAt:
-                  type: string
-                  format: date-time
-                  description: Time of acceptance or rejection; absent before a decision and on expiry.
             meta:
               $ref: '#/components/schemas/V1AuthorizationRequestMeta'
             relationships:
@@ -1471,25 +1466,6 @@ components:
                         properties:
                           data:
                             maxItems: 0
-            - if:
-                properties:
-                  attributes:
-                    properties:
-                      status:
-                        enum:
-                          - Accepted
-                          - Rejected
-              then:
-                properties:
-                  attributes:
-                    required:
-                      - decidedAt
-              else:
-                properties:
-                  attributes:
-                    properties:
-                      decidedAt:
-                        not: {}
             - if:
                 properties:
                   attributes:
