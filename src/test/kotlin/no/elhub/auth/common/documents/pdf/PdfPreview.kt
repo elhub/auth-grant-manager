@@ -42,11 +42,25 @@ private fun AuthorizationDocumentPdfContent.previewName(): String = when (this) 
     is AuthorizationDocumentPdfContent.FrameworkAgreement -> "framework-agreement"
 }
 
+private fun AuthorizationDocumentPdfContent.withLanguage(language: PdfLanguage): AuthorizationDocumentPdfContent =
+    when (this) {
+        is AuthorizationDocumentPdfContent.ChangeOfBalanceSupplier -> copy(language = language)
+        is AuthorizationDocumentPdfContent.MoveInAndChangeOfBalanceSupplier -> copy(language = language)
+        is AuthorizationDocumentPdfContent.FrameworkAgreement -> copy(language = language)
+    }
+
 fun main(args: Array<String>) {
-    require(args.size == 2) { "Expected document name (or 'all') and output directory" }
+    require(args.size in 2..3) { "Expected document name (or 'all'), output directory, and optional language (nb, nn, en)" }
     val (document, outputDirectory) = args
+    val language =
+        args.getOrNull(2)
+            ?.takeIf { it.isNotBlank() }
+            ?.let { code ->
+                PdfLanguage.values().firstOrNull { it.code.equals(code, ignoreCase = true) }
+                    ?: throw IllegalArgumentException("Unsupported language '$code'. Available: nb, nn, en")
+            } ?: PdfLanguage.NB
     val namedSamples = samples.associateBy { it.previewName() }
-    val selected = if (document == "all") {
+    val selectedSamples = if (document == "all") {
         namedSamples
     } else {
         mapOf(
@@ -55,6 +69,10 @@ fun main(args: Array<String>) {
             }
         )
     }
+    val selected =
+        selectedSamples.mapValues { (_, content) ->
+            content.withLanguage(language)
+        }
 
     val output = Path.of(outputDirectory)
     Files.createDirectories(output)
