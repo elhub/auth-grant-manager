@@ -50,6 +50,67 @@ class MustachePdfGeneratorTest : FunSpec({
         pdfLanguage(pdf) shouldBe "nb-NO"
     }
 
+    test("generates a localized framework agreement PDF with an end date") {
+        val pdf = generator(useTestPdfNotice = false).generate(
+            AuthorizationDocumentPdfContent.FrameworkAgreement(
+                language = PdfLanguage.EN,
+                organizationName = "Navn AS",
+                organizationNumber = "100 010 001",
+                balanceSupplierName = "Elvekraft",
+                contractReference = "Elvekraft Framework Agreement ABC213",
+                startDate = LocalDate(2027, 1, 1),
+                endDate = LocalDate(2029, 12, 31),
+            )
+        )
+
+        val text = pdfText(pdf)
+        text shouldContain "Framework agreement confirmation"
+        text shouldContain "Navn AS"
+        text shouldContain "100 010 001"
+        text shouldContain "Elvekraft Framework Agreement ABC213"
+        text shouldContain "01. January 2027"
+        text shouldContain "31. December 2029"
+        pdfLanguage(pdf) shouldBe "en-US"
+    }
+
+    test("renders ongoing framework agreement when the end date is absent") {
+        val pdf = generator(useTestPdfNotice = false).generate(
+            AuthorizationDocumentPdfContent.FrameworkAgreement(
+                language = PdfLanguage.NB,
+                organizationName = "Navn AS",
+                organizationNumber = "100 010 001",
+                balanceSupplierName = "Elvekraft",
+                contractReference = "Elvekraft Rammeavtale ABC213",
+                startDate = LocalDate(2027, 1, 1),
+                endDate = null,
+            )
+        )
+
+        val text = pdfText(pdf)
+        text shouldContain "01. januar 2027"
+        text shouldContain "Løpende avtale"
+        pdfLanguage(pdf) shouldBe "nb-NO"
+    }
+
+    test("formats framework agreement dates using the Nynorsk locale") {
+        val pdf = generator(useTestPdfNotice = false).generate(
+            AuthorizationDocumentPdfContent.FrameworkAgreement(
+                language = PdfLanguage.NN,
+                organizationName = "Navn AS",
+                organizationNumber = "100 010 001",
+                balanceSupplierName = "Elvekraft",
+                contractReference = "Elvekraft Rammeavtale ABC213",
+                startDate = LocalDate(2027, 1, 1),
+                endDate = LocalDate(2029, 12, 31),
+            )
+        )
+
+        val text = pdfText(pdf)
+        text shouldContain "01. januar 2027"
+        text shouldContain "31. desember 2029"
+        pdfLanguage(pdf) shouldBe "nn-NO"
+    }
+
     test("adds test watermark and metadata when configured") {
         val pdf = generator(useTestPdfNotice = true).generate(changeOfSupplierContent())
 

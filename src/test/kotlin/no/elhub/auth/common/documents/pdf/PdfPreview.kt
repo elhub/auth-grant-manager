@@ -25,11 +25,21 @@ private val samples: List<AuthorizationDocumentPdfContent> = listOf(
         balanceSupplierContractName = "Fastpris 12 måneder",
         moveInDate = LocalDate(2026, 10, 1),
     ),
+    AuthorizationDocumentPdfContent.FrameworkAgreement(
+        language = PdfLanguage.NB,
+        organizationName = "Eksempel Organisasjon AS",
+        organizationNumber = "100 010 001",
+        balanceSupplierName = "Eksempel Strøm AS",
+        contractReference = "Rammeavtale 12 måneder",
+        startDate = LocalDate(2027, 1, 1),
+        endDate = LocalDate(2029, 12, 31),
+    ),
 )
 
 private fun AuthorizationDocumentPdfContent.previewName(): String = when (this) {
     is AuthorizationDocumentPdfContent.ChangeOfBalanceSupplier -> "change-of-balance-supplier"
     is AuthorizationDocumentPdfContent.MoveInAndChangeOfBalanceSupplier -> "move-in-and-change-of-balance-supplier"
+    is AuthorizationDocumentPdfContent.FrameworkAgreement -> "framework-agreement"
 }
 
 fun main(args: Array<String>) {

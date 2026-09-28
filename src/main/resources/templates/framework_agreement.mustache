@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="{{htmlLang}}">
+<head>
+    <meta charset="UTF-8"/>
+    <title>{{#i18n}}framework_agreement.document_title{{/i18n}}</title>
+    <style>
+        @page {
+            max-width: 600px;
+        }
+        body {
+            font: 1rem/1.5 Roboto, sans-serif;
+            color: rgba(42, 43, 45, 1);
+            background: rgba(255, 255, 255, 1);
+            margin: 20px auto;
+            padding: 20px;
+            position: relative;
+        }
+
+        .logo-image {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 84px;
+            height: 32px;
+        }
+
+        .meta {
+            margin-bottom: 20px;
+        }
+
+        .meta-row {
+            margin: 0 0 6px;
+            white-space: nowrap;
+        }
+
+        .meta-label {
+            font-weight: 700;
+            color: #2a2a2a;
+        }
+
+        .title {
+            color: #386043;
+            font-size: 20px;
+            margin: 60px 0 12px;
+        }
+
+        p,
+        ul {
+            margin: 0 0 1em;
+        }
+
+        li {
+            margin-bottom: 0.5em;
+        }
+    </style>
+</head>
+<body>
+<img src="https://frzq0sxltynr.objectstorage.eu-frankfurt-1.oci.customer-oci.com/n/frzq0sxltynr/b/insight-prod-open-data-osb/o/download/media/elhub-logo-veldig-liten.png"
+     class="logo-image"
+     alt=""
+     role="presentation"
+     aria-hidden="true"
+/>
+<h1 class="title">{{#i18n}}framework_agreement.document_title{{/i18n}}</h1>
+
+<div class="meta">
+    <p class="meta-row"><span class="meta-label">{{#i18n}}labels.customer{{/i18n}}:</span> {{organizationName}}</p>
+    <p class="meta-row"><span class="meta-label">{{#i18n}}labels.organization_number{{/i18n}}:</span> {{organizationNumber}}</p>
+    <p class="meta-row"><span class="meta-label">{{#i18n}}labels.supplier{{/i18n}}:</span> {{balanceSupplierName}}</p>
+    <p class="meta-row"><span class="meta-label">{{#i18n}}labels.contract{{/i18n}}:</span> {{contractReference}}</p>
+    <p class="meta-row"><span class="meta-label">{{#i18n}}labels.start_date{{/i18n}}:</span> {{startDate}}</p>
+    {{#endDate}}
+        <p class="meta-row"><span class="meta-label">{{#i18n}}labels.end_date{{/i18n}}:</span> {{endDate}}</p>
+    {{/endDate}}
+    {{^endDate}}
+        <p class="meta-row"><span class="meta-label">{{#i18n}}labels.end_date{{/i18n}}:</span> {{#i18n}}framework_agreement.ongoing_agreement{{/i18n}}</p>
+    {{/endDate}}
+</div>
+
+<p>{{#i18n}}framework_agreement.intro{{/i18n}}</p>
+
+<p>{{#i18n}}framework_agreement.signing_confirmation{{/i18n}}</p>
+
+<ul>
+    <li>{{#i18n}}framework_agreement.bullet_1{{/i18n}}</li>
+    <li>{{#i18n}}framework_agreement.bullet_2{{/i18n}}</li>
+    <li>{{#i18n}}framework_agreement.bullet_3{{/i18n}}</li>
+    <li>{{#i18n}}framework_agreement.bullet_4{{/i18n}}</li>
+    <li>{{#i18n}}framework_agreement.bullet_5{{/i18n}}</li>
+</ul>
+
+<p>{{#i18n}}framework_agreement.more_information{{/i18n}}</p>
+
+</body>
+</html>
