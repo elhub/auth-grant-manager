@@ -41,6 +41,16 @@ sealed interface AuthorizationDocumentPdfContent {
         val balanceSupplierContractName: String,
         val moveInDate: LocalDate?,
     ) : AuthorizationDocumentPdfContent
+
+    data class FrameworkAgreement(
+        override val language: PdfLanguage,
+        val organizationName: String,
+        val organizationNumber: String,
+        val balanceSupplierName: String,
+        val contractReference: String,
+        val startDate: LocalDate,
+        val endDate: LocalDate?,
+    ) : AuthorizationDocumentPdfContent
 }
 
 interface PdfGenerator {

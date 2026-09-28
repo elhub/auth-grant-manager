@@ -132,7 +132,7 @@ tasks.withType<Test>().configureEach {
 
 tasks.register<JavaExec>("generatePdf") {
     group = "pdf"
-    description = "Generates sample PDFs for visual inspection (use -Pdocument=<name> to select one)."
+    description = "Generates sample PDFs for visual inspection (use -Pdocument=<name> and -Planguage=<nb|nn|en> to select options)."
     dependsOn(tasks.named("testClasses"))
     classpath = sourceSets["test"].runtimeClasspath
     mainClass.set("no.elhub.auth.common.documents.pdf.PdfPreviewKt")
@@ -140,6 +140,7 @@ tasks.register<JavaExec>("generatePdf") {
     args(
         providers.gradleProperty("document").orElse("all").get(),
         layout.buildDirectory.dir("generated-pdfs").get().asFile.absolutePath,
+        providers.gradleProperty("language").orElse("nb").get(),
     )
 }
 
