@@ -8,7 +8,6 @@ CREATE TABLE auth_v1.authorization_grant (
     granted_by UUID NOT NULL REFERENCES auth.authorization_party (id),
     granted_to UUID NOT NULL REFERENCES auth.authorization_party (id),
     status auth_v1.AUTHORIZATION_GRANT_STATUS NOT NULL,
-    granted_at TIMESTAMPTZ NOT NULL,
     valid_from TIMESTAMPTZ NOT NULL,
     valid_to TIMESTAMPTZ NOT NULL,
     created_at TIMESTAMPTZ NOT NULL,
