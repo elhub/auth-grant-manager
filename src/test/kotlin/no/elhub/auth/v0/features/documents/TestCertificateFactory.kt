@@ -1,6 +1,6 @@
 package no.elhub.auth.v0.features.documents
 
-import no.elhub.auth.v0.features.documents.create.CERT_TYPE
+import no.elhub.auth.common.documents.pdf.CERT_TYPE
 import org.bouncycastle.asn1.ASN1ObjectIdentifier
 import org.bouncycastle.asn1.DERPrintableString
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo

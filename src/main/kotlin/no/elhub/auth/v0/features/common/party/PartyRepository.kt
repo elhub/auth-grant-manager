@@ -78,9 +78,9 @@ class ExposedPartyRepository : PartyRepository {
 object AuthorizationPartyTable : UUIDTable("auth.authorization_party") {
     val type = customEnumeration(
         name = "type",
-        sql = "authorization_party_type",
+        sql = "auth.authorization_party_type",
         fromDb = { value -> PartyType.valueOf(value as String) },
-        toDb = { enumValue -> PGEnum("authorization_party_type", enumValue) }
+        toDb = { enumValue -> PGEnum("auth.authorization_party_type", enumValue) }
     )
 
     val partyId = varchar("party_id", 255)

@@ -448,14 +448,14 @@ object AuthorizationRequestTable : UUIDTable("auth.authorization_request") {
             name = "request_type",
             sql = "auth.authorization_request_type",
             fromDb = { value -> AuthorizationRequest.Type.valueOf(value as String) },
-            toDb = { PGEnum("authorization_request_type", it) },
+            toDb = { PGEnum("auth.authorization_request_type", it) },
         )
     val requestStatus =
         customEnumeration(
             name = "request_status",
             sql = "auth.authorization_request_status",
             fromDb = { value -> DatabaseRequestStatus.valueOf(value as String) },
-            toDb = { PGEnum("authorization_request_status", it) },
+            toDb = { PGEnum("auth.authorization_request_status", it) },
         )
     val requestedBy = javaUUID("requested_by").references(AuthorizationPartyTable.id)
     val requestedFrom = javaUUID("requested_from").references(AuthorizationPartyTable.id)

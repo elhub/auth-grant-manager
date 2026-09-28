@@ -1,5 +1,7 @@
 package no.elhub.auth.v0.features.filegenerator
 
+import no.elhub.auth.common.documents.pdf.PdfLanguage
+
 enum class SupportedLanguage(
     val code: String
 ) {
@@ -15,5 +17,11 @@ enum class SupportedLanguage(
 
     companion object {
         val DEFAULT = NB
+    }
+
+    fun toCommonPdfLanguage() = when (this) {
+        NB -> PdfLanguage.NB
+        NN -> PdfLanguage.NN
+        EN -> PdfLanguage.EN
     }
 }

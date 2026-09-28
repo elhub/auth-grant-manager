@@ -53,7 +53,7 @@ features/requests/create/
 
 ### Route.kt — HTTP only
 
-- Authenticates, deserialises, delegates, maps the `Either` result to HTTP. Contains no business logic.
+- Authenticates, deserialises, delegates, and maps the handler outcome to HTTP. Contains no business logic.
 - Handler methods only accept business objects, and not care about ktor implementation details.
 - All routes must have an authProvider and a handlerInterface as input to the route.
 
@@ -83,7 +83,7 @@ fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
 
 ### Handler.kt — business logic
 
-- Orchestrates services and repositories using `either { }`. Never imports Ktor types.
+- Orchestrates services and repositories using explicit success and error outcomes. Never imports Ktor types.
 - Core logic is always in the Handler
 - Service can be seen as a repository or a client which collects data from external apps.
 
@@ -93,21 +93,18 @@ class Handler(
     private val partyService: PartyService,
     private val repo: RequestRepository,
 ) {
-    suspend operator fun invoke(model: CreateRequestModel): Either<CreateError, AuthorizationRequest> = either {
+    suspend operator fun invoke(model: CreateRequestModel): CreateResult {
         val party = partyService.resolve(model.requestedBy)
-            .mapLeft { CreateError.PartyResolutionFailed }
-            .bind()
-
-        ensure(model.authorizedParty == party) { CreateError.AuthorizationError }
-
-        repo.insert(model.toRequest())
-            .mapLeft { CreateError.PersistenceError }
-            .bind()
+            ?: return CreateResult.Failure(CreateError.PartyResolutionFailed)
+        if (model.authorizedParty != party) {
+            return CreateResult.Failure(CreateError.AuthorizationError)
+        }
+        return CreateResult.Success(repo.insert(model.toRequest()))
     }
 }
 ```
 
-**Rules:** Returns `Either<FeatureError, Result>`. All IO is `suspend`. No `runBlocking`.
+**Rules:** Returns an explicit feature success or error outcome. All IO is `suspend`. No `runBlocking`.
 
 ### CreateError.kt — sealed error type
 
@@ -192,7 +189,7 @@ Whenever a new feature is getting implemented
 Example: `DELETE /authorization-requests/{id}`
 
 1. Create `features/requests/delete/`
-2. Add `Handler.kt` returning `Either<DeleteError, Unit>`
+2. Add `Handler.kt` returning an explicit delete success or error outcome
 3. Add `DeleteError.kt` sealed interface with `toApiErrorResponse()`
 4. Add `Route.kt` — HTTP wiring only
 5. Add DTOs if the endpoint has a request/response body

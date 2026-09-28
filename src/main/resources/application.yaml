@@ -1,7 +1,7 @@
 ktor:
   application:
     modules:
-      - no.elhub.auth.v0.ApplicationModuleKt.module
+      - no.elhub.auth.common.ApplicationModuleKt.module
       - no.elhub.auth.v0.features.common.CommonModuleKt.commonModule
       - no.elhub.auth.v0.features.featuretoggles.ModuleKt.unleashModule
       - no.elhub.auth.v0.features.common.CommonModuleKt.personServiceModule
@@ -14,6 +14,7 @@ ktor:
       - no.elhub.auth.v0.features.grants.ModuleKt.module
       - no.elhub.auth.v0.features.documents.ModuleKt.module
       - no.elhub.auth.v0.features.requests.ModuleKt.module
+      - no.elhub.auth.v1.features.documents.ModuleKt.module
       - no.elhub.auth.v0.features.common.ModuleKt.module
   deployment:
     port: 8080
@@ -28,6 +29,9 @@ ktor:
 pdfGenerator:
   mustacheResourcePath: 'templates'
   useTestPdfNotice: ${USE_PDF_TEST_NOTICE:false}
+
+v1:
+  enabled: ${V1_ENABLED:false}
 
 pdfSigner:
   # HashiCorp Vault settings

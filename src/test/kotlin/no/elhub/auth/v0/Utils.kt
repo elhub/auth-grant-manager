@@ -22,7 +22,7 @@ import io.ktor.server.application.install
 import io.ktor.server.routing.Routing
 import io.ktor.server.routing.routing
 import io.ktor.server.testing.ApplicationTestBuilder
-import no.elhub.auth.v0.config.configureErrorHandling
+import no.elhub.auth.common.configureErrorHandling
 import no.elhub.auth.v0.config.configureSerialization
 import no.elhub.auth.v0.features.common.auth.AuthorizedPartyKey
 import no.elhub.auth.v0.features.common.party.AuthorizationParty

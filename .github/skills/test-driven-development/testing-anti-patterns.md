@@ -20,7 +20,7 @@ Assert on what the code under test produces or does — not on whether a mock wa
 coVerify { repo.insert(any()) }
 
 // ✅ — verifies the handler returned the expected result
-result.shouldBeRight { it.id shouldBe expectedId }
+result.value.id shouldBe expectedId
 ```
 
 `coVerify` is acceptable only when the side effect (e.g., an event being published) is the observable outcome and there is no return value to assert on. It is
@@ -45,15 +45,15 @@ Mock at the right level. Mocking a method that has side effects the test depends
 ```kotlin
 // ❌ — mocking insert() means the request is never persisted,
 //       so the subsequent find() returns NotFound, hiding the real path
-coEvery { repo.insert(any()) } returns Unit.right()
+coEvery { repo.insert(any()) } returns Unit
 val result = handler.invoke(model)
-result.shouldBeRight()   // passes but proves nothing
+result shouldBe expectedResult   // passes but proves nothing
 
 // ✅ — mock the external service that is slow/unavailable,
 //       let the repository run against the test DB
-coEvery { partyService.resolve(any()) } returns party.right()
+coEvery { partyService.resolve(any()) } returns party
 val result = handler.invoke(model)
-result.shouldBeRight { it.status shouldBe AuthorizationRequest.Status.Pending }
+result.value.status shouldBe AuthorizationRequest.Status.Pending
 ```
 
 Before adding a mock, answer: what are this dependency's side effects, and does the test depend on any of them?
@@ -65,7 +65,7 @@ omitted field.
 
 ```kotlin
 // ❌ — missing fields that Route or Handler may access
-coEvery { repo.find(any()) } returns AuthorizationRequest(id = uuid, type = type).right()
+coEvery { repo.find(any()) } returns AuthorizationRequest(id = uuid, type = type)
 
 // ✅ — complete, matches what ExposedRequestRepository would return
 coEvery { repo.find(any()) } returns AuthorizationRequest(
@@ -76,7 +76,7 @@ coEvery { repo.find(any()) } returns AuthorizationRequest(
     createdAt = now,
     updatedAt = now,
     validTo = now.plusYears(1),
-).right()
+)
 ```
 
 ## Warning signs

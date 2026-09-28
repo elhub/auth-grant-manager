@@ -436,7 +436,7 @@ object AuthorizationGrantTable : UUIDTable("auth.authorization_grant") {
             name = "status",
             sql = "auth.authorization_grant_status",
             fromDb = { value -> Status.valueOf(value as String) },
-            toDb = { PGEnum("authorization_grant_status", it) },
+            toDb = { PGEnum("auth.authorization_grant_status", it) },
         )
     val grantedFor = javaUUID("granted_for").references(AuthorizationPartyTable.id)
     val grantedBy = javaUUID("granted_by").references(AuthorizationPartyTable.id)
@@ -451,7 +451,7 @@ object AuthorizationGrantTable : UUIDTable("auth.authorization_grant") {
             name = "source_type",
             sql = "auth.authorization_grant_source_type",
             fromDb = { value -> SourceType.valueOf(value as String) },
-            toDb = { PGEnum("authorization_grant_source_type", it) },
+            toDb = { PGEnum("auth.authorization_grant_source_type", it) },
         )
     val sourceId = javaUUID("source_id")
 }
@@ -459,16 +459,16 @@ object AuthorizationGrantTable : UUIDTable("auth.authorization_grant") {
 object AuthorizationScopeTable : UUIDTable(name = "auth.authorization_scope") {
     val authorizedResourceType = customEnumeration(
         name = "authorized_resource_type",
-        sql = "authorization_resource",
+        sql = "auth.authorization_resource",
         fromDb = { AuthorizationScope.AuthorizationResource.valueOf(it as String) },
-        toDb = { PGEnum("authorization_resource", it) }
+        toDb = { PGEnum("auth.authorization_resource", it) }
     )
     val authorizedResourceId = varchar("authorized_resource_id", length = 64)
     val permissionType = customEnumeration(
         name = "permission_type",
-        sql = "authorization_permission_type",
+        sql = "auth.authorization_permission_type",
         fromDb = { AuthorizationScope.PermissionType.valueOf(it as String) },
-        toDb = { PGEnum("authorization_permission_type", it) }
+        toDb = { PGEnum("auth.authorization_permission_type", it) }
     )
     val createdAt = timestampWithTimeZone("created_at").clientDefault { currentTimeUtc() }
 }

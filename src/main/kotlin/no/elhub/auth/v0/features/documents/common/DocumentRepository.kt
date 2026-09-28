@@ -386,16 +386,16 @@ fun DatabaseStatus.toDocumentStatus() =
 object AuthorizationDocumentTable : UUIDTable("auth.authorization_document") {
     val type = customEnumeration(
         name = "type",
-        sql = "authorization_document_type",
+        sql = "auth.authorization_document_type",
         fromDb = { AuthorizationDocument.Type.valueOf(it as String) },
-        toDb = { PGEnum("authorization_document_type", it) },
+        toDb = { PGEnum("auth.authorization_document_type", it) },
     )
     val file = binary("file")
     val status = customEnumeration(
         name = "status",
-        sql = "authorization_document_status",
+        sql = "auth.authorization_document_status",
         fromDb = { DatabaseStatus.valueOf(it as String) },
-        toDb = { PGEnum("authorization_document_status", it) },
+        toDb = { PGEnum("auth.authorization_document_status", it) },
     )
     val requestedBy = javaUUID("requested_by").references(AuthorizationPartyTable.id)
     val requestedFrom = javaUUID("requested_from").references(AuthorizationPartyTable.id)

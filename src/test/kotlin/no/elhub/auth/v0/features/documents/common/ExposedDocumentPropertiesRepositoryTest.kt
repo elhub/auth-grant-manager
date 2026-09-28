@@ -1,5 +1,6 @@
 package no.elhub.auth.v0.features.documents.common
 
+import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
@@ -78,7 +79,7 @@ class ExposedDocumentPropertiesRepositoryTest : FunSpec({
                     updatedAt = currentTimeUtc()
                 )
 
-            documentRepository.insert(document, listOf())
+            documentRepository.insert(document, listOf()).shouldBeRight()
 
             val properties = listOf(
                 AuthorizationDocumentProperty("requestedFromName", "Ola Normann"),
@@ -88,7 +89,7 @@ class ExposedDocumentPropertiesRepositoryTest : FunSpec({
             repository.insert(properties, document.id)
 
             val document2 = document.copy(id = UUID.randomUUID())
-            documentRepository.insert(document2, listOf())
+            documentRepository.insert(document2, listOf()).shouldBeRight()
             val propertiesDoc2 = listOf(
                 AuthorizationDocumentProperty("requestedFromName", "Alberto Balsalm"),
                 AuthorizationDocumentProperty("meteringPointId", "666")

@@ -1,4 +1,4 @@
-package no.elhub.auth.v0.features.documents.create
+package no.elhub.auth.common.documents.pdf
 
 import java.io.File
 import java.security.cert.CertificateFactory

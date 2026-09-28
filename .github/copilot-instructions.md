@@ -8,7 +8,7 @@
 |----------------|---------------------------------------|
 | Language       | Kotlin, JVM 21+                       |
 | Framework      | Ktor (server + client)                |
-| Error handling | Arrow (`Either`, `raise` DSL)         |
+| Error handling | Explicit domain errors               |
 | DI             | Ktor Native DI                        |
 | Database       | PostgreSQL, Exposed ORM, Liquibase    |
 | API standard   | JSON:API (`application/vnd.api+json`) |
@@ -18,8 +18,8 @@
 ## Non-negotiable constraints
 
 - All IO is `suspend`. Never use `runBlocking` in production code.
-- All business logic returns `Either<Error, Success>`. No exceptions for domain errors.
-- Use the `raise` DSL (`either { ... }`) and `bind()` throughout. No imperative unwrapping.
+- Handle expected domain errors explicitly. Do not use exceptions for expected domain failures.
+- Keep error handling clear at service and repository boundaries; do not hide control flow behind an abstraction.
 - Domain errors are sealed interfaces, one per action slice.
 - Prefer immutable data classes.
 
@@ -29,7 +29,7 @@ Load the relevant skill before generating code. Skills are located alongside thi
 
 | Task                                       | Skill                                                        |
 |--------------------------------------------|--------------------------------------------------------------|
-| Any Handler, Service, or Repository        | `functional-error-handling-arrow`                            |
+| Any Handler, Service, or Repository        | `explicit-error-handling`                                    |
 | Any new feature, action slice, or module   | `vertical-slice-architecture`                                |
 | Any Repository, Table object, or migration | `database-access-exposed-liquibase`                          |
 | Any Route, DTO, or error response          | `json-api-compliance`                                        |

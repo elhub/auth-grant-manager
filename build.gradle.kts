@@ -130,6 +130,20 @@ tasks.withType<Test>().configureEach {
     systemProperty("java.awt.headless", "true")
 }
 
+tasks.register<JavaExec>("generatePdf") {
+    group = "pdf"
+    description = "Generates sample PDFs for visual inspection (use -Pdocument=<name> and -Planguage=<nb|nn|en> to select options)."
+    dependsOn(tasks.named("testClasses"))
+    classpath = sourceSets["test"].runtimeClasspath
+    mainClass.set("no.elhub.auth.common.documents.pdf.PdfPreviewKt")
+    systemProperty("java.awt.headless", "true")
+    args(
+        providers.gradleProperty("document").orElse("all").get(),
+        layout.buildDirectory.dir("generated-pdfs").get().asFile.absolutePath,
+        providers.gradleProperty("language").orElse("nb").get(),
+    )
+}
+
 tasks.named("test").configure {
     dependsOn(tasks.named("generateTestCerts"))
     dependsOn(tasks.named("openApiValidate"))
@@ -172,7 +186,7 @@ val localEnvVars = mapOf(
     "PATH_TO_BANKID_ROOT_CERTIFICATES_DIR" to bankIdDirPath.get(),
     "PATH_TO_TSA_ROOT_CERTIFICATES_DIR" to bankIdDirPath.get(),
     "AUTH_PERSONS_URL" to "http://localhost:8081",
-    "PDP_BASE_URL" to "https://auth-policy-decision-point-test9.elhub.cloud",
+    "PDP_BASE_URL" to "https://auth-policy-decision-point.test9.elhub.cloud",
     "STRUCTURE_DATA_METERING_POINTS_SERVICE_URL" to "http://localhost:8083",
     "STRUCTURE_DATA_METERING_POINTS_SERVICE_IDP_CLIENT_ID" to "clientId",
     "STRUCTURE_DATA_METERING_POINTS_SERVICE_IDP_CLIENT_SECRET" to "clientSecret",

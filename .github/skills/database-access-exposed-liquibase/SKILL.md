@@ -2,13 +2,13 @@
 name: database-access-exposed-liquibase
 description: >
   Use when writing or reviewing any Repository, Table object, or migration.
-  Defines Exposed table conventions, the Either-returning repository pattern,
+  Defines Exposed table conventions and explicit repository error handling,
   newSuspendedTransaction usage, and Liquibase migration rules.
   Load before generating any database access code.
 ---
 # Database Access with Exposed & Liquibase
 
-Repositories return `Either`. Transactions are explicit. Migrations are versioned sequential SQL files.
+Repositories expose explicit success and error outcomes. Transactions are explicit. Migrations are versioned sequential SQL files.
 
 ## Table definitions
 
@@ -47,20 +47,20 @@ object AuthorizationRequestScopeTable : Table("auth.authorization_request_scope"
 
 ## Repository pattern
 - All repositories must have an interface. Then use a concrete implementation of that interface to interact with data source (Postgres).
-- Return type always need to be wrapped in Either<Error, BusinesseObject>.
+- Return types must make expected success and error outcomes explicit.
 - All repository functions must have suspend keyword.
 ### Interface (in `features/{domain}/common/`)
 
 ```kotlin
 interface RequestRepository {
-    suspend fun find(id: UUID): Either<RepositoryReadError, AuthorizationRequest>
-    suspend fun insert(request: AuthorizationRequest): Either<RepositoryWriteError, AuthorizationRequest>
+    suspend fun find(id: UUID): RepositoryFindResult
+    suspend fun insert(request: AuthorizationRequest): RepositoryInsertResult
 }
 ```
 
 ### Implementation
 - DAO always happens through org.jetbrains.exposed, do not use SQL queries. Table must have a table type defined through exposed.
-- Always use Either to map out the Result / Error. E.g. Either<Error, BusinessObject>
+- Always map persistence results and errors to explicit repository outcomes.
 - All errors in repository must be handled and defined as a RepositoryError. This can be found in Errors.kt.
 - Always use `withTransaction { }` from Database.kt. Never use `transaction { }` (blocking).
 ```kotlin
@@ -68,25 +68,28 @@ class ExposedRequestRepository(
     private val partyRepo: PartyRepository,
 ) : RequestRepository {
 
-    override suspend fun find(id: UUID): Either<RepositoryReadError, AuthorizationRequest> =
-        Either.catch {
+    override suspend fun find(id: UUID): RepositoryFindResult = try {
             withTransaction {
                 AuthorizationRequestTable
                     .selectAll()
                     .where { AuthorizationRequestTable.id eq id }
                     .singleOrNull()
             }
-        }
-            .mapLeft { RepositoryReadError.UnexpectedError }
-            .flatMap { row -> row?.toAuthorizationRequest() ?: RepositoryReadError.NotFoundError.left() }
+        }.let { row -> row?.toAuthorizationRequest()?.let(RepositoryFindResult::Success)
+            ?: RepositoryFindResult.Failure(RepositoryReadError.NotFoundError) }
+    } catch (exception: Exception) {
+        RepositoryFindResult.Failure(RepositoryReadError.UnexpectedError)
+    }
 
-    override suspend fun insert(request: AuthorizationRequest): Either<RepositoryWriteError, AuthorizationRequest> =
-        Either.catch {
+    override suspend fun insert(request: AuthorizationRequest): RepositoryInsertResult = try {
             withTransaction {
                 AuthorizationRequestTable.insert { /* ... */ }
                 request
             }
-        }.mapLeft { RepositoryWriteError.UnexpectedError }
+        RepositoryInsertResult.Success(request)
+    } catch (exception: Exception) {
+        RepositoryInsertResult.Failure(RepositoryWriteError.UnexpectedError)
+    }
 }
 ```
 
@@ -96,13 +99,16 @@ class ExposedRequestRepository(
 fun ResultRow.toAuthorizationRequest(
     requestedBy: AuthorizationPartyRecord,
     // ...
-): Either<RepositoryReadError, AuthorizationRequest> = Either.catch {
+): RepositoryFindResult = try {
     AuthorizationRequest(
         id = this[AuthorizationRequestTable.id].value,
         type = this[AuthorizationRequestTable.requestType],
         // ...
     )
-}.mapLeft { RepositoryReadError.UnexpectedError }
+    RepositoryFindResult.Success(AuthorizationRequest(/* ... */))
+} catch (exception: Exception) {
+    RepositoryFindResult.Failure(RepositoryReadError.UnexpectedError)
+}
 ```
 
 ## Error types (from `features/common/Errors.kt`)
@@ -120,7 +126,7 @@ sealed class RepositoryWriteError : RepositoryError() {
 }
 ```
 
-Handlers map these to their own feature error type via `mapLeft` before `bind()`.
+Handlers map these to their own feature error type at the boundary.
 
 ## Transactions in Handlers
 
@@ -128,7 +134,10 @@ Wrap multi-step repository calls in a single `withTransaction { }` when atomicit
 
 ```kotlin
 val result = newSuspendedTransaction {
-    repo.insert(entity).mapLeft { CreateError.PersistenceError }.bind()
+    when (val result = repo.insert(entity)) {
+        is RepositoryInsertResult.Success -> result.value
+        is RepositoryInsertResult.Failure -> throw CreateError.PersistenceError
+    }
 }
 ```
 
