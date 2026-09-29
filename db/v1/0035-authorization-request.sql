@@ -13,6 +13,7 @@ CREATE TABLE auth_v1.authorization_request
     approved_at TIMESTAMPTZ,
     external_reference VARCHAR(255),
     redirect_uri TEXT,
+    valid_from TIMESTAMPTZ NOT NULL,
     valid_to TIMESTAMPTZ NOT NULL,
     created_at TIMESTAMPTZ NOT NULL,
     updated_at TIMESTAMPTZ NOT NULL
@@ -24,7 +25,7 @@ ON auth_v1.authorization_request (requested_by, created_at DESC, id DESC);
 CREATE INDEX request_requested_to_created_idx
 ON auth_v1.authorization_request (requested_to, created_at DESC, id DESC);
 
-CREATE TABLE auth_v1.authorization_request_constraint
+CREATE TABLE auth_v1.authorization_request_resource_constraint
 (
     id UUID PRIMARY KEY,
     request_id UUID NOT NULL REFERENCES auth_v1.authorization_request (id),
@@ -34,4 +35,4 @@ CREATE TABLE auth_v1.authorization_request_constraint
 );
 
 CREATE INDEX request_constraint_request_idx
-ON auth_v1.authorization_request_constraint (request_id);
+ON auth_v1.authorization_request_resource_constraint (request_id);
