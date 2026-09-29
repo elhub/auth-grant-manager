@@ -42,9 +42,19 @@ class MustachePdfGenerator(
     private val useTestPdfNotice = cfg.useTestPdfNotice
 
     object MustacheConstants {
-        internal const val TEMPLATE_CHANGE_SUPPLIER_CONTRACT = "change_of_supplier.mustache"
-        internal const val TEMPLATE_MOVE_IN = "move_in.mustache"
-        internal const val TEMPLATE_FRAMEWORK_AGREEMENT = "framework_agreement.mustache"
+        internal const val TEMPLATE_CHANGE_SUPPLIER_CONTRACT =
+            "businessprocesses/changeofbalancesupplier/change_of_supplier.mustache"
+        internal const val TEMPLATE_MOVE_IN =
+            "businessprocesses/moveinandchangeofbalancesupplier/move_in.mustache"
+        internal const val TEMPLATE_FRAMEWORK_AGREEMENT =
+            "businessprocesses/frameworkagreement/framework_agreement.mustache"
+        internal const val I18N_CHANGE_OF_SUPPLIER =
+            "templates.businessprocesses.changeofbalancesupplier.i18n.messages"
+        internal const val I18N_MOVE_IN =
+            "templates.businessprocesses.moveinandchangeofbalancesupplier.i18n.messages"
+        internal const val I18N_FRAMEWORK_AGREEMENT =
+            "templates.businessprocesses.frameworkagreement.i18n.messages"
+        internal const val I18N_COMMON = "templates.i18n.common.messages"
         internal const val VARIABLE_KEY_CUSTOMER_NAME = "customerName"
         internal const val VARIABLE_KEY_METERING_POINT_ADDRESS = "meteringPointAddress"
         internal const val VARIABLE_KEY_METERING_POINT_ID = "meteringPointId"
@@ -114,7 +124,7 @@ class MustachePdfGenerator(
         }
 
     private fun generateChangeOfBalanceSupplierHtml(content: AuthorizationDocumentPdfContent.ChangeOfBalanceSupplier): String {
-        val i18n = i18nTemplateFunction(content.language)
+        val i18n = i18nTemplateFunction(content.language, MustacheConstants.I18N_CHANGE_OF_SUPPLIER)
         return StringWriter().apply {
             mustacheFactory
                 .compile(MustacheConstants.TEMPLATE_CHANGE_SUPPLIER_CONTRACT)
@@ -135,7 +145,7 @@ class MustachePdfGenerator(
     }
 
     private fun generateMoveInAndChangeOfBalanceSupplierHtml(content: AuthorizationDocumentPdfContent.MoveInAndChangeOfBalanceSupplier): String {
-        val i18n = i18nTemplateFunction(content.language)
+        val i18n = i18nTemplateFunction(content.language, MustacheConstants.I18N_MOVE_IN)
         val moveInDate = content.moveInDate?.let { formatNorwegianDate(it.year, it.month.number, it.day) }
         return StringWriter().apply {
             mustacheFactory
@@ -164,7 +174,7 @@ class MustachePdfGenerator(
     }
 
     private fun generateFrameworkAgreementHtml(content: AuthorizationDocumentPdfContent.FrameworkAgreement): String {
-        val i18n = i18nTemplateFunction(content.language)
+        val i18n = i18nTemplateFunction(content.language, MustacheConstants.I18N_FRAMEWORK_AGREEMENT)
         val dateFormatter =
             DateTimeFormatter.ofPattern("dd. MMMM yyyy", Locale.forLanguageTag(content.language.toPdfLanguage()))
         val startDate = content.startDate.toJavaLocalDate().format(dateFormatter)
@@ -232,14 +242,16 @@ class MustachePdfGenerator(
     private fun fontSupplier(bytes: ByteArray): FSSupplier<InputStream> =
         FSSupplier { ByteArrayInputStream(bytes) }
 
-    private fun i18nTemplateFunction(language: PdfLanguage): TemplateFunction {
-        val bundle = ResourceBundle.getBundle("templates.i18n.messages", Locale.forLanguageTag(language.code))
+    private fun i18nTemplateFunction(language: PdfLanguage, processBundleName: String): TemplateFunction {
+        val locale = Locale.forLanguageTag(language.code)
+        val processBundle = ResourceBundle.getBundle(processBundleName, locale)
+        val commonBundle = ResourceBundle.getBundle(MustacheConstants.I18N_COMMON, locale)
         return TemplateFunction { key ->
             val normalizedKey = key.trim()
-            if (bundle.containsKey(normalizedKey)) {
-                bundle.getString(normalizedKey)
-            } else {
-                normalizedKey
+            when {
+                processBundle.containsKey(normalizedKey) -> processBundle.getString(normalizedKey)
+                commonBundle.containsKey(normalizedKey) -> commonBundle.getString(normalizedKey)
+                else -> normalizedKey
             }
         }
     }

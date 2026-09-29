@@ -26,6 +26,7 @@ class FrameworkAgreementTemplateTest : FunSpec({
         html shouldContain "Navn AS"
         html shouldContain "100 010 001"
         html shouldContain "Elvekraft Rammeavtale ABC213"
+        html shouldContain "Strømleverandør"
         html shouldContain "01. Januar 2027"
         html shouldContain "Løpende avtale"
         html shouldContain "Reguleringsmyndigheten for energi (RME) har pålagt Elhub å kontrollere"
@@ -63,17 +64,30 @@ private val exampleData =
     )
 
 private fun renderFrameworkAgreement(data: Map<String, Any?>, language: String = "nb"): String {
-    val bundle = ResourceBundle.getBundle("templates.i18n.messages", Locale.forLanguageTag(language))
+    val locale = Locale.forLanguageTag(language)
+    val processBundle =
+        ResourceBundle.getBundle(
+            "templates.businessprocesses.frameworkagreement.i18n.messages",
+            locale,
+        )
+    val commonBundle = ResourceBundle.getBundle("templates.i18n.common.messages", locale)
     val templateData =
         data +
             mapOf(
-                "i18n" to TemplateFunction { key -> bundle.getString(key.trim()) },
+                "i18n" to TemplateFunction { key ->
+                    val normalizedKey = key.trim()
+                    when {
+                        processBundle.containsKey(normalizedKey) -> processBundle.getString(normalizedKey)
+                        commonBundle.containsKey(normalizedKey) -> commonBundle.getString(normalizedKey)
+                        else -> normalizedKey
+                    }
+                },
                 "htmlLang" to language,
             )
 
     return StringWriter().also { writer ->
         DefaultMustacheFactory("templates")
-            .compile("framework_agreement.mustache")
+            .compile("businessprocesses/frameworkagreement/framework_agreement.mustache")
             .execute(writer, templateData)
             .flush()
     }.toString()
