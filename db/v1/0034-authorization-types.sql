@@ -15,10 +15,6 @@ CREATE TYPE auth_v1.authorization_request_status AS ENUM (
     'Pending', 'Accepted', 'Rejected'
 );
 
-CREATE TYPE auth_v1.authorization_document_status AS ENUM (
-    'Pending', 'Signed', 'Rejected'
-);
-
 CREATE TYPE auth_v1.authorization_grant_status AS ENUM (
     'Active', 'Exhausted', 'Revoked'
 );
