@@ -13,6 +13,7 @@ CREATE TABLE auth_v1.authorization_document
     signed_at TIMESTAMPTZ,
     external_reference VARCHAR(255),
     file BYTEA NOT NULL,
+    valid_from TIMESTAMPTZ NOT NULL,
     valid_to TIMESTAMPTZ NOT NULL,
     created_at TIMESTAMPTZ NOT NULL,
     updated_at TIMESTAMPTZ NOT NULL
@@ -24,7 +25,7 @@ ON auth_v1.authorization_document (requested_by, created_at DESC, id DESC);
 CREATE INDEX document_rights_holder_created_idx
 ON auth_v1.authorization_document (requested_from, created_at DESC, id DESC);
 
-CREATE TABLE auth_v1.authorization_document_constraint
+CREATE TABLE auth_v1.authorization_document_resource_constraint
 (
     id UUID PRIMARY KEY,
     document_id UUID NOT NULL REFERENCES auth_v1.authorization_document (id),
@@ -34,4 +35,4 @@ CREATE TABLE auth_v1.authorization_document_constraint
 );
 
 CREATE INDEX document_constraint_document_idx
-ON auth_v1.authorization_document_constraint (document_id);
+ON auth_v1.authorization_document_resource_constraint (document_id);
