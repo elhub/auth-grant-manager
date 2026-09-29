@@ -12,7 +12,6 @@ CREATE TABLE auth_v1.authorization_request
     approved_by UUID REFERENCES auth.authorization_party (id),
     approved_at TIMESTAMPTZ,
     external_reference VARCHAR(255),
-    language auth_v1.AUTHORIZATION_LANGUAGE NOT NULL,
     redirect_uri TEXT,
     valid_to TIMESTAMPTZ NOT NULL,
     created_at TIMESTAMPTZ NOT NULL,
