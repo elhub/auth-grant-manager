@@ -29,6 +29,7 @@ CREATE TABLE auth_v1.authorization_document_resource_constraint
     id UUID PRIMARY KEY,
     document_id UUID NOT NULL REFERENCES auth_v1.authorization_document (id),
     kind auth_v1.AUTHORIZATION_CONSTRAINT_KIND NOT NULL,
+    resource_type TEXT NOT NULL,
     attribute TEXT NOT NULL,
     value TEXT[] NOT NULL
 );
