@@ -18,10 +18,10 @@ CREATE TABLE auth_v1.authorization_request
     updated_at TIMESTAMPTZ NOT NULL
 );
 
-CREATE INDEX request_requester_created_idx
+CREATE INDEX request_requested_by_created_idx
 ON auth_v1.authorization_request (requested_by, created_at DESC, id DESC);
 
-CREATE INDEX request_approver_created_idx
+CREATE INDEX request_requested_to_created_idx
 ON auth_v1.authorization_request (requested_to, created_at DESC, id DESC);
 
 CREATE TABLE auth_v1.authorization_request_constraint
