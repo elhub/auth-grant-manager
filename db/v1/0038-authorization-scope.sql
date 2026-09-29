@@ -5,8 +5,7 @@ CREATE TABLE auth_v1.authorization_scope
 (
     id UUID PRIMARY KEY,
     grant_id UUID NOT NULL REFERENCES auth_v1.authorization_grant (id),
-    capability auth_v1.AUTHORIZATION_CAPABILITY NOT NULL,
-    resource_type TEXT NOT NULL
+    capability auth_v1.AUTHORIZATION_CAPABILITY NOT NULL
 );
 
 CREATE INDEX scope_grant_idx
@@ -20,6 +19,7 @@ CREATE TABLE auth_v1.authorization_scope_constraint
     id UUID PRIMARY KEY,
     scope_id UUID NOT NULL REFERENCES auth_v1.authorization_scope (id),
     kind auth_v1.AUTHORIZATION_CONSTRAINT_KIND NOT NULL,
+    resource_type TEXT NOT NULL,
     attribute TEXT NOT NULL,
     value TEXT[] NOT NULL
 );
