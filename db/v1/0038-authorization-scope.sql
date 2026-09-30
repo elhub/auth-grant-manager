@@ -11,9 +11,6 @@ CREATE TABLE auth_v1.authorization_scope
 CREATE INDEX scope_grant_idx
 ON auth_v1.authorization_scope (grant_id);
 
-CREATE INDEX scope_permission_idx
-ON auth_v1.authorization_scope (resource_type, capability);
-
 CREATE TABLE auth_v1.authorization_scope_constraint
 (
     id UUID PRIMARY KEY,
@@ -28,7 +25,7 @@ CREATE INDEX scope_constraint_scope_idx
 ON auth_v1.authorization_scope_constraint (scope_id);
 
 CREATE INDEX scope_constraint_lookup_idx
-ON auth_v1.authorization_scope_constraint (kind, attribute);
+ON auth_v1.authorization_scope_constraint (kind, resource_type, attribute);
 
 CREATE INDEX scope_constraint_value_idx
 ON auth_v1.authorization_scope_constraint USING gin (value);
