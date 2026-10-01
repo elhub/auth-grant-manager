@@ -5,6 +5,7 @@ import com.github.mustachejava.TemplateFunction
 import com.openhtmltopdf.extend.FSSupplier
 import com.openhtmltopdf.outputdevice.helper.BaseRendererBuilder
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.number
 import kotlinx.datetime.toJavaLocalDate
 import org.apache.pdfbox.Loader
@@ -61,10 +62,11 @@ class MustachePdfGenerator(
         internal const val VARIABLE_KEY_METER_NUMBER = "meterNumber"
         internal const val VARIABLE_KEY_BALANCE_SUPPLIER_NAME = "balanceSupplierName"
         internal const val VARIABLE_KEY_BALANCE_SUPPLIER_CONTRACT_NAME = "balanceSupplierContractName"
+        internal const val VARIABLE_KEY_AGREEMENT_REFERENCE = "agreementReference"
+        internal const val VARIABLE_KEY_CONTRACT_REFERENCE = "contractReference"
         internal const val VARIABLE_KEY_MOVE_IN_DATE = "moveInDate"
         internal const val VARIABLE_KEY_ORGANIZATION_NAME = "organizationName"
         internal const val VARIABLE_KEY_ORGANIZATION_NUMBER = "organizationNumber"
-        internal const val VARIABLE_KEY_CONTRACT_REFERENCE = "contractReference"
         internal const val VARIABLE_KEY_START_DATE = "startDate"
         internal const val VARIABLE_KEY_END_DATE = "endDate"
         internal const val VARIABLE_KEY_HTML_LANG = "htmlLang"
@@ -106,8 +108,12 @@ class MustachePdfGenerator(
     override fun generate(content: AuthorizationDocumentPdfContent): ByteArray =
         try {
             val contractHtmlString = when (content) {
-                is AuthorizationDocumentPdfContent.ChangeOfBalanceSupplier -> generateChangeOfBalanceSupplierHtml(content)
-                is AuthorizationDocumentPdfContent.MoveInAndChangeOfBalanceSupplier -> generateMoveInAndChangeOfBalanceSupplierHtml(content)
+                is AuthorizationDocumentPdfContent.MoveInAndChangeOfBalanceSupplier ->
+                    generateMoveInAndChangeOfBalanceSupplierHtml(content)
+
+                is AuthorizationDocumentPdfContent.ChangeOfBalanceSupplier ->
+                    generateChangeOfBalanceSupplierHtml(content)
+
                 is AuthorizationDocumentPdfContent.FrameworkAgreement -> generateFrameworkAgreementHtml(content)
             }
             val pdfBytes = generatePdfFromHtml(contractHtmlString)
@@ -123,55 +129,92 @@ class MustachePdfGenerator(
             throw PdfGenerationException(error)
         }
 
-    private fun generateChangeOfBalanceSupplierHtml(content: AuthorizationDocumentPdfContent.ChangeOfBalanceSupplier): String {
-        val i18n = i18nTemplateFunction(content.language, MustacheConstants.I18N_CHANGE_OF_SUPPLIER)
-        return StringWriter().apply {
-            mustacheFactory
-                .compile(MustacheConstants.TEMPLATE_CHANGE_SUPPLIER_CONTRACT)
-                .execute(
-                    this,
-                    mapOf(
-                        MustacheConstants.VARIABLE_KEY_CUSTOMER_NAME to content.customerName,
-                        MustacheConstants.VARIABLE_KEY_METERING_POINT_ID to content.meteringPointId,
-                        MustacheConstants.VARIABLE_KEY_METER_NUMBER to content.meterNumber,
-                        MustacheConstants.VARIABLE_KEY_METERING_POINT_ADDRESS to content.meteringPointAddress,
-                        MustacheConstants.VARIABLE_KEY_BALANCE_SUPPLIER_NAME to content.balanceSupplierName,
-                        MustacheConstants.VARIABLE_KEY_BALANCE_SUPPLIER_CONTRACT_NAME to content.balanceSupplierContractName,
-                        MustacheConstants.VARIABLE_KEY_HTML_LANG to content.language.code,
-                        MustacheConstants.VARIABLE_KEY_I18N to i18n,
-                    )
-                ).flush()
-        }.toString()
+    private fun generateChangeOfBalanceSupplierHtml(
+        content: AuthorizationDocumentPdfContent.ChangeOfBalanceSupplier,
+    ): String =
+        renderMustacheTemplate(
+            templatePath = MustacheConstants.TEMPLATE_CHANGE_SUPPLIER_CONTRACT,
+            processBundleName = MustacheConstants.I18N_CHANGE_OF_SUPPLIER,
+            language = content.language,
+            data = meteringPointTemplateData(content),
+        )
+
+    private fun generateMoveInAndChangeOfBalanceSupplierHtml(
+        content: AuthorizationDocumentPdfContent.MoveInAndChangeOfBalanceSupplier,
+    ): String {
+        val formattedMoveInDate = content.moveInDate?.let(::formatNorwegianDate)
+        return renderMustacheTemplate(
+            templatePath = MustacheConstants.TEMPLATE_MOVE_IN,
+            processBundleName = MustacheConstants.I18N_MOVE_IN,
+            language = content.language,
+            data = meteringPointTemplateData(content, formattedMoveInDate),
+        )
     }
 
-    private fun generateMoveInAndChangeOfBalanceSupplierHtml(content: AuthorizationDocumentPdfContent.MoveInAndChangeOfBalanceSupplier): String {
-        val i18n = i18nTemplateFunction(content.language, MustacheConstants.I18N_MOVE_IN)
-        val moveInDate = content.moveInDate?.let { formatNorwegianDate(it.year, it.month.number, it.day) }
-        return StringWriter().apply {
+    private fun meteringPointTemplateData(
+        content: AuthorizationDocumentPdfContent.ChangeOfBalanceSupplier,
+        moveInDate: String? = null,
+    ): Map<String, Any?> =
+        buildMap {
+            when (content) {
+                is AuthorizationDocumentPdfContent.ChangeOfBalanceSupplierForPerson -> {
+                    put(MustacheConstants.VARIABLE_KEY_CUSTOMER_NAME, content.customerName)
+                    put(
+                        MustacheConstants.VARIABLE_KEY_BALANCE_SUPPLIER_CONTRACT_NAME,
+                        content.balanceSupplierContractName,
+                    )
+                }
+
+                is AuthorizationDocumentPdfContent.MoveInAndChangeOfBalanceSupplierForPerson -> {
+                    put(MustacheConstants.VARIABLE_KEY_CUSTOMER_NAME, content.customerName)
+                    put(
+                        MustacheConstants.VARIABLE_KEY_BALANCE_SUPPLIER_CONTRACT_NAME,
+                        content.balanceSupplierContractName,
+                    )
+                }
+
+                is AuthorizationDocumentPdfContent.ChangeOfBalanceSupplierForOrganisation -> {
+                    put(MustacheConstants.VARIABLE_KEY_CUSTOMER_NAME, content.organizationName)
+                    put(MustacheConstants.VARIABLE_KEY_ORGANIZATION_NUMBER, content.organizationNumber)
+                    content.agreementReference?.let {
+                        put(MustacheConstants.VARIABLE_KEY_AGREEMENT_REFERENCE, it)
+                    }
+                }
+
+                is AuthorizationDocumentPdfContent.MoveInAndChangeOfBalanceSupplierForOrganisation -> {
+                    put(MustacheConstants.VARIABLE_KEY_CUSTOMER_NAME, content.organizationName)
+                    put(MustacheConstants.VARIABLE_KEY_ORGANIZATION_NUMBER, content.organizationNumber)
+                    content.agreementReference?.let {
+                        put(MustacheConstants.VARIABLE_KEY_AGREEMENT_REFERENCE, it)
+                    }
+                }
+            }
+            put(MustacheConstants.VARIABLE_KEY_METERING_POINT_ADDRESS, content.meteringPointAddress)
+            put(MustacheConstants.VARIABLE_KEY_METERING_POINT_ID, content.meteringPointId)
+            put(MustacheConstants.VARIABLE_KEY_METER_NUMBER, content.meterNumber)
+            put(MustacheConstants.VARIABLE_KEY_BALANCE_SUPPLIER_NAME, content.balanceSupplierName)
+            moveInDate?.let { put(MustacheConstants.VARIABLE_KEY_MOVE_IN_DATE, it) }
+        }
+
+    private fun renderMustacheTemplate(
+        templatePath: String,
+        processBundleName: String,
+        language: PdfLanguage,
+        data: Map<String, Any?>,
+    ): String =
+        StringWriter().apply {
             mustacheFactory
-                .compile(MustacheConstants.TEMPLATE_MOVE_IN)
+                .compile(templatePath)
                 .execute(
                     this,
-                    mapOf(
-                        MustacheConstants.VARIABLE_KEY_CUSTOMER_NAME to content.customerName,
-                        MustacheConstants.VARIABLE_KEY_METERING_POINT_ID to content.meteringPointId,
-                        MustacheConstants.VARIABLE_KEY_METER_NUMBER to content.meterNumber,
-                        MustacheConstants.VARIABLE_KEY_METERING_POINT_ADDRESS to content.meteringPointAddress,
-                        MustacheConstants.VARIABLE_KEY_BALANCE_SUPPLIER_NAME to content.balanceSupplierName,
-                        MustacheConstants.VARIABLE_KEY_BALANCE_SUPPLIER_CONTRACT_NAME to content.balanceSupplierContractName,
-                        MustacheConstants.VARIABLE_KEY_HTML_LANG to content.language.code,
-                        MustacheConstants.VARIABLE_KEY_I18N to i18n,
-                    )
-                        .let { base ->
-                            if (moveInDate == null) {
-                                base
-                            } else {
-                                base + (MustacheConstants.VARIABLE_KEY_MOVE_IN_DATE to moveInDate)
-                            }
-                        }
-                ).flush()
+                    data +
+                        mapOf(
+                            MustacheConstants.VARIABLE_KEY_HTML_LANG to language.code,
+                            MustacheConstants.VARIABLE_KEY_I18N to i18nTemplateFunction(language, processBundleName),
+                        ),
+                )
+                .flush()
         }.toString()
-    }
 
     private fun generateFrameworkAgreementHtml(content: AuthorizationDocumentPdfContent.FrameworkAgreement): String {
         val i18n = i18nTemplateFunction(content.language, MustacheConstants.I18N_FRAMEWORK_AGREEMENT)
@@ -185,7 +228,7 @@ class MustachePdfGenerator(
                 MustacheConstants.VARIABLE_KEY_ORGANIZATION_NAME to content.organizationName,
                 MustacheConstants.VARIABLE_KEY_ORGANIZATION_NUMBER to content.organizationNumber,
                 MustacheConstants.VARIABLE_KEY_BALANCE_SUPPLIER_NAME to content.balanceSupplierName,
-                MustacheConstants.VARIABLE_KEY_CONTRACT_REFERENCE to content.contractReference,
+                MustacheConstants.VARIABLE_KEY_CONTRACT_REFERENCE to content.agreementReference,
                 MustacheConstants.VARIABLE_KEY_START_DATE to startDate,
                 MustacheConstants.VARIABLE_KEY_HTML_LANG to content.language.code,
                 MustacheConstants.VARIABLE_KEY_I18N to i18n,
@@ -205,8 +248,8 @@ class MustachePdfGenerator(
         }.toString()
     }
 
-    private fun formatNorwegianDate(year: Int, month: Int, day: Int): String =
-        String.format(Locale.ROOT, "%02d.%02d.%04d", day, month, year)
+    private fun formatNorwegianDate(date: LocalDate): String =
+        String.format(Locale.ROOT, "%02d.%02d.%04d", date.day, date.month.number, date.year)
 
     private fun generatePdfFromHtml(htmlString: String): ByteArray =
         ByteArrayOutputStream().use { out ->
