@@ -65,16 +65,34 @@ li {
 
 <div class="meta">
     <p class="meta-row"><span class="meta-label">{{#i18n}}labels.customer{{/i18n}}:</span> {{customerName}}</p>
+    {{#organizationNumber}}
+        <p class="meta-row"><span class="meta-label">{{#i18n}}labels.organization_number{{/i18n}}:</span> {{organizationNumber}}</p>
+    {{/organizationNumber}}
     <p class="meta-row"><span class="meta-label">{{#i18n}}labels.address{{/i18n}}:</span> {{meteringPointAddress}}</p>
     <p class="meta-row"><span class="meta-label">{{#i18n}}labels.meter_number{{/i18n}}:</span> {{meterNumber}}</p>
     <p class="meta-row"><span class="meta-label">{{#i18n}}labels.metering_point_id{{/i18n}}:</span> {{meteringPointId}}</p>
     <p class="meta-row"><span class="meta-label">{{#i18n}}labels.supplier{{/i18n}}:</span> {{balanceSupplierName}}</p>
-    <p class="meta-row"><span class="meta-label">{{#i18n}}labels.contract{{/i18n}}:</span> {{balanceSupplierContractName}}</p>
+    {{#organizationNumber}}
+        {{#agreementReference}}
+            <p class="meta-row"><span class="meta-label">{{#i18n}}labels.agreement_reference{{/i18n}}:</span> {{agreementReference}}</p>
+        {{/agreementReference}}
+    {{/organizationNumber}}
+    {{^organizationNumber}}
+        {{#balanceSupplierContractName}}
+            <p class="meta-row"><span class="meta-label">{{#i18n}}labels.contract{{/i18n}}:</span> {{balanceSupplierContractName}}</p>
+        {{/balanceSupplierContractName}}
+    {{/organizationNumber}}
 </div>
 
 <p>{{#i18n}}change_of_supplier.intro_1{{/i18n}}</p>
 
-<p>{{#i18n}}common.intro_signing_confirmation{{/i18n}}</p>
+<p>
+    {{#organizationNumber}}
+        {{#agreementReference}}{{#i18n}}common.organization_signing_confirmation{{/i18n}}{{/agreementReference}}
+        {{^agreementReference}}{{#i18n}}common.organization_signing_confirmation_without_reference{{/i18n}}{{/agreementReference}}
+    {{/organizationNumber}}
+    {{^organizationNumber}}{{#i18n}}common.intro_signing_confirmation{{/i18n}}{{/organizationNumber}}
+</p>
 
 <ul>
     <li>{{#i18n}}change_of_supplier.bullet_1{{/i18n}}</li>

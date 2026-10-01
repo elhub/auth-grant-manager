@@ -25,12 +25,15 @@ class FrameworkAgreementTemplateTest : FunSpec({
         html shouldContain "Avtalebekreftelse - Rammeavtale"
         html shouldContain "Navn AS"
         html shouldContain "100 010 001"
-        html shouldContain "Elvekraft Rammeavtale ABC213"
+        html.substringAfter("Kunde:</span> Navn AS").substringBefore("Strømleverandør:") shouldContain
+            "Organisasjonsnummer:</span> 100 010 001"
+        html shouldContain "Strømavtale:</span> Elvekraft Rammeavtale ABC213"
         html shouldContain "Strømleverandør"
         html shouldContain "01. Januar 2027"
         html shouldContain "Løpende avtale"
         html shouldContain "Reguleringsmyndigheten for energi (RME) har pålagt Elhub å kontrollere"
         html shouldContain "Ved å signere dette dokumentet bekrefter du på vegne av organisasjonen"
+        html shouldContain "organisasjonen har inngått rammeavtalen som det vises til over"
         html shouldContain "Bekreftelsen er ikke knyttet til bestemte målepunkter"
         html shouldNotContain "Jon Janson"
         html shouldNotContain "20.10.1990"
@@ -42,6 +45,7 @@ class FrameworkAgreementTemplateTest : FunSpec({
         html shouldContain "Framework agreement confirmation"
         html shouldContain "Organization number"
         html shouldContain "Ongoing agreement"
+        html shouldContain "entered into the framework agreement referenced above"
     }
 
     test("renders Nynorsk text from the locale bundle") {
@@ -50,6 +54,7 @@ class FrameworkAgreementTemplateTest : FunSpec({
         html shouldContain "Avtalestadfesting - Rammeavtale"
         html shouldContain "Organisasjonsnummer"
         html shouldContain "Løpande avtale"
+        html shouldContain "organisasjonen har inngått rammeavtalen som det blir vist til over"
     }
 })
 
