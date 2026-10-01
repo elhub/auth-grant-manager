@@ -8,6 +8,9 @@
 * @elhub/team-devxp @elhub/chapter-auth
 
 # Business process modules
+/src/main/resources/templates/businessprocesses/changeofbalancesupplier/ @elhub/team-wow
+/src/main/resources/templates/businessprocesses/moveinandchangeofbalancesupplier/ @elhub/team-wow
+/src/main/resources/templates/businessprocesses/frameworkagreement/ @elhub/team-wow
 /src/main/kotlin/no/elhub/auth/v0/features/businessprocesses/changeofbalancesupplier/ @elhub/team-wow
 /src/test/kotlin/no/elhub/auth/v0/features/businessprocesses/changeofbalancesupplier/ @elhub/team-wow
 /src/main/kotlin/no/elhub/auth/v0/features/businessprocesses/moveinandchangeofbalancesupplier/ @elhub/team-wow
