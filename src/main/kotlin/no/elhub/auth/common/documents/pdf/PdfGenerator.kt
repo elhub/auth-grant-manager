@@ -47,14 +47,14 @@ class MustachePdfGenerator(
             "businessprocesses/changeofbalancesupplier/change_of_supplier.mustache"
         internal const val TEMPLATE_MOVE_IN =
             "businessprocesses/moveinandchangeofbalancesupplier/move_in.mustache"
-        internal const val TEMPLATE_FRAMEWORK_AGREEMENT =
-            "businessprocesses/frameworkagreement/framework_agreement.mustache"
+        internal const val TEMPLATE_ENERGY_SUPPLIER_FRAMEWORK_AGREEMENT =
+            "businessprocesses/energysupplierframeworkagreement/energy_supplier_framework_agreement.mustache"
         internal const val I18N_CHANGE_OF_SUPPLIER =
             "templates.businessprocesses.changeofbalancesupplier.i18n.messages"
         internal const val I18N_MOVE_IN =
             "templates.businessprocesses.moveinandchangeofbalancesupplier.i18n.messages"
-        internal const val I18N_FRAMEWORK_AGREEMENT =
-            "templates.businessprocesses.frameworkagreement.i18n.messages"
+        internal const val I18N_ENERGY_SUPPLIER_FRAMEWORK_AGREEMENT =
+            "templates.businessprocesses.energysupplierframeworkagreement.i18n.messages"
         internal const val I18N_COMMON = "templates.i18n.common.messages"
         internal const val VARIABLE_KEY_CUSTOMER_NAME = "customerName"
         internal const val VARIABLE_KEY_METERING_POINT_ADDRESS = "meteringPointAddress"
@@ -114,7 +114,8 @@ class MustachePdfGenerator(
                 is AuthorizationDocumentPdfContent.ChangeOfBalanceSupplier ->
                     generateChangeOfBalanceSupplierHtml(content)
 
-                is AuthorizationDocumentPdfContent.FrameworkAgreement -> generateFrameworkAgreementHtml(content)
+                is AuthorizationDocumentPdfContent.EnergySupplierFrameworkAgreement ->
+                    generateEnergySupplierFrameworkAgreementHtml(content)
             }
             val pdfBytes = generatePdfFromHtml(contractHtmlString)
             if (useTestPdfNotice) {
@@ -216,8 +217,11 @@ class MustachePdfGenerator(
                 .flush()
         }.toString()
 
-    private fun generateFrameworkAgreementHtml(content: AuthorizationDocumentPdfContent.FrameworkAgreement): String {
-        val i18n = i18nTemplateFunction(content.language, MustacheConstants.I18N_FRAMEWORK_AGREEMENT)
+    private fun generateEnergySupplierFrameworkAgreementHtml(
+        content: AuthorizationDocumentPdfContent.EnergySupplierFrameworkAgreement,
+    ): String {
+        val i18n =
+            i18nTemplateFunction(content.language, MustacheConstants.I18N_ENERGY_SUPPLIER_FRAMEWORK_AGREEMENT)
         val dateFormatter =
             DateTimeFormatter.ofPattern("dd. MMMM yyyy", Locale.forLanguageTag(content.language.toPdfLanguage()))
         val startDate = content.startDate.toJavaLocalDate().format(dateFormatter)
@@ -242,7 +246,7 @@ class MustachePdfGenerator(
 
         return StringWriter().apply {
             mustacheFactory
-                .compile(MustacheConstants.TEMPLATE_FRAMEWORK_AGREEMENT)
+                .compile(MustacheConstants.TEMPLATE_ENERGY_SUPPLIER_FRAMEWORK_AGREEMENT)
                 .execute(this, templateData)
                 .flush()
         }.toString()

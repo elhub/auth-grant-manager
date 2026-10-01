@@ -76,7 +76,7 @@ sealed interface AuthorizationDocumentPdfContent {
         override val moveInDate: LocalDate?,
     ) : MoveInAndChangeOfBalanceSupplier()
 
-    data class FrameworkAgreement(
+    data class EnergySupplierFrameworkAgreement(
         override val language: PdfLanguage,
         val organizationName: String,
         val organizationNumber: String,
