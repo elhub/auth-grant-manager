@@ -5,6 +5,7 @@ CREATE TABLE auth_v1.authorization_document
 (
     id UUID PRIMARY KEY,
     document_type auth_v1.AUTHORIZATION_DOCUMENT_TYPE NOT NULL,
+    status auth_v1.AUTHORIZATION_DOCUMENT_STATUS NOT NULL,
     requested_by UUID NOT NULL REFERENCES auth.authorization_party (id),
     requested_from UUID NOT NULL REFERENCES auth.authorization_party (id),
     requested_to UUID NOT NULL REFERENCES auth.authorization_party (id),
@@ -24,15 +25,26 @@ ON auth_v1.authorization_document (requested_by, created_at DESC, id DESC);
 CREATE INDEX document_rights_holder_created_idx
 ON auth_v1.authorization_document (requested_from, created_at DESC, id DESC);
 
-CREATE TABLE auth_v1.authorization_document_resource_constraint
+CREATE TABLE auth_v1.authorization_document_scope
 (
     id UUID PRIMARY KEY,
     document_id UUID NOT NULL REFERENCES auth_v1.authorization_document (id),
+    capability auth_v1.AUTHORIZATION_CAPABILITY NOT NULL,
+    resource_type TEXT NOT NULL
+);
+
+CREATE INDEX document_scope_document_idx
+ON auth_v1.authorization_document_scope (document_id);
+
+CREATE TABLE auth_v1.authorization_document_scope_constraint
+(
+    id UUID PRIMARY KEY,
+    scope_id UUID NOT NULL REFERENCES auth_v1.authorization_document_scope (id),
     kind auth_v1.AUTHORIZATION_CONSTRAINT_KIND NOT NULL,
     resource_type TEXT NOT NULL,
     attribute TEXT NOT NULL,
     value TEXT[] NOT NULL
 );
 
-CREATE INDEX document_constraint_document_idx
-ON auth_v1.authorization_document_resource_constraint (document_id);
+CREATE INDEX document_scope_constraint_scope_idx
+ON auth_v1.authorization_document_scope_constraint (scope_id);
