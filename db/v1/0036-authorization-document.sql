@@ -19,10 +19,10 @@ CREATE TABLE auth_v1.authorization_document
     updated_at TIMESTAMPTZ NOT NULL
 );
 
-CREATE INDEX document_requester_created_idx
+CREATE INDEX document_requested_by_created_idx
 ON auth_v1.authorization_document (requested_by, created_at DESC, id DESC);
 
-CREATE INDEX document_rights_holder_created_idx
+CREATE INDEX document_requested_from_created_idx
 ON auth_v1.authorization_document (requested_from, created_at DESC, id DESC);
 
 CREATE TABLE auth_v1.authorization_document_scope
