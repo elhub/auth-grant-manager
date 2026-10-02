@@ -35,6 +35,7 @@ Load the relevant skill before generating code. Skills are located alongside thi
 | Any Route, DTO, or error response          | `json-api-compliance`                                        |
 | Any test class                             | `testing-kotest` + `testing-anti-patterns` +`testing layers` |
 | Starting any implementation                | `test-driven-development`                                    |
+| Code reviews and pull request reviews      | `code-review`                                                |
 
 When a task touches multiple concerns, load all relevant skills before starting.
 

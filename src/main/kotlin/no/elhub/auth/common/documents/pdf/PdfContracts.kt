@@ -21,33 +21,67 @@ enum class PdfLanguage(val code: String) {
 sealed interface AuthorizationDocumentPdfContent {
     val language: PdfLanguage
 
-    data class ChangeOfBalanceSupplier(
+    sealed class ChangeOfBalanceSupplier : AuthorizationDocumentPdfContent {
+        abstract val meteringPointAddress: String
+        abstract val meteringPointId: String
+        abstract val meterNumber: String
+        abstract val balanceSupplierName: String
+    }
+
+    sealed class MoveInAndChangeOfBalanceSupplier : ChangeOfBalanceSupplier() {
+        abstract val moveInDate: LocalDate?
+    }
+
+    data class ChangeOfBalanceSupplierForPerson(
         override val language: PdfLanguage,
         val customerName: String,
-        val meteringPointAddress: String,
-        val meteringPointId: String,
-        val meterNumber: String,
-        val balanceSupplierName: String,
+        override val meteringPointAddress: String,
+        override val meteringPointId: String,
+        override val meterNumber: String,
+        override val balanceSupplierName: String,
         val balanceSupplierContractName: String,
-    ) : AuthorizationDocumentPdfContent
+    ) : ChangeOfBalanceSupplier()
 
-    data class MoveInAndChangeOfBalanceSupplier(
+    data class MoveInAndChangeOfBalanceSupplierForPerson(
         override val language: PdfLanguage,
         val customerName: String,
-        val meteringPointAddress: String,
-        val meteringPointId: String,
-        val meterNumber: String,
-        val balanceSupplierName: String,
+        override val meteringPointAddress: String,
+        override val meteringPointId: String,
+        override val meterNumber: String,
+        override val balanceSupplierName: String,
         val balanceSupplierContractName: String,
-        val moveInDate: LocalDate?,
-    ) : AuthorizationDocumentPdfContent
+        override val moveInDate: LocalDate?,
+    ) : MoveInAndChangeOfBalanceSupplier()
 
-    data class FrameworkAgreement(
+    data class ChangeOfBalanceSupplierForOrganisation(
+        override val language: PdfLanguage,
+        val organizationName: String,
+        val organizationNumber: String,
+        override val meteringPointAddress: String,
+        override val meteringPointId: String,
+        override val meterNumber: String,
+        override val balanceSupplierName: String,
+        val agreementReference: String?,
+    ) : ChangeOfBalanceSupplier()
+
+    data class MoveInAndChangeOfBalanceSupplierForOrganisation(
+        override val language: PdfLanguage,
+        val organizationName: String,
+        val organizationNumber: String,
+        override val meteringPointAddress: String,
+        override val meteringPointId: String,
+        override val meterNumber: String,
+        override val balanceSupplierName: String,
+        val agreementReference: String?,
+        override val moveInDate: LocalDate?,
+    ) : MoveInAndChangeOfBalanceSupplier()
+
+    data class EnergySupplierFrameworkAgreement(
         override val language: PdfLanguage,
         val organizationName: String,
         val organizationNumber: String,
         val balanceSupplierName: String,
-        val contractReference: String,
+        val agreementReference: String,
         val startDate: LocalDate,
         val endDate: LocalDate?,
     ) : AuthorizationDocumentPdfContent

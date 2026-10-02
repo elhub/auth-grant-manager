@@ -23,7 +23,7 @@ class V0FileGeneratorAdapter(private val pdfGenerator: PdfGenerator) : FileGener
 
 private fun DocumentMetaMarker.toPdfContent(): AuthorizationDocumentPdfContent =
     when (this) {
-        is ChangeOfBalanceSupplierBusinessMeta -> AuthorizationDocumentPdfContent.ChangeOfBalanceSupplier(
+        is ChangeOfBalanceSupplierBusinessMeta -> AuthorizationDocumentPdfContent.ChangeOfBalanceSupplierForPerson(
             language = (language ?: SupportedLanguage.DEFAULT).toCommonPdfLanguage(),
             customerName = requestedFromName,
             meteringPointAddress = requestedForMeteringPointAddress,
@@ -33,7 +33,7 @@ private fun DocumentMetaMarker.toPdfContent(): AuthorizationDocumentPdfContent =
             balanceSupplierContractName = balanceSupplierContractName,
         )
 
-        is MoveInAndChangeOfBalanceSupplierBusinessMeta -> AuthorizationDocumentPdfContent.MoveInAndChangeOfBalanceSupplier(
+        is MoveInAndChangeOfBalanceSupplierBusinessMeta -> AuthorizationDocumentPdfContent.MoveInAndChangeOfBalanceSupplierForPerson(
             language = (language ?: SupportedLanguage.DEFAULT).toCommonPdfLanguage(),
             customerName = requestedFromName,
             meteringPointAddress = requestedForMeteringPointAddress,

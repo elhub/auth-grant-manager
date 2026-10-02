@@ -26,7 +26,7 @@ class V0FileGeneratorAdapterTest : FunSpec({
         )
 
         V0FileGeneratorAdapter(generator).generate(meta).shouldBeRight() shouldBe byteArrayOf(1)
-        generator.captured shouldBe AuthorizationDocumentPdfContent.ChangeOfBalanceSupplier(
+        generator.captured shouldBe AuthorizationDocumentPdfContent.ChangeOfBalanceSupplierForPerson(
             language = no.elhub.auth.common.documents.pdf.PdfLanguage.EN,
             customerName = "Customer",
             meteringPointAddress = "Address",
@@ -52,7 +52,7 @@ class V0FileGeneratorAdapterTest : FunSpec({
         )
 
         V0FileGeneratorAdapter(generator).generate(meta).shouldBeRight() shouldBe byteArrayOf(1)
-        generator.captured shouldBe AuthorizationDocumentPdfContent.MoveInAndChangeOfBalanceSupplier(
+        generator.captured shouldBe AuthorizationDocumentPdfContent.MoveInAndChangeOfBalanceSupplierForPerson(
             language = no.elhub.auth.common.documents.pdf.PdfLanguage.NN,
             customerName = "Customer",
             meteringPointAddress = "Address",

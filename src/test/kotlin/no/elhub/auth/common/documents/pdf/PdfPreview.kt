@@ -6,7 +6,7 @@ import java.nio.file.Path
 
 /** Sample documents for visually inspecting the production PDF rendering path. Add a sample for each new content type. */
 private val samples: List<AuthorizationDocumentPdfContent> = listOf(
-    AuthorizationDocumentPdfContent.ChangeOfBalanceSupplier(
+    AuthorizationDocumentPdfContent.ChangeOfBalanceSupplierForPerson(
         language = PdfLanguage.EN,
         customerName = "Kari Nordmann",
         meteringPointAddress = "Storgata 1, 0155 Oslo",
@@ -15,7 +15,7 @@ private val samples: List<AuthorizationDocumentPdfContent> = listOf(
         balanceSupplierName = "Eksempel Strøm AS",
         balanceSupplierContractName = "Fastpris 12 måneder",
     ),
-    AuthorizationDocumentPdfContent.MoveInAndChangeOfBalanceSupplier(
+    AuthorizationDocumentPdfContent.MoveInAndChangeOfBalanceSupplierForPerson(
         language = PdfLanguage.NB,
         customerName = "Kari Nordmann",
         meteringPointAddress = "Storgata 1, 0155 Oslo",
@@ -25,28 +25,53 @@ private val samples: List<AuthorizationDocumentPdfContent> = listOf(
         balanceSupplierContractName = "Fastpris 12 måneder",
         moveInDate = LocalDate(2026, 10, 1),
     ),
-    AuthorizationDocumentPdfContent.FrameworkAgreement(
+    AuthorizationDocumentPdfContent.ChangeOfBalanceSupplierForOrganisation(
+        language = PdfLanguage.NB,
+        organizationName = "Navn AS",
+        organizationNumber = "100 010 001",
+        meteringPointAddress = "Bjørkeveien 18C, 0168 Oslo",
+        meteringPointId = "707057500047917289",
+        meterNumber = "57390234",
+        balanceSupplierName = "Norgesstrøm",
+        agreementReference = "ABC123",
+    ),
+    AuthorizationDocumentPdfContent.MoveInAndChangeOfBalanceSupplierForOrganisation(
+        language = PdfLanguage.NB,
+        organizationName = "Navn AS",
+        organizationNumber = "100 010 001",
+        meteringPointAddress = "Bjørkeveien 18C, 0168 Oslo",
+        meteringPointId = "707057500047917289",
+        meterNumber = "57390234",
+        balanceSupplierName = "Norgesstrøm",
+        agreementReference = "ABC123",
+        moveInDate = LocalDate(2026, 5, 1),
+    ),
+    AuthorizationDocumentPdfContent.EnergySupplierFrameworkAgreement(
         language = PdfLanguage.NB,
         organizationName = "Eksempel Organisasjon AS",
         organizationNumber = "100 010 001",
         balanceSupplierName = "Eksempel Strøm AS",
-        contractReference = "Rammeavtale 12 måneder",
+        agreementReference = "Rammeavtale 12 måneder",
         startDate = LocalDate(2027, 1, 1),
         endDate = LocalDate(2029, 12, 31),
     ),
 )
 
 private fun AuthorizationDocumentPdfContent.previewName(): String = when (this) {
-    is AuthorizationDocumentPdfContent.ChangeOfBalanceSupplier -> "change-of-balance-supplier"
-    is AuthorizationDocumentPdfContent.MoveInAndChangeOfBalanceSupplier -> "move-in-and-change-of-balance-supplier"
-    is AuthorizationDocumentPdfContent.FrameworkAgreement -> "framework-agreement"
+    is AuthorizationDocumentPdfContent.ChangeOfBalanceSupplierForPerson -> "change-of-balance-supplier"
+    is AuthorizationDocumentPdfContent.MoveInAndChangeOfBalanceSupplierForPerson -> "move-in-and-change-of-balance-supplier"
+    is AuthorizationDocumentPdfContent.ChangeOfBalanceSupplierForOrganisation -> "change-of-balance-supplier-for-organisation"
+    is AuthorizationDocumentPdfContent.MoveInAndChangeOfBalanceSupplierForOrganisation -> "move-in-and-change-of-balance-supplier-for-organisation"
+    is AuthorizationDocumentPdfContent.EnergySupplierFrameworkAgreement -> "framework-agreement"
 }
 
 private fun AuthorizationDocumentPdfContent.withLanguage(language: PdfLanguage): AuthorizationDocumentPdfContent =
     when (this) {
-        is AuthorizationDocumentPdfContent.ChangeOfBalanceSupplier -> copy(language = language)
-        is AuthorizationDocumentPdfContent.MoveInAndChangeOfBalanceSupplier -> copy(language = language)
-        is AuthorizationDocumentPdfContent.FrameworkAgreement -> copy(language = language)
+        is AuthorizationDocumentPdfContent.ChangeOfBalanceSupplierForPerson -> copy(language = language)
+        is AuthorizationDocumentPdfContent.MoveInAndChangeOfBalanceSupplierForPerson -> copy(language = language)
+        is AuthorizationDocumentPdfContent.ChangeOfBalanceSupplierForOrganisation -> copy(language = language)
+        is AuthorizationDocumentPdfContent.MoveInAndChangeOfBalanceSupplierForOrganisation -> copy(language = language)
+        is AuthorizationDocumentPdfContent.EnergySupplierFrameworkAgreement -> copy(language = language)
     }
 
 fun main(args: Array<String>) {
