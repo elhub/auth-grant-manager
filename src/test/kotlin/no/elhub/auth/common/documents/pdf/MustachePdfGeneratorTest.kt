@@ -153,7 +153,7 @@ class MustachePdfGeneratorTest : FunSpec({
 
     test("generates a localized framework agreement PDF with an end date") {
         val pdf = generator(useTestPdfNotice = false).generate(
-            AuthorizationDocumentPdfContent.FrameworkAgreement(
+            AuthorizationDocumentPdfContent.EnergySupplierFrameworkAgreement(
                 language = PdfLanguage.EN,
                 organizationName = "Navn AS",
                 organizationNumber = "100 010 001",
@@ -177,7 +177,7 @@ class MustachePdfGeneratorTest : FunSpec({
 
     test("renders ongoing framework agreement when the end date is absent") {
         val pdf = generator(useTestPdfNotice = false).generate(
-            AuthorizationDocumentPdfContent.FrameworkAgreement(
+            AuthorizationDocumentPdfContent.EnergySupplierFrameworkAgreement(
                 language = PdfLanguage.NB,
                 organizationName = "Navn AS",
                 organizationNumber = "100 010 001",
@@ -196,7 +196,7 @@ class MustachePdfGeneratorTest : FunSpec({
 
     test("formats framework agreement dates using the Nynorsk locale") {
         val pdf = generator(useTestPdfNotice = false).generate(
-            AuthorizationDocumentPdfContent.FrameworkAgreement(
+            AuthorizationDocumentPdfContent.EnergySupplierFrameworkAgreement(
                 language = PdfLanguage.NN,
                 organizationName = "Navn AS",
                 organizationNumber = "100 010 001",

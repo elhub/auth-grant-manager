@@ -9,9 +9,9 @@ import java.io.StringWriter
 import java.util.Locale
 import java.util.ResourceBundle
 
-class FrameworkAgreementTemplateTest : FunSpec({
+class EnergySupplierFrameworkAgreementTemplateTest : FunSpec({
     test("renders organization framework agreement content without signer identity") {
-        val html = renderFrameworkAgreement(
+        val html = renderEnergySupplierFrameworkAgreement(
             mapOf(
                 "organizationName" to "Navn AS",
                 "organizationNumber" to "100 010 001",
@@ -40,7 +40,7 @@ class FrameworkAgreementTemplateTest : FunSpec({
     }
 
     test("renders English text from the locale bundle") {
-        val html = renderFrameworkAgreement(exampleData, "en")
+        val html = renderEnergySupplierFrameworkAgreement(exampleData, "en")
 
         html shouldContain "Framework agreement confirmation"
         html shouldContain "Organization number"
@@ -49,7 +49,7 @@ class FrameworkAgreementTemplateTest : FunSpec({
     }
 
     test("renders Nynorsk text from the locale bundle") {
-        val html = renderFrameworkAgreement(exampleData, "nn")
+        val html = renderEnergySupplierFrameworkAgreement(exampleData, "nn")
 
         html shouldContain "Avtalestadfesting - Rammeavtale"
         html shouldContain "Organisasjonsnummer"
@@ -68,11 +68,11 @@ private val exampleData =
         "endDate" to "",
     )
 
-private fun renderFrameworkAgreement(data: Map<String, Any?>, language: String = "nb"): String {
+private fun renderEnergySupplierFrameworkAgreement(data: Map<String, Any?>, language: String = "nb"): String {
     val locale = Locale.forLanguageTag(language)
     val processBundle =
         ResourceBundle.getBundle(
-            "templates.businessprocesses.frameworkagreement.i18n.messages",
+            "templates.businessprocesses.energysupplierframeworkagreement.i18n.messages",
             locale,
         )
     val commonBundle = ResourceBundle.getBundle("templates.i18n.common.messages", locale)
@@ -92,7 +92,7 @@ private fun renderFrameworkAgreement(data: Map<String, Any?>, language: String =
 
     return StringWriter().also { writer ->
         DefaultMustacheFactory("templates")
-            .compile("businessprocesses/frameworkagreement/framework_agreement.mustache")
+            .compile("businessprocesses/energysupplierframeworkagreement/energy_supplier_framework_agreement.mustache")
             .execute(writer, templateData)
             .flush()
     }.toString()

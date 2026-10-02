@@ -46,7 +46,7 @@ private val samples: List<AuthorizationDocumentPdfContent> = listOf(
         agreementReference = "ABC123",
         moveInDate = LocalDate(2026, 5, 1),
     ),
-    AuthorizationDocumentPdfContent.FrameworkAgreement(
+    AuthorizationDocumentPdfContent.EnergySupplierFrameworkAgreement(
         language = PdfLanguage.NB,
         organizationName = "Eksempel Organisasjon AS",
         organizationNumber = "100 010 001",
@@ -62,7 +62,7 @@ private fun AuthorizationDocumentPdfContent.previewName(): String = when (this) 
     is AuthorizationDocumentPdfContent.MoveInAndChangeOfBalanceSupplierForPerson -> "move-in-and-change-of-balance-supplier"
     is AuthorizationDocumentPdfContent.ChangeOfBalanceSupplierForOrganisation -> "change-of-balance-supplier-for-organisation"
     is AuthorizationDocumentPdfContent.MoveInAndChangeOfBalanceSupplierForOrganisation -> "move-in-and-change-of-balance-supplier-for-organisation"
-    is AuthorizationDocumentPdfContent.FrameworkAgreement -> "framework-agreement"
+    is AuthorizationDocumentPdfContent.EnergySupplierFrameworkAgreement -> "framework-agreement"
 }
 
 private fun AuthorizationDocumentPdfContent.withLanguage(language: PdfLanguage): AuthorizationDocumentPdfContent =
@@ -71,7 +71,7 @@ private fun AuthorizationDocumentPdfContent.withLanguage(language: PdfLanguage):
         is AuthorizationDocumentPdfContent.MoveInAndChangeOfBalanceSupplierForPerson -> copy(language = language)
         is AuthorizationDocumentPdfContent.ChangeOfBalanceSupplierForOrganisation -> copy(language = language)
         is AuthorizationDocumentPdfContent.MoveInAndChangeOfBalanceSupplierForOrganisation -> copy(language = language)
-        is AuthorizationDocumentPdfContent.FrameworkAgreement -> copy(language = language)
+        is AuthorizationDocumentPdfContent.EnergySupplierFrameworkAgreement -> copy(language = language)
     }
 
 fun main(args: Array<String>) {
