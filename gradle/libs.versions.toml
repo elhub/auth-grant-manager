@@ -10,7 +10,7 @@ elhub-jsonapi-wrapper = "0.6.7"
 exposed = "1.5.0"
 gradle-docker = "0.17.21"
 hikari = "7.1.0"
-json-skema = "0.31.0"
+json-skema = "0.32.0"
 kotlinx-datetime = "0.8.0-0.6.x-compat"
 kotlinx-serialization = "1.11.0"
 kotlinx-serialization-plugin = "2.4.20"
@@ -36,7 +36,7 @@ testcontainers = "2.0.5"
 unleash = "12.3.0"
 verapdf = "1.30.2"
 bouncycastle = "1.86"
-itext = "9.7.1"
+itext = "9.8.0"
 
 [plugins]
 elhub-gradle-plugin = { id = "no.elhub.devxp.kotlin-service", version.ref = "elhub-gradle" }
