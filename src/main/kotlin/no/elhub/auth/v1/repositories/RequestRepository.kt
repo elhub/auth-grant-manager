@@ -20,5 +20,3 @@ interface RequestRepository {
     suspend fun reject(requestId: UUID): AuthorizationRequest
     suspend fun accept(requestId: UUID, grant: AuthorizationGrant): AuthorizationRequest
 }
-
-// TODO implement

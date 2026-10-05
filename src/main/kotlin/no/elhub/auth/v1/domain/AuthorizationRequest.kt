@@ -6,7 +6,7 @@ import kotlin.time.Clock
 import kotlin.time.Instant
 
 data class AuthorizationRequest(
-    val id: String,
+    val id: UUID,
     val requestType: AuthorizationRequestType,
     val status: AuthorizationRequestStatus,
     val requestedScopes: List<RequestedAuthorizationScope>,
@@ -31,7 +31,7 @@ data class AuthorizationRequest(
         ): AuthorizationRequest {
             val now = Clock.System.now()
             return AuthorizationRequest(
-                id = UUID.randomUUID().toString(),
+                id = UUID.randomUUID(),
                 requestType = requestType,
                 status = AuthorizationRequestStatus.Pending,
                 requestedScopes = requestedScopes,

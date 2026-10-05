@@ -65,8 +65,3 @@ enum class AuthorizationDocumentType {
     ChangeOfEnergySupplierForOrganization,
     MoveInAndChangeOfEnergySupplierForOrganization,
 }
-
-data class AuthorizationGrant(
-    // TODO implement
-    val id: UUID,
-)
