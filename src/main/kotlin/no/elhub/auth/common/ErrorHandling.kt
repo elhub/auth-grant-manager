@@ -9,6 +9,7 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import no.elhub.auth.v0.features.common.buildApiErrorResponse
 import no.elhub.auth.v0.features.common.toInternalServerApiErrorResponse
 import no.elhub.auth.v1.Errors
+import no.elhub.auth.v1.InputError
 import org.slf4j.LoggerFactory
 
 private val logger = LoggerFactory.getLogger("ErrorHandling")
@@ -38,28 +39,67 @@ fun Application.configureErrorHandling() {
     }
 }
 
+// TODO revise messages and map all errors
 private fun Errors.toApiErrorResponse() = when (this) {
-    is Errors.InvalidMeteringPointId -> buildApiErrorResponse(
+    is InputError.MissingInputError -> buildApiErrorResponse(
         status = HttpStatusCode.UnprocessableEntity,
-        title = "Invalid authorization document request",
-        detail = "requestedScope.appliesTo.meteringPointIds must contain only valid 18-digit metering-point IDs",
+        title = "Missing input",
+        detail = detail,
     )
 
-    is Errors.InvalidCreateAuthorizationDocumentPayload -> buildApiErrorResponse(
+    is InputError.MalformedInputError -> buildApiErrorResponse(
+        status = HttpStatusCode.UnprocessableEntity,
+        title = "Malformed input",
+        detail = detail,
+    )
+
+    is InputError.IdMismatchError -> buildApiErrorResponse(
         status = HttpStatusCode.UnprocessableEntity,
         title = "Invalid authorization document request",
         detail = detail,
     )
 
-    Errors.RequestedToRequestedFromMismatch -> buildApiErrorResponse(
+    is InputError.MissingFieldError -> buildApiErrorResponse(
+        status = HttpStatusCode.UnprocessableEntity,
+        title = "Missing required field",
+        detail = detail,
+    )
+
+    is InputError.InvalidFieldValueError -> buildApiErrorResponse(
+        status = HttpStatusCode.UnprocessableEntity,
+        title = "Invalid field value",
+        detail = detail,
+    )
+
+    is InputError.ContentTooLargeError -> buildApiErrorResponse(
+        status = HttpStatusCode.PayloadTooLarge,
+        title = "Content too large",
+        detail = detail,
+    )
+
+    is InputError.InvalidMeteringPointId -> buildApiErrorResponse(
+        status = HttpStatusCode.UnprocessableEntity,
+        title = "Invalid metering point id",
+        detail = detail,
+    )
+
+    is InputError.InvalidCreateAuthorizationDocumentPayload -> buildApiErrorResponse(
+        status = HttpStatusCode.UnprocessableEntity,
+        title = "Invalid authorization document request",
+        detail = detail,
+    )
+
+    is InputError.RequestedToRequestedFromMismatch -> buildApiErrorResponse(
         status = HttpStatusCode.UnprocessableEntity,
         title = "Invalid authorization recipient",
         detail = "RequestedTo is not allowed to represent RequestedFrom",
     )
 
-    Errors.RequestedScopeNotAllowed -> buildApiErrorResponse(
+    is InputError.RequestedScopeNotAllowed -> buildApiErrorResponse(
         status = HttpStatusCode.Forbidden,
         title = "Requested scope is not authorized",
         detail = "RequestedBy is not allowed to request the specified scope from RequestedFrom",
     )
+
+    else -> throw Exception("Unimplemented")
 }

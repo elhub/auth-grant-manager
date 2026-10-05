@@ -3,7 +3,7 @@ package no.elhub.auth.v1.domain
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
-import no.elhub.auth.v1.Errors
+import no.elhub.auth.v1.InputError
 import no.elhub.auth.v1.features.documents.create.RequestedScope
 
 class DomainTest : FunSpec({
@@ -25,9 +25,9 @@ class DomainTest : FunSpec({
     test("metering-point IDs must contain exactly 18 digits") {
         MeteringPointId.create("707057500000000001").value shouldBe "707057500000000001"
 
-        shouldThrow<Errors.InvalidMeteringPointId> { MeteringPointId.create("") }
-        shouldThrow<Errors.InvalidMeteringPointId> { MeteringPointId.create("70705750000000001") }
-        shouldThrow<Errors.InvalidMeteringPointId> { MeteringPointId.create("7070575000000000001") }
-        shouldThrow<Errors.InvalidMeteringPointId> { MeteringPointId.create("70705750000000000A") }
+        shouldThrow<InputError.InvalidMeteringPointId> { MeteringPointId.create("") }
+        shouldThrow<InputError.InvalidMeteringPointId> { MeteringPointId.create("70705750000000001") }
+        shouldThrow<InputError.InvalidMeteringPointId> { MeteringPointId.create("7070575000000000001") }
+        shouldThrow<InputError.InvalidMeteringPointId> { MeteringPointId.create("70705750000000000A") }
     }
 })

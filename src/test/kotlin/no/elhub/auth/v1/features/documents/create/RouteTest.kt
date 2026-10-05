@@ -9,7 +9,6 @@ import io.ktor.server.testing.testApplication
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
-import kotlinx.datetime.Clock
 import no.elhub.auth.v0.features.common.party.AuthorizationParty
 import no.elhub.auth.v0.features.common.party.PartyService
 import no.elhub.auth.v0.features.common.party.PartyType
@@ -23,6 +22,7 @@ import no.elhub.auth.v1.domain.MeteringPointId
 import no.elhub.auth.v1.domain.ResourceConstraint
 import no.elhub.auth.v1.features.documents.create.dto.JsonApiCreateAuthorizationDocumentResponse
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
+import kotlin.time.Clock
 
 class RouteTest : FunSpec({
     val authorizedParty = AuthorizationParty("123456789", PartyType.OrganizationEntity)

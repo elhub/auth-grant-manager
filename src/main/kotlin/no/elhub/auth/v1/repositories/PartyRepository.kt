@@ -5,6 +5,7 @@ import no.elhub.auth.v0.features.common.party.AuthorizationPartyRecord
 import no.elhub.auth.v0.features.common.party.AuthorizationPartyTable
 import no.elhub.auth.v0.features.common.party.PartyType
 import no.elhub.auth.v0.features.common.party.toAuthorizationParty
+import no.elhub.auth.v1.RepositoryReadError
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.insertIgnore
@@ -16,16 +17,13 @@ interface PartyRepository {
     suspend fun findOrInsert(type: PartyType, partyId: String): AuthorizationPartyRecord
 }
 
-class PartyNotFoundException(val id: UUID) : RuntimeException("Party not found: $id")
-
-/** Uses the shared v0 party table and owns its transactions. */
 class ExposedPartyRepository : PartyRepository {
     override suspend fun find(id: UUID): AuthorizationPartyRecord = withTransaction {
         AuthorizationPartyTable.selectAll()
             .where { AuthorizationPartyTable.id eq id }
             .singleOrNull()
             ?.toAuthorizationParty()
-            ?: throw PartyNotFoundException(id)
+            ?: throw RepositoryReadError.NotFoundError("Party not found: $id")
     }
 
     private fun find(type: PartyType, partyId: String): AuthorizationPartyRecord? =

@@ -1,6 +1,6 @@
 package no.elhub.auth.v1.domain
 
-import no.elhub.auth.v1.Errors
+import no.elhub.auth.v1.InputError
 
 @JvmInline
 value class MeteringPointId private constructor(
@@ -9,7 +9,7 @@ value class MeteringPointId private constructor(
     companion object {
         fun create(value: String): MeteringPointId {
             if (!value.matches(FORMAT)) {
-                throw Errors.InvalidMeteringPointId(value)
+                throw InputError.InvalidMeteringPointId(value)
             }
 
             return MeteringPointId(value)
