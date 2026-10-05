@@ -12,6 +12,7 @@ import no.elhub.auth.v0.features.common.PostgresTestContainer
 import no.elhub.auth.v0.features.common.PostgresTestContainerExtension
 import no.elhub.auth.v0.features.common.party.AuthorizationPartyTable
 import no.elhub.auth.v0.features.common.party.PartyType
+import no.elhub.auth.v1.RepositoryReadError
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.Database
@@ -49,8 +50,7 @@ class ExposedPartyRepositoryTest : FunSpec({
 
     test("find missing UUID throws a typed exception") {
         val id = UUID.randomUUID()
-        val exception = shouldThrow<PartyNotFoundException> { repository.find(id) }
-        exception.id shouldBe id
+        val exception = shouldThrow<RepositoryReadError.NotFoundError> { repository.find(id) }
         exception.message shouldBe "Party not found: $id"
     }
 

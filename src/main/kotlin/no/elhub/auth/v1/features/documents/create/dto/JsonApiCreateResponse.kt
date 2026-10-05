@@ -1,11 +1,11 @@
 package no.elhub.auth.v1.features.documents.create.dto
 
-import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 import no.elhub.auth.v1.domain.AuthorizationDocument
 import no.elhub.auth.v1.domain.AuthorizationDocumentStatus
 import no.elhub.auth.v1.domain.AuthorizationDocumentType
 import no.elhub.auth.v1.domain.DocumentLanguage
+import kotlin.time.Instant
 import no.elhub.auth.v1.domain.ResourceConstraint as DomainResourceConstraint
 
 private const val DOCUMENTS_PATH = "/access/v1/authorization-documents"

@@ -1,7 +1,7 @@
 package no.elhub.auth.v1.features.documents.create
 
 import no.elhub.auth.v0.features.common.party.AuthorizationParty
-import no.elhub.auth.v1.Errors
+import no.elhub.auth.v1.InputError
 import no.elhub.auth.v1.domain.AuthorizationDocument
 import no.elhub.auth.v1.domain.DocumentLanguage
 
@@ -15,14 +15,14 @@ class CreateDocumentBusinessHandler {
         language: DocumentLanguage,
     ): AuthorizationDocument {
         if (!isAllowedToActOnBehalfOf(requestedTo, requestedFrom)) {
-            throw Errors.RequestedToRequestedFromMismatch
+            throw InputError.RequestedToRequestedFromMismatch()
         }
 
         // This will later be resolved by business handlers implemented by the relevant value streams.
         // They must validate that requestedBy may create this document type and is a balance supplier.
         // They must also validate that requestedFrom has the correct party type, such as an organization.
         if (!isRequestedScopeAllowed(requestedFrom, requestedBy, requestedScope)) {
-            throw Errors.RequestedScopeNotAllowed
+            throw InputError.RequestedScopeNotAllowed()
         }
 
         // Remember to fetch PDF metadata and generate the document once the creation flow is implemented.

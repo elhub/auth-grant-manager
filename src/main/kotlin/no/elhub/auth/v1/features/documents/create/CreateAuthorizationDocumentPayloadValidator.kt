@@ -1,6 +1,6 @@
 package no.elhub.auth.v1.features.documents.create
 
-import no.elhub.auth.v1.Errors
+import no.elhub.auth.v1.InputError
 import no.elhub.auth.v1.domain.AuthorizationDocumentType
 import no.elhub.auth.v1.domain.MeteringPointId
 import no.elhub.auth.v1.domain.ResourceConstraint
@@ -15,14 +15,14 @@ class CreateAuthorizationDocumentPayloadValidator {
 
         val meteringPointIds = try {
             scope.appliesTo.meteringPointIds.mapTo(mutableSetOf(), MeteringPointId::create)
-        } catch (_: Errors.InvalidMeteringPointId) {
-            throw Errors.InvalidCreateAuthorizationDocumentPayload(
+        } catch (_: InputError.InvalidMeteringPointId) {
+            throw InputError.InvalidCreateAuthorizationDocumentPayload(
                 "requestedScope.appliesTo.meteringPointIds must contain only valid 18-digit metering-point IDs",
             )
         }
 
         if (meteringPointIds.isEmpty()) {
-            throw Errors.InvalidCreateAuthorizationDocumentPayload(
+            throw InputError.InvalidCreateAuthorizationDocumentPayload(
                 "requestedScope.appliesTo.meteringPointIds must contain at least one metering point",
             )
         }
@@ -37,12 +37,12 @@ class CreateAuthorizationDocumentPayloadValidator {
 
             AuthorizationDocumentType.MoveInAndChangeOfEnergySupplierForOrganization -> {
                 val allowedChanges = scope.allowedChanges
-                    ?: throw Errors.InvalidCreateAuthorizationDocumentPayload(
+                    ?: throw InputError.InvalidCreateAuthorizationDocumentPayload(
                         "requestedScope.allowedChanges is required for MoveInAndChangeOfEnergySupplierForOrganization",
                     )
 
                 if (allowedChanges.validFrom.size != 1) {
-                    throw Errors.InvalidCreateAuthorizationDocumentPayload(
+                    throw InputError.InvalidCreateAuthorizationDocumentPayload(
                         "requestedScope.allowedChanges.validFrom must contain exactly one date",
                     )
                 }

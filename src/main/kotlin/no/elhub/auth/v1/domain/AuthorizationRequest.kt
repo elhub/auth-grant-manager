@@ -5,12 +5,11 @@ import java.util.UUID
 import kotlin.time.Clock
 import kotlin.time.Instant
 
-data class AuthorizationDocument(
+data class AuthorizationRequest(
     val id: String,
-    val documentType: AuthorizationDocumentType,
-    val status: AuthorizationDocumentStatus,
-    val resourceConstraints: List<ResourceConstraint>,
-    val allowedChanges: List<ResourceConstraint>,
+    val requestType: AuthorizationRequestType,
+    val status: AuthorizationRequestStatus,
+    val requestedScopes: List<RequestedAuthorizationScope>,
     val externalReference: String?,
     val validTo: Instant?,
     val createdAt: Instant,
@@ -18,27 +17,24 @@ data class AuthorizationDocument(
     val requestedBy: AuthorizationParty,
     val requestedFrom: AuthorizationParty,
     val requestedTo: AuthorizationParty,
-    val signedBy: AuthorizationParty?,
-    val authorizationGrant: AuthorizationGrant?,
-    val pdfBytes: ByteArray,
+    val approvedBy: AuthorizationParty?,
+    val authorizationGrant: List<AuthorizationGrant>?,
 ) {
     companion object {
         fun new(
-            documentType: AuthorizationDocumentType,
-            resourceConstraints: List<ResourceConstraint>,
+            requestType: AuthorizationRequestType,
+            requestedScopes: List<RequestedAuthorizationScope>,
             externalReference: String?,
             requestedBy: AuthorizationParty,
             requestedFrom: AuthorizationParty,
             requestedTo: AuthorizationParty,
-            pdfBytes: ByteArray,
-        ): AuthorizationDocument {
+        ): AuthorizationRequest {
             val now = Clock.System.now()
-            return AuthorizationDocument(
+            return AuthorizationRequest(
                 id = UUID.randomUUID().toString(),
-                documentType = documentType,
-                status = AuthorizationDocumentStatus.Pending,
-                resourceConstraints = resourceConstraints,
-                allowedChanges = emptyList(),
+                requestType = requestType,
+                status = AuthorizationRequestStatus.Pending,
+                requestedScopes = requestedScopes,
                 externalReference = externalReference,
                 validTo = null,
                 createdAt = now,
@@ -46,27 +42,21 @@ data class AuthorizationDocument(
                 requestedBy = requestedBy,
                 requestedFrom = requestedFrom,
                 requestedTo = requestedTo,
-                signedBy = null,
+                approvedBy = null,
                 authorizationGrant = null,
-                pdfBytes = pdfBytes,
             )
         }
     }
 }
 
-enum class AuthorizationDocumentStatus {
+enum class AuthorizationRequestStatus {
     Accepted,
     Expired,
     Pending,
     Rejected,
 }
 
-enum class AuthorizationDocumentType {
+enum class AuthorizationRequestType {
     ChangeOfEnergySupplierForOrganization,
     MoveInAndChangeOfEnergySupplierForOrganization,
 }
-
-data class AuthorizationGrant(
-    // TODO implement
-    val id: UUID,
-)
