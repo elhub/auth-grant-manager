@@ -2,7 +2,7 @@
 format.version = "1.1"
 
 [versions]
-auth-pdp-plugin = "8.7.6"
+auth-pdp-plugin = "8.7.8"
 arrow = "2.2.3"
 cohort = "2.9.11"
 elhub-gradle = "1.0.0"
