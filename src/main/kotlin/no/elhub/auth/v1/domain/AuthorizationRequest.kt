@@ -25,6 +25,7 @@ data class AuthorizationRequest(
             requestType: AuthorizationRequestType,
             requestedScopes: List<RequestedAuthorizationScope>,
             externalReference: String?,
+            validTo: Instant,
             requestedBy: AuthorizationParty,
             requestedFrom: AuthorizationParty,
             requestedTo: AuthorizationParty,
@@ -36,7 +37,7 @@ data class AuthorizationRequest(
                 status = AuthorizationRequestStatus.Pending,
                 requestedScopes = requestedScopes,
                 externalReference = externalReference,
-                validTo = null,
+                validTo = validTo,
                 createdAt = now,
                 updatedAt = now,
                 requestedBy = requestedBy,
@@ -54,9 +55,12 @@ enum class AuthorizationRequestStatus {
     Expired,
     Pending,
     Rejected,
+    Revoked,
 }
 
 enum class AuthorizationRequestType {
     ChangeOfEnergySupplierForOrganization,
+    ChangeOfEnergySupplierForPerson,
     MoveInAndChangeOfEnergySupplierForOrganization,
+    MoveInAndChangeOfEnergySupplierForPerson,
 }

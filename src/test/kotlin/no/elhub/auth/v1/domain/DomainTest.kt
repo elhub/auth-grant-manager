@@ -7,6 +7,12 @@ import no.elhub.auth.v1.InputError
 import no.elhub.auth.v1.features.documents.create.RequestedScope
 
 class DomainTest : FunSpec({
+    test("metering-point constraints require at least one ID") {
+        shouldThrow<IllegalArgumentException> {
+            ResourceConstraint.MeteringPoints(emptySet())
+        }
+    }
+
     test("requested scope owns its document type") {
         RequestedScope.ChangeOfEnergySupplierForOrganization(
             meteringPointIds = ResourceConstraint.MeteringPoints(

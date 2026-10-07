@@ -7,7 +7,7 @@ data class RequestedAuthorizationScope(
 
 data class AuthorizationScopeConstraint(
     val constraintKind: AuthorizationScopeConstraintKind,
-    val attribute: String,
+    val attribute: AuthorizationScopeConstraintAttribute,
     val value: ResourceConstraint,
 
 )
@@ -21,6 +21,10 @@ data class GrantedAuthorizationScope(
 enum class AuthorizationScopeConstraintKind {
     AppliesTo,
     AllowedChanges,
+}
+
+enum class AuthorizationScopeConstraintAttribute {
+    MeteringPointId,
 }
 
 enum class PermissionCapability {
