@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "resourceUuid": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "validFrom": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "validTo": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "agentRelationship": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "enum": [
+                "Person",
+                "Organization",
+                "MarketEntity"
+              ]
+            },
+            "id": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    },
+    "signedByRelationship": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "Person"
+            },
+            "id": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    },
+    "authorizationGrantRelationship": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "const": "ConsumableGrant"
+              },
+              "id": {
+                "$ref": "#/$defs/resourceUuid"
+              }
+            }
+          }
+        }
+      }
+    },
+    "authorizationSourceRelationship": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "enum": [
+                "AuthorizationDocument",
+                "AuthorizationRequest"
+              ]
+            },
+            "id": {
+              "$ref": "#/$defs/resourceUuid"
+            }
+          }
+        }
+      }
+    }
+  }
+}

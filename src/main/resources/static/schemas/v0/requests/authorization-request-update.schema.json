@@ -6,11 +6,7 @@
   "properties": {
     "data": {
       "type": "object",
-      "required": [
-        "type",
-        "id",
-        "attributes"
-      ],
+      "required": ["type", "id", "attributes"],
       "properties": {
         "id": {
           "$ref": "authorization-request-common.schema.json#/$defs/id"
@@ -26,14 +22,10 @@
               "$ref": "authorization-request-common.schema.json#/$defs/authorizationRequestStatus"
             }
           },
-          "required": [
-            "status"
-          ]
+          "required": ["status"]
         }
       }
     }
   },
-  "required": [
-    "data"
-  ]
+  "required": ["data"]
 }

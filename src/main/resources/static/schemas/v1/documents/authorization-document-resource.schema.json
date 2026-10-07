@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Authorization Document Resource",
+  "description": "Schema for returning an authorization document.",
+  "type": "object",
+  "properties": {
+    "data": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "authorization-document-common.schema.json#/$defs/id"
+        },
+        "type": {
+          "$ref": "authorization-document-common.schema.json#/$defs/type"
+        },
+        "attributes": {
+          "type": "object",
+          "properties": {
+            "documentType": {
+              "$ref": "authorization-document-common.schema.json#/$defs/documentType"
+            },
+            "requestedScopes": {
+              "$ref": "authorization-document-common.schema.json#/$defs/requestedScopes"
+            },
+            "externalReference": {
+              "$ref": "authorization-document-common.schema.json#/$defs/externalReference"
+            },
+            "documentUri": {
+              "$ref": "authorization-document-common.schema.json#/$defs/documentUri"
+            },
+            "status": {
+              "$ref": "authorization-document-common.schema.json#/$defs/status"
+            },
+            "validFrom": {
+              "$ref": "../elhub-common.schema.json#/$defs/validFrom"
+            },
+            "validTo": {
+              "$ref": "../elhub-common.schema.json#/$defs/validTo"
+            },
+            "createdAt": {
+              "$ref": "../elhub-common.schema.json#/$defs/createdAt"
+            },
+            "updatedAt": {
+              "$ref": "../elhub-common.schema.json#/$defs/updatedAt"
+            }
+          }
+        },
+        "meta": {
+          "type": "object",
+          "properties": {
+            "language": {
+              "$ref": "authorization-document-common.schema.json#/$defs/language"
+            }
+          }
+        },
+        "relationships": {
+          "type": "object",
+          "properties": {
+            "requestedBy": {
+              "$ref": "../elhub-common.schema.json#/$defs/agentRelationship"
+            },
+            "requestedFrom": {
+              "$ref": "../elhub-common.schema.json#/$defs/agentRelationship"
+            },
+            "requestedTo": {
+              "$ref": "../elhub-common.schema.json#/$defs/agentRelationship"
+            },
+            "signedBy": {
+              "$ref": "../elhub-common.schema.json#/$defs/signedByRelationship"
+            },
+            "authorizationGrant": {
+              "$ref": "../elhub-common.schema.json#/$defs/authorizationGrantRelationship"
+            }
+          }
+        },
+        "links": {
+          "type": "object",
+          "properties": {
+            "self": {
+              "type": "string",
+              "format": "uri-reference"
+            },
+            "file": {
+              "type": "string",
+              "format": "uri-reference"
+            }
+          }
+        }
+      }
+    }
+  }
+}

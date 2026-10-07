@@ -6,7 +6,13 @@
   "properties": {
     "data": {
       "type": "object",
-      "required": ["id", "type", "attributes", "relationships", "links"],
+      "required": [
+        "id",
+        "type",
+        "attributes",
+        "relationships",
+        "links"
+      ],
       "properties": {
         "id": {
           "$ref": "authorization-grant-common.schema.json#/$defs/id"
@@ -26,7 +32,12 @@
         },
         "relationships": {
           "$ref": "authorization-grant-common.schema.json#/$defs/relationships",
-          "required": ["grantedFor", "grantedTo", "source", "scopes"]
+          "required": [
+            "grantedFor",
+            "grantedTo",
+            "source",
+            "scopes"
+          ]
         },
         "meta": {
           "type": "object",
@@ -45,7 +56,7 @@
     },
     "links": {
       "description": "Link members related to the primary data.",
-      "$ref": "../json-api-framework.schema.json#/$defs/topLevelLinks",
+      "$ref": "../../json-api-framework.schema.json#/$defs/topLevelLinks",
       "examples": [
         {
           "self": "/access/v0/authorization-grants/123e4567-e89b-12d3-a456-426614174000"
@@ -53,7 +64,7 @@
       ]
     },
     "meta": {
-      "$ref": "../json-api-framework.schema.json#/$defs/topLevelMeta"
+      "$ref": "../../json-api-framework.schema.json#/$defs/topLevelMeta"
     }
   },
   "required": ["data", "links", "meta"]

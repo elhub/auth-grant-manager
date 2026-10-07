@@ -1,30 +1,30 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Authorization Document Collection",
-  "description": "Schema for returning a collection of authorization documents.",
+  "title": "Authorization Request Response Collection",
+  "description": "Schema for returning a collection of authorization requests.",
   "type": "object",
   "properties": {
     "data": {
-      "description": "An array of authorization document resource objects.",
+      "description": "An array of authorization request resource objects.",
       "type": "array",
       "items": {
-        "$ref": "authorization-document-resource.schema.json#/properties/data"
+        "$ref": "authorization-request-resource.schema.json#/properties/data"
       },
       "uniqueItems": true
     },
     "links": {
-      "description": "Link members related to the collection (e.g. pagination).",
-      "$ref": "../json-api-framework.schema.json#/$defs/topLevelLinks",
+      "description": "Link members related to the collection (e.g., pagination).",
+      "$ref": "../../json-api-framework.schema.json#/$defs/topLevelLinks",
       "examples": [
         {
-          "self": "/access/v0/authorization-documents"
+          "self": "/access/v0/authorization-requests"
         }
       ]
     },
     "meta": {
       "allOf": [
         {
-          "$ref": "../json-api-framework.schema.json#/$defs/topLevelMeta"
+          "$ref": "../../json-api-framework.schema.json#/$defs/topLevelMeta"
         },
         {
           "type": "object",
@@ -56,5 +56,6 @@
       ]
     }
   },
-  "required": ["data", "links", "meta"]
+  "required": ["data", "links", "meta"],
+  "additionalProperties": false
 }

@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Authorization Grant Resource",
+  "description": "Schema for returning consumable authorization grants.",
+  "type": "object",
+  "properties": {
+    "data": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "authorization-grant-common.schema.json#/$defs/id"
+          },
+          "type": {
+            "$ref": "authorization-grant-common.schema.json#/$defs/type"
+          },
+          "attributes": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "$ref": "authorization-grant-common.schema.json#/$defs/status"
+              },
+              "scopes": {
+                "$ref": "authorization-grant-common.schema.json#/$defs/scopes"
+              },
+              "validFrom": {
+                "$ref": "../elhub-common.schema.json#/$defs/validFrom"
+              },
+              "validTo": {
+                "$ref": "../elhub-common.schema.json#/$defs/validTo"
+              },
+              "grantedAt": {
+                "$ref": "authorization-grant-common.schema.json#/$defs/grantedAt"
+              },
+              "createdAt": {
+                "$ref": "../elhub-common.schema.json#/$defs/createdAt"
+              },
+              "updatedAt": {
+                "$ref": "../elhub-common.schema.json#/$defs/updatedAt"
+              }
+            }
+          },
+          "relationships": {
+            "type": "object",
+            "properties": {
+              "grantedFor": {
+                "$ref": "../elhub-common.schema.json#/$defs/agentRelationship"
+              },
+              "grantedBy": {
+                "$ref": "../elhub-common.schema.json#/$defs/agentRelationship"
+              },
+              "grantedTo": {
+                "$ref": "../elhub-common.schema.json#/$defs/agentRelationship"
+              },
+              "source": {
+                "$ref": "../elhub-common.schema.json#/$defs/authorizationSourceRelationship"
+              }
+            }
+          },
+          "links": {
+            "type": "object",
+            "properties": {
+              "self": {
+                "type": "string",
+                "format": "uri-reference"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

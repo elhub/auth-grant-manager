@@ -14,7 +14,7 @@
     },
     "links": {
       "description": "Link members related to the collection (e.g. pagination).",
-      "$ref": "../json-api-framework.schema.json#/$defs/topLevelLinks",
+      "$ref": "../../json-api-framework.schema.json#/$defs/topLevelLinks",
       "examples": [
         {
           "self": "/access/v0/authorization-grants/123e4567-e89b-12d3-a456-426614174000/scopes"
@@ -22,12 +22,8 @@
       ]
     },
     "meta": {
-      "$ref": "../json-api-framework.schema.json#/$defs/topLevelMeta"
+      "$ref": "../../json-api-framework.schema.json#/$defs/topLevelMeta"
     }
   },
-  "required": [
-    "data",
-    "links",
-    "meta"
-  ]
+  "required": ["data", "links", "meta"]
 }

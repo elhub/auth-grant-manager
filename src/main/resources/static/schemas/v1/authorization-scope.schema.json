@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "requestedScope": {
+      "type": "object",
+      "properties": {
+        "resourceType": {
+          "type": "string",
+          "minLength": 1
+        },
+        "appliesTo": {
+          "type": "array",
+          "items": {
+            "$ref": "authorization-scope-constraint.schema.json#/$defs/requestedScopeConstraint"
+          }
+        },
+        "allowedChanges": {
+          "type": "array",
+          "items": {
+            "$ref": "authorization-scope-constraint.schema.json#/$defs/requestedScopeConstraint"
+          }
+        }
+      }
+    },
+    "authorizationScope": {
+      "type": "object",
+      "properties": {
+        "capability": {
+          "enum": ["Read", "Write"]
+        },
+        "resourceType": {
+          "type": "string",
+          "minLength": 1
+        },
+        "appliesTo": {
+          "type": "array",
+          "items": {
+            "$ref": "authorization-scope-constraint.schema.json#/$defs/authorizationScopeConstraint"
+          }
+        },
+        "allowedChanges": {
+          "type": "array",
+          "items": {
+            "$ref": "authorization-scope-constraint.schema.json#/$defs/authorizationScopeConstraint"
+          }
+        }
+      }
+    }
+  }
+}
