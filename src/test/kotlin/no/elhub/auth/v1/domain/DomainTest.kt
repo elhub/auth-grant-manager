@@ -7,6 +7,19 @@ import no.elhub.auth.v1.InputError
 import no.elhub.auth.v1.features.documents.create.RequestedScope
 
 class DomainTest : FunSpec({
+    test("scope constraint attributes map API names separately from database names") {
+        val attribute = AuthorizationScopeConstraintAttribute.fromApiName("meteringPoint.id")
+        attribute shouldBe AuthorizationScopeConstraintAttribute.MeteringPointId
+        attribute.apiName shouldBe "meteringPoint.id"
+        attribute.name shouldBe "MeteringPointId"
+
+        listOf("MeteringPointId", "unknown", "").forEach { apiName ->
+            shouldThrow<InputError.InvalidFieldValueError> {
+                AuthorizationScopeConstraintAttribute.fromApiName(apiName)
+            }
+        }
+    }
+
     test("metering-point constraints require at least one ID") {
         shouldThrow<IllegalArgumentException> {
             ResourceConstraint.MeteringPoints(emptySet())
