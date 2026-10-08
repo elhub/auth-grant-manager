@@ -36,6 +36,7 @@ import org.jetbrains.exposed.v1.core.lessEq
 import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.datetime.timestamp
 import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.postgresql.util.PGobject
 import java.util.UUID
 import kotlin.time.Instant
 
@@ -193,7 +194,7 @@ class ExposedRequestRepository(
                         val first = scopeRows.first()
 
                         RequestedAuthorizationScope(
-                            resourceType = ResourceType.valueOf(first[AuthorizationRequestScopeTable.resourceType]),
+                            resourceType = first[AuthorizationRequestScopeTable.resourceType],
                             constraints = scopeRows.filter {
                                 it.getOrNull(AuthorizationRequestScopeConstraintTable.id) != null
                             }.map(ResultRow::toConstraint),
@@ -274,7 +275,12 @@ enum class DatabaseRequestStatus {
 object AuthorizationRequestScopeTable : UUIDTable("auth_v1.authorization_request_scope") {
     val requestId = javaUUID("request_id")
         .references(AuthorizationRequestTable.id)
-    val resourceType = text("resource_type")
+    val resourceType = customEnumeration(
+        name = "resource_type",
+        sql = "auth_v1.authorization_resource_type",
+        fromDb = { value -> ResourceType.valueOf(value as String) },
+        toDb = { PGEnum("auth_v1.authorization_resource_type", it) },
+    )
 }
 
 object AuthorizationRequestScopeConstraintTable : UUIDTable("auth_v1.authorization_request_scope_constraint") {
@@ -288,8 +294,15 @@ object AuthorizationRequestScopeConstraintTable : UUIDTable("auth_v1.authorizati
     val attribute = customEnumeration(
         name = "attribute",
         sql = "auth_v1.authorization_constraint_attribute",
-        fromDb = { value -> AuthorizationScopeConstraintAttribute.valueOf(value as String) },
-        toDb = { PGEnum("auth_v1.authorization_constraint_attribute", it) },
+        fromDb = { value ->
+            AuthorizationScopeConstraintAttribute.entries.single { it.apiName == value as String }
+        },
+        toDb = { attribute ->
+            PGobject().apply {
+                type = "auth_v1.authorization_constraint_attribute"
+                value = attribute.apiName
+            }
+        },
     )
     val value = array<String>("value")
 }

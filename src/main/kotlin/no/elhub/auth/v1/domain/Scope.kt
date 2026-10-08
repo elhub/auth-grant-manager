@@ -41,7 +41,7 @@ enum class PermissionCapability {
 }
 
 enum class ResourceType {
-    MeteringPoint,
+    MeteringPointContract,
 }
 
 sealed interface ResourceConstraint {

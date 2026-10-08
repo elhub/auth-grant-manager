@@ -1,8 +1,24 @@
 --liquibase formatted sql
 
 --changeset elhub:43
+CREATE TYPE auth_v1.authorization_resource_type AS ENUM (
+    'MeteringPointContract'
+);
+
+ALTER TABLE auth_v1.authorization_request_scope
+    ALTER COLUMN resource_type TYPE auth_v1.authorization_resource_type
+    USING resource_type::auth_v1.authorization_resource_type;
+
+ALTER TABLE auth_v1.authorization_document_scope
+    ALTER COLUMN resource_type TYPE auth_v1.authorization_resource_type
+    USING resource_type::auth_v1.authorization_resource_type;
+
+ALTER TABLE auth_v1.authorization_grant_scope
+    ALTER COLUMN resource_type TYPE auth_v1.authorization_resource_type
+    USING resource_type::auth_v1.authorization_resource_type;
+
 CREATE TYPE auth_v1.authorization_constraint_attribute AS ENUM (
-    'MeteringPointId'
+    'meteringPoint.id'
 );
 
 ALTER TABLE auth_v1.authorization_request_scope_constraint

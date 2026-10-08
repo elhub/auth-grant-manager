@@ -77,7 +77,7 @@ class ExposedRequestRepositoryTest : FunSpec({
         scopes.forEach { scope ->
             val scopeId = AuthorizationRequestScopeTable.insert {
                 it[AuthorizationRequestScopeTable.requestId] = requestId
-                it[resourceType] = scope.resourceType.name
+                it[resourceType] = scope.resourceType
             }[AuthorizationRequestScopeTable.id].value
             scope.constraints.forEach { constraint ->
                 AuthorizationRequestScopeConstraintTable.insert {
@@ -162,8 +162,8 @@ class ExposedRequestRepositoryTest : FunSpec({
             AuthorizationScopeConstraintAttribute.MeteringPointId,
             ResourceConstraint.MeteringPoints(setOf(MeteringPointId.create("707057500000000003"))),
         )
-        val constrained = RequestedAuthorizationScope(ResourceType.MeteringPoint, listOf(appliesTo, allowedChanges))
-        val otherScope = RequestedAuthorizationScope(ResourceType.MeteringPoint, listOf(appliesTo))
+        val constrained = RequestedAuthorizationScope(ResourceType.MeteringPointContract, listOf(appliesTo, allowedChanges))
+        val otherScope = RequestedAuthorizationScope(ResourceType.MeteringPointContract, listOf(appliesTo))
         val withScopes = insertRequest(
             requestedBy = requester,
             requestedFrom = from,

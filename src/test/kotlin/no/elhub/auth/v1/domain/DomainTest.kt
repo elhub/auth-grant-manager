@@ -7,7 +7,7 @@ import no.elhub.auth.v1.InputError
 import no.elhub.auth.v1.features.documents.create.RequestedScope
 
 class DomainTest : FunSpec({
-    test("scope constraint attributes map API names separately from database names") {
+    test("scope constraint attributes map external names to Kotlin enum constants") {
         val attribute = AuthorizationScopeConstraintAttribute.fromApiName("meteringPoint.id")
         attribute shouldBe AuthorizationScopeConstraintAttribute.MeteringPointId
         attribute.apiName shouldBe "meteringPoint.id"
