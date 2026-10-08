@@ -60,7 +60,5 @@ enum class AuthorizationRequestStatus {
 
 enum class AuthorizationRequestType {
     ChangeOfEnergySupplierForOrganization,
-    ChangeOfEnergySupplierForPerson,
     MoveInAndChangeOfEnergySupplierForOrganization,
-    MoveInAndChangeOfEnergySupplierForPerson,
 }
