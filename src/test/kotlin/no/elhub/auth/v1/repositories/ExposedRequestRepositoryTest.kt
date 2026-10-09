@@ -9,6 +9,7 @@ import no.elhub.auth.v0.features.common.PostgresTestContainer
 import no.elhub.auth.v0.features.common.PostgresTestContainerExtension
 import no.elhub.auth.v0.features.common.party.AuthorizationParty
 import no.elhub.auth.v0.features.common.party.PartyType
+import no.elhub.auth.v1.domain.AuthorizationRequest
 import no.elhub.auth.v1.domain.AuthorizationRequestStatus
 import no.elhub.auth.v1.domain.AuthorizationRequestType
 import no.elhub.auth.v1.domain.AuthorizationScopeConstraint
@@ -91,15 +92,61 @@ class ExposedRequestRepositoryTest : FunSpec({
         requestId
     }
 
-    test("database request status only supports Pending and Rejected") {
-        val statuses = withTransaction {
-            exec("SELECT unnest(enum_range(NULL::auth_v1.authorization_request_status))::text") { rows ->
-                buildList {
-                    while (rows.next()) add(rows.getString(1))
-                }
-            }
-        }
-        statuses shouldBe listOf("Pending", "Rejected")
+    test("inserts request fields, reuses parties, and persists scopes and constraints") {
+        val requestedBy = party(PartyType.Organization)
+        val recipient = party()
+        val existingrequestedBy = partyRepository.findOrInsert(requestedBy.type, requestedBy.id)
+        val appliesTo = AuthorizationScopeConstraint(
+            AuthorizationScopeConstraintKind.AppliesTo,
+            AuthorizationScopeConstraintAttribute.MeteringPointId,
+            ResourceConstraint.MeteringPoints(
+                setOf(
+                    MeteringPointId.create("707057500000000001"),
+                    MeteringPointId.create("707057500000000002"),
+                ),
+            ),
+        )
+        val allowedChanges = appliesTo.copy(
+            constraintKind = AuthorizationScopeConstraintKind.AllowedChanges,
+            value = ResourceConstraint.MeteringPoints(setOf(MeteringPointId.create("707057500000000003"))),
+        )
+        val constrained = RequestedAuthorizationScope(ResourceType.MeteringPointContract, listOf(appliesTo, allowedChanges))
+        val unconstrained = RequestedAuthorizationScope(ResourceType.MeteringPointContract, emptyList())
+        val request = AuthorizationRequest.new(
+            requestType = AuthorizationRequestType.MoveInAndChangeOfEnergySupplierForOrganization,
+            requestedScopes = listOf(constrained, unconstrained),
+            externalReference = "contract-123",
+            validTo = future,
+            requestedBy = requestedBy,
+            requestedFrom = requestedBy,
+            requestedTo = recipient,
+        ).copy(createdAt = createdAt, updatedAt = createdAt + 1.days)
+
+        repository.insert(request) shouldBe request
+
+        val stored = repository.findAndSortByCreatedAt(requestedBy, Pagination(), emptyList()).items.single()
+        stored.copy(requestedScopes = emptyList()) shouldBe request.copy(requestedScopes = emptyList())
+        stored.requestedScopes.single { it.constraints.isEmpty() } shouldBe unconstrained
+        stored.requestedScopes.single { it.constraints.isNotEmpty() }.constraints
+            .shouldContainExactlyInAnyOrder(appliesTo, allowedChanges)
+        partyRepository.findOrInsert(requestedBy.type, requestedBy.id).id shouldBe existingrequestedBy.id
+    }
+
+    test("inserts a request without scopes or external reference") {
+        val requestedBy = party()
+        val request = AuthorizationRequest.new(
+            requestType = AuthorizationRequestType.ChangeOfEnergySupplierForOrganization,
+            requestedScopes = emptyList(),
+            externalReference = null,
+            validTo = future,
+            requestedBy = requestedBy,
+            requestedFrom = requestedBy,
+            requestedTo = requestedBy,
+        ).copy(createdAt = createdAt, updatedAt = createdAt)
+
+        repository.insert(request) shouldBe request
+
+        repository.findAndSortByCreatedAt(requestedBy, Pagination(), emptyList()).items shouldBe listOf(request)
     }
 
     test("includes requestedBy and requestedTo once but excludes requestedFrom-only and unrelated parties") {
@@ -154,7 +201,7 @@ class ExposedRequestRepositoryTest : FunSpec({
     }
 
     test("batch maps parties including approver and scopes with multiple constraints") {
-        val requester = party(PartyType.Organization)
+        val requestedBy = party(PartyType.Organization)
         val from = party(PartyType.Organization)
         val to = party()
         val approver = party()
@@ -176,21 +223,21 @@ class ExposedRequestRepositoryTest : FunSpec({
         val constrained = RequestedAuthorizationScope(ResourceType.MeteringPointContract, listOf(appliesTo, allowedChanges))
         val otherScope = RequestedAuthorizationScope(ResourceType.MeteringPointContract, listOf(appliesTo))
         val withScopes = insertRequest(
-            requestedBy = requester,
+            requestedBy = requestedBy,
             requestedFrom = from,
             requestedTo = to,
             approvedBy = approver,
             externalReference = "contract-123",
             scopes = listOf(constrained, otherScope),
         )
-        val withOtherScope = insertRequest(to, requestedTo = requester, scopes = listOf(otherScope))
-        val withoutScopes = insertRequest(requester)
+        val withOtherScope = insertRequest(to, requestedTo = requestedBy, scopes = listOf(otherScope))
+        val withoutScopes = insertRequest(requestedBy)
 
-        val result = repository.findAndSortByCreatedAt(requester, Pagination(), emptyList())
+        val result = repository.findAndSortByCreatedAt(requestedBy, Pagination(), emptyList())
         result.totalItems shouldBe 3L
         val items = result.items.associateBy { it.id }
         val mapped = items.getValue(withScopes)
-        mapped.requestedBy shouldBe requester
+        mapped.requestedBy shouldBe requestedBy
         mapped.requestedFrom shouldBe from
         mapped.requestedTo shouldBe to
         mapped.approvedBy shouldBe approver

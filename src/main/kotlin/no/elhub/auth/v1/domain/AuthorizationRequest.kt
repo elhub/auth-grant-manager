@@ -11,7 +11,7 @@ data class AuthorizationRequest(
     val status: AuthorizationRequestStatus,
     val requestedScopes: List<RequestedAuthorizationScope>,
     val externalReference: String?,
-    val validTo: Instant?,
+    val validTo: Instant,
     val createdAt: Instant,
     val updatedAt: Instant,
     val requestedBy: AuthorizationParty,
