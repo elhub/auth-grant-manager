@@ -1,11 +1,6 @@
 import { chromium } from 'playwright'
 
-const {
-  BANKID_SIGN_URL,
-  NATIONAL_IDENTITY_NUMBER,
-  BANKID_TEST_OTP,
-  BANKID_TEST_PASSWORD
-} = process.env
+const { BANKID_SIGN_URL, NATIONAL_IDENTITY_NUMBER, BANKID_TEST_OTP, BANKID_TEST_PASSWORD } = process.env
 
 if (BANKID_SIGN_URL === undefined) throw new Error('BANKID_SIGN_URL is not set')
 if (NATIONAL_IDENTITY_NUMBER === undefined) throw new Error('NATIONAL_IDENTITY_NUMBER is not set')
@@ -55,18 +50,9 @@ try {
 
   // Step 7: Wait for completion
   console.log('Waiting for signing to complete...')
-  // The /oppsummering page first shows a "please wait" spinner, then the final status.
-  await page.waitForFunction(
-    () => !document.body.innerText.includes('vennligst vent'),
-    { timeout: 60_000 }
-  )
-  // Success: the summary page ("Oppsummering") is shown with the document list.
-  // Failure: a different heading / error message would appear.
-  const bodyText: string = await page.locator('body').innerText()
-  if (!bodyText.includes('Oppsummering')) {
-    const headings: string[] = await page.locator('h1, h2, h3').allInnerTexts()
-    throw new Error(`Unexpected completion page. Headings: ${headings.join(' | ')}`)
-  }
+  // Wait for navigation and explicit success, not the absence of a loading spinner.
+  await page.waitForURL('**/oppsummering', { timeout: 60_000 })
+  await page.getByRole('alert').filter({ hasText: 'Du har signert 1 dokument med BankID' }).waitFor({ state: 'visible', timeout: 60_000 })
   console.log('BankID signing completed successfully.')
 } catch (err) {
   console.error('BankID signing failed:', (err as Error).message)
