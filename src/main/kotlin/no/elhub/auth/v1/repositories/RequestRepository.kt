@@ -35,6 +35,7 @@ import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.core.lessEq
 import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.datetime.timestamp
+import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.postgresql.util.PGobject
 import java.util.UUID
@@ -128,8 +129,55 @@ class ExposedRequestRepository(
         Page(items = items, totalItems = totalItems, pagination = pagination)
     }
 
-    override suspend fun insert(request: AuthorizationRequest): AuthorizationRequest {
-        TODO("Not yet implemented")
+    override suspend fun insert(request: AuthorizationRequest): AuthorizationRequest = withTransaction {
+        val requestedBy = partyRepository.findOrInsert(request.requestedBy.type, request.requestedBy.id)
+        val requestedFrom = partyRepository.findOrInsert(request.requestedFrom.type, request.requestedFrom.id)
+        val requestedTo = partyRepository.findOrInsert(request.requestedTo.type, request.requestedTo.id)
+        val approvedBy = request.approvedBy?.let { partyRepository.findOrInsert(it.type, it.id) }
+
+        val inserted = AuthorizationRequestTable.insert {
+            it[id] = request.id
+            it[requestType] = request.requestType
+            it[status] = when (request.status) {
+                AuthorizationRequestStatus.Rejected -> DatabaseRequestStatus.Rejected
+                else -> DatabaseRequestStatus.Pending
+            }
+            it[AuthorizationRequestTable.requestedBy] = requestedBy.id
+            it[AuthorizationRequestTable.requestedFrom] = requestedFrom.id
+            it[AuthorizationRequestTable.requestedTo] = requestedTo.id
+            it[AuthorizationRequestTable.approvedBy] = approvedBy?.id
+            it[externalReference] = request.externalReference
+            it[AuthorizationRequestTable.validTo] = request.validTo
+            it[validFrom] = request.createdAt
+            it[createdAt] = request.createdAt
+            it[updatedAt] = request.updatedAt
+        }
+
+        request.requestedScopes.forEach { scope ->
+            val scopeId = AuthorizationRequestScopeTable.insert {
+                it[requestId] = request.id
+                it[resourceType] = scope.resourceType
+            }[AuthorizationRequestScopeTable.id].value
+
+            scope.constraints.forEach { constraint ->
+                AuthorizationRequestScopeConstraintTable.insert {
+                    it[AuthorizationRequestScopeConstraintTable.scopeId] = scopeId
+                    it[kind] = constraint.constraintKind
+                    it[attribute] = constraint.attribute
+                    it[value] = when (val resourceConstraint = constraint.value) {
+                        is ResourceConstraint.MeteringPoints -> resourceConstraint.ids.map { it.value }
+                    }
+                }
+            }
+        }
+
+        inserted.resultedValues!!.single().toAuthorizationRequest(
+            requestedBy = requestedBy,
+            requestedFrom = requestedFrom,
+            requestedTo = requestedTo,
+            requestedScopes = request.requestedScopes,
+            approvedBy = approvedBy,
+        )
     }
 
     override suspend fun reject(requestId: UUID): AuthorizationRequest {
