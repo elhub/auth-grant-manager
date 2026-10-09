@@ -1,6 +1,7 @@
 package no.elhub.auth.v1.domain
 
 import no.elhub.auth.v1.InputError
+import kotlin.time.Instant
 
 data class RequestedAuthorizationScope(
     val resourceType: ResourceType,
@@ -26,7 +27,8 @@ enum class AuthorizationScopeConstraintKind {
 }
 
 enum class AuthorizationScopeConstraintAttribute(val apiName: String) {
-    MeteringPointId("meteringPoint.id");
+    MeteringPointId("meteringPoint.id"),
+    ValidFrom("validFrom");
 
     companion object {
         fun fromApiName(apiName: String): AuthorizationScopeConstraintAttribute =
@@ -52,4 +54,8 @@ sealed interface ResourceConstraint {
             require(ids.isNotEmpty()) { "At least one metering-point ID is required" }
         }
     }
+
+    data class ValidFrom(
+        val value: Instant,
+    ) : ResourceConstraint
 }

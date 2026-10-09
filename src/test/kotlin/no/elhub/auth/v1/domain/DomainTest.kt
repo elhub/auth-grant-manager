@@ -4,7 +4,6 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import no.elhub.auth.v1.InputError
-import no.elhub.auth.v1.features.documents.create.RequestedScope
 
 class DomainTest : FunSpec({
     test("scope constraint attributes map external names to Kotlin enum constants") {
@@ -26,19 +25,19 @@ class DomainTest : FunSpec({
         }
     }
 
-    test("requested scope owns its document type") {
-        RequestedScope.ChangeOfEnergySupplierForOrganization(
-            meteringPointIds = ResourceConstraint.MeteringPoints(
-                setOf(MeteringPointId.create("707057500000000001")),
+    test("requested scope describes its resource") {
+        RequestedAuthorizationScope(
+            resourceType = ResourceType.MeteringPointContract,
+            constraints = listOf(
+                AuthorizationScopeConstraint(
+                    constraintKind = AuthorizationScopeConstraintKind.AppliesTo,
+                    attribute = AuthorizationScopeConstraintAttribute.MeteringPointId,
+                    value = ResourceConstraint.MeteringPoints(
+                        setOf(MeteringPointId.create("707057500000000001")),
+                    ),
+                ),
             ),
-        ).documentType shouldBe AuthorizationDocumentType.ChangeOfEnergySupplierForOrganization
-
-        RequestedScope.MoveInAndChangeOfEnergySupplierForOrganization(
-            meteringPointIds = ResourceConstraint.MeteringPoints(
-                setOf(MeteringPointId.create("707057500000000001")),
-            ),
-            validFrom = kotlinx.datetime.LocalDate(2026, 10, 1),
-        ).documentType shouldBe AuthorizationDocumentType.MoveInAndChangeOfEnergySupplierForOrganization
+        ).resourceType shouldBe ResourceType.MeteringPointContract
     }
 
     test("metering-point IDs must contain exactly 18 digits") {

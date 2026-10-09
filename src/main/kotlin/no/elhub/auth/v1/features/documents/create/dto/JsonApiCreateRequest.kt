@@ -1,6 +1,5 @@
 package no.elhub.auth.v1.features.documents.create.dto
 
-import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
 import no.elhub.auth.v0.features.common.party.PartyIdentifier
 import no.elhub.auth.v1.domain.AuthorizationDocumentType
@@ -10,24 +9,21 @@ import no.elhub.devxp.jsonapi.model.JsonApiAttributes
 @Serializable
 data class CreateAuthorizationDocumentAttributes(
     val documentType: AuthorizationDocumentType,
-    val requestedScope: RequestedScope,
+    val requestedScopes: List<RequestedScope>,
     val externalReference: String? = null,
 ) : JsonApiAttributes
 
 @Serializable
 data class RequestedScope(
-    val appliesTo: ResourceConstraint,
-    val allowedChanges: AllowedChanges? = null,
+    val resourceType: String,
+    val appliesTo: List<ScopeConstraint>,
+    val allowedChanges: List<ScopeConstraint> = emptyList(),
 )
 
 @Serializable
-data class ResourceConstraint(
-    val meteringPointIds: Set<String>,
-)
-
-@Serializable
-data class AllowedChanges(
-    val validFrom: List<LocalDate> = emptyList(),
+data class ScopeConstraint(
+    val attribute: String,
+    val value: List<String>,
 )
 
 @Serializable

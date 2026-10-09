@@ -9,8 +9,7 @@ data class AuthorizationDocument(
     val id: String,
     val documentType: AuthorizationDocumentType,
     val status: AuthorizationDocumentStatus,
-    val resourceConstraints: List<ResourceConstraint>,
-    val allowedChanges: List<ResourceConstraint>,
+    val requestedScopes: List<RequestedAuthorizationScope>,
     val externalReference: String?,
     val validTo: Instant?,
     val createdAt: Instant,
@@ -19,13 +18,13 @@ data class AuthorizationDocument(
     val requestedFrom: AuthorizationParty,
     val requestedTo: AuthorizationParty,
     val signedBy: AuthorizationParty?,
-    val authorizationGrant: AuthorizationGrant?,
+    val authorizationGrants: List<AuthorizationGrant>,
     val pdfBytes: ByteArray,
 ) {
     companion object {
         fun new(
             documentType: AuthorizationDocumentType,
-            resourceConstraints: List<ResourceConstraint>,
+            requestedScopes: List<RequestedAuthorizationScope>,
             externalReference: String?,
             requestedBy: AuthorizationParty,
             requestedFrom: AuthorizationParty,
@@ -37,8 +36,7 @@ data class AuthorizationDocument(
                 id = UUID.randomUUID().toString(),
                 documentType = documentType,
                 status = AuthorizationDocumentStatus.Pending,
-                resourceConstraints = resourceConstraints,
-                allowedChanges = emptyList(),
+                requestedScopes = requestedScopes,
                 externalReference = externalReference,
                 validTo = null,
                 createdAt = now,
@@ -47,7 +45,7 @@ data class AuthorizationDocument(
                 requestedFrom = requestedFrom,
                 requestedTo = requestedTo,
                 signedBy = null,
-                authorizationGrant = null,
+                authorizationGrants = emptyList(),
                 pdfBytes = pdfBytes,
             )
         }
@@ -58,7 +56,6 @@ enum class AuthorizationDocumentStatus {
     Accepted,
     Expired,
     Pending,
-    Rejected,
 }
 
 enum class AuthorizationDocumentType {

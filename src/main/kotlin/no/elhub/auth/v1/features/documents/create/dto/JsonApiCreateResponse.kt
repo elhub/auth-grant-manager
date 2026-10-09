@@ -4,6 +4,7 @@ import kotlinx.serialization.Serializable
 import no.elhub.auth.v1.domain.AuthorizationDocument
 import no.elhub.auth.v1.domain.AuthorizationDocumentStatus
 import no.elhub.auth.v1.domain.AuthorizationDocumentType
+import no.elhub.auth.v1.domain.AuthorizationScopeConstraintKind
 import no.elhub.auth.v1.domain.DocumentLanguage
 import kotlin.time.Instant
 import no.elhub.auth.v1.domain.ResourceConstraint as DomainResourceConstraint
@@ -66,7 +67,10 @@ fun AuthorizationDocument.toCreateResponse(language: DocumentLanguage) =
                 documentType = documentType,
                 requestedScope = ResponseRequestedScope(
                     appliesTo = ResponseResourceConstraint(
-                        meteringPointIds = resourceConstraints
+                        meteringPointIds = requestedScopes
+                            .flatMap { scope -> scope.constraints }
+                            .filter { it.constraintKind == AuthorizationScopeConstraintKind.AppliesTo }
+                            .map { it.value }
                             .filterIsInstance<DomainResourceConstraint.MeteringPoints>()
                             .flatMap { constraint -> constraint.ids.map { it.value } }
                             .toSet(),
