@@ -25,3 +25,29 @@ interface GrantRepository {
     suspend fun insert(grant: AuthorizationGrant): AuthorizationGrant
     suspend fun update(grantId: UUID, newStatus: AuthorizationGrantStatus): AuthorizationGrant
 }
+
+class ExposedGrantRepository : GrantRepository {
+    override suspend fun find(grantId: UUID): AuthorizationGrant {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun findBySourceIds(sourceType: AuthorizationGrantSourceType, sourceIds: List<UUID>): Map<UUID, AuthorizationGrant> {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun findScopes(grantId: UUID): List<GrantedAuthorizationScope> {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun findAll(party: AuthorizationParty, pagination: Pagination): Page<AuthorizationGrant> {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun insert(grant: AuthorizationGrant): AuthorizationGrant {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun update(grantId: UUID, newStatus: AuthorizationGrantStatus): AuthorizationGrant {
+        TODO("Not yet implemented")
+    }
+}

@@ -1,5 +1,7 @@
 package no.elhub.auth.v1.domain
 
+import no.elhub.auth.v1.InputError
+
 data class RequestedAuthorizationScope(
     val resourceType: ResourceType,
     val constraints: List<AuthorizationScopeConstraint>,
@@ -7,7 +9,7 @@ data class RequestedAuthorizationScope(
 
 data class AuthorizationScopeConstraint(
     val constraintKind: AuthorizationScopeConstraintKind,
-    val attribute: String,
+    val attribute: AuthorizationScopeConstraintAttribute,
     val value: ResourceConstraint,
 
 )
@@ -23,13 +25,23 @@ enum class AuthorizationScopeConstraintKind {
     AllowedChanges,
 }
 
+enum class AuthorizationScopeConstraintAttribute(val apiName: String) {
+    MeteringPointId("meteringPoint.id");
+
+    companion object {
+        fun fromApiName(apiName: String): AuthorizationScopeConstraintAttribute =
+            entries.find { it.apiName == apiName }
+                ?: throw InputError.InvalidFieldValueError("Unsupported scope constraint attribute: $apiName")
+    }
+}
+
 enum class PermissionCapability {
     Read,
     Write,
 }
 
 enum class ResourceType {
-    MeteringPoint,
+    MeteringPointContract,
 }
 
 sealed interface ResourceConstraint {
