@@ -1,0 +1,25 @@
+{
+  "data": {
+    "type": "AuthorizationRequest",
+    "attributes": {
+      "requestType": "ChangeOfEnergySupplierForOrganization",
+      "requestedScopes": [
+        {
+          "resourceType": "MeteringPointContract",
+          "appliesTo": [
+            {
+              "attribute": "meteringPoint.id",
+              "value": ["707057500000000001"]
+            }
+          ]
+        }
+      ],
+      "externalReference": "contract-123",
+      "redirectUri": "https://supplier.example/authorization/return"
+    },
+    "meta": {
+      "requestedFrom": "999888777",
+      "requestedTo": "01019012345"
+    }
+  }
+}

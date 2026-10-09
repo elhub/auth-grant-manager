@@ -77,7 +77,10 @@
                 },
                 "type": {
                   "type": "string",
-                  "enum": ["AuthorizationRequest", "AuthorizationDocument"]
+                  "enum": [
+                    "AuthorizationRequest",
+                    "AuthorizationDocument"
+                  ]
                 }
               },
               "examples": [

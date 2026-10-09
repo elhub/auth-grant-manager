@@ -33,7 +33,11 @@
         },
         "relationships": {
           "$ref": "authorization-request-common.schema.json#/$defs/relationships",
-          "required": ["requestedBy", "requestedFrom", "requestedTo"]
+          "required": [
+            "requestedBy",
+            "requestedFrom",
+            "requestedTo"
+          ]
         },
         "meta": {
           "type": "object",
@@ -62,7 +66,7 @@
         },
         "links": {
           "description": "Links related to the primary data.",
-          "$ref": "../json-api-framework.schema.json#/$defs/topLevelLinks",
+          "$ref": "../../json-api-framework.schema.json#/$defs/topLevelLinks",
           "examples": [
             {
               "self": "/access/v0/authorization-requests/123e4567-e89b-12d3-a456-426614174000"
@@ -74,7 +78,7 @@
     },
     "links": {
       "description": "Links related to the primary data.",
-      "$ref": "../json-api-framework.schema.json#/$defs/topLevelLinks",
+      "$ref": "../../json-api-framework.schema.json#/$defs/topLevelLinks",
       "examples": [
         {
           "self": "/access/v0/authorization-requests/123e4567-e89b-12d3-a456-426614174000"
@@ -82,7 +86,7 @@
       ]
     },
     "meta": {
-      "$ref": "../json-api-framework.schema.json#/$defs/topLevelMeta"
+      "$ref": "../../json-api-framework.schema.json#/$defs/topLevelMeta"
     }
   },
   "required": ["data", "links", "meta"]

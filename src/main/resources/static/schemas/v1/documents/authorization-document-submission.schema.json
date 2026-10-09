@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Authorization Document Submission",
+  "description": "Schema for creating an authorization document.",
+  "type": "object",
+  "properties": {
+    "data": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "$ref": "authorization-document-common.schema.json#/$defs/type"
+        },
+        "attributes": {
+          "type": "object",
+          "properties": {
+            "documentType": {
+              "$ref": "authorization-document-common.schema.json#/$defs/documentType"
+            },
+            "requestedScopes": {
+              "$ref": "authorization-document-common.schema.json#/$defs/requestedScopes"
+            },
+            "externalReference": {
+              "$ref": "authorization-document-common.schema.json#/$defs/externalReference"
+            }
+          }
+        },
+        "meta": {
+          "type": "object",
+          "properties": {
+            "requestedFrom": {
+              "$ref": "authorization-document-common.schema.json#/$defs/requestedFrom"
+            },
+            "requestedTo": {
+              "$ref": "authorization-document-common.schema.json#/$defs/requestedTo"
+            },
+            "language": {
+              "$ref": "authorization-document-common.schema.json#/$defs/language"
+            }
+          }
+        }
+      }
+    }
+  }
+}

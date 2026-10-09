@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Authorization Request Submission",
+  "description": "Schema for creating an authorization request.",
+  "type": "object",
+  "properties": {
+    "data": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "$ref": "authorization-request-common.schema.json#/$defs/type"
+        },
+        "attributes": {
+          "type": "object",
+          "properties": {
+            "requestType": {
+              "$ref": "authorization-request-common.schema.json#/$defs/requestType"
+            },
+            "requestedScopes": {
+              "$ref": "authorization-request-common.schema.json#/$defs/requestedScopes"
+            },
+            "externalReference": {
+              "$ref": "authorization-request-common.schema.json#/$defs/externalReference"
+            },
+            "redirectUri": {
+              "$ref": "authorization-request-common.schema.json#/$defs/redirectUri"
+            }
+          }
+        },
+        "meta": {
+          "type": "object",
+          "properties": {
+            "requestedFrom": {
+              "$ref": "authorization-request-common.schema.json#/$defs/requestedFrom"
+            },
+            "requestedTo": {
+              "$ref": "authorization-request-common.schema.json#/$defs/requestedTo"
+            }
+          }
+        }
+      }
+    }
+  }
+}

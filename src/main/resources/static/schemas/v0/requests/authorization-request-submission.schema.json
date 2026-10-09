@@ -20,7 +20,11 @@
   "$defs": {
     "partyMeta": {
       "type": "object",
-      "required": ["requestedBy", "requestedFrom", "requestedTo"],
+      "required": [
+        "requestedBy",
+        "requestedFrom",
+        "requestedTo"
+      ],
       "properties": {
         "requestedBy": {
           "$ref": "../authorization-common.schema.json#/$defs/requestedBy"

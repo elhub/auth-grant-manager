@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "id": {
+      "$ref": "../elhub-common.schema.json#/$defs/resourceUuid"
+    },
+    "type": {
+      "const": "AuthorizationRequest"
+    },
+    "requestType": {
+      "enum": [
+        "ChangeOfEnergySupplierForOrganization",
+        "MoveInAndChangeOfEnergySupplierForOrganization"
+      ]
+    },
+    "status": {
+      "enum": ["Pending", "Accepted", "Rejected", "Expired"]
+    },
+    "requestedScopes": {
+      "type": "array",
+      "items": {
+        "$ref": "../authorization-scope.schema.json#/$defs/requestedScope"
+      }
+    },
+    "externalReference": {
+      "type": "string"
+    },
+    "redirectUri": {
+      "type": "string",
+      "format": "uri"
+    },
+    "requestedFrom": {
+      "type": "string"
+    },
+    "requestedTo": {
+      "type": "string"
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "id": {
+      "$ref": "../elhub-common.schema.json#/$defs/resourceUuid"
+    },
+    "type": {
+      "const": "ConsumableGrant"
+    },
+    "status": {
+      "enum": ["Active", "Exhausted", "Expired", "Revoked"]
+    },
+    "scopes": {
+      "type": "array",
+      "items": {
+        "$ref": "../authorization-scope.schema.json#/$defs/authorizationScope"
+      }
+    },
+    "grantedAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

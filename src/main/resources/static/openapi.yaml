@@ -74,7 +74,7 @@ paths:
           content:
             application/vnd.api+json:
               schema:
-                $ref: './schemas/documents/authorization-document-collection.schema.json'
+                $ref: './schemas/v0/documents/authorization-document-collection.schema.json'
         '401':
           $ref: '#/components/responses/401UnauthorizedError'
         '500':
@@ -98,7 +98,7 @@ paths:
         content:
           application/vnd.api+json:
             schema:
-              $ref: './schemas/documents/authorization-document-submission.schema.json'
+              $ref: './schemas/v0/documents/authorization-document-submission.schema.json'
       responses:
         '201':
           description: >
@@ -107,7 +107,7 @@ paths:
           content:
             application/vnd.api+json:
               schema:
-                $ref: './schemas/documents/authorization-document-resource.schema.json'
+                $ref: './schemas/v0/documents/authorization-document-resource.schema.json'
         '400':
           $ref: '#/components/responses/400BadRequestError'
         '401':
@@ -147,7 +147,7 @@ paths:
           content:
             application/vnd.api+json:
               schema:
-                $ref: './schemas/documents/authorization-document-resource.schema.json'
+                $ref: './schemas/v0/documents/authorization-document-resource.schema.json'
         '400':
           $ref: '#/components/responses/400BadRequestError'
         '401':
@@ -283,7 +283,7 @@ paths:
           content:
             application/vnd.api+json:
               schema:
-                $ref: './schemas/grants/authorization-grant-collection.schema.json'
+                $ref: './schemas/v0/grants/authorization-grant-collection.schema.json'
         '400':
           $ref: '#/components/responses/400BadRequestError'
         '401':
@@ -320,7 +320,7 @@ paths:
           content:
             application/vnd.api+json:
               schema:
-                $ref: './schemas/grants/authorization-grant-resource.schema.json'
+                $ref: './schemas/v0/grants/authorization-grant-resource.schema.json'
         '400':
           $ref: '#/components/responses/400BadRequestError'
         '401':
@@ -352,14 +352,14 @@ paths:
         content:
           application/vnd.api+json:
             schema:
-              $ref: './schemas/grants/authorization-grant-update.schema.json'
+              $ref: './schemas/v0/grants/authorization-grant-update.schema.json'
       responses:
         '200':
           description: The authorization grant was successfully updated.
           content:
             application/vnd.api+json:
               schema:
-                $ref: './schemas/grants/authorization-grant-resource.schema.json'
+                $ref: './schemas/v0/grants/authorization-grant-resource.schema.json'
         '400':
           $ref: '#/components/responses/400BadRequestError'
         '401':
@@ -402,7 +402,7 @@ paths:
           content:
             application/vnd.api+json:
               schema:
-                $ref: './schemas/grants/authorization-scope-collection.schema.json'
+                $ref: './schemas/v0/grants/authorization-scope-collection.schema.json'
         '400':
           $ref: '#/components/responses/400BadRequestError'
         '401':
@@ -444,7 +444,7 @@ paths:
           schema:
             type: array
             items:
-              $ref: './schemas/requests/authorization-request-common.schema.json#/$defs/authorizationRequestStatus'
+              $ref: './schemas/v0/requests/authorization-request-common.schema.json#/$defs/authorizationRequestStatus'
         - name: page[number]
           in: query
           required: false
@@ -468,7 +468,7 @@ paths:
           content:
             application/vnd.api+json:
               schema:
-                $ref: './schemas/requests/authorization-request-collection.schema.json'
+                $ref: './schemas/v0/requests/authorization-request-collection.schema.json'
         '401':
           $ref: '#/components/responses/401UnauthorizedError'
         '403':
@@ -498,7 +498,7 @@ paths:
         content:
           application/vnd.api+json:
             schema:
-              $ref: './schemas/requests/authorization-request-submission.schema.json'
+              $ref: './schemas/v0/requests/authorization-request-submission.schema.json'
       responses:
         '201':
           description: >
@@ -507,7 +507,7 @@ paths:
           content:
             application/vnd.api+json:
               schema:
-                $ref: './schemas/requests/authorization-request-resource.schema.json'
+                $ref: './schemas/v0/requests/authorization-request-resource.schema.json'
         '400':
           $ref: '#/components/responses/400BadRequestError'
         '401':
@@ -551,7 +551,7 @@ paths:
           content:
             application/vnd.api+json:
               schema:
-                $ref: './schemas/requests/authorization-request-resource.schema.json'
+                $ref: './schemas/v0/requests/authorization-request-resource.schema.json'
         '400':
           $ref: '#/components/responses/400BadRequestError'
         '401':
@@ -593,14 +593,14 @@ paths:
         content:
           application/vnd.api+json:
             schema:
-              $ref: './schemas/requests/authorization-request-update.schema.json'
+              $ref: './schemas/v0/requests/authorization-request-update.schema.json'
       responses:
         '200':
           description: The authorization request was successfully updated.
           content:
             application/vnd.api+json:
               schema:
-                $ref: './schemas/requests/authorization-request-resource.schema.json'
+                $ref: './schemas/v0/requests/authorization-request-resource.schema.json'
         '400':
           $ref: '#/components/responses/400BadRequestError'
         '401':
@@ -633,24 +633,24 @@ paths:
         content:
           application/vnd.api+json:
             schema:
-              $ref: '#/components/schemas/V1AuthorizationDocumentSubmission'
+              $ref: './schemas/v1/documents/authorization-document-submission.schema.json'
             examples:
               changeOfEnergySupplierForOrganization:
-                $ref: '#/components/examples/V1ChangeOfEnergySupplierForOrganizationSubmission'
+                externalValue: https://api.elhub.no/access/v0/openapi/schemas/v1/documents/examples/change-of-energy-supplier/create.json
               moveInAndChangeOfEnergySupplierForOrganization:
-                $ref: '#/components/examples/V1MoveInAndChangeOfEnergySupplierForOrganizationSubmission'
+                externalValue: https://api.elhub.no/access/v0/openapi/schemas/v1/documents/examples/move-in-and-change-of-energy-supplier/create.json
       responses:
         '201':
           description: The authorization document was created successfully.
           content:
             application/vnd.api+json:
               schema:
-                $ref: '#/components/schemas/V1AuthorizationDocumentResource'
+                $ref: './schemas/v1/documents/authorization-document-resource.schema.json'
               examples:
                 changeOfEnergySupplierForOrganization:
-                  $ref: '#/components/examples/V1ChangeOfEnergySupplierForOrganizationSubmissionResponse'
+                  externalValue: https://api.elhub.no/access/v0/openapi/schemas/v1/documents/examples/change-of-energy-supplier/created.json
                 moveInAndChangeOfEnergySupplierForOrganization:
-                  $ref: '#/components/examples/V1MoveInAndChangeOfEnergySupplierForOrganizationSubmissionResponse'
+                  externalValue: https://api.elhub.no/access/v0/openapi/schemas/v1/documents/examples/move-in-and-change-of-energy-supplier/created.json
 
   '/access/v1/authorization-documents/{id}':
     get:
@@ -679,12 +679,12 @@ paths:
           content:
             application/vnd.api+json:
               schema:
-                $ref: '#/components/schemas/V1AuthorizationDocumentResource'
+                $ref: './schemas/v1/documents/authorization-document-resource.schema.json'
               examples:
                 changeOfEnergySupplierForOrganization:
-                  $ref: '#/components/examples/V1ChangeOfEnergySupplierForOrganizationGetResponse'
+                  externalValue: https://api.elhub.no/access/v0/openapi/schemas/v1/documents/examples/change-of-energy-supplier/get-signed.json
                 moveInAndChangeOfEnergySupplierForOrganization:
-                  $ref: '#/components/examples/V1MoveInAndChangeOfEnergySupplierForOrganizationGetResponse'
+                  externalValue: https://api.elhub.no/access/v0/openapi/schemas/v1/documents/examples/move-in-and-change-of-energy-supplier/get-signed.json
 
   '/access/v1/authorization-grants/{id}':
     get:
@@ -713,12 +713,10 @@ paths:
           content:
             application/vnd.api+json:
               schema:
-                $ref: '#/components/schemas/V1AuthorizationGrantResource'
+                $ref: './schemas/v1/grants/authorization-grant-resource.schema.json'
               examples:
-                changeOfEnergySupplierForOrganization:
-                  $ref: '#/components/examples/V1ChangeOfEnergySupplierForOrganizationGrantResponse'
-                moveInAndChangeOfEnergySupplierForOrganization:
-                  $ref: '#/components/examples/V1MoveInAndChangeOfEnergySupplierForOrganizationGrantResponse'
+                authorizationGrant:
+                  externalValue: https://api.elhub.no/access/v0/openapi/schemas/v1/grants/examples/get.json
 
   '/access/v1/authorization-requests':
     post:
@@ -739,12 +737,12 @@ paths:
         content:
           application/vnd.api+json:
             schema:
-              $ref: '#/components/schemas/V1AuthorizationRequestSubmission'
+              $ref: './schemas/v1/requests/authorization-request-submission.schema.json'
             examples:
               changeOfEnergySupplierForOrganization:
-                $ref: '#/components/examples/V1ChangeOfEnergySupplierForOrganizationRequestSubmission'
+                externalValue: https://api.elhub.no/access/v0/openapi/schemas/v1/requests/examples/change-of-energy-supplier/create.json
               moveInAndChangeOfEnergySupplierForOrganization:
-                $ref: '#/components/examples/V1MoveInAndChangeOfEnergySupplierForOrganizationRequestSubmission'
+                externalValue: https://api.elhub.no/access/v0/openapi/schemas/v1/requests/examples/move-in-and-change-of-energy-supplier/create.json
       responses:
         '201':
           description: A Pending authorization request.
@@ -757,10 +755,12 @@ paths:
           content:
             application/vnd.api+json:
               schema:
-                $ref: '#/components/schemas/V1AuthorizationRequestResource'
+                $ref: './schemas/v1/requests/authorization-request-resource.schema.json'
               examples:
-                pending:
-                  $ref: '#/components/examples/V1AuthorizationRequestPendingResponse'
+                changeOfEnergySupplierForOrganization:
+                  externalValue: https://api.elhub.no/access/v0/openapi/schemas/v1/requests/examples/change-of-energy-supplier/created.json
+                moveInAndChangeOfEnergySupplierForOrganization:
+                  externalValue: https://api.elhub.no/access/v0/openapi/schemas/v1/requests/examples/move-in-and-change-of-energy-supplier/created.json
         '400':
           $ref: '#/components/responses/400BadRequestError'
         '401':
@@ -805,12 +805,12 @@ paths:
           content:
             application/vnd.api+json:
               schema:
-                $ref: '#/components/schemas/V1AuthorizationRequestResource'
+                $ref: './schemas/v1/requests/authorization-request-resource.schema.json'
               examples:
-                pending:
-                  $ref: '#/components/examples/V1AuthorizationRequestPendingResponse'
-                accepted:
-                  $ref: '#/components/examples/V1AuthorizationRequestAcceptedResponse'
+                changeOfEnergySupplierForOrganization:
+                  externalValue: https://api.elhub.no/access/v0/openapi/schemas/v1/requests/examples/change-of-energy-supplier/get-accepted.json
+                moveInAndChangeOfEnergySupplierForOrganization:
+                  externalValue: https://api.elhub.no/access/v0/openapi/schemas/v1/requests/examples/move-in-and-change-of-energy-supplier/get-accepted.json
         '400':
           $ref: '#/components/responses/400BadRequestError'
         '401':
@@ -825,1137 +825,6 @@ paths:
           $ref: '#/components/responses/500InternalServerError'
 
 components:
-  examples:
-    V1ChangeOfEnergySupplierForOrganizationRequestSubmission:
-      summary: requestType=ChangeOfEnergySupplierForOrganization
-      value:
-        data:
-          type: AuthorizationRequest
-          attributes:
-            requestType: ChangeOfEnergySupplierForOrganization
-            appliesTo:
-              meteringPointId:
-                - '707057500000000001'
-                - '707057500000000002'
-            externalReference: contract-123
-          meta:
-            requestedFrom: '999888777'
-            requestedTo: '01019012345'
-            language: nb
-            redirectURI: https://supplier.example/authorization/return
-
-    V1MoveInAndChangeOfEnergySupplierForOrganizationRequestSubmission:
-      summary: requestType=MoveInAndChangeOfEnergySupplierForOrganization
-      value:
-        data:
-          type: AuthorizationRequest
-          attributes:
-            requestType: MoveInAndChangeOfEnergySupplierForOrganization
-            appliesTo:
-              meteringPointId:
-                - '707057500000000001'
-                - '707057500000000002'
-            allowedChanges:
-              validFrom:
-                - '2026-10-01'
-            externalReference: contract-123
-          meta:
-            requestedFrom: '999888777'
-            requestedTo: '01019012345'
-            language: nb
-            redirectURI: https://supplier.example/authorization/return
-
-    V1AuthorizationRequestPendingResponse:
-      summary: requestType=ChangeOfEnergySupplierForOrganization
-      value:
-        data:
-          id: 123e4567-e89b-12d3-a456-426614174010
-          type: AuthorizationRequest
-          attributes:
-            requestType: ChangeOfEnergySupplierForOrganization
-            appliesTo:
-              meteringPointId:
-                - '707057500000000001'
-                - '707057500000000002'
-            externalReference: contract-123
-            status: Pending
-            createdAt: '2026-09-24T10:00:00Z'
-            updatedAt: '2026-09-24T10:00:00Z'
-            validTo: '2026-10-22T00:00:00+02:00'
-          meta:
-            language: nb
-            redirectURI: https://supplier.example/authorization/return
-          relationships:
-            requestedFrom:
-              data:
-                type: Organization
-                id: '999888777'
-            requestedTo:
-              data:
-                type: Person
-                id: 123e4567-e89b-12d3-a456-426614174020
-            requestedBy:
-              data:
-                type: MarketEntity
-                id: '7080005053246'
-            authorizationGrant:
-              data: []
-          links:
-            self: /access/v1/authorization-requests/123e4567-e89b-12d3-a456-426614174010
-
-    V1AuthorizationRequestAcceptedResponse:
-      summary: requestType=MoveInAndChangeOfEnergySupplierForOrganization
-      value:
-        data:
-          id: 123e4567-e89b-12d3-a456-426614174011
-          type: AuthorizationRequest
-          attributes:
-            requestType: MoveInAndChangeOfEnergySupplierForOrganization
-            appliesTo:
-              meteringPointId:
-                - '707057500000000001'
-                - '707057500000000002'
-            allowedChanges:
-              validFrom:
-                - '2026-10-01'
-            externalReference: contract-123
-            status: Accepted
-            createdAt: '2026-09-24T10:00:00Z'
-            updatedAt: '2026-09-24T10:15:00Z'
-            validTo: '2026-10-22T00:00:00+02:00'
-          meta:
-            language: nb
-            redirectURI: https://supplier.example/authorization/return
-          relationships:
-            requestedFrom:
-              data:
-                type: Organization
-                id: '999888777'
-            requestedTo:
-              data:
-                type: Person
-                id: 123e4567-e89b-12d3-a456-426614174020
-            requestedBy:
-              data:
-                type: MarketEntity
-                id: '7080005053246'
-            approvedBy:
-              data:
-                type: Person
-                id: 123e4567-e89b-12d3-a456-426614174020
-            authorizationGrant:
-              data:
-                - type: AuthorizationGrant
-                  id: 123e4567-e89b-12d3-a456-426614174013
-          links:
-            self: /access/v1/authorization-requests/123e4567-e89b-12d3-a456-426614174011
-
-    V1ChangeOfEnergySupplierForOrganizationSubmission:
-      summary: documentType=ChangeOfEnergySupplierForOrganization
-      description: >
-        Requests authorization to change energy supplier for an organization's metering
-        points. This document type does not include allowed changes.
-      value:
-        data:
-          type: AuthorizationDocument
-          attributes:
-            documentType: ChangeOfEnergySupplierForOrganization
-            appliesTo:
-              meteringPointId:
-                - '707057500000000001'
-                - '707057500000000002'
-            externalReference: contract-123
-          meta:
-            requestedFrom: '999888777'
-            requestedTo: '01019012345'
-            language: nb
-
-    V1MoveInAndChangeOfEnergySupplierForOrganizationSubmission:
-      summary: documentType=MoveInAndChangeOfEnergySupplierForOrganization
-      description: >
-        Requests authorization for changes to multiple metering points and multiple
-        valid-from values. The requested-from party is the organization and the
-        requested-to party is its representative.
-      value:
-        data:
-          type: AuthorizationDocument
-          attributes:
-            documentType: MoveInAndChangeOfEnergySupplierForOrganization
-            appliesTo:
-              meteringPointId:
-                - '707057500000000001'
-                - '707057500000000002'
-            allowedChanges:
-              validFrom:
-                - '2026-10-01'
-            externalReference: contract-123
-          meta:
-            requestedFrom: '999888777'
-            requestedTo: '01019012345'
-            language: nb
-
-    V1ChangeOfEnergySupplierForOrganizationSubmissionResponse:
-      summary: documentType=ChangeOfEnergySupplierForOrganization
-      value:
-        data:
-          id: 123e4567-e89b-12d3-a456-426614174000
-          type: AuthorizationDocument
-          attributes:
-            documentType: ChangeOfEnergySupplierForOrganization
-            appliesTo:
-              meteringPointId:
-                - '707057500000000001'
-                - '707057500000000002'
-            externalReference: contract-123
-            status: Pending
-            createdAt: '2026-09-24T10:00:00Z'
-            updatedAt: '2026-09-24T10:00:00Z'
-            validTo: '2026-10-24T10:00:00Z'
-          meta:
-            language: nb
-          relationships:
-            requestedFrom:
-              data:
-                type: Organization
-                id: '999888777'
-            requestedTo:
-              data:
-                type: Person
-                id: 123e4567-e89b-12d3-a456-426614174020
-            requestedBy:
-              data:
-                type: MarketEntity
-                id: '7080005053246'
-            authorizationGrant:
-              data: []
-          links:
-            self: /access/v1/authorization-documents/123e4567-e89b-12d3-a456-426614174000
-            file: /access/v1/authorization-documents/123e4567-e89b-12d3-a456-426614174000.pdf
-
-    V1MoveInAndChangeOfEnergySupplierForOrganizationSubmissionResponse:
-      summary: documentType=MoveInAndChangeOfEnergySupplierForOrganization
-      value:
-        data:
-          id: 123e4567-e89b-12d3-a456-426614174001
-          type: AuthorizationDocument
-          attributes:
-            documentType: MoveInAndChangeOfEnergySupplierForOrganization
-            appliesTo:
-              meteringPointId:
-                - '707057500000000001'
-                - '707057500000000002'
-            allowedChanges:
-              validFrom:
-                - '2026-10-01'
-            externalReference: contract-123
-            status: Pending
-            createdAt: '2026-09-24T10:00:00Z'
-            updatedAt: '2026-09-24T10:00:00Z'
-            validTo: '2026-11-01T10:00:00Z'
-          meta:
-            language: nb
-          relationships:
-            requestedFrom:
-              data:
-                type: Organization
-                id: '999888777'
-            requestedTo:
-              data:
-                type: Person
-                id: 123e4567-e89b-12d3-a456-426614174020
-            requestedBy:
-              data:
-                type: MarketEntity
-                id: '7080005053246'
-            authorizationGrant:
-              data: []
-          links:
-            self: /access/v1/authorization-documents/123e4567-e89b-12d3-a456-426614174001
-            file: /access/v1/authorization-documents/123e4567-e89b-12d3-a456-426614174001.pdf
-
-    V1ChangeOfEnergySupplierForOrganizationGetResponse:
-      summary: documentType=ChangeOfEnergySupplierForOrganization
-      description: Fully populated authorization document after it has been signed.
-      value:
-        data:
-          id: 123e4567-e89b-12d3-a456-426614174000
-          type: AuthorizationDocument
-          attributes:
-            documentType: ChangeOfEnergySupplierForOrganization
-            appliesTo:
-              meteringPointId:
-                - '707057500000000001'
-                - '707057500000000002'
-            externalReference: contract-123
-            status: Signed
-            createdAt: '2026-09-24T10:00:00Z'
-            updatedAt: '2026-09-24T10:15:00Z'
-            validTo: '2026-10-24T10:00:00Z'
-          meta:
-            language: nb
-          relationships:
-            requestedFrom:
-              data:
-                type: Organization
-                id: '999888777'
-            requestedTo:
-              data:
-                type: Person
-                id: 123e4567-e89b-12d3-a456-426614174020
-            requestedBy:
-              data:
-                type: MarketEntity
-                id: '7080005053246'
-            signedBy:
-              data:
-                type: Person
-                id: 123e4567-e89b-12d3-a456-426614174020
-            authorizationGrant:
-              data:
-                - type: AuthorizationGrant
-                  id: 123e4567-e89b-12d3-a456-426614174002
-          links:
-            self: /access/v1/authorization-documents/123e4567-e89b-12d3-a456-426614174000
-            file: /access/v1/authorization-documents/123e4567-e89b-12d3-a456-426614174000.pdf
-
-    V1MoveInAndChangeOfEnergySupplierForOrganizationGetResponse:
-      summary: documentType=MoveInAndChangeOfEnergySupplierForOrganization
-      description: Fully populated authorization document after it has been signed.
-      value:
-        data:
-          id: 123e4567-e89b-12d3-a456-426614174001
-          type: AuthorizationDocument
-          attributes:
-            documentType: MoveInAndChangeOfEnergySupplierForOrganization
-            appliesTo:
-              meteringPointId:
-                - '707057500000000001'
-                - '707057500000000002'
-            allowedChanges:
-              validFrom:
-                - '2026-10-01'
-            externalReference: contract-123
-            status: Signed
-            createdAt: '2026-09-24T10:00:00Z'
-            updatedAt: '2026-09-24T10:15:00Z'
-            validTo: '2026-11-01T10:00:00Z'
-          meta:
-            language: nb
-          relationships:
-            requestedFrom:
-              data:
-                type: Organization
-                id: '999888777'
-            requestedTo:
-              data:
-                type: Person
-                id: 123e4567-e89b-12d3-a456-426614174020
-            requestedBy:
-              data:
-                type: MarketEntity
-                id: '7080005053246'
-            signedBy:
-              data:
-                type: Person
-                id: 123e4567-e89b-12d3-a456-426614174020
-            authorizationGrant:
-              data:
-                - type: AuthorizationGrant
-                  id: 123e4567-e89b-12d3-a456-426614174003
-          links:
-            self: /access/v1/authorization-documents/123e4567-e89b-12d3-a456-426614174001
-            file: /access/v1/authorization-documents/123e4567-e89b-12d3-a456-426614174001.pdf
-
-    V1ChangeOfEnergySupplierForOrganizationGrantResponse:
-      summary: ChangeOfEnergySupplierForOrganization
-      description: >
-        Authorization grant created from a signed ChangeOfEnergySupplierForOrganization
-        authorization document. The embedded scope shows the permission produced by that
-        document type.
-      value:
-        data:
-          id: 123e4567-e89b-12d3-a456-426614174002
-          type: AuthorizationGrant
-          attributes:
-            status: Active
-            grantedAt: '2026-09-24T10:15:00Z'
-            validFrom: '2026-09-24T10:15:00Z'
-            validTo: '2026-10-24T10:00:00Z'
-            createdAt: '2026-09-24T10:15:00Z'
-            updatedAt: '2026-09-24T10:15:00Z'
-            scopes:
-              - capability: Write
-                resourceType: MeteringPointContract
-                appliesTo:
-                  - attribute: meteringPoint.id
-                    value:
-                      - '707057500000000001'
-                      - '707057500000000002'
-                allowedChanges:
-                  - attribute: type
-                    value:
-                      - EnergySupplier
-          relationships:
-            grantedFor:
-              data:
-                type: Organization
-                id: '999888777'
-            grantedBy:
-              data:
-                type: Person
-                id: 123e4567-e89b-12d3-a456-426614174020
-            grantedTo:
-              data:
-                type: MarketEntity
-                id: '7080005053246'
-            source:
-              data:
-                type: AuthorizationDocument
-                id: 123e4567-e89b-12d3-a456-426614174000
-              links:
-                self: /access/v1/authorization-documents/123e4567-e89b-12d3-a456-426614174000
-          links:
-            self: /access/v1/authorization-grants/123e4567-e89b-12d3-a456-426614174002
-
-    V1MoveInAndChangeOfEnergySupplierForOrganizationGrantResponse:
-      summary: MoveInAndChangeOfEnergySupplierForOrganization
-      description: >
-        Authorization grant created from a signed MoveInAndChangeOfEnergySupplierForOrganization
-        authorization document. The embedded scope shows the permission and allowed changes
-        produced by that document type.
-      value:
-        data:
-          id: 123e4567-e89b-12d3-a456-426614174003
-          type: AuthorizationGrant
-          attributes:
-            status: Active
-            grantedAt: '2026-09-24T10:15:00Z'
-            validFrom: '2026-09-24T10:15:00Z'
-            validTo: '2026-11-01T10:00:00Z'
-            createdAt: '2026-09-24T10:15:00Z'
-            updatedAt: '2026-09-24T10:15:00Z'
-            scopes:
-              - capability: Write
-                resourceType: MeteringPointContract
-                appliesTo:
-                  - attribute: meteringPoint.id
-                    value:
-                      - '707057500000000001'
-                      - '707057500000000002'
-                allowedChanges:
-                  - attribute: type
-                    value:
-                      - EndUser
-                      - EnergySupplier
-                  - attribute: validFrom
-                    value:
-                      - '2026-10-01'
-          relationships:
-            grantedFor:
-              data:
-                type: Organization
-                id: '999888777'
-            grantedBy:
-              data:
-                type: Person
-                id: 123e4567-e89b-12d3-a456-426614174020
-            grantedTo:
-              data:
-                type: MarketEntity
-                id: '7080005053246'
-            source:
-              data:
-                type: AuthorizationDocument
-                id: 123e4567-e89b-12d3-a456-426614174001
-              links:
-                self: /access/v1/authorization-documents/123e4567-e89b-12d3-a456-426614174001
-          links:
-            self: /access/v1/authorization-grants/123e4567-e89b-12d3-a456-426614174003
-
-  schemas:
-    V1AuthorizationRequestSubmission:
-      type: object
-      additionalProperties: false
-      required:
-        - data
-      properties:
-        data:
-          type: object
-          additionalProperties: false
-          required:
-            - type
-            - attributes
-            - meta
-          properties:
-            type:
-              type: string
-              const: AuthorizationRequest
-            attributes:
-              $ref: '#/components/schemas/V1AuthorizationRequestSubmissionAttributes'
-              unevaluatedProperties: false
-            meta:
-              type: object
-              additionalProperties: false
-              required:
-                - requestedFrom
-                - requestedTo
-                - language
-              properties:
-                requestedFrom:
-                  $ref: '#/components/schemas/V1AuthorizationDocumentMeta/properties/requestedFrom'
-                requestedTo:
-                  $ref: '#/components/schemas/V1AuthorizationDocumentMeta/properties/requestedTo'
-                language:
-                  $ref: '#/components/schemas/V1AuthorizationRequestMeta/properties/language'
-                redirectURI:
-                  $ref: '#/components/schemas/V1AuthorizationRequestMeta/properties/redirectURI'
-
-    V1AuthorizationRequestSubmissionAttributes:
-      type: object
-      allOf:
-        - if:
-            properties:
-              requestType:
-                const: ChangeOfEnergySupplierForOrganization
-            required:
-              - requestType
-          then:
-            properties:
-              allowedChanges:
-                not: {}
-        - if:
-            properties:
-              requestType:
-                const: MoveInAndChangeOfEnergySupplierForOrganization
-            required:
-              - requestType
-          then:
-            required:
-              - allowedChanges
-      required:
-        - requestType
-        - appliesTo
-        - externalReference
-      properties:
-        requestType:
-          type: string
-          enum:
-            - ChangeOfEnergySupplierForOrganization
-            - MoveInAndChangeOfEnergySupplierForOrganization
-        appliesTo:
-          $ref: '#/components/schemas/V1AppliesTo'
-        allowedChanges:
-          $ref: '#/components/schemas/V1AllowedChanges'
-        externalReference:
-          $ref: '#/components/schemas/V1AuthorizationDocumentSubmissionAttributes/properties/externalReference'
-
-    V1AuthorizationRequestMeta:
-      type: object
-      additionalProperties: false
-      required:
-        - language
-      properties:
-        language:
-          $ref: '#/components/schemas/V1AuthorizationDocumentMeta/properties/language'
-          description: Language requested for the authorization text presented in Min Side.
-        redirectURI:
-          type: string
-          format: uri
-          pattern: '^https://'
-
-    V1AuthorizationRequestResource:
-      type: object
-      additionalProperties: false
-      required:
-        - data
-      properties:
-        data:
-          type: object
-          additionalProperties: false
-          required:
-            - id
-            - type
-            - attributes
-            - meta
-            - relationships
-            - links
-          properties:
-            id:
-              type: string
-              format: uuid
-            type:
-              type: string
-              const: AuthorizationRequest
-            attributes:
-              type: object
-              allOf:
-                - $ref: '#/components/schemas/V1AuthorizationRequestSubmissionAttributes'
-              unevaluatedProperties: false
-              required:
-                - status
-                - createdAt
-                - updatedAt
-                - validTo
-              properties:
-                status:
-                  type: string
-                  enum:
-                    - Pending
-                    - Accepted
-                    - Rejected
-                    - Expired
-                createdAt:
-                  type: string
-                  format: date-time
-                updatedAt:
-                  type: string
-                  format: date-time
-                validTo:
-                  type: string
-                  format: date-time
-            meta:
-              $ref: '#/components/schemas/V1AuthorizationRequestMeta'
-            relationships:
-              type: object
-              additionalProperties: false
-              required:
-                - requestedFrom
-                - requestedTo
-                - requestedBy
-                - authorizationGrant
-              properties:
-                requestedFrom:
-                  $ref: '#/components/schemas/V1AgentRelationship'
-                  description: Rights holder, equivalent to requestedFrom in the document flow.
-                requestedTo:
-                  $ref: '#/components/schemas/V1AgentRelationship'
-                  description: Intended approver, equivalent to the intended signer in the document flow.
-                requestedBy:
-                  $ref: '#/components/schemas/V1AgentRelationship'
-                  description: Authenticated requesting market party that will receive the permissions.
-                approvedBy:
-                  $ref: '#/components/schemas/V1SignedByRelationship'
-                authorizationGrant:
-                  $ref: '#/components/schemas/V1AuthorizationGrantRelationship'
-                  description: >
-                    Empty until acceptance, then contains all resulting grants. Links are
-                    retained even if the grants later expire, are exhausted or are revoked.
-            links:
-              type: object
-              additionalProperties: false
-              required:
-                - self
-              properties:
-                self:
-                  type: string
-                  format: uri-reference
-          allOf:
-            - if:
-                properties:
-                  attributes:
-                    properties:
-                      status:
-                        const: Accepted
-              then:
-                properties:
-                  relationships:
-                    required:
-                      - approvedBy
-                    properties:
-                      authorizationGrant:
-                        properties:
-                          data:
-                            minItems: 1
-              else:
-                properties:
-                  relationships:
-                    properties:
-                      approvedBy:
-                        not: {}
-                      authorizationGrant:
-                        properties:
-                          data:
-                            maxItems: 0
-
-    V1AuthorizationDocumentSubmission:
-      type: object
-      additionalProperties: false
-      required:
-        - data
-      properties:
-        data:
-          $ref: '#/components/schemas/V1AuthorizationDocumentSubmissionData'
-
-    V1AuthorizationDocumentSubmissionData:
-      type: object
-      additionalProperties: false
-      required:
-        - type
-        - attributes
-        - meta
-      properties:
-        type:
-          type: string
-          const: AuthorizationDocument
-        attributes:
-          $ref: '#/components/schemas/V1AuthorizationDocumentSubmissionAttributes'
-        meta:
-          $ref: '#/components/schemas/V1AuthorizationDocumentMeta'
-
-    V1AuthorizationDocumentSubmissionAttributes:
-      type: object
-      allOf:
-        - $ref: '#/components/schemas/V1AuthorizationDocumentScopeProfile'
-      required:
-        - documentType
-        - appliesTo
-        - externalReference
-      properties:
-        documentType:
-          type: string
-          description: >
-            Selects the document-type profile that validates the requested scope and party identifiers.
-          enum:
-            - ChangeOfEnergySupplierForOrganization
-            - MoveInAndChangeOfEnergySupplierForOrganization
-        appliesTo:
-          $ref: '#/components/schemas/V1AppliesTo'
-        allowedChanges:
-          $ref: '#/components/schemas/V1AllowedChanges'
-        externalReference:
-          type: string
-          minLength: 1
-          maxLength: 255
-          description: Reference assigned by the requesting party to the underlying contract or process.
-
-    V1AppliesTo:
-      type: object
-      additionalProperties: false
-      required:
-        - meteringPointId
-      properties:
-        meteringPointId:
-          type: array
-          minItems: 1
-          uniqueItems: true
-          description: Metering points to which the authorization applies.
-          items:
-            type: string
-            minLength: 1
-    V1AllowedChanges:
-      type: object
-      additionalProperties: false
-      minProperties: 1
-      description: Changes authorized for the listed resources.
-      required:
-        - validFrom
-      properties:
-        validFrom:
-          type: array
-          minItems: 1
-          maxItems: 1
-          uniqueItems: true
-          items:
-            type: string
-            format: date
-
-    V1AuthorizationDocumentScopeProfile:
-      allOf:
-        - if:
-            properties:
-              documentType:
-                const: ChangeOfEnergySupplierForOrganization
-            required:
-              - documentType
-          then:
-            properties:
-              allowedChanges:
-                not: {}
-        - if:
-            properties:
-              documentType:
-                const: MoveInAndChangeOfEnergySupplierForOrganization
-            required:
-              - documentType
-          then:
-            required:
-              - allowedChanges
-
-    V1AuthorizationDocumentMeta:
-      type: object
-      additionalProperties: false
-      required:
-        - requestedFrom
-        - requestedTo
-        - language
-      properties:
-        requestedFrom:
-          type: string
-          minLength: 1
-        requestedTo:
-          type: string
-          minLength: 1
-        language:
-          type: string
-          description: Language used for the generated authorization document.
-          enum:
-            - nb
-            - nn
-            - en
-
-    V1AuthorizationDocumentResource:
-      type: object
-      additionalProperties: false
-      required:
-        - data
-      properties:
-        data:
-          type: object
-          additionalProperties: false
-          required:
-            - id
-            - type
-            - attributes
-            - meta
-            - relationships
-            - links
-          properties:
-            id:
-              type: string
-              format: uuid
-            type:
-              type: string
-              const: AuthorizationDocument
-            attributes:
-              type: object
-              additionalProperties: false
-              allOf:
-                - $ref: '#/components/schemas/V1AuthorizationDocumentScopeProfile'
-              required:
-                - documentType
-                - appliesTo
-                - externalReference
-                - status
-                - createdAt
-                - updatedAt
-                - validTo
-              properties:
-                documentType:
-                  type: string
-                  enum:
-                    - ChangeOfEnergySupplierForOrganization
-                    - MoveInAndChangeOfEnergySupplierForOrganization
-                appliesTo:
-                  $ref: '#/components/schemas/V1AppliesTo'
-                allowedChanges:
-                  $ref: '#/components/schemas/V1AllowedChanges'
-                externalReference:
-                  type: string
-                  minLength: 1
-                  maxLength: 255
-                status:
-                  type: string
-                  enum:
-                    - Pending
-                    - Signed
-                    - Rejected
-                    - Expired
-                createdAt:
-                  type: string
-                  format: date-time
-                updatedAt:
-                  type: string
-                  format: date-time
-                validTo:
-                  type: string
-                  format: date-time
-            meta:
-              type: object
-              additionalProperties: false
-              required:
-                - language
-              properties:
-                language:
-                  type: string
-                  enum:
-                    - nb
-                    - nn
-                    - en
-            relationships:
-              $ref: '#/components/schemas/V1AuthorizationDocumentRelationships'
-            links:
-              type: object
-              additionalProperties: false
-              required:
-                - self
-                - file
-              properties:
-                self:
-                  type: string
-                  format: uri-reference
-                  example: /access/v1/authorization-documents/123e4567-e89b-12d3-a456-426614174000
-                file:
-                  type: string
-                  format: uri-reference
-                  example: /access/v1/authorization-documents/123e4567-e89b-12d3-a456-426614174000.pdf
-
-    V1AuthorizationDocumentRelationships:
-      type: object
-      additionalProperties: false
-      required:
-        - requestedFrom
-        - requestedTo
-        - requestedBy
-      properties:
-        requestedFrom:
-          $ref: '#/components/schemas/V1AgentRelationship'
-        requestedTo:
-          $ref: '#/components/schemas/V1AgentRelationship'
-        requestedBy:
-          $ref: '#/components/schemas/V1AgentRelationship'
-        signedBy:
-          $ref: '#/components/schemas/V1SignedByRelationship'
-        authorizationGrant:
-          $ref: '#/components/schemas/V1AuthorizationGrantRelationship'
-
-    V1AgentRelationship:
-      type: object
-      additionalProperties: false
-      required:
-        - data
-      properties:
-        data:
-          type: object
-          additionalProperties: false
-          required:
-            - type
-            - id
-          properties:
-            type:
-              type: string
-              enum:
-                - Person
-                - Organization
-                - MarketEntity
-            id:
-              type: string
-              minLength: 1
-
-    V1SignedByRelationship:
-      type: object
-      additionalProperties: false
-      required:
-        - data
-      properties:
-        data:
-          type: object
-          additionalProperties: false
-          required:
-            - type
-            - id
-          properties:
-            type:
-              type: string
-              const: Person
-            id:
-              type: string
-              minLength: 1
-
-    V1AuthorizationGrantRelationship:
-      type: object
-      additionalProperties: false
-      required:
-        - data
-      properties:
-        data:
-          type: array
-          items:
-            type: object
-            additionalProperties: false
-            required:
-              - type
-              - id
-            properties:
-              type:
-                type: string
-                const: AuthorizationGrant
-              id:
-                type: string
-                format: uuid
-
-    V1AuthorizationGrantResource:
-      type: object
-      additionalProperties: false
-      required:
-        - data
-      properties:
-        data:
-          $ref: '#/components/schemas/V1AuthorizationGrant'
-
-    V1AuthorizationGrant:
-      type: object
-      additionalProperties: false
-      required:
-        - id
-        - type
-        - attributes
-        - relationships
-        - links
-      properties:
-        id:
-          type: string
-          format: uuid
-        type:
-          type: string
-          const: AuthorizationGrant
-        attributes:
-          $ref: '#/components/schemas/V1AuthorizationGrantAttributes'
-        relationships:
-          $ref: '#/components/schemas/V1AuthorizationGrantRelationships'
-        links:
-          $ref: '#/components/schemas/V1AuthorizationGrantLinks'
-
-    V1AuthorizationGrantAttributes:
-      type: object
-      additionalProperties: false
-      required:
-        - status
-        - grantedAt
-        - validFrom
-        - validTo
-        - createdAt
-        - updatedAt
-        - scopes
-      properties:
-        status:
-          type: string
-          enum:
-            - Active
-            - Exhausted
-            - Expired
-            - Revoked
-        grantedAt:
-          type: string
-          format: date-time
-        validFrom:
-          type: string
-          format: date-time
-        validTo:
-          type: string
-          format: date-time
-        createdAt:
-          type: string
-          format: date-time
-        updatedAt:
-          type: string
-          format: date-time
-        scopes:
-          type: array
-          items:
-            $ref: '#/components/schemas/V1AuthorizationScope'
-
-    V1AuthorizationScope:
-      type: object
-      additionalProperties: false
-      required:
-        - capability
-        - resourceType
-        - appliesTo
-        - allowedChanges
-      properties:
-        capability:
-          type: string
-          enum:
-            - Read
-            - Write
-        resourceType:
-          type: string
-        appliesTo:
-          type: array
-          items:
-            $ref: '#/components/schemas/V1AuthorizationScopeConstraint'
-        allowedChanges:
-          type: array
-          items:
-            $ref: '#/components/schemas/V1AuthorizationScopeConstraint'
-
-    V1AuthorizationScopeConstraint:
-      type: object
-      additionalProperties: false
-      required:
-        - attribute
-        - value
-      properties:
-        attribute:
-          type: string
-          minLength: 1
-        value:
-          type: array
-          minItems: 1
-          items:
-            type: string
-
-    V1AuthorizationGrantRelationships:
-      type: object
-      additionalProperties: false
-      required:
-        - grantedFor
-        - grantedBy
-        - grantedTo
-        - source
-      properties:
-        grantedFor:
-          $ref: '#/components/schemas/V1AgentRelationship'
-        grantedBy:
-          $ref: '#/components/schemas/V1AgentRelationship'
-        grantedTo:
-          $ref: '#/components/schemas/V1AgentRelationship'
-        source:
-          $ref: '#/components/schemas/V1AuthorizationGrantSourceRelationship'
-
-    V1AuthorizationGrantSourceRelationship:
-      type: object
-      description: >
-        Evidence from which this grant was created: either a signed document or an
-        accepted interactive request. The source technology does not change the meaning
-        of the grant's parties or scopes.
-      additionalProperties: false
-      required:
-        - data
-      properties:
-        data:
-          type: object
-          additionalProperties: false
-          required:
-            - type
-            - id
-          properties:
-            type:
-              type: string
-              enum:
-                - AuthorizationDocument
-                - AuthorizationRequest
-            id:
-              type: string
-              format: uuid
-        links:
-          type: object
-          additionalProperties: false
-          properties:
-            self:
-              type: string
-              format: uri-reference
-
-    V1AuthorizationGrantLinks:
-      type: object
-      additionalProperties: false
-      required:
-        - self
-      properties:
-        self:
-          type: string
-          format: uri-reference
-
   parameters:
     UserAgent:
       name: User-Agent

@@ -52,9 +52,7 @@
       "type": "string",
       "format": "UUID",
       "description": "A UUID identifier for a resource.",
-      "examples": [
-        "123e4567-e89b-12d3-a456-426614174000"
-      ]
+      "examples": ["123e4567-e89b-12d3-a456-426614174000"]
     },
     "resourceReference": {
       "type": "object",
@@ -80,33 +78,25 @@
       "type": "string",
       "format": "date-time",
       "description": "Timestamp indicating when this object was created.",
-      "examples": [
-        "2025-11-28T08:51:57+01:00"
-      ]
+      "examples": ["2025-11-28T08:51:57+01:00"]
     },
     "updatedAt": {
       "type": "string",
       "format": "date-time",
       "description": "Timestamp indicating the last modification to the object.",
-      "examples": [
-        "2025-12-17T12:51:57+01:00"
-      ]
+      "examples": ["2025-12-17T12:51:57+01:00"]
     },
     "validFrom": {
       "type": "string",
       "format": "date-time",
       "description": "Timestamp indicating when this object is valid from. Used when this attribute is distinct from creation time.",
-      "examples": [
-        "2025-12-31T23:59:59+01:00"
-      ]
+      "examples": ["2025-12-31T23:59:59+01:00"]
     },
     "validTo": {
       "type": "string",
       "format": "date-time",
       "description": "Timestamp indicating when this object is no longer valid (and can thus no longer be used or modified).",
-      "examples": [
-        "2025-12-31T23:59:59+01:00"
-      ]
+      "examples": ["2025-12-31T23:59:59+01:00"]
     }
   }
 }

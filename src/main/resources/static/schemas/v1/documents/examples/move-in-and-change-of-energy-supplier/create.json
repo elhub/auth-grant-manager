@@ -1,0 +1,31 @@
+{
+  "data": {
+    "type": "AuthorizationDocument",
+    "attributes": {
+      "documentType": "MoveInAndChangeOfEnergySupplierForOrganization",
+      "requestedScopes": [
+        {
+          "resourceType": "MeteringPointContract",
+          "appliesTo": [
+            {
+              "attribute": "meteringPoint.id",
+              "value": ["707057500000000001"]
+            }
+          ],
+          "allowedChanges": [
+            {
+              "attribute": "validFrom",
+              "value": ["2026-10-01T00:00:00Z"]
+            }
+          ]
+        }
+      ],
+      "externalReference": "contract-123"
+    },
+    "meta": {
+      "requestedFrom": "999888777",
+      "requestedTo": "01019012345",
+      "language": "nb"
+    }
+  }
+}
