@@ -11,6 +11,10 @@ ALTER TABLE auth_v1.authorization_request
 
 DROP TYPE auth_v1.authorization_request_status_old;
 
+ALTER TABLE auth_v1.authorization_document DROP COLUMN status;
+
+DROP TYPE auth_v1.authorization_document_status;
+
 CREATE TYPE auth_v1.authorization_resource_type AS ENUM (
     'MeteringPointContract'
 );
