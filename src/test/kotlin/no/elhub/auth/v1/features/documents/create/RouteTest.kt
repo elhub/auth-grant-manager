@@ -17,9 +17,14 @@ import no.elhub.auth.v0.setupAppWith
 import no.elhub.auth.v1.domain.AuthorizationDocument
 import no.elhub.auth.v1.domain.AuthorizationDocumentStatus
 import no.elhub.auth.v1.domain.AuthorizationDocumentType
+import no.elhub.auth.v1.domain.AuthorizationScopeConstraint
+import no.elhub.auth.v1.domain.AuthorizationScopeConstraintAttribute
+import no.elhub.auth.v1.domain.AuthorizationScopeConstraintKind
 import no.elhub.auth.v1.domain.DocumentLanguage
 import no.elhub.auth.v1.domain.MeteringPointId
+import no.elhub.auth.v1.domain.RequestedAuthorizationScope
 import no.elhub.auth.v1.domain.ResourceConstraint
+import no.elhub.auth.v1.domain.ResourceType
 import no.elhub.auth.v1.features.documents.create.dto.JsonApiCreateAuthorizationDocumentResponse
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import kotlin.time.Clock
@@ -32,11 +37,13 @@ class RouteTest : FunSpec({
             "type": "AuthorizationDocument",
             "attributes": {
               "documentType": "ChangeOfEnergySupplierForOrganization",
-              "requestedScope": {
-                "appliesTo": {
-                  "meteringPointIds": ["707057500000000001"]
-                }
-              },
+              "requestedScopes": [{
+                "resourceType": "MeteringPointContract",
+                "appliesTo": [{
+                  "attribute": "meteringPoint.id",
+                  "value": ["707057500000000001"]
+                }]
+              }],
               "externalReference": "contract-123"
             },
             "meta": {
@@ -62,10 +69,20 @@ class RouteTest : FunSpec({
         id = "123e4567-e89b-12d3-a456-426614174000",
         documentType = AuthorizationDocumentType.ChangeOfEnergySupplierForOrganization,
         status = AuthorizationDocumentStatus.Pending,
-        resourceConstraints = listOf(
-            ResourceConstraint.MeteringPoints(setOf(MeteringPointId.create("707057500000000001"))),
+        requestedScopes = listOf(
+            RequestedAuthorizationScope(
+                resourceType = ResourceType.MeteringPointContract,
+                constraints = listOf(
+                    AuthorizationScopeConstraint(
+                        constraintKind = AuthorizationScopeConstraintKind.AppliesTo,
+                        attribute = AuthorizationScopeConstraintAttribute.MeteringPointId,
+                        value = ResourceConstraint.MeteringPoints(
+                            setOf(MeteringPointId.create("707057500000000001")),
+                        ),
+                    ),
+                ),
+            ),
         ),
-        allowedChanges = emptyList(),
         externalReference = "contract-123",
         validTo = null,
         createdAt = Clock.System.now(),
@@ -74,7 +91,7 @@ class RouteTest : FunSpec({
         requestedFrom = AuthorizationParty("999888777", PartyType.OrganizationEntity),
         requestedTo = AuthorizationParty("person-1", PartyType.Person),
         signedBy = null,
-        authorizationGrant = null,
+        authorizationGrants = emptyList(),
         pdfBytes = ByteArray(0),
     )
 
@@ -86,7 +103,7 @@ class RouteTest : FunSpec({
 
     test("POST / returns 201 and passes the authorized party to the handler") {
         coEvery {
-            handler.createAuthorizationDocument(any(), any(), any(), any(), any(), any())
+            handler.createAuthorizationDocument(any(), any(), any(), any(), any(), any(), any())
         } returns responseDocument()
         coEvery { partyService.resolve(any()) } returnsMany listOf(
             AuthorizationParty("999888777", PartyType.OrganizationEntity).right(),
@@ -107,8 +124,9 @@ class RouteTest : FunSpec({
             body.data.meta.language shouldBe DocumentLanguage.Nb
             coVerify(exactly = 1) {
                 handler.createAuthorizationDocument(
+                    documentType = AuthorizationDocumentType.ChangeOfEnergySupplierForOrganization,
                     requestedScope = match {
-                        it.documentType == AuthorizationDocumentType.ChangeOfEnergySupplierForOrganization
+                        it.resourceType == ResourceType.MeteringPointContract
                     },
                     externalReference = "contract-123",
                     requestedBy = authorizedParty,
@@ -130,7 +148,7 @@ class RouteTest : FunSpec({
             val body: JsonApiErrorCollection = response.body()
             body.errors.single().detail shouldBe "Expected 'data.type' to be 'AuthorizationDocument', but received 'OtherResource'"
             coVerify(exactly = 0) {
-                handler.createAuthorizationDocument(any(), any(), any(), any(), any(), any())
+                handler.createAuthorizationDocument(any(), any(), any(), any(), any(), any(), any())
             }
         }
     }
@@ -145,14 +163,14 @@ class RouteTest : FunSpec({
             val body: JsonApiErrorCollection = response.body()
             body.errors.single().title shouldBe "Invalid request body"
             coVerify(exactly = 0) {
-                handler.createAuthorizationDocument(any(), any(), any(), any(), any(), any())
+                handler.createAuthorizationDocument(any(), any(), any(), any(), any(), any(), any())
             }
         }
     }
 
     test("POST / ignores allowed changes that are not used by change of supplier") {
         coEvery {
-            handler.createAuthorizationDocument(any(), any(), any(), any(), any(), any())
+            handler.createAuthorizationDocument(any(), any(), any(), any(), any(), any(), any())
         } returns responseDocument()
         coEvery { partyService.resolve(any()) } returnsMany listOf(
             AuthorizationParty("999888777", PartyType.OrganizationEntity).right(),
@@ -163,12 +181,11 @@ class RouteTest : FunSpec({
             setupAppWith(authorizedParty) { route(partyService, handler, payloadValidator) }
 
             val requestedScope = """
-                "requestedScope": {
-                  "appliesTo": {
-                    "meteringPointIds": ["707057500000000001"]
-                  },
-                  "allowedChanges": { "validFrom": ["2026-10-01"] }
-                }
+                "requestedScopes": [{
+                  "resourceType": "MeteringPointContract",
+                  "appliesTo": [{"attribute": "meteringPoint.id", "value": ["707057500000000001"]}],
+                  "allowedChanges": [{"attribute": "ignored", "value": ["value"]}]
+                }]
             """.trimIndent()
             val response = client.postJson(
                 "/",
@@ -181,7 +198,8 @@ class RouteTest : FunSpec({
             response.status shouldBe HttpStatusCode.Created
             coVerify(exactly = 1) {
                 handler.createAuthorizationDocument(
-                    requestedScope = match { it is RequestedScope.ChangeOfEnergySupplierForOrganization },
+                    documentType = AuthorizationDocumentType.ChangeOfEnergySupplierForOrganization,
+                    requestedScope = match { it.resourceType == ResourceType.MeteringPointContract },
                     externalReference = any(),
                     requestedBy = any(),
                     requestedFrom = any(),
@@ -197,12 +215,11 @@ class RouteTest : FunSpec({
             setupAppWith(authorizedParty) { route(partyService, handler, payloadValidator) }
 
             val requestedScope = """
-                "requestedScope": {
-                  "appliesTo": {
-                    "meteringPointIds": ["707057500000000001"]
-                  },
-                  "allowedChanges": { "validFrom": ["2026-10-01", "2026-11-01"] }
-                }
+                "requestedScopes": [{
+                  "resourceType": "MeteringPointContract",
+                  "appliesTo": [{"attribute": "meteringPoint.id", "value": ["707057500000000001"]}],
+                  "allowedChanges": [{"attribute": "validFrom", "value": ["2026-10-01T00:00:00Z", "2026-11-01T00:00:00Z"]}]
+                }]
             """.trimIndent()
             val response = client.postJson(
                 "/",
@@ -214,7 +231,7 @@ class RouteTest : FunSpec({
             response.status shouldBe HttpStatusCode.UnprocessableEntity
             coVerify(exactly = 0) { partyService.resolve(any()) }
             coVerify(exactly = 0) {
-                handler.createAuthorizationDocument(any(), any(), any(), any(), any(), any())
+                handler.createAuthorizationDocument(any(), any(), any(), any(), any(), any(), any())
             }
         }
     }
@@ -231,10 +248,10 @@ class RouteTest : FunSpec({
             response.status shouldBe HttpStatusCode.UnprocessableEntity
             val body: JsonApiErrorCollection = response.body()
             body.errors.single().detail shouldBe
-                "requestedScope.appliesTo.meteringPointIds must contain only valid 18-digit metering-point IDs"
+                "requestedScopes.appliesTo.meteringPoint.id must contain only valid 18-digit metering-point IDs"
             coVerify(exactly = 0) { partyService.resolve(any()) }
             coVerify(exactly = 0) {
-                handler.createAuthorizationDocument(any(), any(), any(), any(), any(), any())
+                handler.createAuthorizationDocument(any(), any(), any(), any(), any(), any(), any())
             }
         }
     }

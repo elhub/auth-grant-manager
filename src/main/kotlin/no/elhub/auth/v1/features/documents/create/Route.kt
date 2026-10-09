@@ -62,6 +62,7 @@ fun Route.route(
         val requestedBy = call.authorizedParty
 
         val document = handler.createAuthorizationDocument(
+            documentType = request.data.attributes.documentType,
             requestedScope = requestedScope,
             externalReference = request.data.attributes.externalReference,
             requestedBy = requestedBy,

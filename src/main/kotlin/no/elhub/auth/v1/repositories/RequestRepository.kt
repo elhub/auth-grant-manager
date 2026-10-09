@@ -312,6 +312,10 @@ fun ResultRow.toConstraint(): AuthorizationScopeConstraint {
             AuthorizationScopeConstraintAttribute.MeteringPointId -> ResourceConstraint.MeteringPoints(
                 this[AuthorizationRequestScopeConstraintTable.value].map(MeteringPointId::create).toSet(),
             )
+
+            AuthorizationScopeConstraintAttribute.ValidFrom -> ResourceConstraint.ValidFrom(
+                Instant.parse(this[AuthorizationRequestScopeConstraintTable.value].single()),
+            )
         },
     )
 }

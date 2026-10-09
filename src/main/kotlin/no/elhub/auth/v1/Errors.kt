@@ -23,6 +23,7 @@ sealed class InputError(override val detail: String) : Errors(detail) {
     ) : InputError(detail)
 
     class RequestedToRequestedFromMismatch : Errors()
+    class PartiesNotAllowedForDocumentType : Errors()
     class RequestedScopeNotAllowed : Errors()
 }
 
