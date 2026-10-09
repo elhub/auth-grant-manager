@@ -55,7 +55,6 @@ enum class AuthorizationRequestStatus {
     Expired,
     Pending,
     Rejected,
-    Revoked,
 }
 
 enum class AuthorizationRequestType {

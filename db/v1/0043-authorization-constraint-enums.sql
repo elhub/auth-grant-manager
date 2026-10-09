@@ -1,6 +1,16 @@
 --liquibase formatted sql
 
 --changeset elhub:43
+ALTER TYPE auth_v1.authorization_request_status RENAME TO authorization_request_status_old;
+
+CREATE TYPE auth_v1.authorization_request_status AS ENUM ('Pending', 'Rejected');
+
+ALTER TABLE auth_v1.authorization_request
+    ALTER COLUMN status TYPE auth_v1.authorization_request_status
+    USING status::text::auth_v1.authorization_request_status;
+
+DROP TYPE auth_v1.authorization_request_status_old;
+
 CREATE TYPE auth_v1.authorization_resource_type AS ENUM (
     'MeteringPointContract'
 );

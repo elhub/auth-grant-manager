@@ -168,8 +168,6 @@ class ExposedRequestRepository(
                         AuthorizationRequestTable.approvedBy.isNotNull()
 
                 AuthorizationRequestStatus.Rejected -> AuthorizationRequestTable.status eq DatabaseRequestStatus.Rejected
-
-                AuthorizationRequestStatus.Revoked -> AuthorizationRequestTable.status eq DatabaseRequestStatus.Revoked
             }
         }.reduce { acc, op -> acc or op }
         return partyCondition and statusCondition
@@ -244,7 +242,6 @@ fun ResultRow.toAuthorizationRequest(
     val dbStatus = this[AuthorizationRequestTable.status]
     val status: AuthorizationRequestStatus = when (dbStatus) {
         DatabaseRequestStatus.Rejected -> AuthorizationRequestStatus.Rejected
-        DatabaseRequestStatus.Revoked -> AuthorizationRequestStatus.Revoked
         DatabaseRequestStatus.Pending if this[AuthorizationRequestTable.approvedBy] != null -> AuthorizationRequestStatus.Accepted
         DatabaseRequestStatus.Pending if validTo <= currentTime -> AuthorizationRequestStatus.Expired
         else -> AuthorizationRequestStatus.Pending
@@ -269,7 +266,6 @@ fun ResultRow.toAuthorizationRequest(
 enum class DatabaseRequestStatus {
     Pending,
     Rejected,
-    Revoked,
 }
 
 object AuthorizationRequestScopeTable : UUIDTable("auth_v1.authorization_request_scope") {

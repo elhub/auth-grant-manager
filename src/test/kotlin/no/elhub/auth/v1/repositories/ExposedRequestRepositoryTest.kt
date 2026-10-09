@@ -91,6 +91,17 @@ class ExposedRequestRepositoryTest : FunSpec({
         requestId
     }
 
+    test("database request status only supports Pending and Rejected") {
+        val statuses = withTransaction {
+            exec("SELECT unnest(enum_range(NULL::auth_v1.authorization_request_status))::text") { rows ->
+                buildList {
+                    while (rows.next()) add(rows.getString(1))
+                }
+            }
+        }
+        statuses shouldBe listOf("Pending", "Rejected")
+    }
+
     test("includes requestedBy and requestedTo once but excludes requestedFrom-only and unrelated parties") {
         val party = party()
         val other = party(PartyType.Organization)
@@ -214,19 +225,14 @@ class ExposedRequestRepositoryTest : FunSpec({
             insertRequest(party, status = DatabaseRequestStatus.Rejected) to AuthorizationRequestStatus.Rejected,
             insertRequest(party, status = DatabaseRequestStatus.Rejected, approvedBy = approver, validTo = past) to
                 AuthorizationRequestStatus.Rejected,
-            insertRequest(party, status = DatabaseRequestStatus.Revoked) to AuthorizationRequestStatus.Revoked,
-            insertRequest(party, status = DatabaseRequestStatus.Revoked, approvedBy = approver, validTo = past) to
-                AuthorizationRequestStatus.Revoked,
         )
         insertRequest(approver)
         insertRequest(approver, approvedBy = party)
         insertRequest(approver, validTo = past)
         insertRequest(approver, status = DatabaseRequestStatus.Rejected)
-        insertRequest(approver, status = DatabaseRequestStatus.Revoked)
 
         val filters = AuthorizationRequestStatus.entries.map { listOf(it) } + listOf(
             listOf(AuthorizationRequestStatus.Pending, AuthorizationRequestStatus.Expired),
-            listOf(AuthorizationRequestStatus.Accepted, AuthorizationRequestStatus.Rejected, AuthorizationRequestStatus.Revoked),
             AuthorizationRequestStatus.entries.toList(),
             emptyList(),
         )
