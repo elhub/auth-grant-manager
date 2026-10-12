@@ -11,13 +11,15 @@ import no.elhub.auth.v0.features.common.buildApiErrorResponse
 import no.elhub.auth.v0.features.common.party.PartyError
 import no.elhub.auth.v0.features.common.party.PartyService
 import no.elhub.auth.v0.features.common.toTypeMismatchApiErrorResponse
+import no.elhub.auth.v1.domain.AuthorizationDocumentType
 import no.elhub.auth.v1.features.documents.create.dto.JsonApiCreateAuthorizationDocumentRequest
 import no.elhub.auth.v1.features.documents.create.dto.toCreateResponse
 
 fun Route.route(
     partyService: PartyService,
-    handler: CreateDocumentBusinessHandler,
-    payloadValidator: CreateAuthorizationDocumentPayloadValidator,
+    handler: DocumentService,
+    changeOfEnergySupplierActionValidator: ChangeOfEnergySupplierDocumentActionValidator,
+    moveInAndChangeOfEnergySupplierActionValidator: MoveInAndChangeOfEnergySupplierDocumentActionValidator,
 ) {
     post {
         val request = try {
@@ -41,7 +43,13 @@ fun Route.route(
             return@post
         }
 
-        val requestedScope = payloadValidator.validate(request)
+        val action = when (request.data.attributes.documentType) {
+            AuthorizationDocumentType.ChangeOfEnergySupplierForOrganization ->
+                changeOfEnergySupplierActionValidator.validate(request.data.attributes.requestedScopes)
+
+            AuthorizationDocumentType.MoveInAndChangeOfEnergySupplierForOrganization ->
+                moveInAndChangeOfEnergySupplierActionValidator.validate(request.data.attributes.requestedScopes)
+        }
 
         val requestedFrom = partyService.resolve(request.data.meta.requestedFrom).fold(
             ifLeft = { error ->
@@ -62,14 +70,14 @@ fun Route.route(
         val requestedBy = call.authorizedParty
 
         val document = handler.createAuthorizationDocument(
-            requestedScope = requestedScope,
+            action = action,
             externalReference = request.data.attributes.externalReference,
             requestedBy = requestedBy,
             requestedFrom = requestedFrom,
             requestedTo = requestedTo,
             language = request.data.meta.language,
         )
-        call.respond(HttpStatusCode.Created, document.toCreateResponse(request.data.meta.language))
+        call.respond(HttpStatusCode.Created, document.toCreateResponse())
     }
 }
 

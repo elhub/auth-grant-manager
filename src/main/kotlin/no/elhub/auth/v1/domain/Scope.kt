@@ -55,6 +55,7 @@ enum class ResourceType {
 }
 
 enum class MeteringPointContractType {
+    EndUser,
     EnergySupplier,
 }
 
