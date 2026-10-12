@@ -12,8 +12,15 @@ data class AuthorizationScopeConstraint(
     val constraintKind: AuthorizationScopeConstraintKind,
     val attribute: AuthorizationScopeConstraintAttribute,
     val value: ResourceConstraint,
-
-)
+) {
+    init {
+        if (attribute != value.attribute) {
+            throw InputError.InvalidFieldValueError(
+                "Scope constraint attribute '${attribute.apiName}' does not match value for '${value.attribute.apiName}'",
+            )
+        }
+    }
+}
 
 data class GrantedAuthorizationScope(
     val capability: PermissionCapability,
@@ -52,13 +59,19 @@ enum class MeteringPointContractType {
 }
 
 sealed interface ResourceConstraint {
+    val attribute: AuthorizationScopeConstraintAttribute
+
     data class ValidFrom(
         val value: Instant,
-    ) : ResourceConstraint
+    ) : ResourceConstraint {
+        override val attribute = AuthorizationScopeConstraintAttribute.ValidFrom
+    }
 
     data class MeteringPoints(
         val ids: Set<MeteringPointId>,
     ) : ResourceConstraint {
+        override val attribute = AuthorizationScopeConstraintAttribute.MeteringPointId
+
         init {
             require(ids.isNotEmpty()) { "At least one metering-point ID is required" }
         }
@@ -67,6 +80,8 @@ sealed interface ResourceConstraint {
     data class ContractTypes(
         val types: Set<MeteringPointContractType>,
     ) : ResourceConstraint {
+        override val attribute = AuthorizationScopeConstraintAttribute.ContractType
+
         init {
             require(types.isNotEmpty()) { "At least one contract type is required" }
         }
