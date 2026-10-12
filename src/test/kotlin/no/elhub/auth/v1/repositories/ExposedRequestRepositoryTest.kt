@@ -1,5 +1,6 @@
 package no.elhub.auth.v1.repositories
 
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
@@ -9,12 +10,14 @@ import no.elhub.auth.v0.features.common.PostgresTestContainer
 import no.elhub.auth.v0.features.common.PostgresTestContainerExtension
 import no.elhub.auth.v0.features.common.party.AuthorizationParty
 import no.elhub.auth.v0.features.common.party.PartyType
+import no.elhub.auth.v1.RepositoryReadError
 import no.elhub.auth.v1.domain.AuthorizationRequest
 import no.elhub.auth.v1.domain.AuthorizationRequestStatus
 import no.elhub.auth.v1.domain.AuthorizationRequestType
 import no.elhub.auth.v1.domain.AuthorizationScopeConstraint
 import no.elhub.auth.v1.domain.AuthorizationScopeConstraintAttribute
 import no.elhub.auth.v1.domain.AuthorizationScopeConstraintKind
+import no.elhub.auth.v1.domain.MeteringPointContractType
 import no.elhub.auth.v1.domain.MeteringPointId
 import no.elhub.auth.v1.domain.RequestedAuthorizationScope
 import no.elhub.auth.v1.domain.ResourceConstraint
@@ -85,11 +88,115 @@ class ExposedRequestRepositoryTest : FunSpec({
                     it[AuthorizationRequestScopeConstraintTable.scopeId] = scopeId
                     it[kind] = constraint.constraintKind
                     it[attribute] = constraint.attribute
-                    it[value] = (constraint.value as ResourceConstraint.MeteringPoints).ids.map { id -> id.value }
+                    it[value] = when (val resourceConstraint = constraint.value) {
+                        is ResourceConstraint.MeteringPoints -> resourceConstraint.ids.map { id -> id.value }
+                        is ResourceConstraint.ContractTypes -> resourceConstraint.types.map { type -> type.name }
+                        is ResourceConstraint.ValidFrom -> listOf(resourceConstraint.value.toString())
+                    }
                 }
             }
         }
         requestId
+    }
+
+    test("find maps request fields, parties, approver, scopes and constraints") {
+        val requestedBy = party(PartyType.Organization)
+        val requestedFrom = party(PartyType.Organization)
+        val requestedTo = party()
+        val approver = party()
+        val appliesTo = AuthorizationScopeConstraint(
+            AuthorizationScopeConstraintKind.AppliesTo,
+            AuthorizationScopeConstraintAttribute.MeteringPointId,
+            ResourceConstraint.MeteringPoints(
+                setOf(
+                    MeteringPointId.create("707057500000000001"),
+                    MeteringPointId.create("707057500000000002"),
+                ),
+            ),
+        )
+        val allowedChanges = AuthorizationScopeConstraint(
+            constraintKind = AuthorizationScopeConstraintKind.AllowedChanges,
+            attribute = AuthorizationScopeConstraintAttribute.ContractType,
+            value = ResourceConstraint.ContractTypes(setOf(MeteringPointContractType.EnergySupplier)),
+        )
+        val constrained = RequestedAuthorizationScope(ResourceType.MeteringPointContract, listOf(appliesTo, allowedChanges))
+        val unconstrained = RequestedAuthorizationScope(ResourceType.MeteringPointContract, emptyList())
+        val requestId = insertRequest(
+            requestedBy = requestedBy,
+            requestedFrom = requestedFrom,
+            requestedTo = requestedTo,
+            approvedBy = approver,
+            externalReference = "contract-123",
+            scopes = listOf(constrained, unconstrained),
+        )
+        insertRequest(requestedBy, scopes = listOf(constrained))
+
+        val result = repository.find(requestId)
+
+        result.copy(requestedScopes = emptyList()) shouldBe AuthorizationRequest(
+            id = requestId,
+            requestType = AuthorizationRequestType.ChangeOfEnergySupplierForOrganization,
+            status = AuthorizationRequestStatus.Accepted,
+            requestedScopes = emptyList(),
+            externalReference = "contract-123",
+            validTo = future,
+            createdAt = createdAt,
+            updatedAt = createdAt + 1.days,
+            requestedBy = requestedBy,
+            requestedFrom = requestedFrom,
+            requestedTo = requestedTo,
+            approvedBy = approver,
+            authorizationGrant = null,
+        )
+        result.requestedScopes.size shouldBe 2
+        result.requestedScopes.single { it.constraints.isEmpty() } shouldBe unconstrained
+        val mappedScope = result.requestedScopes.single { it.constraints.isNotEmpty() }
+        mappedScope.resourceType shouldBe constrained.resourceType
+        mappedScope.constraints.shouldContainExactlyInAnyOrder(appliesTo, allowedChanges)
+    }
+
+    test("find maps a request without scopes, approver or external reference") {
+        val requestedBy = party()
+        val requestId = insertRequest(requestedBy)
+
+        val result = repository.find(requestId)
+
+        result.id shouldBe requestId
+        result.requestedBy shouldBe requestedBy
+        result.requestedFrom shouldBe requestedBy
+        result.requestedTo shouldBe requestedBy
+        result.requestedScopes shouldBe emptyList()
+        result.approvedBy shouldBe null
+        result.externalReference shouldBe null
+        result.status shouldBe AuthorizationRequestStatus.Pending
+    }
+
+    test("find derives status with rejection and approval taking precedence over expiry") {
+        val requestedBy = party()
+        val approver = party()
+        val expected = mapOf(
+            insertRequest(requestedBy) to AuthorizationRequestStatus.Pending,
+            insertRequest(requestedBy, approvedBy = approver) to AuthorizationRequestStatus.Accepted,
+            insertRequest(requestedBy, approvedBy = approver, validTo = past) to AuthorizationRequestStatus.Accepted,
+            insertRequest(requestedBy, validTo = past) to AuthorizationRequestStatus.Expired,
+            insertRequest(requestedBy, status = DatabaseRequestStatus.Rejected) to AuthorizationRequestStatus.Rejected,
+            insertRequest(requestedBy, status = DatabaseRequestStatus.Rejected, approvedBy = approver, validTo = past) to
+                AuthorizationRequestStatus.Rejected,
+        )
+
+        expected.forEach { (requestId, status) ->
+            repository.find(requestId).status shouldBe status
+        }
+    }
+
+    test("find throws a modeled not found error for an unknown request ID") {
+        val requestId = UUID.randomUUID()
+
+        val error = shouldThrow<RepositoryReadError.NotFoundError> {
+            repository.find(requestId)
+        }
+
+        error.detail shouldBe "Request not found: $requestId"
     }
 
     test("inserts request fields, reuses parties, and persists scopes and constraints") {
@@ -106,14 +213,15 @@ class ExposedRequestRepositoryTest : FunSpec({
                 ),
             ),
         )
-        val allowedChanges = appliesTo.copy(
+        val allowedChanges = AuthorizationScopeConstraint(
             constraintKind = AuthorizationScopeConstraintKind.AllowedChanges,
-            value = ResourceConstraint.MeteringPoints(setOf(MeteringPointId.create("707057500000000003"))),
+            attribute = AuthorizationScopeConstraintAttribute.ContractType,
+            value = ResourceConstraint.ContractTypes(setOf(MeteringPointContractType.EnergySupplier)),
         )
         val constrained = RequestedAuthorizationScope(ResourceType.MeteringPointContract, listOf(appliesTo, allowedChanges))
         val unconstrained = RequestedAuthorizationScope(ResourceType.MeteringPointContract, emptyList())
         val request = AuthorizationRequest.new(
-            requestType = AuthorizationRequestType.MoveInAndChangeOfEnergySupplierForOrganization,
+            requestType = AuthorizationRequestType.ChangeOfEnergySupplierForOrganization,
             requestedScopes = listOf(constrained, unconstrained),
             externalReference = "contract-123",
             validTo = future,
@@ -147,6 +255,40 @@ class ExposedRequestRepositoryTest : FunSpec({
         repository.insert(request) shouldBe request
 
         repository.findAndSortByCreatedAt(requestedBy, Pagination(), emptyList()).items shouldBe listOf(request)
+    }
+
+    test("persists validFrom allowed changes and reads them by ID and in a page") {
+        AuthorizationScopeConstraintAttribute.fromApiName("validFrom") shouldBe AuthorizationScopeConstraintAttribute.ValidFrom
+        val requestedBy = party(PartyType.Organization)
+        val recipient = party()
+        val appliesTo = AuthorizationScopeConstraint(
+            AuthorizationScopeConstraintKind.AppliesTo,
+            AuthorizationScopeConstraintAttribute.MeteringPointId,
+            ResourceConstraint.MeteringPoints(setOf(MeteringPointId.create("707000000000000001"))),
+        )
+        val validFrom = AuthorizationScopeConstraint(
+            AuthorizationScopeConstraintKind.AllowedChanges,
+            AuthorizationScopeConstraintAttribute.ValidFrom,
+            ResourceConstraint.ValidFrom(Instant.parse("2026-10-01T00:00:00Z")),
+        )
+        val request = AuthorizationRequest.new(
+            requestType = AuthorizationRequestType.MoveInAndChangeOfEnergySupplierForOrganization,
+            requestedScopes = listOf(RequestedAuthorizationScope(ResourceType.MeteringPointContract, listOf(appliesTo, validFrom))),
+            externalReference = "contract-124",
+            validTo = future,
+            requestedBy = requestedBy,
+            requestedFrom = requestedBy,
+            requestedTo = recipient,
+        ).copy(createdAt = createdAt, updatedAt = createdAt)
+
+        repository.insert(request) shouldBe request
+
+        val found = repository.find(request.id)
+        val listed = repository.findAndSortByCreatedAt(requestedBy, Pagination(), emptyList()).items.single()
+        listOf(found, listed).forEach { stored ->
+            stored.copy(requestedScopes = emptyList()) shouldBe request.copy(requestedScopes = emptyList())
+            stored.requestedScopes.single().constraints.shouldContainExactlyInAnyOrder(appliesTo, validFrom)
+        }
     }
 
     test("includes requestedBy and requestedTo once but excludes requestedFrom-only and unrelated parties") {
@@ -217,8 +359,8 @@ class ExposedRequestRepositoryTest : FunSpec({
         )
         val allowedChanges = AuthorizationScopeConstraint(
             AuthorizationScopeConstraintKind.AllowedChanges,
-            AuthorizationScopeConstraintAttribute.MeteringPointId,
-            ResourceConstraint.MeteringPoints(setOf(MeteringPointId.create("707057500000000003"))),
+            AuthorizationScopeConstraintAttribute.ContractType,
+            ResourceConstraint.ContractTypes(setOf(MeteringPointContractType.EnergySupplier)),
         )
         val constrained = RequestedAuthorizationScope(ResourceType.MeteringPointContract, listOf(appliesTo, allowedChanges))
         val otherScope = RequestedAuthorizationScope(ResourceType.MeteringPointContract, listOf(appliesTo))
