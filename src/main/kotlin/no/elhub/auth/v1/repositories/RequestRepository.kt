@@ -17,6 +17,7 @@ import no.elhub.auth.v1.domain.AuthorizationRequestType
 import no.elhub.auth.v1.domain.AuthorizationScopeConstraint
 import no.elhub.auth.v1.domain.AuthorizationScopeConstraintAttribute
 import no.elhub.auth.v1.domain.AuthorizationScopeConstraintKind
+import no.elhub.auth.v1.domain.MeteringPointContractType
 import no.elhub.auth.v1.domain.MeteringPointId
 import no.elhub.auth.v1.domain.RequestedAuthorizationScope
 import no.elhub.auth.v1.domain.ResourceConstraint
@@ -57,8 +58,19 @@ interface RequestRepository {
 class ExposedRequestRepository(
     val partyRepository: PartyRepository,
 ) : RequestRepository {
-    override suspend fun find(requestId: UUID): AuthorizationRequest {
-        TODO("Not yet implemented")
+    override suspend fun find(requestId: UUID): AuthorizationRequest = withTransaction {
+        val row = AuthorizationRequestTable.selectAll()
+            .where { AuthorizationRequestTable.id eq requestId }
+            .singleOrNull()
+            ?: throw RepositoryReadError.NotFoundError("Request not found: $requestId")
+
+        row.toAuthorizationRequest(
+            requestedBy = partyRepository.find(row[AuthorizationRequestTable.requestedBy]),
+            requestedFrom = partyRepository.find(row[AuthorizationRequestTable.requestedFrom]),
+            requestedTo = partyRepository.find(row[AuthorizationRequestTable.requestedTo]),
+            requestedScopes = getScopesByRequestId(listOf(requestId))[requestId].orEmpty(),
+            approvedBy = row[AuthorizationRequestTable.approvedBy]?.let { partyRepository.find(it) },
+        )
     }
 
     override suspend fun findAndSortByCreatedAt(
@@ -166,6 +178,8 @@ class ExposedRequestRepository(
                     it[attribute] = constraint.attribute
                     it[value] = when (val resourceConstraint = constraint.value) {
                         is ResourceConstraint.MeteringPoints -> resourceConstraint.ids.map { it.value }
+                        is ResourceConstraint.ContractTypes -> resourceConstraint.types.map { it.name }
+                        is ResourceConstraint.ValidFrom -> listOf(resourceConstraint.value.toString())
                     }
                 }
             }
@@ -359,6 +373,14 @@ fun ResultRow.toConstraint(): AuthorizationScopeConstraint {
         value = when (attribute) {
             AuthorizationScopeConstraintAttribute.MeteringPointId -> ResourceConstraint.MeteringPoints(
                 this[AuthorizationRequestScopeConstraintTable.value].map(MeteringPointId::create).toSet(),
+            )
+
+            AuthorizationScopeConstraintAttribute.ContractType -> ResourceConstraint.ContractTypes(
+                this[AuthorizationRequestScopeConstraintTable.value].map(MeteringPointContractType::valueOf).toSet(),
+            )
+
+            AuthorizationScopeConstraintAttribute.ValidFrom -> ResourceConstraint.ValidFrom(
+                Instant.parse(this[AuthorizationRequestScopeConstraintTable.value].single()),
             )
         },
     )
