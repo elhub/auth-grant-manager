@@ -8,7 +8,9 @@ import no.elhub.auth.v0.features.common.party.AuthorizationParty
 import no.elhub.auth.v0.features.common.party.AuthorizationPartyRecord
 import no.elhub.auth.v0.features.common.party.AuthorizationPartyTable
 import no.elhub.auth.v0.features.common.party.toAuthorizationParty
+import no.elhub.auth.v0.features.grants.common.toAuthorizationParty
 import no.elhub.auth.v1.RepositoryReadError
+import no.elhub.auth.v1.RepositoryWriteError
 import no.elhub.auth.v1.common.now
 import no.elhub.auth.v1.domain.AuthorizationGrant
 import no.elhub.auth.v1.domain.AuthorizationRequest
@@ -35,9 +37,11 @@ import org.jetbrains.exposed.v1.core.isNull
 import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.core.lessEq
 import org.jetbrains.exposed.v1.core.or
+import org.jetbrains.exposed.v1.core.vendors.ForUpdateOption
 import org.jetbrains.exposed.v1.datetime.timestamp
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.updateReturning
 import org.postgresql.util.PGobject
 import java.util.UUID
 import kotlin.time.Instant
@@ -65,11 +69,12 @@ class ExposedRequestRepository(
             ?: throw RepositoryReadError.NotFoundError("Request not found: $requestId")
 
         row.toAuthorizationRequest(
-            requestedBy = partyRepository.find(row[AuthorizationRequestTable.requestedBy]),
-            requestedFrom = partyRepository.find(row[AuthorizationRequestTable.requestedFrom]),
-            requestedTo = partyRepository.find(row[AuthorizationRequestTable.requestedTo]),
+            requestedBy = partyRepository.find(row[AuthorizationRequestTable.requestedBy]).toAuthorizationParty(),
+            requestedFrom = partyRepository.find(row[AuthorizationRequestTable.requestedFrom]).toAuthorizationParty(),
+            requestedTo = partyRepository.find(row[AuthorizationRequestTable.requestedTo]).toAuthorizationParty(),
             requestedScopes = getScopesByRequestId(listOf(requestId))[requestId].orEmpty(),
-            approvedBy = row[AuthorizationRequestTable.approvedBy]?.let { partyRepository.find(it) },
+            approvedBy = row[AuthorizationRequestTable.approvedBy]?.let { partyRepository.find(it).toAuthorizationParty() },
+            now = now(),
         )
     }
 
@@ -79,8 +84,8 @@ class ExposedRequestRepository(
         statuses: List<AuthorizationRequestStatus>
     ): Page<AuthorizationRequest> = withTransaction {
         val partyId = partyRepository.findOrInsert(type = party.type, partyId = party.id).id
-        val currentTime = now()
-        val whereClause = generateFilterByCondition(partyId, statuses, currentTime)
+        val now = now()
+        val whereClause = generateFilterByCondition(partyId, statuses, now)
 
         val totalItems = AuthorizationRequestTable
             .selectAll()
@@ -129,12 +134,12 @@ class ExposedRequestRepository(
             }
             val requestId = row[AuthorizationRequestTable.id].value
             row.toAuthorizationRequest(
-                requestedBy = requestedBy,
-                requestedFrom = requestedFrom,
-                requestedTo = requestedTo,
+                requestedBy = requestedBy.toAuthorizationParty(),
+                requestedFrom = requestedFrom.toAuthorizationParty(),
+                requestedTo = requestedTo.toAuthorizationParty(),
                 requestedScopes = scopesByRequestId[requestId].orEmpty(),
-                approvedBy = approvedBy,
-                currentTime = currentTime,
+                approvedBy = approvedBy?.toAuthorizationParty(),
+                now = now,
             )
         }
 
@@ -186,16 +191,47 @@ class ExposedRequestRepository(
         }
 
         inserted.resultedValues!!.single().toAuthorizationRequest(
-            requestedBy = requestedBy,
-            requestedFrom = requestedFrom,
-            requestedTo = requestedTo,
+            requestedBy = requestedBy.toAuthorizationParty(),
+            requestedFrom = requestedFrom.toAuthorizationParty(),
+            requestedTo = requestedTo.toAuthorizationParty(),
             requestedScopes = request.requestedScopes,
-            approvedBy = approvedBy,
+            approvedBy = approvedBy?.toAuthorizationParty(),
+            now = now(),
         )
     }
 
-    override suspend fun reject(requestId: UUID): AuthorizationRequest {
-        TODO("Not yet implemented")
+    override suspend fun reject(requestId: UUID): AuthorizationRequest = withTransaction {
+        // Lock the row using SELECT ... FOR NO KEY UPDATE for atomicity
+        val row = AuthorizationRequestTable.selectAll()
+            .where { AuthorizationRequestTable.id eq requestId }
+            .forUpdate(ForUpdateOption.PostgreSQL.ForNoKeyUpdate)
+            .singleOrNull()
+            ?: throw RepositoryWriteError.NotFoundError("Request not found: $requestId")
+
+        val now = now()
+        val status = row.toAuthorizationRequestStatus(now)
+
+        when (status) {
+            AuthorizationRequestStatus.Expired -> throw RepositoryWriteError.ExpiredError("Request $requestId has expired")
+
+            AuthorizationRequestStatus.Accepted, AuthorizationRequestStatus.Rejected ->
+                throw RepositoryWriteError.ConflictError("Invalid transition for request $requestId from $status to Rejected")
+
+            AuthorizationRequestStatus.Pending -> Unit
+        }
+
+        AuthorizationRequestTable.updateReturning(
+            where = { AuthorizationRequestTable.id eq requestId }
+        ) {
+            it[AuthorizationRequestTable.status] = DatabaseRequestStatus.Rejected
+            it[updatedAt] = now
+        }.single().toAuthorizationRequest(
+            requestedBy = partyRepository.find(row[AuthorizationRequestTable.requestedBy]).toAuthorizationParty(),
+            requestedFrom = partyRepository.find(row[AuthorizationRequestTable.requestedFrom]).toAuthorizationParty(),
+            requestedTo = partyRepository.find(row[AuthorizationRequestTable.requestedTo]).toAuthorizationParty(),
+            requestedScopes = getScopesByRequestId(listOf(requestId))[requestId].orEmpty(),
+            now = now,
+        )
     }
 
     override suspend fun accept(requestId: UUID, grant: AuthorizationGrant): AuthorizationRequest {
@@ -205,7 +241,7 @@ class ExposedRequestRepository(
     private fun generateFilterByCondition(
         partyId: UUID,
         statuses: List<AuthorizationRequestStatus>,
-        currentTime: Instant,
+        now: Instant,
     ): Op<Boolean> {
         val partyCondition = (AuthorizationRequestTable.requestedTo eq partyId) or
             (AuthorizationRequestTable.requestedBy eq partyId)
@@ -218,12 +254,12 @@ class ExposedRequestRepository(
                 AuthorizationRequestStatus.Pending ->
                     (AuthorizationRequestTable.status eq DatabaseRequestStatus.Pending) and
                         AuthorizationRequestTable.approvedBy.isNull() and
-                        (AuthorizationRequestTable.validTo greater currentTime)
+                        (AuthorizationRequestTable.validTo greater now)
 
                 AuthorizationRequestStatus.Expired ->
                     (AuthorizationRequestTable.status eq DatabaseRequestStatus.Pending) and
                         AuthorizationRequestTable.approvedBy.isNull() and
-                        (AuthorizationRequestTable.validTo lessEq currentTime)
+                        (AuthorizationRequestTable.validTo lessEq now)
 
                 AuthorizationRequestStatus.Accepted ->
                     (AuthorizationRequestTable.status eq DatabaseRequestStatus.Pending) and
@@ -292,35 +328,39 @@ object AuthorizationRequestTable : UUIDTable("auth_v1.authorization_request") {
     val updatedAt = timestamp("updated_at").clientDefault { now() }
 }
 
+private fun ResultRow.toAuthorizationRequestStatus(now: Instant): AuthorizationRequestStatus =
+    when (this[AuthorizationRequestTable.status]) {
+        DatabaseRequestStatus.Rejected -> AuthorizationRequestStatus.Rejected
+
+        DatabaseRequestStatus.Pending -> when {
+            this[AuthorizationRequestTable.approvedBy] != null -> AuthorizationRequestStatus.Accepted
+            this[AuthorizationRequestTable.validTo] <= now -> AuthorizationRequestStatus.Expired
+            else -> AuthorizationRequestStatus.Pending
+        }
+    }
+
 fun ResultRow.toAuthorizationRequest(
-    requestedBy: AuthorizationPartyRecord,
-    requestedFrom: AuthorizationPartyRecord,
-    requestedTo: AuthorizationPartyRecord,
+    requestedBy: AuthorizationParty,
+    requestedFrom: AuthorizationParty,
+    requestedTo: AuthorizationParty,
     requestedScopes: List<RequestedAuthorizationScope>,
-    approvedBy: AuthorizationPartyRecord? = null,
-    currentTime: Instant = now(),
+    approvedBy: AuthorizationParty? = null,
+    now: Instant,
 ): AuthorizationRequest {
     val validTo = this[AuthorizationRequestTable.validTo]
-    val dbStatus = this[AuthorizationRequestTable.status]
-    val status: AuthorizationRequestStatus = when (dbStatus) {
-        DatabaseRequestStatus.Rejected -> AuthorizationRequestStatus.Rejected
-        DatabaseRequestStatus.Pending if this[AuthorizationRequestTable.approvedBy] != null -> AuthorizationRequestStatus.Accepted
-        DatabaseRequestStatus.Pending if validTo <= currentTime -> AuthorizationRequestStatus.Expired
-        else -> AuthorizationRequestStatus.Pending
-    }
     return AuthorizationRequest(
         id = this[AuthorizationRequestTable.id].value,
         requestType = this[AuthorizationRequestTable.requestType],
-        status = status,
+        status = toAuthorizationRequestStatus(now),
         requestedScopes = requestedScopes,
         externalReference = this[AuthorizationRequestTable.externalReference],
         validTo = validTo,
         createdAt = this[AuthorizationRequestTable.createdAt],
         updatedAt = this[AuthorizationRequestTable.updatedAt],
-        requestedBy = AuthorizationParty(id = requestedBy.resourceId, type = requestedBy.type),
-        requestedFrom = AuthorizationParty(id = requestedFrom.resourceId, type = requestedFrom.type),
-        requestedTo = AuthorizationParty(id = requestedTo.resourceId, type = requestedTo.type),
-        approvedBy = approvedBy?.let { AuthorizationParty(id = approvedBy.resourceId, type = approvedBy.type) },
+        requestedBy = AuthorizationParty(id = requestedBy.id, type = requestedBy.type),
+        requestedFrom = AuthorizationParty(id = requestedFrom.id, type = requestedFrom.type),
+        requestedTo = AuthorizationParty(id = requestedTo.id, type = requestedTo.type),
+        approvedBy = approvedBy?.let { AuthorizationParty(id = approvedBy.id, type = approvedBy.type) },
         authorizationGrant = null,
     )
 }

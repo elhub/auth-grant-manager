@@ -4,6 +4,10 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import no.elhub.auth.v0.config.withTransaction
 import no.elhub.auth.v0.features.common.Pagination
 import no.elhub.auth.v0.features.common.PostgresTestContainer
@@ -11,6 +15,8 @@ import no.elhub.auth.v0.features.common.PostgresTestContainerExtension
 import no.elhub.auth.v0.features.common.party.AuthorizationParty
 import no.elhub.auth.v0.features.common.party.PartyType
 import no.elhub.auth.v1.RepositoryReadError
+import no.elhub.auth.v1.RepositoryWriteError
+import no.elhub.auth.v1.common.now
 import no.elhub.auth.v1.domain.AuthorizationRequest
 import no.elhub.auth.v1.domain.AuthorizationRequestStatus
 import no.elhub.auth.v1.domain.AuthorizationRequestType
@@ -432,5 +438,90 @@ class ExposedRequestRepositoryTest : FunSpec({
             result.items.size shouldBe matching.size
             result.items.associate { it.id to it.status } shouldBe matching
         }
+    }
+
+    test("reject(id) persists status and updatedAt while preserving request fields") {
+        val scope = RequestedAuthorizationScope(ResourceType.MeteringPointContract, emptyList())
+        val id = insertRequest(
+            requestedBy = party(),
+            requestedFrom = party(),
+            requestedTo = party(),
+            externalReference = "reject-test",
+            scopes = listOf(scope),
+        )
+        val original = repository.find(id)
+        val before = now()
+        val rejectedRequest = repository.reject(id)
+        val after = now()
+        rejectedRequest.status shouldBe AuthorizationRequestStatus.Rejected
+        (rejectedRequest.updatedAt >= before && rejectedRequest.updatedAt <= after) shouldBe true
+        rejectedRequest shouldBe original.copy(
+            status = AuthorizationRequestStatus.Rejected,
+            updatedAt = rejectedRequest.updatedAt,
+        )
+        repository.find(id) shouldBe rejectedRequest
+    }
+
+    test("reject(id) throws notfound for nonexistent id") {
+        val randomUUID = UUID.randomUUID()
+        val error = shouldThrow<RepositoryWriteError.NotFoundError> {
+            repository.reject(randomUUID)
+        }
+        error.detail shouldBe "Request not found: $randomUUID"
+    }
+
+    test("reject(id) throws conflict on double-reject") {
+        val id = insertRequest(party())
+        val rejectedRequest = repository.reject(id)
+        rejectedRequest.status shouldBe AuthorizationRequestStatus.Rejected
+        val error = shouldThrow<RepositoryWriteError.ConflictError> {
+            repository.reject(id)
+        }
+        error.detail shouldBe "Invalid transition for request $id from Rejected to Rejected"
+        repository.find(id) shouldBe rejectedRequest
+    }
+
+    test("reject(id) throws conflict for accepted requests without changing them") {
+        listOf(future, past).forEach { validTo ->
+            val id = insertRequest(party(), approvedBy = party(), validTo = validTo)
+            val original = repository.find(id)
+            val error = shouldThrow<RepositoryWriteError.ConflictError> {
+                repository.reject(id)
+            }
+            error.detail shouldBe "Invalid transition for request $id from Accepted to Rejected"
+            repository.find(id) shouldBe original
+        }
+    }
+
+    test("reject(id) throws expired for expired requests without changing them") {
+        val id = insertRequest(party(), validTo = past)
+        val original = repository.find(id)
+        val error = shouldThrow<RepositoryWriteError.ExpiredError> {
+            repository.reject(id)
+        }
+        error.detail shouldBe "Request $id has expired"
+        repository.find(id) shouldBe original
+    }
+
+    test("concurrent reject(id) calls produce one success and one conflict") {
+        val id = insertRequest(party())
+        val results = coroutineScope {
+            val start = CompletableDeferred<Unit>()
+            val attempts = List(2) {
+                async {
+                    start.await()
+                    runCatching { repository.reject(id) }
+                }
+            }
+            start.complete(Unit)
+            attempts.awaitAll()
+        }
+
+        results.count { it.isSuccess } shouldBe 1
+        val error = results.single { it.isFailure }.exceptionOrNull()
+        (error is RepositoryWriteError.ConflictError) shouldBe true
+        val rejectedRequest = results.single { it.isSuccess }.getOrThrow()
+        rejectedRequest.status shouldBe AuthorizationRequestStatus.Rejected
+        repository.find(id) shouldBe rejectedRequest
     }
 })
