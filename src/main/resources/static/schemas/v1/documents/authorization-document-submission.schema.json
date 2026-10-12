@@ -12,6 +12,7 @@
         },
         "attributes": {
           "type": "object",
+          "required": ["documentType", "requestedScopes"],
           "properties": {
             "documentType": {
               "$ref": "authorization-document-common.schema.json#/$defs/documentType"
