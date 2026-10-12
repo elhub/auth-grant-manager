@@ -1,5 +1,6 @@
 package no.elhub.auth.v1.domain
 
+import kotlinx.serialization.json.JsonObject
 import no.elhub.auth.v0.features.common.party.AuthorizationParty
 import java.util.UUID
 import kotlin.time.Clock
@@ -9,24 +10,26 @@ data class AuthorizationDocument(
     val id: String,
     val documentType: AuthorizationDocumentType,
     val status: AuthorizationDocumentStatus,
-    val resourceConstraints: List<ResourceConstraint>,
-    val allowedChanges: List<ResourceConstraint>,
+    val requestedScopes: List<RequestedAuthorizationScope>,
     val externalReference: String?,
-    val validTo: Instant?,
+    val meta: JsonObject,
+    val validTo: Instant,
     val createdAt: Instant,
     val updatedAt: Instant,
     val requestedBy: AuthorizationParty,
     val requestedFrom: AuthorizationParty,
     val requestedTo: AuthorizationParty,
     val signedBy: AuthorizationParty?,
-    val authorizationGrant: AuthorizationGrant?,
+    val authorizationGrant: List<AuthorizationGrant>?,
     val pdfBytes: ByteArray,
 ) {
     companion object {
         fun new(
             documentType: AuthorizationDocumentType,
-            resourceConstraints: List<ResourceConstraint>,
+            requestedScopes: List<RequestedAuthorizationScope>,
             externalReference: String?,
+            meta: JsonObject,
+            validTo: Instant,
             requestedBy: AuthorizationParty,
             requestedFrom: AuthorizationParty,
             requestedTo: AuthorizationParty,
@@ -37,10 +40,10 @@ data class AuthorizationDocument(
                 id = UUID.randomUUID().toString(),
                 documentType = documentType,
                 status = AuthorizationDocumentStatus.Pending,
-                resourceConstraints = resourceConstraints,
-                allowedChanges = emptyList(),
+                requestedScopes = requestedScopes,
                 externalReference = externalReference,
-                validTo = null,
+                meta = meta,
+                validTo = validTo,
                 createdAt = now,
                 updatedAt = now,
                 requestedBy = requestedBy,
@@ -58,7 +61,6 @@ enum class AuthorizationDocumentStatus {
     Accepted,
     Expired,
     Pending,
-    Rejected,
 }
 
 enum class AuthorizationDocumentType {
