@@ -30,7 +30,7 @@ data class ScopeConstraint(
 data class CreateAuthorizationDocumentMeta(
     val requestedFrom: PartyIdentifier,
     val requestedTo: PartyIdentifier,
-    val language: DocumentLanguage,
+    val language: DocumentLanguage = DocumentLanguage.NB,
 )
 
 @Serializable

@@ -38,7 +38,8 @@
       "type": "string"
     },
     "language": {
-      "enum": ["nb", "nn", "en"]
+      "enum": ["nb", "nn", "en"],
+      "default": "nb"
     }
   }
 }

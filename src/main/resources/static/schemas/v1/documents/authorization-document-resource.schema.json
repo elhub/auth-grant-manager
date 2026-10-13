@@ -45,14 +45,6 @@
             }
           }
         },
-        "meta": {
-          "type": "object",
-          "properties": {
-            "language": {
-              "$ref": "authorization-document-common.schema.json#/$defs/language"
-            }
-          }
-        },
         "relationships": {
           "type": "object",
           "properties": {

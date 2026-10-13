@@ -17,7 +17,7 @@ class PlaceholderDocumentActionHandlersTest : FunSpec({
         requestedBy = AuthorizationParty("supplier-1", PartyType.OrganizationEntity),
         requestedFrom = AuthorizationParty("org-1", PartyType.Organization),
         requestedTo = AuthorizationParty("person-1", PartyType.Person),
-        language = DocumentLanguage.En,
+        language = DocumentLanguage.EN,
         externalReference = "reference-1",
     )
     val meteringPointIds = ResourceConstraint.MeteringPoints(
