@@ -26,6 +26,11 @@ sealed class InputError(override val detail: String) : Errors(detail) {
     class RequestedScopeNotAllowed : Errors()
 }
 
+sealed class DomainError(override val detail: String) : Errors(detail) {
+    class InvalidExternalAgentIdentifier(value: String) :
+        DomainError("Invalid external agent identifier: '$value'")
+}
+
 sealed class CommandError(override val detail: String) : Errors(detail) {
     class ResourceNotFoundError(detail: String) : CommandError(detail)
     class IOError(detail: String) : CommandError(detail)

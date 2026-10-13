@@ -8,6 +8,7 @@ import io.ktor.server.response.respond
 import kotlinx.serialization.ExperimentalSerializationApi
 import no.elhub.auth.v0.features.common.buildApiErrorResponse
 import no.elhub.auth.v0.features.common.toInternalServerApiErrorResponse
+import no.elhub.auth.v1.DomainError
 import no.elhub.auth.v1.Errors
 import no.elhub.auth.v1.InputError
 import org.slf4j.LoggerFactory
@@ -41,6 +42,12 @@ fun Application.configureErrorHandling() {
 
 // TODO revise messages and map all errors
 private fun Errors.toApiErrorResponse() = when (this) {
+    is DomainError.InvalidExternalAgentIdentifier -> buildApiErrorResponse(
+        status = HttpStatusCode.BadRequest,
+        title = "Invalid external agent identifier",
+        detail = detail,
+    )
+
     is InputError.MissingInputError -> buildApiErrorResponse(
         status = HttpStatusCode.UnprocessableEntity,
         title = "Missing input",

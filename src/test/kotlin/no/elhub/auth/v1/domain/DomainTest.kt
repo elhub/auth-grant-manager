@@ -3,6 +3,7 @@ package no.elhub.auth.v1.domain
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
+import no.elhub.auth.v1.DomainError
 import no.elhub.auth.v1.InputError
 import no.elhub.auth.v1.features.documents.create.DocumentAction
 import kotlin.time.Instant
@@ -76,5 +77,44 @@ class DomainTest : FunSpec({
         shouldThrow<InputError.InvalidMeteringPointId> { MeteringPointId.create("70705750000000001") }
         shouldThrow<InputError.InvalidMeteringPointId> { MeteringPointId.create("7070575000000000001") }
         shouldThrow<InputError.InvalidMeteringPointId> { MeteringPointId.create("70705750000000000A") }
+    }
+
+    test("external agent identifiers are classified by digit length") {
+        AgentExternalIdentifier.create("123456789") shouldBe
+            AgentExternalIdentifier.OrganizationIdentifier("123456789")
+        AgentExternalIdentifier.create("01019012345") shouldBe
+            AgentExternalIdentifier.PersonIdentifier("01019012345")
+        AgentExternalIdentifier.create("1234567890123") shouldBe
+            AgentExternalIdentifier.MarketPartyIdentifier("1234567890123")
+    }
+
+    test("external agent identifier factory rejects unsupported lengths and non-digits") {
+        listOf(
+            "",
+            "12345678",
+            "1234567890",
+            "123456789012",
+            "12345678901234",
+            "12345678A",
+            "1234567890A",
+            "123456789012A",
+        )
+            .forEach { value ->
+                shouldThrow<DomainError.InvalidExternalAgentIdentifier> {
+                    AgentExternalIdentifier.create(value)
+                }
+            }
+    }
+
+    test("external agent identifier variants enforce their own formats") {
+        shouldThrow<DomainError.InvalidExternalAgentIdentifier> {
+            AgentExternalIdentifier.OrganizationIdentifier("12345678A")
+        }
+        shouldThrow<DomainError.InvalidExternalAgentIdentifier> {
+            AgentExternalIdentifier.PersonIdentifier("1234567890A")
+        }
+        shouldThrow<DomainError.InvalidExternalAgentIdentifier> {
+            AgentExternalIdentifier.MarketPartyIdentifier("123456789012A")
+        }
     }
 })

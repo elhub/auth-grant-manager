@@ -1,16 +1,19 @@
 package no.elhub.auth.v1.features.documents.create
 
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.plugins.BadRequestException
-import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
 import no.elhub.auth.v0.features.common.auth.authorizedParty
 import no.elhub.auth.v0.features.common.buildApiErrorResponse
 import no.elhub.auth.v0.features.common.party.PartyError
+import no.elhub.auth.v0.features.common.party.PartyIdentifier
+import no.elhub.auth.v0.features.common.party.PartyIdentifierType
 import no.elhub.auth.v0.features.common.party.PartyService
+import no.elhub.auth.v0.features.common.receiveEither
+import no.elhub.auth.v0.features.common.toApiErrorResponse
 import no.elhub.auth.v0.features.common.toTypeMismatchApiErrorResponse
+import no.elhub.auth.v1.domain.AgentExternalIdentifier
 import no.elhub.auth.v1.domain.AuthorizationDocumentType
 import no.elhub.auth.v1.features.documents.create.dto.JsonApiCreateAuthorizationDocumentRequest
 import no.elhub.auth.v1.features.documents.create.dto.toCreateResponse
@@ -22,17 +25,14 @@ fun Route.route(
     moveInAndChangeOfEnergySupplierActionValidator: MoveInAndChangeOfEnergySupplierDocumentActionValidator,
 ) {
     post {
-        val request = try {
-            call.receive<JsonApiCreateAuthorizationDocumentRequest>()
-        } catch (exception: BadRequestException) {
-            val (status, body) = buildApiErrorResponse(
-                status = HttpStatusCode.BadRequest,
-                title = "Invalid request body",
-                detail = exception.message ?: "The request body could not be deserialized",
-            )
-            call.respond(status, body)
-            return@post
-        }
+        val request = call.receiveEither<JsonApiCreateAuthorizationDocumentRequest>().fold(
+            ifLeft = { error ->
+                val (status, body) = error.toApiErrorResponse()
+                call.respond(status, body)
+                return@post
+            },
+            ifRight = { it },
+        )
 
         if (request.data.type != "AuthorizationDocument") {
             val (status, body) = toTypeMismatchApiErrorResponse(
@@ -51,7 +51,9 @@ fun Route.route(
                 moveInAndChangeOfEnergySupplierActionValidator.validate(request.data.attributes.requestedScopes)
         }
 
-        val requestedFrom = partyService.resolve(request.data.meta.requestedFrom).fold(
+        val requestedFromIdentifier = AgentExternalIdentifier.create(request.data.meta.requestedFrom)
+            .toPartyIdentifier()
+        val requestedFrom = partyService.resolve(requestedFromIdentifier).fold(
             ifLeft = { error ->
                 call.respond(error.toApiErrorResponse())
                 return@post
@@ -59,7 +61,9 @@ fun Route.route(
             ifRight = { it },
         )
 
-        val requestedTo = partyService.resolve(request.data.meta.requestedTo).fold(
+        val requestedToIdentifier = AgentExternalIdentifier.create(request.data.meta.requestedTo)
+            .toPartyIdentifier()
+        val requestedTo = partyService.resolve(requestedToIdentifier).fold(
             ifLeft = { error ->
                 call.respond(error.toApiErrorResponse())
                 return@post
@@ -79,6 +83,17 @@ fun Route.route(
         )
         call.respond(HttpStatusCode.Created, document.toCreateResponse())
     }
+}
+
+private fun AgentExternalIdentifier.toPartyIdentifier() = when (this) {
+    is AgentExternalIdentifier.OrganizationIdentifier ->
+        PartyIdentifier(PartyIdentifierType.OrganizationNumber, value)
+
+    is AgentExternalIdentifier.PersonIdentifier ->
+        PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, value)
+
+    is AgentExternalIdentifier.MarketPartyIdentifier ->
+        PartyIdentifier(PartyIdentifierType.GlobalLocationNumber, value)
 }
 
 private fun PartyError.toApiErrorResponse() = when (this) {
