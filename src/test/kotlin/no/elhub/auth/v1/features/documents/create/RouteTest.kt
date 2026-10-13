@@ -60,7 +60,7 @@ class RouteTest : FunSpec({
                 "idType": "NationalIdentityNumber",
                 "idValue": "01019012345"
               },
-              "language": "Nb"
+              "language": "nb"
             }
           }
         }
@@ -153,7 +153,37 @@ class RouteTest : FunSpec({
                     requestedBy = authorizedParty,
                     requestedFrom = AuthorizationParty("999888777", PartyType.OrganizationEntity),
                     requestedTo = AuthorizationParty("person-1", PartyType.Person),
-                    language = DocumentLanguage.Nb,
+                    language = DocumentLanguage.NB,
+                )
+            }
+        }
+    }
+
+    test("POST / defaults the document language to Norwegian Bokmål") {
+        coEvery {
+            handler.createAuthorizationDocument(any(), any(), any(), any(), any(), any())
+        } returns responseDocument()
+        coEvery { partyService.resolve(any()) } returnsMany listOf(
+            AuthorizationParty("999888777", PartyType.OrganizationEntity).right(),
+            AuthorizationParty("person-1", PartyType.Person).right(),
+        )
+
+        testApplication {
+            setupAppWith(authorizedParty) {
+                route(partyService, handler, changeOfEnergySupplierActionValidator, moveInAndChangeOfEnergySupplierActionValidator)
+            }
+
+            val response = client.postJson("/", requestBody.replace(Regex(",\\s*\"language\": \"nb\""), ""))
+
+            response.status shouldBe HttpStatusCode.Created
+            coVerify(exactly = 1) {
+                handler.createAuthorizationDocument(
+                    action = any(),
+                    externalReference = "contract-123",
+                    requestedBy = authorizedParty,
+                    requestedFrom = AuthorizationParty("999888777", PartyType.OrganizationEntity),
+                    requestedTo = AuthorizationParty("person-1", PartyType.Person),
+                    language = DocumentLanguage.NB,
                 )
             }
         }
@@ -182,7 +212,7 @@ class RouteTest : FunSpec({
             requestedBy = authorizedParty,
             requestedFrom = AuthorizationParty("org-1", PartyType.Organization),
             requestedTo = AuthorizationParty("person-1", PartyType.Person),
-            language = DocumentLanguage.Nb,
+            language = DocumentLanguage.NB,
         )
 
         document.validTo shouldBe validTo

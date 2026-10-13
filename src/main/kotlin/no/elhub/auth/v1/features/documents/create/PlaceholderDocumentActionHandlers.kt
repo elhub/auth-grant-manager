@@ -67,7 +67,7 @@ class PlaceholderMoveInAndChangeOfEnergySupplierDocumentActionHandler : MoveInAn
 }
 
 private fun DocumentLanguage.toPdfLanguage() = when (this) {
-    DocumentLanguage.Nb -> PdfLanguage.NB
-    DocumentLanguage.Nn -> PdfLanguage.NN
-    DocumentLanguage.En -> PdfLanguage.EN
+    DocumentLanguage.NB -> PdfLanguage.NB
+    DocumentLanguage.NN -> PdfLanguage.NN
+    DocumentLanguage.EN -> PdfLanguage.EN
 }
