@@ -24,10 +24,10 @@ import no.elhub.auth.v1.domain.AuthorizationScopeConstraint
 import no.elhub.auth.v1.domain.AuthorizationScopeConstraintAttribute
 import no.elhub.auth.v1.domain.AuthorizationScopeConstraintKind
 import no.elhub.auth.v1.domain.MeteringPointContractType
-import no.elhub.auth.v1.domain.MeteringPointId
 import no.elhub.auth.v1.domain.RequestedAuthorizationScope
 import no.elhub.auth.v1.domain.ResourceConstraint
 import no.elhub.auth.v1.domain.ResourceType
+import no.elhub.auth.v1.domain.validMeteringPointId
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.insert
 import java.util.UUID
@@ -115,8 +115,8 @@ class ExposedRequestRepositoryTest : FunSpec({
             AuthorizationScopeConstraintAttribute.MeteringPointId,
             ResourceConstraint.MeteringPoints(
                 setOf(
-                    MeteringPointId.create("707057500000000001"),
-                    MeteringPointId.create("707057500000000002"),
+                    validMeteringPointId("707057500000000001"),
+                    validMeteringPointId("707057500000000002"),
                 ),
             ),
         )
@@ -214,8 +214,8 @@ class ExposedRequestRepositoryTest : FunSpec({
             AuthorizationScopeConstraintAttribute.MeteringPointId,
             ResourceConstraint.MeteringPoints(
                 setOf(
-                    MeteringPointId.create("707057500000000001"),
-                    MeteringPointId.create("707057500000000002"),
+                    validMeteringPointId("707057500000000001"),
+                    validMeteringPointId("707057500000000002"),
                 ),
             ),
         )
@@ -270,7 +270,7 @@ class ExposedRequestRepositoryTest : FunSpec({
         val appliesTo = AuthorizationScopeConstraint(
             AuthorizationScopeConstraintKind.AppliesTo,
             AuthorizationScopeConstraintAttribute.MeteringPointId,
-            ResourceConstraint.MeteringPoints(setOf(MeteringPointId.create("707000000000000001"))),
+            ResourceConstraint.MeteringPoints(setOf(validMeteringPointId("707000000000000001"))),
         )
         val validFrom = AuthorizationScopeConstraint(
             AuthorizationScopeConstraintKind.AllowedChanges,
@@ -358,8 +358,8 @@ class ExposedRequestRepositoryTest : FunSpec({
             AuthorizationScopeConstraintAttribute.MeteringPointId,
             ResourceConstraint.MeteringPoints(
                 setOf(
-                    MeteringPointId.create("707057500000000001"),
-                    MeteringPointId.create("707057500000000002"),
+                    validMeteringPointId("707057500000000001"),
+                    validMeteringPointId("707057500000000002"),
                 )
             ),
         )

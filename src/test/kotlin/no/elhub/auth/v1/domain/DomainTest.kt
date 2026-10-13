@@ -11,7 +11,7 @@ import kotlin.time.Instant
 class DomainTest : FunSpec({
     test("scope constraints accept matching attributes and reject mismatches, including after copying") {
         val values = listOf(
-            ResourceConstraint.MeteringPoints(setOf(MeteringPointId.create("707057500000000001"))) to
+            ResourceConstraint.MeteringPoints(setOf(validMeteringPointId("707057500000000001"))) to
                 AuthorizationScopeConstraintAttribute.MeteringPointId,
             ResourceConstraint.ContractTypes(setOf(MeteringPointContractType.EnergySupplier)) to
                 AuthorizationScopeConstraintAttribute.ContractType,
@@ -58,25 +58,25 @@ class DomainTest : FunSpec({
     test("document action owns its document type") {
         DocumentAction.ChangeOfEnergySupplierForOrganization(
             meteringPointIds = ResourceConstraint.MeteringPoints(
-                setOf(MeteringPointId.create("707057500000000001")),
+                setOf(validMeteringPointId("707057500000000001")),
             ),
         ).documentType shouldBe AuthorizationDocumentType.ChangeOfEnergySupplierForOrganization
 
         DocumentAction.MoveInAndChangeOfEnergySupplierForOrganization(
             meteringPointIds = ResourceConstraint.MeteringPoints(
-                setOf(MeteringPointId.create("707057500000000001")),
+                setOf(validMeteringPointId("707057500000000001")),
             ),
             validFrom = kotlinx.datetime.LocalDate(2026, 10, 1),
         ).documentType shouldBe AuthorizationDocumentType.MoveInAndChangeOfEnergySupplierForOrganization
     }
 
     test("metering-point IDs must contain exactly 18 digits") {
-        MeteringPointId.create("707057500000000001").value shouldBe "707057500000000001"
+        val validResult = MeteringPointId.parse("707057500000000001")
+        (validResult as MeteringPointIdParseResult.Valid).id.value shouldBe "707057500000000001"
 
-        shouldThrow<InputError.InvalidMeteringPointId> { MeteringPointId.create("") }
-        shouldThrow<InputError.InvalidMeteringPointId> { MeteringPointId.create("70705750000000001") }
-        shouldThrow<InputError.InvalidMeteringPointId> { MeteringPointId.create("7070575000000000001") }
-        shouldThrow<InputError.InvalidMeteringPointId> { MeteringPointId.create("70705750000000000A") }
+        listOf("", "70705750000000001", "7070575000000000001", "70705750000000000A").forEach { value ->
+            MeteringPointId.parse(value) shouldBe MeteringPointIdParseResult.InvalidFormat
+        }
     }
 
     test("external agent identifiers are classified by digit length") {

@@ -9,13 +9,13 @@ import no.elhub.auth.v1.domain.AuthorizationScopeConstraint
 import no.elhub.auth.v1.domain.AuthorizationScopeConstraintAttribute
 import no.elhub.auth.v1.domain.AuthorizationScopeConstraintKind
 import no.elhub.auth.v1.domain.MeteringPointContractType
-import no.elhub.auth.v1.domain.MeteringPointId
 import no.elhub.auth.v1.domain.RequestedAuthorizationScope
 import no.elhub.auth.v1.domain.ResourceConstraint
 import no.elhub.auth.v1.domain.ResourceType
+import no.elhub.auth.v1.domain.validMeteringPointId
 
 class DocumentActionTest : FunSpec({
-    val meteringPointIds = setOf(MeteringPointId.create("707057500000000001"))
+    val meteringPointIds = setOf(validMeteringPointId("707057500000000001"))
 
     test("maps supplier change scope to metering point and energy-supplier contract constraints") {
         val scope = DocumentAction.ChangeOfEnergySupplierForOrganization(

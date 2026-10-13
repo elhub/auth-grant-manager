@@ -28,10 +28,10 @@ import no.elhub.auth.v1.domain.AuthorizationScopeConstraintAttribute
 import no.elhub.auth.v1.domain.AuthorizationScopeConstraintKind
 import no.elhub.auth.v1.domain.DocumentLanguage
 import no.elhub.auth.v1.domain.MeteringPointContractType
-import no.elhub.auth.v1.domain.MeteringPointId
 import no.elhub.auth.v1.domain.RequestedAuthorizationScope
 import no.elhub.auth.v1.domain.ResourceConstraint
 import no.elhub.auth.v1.domain.ResourceType
+import no.elhub.auth.v1.domain.validMeteringPointId
 import no.elhub.auth.v1.features.documents.create.dto.JsonApiCreateAuthorizationDocumentResponse
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import kotlin.time.Clock
@@ -80,7 +80,7 @@ class RouteTest : FunSpec({
                     AuthorizationScopeConstraint(
                         constraintKind = AuthorizationScopeConstraintKind.AppliesTo,
                         attribute = AuthorizationScopeConstraintAttribute.MeteringPointId,
-                        value = ResourceConstraint.MeteringPoints(setOf(MeteringPointId.create("707057500000000001"))),
+                        value = ResourceConstraint.MeteringPoints(setOf(validMeteringPointId("707057500000000001"))),
                     ),
                     AuthorizationScopeConstraint(
                         constraintKind = AuthorizationScopeConstraintKind.AllowedChanges,
@@ -195,7 +195,7 @@ class RouteTest : FunSpec({
         val changeSupplierHandler: ChangeOfEnergySupplierDocumentActionHandler = mockk()
         val moveInHandler: MoveInAndChangeOfEnergySupplierDocumentActionHandler = mockk()
         val action = DocumentAction.ChangeOfEnergySupplierForOrganization(
-            ResourceConstraint.MeteringPoints(setOf(MeteringPointId.create("707057500000000001"))),
+            ResourceConstraint.MeteringPoints(setOf(validMeteringPointId("707057500000000001"))),
         )
         val pdfContent = mockk<no.elhub.auth.common.documents.pdf.AuthorizationDocumentPdfContent>()
         val unsignedPdf = byteArrayOf(1, 2)

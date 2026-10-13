@@ -8,8 +8,8 @@ import no.elhub.auth.common.documents.pdf.AuthorizationDocumentPdfContent
 import no.elhub.auth.v0.features.common.party.AuthorizationParty
 import no.elhub.auth.v0.features.common.party.PartyType
 import no.elhub.auth.v1.domain.DocumentLanguage
-import no.elhub.auth.v1.domain.MeteringPointId
 import no.elhub.auth.v1.domain.ResourceConstraint
+import no.elhub.auth.v1.domain.validMeteringPointId
 import kotlin.time.Clock
 
 class PlaceholderDocumentActionHandlersTest : FunSpec({
@@ -21,7 +21,7 @@ class PlaceholderDocumentActionHandlersTest : FunSpec({
         externalReference = "reference-1",
     )
     val meteringPointIds = ResourceConstraint.MeteringPoints(
-        setOf(MeteringPointId.create("707057500000000001")),
+        setOf(validMeteringPointId("707057500000000001")),
     )
 
     test("change-supplier placeholder returns document-specific details") {

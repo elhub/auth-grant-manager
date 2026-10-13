@@ -14,10 +14,6 @@ sealed class InputError(override val detail: String) : Errors(detail) {
 
     class InvalidFieldValueError(detail: String) : InputError(detail)
     class ContentTooLargeError(detail: String) : InputError(detail)
-    class InvalidMeteringPointId(
-        value: String,
-    ) : InputError("Invalid metering-point ID: '$value'. Expected exactly 18 digits")
-
     class InvalidCreateAuthorizationDocumentPayload(
         detail: String,
     ) : InputError(detail)

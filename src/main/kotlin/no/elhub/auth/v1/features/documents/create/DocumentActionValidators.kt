@@ -6,6 +6,7 @@ import kotlinx.datetime.toLocalDateTime
 import no.elhub.auth.v1.InputError
 import no.elhub.auth.v1.domain.AuthorizationScopeConstraintAttribute
 import no.elhub.auth.v1.domain.MeteringPointId
+import no.elhub.auth.v1.domain.MeteringPointIdParseResult
 import no.elhub.auth.v1.domain.ResourceConstraint
 import no.elhub.auth.v1.domain.ResourceType
 import no.elhub.auth.v1.features.documents.create.dto.RequestedScope
@@ -108,12 +109,15 @@ private fun RequestedScope.toMeteringPointConstraint(): ResourceConstraint.Meter
         )
     }
 
-    val meteringPointIds = try {
-        meteringPointConstraints.single().value.mapTo(mutableSetOf(), MeteringPointId::create)
-    } catch (_: InputError.InvalidMeteringPointId) {
-        throw InputError.InvalidCreateAuthorizationDocumentPayload(
-            "requestedScopes[0].appliesTo meteringPoint.id values must be valid 18-digit metering-point IDs",
-        )
+    val meteringPointIds = meteringPointConstraints.single().value.mapTo(mutableSetOf()) { value ->
+        when (val result = MeteringPointId.parse(value)) {
+            is MeteringPointIdParseResult.Valid -> result.id
+
+            MeteringPointIdParseResult.InvalidFormat ->
+                throw InputError.InvalidCreateAuthorizationDocumentPayload(
+                    "requestedScopes[0].appliesTo meteringPoint.id values must be valid 18-digit metering-point IDs",
+                )
+        }
     }
 
     if (meteringPointIds.isEmpty()) {

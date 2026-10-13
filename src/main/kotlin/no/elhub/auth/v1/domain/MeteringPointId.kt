@@ -1,20 +1,22 @@
 package no.elhub.auth.v1.domain
 
-import no.elhub.auth.v1.InputError
+sealed interface MeteringPointIdParseResult {
+    data class Valid(val id: MeteringPointId) : MeteringPointIdParseResult
+    data object InvalidFormat : MeteringPointIdParseResult
+}
 
 @JvmInline
 value class MeteringPointId private constructor(
     val value: String,
 ) {
     companion object {
-        fun create(value: String): MeteringPointId {
-            if (!value.matches(FORMAT)) {
-                throw InputError.InvalidMeteringPointId(value)
+        fun parse(value: String): MeteringPointIdParseResult =
+            if (FORMAT.matches(value)) {
+                MeteringPointIdParseResult.Valid(MeteringPointId(value))
+            } else {
+                MeteringPointIdParseResult.InvalidFormat
             }
 
-            return MeteringPointId(value)
-        }
-
-        private val FORMAT = Regex("^\\d{18}$")
+        private val FORMAT = Regex("\\d{18}")
     }
 }

@@ -84,12 +84,6 @@ private fun Errors.toApiErrorResponse() = when (this) {
         detail = detail,
     )
 
-    is InputError.InvalidMeteringPointId -> buildApiErrorResponse(
-        status = HttpStatusCode.UnprocessableEntity,
-        title = "Invalid metering point id",
-        detail = detail,
-    )
-
     is InputError.InvalidCreateAuthorizationDocumentPayload -> buildApiErrorResponse(
         status = HttpStatusCode.UnprocessableEntity,
         title = "Invalid authorization document request",

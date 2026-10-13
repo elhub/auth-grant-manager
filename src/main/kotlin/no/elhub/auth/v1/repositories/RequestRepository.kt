@@ -21,6 +21,7 @@ import no.elhub.auth.v1.domain.AuthorizationScopeConstraintAttribute
 import no.elhub.auth.v1.domain.AuthorizationScopeConstraintKind
 import no.elhub.auth.v1.domain.MeteringPointContractType
 import no.elhub.auth.v1.domain.MeteringPointId
+import no.elhub.auth.v1.domain.MeteringPointIdParseResult
 import no.elhub.auth.v1.domain.RequestedAuthorizationScope
 import no.elhub.auth.v1.domain.ResourceConstraint
 import no.elhub.auth.v1.domain.ResourceType
@@ -412,7 +413,14 @@ fun ResultRow.toConstraint(): AuthorizationScopeConstraint {
         attribute = attribute,
         value = when (attribute) {
             AuthorizationScopeConstraintAttribute.MeteringPointId -> ResourceConstraint.MeteringPoints(
-                this[AuthorizationRequestScopeConstraintTable.value].map(MeteringPointId::create).toSet(),
+                this[AuthorizationRequestScopeConstraintTable.value].map { value ->
+                    when (val result = MeteringPointId.parse(value)) {
+                        is MeteringPointIdParseResult.Valid -> result.id
+
+                        MeteringPointIdParseResult.InvalidFormat ->
+                            throw RepositoryReadError.UnexpectedError("Unexpected error occurred.")
+                    }
+                }.toSet(),
             )
 
             AuthorizationScopeConstraintAttribute.ContractType -> ResourceConstraint.ContractTypes(
