@@ -14,6 +14,8 @@ import kotlinx.serialization.json.JsonObject
 import no.elhub.auth.common.documents.pdf.PdfGenerator
 import no.elhub.auth.common.documents.pdf.PdfSigner
 import no.elhub.auth.v0.features.common.party.AuthorizationParty
+import no.elhub.auth.v0.features.common.party.PartyIdentifier
+import no.elhub.auth.v0.features.common.party.PartyIdentifierType
 import no.elhub.auth.v0.features.common.party.PartyService
 import no.elhub.auth.v0.features.common.party.PartyType
 import no.elhub.auth.v0.postJson
@@ -52,14 +54,8 @@ class RouteTest : FunSpec({
               "externalReference": "contract-123"
             },
             "meta": {
-              "requestedFrom": {
-                "idType": "GlobalLocationNumber",
-                "idValue": "999888777"
-              },
-              "requestedTo": {
-                "idType": "NationalIdentityNumber",
-                "idValue": "01019012345"
-              },
+              "requestedFrom": "999888777",
+              "requestedTo": "01019012345",
               "language": "nb"
             }
           }
@@ -144,6 +140,12 @@ class RouteTest : FunSpec({
             returnedScope.appliesTo.single().value shouldBe listOf("707057500000000001")
             returnedScope.allowedChanges.single().attribute shouldBe "type"
             returnedScope.allowedChanges.single().value shouldBe listOf("EnergySupplier")
+            coVerify(exactly = 1) {
+                partyService.resolve(PartyIdentifier(PartyIdentifierType.OrganizationNumber, "999888777"))
+            }
+            coVerify(exactly = 1) {
+                partyService.resolve(PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "01019012345"))
+            }
             coVerify(exactly = 1) {
                 handler.createAuthorizationDocument(
                     action = match {
@@ -238,7 +240,7 @@ class RouteTest : FunSpec({
         }
     }
 
-    test("POST / returns 400 when the request cannot be deserialized") {
+    test("POST / returns a field-specific 400 when the request cannot be deserialized") {
         testApplication {
             setupAppWith(authorizedParty) {
                 route(partyService, handler, changeOfEnergySupplierActionValidator, moveInAndChangeOfEnergySupplierActionValidator)
@@ -248,7 +250,8 @@ class RouteTest : FunSpec({
 
             response.status shouldBe HttpStatusCode.BadRequest
             val body: JsonApiErrorCollection = response.body()
-            body.errors.single().title shouldBe "Invalid request body"
+            body.errors.single().title shouldBe "Missing required field in request body"
+            body.errors.single().detail shouldBe "Field '[attributes, meta]' is missing or invalid"
             coVerify(exactly = 0) {
                 handler.createAuthorizationDocument(any(), any(), any(), any(), any(), any())
             }

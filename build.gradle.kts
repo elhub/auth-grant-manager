@@ -139,7 +139,10 @@ tasks.register<JavaExec>("generatePdf") {
     systemProperty("java.awt.headless", "true")
     args(
         providers.gradleProperty("document").orElse("all").get(),
-        layout.buildDirectory.dir("generated-pdfs").get().asFile.absolutePath,
+        layout.buildDirectory
+            .dir("generated-pdfs")
+            .get()
+            .asFile.absolutePath,
         providers.gradleProperty("language").orElse("nb").get(),
     )
 }
@@ -173,39 +176,41 @@ tasks.named("liquibaseUpdate").configure {
     dependsOn(tasks.named("servicesComposeUp"))
 }
 
-val localEnvVars = mapOf(
-    "JDBC_URL" to "jdbc:postgresql://localhost:5432/auth",
-    "APP_USERNAME" to "app",
-    "APP_PASSWORD" to "app",
-    "MUSTACHE_RESOURCE_PATH" to "templates",
-    "VAULT_URL" to "http://localhost:8200/v1/transit",
-    "VAULT_KEY" to "test-key",
-    "VAULT_TOKEN_PATH" to "src/test/resources/vault_token_mock.txt",
-    "PATH_TO_SIGNING_CERTIFICATE" to testCertPath.get(),
-    "PATH_TO_INTERMEDIATE_CERTIFICATE" to intermediateCertPath.get(),
-    "PATH_TO_BANKID_ROOT_CERTIFICATES_DIR" to bankIdDirPath.get(),
-    "PATH_TO_TSA_ROOT_CERTIFICATES_DIR" to bankIdDirPath.get(),
-    "AUTH_PERSONS_URL" to "http://localhost:8081",
-    "PDP_BASE_URL" to "https://auth-policy-decision-point.test9.elhub.cloud",
-    "STRUCTURE_DATA_METERING_POINTS_SERVICE_URL" to "http://localhost:8083",
-    "STRUCTURE_DATA_METERING_POINTS_SERVICE_IDP_CLIENT_ID" to "clientId",
-    "STRUCTURE_DATA_METERING_POINTS_SERVICE_IDP_CLIENT_SECRET" to "clientSecret",
-    "STRUCTURE_DATA_ORGANISATIONS_SERVICE_URL" to "http://localhost:8082",
-    "STRUCTURE_DATA_ORGANISATIONS_SERVICE_API_USERNAME" to "user",
-    "STRUCTURE_DATA_ORGANISATIONS_SERVICE_API_PASSWORD" to "pass",
-    "USE_PDF_TEST_NOTICE" to "true",
-    "STROMPRIS_SERVICE_URL" to "",
-    "STROMPRIS_SERVICE_IDP_CLIENT_ID" to "",
-    "STROMPRIS_SERVICE_IDP_CLIENT_SECRET" to "",
-    "IDP_TOKEN_URL" to "http://localhost:8085/token",
-    "VALIDATE_CONTRACT_NAME_FEATURE" to "false",
-    "EDIEL_ENV" to "test",
-    "EDIEL_USERNAME" to "test",
-    "EDIEL_PASSWORD" to "test",
-    "EDIEL_SERVICE_URL" to "https://ws.qa1.ediel.no/api/",
-    "AUTH_PERSONS_IDP_CLIENT_ID" to "test",
-    "AUTH_PERSONS_IDP_CLIENT_SECRET" to "test",
-)
+val localEnvVars =
+    mapOf(
+        "JDBC_URL" to "jdbc:postgresql://localhost:5432/auth",
+        "APP_USERNAME" to "app",
+        "APP_PASSWORD" to "app",
+        "MUSTACHE_RESOURCE_PATH" to "templates",
+        "VAULT_URL" to "http://localhost:8200/v1/transit",
+        "VAULT_KEY" to "test-key",
+        "VAULT_TOKEN_PATH" to "src/test/resources/vault_token_mock.txt",
+        "PATH_TO_SIGNING_CERTIFICATE" to testCertPath.get(),
+        "PATH_TO_INTERMEDIATE_CERTIFICATE" to intermediateCertPath.get(),
+        "PATH_TO_BANKID_ROOT_CERTIFICATES_DIR" to bankIdDirPath.get(),
+        "PATH_TO_TSA_ROOT_CERTIFICATES_DIR" to bankIdDirPath.get(),
+        "AUTH_PERSONS_URL" to "http://localhost:8081",
+        "PDP_BASE_URL" to "https://auth-policy-decision-point.test9.elhub.cloud",
+        "STRUCTURE_DATA_METERING_POINTS_SERVICE_URL" to "http://localhost:8083",
+        "STRUCTURE_DATA_METERING_POINTS_SERVICE_IDP_CLIENT_ID" to "clientId",
+        "STRUCTURE_DATA_METERING_POINTS_SERVICE_IDP_CLIENT_SECRET" to "clientSecret",
+        "STRUCTURE_DATA_ORGANISATIONS_SERVICE_URL" to "http://localhost:8082",
+        "STRUCTURE_DATA_ORGANISATIONS_SERVICE_API_USERNAME" to "user",
+        "STRUCTURE_DATA_ORGANISATIONS_SERVICE_API_PASSWORD" to "pass",
+        "USE_PDF_TEST_NOTICE" to "true",
+        "STROMPRIS_SERVICE_URL" to "",
+        "STROMPRIS_SERVICE_IDP_CLIENT_ID" to "",
+        "STROMPRIS_SERVICE_IDP_CLIENT_SECRET" to "",
+        "IDP_TOKEN_URL" to "http://localhost:8085/token",
+        "VALIDATE_CONTRACT_NAME_FEATURE" to "false",
+        "EDIEL_ENV" to "test",
+        "EDIEL_USERNAME" to "test",
+        "EDIEL_PASSWORD" to "test",
+        "EDIEL_SERVICE_URL" to "https://ws.qa1.ediel.no/api/",
+        "AUTH_PERSONS_IDP_CLIENT_ID" to "test",
+        "AUTH_PERSONS_IDP_CLIENT_SECRET" to "test",
+        "V1_ENABLED" to "true",
+    )
 
 tasks.named<JavaExec>("run").configure {
     dependsOn("generateTestCerts", "servicesComposeUp", "liquibaseUpdate")

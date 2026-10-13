@@ -1,7 +1,6 @@
 package no.elhub.auth.v1.features.documents.create.dto
 
 import kotlinx.serialization.Serializable
-import no.elhub.auth.v0.features.common.party.PartyIdentifier
 import no.elhub.auth.v1.domain.AuthorizationDocumentType
 import no.elhub.auth.v1.domain.DocumentLanguage
 import no.elhub.devxp.jsonapi.model.JsonApiAttributes
@@ -28,8 +27,8 @@ data class ScopeConstraint(
 
 @Serializable
 data class CreateAuthorizationDocumentMeta(
-    val requestedFrom: PartyIdentifier,
-    val requestedTo: PartyIdentifier,
+    val requestedFrom: String,
+    val requestedTo: String,
     val language: DocumentLanguage = DocumentLanguage.NB,
 )
 
