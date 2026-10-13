@@ -1,6 +1,8 @@
 {
+  "summary": "requestType=MoveInAndChangeOfEnergySupplierForOrganization",
+  "value": {
   "data": {
-    "id": "01997291-7e8b-7000-000000000013",
+    "id": "01997291-7e8b-7000-8000-000000000013",
     "type": "AuthorizationRequest",
     "attributes": {
       "requestType": "MoveInAndChangeOfEnergySupplierForOrganization",
@@ -56,10 +58,11 @@
         "data": [
           {
             "type": "ConsumableGrant",
-            "id": "01997291-7e8b-7000-000000000015"
+            "id": "01997291-7e8b-7000-8000-000000000015"
           }
         ]
       }
     }
+  }
   }
 }

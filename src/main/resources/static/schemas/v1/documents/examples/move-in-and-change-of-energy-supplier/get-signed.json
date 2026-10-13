@@ -1,4 +1,6 @@
 {
+  "summary": "documentType=MoveInAndChangeOfEnergySupplierForOrganization",
+  "value": {
   "data": {
     "id": "01997291-7e8b-7000-8000-000000000012",
     "type": "AuthorizationDocument",
@@ -67,5 +69,6 @@
         ]
       }
     }
+  }
   }
 }

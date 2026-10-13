@@ -1,4 +1,6 @@
 {
+  "summary": "requestType=MoveInAndChangeOfEnergySupplierForOrganization",
+  "value": {
   "data": {
     "type": "AuthorizationRequest",
     "attributes": {
@@ -27,5 +29,6 @@
       "requestedFrom": "999888777",
       "requestedTo": "01019012345"
     }
+  }
   }
 }

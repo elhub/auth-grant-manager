@@ -1,4 +1,6 @@
 {
+  "summary": "documentType=ChangeOfEnergySupplierForOrganization",
+  "value": {
   "data": {
     "type": "AuthorizationDocument",
     "attributes": {
@@ -21,5 +23,6 @@
       "requestedTo": "01019012345",
       "language": "nb"
     }
+  }
   }
 }
