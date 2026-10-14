@@ -615,6 +615,54 @@ paths:
           $ref: '#/components/responses/500InternalServerError'
 
   '/access/v1/authorization-documents':
+    get:
+      tags:
+        - Work in Progress
+      summary: '[WIP] List authorization documents'
+      description: Retrieve a paginated list of authorization documents available to the calling party.
+      operationId: listV1AuthorizationDocuments
+      x-status: Work in progress
+      x-availability: Not deployed to Production or MT1
+      parameters:
+        - $ref: '#/components/parameters/UserAgent'
+        - $ref: '#/components/parameters/AuthorizationMaskinporten'
+        - $ref: '#/components/parameters/SenderGlnRequired'
+        - $ref: '#/components/parameters/OnBehalfOfGlnOptional'
+        - name: page[number]
+          in: query
+          required: false
+          description: Zero-based page number. Defaults to 0.
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: page[size]
+          in: query
+          required: false
+          description: Number of items per page. Defaults to 100, maximum 100.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 100
+      responses:
+        '200':
+          description: A paginated list of authorization documents.
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: './schemas/v1/documents/authorization-document-collection.schema.json'
+              examples:
+                authorizationDocuments:
+                  $ref: './schemas/v1/documents/examples/list.json'
+        '401':
+          $ref: '#/components/responses/401UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/403ForbiddenError'
+        '406':
+          $ref: '#/components/responses/406NotAcceptableError'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
     post:
       tags:
         - Work in Progress
@@ -719,6 +767,68 @@ paths:
                   $ref: './schemas/v1/grants/examples/get.json'
 
   '/access/v1/authorization-requests':
+    get:
+      tags:
+        - Work in Progress
+      summary: '[WIP] List authorization requests'
+      description: >
+        Retrieve a paginated list of authorization requests available to the calling party.
+        Results are ordered by createdAt DESC (newest first).
+      operationId: listV1AuthorizationRequests
+      x-status: Work in progress
+      x-availability: Not deployed to Production or MT1
+      parameters:
+        - $ref: '#/components/parameters/UserAgent'
+        - $ref: '#/components/parameters/AuthorizationMaskinportenOrEndUser'
+        - $ref: '#/components/parameters/SenderGlnOptional'
+        - $ref: '#/components/parameters/OnBehalfOfGlnOptional'
+        - name: filter[status]
+          in: query
+          required: false
+          description: >
+            Filter results by one or more statuses. When omitted, requests of all statuses are returned.
+            Multiple statuses can be specified as a comma-separated list (e.g. `filter[status]=Pending,Expired`).
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              $ref: './schemas/v1/requests/authorization-request-common.schema.json#/$defs/status'
+        - name: page[number]
+          in: query
+          required: false
+          description: Zero-based page number. Defaults to 0.
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: page[size]
+          in: query
+          required: false
+          description: Number of items per page. Defaults to 100, maximum 100.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 100
+      responses:
+        '200':
+          description: A paginated list of authorization requests.
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: './schemas/v1/requests/authorization-request-collection.schema.json'
+              examples:
+                authorizationRequests:
+                  $ref: './schemas/v1/requests/examples/list.json'
+        '401':
+          $ref: '#/components/responses/401UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/403ForbiddenError'
+        '406':
+          $ref: '#/components/responses/406NotAcceptableError'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
     post:
       tags:
         - Work in Progress
