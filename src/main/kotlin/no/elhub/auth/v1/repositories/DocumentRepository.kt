@@ -38,6 +38,7 @@ import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.core.lessEq
 import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.datetime.timestamp
+import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.json.jsonb
 import org.postgresql.util.PGobject
@@ -129,8 +130,56 @@ class ExposedDocumentRepository(
         Page(items, totalItems, pagination)
     }
 
-    override suspend fun insert(document: AuthorizationDocument): AuthorizationDocument {
-        TODO("Not yet implemented")
+    override suspend fun insert(document: AuthorizationDocument): AuthorizationDocument = withTransaction {
+        val documentId = UUID.fromString(document.id)
+        val requestedBy = partyRepository.findOrInsert(document.requestedBy.type, document.requestedBy.id)
+        val requestedPrincipal = partyRepository.findOrInsert(document.requestedPrincipal.type, document.requestedPrincipal.id)
+        val requestedOf = partyRepository.findOrInsert(document.requestedOf.type, document.requestedOf.id)
+        val approvedBy = document.approvedBy?.let { partyRepository.findOrInsert(it.type, it.id) }
+
+        val inserted = AuthorizationDocumentTable.insert {
+            it[id] = documentId
+            it[documentType] = document.documentType
+            it[AuthorizationDocumentTable.requestedBy] = requestedBy.id
+            it[AuthorizationDocumentTable.requestedPrincipal] = requestedPrincipal.id
+            it[AuthorizationDocumentTable.requestedOf] = requestedOf.id
+            it[AuthorizationDocumentTable.approvedBy] = approvedBy?.id
+            it[externalReference] = document.externalReference
+            it[meta] = document.meta
+            it[file] = document.pdfBytes
+            it[validFrom] = document.createdAt
+            it[validTo] = document.validTo
+            it[createdAt] = document.createdAt
+            it[updatedAt] = document.updatedAt
+        }
+
+        document.requestedScopes.forEach { scope ->
+            val scopeId = AuthorizationDocumentScopeTable.insert {
+                it[AuthorizationDocumentScopeTable.documentId] = documentId
+                it[resourceType] = scope.resourceType
+            }[AuthorizationDocumentScopeTable.id].value
+            scope.constraints.forEach { constraint ->
+                AuthorizationDocumentScopeConstraintTable.insert {
+                    it[AuthorizationDocumentScopeConstraintTable.scopeId] = scopeId
+                    it[kind] = constraint.constraintKind
+                    it[attribute] = constraint.attribute
+                    it[value] = when (val resourceConstraint = constraint.value) {
+                        is ResourceConstraint.MeteringPoints -> resourceConstraint.ids.map { it.value }
+                        is ResourceConstraint.ContractTypes -> resourceConstraint.types.map { it.name }
+                        is ResourceConstraint.ValidFrom -> listOf(resourceConstraint.value.toString())
+                    }
+                }
+            }
+        }
+
+        inserted.resultedValues!!.single().toAuthorizationDocument(
+            requestedBy = requestedBy.toAuthorizationParty(),
+            requestedPrincipal = requestedPrincipal.toAuthorizationParty(),
+            requestedOf = requestedOf.toAuthorizationParty(),
+            requestedScopes = document.requestedScopes,
+            approvedBy = approvedBy?.toAuthorizationParty(),
+            now = now(),
+        )
     }
 
     override suspend fun confirm(documentId: UUID, signedFile: ByteArray, signatory: AuthorizationParty, grant: AuthorizationGrant): AuthorizationDocument {
