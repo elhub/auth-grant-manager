@@ -41,7 +41,7 @@
               "description": "Number of items per page."
             }
           },
-          "required": ["totalItems", "totalPages", "page", "pageSize"]
+          "required": ["createdAt", "totalItems", "totalPages", "page", "pageSize"]
         }
       ]
     }

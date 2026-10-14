@@ -151,6 +151,7 @@
       "last": "https://api.elhub.no/access/v1/authorization-documents?page%5Bnumber%5D=0&page%5Bsize%5D=100"
     },
     "meta": {
+      "createdAt": "2026-09-24T10:15:00Z",
       "totalItems": 2,
       "totalPages": 1,
       "page": 0,
