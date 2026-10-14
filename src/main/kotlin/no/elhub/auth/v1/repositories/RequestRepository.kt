@@ -73,8 +73,8 @@ class ExposedRequestRepository(
 
         row.toAuthorizationRequest(
             requestedBy = partyRepository.find(row[AuthorizationRequestTable.requestedBy]).toAuthorizationParty(),
-            requestedFrom = partyRepository.find(row[AuthorizationRequestTable.requestedFrom]).toAuthorizationParty(),
-            requestedTo = partyRepository.find(row[AuthorizationRequestTable.requestedTo]).toAuthorizationParty(),
+            requestedPrincipal = partyRepository.find(row[AuthorizationRequestTable.requestedPrincipal]).toAuthorizationParty(),
+            requestedOf = partyRepository.find(row[AuthorizationRequestTable.requestedOf]).toAuthorizationParty(),
             requestedScopes = getScopesByRequestId(listOf(requestId))[requestId].orEmpty(),
             approvedBy = row[AuthorizationRequestTable.approvedBy]?.let { partyRepository.find(it).toAuthorizationParty() },
             now = now(),
@@ -112,8 +112,8 @@ class ExposedRequestRepository(
         val allPartyIds = requestRows.flatMap {
             listOfNotNull(
                 it[AuthorizationRequestTable.requestedBy],
-                it[AuthorizationRequestTable.requestedFrom],
-                it[AuthorizationRequestTable.requestedTo],
+                it[AuthorizationRequestTable.requestedPrincipal],
+                it[AuthorizationRequestTable.requestedOf],
                 it[AuthorizationRequestTable.approvedBy],
             )
         }.distinct()
@@ -128,9 +128,9 @@ class ExposedRequestRepository(
         val items = requestRows.map { row ->
             val requestedBy = partyMap[row[AuthorizationRequestTable.requestedBy]]
                 ?: throw RepositoryReadError.UnexpectedError(unexpectedMessage)
-            val requestedFrom = partyMap[row[AuthorizationRequestTable.requestedFrom]]
+            val requestedPrincipal = partyMap[row[AuthorizationRequestTable.requestedPrincipal]]
                 ?: throw RepositoryReadError.UnexpectedError(unexpectedMessage)
-            val requestedTo = partyMap[row[AuthorizationRequestTable.requestedTo]]
+            val requestedOf = partyMap[row[AuthorizationRequestTable.requestedOf]]
                 ?: throw RepositoryReadError.UnexpectedError(unexpectedMessage)
             val approvedBy = row[AuthorizationRequestTable.approvedBy]?.let {
                 partyMap[it] ?: throw RepositoryReadError.UnexpectedError(unexpectedMessage)
@@ -138,8 +138,8 @@ class ExposedRequestRepository(
             val requestId = row[AuthorizationRequestTable.id].value
             row.toAuthorizationRequest(
                 requestedBy = requestedBy.toAuthorizationParty(),
-                requestedFrom = requestedFrom.toAuthorizationParty(),
-                requestedTo = requestedTo.toAuthorizationParty(),
+                requestedPrincipal = requestedPrincipal.toAuthorizationParty(),
+                requestedOf = requestedOf.toAuthorizationParty(),
                 requestedScopes = scopesByRequestId[requestId].orEmpty(),
                 approvedBy = approvedBy?.toAuthorizationParty(),
                 now = now,
@@ -151,8 +151,8 @@ class ExposedRequestRepository(
 
     override suspend fun insert(request: AuthorizationRequest): AuthorizationRequest = withTransaction {
         val requestedBy = partyRepository.findOrInsert(request.requestedBy.type, request.requestedBy.id)
-        val requestedFrom = partyRepository.findOrInsert(request.requestedFrom.type, request.requestedFrom.id)
-        val requestedTo = partyRepository.findOrInsert(request.requestedTo.type, request.requestedTo.id)
+        val requestedPrincipal = partyRepository.findOrInsert(request.requestedPrincipal.type, request.requestedPrincipal.id)
+        val requestedOf = partyRepository.findOrInsert(request.requestedOf.type, request.requestedOf.id)
         val approvedBy = request.approvedBy?.let { partyRepository.findOrInsert(it.type, it.id) }
 
         val inserted = AuthorizationRequestTable.insert {
@@ -163,8 +163,8 @@ class ExposedRequestRepository(
                 else -> DatabaseRequestStatus.Pending
             }
             it[AuthorizationRequestTable.requestedBy] = requestedBy.id
-            it[AuthorizationRequestTable.requestedFrom] = requestedFrom.id
-            it[AuthorizationRequestTable.requestedTo] = requestedTo.id
+            it[AuthorizationRequestTable.requestedPrincipal] = requestedPrincipal.id
+            it[AuthorizationRequestTable.requestedOf] = requestedOf.id
             it[AuthorizationRequestTable.approvedBy] = approvedBy?.id
             it[externalReference] = request.externalReference
             it[meta] = request.meta
@@ -196,8 +196,8 @@ class ExposedRequestRepository(
 
         inserted.resultedValues!!.single().toAuthorizationRequest(
             requestedBy = requestedBy.toAuthorizationParty(),
-            requestedFrom = requestedFrom.toAuthorizationParty(),
-            requestedTo = requestedTo.toAuthorizationParty(),
+            requestedPrincipal = requestedPrincipal.toAuthorizationParty(),
+            requestedOf = requestedOf.toAuthorizationParty(),
             requestedScopes = request.requestedScopes,
             approvedBy = approvedBy?.toAuthorizationParty(),
             now = now(),
@@ -231,8 +231,8 @@ class ExposedRequestRepository(
             it[updatedAt] = now
         }.single().toAuthorizationRequest(
             requestedBy = partyRepository.find(row[AuthorizationRequestTable.requestedBy]).toAuthorizationParty(),
-            requestedFrom = partyRepository.find(row[AuthorizationRequestTable.requestedFrom]).toAuthorizationParty(),
-            requestedTo = partyRepository.find(row[AuthorizationRequestTable.requestedTo]).toAuthorizationParty(),
+            requestedPrincipal = partyRepository.find(row[AuthorizationRequestTable.requestedPrincipal]).toAuthorizationParty(),
+            requestedOf = partyRepository.find(row[AuthorizationRequestTable.requestedOf]).toAuthorizationParty(),
             requestedScopes = getScopesByRequestId(listOf(requestId))[requestId].orEmpty(),
             now = now,
         )
@@ -247,7 +247,7 @@ class ExposedRequestRepository(
         statuses: List<AuthorizationRequestStatus>,
         now: Instant,
     ): Op<Boolean> {
-        val partyCondition = (AuthorizationRequestTable.requestedTo eq partyId) or
+        val partyCondition = (AuthorizationRequestTable.requestedOf eq partyId) or
             (AuthorizationRequestTable.requestedBy eq partyId)
         if (statuses.isEmpty()) {
             return partyCondition
@@ -320,8 +320,8 @@ object AuthorizationRequestTable : UUIDTable("auth_v1.authorization_request") {
             toDb = { PGEnum("auth_v1.authorization_request_status", it) },
         )
     val requestedBy = javaUUID("requested_by").references(AuthorizationPartyTable.id)
-    val requestedFrom = javaUUID("requested_from").references(AuthorizationPartyTable.id)
-    val requestedTo = javaUUID("requested_to").references(AuthorizationPartyTable.id)
+    val requestedPrincipal = javaUUID("requested_principal").references(AuthorizationPartyTable.id)
+    val requestedOf = javaUUID("requested_of").references(AuthorizationPartyTable.id)
     val approvedBy = javaUUID("approved_by").references(AuthorizationPartyTable.id).nullable()
     val approvedAt = timestamp("approved_at").nullable()
     val createdAt = timestamp("created_at").clientDefault { now() }
@@ -346,8 +346,8 @@ private fun ResultRow.toAuthorizationRequestStatus(now: Instant): AuthorizationR
 
 fun ResultRow.toAuthorizationRequest(
     requestedBy: AuthorizationParty,
-    requestedFrom: AuthorizationParty,
-    requestedTo: AuthorizationParty,
+    requestedPrincipal: AuthorizationParty,
+    requestedOf: AuthorizationParty,
     requestedScopes: List<RequestedAuthorizationScope>,
     approvedBy: AuthorizationParty? = null,
     now: Instant,
@@ -364,8 +364,8 @@ fun ResultRow.toAuthorizationRequest(
         createdAt = this[AuthorizationRequestTable.createdAt],
         updatedAt = this[AuthorizationRequestTable.updatedAt],
         requestedBy = AuthorizationParty(id = requestedBy.id, type = requestedBy.type),
-        requestedFrom = AuthorizationParty(id = requestedFrom.id, type = requestedFrom.type),
-        requestedTo = AuthorizationParty(id = requestedTo.id, type = requestedTo.type),
+        requestedPrincipal = AuthorizationParty(id = requestedPrincipal.id, type = requestedPrincipal.type),
+        requestedOf = AuthorizationParty(id = requestedOf.id, type = requestedOf.type),
         approvedBy = approvedBy?.let { AuthorizationParty(id = approvedBy.id, type = approvedBy.type) },
         authorizationGrant = null,
     )

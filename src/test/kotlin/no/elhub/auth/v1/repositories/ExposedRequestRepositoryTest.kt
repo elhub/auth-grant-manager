@@ -62,8 +62,8 @@ class ExposedRequestRepositoryTest : FunSpec({
 
     suspend fun insertRequest(
         requestedBy: AuthorizationParty,
-        requestedFrom: AuthorizationParty = requestedBy,
-        requestedTo: AuthorizationParty = requestedBy,
+        requestedPrincipal: AuthorizationParty = requestedBy,
+        requestedOf: AuthorizationParty = requestedBy,
         approvedBy: AuthorizationParty? = null,
         status: DatabaseRequestStatus = DatabaseRequestStatus.Pending,
         validTo: Instant = future,
@@ -74,15 +74,15 @@ class ExposedRequestRepositoryTest : FunSpec({
     ): UUID = withTransaction {
         suspend fun partyId(party: AuthorizationParty) = partyRepository.findOrInsert(party.type, party.id).id
         val byId = partyId(requestedBy)
-        val fromId = partyId(requestedFrom)
-        val toId = partyId(requestedTo)
+        val principalId = partyId(requestedPrincipal)
+        val ofId = partyId(requestedOf)
         val approverId = approvedBy?.let { partyId(it) }
         val requestId = AuthorizationRequestTable.insert {
             it[requestType] = AuthorizationRequestType.ChangeOfEnergySupplierForOrganization
             it[AuthorizationRequestTable.status] = status
             it[AuthorizationRequestTable.requestedBy] = byId
-            it[AuthorizationRequestTable.requestedFrom] = fromId
-            it[AuthorizationRequestTable.requestedTo] = toId
+            it[AuthorizationRequestTable.requestedPrincipal] = principalId
+            it[AuthorizationRequestTable.requestedOf] = ofId
             it[AuthorizationRequestTable.approvedBy] = approverId
             it[AuthorizationRequestTable.validTo] = validTo
             it[AuthorizationRequestTable.createdAt] = created
@@ -115,8 +115,8 @@ class ExposedRequestRepositoryTest : FunSpec({
 
     test("find maps request fields, parties, approver, scopes and constraints") {
         val requestedBy = party(PartyType.Organization)
-        val requestedFrom = party(PartyType.Organization)
-        val requestedTo = party()
+        val requestedPrincipal = party(PartyType.Organization)
+        val requestedOf = party()
         val approver = party()
         val appliesTo = AuthorizationScopeConstraint(
             AuthorizationScopeConstraintKind.AppliesTo,
@@ -137,8 +137,8 @@ class ExposedRequestRepositoryTest : FunSpec({
         val unconstrained = RequestedAuthorizationScope(ResourceType.MeteringPointContract, emptyList())
         val requestId = insertRequest(
             requestedBy = requestedBy,
-            requestedFrom = requestedFrom,
-            requestedTo = requestedTo,
+            requestedPrincipal = requestedPrincipal,
+            requestedOf = requestedOf,
             approvedBy = approver,
             externalReference = "contract-123",
             scopes = listOf(constrained, unconstrained),
@@ -158,8 +158,8 @@ class ExposedRequestRepositoryTest : FunSpec({
             createdAt = createdAt,
             updatedAt = createdAt + 1.days,
             requestedBy = requestedBy,
-            requestedFrom = requestedFrom,
-            requestedTo = requestedTo,
+            requestedPrincipal = requestedPrincipal,
+            requestedOf = requestedOf,
             approvedBy = approver,
             authorizationGrant = null,
         )
@@ -178,8 +178,8 @@ class ExposedRequestRepositoryTest : FunSpec({
 
         result.id shouldBe requestId
         result.requestedBy shouldBe requestedBy
-        result.requestedFrom shouldBe requestedBy
-        result.requestedTo shouldBe requestedBy
+        result.requestedPrincipal shouldBe requestedBy
+        result.requestedOf shouldBe requestedBy
         result.requestedScopes shouldBe emptyList()
         result.approvedBy shouldBe null
         result.externalReference shouldBe null
@@ -242,8 +242,8 @@ class ExposedRequestRepositoryTest : FunSpec({
             validTo = future,
             meta = metadata,
             requestedBy = requestedBy,
-            requestedFrom = requestedBy,
-            requestedTo = recipient,
+            requestedPrincipal = requestedBy,
+            requestedOf = recipient,
         ).copy(createdAt = createdAt, updatedAt = createdAt + 1.days)
 
         repository.insert(request) shouldBe request
@@ -266,8 +266,8 @@ class ExposedRequestRepositoryTest : FunSpec({
             validTo = future,
             meta = JsonObject(emptyMap()),
             requestedBy = requestedBy,
-            requestedFrom = requestedBy,
-            requestedTo = requestedBy,
+            requestedPrincipal = requestedBy,
+            requestedOf = requestedBy,
         ).copy(createdAt = createdAt, updatedAt = createdAt)
 
         repository.insert(request) shouldBe request
@@ -296,8 +296,8 @@ class ExposedRequestRepositoryTest : FunSpec({
             validTo = future,
             meta = metadata,
             requestedBy = requestedBy,
-            requestedFrom = requestedBy,
-            requestedTo = recipient,
+            requestedPrincipal = requestedBy,
+            requestedOf = recipient,
         ).copy(createdAt = createdAt, updatedAt = createdAt)
 
         repository.insert(request) shouldBe request
@@ -310,18 +310,18 @@ class ExposedRequestRepositoryTest : FunSpec({
         }
     }
 
-    test("includes requestedBy and requestedTo once but excludes requestedFrom-only and unrelated parties") {
+    test("includes requestedBy and requestedOf once but excludes requestedPrincipal-only and unrelated parties") {
         val party = party()
         val other = party(PartyType.Organization)
-        val by = insertRequest(party, requestedFrom = other, requestedTo = other)
-        val to = insertRequest(other, requestedTo = party)
+        val by = insertRequest(party, requestedPrincipal = other, requestedOf = other)
+        val of = insertRequest(other, requestedOf = party)
         val both = insertRequest(party)
-        insertRequest(other, requestedFrom = party)
+        insertRequest(other, requestedPrincipal = party)
         insertRequest(other)
 
         val result = repository.findAndSortByCreatedAt(party, Pagination(), emptyList())
 
-        result.items.map { it.id }.shouldContainExactlyInAnyOrder(by, to, both)
+        result.items.map { it.id }.shouldContainExactlyInAnyOrder(by, of, both)
         result.totalItems shouldBe 3L
     }
 
@@ -363,8 +363,8 @@ class ExposedRequestRepositoryTest : FunSpec({
 
     test("batch maps parties including approver and scopes with multiple constraints") {
         val requestedBy = party(PartyType.Organization)
-        val from = party(PartyType.Organization)
-        val to = party()
+        val requestedPrincipal = party(PartyType.Organization)
+        val requestedOf = party()
         val approver = party()
         val appliesTo = AuthorizationScopeConstraint(
             AuthorizationScopeConstraintKind.AppliesTo,
@@ -385,13 +385,13 @@ class ExposedRequestRepositoryTest : FunSpec({
         val otherScope = RequestedAuthorizationScope(ResourceType.MeteringPointContract, listOf(appliesTo))
         val withScopes = insertRequest(
             requestedBy = requestedBy,
-            requestedFrom = from,
-            requestedTo = to,
+            requestedPrincipal = requestedPrincipal,
+            requestedOf = requestedOf,
             approvedBy = approver,
             externalReference = "contract-123",
             scopes = listOf(constrained, otherScope),
         )
-        val withOtherScope = insertRequest(to, requestedTo = requestedBy, scopes = listOf(otherScope))
+        val withOtherScope = insertRequest(requestedOf, requestedOf = requestedBy, scopes = listOf(otherScope))
         val withoutScopes = insertRequest(requestedBy)
 
         val result = repository.findAndSortByCreatedAt(requestedBy, Pagination(), emptyList())
@@ -399,8 +399,8 @@ class ExposedRequestRepositoryTest : FunSpec({
         val items = result.items.associateBy { it.id }
         val mapped = items.getValue(withScopes)
         mapped.requestedBy shouldBe requestedBy
-        mapped.requestedFrom shouldBe from
-        mapped.requestedTo shouldBe to
+        mapped.requestedPrincipal shouldBe requestedPrincipal
+        mapped.requestedOf shouldBe requestedOf
         mapped.approvedBy shouldBe approver
         mapped.status shouldBe AuthorizationRequestStatus.Accepted
         mapped.requestType shouldBe AuthorizationRequestType.ChangeOfEnergySupplierForOrganization
@@ -457,8 +457,8 @@ class ExposedRequestRepositoryTest : FunSpec({
         val scope = RequestedAuthorizationScope(ResourceType.MeteringPointContract, emptyList())
         val id = insertRequest(
             requestedBy = party(),
-            requestedFrom = party(),
-            requestedTo = party(),
+            requestedPrincipal = party(),
+            requestedOf = party(),
             externalReference = "reject-test",
             scopes = listOf(scope),
             meta = metadata,

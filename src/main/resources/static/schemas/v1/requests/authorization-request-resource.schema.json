@@ -55,14 +55,14 @@
             "requestedBy": {
               "$ref": "../elhub-common.schema.json#/$defs/agentRelationship"
             },
-            "requestedFrom": {
+            "requestedPrincipal": {
               "$ref": "../elhub-common.schema.json#/$defs/agentRelationship"
             },
-            "requestedTo": {
+            "requestedOf": {
               "$ref": "../elhub-common.schema.json#/$defs/agentRelationship"
             },
             "approvedBy": {
-              "$ref": "../elhub-common.schema.json#/$defs/signedByRelationship"
+              "$ref": "../elhub-common.schema.json#/$defs/approvedByRelationship"
             },
             "authorizationGrant": {
               "$ref": "../elhub-common.schema.json#/$defs/authorizationGrantRelationship"

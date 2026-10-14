@@ -17,9 +17,9 @@ data class AuthorizationDocument(
     val createdAt: Instant,
     val updatedAt: Instant,
     val requestedBy: AuthorizationParty,
-    val requestedFrom: AuthorizationParty,
-    val requestedTo: AuthorizationParty,
-    val signedBy: AuthorizationParty?,
+    val requestedPrincipal: AuthorizationParty,
+    val requestedOf: AuthorizationParty,
+    val approvedBy: AuthorizationParty?,
     val authorizationGrant: List<AuthorizationGrant>?,
     val pdfBytes: ByteArray,
 ) {
@@ -31,8 +31,8 @@ data class AuthorizationDocument(
             meta: JsonObject,
             validTo: Instant,
             requestedBy: AuthorizationParty,
-            requestedFrom: AuthorizationParty,
-            requestedTo: AuthorizationParty,
+            requestedPrincipal: AuthorizationParty,
+            requestedOf: AuthorizationParty,
             pdfBytes: ByteArray,
         ): AuthorizationDocument {
             val now = Clock.System.now()
@@ -47,9 +47,9 @@ data class AuthorizationDocument(
                 createdAt = now,
                 updatedAt = now,
                 requestedBy = requestedBy,
-                requestedFrom = requestedFrom,
-                requestedTo = requestedTo,
-                signedBy = null,
+                requestedPrincipal = requestedPrincipal,
+                requestedOf = requestedOf,
+                approvedBy = null,
                 authorizationGrant = null,
                 pdfBytes = pdfBytes,
             )

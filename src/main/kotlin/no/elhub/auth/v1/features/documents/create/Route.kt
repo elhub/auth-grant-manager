@@ -51,9 +51,9 @@ fun Route.route(
                 moveInAndChangeOfEnergySupplierActionValidator.validate(request.data.attributes.requestedScopes)
         }
 
-        val requestedFromIdentifier = AgentExternalIdentifier.create(request.data.meta.requestedFrom)
+        val requestedPrincipalIdentifier = AgentExternalIdentifier.create(request.data.meta.requestedPrincipal)
             .toPartyIdentifier()
-        val requestedFrom = partyService.resolve(requestedFromIdentifier).fold(
+        val requestedPrincipal = partyService.resolve(requestedPrincipalIdentifier).fold(
             ifLeft = { error ->
                 call.respond(error.toApiErrorResponse())
                 return@post
@@ -61,9 +61,9 @@ fun Route.route(
             ifRight = { it },
         )
 
-        val requestedToIdentifier = AgentExternalIdentifier.create(request.data.meta.requestedTo)
+        val requestedOfIdentifier = AgentExternalIdentifier.create(request.data.meta.requestedOf)
             .toPartyIdentifier()
-        val requestedTo = partyService.resolve(requestedToIdentifier).fold(
+        val requestedOf = partyService.resolve(requestedOfIdentifier).fold(
             ifLeft = { error ->
                 call.respond(error.toApiErrorResponse())
                 return@post
@@ -77,8 +77,8 @@ fun Route.route(
             action = action,
             externalReference = request.data.attributes.externalReference,
             requestedBy = requestedBy,
-            requestedFrom = requestedFrom,
-            requestedTo = requestedTo,
+            requestedPrincipal = requestedPrincipal,
+            requestedOf = requestedOf,
             language = request.data.meta.language,
         )
         call.respond(HttpStatusCode.Created, document.toCreateResponse())

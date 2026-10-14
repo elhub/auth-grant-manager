@@ -1,28 +1,28 @@
 {
   "summary": "documentType=ChangeOfEnergySupplierForOrganization",
   "value": {
-  "data": {
-    "type": "AuthorizationDocument",
-    "attributes": {
-      "documentType": "ChangeOfEnergySupplierForOrganization",
-      "requestedScopes": [
-        {
-          "resourceType": "MeteringPointContract",
-          "appliesTo": [
-            {
-              "attribute": "meteringPoint.id",
-              "value": ["707057500000000001"]
-            }
-          ]
-        }
-      ],
-      "externalReference": "contract-123"
-    },
-    "meta": {
-      "requestedFrom": "999888777",
-      "requestedTo": "01019012345",
-      "language": "nb"
+    "data": {
+      "type": "AuthorizationDocument",
+      "attributes": {
+        "documentType": "ChangeOfEnergySupplierForOrganization",
+        "requestedScopes": [
+          {
+            "resourceType": "MeteringPointContract",
+            "appliesTo": [
+              {
+                "attribute": "meteringPoint.id",
+                "value": ["707057500000000001"]
+              }
+            ]
+          }
+        ],
+        "externalReference": "contract-123"
+      },
+      "meta": {
+        "requestedPrincipal": "999888777",
+        "requestedOf": "01019012345",
+        "language": "nb"
+      }
     }
-  }
   }
 }

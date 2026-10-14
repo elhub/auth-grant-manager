@@ -44,7 +44,7 @@
           "relationships": {
             "type": "object",
             "properties": {
-              "grantedFor": {
+              "principal": {
                 "$ref": "../elhub-common.schema.json#/$defs/agentRelationship"
               },
               "grantedBy": {
@@ -52,6 +52,9 @@
               },
               "grantedTo": {
                 "$ref": "../elhub-common.schema.json#/$defs/agentRelationship"
+              },
+              "approvedBy": {
+                "$ref": "../elhub-common.schema.json#/$defs/approvedByRelationship"
               },
               "source": {
                 "$ref": "../elhub-common.schema.json#/$defs/authorizationSourceRelationship"

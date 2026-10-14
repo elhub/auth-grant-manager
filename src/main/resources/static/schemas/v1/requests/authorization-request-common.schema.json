@@ -29,10 +29,10 @@
       "type": "string",
       "format": "uri"
     },
-    "requestedFrom": {
+    "requestedPrincipal": {
       "type": "string"
     },
-    "requestedTo": {
+    "requestedOf": {
       "type": "string"
     }
   }

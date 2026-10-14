@@ -96,16 +96,16 @@ private fun Errors.toApiErrorResponse() = when (this) {
         detail = detail,
     )
 
-    is InputError.RequestedToRequestedFromMismatch -> buildApiErrorResponse(
+    is InputError.RequestedOfRequestedPrincipalMismatch -> buildApiErrorResponse(
         status = HttpStatusCode.UnprocessableEntity,
         title = "Invalid authorization recipient",
-        detail = "RequestedTo is not allowed to represent RequestedFrom",
+        detail = "RequestedOf is not allowed to represent RequestedPrincipal",
     )
 
     is InputError.RequestedScopeNotAllowed -> buildApiErrorResponse(
         status = HttpStatusCode.Forbidden,
         title = "Requested scope is not authorized",
-        detail = "RequestedBy is not allowed to request the specified scope from RequestedFrom",
+        detail = "RequestedBy is not allowed to request the specified scope from RequestedPrincipal",
     )
 
     else -> throw Exception("Unimplemented")

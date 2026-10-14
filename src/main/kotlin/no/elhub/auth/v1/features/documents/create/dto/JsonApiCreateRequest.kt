@@ -27,8 +27,8 @@ data class ScopeConstraint(
 
 @Serializable
 data class CreateAuthorizationDocumentMeta(
-    val requestedFrom: String,
-    val requestedTo: String,
+    val requestedPrincipal: String,
+    val requestedOf: String,
     val language: DocumentLanguage = DocumentLanguage.NB,
 )
 

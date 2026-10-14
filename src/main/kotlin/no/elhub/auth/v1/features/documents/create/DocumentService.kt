@@ -16,14 +16,14 @@ class DocumentService(
         action: DocumentAction,
         externalReference: String?,
         requestedBy: AuthorizationParty,
-        requestedFrom: AuthorizationParty,
-        requestedTo: AuthorizationParty,
+        requestedPrincipal: AuthorizationParty,
+        requestedOf: AuthorizationParty,
         language: DocumentLanguage,
     ): AuthorizationDocument {
         val context = DocumentActionContext(
             requestedBy = requestedBy,
-            requestedFrom = requestedFrom,
-            requestedTo = requestedTo,
+            requestedPrincipal = requestedPrincipal,
+            requestedOf = requestedOf,
             language = language,
             externalReference = externalReference,
         )
@@ -43,8 +43,8 @@ class DocumentService(
             meta = details.meta,
             validTo = details.validTo,
             requestedBy = requestedBy,
-            requestedFrom = requestedFrom,
-            requestedTo = requestedTo,
+            requestedPrincipal = requestedPrincipal,
+            requestedOf = requestedOf,
             pdfBytes = pdfBytes,
         )
     }

@@ -8,8 +8,8 @@ import kotlin.time.Instant
 
 data class DocumentActionContext(
     val requestedBy: AuthorizationParty,
-    val requestedFrom: AuthorizationParty,
-    val requestedTo: AuthorizationParty,
+    val requestedPrincipal: AuthorizationParty,
+    val requestedOf: AuthorizationParty,
     val language: DocumentLanguage,
     val externalReference: String?,
 )

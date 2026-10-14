@@ -39,13 +39,13 @@
               "id": "7080005053246"
             }
           },
-          "requestedFrom": {
+          "requestedPrincipal": {
             "data": {
               "type": "Organization",
               "id": "999888777"
             }
           },
-          "requestedTo": {
+          "requestedOf": {
             "data": {
               "type": "Person",
               "id": "01019012345"
@@ -111,13 +111,13 @@
               "id": "7080005053246"
             }
           },
-          "requestedFrom": {
+          "requestedPrincipal": {
             "data": {
               "type": "Organization",
               "id": "999888777"
             }
           },
-          "requestedTo": {
+          "requestedOf": {
             "data": {
               "type": "Person",
               "id": "01019012345"

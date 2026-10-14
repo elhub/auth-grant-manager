@@ -54,8 +54,8 @@ class RouteTest : FunSpec({
               "externalReference": "contract-123"
             },
             "meta": {
-              "requestedFrom": "999888777",
-              "requestedTo": "01019012345",
+              "requestedPrincipal": "999888777",
+              "requestedOf": "01019012345",
               "language": "nb"
             }
           }
@@ -96,9 +96,9 @@ class RouteTest : FunSpec({
         createdAt = Clock.System.now(),
         updatedAt = Clock.System.now(),
         requestedBy = authorizedParty,
-        requestedFrom = AuthorizationParty("999888777", PartyType.OrganizationEntity),
-        requestedTo = AuthorizationParty("person-1", PartyType.Person),
-        signedBy = null,
+        requestedPrincipal = AuthorizationParty("999888777", PartyType.OrganizationEntity),
+        requestedOf = AuthorizationParty("person-1", PartyType.Person),
+        approvedBy = null,
         authorizationGrant = null,
         pdfBytes = ByteArray(0),
     )
@@ -153,8 +153,8 @@ class RouteTest : FunSpec({
                     },
                     externalReference = "contract-123",
                     requestedBy = authorizedParty,
-                    requestedFrom = AuthorizationParty("999888777", PartyType.OrganizationEntity),
-                    requestedTo = AuthorizationParty("person-1", PartyType.Person),
+                    requestedPrincipal = AuthorizationParty("999888777", PartyType.OrganizationEntity),
+                    requestedOf = AuthorizationParty("person-1", PartyType.Person),
                     language = DocumentLanguage.NB,
                 )
             }
@@ -183,8 +183,8 @@ class RouteTest : FunSpec({
                     action = any(),
                     externalReference = "contract-123",
                     requestedBy = authorizedParty,
-                    requestedFrom = AuthorizationParty("999888777", PartyType.OrganizationEntity),
-                    requestedTo = AuthorizationParty("person-1", PartyType.Person),
+                    requestedPrincipal = AuthorizationParty("999888777", PartyType.OrganizationEntity),
+                    requestedOf = AuthorizationParty("person-1", PartyType.Person),
                     language = DocumentLanguage.NB,
                 )
             }
@@ -212,8 +212,8 @@ class RouteTest : FunSpec({
             action = action,
             externalReference = "ref",
             requestedBy = authorizedParty,
-            requestedFrom = AuthorizationParty("org-1", PartyType.Organization),
-            requestedTo = AuthorizationParty("person-1", PartyType.Person),
+            requestedPrincipal = AuthorizationParty("org-1", PartyType.Organization),
+            requestedOf = AuthorizationParty("person-1", PartyType.Person),
             language = DocumentLanguage.NB,
         )
 
