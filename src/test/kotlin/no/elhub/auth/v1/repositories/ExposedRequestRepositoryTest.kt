@@ -8,6 +8,9 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonObject
 import no.elhub.auth.v0.config.withTransaction
 import no.elhub.auth.v0.features.common.Pagination
 import no.elhub.auth.v0.features.common.PostgresTestContainer
@@ -51,6 +54,9 @@ class ExposedRequestRepositoryTest : FunSpec({
     val createdAt = Instant.parse("2025-01-01T00:00:00Z")
     val future = Instant.parse("2100-01-01T00:00:00Z")
     val past = Instant.parse("2000-01-01T00:00:00Z")
+    val metadata = Json.parseToJsonElement(
+        """{"name":"alberto","nestedStuff":{"values":[null,false,1.5]}}""",
+    ).jsonObject
 
     fun party(type: PartyType = PartyType.Person) = AuthorizationParty(id = UUID.randomUUID().toString(), type = type)
 
@@ -64,6 +70,7 @@ class ExposedRequestRepositoryTest : FunSpec({
         created: Instant = createdAt,
         externalReference: String? = null,
         scopes: List<RequestedAuthorizationScope> = emptyList(),
+        meta: JsonObject = JsonObject(emptyMap()),
     ): UUID = withTransaction {
         suspend fun partyId(party: AuthorizationParty) = partyRepository.findOrInsert(party.type, party.id).id
         val byId = partyId(requestedBy)
@@ -82,6 +89,7 @@ class ExposedRequestRepositoryTest : FunSpec({
             it[updatedAt] = created + 1.days
             it[validFrom] = created
             it[AuthorizationRequestTable.externalReference] = externalReference
+            it[AuthorizationRequestTable.meta] = meta
         }[AuthorizationRequestTable.id].value
 
         scopes.forEach { scope ->
@@ -146,6 +154,7 @@ class ExposedRequestRepositoryTest : FunSpec({
             requestedScopes = emptyList(),
             externalReference = "contract-123",
             validTo = future,
+            meta = JsonObject(emptyMap()),
             createdAt = createdAt,
             updatedAt = createdAt + 1.days,
             requestedBy = requestedBy,
@@ -231,6 +240,7 @@ class ExposedRequestRepositoryTest : FunSpec({
             requestedScopes = listOf(constrained, unconstrained),
             externalReference = "contract-123",
             validTo = future,
+            meta = metadata,
             requestedBy = requestedBy,
             requestedFrom = requestedBy,
             requestedTo = recipient,
@@ -238,6 +248,7 @@ class ExposedRequestRepositoryTest : FunSpec({
 
         repository.insert(request) shouldBe request
 
+        repository.find(request.id).meta shouldBe metadata
         val stored = repository.findAndSortByCreatedAt(requestedBy, Pagination(), emptyList()).items.single()
         stored.copy(requestedScopes = emptyList()) shouldBe request.copy(requestedScopes = emptyList())
         stored.requestedScopes.single { it.constraints.isEmpty() } shouldBe unconstrained
@@ -253,6 +264,7 @@ class ExposedRequestRepositoryTest : FunSpec({
             requestedScopes = emptyList(),
             externalReference = null,
             validTo = future,
+            meta = JsonObject(emptyMap()),
             requestedBy = requestedBy,
             requestedFrom = requestedBy,
             requestedTo = requestedBy,
@@ -282,6 +294,7 @@ class ExposedRequestRepositoryTest : FunSpec({
             requestedScopes = listOf(RequestedAuthorizationScope(ResourceType.MeteringPointContract, listOf(appliesTo, validFrom))),
             externalReference = "contract-124",
             validTo = future,
+            meta = metadata,
             requestedBy = requestedBy,
             requestedFrom = requestedBy,
             requestedTo = recipient,
@@ -448,6 +461,7 @@ class ExposedRequestRepositoryTest : FunSpec({
             requestedTo = party(),
             externalReference = "reject-test",
             scopes = listOf(scope),
+            meta = metadata,
         )
         val original = repository.find(id)
         val before = now()
