@@ -18,9 +18,6 @@
     "authorizationScopeConstraint": {
       "type": "object",
       "properties": {
-        "resource": {
-          "type": "string"
-        },
         "attribute": {
           "type": "string",
           "minLength": 1
