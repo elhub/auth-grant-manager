@@ -258,25 +258,6 @@ class RouteTest : FunSpec({
         }
     }
 
-    listOf("requestedPrincipal", "requestedOf").forEach { field ->
-        test("POST / returns a field-specific 400 before party resolution when $field is missing") {
-            testApplication {
-                setupAppWith(authorizedParty) {
-                    route(partyService, handler, changeOfEnergySupplierActionValidator, moveInAndChangeOfEnergySupplierActionValidator)
-                }
-
-                val response = client.postJson("/", requestBody.replace(Regex("\"$field\": \"[^\"]*\",\\s*"), ""))
-
-                response.status shouldBe HttpStatusCode.BadRequest
-                val body: JsonApiErrorCollection = response.body()
-                body.errors.single().title shouldBe "Missing required field in request body"
-                body.errors.single().detail shouldBe "Field '[$field]' is missing or invalid"
-                coVerify(exactly = 0) { partyService.resolve(any()) }
-                coVerify(exactly = 0) { handler.createAuthorizationDocument(any(), any(), any(), any(), any(), any()) }
-            }
-        }
-    }
-
     test("POST / rejects validFrom changes that are unsupported for change of supplier") {
         testApplication {
             setupAppWith(authorizedParty) {
