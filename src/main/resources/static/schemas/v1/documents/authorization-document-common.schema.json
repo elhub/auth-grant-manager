@@ -31,10 +31,10 @@
       "type": "string",
       "format": "uri-reference"
     },
-    "requestedFrom": {
+    "requestedPrincipal": {
       "type": "string"
     },
-    "requestedTo": {
+    "requestedOf": {
       "type": "string"
     },
     "language": {

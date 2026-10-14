@@ -17,8 +17,8 @@ data class AuthorizationRequest(
     val createdAt: Instant,
     val updatedAt: Instant,
     val requestedBy: AuthorizationParty,
-    val requestedFrom: AuthorizationParty,
-    val requestedTo: AuthorizationParty,
+    val requestedPrincipal: AuthorizationParty,
+    val requestedOf: AuthorizationParty,
     val approvedBy: AuthorizationParty?,
     val authorizationGrant: List<AuthorizationGrant>?,
 ) {
@@ -30,8 +30,8 @@ data class AuthorizationRequest(
             meta: JsonObject,
             validTo: Instant,
             requestedBy: AuthorizationParty,
-            requestedFrom: AuthorizationParty,
-            requestedTo: AuthorizationParty,
+            requestedPrincipal: AuthorizationParty,
+            requestedOf: AuthorizationParty,
         ): AuthorizationRequest {
             val now = Clock.System.now()
             return AuthorizationRequest(
@@ -45,8 +45,8 @@ data class AuthorizationRequest(
                 createdAt = now,
                 updatedAt = now,
                 requestedBy = requestedBy,
-                requestedFrom = requestedFrom,
-                requestedTo = requestedTo,
+                requestedPrincipal = requestedPrincipal,
+                requestedOf = requestedOf,
                 approvedBy = null,
                 authorizationGrant = null,
             )

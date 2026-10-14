@@ -15,8 +15,8 @@ import kotlin.time.Clock
 class PlaceholderDocumentActionHandlersTest : FunSpec({
     val context = DocumentActionContext(
         requestedBy = AuthorizationParty("supplier-1", PartyType.OrganizationEntity),
-        requestedFrom = AuthorizationParty("org-1", PartyType.Organization),
-        requestedTo = AuthorizationParty("person-1", PartyType.Person),
+        requestedPrincipal = AuthorizationParty("org-1", PartyType.Organization),
+        requestedOf = AuthorizationParty("person-1", PartyType.Person),
         language = DocumentLanguage.EN,
         externalReference = "reference-1",
     )

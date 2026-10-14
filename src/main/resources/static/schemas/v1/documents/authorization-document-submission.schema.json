@@ -28,11 +28,11 @@
         "meta": {
           "type": "object",
           "properties": {
-            "requestedFrom": {
-              "$ref": "authorization-document-common.schema.json#/$defs/requestedFrom"
+            "requestedPrincipal": {
+              "$ref": "authorization-document-common.schema.json#/$defs/requestedPrincipal"
             },
-            "requestedTo": {
-              "$ref": "authorization-document-common.schema.json#/$defs/requestedTo"
+            "requestedOf": {
+              "$ref": "authorization-document-common.schema.json#/$defs/requestedOf"
             },
             "language": {
               "$ref": "authorization-document-common.schema.json#/$defs/language"

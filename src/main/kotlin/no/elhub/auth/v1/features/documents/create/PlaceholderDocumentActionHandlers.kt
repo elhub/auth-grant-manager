@@ -20,8 +20,8 @@ class PlaceholderChangeOfEnergySupplierDocumentActionHandler : ChangeOfEnergySup
         return DocumentActionDetails(
             pdfContent = AuthorizationDocumentPdfContent.ChangeOfBalanceSupplierForOrganisation(
                 language = context.language.toPdfLanguage(),
-                organizationName = "Placeholder organization ${context.requestedFrom.id}",
-                organizationNumber = context.requestedFrom.id,
+                organizationName = "Placeholder organization ${context.requestedPrincipal.id}",
+                organizationNumber = context.requestedPrincipal.id,
                 meteringPointAddress = "Placeholder address",
                 meteringPointId = meteringPointId,
                 meterNumber = "Unknown",
@@ -47,8 +47,8 @@ class PlaceholderMoveInAndChangeOfEnergySupplierDocumentActionHandler : MoveInAn
         return DocumentActionDetails(
             pdfContent = AuthorizationDocumentPdfContent.MoveInAndChangeOfBalanceSupplierForOrganisation(
                 language = context.language.toPdfLanguage(),
-                organizationName = "Placeholder organization ${context.requestedFrom.id}",
-                organizationNumber = context.requestedFrom.id,
+                organizationName = "Placeholder organization ${context.requestedPrincipal.id}",
+                organizationNumber = context.requestedPrincipal.id,
                 meteringPointAddress = "Placeholder address",
                 meteringPointId = meteringPointId,
                 meterNumber = "Unknown",

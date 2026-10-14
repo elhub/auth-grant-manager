@@ -22,7 +22,7 @@ sealed class InputError(override val detail: String) : Errors(detail) {
         detail: String,
     ) : InputError(detail)
 
-    class RequestedToRequestedFromMismatch : Errors()
+    class RequestedOfRequestedPrincipalMismatch : Errors()
     class RequestedScopeNotAllowed : Errors()
 }
 

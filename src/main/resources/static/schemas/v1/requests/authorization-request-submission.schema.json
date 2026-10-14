@@ -30,11 +30,11 @@
         "meta": {
           "type": "object",
           "properties": {
-            "requestedFrom": {
-              "$ref": "authorization-request-common.schema.json#/$defs/requestedFrom"
+            "requestedPrincipal": {
+              "$ref": "authorization-request-common.schema.json#/$defs/requestedPrincipal"
             },
-            "requestedTo": {
-              "$ref": "authorization-request-common.schema.json#/$defs/requestedTo"
+            "requestedOf": {
+              "$ref": "authorization-request-common.schema.json#/$defs/requestedOf"
             }
           }
         }
