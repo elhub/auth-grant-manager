@@ -7,6 +7,7 @@ import io.kotest.matchers.shouldBe
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import no.elhub.auth.v0.config.withTransaction
+import no.elhub.auth.v0.features.common.Pagination
 import no.elhub.auth.v0.features.common.PostgresTestContainer
 import no.elhub.auth.v0.features.common.PostgresTestContainerExtension
 import no.elhub.auth.v0.features.common.party.AuthorizationParty
@@ -175,5 +176,133 @@ class ExposedDocumentRepositoryTest : FunSpec({
         val error = shouldThrow<RepositoryReadError.NotFoundError> { repository.find(id) }
 
         error.detail shouldBe "Document not found: $id"
+    }
+
+    test("listing includes requester or principal but excludes other roles and party types") {
+        val party = party(PartyType.Organization)
+        val by = seed(document().copy(requestedBy = party))
+        val principal = seed(document().copy(requestedPrincipal = party))
+        val both = seed(document().copy(requestedBy = party, requestedPrincipal = party))
+        seed(document().copy(requestedOf = party))
+        seed(document().copy(approvedBy = party))
+        seed(document().copy(requestedBy = party.copy(type = PartyType.Person)))
+        seed(document())
+
+        val result = repository.findAndSortByCreatedAt(party, Pagination(), emptyList())
+
+        result.items.map { it.id }.shouldContainExactlyInAnyOrder(by.toString(), principal.toString(), both.toString())
+        result.totalItems shouldBe 3L
+    }
+
+    test("listing sorts by creation time then UUID descending with consistent page totals") {
+        val party = party()
+        val ids = listOf(
+            "00000000-0000-0000-0000-000000000001",
+            "00000000-0000-0000-0000-000000000002",
+            "00000000-0000-0000-0000-000000000003",
+            "00000000-0000-0000-0000-000000000004",
+            "00000000-0000-0000-0000-000000000005",
+        )
+        val times = listOf(createdAt + 2.days, createdAt, createdAt + 2.days, createdAt + 3.days, createdAt + 1.days)
+        ids.zip(times).forEach { (id, time) -> seed(document().copy(id = id, requestedBy = party, createdAt = time)) }
+        val expectedPages = listOf(listOf(ids[3], ids[2]), listOf(ids[0], ids[4]), listOf(ids[1]), emptyList())
+
+        expectedPages.forEachIndexed { page, expected ->
+            val pagination = Pagination(page = page, size = 2)
+            val result = repository.findAndSortByCreatedAt(party, pagination, emptyList())
+            result.items.map { it.id } shouldBe expected
+            result.totalItems shouldBe 5L
+            result.pagination shouldBe pagination
+        }
+    }
+
+    test("listing filters derived document statuses including combined and empty filters") {
+        val party = party()
+        val past = Instant.parse("2000-01-01T00:00:00Z")
+        val expected = listOf(
+            document() to AuthorizationDocumentStatus.Pending,
+            document().copy(validTo = past) to AuthorizationDocumentStatus.Expired,
+            document().copy(approvedBy = party()) to AuthorizationDocumentStatus.Accepted,
+            document().copy(approvedBy = party(), validTo = past) to AuthorizationDocumentStatus.Accepted,
+        ).associate { (document, status) -> seed(document.copy(requestedBy = party)).toString() to status }
+        seed(document().copy(validTo = past))
+        seed(document().copy(approvedBy = party()))
+        val filters = AuthorizationDocumentStatus.entries.map { listOf(it) } + listOf(
+            listOf(AuthorizationDocumentStatus.Pending, AuthorizationDocumentStatus.Expired),
+            AuthorizationDocumentStatus.entries.toList(),
+            emptyList(),
+        )
+
+        filters.forEach { statuses ->
+            val matching = expected.filterValues { statuses.isEmpty() || it in statuses }
+            val result = repository.findAndSortByCreatedAt(party, Pagination(), statuses)
+            result.items.associate { it.id to it.status } shouldBe matching
+            result.totalItems shouldBe matching.size.toLong()
+        }
+    }
+
+    test("listing returns empty pages when no party or status matches") {
+        val party = party()
+        seed(document().copy(requestedBy = party))
+
+        val noParty = repository.findAndSortByCreatedAt(party(), Pagination(), emptyList())
+        val noStatus = repository.findAndSortByCreatedAt(party, Pagination(), listOf(AuthorizationDocumentStatus.Accepted))
+
+        listOf(noParty, noStatus).forEach {
+            it.items shouldBe emptyList()
+            it.totalItems shouldBe 0L
+            it.pagination shouldBe Pagination()
+        }
+    }
+
+    test("listing maps each document with its own parties and scopes") {
+        val party = party(PartyType.Organization)
+        val constraints = listOf(
+            AuthorizationScopeConstraint(
+                AuthorizationScopeConstraintKind.AppliesTo,
+                AuthorizationScopeConstraintAttribute.MeteringPointId,
+                ResourceConstraint.MeteringPoints(setOf(MeteringPointId.create("707057500000000001"))),
+            ),
+            AuthorizationScopeConstraint(
+                AuthorizationScopeConstraintKind.AllowedChanges,
+                AuthorizationScopeConstraintAttribute.ContractType,
+                ResourceConstraint.ContractTypes(setOf(MeteringPointContractType.EnergySupplier)),
+            ),
+            AuthorizationScopeConstraint(
+                AuthorizationScopeConstraintKind.AllowedChanges,
+                AuthorizationScopeConstraintAttribute.ValidFrom,
+                ResourceConstraint.ValidFrom(createdAt),
+            ),
+        )
+        val unconstrained = RequestedAuthorizationScope(ResourceType.MeteringPointContract, emptyList())
+        val constrained = RequestedAuthorizationScope(ResourceType.MeteringPointContract, constraints)
+        val documents = listOf(
+            document().copy(
+                requestedBy = party,
+                approvedBy = party(),
+                status = AuthorizationDocumentStatus.Accepted,
+                externalReference = "listed-contract",
+                requestedScopes = listOf(constrained, unconstrained),
+            ),
+            document().copy(requestedPrincipal = party, requestedScopes = listOf(unconstrained)),
+            document().copy(requestedBy = party, documentType = AuthorizationDocumentType.ChangeOfEnergySupplierForOrganization),
+        )
+        documents.forEach { seed(it) }
+        seed(document().copy(requestedScopes = listOf(constrained)))
+
+        val result = repository.findAndSortByCreatedAt(party, Pagination(), emptyList())
+
+        result.totalItems shouldBe 3L
+        val items = result.items.associateBy { it.id }
+        documents.forEach { expected ->
+            val actual = items.getValue(expected.id)
+            actual.copy(requestedScopes = emptyList(), pdfBytes = expected.pdfBytes) shouldBe expected.copy(requestedScopes = emptyList())
+            actual.pdfBytes.toList() shouldBe expected.pdfBytes.toList()
+            actual.requestedScopes.size shouldBe expected.requestedScopes.size
+            actual.requestedScopes.filter { it.constraints.isEmpty() } shouldBe expected.requestedScopes.filter { it.constraints.isEmpty() }
+            if (expected.requestedScopes.any { it.constraints.isNotEmpty() }) {
+                actual.requestedScopes.single { it.constraints.isNotEmpty() }.constraints.shouldContainExactlyInAnyOrder(constraints)
+            }
+        }
     }
 })

@@ -8,6 +8,7 @@ import no.elhub.auth.v0.features.common.Page
 import no.elhub.auth.v0.features.common.Pagination
 import no.elhub.auth.v0.features.common.party.AuthorizationParty
 import no.elhub.auth.v0.features.common.party.AuthorizationPartyTable
+import no.elhub.auth.v0.features.common.party.toAuthorizationParty
 import no.elhub.auth.v0.features.grants.common.toAuthorizationParty
 import no.elhub.auth.v1.RepositoryReadError
 import no.elhub.auth.v1.common.now
@@ -24,9 +25,18 @@ import no.elhub.auth.v1.domain.RequestedAuthorizationScope
 import no.elhub.auth.v1.domain.ResourceConstraint
 import no.elhub.auth.v1.domain.ResourceType
 import org.jetbrains.exposed.v1.core.ResultRow
+import org.jetbrains.exposed.v1.core.Op
+import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.greater
+import org.jetbrains.exposed.v1.core.inList
+import org.jetbrains.exposed.v1.core.isNotNull
+import org.jetbrains.exposed.v1.core.isNull
 import org.jetbrains.exposed.v1.core.java.javaUUID
+import org.jetbrains.exposed.v1.core.lessEq
+import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.datetime.timestamp
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.json.jsonb
@@ -60,23 +70,11 @@ class ExposedDocumentRepository(
             .singleOrNull()
             ?: throw RepositoryReadError.NotFoundError("Document not found: $id")
 
-        val scopes = (AuthorizationDocumentScopeTable leftJoin AuthorizationDocumentScopeConstraintTable)
-            .selectAll()
-            .where { AuthorizationDocumentScopeTable.documentId eq id }
-            .groupBy { it[AuthorizationDocumentScopeTable.id].value }
-            .values.map { scopeRows ->
-                scopeRows.first().toRequestedAuthorizationScope(
-                    constraints = scopeRows.filter {
-                        it.getOrNull(AuthorizationDocumentScopeConstraintTable.id) != null
-                    }.map { it.toAuthorizationScopeConstraint() },
-                )
-            }
-
         row.toAuthorizationDocument(
             requestedBy = partyRepository.find(row[AuthorizationDocumentTable.requestedBy]).toAuthorizationParty(),
             requestedPrincipal = partyRepository.find(row[AuthorizationDocumentTable.requestedPrincipal]).toAuthorizationParty(),
             requestedOf = partyRepository.find(row[AuthorizationDocumentTable.requestedOf]).toAuthorizationParty(),
-            requestedScopes = scopes,
+            requestedScopes = getScopesByDocumentId(listOf(id))[id].orEmpty(),
             approvedBy = row[AuthorizationDocumentTable.approvedBy]?.let { partyRepository.find(it).toAuthorizationParty() },
             now = now(),
         )
@@ -86,8 +84,49 @@ class ExposedDocumentRepository(
         requestedBy: AuthorizationParty,
         pagination: Pagination,
         statuses: List<AuthorizationDocumentStatus>
-    ): Page<AuthorizationDocument> {
-        TODO("Not yet implemented")
+    ): Page<AuthorizationDocument> = withTransaction {
+        val partyId = partyRepository.findOrInsert(requestedBy.type, requestedBy.id).id
+        val now = now()
+        val whereClause = generateFilterByCondition(partyId, statuses, now)
+        val totalItems = AuthorizationDocumentTable.selectAll().where(whereClause).count()
+        val documentRows = AuthorizationDocumentTable.selectAll()
+            .where(whereClause)
+            .orderBy(AuthorizationDocumentTable.createdAt to SortOrder.DESC, AuthorizationDocumentTable.id to SortOrder.DESC)
+            .limit(pagination.size)
+            .offset(pagination.offset)
+            .toList()
+
+        if (documentRows.isEmpty()) {
+            return@withTransaction Page(emptyList(), totalItems, pagination)
+        }
+
+        val partyIds = documentRows.flatMap {
+            listOfNotNull(
+                it[AuthorizationDocumentTable.requestedBy],
+                it[AuthorizationDocumentTable.requestedPrincipal],
+                it[AuthorizationDocumentTable.requestedOf],
+                it[AuthorizationDocumentTable.approvedBy],
+            )
+        }.distinct()
+        val parties = AuthorizationPartyTable.selectAll()
+            .where { AuthorizationPartyTable.id inList partyIds }
+            .associate { it[AuthorizationPartyTable.id].value to it.toAuthorizationParty().toAuthorizationParty() }
+        val scopes = getScopesByDocumentId(documentRows.map { it[AuthorizationDocumentTable.id].value })
+
+        fun party(id: UUID): AuthorizationParty = parties[id]
+            ?: throw RepositoryReadError.UnexpectedError("Party not found for document: $id")
+
+        val items = documentRows.map { row ->
+            row.toAuthorizationDocument(
+                requestedBy = party(row[AuthorizationDocumentTable.requestedBy]),
+                requestedPrincipal = party(row[AuthorizationDocumentTable.requestedPrincipal]),
+                requestedOf = party(row[AuthorizationDocumentTable.requestedOf]),
+                requestedScopes = scopes[row[AuthorizationDocumentTable.id].value].orEmpty(),
+                approvedBy = row[AuthorizationDocumentTable.approvedBy]?.let { party(it) },
+                now = now,
+            )
+        }
+        Page(items, totalItems, pagination)
     }
 
     override suspend fun insert(document: AuthorizationDocument): AuthorizationDocument {
@@ -96,6 +135,49 @@ class ExposedDocumentRepository(
 
     override suspend fun confirm(documentId: UUID, signedFile: ByteArray, signatory: AuthorizationParty, grant: AuthorizationGrant): AuthorizationDocument {
         TODO("Not yet implemented")
+    }
+
+    private fun generateFilterByCondition(
+        partyId: UUID,
+        statuses: List<AuthorizationDocumentStatus>,
+        now: Instant,
+    ): Op<Boolean> {
+        val partyCondition = (AuthorizationDocumentTable.requestedBy eq partyId) or
+            (AuthorizationDocumentTable.requestedPrincipal eq partyId)
+        if (statuses.isEmpty()) {
+            return partyCondition
+        }
+        val statusCondition = statuses.map { status ->
+            when (status) {
+                AuthorizationDocumentStatus.Pending -> AuthorizationDocumentTable.approvedBy.isNull() and
+                    (AuthorizationDocumentTable.validTo greater now)
+
+                AuthorizationDocumentStatus.Expired -> AuthorizationDocumentTable.approvedBy.isNull() and
+                    (AuthorizationDocumentTable.validTo lessEq now)
+
+                AuthorizationDocumentStatus.Accepted -> AuthorizationDocumentTable.approvedBy.isNotNull()
+            }
+        }.reduce { acc, op -> acc or op }
+        return partyCondition and statusCondition
+    }
+
+    private fun getScopesByDocumentId(documentIds: List<UUID>): Map<UUID, List<RequestedAuthorizationScope>> {
+        if (documentIds.isEmpty()) {
+            return emptyMap()
+        }
+        return (AuthorizationDocumentScopeTable leftJoin AuthorizationDocumentScopeConstraintTable)
+            .selectAll()
+            .where { AuthorizationDocumentScopeTable.documentId inList documentIds }
+            .groupBy { it[AuthorizationDocumentScopeTable.documentId] }
+            .mapValues { (_, rows) ->
+                rows.groupBy { it[AuthorizationDocumentScopeTable.id].value }.values.map { scopeRows ->
+                    scopeRows.first().toRequestedAuthorizationScope(
+                        constraints = scopeRows.filter {
+                            it.getOrNull(AuthorizationDocumentScopeConstraintTable.id) != null
+                        }.map { it.toAuthorizationScopeConstraint() },
+                    )
+                }
+            }
     }
 }
 
