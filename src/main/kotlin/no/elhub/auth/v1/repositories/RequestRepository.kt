@@ -1,5 +1,7 @@
 package no.elhub.auth.v1.repositories
 
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
 import no.elhub.auth.v0.config.withTransaction
 import no.elhub.auth.v0.features.common.PGEnum
 import no.elhub.auth.v0.features.common.Page
@@ -42,6 +44,7 @@ import org.jetbrains.exposed.v1.datetime.timestamp
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.updateReturning
+import org.jetbrains.exposed.v1.json.jsonb
 import org.postgresql.util.PGobject
 import java.util.UUID
 import kotlin.time.Instant
@@ -164,6 +167,7 @@ class ExposedRequestRepository(
             it[AuthorizationRequestTable.requestedTo] = requestedTo.id
             it[AuthorizationRequestTable.approvedBy] = approvedBy?.id
             it[externalReference] = request.externalReference
+            it[meta] = request.meta
             it[AuthorizationRequestTable.validTo] = request.validTo
             it[validFrom] = request.createdAt
             it[createdAt] = request.createdAt
@@ -322,6 +326,7 @@ object AuthorizationRequestTable : UUIDTable("auth_v1.authorization_request") {
     val approvedAt = timestamp("approved_at").nullable()
     val createdAt = timestamp("created_at").clientDefault { now() }
     val externalReference = varchar("external_reference", 255).nullable()
+    val meta = jsonb("meta", Json, JsonObject.serializer())
     val redirectUri = text("redirect_uri").nullable()
     val validFrom = timestamp("valid_from").clientDefault { now() }
     val validTo = timestamp("valid_to").clientDefault { now() }
@@ -354,6 +359,7 @@ fun ResultRow.toAuthorizationRequest(
         status = toAuthorizationRequestStatus(now),
         requestedScopes = requestedScopes,
         externalReference = this[AuthorizationRequestTable.externalReference],
+        meta = this[AuthorizationRequestTable.meta],
         validTo = validTo,
         createdAt = this[AuthorizationRequestTable.createdAt],
         updatedAt = this[AuthorizationRequestTable.updatedAt],

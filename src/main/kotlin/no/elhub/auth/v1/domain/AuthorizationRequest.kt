@@ -1,5 +1,6 @@
 package no.elhub.auth.v1.domain
 
+import kotlinx.serialization.json.JsonObject
 import no.elhub.auth.v0.features.common.party.AuthorizationParty
 import java.util.UUID
 import kotlin.time.Clock
@@ -11,6 +12,7 @@ data class AuthorizationRequest(
     val status: AuthorizationRequestStatus,
     val requestedScopes: List<RequestedAuthorizationScope>,
     val externalReference: String?,
+    val meta: JsonObject,
     val validTo: Instant,
     val createdAt: Instant,
     val updatedAt: Instant,
@@ -25,6 +27,7 @@ data class AuthorizationRequest(
             requestType: AuthorizationRequestType,
             requestedScopes: List<RequestedAuthorizationScope>,
             externalReference: String?,
+            meta: JsonObject,
             validTo: Instant,
             requestedBy: AuthorizationParty,
             requestedFrom: AuthorizationParty,
@@ -37,6 +40,7 @@ data class AuthorizationRequest(
                 status = AuthorizationRequestStatus.Pending,
                 requestedScopes = requestedScopes,
                 externalReference = externalReference,
+                meta = meta,
                 validTo = validTo,
                 createdAt = now,
                 updatedAt = now,
