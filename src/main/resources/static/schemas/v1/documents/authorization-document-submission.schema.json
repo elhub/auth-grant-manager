@@ -27,6 +27,7 @@
         },
         "meta": {
           "type": "object",
+          "required": ["requestedPrincipal", "requestedOf"],
           "properties": {
             "requestedPrincipal": {
               "$ref": "authorization-document-common.schema.json#/$defs/requestedPrincipal"
