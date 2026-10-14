@@ -13,14 +13,12 @@
             "resourceType": "MeteringPointContract",
             "appliesTo": [
               {
-                "resource": "MeteringPointContract",
                 "attribute": "meteringPoint.id",
                 "value": ["300362000000000190"]
               }
             ],
             "allowedChanges": [
               {
-                "resource": "MeteringPointContract",
                 "attribute": "validFrom",
                 "value": ["2026-01-01T00:00:00+02:00"]
               }
