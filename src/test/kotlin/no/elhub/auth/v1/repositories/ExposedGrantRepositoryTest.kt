@@ -5,9 +5,11 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
 import no.elhub.auth.v0.config.withTransaction
+import no.elhub.auth.v0.features.common.Pagination
 import no.elhub.auth.v0.features.common.PostgresTestContainer
 import no.elhub.auth.v0.features.common.PostgresTestContainerExtension
 import no.elhub.auth.v0.features.common.party.AuthorizationParty
+import no.elhub.auth.v0.features.common.party.AuthorizationPartyTable
 import no.elhub.auth.v0.features.common.party.PartyType
 import no.elhub.auth.v1.RepositoryReadError
 import no.elhub.auth.v1.domain.AuthorizationGrant
@@ -23,8 +25,10 @@ import no.elhub.auth.v1.domain.MeteringPointId
 import no.elhub.auth.v1.domain.PermissionCapability
 import no.elhub.auth.v1.domain.ResourceConstraint
 import no.elhub.auth.v1.domain.ResourceType
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import java.util.UUID
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Instant
@@ -81,11 +85,12 @@ class ExposedGrantRepositoryTest : FunSpec({
         status: DatabaseGrantStatus = DatabaseGrantStatus.Active,
         validTo: Instant = future,
         scopes: List<GrantedAuthorizationScope> = emptyList(),
+        principal: AuthorizationParty = party(PartyType.Organization),
+        grantedBy: AuthorizationParty = party(PartyType.Person),
+        grantedTo: AuthorizationParty = party(PartyType.OrganizationEntity),
+        approvedBy: AuthorizationParty = party(PartyType.Person),
+        created: Instant = createdAt,
     ): AuthorizationGrant = withTransaction {
-        val principal = party(PartyType.Organization)
-        val grantedBy = party(PartyType.Person)
-        val grantedTo = party(PartyType.OrganizationEntity)
-        val approvedBy = party(PartyType.Person)
         suspend fun partyId(party: AuthorizationParty) = partyRepository.findOrInsert(party.type, party.id).id
         val principalId = partyId(principal)
         val byId = partyId(grantedBy)
@@ -102,7 +107,7 @@ class ExposedGrantRepositoryTest : FunSpec({
             it[AuthorizationGrantTable.status] = status
             it[validFrom] = createdAt
             it[AuthorizationGrantTable.validTo] = validTo
-            it[AuthorizationGrantTable.createdAt] = createdAt
+            it[AuthorizationGrantTable.createdAt] = created
             it[updatedAt] = createdAt + 1.days
         }[AuthorizationGrantTable.id].value
 
@@ -138,7 +143,7 @@ class ExposedGrantRepositoryTest : FunSpec({
             status = AuthorizationGrantStatus.valueOf(status.name),
             validFrom = createdAt,
             validTo = validTo,
-            createdAt = createdAt,
+            createdAt = created,
             updatedAt = createdAt + 1.days,
             scopes = scopes,
         )
@@ -215,5 +220,124 @@ class ExposedGrantRepositoryTest : FunSpec({
     test("findBySourceIds returns an empty map for empty input or unknown sources") {
         repository.findBySourceIds(AuthorizationGrantSourceType.Document, emptyList()) shouldBe emptyMap()
         repository.findBySourceIds(AuthorizationGrantSourceType.Document, listOf(UUID.randomUUID())) shouldBe emptyMap()
+    }
+
+    test("findAll includes principal and recipient once but excludes grantor-only, approver-only and unrelated parties") {
+        val caller = party(PartyType.Person)
+        val principalGrant = insertGrant(principal = caller, scopes = listOf(constrained, unconstrained))
+        val recipientGrant = insertGrant(grantedTo = caller, validTo = past)
+        val bothGrant = insertGrant(principal = caller, grantedTo = caller, status = DatabaseGrantStatus.Revoked)
+        insertGrant(grantedBy = caller)
+        insertGrant(approvedBy = caller)
+        insertGrant()
+        insertGrant(principal = caller.copy(type = PartyType.Organization))
+
+        val result = repository.findAll(caller, Pagination())
+
+        result.totalItems shouldBe 3L
+        result.items.map { it.id }.shouldContainExactlyInAnyOrder(principalGrant.id, recipientGrant.id, bothGrant.id)
+        assertGrant(result.items.single { it.id == principalGrant.id }, principalGrant)
+        assertGrant(result.items.single { it.id == recipientGrant.id }, recipientGrant.copy(status = AuthorizationGrantStatus.Expired))
+        assertGrant(result.items.single { it.id == bothGrant.id }, bothGrant)
+    }
+
+    test("findAll sorts newest first with stable ID ordering and preserves counts beyond the last page") {
+        val caller = party(PartyType.Person)
+        val older = insertGrant(principal = caller, created = createdAt - 1.days)
+        val tied = List(2) { insertGrant(principal = caller) }
+            .sortedByDescending { it.id.toString() }
+        val expected = tied + older
+
+        val first = repository.findAll(caller, Pagination(page = 0, size = 2))
+        first.items.map { it.id } shouldBe expected.take(2).map { it.id }
+        first.totalItems shouldBe 3L
+        first.pagination shouldBe Pagination(page = 0, size = 2)
+        first.totalPages shouldBe 2
+
+        val last = repository.findAll(caller, Pagination(page = 1, size = 2))
+        last.items.map { it.id } shouldBe listOf(older.id)
+        last.totalItems shouldBe 3L
+
+        val beyond = repository.findAll(caller, Pagination(page = 2, size = 2))
+        beyond.items shouldBe emptyList()
+        beyond.totalItems shouldBe 3L
+    }
+
+    test("findAll returns an empty page for an unknown party") {
+        val pagination = Pagination(page = 1, size = 2)
+        val result = repository.findAll(party(PartyType.Person), pagination)
+
+        result.items shouldBe emptyList()
+        result.totalItems shouldBe 0L
+        result.pagination shouldBe pagination
+    }
+
+    test("insert persists all fields, reuses parties and round-trips scopes and typed constraints") {
+        val template = insertGrant()
+        val grant = template.copy(id = UUID.randomUUID(), sourceId = UUID.randomUUID(), scopes = listOf(constrained, unconstrained))
+        val existing = partyRepository.findOrInsert(grant.principal.type, grant.principal.id)
+
+        assertGrant(repository.insert(grant), grant)
+        assertGrant(repository.find(grant.id), grant)
+        assertGrant(repository.findBySourceIds(grant.sourceType, listOf(grant.sourceId)).getValue(grant.sourceId), grant)
+        partyRepository.findOrInsert(grant.principal.type, grant.principal.id) shouldBe existing
+        withTransaction {
+            AuthorizationPartyTable.selectAll().where { AuthorizationPartyTable.partyId eq grant.principal.id }.count() shouldBe 1L
+        }
+    }
+
+    test("insert creates missing parties and persists both grant types and all statuses without scopes") {
+        val template = insertGrant()
+        AuthorizationGrantType.entries.forEach { type ->
+            AuthorizationGrantStatus.entries.forEach { status ->
+                val person = party(PartyType.Person)
+                val grant = template.copy(
+                    id = UUID.randomUUID(),
+                    type = type,
+                    sourceType = AuthorizationGrantSourceType.Request,
+                    sourceId = UUID.randomUUID(),
+                    principal = person,
+                    grantedBy = person,
+                    grantedTo = person,
+                    approvedBy = person,
+                    status = status,
+                    validTo = if (status == AuthorizationGrantStatus.Expired) past else future,
+                )
+
+                repository.insert(grant) shouldBe grant
+                repository.find(grant.id) shouldBe grant
+            }
+        }
+    }
+
+    test("insert rolls back grant, scopes, constraints and new parties with the enclosing transaction") {
+        val template = insertGrant()
+        val person = party(PartyType.Person)
+        val grant = template.copy(
+            id = UUID.randomUUID(),
+            sourceId = UUID.randomUUID(),
+            principal = person,
+            grantedBy = person,
+            grantedTo = person,
+            approvedBy = person,
+            scopes = listOf(constrained, unconstrained),
+        )
+        val before = withTransaction {
+            AuthorizationGrantScopeTable.selectAll().count() to AuthorizationGrantScopeConstraintTable.selectAll().count()
+        }
+
+        shouldThrow<IllegalStateException> {
+            withTransaction {
+                repository.insert(grant)
+                error("Abort grant issuance")
+            }
+        }
+
+        shouldThrow<RepositoryReadError.NotFoundError> { repository.find(grant.id) }
+        withTransaction {
+            AuthorizationGrantScopeTable.selectAll().count() shouldBe before.first
+            AuthorizationGrantScopeConstraintTable.selectAll().count() shouldBe before.second
+            AuthorizationPartyTable.selectAll().where { AuthorizationPartyTable.partyId eq person.id }.count() shouldBe 0L
+        }
     }
 })

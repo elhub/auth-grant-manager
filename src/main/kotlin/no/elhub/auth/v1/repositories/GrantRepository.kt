@@ -23,12 +23,15 @@ import no.elhub.auth.v1.domain.PermissionCapability
 import no.elhub.auth.v1.domain.ResourceConstraint
 import no.elhub.auth.v1.domain.ResourceType
 import org.jetbrains.exposed.v1.core.ResultRow
+import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.java.javaUUID
+import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.datetime.timestamp
+import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.postgresql.util.PGobject
 import java.util.UUID
@@ -110,12 +113,100 @@ class ExposedGrantRepository(
         }
     }
 
-    override suspend fun findAll(party: AuthorizationParty, pagination: Pagination): Page<AuthorizationGrant> {
-        TODO("Not yet implemented")
+    override suspend fun findAll(party: AuthorizationParty, pagination: Pagination): Page<AuthorizationGrant> = withTransaction {
+        val partyId = partyRepository.findOrInsert(party.type, party.id).id
+        val whereClause = (AuthorizationGrantTable.principal eq partyId) or (AuthorizationGrantTable.grantedTo eq partyId)
+        val totalItems = AuthorizationGrantTable.selectAll().where { whereClause }.count()
+        val rows = AuthorizationGrantTable.selectAll()
+            .where { whereClause }
+            .orderBy(AuthorizationGrantTable.createdAt to SortOrder.DESC, AuthorizationGrantTable.id to SortOrder.DESC)
+            .limit(pagination.size)
+            .offset(pagination.offset)
+            .toList()
+
+        if (rows.isEmpty()) return@withTransaction Page(emptyList(), totalItems, pagination)
+
+        val partyIds = rows.flatMap {
+            listOf(
+                it[AuthorizationGrantTable.principal],
+                it[AuthorizationGrantTable.grantedBy],
+                it[AuthorizationGrantTable.grantedTo],
+                it[AuthorizationGrantTable.approvedBy],
+            )
+        }.distinct()
+        val parties = partyRepository.findByIds(partyIds)
+            .mapValues { (_, party) -> party.toAuthorizationParty() }
+        val scopes = getScopesByGrantId(rows.map { it[AuthorizationGrantTable.id].value })
+        val now = now()
+
+        val items = rows.map { row ->
+            row.toAuthorizationGrant(
+                principal = parties.getValue(row[AuthorizationGrantTable.principal]),
+                grantedBy = parties.getValue(row[AuthorizationGrantTable.grantedBy]),
+                grantedTo = parties.getValue(row[AuthorizationGrantTable.grantedTo]),
+                approvedBy = parties.getValue(row[AuthorizationGrantTable.approvedBy]),
+                scopes = scopes[row[AuthorizationGrantTable.id].value].orEmpty(),
+                now = now,
+            )
+        }
+        Page(items, totalItems, pagination)
     }
 
-    override suspend fun insert(grant: AuthorizationGrant): AuthorizationGrant {
-        TODO("Not yet implemented")
+    override suspend fun insert(grant: AuthorizationGrant): AuthorizationGrant = withTransaction {
+        val principal = partyRepository.findOrInsert(grant.principal.type, grant.principal.id)
+        val grantedBy = partyRepository.findOrInsert(grant.grantedBy.type, grant.grantedBy.id)
+        val grantedTo = partyRepository.findOrInsert(grant.grantedTo.type, grant.grantedTo.id)
+        val approvedBy = partyRepository.findOrInsert(grant.approvedBy.type, grant.approvedBy.id)
+
+        val inserted = AuthorizationGrantTable.insert {
+            it[id] = grant.id
+            it[type] = grant.type
+            it[sourceType] = grant.sourceType
+            it[sourceId] = grant.sourceId
+            it[AuthorizationGrantTable.principal] = principal.id
+            it[AuthorizationGrantTable.grantedBy] = grantedBy.id
+            it[AuthorizationGrantTable.grantedTo] = grantedTo.id
+            it[AuthorizationGrantTable.approvedBy] = approvedBy.id
+            it[status] = when (grant.status) {
+                AuthorizationGrantStatus.Active, AuthorizationGrantStatus.Expired -> DatabaseGrantStatus.Active
+                AuthorizationGrantStatus.Revoked -> DatabaseGrantStatus.Revoked
+                AuthorizationGrantStatus.Exhausted -> DatabaseGrantStatus.Exhausted
+            }
+            it[validFrom] = grant.validFrom
+            it[validTo] = grant.validTo
+            it[createdAt] = grant.createdAt
+            it[updatedAt] = grant.updatedAt
+        }
+
+        grant.scopes.forEach { scope ->
+            val scopeId = AuthorizationGrantScopeTable.insert {
+                it[grantId] = grant.id
+                it[capability] = scope.capability
+                it[resourceType] = scope.resourceType
+            }[AuthorizationGrantScopeTable.id].value
+
+            scope.constraints.forEach { constraint ->
+                AuthorizationGrantScopeConstraintTable.insert {
+                    it[AuthorizationGrantScopeConstraintTable.scopeId] = scopeId
+                    it[kind] = constraint.constraintKind
+                    it[attribute] = constraint.attribute
+                    it[value] = when (val value = constraint.value) {
+                        is ResourceConstraint.MeteringPoints -> value.ids.map { it.value }
+                        is ResourceConstraint.ContractTypes -> value.types.map { it.name }
+                        is ResourceConstraint.ValidFrom -> listOf(value.value.toString())
+                    }
+                }
+            }
+        }
+
+        inserted.resultedValues!!.single().toAuthorizationGrant(
+            principal = principal.toAuthorizationParty(),
+            grantedBy = grantedBy.toAuthorizationParty(),
+            grantedTo = grantedTo.toAuthorizationParty(),
+            approvedBy = approvedBy.toAuthorizationParty(),
+            scopes = grant.scopes,
+            now = now(),
+        )
     }
 
     override suspend fun update(grantId: UUID, newStatus: AuthorizationGrantStatus): AuthorizationGrant {
