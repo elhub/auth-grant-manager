@@ -5,6 +5,7 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 import no.elhub.auth.v0.config.withTransaction
 import no.elhub.auth.v0.features.common.Pagination
@@ -302,6 +303,87 @@ class ExposedDocumentRepositoryTest : FunSpec({
             actual.requestedScopes.filter { it.constraints.isEmpty() } shouldBe expected.requestedScopes.filter { it.constraints.isEmpty() }
             if (expected.requestedScopes.any { it.constraints.isNotEmpty() }) {
                 actual.requestedScopes.single { it.constraints.isNotEmpty() }.constraints.shouldContainExactlyInAnyOrder(constraints)
+            }
+        }
+    }
+
+    test("insert persists document fields and requested scopes") {
+        val constraints = listOf(
+            AuthorizationScopeConstraint(
+                AuthorizationScopeConstraintKind.AppliesTo,
+                AuthorizationScopeConstraintAttribute.MeteringPointId,
+                ResourceConstraint.MeteringPoints(
+                    setOf(MeteringPointId.create("707057500000000001"), MeteringPointId.create("707057500000000002")),
+                ),
+            ),
+            AuthorizationScopeConstraint(
+                AuthorizationScopeConstraintKind.AllowedChanges,
+                AuthorizationScopeConstraintAttribute.ContractType,
+                ResourceConstraint.ContractTypes(setOf(MeteringPointContractType.EnergySupplier)),
+            ),
+            AuthorizationScopeConstraint(
+                AuthorizationScopeConstraintKind.AllowedChanges,
+                AuthorizationScopeConstraintAttribute.ValidFrom,
+                ResourceConstraint.ValidFrom(createdAt),
+            ),
+        )
+        val unconstrained = RequestedAuthorizationScope(ResourceType.MeteringPointContract, emptyList())
+        val expected = document().copy(
+            externalReference = "inserted-contract",
+            requestedScopes = listOf(RequestedAuthorizationScope(ResourceType.MeteringPointContract, constraints), unconstrained),
+        )
+
+        val inserted = repository.insert(expected)
+        val found = repository.find(UUID.fromString(expected.id))
+        val page = repository.findAndSortByCreatedAt(expected.requestedBy, Pagination(), emptyList())
+
+        page.totalItems shouldBe 1L
+        listOf(inserted, found, page.items.single()).forEach { actual ->
+            actual.copy(requestedScopes = emptyList(), pdfBytes = expected.pdfBytes) shouldBe expected.copy(requestedScopes = emptyList())
+            actual.pdfBytes.toList() shouldBe expected.pdfBytes.toList()
+            actual.requestedScopes.size shouldBe 2
+            actual.requestedScopes.single { it.constraints.isEmpty() } shouldBe unconstrained
+            val scope = actual.requestedScopes.single { it.constraints.isNotEmpty() }
+            scope.resourceType shouldBe ResourceType.MeteringPointContract
+            scope.constraints.shouldContainExactlyInAnyOrder(constraints)
+        }
+    }
+
+    test("insert reuses parties for a document without optional fields") {
+        val party = party(PartyType.Organization)
+        val existing = partyRepository.findOrInsert(party.type, party.id)
+        val expected = document().copy(
+            documentType = AuthorizationDocumentType.ChangeOfEnergySupplierForOrganization,
+            requestedBy = party,
+            requestedPrincipal = party,
+            requestedOf = party,
+            meta = JsonObject(emptyMap()),
+        )
+
+        val inserted = repository.insert(expected)
+        val found = repository.find(UUID.fromString(expected.id))
+
+        listOf(inserted, found).forEach { actual ->
+            actual.copy(pdfBytes = expected.pdfBytes) shouldBe expected
+            actual.pdfBytes.toList() shouldBe expected.pdfBytes.toList()
+        }
+        partyRepository.findOrInsert(party.type, party.id).id shouldBe existing.id
+    }
+
+    test("insert returns persisted derived status rather than the input status") {
+        val past = Instant.parse("2000-01-01T00:00:00Z")
+        val cases = listOf(
+            document().copy(status = AuthorizationDocumentStatus.Accepted) to AuthorizationDocumentStatus.Pending,
+            document().copy(validTo = past) to AuthorizationDocumentStatus.Expired,
+            document().copy(validTo = past, approvedBy = party()) to AuthorizationDocumentStatus.Accepted,
+        )
+
+        cases.forEach { (document, status) ->
+            val inserted = repository.insert(document)
+            val found = repository.find(UUID.fromString(document.id))
+            listOf(inserted, found).forEach { actual ->
+                actual.copy(pdfBytes = document.pdfBytes) shouldBe document.copy(status = status)
+                actual.pdfBytes.toList() shouldBe document.pdfBytes.toList()
             }
         }
     }
