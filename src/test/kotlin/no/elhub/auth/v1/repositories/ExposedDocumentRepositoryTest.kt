@@ -4,6 +4,14 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
+import io.mockk.clearMocks
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.mockk
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
@@ -14,9 +22,13 @@ import no.elhub.auth.v0.features.common.PostgresTestContainerExtension
 import no.elhub.auth.v0.features.common.party.AuthorizationParty
 import no.elhub.auth.v0.features.common.party.PartyType
 import no.elhub.auth.v1.RepositoryReadError
+import no.elhub.auth.v1.RepositoryWriteError
+import no.elhub.auth.v1.common.now
 import no.elhub.auth.v1.domain.AuthorizationDocument
 import no.elhub.auth.v1.domain.AuthorizationDocumentStatus
 import no.elhub.auth.v1.domain.AuthorizationDocumentType
+import no.elhub.auth.v1.domain.AuthorizationGrant
+import no.elhub.auth.v1.domain.AuthorizationGrantSourceType
 import no.elhub.auth.v1.domain.AuthorizationScopeConstraint
 import no.elhub.auth.v1.domain.AuthorizationScopeConstraintAttribute
 import no.elhub.auth.v1.domain.AuthorizationScopeConstraintKind
@@ -25,8 +37,10 @@ import no.elhub.auth.v1.domain.MeteringPointId
 import no.elhub.auth.v1.domain.RequestedAuthorizationScope
 import no.elhub.auth.v1.domain.ResourceConstraint
 import no.elhub.auth.v1.domain.ResourceType
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import java.util.UUID
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Instant
@@ -44,7 +58,10 @@ class ExposedDocumentRepositoryTest : FunSpec({
     }
 
     val partyRepository = ExposedPartyRepository()
-    val repository = ExposedDocumentRepository(partyRepository)
+    val grantRepository = mockk<GrantRepository>()
+    val repository = ExposedDocumentRepository(partyRepository, grantRepository)
+
+    beforeTest { clearMocks(grantRepository) }
     val createdAt = Instant.parse("2025-01-01T00:00:00Z")
     val future = Instant.parse("2100-01-01T00:00:00Z")
 
@@ -61,6 +78,18 @@ class ExposedDocumentRepositoryTest : FunSpec({
         requestedOf = party(),
         pdfBytes = byteArrayOf(0, 1, 127, -128, -1),
     ).copy(createdAt = createdAt, updatedAt = createdAt + 1.days)
+
+    fun grant(document: AuthorizationDocument, signatory: AuthorizationParty) = AuthorizationGrant.new(
+        sourceType = AuthorizationGrantSourceType.Document,
+        sourceId = UUID.fromString(document.id),
+        principal = document.requestedPrincipal,
+        grantedBy = document.requestedOf,
+        grantedTo = document.requestedBy,
+        approvedBy = signatory,
+        validFrom = createdAt,
+        validTo = future,
+        scopes = emptyList(),
+    )
 
     suspend fun seed(document: AuthorizationDocument): UUID = withTransaction {
         suspend fun partyId(party: AuthorizationParty) = partyRepository.findOrInsert(party.type, party.id).id
@@ -386,5 +415,143 @@ class ExposedDocumentRepositoryTest : FunSpec({
                 actual.pdfBytes.toList() shouldBe document.pdfBytes.toList()
             }
         }
+    }
+
+    test("confirm persists signed document fields and inserts the grant") {
+        val original = document().copy(
+            externalReference = "confirmed-contract",
+            requestedScopes = listOf(RequestedAuthorizationScope(ResourceType.MeteringPointContract, emptyList())),
+        )
+        val id = seed(original)
+        val signatory = party()
+        val grant = grant(original, signatory)
+        val storedGrant = grant.copy(updatedAt = createdAt)
+        val signedFile = byteArrayOf(42, -128, 0, -1)
+        coEvery { grantRepository.insert(grant) } returns storedGrant
+        val before = now()
+
+        val result = repository.confirm(id, signedFile, signatory, grant)
+
+        val after = now()
+        result.copy(pdfBytes = original.pdfBytes) shouldBe original.copy(
+            status = AuthorizationDocumentStatus.Accepted,
+            approvedBy = signatory,
+            updatedAt = result.updatedAt,
+            authorizationGrant = listOf(storedGrant),
+        )
+        result.pdfBytes.toList() shouldBe signedFile.toList()
+        (result.updatedAt in before..after) shouldBe true
+        val found = repository.find(id)
+        found.copy(pdfBytes = result.pdfBytes) shouldBe result.copy(authorizationGrant = null)
+        found.pdfBytes.toList() shouldBe signedFile.toList()
+        withTransaction {
+            val row = AuthorizationDocumentTable.selectAll().where { AuthorizationDocumentTable.id eq id }.single()
+            row[AuthorizationDocumentTable.signedAt] shouldBe result.updatedAt
+        }
+        coVerify(exactly = 1) { grantRepository.insert(grant) }
+    }
+
+    test("confirm rejects unknown documents without inserting a grant") {
+        val original = document()
+        val id = UUID.fromString(original.id)
+        val signatory = party()
+
+        val error = shouldThrow<RepositoryWriteError.NotFoundError> {
+            repository.confirm(id, byteArrayOf(1), signatory, grant(original, signatory))
+        }
+
+        error.detail shouldBe "Document not found: $id"
+        coVerify(exactly = 0) { grantRepository.insert(any()) }
+    }
+
+    test("confirm rejects expired documents without changing them") {
+        val original = document().copy(validTo = Instant.parse("2000-01-01T00:00:00Z"))
+        val id = seed(original)
+        val before = repository.find(id)
+        val signatory = party()
+
+        val error = shouldThrow<RepositoryWriteError.ExpiredError> {
+            repository.confirm(id, byteArrayOf(1), signatory, grant(original, signatory))
+        }
+
+        error.detail shouldBe "Document $id has expired"
+        val after = repository.find(id)
+        after.copy(pdfBytes = before.pdfBytes) shouldBe before
+        after.pdfBytes.toList() shouldBe before.pdfBytes.toList()
+        coVerify(exactly = 0) { grantRepository.insert(any()) }
+    }
+
+    test("confirm rejects accepted documents") {
+        listOf(future, Instant.parse("2000-01-01T00:00:00Z")).forEach { validTo ->
+            val original = document().copy(approvedBy = party(), validTo = validTo)
+            val id = seed(original)
+            val before = repository.find(id)
+            val signatory = party()
+
+            val error = shouldThrow<RepositoryWriteError.ConflictError> {
+                repository.confirm(id, byteArrayOf(1), signatory, grant(original, signatory))
+            }
+
+            error.detail shouldBe "Invalid transition for document $id from Accepted to Accepted"
+            val after = repository.find(id)
+            after.copy(pdfBytes = before.pdfBytes) shouldBe before
+            after.pdfBytes.toList() shouldBe before.pdfBytes.toList()
+        }
+        coVerify(exactly = 0) { grantRepository.insert(any()) }
+    }
+
+    test("confirm bubbles grant insertion failures and rolls back document changes") {
+        val original = document()
+        val id = seed(original)
+        val before = repository.find(id)
+        val signatory = party()
+        val grant = grant(original, signatory)
+        val failure = IllegalStateException("Grant insertion failed")
+        coEvery { grantRepository.insert(grant) } coAnswers {
+            withTransaction {
+                val row = AuthorizationDocumentTable.selectAll().where { AuthorizationDocumentTable.id eq id }.single()
+                (row[AuthorizationDocumentTable.approvedBy] != null) shouldBe true
+            }
+            throw failure
+        }
+
+        val error = shouldThrow<IllegalStateException> {
+            repository.confirm(id, byteArrayOf(1), signatory, grant)
+        }
+
+        error.message shouldBe failure.message
+        val after = repository.find(id)
+        after.copy(pdfBytes = before.pdfBytes) shouldBe before
+        after.pdfBytes.toList() shouldBe before.pdfBytes.toList()
+        withTransaction {
+            AuthorizationDocumentTable.selectAll().where { AuthorizationDocumentTable.id eq id }
+                .single()[AuthorizationDocumentTable.signedAt] shouldBe null
+        }
+        coVerify(exactly = 1) { grantRepository.insert(grant) }
+    }
+
+    test("concurrent confirmations produce one success and one conflict") {
+        val original = document()
+        val id = seed(original)
+        val signatory = party()
+        val grant = grant(original, signatory)
+        coEvery { grantRepository.insert(grant) } returns grant
+
+        val results = coroutineScope {
+            val start = CompletableDeferred<Unit>()
+            val attempts = List(2) {
+                async {
+                    start.await()
+                    runCatching { repository.confirm(id, byteArrayOf(1), signatory, grant) }
+                }
+            }
+            start.complete(Unit)
+            attempts.awaitAll()
+        }
+
+        results.count { it.isSuccess } shouldBe 1
+        (results.single { it.isFailure }.exceptionOrNull() is RepositoryWriteError.ConflictError) shouldBe true
+        repository.find(id).status shouldBe AuthorizationDocumentStatus.Accepted
+        coVerify(exactly = 1) { grantRepository.insert(grant) }
     }
 })

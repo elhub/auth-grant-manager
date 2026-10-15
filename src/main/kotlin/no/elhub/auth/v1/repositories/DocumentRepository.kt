@@ -11,6 +11,7 @@ import no.elhub.auth.v0.features.common.party.AuthorizationPartyTable
 import no.elhub.auth.v0.features.common.party.toAuthorizationParty
 import no.elhub.auth.v0.features.grants.common.toAuthorizationParty
 import no.elhub.auth.v1.RepositoryReadError
+import no.elhub.auth.v1.RepositoryWriteError
 import no.elhub.auth.v1.common.now
 import no.elhub.auth.v1.domain.AuthorizationDocument
 import no.elhub.auth.v1.domain.AuthorizationDocumentStatus
@@ -37,9 +38,11 @@ import org.jetbrains.exposed.v1.core.isNull
 import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.core.lessEq
 import org.jetbrains.exposed.v1.core.or
+import org.jetbrains.exposed.v1.core.vendors.ForUpdateOption
 import org.jetbrains.exposed.v1.datetime.timestamp
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.updateReturning
 import org.jetbrains.exposed.v1.json.jsonb
 import org.postgresql.util.PGobject
 import java.util.UUID
@@ -64,6 +67,7 @@ interface DocumentRepository {
 
 class ExposedDocumentRepository(
     private val partyRepository: PartyRepository,
+    private val grantRepository: GrantRepository,
 ) : DocumentRepository {
     override suspend fun find(id: UUID): AuthorizationDocument = withTransaction {
         val row = AuthorizationDocumentTable.selectAll()
@@ -182,8 +186,49 @@ class ExposedDocumentRepository(
         )
     }
 
-    override suspend fun confirm(documentId: UUID, signedFile: ByteArray, signatory: AuthorizationParty, grant: AuthorizationGrant): AuthorizationDocument {
-        TODO("Not yet implemented")
+    override suspend fun confirm(
+        documentId: UUID,
+        signedFile: ByteArray,
+        signatory: AuthorizationParty,
+        grant: AuthorizationGrant,
+    ): AuthorizationDocument = withTransaction {
+        // Serialize confirmations before checking the current state.
+        val row = AuthorizationDocumentTable.selectAll()
+            .where { AuthorizationDocumentTable.id eq documentId }
+            .forUpdate(ForUpdateOption.PostgreSQL.ForNoKeyUpdate)
+            .singleOrNull()
+            ?: throw RepositoryWriteError.NotFoundError("Document not found: $documentId")
+
+        val now = now()
+        when (row.toAuthorizationDocumentStatus(now)) {
+            AuthorizationDocumentStatus.Accepted -> throw RepositoryWriteError.ConflictError(
+                "Invalid transition for document $documentId from Accepted to Accepted",
+            )
+
+            AuthorizationDocumentStatus.Expired -> throw RepositoryWriteError.ExpiredError("Document $documentId has expired")
+
+            AuthorizationDocumentStatus.Pending -> Unit
+        }
+
+        val approvedBy = partyRepository.findOrInsert(signatory.type, signatory.id)
+        val updated = AuthorizationDocumentTable.updateReturning(
+            where = { AuthorizationDocumentTable.id eq documentId },
+        ) {
+            it[file] = signedFile
+            it[AuthorizationDocumentTable.approvedBy] = approvedBy.id
+            it[signedAt] = now
+            it[updatedAt] = now
+        }.single()
+        val insertedGrant = grantRepository.insert(grant)
+
+        updated.toAuthorizationDocument(
+            requestedBy = partyRepository.find(row[AuthorizationDocumentTable.requestedBy]).toAuthorizationParty(),
+            requestedPrincipal = partyRepository.find(row[AuthorizationDocumentTable.requestedPrincipal]).toAuthorizationParty(),
+            requestedOf = partyRepository.find(row[AuthorizationDocumentTable.requestedOf]).toAuthorizationParty(),
+            requestedScopes = getScopesByDocumentId(listOf(documentId))[documentId].orEmpty(),
+            approvedBy = approvedBy.toAuthorizationParty(),
+            now = now,
+        ).copy(authorizationGrant = listOf(insertedGrant))
     }
 
     private fun generateFilterByCondition(
@@ -251,6 +296,12 @@ object AuthorizationDocumentTable : UUIDTable("auth_v1.authorization_document") 
     val updatedAt = timestamp("updated_at").clientDefault { now() }
 }
 
+private fun ResultRow.toAuthorizationDocumentStatus(now: Instant): AuthorizationDocumentStatus = when {
+    this[AuthorizationDocumentTable.approvedBy] != null -> AuthorizationDocumentStatus.Accepted
+    this[AuthorizationDocumentTable.validTo] <= now -> AuthorizationDocumentStatus.Expired
+    else -> AuthorizationDocumentStatus.Pending
+}
+
 fun ResultRow.toAuthorizationDocument(
     requestedBy: AuthorizationParty,
     requestedPrincipal: AuthorizationParty,
@@ -261,11 +312,7 @@ fun ResultRow.toAuthorizationDocument(
 ): AuthorizationDocument = AuthorizationDocument(
     id = this[AuthorizationDocumentTable.id].value.toString(),
     documentType = this[AuthorizationDocumentTable.documentType],
-    status = when {
-        approvedBy != null -> AuthorizationDocumentStatus.Accepted
-        this[AuthorizationDocumentTable.validTo] <= now -> AuthorizationDocumentStatus.Expired
-        else -> AuthorizationDocumentStatus.Pending
-    },
+    status = toAuthorizationDocumentStatus(now),
     requestedScopes = requestedScopes,
     externalReference = this[AuthorizationDocumentTable.externalReference],
     meta = this[AuthorizationDocumentTable.meta],
