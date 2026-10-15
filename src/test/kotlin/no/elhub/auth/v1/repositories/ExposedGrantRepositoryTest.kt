@@ -3,7 +3,12 @@ package no.elhub.auth.v1.repositories
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
+import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import no.elhub.auth.v0.config.withTransaction
 import no.elhub.auth.v0.features.common.Pagination
 import no.elhub.auth.v0.features.common.PostgresTestContainer
@@ -12,6 +17,7 @@ import no.elhub.auth.v0.features.common.party.AuthorizationParty
 import no.elhub.auth.v0.features.common.party.AuthorizationPartyTable
 import no.elhub.auth.v0.features.common.party.PartyType
 import no.elhub.auth.v1.RepositoryReadError
+import no.elhub.auth.v1.RepositoryWriteError
 import no.elhub.auth.v1.domain.AuthorizationGrant
 import no.elhub.auth.v1.domain.AuthorizationGrantSourceType
 import no.elhub.auth.v1.domain.AuthorizationGrantStatus
@@ -339,5 +345,77 @@ class ExposedGrantRepositoryTest : FunSpec({
             AuthorizationGrantScopeConstraintTable.selectAll().count() shouldBe before.second
             AuthorizationPartyTable.selectAll().where { AuthorizationPartyTable.partyId eq person.id }.count() shouldBe 0L
         }
+    }
+
+    test("update allows revocation for both types and exhaustion only for consumable grants") {
+        val legalTransitions = listOf(
+            AuthorizationGrantType.Persistent to AuthorizationGrantStatus.Revoked,
+            AuthorizationGrantType.Consumable to AuthorizationGrantStatus.Revoked,
+            AuthorizationGrantType.Consumable to AuthorizationGrantStatus.Exhausted,
+        )
+        val illegalTransitions = listOf(
+            AuthorizationGrantType.Persistent to AuthorizationGrantStatus.Exhausted,
+        )
+        legalTransitions.forEach { (type, status) ->
+            val grant = insertGrant(type = type, scopes = listOf(constrained, unconstrained))
+
+            val result = repository.update(grant.id, status)
+
+            result.updatedAt shouldBeGreaterThan grant.updatedAt
+            assertGrant(result, grant.copy(status = status, updatedAt = result.updatedAt))
+            assertGrant(repository.find(grant.id), result)
+        }
+        illegalTransitions.forEach { (type, status) ->
+            val grant = insertGrant(type = type, scopes = listOf(constrained, unconstrained))
+            val error = shouldThrow<RepositoryWriteError.ConflictError> { repository.update(grant.id, status) }
+            error.detail shouldBe "Invalid transition for grant ${grant.id} from Active to $status"
+        }
+    }
+
+    test("update rejects expired grants") {
+        AuthorizationGrantType.entries.forEach { type ->
+            val expired = insertGrant(type = type, validTo = past)
+            AuthorizationGrantStatus.entries.forEach { target ->
+                shouldThrow<RepositoryWriteError.ExpiredError> { repository.update(expired.id, target) }
+                    .detail shouldBe "Grant ${expired.id} has expired"
+                repository.find(expired.id) shouldBe expired.copy(status = AuthorizationGrantStatus.Expired)
+            }
+            listOf(DatabaseGrantStatus.Revoked, DatabaseGrantStatus.Exhausted).forEach { status ->
+                val terminal = insertGrant(type = type, status = status, validTo = past)
+                shouldThrow<RepositoryWriteError.ConflictError> {
+                    repository.update(terminal.id, AuthorizationGrantStatus.Revoked)
+                }
+                repository.find(terminal.id) shouldBe terminal
+            }
+        }
+    }
+
+    test("update throws a modeled write not found error for an unknown grant") {
+        val id = UUID.randomUUID()
+
+        shouldThrow<RepositoryWriteError.NotFoundError> { repository.update(id, AuthorizationGrantStatus.Revoked) }
+            .detail shouldBe "Grant not found: $id"
+    }
+
+    test("concurrent updates produce one successful transition and one conflict") {
+        val grant = insertGrant(scopes = listOf(constrained, unconstrained))
+        val ready = CompletableDeferred<Unit>()
+
+        val results = coroutineScope {
+            listOf(AuthorizationGrantStatus.Revoked, AuthorizationGrantStatus.Exhausted).map { target ->
+                async {
+                    ready.await()
+                    try {
+                        Result.success(repository.update(grant.id, target))
+                    } catch (error: RepositoryWriteError.ConflictError) {
+                        Result.failure<AuthorizationGrant>(error)
+                    }
+                }
+            }.also { ready.complete(Unit) }.awaitAll()
+        }
+
+        results.count { it.isSuccess } shouldBe 1
+        results.count { it.exceptionOrNull() is RepositoryWriteError.ConflictError } shouldBe 1
+        assertGrant(repository.find(grant.id), results.single { it.isSuccess }.getOrThrow())
     }
 })
