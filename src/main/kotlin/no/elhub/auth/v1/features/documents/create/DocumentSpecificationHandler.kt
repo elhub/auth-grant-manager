@@ -6,7 +6,7 @@ import no.elhub.auth.v0.features.common.party.AuthorizationParty
 import no.elhub.auth.v1.domain.DocumentLanguage
 import kotlin.time.Instant
 
-data class DocumentActionContext(
+data class DocumentCreationContext(
     val requestedBy: AuthorizationParty,
     val requestedPrincipal: AuthorizationParty,
     val requestedOf: AuthorizationParty,
@@ -14,21 +14,21 @@ data class DocumentActionContext(
     val externalReference: String?,
 )
 
-data class DocumentActionDetails(
+data class DocumentCreationDetails(
     val pdfContent: AuthorizationDocumentPdfContent,
     val validTo: Instant,
     val meta: JsonObject,
 )
 
-interface DocumentActionHandler<in Action : DocumentAction> {
+interface DocumentSpecificationHandler<in Specification : DocumentSpecification> {
     suspend fun validateAndGetDetails(
-        action: Action,
-        context: DocumentActionContext,
-    ): DocumentActionDetails
+        specification: Specification,
+        context: DocumentCreationContext,
+    ): DocumentCreationDetails
 }
 
-interface ChangeOfEnergySupplierDocumentActionHandler :
-    DocumentActionHandler<DocumentAction.ChangeOfEnergySupplierForOrganization>
+interface ChangeOfEnergySupplierDocumentHandler :
+    DocumentSpecificationHandler<DocumentSpecification.ChangeOfEnergySupplierForOrganization>
 
-interface MoveInAndChangeOfEnergySupplierDocumentActionHandler :
-    DocumentActionHandler<DocumentAction.MoveInAndChangeOfEnergySupplierForOrganization>
+interface MoveInAndChangeOfEnergySupplierDocumentHandler :
+    DocumentSpecificationHandler<DocumentSpecification.MoveInAndChangeOfEnergySupplierForOrganization>

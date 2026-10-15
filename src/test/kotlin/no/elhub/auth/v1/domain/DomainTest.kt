@@ -5,7 +5,7 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import no.elhub.auth.v1.DomainError
 import no.elhub.auth.v1.InputError
-import no.elhub.auth.v1.features.documents.create.DocumentAction
+import no.elhub.auth.v1.features.documents.create.DocumentSpecification
 import kotlin.time.Instant
 
 class DomainTest : FunSpec({
@@ -55,14 +55,14 @@ class DomainTest : FunSpec({
         }
     }
 
-    test("document action owns its document type") {
-        DocumentAction.ChangeOfEnergySupplierForOrganization(
+    test("document specification owns its document type") {
+        DocumentSpecification.ChangeOfEnergySupplierForOrganization(
             meteringPointIds = ResourceConstraint.MeteringPoints(
                 setOf(MeteringPointId.create("707057500000000001")),
             ),
         ).documentType shouldBe AuthorizationDocumentType.ChangeOfEnergySupplierForOrganization
 
-        DocumentAction.MoveInAndChangeOfEnergySupplierForOrganization(
+        DocumentSpecification.MoveInAndChangeOfEnergySupplierForOrganization(
             meteringPointIds = ResourceConstraint.MeteringPoints(
                 setOf(MeteringPointId.create("707057500000000001")),
             ),

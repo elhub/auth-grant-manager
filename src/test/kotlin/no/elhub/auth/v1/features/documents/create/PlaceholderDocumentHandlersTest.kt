@@ -12,8 +12,8 @@ import no.elhub.auth.v1.domain.MeteringPointId
 import no.elhub.auth.v1.domain.ResourceConstraint
 import kotlin.time.Clock
 
-class PlaceholderDocumentActionHandlersTest : FunSpec({
-    val context = DocumentActionContext(
+class PlaceholderDocumentHandlersTest : FunSpec({
+    val context = DocumentCreationContext(
         requestedBy = AuthorizationParty("supplier-1", PartyType.OrganizationEntity),
         requestedPrincipal = AuthorizationParty("org-1", PartyType.Organization),
         requestedOf = AuthorizationParty("person-1", PartyType.Person),
@@ -25,8 +25,8 @@ class PlaceholderDocumentActionHandlersTest : FunSpec({
     )
 
     test("change-supplier placeholder returns document-specific details") {
-        val details = PlaceholderChangeOfEnergySupplierDocumentActionHandler().validateAndGetDetails(
-            action = DocumentAction.ChangeOfEnergySupplierForOrganization(meteringPointIds),
+        val details = PlaceholderChangeOfEnergySupplierDocumentHandler().validateAndGetDetails(
+            specification = DocumentSpecification.ChangeOfEnergySupplierForOrganization(meteringPointIds),
             context = context,
         )
 
@@ -39,8 +39,8 @@ class PlaceholderDocumentActionHandlersTest : FunSpec({
 
     test("move-in placeholder returns document-specific details including move-in date") {
         val validFrom = LocalDate(2026, 10, 1)
-        val details = PlaceholderMoveInAndChangeOfEnergySupplierDocumentActionHandler().validateAndGetDetails(
-            action = DocumentAction.MoveInAndChangeOfEnergySupplierForOrganization(
+        val details = PlaceholderMoveInAndChangeOfEnergySupplierDocumentHandler().validateAndGetDetails(
+            specification = DocumentSpecification.MoveInAndChangeOfEnergySupplierForOrganization(
                 meteringPointIds = meteringPointIds,
                 validFrom = validFrom,
             ),
