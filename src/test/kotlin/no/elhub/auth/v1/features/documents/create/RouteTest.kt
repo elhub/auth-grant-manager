@@ -10,6 +10,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.datetime.LocalDate
 import kotlinx.serialization.json.JsonObject
 import no.elhub.auth.common.documents.pdf.PdfGenerator
 import no.elhub.auth.common.documents.pdf.PdfSigner
@@ -66,8 +67,6 @@ class RouteTest : FunSpec({
     lateinit var pdfGenerator: PdfGenerator
     lateinit var pdfSigner: PdfSigner
     lateinit var partyService: PartyService
-    lateinit var changeOfEnergySupplierActionValidator: ChangeOfEnergySupplierDocumentActionValidator
-    lateinit var moveInAndChangeOfEnergySupplierActionValidator: MoveInAndChangeOfEnergySupplierDocumentActionValidator
 
     fun responseDocument() = AuthorizationDocument(
         id = "123e4567-e89b-12d3-a456-426614174000",
@@ -108,8 +107,6 @@ class RouteTest : FunSpec({
         pdfGenerator = mockk()
         pdfSigner = mockk()
         partyService = mockk()
-        changeOfEnergySupplierActionValidator = ChangeOfEnergySupplierDocumentActionValidator()
-        moveInAndChangeOfEnergySupplierActionValidator = MoveInAndChangeOfEnergySupplierDocumentActionValidator()
     }
 
     test("POST / returns 201 and passes the authorized party to the handler") {
@@ -123,7 +120,7 @@ class RouteTest : FunSpec({
 
         testApplication {
             setupAppWith(authorizedParty) {
-                route(partyService, handler, changeOfEnergySupplierActionValidator, moveInAndChangeOfEnergySupplierActionValidator)
+                route(partyService, handler)
             }
 
             val response = client.postJson("/", requestBody)
@@ -148,7 +145,7 @@ class RouteTest : FunSpec({
             }
             coVerify(exactly = 1) {
                 handler.createAuthorizationDocument(
-                    action = match {
+                    specification = match {
                         it.documentType == AuthorizationDocumentType.ChangeOfEnergySupplierForOrganization
                     },
                     externalReference = "contract-123",
@@ -172,7 +169,7 @@ class RouteTest : FunSpec({
 
         testApplication {
             setupAppWith(authorizedParty) {
-                route(partyService, handler, changeOfEnergySupplierActionValidator, moveInAndChangeOfEnergySupplierActionValidator)
+                route(partyService, handler)
             }
 
             val response = client.postJson("/", requestBody.replace(Regex(",\\s*\"language\": \"nb\""), ""))
@@ -180,7 +177,7 @@ class RouteTest : FunSpec({
             response.status shouldBe HttpStatusCode.Created
             coVerify(exactly = 1) {
                 handler.createAuthorizationDocument(
-                    action = any(),
+                    specification = any(),
                     externalReference = "contract-123",
                     requestedBy = authorizedParty,
                     requestedPrincipal = AuthorizationParty("999888777", PartyType.OrganizationEntity),
@@ -191,10 +188,63 @@ class RouteTest : FunSpec({
         }
     }
 
-    test("document service uses action details to generate and sign the document") {
-        val changeSupplierHandler: ChangeOfEnergySupplierDocumentActionHandler = mockk()
-        val moveInHandler: MoveInAndChangeOfEnergySupplierDocumentActionHandler = mockk()
-        val action = DocumentAction.ChangeOfEnergySupplierForOrganization(
+    test("POST / maps move-in validFrom input and infers the allowed contract types") {
+        coEvery {
+            handler.createAuthorizationDocument(any(), any(), any(), any(), any(), any())
+        } returns responseDocument()
+        coEvery { partyService.resolve(any()) } returnsMany listOf(
+            AuthorizationParty("999888777", PartyType.OrganizationEntity).right(),
+            AuthorizationParty("person-1", PartyType.Person).right(),
+        )
+
+        val requestedScope = """
+            "requestedScopes": [{
+              "resourceType": "MeteringPointContract",
+              "appliesTo": [{
+                "attribute": "meteringPoint.id",
+                "value": ["707057500000000001"]
+              }],
+              "allowedChanges": [{
+                "attribute": "validFrom",
+                "value": ["2026-10-01"]
+              }]
+            }]
+        """.trimIndent()
+        val moveInRequest = requestBody
+            .replace("ChangeOfEnergySupplierForOrganization", "MoveInAndChangeOfEnergySupplierForOrganization")
+            .replace("\"externalReference\": \"contract-123\"", "\"externalReference\": \"contract-123\",$requestedScope")
+        val expectedSpecification = DocumentSpecification.MoveInAndChangeOfEnergySupplierForOrganization(
+            meteringPointIds = ResourceConstraint.MeteringPoints(
+                setOf(MeteringPointId.create("707057500000000001")),
+            ),
+            validFrom = LocalDate(2026, 10, 1),
+        )
+
+        testApplication {
+            setupAppWith(authorizedParty) {
+                route(partyService, handler)
+            }
+
+            val response = client.postJson("/", moveInRequest)
+
+            response.status shouldBe HttpStatusCode.Created
+            coVerify(exactly = 1) {
+                handler.createAuthorizationDocument(
+                    specification = expectedSpecification,
+                    externalReference = "contract-123",
+                    requestedBy = authorizedParty,
+                    requestedPrincipal = AuthorizationParty("999888777", PartyType.OrganizationEntity),
+                    requestedOf = AuthorizationParty("person-1", PartyType.Person),
+                    language = DocumentLanguage.NB,
+                )
+            }
+        }
+    }
+
+    test("document service uses document details to generate and sign the document") {
+        val changeSupplierHandler: ChangeOfEnergySupplierDocumentHandler = mockk()
+        val moveInHandler: MoveInAndChangeOfEnergySupplierDocumentHandler = mockk()
+        val specification = DocumentSpecification.ChangeOfEnergySupplierForOrganization(
             ResourceConstraint.MeteringPoints(setOf(MeteringPointId.create("707057500000000001"))),
         )
         val pdfContent = mockk<no.elhub.auth.common.documents.pdf.AuthorizationDocumentPdfContent>()
@@ -202,14 +252,14 @@ class RouteTest : FunSpec({
         val signedPdf = byteArrayOf(3, 4)
         val validTo = Clock.System.now()
         val meta = JsonObject(mapOf("source" to kotlinx.serialization.json.JsonPrimitive("placeholder")))
-        coEvery { changeSupplierHandler.validateAndGetDetails(action, any()) } returns
-            DocumentActionDetails(pdfContent, validTo, meta)
+        coEvery { changeSupplierHandler.validateAndGetDetails(specification, any()) } returns
+            DocumentCreationDetails(pdfContent, validTo, meta)
         every { pdfGenerator.generate(pdfContent) } returns unsignedPdf
         coEvery { pdfSigner.sign(unsignedPdf) } returns signedPdf
 
         val service = DocumentService(changeSupplierHandler, moveInHandler, pdfGenerator, pdfSigner)
         val document = service.createAuthorizationDocument(
-            action = action,
+            specification = specification,
             externalReference = "ref",
             requestedBy = authorizedParty,
             requestedPrincipal = AuthorizationParty("org-1", PartyType.Organization),
@@ -226,7 +276,7 @@ class RouteTest : FunSpec({
     test("POST / returns 409 when the resource type is wrong") {
         testApplication {
             setupAppWith(authorizedParty) {
-                route(partyService, handler, changeOfEnergySupplierActionValidator, moveInAndChangeOfEnergySupplierActionValidator)
+                route(partyService, handler)
             }
 
             val response = client.postJson("/", requestBody.replace("AuthorizationDocument", "OtherResource"))
@@ -243,7 +293,7 @@ class RouteTest : FunSpec({
     test("POST / returns a field-specific 400 when the request cannot be deserialized") {
         testApplication {
             setupAppWith(authorizedParty) {
-                route(partyService, handler, changeOfEnergySupplierActionValidator, moveInAndChangeOfEnergySupplierActionValidator)
+                route(partyService, handler)
             }
 
             val response = client.postJson("/", "{ \"data\": { \"type\": \"AuthorizationDocument\" } }")
@@ -261,7 +311,7 @@ class RouteTest : FunSpec({
     test("POST / rejects validFrom changes that are unsupported for change of supplier") {
         testApplication {
             setupAppWith(authorizedParty) {
-                route(partyService, handler, changeOfEnergySupplierActionValidator, moveInAndChangeOfEnergySupplierActionValidator)
+                route(partyService, handler)
             }
 
             val requestedScope = """
@@ -294,7 +344,7 @@ class RouteTest : FunSpec({
     test("POST / returns 422 when move-in validFrom contains multiple dates") {
         testApplication {
             setupAppWith(authorizedParty) {
-                route(partyService, handler, changeOfEnergySupplierActionValidator, moveInAndChangeOfEnergySupplierActionValidator)
+                route(partyService, handler)
             }
 
             val requestedScope = """
@@ -305,9 +355,6 @@ class RouteTest : FunSpec({
                     "value": ["707057500000000001"]
                   }],
                   "allowedChanges": [{
-                    "attribute": "type",
-                    "value": ["EnergySupplier", "EndUser"]
-                  }, {
                     "attribute": "validFrom",
                     "value": ["2026-10-01", "2026-11-01"]
                   }]
@@ -331,10 +378,10 @@ class RouteTest : FunSpec({
         }
     }
 
-    test("POST / returns 422 when move-in does not contain the exact allowed contract types") {
+    test("POST / returns 422 when move-in explicitly supplies an allowed type change") {
         testApplication {
             setupAppWith(authorizedParty) {
-                route(partyService, handler, changeOfEnergySupplierActionValidator, moveInAndChangeOfEnergySupplierActionValidator)
+                route(partyService, handler)
             }
 
             val requestedScope = """
@@ -345,7 +392,7 @@ class RouteTest : FunSpec({
                     "value": ["707057500000000001"]
                   }],
                   "allowedChanges": [
-                    { "attribute": "type", "value": ["EnergySupplier"] },
+                    { "attribute": "type", "value": ["EnergySupplier", "EndUser"] },
                     { "attribute": "validFrom", "value": ["2026-10-01"] }
                   ]
                 }]
@@ -360,14 +407,14 @@ class RouteTest : FunSpec({
             response.status shouldBe HttpStatusCode.UnprocessableEntity
             val body: JsonApiErrorCollection = response.body()
             body.errors.single().detail shouldBe
-                "requestedScopes[0].allowedChanges type must contain exactly [EndUser, EnergySupplier]"
+                "requestedScopes[0].allowedChanges must contain exactly one validFrom constraint"
         }
     }
 
     test("POST / returns 422 when a metering-point ID has an invalid format") {
         testApplication {
             setupAppWith(authorizedParty) {
-                route(partyService, handler, changeOfEnergySupplierActionValidator, moveInAndChangeOfEnergySupplierActionValidator)
+                route(partyService, handler)
             }
 
             val response = client.postJson(
@@ -389,7 +436,7 @@ class RouteTest : FunSpec({
     test("POST / returns 422 when requested scope has an unsupported resource type") {
         testApplication {
             setupAppWith(authorizedParty) {
-                route(partyService, handler, changeOfEnergySupplierActionValidator, moveInAndChangeOfEnergySupplierActionValidator)
+                route(partyService, handler)
             }
 
             val response = client.postJson(

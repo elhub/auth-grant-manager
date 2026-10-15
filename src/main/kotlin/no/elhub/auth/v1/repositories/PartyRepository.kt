@@ -8,23 +8,31 @@ import no.elhub.auth.v0.features.common.party.toAuthorizationParty
 import no.elhub.auth.v1.RepositoryReadError
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.jdbc.insertIgnore
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import java.util.UUID
 
 interface PartyRepository {
     suspend fun find(id: UUID): AuthorizationPartyRecord
+    suspend fun findByIds(ids: List<UUID>): Map<UUID, AuthorizationPartyRecord>
     suspend fun findOrInsert(type: PartyType, partyId: String): AuthorizationPartyRecord
 }
 
 class ExposedPartyRepository : PartyRepository {
-    override suspend fun find(id: UUID): AuthorizationPartyRecord = withTransaction {
-        AuthorizationPartyTable.selectAll()
-            .where { AuthorizationPartyTable.id eq id }
-            .singleOrNull()
-            ?.toAuthorizationParty()
-            ?: throw RepositoryReadError.NotFoundError("Party not found: $id")
+    override suspend fun findByIds(ids: List<UUID>): Map<UUID, AuthorizationPartyRecord> {
+        if (ids.isEmpty()) return emptyMap()
+
+        return withTransaction {
+            AuthorizationPartyTable.selectAll()
+                .where { AuthorizationPartyTable.id inList ids }
+                .associate { it[AuthorizationPartyTable.id].value to it.toAuthorizationParty() }
+        }
     }
+
+    override suspend fun find(id: UUID): AuthorizationPartyRecord =
+        findByIds(listOf(id)).values.singleOrNull()
+            ?: throw RepositoryReadError.NotFoundError("Party not found: $id")
 
     private fun find(type: PartyType, partyId: String): AuthorizationPartyRecord? =
         AuthorizationPartyTable.selectAll()

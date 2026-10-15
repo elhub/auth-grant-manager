@@ -7,12 +7,13 @@ import kotlin.time.Instant
 
 data class AuthorizationGrant(
     val id: UUID,
+    val type: AuthorizationGrantType,
     val sourceType: AuthorizationGrantSourceType,
     val sourceId: UUID,
     val principal: AuthorizationParty,
     val grantedBy: AuthorizationParty,
     val grantedTo: AuthorizationParty,
-    val approvedBy: AuthorizationParty?,
+    val approvedBy: AuthorizationParty,
     val status: AuthorizationGrantStatus,
     val validFrom: Instant,
     val validTo: Instant,
@@ -22,12 +23,13 @@ data class AuthorizationGrant(
 ) {
     companion object {
         fun new(
+            type: AuthorizationGrantType,
             sourceType: AuthorizationGrantSourceType,
             sourceId: UUID,
             principal: AuthorizationParty,
             grantedBy: AuthorizationParty,
             grantedTo: AuthorizationParty,
-            approvedBy: AuthorizationParty?,
+            approvedBy: AuthorizationParty,
             validFrom: Instant,
             validTo: Instant,
             scopes: List<GrantedAuthorizationScope>,
@@ -35,6 +37,7 @@ data class AuthorizationGrant(
             val now = Clock.System.now()
             return AuthorizationGrant(
                 id = UUID.randomUUID(),
+                type = type,
                 sourceType = sourceType,
                 sourceId = sourceId,
                 principal = principal,
@@ -50,6 +53,11 @@ data class AuthorizationGrant(
             )
         }
     }
+}
+
+enum class AuthorizationGrantType {
+    Persistent,
+    Consumable,
 }
 
 enum class AuthorizationGrantStatus {

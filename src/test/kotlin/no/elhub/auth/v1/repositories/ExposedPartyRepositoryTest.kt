@@ -54,6 +54,20 @@ class ExposedPartyRepositoryTest : FunSpec({
         exception.message shouldBe "Party not found: $id"
     }
 
+    test("findByIds returns requested parties keyed by ID and omits missing IDs") {
+        val first = repository.findOrInsert(PartyType.Person, "BATCH_PERSON")
+        val second = repository.findOrInsert(PartyType.Organization, "BATCH_ORGANIZATION")
+        repository.findOrInsert(PartyType.Person, "BATCH_UNRELATED")
+
+        repository.findByIds(listOf(first.id, second.id, first.id, UUID.randomUUID())) shouldBe
+            mapOf(first.id to first, second.id to second)
+    }
+
+    test("findByIds returns an empty map for empty input or missing IDs") {
+        repository.findByIds(emptyList()) shouldBe emptyMap()
+        repository.findByIds(listOf(UUID.randomUUID())) shouldBe emptyMap()
+    }
+
     test("findOrInsert persists a new party and returns the same record on repeated calls") {
         val first = repository.findOrInsert(PartyType.Person, "NEW_PARTY")
 
