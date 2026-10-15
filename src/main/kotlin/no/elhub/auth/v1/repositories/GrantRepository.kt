@@ -8,6 +8,7 @@ import no.elhub.auth.v0.features.common.party.AuthorizationParty
 import no.elhub.auth.v0.features.common.party.AuthorizationPartyTable
 import no.elhub.auth.v0.features.grants.common.toAuthorizationParty
 import no.elhub.auth.v1.RepositoryReadError
+import no.elhub.auth.v1.RepositoryWriteError
 import no.elhub.auth.v1.common.now
 import no.elhub.auth.v1.domain.AuthorizationGrant
 import no.elhub.auth.v1.domain.AuthorizationGrantSourceType
@@ -30,9 +31,11 @@ import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.core.or
+import org.jetbrains.exposed.v1.core.vendors.ForUpdateOption
 import org.jetbrains.exposed.v1.datetime.timestamp
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.updateReturning
 import org.postgresql.util.PGobject
 import java.util.UUID
 import kotlin.time.Instant
@@ -209,8 +212,38 @@ class ExposedGrantRepository(
         )
     }
 
-    override suspend fun update(grantId: UUID, newStatus: AuthorizationGrantStatus): AuthorizationGrant {
-        TODO("Not yet implemented")
+    override suspend fun update(grantId: UUID, newStatus: AuthorizationGrantStatus): AuthorizationGrant = withTransaction {
+        val row = AuthorizationGrantTable.selectAll()
+            .where { AuthorizationGrantTable.id eq grantId }
+            .forUpdate(ForUpdateOption.PostgreSQL.ForNoKeyUpdate)
+            .singleOrNull()
+            ?: throw RepositoryWriteError.NotFoundError("Grant not found: $grantId")
+
+        val now = now()
+        val status = row.toAuthorizationGrantStatus(now)
+        if (status == AuthorizationGrantStatus.Expired) {
+            throw RepositoryWriteError.ExpiredError("Grant $grantId has expired")
+        }
+
+        val target = when {
+            status != AuthorizationGrantStatus.Active -> null
+            newStatus == AuthorizationGrantStatus.Revoked -> DatabaseGrantStatus.Revoked
+            newStatus == AuthorizationGrantStatus.Exhausted && row[AuthorizationGrantTable.type] == AuthorizationGrantType.Consumable ->
+                DatabaseGrantStatus.Exhausted
+            else -> null
+        } ?: throw RepositoryWriteError.ConflictError("Invalid transition for grant $grantId from $status to $newStatus")
+
+        AuthorizationGrantTable.updateReturning(where = { AuthorizationGrantTable.id eq grantId }) {
+            it[AuthorizationGrantTable.status] = target
+            it[updatedAt] = now
+        }.single().toAuthorizationGrant(
+            principal = partyRepository.find(row[AuthorizationGrantTable.principal]).toAuthorizationParty(),
+            grantedBy = partyRepository.find(row[AuthorizationGrantTable.grantedBy]).toAuthorizationParty(),
+            grantedTo = partyRepository.find(row[AuthorizationGrantTable.grantedTo]).toAuthorizationParty(),
+            approvedBy = partyRepository.find(row[AuthorizationGrantTable.approvedBy]).toAuthorizationParty(),
+            scopes = getScopesByGrantId(listOf(grantId))[grantId].orEmpty(),
+            now = now,
+        )
     }
 
     private fun getScopesByGrantId(grantIds: List<UUID>): Map<UUID, List<GrantedAuthorizationScope>> =
