@@ -227,9 +227,12 @@ class ExposedGrantRepository(
 
         val target = when {
             status != AuthorizationGrantStatus.Active -> null
+
             newStatus == AuthorizationGrantStatus.Revoked -> DatabaseGrantStatus.Revoked
+
             newStatus == AuthorizationGrantStatus.Exhausted && row[AuthorizationGrantTable.type] == AuthorizationGrantType.Consumable ->
                 DatabaseGrantStatus.Exhausted
+
             else -> null
         } ?: throw RepositoryWriteError.ConflictError("Invalid transition for grant $grantId from $status to $newStatus")
 
@@ -289,7 +292,9 @@ fun ResultRow.toAuthorizationGrant(
 private fun ResultRow.toAuthorizationGrantStatus(now: Instant): AuthorizationGrantStatus =
     when (this[AuthorizationGrantTable.status]) {
         DatabaseGrantStatus.Revoked -> AuthorizationGrantStatus.Revoked
+
         DatabaseGrantStatus.Exhausted -> AuthorizationGrantStatus.Exhausted
+
         DatabaseGrantStatus.Active -> if (this[AuthorizationGrantTable.validTo] <= now) {
             AuthorizationGrantStatus.Expired
         } else {
@@ -314,9 +319,11 @@ fun ResultRow.toGrantScopeConstraint(): AuthorizationScopeConstraint {
             AuthorizationScopeConstraintAttribute.MeteringPointId -> ResourceConstraint.MeteringPoints(
                 values.map(MeteringPointId::create).toSet(),
             )
+
             AuthorizationScopeConstraintAttribute.ContractType -> ResourceConstraint.ContractTypes(
                 values.map(MeteringPointContractType::valueOf).toSet(),
             )
+
             AuthorizationScopeConstraintAttribute.ValidFrom -> ResourceConstraint.ValidFrom(Instant.parse(values.single()))
         },
     )
