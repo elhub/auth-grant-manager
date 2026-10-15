@@ -209,8 +209,8 @@ class ExposedGrantRepositoryTest : FunSpec({
         )
 
         result.keys shouldBe setOf(first.sourceId, second.sourceId)
-        assertGrant(result.getValue(first.sourceId), first)
-        assertGrant(result.getValue(second.sourceId), second.copy(status = AuthorizationGrantStatus.Expired))
+        assertGrant(result.getValue(first.sourceId).single(), first)
+        assertGrant(result.getValue(second.sourceId).single(), second.copy(status = AuthorizationGrantStatus.Expired))
         repository.findBySourceIds(AuthorizationGrantSourceType.Request, listOf(unrelated.sourceId)) shouldBe emptyMap()
     }
 
@@ -220,7 +220,16 @@ class ExposedGrantRepositoryTest : FunSpec({
         val result = repository.findBySourceIds(AuthorizationGrantSourceType.Request, listOf(grant.sourceId))
 
         result.keys shouldBe setOf(grant.sourceId)
-        assertGrant(result.getValue(grant.sourceId), grant)
+        assertGrant(result.getValue(grant.sourceId).single(), grant)
+    }
+
+    test("findBySourceIds preserves multiple grants for the same source") {
+        val first = insertGrant(sourceType = AuthorizationGrantSourceType.Request)
+        val second = insertGrant(sourceId = first.sourceId, sourceType = first.sourceType)
+
+        val result = repository.findBySourceIds(first.sourceType, listOf(first.sourceId))
+
+        result.getValue(first.sourceId).shouldContainExactlyInAnyOrder(first, second)
     }
 
     test("findBySourceIds returns an empty map for empty input or unknown sources") {
@@ -285,7 +294,7 @@ class ExposedGrantRepositoryTest : FunSpec({
 
         assertGrant(repository.insert(grant), grant)
         assertGrant(repository.find(grant.id), grant)
-        assertGrant(repository.findBySourceIds(grant.sourceType, listOf(grant.sourceId)).getValue(grant.sourceId), grant)
+        assertGrant(repository.findBySourceIds(grant.sourceType, listOf(grant.sourceId)).getValue(grant.sourceId).single(), grant)
         partyRepository.findOrInsert(grant.principal.type, grant.principal.id) shouldBe existing
         withTransaction {
             AuthorizationPartyTable.selectAll().where { AuthorizationPartyTable.partyId eq grant.principal.id }.count() shouldBe 1L

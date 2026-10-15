@@ -45,7 +45,7 @@ interface GrantRepository {
     suspend fun findBySourceIds(
         sourceType: AuthorizationGrantSourceType,
         sourceIds: List<UUID>
-    ): Map<UUID, AuthorizationGrant>
+    ): Map<UUID, List<AuthorizationGrant>>
 
     suspend fun findAll(
         party: AuthorizationParty,
@@ -78,7 +78,7 @@ class ExposedGrantRepository(
     override suspend fun findBySourceIds(
         sourceType: AuthorizationGrantSourceType,
         sourceIds: List<UUID>,
-    ): Map<UUID, AuthorizationGrant> {
+    ): Map<UUID, List<AuthorizationGrant>> {
         if (sourceIds.isEmpty()) return emptyMap()
 
         return withTransaction {
@@ -103,8 +103,8 @@ class ExposedGrantRepository(
             val scopes = getScopesByGrantId(rows.map { it[AuthorizationGrantTable.id].value })
             val now = now()
 
-            rows.associate { row ->
-                row[AuthorizationGrantTable.sourceId] to row.toAuthorizationGrant(
+            rows.map { row ->
+                row.toAuthorizationGrant(
                     principal = parties.getValue(row[AuthorizationGrantTable.principal]),
                     grantedBy = parties.getValue(row[AuthorizationGrantTable.grantedBy]),
                     grantedTo = parties.getValue(row[AuthorizationGrantTable.grantedTo]),
@@ -112,7 +112,7 @@ class ExposedGrantRepository(
                     scopes = scopes[row[AuthorizationGrantTable.id].value].orEmpty(),
                     now = now,
                 )
-            }
+            }.groupBy { it.sourceId }
         }
     }
 
@@ -194,8 +194,8 @@ class ExposedGrantRepository(
                     it[kind] = constraint.constraintKind
                     it[attribute] = constraint.attribute
                     it[value] = when (val value = constraint.value) {
-                        is ResourceConstraint.MeteringPoints -> value.ids.map { it.value }
-                        is ResourceConstraint.ContractTypes -> value.types.map { it.name }
+                        is ResourceConstraint.MeteringPoints -> value.ids.map { id -> id.value }
+                        is ResourceConstraint.ContractTypes -> value.types.map { type -> type.name }
                         is ResourceConstraint.ValidFrom -> listOf(value.value.toString())
                     }
                 }
