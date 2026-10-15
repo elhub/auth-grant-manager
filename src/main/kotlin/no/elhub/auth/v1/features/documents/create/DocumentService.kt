@@ -7,38 +7,38 @@ import no.elhub.auth.v1.domain.AuthorizationDocument
 import no.elhub.auth.v1.domain.DocumentLanguage
 
 class DocumentService(
-    private val changeOfEnergySupplierHandler: ChangeOfEnergySupplierDocumentActionHandler,
-    private val moveInAndChangeOfEnergySupplierHandler: MoveInAndChangeOfEnergySupplierDocumentActionHandler,
+    private val changeOfEnergySupplierHandler: ChangeOfEnergySupplierDocumentHandler,
+    private val moveInAndChangeOfEnergySupplierHandler: MoveInAndChangeOfEnergySupplierDocumentHandler,
     private val pdfGenerator: PdfGenerator,
     private val pdfSigner: PdfSigner,
 ) {
     suspend fun createAuthorizationDocument(
-        action: DocumentAction,
+        specification: DocumentSpecification,
         externalReference: String?,
         requestedBy: AuthorizationParty,
         requestedPrincipal: AuthorizationParty,
         requestedOf: AuthorizationParty,
         language: DocumentLanguage,
     ): AuthorizationDocument {
-        val context = DocumentActionContext(
+        val context = DocumentCreationContext(
             requestedBy = requestedBy,
             requestedPrincipal = requestedPrincipal,
             requestedOf = requestedOf,
             language = language,
             externalReference = externalReference,
         )
-        val details = when (action) {
-            is DocumentAction.ChangeOfEnergySupplierForOrganization ->
-                changeOfEnergySupplierHandler.validateAndGetDetails(action, context)
+        val details = when (specification) {
+            is DocumentSpecification.ChangeOfEnergySupplierForOrganization ->
+                changeOfEnergySupplierHandler.validateAndGetDetails(specification, context)
 
-            is DocumentAction.MoveInAndChangeOfEnergySupplierForOrganization ->
-                moveInAndChangeOfEnergySupplierHandler.validateAndGetDetails(action, context)
+            is DocumentSpecification.MoveInAndChangeOfEnergySupplierForOrganization ->
+                moveInAndChangeOfEnergySupplierHandler.validateAndGetDetails(specification, context)
         }
         val pdfBytes = pdfSigner.sign(pdfGenerator.generate(details.pdfContent))
 
         return AuthorizationDocument.new(
-            documentType = action.documentType,
-            requestedScopes = listOf(action.toRequestedAuthorizationScope()),
+            documentType = specification.documentType,
+            requestedScopes = listOf(specification.toRequestedAuthorizationScope()),
             externalReference = externalReference,
             meta = details.meta,
             validTo = details.validTo,

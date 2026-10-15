@@ -14,11 +14,11 @@ import no.elhub.auth.v1.domain.RequestedAuthorizationScope
 import no.elhub.auth.v1.domain.ResourceConstraint
 import no.elhub.auth.v1.domain.ResourceType
 
-class DocumentActionTest : FunSpec({
+class DocumentSpecificationTest : FunSpec({
     val meteringPointIds = setOf(MeteringPointId.create("707057500000000001"))
 
     test("maps supplier change scope to metering point and energy-supplier contract constraints") {
-        val scope = DocumentAction.ChangeOfEnergySupplierForOrganization(
+        val scope = DocumentSpecification.ChangeOfEnergySupplierForOrganization(
             meteringPointIds = ResourceConstraint.MeteringPoints(meteringPointIds),
         )
 
@@ -44,7 +44,7 @@ class DocumentActionTest : FunSpec({
 
     test("maps move-in scope to metering point, contract-type and valid-from constraints") {
         val validFrom = LocalDate(2026, 10, 1)
-        val scope = DocumentAction.MoveInAndChangeOfEnergySupplierForOrganization(
+        val scope = DocumentSpecification.MoveInAndChangeOfEnergySupplierForOrganization(
             meteringPointIds = ResourceConstraint.MeteringPoints(meteringPointIds),
             validFrom = validFrom,
         )

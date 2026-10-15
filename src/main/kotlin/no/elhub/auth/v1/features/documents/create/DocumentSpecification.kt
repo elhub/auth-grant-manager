@@ -12,13 +12,13 @@ import no.elhub.auth.v1.domain.RequestedAuthorizationScope
 import no.elhub.auth.v1.domain.ResourceConstraint
 import no.elhub.auth.v1.domain.ResourceType
 
-sealed interface DocumentAction {
+sealed interface DocumentSpecification {
     val documentType: AuthorizationDocumentType
     fun toRequestedAuthorizationScope(): RequestedAuthorizationScope
 
     data class ChangeOfEnergySupplierForOrganization(
         val meteringPointIds: ResourceConstraint.MeteringPoints,
-    ) : DocumentAction {
+    ) : DocumentSpecification {
         override val documentType = AuthorizationDocumentType.ChangeOfEnergySupplierForOrganization
 
         override fun toRequestedAuthorizationScope() = RequestedAuthorizationScope(
@@ -41,7 +41,7 @@ sealed interface DocumentAction {
     data class MoveInAndChangeOfEnergySupplierForOrganization(
         val meteringPointIds: ResourceConstraint.MeteringPoints,
         val validFrom: LocalDate,
-    ) : DocumentAction {
+    ) : DocumentSpecification {
         override val documentType = AuthorizationDocumentType.MoveInAndChangeOfEnergySupplierForOrganization
 
         override fun toRequestedAuthorizationScope() = RequestedAuthorizationScope(

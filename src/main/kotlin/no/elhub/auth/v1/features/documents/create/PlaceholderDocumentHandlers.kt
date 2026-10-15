@@ -10,14 +10,14 @@ import kotlin.time.Duration.Companion.days
 
 private const val DOCUMENT_VALID_DAYS = 28
 
-class PlaceholderChangeOfEnergySupplierDocumentActionHandler : ChangeOfEnergySupplierDocumentActionHandler {
+class PlaceholderChangeOfEnergySupplierDocumentHandler : ChangeOfEnergySupplierDocumentHandler {
     override suspend fun validateAndGetDetails(
-        action: DocumentAction.ChangeOfEnergySupplierForOrganization,
-        context: DocumentActionContext,
-    ): DocumentActionDetails {
-        val meteringPointId = action.meteringPointIds.ids.first().value
+        specification: DocumentSpecification.ChangeOfEnergySupplierForOrganization,
+        context: DocumentCreationContext,
+    ): DocumentCreationDetails {
+        val meteringPointId = specification.meteringPointIds.ids.first().value
 
-        return DocumentActionDetails(
+        return DocumentCreationDetails(
             pdfContent = AuthorizationDocumentPdfContent.ChangeOfBalanceSupplierForOrganisation(
                 language = context.language.toPdfLanguage(),
                 organizationName = "Placeholder organization ${context.requestedPrincipal.id}",
@@ -37,14 +37,14 @@ class PlaceholderChangeOfEnergySupplierDocumentActionHandler : ChangeOfEnergySup
     }
 }
 
-class PlaceholderMoveInAndChangeOfEnergySupplierDocumentActionHandler : MoveInAndChangeOfEnergySupplierDocumentActionHandler {
+class PlaceholderMoveInAndChangeOfEnergySupplierDocumentHandler : MoveInAndChangeOfEnergySupplierDocumentHandler {
     override suspend fun validateAndGetDetails(
-        action: DocumentAction.MoveInAndChangeOfEnergySupplierForOrganization,
-        context: DocumentActionContext,
-    ): DocumentActionDetails {
-        val meteringPointId = action.meteringPointIds.ids.first().value
+        specification: DocumentSpecification.MoveInAndChangeOfEnergySupplierForOrganization,
+        context: DocumentCreationContext,
+    ): DocumentCreationDetails {
+        val meteringPointId = specification.meteringPointIds.ids.first().value
 
-        return DocumentActionDetails(
+        return DocumentCreationDetails(
             pdfContent = AuthorizationDocumentPdfContent.MoveInAndChangeOfBalanceSupplierForOrganisation(
                 language = context.language.toPdfLanguage(),
                 organizationName = "Placeholder organization ${context.requestedPrincipal.id}",
@@ -54,12 +54,12 @@ class PlaceholderMoveInAndChangeOfEnergySupplierDocumentActionHandler : MoveInAn
                 meterNumber = "Unknown",
                 balanceSupplierName = "Placeholder supplier ${context.requestedBy.id}",
                 agreementReference = null,
-                moveInDate = action.validFrom,
+                moveInDate = specification.validFrom,
             ),
             validTo = Clock.System.now() + DOCUMENT_VALID_DAYS.days,
             meta = buildJsonObject {
                 put("meteringPointId", meteringPointId)
-                put("validFrom", action.validFrom.toString())
+                put("validFrom", specification.validFrom.toString())
                 put("placeholder", true)
             },
         )

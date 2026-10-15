@@ -14,15 +14,13 @@ import no.elhub.auth.v0.features.common.receiveEither
 import no.elhub.auth.v0.features.common.toApiErrorResponse
 import no.elhub.auth.v0.features.common.toTypeMismatchApiErrorResponse
 import no.elhub.auth.v1.domain.AgentExternalIdentifier
-import no.elhub.auth.v1.domain.AuthorizationDocumentType
 import no.elhub.auth.v1.features.documents.create.dto.JsonApiCreateAuthorizationDocumentRequest
 import no.elhub.auth.v1.features.documents.create.dto.toCreateResponse
+import no.elhub.auth.v1.features.documents.create.dto.toDocumentSpecification
 
 fun Route.route(
     partyService: PartyService,
     handler: DocumentService,
-    changeOfEnergySupplierActionValidator: ChangeOfEnergySupplierDocumentActionValidator,
-    moveInAndChangeOfEnergySupplierActionValidator: MoveInAndChangeOfEnergySupplierDocumentActionValidator,
 ) {
     post {
         val request = call.receiveEither<JsonApiCreateAuthorizationDocumentRequest>().fold(
@@ -43,13 +41,10 @@ fun Route.route(
             return@post
         }
 
-        val action = when (request.data.attributes.documentType) {
-            AuthorizationDocumentType.ChangeOfEnergySupplierForOrganization ->
-                changeOfEnergySupplierActionValidator.validate(request.data.attributes.requestedScopes)
-
-            AuthorizationDocumentType.MoveInAndChangeOfEnergySupplierForOrganization ->
-                moveInAndChangeOfEnergySupplierActionValidator.validate(request.data.attributes.requestedScopes)
-        }
+        val specification = toDocumentSpecification(
+            documentType = request.data.attributes.documentType,
+            requestedScopes = request.data.attributes.requestedScopes,
+        )
 
         val requestedPrincipalIdentifier = AgentExternalIdentifier.create(request.data.meta.requestedPrincipal)
             .toPartyIdentifier()
@@ -74,7 +69,7 @@ fun Route.route(
         val requestedBy = call.authorizedParty
 
         val document = handler.createAuthorizationDocument(
-            action = action,
+            specification = specification,
             externalReference = request.data.attributes.externalReference,
             requestedBy = requestedBy,
             requestedPrincipal = requestedPrincipal,
