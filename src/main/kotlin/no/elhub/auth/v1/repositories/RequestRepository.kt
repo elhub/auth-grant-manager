@@ -15,6 +15,7 @@ import no.elhub.auth.v1.RepositoryReadError
 import no.elhub.auth.v1.RepositoryWriteError
 import no.elhub.auth.v1.common.now
 import no.elhub.auth.v1.domain.AuthorizationGrant
+import no.elhub.auth.v1.domain.AuthorizationGrantSourceType
 import no.elhub.auth.v1.domain.AuthorizationRequest
 import no.elhub.auth.v1.domain.AuthorizationRequestStatus
 import no.elhub.auth.v1.domain.AuthorizationRequestType
@@ -59,11 +60,12 @@ interface RequestRepository {
 
     suspend fun insert(request: AuthorizationRequest): AuthorizationRequest
     suspend fun reject(requestId: UUID): AuthorizationRequest
-    suspend fun accept(requestId: UUID, grant: AuthorizationGrant): AuthorizationRequest
+    suspend fun accept(requestId: UUID, grants: List<AuthorizationGrant>): AuthorizationRequest
 }
 
 class ExposedRequestRepository(
     val partyRepository: PartyRepository,
+    val grantRepository: GrantRepository,
 ) : RequestRepository {
     override suspend fun find(requestId: UUID): AuthorizationRequest = withTransaction {
         val row = AuthorizationRequestTable.selectAll()
@@ -78,6 +80,7 @@ class ExposedRequestRepository(
             requestedScopes = getScopesByRequestId(listOf(requestId))[requestId].orEmpty(),
             approvedBy = row[AuthorizationRequestTable.approvedBy]?.let { partyRepository.find(it).toAuthorizationParty() },
             now = now(),
+            grants = grantRepository.findBySourceIds(AuthorizationGrantSourceType.Request, listOf(requestId))[requestId],
         )
     }
 
@@ -122,6 +125,7 @@ class ExposedRequestRepository(
             .where { AuthorizationPartyTable.id inList allPartyIds }
             .associate { it[AuthorizationPartyTable.id].value to it.toAuthorizationParty() }
         val scopesByRequestId = getScopesByRequestId(requestIds)
+        val grantsByRequestId = grantRepository.findBySourceIds(AuthorizationGrantSourceType.Request, requestIds)
 
         val unexpectedMessage = "Unexpected error occurred."
 
@@ -143,6 +147,7 @@ class ExposedRequestRepository(
                 requestedScopes = scopesByRequestId[requestId].orEmpty(),
                 approvedBy = approvedBy?.toAuthorizationParty(),
                 now = now,
+                grants = grantsByRequestId[requestId],
             )
         }
 
@@ -186,8 +191,8 @@ class ExposedRequestRepository(
                     it[kind] = constraint.constraintKind
                     it[attribute] = constraint.attribute
                     it[value] = when (val resourceConstraint = constraint.value) {
-                        is ResourceConstraint.MeteringPoints -> resourceConstraint.ids.map { it.value }
-                        is ResourceConstraint.ContractTypes -> resourceConstraint.types.map { it.name }
+                        is ResourceConstraint.MeteringPoints -> resourceConstraint.ids.map { id -> id.value }
+                        is ResourceConstraint.ContractTypes -> resourceConstraint.types.map { type -> type.name }
                         is ResourceConstraint.ValidFrom -> listOf(resourceConstraint.value.toString())
                     }
                 }
@@ -238,8 +243,43 @@ class ExposedRequestRepository(
         )
     }
 
-    override suspend fun accept(requestId: UUID, grant: AuthorizationGrant): AuthorizationRequest {
-        TODO("Not yet implemented")
+    override suspend fun accept(requestId: UUID, grants: List<AuthorizationGrant>): AuthorizationRequest = withTransaction {
+        val row = AuthorizationRequestTable.selectAll()
+            .where { AuthorizationRequestTable.id eq requestId }
+            .forUpdate(ForUpdateOption.PostgreSQL.ForNoKeyUpdate)
+            .singleOrNull()
+            ?: throw RepositoryWriteError.NotFoundError("Request not found: $requestId")
+
+        val now = now()
+        when (val status = row.toAuthorizationRequestStatus(now)) {
+            AuthorizationRequestStatus.Expired -> throw RepositoryWriteError.ExpiredError("Request $requestId has expired")
+
+            AuthorizationRequestStatus.Accepted, AuthorizationRequestStatus.Rejected ->
+                throw RepositoryWriteError.ConflictError("Invalid transition for request $requestId from $status to Accepted")
+
+            AuthorizationRequestStatus.Pending -> Unit
+        }
+
+        val insertedGrants = grants.map { grantRepository.insert(it) }
+
+        val approvedBy = insertedGrants.first().approvedBy
+        val approvedById = partyRepository.findOrInsert(approvedBy.type, approvedBy.id).id
+
+        AuthorizationRequestTable.updateReturning(
+            where = { AuthorizationRequestTable.id eq requestId }
+        ) {
+            it[AuthorizationRequestTable.approvedBy] = approvedById
+            it[approvedAt] = now
+            it[updatedAt] = now
+        }.single().toAuthorizationRequest(
+            requestedBy = partyRepository.find(row[AuthorizationRequestTable.requestedBy]).toAuthorizationParty(),
+            requestedPrincipal = partyRepository.find(row[AuthorizationRequestTable.requestedPrincipal]).toAuthorizationParty(),
+            requestedOf = partyRepository.find(row[AuthorizationRequestTable.requestedOf]).toAuthorizationParty(),
+            requestedScopes = getScopesByRequestId(listOf(requestId))[requestId].orEmpty(),
+            approvedBy = approvedBy,
+            now = now,
+            grants = insertedGrants,
+        )
     }
 
     private fun generateFilterByCondition(
@@ -351,6 +391,7 @@ fun ResultRow.toAuthorizationRequest(
     requestedScopes: List<RequestedAuthorizationScope>,
     approvedBy: AuthorizationParty? = null,
     now: Instant,
+    grants: List<AuthorizationGrant>? = null
 ): AuthorizationRequest {
     val validTo = this[AuthorizationRequestTable.validTo]
     return AuthorizationRequest(
@@ -367,7 +408,7 @@ fun ResultRow.toAuthorizationRequest(
         requestedPrincipal = AuthorizationParty(id = requestedPrincipal.id, type = requestedPrincipal.type),
         requestedOf = AuthorizationParty(id = requestedOf.id, type = requestedOf.type),
         approvedBy = approvedBy?.let { AuthorizationParty(id = approvedBy.id, type = approvedBy.type) },
-        authorizationGrant = null,
+        authorizationGrant = grants,
     )
 }
 

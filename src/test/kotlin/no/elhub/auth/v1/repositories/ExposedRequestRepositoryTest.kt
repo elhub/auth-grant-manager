@@ -20,6 +20,9 @@ import no.elhub.auth.v0.features.common.party.PartyType
 import no.elhub.auth.v1.RepositoryReadError
 import no.elhub.auth.v1.RepositoryWriteError
 import no.elhub.auth.v1.common.now
+import no.elhub.auth.v1.domain.AuthorizationGrant
+import no.elhub.auth.v1.domain.AuthorizationGrantSourceType
+import no.elhub.auth.v1.domain.AuthorizationGrantType
 import no.elhub.auth.v1.domain.AuthorizationRequest
 import no.elhub.auth.v1.domain.AuthorizationRequestStatus
 import no.elhub.auth.v1.domain.AuthorizationRequestType
@@ -31,8 +34,10 @@ import no.elhub.auth.v1.domain.MeteringPointId
 import no.elhub.auth.v1.domain.RequestedAuthorizationScope
 import no.elhub.auth.v1.domain.ResourceConstraint
 import no.elhub.auth.v1.domain.ResourceType
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import java.util.UUID
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Instant
@@ -50,7 +55,8 @@ class ExposedRequestRepositoryTest : FunSpec({
     }
 
     val partyRepository = ExposedPartyRepository()
-    val repository = ExposedRequestRepository(partyRepository)
+    val grantRepository = ExposedGrantRepository(partyRepository)
+    val repository = ExposedRequestRepository(partyRepository, grantRepository)
     val createdAt = Instant.parse("2025-01-01T00:00:00Z")
     val future = Instant.parse("2100-01-01T00:00:00Z")
     val past = Instant.parse("2000-01-01T00:00:00Z")
@@ -59,6 +65,19 @@ class ExposedRequestRepositoryTest : FunSpec({
     ).jsonObject
 
     fun party(type: PartyType = PartyType.Person) = AuthorizationParty(id = UUID.randomUUID().toString(), type = type)
+
+    fun grant(request: AuthorizationRequest) = AuthorizationGrant.new(
+        type = AuthorizationGrantType.Consumable,
+        sourceType = AuthorizationGrantSourceType.Request,
+        sourceId = request.id,
+        principal = request.requestedPrincipal,
+        grantedBy = request.requestedOf,
+        grantedTo = request.requestedBy,
+        approvedBy = party(),
+        validFrom = createdAt,
+        validTo = future,
+        scopes = emptyList(),
+    ).copy(createdAt = createdAt, updatedAt = createdAt)
 
     suspend fun insertRequest(
         requestedBy: AuthorizationParty,
@@ -275,7 +294,7 @@ class ExposedRequestRepositoryTest : FunSpec({
         repository.findAndSortByCreatedAt(requestedBy, Pagination(), emptyList()).items shouldBe listOf(request)
     }
 
-    test("persists validFrom allowed changes and reads them by ID and in a page") {
+    test("persists validFrom allowed changes and reads them by ID") {
         AuthorizationScopeConstraintAttribute.fromApiName("validFrom") shouldBe AuthorizationScopeConstraintAttribute.ValidFrom
         val requestedBy = party(PartyType.Organization)
         val recipient = party()
@@ -468,7 +487,7 @@ class ExposedRequestRepositoryTest : FunSpec({
         val rejectedRequest = repository.reject(id)
         val after = now()
         rejectedRequest.status shouldBe AuthorizationRequestStatus.Rejected
-        (rejectedRequest.updatedAt >= before && rejectedRequest.updatedAt <= after) shouldBe true
+        (rejectedRequest.updatedAt in before..after) shouldBe true
         rejectedRequest shouldBe original.copy(
             status = AuthorizationRequestStatus.Rejected,
             updatedAt = rejectedRequest.updatedAt,
@@ -495,7 +514,7 @@ class ExposedRequestRepositoryTest : FunSpec({
         repository.find(id) shouldBe rejectedRequest
     }
 
-    test("reject(id) throws conflict for accepted requests without changing them") {
+    test("reject(id) throws conflict for accepted requests") {
         listOf(future, past).forEach { validTo ->
             val id = insertRequest(party(), approvedBy = party(), validTo = validTo)
             val original = repository.find(id)
@@ -515,6 +534,183 @@ class ExposedRequestRepositoryTest : FunSpec({
         }
         error.detail shouldBe "Request $id has expired"
         repository.find(id) shouldBe original
+    }
+
+    test("accept(id, grant) persists approval and updatedAt while preserving request fields") {
+        val scope = RequestedAuthorizationScope(ResourceType.MeteringPointContract, emptyList())
+        val id = insertRequest(
+            requestedBy = party(PartyType.Organization),
+            requestedPrincipal = party(PartyType.Organization),
+            requestedOf = party(),
+            externalReference = "accept-test",
+            scopes = listOf(scope),
+            meta = metadata,
+        )
+        val original = repository.find(id)
+        val grant = grant(original)
+        val before = now()
+
+        val accepted = repository.accept(id, listOf(grant))
+
+        val after = now()
+        (accepted.updatedAt in before..after) shouldBe true
+        accepted shouldBe original.copy(
+            status = AuthorizationRequestStatus.Accepted,
+            approvedBy = grant.approvedBy,
+            updatedAt = accepted.updatedAt,
+            authorizationGrant = listOf(grant),
+        )
+        withTransaction {
+            val row = AuthorizationRequestTable.selectAll()
+                .where { AuthorizationRequestTable.id eq id }
+                .single()
+            row[AuthorizationRequestTable.status] shouldBe DatabaseRequestStatus.Pending
+            row[AuthorizationRequestTable.approvedAt] shouldBe accepted.updatedAt
+        }
+        repository.find(id) shouldBe accepted
+    }
+
+    test("accept persists multiple grants and reads them by ID and in a page") {
+        val requestedBy = party(PartyType.Organization)
+        val id = insertRequest(requestedBy)
+        val original = repository.find(id)
+        val first = grant(original).copy(approvedBy = requestedBy)
+        val second = grant(original).copy(approvedBy = requestedBy)
+        val grants = listOf(first, second)
+
+        val accepted = repository.accept(id, grants)
+
+        accepted.approvedBy shouldBe requestedBy
+        accepted.authorizationGrant.shouldContainExactlyInAnyOrder(grants)
+        val found = repository.find(id)
+        val listed = repository.findAndSortByCreatedAt(
+            requestedBy,
+            Pagination(),
+            listOf(AuthorizationRequestStatus.Accepted),
+        ).items.single()
+        listOf(found, listed).forEach { stored ->
+            stored.copy(authorizationGrant = null) shouldBe accepted.copy(authorizationGrant = null)
+            stored.authorizationGrant.shouldContainExactlyInAnyOrder(grants)
+        }
+        grants.forEach { grant -> grantRepository.find(grant.id) shouldBe grant }
+    }
+
+    test("accept(id, grant) throws not found for a nonexistent ID") {
+        val requestedBy = party()
+        val request = AuthorizationRequest.new(
+            requestType = AuthorizationRequestType.ChangeOfEnergySupplierForOrganization,
+            requestedScopes = emptyList(),
+            externalReference = null,
+            meta = JsonObject(emptyMap()),
+            validTo = future,
+            requestedBy = requestedBy,
+            requestedPrincipal = requestedBy,
+            requestedOf = requestedBy,
+        )
+
+        val error = shouldThrow<RepositoryWriteError.NotFoundError> {
+            repository.accept(request.id, listOf(grant(request)))
+        }
+
+        error.detail shouldBe "Request not found: ${request.id}"
+    }
+
+    test("accept(id, grant) throws conflict on double-accept") {
+        val id = insertRequest(party())
+        val original = repository.find(id)
+        val accepted = repository.accept(id, listOf(grant(original)))
+        accepted.status shouldBe AuthorizationRequestStatus.Accepted
+
+        val error = shouldThrow<RepositoryWriteError.ConflictError> {
+            repository.accept(id, listOf(grant(original)))
+        }
+
+        error.detail shouldBe "Invalid transition for request $id from Accepted to Accepted"
+        repository.find(id) shouldBe accepted
+    }
+
+    test("accept(id, grant) throws conflict for rejected requests") {
+        listOf(future, past).forEach { validTo ->
+            val id = insertRequest(party(), status = DatabaseRequestStatus.Rejected, validTo = validTo)
+            val original = repository.find(id)
+
+            val error = shouldThrow<RepositoryWriteError.ConflictError> {
+                repository.accept(id, listOf(grant(original)))
+            }
+
+            error.detail shouldBe "Invalid transition for request $id from Rejected to Accepted"
+            repository.find(id) shouldBe original
+        }
+    }
+
+    test("accept(id, grant) throws expired for expired requests without changing them") {
+        val id = insertRequest(party(), validTo = past)
+        val original = repository.find(id)
+
+        val error = shouldThrow<RepositoryWriteError.ExpiredError> {
+            repository.accept(id, listOf(grant(original)))
+        }
+
+        error.detail shouldBe "Request $id has expired"
+        repository.find(id) shouldBe original
+    }
+
+    test("concurrent accept(id, grant) calls produce one success and one conflict") {
+        val id = insertRequest(party())
+        val original = repository.find(id)
+        val grants = List(2) { grant(original) }
+        val results = coroutineScope {
+            val start = CompletableDeferred<Unit>()
+            val attempts = grants.map { grant ->
+                async {
+                    start.await()
+                    runCatching { repository.accept(id, listOf(grant)) }
+                }
+            }
+            start.complete(Unit)
+            attempts.awaitAll()
+        }
+
+        results.count { it.isSuccess } shouldBe 1
+        val error = results.single { it.isFailure }.exceptionOrNull()
+        (error is RepositoryWriteError.ConflictError) shouldBe true
+        val accepted = results.single { it.isSuccess }.getOrThrow()
+        accepted.status shouldBe AuthorizationRequestStatus.Accepted
+        accepted.authorizationGrant shouldBe listOf(grants[results.indexOfFirst { it.isSuccess }])
+        repository.find(id) shouldBe accepted
+    }
+
+    test("concurrent accept(id, grant) and reject(id) calls produce one success and one conflict") {
+        val id = insertRequest(party())
+        val grant = grant(repository.find(id))
+        val results = coroutineScope {
+            val start = CompletableDeferred<Unit>()
+            val attempts = listOf(
+                async {
+                    start.await()
+                    runCatching { repository.accept(id, listOf(grant)) }
+                },
+                async {
+                    start.await()
+                    runCatching { repository.reject(id) }
+                },
+            )
+            start.complete(Unit)
+            attempts.awaitAll()
+        }
+
+        results.count { it.isSuccess } shouldBe 1
+        val winner = results.single { it.isSuccess }.getOrThrow()
+        val error = results.single { it.isFailure }.exceptionOrNull()
+        (error is RepositoryWriteError.ConflictError) shouldBe true
+        winner.status shouldBe if (results.first().isSuccess) {
+            AuthorizationRequestStatus.Accepted
+        } else {
+            AuthorizationRequestStatus.Rejected
+        }
+        winner.approvedBy shouldBe if (results.first().isSuccess) grant.approvedBy else null
+        winner.authorizationGrant shouldBe if (results.first().isSuccess) listOf(grant) else null
+        repository.find(id) shouldBe winner
     }
 
     test("concurrent reject(id) calls produce one success and one conflict") {
