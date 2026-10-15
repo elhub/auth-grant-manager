@@ -29,6 +29,7 @@ import no.elhub.auth.v1.domain.AuthorizationDocumentStatus
 import no.elhub.auth.v1.domain.AuthorizationDocumentType
 import no.elhub.auth.v1.domain.AuthorizationGrant
 import no.elhub.auth.v1.domain.AuthorizationGrantSourceType
+import no.elhub.auth.v1.domain.AuthorizationGrantType
 import no.elhub.auth.v1.domain.AuthorizationScopeConstraint
 import no.elhub.auth.v1.domain.AuthorizationScopeConstraintAttribute
 import no.elhub.auth.v1.domain.AuthorizationScopeConstraintKind
@@ -80,6 +81,7 @@ class ExposedDocumentRepositoryTest : FunSpec({
     ).copy(createdAt = createdAt, updatedAt = createdAt + 1.days)
 
     fun grant(document: AuthorizationDocument, signatory: AuthorizationParty) = AuthorizationGrant.new(
+        type = AuthorizationGrantType.Consumable,
         sourceType = AuthorizationGrantSourceType.Document,
         sourceId = UUID.fromString(document.id),
         principal = document.requestedPrincipal,
