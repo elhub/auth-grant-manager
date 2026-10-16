@@ -734,6 +734,100 @@ paths:
                 moveInAndChangeOfEnergySupplierForOrganization:
                   $ref: './schemas/v1/documents/examples/move-in-and-change-of-energy-supplier/get-signed.json'
 
+  '/access/v1/authorization-documents/{id}.pdf':
+    get:
+      tags:
+        - Work in Progress
+      summary: '[WIP] Download authorization document PDF'
+      operationId: getV1AuthorizationDocumentPdf
+      description: >
+        Retrieve the PDF representation of an authorization document. The PDF reflects the
+        current state of the document at the time of retrieval.
+      x-status: Work in progress
+      x-availability: Not deployed to Production or MT1
+      parameters:
+        - $ref: '#/components/parameters/UserAgent'
+        - $ref: '#/components/parameters/AuthorizationMaskinporten'
+        - $ref: '#/components/parameters/SenderGlnRequired'
+        - $ref: '#/components/parameters/OnBehalfOfGlnOptional'
+        - name: id
+          in: path
+          required: true
+          description: Unique identifier of the authorization document whose PDF should be retrieved.
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: The PDF file representing the authorization document. Error responses are returned as application/vnd.api+json.
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '401':
+          $ref: '#/components/responses/401UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/403ForbiddenError'
+        '404':
+          $ref: '#/components/responses/404NotFoundError'
+        '422':
+          $ref: '#/components/responses/422UnprocessableEntityError'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
+    put:
+      tags:
+        - Work in Progress
+      summary: '[WIP] Submit signed authorization document'
+      operationId: submitV1AuthorizationDocument
+      description: >
+        Submit a signed authorization document as a PDF file. Elhub validates the signature,
+        generates any required authorization grants, and stores the document if the validation succeeds.
+      x-status: Work in progress
+      x-availability: Not deployed to Production or MT1
+      parameters:
+        - $ref: '#/components/parameters/UserAgent'
+        - $ref: '#/components/parameters/AuthorizationMaskinporten'
+        - $ref: '#/components/parameters/SenderGlnRequired'
+        - $ref: '#/components/parameters/OnBehalfOfGlnOptional'
+        - name: id
+          in: path
+          required: true
+          description: Unique identifier of the authorization document to be submitted.
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/pdf:
+            schema:
+              type: string
+              format: binary
+      responses:
+        '204':
+          description: >
+            The signature was successfully validated and the document was registered and accepted.
+            No content is returned in the response body.
+        '400':
+          $ref: '#/components/responses/400BadRequestError'
+        '401':
+          $ref: '#/components/responses/401UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/403ForbiddenError'
+        '404':
+          $ref: '#/components/responses/404NotFoundError'
+        '406':
+          $ref: '#/components/responses/406NotAcceptableError'
+        '413':
+          $ref: '#/components/responses/413ContentTooLargeError'
+        '415':
+          $ref: '#/components/responses/415UnsupportedMediaTypeError'
+        '422':
+          $ref: '#/components/responses/422UnprocessableEntityError'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
+
   '/access/v1/authorization-grants':
     get:
       tags:
@@ -1056,6 +1150,79 @@ paths:
           $ref: '#/components/responses/404NotFoundError'
         '406':
           $ref: '#/components/responses/406NotAcceptableError'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
+
+    patch:
+      tags:
+        - Work in Progress
+      summary: '[WIP] Accept or reject an authorization request'
+      description: >
+        Accept or reject a pending, unexpired authorization request. This endpoint is intended
+        for internal MinSide usage with an end-user token and is not available to external integrators.
+        Only the requestedOf party may decide the request. Accepting creates the authorization grant;
+        rejecting does not create a grant. The request body ID must match the path ID.
+        textLanguage must be provided when accepting or rejecting the request. textReference is set by
+        the server and cannot be updated through this endpoint.
+      operationId: updateV1AuthorizationRequest
+      x-status: Work in progress
+      x-availability: Not deployed to Production or MT1
+      parameters:
+        - $ref: '#/components/parameters/UserAgent'
+        - name: Authorization
+          in: header
+          required: true
+          description: End-user bearer token associated with the MinSide user.
+          schema:
+            type: string
+        - name: id
+          in: path
+          required: true
+          description: Unique identifier of the authorization request to accept or reject.
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: './schemas/v1/requests/authorization-request-update.schema.json'
+            examples:
+              acceptAuthorizationRequest:
+                $ref: './schemas/v1/requests/examples/accept.json'
+              rejectAuthorizationRequest:
+                $ref: './schemas/v1/requests/examples/reject.json'
+      responses:
+        '200':
+          description: The updated authorization request.
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: './schemas/v1/requests/authorization-request-resource.schema.json'
+              examples:
+                acceptedAuthorizationRequest:
+                  $ref: './schemas/v1/requests/examples/change-of-energy-supplier/get-accepted.json'
+        '400':
+          $ref: '#/components/responses/400BadRequestError'
+        '401':
+          $ref: '#/components/responses/401UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/403ForbiddenError'
+        '404':
+          $ref: '#/components/responses/404NotFoundError'
+        '406':
+          $ref: '#/components/responses/406NotAcceptableError'
+        '415':
+          $ref: '#/components/responses/415UnsupportedMediaTypeError'
+        '422':
+          description: >
+            The requested status transition is invalid, the request has already been processed
+            or has expired.
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: './schemas/json-api-error.schema.json'
         '500':
           $ref: '#/components/responses/500InternalServerError'
 

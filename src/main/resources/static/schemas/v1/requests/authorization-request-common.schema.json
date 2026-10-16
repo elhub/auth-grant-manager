@@ -16,6 +16,17 @@
     "status": {
       "enum": ["Pending", "Accepted", "Rejected", "Expired"]
     },
+    "textReference": {
+      "type": "string",
+      "description": "Reference to the authorization text associated with the request, set by the server.",
+      "examples": ["v1"]
+    },
+    "textLanguage": {
+      "type": "string",
+      "enum": ["nb", "nn", "en"],
+      "description": "Language of the authorization text presented to the user when accepting or rejecting the request.",
+      "examples": ["nb"]
+    },
     "requestedScopes": {
       "type": "array",
       "items": {

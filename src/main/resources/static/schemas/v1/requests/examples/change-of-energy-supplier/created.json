@@ -26,6 +26,7 @@
         "externalReference": "contract-123",
         "redirectUri": "https://supplier.example/authorization/return",
         "status": "Pending",
+        "textReference": "v1",
         "validFrom": "2026-10-01T00:00:00Z",
         "validTo": "2026-10-24T10:00:00Z",
         "createdAt": "2026-09-24T10:00:00Z",
