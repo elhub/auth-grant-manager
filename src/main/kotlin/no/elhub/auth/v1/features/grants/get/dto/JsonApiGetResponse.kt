@@ -1,6 +1,8 @@
 package no.elhub.auth.v1.features.grants.get.dto
 
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import no.elhub.auth.v1.domain.AuthorizationGrant
 import no.elhub.auth.v1.domain.AuthorizationGrantSourceType
 import no.elhub.auth.v1.domain.AuthorizationGrantStatus
@@ -12,14 +14,13 @@ import no.elhub.auth.v1.features.common.dto.toApprovalRelationship
 import no.elhub.auth.v1.features.common.dto.toResponse
 import no.elhub.auth.v1.features.common.dto.toResponseIdentifier
 import no.elhub.auth.v1.features.common.dto.toResponseRelationship
+import no.elhub.devxp.jsonapi.model.JsonApiLinks
+import no.elhub.devxp.jsonapi.response.JsonApiResponse
 import kotlin.time.Instant
 
 private const val GRANTS_PATH = "/access/v1/authorization-grants"
 
-@Serializable
-data class JsonApiGetAuthorizationGrantResponse(
-    val data: AuthorizationGrantResource,
-)
+typealias JsonApiGetAuthorizationGrantResponse = JsonApiResponse.Document<AuthorizationGrantResource>
 
 @Serializable
 data class AuthorizationGrantResource(
@@ -88,5 +89,9 @@ fun AuthorizationGrant.toGetResponse(): JsonApiGetAuthorizationGrantResponse {
                 self = "$GRANTS_PATH/$id",
             ),
         ),
+        links = JsonApiLinks.ResourceObjectLink(self = "$GRANTS_PATH/$id"),
+        meta = buildJsonObject {
+            put("createdAt", createdAt.toString())
+        },
     )
 }

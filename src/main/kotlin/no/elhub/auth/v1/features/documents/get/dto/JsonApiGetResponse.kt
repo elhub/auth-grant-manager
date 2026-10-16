@@ -1,6 +1,8 @@
 package no.elhub.auth.v1.features.documents.get.dto
 
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import no.elhub.auth.v1.domain.AuthorizationDocument
 import no.elhub.auth.v1.domain.AuthorizationDocumentStatus
 import no.elhub.auth.v1.domain.AuthorizationDocumentType
@@ -13,14 +15,13 @@ import no.elhub.auth.v1.features.common.dto.toApprovalRelationship
 import no.elhub.auth.v1.features.common.dto.toResponse
 import no.elhub.auth.v1.features.common.dto.toResponseIdentifier
 import no.elhub.auth.v1.features.common.dto.toResponseRelationship
+import no.elhub.devxp.jsonapi.model.JsonApiLinks
+import no.elhub.devxp.jsonapi.response.JsonApiResponse
 import kotlin.time.Instant
 
 private const val DOCUMENTS_PATH = "/access/v1/authorization-documents"
 
-@Serializable
-data class JsonApiGetAuthorizationDocumentResponse(
-    val data: AuthorizationDocumentResource,
-)
+typealias JsonApiGetAuthorizationDocumentResponse = JsonApiResponse.Document<AuthorizationDocumentResource>
 
 @Serializable
 data class AuthorizationDocumentResource(
@@ -100,4 +101,8 @@ fun AuthorizationDocument.toGetResponse() =
                 file = "$DOCUMENTS_PATH/$id.pdf",
             ),
         ),
+        links = JsonApiLinks.ResourceObjectLink(self = "$DOCUMENTS_PATH/$id"),
+        meta = buildJsonObject {
+            put("createdAt", createdAt.toString())
+        },
     )
