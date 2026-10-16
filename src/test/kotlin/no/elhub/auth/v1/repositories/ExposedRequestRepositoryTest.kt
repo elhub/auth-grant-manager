@@ -90,6 +90,8 @@ class ExposedRequestRepositoryTest : FunSpec({
         externalReference: String? = null,
         scopes: List<RequestedAuthorizationScope> = emptyList(),
         meta: JsonObject = JsonObject(emptyMap()),
+        redirectUri: String? = null,
+        validFrom: Instant = createdAt + 2.days,
     ): UUID = withTransaction {
         suspend fun partyId(party: AuthorizationParty) = partyRepository.findOrInsert(party.type, party.id).id
         val byId = partyId(requestedBy)
@@ -106,7 +108,8 @@ class ExposedRequestRepositoryTest : FunSpec({
             it[AuthorizationRequestTable.validTo] = validTo
             it[AuthorizationRequestTable.createdAt] = created
             it[updatedAt] = created + 1.days
-            it[validFrom] = created
+            it[AuthorizationRequestTable.validFrom] = validFrom
+            it[AuthorizationRequestTable.redirectUri] = redirectUri
             it[AuthorizationRequestTable.externalReference] = externalReference
             it[AuthorizationRequestTable.meta] = meta
         }[AuthorizationRequestTable.id].value
@@ -172,6 +175,8 @@ class ExposedRequestRepositoryTest : FunSpec({
             status = AuthorizationRequestStatus.Accepted,
             requestedScopes = emptyList(),
             externalReference = "contract-123",
+            redirectUri = null,
+            validFrom = createdAt + 2.days,
             validTo = future,
             meta = JsonObject(emptyMap()),
             createdAt = createdAt,
@@ -202,6 +207,7 @@ class ExposedRequestRepositoryTest : FunSpec({
         result.requestedScopes shouldBe emptyList()
         result.approvedBy shouldBe null
         result.externalReference shouldBe null
+        result.redirectUri shouldBe null
         result.status shouldBe AuthorizationRequestStatus.Pending
     }
 
@@ -263,7 +269,7 @@ class ExposedRequestRepositoryTest : FunSpec({
             requestedBy = requestedBy,
             requestedPrincipal = requestedBy,
             requestedOf = recipient,
-        ).copy(createdAt = createdAt, updatedAt = createdAt + 1.days)
+        ).copy(validFrom = createdAt + 2.days, createdAt = createdAt, updatedAt = createdAt + 1.days)
 
         repository.insert(request) shouldBe request
 
@@ -287,7 +293,7 @@ class ExposedRequestRepositoryTest : FunSpec({
             requestedBy = requestedBy,
             requestedPrincipal = requestedBy,
             requestedOf = requestedBy,
-        ).copy(createdAt = createdAt, updatedAt = createdAt)
+        ).copy(validFrom = createdAt + 2.days, createdAt = createdAt, updatedAt = createdAt)
 
         repository.insert(request) shouldBe request
 
@@ -317,7 +323,7 @@ class ExposedRequestRepositoryTest : FunSpec({
             requestedBy = requestedBy,
             requestedPrincipal = requestedBy,
             requestedOf = recipient,
-        ).copy(createdAt = createdAt, updatedAt = createdAt)
+        ).copy(validFrom = createdAt + 2.days, createdAt = createdAt, updatedAt = createdAt)
 
         repository.insert(request) shouldBe request
 
@@ -479,6 +485,7 @@ class ExposedRequestRepositoryTest : FunSpec({
             requestedPrincipal = party(),
             requestedOf = party(),
             externalReference = "reject-test",
+            redirectUri = "https://example.com/rejected",
             scopes = listOf(scope),
             meta = metadata,
         )
@@ -543,6 +550,7 @@ class ExposedRequestRepositoryTest : FunSpec({
             requestedPrincipal = party(PartyType.Organization),
             requestedOf = party(),
             externalReference = "accept-test",
+            redirectUri = "https://example.com/accepted",
             scopes = listOf(scope),
             meta = metadata,
         )

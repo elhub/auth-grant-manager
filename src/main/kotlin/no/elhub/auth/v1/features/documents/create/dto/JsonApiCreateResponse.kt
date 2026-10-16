@@ -4,12 +4,10 @@ import kotlinx.serialization.Serializable
 import no.elhub.auth.v1.domain.AuthorizationDocument
 import no.elhub.auth.v1.domain.AuthorizationDocumentStatus
 import no.elhub.auth.v1.domain.AuthorizationDocumentType
-import no.elhub.auth.v1.domain.AuthorizationScopeConstraint
-import no.elhub.auth.v1.domain.AuthorizationScopeConstraintKind
 import no.elhub.auth.v1.domain.RequestedAuthorizationScope
-import no.elhub.auth.v1.domain.ResourceType
+import no.elhub.auth.v1.features.common.dto.ResponseRequestedScope
+import no.elhub.auth.v1.features.common.dto.toResponse
 import kotlin.time.Instant
-import no.elhub.auth.v1.domain.ResourceConstraint as DomainResourceConstraint
 
 private const val DOCUMENTS_PATH = "/access/v1/authorization-documents"
 
@@ -33,20 +31,8 @@ data class AuthorizationDocumentAttributes(
     val externalReference: String? = null,
     val status: AuthorizationDocumentStatus,
     val createdAt: Instant,
+    val validFrom: Instant,
     val validTo: Instant,
-)
-
-@Serializable
-data class ResponseRequestedScope(
-    val resourceType: ResourceType,
-    val appliesTo: List<ResponseScopeConstraint>,
-    val allowedChanges: List<ResponseScopeConstraint>,
-)
-
-@Serializable
-data class ResponseScopeConstraint(
-    val attribute: String,
-    val value: List<String>,
 )
 
 @Serializable
@@ -66,6 +52,7 @@ fun AuthorizationDocument.toCreateResponse() =
                 externalReference = externalReference,
                 status = status,
                 createdAt = createdAt,
+                validFrom = validFrom,
                 validTo = validTo,
             ),
             links = AuthorizationDocumentLinks(
@@ -74,22 +61,3 @@ fun AuthorizationDocument.toCreateResponse() =
             ),
         ),
     )
-
-private fun RequestedAuthorizationScope.toResponse() = ResponseRequestedScope(
-    resourceType = resourceType,
-    appliesTo = constraints
-        .filter { it.constraintKind == AuthorizationScopeConstraintKind.AppliesTo }
-        .map(AuthorizationScopeConstraint::toResponse),
-    allowedChanges = constraints
-        .filter { it.constraintKind == AuthorizationScopeConstraintKind.AllowedChanges }
-        .map(AuthorizationScopeConstraint::toResponse),
-)
-
-private fun AuthorizationScopeConstraint.toResponse() = ResponseScopeConstraint(
-    attribute = attribute.apiName,
-    value = when (val constraint = value) {
-        is DomainResourceConstraint.MeteringPoints -> constraint.ids.map { it.value }.sorted()
-        is DomainResourceConstraint.ContractTypes -> constraint.types.map { it.name }.sorted()
-        is DomainResourceConstraint.ValidFrom -> listOf(constraint.value.toString())
-    },
-)
