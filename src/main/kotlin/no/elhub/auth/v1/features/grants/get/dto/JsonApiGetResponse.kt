@@ -7,7 +7,10 @@ import no.elhub.auth.v1.domain.AuthorizationGrant
 import no.elhub.auth.v1.domain.AuthorizationGrantSourceType
 import no.elhub.auth.v1.domain.AuthorizationGrantStatus
 import no.elhub.auth.v1.domain.GrantedAuthorizationScope
+import no.elhub.auth.v1.features.common.dto.GrantSourceTypeResponse
+import no.elhub.auth.v1.features.common.dto.GrantTypeResponse
 import no.elhub.auth.v1.features.common.dto.GrantedScopeResponse
+import no.elhub.auth.v1.features.common.dto.PartyTypeResponse
 import no.elhub.auth.v1.features.common.dto.ResponseRelationship
 import no.elhub.auth.v1.features.common.dto.ResponseResourceIdentifier
 import no.elhub.auth.v1.features.common.dto.toApprovalRelationship
@@ -25,7 +28,7 @@ typealias JsonApiGetAuthorizationGrantResponse = JsonApiResponse.Document<Author
 @Serializable
 data class AuthorizationGrantResource(
     val id: String,
-    val type: String,
+    val type: GrantTypeResponse,
     val attributes: AuthorizationGrantAttributes,
     val relationships: AuthorizationGrantRelationships,
     val links: AuthorizationGrantLinks,
@@ -44,11 +47,11 @@ data class AuthorizationGrantAttributes(
 
 @Serializable
 data class AuthorizationGrantRelationships(
-    val principal: ResponseRelationship,
-    val grantedBy: ResponseRelationship,
-    val grantedTo: ResponseRelationship,
-    val approvedBy: ResponseRelationship,
-    val source: ResponseRelationship,
+    val principal: ResponseRelationship<PartyTypeResponse>,
+    val grantedBy: ResponseRelationship<PartyTypeResponse>,
+    val grantedTo: ResponseRelationship<PartyTypeResponse>,
+    val approvedBy: ResponseRelationship<PartyTypeResponse>,
+    val source: ResponseRelationship<GrantSourceTypeResponse>,
 )
 
 @Serializable
@@ -78,8 +81,8 @@ fun AuthorizationGrant.toGetResponse(): JsonApiGetAuthorizationGrantResponse {
                 source = ResponseRelationship(
                     data = ResponseResourceIdentifier(
                         type = when (sourceType) {
-                            AuthorizationGrantSourceType.Document -> "AuthorizationDocument"
-                            AuthorizationGrantSourceType.Request -> "AuthorizationRequest"
+                            AuthorizationGrantSourceType.Document -> GrantSourceTypeResponse.AuthorizationDocument
+                            AuthorizationGrantSourceType.Request -> GrantSourceTypeResponse.AuthorizationRequest
                         },
                         id = sourceId.toString(),
                     ),
