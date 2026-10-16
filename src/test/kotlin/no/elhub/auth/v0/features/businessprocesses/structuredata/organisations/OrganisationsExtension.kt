@@ -9,7 +9,7 @@ import org.testcontainers.utility.DockerImageName
 import java.time.Duration
 
 object OrganisationsServiceTestContainer {
-    private val image = DockerImageName.parse("docker.jfrog.elhub.cloud/frzq0sxltynr/elhub/structure-data-organisations-service-mock:0.1.25-161")
+    private val image = DockerImageName.parse("docker.jfrog.elhub.cloud/frzq0sxltynr/elhub/structure-data-organisations-service-mock:0.1.86-397")
     private var container: GenericContainer<*>? = null
 
     fun start() {
