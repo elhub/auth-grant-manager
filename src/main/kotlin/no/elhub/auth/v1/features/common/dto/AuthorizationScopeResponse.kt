@@ -10,27 +10,27 @@ import no.elhub.auth.v1.domain.ResourceConstraint
 import no.elhub.auth.v1.domain.ResourceType
 
 @Serializable
-data class ResponseRequestedScope(
+data class RequestedScopeResponse(
     val resourceType: ResourceType,
-    val appliesTo: List<ResponseScopeConstraint>,
-    val allowedChanges: List<ResponseScopeConstraint>,
+    val appliesTo: List<ScopeConstraintResponse>,
+    val allowedChanges: List<ScopeConstraintResponse>,
 )
 
 @Serializable
-data class ResponseGrantedScope(
+data class GrantedScopeResponse(
     val capability: PermissionCapability,
     val resourceType: ResourceType,
-    val appliesTo: List<ResponseScopeConstraint>,
-    val allowedChanges: List<ResponseScopeConstraint>,
+    val appliesTo: List<ScopeConstraintResponse>,
+    val allowedChanges: List<ScopeConstraintResponse>,
 )
 
 @Serializable
-data class ResponseScopeConstraint(
+data class ScopeConstraintResponse(
     val attribute: String,
     val value: List<String>,
 )
 
-fun RequestedAuthorizationScope.toResponse() = ResponseRequestedScope(
+fun RequestedAuthorizationScope.toResponse() = RequestedScopeResponse(
     resourceType = resourceType,
     appliesTo = constraints.filter { it.constraintKind == AuthorizationScopeConstraintKind.AppliesTo }
         .map(AuthorizationScopeConstraint::toResponse),
@@ -38,7 +38,7 @@ fun RequestedAuthorizationScope.toResponse() = ResponseRequestedScope(
         .map(AuthorizationScopeConstraint::toResponse),
 )
 
-fun GrantedAuthorizationScope.toResponse() = ResponseGrantedScope(
+fun GrantedAuthorizationScope.toResponse() = GrantedScopeResponse(
     capability = capability,
     resourceType = resourceType,
     appliesTo = constraints.filter { it.constraintKind == AuthorizationScopeConstraintKind.AppliesTo }
@@ -47,7 +47,7 @@ fun GrantedAuthorizationScope.toResponse() = ResponseGrantedScope(
         .map(AuthorizationScopeConstraint::toResponse),
 )
 
-private fun AuthorizationScopeConstraint.toResponse() = ResponseScopeConstraint(
+private fun AuthorizationScopeConstraint.toResponse() = ScopeConstraintResponse(
     attribute = attribute.apiName,
     value = when (val constraint = value) {
         is ResourceConstraint.MeteringPoints -> constraint.ids.map { it.value }.sorted()

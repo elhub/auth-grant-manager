@@ -5,7 +5,7 @@ import no.elhub.auth.v1.domain.AuthorizationDocument
 import no.elhub.auth.v1.domain.AuthorizationDocumentStatus
 import no.elhub.auth.v1.domain.AuthorizationDocumentType
 import no.elhub.auth.v1.domain.RequestedAuthorizationScope
-import no.elhub.auth.v1.features.common.dto.ResponseRequestedScope
+import no.elhub.auth.v1.features.common.dto.RequestedScopeResponse
 import no.elhub.auth.v1.features.common.dto.toResponse
 import kotlin.time.Instant
 
@@ -27,7 +27,7 @@ data class AuthorizationDocumentResource(
 @Serializable
 data class AuthorizationDocumentAttributes(
     val documentType: AuthorizationDocumentType,
-    val requestedScopes: List<ResponseRequestedScope>,
+    val requestedScopes: List<RequestedScopeResponse>,
     val externalReference: String? = null,
     val status: AuthorizationDocumentStatus,
     val createdAt: Instant,

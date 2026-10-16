@@ -11,7 +11,7 @@ import no.elhub.auth.v1.domain.AuthorizationRequestType
 import no.elhub.auth.v1.domain.RequestedAuthorizationScope
 import no.elhub.auth.v1.features.common.dto.ResponseGrantRelationship
 import no.elhub.auth.v1.features.common.dto.ResponseRelationship
-import no.elhub.auth.v1.features.common.dto.ResponseRequestedScope
+import no.elhub.auth.v1.features.common.dto.RequestedScopeResponse
 import no.elhub.auth.v1.features.common.dto.toApprovalRelationship
 import no.elhub.auth.v1.features.common.dto.toResponse
 import no.elhub.auth.v1.features.common.dto.toResponseIdentifier
@@ -37,7 +37,7 @@ data class AuthorizationRequestResource(
 @Serializable
 data class AuthorizationRequestAttributes(
     val requestType: AuthorizationRequestType,
-    val requestedScopes: List<ResponseRequestedScope>,
+    val requestedScopes: List<RequestedScopeResponse>,
     val externalReference: String? = null,
     val redirectUri: String? = null,
     val status: AuthorizationRequestStatus,

@@ -10,7 +10,7 @@ import no.elhub.auth.v1.domain.AuthorizationGrant
 import no.elhub.auth.v1.domain.RequestedAuthorizationScope
 import no.elhub.auth.v1.features.common.dto.ResponseGrantRelationship
 import no.elhub.auth.v1.features.common.dto.ResponseRelationship
-import no.elhub.auth.v1.features.common.dto.ResponseRequestedScope
+import no.elhub.auth.v1.features.common.dto.RequestedScopeResponse
 import no.elhub.auth.v1.features.common.dto.toApprovalRelationship
 import no.elhub.auth.v1.features.common.dto.toResponse
 import no.elhub.auth.v1.features.common.dto.toResponseIdentifier
@@ -35,7 +35,7 @@ data class AuthorizationDocumentResource(
 @Serializable
 data class AuthorizationDocumentAttributes(
     val documentType: AuthorizationDocumentType,
-    val requestedScopes: List<ResponseRequestedScope>,
+    val requestedScopes: List<RequestedScopeResponse>,
     val externalReference: String? = null,
     val documentUri: String,
     val status: ResponseAuthorizationDocumentStatus,

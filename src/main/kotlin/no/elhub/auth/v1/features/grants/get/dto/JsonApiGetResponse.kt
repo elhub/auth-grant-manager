@@ -7,7 +7,7 @@ import no.elhub.auth.v1.domain.AuthorizationGrant
 import no.elhub.auth.v1.domain.AuthorizationGrantSourceType
 import no.elhub.auth.v1.domain.AuthorizationGrantStatus
 import no.elhub.auth.v1.domain.GrantedAuthorizationScope
-import no.elhub.auth.v1.features.common.dto.ResponseGrantedScope
+import no.elhub.auth.v1.features.common.dto.GrantedScopeResponse
 import no.elhub.auth.v1.features.common.dto.ResponseRelationship
 import no.elhub.auth.v1.features.common.dto.ResponseResourceIdentifier
 import no.elhub.auth.v1.features.common.dto.toApprovalRelationship
@@ -34,7 +34,7 @@ data class AuthorizationGrantResource(
 @Serializable
 data class AuthorizationGrantAttributes(
     val status: AuthorizationGrantStatus,
-    val scopes: List<ResponseGrantedScope>,
+    val scopes: List<GrantedScopeResponse>,
     val validFrom: Instant,
     val validTo: Instant,
     val grantedAt: Instant? = null,
