@@ -9,10 +9,10 @@ import no.elhub.auth.v1.domain.AuthorizationRequest
 import no.elhub.auth.v1.domain.AuthorizationRequestStatus
 import no.elhub.auth.v1.domain.AuthorizationRequestType
 import no.elhub.auth.v1.domain.RequestedAuthorizationScope
-import no.elhub.auth.v1.features.common.dto.ResponseGrantRelationship
-import no.elhub.auth.v1.features.common.dto.ResponseRelationship
 import no.elhub.auth.v1.features.common.dto.PartyTypeResponse
 import no.elhub.auth.v1.features.common.dto.RequestedScopeResponse
+import no.elhub.auth.v1.features.common.dto.ResponseGrantRelationship
+import no.elhub.auth.v1.features.common.dto.ResponseRelationship
 import no.elhub.auth.v1.features.common.dto.toApprovalRelationship
 import no.elhub.auth.v1.features.common.dto.toResponse
 import no.elhub.auth.v1.features.common.dto.toResponseIdentifier
