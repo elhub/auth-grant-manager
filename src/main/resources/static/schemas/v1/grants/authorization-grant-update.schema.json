@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Authorization Grant Update",
+  "description": "Consume an authorization grant.",
+  "type": "object",
+  "required": ["data"],
+  "properties": {
+    "data": {
+      "type": "object",
+      "required": ["id", "type", "attributes"],
+      "properties": {
+        "id": {
+          "$ref": "authorization-grant-common.schema.json#/$defs/id"
+        },
+        "type": {
+          "$ref": "authorization-grant-common.schema.json#/$defs/type"
+        },
+        "attributes": {
+          "type": "object",
+          "required": ["status"],
+          "additionalProperties": false,
+          "properties": {
+            "status": {
+              "enum": ["Exhausted", "Revoked"]
+            }
+          }
+        }
+      }
+    }
+  }
+}
