@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Authorization Grant Resource",
-  "description": "Schema for returning consumable authorization grants.",
+  "description": "Schema for returning consumable and persistent authorization grants.",
   "type": "object",
   "properties": {
     "data": {
@@ -27,9 +27,6 @@
             },
             "validTo": {
               "$ref": "../elhub-common.schema.json#/$defs/validTo"
-            },
-            "grantedAt": {
-              "$ref": "authorization-grant-common.schema.json#/$defs/grantedAt"
             },
             "createdAt": {
               "$ref": "../elhub-common.schema.json#/$defs/createdAt"

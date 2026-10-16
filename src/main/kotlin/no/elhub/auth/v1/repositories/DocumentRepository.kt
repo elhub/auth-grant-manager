@@ -151,7 +151,7 @@ class ExposedDocumentRepository(
             it[externalReference] = document.externalReference
             it[meta] = document.meta
             it[file] = document.pdfBytes
-            it[validFrom] = document.createdAt
+            it[validFrom] = document.validFrom
             it[validTo] = document.validTo
             it[createdAt] = document.createdAt
             it[updatedAt] = document.updatedAt
@@ -316,6 +316,7 @@ fun ResultRow.toAuthorizationDocument(
     requestedScopes = requestedScopes,
     externalReference = this[AuthorizationDocumentTable.externalReference],
     meta = this[AuthorizationDocumentTable.meta],
+    validFrom = this[AuthorizationDocumentTable.validFrom],
     validTo = this[AuthorizationDocumentTable.validTo],
     createdAt = this[AuthorizationDocumentTable.createdAt],
     updatedAt = this[AuthorizationDocumentTable.updatedAt],

@@ -78,7 +78,7 @@ class ExposedDocumentRepositoryTest : FunSpec({
         requestedPrincipal = party(PartyType.Organization),
         requestedOf = party(),
         pdfBytes = byteArrayOf(0, 1, 127, -128, -1),
-    ).copy(createdAt = createdAt, updatedAt = createdAt + 1.days)
+    ).copy(validFrom = createdAt + 2.days, createdAt = createdAt, updatedAt = createdAt + 1.days)
 
     fun grant(document: AuthorizationDocument, signatory: AuthorizationParty) = AuthorizationGrant.new(
         type = AuthorizationGrantType.Consumable,
@@ -110,7 +110,7 @@ class ExposedDocumentRepositoryTest : FunSpec({
             it[externalReference] = document.externalReference
             it[meta] = document.meta
             it[file] = document.pdfBytes
-            it[validFrom] = document.createdAt
+            it[validFrom] = document.validFrom
             it[validTo] = document.validTo
             it[AuthorizationDocumentTable.createdAt] = document.createdAt
             it[updatedAt] = document.updatedAt
@@ -338,7 +338,7 @@ class ExposedDocumentRepositoryTest : FunSpec({
         }
     }
 
-    test("insert persists document fields and requested scopes") {
+    test("insert, find and list preserve validFrom independently of createdAt and requested scopes") {
         val constraints = listOf(
             AuthorizationScopeConstraint(
                 AuthorizationScopeConstraintKind.AppliesTo,

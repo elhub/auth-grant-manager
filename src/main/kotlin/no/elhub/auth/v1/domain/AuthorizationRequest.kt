@@ -12,7 +12,9 @@ data class AuthorizationRequest(
     val status: AuthorizationRequestStatus,
     val requestedScopes: List<RequestedAuthorizationScope>,
     val externalReference: String?,
+    val redirectUri: String?,
     val meta: JsonObject,
+    val validFrom: Instant,
     val validTo: Instant,
     val createdAt: Instant,
     val updatedAt: Instant,
@@ -32,6 +34,7 @@ data class AuthorizationRequest(
             requestedBy: AuthorizationParty,
             requestedPrincipal: AuthorizationParty,
             requestedOf: AuthorizationParty,
+            redirectUri: String? = null,
         ): AuthorizationRequest {
             val now = Clock.System.now()
             return AuthorizationRequest(
@@ -40,7 +43,9 @@ data class AuthorizationRequest(
                 status = AuthorizationRequestStatus.Pending,
                 requestedScopes = requestedScopes,
                 externalReference = externalReference,
+                redirectUri = redirectUri,
                 meta = meta,
+                validFrom = now,
                 validTo = validTo,
                 createdAt = now,
                 updatedAt = now,
