@@ -31,6 +31,12 @@
             "status": {
               "$ref": "authorization-request-common.schema.json#/$defs/status"
             },
+            "textReference": {
+              "$ref": "authorization-request-common.schema.json#/$defs/textReference"
+            },
+            "textLanguage": {
+              "$ref": "authorization-request-common.schema.json#/$defs/textLanguage"
+            },
             "validFrom": {
               "$ref": "../elhub-common.schema.json#/$defs/validFrom"
             },
