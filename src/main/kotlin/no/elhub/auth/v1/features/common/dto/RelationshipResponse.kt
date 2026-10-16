@@ -39,7 +39,10 @@ fun AuthorizationParty.toApprovalRelationship(): ResponseRelationship {
     return toResponseRelationship()
 }
 
-fun AuthorizationGrant.toResponseIdentifier(): ResponseResourceIdentifier {
-    check(type == AuthorizationGrantType.Consumable) { "Only consumable grants can be represented in v1 responses" }
-    return ResponseResourceIdentifier(type = "ConsumableGrant", id = id.toString())
-}
+fun AuthorizationGrant.toResponseIdentifier() = ResponseResourceIdentifier(
+    type = when (type) {
+        AuthorizationGrantType.Consumable -> "ConsumableGrant"
+        AuthorizationGrantType.Persistent -> "PersistentGrant"
+    },
+    id = id.toString(),
+)

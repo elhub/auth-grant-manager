@@ -64,7 +64,7 @@
             "type": "object",
             "properties": {
               "type": {
-                "const": "ConsumableGrant"
+                "$ref": "grants/authorization-grant-common.schema.json#/$defs/type"
               },
               "id": {
                 "$ref": "#/$defs/resourceUuid"
