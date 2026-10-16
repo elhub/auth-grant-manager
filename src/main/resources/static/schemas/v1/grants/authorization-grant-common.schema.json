@@ -15,10 +15,6 @@
       "items": {
         "$ref": "../authorization-scope.schema.json#/$defs/authorizationScope"
       }
-    },
-    "grantedAt": {
-      "type": "string",
-      "format": "date-time"
     }
   }
 }

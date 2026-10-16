@@ -28,9 +28,6 @@
             "validTo": {
               "$ref": "../elhub-common.schema.json#/$defs/validTo"
             },
-            "grantedAt": {
-              "$ref": "authorization-grant-common.schema.json#/$defs/grantedAt"
-            },
             "createdAt": {
               "$ref": "../elhub-common.schema.json#/$defs/createdAt"
             },
