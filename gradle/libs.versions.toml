@@ -2,7 +2,7 @@
 format.version = "1.1"
 
 [versions]
-auth-pdp-plugin = "8.8.3"
+auth-pdp-plugin = "8.8.4"
 arrow = "2.2.3"
 cohort = "2.9.11"
 elhub-gradle = "1.0.2"
@@ -14,7 +14,7 @@ json-skema = "0.32.0"
 kotlinx-datetime = "0.8.0-0.6.x-compat"
 kotlinx-serialization = "1.11.0"
 kotlinx-serialization-plugin = "2.4.21"
-kotest = "6.2.5"
+kotest = "6.2.6"
 kotlin-logging = "8.0.4"
 ksp = "2.3.12"
 ktor = "3.6.0"
