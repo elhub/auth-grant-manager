@@ -28,7 +28,11 @@
           "type": "object",
           "properties": {
             "type": {
-              "enum": ["Person", "Organization", "MarketEntity"]
+              "enum": [
+                "Person",
+                "Organization",
+                "MarketEntity"
+              ]
             },
             "id": {
               "type": "string",
@@ -64,7 +68,7 @@
             "type": "object",
             "properties": {
               "type": {
-                "const": "ConsumableGrant"
+                "$ref": "grants/authorization-grant-common.schema.json#/$defs/type"
               },
               "id": {
                 "$ref": "#/$defs/resourceUuid"
@@ -81,7 +85,10 @@
           "type": "object",
           "properties": {
             "type": {
-              "enum": ["AuthorizationDocument", "AuthorizationRequest"]
+              "enum": [
+                "AuthorizationDocument",
+                "AuthorizationRequest"
+              ]
             },
             "id": {
               "$ref": "#/$defs/resourceUuid"

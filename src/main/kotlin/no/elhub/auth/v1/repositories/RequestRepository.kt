@@ -173,8 +173,9 @@ class ExposedRequestRepository(
             it[AuthorizationRequestTable.approvedBy] = approvedBy?.id
             it[externalReference] = request.externalReference
             it[meta] = request.meta
+            it[redirectUri] = request.redirectUri
             it[AuthorizationRequestTable.validTo] = request.validTo
-            it[validFrom] = request.createdAt
+            it[validFrom] = request.validFrom
             it[createdAt] = request.createdAt
             it[updatedAt] = request.updatedAt
         }
@@ -401,6 +402,8 @@ fun ResultRow.toAuthorizationRequest(
         requestedScopes = requestedScopes,
         externalReference = this[AuthorizationRequestTable.externalReference],
         meta = this[AuthorizationRequestTable.meta],
+        redirectUri = this[AuthorizationRequestTable.redirectUri],
+        validFrom = this[AuthorizationRequestTable.validFrom],
         validTo = validTo,
         createdAt = this[AuthorizationRequestTable.createdAt],
         updatedAt = this[AuthorizationRequestTable.updatedAt],

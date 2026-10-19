@@ -36,6 +36,7 @@ import no.elhub.auth.v1.domain.ResourceType
 import no.elhub.auth.v1.features.documents.create.dto.JsonApiCreateAuthorizationDocumentResponse
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import kotlin.time.Clock
+import kotlin.time.Instant
 
 class RouteTest : FunSpec({
     val authorizedParty = AuthorizationParty("123456789", PartyType.OrganizationEntity)
@@ -91,6 +92,7 @@ class RouteTest : FunSpec({
         ),
         externalReference = "contract-123",
         meta = JsonObject(emptyMap()),
+        validFrom = Instant.parse("2026-10-01T08:00:00Z"),
         validTo = Clock.System.now(),
         createdAt = Clock.System.now(),
         updatedAt = Clock.System.now(),
@@ -131,6 +133,7 @@ class RouteTest : FunSpec({
             body.data.id shouldBe body.data.links.self.substringAfterLast('/')
             body.data.attributes.documentType shouldBe AuthorizationDocumentType.ChangeOfEnergySupplierForOrganization
             body.data.attributes.status.name shouldBe "Pending"
+            body.data.attributes.validFrom shouldBe Instant.parse("2026-10-01T08:00:00Z")
             val returnedScope = body.data.attributes.requestedScopes.single()
             returnedScope.resourceType shouldBe ResourceType.MeteringPointContract
             returnedScope.appliesTo.single().attribute shouldBe "meteringPoint.id"
@@ -268,6 +271,7 @@ class RouteTest : FunSpec({
         )
 
         document.validTo shouldBe validTo
+        document.validFrom shouldBe document.createdAt
         document.meta shouldBe meta
         document.pdfBytes.toList() shouldBe signedPdf.toList()
         coVerify(exactly = 0) { moveInHandler.validateAndGetDetails(any(), any()) }

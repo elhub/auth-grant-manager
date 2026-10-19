@@ -5,7 +5,7 @@
       "$ref": "../elhub-common.schema.json#/$defs/resourceUuid"
     },
     "type": {
-      "const": "ConsumableGrant"
+      "enum": ["ConsumableGrant", "PersistentGrant"]
     },
     "status": {
       "enum": ["Active", "Exhausted", "Expired", "Revoked"]
@@ -15,10 +15,6 @@
       "items": {
         "$ref": "../authorization-scope.schema.json#/$defs/authorizationScope"
       }
-    },
-    "grantedAt": {
-      "type": "string",
-      "format": "date-time"
     }
   }
 }
