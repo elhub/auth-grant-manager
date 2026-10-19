@@ -3,9 +3,7 @@ package no.elhub.auth.v1.domain
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
-import no.elhub.auth.v1.DomainError
-import no.elhub.auth.v1.InputError
-import no.elhub.auth.v1.features.documents.create.DocumentSpecification
+import no.elhub.auth.v1.domain.documents.DocumentSpecification
 import kotlin.time.Instant
 
 class DomainTest : FunSpec({
@@ -25,12 +23,12 @@ class DomainTest : FunSpec({
             constraint.copy() shouldBe constraint
 
             values.filter { it.second != attribute }.forEach { (otherValue, otherAttribute) ->
-                val error = shouldThrow<InputError.InvalidFieldValueError> {
+                val error = shouldThrow<DomainError.InvalidScopeConstraint> {
                     AuthorizationScopeConstraint(AuthorizationScopeConstraintKind.AllowedChanges, otherAttribute, value)
                 }
                 error.detail shouldBe "Scope constraint attribute '${otherAttribute.apiName}' does not match value for '${attribute.apiName}'"
-                shouldThrow<InputError.InvalidFieldValueError> { constraint.copy(attribute = otherAttribute) }
-                shouldThrow<InputError.InvalidFieldValueError> { constraint.copy(value = otherValue) }
+                shouldThrow<DomainError.InvalidScopeConstraint> { constraint.copy(attribute = otherAttribute) }
+                shouldThrow<DomainError.InvalidScopeConstraint> { constraint.copy(value = otherValue) }
                 constraint.copy(attribute = otherAttribute, value = otherValue).attribute shouldBe otherAttribute
             }
         }
@@ -43,7 +41,7 @@ class DomainTest : FunSpec({
         attribute.name shouldBe "MeteringPointId"
 
         listOf("MeteringPointId", "unknown", "").forEach { apiName ->
-            shouldThrow<InputError.InvalidFieldValueError> {
+            shouldThrow<DomainError.UnsupportedScopeConstraintAttribute> {
                 AuthorizationScopeConstraintAttribute.fromApiName(apiName)
             }
         }
@@ -73,10 +71,10 @@ class DomainTest : FunSpec({
     test("metering-point IDs must contain exactly 18 digits") {
         MeteringPointId.create("707057500000000001").value shouldBe "707057500000000001"
 
-        shouldThrow<InputError.InvalidMeteringPointId> { MeteringPointId.create("") }
-        shouldThrow<InputError.InvalidMeteringPointId> { MeteringPointId.create("70705750000000001") }
-        shouldThrow<InputError.InvalidMeteringPointId> { MeteringPointId.create("7070575000000000001") }
-        shouldThrow<InputError.InvalidMeteringPointId> { MeteringPointId.create("70705750000000000A") }
+        shouldThrow<DomainError.InvalidMeteringPointId> { MeteringPointId.create("") }
+        shouldThrow<DomainError.InvalidMeteringPointId> { MeteringPointId.create("70705750000000001") }
+        shouldThrow<DomainError.InvalidMeteringPointId> { MeteringPointId.create("7070575000000000001") }
+        shouldThrow<DomainError.InvalidMeteringPointId> { MeteringPointId.create("70705750000000000A") }
     }
 
     test("external agent identifiers are classified by digit length") {

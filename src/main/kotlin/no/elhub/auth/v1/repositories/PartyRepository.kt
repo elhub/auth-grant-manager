@@ -5,7 +5,6 @@ import no.elhub.auth.v0.features.common.party.AuthorizationPartyRecord
 import no.elhub.auth.v0.features.common.party.AuthorizationPartyTable
 import no.elhub.auth.v0.features.common.party.PartyType
 import no.elhub.auth.v0.features.common.party.toAuthorizationParty
-import no.elhub.auth.v1.RepositoryReadError
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.inList

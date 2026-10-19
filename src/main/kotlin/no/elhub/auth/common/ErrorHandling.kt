@@ -8,9 +8,9 @@ import io.ktor.server.response.respond
 import kotlinx.serialization.ExperimentalSerializationApi
 import no.elhub.auth.v0.features.common.buildApiErrorResponse
 import no.elhub.auth.v0.features.common.toInternalServerApiErrorResponse
-import no.elhub.auth.v1.DomainError
 import no.elhub.auth.v1.Errors
-import no.elhub.auth.v1.InputError
+import no.elhub.auth.v1.api.common.errors.InputError
+import no.elhub.auth.v1.domain.DomainError
 import org.slf4j.LoggerFactory
 
 private val logger = LoggerFactory.getLogger("ErrorHandling")
@@ -78,13 +78,25 @@ private fun Errors.toApiErrorResponse() = when (this) {
         detail = detail,
     )
 
+    is DomainError.InvalidScopeConstraint -> buildApiErrorResponse(
+        status = HttpStatusCode.UnprocessableEntity,
+        title = "Invalid field value",
+        detail = detail,
+    )
+
+    is DomainError.UnsupportedScopeConstraintAttribute -> buildApiErrorResponse(
+        status = HttpStatusCode.UnprocessableEntity,
+        title = "Invalid field value",
+        detail = detail,
+    )
+
     is InputError.ContentTooLargeError -> buildApiErrorResponse(
         status = HttpStatusCode.PayloadTooLarge,
         title = "Content too large",
         detail = detail,
     )
 
-    is InputError.InvalidMeteringPointId -> buildApiErrorResponse(
+    is DomainError.InvalidMeteringPointId -> buildApiErrorResponse(
         status = HttpStatusCode.UnprocessableEntity,
         title = "Invalid metering point id",
         detail = detail,
