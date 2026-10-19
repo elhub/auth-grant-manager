@@ -1,7 +1,5 @@
 package no.elhub.auth.v1.domain
 
-import no.elhub.auth.v1.DomainError
-
 sealed interface AgentExternalIdentifier {
     val value: String
 

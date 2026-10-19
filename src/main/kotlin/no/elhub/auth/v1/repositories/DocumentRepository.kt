@@ -10,8 +10,6 @@ import no.elhub.auth.v0.features.common.party.AuthorizationParty
 import no.elhub.auth.v0.features.common.party.AuthorizationPartyTable
 import no.elhub.auth.v0.features.common.party.toAuthorizationParty
 import no.elhub.auth.v0.features.grants.common.toAuthorizationParty
-import no.elhub.auth.v1.RepositoryReadError
-import no.elhub.auth.v1.RepositoryWriteError
 import no.elhub.auth.v1.common.now
 import no.elhub.auth.v1.domain.AuthorizationDocument
 import no.elhub.auth.v1.domain.AuthorizationDocumentStatus

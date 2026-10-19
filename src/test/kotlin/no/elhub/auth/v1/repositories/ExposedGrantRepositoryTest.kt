@@ -16,8 +16,6 @@ import no.elhub.auth.v0.features.common.PostgresTestContainerExtension
 import no.elhub.auth.v0.features.common.party.AuthorizationParty
 import no.elhub.auth.v0.features.common.party.AuthorizationPartyTable
 import no.elhub.auth.v0.features.common.party.PartyType
-import no.elhub.auth.v1.RepositoryReadError
-import no.elhub.auth.v1.RepositoryWriteError
 import no.elhub.auth.v1.domain.AuthorizationGrant
 import no.elhub.auth.v1.domain.AuthorizationGrantSourceType
 import no.elhub.auth.v1.domain.AuthorizationGrantStatus

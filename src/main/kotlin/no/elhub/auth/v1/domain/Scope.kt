@@ -1,6 +1,5 @@
 package no.elhub.auth.v1.domain
 
-import no.elhub.auth.v1.InputError
 import kotlin.time.Instant
 
 data class RequestedAuthorizationScope(
@@ -15,7 +14,7 @@ data class AuthorizationScopeConstraint(
 ) {
     init {
         if (attribute != value.attribute) {
-            throw InputError.InvalidFieldValueError(
+            throw DomainError.InvalidScopeConstraint(
                 "Scope constraint attribute '${attribute.apiName}' does not match value for '${value.attribute.apiName}'",
             )
         }
@@ -41,7 +40,7 @@ enum class AuthorizationScopeConstraintAttribute(val apiName: String) {
     companion object {
         fun fromApiName(apiName: String): AuthorizationScopeConstraintAttribute =
             entries.find { it.apiName == apiName }
-                ?: throw InputError.InvalidFieldValueError("Unsupported scope constraint attribute: $apiName")
+                ?: throw DomainError.UnsupportedScopeConstraintAttribute(apiName)
     }
 }
 
