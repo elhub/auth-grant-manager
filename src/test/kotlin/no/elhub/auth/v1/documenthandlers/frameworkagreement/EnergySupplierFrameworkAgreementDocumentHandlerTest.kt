@@ -32,6 +32,7 @@ import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.O
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.VALID_PARTY_ID
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.VALID_PARTY_NAME
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.organisationsServiceHttpClient
+import no.elhub.auth.v1.common.AuthorizationRulesService
 import no.elhub.auth.v1.domain.AuthorizationDocument
 import no.elhub.auth.v1.domain.AuthorizationDocumentStatus
 import no.elhub.auth.v1.domain.AuthorizationDocumentType
@@ -143,6 +144,7 @@ class EnergySupplierFrameworkAgreementDocumentHandlerTest : FunSpec({
             val pdfGenerator = mockk<PdfGenerator>()
             val pdfSigner = mockk<PdfSigner>()
             val repository = mockk<DocumentRepository>()
+            val authorizationRulesService = mockk<AuthorizationRulesService>()
             val inserted = slot<AuthorizationDocument>()
             val unsignedPdf = byteArrayOf(1, 2)
             val signedPdf = byteArrayOf(3, 4)
@@ -150,6 +152,7 @@ class EnergySupplierFrameworkAgreementDocumentHandlerTest : FunSpec({
             every { pdfGenerator.generate(details.pdfContent) } returns unsignedPdf
             coEvery { pdfSigner.sign(unsignedPdf) } returns signedPdf
             coEvery { repository.insert(capture(inserted)) } answers { inserted.captured.copy(id = "saved-id") }
+            coEvery { authorizationRulesService.canActOnBehalfOf(context.requestedOf, context.requestedPrincipal) } returns true
 
             val saved = CreateDocumentHandler(
                 supplierChangeHandler,
@@ -158,6 +161,7 @@ class EnergySupplierFrameworkAgreementDocumentHandlerTest : FunSpec({
                 pdfGenerator,
                 pdfSigner,
                 repository,
+                authorizationRulesService,
             ).createAuthorizationDocument(
                 specification = specification,
                 externalReference = context.externalReference,

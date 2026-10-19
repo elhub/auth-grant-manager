@@ -15,6 +15,8 @@ import no.elhub.auth.common.auth.AuthorizationParty
 import no.elhub.auth.common.auth.PartyType
 import no.elhub.auth.common.documents.pdf.PdfGenerator
 import no.elhub.auth.common.documents.pdf.PdfSigner
+import no.elhub.auth.v1.api.common.errors.InputError
+import no.elhub.auth.v1.common.AuthorizationRulesService
 import no.elhub.auth.v1.domain.DocumentLanguage
 import no.elhub.auth.v1.domain.MeteringPointId
 import no.elhub.auth.v1.domain.ResourceConstraint
@@ -46,6 +48,7 @@ class CreateDocumentHandlerTest : FunSpec({
     lateinit var pdfGenerator: PdfGenerator
     lateinit var pdfSigner: PdfSigner
     lateinit var repository: DocumentRepository
+    lateinit var authorizationRulesService: AuthorizationRulesService
     lateinit var handler: CreateDocumentHandler
 
     beforeTest {
@@ -55,6 +58,8 @@ class CreateDocumentHandlerTest : FunSpec({
         pdfGenerator = mockk()
         pdfSigner = mockk()
         repository = mockk()
+        authorizationRulesService = mockk()
+        coEvery { authorizationRulesService.canActOnBehalfOf(any(), any()) } returns true
         handler = CreateDocumentHandler(
             supplierChangeHandler,
             moveInHandler,
@@ -62,6 +67,7 @@ class CreateDocumentHandlerTest : FunSpec({
             pdfGenerator,
             pdfSigner,
             repository,
+            authorizationRulesService,
         )
     }
 
@@ -116,6 +122,7 @@ class CreateDocumentHandlerTest : FunSpec({
                     error.actualAgentType shouldBe invalidType
                     error.expectedAgentType shouldBe validParty.type
                     coVerify(exactly = 0) {
+                        authorizationRulesService.canActOnBehalfOf(any(), any())
                         supplierChangeHandler.prepare(any(), any())
                         moveInHandler.prepare(any(), any())
                         frameworkAgreementHandler.prepare(any(), any())
@@ -126,5 +133,34 @@ class CreateDocumentHandlerTest : FunSpec({
                 }
             }
         }
+    }
+
+    test("rejects unauthorized representatives before document preparation or persistence") {
+        coEvery { authorizationRulesService.canActOnBehalfOf(any(), any()) } returns false
+
+        shouldThrow<InputError.RequestedOfRequestedPrincipalMismatch> {
+            handler.createAuthorizationDocument(
+                specification = specifications.first(),
+                externalReference = null,
+                requestedBy = roles.getValue("requestedBy"),
+                requestedPrincipal = roles.getValue("requestedPrincipal"),
+                requestedOf = roles.getValue("requestedOf"),
+                language = DocumentLanguage.NB,
+            )
+        }
+
+        coVerify(exactly = 1) {
+            authorizationRulesService.canActOnBehalfOf(
+                roles.getValue("requestedOf"),
+                roles.getValue("requestedPrincipal"),
+            )
+        }
+        coVerify(exactly = 0) {
+            supplierChangeHandler.prepare(any(), any())
+            moveInHandler.prepare(any(), any())
+            frameworkAgreementHandler.prepare(any(), any())
+            repository.insert(any())
+        }
+        verify(exactly = 0) { pdfGenerator.generate(any()) }
     }
 })

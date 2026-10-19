@@ -21,6 +21,7 @@ import no.elhub.auth.v0.config.configureSerialization
 import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsService
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsService
 import no.elhub.auth.v0.features.common.party.PartyService
+import no.elhub.auth.v1.common.AuthorizationRulesService
 
 class DocumentsModuleTest : FunSpec({
     test("does not register v1 routes when disabled") {
@@ -56,6 +57,7 @@ class DocumentsModuleTest : FunSpec({
                         provide<PartyService> { mockk<PartyService>() }
                         provide<MeteringPointsService> { mockk<MeteringPointsService>() }
                         provide<OrganisationsService> { mockk<OrganisationsService>() }
+                        provide<AuthorizationRulesService> { mockk<AuthorizationRulesService>() }
                     }
                     module()
                 }
@@ -97,6 +99,7 @@ class DocumentsModuleTest : FunSpec({
                     provide<PartyService> { mockk<PartyService>() }
                     provide<MeteringPointsService> { mockk<MeteringPointsService>() }
                     provide<OrganisationsService> { mockk<OrganisationsService>() }
+                    provide<AuthorizationRulesService> { mockk<AuthorizationRulesService>() }
                 }
                 module()
             }

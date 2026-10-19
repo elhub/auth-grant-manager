@@ -8,6 +8,7 @@ import no.elhub.auth.plugin.policies.token.base.authinfo.AuthInfoPolicy
 import no.elhub.auth.plugin.tokenAuthorize
 import no.elhub.auth.v0.features.common.party.PartyService
 import no.elhub.auth.v1.api.documents.routes.route
+import no.elhub.auth.v1.common.AuthorizationRulesService
 import no.elhub.auth.v1.features.documents.ConfirmDocumentHandler
 import no.elhub.auth.v1.features.documents.CreateDocumentHandler
 import no.elhub.auth.v1.features.documents.GetDocumentHandler
@@ -46,7 +47,15 @@ fun Application.module() {
             FrameworkAgreementHandlerImplementation(resolve())
         }
         provide<CreateDocumentHandler> {
-            CreateDocumentHandler(resolve(), resolve(), resolve(), resolve(), resolve(), resolve())
+            CreateDocumentHandler(
+                resolve(),
+                resolve(),
+                resolve(),
+                resolve(),
+                resolve(),
+                resolve(),
+                resolve<AuthorizationRulesService>(),
+            )
         }
         provide<ConfirmDocumentHandler> {
             ConfirmDocumentHandler(resolve(), resolve(), resolve())

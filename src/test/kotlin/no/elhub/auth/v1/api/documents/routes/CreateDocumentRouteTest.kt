@@ -28,6 +28,7 @@ import no.elhub.auth.v0.features.common.party.PartyService
 import no.elhub.auth.v0.postJson
 import no.elhub.auth.v0.setupAppWith
 import no.elhub.auth.v1.api.documents.response.JsonApiGetAuthorizationDocumentResponse
+import no.elhub.auth.v1.common.AuthorizationRulesService
 import no.elhub.auth.v1.domain.AuthorizationDocument
 import no.elhub.auth.v1.domain.AuthorizationDocumentStatus
 import no.elhub.auth.v1.domain.AuthorizationDocumentType
@@ -137,7 +138,15 @@ class CreateDocumentRouteTest : FunSpec({
             )
             coEvery { partyService.resolve(any()) } returnsMany listOf(requestedPrincipal.right(), requestedOf.right())
             val repository = mockk<DocumentRepository>()
-            val creationHandler = CreateDocumentHandler(mockk(), mockk(), mockk(), pdfGenerator, pdfSigner, repository)
+            val creationHandler = CreateDocumentHandler(
+                mockk(),
+                mockk(),
+                mockk(),
+                pdfGenerator,
+                pdfSigner,
+                repository,
+                mockk(),
+            )
 
             testApplication {
                 setupAppWith(requestedBy) {
@@ -403,7 +412,17 @@ class CreateDocumentRouteTest : FunSpec({
         coEvery { pdfSigner.sign(unsignedPdf) } returns signedPdf
         coEvery { documentRepository.insert(capture(insertedDocument)) } returns savedDocument
 
-        val service = CreateDocumentHandler(changeSupplierHandler, moveInHandler, mockk(), pdfGenerator, pdfSigner, documentRepository)
+        val rulesService = mockk<AuthorizationRulesService>()
+        coEvery { rulesService.canActOnBehalfOf(any(), any()) } returns true
+        val service = CreateDocumentHandler(
+            changeSupplierHandler,
+            moveInHandler,
+            mockk(),
+            pdfGenerator,
+            pdfSigner,
+            documentRepository,
+            rulesService,
+        )
         val document = service.createAuthorizationDocument(
             specification = specification,
             externalReference = "ref",
@@ -428,6 +447,12 @@ class CreateDocumentRouteTest : FunSpec({
             pdfBytes.toList() shouldBe signedPdf.toList()
         }
         coVerify(exactly = 1) { documentRepository.insert(any()) }
+        coVerify(exactly = 1) {
+            rulesService.canActOnBehalfOf(
+                AuthorizationParty("org-2", PartyType.Organization),
+                AuthorizationParty("org-1", PartyType.Organization),
+            )
+        }
         coVerify(exactly = 0) { moveInHandler.prepare(any(), any()) }
     }
 
@@ -437,7 +462,17 @@ class CreateDocumentRouteTest : FunSpec({
         val documentRepository: DocumentRepository = mockk()
         coEvery { changeSupplierHandler.prepare(any(), any()) } throws
             DocumentPreparationError.RequestedMeteringPointsNotFound()
-        val service = CreateDocumentHandler(changeSupplierHandler, moveInHandler, mockk(), pdfGenerator, pdfSigner, documentRepository)
+        val rulesService = mockk<AuthorizationRulesService>()
+        coEvery { rulesService.canActOnBehalfOf(any(), any()) } returns true
+        val service = CreateDocumentHandler(
+            changeSupplierHandler,
+            moveInHandler,
+            mockk(),
+            pdfGenerator,
+            pdfSigner,
+            documentRepository,
+            rulesService,
+        )
         val specification = DocumentSpecification.ChangeOfEnergySupplierForOrganization(
             ResourceConstraint.MeteringPoints(setOf(MeteringPointId.create("707057500000000001"))),
         )
