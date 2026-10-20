@@ -29,8 +29,8 @@ class DocumentsModuleTest : FunSpec({
         }
     }
 
-    listOf("", ".pdf").forEach { suffix ->
-        test("registers the protected GET /{id}$suffix route when v1 is enabled") {
+    listOf("", "/12334", "/12334.pdf").forEach { path ->
+        test("registers the protected GET $V1_DOCUMENTS_PATH$path route when v1 is enabled") {
             testApplication {
                 environment {
                     config = MapApplicationConfig(
@@ -50,11 +50,11 @@ class DocumentsModuleTest : FunSpec({
                     module()
                 }
 
-                client.get("$V1_DOCUMENTS_PATH/12334$suffix").status shouldBe HttpStatusCode.Unauthorized
+                client.get("$V1_DOCUMENTS_PATH$path").status shouldBe HttpStatusCode.Unauthorized
             }
         }
 
-        test("does not register GET /{id}$suffix when v1 is disabled") {
+        test("does not register GET $V1_DOCUMENTS_PATH$path when v1 is disabled") {
             testApplication {
                 environment {
                     config = MapApplicationConfig("v1.enabled" to "false")
@@ -63,7 +63,7 @@ class DocumentsModuleTest : FunSpec({
                     module()
                 }
 
-                client.get("$V1_DOCUMENTS_PATH/12334$suffix").status shouldBe HttpStatusCode.NotFound
+                client.get("$V1_DOCUMENTS_PATH$path").status shouldBe HttpStatusCode.NotFound
             }
         }
     }
