@@ -11,6 +11,12 @@ import no.elhub.auth.v1.api.documents.routes.route
 import no.elhub.auth.v1.features.documents.CreateDocumentHandler
 import no.elhub.auth.v1.features.documents.creation.ChangeOfEnergySupplierDocumentHandler
 import no.elhub.auth.v1.features.documents.creation.MoveInAndChangeOfEnergySupplierDocumentHandler
+import no.elhub.auth.v1.repositories.DocumentRepository
+import no.elhub.auth.v1.repositories.ExposedDocumentRepository
+import no.elhub.auth.v1.repositories.ExposedGrantRepository
+import no.elhub.auth.v1.repositories.ExposedPartyRepository
+import no.elhub.auth.v1.repositories.GrantRepository
+import no.elhub.auth.v1.repositories.PartyRepository
 import no.elhub.auth.v1.documenthandlers.movein.MoveInAndChangeOfEnergySupplierDocumentHandler as MoveInHandlerImplementation
 import no.elhub.auth.v1.documenthandlers.supplierchange.ChangeOfEnergySupplierDocumentHandler as SupplierChangeHandlerImplementation
 
@@ -22,6 +28,9 @@ fun Application.module() {
     }
 
     dependencies {
+        provide<PartyRepository> { ExposedPartyRepository() }
+        provide<GrantRepository> { ExposedGrantRepository(resolve()) }
+        provide<DocumentRepository> { ExposedDocumentRepository(resolve(), resolve()) }
         provide<ChangeOfEnergySupplierDocumentHandler> {
             SupplierChangeHandlerImplementation()
         }
@@ -29,7 +38,7 @@ fun Application.module() {
             MoveInHandlerImplementation()
         }
         provide<CreateDocumentHandler> {
-            CreateDocumentHandler(resolve(), resolve(), resolve(), resolve())
+            CreateDocumentHandler(resolve(), resolve(), resolve(), resolve(), resolve())
         }
     }
 
