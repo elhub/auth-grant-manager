@@ -5,12 +5,18 @@ import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.response.respond
+import io.ktor.server.response.respondText
 import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.json.Json
+import no.elhub.auth.v0.config.jsonApiContentType
 import no.elhub.auth.v0.features.common.buildApiErrorResponse
 import no.elhub.auth.v0.features.common.toInternalServerApiErrorResponse
+import no.elhub.auth.v0.features.common.toNotFoundApiErrorResponse
 import no.elhub.auth.v1.Errors
 import no.elhub.auth.v1.api.common.errors.InputError
 import no.elhub.auth.v1.domain.DomainError
+import no.elhub.auth.v1.features.documents.GetDocumentError
+import no.elhub.auth.v1.repositories.RepositoryReadError
 import org.slf4j.LoggerFactory
 
 private val logger = LoggerFactory.getLogger("ErrorHandling")
@@ -30,18 +36,28 @@ fun Application.configureErrorHandling() {
         }
         exception<Errors> { call, cause ->
             val (status, body) = cause.toApiErrorResponse()
-            call.respond(status, body)
+            call.respondText(Json.encodeToString(body), jsonApiContentType, status)
         }
         exception<Throwable> { call, cause ->
             logger.error("Unhandled exception", cause)
             val (status, body) = toInternalServerApiErrorResponse()
-            call.respond(status, body)
+            call.respondText(Json.encodeToString(body), jsonApiContentType, status)
         }
     }
 }
 
 // TODO revise messages and map all errors
 private fun Errors.toApiErrorResponse() = when (this) {
+    is RepositoryReadError.NotFoundError -> toNotFoundApiErrorResponse()
+
+    is RepositoryReadError.UnexpectedError -> toInternalServerApiErrorResponse()
+
+    is GetDocumentError.NotAuthorized -> buildApiErrorResponse(
+        status = HttpStatusCode.Forbidden,
+        title = "Party not authorized",
+        detail = "The party is not allowed to access this resource",
+    )
+
     is DomainError.InvalidExternalAgentIdentifier -> buildApiErrorResponse(
         status = HttpStatusCode.BadRequest,
         title = "Invalid external agent identifier",
