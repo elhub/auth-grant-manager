@@ -9,12 +9,14 @@ import no.elhub.auth.v1.domain.documents.DocumentSpecification
 import no.elhub.auth.v1.features.documents.creation.ChangeOfEnergySupplierDocumentHandler
 import no.elhub.auth.v1.features.documents.creation.DocumentCreationContext
 import no.elhub.auth.v1.features.documents.creation.MoveInAndChangeOfEnergySupplierDocumentHandler
+import no.elhub.auth.v1.repositories.DocumentRepository
 
 class CreateDocumentHandler(
     private val changeOfEnergySupplierHandler: ChangeOfEnergySupplierDocumentHandler,
     private val moveInAndChangeOfEnergySupplierHandler: MoveInAndChangeOfEnergySupplierDocumentHandler,
     private val pdfGenerator: PdfGenerator,
     private val pdfSigner: PdfSigner,
+    private val documentRepository: DocumentRepository,
 ) {
     suspend fun createAuthorizationDocument(
         specification: DocumentSpecification,
@@ -40,7 +42,7 @@ class CreateDocumentHandler(
         }
         val pdfBytes = pdfSigner.sign(pdfGenerator.generate(details.pdfContent))
 
-        return AuthorizationDocument.new(
+        val document = AuthorizationDocument.new(
             documentType = specification.documentType,
             requestedScopes = listOf(specification.toRequestedAuthorizationScope()),
             externalReference = externalReference,
@@ -51,5 +53,6 @@ class CreateDocumentHandler(
             requestedOf = requestedOf,
             pdfBytes = pdfBytes,
         )
+        return documentRepository.insert(document)
     }
 }

@@ -1,6 +1,7 @@
 package no.elhub.auth.v1.api.documents.response
 
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import no.elhub.auth.v1.api.common.response.PartyTypeResponse
@@ -29,6 +30,7 @@ data class GetAuthorizationDocumentResource(
     val id: String,
     val type: String,
     val attributes: GetAuthorizationDocumentAttributes,
+    val meta: JsonObject,
     val relationships: AuthorizationDocumentRelationships,
     val links: AuthorizationDocumentLinks,
 )
@@ -88,6 +90,7 @@ fun AuthorizationDocument.toGetResponse() =
                 createdAt = createdAt,
                 updatedAt = updatedAt,
             ),
+            meta = meta,
             relationships = AuthorizationDocumentRelationships(
                 requestedBy = requestedBy.toResponseRelationship(),
                 requestedPrincipal = requestedPrincipal.toResponseRelationship(),

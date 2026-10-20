@@ -10,8 +10,11 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import kotlinx.datetime.LocalDate
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonObject
 import no.elhub.auth.common.documents.pdf.PdfGenerator
 import no.elhub.auth.common.documents.pdf.PdfSigner
 import no.elhub.auth.v0.features.common.party.AuthorizationParty
@@ -39,6 +42,7 @@ import no.elhub.auth.v1.features.documents.CreateDocumentHandler
 import no.elhub.auth.v1.features.documents.creation.ChangeOfEnergySupplierDocumentHandler
 import no.elhub.auth.v1.features.documents.creation.DocumentCreationDetails
 import no.elhub.auth.v1.features.documents.creation.MoveInAndChangeOfEnergySupplierDocumentHandler
+import no.elhub.auth.v1.repositories.DocumentRepository
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import kotlin.time.Clock
 import kotlin.time.Instant
@@ -117,7 +121,11 @@ class CreateDocumentRouteTest : FunSpec({
     }
 
     test("POST / returns 201 and passes the authorized party to the handler") {
-        val document = responseDocument()
+        val document = responseDocument().copy(
+            meta = Json.parseToJsonElement(
+                """{"meteringPointId":"707057500000000001","nested":{"values":[null,false,1.5,"text"]},"placeholder":true}""",
+            ).jsonObject,
+        )
         coEvery {
             handler.createAuthorizationDocument(any(), any(), any(), any(), any(), any())
         } returns document
@@ -136,6 +144,7 @@ class CreateDocumentRouteTest : FunSpec({
             response.status shouldBe HttpStatusCode.Created
             val body: JsonApiGetAuthorizationDocumentResponse = response.body()
             body.data.type shouldBe "AuthorizationDocument"
+            body.data.meta shouldBe document.meta
             body.data.id shouldBe body.data.links.self.substringAfterLast('/')
             body.data.attributes.documentType shouldBe AuthorizationDocumentType.ChangeOfEnergySupplierForOrganization
             body.data.attributes.status.name shouldBe "Pending"
@@ -189,6 +198,8 @@ class CreateDocumentRouteTest : FunSpec({
             val response = client.postJson("/", requestBody.replace(Regex(",\\s*\"language\": \"nb\""), ""))
 
             response.status shouldBe HttpStatusCode.Created
+            val body: JsonApiGetAuthorizationDocumentResponse = response.body()
+            body.data.meta shouldBe JsonObject(emptyMap())
             coVerify(exactly = 1) {
                 handler.createAuthorizationDocument(
                     specification = any(),
@@ -255,9 +266,12 @@ class CreateDocumentRouteTest : FunSpec({
         }
     }
 
-    test("document service uses document details to generate and sign the document") {
+    test("document service generates, signs and inserts the document and returns the saved document") {
         val changeSupplierHandler: ChangeOfEnergySupplierDocumentHandler = mockk()
         val moveInHandler: MoveInAndChangeOfEnergySupplierDocumentHandler = mockk()
+        val documentRepository: DocumentRepository = mockk()
+        val insertedDocument = slot<AuthorizationDocument>()
+        val savedDocument = responseDocument()
         val specification = DocumentSpecification.ChangeOfEnergySupplierForOrganization(
             ResourceConstraint.MeteringPoints(setOf(MeteringPointId.create("707057500000000001"))),
         )
@@ -270,8 +284,9 @@ class CreateDocumentRouteTest : FunSpec({
             DocumentCreationDetails(pdfContent, validTo, meta)
         every { pdfGenerator.generate(pdfContent) } returns unsignedPdf
         coEvery { pdfSigner.sign(unsignedPdf) } returns signedPdf
+        coEvery { documentRepository.insert(capture(insertedDocument)) } returns savedDocument
 
-        val service = CreateDocumentHandler(changeSupplierHandler, moveInHandler, pdfGenerator, pdfSigner)
+        val service = CreateDocumentHandler(changeSupplierHandler, moveInHandler, pdfGenerator, pdfSigner, documentRepository)
         val document = service.createAuthorizationDocument(
             specification = specification,
             externalReference = "ref",
@@ -281,10 +296,21 @@ class CreateDocumentRouteTest : FunSpec({
             language = DocumentLanguage.NB,
         )
 
-        document.validTo shouldBe validTo
-        document.validFrom shouldBe document.createdAt
-        document.meta shouldBe meta
-        document.pdfBytes.toList() shouldBe signedPdf.toList()
+        document shouldBe savedDocument
+        insertedDocument.captured.apply {
+            documentType shouldBe specification.documentType
+            requestedScopes shouldBe listOf(specification.toRequestedAuthorizationScope())
+            externalReference shouldBe "ref"
+            requestedBy shouldBe authorizedParty
+            requestedPrincipal shouldBe AuthorizationParty("org-1", PartyType.Organization)
+            requestedOf shouldBe AuthorizationParty("person-1", PartyType.Person)
+            status shouldBe AuthorizationDocumentStatus.Pending
+            this.validTo shouldBe validTo
+            validFrom shouldBe createdAt
+            this.meta shouldBe meta
+            pdfBytes.toList() shouldBe signedPdf.toList()
+        }
+        coVerify(exactly = 1) { documentRepository.insert(any()) }
         coVerify(exactly = 0) { moveInHandler.prepare(any(), any()) }
     }
 
