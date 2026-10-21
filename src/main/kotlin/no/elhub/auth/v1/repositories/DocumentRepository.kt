@@ -59,7 +59,7 @@ interface DocumentRepository {
         documentId: UUID,
         signedFile: ByteArray,
         signatory: AuthorizationParty,
-        grant: AuthorizationGrant,
+        grants: List<AuthorizationGrant>,
     ): AuthorizationDocument
 }
 
@@ -188,8 +188,12 @@ class ExposedDocumentRepository(
         documentId: UUID,
         signedFile: ByteArray,
         signatory: AuthorizationParty,
-        grant: AuthorizationGrant,
+        grants: List<AuthorizationGrant>,
     ): AuthorizationDocument = withTransaction {
+        if (grants.isEmpty()) {
+            throw RepositoryWriteError.UnexpectedError("Cannot confirm document $documentId without grants")
+        }
+
         // Serialize confirmations before checking the current state.
         val row = AuthorizationDocumentTable.selectAll()
             .where { AuthorizationDocumentTable.id eq documentId }
@@ -217,7 +221,7 @@ class ExposedDocumentRepository(
             it[signedAt] = now
             it[updatedAt] = now
         }.single()
-        val insertedGrant = grantRepository.insert(grant)
+        val insertedGrants = grants.map { grantRepository.insert(it) }
 
         updated.toAuthorizationDocument(
             requestedBy = partyRepository.find(row[AuthorizationDocumentTable.requestedBy]).toAuthorizationParty(),
@@ -226,7 +230,7 @@ class ExposedDocumentRepository(
             requestedScopes = getScopesByDocumentId(listOf(documentId))[documentId].orEmpty(),
             approvedBy = approvedBy.toAuthorizationParty(),
             now = now,
-        ).copy(authorizationGrant = listOf(insertedGrant))
+        ).copy(authorizationGrant = insertedGrants)
     }
 
     private fun generateFilterByCondition(
