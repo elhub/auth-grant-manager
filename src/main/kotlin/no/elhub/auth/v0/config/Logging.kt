@@ -9,6 +9,7 @@ import io.ktor.server.request.httpMethod
 import io.ktor.server.request.path
 import no.elhub.auth.v0.features.common.TRACE_ID_MDC_KEY
 import no.elhub.auth.v0.features.openapi.API_PATH_OPENAPI
+import no.elhub.auth.v0.features.openapi.API_PATH_OPENAPI_LEGACY
 import org.slf4j.event.Level
 
 fun Application.configureLogging() {
@@ -16,6 +17,7 @@ fun Application.configureLogging() {
         "/health",
         "/metrics",
         "/$API_PATH_OPENAPI",
+        "/$API_PATH_OPENAPI_LEGACY",
     )
     install(CallLogging) {
         level = Level.INFO
