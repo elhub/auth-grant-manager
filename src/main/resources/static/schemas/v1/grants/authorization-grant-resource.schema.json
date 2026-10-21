@@ -28,6 +28,11 @@
             "validTo": {
               "$ref": "../elhub-common.schema.json#/$defs/validTo"
             },
+            "grantedAt": {
+              "type": "string",
+              "format": "date-time",
+              "description": "Timestamp indicating when this authorization grant was approved."
+            },
             "createdAt": {
               "$ref": "../elhub-common.schema.json#/$defs/createdAt"
             },
