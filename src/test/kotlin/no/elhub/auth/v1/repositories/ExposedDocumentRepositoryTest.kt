@@ -208,19 +208,19 @@ class ExposedDocumentRepositoryTest : FunSpec({
         error.detail shouldBe "Document not found: $id"
     }
 
-    test("listing includes requester or principal but excludes other roles and party types") {
+    test("listing includes requester or requestedOf but excludes other roles and party types") {
         val party = party(PartyType.Organization)
         val by = seed(document().copy(requestedBy = party))
-        val principal = seed(document().copy(requestedPrincipal = party))
-        val both = seed(document().copy(requestedBy = party, requestedPrincipal = party))
-        seed(document().copy(requestedOf = party))
+        val requestedOf = seed(document().copy(requestedOf = party))
+        val both = seed(document().copy(requestedBy = party, requestedOf = party))
+        seed(document().copy(requestedPrincipal = party))
         seed(document().copy(approvedBy = party))
         seed(document().copy(requestedBy = party.copy(type = PartyType.Person)))
         seed(document())
 
         val result = repository.findAndSortByCreatedAt(party, Pagination(), emptyList())
 
-        result.items.map { it.id }.shouldContainExactlyInAnyOrder(by.toString(), principal.toString(), both.toString())
+        result.items.map { it.id }.shouldContainExactlyInAnyOrder(by.toString(), requestedOf.toString(), both.toString())
         result.totalItems shouldBe 3L
     }
 
@@ -314,7 +314,7 @@ class ExposedDocumentRepositoryTest : FunSpec({
                 externalReference = "listed-contract",
                 requestedScopes = listOf(constrained, unconstrained),
             ),
-            document().copy(requestedPrincipal = party, requestedScopes = listOf(unconstrained)),
+            document().copy(requestedOf = party, requestedScopes = listOf(unconstrained)),
             document().copy(requestedBy = party, documentType = AuthorizationDocumentType.ChangeOfEnergySupplierForOrganization),
         )
         documents.forEach { seed(it) }

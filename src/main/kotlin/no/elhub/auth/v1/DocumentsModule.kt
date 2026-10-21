@@ -10,6 +10,7 @@ import no.elhub.auth.v0.features.common.party.PartyService
 import no.elhub.auth.v1.api.documents.routes.route
 import no.elhub.auth.v1.features.documents.CreateDocumentHandler
 import no.elhub.auth.v1.features.documents.GetDocumentHandler
+import no.elhub.auth.v1.features.documents.ListDocumentsHandler
 import no.elhub.auth.v1.features.documents.creation.ChangeOfEnergySupplierDocumentHandler
 import no.elhub.auth.v1.features.documents.creation.MoveInAndChangeOfEnergySupplierDocumentHandler
 import no.elhub.auth.v1.repositories.DocumentRepository
@@ -44,16 +45,21 @@ fun Application.module() {
         provide<GetDocumentHandler> {
             GetDocumentHandler(resolve(), resolve())
         }
+        provide<ListDocumentsHandler> {
+            ListDocumentsHandler(resolve(), resolve())
+        }
     }
 
     val createHandler: CreateDocumentHandler by dependencies
     val getHandler: GetDocumentHandler by dependencies
+    val listHandler: ListDocumentsHandler by dependencies
     val partyService: PartyService by dependencies
     routing {
         tokenAuthorize(AuthInfoPolicy) {
             route(V1_DOCUMENTS_PATH) {
                 route(partyService, createHandler)
                 route(getHandler)
+                route(listHandler)
             }
         }
     }

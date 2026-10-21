@@ -235,7 +235,7 @@ class ExposedDocumentRepository(
         now: Instant,
     ): Op<Boolean> {
         val partyCondition = (AuthorizationDocumentTable.requestedBy eq partyId) or
-            (AuthorizationDocumentTable.requestedPrincipal eq partyId)
+            (AuthorizationDocumentTable.requestedOf eq partyId)
         if (statuses.isEmpty()) {
             return partyCondition
         }
