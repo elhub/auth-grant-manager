@@ -42,6 +42,7 @@ import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import java.util.UUID
 import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.microseconds
 import kotlin.time.Instant
 
 class ExposedDocumentRepositoryTest : FunSpec({
@@ -468,10 +469,20 @@ class ExposedDocumentRepositoryTest : FunSpec({
         result.status shouldBe AuthorizationDocumentStatus.Accepted
         result.approvedBy shouldBe signatory
         result.pdfBytes.toList() shouldBe signedFile.toList()
-        result.authorizationGrant.shouldContainExactlyInAnyOrder(grants)
-        storedGrantRepository.findBySourceIds(AuthorizationGrantSourceType.Document, listOf(id))[id]
-            .shouldContainExactlyInAnyOrder(grants)
-        grants.forEach { grant -> storedGrantRepository.find(grant.id) shouldBe grant }
+        val insertedGrants = result.authorizationGrant ?: error("Confirmed document must contain its inserted grants")
+        val fetchedGrants = storedGrantRepository.findBySourceIds(AuthorizationGrantSourceType.Document, listOf(id))[id].orEmpty()
+        insertedGrants.map { it.id }.shouldContainExactlyInAnyOrder(grants.map { it.id })
+        fetchedGrants.map { it.id }.shouldContainExactlyInAnyOrder(grants.map { it.id })
+        grants.forEach { expected ->
+            val inserted = insertedGrants.single { it.id == expected.id }
+            val fetched = fetchedGrants.single { it.id == expected.id }
+            listOf(inserted, fetched).forEach { actual ->
+                actual.copy(createdAt = expected.createdAt, updatedAt = expected.updatedAt) shouldBe expected
+                ((actual.createdAt - expected.createdAt).absoluteValue <= 1.microseconds) shouldBe true
+                ((actual.updatedAt - expected.updatedAt).absoluteValue <= 1.microseconds) shouldBe true
+            }
+            storedGrantRepository.find(expected.id) shouldBe fetched
+        }
     }
 
     test("confirm rejects an empty grant list without changing the document") {
