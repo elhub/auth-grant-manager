@@ -8,6 +8,7 @@ import no.elhub.auth.plugin.policies.token.base.authinfo.AuthInfoPolicy
 import no.elhub.auth.plugin.tokenAuthorize
 import no.elhub.auth.v0.features.common.party.PartyService
 import no.elhub.auth.v1.api.documents.routes.route
+import no.elhub.auth.v1.features.documents.ConfirmDocumentHandler
 import no.elhub.auth.v1.features.documents.CreateDocumentHandler
 import no.elhub.auth.v1.features.documents.GetDocumentHandler
 import no.elhub.auth.v1.features.documents.ListDocumentsHandler
@@ -42,6 +43,9 @@ fun Application.module() {
         provide<CreateDocumentHandler> {
             CreateDocumentHandler(resolve(), resolve(), resolve(), resolve(), resolve())
         }
+        provide<ConfirmDocumentHandler> {
+            ConfirmDocumentHandler(resolve(), resolve(), resolve())
+        }
         provide<GetDocumentHandler> {
             GetDocumentHandler(resolve(), resolve())
         }
@@ -51,6 +55,7 @@ fun Application.module() {
     }
 
     val createHandler: CreateDocumentHandler by dependencies
+    val confirmHandler: ConfirmDocumentHandler by dependencies
     val getHandler: GetDocumentHandler by dependencies
     val listHandler: ListDocumentsHandler by dependencies
     val partyService: PartyService by dependencies
@@ -60,6 +65,7 @@ fun Application.module() {
                 route(partyService, createHandler)
                 route(getHandler)
                 route(listHandler)
+                route(confirmHandler)
             }
         }
     }

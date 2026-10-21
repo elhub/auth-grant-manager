@@ -430,7 +430,7 @@ class ExposedDocumentRepositoryTest : FunSpec({
         coEvery { grantRepository.insert(grant) } returns storedGrant
         val before = now()
 
-        val result = repository.confirm(id, signedFile, signatory, grant)
+        val result = repository.confirm(id, signedFile, signatory, listOf(grant))
 
         val after = now()
         result.copy(pdfBytes = original.pdfBytes) shouldBe original.copy(
@@ -451,13 +451,56 @@ class ExposedDocumentRepositoryTest : FunSpec({
         coVerify(exactly = 1) { grantRepository.insert(grant) }
     }
 
+    test("confirm persists multiple grants and returns all inserted grants") {
+        val storedGrantRepository = ExposedGrantRepository(partyRepository)
+        val documentRepository = ExposedDocumentRepository(partyRepository, storedGrantRepository)
+        val original = document()
+        val id = seed(original)
+        val signatory = party()
+        val grants = listOf(
+            grant(original, signatory),
+            grant(original, signatory).copy(type = AuthorizationGrantType.Persistent),
+        )
+        val signedFile = byteArrayOf(42, -128, 0, -1)
+
+        val result = documentRepository.confirm(id, signedFile, signatory, grants)
+
+        result.status shouldBe AuthorizationDocumentStatus.Accepted
+        result.approvedBy shouldBe signatory
+        result.pdfBytes.toList() shouldBe signedFile.toList()
+        result.authorizationGrant.shouldContainExactlyInAnyOrder(grants)
+        storedGrantRepository.findBySourceIds(AuthorizationGrantSourceType.Document, listOf(id))[id]
+            .shouldContainExactlyInAnyOrder(grants)
+        grants.forEach { grant -> storedGrantRepository.find(grant.id) shouldBe grant }
+    }
+
+    test("confirm rejects an empty grant list without changing the document") {
+        val original = document()
+        val id = seed(original)
+        val before = repository.find(id)
+
+        val error = shouldThrow<RepositoryWriteError.UnexpectedError> {
+            repository.confirm(id, byteArrayOf(1), party(), emptyList())
+        }
+
+        error.detail shouldBe "Cannot confirm document $id without grants"
+        val after = repository.find(id)
+        after.copy(pdfBytes = before.pdfBytes) shouldBe before
+        after.pdfBytes.toList() shouldBe before.pdfBytes.toList()
+        withTransaction {
+            AuthorizationDocumentTable.selectAll().where { AuthorizationDocumentTable.id eq id }
+                .single()[AuthorizationDocumentTable.signedAt] shouldBe null
+        }
+        coVerify(exactly = 0) { grantRepository.insert(any()) }
+    }
+
     test("confirm rejects unknown documents without inserting a grant") {
         val original = document()
         val id = UUID.fromString(original.id)
         val signatory = party()
 
         val error = shouldThrow<RepositoryWriteError.NotFoundError> {
-            repository.confirm(id, byteArrayOf(1), signatory, grant(original, signatory))
+            repository.confirm(id, byteArrayOf(1), signatory, listOf(grant(original, signatory)))
         }
 
         error.detail shouldBe "Document not found: $id"
@@ -471,7 +514,7 @@ class ExposedDocumentRepositoryTest : FunSpec({
         val signatory = party()
 
         val error = shouldThrow<RepositoryWriteError.ExpiredError> {
-            repository.confirm(id, byteArrayOf(1), signatory, grant(original, signatory))
+            repository.confirm(id, byteArrayOf(1), signatory, listOf(grant(original, signatory)))
         }
 
         error.detail shouldBe "Document $id has expired"
@@ -489,7 +532,7 @@ class ExposedDocumentRepositoryTest : FunSpec({
             val signatory = party()
 
             val error = shouldThrow<RepositoryWriteError.ConflictError> {
-                repository.confirm(id, byteArrayOf(1), signatory, grant(original, signatory))
+                repository.confirm(id, byteArrayOf(1), signatory, listOf(grant(original, signatory)))
             }
 
             error.detail shouldBe "Invalid transition for document $id from Accepted to Accepted"
@@ -500,23 +543,27 @@ class ExposedDocumentRepositoryTest : FunSpec({
         coVerify(exactly = 0) { grantRepository.insert(any()) }
     }
 
-    test("confirm bubbles grant insertion failures and rolls back document changes") {
+    test("confirm rolls back the document and earlier grants when a later grant insertion fails") {
         val original = document()
         val id = seed(original)
         val before = repository.find(id)
         val signatory = party()
-        val grant = grant(original, signatory)
+        val firstGrant = grant(original, signatory)
+        val secondGrant = grant(original, signatory)
+        val storedGrantRepository = ExposedGrantRepository(partyRepository)
         val failure = IllegalStateException("Grant insertion failed")
-        coEvery { grantRepository.insert(grant) } coAnswers {
+        coEvery { grantRepository.insert(firstGrant) } coAnswers { storedGrantRepository.insert(firstGrant) }
+        coEvery { grantRepository.insert(secondGrant) } coAnswers {
             withTransaction {
                 val row = AuthorizationDocumentTable.selectAll().where { AuthorizationDocumentTable.id eq id }.single()
                 (row[AuthorizationDocumentTable.approvedBy] != null) shouldBe true
             }
+            storedGrantRepository.find(firstGrant.id).id shouldBe firstGrant.id
             throw failure
         }
 
         val error = shouldThrow<IllegalStateException> {
-            repository.confirm(id, byteArrayOf(1), signatory, grant)
+            repository.confirm(id, byteArrayOf(1), signatory, listOf(firstGrant, secondGrant))
         }
 
         error.message shouldBe failure.message
@@ -527,7 +574,9 @@ class ExposedDocumentRepositoryTest : FunSpec({
             AuthorizationDocumentTable.selectAll().where { AuthorizationDocumentTable.id eq id }
                 .single()[AuthorizationDocumentTable.signedAt] shouldBe null
         }
-        coVerify(exactly = 1) { grantRepository.insert(grant) }
+        storedGrantRepository.findBySourceIds(AuthorizationGrantSourceType.Document, listOf(id))[id].orEmpty() shouldBe emptyList()
+        coVerify(exactly = 1) { grantRepository.insert(firstGrant) }
+        coVerify(exactly = 1) { grantRepository.insert(secondGrant) }
     }
 
     test("concurrent confirmations produce one success and one conflict") {
@@ -542,7 +591,7 @@ class ExposedDocumentRepositoryTest : FunSpec({
             val attempts = List(2) {
                 async {
                     start.await()
-                    runCatching { repository.confirm(id, byteArrayOf(1), signatory, grant) }
+                    runCatching { repository.confirm(id, byteArrayOf(1), signatory, listOf(grant)) }
                 }
             }
             start.complete(Unit)
