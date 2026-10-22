@@ -1,4 +1,4 @@
-package no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints
+package no.elhub.auth.common.structuredata.meteringpoints
 
 import kotlinx.serialization.Serializable
 import no.elhub.devxp.jsonapi.model.JsonApiAttributes
@@ -50,7 +50,16 @@ data class Relationships(
 @Serializable
 data class AccountingPoint(
     val blockedForSwitching: Boolean? = null,
+    val address: MeteringPointAddress? = null,
     val meter: Meter? = null
+)
+
+@Serializable
+data class MeteringPointAddress(
+    val streetName: String? = null,
+    val houseNumber: String? = null,
+    val postalCode: String,
+    val city: String? = null,
 )
 
 @Serializable

@@ -7,6 +7,7 @@ import arrow.core.raise.either
 import arrow.core.right
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.plus
+import no.elhub.auth.common.structuredata.meteringpoints.AccessType.SHARED
 import no.elhub.auth.v0.features.businessprocesses.BusinessProcessError
 import no.elhub.auth.v0.features.businessprocesses.changeofbalancesupplier.domain.ChangeOfBalanceSupplierBusinessCommand
 import no.elhub.auth.v0.features.businessprocesses.changeofbalancesupplier.domain.ChangeOfBalanceSupplierBusinessMeta
@@ -21,7 +22,6 @@ import no.elhub.auth.v0.features.businessprocesses.ediel.RedirectUriDomainValida
 import no.elhub.auth.v0.features.businessprocesses.ediel.redirectUriFor
 import no.elhub.auth.v0.features.businessprocesses.ediel.validateRedirectUriDomain
 import no.elhub.auth.v0.features.businessprocesses.structuredata.common.ClientError
-import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.AccessType.SHARED
 import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsService
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsService
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.PartyStatus

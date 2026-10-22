@@ -28,6 +28,7 @@ import java.util.UUID
 class MeteringPointsApiTest : FunSpec({
 
     val validMeteringPointId = "300362000000000008"
+    val secondMeteringPointId = "300362000000000009"
     val endUserId = "d6784082-8344-e733-e053-02058d0a6752"
     val otherEndUserId = "00662e04-2fd6-3b06-b672-3965abe7b7c5"
     lateinit var traceId: String
@@ -65,6 +66,14 @@ class MeteringPointsApiTest : FunSpec({
                                         "relationships":{"endUser":{"data":{"id":"end-user-unique-id","type":"end-user"}}}}
                                     }
                             """.trimMargin(),
+                            status = HttpStatusCode.OK,
+                            headers = headersOf(HttpHeaders.ContentType, "application/json")
+                        )
+                    }
+
+                    "/metering-points/$secondMeteringPointId?endUserId=$endUserId" -> {
+                        respond(
+                            content = """{"data":{"id":"$secondMeteringPointId","type":"metering-point","relationships":{}}}""",
                             status = HttpStatusCode.OK,
                             headers = headersOf(HttpHeaders.ContentType, "application/json")
                         )
@@ -129,6 +138,20 @@ class MeteringPointsApiTest : FunSpec({
 
     test("Non existing metering point") {
         val response = service.getMeteringPointByIdAndElhubInternalId("300362000000000000", "some-end-user-id")
+        response.shouldBeLeft()
+        response.value shouldBe ClientError.NotFound
+    }
+
+    test("Returns all requested metering points in the requested order") {
+        val response = service.getMeteringPoints(listOf(secondMeteringPointId, validMeteringPointId), endUserId)
+
+        response.shouldBeRight()
+        response.value.map { it.data.id } shouldBe listOf(secondMeteringPointId, validMeteringPointId)
+    }
+
+    test("Returns not found when any requested metering point does not exist") {
+        val response = service.getMeteringPoints(listOf(validMeteringPointId, "300362000000000000"), endUserId)
+
         response.shouldBeLeft()
         response.value shouldBe ClientError.NotFound
     }

@@ -1,5 +1,6 @@
 package no.elhub.auth.v1.features.documents
 
+import arrow.core.Either
 import no.elhub.auth.common.documents.pdf.PdfGenerator
 import no.elhub.auth.common.documents.pdf.PdfSigner
 import no.elhub.auth.v0.features.common.party.AuthorizationParty
@@ -8,6 +9,7 @@ import no.elhub.auth.v1.domain.DocumentLanguage
 import no.elhub.auth.v1.domain.documents.DocumentSpecification
 import no.elhub.auth.v1.features.documents.creation.ChangeOfEnergySupplierDocumentHandler
 import no.elhub.auth.v1.features.documents.creation.DocumentCreationContext
+import no.elhub.auth.v1.features.documents.creation.DocumentPreparationError
 import no.elhub.auth.v1.features.documents.creation.MoveInAndChangeOfEnergySupplierDocumentHandler
 import no.elhub.auth.v1.repositories.DocumentRepository
 
@@ -25,7 +27,7 @@ class CreateDocumentHandler(
         requestedPrincipal: AuthorizationParty,
         requestedOf: AuthorizationParty,
         language: DocumentLanguage,
-    ): AuthorizationDocument {
+    ): Either<DocumentPreparationError, AuthorizationDocument> {
         val context = DocumentCreationContext(
             requestedBy = requestedBy,
             requestedPrincipal = requestedPrincipal,
@@ -40,19 +42,26 @@ class CreateDocumentHandler(
             is DocumentSpecification.MoveInAndChangeOfEnergySupplierForOrganization ->
                 moveInAndChangeOfEnergySupplierHandler.prepare(specification, context)
         }
-        val pdfBytes = pdfSigner.sign(pdfGenerator.generate(details.pdfContent))
+        return when (details) {
+            is Either.Left -> details
 
-        val document = AuthorizationDocument.new(
-            documentType = specification.documentType,
-            requestedScopes = listOf(specification.toRequestedAuthorizationScope()),
-            externalReference = externalReference,
-            meta = details.meta,
-            validTo = details.validTo,
-            requestedBy = requestedBy,
-            requestedPrincipal = requestedPrincipal,
-            requestedOf = requestedOf,
-            pdfBytes = pdfBytes,
-        )
-        return documentRepository.insert(document)
+            is Either.Right -> {
+                val creationDetails = details.value
+                val pdfBytes = pdfSigner.sign(pdfGenerator.generate(creationDetails.pdfContent))
+
+                val document = AuthorizationDocument.new(
+                    documentType = specification.documentType,
+                    requestedScopes = listOf(specification.toRequestedAuthorizationScope()),
+                    externalReference = externalReference,
+                    meta = creationDetails.meta,
+                    validTo = creationDetails.validTo,
+                    requestedBy = requestedBy,
+                    requestedPrincipal = requestedPrincipal,
+                    requestedOf = requestedOf,
+                    pdfBytes = pdfBytes,
+                )
+                Either.Right(documentRepository.insert(document))
+            }
+        }
     }
 }
