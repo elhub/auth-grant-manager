@@ -64,7 +64,7 @@ class GetDocumentHandlerTest : FunSpec({
                 grantRepository.findBySourceIds(AuthorizationGrantSourceType.Document, listOf(documentId))
             } returns mapOf(documentId to listOf(grant))
 
-            handler(documentId, party) shouldBe document.copy(authorizationGrant = listOf(grant))
+            handler(documentId, party) shouldBe document.copy(authorizationGrants = listOf(grant))
         }
     }
 
@@ -76,7 +76,7 @@ class GetDocumentHandlerTest : FunSpec({
             grantRepository.findBySourceIds(AuthorizationGrantSourceType.Document, listOf(documentId))
         } returns mapOf(documentId to grants)
 
-        handler(documentId, requestedBy) shouldBe document.copy(authorizationGrant = grants)
+        handler(documentId, requestedBy) shouldBe document.copy(authorizationGrants = grants)
     }
 
     test("returns an empty grant relationship when no corresponding grants exist") {
@@ -85,7 +85,7 @@ class GetDocumentHandlerTest : FunSpec({
             grantRepository.findBySourceIds(AuthorizationGrantSourceType.Document, listOf(documentId))
         } returns emptyMap()
 
-        handler(documentId, requestedBy) shouldBe document.copy(authorizationGrant = emptyList())
+        handler(documentId, requestedBy) shouldBe document.copy(authorizationGrants = emptyList())
     }
 
     listOf(

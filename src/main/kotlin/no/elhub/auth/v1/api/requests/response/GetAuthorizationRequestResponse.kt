@@ -54,7 +54,7 @@ data class AuthorizationRequestRelationships(
     val requestedPrincipal: ResponseRelationship<PartyTypeResponse>,
     val requestedOf: ResponseRelationship<PartyTypeResponse>,
     val approvedBy: ResponseRelationship<PartyTypeResponse>? = null,
-    val authorizationGrant: ResponseGrantRelationship? = null,
+    val authorizationGrants: ResponseGrantRelationship? = null,
 )
 
 @Serializable
@@ -84,7 +84,7 @@ fun AuthorizationRequest.toGetResponse() =
                 requestedPrincipal = requestedPrincipal.toResponseRelationship(),
                 requestedOf = requestedOf.toResponseRelationship(),
                 approvedBy = approvedBy?.let { it.toApprovalRelationship() },
-                authorizationGrant = authorizationGrant?.let {
+                authorizationGrants = authorizationGrants?.let {
                     ResponseGrantRelationship(data = it.map(AuthorizationGrant::toResponseIdentifier))
                 },
             ),

@@ -29,7 +29,7 @@ class ListDocumentsHandler(
 
         return page.copy(
             items = page.items.map { document ->
-                document.copy(authorizationGrant = grants[UUID.fromString(document.id)].orEmpty())
+                document.copy(authorizationGrants = grants[UUID.fromString(document.id)].orEmpty())
             },
         )
     }

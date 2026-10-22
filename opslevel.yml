@@ -29,7 +29,7 @@ component:
       value: consent-management
   repositories:
     - name: elhub/auth-grant-manager
-      path: "/"
+      path: '/'
       provider: github
       display_name: Auth Grant Manager
   tools:

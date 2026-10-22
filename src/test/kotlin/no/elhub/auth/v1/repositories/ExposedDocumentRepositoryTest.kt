@@ -438,12 +438,12 @@ class ExposedDocumentRepositoryTest : FunSpec({
             status = AuthorizationDocumentStatus.Accepted,
             approvedBy = signatory,
             updatedAt = result.updatedAt,
-            authorizationGrant = listOf(storedGrant),
+            authorizationGrants = listOf(storedGrant),
         )
         result.pdfBytes.toList() shouldBe signedFile.toList()
         (result.updatedAt in before..after) shouldBe true
         val found = repository.find(id)
-        found.copy(pdfBytes = result.pdfBytes) shouldBe result.copy(authorizationGrant = null)
+        found.copy(pdfBytes = result.pdfBytes) shouldBe result.copy(authorizationGrants = null)
         found.pdfBytes.toList() shouldBe signedFile.toList()
         withTransaction {
             val row = AuthorizationDocumentTable.selectAll().where { AuthorizationDocumentTable.id eq id }.single()
@@ -469,7 +469,7 @@ class ExposedDocumentRepositoryTest : FunSpec({
         result.status shouldBe AuthorizationDocumentStatus.Accepted
         result.approvedBy shouldBe signatory
         result.pdfBytes.toList() shouldBe signedFile.toList()
-        val insertedGrants = result.authorizationGrant ?: error("Confirmed document must contain its inserted grants")
+        val insertedGrants = result.authorizationGrants ?: error("Confirmed document must contain its inserted grants")
         val fetchedGrants = storedGrantRepository.findBySourceIds(AuthorizationGrantSourceType.Document, listOf(id))[id].orEmpty()
         insertedGrants.map { it.id }.shouldContainExactlyInAnyOrder(grants.map { it.id })
         fetchedGrants.map { it.id }.shouldContainExactlyInAnyOrder(grants.map { it.id })

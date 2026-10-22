@@ -230,7 +230,7 @@ class ExposedDocumentRepository(
             requestedScopes = getScopesByDocumentId(listOf(documentId))[documentId].orEmpty(),
             approvedBy = approvedBy.toAuthorizationParty(),
             now = now,
-        ).copy(authorizationGrant = insertedGrants)
+        ).copy(authorizationGrants = insertedGrants)
     }
 
     private fun generateFilterByCondition(
@@ -326,7 +326,7 @@ fun ResultRow.toAuthorizationDocument(
     requestedPrincipal = requestedPrincipal,
     requestedOf = requestedOf,
     approvedBy = approvedBy,
-    authorizationGrant = null,
+    authorizationGrants = null,
     pdfBytes = this[AuthorizationDocumentTable.file],
 )
 

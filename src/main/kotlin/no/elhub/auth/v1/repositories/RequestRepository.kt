@@ -409,7 +409,7 @@ fun ResultRow.toAuthorizationRequest(
         requestedPrincipal = AuthorizationParty(id = requestedPrincipal.id, type = requestedPrincipal.type),
         requestedOf = AuthorizationParty(id = requestedOf.id, type = requestedOf.type),
         approvedBy = approvedBy?.let { AuthorizationParty(id = approvedBy.id, type = approvedBy.type) },
-        authorizationGrant = grants,
+        authorizationGrants = grants,
     )
 }
 

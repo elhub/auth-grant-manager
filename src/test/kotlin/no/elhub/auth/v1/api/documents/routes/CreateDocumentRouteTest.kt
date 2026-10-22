@@ -109,7 +109,7 @@ class CreateDocumentRouteTest : FunSpec({
         requestedPrincipal = AuthorizationParty("999888777", PartyType.OrganizationEntity),
         requestedOf = AuthorizationParty("person-1", PartyType.Person),
         approvedBy = null,
-        authorizationGrant = null,
+        authorizationGrants = null,
         pdfBytes = ByteArray(0),
     )
 

@@ -183,7 +183,7 @@ class ExposedRequestRepositoryTest : FunSpec({
             requestedPrincipal = requestedPrincipal,
             requestedOf = requestedOf,
             approvedBy = approver,
-            authorizationGrant = null,
+            authorizationGrants = null,
         )
         result.requestedScopes.size shouldBe 2
         result.requestedScopes.single { it.constraints.isEmpty() } shouldBe unconstrained
@@ -431,7 +431,7 @@ class ExposedRequestRepositoryTest : FunSpec({
         mapped.validTo shouldBe future
         mapped.createdAt shouldBe createdAt
         mapped.updatedAt shouldBe createdAt + 1.days
-        mapped.authorizationGrant shouldBe null
+        mapped.authorizationGrants shouldBe null
         mapped.requestedScopes.size shouldBe 2
         mapped.requestedScopes.single { it.constraints.size == 1 } shouldBe otherScope
         val mappedScope = mapped.requestedScopes.single { it.constraints.size == 2 }
@@ -564,7 +564,7 @@ class ExposedRequestRepositoryTest : FunSpec({
             status = AuthorizationRequestStatus.Accepted,
             approvedBy = grant.approvedBy,
             updatedAt = accepted.updatedAt,
-            authorizationGrant = listOf(grant),
+            authorizationGrants = listOf(grant),
         )
         withTransaction {
             val row = AuthorizationRequestTable.selectAll()
@@ -587,7 +587,7 @@ class ExposedRequestRepositoryTest : FunSpec({
         val accepted = repository.accept(id, grants)
 
         accepted.approvedBy shouldBe requestedBy
-        accepted.authorizationGrant.shouldContainExactlyInAnyOrder(grants)
+        accepted.authorizationGrants.shouldContainExactlyInAnyOrder(grants)
         val found = repository.find(id)
         val listed = repository.findAndSortByCreatedAt(
             requestedBy,
@@ -595,8 +595,8 @@ class ExposedRequestRepositoryTest : FunSpec({
             listOf(AuthorizationRequestStatus.Accepted),
         ).items.single()
         listOf(found, listed).forEach { stored ->
-            stored.copy(authorizationGrant = null) shouldBe accepted.copy(authorizationGrant = null)
-            stored.authorizationGrant.shouldContainExactlyInAnyOrder(grants)
+            stored.copy(authorizationGrants = null) shouldBe accepted.copy(authorizationGrants = null)
+            stored.authorizationGrants.shouldContainExactlyInAnyOrder(grants)
         }
         grants.forEach { grant -> grantRepository.find(grant.id) shouldBe grant }
     }
@@ -682,7 +682,7 @@ class ExposedRequestRepositoryTest : FunSpec({
         (error is RepositoryWriteError.ConflictError) shouldBe true
         val accepted = results.single { it.isSuccess }.getOrThrow()
         accepted.status shouldBe AuthorizationRequestStatus.Accepted
-        accepted.authorizationGrant shouldBe listOf(grants[results.indexOfFirst { it.isSuccess }])
+        accepted.authorizationGrants shouldBe listOf(grants[results.indexOfFirst { it.isSuccess }])
         repository.find(id) shouldBe accepted
     }
 
@@ -715,7 +715,7 @@ class ExposedRequestRepositoryTest : FunSpec({
             AuthorizationRequestStatus.Rejected
         }
         winner.approvedBy shouldBe if (results.first().isSuccess) grant.approvedBy else null
-        winner.authorizationGrant shouldBe if (results.first().isSuccess) listOf(grant) else null
+        winner.authorizationGrants shouldBe if (results.first().isSuccess) listOf(grant) else null
         repository.find(id) shouldBe winner
     }
 

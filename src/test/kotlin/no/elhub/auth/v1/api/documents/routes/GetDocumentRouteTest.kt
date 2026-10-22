@@ -60,7 +60,7 @@ class GetDocumentRouteTest : FunSpec({
         requestedPrincipal = AuthorizationParty("999888777", PartyType.OrganizationEntity),
         requestedOf = AuthorizationParty("person-1", PartyType.Person),
         approvedBy = null,
-        authorizationGrant = null,
+        authorizationGrants = null,
         pdfBytes = "%PDF-1.7\nexample document".toByteArray(),
     )
 
@@ -84,7 +84,7 @@ class GetDocumentRouteTest : FunSpec({
         coEvery { handler(documentId, authorizedParty) } returns document.copy(
             status = AuthorizationDocumentStatus.Accepted,
             approvedBy = document.requestedOf,
-            authorizationGrant = listOf(grant, persistentGrant),
+            authorizationGrants = listOf(grant, persistentGrant),
         )
 
         testApplication {
@@ -98,14 +98,14 @@ class GetDocumentRouteTest : FunSpec({
             val body = response.body<JsonApiGetAuthorizationDocumentResponse>()
             body.data.attributes.status.name shouldBe "Signed"
             body.data.relationships.approvedBy.shouldNotBeNull().data.id shouldBe document.requestedOf.id
-            val grants = body.data.relationships.authorizationGrant.shouldNotBeNull().data
+            val grants = body.data.relationships.authorizationGrants.shouldNotBeNull().data
             grants.map { it.id } shouldBe listOf(grant.id.toString(), persistentGrant.id.toString())
             grants.map { it.type } shouldBe listOf(GrantTypeResponse.ConsumableGrant, GrantTypeResponse.PersistentGrant)
         }
     }
 
     test("GET /{id} serializes an empty grant relationship") {
-        coEvery { handler(documentId, authorizedParty) } returns document.copy(authorizationGrant = emptyList())
+        coEvery { handler(documentId, authorizedParty) } returns document.copy(authorizationGrants = emptyList())
 
         testApplication {
             setupAppWith(authorizedParty) {
@@ -116,7 +116,7 @@ class GetDocumentRouteTest : FunSpec({
 
             response.status shouldBe HttpStatusCode.OK
             val body = response.body<JsonApiGetAuthorizationDocumentResponse>()
-            body.data.relationships.authorizationGrant.shouldNotBeNull().data shouldBe emptyList()
+            body.data.relationships.authorizationGrants.shouldNotBeNull().data shouldBe emptyList()
         }
     }
 
