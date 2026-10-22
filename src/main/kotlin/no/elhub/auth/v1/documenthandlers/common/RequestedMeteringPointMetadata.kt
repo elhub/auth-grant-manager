@@ -1,4 +1,4 @@
-package no.elhub.auth.v1.features.documents.creation
+package no.elhub.auth.v1.documenthandlers.common
 
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -13,33 +13,21 @@ data class RequestedMeteringPointMetadata(
     val meterNumber: String?,
 )
 
-data class RequestedMeteringPointsMetadata(
-    val requestedMeteringPoints: List<RequestedMeteringPointMetadata>,
-)
-
-fun List<MeteringPointResponse>.toRequestedMeteringPointsMetadata() = RequestedMeteringPointsMetadata(
-    requestedMeteringPoints = map { meteringPoint ->
+fun List<MeteringPointResponse>.toRequestedMeteringPointMetadata(): List<RequestedMeteringPointMetadata> =
+    map { meteringPoint ->
         RequestedMeteringPointMetadata(
             id = meteringPoint.data.id,
             address = meteringPoint.data.attributes?.accountingPoint?.address,
             meterNumber = meteringPoint.data.attributes?.accountingPoint?.meter?.meterNumber,
         )
-    },
-)
+    }
 
-fun RequestedMeteringPointsMetadata.toJsonObject(): JsonObject = buildJsonObject {
-    put(
-        "requestedMeteringPoints",
-        JsonArray(
-            requestedMeteringPoints.map { point ->
-                buildJsonObject {
-                    put("id", point.id)
-                    point.address?.let { put("address", it.toJsonObject()) }
-                    point.meterNumber?.let { put("meterNumber", it) }
-                }
-            },
-        ),
-    )
+fun List<RequestedMeteringPointMetadata>.toJsonArray(): JsonArray = JsonArray(map { it.toJsonObject() })
+
+private fun RequestedMeteringPointMetadata.toJsonObject(): JsonObject = buildJsonObject {
+    put("id", id)
+    address?.let { put("address", it.toJsonObject()) }
+    meterNumber?.let { put("meterNumber", it) }
 }
 
 private fun MeteringPointAddress.toJsonObject(): JsonObject = buildJsonObject {

@@ -2,6 +2,7 @@ package no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints
 
 import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
@@ -145,14 +146,14 @@ class MeteringPointsApiTest : FunSpec({
     test("Returns all requested metering points in the requested order") {
         val response = service.getMeteringPoints(listOf(secondMeteringPointId, validMeteringPointId), endUserId)
 
-        response.shouldBeRight()
-        response.value.map { it.data.id } shouldBe listOf(secondMeteringPointId, validMeteringPointId)
+        response.map { it.data.id } shouldBe listOf(secondMeteringPointId, validMeteringPointId)
     }
 
-    test("Returns not found when any requested metering point does not exist") {
-        val response = service.getMeteringPoints(listOf(validMeteringPointId, "300362000000000000"), endUserId)
+    test("Throws not found when any requested metering point does not exist") {
+        val error = shouldThrow<MeteringPointsLookupException> {
+            service.getMeteringPoints(listOf(validMeteringPointId, "300362000000000000"), endUserId)
+        }
 
-        response.shouldBeLeft()
-        response.value shouldBe ClientError.NotFound
+        error.clientError shouldBe ClientError.NotFound
     }
 })

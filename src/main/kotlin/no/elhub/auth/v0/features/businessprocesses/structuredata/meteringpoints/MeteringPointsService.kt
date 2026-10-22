@@ -2,7 +2,6 @@ package no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints
 
 import arrow.core.Either
 import arrow.core.left
-import arrow.core.raise.either
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -25,8 +24,11 @@ interface MeteringPointsService {
     suspend fun getMeteringPoints(
         meteringPointIds: List<String>,
         elhubInternalId: String
-    ): Either<ClientError, List<MeteringPointResponse>>
+    ): List<MeteringPointResponse>
 }
+
+class MeteringPointsLookupException(val clientError: ClientError) :
+    RuntimeException("Failed to fetch metering points: $clientError")
 
 class MeteringPointsApi(
     private val meteringPointsApiConfig: MeteringPointsApiConfig,
@@ -65,10 +67,11 @@ class MeteringPointsApi(
     override suspend fun getMeteringPoints(
         meteringPointIds: List<String>,
         elhubInternalId: String
-    ): Either<ClientError, List<MeteringPointResponse>> = either {
-        meteringPointIds.map { meteringPointId ->
-            getMeteringPointByIdAndElhubInternalId(meteringPointId, elhubInternalId).bind()
-        }
+    ): List<MeteringPointResponse> = meteringPointIds.map { meteringPointId ->
+        getMeteringPointByIdAndElhubInternalId(meteringPointId, elhubInternalId).fold(
+            ifLeft = { throw MeteringPointsLookupException(it) },
+            ifRight = { it },
+        )
     }
 }
 
