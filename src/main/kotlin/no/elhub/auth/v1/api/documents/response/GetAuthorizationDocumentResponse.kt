@@ -40,7 +40,6 @@ data class GetAuthorizationDocumentAttributes(
     val documentType: AuthorizationDocumentType,
     val requestedScopes: List<RequestedScopeResponse>,
     val externalReference: String? = null,
-    val documentUri: String,
     val status: ResponseAuthorizationDocumentStatus,
     val validFrom: Instant,
     val validTo: Instant,
@@ -79,7 +78,6 @@ fun AuthorizationDocument.toGetResponse() =
                 documentType = documentType,
                 requestedScopes = requestedScopes.map(RequestedAuthorizationScope::toResponse),
                 externalReference = externalReference,
-                documentUri = "$DOCUMENTS_PATH/$id.pdf",
                 status = when (status) {
                     AuthorizationDocumentStatus.Accepted -> ResponseAuthorizationDocumentStatus.Signed
                     AuthorizationDocumentStatus.Expired -> ResponseAuthorizationDocumentStatus.Expired

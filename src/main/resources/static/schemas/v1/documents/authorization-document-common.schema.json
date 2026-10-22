@@ -38,10 +38,6 @@
       "format": "date-time",
       "description": "Requested end of validity for the authorization grant created when the document is signed."
     },
-    "documentUri": {
-      "type": "string",
-      "format": "uri-reference"
-    },
     "requestedPrincipal": {
       "type": "string"
     },

@@ -31,9 +31,6 @@
             "requestedGrantValidTo": {
               "$ref": "authorization-document-common.schema.json#/$defs/requestedGrantValidTo"
             },
-            "documentUri": {
-              "$ref": "authorization-document-common.schema.json#/$defs/documentUri"
-            },
             "status": {
               "$ref": "authorization-document-common.schema.json#/$defs/status"
             },
