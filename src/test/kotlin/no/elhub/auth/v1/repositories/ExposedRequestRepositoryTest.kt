@@ -90,6 +90,8 @@ class ExposedRequestRepositoryTest : FunSpec({
         meta: JsonObject = JsonObject(emptyMap()),
         redirectUri: String? = null,
         validFrom: Instant = createdAt + 2.days,
+        requestedGrantValidFrom: Instant? = null,
+        requestedGrantValidTo: Instant? = null,
     ): UUID = withTransaction {
         suspend fun partyId(party: AuthorizationParty) = partyRepository.findOrInsert(party.type, party.id).id
         val byId = partyId(requestedBy)
@@ -110,6 +112,8 @@ class ExposedRequestRepositoryTest : FunSpec({
             it[AuthorizationRequestTable.redirectUri] = redirectUri
             it[AuthorizationRequestTable.externalReference] = externalReference
             it[AuthorizationRequestTable.meta] = meta
+            it[AuthorizationRequestTable.requestedGrantValidFrom] = requestedGrantValidFrom
+            it[AuthorizationRequestTable.requestedGrantValidTo] = requestedGrantValidTo
         }[AuthorizationRequestTable.id].value
 
         scopes.forEach { scope ->
@@ -162,6 +166,8 @@ class ExposedRequestRepositoryTest : FunSpec({
             approvedBy = approver,
             externalReference = "contract-123",
             scopes = listOf(constrained, unconstrained),
+            requestedGrantValidFrom = createdAt,
+            requestedGrantValidTo = future,
         )
         insertRequest(requestedBy, scopes = listOf(constrained))
 
@@ -174,6 +180,8 @@ class ExposedRequestRepositoryTest : FunSpec({
             requestedScopes = emptyList(),
             externalReference = "contract-123",
             redirectUri = null,
+            requestedGrantValidFrom = createdAt,
+            requestedGrantValidTo = future,
             validFrom = createdAt + 2.days,
             validTo = future,
             meta = JsonObject(emptyMap()),
@@ -267,7 +275,13 @@ class ExposedRequestRepositoryTest : FunSpec({
             requestedBy = requestedBy,
             requestedPrincipal = requestedBy,
             requestedOf = recipient,
-        ).copy(validFrom = createdAt + 2.days, createdAt = createdAt, updatedAt = createdAt + 1.days)
+        ).copy(
+            requestedGrantValidFrom = createdAt,
+            requestedGrantValidTo = future,
+            validFrom = createdAt + 2.days,
+            createdAt = createdAt,
+            updatedAt = createdAt + 1.days,
+        )
 
         repository.insert(request) shouldBe request
 

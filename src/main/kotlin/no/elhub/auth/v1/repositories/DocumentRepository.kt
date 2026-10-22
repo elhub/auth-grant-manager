@@ -149,6 +149,8 @@ class ExposedDocumentRepository(
             it[externalReference] = document.externalReference
             it[meta] = document.meta
             it[file] = document.pdfBytes
+            it[AuthorizationDocumentTable.requestedGrantValidFrom] = document.requestedGrantValidFrom
+            it[AuthorizationDocumentTable.requestedGrantValidTo] = document.requestedGrantValidTo
             it[validFrom] = document.validFrom
             it[validTo] = document.validTo
             it[createdAt] = document.createdAt
@@ -292,6 +294,8 @@ object AuthorizationDocumentTable : UUIDTable("auth_v1.authorization_document") 
     val externalReference = varchar("external_reference", 255).nullable()
     val meta = jsonb("meta", Json, JsonObject.serializer())
     val file = binary("file")
+    val requestedGrantValidFrom = timestamp("requested_grant_valid_from").nullable()
+    val requestedGrantValidTo = timestamp("requested_grant_valid_to").nullable()
     val validFrom = timestamp("valid_from").clientDefault { now() }
     val validTo = timestamp("valid_to").clientDefault { now() }
     val createdAt = timestamp("created_at").clientDefault { now() }
@@ -318,6 +322,8 @@ fun ResultRow.toAuthorizationDocument(
     requestedScopes = requestedScopes,
     externalReference = this[AuthorizationDocumentTable.externalReference],
     meta = this[AuthorizationDocumentTable.meta],
+    requestedGrantValidFrom = this[AuthorizationDocumentTable.requestedGrantValidFrom],
+    requestedGrantValidTo = this[AuthorizationDocumentTable.requestedGrantValidTo],
     validFrom = this[AuthorizationDocumentTable.validFrom],
     validTo = this[AuthorizationDocumentTable.validTo],
     createdAt = this[AuthorizationDocumentTable.createdAt],
