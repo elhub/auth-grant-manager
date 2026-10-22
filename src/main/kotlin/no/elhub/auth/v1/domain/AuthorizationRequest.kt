@@ -22,7 +22,7 @@ data class AuthorizationRequest(
     val requestedPrincipal: AuthorizationParty,
     val requestedOf: AuthorizationParty,
     val approvedBy: AuthorizationParty?,
-    val authorizationGrant: List<AuthorizationGrant>?,
+    val authorizationGrants: List<AuthorizationGrant>?,
 ) {
     companion object {
         fun new(
@@ -53,7 +53,7 @@ data class AuthorizationRequest(
                 requestedPrincipal = requestedPrincipal,
                 requestedOf = requestedOf,
                 approvedBy = null,
-                authorizationGrant = null,
+                authorizationGrants = null,
             )
         }
     }

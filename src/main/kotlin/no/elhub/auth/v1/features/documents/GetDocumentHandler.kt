@@ -23,6 +23,6 @@ class GetDocumentHandler(
 
         val grants = grantRepository.findBySourceIds(AuthorizationGrantSourceType.Document, listOf(id))
 
-        return document.copy(authorizationGrant = grants[id].orEmpty())
+        return document.copy(authorizationGrants = grants[id].orEmpty())
     }
 }

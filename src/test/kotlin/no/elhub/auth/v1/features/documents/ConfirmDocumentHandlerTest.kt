@@ -155,7 +155,7 @@ class ConfirmDocumentHandlerTest : FunSpec({
         every { validator.validateSignaturesAndReturnSignatory(signedFile, originalFile) } returns PdfSignatory(nin)
         coEvery { partyService.resolve(identifier) } returns requestedOf.right()
         val grants = document.toGrants(requestedOf)
-        val confirmed = document.copy(status = AuthorizationDocumentStatus.Accepted, authorizationGrant = grants)
+        val confirmed = document.copy(status = AuthorizationDocumentStatus.Accepted, authorizationGrants = grants)
         coEvery { repository.confirm(id, signedFile, requestedOf, any()) } returns confirmed
 
         handler(id, requestedBy, signedFile) shouldBeSameInstanceAs confirmed

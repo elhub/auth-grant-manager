@@ -51,7 +51,7 @@
             "id": "01019012345"
           }
         },
-        "authorizationGrant": {
+        "authorizationGrants": {
           "data": []
         }
       }

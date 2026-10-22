@@ -70,7 +70,7 @@ class ListDocumentsHandlerTest : FunSpec({
             } returns mapOf(documentId to listOf(grant))
 
             handler(party, pagination, statuses) shouldBe page.copy(
-                items = listOf(document.copy(authorizationGrant = listOf(grant))),
+                items = listOf(document.copy(authorizationGrants = listOf(grant))),
             )
         }
     }
@@ -88,8 +88,8 @@ class ListDocumentsHandlerTest : FunSpec({
 
         handler(requestedBy, pagination, statuses) shouldBe page.copy(
             items = listOf(
-                document.copy(authorizationGrant = listOf(grant, revokedGrant)),
-                second.copy(authorizationGrant = listOf(secondGrant)),
+                document.copy(authorizationGrants = listOf(grant, revokedGrant)),
+                second.copy(authorizationGrants = listOf(secondGrant)),
             ),
         )
         coVerify(exactly = 1) { grantRepository.findBySourceIds(any(), any()) }
@@ -100,7 +100,7 @@ class ListDocumentsHandlerTest : FunSpec({
             Page(listOf(document), 1, pagination)
         coEvery { grantRepository.findBySourceIds(any(), any()) } returns emptyMap()
 
-        handler(requestedBy, pagination, emptyList()).items.single().authorizationGrant shouldBe emptyList()
+        handler(requestedBy, pagination, emptyList()).items.single().authorizationGrants shouldBe emptyList()
     }
 
     test("returns an empty page without looking up grants") {

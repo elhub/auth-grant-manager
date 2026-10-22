@@ -76,7 +76,7 @@
             "approvedBy": {
               "$ref": "../elhub-common.schema.json#/$defs/approvedByRelationship"
             },
-            "authorizationGrant": {
+            "authorizationGrants": {
               "$ref": "../elhub-common.schema.json#/$defs/authorizationGrantRelationship"
             }
           }

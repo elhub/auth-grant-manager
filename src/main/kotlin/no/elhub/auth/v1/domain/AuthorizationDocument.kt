@@ -21,7 +21,7 @@ data class AuthorizationDocument(
     val requestedPrincipal: AuthorizationParty,
     val requestedOf: AuthorizationParty,
     val approvedBy: AuthorizationParty?,
-    val authorizationGrant: List<AuthorizationGrant>?,
+    val authorizationGrants: List<AuthorizationGrant>?,
     val pdfBytes: ByteArray,
 ) {
     companion object {
@@ -52,7 +52,7 @@ data class AuthorizationDocument(
                 requestedPrincipal = requestedPrincipal,
                 requestedOf = requestedOf,
                 approvedBy = null,
-                authorizationGrant = null,
+                authorizationGrants = null,
                 pdfBytes = pdfBytes,
             )
         }
