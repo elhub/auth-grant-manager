@@ -1,5 +1,7 @@
 package no.elhub.auth.v1.documenthandlers.frameworkagreement
 
+import arrow.core.Either
+import arrow.core.right
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import no.elhub.auth.common.documents.pdf.AuthorizationDocumentPdfContent
@@ -9,6 +11,7 @@ import no.elhub.auth.v1.documenthandlers.common.toPdfLanguage
 import no.elhub.auth.v1.domain.documents.DocumentSpecification
 import no.elhub.auth.v1.features.documents.creation.DocumentCreationContext
 import no.elhub.auth.v1.features.documents.creation.DocumentCreationDetails
+import no.elhub.auth.v1.features.documents.creation.DocumentPreparationError
 import kotlin.time.Duration.Companion.days
 import no.elhub.auth.v1.features.documents.creation.EnergySupplierFrameworkAgreementDocumentHandler as HandlerContract
 
@@ -18,7 +21,7 @@ class EnergySupplierFrameworkAgreementDocumentHandler : HandlerContract {
     override suspend fun prepare(
         specification: DocumentSpecification.EnergySupplierFrameworkAgreement,
         context: DocumentCreationContext,
-    ): DocumentCreationDetails {
+    ): Either<DocumentPreparationError, DocumentCreationDetails> {
         val now = now()
 
         return DocumentCreationDetails(
@@ -35,6 +38,6 @@ class EnergySupplierFrameworkAgreementDocumentHandler : HandlerContract {
             meta = buildJsonObject {
                 put("placeholder", true)
             },
-        )
+        ).right()
     }
 }

@@ -1,5 +1,6 @@
 package no.elhub.auth.v1.api.documents.routes
 
+import arrow.core.left
 import arrow.core.right
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
@@ -11,6 +12,8 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
+import kotlin.time.Clock
+import kotlin.time.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -19,6 +22,7 @@ import no.elhub.auth.common.auth.AuthorizationParty
 import no.elhub.auth.common.auth.PartyType
 import no.elhub.auth.common.documents.pdf.PdfGenerator
 import no.elhub.auth.common.documents.pdf.PdfSigner
+import no.elhub.auth.v0.features.businessprocesses.structuredata.common.ClientError
 import no.elhub.auth.v0.features.common.party.PartyIdentifier
 import no.elhub.auth.v0.features.common.party.PartyIdentifierType
 import no.elhub.auth.v0.features.common.party.PartyService
@@ -41,11 +45,10 @@ import no.elhub.auth.v1.domain.documents.DocumentSpecification
 import no.elhub.auth.v1.features.documents.CreateDocumentHandler
 import no.elhub.auth.v1.features.documents.creation.ChangeOfEnergySupplierDocumentHandler
 import no.elhub.auth.v1.features.documents.creation.DocumentCreationDetails
+import no.elhub.auth.v1.features.documents.creation.DocumentPreparationError
 import no.elhub.auth.v1.features.documents.creation.MoveInAndChangeOfEnergySupplierDocumentHandler
 import no.elhub.auth.v1.repositories.DocumentRepository
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
-import kotlin.time.Clock
-import kotlin.time.Instant
 
 class CreateDocumentRouteTest : FunSpec({
     val authorizedParty = AuthorizationParty("123456789", PartyType.OrganizationEntity)
@@ -128,7 +131,7 @@ class CreateDocumentRouteTest : FunSpec({
         )
         coEvery {
             handler.createAuthorizationDocument(any(), any(), any(), any(), any(), any())
-        } returns document
+        } returns document.right()
         coEvery { partyService.resolve(any()) } returnsMany listOf(
             AuthorizationParty("999888777", PartyType.OrganizationEntity).right(),
             AuthorizationParty("person-1", PartyType.Person).right(),
@@ -192,7 +195,7 @@ class CreateDocumentRouteTest : FunSpec({
         )
         coEvery {
             handler.createAuthorizationDocument(any(), any(), any(), any(), any(), any())
-        } returns document
+        } returns document.right()
         coEvery { partyService.resolve(any()) } returnsMany listOf(
             AuthorizationParty("999888777", PartyType.OrganizationEntity).right(),
             AuthorizationParty("person-1", PartyType.Person).right(),
@@ -252,7 +255,7 @@ class CreateDocumentRouteTest : FunSpec({
     test("POST / defaults the document language to Norwegian Bokmål") {
         coEvery {
             handler.createAuthorizationDocument(any(), any(), any(), any(), any(), any())
-        } returns responseDocument()
+        } returns responseDocument().right()
         coEvery { partyService.resolve(any()) } returnsMany listOf(
             AuthorizationParty("999888777", PartyType.OrganizationEntity).right(),
             AuthorizationParty("person-1", PartyType.Person).right(),
@@ -284,7 +287,7 @@ class CreateDocumentRouteTest : FunSpec({
     test("POST / maps move-in validFrom input and infers the allowed contract types") {
         coEvery {
             handler.createAuthorizationDocument(any(), any(), any(), any(), any(), any())
-        } returns responseDocument()
+        } returns responseDocument().right()
         coEvery { partyService.resolve(any()) } returnsMany listOf(
             AuthorizationParty("999888777", PartyType.OrganizationEntity).right(),
             AuthorizationParty("person-1", PartyType.Person).right(),
@@ -334,6 +337,49 @@ class CreateDocumentRouteTest : FunSpec({
         }
     }
 
+    test("POST / returns a validation error when a requested metering point cannot be found") {
+        coEvery {
+            handler.createAuthorizationDocument(any(), any(), any(), any(), any(), any())
+        } returns DocumentPreparationError.RequestedMeteringPointsNotFound.left()
+        coEvery { partyService.resolve(any()) } returnsMany listOf(
+            AuthorizationParty("999888777", PartyType.OrganizationEntity).right(),
+            AuthorizationParty("person-1", PartyType.Person).right(),
+        )
+
+        testApplication {
+            setupAppWith(authorizedParty) {
+                route(partyService, handler)
+            }
+
+            val response = client.postJson("/", requestBody)
+
+            response.status shouldBe HttpStatusCode.UnprocessableEntity
+            val body: JsonApiErrorCollection = response.body()
+            body.errors.single().title shouldBe "Validation error"
+            body.errors.single().detail shouldBe "One or more requested metering points could not be found"
+        }
+    }
+
+    test("POST / does not treat a metering-points service failure as a missing requested metering point") {
+        coEvery {
+            handler.createAuthorizationDocument(any(), any(), any(), any(), any(), any())
+        } returns DocumentPreparationError.MeteringPointsServiceFailure(ClientError.NotFound).left()
+        coEvery { partyService.resolve(any()) } returnsMany listOf(
+            AuthorizationParty("999888777", PartyType.OrganizationEntity).right(),
+            AuthorizationParty("person-1", PartyType.Person).right(),
+        )
+
+        testApplication {
+            setupAppWith(authorizedParty) {
+                route(partyService, handler)
+            }
+
+            val response = client.postJson("/", requestBody)
+
+            response.status shouldBe HttpStatusCode.InternalServerError
+        }
+    }
+
     test("document service generates, signs and inserts the document and returns the saved document") {
         val changeSupplierHandler: ChangeOfEnergySupplierDocumentHandler = mockk()
         val moveInHandler: MoveInAndChangeOfEnergySupplierDocumentHandler = mockk()
@@ -349,7 +395,7 @@ class CreateDocumentRouteTest : FunSpec({
         val validTo = Clock.System.now()
         val meta = JsonObject(mapOf("source" to kotlinx.serialization.json.JsonPrimitive("placeholder")))
         coEvery { changeSupplierHandler.prepare(specification, any()) } returns
-            DocumentCreationDetails(pdfContent, validTo, meta)
+            DocumentCreationDetails(pdfContent, validTo, meta).right()
         every { pdfGenerator.generate(pdfContent) } returns unsignedPdf
         coEvery { pdfSigner.sign(unsignedPdf) } returns signedPdf
         coEvery { documentRepository.insert(capture(insertedDocument)) } returns savedDocument
@@ -364,7 +410,7 @@ class CreateDocumentRouteTest : FunSpec({
             language = DocumentLanguage.NB,
         )
 
-        document shouldBe savedDocument
+        document shouldBe savedDocument.right()
         insertedDocument.captured.apply {
             documentType shouldBe specification.documentType
             requestedScopes shouldBe listOf(specification.toRequestedAuthorizationScope())
@@ -380,6 +426,30 @@ class CreateDocumentRouteTest : FunSpec({
         }
         coVerify(exactly = 1) { documentRepository.insert(any()) }
         coVerify(exactly = 0) { moveInHandler.prepare(any(), any()) }
+    }
+
+    test("document service does not generate or insert a document when metering point lookup fails") {
+        val changeSupplierHandler: ChangeOfEnergySupplierDocumentHandler = mockk()
+        val moveInHandler: MoveInAndChangeOfEnergySupplierDocumentHandler = mockk()
+        val documentRepository: DocumentRepository = mockk()
+        coEvery { changeSupplierHandler.prepare(any(), any()) } returns
+            DocumentPreparationError.RequestedMeteringPointsNotFound.left()
+        val service = CreateDocumentHandler(changeSupplierHandler, moveInHandler, mockk(), pdfGenerator, pdfSigner, documentRepository)
+        val specification = DocumentSpecification.ChangeOfEnergySupplierForOrganization(
+            ResourceConstraint.MeteringPoints(setOf(MeteringPointId.create("707057500000000001"))),
+        )
+
+        val result = service.createAuthorizationDocument(
+            specification = specification,
+            externalReference = "ref",
+            requestedBy = authorizedParty,
+            requestedPrincipal = AuthorizationParty("org-1", PartyType.Organization),
+            requestedOf = AuthorizationParty("person-1", PartyType.Person),
+            language = DocumentLanguage.NB,
+        )
+
+        result shouldBe DocumentPreparationError.RequestedMeteringPointsNotFound.left()
+        coVerify(exactly = 0) { documentRepository.insert(any()) }
     }
 
     test("POST / returns 409 when the resource type is wrong") {

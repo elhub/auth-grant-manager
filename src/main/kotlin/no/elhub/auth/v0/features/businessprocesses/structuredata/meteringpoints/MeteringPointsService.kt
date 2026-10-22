@@ -2,11 +2,13 @@ package no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints
 
 import arrow.core.Either
 import arrow.core.left
+import arrow.core.raise.either
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.http.isSuccess
+import no.elhub.auth.common.structuredata.meteringpoints.MeteringPointResponse
 import no.elhub.auth.v0.features.businessprocesses.common.JwtTokenProvider
 import no.elhub.auth.v0.features.businessprocesses.structuredata.common.ClientError
 import no.elhub.auth.v0.features.businessprocesses.structuredata.common.mapErrorsFromServer
@@ -19,6 +21,11 @@ interface MeteringPointsService {
         meteringPointId: String,
         elhubInternalId: String
     ): Either<ClientError, MeteringPointResponse>
+
+    suspend fun getMeteringPoints(
+        meteringPointIds: List<String>,
+        elhubInternalId: String
+    ): Either<ClientError, List<MeteringPointResponse>>
 }
 
 class MeteringPointsApi(
@@ -51,6 +58,16 @@ class MeteringPointsApi(
         }.mapLeft { throwable ->
             logger.error("Failed to fetch metering point: {}", throwable.message)
             ClientError.UnexpectedError(throwable)
+        }
+    }
+
+    // Uses single-ID lookups until the service exposes a batch endpoint for service-to-service tokens.
+    override suspend fun getMeteringPoints(
+        meteringPointIds: List<String>,
+        elhubInternalId: String
+    ): Either<ClientError, List<MeteringPointResponse>> = either {
+        meteringPointIds.map { meteringPointId ->
+            getMeteringPointByIdAndElhubInternalId(meteringPointId, elhubInternalId).bind()
         }
     }
 }
