@@ -12,7 +12,7 @@
         },
         "attributes": {
           "type": "object",
-          "required": ["documentType", "requestedScopes"],
+          "required": ["documentType"],
           "properties": {
             "documentType": {
               "$ref": "authorization-document-common.schema.json#/$defs/documentType"
@@ -22,6 +22,12 @@
             },
             "externalReference": {
               "$ref": "authorization-document-common.schema.json#/$defs/externalReference"
+            },
+            "requestedGrantValidFrom": {
+              "$ref": "authorization-document-common.schema.json#/$defs/requestedGrantValidFrom"
+            },
+            "requestedGrantValidTo": {
+              "$ref": "authorization-document-common.schema.json#/$defs/requestedGrantValidTo"
             }
           }
         },

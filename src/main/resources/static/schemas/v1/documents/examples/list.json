@@ -1,5 +1,5 @@
 {
-  "summary": "Authorization documents of both supported types",
+  "summary": "List of authorization documents",
   "value": {
     "data": [
       {
@@ -143,6 +143,71 @@
           "self": "https://api.elhub.no/access/v1/authorization-documents/01997291-7e8b-7000-8000-000000000012",
           "file": "https://api.elhub.no/access/v1/authorization-documents/01997291-7e8b-7000-8000-000000000012.pdf"
         }
+      },
+      {
+        "id": "01997291-7e8b-7000-8000-000000000021",
+        "type": "AuthorizationDocument",
+        "attributes": {
+          "documentType": "EnergySupplierFrameworkAgreement",
+          "requestedScopes": [
+            {
+              "resourceType": "MeteringPointContract",
+              "allowedChanges": [
+                {
+                  "attribute": "type",
+                  "value": ["EndUser", "EnergySupplier"]
+                }
+              ]
+            }
+          ],
+          "externalReference": "framework-agreement-2026-001",
+          "requestedGrantValidFrom": "2026-11-01T00:00:00+01:00",
+          "requestedGrantValidTo": "2027-11-01T00:00:00+01:00",
+          "documentUri": "/access/v1/authorization-documents/01997291-7e8b-7000-8000-000000000021.pdf",
+          "status": "Signed",
+          "validFrom": "2026-10-22T10:00:00Z",
+          "validTo": "2026-11-21T10:00:00Z",
+          "createdAt": "2026-10-22T10:00:00Z",
+          "updatedAt": "2026-10-22T10:15:00Z"
+        },
+        "relationships": {
+          "requestedBy": {
+            "data": {
+              "type": "MarketEntity",
+              "id": "7080005053246"
+            }
+          },
+          "requestedPrincipal": {
+            "data": {
+              "type": "Organization",
+              "id": "999888777"
+            }
+          },
+          "requestedOf": {
+            "data": {
+              "type": "Person",
+              "id": "01019012345"
+            }
+          },
+          "approvedBy": {
+            "data": {
+              "type": "Person",
+              "id": "01019012345"
+            }
+          },
+          "authorizationGrant": {
+            "data": [
+              {
+                "type": "PersistentGrant",
+                "id": "01997291-7e8b-7000-8000-000000000024"
+              }
+            ]
+          }
+        },
+        "links": {
+          "self": "https://api.elhub.no/access/v1/authorization-documents/01997291-7e8b-7000-8000-000000000021",
+          "file": "https://api.elhub.no/access/v1/authorization-documents/01997291-7e8b-7000-8000-000000000021.pdf"
+        }
       }
     ],
     "links": {
@@ -152,7 +217,7 @@
     },
     "meta": {
       "createdAt": "2026-09-24T10:15:00Z",
-      "totalItems": 2,
+      "totalItems": 3,
       "totalPages": 1,
       "page": 0,
       "pageSize": 100
