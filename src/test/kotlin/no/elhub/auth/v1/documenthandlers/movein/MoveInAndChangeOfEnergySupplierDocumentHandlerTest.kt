@@ -1,6 +1,7 @@
 package no.elhub.auth.v1.documenthandlers.movein
 
 import arrow.core.Either
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
@@ -52,7 +53,7 @@ class MoveInAndChangeOfEnergySupplierDocumentHandlerTest : FunSpec({
             service.getMeteringPoints(listOf("707057500000000001"), "org-1")
         } returns Either.Right(listOf(meteringPointResponse("707057500000000001", "meter-1")))
 
-        val result = MoveInAndChangeOfEnergySupplierDocumentHandler(service).prepare(
+        val details = MoveInAndChangeOfEnergySupplierDocumentHandler(service).prepare(
             specification = DocumentSpecification.MoveInAndChangeOfEnergySupplierForOrganization(
                 meteringPointIds = meteringPointIds,
                 validFrom = validFrom,
@@ -83,11 +84,7 @@ class MoveInAndChangeOfEnergySupplierDocumentHandlerTest : FunSpec({
             )
             put("validFrom", "2026-10-01")
         }
-        result.map { it.meta } shouldBe Either.Right(expectedMeta)
-        val details = result.fold(
-            ifLeft = { error("Expected metering point details, got $it") },
-            ifRight = { it },
-        )
+        details.meta shouldBe expectedMeta
         val pdfContent = details.pdfContent.shouldBeInstanceOf<AuthorizationDocumentPdfContent.MoveInAndChangeOfBalanceSupplierForOrganisation>()
         pdfContent.language shouldBe no.elhub.auth.common.documents.pdf.PdfLanguage.EN
         pdfContent.meteringPointId shouldBe "707057500000000001"
@@ -96,21 +93,21 @@ class MoveInAndChangeOfEnergySupplierDocumentHandlerTest : FunSpec({
         (details.validTo > Clock.System.now()) shouldBe true
     }
 
-    test("returns a lookup error when metering point data cannot be fetched") {
+    test("throws when a requested metering point cannot be found") {
         val service = mockk<MeteringPointsService>()
         coEvery {
             service.getMeteringPoints(any(), any())
         } returns Either.Left(ClientError.NotFound)
 
-        val result = MoveInAndChangeOfEnergySupplierDocumentHandler(service).prepare(
-            specification = DocumentSpecification.MoveInAndChangeOfEnergySupplierForOrganization(
-                meteringPointIds = meteringPointIds,
-                validFrom = LocalDate(2026, 10, 1),
-            ),
-            context = context,
-        )
-
-        result shouldBe Either.Left(DocumentPreparationError.RequestedMeteringPointsNotFound)
+        shouldThrow<DocumentPreparationError.RequestedMeteringPointsNotFound> {
+            MoveInAndChangeOfEnergySupplierDocumentHandler(service).prepare(
+                specification = DocumentSpecification.MoveInAndChangeOfEnergySupplierForOrganization(
+                    meteringPointIds = meteringPointIds,
+                    validFrom = LocalDate(2026, 10, 1),
+                ),
+                context = context,
+            )
+        }
     }
 })
 

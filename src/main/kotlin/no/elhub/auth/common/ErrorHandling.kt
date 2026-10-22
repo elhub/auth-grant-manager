@@ -15,12 +15,14 @@ import no.elhub.auth.v0.config.jsonApiContentType
 import no.elhub.auth.v0.features.common.buildApiErrorResponse
 import no.elhub.auth.v0.features.common.toInternalServerApiErrorResponse
 import no.elhub.auth.v0.features.common.toNotFoundApiErrorResponse
+import no.elhub.auth.v0.features.common.toValidationApiErrorResponse
 import no.elhub.auth.v1.Errors
 import no.elhub.auth.v1.api.common.errors.InputError
 import no.elhub.auth.v1.domain.DomainError
 import no.elhub.auth.v1.features.documents.ConfirmDocumentError
 import no.elhub.auth.v1.features.documents.GetDocumentError
 import no.elhub.auth.v1.features.documents.InvalidDocumentScopes
+import no.elhub.auth.v1.features.documents.creation.DocumentPreparationError
 import no.elhub.auth.v1.features.grants.GetGrantError
 import no.elhub.auth.v1.repositories.RepositoryReadError
 import no.elhub.auth.v1.repositories.RepositoryWriteError
@@ -302,6 +304,15 @@ private fun Errors.toApiErrorResponse() =
                 title = "Requested scope is not authorized",
                 detail = "RequestedBy is not allowed to request the specified scope from RequestedPrincipal",
             )
+        }
+
+        is DocumentPreparationError.RequestedMeteringPointsNotFound -> {
+            toValidationApiErrorResponse(detail)
+        }
+
+        is DocumentPreparationError.MeteringPointsServiceFailure -> {
+            logger.error("Failed to fetch requested metering points: {}", clientError)
+            toInternalServerApiErrorResponse()
         }
 
         else -> {
