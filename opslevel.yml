@@ -1,7 +1,7 @@
 ---
 version: 1
 component:
-  name: Auth Grant Manager
+  name: auth-grant-manager
   type: service
   lifecycle: generally_available
   tier: tier_2
