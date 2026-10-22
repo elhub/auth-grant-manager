@@ -1,7 +1,5 @@
 package no.elhub.auth.v1.documenthandlers.frameworkagreement
 
-import arrow.core.right
-import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
@@ -48,7 +46,7 @@ class EnergySupplierFrameworkAgreementDocumentHandlerTest : FunSpec({
 
     test("prepares framework PDF content with Oslo dates and a 28-day document lifetime") {
         val before = Clock.System.now()
-        val details = handler.prepare(DocumentSpecification.EnergySupplierFrameworkAgreement(validFrom, validTo), context).shouldBeRight()
+        val details = handler.prepare(DocumentSpecification.EnergySupplierFrameworkAgreement(validFrom, validTo), context)
         val after = Clock.System.now()
 
         val content = details.pdfContent.shouldBeInstanceOf<AuthorizationDocumentPdfContent.EnergySupplierFrameworkAgreement>()
@@ -70,7 +68,7 @@ class EnergySupplierFrameworkAgreementDocumentHandlerTest : FunSpec({
         val details = handler.prepare(
             DocumentSpecification.EnergySupplierFrameworkAgreement(null, null),
             context.copy(externalReference = null),
-        ).shouldBeRight()
+        )
         val after = Clock.System.now().toLocalDateTime(timeZone).date
 
         val content = details.pdfContent.shouldBeInstanceOf<AuthorizationDocumentPdfContent.EnergySupplierFrameworkAgreement>()
@@ -80,7 +78,7 @@ class EnergySupplierFrameworkAgreementDocumentHandlerTest : FunSpec({
     }
 
     test("keeps an explicit start date when the agreement has no end date") {
-        val details = handler.prepare(DocumentSpecification.EnergySupplierFrameworkAgreement(validFrom, null), context).shouldBeRight()
+        val details = handler.prepare(DocumentSpecification.EnergySupplierFrameworkAgreement(validFrom, null), context)
 
         val content = details.pdfContent.shouldBeInstanceOf<AuthorizationDocumentPdfContent.EnergySupplierFrameworkAgreement>()
         content.startDate shouldBe LocalDate(2100, 1, 2)
@@ -90,7 +88,7 @@ class EnergySupplierFrameworkAgreementDocumentHandlerTest : FunSpec({
     listOf(validFrom to validTo, validFrom to null, null to validTo, null to null).forEach { (start, end) ->
         test("dispatches framework creation and persists signed PDF and requested dates $start to $end") {
             val specification = DocumentSpecification.EnergySupplierFrameworkAgreement(start, end)
-            val details = handler.prepare(specification, context).shouldBeRight()
+            val details = handler.prepare(specification, context)
             val frameworkHandler = mockk<HandlerContract>()
             val supplierChangeHandler = mockk<ChangeOfEnergySupplierDocumentHandler>()
             val moveInHandler = mockk<MoveInAndChangeOfEnergySupplierDocumentHandler>()
@@ -100,7 +98,7 @@ class EnergySupplierFrameworkAgreementDocumentHandlerTest : FunSpec({
             val inserted = slot<AuthorizationDocument>()
             val unsignedPdf = byteArrayOf(1, 2)
             val signedPdf = byteArrayOf(3, 4)
-            coEvery { frameworkHandler.prepare(specification, context) } returns details.right()
+            coEvery { frameworkHandler.prepare(specification, context) } returns details
             every { pdfGenerator.generate(details.pdfContent) } returns unsignedPdf
             coEvery { pdfSigner.sign(unsignedPdf) } returns signedPdf
             coEvery { repository.insert(capture(inserted)) } answers { inserted.captured.copy(id = "saved-id") }
@@ -121,7 +119,7 @@ class EnergySupplierFrameworkAgreementDocumentHandlerTest : FunSpec({
                 language = context.language,
             )
 
-            saved.shouldBeRight() shouldBe inserted.captured.copy(id = "saved-id")
+            saved shouldBe inserted.captured.copy(id = "saved-id")
             inserted.captured.apply {
                 documentType shouldBe AuthorizationDocumentType.EnergySupplierFrameworkAgreement
                 status shouldBe AuthorizationDocumentStatus.Pending

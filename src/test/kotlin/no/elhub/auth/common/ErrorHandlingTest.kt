@@ -14,9 +14,11 @@ import no.elhub.auth.common.documents.pdf.PdfGenerationException
 import no.elhub.auth.common.documents.pdf.PdfSigningException
 import no.elhub.auth.common.documents.pdf.PdfValidationException
 import no.elhub.auth.v0.config.jsonApiContentType
+import no.elhub.auth.v0.features.businessprocesses.structuredata.common.ClientError
 import no.elhub.auth.v1.domain.AuthorizationDocumentStatus
 import no.elhub.auth.v1.features.documents.ConfirmDocumentError
 import no.elhub.auth.v1.features.documents.InvalidDocumentScopes
+import no.elhub.auth.v1.features.documents.creation.DocumentPreparationError
 import no.elhub.auth.v1.features.grants.UpdateGrantError
 import no.elhub.auth.v1.repositories.RepositoryReadError
 import no.elhub.auth.v1.repositories.RepositoryWriteError
@@ -105,6 +107,12 @@ class ErrorHandlingTest : FunSpec({
             "The signer does not match the document's requestedOf party.",
         ),
         ErrorCase(
+            DocumentPreparationError.RequestedMeteringPointsNotFound(),
+            HttpStatusCode.UnprocessableEntity,
+            "Validation error",
+            "One or more requested metering points could not be found",
+        ),
+        ErrorCase(
             RepositoryReadError.NotFoundError("sensitive read detail"),
             HttpStatusCode.NotFound,
             "Not found error",
@@ -178,6 +186,7 @@ class ErrorHandlingTest : FunSpec({
         RepositoryReadError.UnexpectedError("secret database read error"),
         RepositoryWriteError.UnexpectedError("secret database write error"),
         InvalidDocumentScopes("secret stored document scope error"),
+        DocumentPreparationError.MeteringPointsServiceFailure(ClientError.NotFound),
     ).forEach { cause ->
         test("hides details of ${cause::class.qualifiedName} behind a generic 500 JSON:API error") {
             testApplication {

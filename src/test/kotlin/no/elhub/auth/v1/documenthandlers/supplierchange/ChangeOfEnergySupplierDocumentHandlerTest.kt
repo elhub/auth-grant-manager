@@ -1,6 +1,7 @@
 package no.elhub.auth.v1.documenthandlers.supplierchange
 
 import arrow.core.Either
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
@@ -49,7 +50,7 @@ class ChangeOfEnergySupplierDocumentHandlerTest : FunSpec({
             service.getMeteringPoints(listOf("707057500000000001"), "org-1")
         } returns Either.Right(listOf(meteringPointResponse("707057500000000001", "meter-1")))
 
-        val result = ChangeOfEnergySupplierDocumentHandler(service).prepare(
+        val details = ChangeOfEnergySupplierDocumentHandler(service).prepare(
             specification = DocumentSpecification.ChangeOfEnergySupplierForOrganization(meteringPointIds),
             context = context,
         )
@@ -76,11 +77,7 @@ class ChangeOfEnergySupplierDocumentHandlerTest : FunSpec({
                 }
             )
         }
-        result.map { it.meta } shouldBe Either.Right(expectedMeta)
-        val details = result.fold(
-            ifLeft = { error("Expected metering point details, got $it") },
-            ifRight = { it },
-        )
+        details.meta shouldBe expectedMeta
         val pdfContent = details.pdfContent.shouldBeInstanceOf<AuthorizationDocumentPdfContent.ChangeOfBalanceSupplierForOrganisation>()
         pdfContent.language shouldBe no.elhub.auth.common.documents.pdf.PdfLanguage.EN
         pdfContent.meteringPointId shouldBe "707057500000000001"
@@ -88,34 +85,34 @@ class ChangeOfEnergySupplierDocumentHandlerTest : FunSpec({
         (details.validTo > Clock.System.now()) shouldBe true
     }
 
-    test("returns a lookup error when metering point data cannot be fetched") {
+    test("throws when a requested metering point cannot be found") {
         val service = mockk<MeteringPointsService>()
         coEvery {
             service.getMeteringPoints(any(), any())
         } returns Either.Left(ClientError.NotFound)
 
-        val result = ChangeOfEnergySupplierDocumentHandler(service).prepare(
-            specification = DocumentSpecification.ChangeOfEnergySupplierForOrganization(meteringPointIds),
-            context = context,
-        )
-
-        result shouldBe Either.Left(DocumentPreparationError.RequestedMeteringPointsNotFound)
+        shouldThrow<DocumentPreparationError.RequestedMeteringPointsNotFound> {
+            ChangeOfEnergySupplierDocumentHandler(service).prepare(
+                specification = DocumentSpecification.ChangeOfEnergySupplierForOrganization(meteringPointIds),
+                context = context,
+            )
+        }
     }
 
-    test("preserves other metering-points service errors") {
+    test("throws a service failure for other metering-points service errors") {
         val service = mockk<MeteringPointsService>()
         coEvery {
             service.getMeteringPoints(any(), any())
         } returns Either.Left(ClientError.ServerError)
 
-        val result = ChangeOfEnergySupplierDocumentHandler(service).prepare(
-            specification = DocumentSpecification.ChangeOfEnergySupplierForOrganization(meteringPointIds),
-            context = context,
-        )
+        val error = shouldThrow<DocumentPreparationError.MeteringPointsServiceFailure> {
+            ChangeOfEnergySupplierDocumentHandler(service).prepare(
+                specification = DocumentSpecification.ChangeOfEnergySupplierForOrganization(meteringPointIds),
+                context = context,
+            )
+        }
 
-        result shouldBe Either.Left(
-            DocumentPreparationError.MeteringPointsServiceFailure(ClientError.ServerError),
-        )
+        error.clientError shouldBe ClientError.ServerError
     }
 
     test("stores metadata for every requested metering point in a stable order") {
@@ -178,7 +175,7 @@ class ChangeOfEnergySupplierDocumentHandlerTest : FunSpec({
             )
         }
 
-        result.map { it.meta } shouldBe Either.Right(expectedMeta)
+        result.meta shouldBe expectedMeta
     }
 })
 
