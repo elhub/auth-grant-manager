@@ -235,23 +235,29 @@ class ExposedGrantRepositoryTest : FunSpec({
         repository.findBySourceIds(AuthorizationGrantSourceType.Document, listOf(UUID.randomUUID())) shouldBe emptyMap()
     }
 
-    test("findAll includes principal and recipient once but excludes grantor-only, approver-only and unrelated parties") {
+    test("findAll includes principal, recipient and grantor once but excludes approver-only and unrelated parties") {
         val caller = party(PartyType.Person)
         val principalGrant = insertGrant(principal = caller, scopes = listOf(constrained, unconstrained))
         val recipientGrant = insertGrant(grantedTo = caller, validTo = past)
         val bothGrant = insertGrant(principal = caller, grantedTo = caller, status = DatabaseGrantStatus.Revoked)
-        insertGrant(grantedBy = caller)
+        val grantorGrant = insertGrant(grantedBy = caller)
         insertGrant(approvedBy = caller)
         insertGrant()
         insertGrant(principal = caller.copy(type = PartyType.Organization))
 
         val result = repository.findAll(caller, Pagination())
 
-        result.totalItems shouldBe 3L
-        result.items.map { it.id }.shouldContainExactlyInAnyOrder(principalGrant.id, recipientGrant.id, bothGrant.id)
+        result.totalItems shouldBe 4L
+        result.items.map { it.id }.shouldContainExactlyInAnyOrder(
+            principalGrant.id,
+            recipientGrant.id,
+            bothGrant.id,
+            grantorGrant.id,
+        )
         assertGrant(result.items.single { it.id == principalGrant.id }, principalGrant)
         assertGrant(result.items.single { it.id == recipientGrant.id }, recipientGrant.copy(status = AuthorizationGrantStatus.Expired))
         assertGrant(result.items.single { it.id == bothGrant.id }, bothGrant)
+        assertGrant(result.items.single { it.id == grantorGrant.id }, grantorGrant)
     }
 
     test("findAll sorts newest first with stable ID ordering and preserves counts beyond the last page") {

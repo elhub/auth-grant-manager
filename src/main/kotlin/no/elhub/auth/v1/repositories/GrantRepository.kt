@@ -116,7 +116,9 @@ class ExposedGrantRepository(
 
     override suspend fun findAll(party: AuthorizationParty, pagination: Pagination): Page<AuthorizationGrant> = withTransaction {
         val partyId = partyRepository.findOrInsert(party.type, party.id).id
-        val whereClause = (AuthorizationGrantTable.principal eq partyId) or (AuthorizationGrantTable.grantedTo eq partyId)
+        val whereClause = (AuthorizationGrantTable.principal eq partyId) or
+            (AuthorizationGrantTable.grantedTo eq partyId) or
+            (AuthorizationGrantTable.grantedBy eq partyId)
         val totalItems = AuthorizationGrantTable.selectAll().where { whereClause }.count()
         val rows = AuthorizationGrantTable.selectAll()
             .where { whereClause }
