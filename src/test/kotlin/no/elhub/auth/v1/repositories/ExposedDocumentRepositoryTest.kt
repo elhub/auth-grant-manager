@@ -109,6 +109,8 @@ class ExposedDocumentRepositoryTest : FunSpec({
             it[externalReference] = document.externalReference
             it[meta] = document.meta
             it[file] = document.pdfBytes
+            it[AuthorizationDocumentTable.requestedGrantValidFrom] = document.requestedGrantValidFrom
+            it[AuthorizationDocumentTable.requestedGrantValidTo] = document.requestedGrantValidTo
             it[validFrom] = document.validFrom
             it[validTo] = document.validTo
             it[AuthorizationDocumentTable.createdAt] = document.createdAt
@@ -360,6 +362,8 @@ class ExposedDocumentRepositoryTest : FunSpec({
         val unconstrained = RequestedAuthorizationScope(ResourceType.MeteringPointContract, emptyList())
         val expected = document().copy(
             externalReference = "inserted-contract",
+            requestedGrantValidFrom = createdAt,
+            requestedGrantValidTo = future,
             requestedScopes = listOf(RequestedAuthorizationScope(ResourceType.MeteringPointContract, constraints), unconstrained),
         )
 

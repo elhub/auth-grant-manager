@@ -13,6 +13,8 @@ data class AuthorizationDocument(
     val requestedScopes: List<RequestedAuthorizationScope>,
     val externalReference: String?,
     val meta: JsonObject,
+    val requestedGrantValidFrom: Instant? = null,
+    val requestedGrantValidTo: Instant? = null,
     val validFrom: Instant,
     val validTo: Instant,
     val createdAt: Instant,
