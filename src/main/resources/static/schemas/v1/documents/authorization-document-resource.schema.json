@@ -25,6 +25,12 @@
             "externalReference": {
               "$ref": "authorization-document-common.schema.json#/$defs/externalReference"
             },
+            "requestedGrantValidFrom": {
+              "$ref": "authorization-document-common.schema.json#/$defs/requestedGrantValidFrom"
+            },
+            "requestedGrantValidTo": {
+              "$ref": "authorization-document-common.schema.json#/$defs/requestedGrantValidTo"
+            },
             "documentUri": {
               "$ref": "authorization-document-common.schema.json#/$defs/documentUri"
             },

@@ -22,6 +22,12 @@
             "externalReference": {
               "$ref": "authorization-request-common.schema.json#/$defs/externalReference"
             },
+            "requestedGrantValidFrom": {
+              "$ref": "authorization-request-common.schema.json#/$defs/requestedGrantValidFrom"
+            },
+            "requestedGrantValidTo": {
+              "$ref": "authorization-request-common.schema.json#/$defs/requestedGrantValidTo"
+            },
             "redirectUri": {
               "$ref": "authorization-request-common.schema.json#/$defs/redirectUri"
             }

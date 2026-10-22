@@ -687,6 +687,8 @@ paths:
                 $ref: './schemas/v1/documents/examples/change-of-energy-supplier/create.json'
               moveInAndChangeOfEnergySupplierForOrganization:
                 $ref: './schemas/v1/documents/examples/move-in-and-change-of-energy-supplier/create.json'
+              energySupplierFrameworkAgreement:
+                $ref: './schemas/v1/documents/examples/energy-supplier-framework-agreement/create.json'
       responses:
         '201':
           description: The authorization document was created successfully.
@@ -699,6 +701,8 @@ paths:
                   $ref: './schemas/v1/documents/examples/change-of-energy-supplier/created.json'
                 moveInAndChangeOfEnergySupplierForOrganization:
                   $ref: './schemas/v1/documents/examples/move-in-and-change-of-energy-supplier/created.json'
+                energySupplierFrameworkAgreement:
+                  $ref: './schemas/v1/documents/examples/energy-supplier-framework-agreement/created.json'
 
   '/access/v1/authorization-documents/{id}':
     get:
@@ -733,6 +737,8 @@ paths:
                   $ref: './schemas/v1/documents/examples/change-of-energy-supplier/get-signed.json'
                 moveInAndChangeOfEnergySupplierForOrganization:
                   $ref: './schemas/v1/documents/examples/move-in-and-change-of-energy-supplier/get-signed.json'
+                energySupplierFrameworkAgreement:
+                  $ref: './schemas/v1/documents/examples/energy-supplier-framework-agreement/get-signed.json'
 
   '/access/v1/authorization-documents/{id}.pdf':
     get:
@@ -1072,6 +1078,8 @@ paths:
                 $ref: './schemas/v1/requests/examples/change-of-energy-supplier/create.json'
               moveInAndChangeOfEnergySupplierForOrganization:
                 $ref: './schemas/v1/requests/examples/move-in-and-change-of-energy-supplier/create.json'
+              energySupplierFrameworkAgreement:
+                $ref: './schemas/v1/requests/examples/energy-supplier-framework-agreement/create.json'
       responses:
         '201':
           description: A Pending authorization request.
@@ -1090,6 +1098,8 @@ paths:
                   $ref: './schemas/v1/requests/examples/change-of-energy-supplier/created.json'
                 moveInAndChangeOfEnergySupplierForOrganization:
                   $ref: './schemas/v1/requests/examples/move-in-and-change-of-energy-supplier/created.json'
+                energySupplierFrameworkAgreement:
+                  $ref: './schemas/v1/requests/examples/energy-supplier-framework-agreement/created.json'
         '400':
           $ref: '#/components/responses/400BadRequestError'
         '401':
@@ -1140,6 +1150,8 @@ paths:
                   $ref: './schemas/v1/requests/examples/change-of-energy-supplier/get-accepted.json'
                 moveInAndChangeOfEnergySupplierForOrganization:
                   $ref: './schemas/v1/requests/examples/move-in-and-change-of-energy-supplier/get-accepted.json'
+                energySupplierFrameworkAgreement:
+                  $ref: './schemas/v1/requests/examples/energy-supplier-framework-agreement/get-accepted.json'
         '400':
           $ref: '#/components/responses/400BadRequestError'
         '401':

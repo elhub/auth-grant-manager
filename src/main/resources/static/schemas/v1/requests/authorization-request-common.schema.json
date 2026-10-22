@@ -10,7 +10,8 @@
     "requestType": {
       "enum": [
         "ChangeOfEnergySupplierForOrganization",
-        "MoveInAndChangeOfEnergySupplierForOrganization"
+        "MoveInAndChangeOfEnergySupplierForOrganization",
+        "EnergySupplierFrameworkAgreement"
       ]
     },
     "status": {
@@ -35,6 +36,16 @@
     },
     "externalReference": {
       "type": "string"
+    },
+    "requestedGrantValidFrom": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Requested start of validity for the authorization grant created when the request is accepted."
+    },
+    "requestedGrantValidTo": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Requested end of validity for the authorization grant created when the request is accepted."
     },
     "redirectUri": {
       "type": "string",

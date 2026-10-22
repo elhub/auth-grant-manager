@@ -3,7 +3,7 @@
   "$defs": {
     "requestedScope": {
       "type": "object",
-      "required": ["resourceType", "appliesTo"],
+      "required": ["resourceType"],
       "properties": {
         "resourceType": {
           "enum": ["MeteringPointContract"]
