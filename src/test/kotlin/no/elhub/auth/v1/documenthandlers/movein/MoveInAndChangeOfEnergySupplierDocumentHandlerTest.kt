@@ -1,6 +1,5 @@
 package no.elhub.auth.v1.documenthandlers.movein
 
-import arrow.core.Either
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
@@ -23,6 +22,7 @@ import no.elhub.auth.common.structuredata.meteringpoints.MeteringPointAddress
 import no.elhub.auth.common.structuredata.meteringpoints.MeteringPointResponse
 import no.elhub.auth.common.structuredata.meteringpoints.Relationships
 import no.elhub.auth.v0.features.businessprocesses.structuredata.common.ClientError
+import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsLookupException
 import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsService
 import no.elhub.auth.v1.domain.DocumentLanguage
 import no.elhub.auth.v1.domain.MeteringPointId
@@ -51,7 +51,7 @@ class MoveInAndChangeOfEnergySupplierDocumentHandlerTest : FunSpec({
         val service = mockk<MeteringPointsService>()
         coEvery {
             service.getMeteringPoints(listOf("707057500000000001"), "org-1")
-        } returns Either.Right(listOf(meteringPointResponse("707057500000000001", "meter-1")))
+        } returns listOf(meteringPointResponse("707057500000000001", "meter-1"))
 
         val details = MoveInAndChangeOfEnergySupplierDocumentHandler(service).prepare(
             specification = DocumentSpecification.MoveInAndChangeOfEnergySupplierForOrganization(
@@ -97,7 +97,7 @@ class MoveInAndChangeOfEnergySupplierDocumentHandlerTest : FunSpec({
         val service = mockk<MeteringPointsService>()
         coEvery {
             service.getMeteringPoints(any(), any())
-        } returns Either.Left(ClientError.NotFound)
+        } throws MeteringPointsLookupException(ClientError.NotFound)
 
         shouldThrow<DocumentPreparationError.RequestedMeteringPointsNotFound> {
             MoveInAndChangeOfEnergySupplierDocumentHandler(service).prepare(
