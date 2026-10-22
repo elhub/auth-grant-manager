@@ -288,6 +288,14 @@ private fun Errors.toApiErrorResponse() =
             )
         }
 
+        is InputError.InvalidCreateAuthorizationRequestPayload -> {
+            buildApiErrorResponse(
+                status = HttpStatusCode.UnprocessableEntity,
+                title = "Invalid authorization request",
+                detail = detail,
+            )
+        }
+
         is InputError.RequestedOfRequestedPrincipalMismatch -> {
             buildApiErrorResponse(
                 status = HttpStatusCode.UnprocessableEntity,
