@@ -8,6 +8,7 @@ import no.elhub.auth.plugin.policies.token.base.authinfo.AuthInfoPolicy
 import no.elhub.auth.plugin.tokenAuthorize
 import no.elhub.auth.v1.api.grants.routes.route
 import no.elhub.auth.v1.features.grants.GetGrantHandler
+import no.elhub.auth.v1.features.grants.ListGrantsHandler
 
 const val V1_GRANTS_PATH = "/access/v1/authorization-grants"
 
@@ -18,13 +19,16 @@ fun Application.grantsModule() {
 
     dependencies {
         provide<GetGrantHandler> { GetGrantHandler(resolve()) }
+        provide<ListGrantsHandler> { ListGrantsHandler(resolve()) }
     }
 
     val getHandler: GetGrantHandler by dependencies
+    val listHandler: ListGrantsHandler by dependencies
     routing {
         tokenAuthorize(AuthInfoPolicy) {
             route(V1_GRANTS_PATH) {
                 route(getHandler)
+                route(listHandler)
             }
         }
     }

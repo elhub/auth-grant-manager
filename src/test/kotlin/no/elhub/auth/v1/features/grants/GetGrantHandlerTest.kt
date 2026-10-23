@@ -40,7 +40,7 @@ class GetGrantHandlerTest : FunSpec({
 
     beforeTest { clearMocks(grantRepository) }
 
-    listOf(grantedTo, principal, system).forEach { party ->
+    listOf(grantedTo, principal, grantedBy, system).forEach { party ->
         test("returns the grant for ${party.type} ${party.id}") {
             coEvery { grantRepository.find(grantId) } returns grant
 
@@ -50,7 +50,6 @@ class GetGrantHandlerTest : FunSpec({
 
     listOf(
         AuthorizationParty("unrelated-org", PartyType.OrganizationEntity),
-        grantedBy,
         grantedTo.copy(type = PartyType.Person),
     ).forEach { party ->
         test("denies access for ${party.type} ${party.id}") {

@@ -17,7 +17,8 @@ class GetGrantHandler(
 
         if (authorizedParty.type != PartyType.System &&
             authorizedParty != grant.grantedTo &&
-            authorizedParty != grant.principal
+            authorizedParty != grant.principal &&
+            authorizedParty != grant.grantedBy
         ) {
             throw GetGrantError.NotAuthorized()
         }
