@@ -14,6 +14,8 @@ data class AuthorizationRequest(
     val externalReference: String?,
     val redirectUri: String?,
     val meta: JsonObject,
+    val requestedGrantValidFrom: Instant? = null,
+    val requestedGrantValidTo: Instant? = null,
     val validFrom: Instant,
     val validTo: Instant,
     val createdAt: Instant,

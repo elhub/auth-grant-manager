@@ -172,6 +172,8 @@ class ExposedRequestRepository(
             it[externalReference] = request.externalReference
             it[meta] = request.meta
             it[redirectUri] = request.redirectUri
+            it[AuthorizationRequestTable.requestedGrantValidFrom] = request.requestedGrantValidFrom
+            it[AuthorizationRequestTable.requestedGrantValidTo] = request.requestedGrantValidTo
             it[AuthorizationRequestTable.validTo] = request.validTo
             it[validFrom] = request.validFrom
             it[createdAt] = request.createdAt
@@ -367,6 +369,8 @@ object AuthorizationRequestTable : UUIDTable("auth_v1.authorization_request") {
     val externalReference = varchar("external_reference", 255).nullable()
     val meta = jsonb("meta", Json, JsonObject.serializer())
     val redirectUri = text("redirect_uri").nullable()
+    val requestedGrantValidFrom = timestamp("requested_grant_valid_from").nullable()
+    val requestedGrantValidTo = timestamp("requested_grant_valid_to").nullable()
     val validFrom = timestamp("valid_from").clientDefault { now() }
     val validTo = timestamp("valid_to").clientDefault { now() }
     val updatedAt = timestamp("updated_at").clientDefault { now() }
@@ -401,6 +405,8 @@ fun ResultRow.toAuthorizationRequest(
         externalReference = this[AuthorizationRequestTable.externalReference],
         meta = this[AuthorizationRequestTable.meta],
         redirectUri = this[AuthorizationRequestTable.redirectUri],
+        requestedGrantValidFrom = this[AuthorizationRequestTable.requestedGrantValidFrom],
+        requestedGrantValidTo = this[AuthorizationRequestTable.requestedGrantValidTo],
         validFrom = this[AuthorizationRequestTable.validFrom],
         validTo = validTo,
         createdAt = this[AuthorizationRequestTable.createdAt],
