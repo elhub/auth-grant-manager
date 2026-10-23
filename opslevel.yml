@@ -3,43 +3,32 @@ version: 1
 component:
   name: auth-grant-manager
   type: service
-  lifecycle: generally_available
-  tier: tier_2
-  product: Access API
+  lifecycle: production
+  tier: tier_1
   owner: team-devxp
-  system: auth-platform
+  system: identity_access_management
   language: Kotlin
   framework: Ktor
-  description: Manages and tracks user authorization grants for Access API across Elhub applications and data processing activities.
+  description: Manages and tracks user authorization grants for Access API across
+    Elhub applications and data processing activities.
   aliases:
-    - auth-grant-manager
     - agm
+    - auth_grant_manager
+    - no.elhub.auth.auth-grant-manager
   tags:
-    - key: domain
-      value: authorization
-    - key: runtime
-      value: ktor
-    - key: datastore
-      value: postgresql
     - key: api-style
       value: rest
-    - key: docs
-      value: openapi
-    - key: compliance
-      value: consent-management
+    - key: datastore
+      value: postgresql
   repositories:
     - name: elhub/auth-grant-manager
-      path: '/'
+      path: "/"
       provider: github
-      display_name: Auth Grant Manager
+      display_name: auth-grant-manager
   tools:
     - name: Source Code
       category: code
       url: https://github.com/elhub/auth-grant-manager
-      environment: Production
-    - name: GitHub Actions
-      category: continuous_integration
-      url: https://github.com/elhub/auth-grant-manager/actions
       environment: Production
     - name: OpenAPI Spec
       category: api_documentation
@@ -54,9 +43,7 @@ component:
       url: https://github.com/elhub/auth-grant-manager/blob/main/docs/usage.md
       environment: Production
   dependencies:
-    - alias: auth-policy-decision-point
-      notes: Used to evaluate authorization and policy decisions.
-    - alias: auth-persons
-      notes: Used to resolve person and identity data during authorization flows.
-  alert_sources: []
-  properties: {}
+    - alias: devxp-json-api-wrapper
+      notes: runtime
+  alert_sources:
+  properties:
