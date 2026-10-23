@@ -35,10 +35,10 @@ fun Application.module() {
         provide<GrantRepository> { ExposedGrantRepository(resolve()) }
         provide<DocumentRepository> { ExposedDocumentRepository(resolve(), resolve()) }
         provide<ChangeOfEnergySupplierDocumentHandler> {
-            SupplierChangeHandlerImplementation()
+            SupplierChangeHandlerImplementation(resolve())
         }
         provide<MoveInAndChangeOfEnergySupplierDocumentHandler> {
-            MoveInHandlerImplementation()
+            MoveInHandlerImplementation(resolve())
         }
         provide<CreateDocumentHandler> {
             CreateDocumentHandler(resolve(), resolve(), resolve(), resolve(), resolve())
