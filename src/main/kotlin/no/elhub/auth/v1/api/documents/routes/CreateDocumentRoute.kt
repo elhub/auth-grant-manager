@@ -5,14 +5,12 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
 import no.elhub.auth.v0.features.common.auth.authorizedParty
-import no.elhub.auth.v0.features.common.buildApiErrorResponse
-import no.elhub.auth.v0.features.common.party.PartyError
-import no.elhub.auth.v0.features.common.party.PartyIdentifier
-import no.elhub.auth.v0.features.common.party.PartyIdentifierType
 import no.elhub.auth.v0.features.common.party.PartyService
 import no.elhub.auth.v0.features.common.receiveEither
 import no.elhub.auth.v0.features.common.toApiErrorResponse
 import no.elhub.auth.v0.features.common.toTypeMismatchApiErrorResponse
+import no.elhub.auth.v1.api.common.toApiErrorResponse
+import no.elhub.auth.v1.api.common.toPartyIdentifier
 import no.elhub.auth.v1.api.documents.request.JsonApiCreateAuthorizationDocumentRequest
 import no.elhub.auth.v1.api.documents.request.toDocumentSpecification
 import no.elhub.auth.v1.api.documents.response.toGetResponse
@@ -90,37 +88,3 @@ fun Route.route(
         call.respond(HttpStatusCode.Created, document.toGetResponse())
     }
 }
-
-private fun AgentExternalIdentifier.toPartyIdentifier() =
-    when (this) {
-        is AgentExternalIdentifier.OrganizationIdentifier -> {
-            PartyIdentifier(PartyIdentifierType.OrganizationNumber, value)
-        }
-
-        is AgentExternalIdentifier.PersonIdentifier -> {
-            PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, value)
-        }
-
-        is AgentExternalIdentifier.MarketPartyIdentifier -> {
-            PartyIdentifier(PartyIdentifierType.GlobalLocationNumber, value)
-        }
-    }
-
-private fun PartyError.toApiErrorResponse() =
-    when (this) {
-        PartyError.InvalidNin -> {
-            buildApiErrorResponse(
-                status = HttpStatusCode.BadRequest,
-                title = "Invalid national identity number",
-                detail = "Provided national identity number is invalid",
-            )
-        }
-
-        PartyError.PersonResolutionError -> {
-            buildApiErrorResponse(
-                status = HttpStatusCode.UnprocessableEntity,
-                title = "Unable to resolve party",
-                detail = "The requested party could not be resolved",
-            )
-        }
-    }

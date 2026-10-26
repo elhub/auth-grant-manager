@@ -16,6 +16,10 @@ sealed class InputError(override val detail: String) : Errors(detail) {
         detail: String,
     ) : InputError(detail)
 
+    class InvalidCreateAuthorizationRequestPayload(
+        detail: String,
+    ) : InputError(detail)
+
     class RequestedOfRequestedPrincipalMismatch : Errors()
     class RequestedScopeNotAllowed : Errors()
 }

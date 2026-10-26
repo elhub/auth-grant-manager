@@ -312,6 +312,37 @@ class ExposedRequestRepositoryTest : FunSpec({
         repository.findAndSortByCreatedAt(requestedBy, Pagination(), emptyList()).items shouldBe listOf(request)
     }
 
+    test("inserts a framework agreement request with requested grant validity") {
+        val requestedBy = party(PartyType.Organization)
+        val contractTypes = AuthorizationScopeConstraint(
+            AuthorizationScopeConstraintKind.AllowedChanges,
+            AuthorizationScopeConstraintAttribute.ContractType,
+            ResourceConstraint.ContractTypes(
+                setOf(MeteringPointContractType.EndUser, MeteringPointContractType.EnergySupplier),
+            ),
+        )
+        val request = AuthorizationRequest.new(
+            requestType = AuthorizationRequestType.EnergySupplierFrameworkAgreement,
+            requestedScopes = listOf(RequestedAuthorizationScope(ResourceType.MeteringPointContract, listOf(contractTypes))),
+            externalReference = "framework-1",
+            validTo = future,
+            meta = metadata,
+            requestedBy = requestedBy,
+            requestedPrincipal = requestedBy,
+            requestedOf = party(),
+        ).copy(
+            requestedGrantValidFrom = future,
+            requestedGrantValidTo = future + 365.days,
+            validFrom = createdAt,
+            createdAt = createdAt,
+            updatedAt = createdAt,
+        )
+
+        repository.insert(request) shouldBe request
+
+        repository.find(request.id) shouldBe request
+    }
+
     test("persists validFrom allowed changes and reads them by ID") {
         AuthorizationScopeConstraintAttribute.fromApiName("validFrom") shouldBe AuthorizationScopeConstraintAttribute.ValidFrom
         val requestedBy = party(PartyType.Organization)
