@@ -28,6 +28,7 @@ data class AuthorizationRequest(
     val requestedOf: AuthorizationParty,
     val approvedBy: AuthorizationParty?,
     val authorizationGrants: List<AuthorizationGrant>?,
+    val textLanguage: TextLanguage? = null,
 ) {
     companion object {
         fun create(

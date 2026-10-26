@@ -87,7 +87,7 @@ class ExposedGrantRepositoryTest : FunSpec({
         sourceType: AuthorizationGrantSourceType = AuthorizationGrantSourceType.Document,
         type: AuthorizationGrantType = AuthorizationGrantType.Consumable,
         status: DatabaseGrantStatus = DatabaseGrantStatus.Active,
-        validTo: Instant = future,
+        validTo: Instant? = future,
         scopes: List<GrantedAuthorizationScope> = emptyList(),
         principal: AuthorizationParty = party(PartyType.Organization),
         grantedBy: AuthorizationParty = party(PartyType.Person),
@@ -179,6 +179,7 @@ class ExposedGrantRepositoryTest : FunSpec({
     test("find derives expiry with revoked and exhausted taking precedence") {
         val grants = listOf(
             insertGrant() to AuthorizationGrantStatus.Active,
+            insertGrant(validTo = null) to AuthorizationGrantStatus.Active,
             insertGrant(validTo = past) to AuthorizationGrantStatus.Expired,
             insertGrant(status = DatabaseGrantStatus.Revoked, validTo = past) to AuthorizationGrantStatus.Revoked,
             insertGrant(status = DatabaseGrantStatus.Exhausted, validTo = past) to AuthorizationGrantStatus.Exhausted,
@@ -303,6 +304,15 @@ class ExposedGrantRepositoryTest : FunSpec({
         withTransaction {
             AuthorizationPartyTable.selectAll().where { AuthorizationPartyTable.partyId eq grant.principal.id }.count() shouldBe 1L
         }
+    }
+
+    test("insert persists a persistent grant without an end date") {
+        val template = insertGrant(type = AuthorizationGrantType.Persistent)
+        val grant = template.copy(id = UUID.randomUUID(), sourceId = UUID.randomUUID(), validTo = null)
+
+        repository.insert(grant) shouldBe grant
+        repository.find(grant.id) shouldBe grant
+        repository.find(grant.id).status shouldBe AuthorizationGrantStatus.Active
     }
 
     test("insert creates missing parties and persists both grant types and all statuses without scopes") {

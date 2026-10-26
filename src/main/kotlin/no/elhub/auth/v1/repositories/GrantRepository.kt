@@ -295,7 +295,7 @@ private fun ResultRow.toAuthorizationGrantStatus(now: Instant): AuthorizationGra
 
         DatabaseGrantStatus.Exhausted -> AuthorizationGrantStatus.Exhausted
 
-        DatabaseGrantStatus.Active -> if (this[AuthorizationGrantTable.validTo] <= now) {
+        DatabaseGrantStatus.Active -> if (this[AuthorizationGrantTable.validTo]?.let { it <= now } == true) {
             AuthorizationGrantStatus.Expired
         } else {
             AuthorizationGrantStatus.Active
@@ -354,7 +354,7 @@ object AuthorizationGrantTable : UUIDTable("auth_v1.authorization_grant") {
         toDb = { PGEnum("auth_v1.authorization_grant_status", it) },
     )
     val validFrom = timestamp("valid_from").clientDefault { now() }
-    val validTo = timestamp("valid_to").clientDefault { now() }
+    val validTo = timestamp("valid_to").nullable()
     val createdAt = timestamp("created_at").clientDefault { now() }
     val updatedAt = timestamp("updated_at").clientDefault { now() }
 }

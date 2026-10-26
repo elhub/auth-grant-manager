@@ -8,6 +8,7 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.datetime.LocalDate
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
@@ -32,6 +33,9 @@ import no.elhub.auth.v1.domain.MeteringPointId
 import no.elhub.auth.v1.domain.RequestedAuthorizationScope
 import no.elhub.auth.v1.domain.ResourceConstraint
 import no.elhub.auth.v1.domain.ResourceType
+import no.elhub.auth.v1.domain.TextLanguage
+import no.elhub.auth.v1.domain.requests.AuthorizationRequestTypeDetails
+import no.elhub.auth.v1.features.requests.toGrants
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.insert
@@ -534,13 +538,15 @@ class ExposedRequestRepositoryTest : FunSpec({
         )
         val original = repository.find(id)
         val before = now()
-        val rejectedRequest = repository.reject(id)
+        val rejectedRequest = repository.reject(id, TextLanguage.NN)
         val after = now()
         rejectedRequest.status shouldBe AuthorizationRequestStatus.Rejected
         (rejectedRequest.updatedAt in before..after) shouldBe true
+        original.textLanguage shouldBe null
         rejectedRequest shouldBe original.copy(
             status = AuthorizationRequestStatus.Rejected,
             updatedAt = rejectedRequest.updatedAt,
+            textLanguage = TextLanguage.NN,
         )
         repository.find(id) shouldBe rejectedRequest
     }
@@ -548,17 +554,17 @@ class ExposedRequestRepositoryTest : FunSpec({
     test("reject(id) throws notfound for nonexistent id") {
         val randomUUID = UUID.randomUUID()
         val error = shouldThrow<RepositoryWriteError.NotFoundError> {
-            repository.reject(randomUUID)
+            repository.reject(randomUUID, TextLanguage.NB)
         }
         error.detail shouldBe "Request not found: $randomUUID"
     }
 
     test("reject(id) throws conflict on double-reject") {
         val id = insertRequest(party())
-        val rejectedRequest = repository.reject(id)
+        val rejectedRequest = repository.reject(id, TextLanguage.NB)
         rejectedRequest.status shouldBe AuthorizationRequestStatus.Rejected
         val error = shouldThrow<RepositoryWriteError.ConflictError> {
-            repository.reject(id)
+            repository.reject(id, TextLanguage.NB)
         }
         error.detail shouldBe "Invalid transition for request $id from Rejected to Rejected"
         repository.find(id) shouldBe rejectedRequest
@@ -569,7 +575,7 @@ class ExposedRequestRepositoryTest : FunSpec({
             val id = insertRequest(party(), approvedBy = party(), validTo = validTo)
             val original = repository.find(id)
             val error = shouldThrow<RepositoryWriteError.ConflictError> {
-                repository.reject(id)
+                repository.reject(id, TextLanguage.NB)
             }
             error.detail shouldBe "Invalid transition for request $id from Accepted to Rejected"
             repository.find(id) shouldBe original
@@ -580,7 +586,7 @@ class ExposedRequestRepositoryTest : FunSpec({
         val id = insertRequest(party(), validTo = past)
         val original = repository.find(id)
         val error = shouldThrow<RepositoryWriteError.ExpiredError> {
-            repository.reject(id)
+            repository.reject(id, TextLanguage.NB)
         }
         error.detail shouldBe "Request $id has expired"
         repository.find(id) shouldBe original
@@ -601,15 +607,17 @@ class ExposedRequestRepositoryTest : FunSpec({
         val grant = grant(original)
         val before = now()
 
-        val accepted = repository.accept(id, listOf(grant))
+        val accepted = repository.accept(id, listOf(grant), TextLanguage.EN)
 
         val after = now()
         (accepted.updatedAt in before..after) shouldBe true
+        original.textLanguage shouldBe null
         accepted shouldBe original.copy(
             status = AuthorizationRequestStatus.Accepted,
             approvedBy = grant.approvedBy,
             updatedAt = accepted.updatedAt,
             authorizationGrants = listOf(grant),
+            textLanguage = TextLanguage.EN,
         )
         withTransaction {
             val row = AuthorizationRequestTable.selectAll()
@@ -629,7 +637,7 @@ class ExposedRequestRepositoryTest : FunSpec({
         val second = grant(original).copy(approvedBy = requestedBy)
         val grants = listOf(first, second)
 
-        val accepted = repository.accept(id, grants)
+        val accepted = repository.accept(id, grants, TextLanguage.NB)
 
         accepted.approvedBy shouldBe requestedBy
         accepted.authorizationGrants.shouldContainExactlyInAnyOrder(grants)
@@ -653,8 +661,8 @@ class ExposedRequestRepositoryTest : FunSpec({
         val withoutGrantsId = insertRequest(requestedBy, created = createdAt)
         val firstGrants = listOf(grant(repository.find(withGrantsId)), grant(repository.find(withGrantsId)))
         val otherGrants = listOf(grant(repository.find(otherWithGrantsId)))
-        repository.accept(withGrantsId, firstGrants)
-        repository.accept(otherWithGrantsId, otherGrants)
+        repository.accept(withGrantsId, firstGrants, TextLanguage.NB)
+        repository.accept(otherWithGrantsId, otherGrants, TextLanguage.NB)
 
         val items = repository.findAndSortByCreatedAt(requestedBy, Pagination(), emptyList()).items
 
@@ -662,6 +670,40 @@ class ExposedRequestRepositoryTest : FunSpec({
         items[0].authorizationGrants.shouldContainExactlyInAnyOrder(firstGrants)
         items[1].authorizationGrants.shouldContainExactlyInAnyOrder(otherGrants)
         items[2].authorizationGrants shouldBe null
+    }
+
+    listOf(
+        AuthorizationRequestTypeDetails.ChangeOfEnergySupplierForOrganization(
+            ResourceConstraint.MeteringPoints(setOf(MeteringPointId.create("707057500000000001"))),
+        ),
+        AuthorizationRequestTypeDetails.MoveInAndChangeOfEnergySupplierForOrganization(
+            ResourceConstraint.MeteringPoints(setOf(MeteringPointId.create("707057500000000001"))),
+            LocalDate(2026, 11, 1),
+        ),
+        AuthorizationRequestTypeDetails.EnergySupplierFrameworkAgreement(null, null),
+    ).forEach { details ->
+        test("a stored ${details::class.simpleName} request produces the same grants as the created one") {
+            val requestedOf = party(PartyType.Person)
+            val created = AuthorizationRequest.create(
+                requestedBy = party(PartyType.OrganizationEntity),
+                requestedPrincipal = party(PartyType.Organization),
+                requestedOf = requestedOf,
+                details = details,
+                validTo = future,
+                meta = JsonObject(emptyMap()),
+                externalReference = null,
+                redirectUri = null,
+            )
+            repository.insert(created)
+
+            val stored = repository.find(created.id)
+
+            val grantNow = now()
+            fun List<AuthorizationGrant>.withoutGeneratedFields() =
+                map { it.copy(id = UUID(0, 0), createdAt = grantNow, updatedAt = grantNow) }
+            stored.toGrants(requestedOf, grantNow).withoutGeneratedFields() shouldBe
+                created.toGrants(requestedOf, grantNow).withoutGeneratedFields()
+        }
     }
 
     test("accept(id, grant) throws not found for a nonexistent ID") {
@@ -678,7 +720,7 @@ class ExposedRequestRepositoryTest : FunSpec({
         )
 
         val error = shouldThrow<RepositoryWriteError.NotFoundError> {
-            repository.accept(request.id, listOf(grant(request)))
+            repository.accept(request.id, listOf(grant(request)), TextLanguage.NB)
         }
 
         error.detail shouldBe "Request not found: ${request.id}"
@@ -687,11 +729,11 @@ class ExposedRequestRepositoryTest : FunSpec({
     test("accept(id, grant) throws conflict on double-accept") {
         val id = insertRequest(party())
         val original = repository.find(id)
-        val accepted = repository.accept(id, listOf(grant(original)))
+        val accepted = repository.accept(id, listOf(grant(original)), TextLanguage.NB)
         accepted.status shouldBe AuthorizationRequestStatus.Accepted
 
         val error = shouldThrow<RepositoryWriteError.ConflictError> {
-            repository.accept(id, listOf(grant(original)))
+            repository.accept(id, listOf(grant(original)), TextLanguage.NB)
         }
 
         error.detail shouldBe "Invalid transition for request $id from Accepted to Accepted"
@@ -704,7 +746,7 @@ class ExposedRequestRepositoryTest : FunSpec({
             val original = repository.find(id)
 
             val error = shouldThrow<RepositoryWriteError.ConflictError> {
-                repository.accept(id, listOf(grant(original)))
+                repository.accept(id, listOf(grant(original)), TextLanguage.NB)
             }
 
             error.detail shouldBe "Invalid transition for request $id from Rejected to Accepted"
@@ -717,7 +759,7 @@ class ExposedRequestRepositoryTest : FunSpec({
         val original = repository.find(id)
 
         val error = shouldThrow<RepositoryWriteError.ExpiredError> {
-            repository.accept(id, listOf(grant(original)))
+            repository.accept(id, listOf(grant(original)), TextLanguage.NB)
         }
 
         error.detail shouldBe "Request $id has expired"
@@ -733,7 +775,7 @@ class ExposedRequestRepositoryTest : FunSpec({
             val attempts = grants.map { grant ->
                 async {
                     start.await()
-                    runCatching { repository.accept(id, listOf(grant)) }
+                    runCatching { repository.accept(id, listOf(grant), TextLanguage.NB) }
                 }
             }
             start.complete(Unit)
@@ -757,11 +799,11 @@ class ExposedRequestRepositoryTest : FunSpec({
             val attempts = listOf(
                 async {
                     start.await()
-                    runCatching { repository.accept(id, listOf(grant)) }
+                    runCatching { repository.accept(id, listOf(grant), TextLanguage.NB) }
                 },
                 async {
                     start.await()
-                    runCatching { repository.reject(id) }
+                    runCatching { repository.reject(id, TextLanguage.NB) }
                 },
             )
             start.complete(Unit)
@@ -789,7 +831,7 @@ class ExposedRequestRepositoryTest : FunSpec({
             val attempts = List(2) {
                 async {
                     start.await()
-                    runCatching { repository.reject(id) }
+                    runCatching { repository.reject(id, TextLanguage.NB) }
                 }
             }
             start.complete(Unit)

@@ -17,6 +17,7 @@ import no.elhub.auth.v1.domain.AuthorizationRequest
 import no.elhub.auth.v1.domain.AuthorizationRequestStatus
 import no.elhub.auth.v1.domain.AuthorizationRequestType
 import no.elhub.auth.v1.domain.RequestedAuthorizationScope
+import no.elhub.auth.v1.domain.TextLanguage
 import no.elhub.devxp.jsonapi.model.JsonApiLinks
 import no.elhub.devxp.jsonapi.response.JsonApiResponse
 import kotlin.time.Instant
@@ -44,6 +45,7 @@ data class AuthorizationRequestAttributes(
     val requestedGrantValidFrom: Instant? = null,
     val requestedGrantValidTo: Instant? = null,
     val status: AuthorizationRequestStatus,
+    val textLanguage: TextLanguage? = null,
     val validFrom: Instant,
     val validTo: Instant,
     val createdAt: Instant,
@@ -77,6 +79,7 @@ fun AuthorizationRequest.toGetResponse() =
                 requestedGrantValidFrom = requestedGrantValidFrom,
                 requestedGrantValidTo = requestedGrantValidTo,
                 status = status,
+                textLanguage = textLanguage,
                 validFrom = validFrom,
                 validTo = validTo,
                 createdAt = createdAt,

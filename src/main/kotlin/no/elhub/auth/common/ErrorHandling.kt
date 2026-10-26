@@ -23,6 +23,7 @@ import no.elhub.auth.v1.features.documents.GetDocumentError
 import no.elhub.auth.v1.features.documents.InvalidDocumentScopes
 import no.elhub.auth.v1.features.grants.GetGrantError
 import no.elhub.auth.v1.features.requests.GetRequestError
+import no.elhub.auth.v1.features.requests.UpdateRequestError
 import no.elhub.auth.v1.repositories.RepositoryReadError
 import no.elhub.auth.v1.repositories.RepositoryWriteError
 import org.slf4j.LoggerFactory
@@ -208,6 +209,42 @@ private fun Errors.toApiErrorResponse() =
                 detail = "The party is not allowed to access this resource",
             )
         }
+
+        is UpdateRequestError.NotAuthorized -> buildApiErrorResponse(
+            status = HttpStatusCode.Forbidden,
+            title = "Not allowed to update",
+            detail = detail,
+        )
+
+        is UpdateRequestError.InvalidTransition -> buildApiErrorResponse(
+            status = HttpStatusCode.UnprocessableEntity,
+            title = "Invalid status transition",
+            detail = detail,
+        )
+
+        is UpdateRequestError.AlreadyProcessed -> buildApiErrorResponse(
+            status = HttpStatusCode.UnprocessableEntity,
+            title = "Invalid status state",
+            detail = detail,
+        )
+
+        is UpdateRequestError.Expired -> buildApiErrorResponse(
+            status = HttpStatusCode.UnprocessableEntity,
+            title = "AuthorizationRequest has expired",
+            detail = detail,
+        )
+
+        is UpdateRequestError.InvalidGrantValidity -> buildApiErrorResponse(
+            status = HttpStatusCode.UnprocessableEntity,
+            title = "Invalid grant validity",
+            detail = detail,
+        )
+
+        is UpdateRequestError.UnsupportedRequestedOf -> buildApiErrorResponse(
+            status = HttpStatusCode.UnprocessableEntity,
+            title = "Unsupported requestedOf party",
+            detail = detail,
+        )
 
         is DomainError.InvalidExternalAgentIdentifier -> {
             buildApiErrorResponse(

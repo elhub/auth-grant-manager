@@ -16,7 +16,7 @@ data class AuthorizationGrant(
     val approvedBy: AuthorizationParty,
     val status: AuthorizationGrantStatus,
     val validFrom: Instant,
-    val validTo: Instant,
+    val validTo: Instant?,
     val createdAt: Instant,
     val updatedAt: Instant,
     val scopes: List<GrantedAuthorizationScope>,
@@ -31,7 +31,7 @@ data class AuthorizationGrant(
             grantedTo: AuthorizationParty,
             approvedBy: AuthorizationParty,
             validFrom: Instant,
-            validTo: Instant,
+            validTo: Instant?,
             scopes: List<GrantedAuthorizationScope>,
         ): AuthorizationGrant {
             val now = Clock.System.now()
