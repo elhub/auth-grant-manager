@@ -30,17 +30,70 @@ class AuthorizationRequestSpecificationMapperTest : FunSpec({
         requestedScopes: List<RequestedScope>? = null,
         requestedGrantValidFrom: OffsetDateTime? = null,
         requestedGrantValidTo: OffsetDateTime? = null,
+        redirectUri: String? = "https://example.com/callback",
     ) = CreateAuthorizationRequestAttributes(
         requestType = requestType,
         requestedScopes = requestedScopes,
         externalReference = "ref-1",
         requestedGrantValidFrom = requestedGrantValidFrom,
         requestedGrantValidTo = requestedGrantValidTo,
-        redirectUri = "https://example.com/callback",
+        redirectUri = redirectUri,
     )
 
     fun invalidPayload(expectedDetail: String, block: () -> Unit) {
         shouldThrow<InputError.InvalidCreateAuthorizationRequestPayload>(block).detail shouldBe expectedDetail
+    }
+
+    context("redirectUri") {
+        val type = AuthorizationRequestType.EnergySupplierFrameworkAgreement
+
+        test("allows omitted redirect uri") {
+            attributes(type, redirectUri = null)
+                .validateAndReturnAuthorizationRequestSpecification(now)
+                .redirectUri shouldBe null
+        }
+
+        test("allows path and query and trims whitespace") {
+            attributes(type, redirectUri = " https://app.example.com/callback/elhub?ref=123 ")
+                .validateAndReturnAuthorizationRequestSpecification(now)
+                .redirectUri shouldBe "https://app.example.com/callback/elhub?ref=123"
+        }
+
+        test("rejects invalid uri") {
+            invalidPayload("redirectUri must be a valid URI") {
+                attributes(type, redirectUri = "https://exa mple.com")
+                    .validateAndReturnAuthorizationRequestSpecification(now)
+            }
+        }
+
+        test("rejects non-https and relative uris") {
+            listOf("http://example.com/callback", "myapp://callback", "/callback").forEach {
+                invalidPayload("redirectUri must use the https scheme") {
+                    attributes(type, redirectUri = it).validateAndReturnAuthorizationRequestSpecification(now)
+                }
+            }
+        }
+
+        test("rejects uri without host") {
+            invalidPayload("redirectUri must contain a host") {
+                attributes(type, redirectUri = "https:///callback")
+                    .validateAndReturnAuthorizationRequestSpecification(now)
+            }
+        }
+
+        test("rejects user info") {
+            invalidPayload("redirectUri must not contain user info") {
+                attributes(type, redirectUri = "https://user:pass@example.com/callback")
+                    .validateAndReturnAuthorizationRequestSpecification(now)
+            }
+        }
+
+        test("rejects fragment") {
+            invalidPayload("redirectUri must not contain a fragment") {
+                attributes(type, redirectUri = "https://example.com/callback#section")
+                    .validateAndReturnAuthorizationRequestSpecification(now)
+            }
+        }
     }
 
     context("EnergySupplierFrameworkAgreement") {

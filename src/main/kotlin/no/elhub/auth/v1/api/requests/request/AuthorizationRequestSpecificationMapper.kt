@@ -12,6 +12,8 @@ import no.elhub.auth.v1.domain.ResourceConstraint
 import no.elhub.auth.v1.domain.ResourceType
 import no.elhub.auth.v1.domain.requests.AuthorizationRequestSpecification
 import no.elhub.auth.v1.domain.requests.AuthorizationRequestTypeDetails
+import java.net.URI
+import java.net.URISyntaxException
 import java.time.OffsetDateTime
 import kotlin.time.Clock
 import kotlin.time.Instant
@@ -22,9 +24,31 @@ fun CreateAuthorizationRequestAttributes.validateAndReturnAuthorizationRequestSp
 ): AuthorizationRequestSpecification =
     AuthorizationRequestSpecification(
         externalReference = externalReference,
-        redirectUri = redirectUri,
+        redirectUri = redirectUri?.let(::requireValidRedirectUri),
         details = validateAndReturnTypeDetails(now),
     )
+
+private fun requireValidRedirectUri(value: String): String {
+    val trimmed = value.trim()
+    val uri = try {
+        URI(trimmed)
+    } catch (_: URISyntaxException) {
+        invalid("redirectUri must be a valid URI")
+    }
+    if (!uri.isAbsolute || !uri.scheme.equals("https", ignoreCase = true)) {
+        invalid("redirectUri must use the https scheme")
+    }
+    if (uri.host.isNullOrBlank()) {
+        invalid("redirectUri must contain a host")
+    }
+    if (uri.rawUserInfo != null) {
+        invalid("redirectUri must not contain user info")
+    }
+    if (uri.rawFragment != null) {
+        invalid("redirectUri must not contain a fragment")
+    }
+    return trimmed
+}
 
 private fun CreateAuthorizationRequestAttributes.validateAndReturnTypeDetails(
     now: Instant,
