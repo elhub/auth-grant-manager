@@ -52,8 +52,8 @@
         },
         "requestedOf": {
           "data": {
-            "type": "Person",
-            "id": "01019012345"
+            "type": "Organization",
+            "id": "999888777"
           }
         },
         "authorizationGrants": {
