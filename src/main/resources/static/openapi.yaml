@@ -841,8 +841,8 @@ paths:
       summary: '[WIP] List authorization grants'
       description: >
         Retrieve a paginated list of authorization grants available to the calling party. A grant is
-        available when the calling party is either the grantedTo or the principal. Results are ordered
-        by createdAt DESC (newest first).
+        available when the calling party is the grantedTo, the principal, or the grantedBy. Results are
+        ordered by createdAt DESC (newest first).
       operationId: listV1AuthorizationGrants
       x-status: Work in progress
       x-availability: Not deployed to Production or MT1
