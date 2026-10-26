@@ -51,7 +51,8 @@ fun Route.route(
         val requestedPrincipal =
             partyService.resolve(requestedPrincipalIdentifier).fold(
                 ifLeft = { error ->
-                    call.respond(error.toApiErrorResponse())
+                    val (status, body) = error.toApiErrorResponse()
+                    call.respond(status, body)
                     return@post
                 },
                 ifRight = { it },
@@ -64,7 +65,8 @@ fun Route.route(
         val requestedOf =
             partyService.resolve(requestedOfIdentifier).fold(
                 ifLeft = { error ->
-                    call.respond(error.toApiErrorResponse())
+                    val (status, body) = error.toApiErrorResponse()
+                    call.respond(status, body)
                     return@post
                 },
                 ifRight = { it },
