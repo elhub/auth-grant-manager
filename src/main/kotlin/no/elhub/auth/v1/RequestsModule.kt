@@ -9,6 +9,7 @@ import no.elhub.auth.plugin.tokenAuthorize
 import no.elhub.auth.v0.features.common.party.PartyService
 import no.elhub.auth.v1.api.requests.routes.route
 import no.elhub.auth.v1.features.requests.CreateRequestHandler
+import no.elhub.auth.v1.features.requests.GetRequestHandler
 import no.elhub.auth.v1.features.requests.creation.ChangeOfEnergySupplierRequestHandler
 import no.elhub.auth.v1.features.requests.creation.EnergySupplierFrameworkAgreementRequestHandler
 import no.elhub.auth.v1.features.requests.creation.MoveInAndChangeOfEnergySupplierRequestHandler
@@ -31,14 +32,17 @@ fun Application.requestsModule() {
         provide<MoveInAndChangeOfEnergySupplierRequestHandler> { MoveInHandlerImplementation() }
         provide<EnergySupplierFrameworkAgreementRequestHandler> { FrameworkAgreementHandlerImplementation() }
         provide<CreateRequestHandler> { CreateRequestHandler(resolve(), resolve(), resolve(), resolve()) }
+        provide<GetRequestHandler> { GetRequestHandler(resolve()) }
     }
 
     val createHandler: CreateRequestHandler by dependencies
+    val getHandler: GetRequestHandler by dependencies
     val partyService: PartyService by dependencies
     routing {
         tokenAuthorize(AuthInfoPolicy) {
             route(V1_REQUESTS_PATH) {
                 route(partyService, createHandler)
+                route(getHandler)
             }
         }
     }

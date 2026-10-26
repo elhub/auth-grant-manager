@@ -22,6 +22,7 @@ import no.elhub.auth.v1.features.documents.ConfirmDocumentError
 import no.elhub.auth.v1.features.documents.GetDocumentError
 import no.elhub.auth.v1.features.documents.InvalidDocumentScopes
 import no.elhub.auth.v1.features.grants.GetGrantError
+import no.elhub.auth.v1.features.requests.GetRequestError
 import no.elhub.auth.v1.repositories.RepositoryReadError
 import no.elhub.auth.v1.repositories.RepositoryWriteError
 import org.slf4j.LoggerFactory
@@ -185,6 +186,14 @@ private fun Errors.toApiErrorResponse() =
         )
 
         is GetDocumentError.NotAuthorized -> {
+            buildApiErrorResponse(
+                status = HttpStatusCode.Forbidden,
+                title = "Party not authorized",
+                detail = "The party is not allowed to access this resource",
+            )
+        }
+
+        is GetRequestError.NotAuthorized -> {
             buildApiErrorResponse(
                 status = HttpStatusCode.Forbidden,
                 title = "Party not authorized",
