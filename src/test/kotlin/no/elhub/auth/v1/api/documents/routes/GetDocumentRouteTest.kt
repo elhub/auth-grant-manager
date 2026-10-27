@@ -82,7 +82,7 @@ class GetDocumentRouteTest : FunSpec({
     test("GET /{id} serializes the corresponding grant identifiers") {
         val persistentGrant = grant.copy(id = UUID.randomUUID(), type = AuthorizationGrantType.Persistent)
         coEvery { handler(documentId, authorizedParty) } returns document.copy(
-            status = AuthorizationDocumentStatus.Accepted,
+            status = AuthorizationDocumentStatus.Approved,
             approvedBy = document.requestedOf,
             authorizationGrants = listOf(grant, persistentGrant),
         )
@@ -96,7 +96,7 @@ class GetDocumentRouteTest : FunSpec({
 
             response.status shouldBe HttpStatusCode.OK
             val body = response.body<JsonApiGetAuthorizationDocumentResponse>()
-            body.data.attributes.status.name shouldBe "Signed"
+            body.data.attributes.status.name shouldBe "Approved"
             body.data.relationships.approvedBy.shouldNotBeNull().data.id shouldBe document.requestedOf.id
             val grants = body.data.relationships.authorizationGrants.shouldNotBeNull().data
             grants.map { it.id } shouldBe listOf(grant.id.toString(), persistentGrant.id.toString())

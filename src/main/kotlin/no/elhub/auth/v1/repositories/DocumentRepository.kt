@@ -205,8 +205,8 @@ class ExposedDocumentRepository(
 
         val now = now()
         when (row.toAuthorizationDocumentStatus(now)) {
-            AuthorizationDocumentStatus.Accepted -> throw RepositoryWriteError.ConflictError(
-                "Invalid transition for document $documentId from Accepted to Accepted",
+            AuthorizationDocumentStatus.Approved -> throw RepositoryWriteError.ConflictError(
+                "Invalid transition for document $documentId from Approved to Approved",
             )
 
             AuthorizationDocumentStatus.Expired -> throw RepositoryWriteError.ExpiredError("Document $documentId has expired")
@@ -253,7 +253,7 @@ class ExposedDocumentRepository(
                 AuthorizationDocumentStatus.Expired -> AuthorizationDocumentTable.approvedBy.isNull() and
                     (AuthorizationDocumentTable.validTo lessEq now)
 
-                AuthorizationDocumentStatus.Accepted -> AuthorizationDocumentTable.approvedBy.isNotNull()
+                AuthorizationDocumentStatus.Approved -> AuthorizationDocumentTable.approvedBy.isNotNull()
             }
         }.reduce { acc, op -> acc or op }
         return partyCondition and statusCondition
@@ -303,7 +303,7 @@ object AuthorizationDocumentTable : UUIDTable("auth_v1.authorization_document") 
 }
 
 private fun ResultRow.toAuthorizationDocumentStatus(now: Instant): AuthorizationDocumentStatus = when {
-    this[AuthorizationDocumentTable.approvedBy] != null -> AuthorizationDocumentStatus.Accepted
+    this[AuthorizationDocumentTable.approvedBy] != null -> AuthorizationDocumentStatus.Approved
     this[AuthorizationDocumentTable.validTo] <= now -> AuthorizationDocumentStatus.Expired
     else -> AuthorizationDocumentStatus.Pending
 }

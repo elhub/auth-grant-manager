@@ -225,7 +225,7 @@ class ExposedRequestRepository(
         when (status) {
             AuthorizationRequestStatus.Expired -> throw RepositoryWriteError.ExpiredError("Request $requestId has expired")
 
-            AuthorizationRequestStatus.Accepted, AuthorizationRequestStatus.Rejected ->
+            AuthorizationRequestStatus.Approved, AuthorizationRequestStatus.Rejected ->
                 throw RepositoryWriteError.ConflictError("Invalid transition for request $requestId from $status to Rejected")
 
             AuthorizationRequestStatus.Pending -> Unit
@@ -261,8 +261,8 @@ class ExposedRequestRepository(
         when (val status = row.toAuthorizationRequestStatus(now)) {
             AuthorizationRequestStatus.Expired -> throw RepositoryWriteError.ExpiredError("Request $requestId has expired")
 
-            AuthorizationRequestStatus.Accepted, AuthorizationRequestStatus.Rejected ->
-                throw RepositoryWriteError.ConflictError("Invalid transition for request $requestId from $status to Accepted")
+            AuthorizationRequestStatus.Approved, AuthorizationRequestStatus.Rejected ->
+                throw RepositoryWriteError.ConflictError("Invalid transition for request $requestId from $status to Approved")
 
             AuthorizationRequestStatus.Pending -> Unit
         }
@@ -313,7 +313,7 @@ class ExposedRequestRepository(
                         AuthorizationRequestTable.approvedBy.isNull() and
                         (AuthorizationRequestTable.validTo lessEq now)
 
-                AuthorizationRequestStatus.Accepted ->
+                AuthorizationRequestStatus.Approved ->
                     (AuthorizationRequestTable.status eq DatabaseRequestStatus.Pending) and
                         AuthorizationRequestTable.approvedBy.isNotNull()
 
@@ -391,7 +391,7 @@ private fun ResultRow.toAuthorizationRequestStatus(now: Instant): AuthorizationR
         DatabaseRequestStatus.Rejected -> AuthorizationRequestStatus.Rejected
 
         DatabaseRequestStatus.Pending -> when {
-            this[AuthorizationRequestTable.approvedBy] != null -> AuthorizationRequestStatus.Accepted
+            this[AuthorizationRequestTable.approvedBy] != null -> AuthorizationRequestStatus.Approved
             this[AuthorizationRequestTable.validTo] <= now -> AuthorizationRequestStatus.Expired
             else -> AuthorizationRequestStatus.Pending
         }

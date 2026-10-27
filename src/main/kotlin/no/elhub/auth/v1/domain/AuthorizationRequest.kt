@@ -169,7 +169,7 @@ data class AuthorizationRequest(
 }
 
 enum class AuthorizationRequestStatus {
-    Accepted,
+    Approved,
     Expired,
     Pending,
     Rejected,

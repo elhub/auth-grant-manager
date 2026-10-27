@@ -25,7 +25,7 @@
         ],
         "externalReference": "contract-123",
         "redirectUri": "https://supplier.example/authorization/return",
-        "status": "Accepted",
+        "status": "Approved",
         "textReference": "v1",
         "textLanguage": "nb",
         "validFrom": "2026-10-01T00:00:00Z",

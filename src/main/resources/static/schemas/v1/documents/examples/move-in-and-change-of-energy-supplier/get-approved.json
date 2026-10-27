@@ -1,30 +1,38 @@
 {
-  "summary": "documentType=EnergySupplierFrameworkAgreement",
+  "summary": "documentType=MoveInAndChangeOfEnergySupplierForOrganization",
   "value": {
     "data": {
-      "id": "01997291-7e8b-7000-8000-000000000021",
+      "id": "01997291-7e8b-7000-8000-000000000012",
       "type": "AuthorizationDocument",
       "attributes": {
-        "documentType": "EnergySupplierFrameworkAgreement",
+        "documentType": "MoveInAndChangeOfEnergySupplierForOrganization",
         "requestedScopes": [
           {
             "resourceType": "MeteringPointContract",
+            "appliesTo": [
+              {
+                "attribute": "meteringPoint.id",
+                "value": ["707000000000000001"]
+              }
+            ],
             "allowedChanges": [
               {
                 "attribute": "type",
-                "value": ["EndUser", "EnergySupplier"]
+                "value": ["EnergySupplier", "EndUser"]
+              },
+              {
+                "attribute": "validFrom",
+                "value": ["2026-10-01T00:00:00Z"]
               }
             ]
           }
         ],
-        "externalReference": "framework-agreement-2026-001",
-        "requestedGrantValidFrom": "2026-11-01T00:00:00+01:00",
-        "requestedGrantValidTo": "2027-11-01T00:00:00+01:00",
-        "status": "Signed",
-        "validFrom": "2026-10-22T10:00:00Z",
-        "validTo": "2026-11-21T10:00:00Z",
-        "createdAt": "2026-10-22T10:00:00Z",
-        "updatedAt": "2026-10-22T10:15:00Z"
+        "externalReference": "contract-124",
+        "status": "Approved",
+        "validFrom": "2026-10-01T00:00:00Z",
+        "validTo": "2026-10-24T10:00:00Z",
+        "createdAt": "2026-09-24T10:00:00Z",
+        "updatedAt": "2026-09-24T10:15:00Z"
       },
       "relationships": {
         "requestedBy": {
@@ -54,8 +62,8 @@
         "authorizationGrants": {
           "data": [
             {
-              "type": "PersistentGrant",
-              "id": "01997291-7e8b-7000-8000-000000000024"
+              "type": "ConsumableGrant",
+              "id": "01997291-7e8b-7000-8000-000000000015"
             }
           ]
         }

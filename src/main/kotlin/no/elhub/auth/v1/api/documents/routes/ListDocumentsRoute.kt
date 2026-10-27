@@ -32,7 +32,7 @@ fun Route.route(handler: ListDocumentsHandler) {
         }
         val domainStatuses = statuses.map { status ->
             when (status) {
-                ResponseAuthorizationDocumentStatus.Signed -> AuthorizationDocumentStatus.Accepted
+                ResponseAuthorizationDocumentStatus.Approved -> AuthorizationDocumentStatus.Approved
                 ResponseAuthorizationDocumentStatus.Expired -> AuthorizationDocumentStatus.Expired
                 ResponseAuthorizationDocumentStatus.Pending -> AuthorizationDocumentStatus.Pending
             }

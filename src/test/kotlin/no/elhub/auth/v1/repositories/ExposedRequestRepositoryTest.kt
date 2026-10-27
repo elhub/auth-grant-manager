@@ -180,7 +180,7 @@ class ExposedRequestRepositoryTest : FunSpec({
         result.copy(requestedScopes = emptyList()) shouldBe AuthorizationRequest(
             id = requestId,
             requestType = AuthorizationRequestType.ChangeOfEnergySupplierForOrganization,
-            status = AuthorizationRequestStatus.Accepted,
+            status = AuthorizationRequestStatus.Approved,
             requestedScopes = emptyList(),
             externalReference = "contract-123",
             redirectUri = null,
@@ -226,8 +226,8 @@ class ExposedRequestRepositoryTest : FunSpec({
         val approver = party()
         val expected = mapOf(
             insertRequest(requestedBy) to AuthorizationRequestStatus.Pending,
-            insertRequest(requestedBy, approvedBy = approver) to AuthorizationRequestStatus.Accepted,
-            insertRequest(requestedBy, approvedBy = approver, validTo = past) to AuthorizationRequestStatus.Accepted,
+            insertRequest(requestedBy, approvedBy = approver) to AuthorizationRequestStatus.Approved,
+            insertRequest(requestedBy, approvedBy = approver, validTo = past) to AuthorizationRequestStatus.Approved,
             insertRequest(requestedBy, validTo = past) to AuthorizationRequestStatus.Expired,
             insertRequest(requestedBy, status = DatabaseRequestStatus.Rejected) to AuthorizationRequestStatus.Rejected,
             insertRequest(requestedBy, status = DatabaseRequestStatus.Rejected, approvedBy = approver, validTo = past) to
@@ -474,7 +474,7 @@ class ExposedRequestRepositoryTest : FunSpec({
         mapped.requestedPrincipal shouldBe requestedPrincipal
         mapped.requestedOf shouldBe requestedOf
         mapped.approvedBy shouldBe approver
-        mapped.status shouldBe AuthorizationRequestStatus.Accepted
+        mapped.status shouldBe AuthorizationRequestStatus.Approved
         mapped.requestType shouldBe AuthorizationRequestType.ChangeOfEnergySupplierForOrganization
         mapped.externalReference shouldBe "contract-123"
         mapped.validTo shouldBe future
@@ -499,8 +499,8 @@ class ExposedRequestRepositoryTest : FunSpec({
         val approver = party()
         val expected = mapOf(
             insertRequest(party) to AuthorizationRequestStatus.Pending,
-            insertRequest(party, approvedBy = approver) to AuthorizationRequestStatus.Accepted,
-            insertRequest(party, approvedBy = approver, validTo = past) to AuthorizationRequestStatus.Accepted,
+            insertRequest(party, approvedBy = approver) to AuthorizationRequestStatus.Approved,
+            insertRequest(party, approvedBy = approver, validTo = past) to AuthorizationRequestStatus.Approved,
             insertRequest(party, validTo = past) to AuthorizationRequestStatus.Expired,
             insertRequest(party, status = DatabaseRequestStatus.Rejected) to AuthorizationRequestStatus.Rejected,
             insertRequest(party, status = DatabaseRequestStatus.Rejected, approvedBy = approver, validTo = past) to
@@ -577,7 +577,7 @@ class ExposedRequestRepositoryTest : FunSpec({
             val error = shouldThrow<RepositoryWriteError.ConflictError> {
                 repository.reject(id, TextLanguage.NB)
             }
-            error.detail shouldBe "Invalid transition for request $id from Accepted to Rejected"
+            error.detail shouldBe "Invalid transition for request $id from Approved to Rejected"
             repository.find(id) shouldBe original
         }
     }
@@ -613,7 +613,7 @@ class ExposedRequestRepositoryTest : FunSpec({
         (accepted.updatedAt in before..after) shouldBe true
         original.textLanguage shouldBe null
         accepted shouldBe original.copy(
-            status = AuthorizationRequestStatus.Accepted,
+            status = AuthorizationRequestStatus.Approved,
             approvedBy = grant.approvedBy,
             updatedAt = accepted.updatedAt,
             authorizationGrants = listOf(grant),
@@ -645,7 +645,7 @@ class ExposedRequestRepositoryTest : FunSpec({
         val listed = repository.findAndSortByCreatedAt(
             requestedBy,
             Pagination(),
-            listOf(AuthorizationRequestStatus.Accepted),
+            listOf(AuthorizationRequestStatus.Approved),
         ).items.single()
         listOf(found, listed).forEach { stored ->
             stored.copy(authorizationGrants = null) shouldBe accepted.copy(authorizationGrants = null)
@@ -730,13 +730,13 @@ class ExposedRequestRepositoryTest : FunSpec({
         val id = insertRequest(party())
         val original = repository.find(id)
         val accepted = repository.accept(id, listOf(grant(original)), TextLanguage.NB)
-        accepted.status shouldBe AuthorizationRequestStatus.Accepted
+        accepted.status shouldBe AuthorizationRequestStatus.Approved
 
         val error = shouldThrow<RepositoryWriteError.ConflictError> {
             repository.accept(id, listOf(grant(original)), TextLanguage.NB)
         }
 
-        error.detail shouldBe "Invalid transition for request $id from Accepted to Accepted"
+        error.detail shouldBe "Invalid transition for request $id from Approved to Approved"
         repository.find(id) shouldBe accepted
     }
 
@@ -749,7 +749,7 @@ class ExposedRequestRepositoryTest : FunSpec({
                 repository.accept(id, listOf(grant(original)), TextLanguage.NB)
             }
 
-            error.detail shouldBe "Invalid transition for request $id from Rejected to Accepted"
+            error.detail shouldBe "Invalid transition for request $id from Rejected to Approved"
             repository.find(id) shouldBe original
         }
     }
@@ -786,7 +786,7 @@ class ExposedRequestRepositoryTest : FunSpec({
         val error = results.single { it.isFailure }.exceptionOrNull()
         (error is RepositoryWriteError.ConflictError) shouldBe true
         val accepted = results.single { it.isSuccess }.getOrThrow()
-        accepted.status shouldBe AuthorizationRequestStatus.Accepted
+        accepted.status shouldBe AuthorizationRequestStatus.Approved
         accepted.authorizationGrants shouldBe listOf(grants[results.indexOfFirst { it.isSuccess }])
         repository.find(id) shouldBe accepted
     }
@@ -815,7 +815,7 @@ class ExposedRequestRepositoryTest : FunSpec({
         val error = results.single { it.isFailure }.exceptionOrNull()
         (error is RepositoryWriteError.ConflictError) shouldBe true
         winner.status shouldBe if (results.first().isSuccess) {
-            AuthorizationRequestStatus.Accepted
+            AuthorizationRequestStatus.Approved
         } else {
             AuthorizationRequestStatus.Rejected
         }
