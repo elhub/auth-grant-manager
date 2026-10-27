@@ -3,6 +3,7 @@ package no.elhub.auth.v1
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.ktor.client.request.get
+import io.ktor.client.request.patch
 import io.ktor.client.request.post
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.config.MapApplicationConfig
@@ -33,6 +34,7 @@ class RequestsModuleTest : FunSpec({
             client.post(V1_REQUESTS_PATH).status shouldBe HttpStatusCode.NotFound
             client.get("$V1_REQUESTS_PATH/$REQUEST_ID").status shouldBe HttpStatusCode.NotFound
             client.get(V1_REQUESTS_PATH).status shouldBe HttpStatusCode.NotFound
+            client.patch("$V1_REQUESTS_PATH/$REQUEST_ID").status shouldBe HttpStatusCode.NotFound
         }
     }
 
@@ -59,6 +61,30 @@ class RequestsModuleTest : FunSpec({
 
                 client.get("$V1_REQUESTS_PATH$path").status shouldBe HttpStatusCode.Unauthorized
             }
+        }
+    }
+
+    test("registers the protected PATCH $V1_REQUESTS_PATH/{id} route when v1 is enabled") {
+        testApplication {
+            environment {
+                config = MapApplicationConfig(
+                    "v1.enabled" to "true",
+                    "pdp.baseUrl" to "http://localhost/pdp",
+                )
+            }
+            application {
+                configureSerialization()
+                configureErrorHandling()
+                configureAuthorization()
+                dependencies {
+                    provide<PartyService> { mockk<PartyService>() }
+                    provide<PartyRepository> { ExposedPartyRepository() }
+                    provide<GrantRepository> { ExposedGrantRepository(resolve()) }
+                }
+                requestsModule()
+            }
+
+            client.patch("$V1_REQUESTS_PATH/$REQUEST_ID").status shouldBe HttpStatusCode.Unauthorized
         }
     }
 

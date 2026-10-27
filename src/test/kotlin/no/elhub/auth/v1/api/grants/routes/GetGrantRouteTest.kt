@@ -15,6 +15,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
 import no.elhub.auth.v0.config.jsonApiContentType
 import no.elhub.auth.v0.features.common.party.AuthorizationParty
 import no.elhub.auth.v0.features.common.party.PartyType
@@ -79,6 +80,24 @@ class GetGrantRouteTest : FunSpec({
             body.data.relationships.source.data.type shouldBe GrantSourceTypeResponse.AuthorizationDocument
             body.data.relationships.source.data.id shouldBe sourceId.toString()
             body.data.links.self shouldBe "$V1_GRANTS_PATH/$grantId"
+        }
+    }
+
+    test("GET /{id} omits validTo for a grant without an end date") {
+        coEvery { handler(grantId, authorizedParty) } returns grant.copy(type = AuthorizationGrantType.Persistent, validTo = null)
+
+        testApplication {
+            setupAppWith(authorizedParty) {
+                route(V1_GRANTS_PATH) { route(handler) }
+            }
+
+            val response = client.get("$V1_GRANTS_PATH/$grantId") { accept(jsonApiContentType) }
+
+            response.status shouldBe HttpStatusCode.OK
+            val attributes = Json.parseToJsonElement(response.bodyAsText())
+                .jsonObject.getValue("data").jsonObject.getValue("attributes").jsonObject
+            attributes.containsKey("validTo") shouldBe false
+            attributes.containsKey("validFrom") shouldBe true
         }
     }
 

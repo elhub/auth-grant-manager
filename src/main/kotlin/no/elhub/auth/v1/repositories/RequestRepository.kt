@@ -25,6 +25,7 @@ import no.elhub.auth.v1.domain.MeteringPointId
 import no.elhub.auth.v1.domain.RequestedAuthorizationScope
 import no.elhub.auth.v1.domain.ResourceConstraint
 import no.elhub.auth.v1.domain.ResourceType
+import no.elhub.auth.v1.domain.TextLanguage
 import org.jetbrains.exposed.v1.core.Op
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
@@ -57,8 +58,8 @@ interface RequestRepository {
     ): Page<AuthorizationRequest>
 
     suspend fun insert(request: AuthorizationRequest): AuthorizationRequest
-    suspend fun reject(requestId: UUID): AuthorizationRequest
-    suspend fun accept(requestId: UUID, grants: List<AuthorizationGrant>): AuthorizationRequest
+    suspend fun reject(requestId: UUID, textLanguage: TextLanguage): AuthorizationRequest
+    suspend fun accept(requestId: UUID, grants: List<AuthorizationGrant>, textLanguage: TextLanguage): AuthorizationRequest
 }
 
 class ExposedRequestRepository(
@@ -210,7 +211,7 @@ class ExposedRequestRepository(
         )
     }
 
-    override suspend fun reject(requestId: UUID): AuthorizationRequest = withTransaction {
+    override suspend fun reject(requestId: UUID, textLanguage: TextLanguage): AuthorizationRequest = withTransaction {
         // Lock the row using SELECT ... FOR NO KEY UPDATE for atomicity
         val row = AuthorizationRequestTable.selectAll()
             .where { AuthorizationRequestTable.id eq requestId }
@@ -234,6 +235,7 @@ class ExposedRequestRepository(
             where = { AuthorizationRequestTable.id eq requestId }
         ) {
             it[AuthorizationRequestTable.status] = DatabaseRequestStatus.Rejected
+            it[AuthorizationRequestTable.textLanguage] = textLanguage
             it[updatedAt] = now
         }.single().toAuthorizationRequest(
             requestedBy = partyRepository.find(row[AuthorizationRequestTable.requestedBy]).toAuthorizationParty(),
@@ -244,7 +246,11 @@ class ExposedRequestRepository(
         )
     }
 
-    override suspend fun accept(requestId: UUID, grants: List<AuthorizationGrant>): AuthorizationRequest = withTransaction {
+    override suspend fun accept(
+        requestId: UUID,
+        grants: List<AuthorizationGrant>,
+        textLanguage: TextLanguage,
+    ): AuthorizationRequest = withTransaction {
         val row = AuthorizationRequestTable.selectAll()
             .where { AuthorizationRequestTable.id eq requestId }
             .forUpdate(ForUpdateOption.PostgreSQL.ForNoKeyUpdate)
@@ -271,6 +277,7 @@ class ExposedRequestRepository(
         ) {
             it[AuthorizationRequestTable.approvedBy] = approvedById
             it[approvedAt] = now
+            it[AuthorizationRequestTable.textLanguage] = textLanguage
             it[updatedAt] = now
         }.single().toAuthorizationRequest(
             requestedBy = partyRepository.find(row[AuthorizationRequestTable.requestedBy]).toAuthorizationParty(),
@@ -371,6 +378,9 @@ object AuthorizationRequestTable : UUIDTable("auth_v1.authorization_request") {
     val redirectUri = text("redirect_uri").nullable()
     val requestedGrantValidFrom = timestamp("requested_grant_valid_from").nullable()
     val requestedGrantValidTo = timestamp("requested_grant_valid_to").nullable()
+    val textLanguage = varchar("text_language", 2)
+        .transform(wrap = TextLanguage::fromCode, unwrap = TextLanguage::code)
+        .nullable()
     val validFrom = timestamp("valid_from").clientDefault { now() }
     val validTo = timestamp("valid_to").clientDefault { now() }
     val updatedAt = timestamp("updated_at").clientDefault { now() }
@@ -416,6 +426,7 @@ fun ResultRow.toAuthorizationRequest(
         requestedOf = AuthorizationParty(id = requestedOf.id, type = requestedOf.type),
         approvedBy = approvedBy?.let { AuthorizationParty(id = approvedBy.id, type = approvedBy.type) },
         authorizationGrants = grants,
+        textLanguage = this[AuthorizationRequestTable.textLanguage],
     )
 }
 
