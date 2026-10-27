@@ -49,7 +49,7 @@ data class GetAuthorizationDocumentAttributes(
 
 @Serializable
 enum class ResponseAuthorizationDocumentStatus {
-    Signed,
+    Approved,
     Expired,
     Pending,
 }
@@ -79,7 +79,7 @@ fun AuthorizationDocument.toGetResponse() =
                 requestedScopes = requestedScopes.map(RequestedAuthorizationScope::toResponse),
                 externalReference = externalReference,
                 status = when (status) {
-                    AuthorizationDocumentStatus.Accepted -> ResponseAuthorizationDocumentStatus.Signed
+                    AuthorizationDocumentStatus.Approved -> ResponseAuthorizationDocumentStatus.Approved
                     AuthorizationDocumentStatus.Expired -> ResponseAuthorizationDocumentStatus.Expired
                     AuthorizationDocumentStatus.Pending -> ResponseAuthorizationDocumentStatus.Pending
                 },

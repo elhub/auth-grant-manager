@@ -1,11 +1,11 @@
 {
-  "summary": "requestType=EnergySupplierFrameworkAgreement",
+  "summary": "documentType=EnergySupplierFrameworkAgreement",
   "value": {
     "data": {
-      "id": "01997291-7e8b-7000-8000-000000000022",
-      "type": "AuthorizationRequest",
+      "id": "01997291-7e8b-7000-8000-000000000021",
+      "type": "AuthorizationDocument",
       "attributes": {
-        "requestType": "EnergySupplierFrameworkAgreement",
+        "documentType": "EnergySupplierFrameworkAgreement",
         "requestedScopes": [
           {
             "resourceType": "MeteringPointContract",
@@ -20,10 +20,7 @@
         "externalReference": "framework-agreement-2026-001",
         "requestedGrantValidFrom": "2026-11-01T00:00:00+01:00",
         "requestedGrantValidTo": "2027-11-01T00:00:00+01:00",
-        "redirectUri": "https://supplier.example/authorization/return",
-        "status": "Accepted",
-        "textReference": "v1",
-        "textLanguage": "nb",
+        "status": "Approved",
         "validFrom": "2026-10-22T10:00:00Z",
         "validTo": "2026-11-21T10:00:00Z",
         "createdAt": "2026-10-22T10:00:00Z",
@@ -48,11 +45,17 @@
             "id": "999888777"
           }
         },
+        "approvedBy": {
+          "data": {
+            "type": "Person",
+            "id": "01019012345"
+          }
+        },
         "authorizationGrants": {
           "data": [
             {
               "type": "PersistentGrant",
-              "id": "01997291-7e8b-7000-8000-000000000025"
+              "id": "01997291-7e8b-7000-8000-000000000024"
             }
           ]
         }

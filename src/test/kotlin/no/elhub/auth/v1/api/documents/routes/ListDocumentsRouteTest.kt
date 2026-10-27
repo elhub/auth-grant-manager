@@ -68,16 +68,16 @@ class ListDocumentsRouteTest : FunSpec({
     }
 
     listOf(
-        "Signed" to listOf(AuthorizationDocumentStatus.Accepted),
+        "Approved" to listOf(AuthorizationDocumentStatus.Approved),
         "Expired" to listOf(AuthorizationDocumentStatus.Expired),
         "Pending" to listOf(AuthorizationDocumentStatus.Pending),
-        "Signed,Expired,Signed" to listOf(AuthorizationDocumentStatus.Accepted, AuthorizationDocumentStatus.Expired),
+        "Approved,Expired,Approved" to listOf(AuthorizationDocumentStatus.Approved, AuthorizationDocumentStatus.Expired),
         "" to emptyList(),
     ).forEach { (filter, statuses) ->
         test("GET maps public status filter '$filter' to domain statuses") {
             val pagination = Pagination(page = 1, size = 2)
             coEvery { handler(authorizedParty, pagination, statuses) } returns
-                Page(listOf(document.copy(status = AuthorizationDocumentStatus.Accepted)), 5, pagination)
+                Page(listOf(document.copy(status = AuthorizationDocumentStatus.Approved)), 5, pagination)
 
             testApplication {
                 setupAppWith(authorizedParty) {
@@ -95,13 +95,13 @@ class ListDocumentsRouteTest : FunSpec({
 
                 response.status shouldBe HttpStatusCode.OK
                 val body = response.body<JsonApiListAuthorizationDocumentsResponse>()
-                body.data.single().attributes.status shouldBe ResponseAuthorizationDocumentStatus.Signed
+                body.data.single().attributes.status shouldBe ResponseAuthorizationDocumentStatus.Approved
                 coVerify(exactly = 1) { handler(authorizedParty, pagination, statuses) }
             }
         }
     }
 
-    listOf("Accepted", "Rejected", "signed", "Pending,Unknown", "Signed, Expired").forEach { filter ->
+    listOf("Accepted", "Signed", "Rejected", "approved", "Pending,Unknown", "Approved, Expired").forEach { filter ->
         test("GET rejects invalid status filter '$filter' without calling the handler") {
             testApplication {
                 setupAppWith(authorizedParty) {

@@ -30,7 +30,7 @@ class UpdateRequestHandler(
 
         return try {
             when (status) {
-                AuthorizationRequestStatus.Accepted -> {
+                AuthorizationRequestStatus.Approved -> {
                     ensurePending(request.status)
                     val grants = request.toGrants(approvedBy = authorizedParty)
                     requestRepository.accept(id, grants, textLanguage)
@@ -52,7 +52,7 @@ class UpdateRequestHandler(
         when (status) {
             AuthorizationRequestStatus.Pending -> Unit
             AuthorizationRequestStatus.Expired -> throw UpdateRequestError.Expired()
-            AuthorizationRequestStatus.Accepted, AuthorizationRequestStatus.Rejected -> throw UpdateRequestError.AlreadyProcessed()
+            AuthorizationRequestStatus.Approved, AuthorizationRequestStatus.Rejected -> throw UpdateRequestError.AlreadyProcessed()
         }
     }
 }

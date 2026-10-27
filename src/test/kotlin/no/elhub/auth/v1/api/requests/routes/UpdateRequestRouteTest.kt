@@ -55,7 +55,7 @@ class UpdateRequestRouteTest : FunSpec({
     val path = "$V1_REQUESTS_PATH/$id"
 
     fun body(
-        status: String = "Accepted",
+        status: String = "Approved",
         textLanguage: String = "nb",
         dataId: String = id.toString(),
         type: String = "AuthorizationRequest",
@@ -76,8 +76,8 @@ class UpdateRequestRouteTest : FunSpec({
             validTo = request.validTo,
             scopes = emptyList(),
         )
-        coEvery { handler(id, requestedOf, AuthorizationRequestStatus.Accepted, TextLanguage.NN) } returns request.copy(
-            status = AuthorizationRequestStatus.Accepted,
+        coEvery { handler(id, requestedOf, AuthorizationRequestStatus.Approved, TextLanguage.NN) } returns request.copy(
+            status = AuthorizationRequestStatus.Approved,
             approvedBy = requestedOf,
             authorizationGrants = listOf(grant),
             textLanguage = TextLanguage.NN,
@@ -98,7 +98,7 @@ class UpdateRequestRouteTest : FunSpec({
             response.contentType()?.withoutParameters() shouldBe jsonApiContentType
             val data = response.body<JsonApiGetAuthorizationRequestResponse>().data
             data.id shouldBe id.toString()
-            data.attributes.status shouldBe AuthorizationRequestStatus.Accepted
+            data.attributes.status shouldBe AuthorizationRequestStatus.Approved
             data.attributes.textLanguage shouldBe TextLanguage.NN
             data.relationships.authorizationGrants.shouldNotBeNull().data.single().id shouldBe grant.id.toString()
         }
@@ -125,8 +125,8 @@ class UpdateRequestRouteTest : FunSpec({
     listOf(
         "invalid path ID" to ("$V1_REQUESTS_PATH/not-a-uuid" to body()),
         "unsupported text language" to (path to body(textLanguage = "sv")),
-        "missing text language" to (path to """{"data":{"id":"$id","type":"AuthorizationRequest","attributes":{"status":"Accepted"}}}"""),
-        "unknown status" to (path to body(status = "Approved")),
+        "missing text language" to (path to """{"data":{"id":"$id","type":"AuthorizationRequest","attributes":{"status":"Approved"}}}"""),
+        "unknown status" to (path to body(status = "Accepted")),
         "malformed JSON" to (path to "{"),
     ).forEach { (description, input) ->
         test("PATCH returns 400 for $description without calling the handler") {

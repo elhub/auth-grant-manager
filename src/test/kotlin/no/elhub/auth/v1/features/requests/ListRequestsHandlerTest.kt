@@ -24,7 +24,7 @@ class ListRequestsHandlerTest : FunSpec({
     val handler = ListRequestsHandler(requestRepository)
     val party = AuthorizationParty("123456789", PartyType.OrganizationEntity)
     val pagination = Pagination(page = 1, size = 2)
-    val statuses = listOf(AuthorizationRequestStatus.Pending, AuthorizationRequestStatus.Accepted)
+    val statuses = listOf(AuthorizationRequestStatus.Pending, AuthorizationRequestStatus.Approved)
     val request = AuthorizationRequest.new(
         requestType = AuthorizationRequestType.ChangeOfEnergySupplierForOrganization,
         requestedScopes = emptyList(),

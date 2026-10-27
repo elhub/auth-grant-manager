@@ -99,7 +99,7 @@ class GetRequestRouteTest : FunSpec({
             scopes = emptyList(),
         )
         coEvery { handler(requestId, authorizedParty) } returns request.copy(
-            status = AuthorizationRequestStatus.Accepted,
+            status = AuthorizationRequestStatus.Approved,
             approvedBy = request.requestedOf,
             authorizationGrants = listOf(grant),
         )

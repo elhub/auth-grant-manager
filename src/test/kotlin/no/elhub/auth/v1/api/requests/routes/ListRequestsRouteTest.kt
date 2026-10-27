@@ -83,7 +83,7 @@ class ListRequestsRouteTest : FunSpec({
             scopes = emptyList(),
         )
         val accepted = request.copy(
-            status = AuthorizationRequestStatus.Accepted,
+            status = AuthorizationRequestStatus.Approved,
             approvedBy = request.requestedOf,
             authorizationGrants = listOf(grant),
         )
@@ -106,10 +106,10 @@ class ListRequestsRouteTest : FunSpec({
 
     listOf(
         "Pending" to listOf(AuthorizationRequestStatus.Pending),
-        "Accepted" to listOf(AuthorizationRequestStatus.Accepted),
+        "Approved" to listOf(AuthorizationRequestStatus.Approved),
         "Rejected" to listOf(AuthorizationRequestStatus.Rejected),
         "Expired" to listOf(AuthorizationRequestStatus.Expired),
-        "Pending,Accepted,Pending" to listOf(AuthorizationRequestStatus.Pending, AuthorizationRequestStatus.Accepted),
+        "Pending,Approved,Pending" to listOf(AuthorizationRequestStatus.Pending, AuthorizationRequestStatus.Approved),
         "" to emptyList(),
     ).forEach { (filter, statuses) ->
         test("GET passes status filter '$filter' to the handler") {
@@ -138,7 +138,7 @@ class ListRequestsRouteTest : FunSpec({
         }
     }
 
-    listOf("Signed", "pending", "Pending,Unknown", "Pending, Accepted").forEach { filter ->
+    listOf("Accepted", "pending", "Pending,Unknown", "Pending, Approved").forEach { filter ->
         test("GET rejects invalid status filter '$filter' without calling the handler") {
             testApplication {
                 setupAppWith(authorizedParty) {
