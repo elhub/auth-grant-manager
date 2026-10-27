@@ -1,9 +1,8 @@
 package no.elhub.auth.v1.domain
 
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.atStartOfDayIn
 import kotlinx.serialization.json.JsonObject
 import no.elhub.auth.v0.features.common.party.AuthorizationParty
+import no.elhub.auth.v1.common.startOfDayOslo
 import no.elhub.auth.v1.domain.requests.AuthorizationRequestTypeDetails
 import java.util.UUID
 import kotlin.time.Clock
@@ -77,7 +76,7 @@ data class AuthorizationRequest(
                                     constraintKind = AuthorizationScopeConstraintKind.AllowedChanges,
                                     attribute = AuthorizationScopeConstraintAttribute.ValidFrom,
                                     value = ResourceConstraint.ValidFrom(
-                                        details.moveInDate.atStartOfDayIn(TimeZone.of("Europe/Oslo")),
+                                        details.moveInDate.startOfDayOslo(),
                                     ),
                                 ),
                             ),

@@ -1,8 +1,5 @@
 package no.elhub.auth.v1.common
 
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.atStartOfDayIn
-import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Instant
 
 data class GrantValidity(
@@ -20,8 +17,7 @@ fun frameworkAgreementGrantValidity(
     now: Instant,
     invalidValidity: () -> Nothing,
 ): GrantValidity {
-    val oslo = TimeZone.of("Europe/Oslo")
-    val startOfToday = now.toLocalDateTime(oslo).date.atStartOfDayIn(oslo)
+    val startOfToday = startOfTodayOslo(now)
     val validFrom = maxOf(requestedValidFrom ?: startOfToday, startOfToday)
     if (requestedValidTo != null && (requestedValidTo <= now || validFrom > requestedValidTo)) {
         invalidValidity()

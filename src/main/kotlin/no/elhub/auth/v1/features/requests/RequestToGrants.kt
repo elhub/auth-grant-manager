@@ -1,15 +1,13 @@
 package no.elhub.auth.v1.features.requests
 
 import kotlinx.datetime.DateTimeUnit
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.atStartOfDayIn
-import kotlinx.datetime.atTime
 import kotlinx.datetime.plus
-import kotlinx.datetime.toInstant
-import kotlinx.datetime.toLocalDateTime
 import no.elhub.auth.v0.features.common.party.AuthorizationParty
 import no.elhub.auth.v1.common.GrantValidity
+import no.elhub.auth.v1.common.endOfDayOslo
 import no.elhub.auth.v1.common.now
+import no.elhub.auth.v1.common.startOfDayOslo
+import no.elhub.auth.v1.common.todayOslo
 import no.elhub.auth.v1.domain.AuthorizationGrant
 import no.elhub.auth.v1.domain.AuthorizationGrantSourceType
 import no.elhub.auth.v1.domain.AuthorizationGrantType
@@ -24,7 +22,6 @@ import no.elhub.auth.v1.domain.ResourceType
 import kotlin.time.Instant
 import no.elhub.auth.v1.common.frameworkAgreementGrantValidity as calculateFrameworkAgreementGrantValidity
 
-private val OSLO = TimeZone.of("Europe/Oslo")
 private const val CONSUMABLE_GRANT_VALID_YEARS = 2
 
 // The requested scopes are built by AuthorizationRequest.create for each request type, so their shape is trusted here.
@@ -155,10 +152,10 @@ private fun AuthorizationRequest.energySupplierFrameworkAgreementGrants(
  * Valid from the start of today until the end of the day (23:59:59) two years ahead, in Norwegian time.
  */
 fun consumableGrantValidity(now: Instant): GrantValidity {
-    val today = now.toLocalDateTime(OSLO).date
+    val today = todayOslo(now)
     return GrantValidity(
-        validFrom = today.atStartOfDayIn(OSLO),
-        validTo = today.plus(CONSUMABLE_GRANT_VALID_YEARS, DateTimeUnit.YEAR).atTime(23, 59, 59).toInstant(OSLO),
+        validFrom = today.startOfDayOslo(),
+        validTo = today.plus(CONSUMABLE_GRANT_VALID_YEARS, DateTimeUnit.YEAR).endOfDayOslo(),
     )
 }
 

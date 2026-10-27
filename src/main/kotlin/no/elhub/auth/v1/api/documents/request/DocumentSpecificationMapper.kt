@@ -1,9 +1,8 @@
 package no.elhub.auth.v1.api.documents.request
 
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
 import no.elhub.auth.v1.api.common.errors.InputError
+import no.elhub.auth.v1.common.todayOslo
 import no.elhub.auth.v1.domain.AuthorizationDocumentType
 import no.elhub.auth.v1.domain.AuthorizationScopeConstraintAttribute
 import no.elhub.auth.v1.domain.DomainError
@@ -171,7 +170,7 @@ private fun List<RequestedScope>.toMoveInSpecification(): DocumentSpecification.
         LocalDate.parse(validFromValue)
     } catch (_: IllegalArgumentException) {
         try {
-            Instant.parse(validFromValue).toLocalDateTime(TimeZone.of("Europe/Oslo")).date
+            todayOslo(Instant.parse(validFromValue))
         } catch (_: IllegalArgumentException) {
             throw InputError.InvalidCreateAuthorizationDocumentPayload(
                 "requestedScopes[0].allowedChanges validFrom must be an ISO date or timestamp",

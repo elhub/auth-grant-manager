@@ -1,8 +1,7 @@
 package no.elhub.auth.v1.domain.documents
 
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.atStartOfDayIn
+import no.elhub.auth.v1.common.startOfDayOslo
 import no.elhub.auth.v1.domain.AuthorizationDocumentType
 import no.elhub.auth.v1.domain.AuthorizationScopeConstraint
 import no.elhub.auth.v1.domain.AuthorizationScopeConstraintAttribute
@@ -84,7 +83,7 @@ sealed interface DocumentSpecification {
                     constraintKind = AuthorizationScopeConstraintKind.AllowedChanges,
                     attribute = AuthorizationScopeConstraintAttribute.ValidFrom,
                     value = ResourceConstraint.ValidFrom(
-                        validFrom.atStartOfDayIn(TimeZone.of("Europe/Oslo")),
+                        validFrom.startOfDayOslo(),
                     ),
                 ),
             ),

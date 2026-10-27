@@ -1,9 +1,8 @@
 package no.elhub.auth.v1.api.requests.request
 
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
 import no.elhub.auth.v1.api.common.errors.InputError
+import no.elhub.auth.v1.common.todayOslo
 import no.elhub.auth.v1.domain.AuthorizationRequestType
 import no.elhub.auth.v1.domain.AuthorizationScopeConstraintAttribute
 import no.elhub.auth.v1.domain.DomainError
@@ -174,7 +173,7 @@ private fun String.toDateOrNull(): LocalDate? =
         LocalDate.parse(this)
     } catch (_: IllegalArgumentException) {
         try {
-            Instant.parse(this).toLocalDateTime(TimeZone.of("Europe/Oslo")).date
+            todayOslo(Instant.parse(this))
         } catch (_: IllegalArgumentException) {
             null
         }
