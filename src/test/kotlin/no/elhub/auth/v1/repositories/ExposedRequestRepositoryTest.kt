@@ -646,6 +646,24 @@ class ExposedRequestRepositoryTest : FunSpec({
         grants.forEach { grant -> grantRepository.find(grant.id) shouldBe grant }
     }
 
+    test("list attaches each request's own grants and leaves requests without grants empty") {
+        val requestedBy = party(PartyType.Organization)
+        val withGrantsId = insertRequest(requestedBy, created = createdAt + 2.days)
+        val otherWithGrantsId = insertRequest(requestedBy, created = createdAt + 1.days)
+        val withoutGrantsId = insertRequest(requestedBy, created = createdAt)
+        val firstGrants = listOf(grant(repository.find(withGrantsId)), grant(repository.find(withGrantsId)))
+        val otherGrants = listOf(grant(repository.find(otherWithGrantsId)))
+        repository.accept(withGrantsId, firstGrants)
+        repository.accept(otherWithGrantsId, otherGrants)
+
+        val items = repository.findAndSortByCreatedAt(requestedBy, Pagination(), emptyList()).items
+
+        items.map { it.id } shouldBe listOf(withGrantsId, otherWithGrantsId, withoutGrantsId)
+        items[0].authorizationGrants.shouldContainExactlyInAnyOrder(firstGrants)
+        items[1].authorizationGrants.shouldContainExactlyInAnyOrder(otherGrants)
+        items[2].authorizationGrants shouldBe null
+    }
+
     test("accept(id, grant) throws not found for a nonexistent ID") {
         val requestedBy = party()
         val request = AuthorizationRequest.new(

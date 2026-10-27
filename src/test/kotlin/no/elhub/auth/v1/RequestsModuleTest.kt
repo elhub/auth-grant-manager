@@ -32,30 +32,33 @@ class RequestsModuleTest : FunSpec({
 
             client.post(V1_REQUESTS_PATH).status shouldBe HttpStatusCode.NotFound
             client.get("$V1_REQUESTS_PATH/$REQUEST_ID").status shouldBe HttpStatusCode.NotFound
+            client.get(V1_REQUESTS_PATH).status shouldBe HttpStatusCode.NotFound
         }
     }
 
-    test("registers the protected GET $V1_REQUESTS_PATH/{id} route when v1 is enabled") {
-        testApplication {
-            environment {
-                config = MapApplicationConfig(
-                    "v1.enabled" to "true",
-                    "pdp.baseUrl" to "http://localhost/pdp",
-                )
-            }
-            application {
-                configureSerialization()
-                configureErrorHandling()
-                configureAuthorization()
-                dependencies {
-                    provide<PartyService> { mockk<PartyService>() }
-                    provide<PartyRepository> { ExposedPartyRepository() }
-                    provide<GrantRepository> { ExposedGrantRepository(resolve()) }
+    listOf("", "/$REQUEST_ID").forEach { path ->
+        test("registers the protected GET $V1_REQUESTS_PATH$path route when v1 is enabled") {
+            testApplication {
+                environment {
+                    config = MapApplicationConfig(
+                        "v1.enabled" to "true",
+                        "pdp.baseUrl" to "http://localhost/pdp",
+                    )
                 }
-                requestsModule()
-            }
+                application {
+                    configureSerialization()
+                    configureErrorHandling()
+                    configureAuthorization()
+                    dependencies {
+                        provide<PartyService> { mockk<PartyService>() }
+                        provide<PartyRepository> { ExposedPartyRepository() }
+                        provide<GrantRepository> { ExposedGrantRepository(resolve()) }
+                    }
+                    requestsModule()
+                }
 
-            client.get("$V1_REQUESTS_PATH/$REQUEST_ID").status shouldBe HttpStatusCode.Unauthorized
+                client.get("$V1_REQUESTS_PATH$path").status shouldBe HttpStatusCode.Unauthorized
+            }
         }
     }
 
