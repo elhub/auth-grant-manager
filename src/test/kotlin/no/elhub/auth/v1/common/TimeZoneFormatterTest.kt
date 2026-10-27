@@ -7,6 +7,14 @@ import kotlinx.datetime.LocalDateTime
 import kotlin.time.Instant
 
 class TimeZoneFormatterTest : FunSpec({
+    test("parses ISO dates and maps timestamps to the Oslo calendar date") {
+        "2026-07-01".toDateOrNull() shouldBe LocalDate.parse("2026-07-01")
+        "2026-07-01T22:30:00Z".toDateOrNull() shouldBe LocalDate.parse("2026-07-02")
+        "2026-07-02T00:30:00+02:00".toDateOrNull() shouldBe LocalDate.parse("2026-07-02")
+        "2026-02-30".toDateOrNull() shouldBe null
+        "not-a-date".toDateOrNull() shouldBe null
+    }
+
     test("converts instants to Oslo local time and date across midnight") {
         val instant = Instant.parse("2026-07-01T22:30:00Z")
 

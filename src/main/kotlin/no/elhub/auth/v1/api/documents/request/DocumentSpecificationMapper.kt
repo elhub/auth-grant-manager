@@ -1,8 +1,8 @@
 package no.elhub.auth.v1.api.documents.request
 
-import kotlinx.datetime.LocalDate
 import no.elhub.auth.v1.api.common.errors.InputError
-import no.elhub.auth.v1.common.todayOslo
+import no.elhub.auth.v1.common.now
+import no.elhub.auth.v1.common.toDateOrNull
 import no.elhub.auth.v1.domain.AuthorizationDocumentType
 import no.elhub.auth.v1.domain.AuthorizationScopeConstraintAttribute
 import no.elhub.auth.v1.domain.DomainError
@@ -10,17 +10,14 @@ import no.elhub.auth.v1.domain.MeteringPointId
 import no.elhub.auth.v1.domain.ResourceConstraint
 import no.elhub.auth.v1.domain.ResourceType
 import no.elhub.auth.v1.domain.documents.DocumentSpecification
-import java.time.OffsetDateTime
-import kotlin.time.Clock
 import kotlin.time.Instant
-import kotlin.time.toKotlinInstant
 
 fun toDocumentSpecification(
     documentType: AuthorizationDocumentType,
     requestedScopes: List<RequestedScope>? = null,
-    requestedGrantValidFrom: OffsetDateTime? = null,
-    requestedGrantValidTo: OffsetDateTime? = null,
-    now: Instant = Clock.System.now(),
+    requestedGrantValidFrom: Instant? = null,
+    requestedGrantValidTo: Instant? = null,
+    now: Instant = now(),
 ): DocumentSpecification {
     if (documentType != AuthorizationDocumentType.EnergySupplierFrameworkAgreement) {
         if (requestedGrantValidFrom != null || requestedGrantValidTo != null) {
@@ -46,8 +43,8 @@ fun toDocumentSpecification(
                     "requestedScopes is not supported for $documentType",
                 )
             }
-            val validFrom = requestedGrantValidFrom?.toInstant()?.toKotlinInstant()
-            val validTo = requestedGrantValidTo?.toInstant()?.toKotlinInstant()
+            val validFrom = requestedGrantValidFrom
+            val validTo = requestedGrantValidTo
             if (validFrom != null && validFrom <= now) {
                 throw InputError.InvalidCreateAuthorizationDocumentPayload("requestedGrantValidFrom must be in the future")
             }
@@ -166,17 +163,10 @@ private fun List<RequestedScope>.toMoveInSpecification(): DocumentSpecification.
     }
 
     val validFromValue = validFromValues.single()
-    val validFrom = try {
-        LocalDate.parse(validFromValue)
-    } catch (_: IllegalArgumentException) {
-        try {
-            todayOslo(Instant.parse(validFromValue))
-        } catch (_: IllegalArgumentException) {
-            throw InputError.InvalidCreateAuthorizationDocumentPayload(
-                "requestedScopes[0].allowedChanges validFrom must be an ISO date or timestamp",
-            )
-        }
-    }
+    val validFrom = validFromValue.toDateOrNull()
+        ?: throw InputError.InvalidCreateAuthorizationDocumentPayload(
+            "requestedScopes[0].allowedChanges validFrom must be an ISO date or timestamp",
+        )
 
     return DocumentSpecification.MoveInAndChangeOfEnergySupplierForOrganization(
         meteringPointIds = ResourceConstraint.MeteringPoints(meteringPointIds),

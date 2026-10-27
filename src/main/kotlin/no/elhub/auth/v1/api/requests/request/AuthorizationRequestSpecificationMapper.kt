@@ -2,7 +2,8 @@ package no.elhub.auth.v1.api.requests.request
 
 import kotlinx.datetime.LocalDate
 import no.elhub.auth.v1.api.common.errors.InputError
-import no.elhub.auth.v1.common.todayOslo
+import no.elhub.auth.v1.common.now
+import no.elhub.auth.v1.common.toDateOrNull
 import no.elhub.auth.v1.domain.AuthorizationRequestType
 import no.elhub.auth.v1.domain.AuthorizationScopeConstraintAttribute
 import no.elhub.auth.v1.domain.DomainError
@@ -13,13 +14,10 @@ import no.elhub.auth.v1.domain.requests.AuthorizationRequestSpecification
 import no.elhub.auth.v1.domain.requests.AuthorizationRequestTypeDetails
 import java.net.URI
 import java.net.URISyntaxException
-import java.time.OffsetDateTime
-import kotlin.time.Clock
 import kotlin.time.Instant
-import kotlin.time.toKotlinInstant
 
 fun CreateAuthorizationRequestAttributes.validateAndReturnAuthorizationRequestSpecification(
-    now: Instant = Clock.System.now(),
+    now: Instant = now(),
 ): AuthorizationRequestSpecification =
     AuthorizationRequestSpecification(
         externalReference = externalReference,
@@ -83,8 +81,8 @@ private fun CreateAuthorizationRequestAttributes.validateAndReturnTypeDetails(
             requireRequestedGrantValidFromBeforeValidTo()
 
             AuthorizationRequestTypeDetails.EnergySupplierFrameworkAgreement(
-                requestedGrantValidFrom = requestedGrantValidFrom?.toKotlinInstant(),
-                requestedGrantValidTo = requestedGrantValidTo?.toKotlinInstant(),
+                requestedGrantValidFrom = requestedGrantValidFrom,
+                requestedGrantValidTo = requestedGrantValidTo,
             )
         }
     }
@@ -105,10 +103,10 @@ private fun CreateAuthorizationRequestAttributes.rejectRequestedGrantValidity() 
 }
 
 private fun CreateAuthorizationRequestAttributes.requireRequestedGrantValidityInFuture(now: Instant) {
-    if (requestedGrantValidFrom != null && requestedGrantValidFrom.toKotlinInstant() <= now) {
+    if (requestedGrantValidFrom != null && requestedGrantValidFrom <= now) {
         invalid("requestedGrantValidFrom must be in the future")
     }
-    if (requestedGrantValidTo != null && requestedGrantValidTo.toKotlinInstant() <= now) {
+    if (requestedGrantValidTo != null && requestedGrantValidTo <= now) {
         invalid("requestedGrantValidTo must be in the future")
     }
 }
@@ -116,7 +114,7 @@ private fun CreateAuthorizationRequestAttributes.requireRequestedGrantValidityIn
 private fun CreateAuthorizationRequestAttributes.requireRequestedGrantValidFromBeforeValidTo() {
     if (requestedGrantValidFrom != null &&
         requestedGrantValidTo != null &&
-        !requestedGrantValidFrom.isBefore(requestedGrantValidTo)
+        requestedGrantValidFrom >= requestedGrantValidTo
     ) {
         invalid("requestedGrantValidFrom must be before requestedGrantValidTo")
     }
@@ -167,19 +165,6 @@ private fun String.toMeteringPointIdOrNull(): MeteringPointId? =
     } catch (_: DomainError.InvalidMeteringPointId) {
         null
     }
-
-private fun String.toDateOrNull(): LocalDate? =
-    try {
-        LocalDate.parse(this)
-    } catch (_: IllegalArgumentException) {
-        try {
-            todayOslo(Instant.parse(this))
-        } catch (_: IllegalArgumentException) {
-            null
-        }
-    }
-
-private fun OffsetDateTime.toKotlinInstant(): Instant = toInstant().toKotlinInstant()
 
 private fun invalid(detail: String): Nothing =
     throw InputError.InvalidCreateAuthorizationRequestPayload(detail)

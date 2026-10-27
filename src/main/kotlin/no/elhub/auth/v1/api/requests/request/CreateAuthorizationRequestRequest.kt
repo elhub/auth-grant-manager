@@ -1,20 +1,17 @@
 package no.elhub.auth.v1.api.requests.request
 
 import kotlinx.serialization.Serializable
-import no.elhub.auth.v1.common.OffsetDateTimeSerializer
 import no.elhub.auth.v1.domain.AuthorizationRequestType
 import no.elhub.devxp.jsonapi.model.JsonApiAttributes
-import java.time.OffsetDateTime
+import kotlin.time.Instant
 
 @Serializable
 data class CreateAuthorizationRequestAttributes(
     val requestType: AuthorizationRequestType,
     val requestedScopes: List<RequestedScope>? = null,
     val externalReference: String? = null,
-    @Serializable(with = OffsetDateTimeSerializer::class)
-    val requestedGrantValidFrom: OffsetDateTime? = null,
-    @Serializable(with = OffsetDateTimeSerializer::class)
-    val requestedGrantValidTo: OffsetDateTime? = null,
+    val requestedGrantValidFrom: Instant? = null,
+    val requestedGrantValidTo: Instant? = null,
     val redirectUri: String? = null,
 ) : JsonApiAttributes
 

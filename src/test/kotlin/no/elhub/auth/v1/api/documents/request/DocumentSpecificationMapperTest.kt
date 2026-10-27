@@ -12,7 +12,6 @@ import no.elhub.auth.v1.domain.MeteringPointContractType
 import no.elhub.auth.v1.domain.MeteringPointId
 import no.elhub.auth.v1.domain.ResourceConstraint
 import no.elhub.auth.v1.domain.documents.DocumentSpecification
-import java.time.OffsetDateTime
 import kotlin.time.Instant
 
 class DocumentSpecificationMapperTest : FunSpec({
@@ -53,8 +52,8 @@ class DocumentSpecificationMapperTest : FunSpec({
     context("EnergySupplierFrameworkAgreement") {
         val type = AuthorizationDocumentType.EnergySupplierFrameworkAgreement
         val now = Instant.parse("2026-01-01T00:00:00Z")
-        val validFrom = OffsetDateTime.parse("2026-02-01T00:00:00+01:00")
-        val validTo = OffsetDateTime.parse("2027-02-01T00:00:00+01:00")
+        val validFrom = Instant.parse("2026-02-01T00:00:00+01:00")
+        val validTo = Instant.parse("2027-02-01T00:00:00+01:00")
 
         test("deserializes omitted scopes and optional offset dates") {
             val attributes = Json.decodeFromString<CreateAuthorizationDocumentAttributes>(
@@ -100,7 +99,7 @@ class DocumentSpecificationMapperTest : FunSpec({
 
         test("rejects past and present validity dates") {
             listOf("2025-12-31T00:00:00Z", "2026-01-01T01:00:00+01:00").forEach { value ->
-                val date = OffsetDateTime.parse(value)
+                val date = Instant.parse(value)
                 invalidPayload(
                     { toDocumentSpecification(type, requestedGrantValidFrom = date, now = now) },
                     "requestedGrantValidFrom must be in the future",
@@ -113,7 +112,7 @@ class DocumentSpecificationMapperTest : FunSpec({
         }
 
         test("rejects reversed and equal validity instants regardless of offset") {
-            listOf(validTo, validFrom, OffsetDateTime.parse("2026-01-31T23:00:00Z")).forEach { from ->
+            listOf(validTo, validFrom, Instant.parse("2026-01-31T23:00:00Z")).forEach { from ->
                 invalidPayload(
                     {
                         toDocumentSpecification(
@@ -130,7 +129,7 @@ class DocumentSpecificationMapperTest : FunSpec({
     }
 
     test("existing document types require scopes and reject either requested grant date") {
-        val date = OffsetDateTime.parse("2100-01-01T00:00:00Z")
+        val date = Instant.parse("2100-01-01T00:00:00Z")
         listOf(supplierChangeType, moveInType).forEach { type ->
             invalidPayload(
                 { toDocumentSpecification(type) },

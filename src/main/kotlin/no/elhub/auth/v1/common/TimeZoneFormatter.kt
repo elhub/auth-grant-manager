@@ -22,3 +22,14 @@ fun startOfTodayOslo(instant: Instant = now()) = todayOslo(instant).startOfDayOs
 fun LocalDate.startOfDayOslo() = atStartOfDayIn(OSLO)
 
 fun LocalDate.endOfDayOslo() = atTime(23, 59, 59).toInstant(OSLO)
+
+fun String.toDateOrNull(): LocalDate? =
+    try {
+        LocalDate.parse(this)
+    } catch (_: IllegalArgumentException) {
+        try {
+            todayOslo(Instant.parse(this))
+        } catch (_: IllegalArgumentException) {
+            null
+        }
+    }

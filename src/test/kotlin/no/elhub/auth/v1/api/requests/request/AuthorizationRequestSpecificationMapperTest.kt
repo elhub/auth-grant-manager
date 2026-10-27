@@ -10,14 +10,13 @@ import no.elhub.auth.v1.domain.MeteringPointId
 import no.elhub.auth.v1.domain.ResourceConstraint
 import no.elhub.auth.v1.domain.requests.AuthorizationRequestSpecification
 import no.elhub.auth.v1.domain.requests.AuthorizationRequestTypeDetails
-import java.time.OffsetDateTime
 import kotlin.time.Instant
 
 class AuthorizationRequestSpecificationMapperTest : FunSpec({
     val now = Instant.parse("2026-01-01T00:00:00Z")
     val validMeteringPointId = "707057500000000001"
-    val validFrom = OffsetDateTime.parse("2026-02-01T00:00:00+01:00")
-    val validTo = OffsetDateTime.parse("2027-02-01T00:00:00+01:00")
+    val validFrom = Instant.parse("2026-02-01T00:00:00+01:00")
+    val validTo = Instant.parse("2027-02-01T00:00:00+01:00")
 
     fun meteringPointScope(allowedChanges: List<ScopeConstraint> = emptyList()) = RequestedScope(
         resourceType = "MeteringPointContract",
@@ -28,8 +27,8 @@ class AuthorizationRequestSpecificationMapperTest : FunSpec({
     fun attributes(
         requestType: AuthorizationRequestType,
         requestedScopes: List<RequestedScope>? = null,
-        requestedGrantValidFrom: OffsetDateTime? = null,
-        requestedGrantValidTo: OffsetDateTime? = null,
+        requestedGrantValidFrom: Instant? = null,
+        requestedGrantValidTo: Instant? = null,
         redirectUri: String? = "https://example.com/callback",
     ) = CreateAuthorizationRequestAttributes(
         requestType = requestType,
@@ -127,11 +126,11 @@ class AuthorizationRequestSpecificationMapperTest : FunSpec({
 
         test("requires requested grant validity to be in the future") {
             invalidPayload("requestedGrantValidFrom must be in the future") {
-                attributes(type, requestedGrantValidFrom = OffsetDateTime.parse("2025-12-31T00:00:00Z"))
+                attributes(type, requestedGrantValidFrom = Instant.parse("2025-12-31T00:00:00Z"))
                     .validateAndReturnAuthorizationRequestSpecification(now)
             }
             invalidPayload("requestedGrantValidTo must be in the future") {
-                attributes(type, requestedGrantValidTo = OffsetDateTime.parse("2026-01-01T00:00:00Z"))
+                attributes(type, requestedGrantValidTo = Instant.parse("2026-01-01T00:00:00Z"))
                     .validateAndReturnAuthorizationRequestSpecification(now)
             }
         }
