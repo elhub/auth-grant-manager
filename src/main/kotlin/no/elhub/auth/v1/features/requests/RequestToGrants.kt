@@ -37,20 +37,20 @@ fun AuthorizationRequest.toGrants(
 ): List<AuthorizationGrant> =
     when (requestType) {
         AuthorizationRequestType.ChangeOfEnergySupplierForOrganization ->
-            oneConsumableGrantPerMeteringPointForChangeOfEnergySupplier(approvedBy, now)
+            changeOfEnergySupplierGrants(approvedBy, now)
 
         AuthorizationRequestType.MoveInAndChangeOfEnergySupplierForOrganization ->
-            oneConsumableGrantPerMeteringPointForMoveInAndChangeOfEnergySupplier(approvedBy, now)
+            moveInAndChangeOfEnergySupplierGrants(approvedBy, now)
 
         AuthorizationRequestType.EnergySupplierFrameworkAgreement ->
-            listOf(onePersistentGrantForEnergySupplierFrameworkAgreement(approvedBy, now))
+            energySupplierFrameworkAgreementGrants(approvedBy, now)
     }
 
 /**
  * One Consumable grant per metering point, each allowing requestedBy to change the energy supplier contract on that
  * metering point. Valid from today until the end of the day two years ahead.
  */
-private fun AuthorizationRequest.oneConsumableGrantPerMeteringPointForChangeOfEnergySupplier(
+private fun AuthorizationRequest.changeOfEnergySupplierGrants(
     approvedBy: AuthorizationParty,
     now: Instant,
 ): List<AuthorizationGrant> {
@@ -87,7 +87,7 @@ private fun AuthorizationRequest.oneConsumableGrantPerMeteringPointForChangeOfEn
  * One Consumable grant per metering point, each allowing requestedBy to change the end user and energy supplier
  * contracts on that metering point from the move-in date. Valid from today until the end of the day two years ahead.
  */
-private fun AuthorizationRequest.oneConsumableGrantPerMeteringPointForMoveInAndChangeOfEnergySupplier(
+private fun AuthorizationRequest.moveInAndChangeOfEnergySupplierGrants(
     approvedBy: AuthorizationParty,
     now: Instant,
 ): List<AuthorizationGrant> {
@@ -123,17 +123,17 @@ private fun AuthorizationRequest.oneConsumableGrantPerMeteringPointForMoveInAndC
 }
 
 /**
- * One Persistent grant allowing requestedBy to change the end user and energy supplier contracts on all of the
+ * Exactly one Persistent grant allowing requestedBy to change the end user and energy supplier contracts on all of the
  * principal's metering points. Valid according to [frameworkAgreementGrantValidity].
  */
-private fun AuthorizationRequest.onePersistentGrantForEnergySupplierFrameworkAgreement(
+private fun AuthorizationRequest.energySupplierFrameworkAgreementGrants(
     approvedBy: AuthorizationParty,
     now: Instant,
-): AuthorizationGrant {
+): List<AuthorizationGrant> {
     val contractTypes = constraint(AuthorizationScopeConstraintAttribute.ContractType)
     val validity = frameworkAgreementGrantValidity(requestedGrantValidFrom, requestedGrantValidTo, now)
 
-    return AuthorizationGrant.new(
+    val grant = AuthorizationGrant.new(
         type = AuthorizationGrantType.Persistent,
         sourceType = AuthorizationGrantSourceType.Request,
         sourceId = id,
@@ -151,6 +151,7 @@ private fun AuthorizationRequest.onePersistentGrantForEnergySupplierFrameworkAgr
             ),
         ),
     )
+    return listOf(grant)
 }
 
 /**
@@ -167,7 +168,7 @@ fun consumableGrantValidity(now: Instant): GrantValidity {
 /**
  * - validFrom: the requested start, moved forward to the start of today if it is missing or in the past.
  * - validTo: the requested end, or no end date if none was requested.
- * - Fails if the requested end is before today or before validFrom.
+ * - Fails if the requested end is not after now, or is before validFrom.
  */
 fun frameworkAgreementGrantValidity(
     requestedValidFrom: Instant?,
@@ -176,7 +177,7 @@ fun frameworkAgreementGrantValidity(
 ): GrantValidity {
     val startOfToday = now.toLocalDateTime(OSLO).date.atStartOfDayIn(OSLO)
     val validFrom = maxOf(requestedValidFrom ?: startOfToday, startOfToday)
-    if (requestedValidTo != null && (requestedValidTo < startOfToday || validFrom > requestedValidTo)) {
+    if (requestedValidTo != null && (requestedValidTo <= now || validFrom > requestedValidTo)) {
         throw UpdateRequestError.InvalidGrantValidity()
     }
     return GrantValidity(validFrom = validFrom, validTo = requestedValidTo)

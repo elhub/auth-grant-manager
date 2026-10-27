@@ -166,6 +166,7 @@ class RequestToGrantsTest : FunSpec({
 
         val past = Instant.parse("2026-10-01T00:00:00Z")
         val earlierToday = Instant.parse("2026-10-26T05:00:00Z")
+        val laterToday = Instant.parse("2026-10-26T15:00:00Z")
         val future = Instant.parse("2026-12-01T00:00:00Z")
         val laterFuture = Instant.parse("2027-12-01T00:00:00Z")
 
@@ -178,7 +179,7 @@ class RequestToGrantsTest : FunSpec({
             Triple(future, null, future to null),
             Triple(future, laterFuture, future to laterFuture),
             Triple(future, future, future to future),
-            Triple(null, earlierToday, startOfToday to earlierToday),
+            Triple(null, laterToday, startOfToday to laterToday),
         ).forEach { (requestedFrom, requestedTo, expected) ->
             test("requested $requestedFrom..$requestedTo gives grant ${expected.first}..${expected.second}") {
                 val grant = frameworkRequest(requestedFrom, requestedTo).toGrants(approvedBy, now).single()
@@ -191,6 +192,8 @@ class RequestToGrantsTest : FunSpec({
         listOf(
             null to past,
             past to past,
+            null to earlierToday,
+            null to now,
             laterFuture to future,
         ).forEach { (requestedFrom, requestedTo) ->
             test("rejects requested $requestedFrom..$requestedTo") {
