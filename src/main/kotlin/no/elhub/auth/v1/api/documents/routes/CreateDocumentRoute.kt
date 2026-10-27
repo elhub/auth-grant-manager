@@ -46,6 +46,8 @@ fun Route.route(
             toDocumentSpecification(
                 documentType = request.data.attributes.documentType,
                 requestedScopes = request.data.attributes.requestedScopes,
+                requestedGrantValidFrom = request.data.attributes.requestedGrantValidFrom,
+                requestedGrantValidTo = request.data.attributes.requestedGrantValidTo,
             )
 
         val requestedPrincipalIdentifier =

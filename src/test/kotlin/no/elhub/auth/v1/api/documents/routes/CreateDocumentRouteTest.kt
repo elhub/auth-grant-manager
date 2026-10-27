@@ -180,6 +180,75 @@ class CreateDocumentRouteTest : FunSpec({
         }
     }
 
+    test("POST / creates a framework agreement without scopes and preserves future requested grant dates") {
+        val requestedGrantValidFrom = Instant.parse("2098-01-01T00:00:00Z")
+        val requestedGrantValidTo = Instant.parse("2099-01-01T00:00:00Z")
+        val specification = DocumentSpecification.EnergySupplierFrameworkAgreement(requestedGrantValidFrom, requestedGrantValidTo)
+        val document = responseDocument().copy(
+            documentType = AuthorizationDocumentType.EnergySupplierFrameworkAgreement,
+            requestedScopes = listOf(specification.toRequestedAuthorizationScope()),
+            requestedGrantValidFrom = requestedGrantValidFrom,
+            requestedGrantValidTo = requestedGrantValidTo,
+        )
+        coEvery {
+            handler.createAuthorizationDocument(any(), any(), any(), any(), any(), any())
+        } returns document
+        coEvery { partyService.resolve(any()) } returnsMany listOf(
+            AuthorizationParty("999888777", PartyType.OrganizationEntity).right(),
+            AuthorizationParty("person-1", PartyType.Person).right(),
+        )
+        val frameworkRequest = """
+            {
+              "data": {
+                "type": "AuthorizationDocument",
+                "attributes": {
+                  "documentType": "EnergySupplierFrameworkAgreement",
+                  "externalReference": "contract-123",
+                  "requestedGrantValidFrom": "2098-01-01T01:00:00+01:00",
+                  "requestedGrantValidTo": "2099-01-01T01:00:00+01:00"
+                },
+                "meta": {
+                  "requestedPrincipal": "999888777",
+                  "requestedOf": "01019012345",
+                  "language": "nb"
+                }
+              }
+            }
+        """.trimIndent()
+
+        testApplication {
+            setupAppWith(authorizedParty) {
+                route(partyService, handler)
+            }
+
+            val response = client.postJson("/", frameworkRequest)
+
+            response.status shouldBe HttpStatusCode.Created
+            val body: JsonApiGetAuthorizationDocumentResponse = response.body()
+            body.data.id shouldBe document.id
+            body.data.type shouldBe "AuthorizationDocument"
+            body.data.attributes.documentType shouldBe AuthorizationDocumentType.EnergySupplierFrameworkAgreement
+            body.data.attributes.status.name shouldBe "Pending"
+            body.data.attributes.requestedGrantValidFrom shouldBe requestedGrantValidFrom
+            body.data.attributes.requestedGrantValidTo shouldBe requestedGrantValidTo
+            val returnedScope = body.data.attributes.requestedScopes.single()
+            returnedScope.resourceType shouldBe ResourceType.MeteringPointContract
+            returnedScope.appliesTo shouldBe emptyList()
+            returnedScope.allowedChanges.single().attribute shouldBe "type"
+            returnedScope.allowedChanges.single().value.toSet() shouldBe setOf("EndUser", "EnergySupplier")
+            coVerify(exactly = 1) {
+                handler.createAuthorizationDocument(
+                    specification = specification,
+                    externalReference = "contract-123",
+                    requestedBy = authorizedParty,
+                    requestedPrincipal = AuthorizationParty("999888777", PartyType.OrganizationEntity),
+                    requestedOf = AuthorizationParty("person-1", PartyType.Person),
+                    language = DocumentLanguage.NB,
+                )
+            }
+        }
+    }
+
     test("POST / defaults the document language to Norwegian Bokmål") {
         coEvery {
             handler.createAuthorizationDocument(any(), any(), any(), any(), any(), any())
@@ -285,7 +354,7 @@ class CreateDocumentRouteTest : FunSpec({
         coEvery { pdfSigner.sign(unsignedPdf) } returns signedPdf
         coEvery { documentRepository.insert(capture(insertedDocument)) } returns savedDocument
 
-        val service = CreateDocumentHandler(changeSupplierHandler, moveInHandler, pdfGenerator, pdfSigner, documentRepository)
+        val service = CreateDocumentHandler(changeSupplierHandler, moveInHandler, mockk(), pdfGenerator, pdfSigner, documentRepository)
         val document = service.createAuthorizationDocument(
             specification = specification,
             externalReference = "ref",

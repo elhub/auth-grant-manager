@@ -13,4 +13,8 @@ sealed class ConfirmDocumentError(override val detail: String) : Errors(detail) 
     class SignatoryResolutionFailed : ConfirmDocumentError("The document signatory could not be resolved.")
 
     class SignatoryNotAllowed : ConfirmDocumentError("The signer does not match the document's requestedOf party.")
+
+    class InvalidGrantValidity : ConfirmDocumentError(
+        "The requested grant validity period has ended or ends before it starts.",
+    )
 }

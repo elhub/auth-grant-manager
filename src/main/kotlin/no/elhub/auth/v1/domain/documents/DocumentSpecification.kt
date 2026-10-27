@@ -11,10 +11,31 @@ import no.elhub.auth.v1.domain.MeteringPointContractType
 import no.elhub.auth.v1.domain.RequestedAuthorizationScope
 import no.elhub.auth.v1.domain.ResourceConstraint
 import no.elhub.auth.v1.domain.ResourceType
+import kotlin.time.Instant
 
 sealed interface DocumentSpecification {
     val documentType: AuthorizationDocumentType
     fun toRequestedAuthorizationScope(): RequestedAuthorizationScope
+
+    data class EnergySupplierFrameworkAgreement(
+        val requestedGrantValidFrom: Instant? = null,
+        val requestedGrantValidTo: Instant? = null,
+    ) : DocumentSpecification {
+        override val documentType = AuthorizationDocumentType.EnergySupplierFrameworkAgreement
+
+        override fun toRequestedAuthorizationScope() = RequestedAuthorizationScope(
+            resourceType = ResourceType.MeteringPointContract,
+            constraints = listOf(
+                AuthorizationScopeConstraint(
+                    constraintKind = AuthorizationScopeConstraintKind.AllowedChanges,
+                    attribute = AuthorizationScopeConstraintAttribute.ContractType,
+                    value = ResourceConstraint.ContractTypes(
+                        setOf(MeteringPointContractType.EndUser, MeteringPointContractType.EnergySupplier),
+                    ),
+                ),
+            ),
+        )
+    }
 
     data class ChangeOfEnergySupplierForOrganization(
         val meteringPointIds: ResourceConstraint.MeteringPoints,

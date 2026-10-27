@@ -41,6 +41,150 @@ class DocumentToGrantsTest : FunSpec({
     val approvedBy = AuthorizationParty(UUID.randomUUID().toString(), PartyType.Person)
     val moveInDate = Instant.parse("2026-09-30T22:00:00Z")
 
+    context("EnergySupplierFrameworkAgreement") {
+        val now = Instant.parse("2026-10-26T10:00:00Z")
+        val startOfToday = Instant.parse("2026-10-25T23:00:00Z")
+        val contractTypeConstraint = AuthorizationScopeConstraint(
+            constraintKind = AuthorizationScopeConstraintKind.AllowedChanges,
+            attribute = AuthorizationScopeConstraintAttribute.ContractType,
+            value = ResourceConstraint.ContractTypes(setOf(MeteringPointContractType.EndUser, MeteringPointContractType.EnergySupplier)),
+        )
+        val requestedScope = RequestedAuthorizationScope(
+            resourceType = ResourceType.MeteringPointContract,
+            constraints = listOf(contractTypeConstraint),
+        )
+        val document = AuthorizationDocument.new(
+            documentType = AuthorizationDocumentType.EnergySupplierFrameworkAgreement,
+            requestedScopes = listOf(requestedScope),
+            externalReference = "framework-123",
+            meta = JsonObject(emptyMap()),
+            validTo = Instant.parse("2026-11-24T10:00:00Z"),
+            requestedBy = requestedBy,
+            requestedPrincipal = requestedPrincipal,
+            requestedOf = requestedOf,
+            pdfBytes = byteArrayOf(),
+        ).copy(validFrom = Instant.parse("2026-10-24T10:00:00Z"))
+
+        test("creates exactly one persistent Document-source Write grant covering all metering points with unchanged role mapping") {
+            val grant = document.toGrants(approvedBy, now).single()
+
+            grant.type shouldBe AuthorizationGrantType.Persistent
+            grant.status shouldBe AuthorizationGrantStatus.Active
+            grant.sourceType shouldBe AuthorizationGrantSourceType.Document
+            grant.sourceId shouldBe UUID.fromString(document.id)
+            grant.principal shouldBe requestedPrincipal
+            grant.grantedBy shouldBe requestedOf
+            grant.grantedTo shouldBe requestedBy
+            grant.approvedBy shouldBe approvedBy
+            grant.scopes shouldBe listOf(
+                GrantedAuthorizationScope(
+                    capability = PermissionCapability.Write,
+                    resourceType = ResourceType.MeteringPointContract,
+                    constraints = listOf(contractTypeConstraint),
+                ),
+            )
+            grant.validFrom shouldBe startOfToday
+            grant.validTo shouldBe null
+        }
+
+        val past = Instant.parse("2026-10-01T00:00:00Z")
+        val earlierToday = Instant.parse("2026-10-26T05:00:00Z")
+        val laterToday = Instant.parse("2026-10-26T15:00:00Z")
+        val future = Instant.parse("2026-12-01T00:00:00Z")
+        val laterFuture = Instant.parse("2027-12-01T00:00:00Z")
+
+        listOf(
+            Triple(null, null, startOfToday to null),
+            Triple(null, future, startOfToday to future),
+            Triple(past, null, startOfToday to null),
+            Triple(past, future, startOfToday to future),
+            Triple(startOfToday, null, startOfToday to null),
+            Triple(earlierToday, null, earlierToday to null),
+            Triple(laterToday, null, laterToday to null),
+            Triple(future, null, future to null),
+            Triple(future, laterFuture, future to laterFuture),
+            Triple(future, future, future to future),
+            Triple(null, laterToday, startOfToday to laterToday),
+        ).forEach { (requestedFrom, requestedTo, expected) ->
+            test("requested $requestedFrom..$requestedTo gives grant ${expected.first}..${expected.second}") {
+                val grant = document.copy(
+                    requestedGrantValidFrom = requestedFrom,
+                    requestedGrantValidTo = requestedTo,
+                ).toGrants(approvedBy, now).single()
+
+                grant.validFrom shouldBe expected.first
+                grant.validTo shouldBe expected.second
+            }
+        }
+
+        listOf(
+            null to past,
+            past to past,
+            null to startOfToday,
+            null to earlierToday,
+            null to now,
+            laterFuture to future,
+        ).forEach { (requestedFrom, requestedTo) ->
+            test("rejects requested $requestedFrom..$requestedTo with a document confirmation error") {
+                shouldThrow<ConfirmDocumentError.InvalidGrantValidity> {
+                    document.copy(
+                        requestedGrantValidFrom = requestedFrom,
+                        requestedGrantValidTo = requestedTo,
+                    ).toGrants(approvedBy, now)
+                }
+            }
+        }
+
+        listOf(
+            "2026-07-01T10:00:00Z" to "2026-06-30T22:00:00Z",
+            "2026-10-26T23:30:00Z" to "2026-10-26T23:00:00Z",
+            "2026-03-29T10:00:00Z" to "2026-03-28T23:00:00Z",
+            "2026-10-25T10:00:00Z" to "2026-10-24T22:00:00Z",
+        ).forEach { (approvalTime, expectedStart) ->
+            test("uses the Oslo start of day when approved at $approvalTime") {
+                document.toGrants(approvedBy, Instant.parse(approvalTime)).single().validFrom shouldBe Instant.parse(expectedStart)
+            }
+        }
+
+        test("rejects missing or multiple requested scopes") {
+            listOf(emptyList(), listOf(requestedScope, requestedScope)).forEach { scopes ->
+                shouldThrow<InvalidDocumentScopes> {
+                    document.copy(requestedScopes = scopes).toGrants(approvedBy, now)
+                }
+            }
+        }
+
+        val meteringPointConstraint = AuthorizationScopeConstraint(
+            constraintKind = AuthorizationScopeConstraintKind.AppliesTo,
+            attribute = AuthorizationScopeConstraintAttribute.MeteringPointId,
+            value = ResourceConstraint.MeteringPoints(meteringPointIds),
+        )
+        val moveInConstraint = AuthorizationScopeConstraint(
+            constraintKind = AuthorizationScopeConstraintKind.AllowedChanges,
+            attribute = AuthorizationScopeConstraintAttribute.ValidFrom,
+            value = ResourceConstraint.ValidFrom(moveInDate),
+        )
+        listOf(
+            "missing contract types" to emptyList(),
+            "duplicate contract types" to listOf(contractTypeConstraint, contractTypeConstraint),
+            "AppliesTo contract types" to listOf(contractTypeConstraint.copy(constraintKind = AuthorizationScopeConstraintKind.AppliesTo)),
+            "only EndUser" to listOf(
+                contractTypeConstraint.copy(value = ResourceConstraint.ContractTypes(setOf(MeteringPointContractType.EndUser))),
+            ),
+            "only EnergySupplier" to listOf(
+                contractTypeConstraint.copy(value = ResourceConstraint.ContractTypes(setOf(MeteringPointContractType.EnergySupplier))),
+            ),
+            "metering-point restriction" to listOf(contractTypeConstraint, meteringPointConstraint),
+            "move-in date" to listOf(contractTypeConstraint, moveInConstraint),
+        ).forEach { (description, constraints) ->
+            test("rejects framework scope with $description") {
+                shouldThrow<InvalidDocumentScopes> {
+                    document.copy(requestedScopes = listOf(requestedScope.copy(constraints = constraints))).toGrants(approvedBy, now)
+                }
+            }
+        }
+    }
+
     context("ChangeOfEnergySupplierForOrganization") {
         val meteringPointConstraint = AuthorizationScopeConstraint(
             constraintKind = AuthorizationScopeConstraintKind.AppliesTo,
@@ -105,6 +249,17 @@ class DocumentToGrantsTest : FunSpec({
             grant.validTo shouldBe grant.validFrom.plus(1, DateTimeUnit.YEAR, TimeZone.UTC)
             (grant.validFrom == document.validFrom) shouldBe false
             (grant.validTo == document.validTo) shouldBe false
+        }
+
+        test("keeps one-year UTC validity independent of requested grant dates") {
+            val now = Instant.parse("2026-10-26T10:15:30Z")
+            val grant = document.copy(
+                requestedGrantValidFrom = Instant.parse("2025-01-01T00:00:00Z"),
+                requestedGrantValidTo = Instant.parse("2025-02-01T00:00:00Z"),
+            ).toGrants(approvedBy, now).single()
+
+            grant.validFrom shouldBe now
+            grant.validTo shouldBe Instant.parse("2027-10-26T10:15:30Z")
         }
 
         test("several metering points produce separate EnergySupplier Write grants with the same validity window") {
@@ -267,6 +422,17 @@ class DocumentToGrantsTest : FunSpec({
             grant.validTo shouldBe grant.validFrom.plus(1, DateTimeUnit.YEAR, TimeZone.UTC)
             (grant.validFrom == document.validFrom) shouldBe false
             (grant.validTo == document.validTo) shouldBe false
+        }
+
+        test("keeps one-year UTC validity independent of requested grant dates") {
+            val now = Instant.parse("2026-10-26T10:15:30Z")
+            val grant = document.copy(
+                requestedGrantValidFrom = Instant.parse("2025-01-01T00:00:00Z"),
+                requestedGrantValidTo = Instant.parse("2025-02-01T00:00:00Z"),
+            ).toGrants(approvedBy, now).single()
+
+            grant.validFrom shouldBe now
+            grant.validTo shouldBe Instant.parse("2027-10-26T10:15:30Z")
         }
 
         test("several metering points produce separate EndUser and EnergySupplier Write grants with the move-in date") {

@@ -4,6 +4,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import kotlinx.datetime.LocalDate
+import kotlinx.serialization.json.Json
 import no.elhub.auth.v1.api.common.errors.InputError
 import no.elhub.auth.v1.domain.AuthorizationDocumentType
 import no.elhub.auth.v1.domain.AuthorizationScopeConstraintAttribute
@@ -11,6 +12,8 @@ import no.elhub.auth.v1.domain.MeteringPointContractType
 import no.elhub.auth.v1.domain.MeteringPointId
 import no.elhub.auth.v1.domain.ResourceConstraint
 import no.elhub.auth.v1.domain.documents.DocumentSpecification
+import java.time.OffsetDateTime
+import kotlin.time.Instant
 
 class DocumentSpecificationMapperTest : FunSpec({
     val validMeteringPointId = "707057500000000001"
@@ -45,6 +48,104 @@ class DocumentSpecificationMapperTest : FunSpec({
 
     fun invalidPayload(block: () -> Unit, expectedDetail: String) {
         shouldThrow<InputError.InvalidCreateAuthorizationDocumentPayload>(block).detail shouldBe expectedDetail
+    }
+
+    context("EnergySupplierFrameworkAgreement") {
+        val type = AuthorizationDocumentType.EnergySupplierFrameworkAgreement
+        val now = Instant.parse("2026-01-01T00:00:00Z")
+        val validFrom = OffsetDateTime.parse("2026-02-01T00:00:00+01:00")
+        val validTo = OffsetDateTime.parse("2027-02-01T00:00:00+01:00")
+
+        test("deserializes omitted scopes and optional offset dates") {
+            val attributes = Json.decodeFromString<CreateAuthorizationDocumentAttributes>(
+                """{"documentType":"EnergySupplierFrameworkAgreement",
+                    "requestedGrantValidFrom":"2026-02-01T00:00:00+01:00",
+                    "requestedGrantValidTo":"2027-02-01T00:00:00+01:00"}""",
+            )
+
+            attributes.requestedScopes shouldBe null
+            attributes.requestedGrantValidFrom shouldBe validFrom
+            attributes.requestedGrantValidTo shouldBe validTo
+            toDocumentSpecification(
+                attributes.documentType,
+                attributes.requestedScopes,
+                attributes.requestedGrantValidFrom,
+                attributes.requestedGrantValidTo,
+                now,
+            ) shouldBe DocumentSpecification.EnergySupplierFrameworkAgreement(
+                Instant.parse("2026-01-31T23:00:00Z"),
+                Instant.parse("2027-01-31T23:00:00Z"),
+            )
+        }
+
+        test("allows either or both validity dates to be omitted") {
+            toDocumentSpecification(type, now = now) shouldBe
+                DocumentSpecification.EnergySupplierFrameworkAgreement()
+            toDocumentSpecification(type, requestedGrantValidFrom = validFrom, now = now) shouldBe
+                DocumentSpecification.EnergySupplierFrameworkAgreement(Instant.parse("2026-01-31T23:00:00Z"))
+            toDocumentSpecification(type, requestedGrantValidTo = validTo, now = now) shouldBe
+                DocumentSpecification.EnergySupplierFrameworkAgreement(
+                    requestedGrantValidTo = Instant.parse("2027-01-31T23:00:00Z"),
+                )
+        }
+
+        test("rejects supplied scopes including an empty list") {
+            listOf(emptyList(), listOf(supplierScope())).forEach { scopes ->
+                invalidPayload(
+                    { toDocumentSpecification(type, scopes, now = now) },
+                    "requestedScopes is not supported for $type",
+                )
+            }
+        }
+
+        test("rejects past and present validity dates") {
+            listOf("2025-12-31T00:00:00Z", "2026-01-01T01:00:00+01:00").forEach { value ->
+                val date = OffsetDateTime.parse(value)
+                invalidPayload(
+                    { toDocumentSpecification(type, requestedGrantValidFrom = date, now = now) },
+                    "requestedGrantValidFrom must be in the future",
+                )
+                invalidPayload(
+                    { toDocumentSpecification(type, requestedGrantValidTo = date, now = now) },
+                    "requestedGrantValidTo must be in the future",
+                )
+            }
+        }
+
+        test("rejects reversed and equal validity instants regardless of offset") {
+            listOf(validTo, validFrom, OffsetDateTime.parse("2026-01-31T23:00:00Z")).forEach { from ->
+                invalidPayload(
+                    {
+                        toDocumentSpecification(
+                            type,
+                            requestedGrantValidFrom = from,
+                            requestedGrantValidTo = validFrom,
+                            now = now,
+                        )
+                    },
+                    "requestedGrantValidFrom must be before requestedGrantValidTo",
+                )
+            }
+        }
+    }
+
+    test("existing document types require scopes and reject either requested grant date") {
+        val date = OffsetDateTime.parse("2100-01-01T00:00:00Z")
+        listOf(supplierChangeType, moveInType).forEach { type ->
+            invalidPayload(
+                { toDocumentSpecification(type) },
+                "requestedScopes is required for $type",
+            )
+            val scopes = listOf(if (type == supplierChangeType) supplierScope() else moveInScope())
+            invalidPayload(
+                { toDocumentSpecification(type, scopes, requestedGrantValidFrom = date) },
+                "requestedGrantValidFrom and requestedGrantValidTo are not supported for $type",
+            )
+            invalidPayload(
+                { toDocumentSpecification(type, scopes, requestedGrantValidTo = date) },
+                "requestedGrantValidFrom and requestedGrantValidTo are not supported for $type",
+            )
+        }
     }
 
     context("ChangeOfEnergySupplierForOrganization") {

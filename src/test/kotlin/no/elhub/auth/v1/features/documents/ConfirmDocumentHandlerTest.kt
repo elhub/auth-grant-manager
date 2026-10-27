@@ -4,12 +4,14 @@ import arrow.core.left
 import arrow.core.right
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
 import kotlinx.serialization.json.JsonObject
 import no.elhub.auth.common.documents.pdf.PdfSignatory
@@ -24,11 +26,16 @@ import no.elhub.auth.v0.features.common.party.PartyType
 import no.elhub.auth.v1.domain.AuthorizationDocument
 import no.elhub.auth.v1.domain.AuthorizationDocumentStatus
 import no.elhub.auth.v1.domain.AuthorizationDocumentType
+import no.elhub.auth.v1.domain.AuthorizationGrant
+import no.elhub.auth.v1.domain.AuthorizationGrantSourceType
+import no.elhub.auth.v1.domain.AuthorizationGrantType
 import no.elhub.auth.v1.domain.AuthorizationScopeConstraint
 import no.elhub.auth.v1.domain.AuthorizationScopeConstraintAttribute
 import no.elhub.auth.v1.domain.AuthorizationScopeConstraintKind
+import no.elhub.auth.v1.domain.GrantedAuthorizationScope
 import no.elhub.auth.v1.domain.MeteringPointContractType
 import no.elhub.auth.v1.domain.MeteringPointId
+import no.elhub.auth.v1.domain.PermissionCapability
 import no.elhub.auth.v1.domain.RequestedAuthorizationScope
 import no.elhub.auth.v1.domain.ResourceConstraint
 import no.elhub.auth.v1.domain.ResourceType
@@ -79,6 +86,23 @@ class ConfirmDocumentHandlerTest : FunSpec({
         pdfBytes = originalFile,
     )
     val id = UUID.fromString(document.id)
+    val frameworkDocument = document.copy(
+        documentType = AuthorizationDocumentType.EnergySupplierFrameworkAgreement,
+        requestedScopes = listOf(
+            RequestedAuthorizationScope(
+                ResourceType.MeteringPointContract,
+                listOf(
+                    AuthorizationScopeConstraint(
+                        AuthorizationScopeConstraintKind.AllowedChanges,
+                        AuthorizationScopeConstraintAttribute.ContractType,
+                        ResourceConstraint.ContractTypes(setOf(MeteringPointContractType.EndUser, MeteringPointContractType.EnergySupplier)),
+                    ),
+                ),
+            ),
+        ),
+        requestedGrantValidFrom = Instant.parse("2098-01-01T00:00:00Z"),
+        requestedGrantValidTo = Instant.parse("2099-01-01T00:00:00Z"),
+    )
 
     beforeTest {
         clearMocks(repository, partyService, validator)
@@ -176,6 +200,51 @@ class ConfirmDocumentHandlerTest : FunSpec({
                 }
             )
         }
+    }
+
+    test("confirms a framework agreement with exactly one persistent Document-source grant") {
+        coEvery { repository.find(id) } returns frameworkDocument
+        every { validator.validateSignaturesAndReturnSignatory(signedFile, originalFile) } returns PdfSignatory(nin)
+        coEvery { partyService.resolve(identifier) } returns requestedOf.right()
+        val grants = slot<List<AuthorizationGrant>>()
+        val confirmed = frameworkDocument.copy(status = AuthorizationDocumentStatus.Accepted)
+        coEvery { repository.confirm(id, signedFile, requestedOf, capture(grants)) } returns confirmed
+
+        handler(id, requestedBy, signedFile) shouldBeSameInstanceAs confirmed
+
+        val grant = grants.captured.single()
+        grant.type shouldBe AuthorizationGrantType.Persistent
+        grant.sourceType shouldBe AuthorizationGrantSourceType.Document
+        grant.sourceId shouldBe id
+        grant.principal shouldBe requestedPrincipal
+        grant.grantedBy shouldBe requestedOf
+        grant.grantedTo shouldBe requestedBy
+        grant.approvedBy shouldBe requestedOf
+        grant.validFrom shouldBe frameworkDocument.requestedGrantValidFrom
+        grant.validTo shouldBe frameworkDocument.requestedGrantValidTo
+        grant.scopes shouldBe listOf(
+            GrantedAuthorizationScope(
+                capability = PermissionCapability.Write,
+                resourceType = ResourceType.MeteringPointContract,
+                constraints = frameworkDocument.requestedScopes.single().constraints,
+            ),
+        )
+        verify(exactly = 1) { validator.validateSignaturesAndReturnSignatory(signedFile, originalFile) }
+        coVerify(exactly = 1) { partyService.resolve(identifier) }
+        coVerify(exactly = 1) { repository.confirm(id, signedFile, requestedOf, any()) }
+    }
+
+    test("rejects a framework agreement with an expired requested grant end without confirming") {
+        coEvery { repository.find(id) } returns frameworkDocument.copy(
+            requestedGrantValidFrom = null,
+            requestedGrantValidTo = Instant.parse("2000-01-01T00:00:00Z"),
+        )
+        every { validator.validateSignaturesAndReturnSignatory(signedFile, originalFile) } returns PdfSignatory(nin)
+        coEvery { partyService.resolve(identifier) } returns requestedOf.right()
+
+        shouldThrow<ConfirmDocumentError.InvalidGrantValidity> { handler(id, requestedBy, signedFile) }
+
+        coVerify(exactly = 0) { repository.confirm(any(), any(), any(), any()) }
     }
 
     test("propagates a repository confirmation failure") {

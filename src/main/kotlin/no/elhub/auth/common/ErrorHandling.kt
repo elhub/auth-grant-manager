@@ -234,6 +234,12 @@ private fun Errors.toApiErrorResponse() =
             detail = detail,
         )
 
+        is ConfirmDocumentError.InvalidGrantValidity -> buildApiErrorResponse(
+            status = HttpStatusCode.UnprocessableEntity,
+            title = "Invalid grant validity",
+            detail = detail,
+        )
+
         is UpdateRequestError.InvalidGrantValidity -> buildApiErrorResponse(
             status = HttpStatusCode.UnprocessableEntity,
             title = "Invalid grant validity",

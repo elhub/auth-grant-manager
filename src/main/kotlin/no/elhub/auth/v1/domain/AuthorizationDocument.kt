@@ -37,6 +37,8 @@ data class AuthorizationDocument(
             requestedPrincipal: AuthorizationParty,
             requestedOf: AuthorizationParty,
             pdfBytes: ByteArray,
+            requestedGrantValidFrom: Instant? = null,
+            requestedGrantValidTo: Instant? = null,
         ): AuthorizationDocument {
             val now = Clock.System.now()
             return AuthorizationDocument(
@@ -46,6 +48,8 @@ data class AuthorizationDocument(
                 requestedScopes = requestedScopes,
                 externalReference = externalReference,
                 meta = meta,
+                requestedGrantValidFrom = requestedGrantValidFrom,
+                requestedGrantValidTo = requestedGrantValidTo,
                 validFrom = now,
                 validTo = validTo,
                 createdAt = now,
@@ -68,6 +72,7 @@ enum class AuthorizationDocumentStatus {
 }
 
 enum class AuthorizationDocumentType {
+    EnergySupplierFrameworkAgreement,
     ChangeOfEnergySupplierForOrganization,
     MoveInAndChangeOfEnergySupplierForOrganization,
 }

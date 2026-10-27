@@ -33,3 +33,6 @@ interface ChangeOfEnergySupplierDocumentHandler :
 
 interface MoveInAndChangeOfEnergySupplierDocumentHandler :
     DocumentCreationHandler<DocumentSpecification.MoveInAndChangeOfEnergySupplierForOrganization>
+
+interface EnergySupplierFrameworkAgreementDocumentHandler :
+    DocumentCreationHandler<DocumentSpecification.EnergySupplierFrameworkAgreement>

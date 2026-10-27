@@ -5,6 +5,7 @@ import io.kotest.matchers.shouldBe
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
+import no.elhub.auth.v1.domain.AuthorizationDocumentType
 import no.elhub.auth.v1.domain.AuthorizationScopeConstraint
 import no.elhub.auth.v1.domain.AuthorizationScopeConstraintAttribute
 import no.elhub.auth.v1.domain.AuthorizationScopeConstraintKind
@@ -16,6 +17,24 @@ import no.elhub.auth.v1.domain.ResourceType
 
 class DocumentSpecificationTest : FunSpec({
     val meteringPointIds = setOf(MeteringPointId.create("707057500000000001"))
+
+    test("framework agreement scope allows both contract types without metering-point restrictions") {
+        val specification = DocumentSpecification.EnergySupplierFrameworkAgreement()
+
+        specification.documentType shouldBe AuthorizationDocumentType.EnergySupplierFrameworkAgreement
+        specification.toRequestedAuthorizationScope() shouldBe RequestedAuthorizationScope(
+            resourceType = ResourceType.MeteringPointContract,
+            constraints = listOf(
+                AuthorizationScopeConstraint(
+                    constraintKind = AuthorizationScopeConstraintKind.AllowedChanges,
+                    attribute = AuthorizationScopeConstraintAttribute.ContractType,
+                    value = ResourceConstraint.ContractTypes(
+                        setOf(MeteringPointContractType.EndUser, MeteringPointContractType.EnergySupplier),
+                    ),
+                ),
+            ),
+        )
+    }
 
     test("maps supplier change scope to metering point and energy-supplier contract constraints") {
         val scope = DocumentSpecification.ChangeOfEnergySupplierForOrganization(
