@@ -62,7 +62,7 @@ data class AuthorizationDocument(
 }
 
 enum class AuthorizationDocumentStatus {
-    Accepted,
+    Approved,
     Expired,
     Pending,
 }

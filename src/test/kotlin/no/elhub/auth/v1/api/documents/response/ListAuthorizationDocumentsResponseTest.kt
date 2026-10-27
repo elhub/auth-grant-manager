@@ -45,12 +45,12 @@ class ListAuthorizationDocumentsResponseTest : FunSpec({
 
     test("preserves public status filters in all pagination links") {
         val response = Page(listOf(document), 5, Pagination(page = 1, size = 2)).toGetCollectionResponse(
-            listOf(ResponseAuthorizationDocumentStatus.Signed, ResponseAuthorizationDocumentStatus.Expired),
+            listOf(ResponseAuthorizationDocumentStatus.Approved, ResponseAuthorizationDocumentStatus.Expired),
         )
 
         listOf(response.links.self, response.links.first, response.links.last, response.links.prev, response.links.next)
             .forEach { link ->
-                link?.substringAfter("&filter[status]=") shouldBe "Signed,Expired"
+                link?.substringAfter("&filter[status]=") shouldBe "Approved,Expired"
             }
     }
 

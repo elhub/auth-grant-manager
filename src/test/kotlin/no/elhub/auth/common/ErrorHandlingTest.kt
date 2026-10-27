@@ -80,10 +80,10 @@ class ErrorHandlingTest : FunSpec({
             "The authorized party is not permitted to confirm this document.",
         ),
         ErrorCase(
-            ConfirmDocumentError.InvalidStatus(AuthorizationDocumentStatus.Accepted),
+            ConfirmDocumentError.InvalidStatus(AuthorizationDocumentStatus.Approved),
             HttpStatusCode.Conflict,
             "Invalid document status",
-            "AuthorizationDocument cannot be confirmed from status 'Accepted'. Only Pending documents can be confirmed.",
+            "AuthorizationDocument cannot be confirmed from status 'Approved'. Only Pending documents can be confirmed.",
         ),
         ErrorCase(
             ConfirmDocumentError.SignatoryResolutionFailed(),

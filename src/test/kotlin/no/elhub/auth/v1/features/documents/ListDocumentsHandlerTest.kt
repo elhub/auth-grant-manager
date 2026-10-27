@@ -57,7 +57,7 @@ class ListDocumentsHandlerTest : FunSpec({
         scopes = emptyList(),
     )
     val pagination = Pagination(page = 1, size = 2)
-    val statuses = listOf(AuthorizationDocumentStatus.Accepted, AuthorizationDocumentStatus.Expired)
+    val statuses = listOf(AuthorizationDocumentStatus.Approved, AuthorizationDocumentStatus.Expired)
 
     beforeTest { clearMocks(documentRepository, grantRepository) }
 

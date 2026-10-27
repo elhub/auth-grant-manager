@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Authorization Request Update",
-  "description": "Accept or reject an authorization request.",
+  "description": "Approve or reject an authorization request.",
   "type": "object",
   "required": ["data"],
   "properties": {
@@ -21,7 +21,7 @@
           "additionalProperties": false,
           "properties": {
             "status": {
-              "enum": ["Accepted", "Rejected"]
+              "enum": ["Approved", "Rejected"]
             },
             "textLanguage": {
               "$ref": "authorization-request-common.schema.json#/$defs/textLanguage"

@@ -93,7 +93,7 @@ class ConfirmDocumentHandlerTest : FunSpec({
         coVerify(exactly = 0) { repository.confirm(any(), any(), any(), any()) }
     }
 
-    listOf(AuthorizationDocumentStatus.Accepted, AuthorizationDocumentStatus.Expired).forEach { status ->
+    listOf(AuthorizationDocumentStatus.Approved, AuthorizationDocumentStatus.Expired).forEach { status ->
         test("rejects a document in $status status without validating the PDF") {
             coEvery { repository.find(id) } returns document.copy(status = status)
             shouldThrow<ConfirmDocumentError.InvalidStatus> { handler(id, requestedBy, signedFile) }
@@ -155,7 +155,7 @@ class ConfirmDocumentHandlerTest : FunSpec({
         every { validator.validateSignaturesAndReturnSignatory(signedFile, originalFile) } returns PdfSignatory(nin)
         coEvery { partyService.resolve(identifier) } returns requestedOf.right()
         val grants = document.toGrants(requestedOf)
-        val confirmed = document.copy(status = AuthorizationDocumentStatus.Accepted, authorizationGrants = grants)
+        val confirmed = document.copy(status = AuthorizationDocumentStatus.Approved, authorizationGrants = grants)
         coEvery { repository.confirm(id, signedFile, requestedOf, any()) } returns confirmed
 
         handler(id, requestedBy, signedFile) shouldBeSameInstanceAs confirmed

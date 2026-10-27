@@ -51,11 +51,11 @@ class UpdateRequestHandlerTest : FunSpec({
 
     test("accepting creates grants approved by requestedOf and stores the text language") {
         val grants = slot<List<AuthorizationGrant>>()
-        val accepted = request.copy(status = AuthorizationRequestStatus.Accepted, approvedBy = requestedOf)
+        val accepted = request.copy(status = AuthorizationRequestStatus.Approved, approvedBy = requestedOf)
         coEvery { requestRepository.find(id) } returns request
         coEvery { requestRepository.accept(id, capture(grants), TextLanguage.NN) } returns accepted
 
-        handler(id, requestedOf, AuthorizationRequestStatus.Accepted, TextLanguage.NN) shouldBe accepted
+        handler(id, requestedOf, AuthorizationRequestStatus.Approved, TextLanguage.NN) shouldBe accepted
 
         grants.captured shouldHaveSize 1
         grants.captured.single().approvedBy shouldBe requestedOf
@@ -83,14 +83,14 @@ class UpdateRequestHandlerTest : FunSpec({
             coEvery { requestRepository.find(id) } returns request
 
             shouldThrow<UpdateRequestError.NotAuthorized> {
-                handler(id, party, AuthorizationRequestStatus.Accepted, TextLanguage.NB)
+                handler(id, party, AuthorizationRequestStatus.Approved, TextLanguage.NB)
             }
             coVerify(exactly = 0) { requestRepository.accept(any(), any(), any()) }
             coVerify(exactly = 0) { requestRepository.reject(any(), any()) }
         }
     }
 
-    listOf(AuthorizationRequestStatus.Accepted, AuthorizationRequestStatus.Rejected).forEach { status ->
+    listOf(AuthorizationRequestStatus.Approved, AuthorizationRequestStatus.Rejected).forEach { status ->
         test("refuses to $status a request whose requestedOf is an organization") {
             val organization = AuthorizationParty("888777666", PartyType.Organization)
             coEvery { requestRepository.find(id) } returns request.copy(requestedOf = organization)
@@ -114,7 +114,7 @@ class UpdateRequestHandlerTest : FunSpec({
     }
 
     listOf(
-        AuthorizationRequestStatus.Accepted to UpdateRequestError.AlreadyProcessed::class,
+        AuthorizationRequestStatus.Approved to UpdateRequestError.AlreadyProcessed::class,
         AuthorizationRequestStatus.Rejected to UpdateRequestError.AlreadyProcessed::class,
         AuthorizationRequestStatus.Expired to UpdateRequestError.Expired::class,
     ).forEach { (currentStatus, expectedError) ->
@@ -122,7 +122,7 @@ class UpdateRequestHandlerTest : FunSpec({
             coEvery { requestRepository.find(id) } returns request.copy(status = currentStatus)
 
             shouldThrow<UpdateRequestError> {
-                handler(id, requestedOf, AuthorizationRequestStatus.Accepted, TextLanguage.NB)
+                handler(id, requestedOf, AuthorizationRequestStatus.Approved, TextLanguage.NB)
             }::class shouldBe expectedError
             coVerify(exactly = 0) { requestRepository.accept(any(), any(), any()) }
         }
@@ -132,7 +132,7 @@ class UpdateRequestHandlerTest : FunSpec({
         RepositoryWriteError.ConflictError("conflict") to UpdateRequestError.AlreadyProcessed::class,
         RepositoryWriteError.ExpiredError("expired") to UpdateRequestError.Expired::class,
     ).forEach { (repositoryError, expectedError) ->
-        listOf(AuthorizationRequestStatus.Accepted, AuthorizationRequestStatus.Rejected).forEach { status ->
+        listOf(AuthorizationRequestStatus.Approved, AuthorizationRequestStatus.Rejected).forEach { status ->
             test("maps ${repositoryError::class.simpleName} to ${expectedError.simpleName} when $status") {
                 coEvery { requestRepository.find(id) } returns request
                 coEvery { requestRepository.accept(id, any(), any()) } throws repositoryError
@@ -150,7 +150,7 @@ class UpdateRequestHandlerTest : FunSpec({
         coEvery { requestRepository.find(id) } throws error
 
         shouldThrow<RepositoryReadError.NotFoundError> {
-            handler(id, requestedOf, AuthorizationRequestStatus.Accepted, TextLanguage.NB)
+            handler(id, requestedOf, AuthorizationRequestStatus.Approved, TextLanguage.NB)
         } shouldBeSameInstanceAs error
     }
 })
