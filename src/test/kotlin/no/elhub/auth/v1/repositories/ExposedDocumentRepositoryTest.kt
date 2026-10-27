@@ -159,7 +159,7 @@ class ExposedDocumentRepositoryTest : FunSpec({
         )
         val unconstrained = RequestedAuthorizationScope(ResourceType.MeteringPointContract, emptyList())
         val expected = document().copy(
-            status = AuthorizationDocumentStatus.Accepted,
+            status = AuthorizationDocumentStatus.Approved,
             approvedBy = party(),
             externalReference = "contract-123",
             requestedScopes = listOf(RequestedAuthorizationScope(ResourceType.MeteringPointContract, constraints), unconstrained),
@@ -193,8 +193,8 @@ class ExposedDocumentRepositoryTest : FunSpec({
         val expected = listOf(
             document() to AuthorizationDocumentStatus.Pending,
             document().copy(validTo = past) to AuthorizationDocumentStatus.Expired,
-            document().copy(approvedBy = party()) to AuthorizationDocumentStatus.Accepted,
-            document().copy(approvedBy = party(), validTo = past) to AuthorizationDocumentStatus.Accepted,
+            document().copy(approvedBy = party()) to AuthorizationDocumentStatus.Approved,
+            document().copy(approvedBy = party(), validTo = past) to AuthorizationDocumentStatus.Approved,
         )
 
         expected.forEach { (document, status) ->
@@ -255,8 +255,8 @@ class ExposedDocumentRepositoryTest : FunSpec({
         val expected = listOf(
             document() to AuthorizationDocumentStatus.Pending,
             document().copy(validTo = past) to AuthorizationDocumentStatus.Expired,
-            document().copy(approvedBy = party()) to AuthorizationDocumentStatus.Accepted,
-            document().copy(approvedBy = party(), validTo = past) to AuthorizationDocumentStatus.Accepted,
+            document().copy(approvedBy = party()) to AuthorizationDocumentStatus.Approved,
+            document().copy(approvedBy = party(), validTo = past) to AuthorizationDocumentStatus.Approved,
         ).associate { (document, status) -> seed(document.copy(requestedBy = party)).toString() to status }
         seed(document().copy(validTo = past))
         seed(document().copy(approvedBy = party()))
@@ -279,7 +279,7 @@ class ExposedDocumentRepositoryTest : FunSpec({
         seed(document().copy(requestedBy = party))
 
         val noParty = repository.findAndSortByCreatedAt(party(), Pagination(), emptyList())
-        val noStatus = repository.findAndSortByCreatedAt(party, Pagination(), listOf(AuthorizationDocumentStatus.Accepted))
+        val noStatus = repository.findAndSortByCreatedAt(party, Pagination(), listOf(AuthorizationDocumentStatus.Approved))
 
         listOf(noParty, noStatus).forEach {
             it.items shouldBe emptyList()
@@ -313,7 +313,7 @@ class ExposedDocumentRepositoryTest : FunSpec({
             document().copy(
                 requestedBy = party,
                 approvedBy = party(),
-                status = AuthorizationDocumentStatus.Accepted,
+                status = AuthorizationDocumentStatus.Approved,
                 externalReference = "listed-contract",
                 requestedScopes = listOf(constrained, unconstrained),
             ),
@@ -407,9 +407,9 @@ class ExposedDocumentRepositoryTest : FunSpec({
     test("insert returns persisted derived status rather than the input status") {
         val past = Instant.parse("2000-01-01T00:00:00Z")
         val cases = listOf(
-            document().copy(status = AuthorizationDocumentStatus.Accepted) to AuthorizationDocumentStatus.Pending,
+            document().copy(status = AuthorizationDocumentStatus.Approved) to AuthorizationDocumentStatus.Pending,
             document().copy(validTo = past) to AuthorizationDocumentStatus.Expired,
-            document().copy(validTo = past, approvedBy = party()) to AuthorizationDocumentStatus.Accepted,
+            document().copy(validTo = past, approvedBy = party()) to AuthorizationDocumentStatus.Approved,
         )
 
         cases.forEach { (document, status) ->
@@ -439,7 +439,7 @@ class ExposedDocumentRepositoryTest : FunSpec({
 
         val after = now()
         result.copy(pdfBytes = original.pdfBytes) shouldBe original.copy(
-            status = AuthorizationDocumentStatus.Accepted,
+            status = AuthorizationDocumentStatus.Approved,
             approvedBy = signatory,
             updatedAt = result.updatedAt,
             authorizationGrants = listOf(storedGrant),
@@ -470,7 +470,7 @@ class ExposedDocumentRepositoryTest : FunSpec({
 
         val result = documentRepository.confirm(id, signedFile, signatory, grants)
 
-        result.status shouldBe AuthorizationDocumentStatus.Accepted
+        result.status shouldBe AuthorizationDocumentStatus.Approved
         result.approvedBy shouldBe signatory
         result.pdfBytes.toList() shouldBe signedFile.toList()
         val insertedGrants = result.authorizationGrants ?: error("Confirmed document must contain its inserted grants")
@@ -550,7 +550,7 @@ class ExposedDocumentRepositoryTest : FunSpec({
                 repository.confirm(id, byteArrayOf(1), signatory, listOf(grant(original, signatory)))
             }
 
-            error.detail shouldBe "Invalid transition for document $id from Accepted to Accepted"
+            error.detail shouldBe "Invalid transition for document $id from Approved to Approved"
             val after = repository.find(id)
             after.copy(pdfBytes = before.pdfBytes) shouldBe before
             after.pdfBytes.toList() shouldBe before.pdfBytes.toList()
@@ -615,7 +615,7 @@ class ExposedDocumentRepositoryTest : FunSpec({
 
         results.count { it.isSuccess } shouldBe 1
         (results.single { it.isFailure }.exceptionOrNull() is RepositoryWriteError.ConflictError) shouldBe true
-        repository.find(id).status shouldBe AuthorizationDocumentStatus.Accepted
+        repository.find(id).status shouldBe AuthorizationDocumentStatus.Approved
         coVerify(exactly = 1) { grantRepository.insert(grant) }
     }
 })

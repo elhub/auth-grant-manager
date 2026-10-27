@@ -15,7 +15,7 @@
       ]
     },
     "status": {
-      "enum": ["Pending", "Accepted", "Rejected", "Expired"]
+      "enum": ["Pending", "Approved", "Rejected", "Expired"]
     },
     "textReference": {
       "type": "string",
@@ -25,7 +25,7 @@
     "textLanguage": {
       "type": "string",
       "enum": ["nb", "nn", "en"],
-      "description": "Language of the authorization text presented to the user when accepting or rejecting the request.",
+      "description": "Language of the authorization text presented to the user when approving or rejecting the request.",
       "examples": ["nb"]
     },
     "requestedScopes": {
@@ -40,12 +40,12 @@
     "requestedGrantValidFrom": {
       "type": "string",
       "format": "date-time",
-      "description": "Requested start of validity for the authorization grant created when the request is accepted."
+      "description": "Requested start of validity for the authorization grant created when the request is approved."
     },
     "requestedGrantValidTo": {
       "type": "string",
       "format": "date-time",
-      "description": "Requested end of validity for the authorization grant created when the request is accepted."
+      "description": "Requested end of validity for the authorization grant created when the request is approved."
     },
     "redirectUri": {
       "type": "string",

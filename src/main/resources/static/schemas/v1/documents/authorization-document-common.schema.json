@@ -15,7 +15,7 @@
       ]
     },
     "status": {
-      "enum": ["Pending", "Signed", "Rejected", "Expired"]
+      "enum": ["Pending", "Approved", "Expired"]
     },
     "requestedScopes": {
       "type": "array",
