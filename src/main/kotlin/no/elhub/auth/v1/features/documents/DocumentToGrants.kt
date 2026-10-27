@@ -5,6 +5,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.plus
 import no.elhub.auth.v0.features.common.party.AuthorizationParty
 import no.elhub.auth.v1.common.frameworkAgreementGrantValidity
+import no.elhub.auth.v1.common.now
 import no.elhub.auth.v1.domain.AuthorizationDocument
 import no.elhub.auth.v1.domain.AuthorizationDocumentType
 import no.elhub.auth.v1.domain.AuthorizationGrant
@@ -18,14 +19,13 @@ import no.elhub.auth.v1.domain.PermissionCapability
 import no.elhub.auth.v1.domain.ResourceConstraint
 import no.elhub.auth.v1.domain.ResourceType
 import java.util.UUID
-import kotlin.time.Clock
 import kotlin.time.Instant
 
 class InvalidDocumentScopes(detail: String) : IllegalStateException(detail)
 
 fun AuthorizationDocument.toGrants(
     approvedBy: AuthorizationParty,
-    now: Instant = Clock.System.now(),
+    now: Instant = now(),
 ): List<AuthorizationGrant> =
     when (documentType) {
         AuthorizationDocumentType.EnergySupplierFrameworkAgreement -> {
