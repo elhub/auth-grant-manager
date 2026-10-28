@@ -1,8 +1,8 @@
 package no.elhub.auth.v1.features.documents
 
+import no.elhub.auth.common.auth.AuthorizationParty
 import no.elhub.auth.v0.features.common.Page
 import no.elhub.auth.v0.features.common.Pagination
-import no.elhub.auth.v0.features.common.party.AuthorizationParty
 import no.elhub.auth.v1.domain.AuthorizationDocument
 import no.elhub.auth.v1.domain.AuthorizationDocumentStatus
 import no.elhub.auth.v1.domain.AuthorizationGrantSourceType

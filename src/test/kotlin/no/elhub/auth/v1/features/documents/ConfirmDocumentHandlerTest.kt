@@ -14,15 +14,15 @@ import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
 import kotlinx.serialization.json.JsonObject
+import no.elhub.auth.common.auth.AuthorizationParty
+import no.elhub.auth.common.auth.PartyType
 import no.elhub.auth.common.documents.pdf.PdfSignatory
 import no.elhub.auth.common.documents.pdf.PdfSignatureValidator
 import no.elhub.auth.common.documents.pdf.PdfValidationException
-import no.elhub.auth.v0.features.common.party.AuthorizationParty
 import no.elhub.auth.v0.features.common.party.PartyError
 import no.elhub.auth.v0.features.common.party.PartyIdentifier
 import no.elhub.auth.v0.features.common.party.PartyIdentifierType
 import no.elhub.auth.v0.features.common.party.PartyService
-import no.elhub.auth.v0.features.common.party.PartyType
 import no.elhub.auth.v1.domain.AuthorizationDocument
 import no.elhub.auth.v1.domain.AuthorizationDocumentStatus
 import no.elhub.auth.v1.domain.AuthorizationDocumentType

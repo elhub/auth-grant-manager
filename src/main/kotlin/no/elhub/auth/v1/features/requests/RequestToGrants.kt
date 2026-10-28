@@ -2,7 +2,7 @@ package no.elhub.auth.v1.features.requests
 
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.plus
-import no.elhub.auth.v0.features.common.party.AuthorizationParty
+import no.elhub.auth.common.auth.AuthorizationParty
 import no.elhub.auth.v1.common.GrantValidity
 import no.elhub.auth.v1.common.endOfDayOslo
 import no.elhub.auth.v1.common.now

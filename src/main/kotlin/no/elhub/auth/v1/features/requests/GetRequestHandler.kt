@@ -1,6 +1,6 @@
 package no.elhub.auth.v1.features.requests
 
-import no.elhub.auth.v0.features.common.party.AuthorizationParty
+import no.elhub.auth.common.auth.AuthorizationParty
 import no.elhub.auth.v1.domain.AuthorizationRequest
 import no.elhub.auth.v1.repositories.RequestRepository
 import java.util.UUID

@@ -12,14 +12,14 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.plus
+import no.elhub.auth.common.auth.AuthorizationParty
+import no.elhub.auth.common.auth.PartyType
 import no.elhub.auth.v0.features.common.RepositoryReadError
 import no.elhub.auth.v0.features.common.currentTimeUtc
-import no.elhub.auth.v0.features.common.party.AuthorizationParty
 import no.elhub.auth.v0.features.common.party.PartyError
 import no.elhub.auth.v0.features.common.party.PartyIdentifier
 import no.elhub.auth.v0.features.common.party.PartyIdentifierType
 import no.elhub.auth.v0.features.common.party.PartyService
-import no.elhub.auth.v0.features.common.party.PartyType
 import no.elhub.auth.v0.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
 import no.elhub.auth.v0.features.common.todayOslo
 import no.elhub.auth.v0.features.documents.AuthorizationDocument

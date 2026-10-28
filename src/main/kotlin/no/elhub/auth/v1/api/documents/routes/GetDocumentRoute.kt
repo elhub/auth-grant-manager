@@ -10,8 +10,8 @@ import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import kotlinx.serialization.json.Json
+import no.elhub.auth.common.auth.authorizedParty
 import no.elhub.auth.v0.config.jsonApiContentType
-import no.elhub.auth.v0.features.common.auth.authorizedParty
 import no.elhub.auth.v0.features.common.toApiErrorResponse
 import no.elhub.auth.v0.features.common.toNotAcceptedErrorResponse
 import no.elhub.auth.v0.features.common.validatePathId

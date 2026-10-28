@@ -2,7 +2,7 @@ package no.elhub.auth.v0.features.documents.create.dto
 
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
-import no.elhub.auth.v0.features.common.party.AuthorizationParty
+import no.elhub.auth.common.auth.AuthorizationParty
 import no.elhub.auth.v0.features.common.party.PartyIdentifier
 import no.elhub.auth.v0.features.documents.AuthorizationDocument
 import no.elhub.auth.v0.features.documents.common.CreateDocumentBusinessMeta

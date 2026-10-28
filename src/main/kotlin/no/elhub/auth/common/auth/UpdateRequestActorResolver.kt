@@ -1,10 +1,8 @@
-package no.elhub.auth.v0.features.common.auth
+package no.elhub.auth.common.auth
 
 import no.elhub.auth.plugin.dto.TokenType
 import no.elhub.auth.plugin.policies.token.base.authinfo.AuthInfoPolicy
 import no.elhub.auth.plugin.policies.token.core.TokenPolicy
-import no.elhub.auth.v0.features.common.party.AuthorizationParty
-import no.elhub.auth.v0.features.common.party.PartyType
 import org.slf4j.LoggerFactory
 
 private val log = LoggerFactory.getLogger("UpdateRequestActorResolver")

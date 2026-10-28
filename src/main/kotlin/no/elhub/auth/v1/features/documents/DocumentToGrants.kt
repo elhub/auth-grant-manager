@@ -3,7 +3,7 @@ package no.elhub.auth.v1.features.documents
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.plus
-import no.elhub.auth.v0.features.common.party.AuthorizationParty
+import no.elhub.auth.common.auth.AuthorizationParty
 import no.elhub.auth.v1.common.frameworkAgreementGrantValidity
 import no.elhub.auth.v1.common.now
 import no.elhub.auth.v1.domain.AuthorizationDocument
