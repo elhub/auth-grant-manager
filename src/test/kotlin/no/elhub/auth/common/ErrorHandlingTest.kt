@@ -17,6 +17,7 @@ import no.elhub.auth.v0.config.jsonApiContentType
 import no.elhub.auth.v1.domain.AuthorizationDocumentStatus
 import no.elhub.auth.v1.features.documents.ConfirmDocumentError
 import no.elhub.auth.v1.features.documents.InvalidDocumentScopes
+import no.elhub.auth.v1.features.grants.UpdateGrantError
 import no.elhub.auth.v1.repositories.RepositoryReadError
 import no.elhub.auth.v1.repositories.RepositoryWriteError
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
@@ -129,7 +130,28 @@ class ErrorHandlingTest : FunSpec({
         ),
     )
 
-    (validationCases + confirmationCases).forEach { case ->
+    val grantUpdateCases = listOf(
+        ErrorCase(
+            UpdateGrantError.NotAuthorized(),
+            HttpStatusCode.Forbidden,
+            "Not allowed to update",
+            "Only systems may update an AuthorizationGrant.",
+        ),
+        ErrorCase(
+            UpdateGrantError.InvalidTransition(),
+            HttpStatusCode.UnprocessableEntity,
+            "Invalid status transition",
+            "Only active AuthorizationGrants may be revoked, and only active consumable grants may be exhausted.",
+        ),
+        ErrorCase(
+            UpdateGrantError.Expired(),
+            HttpStatusCode.UnprocessableEntity,
+            "AuthorizationGrant has expired",
+            "AuthorizationGrant has expired.",
+        ),
+    )
+
+    (validationCases + confirmationCases + grantUpdateCases).forEach { case ->
         test("maps ${case.cause::class.qualifiedName} to ${case.status.value} JSON:API error") {
             testApplication {
                 application {

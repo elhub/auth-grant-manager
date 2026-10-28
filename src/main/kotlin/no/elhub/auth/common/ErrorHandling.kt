@@ -22,6 +22,7 @@ import no.elhub.auth.v1.features.documents.ConfirmDocumentError
 import no.elhub.auth.v1.features.documents.GetDocumentError
 import no.elhub.auth.v1.features.documents.InvalidDocumentScopes
 import no.elhub.auth.v1.features.grants.GetGrantError
+import no.elhub.auth.v1.features.grants.UpdateGrantError
 import no.elhub.auth.v1.features.requests.GetRequestError
 import no.elhub.auth.v1.features.requests.UpdateRequestError
 import no.elhub.auth.v1.repositories.RepositoryReadError
@@ -209,6 +210,24 @@ private fun Errors.toApiErrorResponse() =
                 detail = "The party is not allowed to access this resource",
             )
         }
+
+        is UpdateGrantError.NotAuthorized -> buildApiErrorResponse(
+            status = HttpStatusCode.Forbidden,
+            title = "Not allowed to update",
+            detail = detail,
+        )
+
+        is UpdateGrantError.InvalidTransition -> buildApiErrorResponse(
+            status = HttpStatusCode.UnprocessableEntity,
+            title = "Invalid status transition",
+            detail = detail,
+        )
+
+        is UpdateGrantError.Expired -> buildApiErrorResponse(
+            status = HttpStatusCode.UnprocessableEntity,
+            title = "AuthorizationGrant has expired",
+            detail = detail,
+        )
 
         is UpdateRequestError.NotAuthorized -> buildApiErrorResponse(
             status = HttpStatusCode.Forbidden,
