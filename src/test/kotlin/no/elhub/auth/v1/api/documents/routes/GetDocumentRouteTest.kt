@@ -25,7 +25,7 @@ import no.elhub.auth.common.auth.PartyType
 import no.elhub.auth.v0.config.jsonApiContentType
 import no.elhub.auth.v0.setupAppWith
 import no.elhub.auth.v1.V1_DOCUMENTS_PATH
-import no.elhub.auth.v1.api.common.response.GrantTypeResponse
+import no.elhub.auth.v1.api.common.GrantResourceType
 import no.elhub.auth.v1.api.documents.response.JsonApiGetAuthorizationDocumentResponse
 import no.elhub.auth.v1.domain.AuthorizationDocument
 import no.elhub.auth.v1.domain.AuthorizationDocumentStatus
@@ -100,7 +100,7 @@ class GetDocumentRouteTest : FunSpec({
             body.data.relationships.approvedBy.shouldNotBeNull().data.id shouldBe document.requestedOf.id
             val grants = body.data.relationships.authorizationGrants.shouldNotBeNull().data
             grants.map { it.id } shouldBe listOf(grant.id.toString(), persistentGrant.id.toString())
-            grants.map { it.type } shouldBe listOf(GrantTypeResponse.ConsumableGrant, GrantTypeResponse.PersistentGrant)
+            grants.map { it.type } shouldBe listOf(GrantResourceType.ConsumableGrant, GrantResourceType.PersistentGrant)
         }
     }
 

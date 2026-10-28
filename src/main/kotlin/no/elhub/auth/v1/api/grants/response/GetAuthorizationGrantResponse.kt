@@ -3,8 +3,8 @@ package no.elhub.auth.v1.api.grants.response
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import no.elhub.auth.v1.api.common.GrantResourceType
 import no.elhub.auth.v1.api.common.response.GrantSourceTypeResponse
-import no.elhub.auth.v1.api.common.response.GrantTypeResponse
 import no.elhub.auth.v1.api.common.response.GrantedScopeResponse
 import no.elhub.auth.v1.api.common.response.PartyTypeResponse
 import no.elhub.auth.v1.api.common.response.ResponseRelationship
@@ -28,7 +28,7 @@ typealias JsonApiGetAuthorizationGrantResponse = JsonApiResponse.Document<Author
 @Serializable
 data class AuthorizationGrantResource(
     val id: String,
-    val type: GrantTypeResponse,
+    val type: GrantResourceType,
     val attributes: AuthorizationGrantAttributes,
     val relationships: AuthorizationGrantRelationships,
     val links: AuthorizationGrantLinks,

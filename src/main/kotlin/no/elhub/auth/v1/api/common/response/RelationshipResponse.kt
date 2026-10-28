@@ -3,6 +3,7 @@ package no.elhub.auth.v1.api.common.response
 import kotlinx.serialization.Serializable
 import no.elhub.auth.common.auth.AuthorizationParty
 import no.elhub.auth.common.auth.PartyType
+import no.elhub.auth.v1.api.common.GrantResourceType
 import no.elhub.auth.v1.domain.AuthorizationGrant
 import no.elhub.auth.v1.domain.AuthorizationGrantType
 
@@ -11,12 +12,6 @@ enum class PartyTypeResponse {
     Person,
     Organization,
     MarketEntity,
-}
-
-@Serializable
-enum class GrantTypeResponse {
-    ConsumableGrant,
-    PersistentGrant,
 }
 
 @Serializable
@@ -38,7 +33,7 @@ data class ResponseRelationship<T>(
 
 @Serializable
 data class ResponseGrantRelationship(
-    val data: List<ResponseResourceIdentifier<GrantTypeResponse>>,
+    val data: List<ResponseResourceIdentifier<GrantResourceType>>,
 )
 
 fun AuthorizationParty.toResponseRelationship() = ResponseRelationship(
@@ -60,8 +55,8 @@ fun AuthorizationParty.toApprovalRelationship(): ResponseRelationship<PartyTypeR
 
 fun AuthorizationGrant.toResponseIdentifier() = ResponseResourceIdentifier(
     type = when (type) {
-        AuthorizationGrantType.Consumable -> GrantTypeResponse.ConsumableGrant
-        AuthorizationGrantType.Persistent -> GrantTypeResponse.PersistentGrant
+        AuthorizationGrantType.Consumable -> GrantResourceType.ConsumableGrant
+        AuthorizationGrantType.Persistent -> GrantResourceType.PersistentGrant
     },
     id = id.toString(),
 )

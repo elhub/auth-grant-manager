@@ -937,11 +937,11 @@ paths:
     patch:
       tags:
         - Work in Progress
-      summary: '[WIP] Consume an authorization grant'
+      summary: '[WIP] Update an authorization grant'
       description: >
-        Consume an active, unexpired authorization grant by setting its status to Exhausted.
-        Only the transition from Active to Exhausted is supported. This endpoint is intended
-        for internal Elhub systems (BRS) and is not available to external integrators.
+        Update an active authorization grant by setting its status to Exhausted or Revoked.
+        Only internal Elhub systems may exhaust consumable grants. The principal, grantedBy party,
+        or internal Elhub systems may revoke grants.
         The request body ID must match the path ID.
       operationId: updateV1AuthorizationGrant
       x-status: Work in progress
@@ -951,7 +951,7 @@ paths:
         - name: id
           in: path
           required: true
-          description: Unique identifier of the authorization grant to consume.
+          description: Unique identifier of the authorization grant to update.
           schema:
             type: string
             format: uuid
@@ -966,7 +966,7 @@ paths:
                 $ref: './schemas/v1/grants/examples/update.json'
       responses:
         '200':
-          description: The consumed authorization grant.
+          description: The updated authorization grant.
           content:
             application/vnd.api+json:
               schema:
