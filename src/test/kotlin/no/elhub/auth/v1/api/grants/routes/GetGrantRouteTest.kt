@@ -21,8 +21,8 @@ import no.elhub.auth.common.auth.PartyType
 import no.elhub.auth.v0.config.jsonApiContentType
 import no.elhub.auth.v0.setupAppWith
 import no.elhub.auth.v1.V1_GRANTS_PATH
+import no.elhub.auth.v1.api.common.GrantResourceType
 import no.elhub.auth.v1.api.common.response.GrantSourceTypeResponse
-import no.elhub.auth.v1.api.common.response.GrantTypeResponse
 import no.elhub.auth.v1.api.grants.response.JsonApiGetAuthorizationGrantResponse
 import no.elhub.auth.v1.domain.AuthorizationGrant
 import no.elhub.auth.v1.domain.AuthorizationGrantSourceType
@@ -71,7 +71,7 @@ class GetGrantRouteTest : FunSpec({
             response.contentType()?.withoutParameters() shouldBe jsonApiContentType
             val body = response.body<JsonApiGetAuthorizationGrantResponse>()
             body.data.id shouldBe grantId.toString()
-            body.data.type shouldBe GrantTypeResponse.ConsumableGrant
+            body.data.type shouldBe GrantResourceType.ConsumableGrant
             body.data.attributes.status shouldBe AuthorizationGrantStatus.Active
             body.data.relationships.principal.data.id shouldBe principal.id
             body.data.relationships.grantedBy.data.id shouldBe grantedBy.id

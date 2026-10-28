@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Authorization Grant Update",
-  "description": "Consume an authorization grant.",
+  "description": "Consume or revoke an authorization grant.",
   "type": "object",
   "required": ["data"],
   "properties": {

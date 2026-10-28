@@ -223,6 +223,12 @@ private fun Errors.toApiErrorResponse() =
             detail = detail,
         )
 
+        is UpdateGrantError.TypeMismatch -> buildApiErrorResponse(
+            status = HttpStatusCode.UnprocessableEntity,
+            title = "Invalid field value",
+            detail = detail,
+        )
+
         is UpdateGrantError.Expired -> buildApiErrorResponse(
             status = HttpStatusCode.UnprocessableEntity,
             title = "AuthorizationGrant has expired",
