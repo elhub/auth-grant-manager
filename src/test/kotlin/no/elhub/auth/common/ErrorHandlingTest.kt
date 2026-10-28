@@ -74,6 +74,12 @@ class ErrorHandlingTest : FunSpec({
 
     val confirmationCases = listOf(
         ErrorCase(
+            ConfirmDocumentError.InvalidGrantValidity(),
+            HttpStatusCode.UnprocessableEntity,
+            "Invalid grant validity",
+            "The requested grant validity period has ended or ends before it starts.",
+        ),
+        ErrorCase(
             ConfirmDocumentError.NotAuthorized(),
             HttpStatusCode.Forbidden,
             "Party not authorized",

@@ -176,6 +176,8 @@ class RequestToGrantsTest : FunSpec({
             Triple(past, null, startOfToday to null),
             Triple(past, future, startOfToday to future),
             Triple(startOfToday, null, startOfToday to null),
+            Triple(earlierToday, null, earlierToday to null),
+            Triple(laterToday, null, laterToday to null),
             Triple(future, null, future to null),
             Triple(future, laterFuture, future to laterFuture),
             Triple(future, future, future to future),

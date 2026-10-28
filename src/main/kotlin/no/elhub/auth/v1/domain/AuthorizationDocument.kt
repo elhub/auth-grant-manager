@@ -2,6 +2,7 @@ package no.elhub.auth.v1.domain
 
 import kotlinx.serialization.json.JsonObject
 import no.elhub.auth.v0.features.common.party.AuthorizationParty
+import no.elhub.auth.v1.domain.documents.DocumentSpecification
 import java.util.UUID
 import kotlin.time.Clock
 import kotlin.time.Instant
@@ -27,6 +28,56 @@ data class AuthorizationDocument(
     val pdfBytes: ByteArray,
 ) {
     companion object {
+        fun create(
+            specification: DocumentSpecification,
+            externalReference: String?,
+            meta: JsonObject,
+            validTo: Instant,
+            requestedBy: AuthorizationParty,
+            requestedPrincipal: AuthorizationParty,
+            requestedOf: AuthorizationParty,
+            pdfBytes: ByteArray,
+        ): AuthorizationDocument =
+            when (specification) {
+                is DocumentSpecification.ChangeOfEnergySupplierForOrganization -> new(
+                    documentType = specification.documentType,
+                    requestedScopes = listOf(specification.toRequestedAuthorizationScope()),
+                    externalReference = externalReference,
+                    meta = meta,
+                    validTo = validTo,
+                    requestedBy = requestedBy,
+                    requestedPrincipal = requestedPrincipal,
+                    requestedOf = requestedOf,
+                    pdfBytes = pdfBytes,
+                )
+
+                is DocumentSpecification.MoveInAndChangeOfEnergySupplierForOrganization -> new(
+                    documentType = specification.documentType,
+                    requestedScopes = listOf(specification.toRequestedAuthorizationScope()),
+                    externalReference = externalReference,
+                    meta = meta,
+                    validTo = validTo,
+                    requestedBy = requestedBy,
+                    requestedPrincipal = requestedPrincipal,
+                    requestedOf = requestedOf,
+                    pdfBytes = pdfBytes,
+                )
+
+                is DocumentSpecification.EnergySupplierFrameworkAgreement -> new(
+                    documentType = specification.documentType,
+                    requestedScopes = listOf(specification.toRequestedAuthorizationScope()),
+                    externalReference = externalReference,
+                    meta = meta,
+                    validTo = validTo,
+                    requestedBy = requestedBy,
+                    requestedPrincipal = requestedPrincipal,
+                    requestedOf = requestedOf,
+                    pdfBytes = pdfBytes,
+                    requestedGrantValidFrom = specification.requestedGrantValidFrom,
+                    requestedGrantValidTo = specification.requestedGrantValidTo,
+                )
+            }
+
         fun new(
             documentType: AuthorizationDocumentType,
             requestedScopes: List<RequestedAuthorizationScope>,
@@ -37,6 +88,8 @@ data class AuthorizationDocument(
             requestedPrincipal: AuthorizationParty,
             requestedOf: AuthorizationParty,
             pdfBytes: ByteArray,
+            requestedGrantValidFrom: Instant? = null,
+            requestedGrantValidTo: Instant? = null,
         ): AuthorizationDocument {
             val now = Clock.System.now()
             return AuthorizationDocument(
@@ -46,6 +99,8 @@ data class AuthorizationDocument(
                 requestedScopes = requestedScopes,
                 externalReference = externalReference,
                 meta = meta,
+                requestedGrantValidFrom = requestedGrantValidFrom,
+                requestedGrantValidTo = requestedGrantValidTo,
                 validFrom = now,
                 validTo = validTo,
                 createdAt = now,
@@ -68,6 +123,7 @@ enum class AuthorizationDocumentStatus {
 }
 
 enum class AuthorizationDocumentType {
+    EnergySupplierFrameworkAgreement,
     ChangeOfEnergySupplierForOrganization,
     MoveInAndChangeOfEnergySupplierForOrganization,
 }

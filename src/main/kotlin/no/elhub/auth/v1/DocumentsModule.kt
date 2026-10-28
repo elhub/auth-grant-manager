@@ -13,6 +13,7 @@ import no.elhub.auth.v1.features.documents.CreateDocumentHandler
 import no.elhub.auth.v1.features.documents.GetDocumentHandler
 import no.elhub.auth.v1.features.documents.ListDocumentsHandler
 import no.elhub.auth.v1.features.documents.creation.ChangeOfEnergySupplierDocumentHandler
+import no.elhub.auth.v1.features.documents.creation.EnergySupplierFrameworkAgreementDocumentHandler
 import no.elhub.auth.v1.features.documents.creation.MoveInAndChangeOfEnergySupplierDocumentHandler
 import no.elhub.auth.v1.repositories.DocumentRepository
 import no.elhub.auth.v1.repositories.ExposedDocumentRepository
@@ -20,6 +21,7 @@ import no.elhub.auth.v1.repositories.ExposedGrantRepository
 import no.elhub.auth.v1.repositories.ExposedPartyRepository
 import no.elhub.auth.v1.repositories.GrantRepository
 import no.elhub.auth.v1.repositories.PartyRepository
+import no.elhub.auth.v1.documenthandlers.frameworkagreement.EnergySupplierFrameworkAgreementDocumentHandler as FrameworkAgreementHandlerImplementation
 import no.elhub.auth.v1.documenthandlers.movein.MoveInAndChangeOfEnergySupplierDocumentHandler as MoveInHandlerImplementation
 import no.elhub.auth.v1.documenthandlers.supplierchange.ChangeOfEnergySupplierDocumentHandler as SupplierChangeHandlerImplementation
 
@@ -40,8 +42,11 @@ fun Application.module() {
         provide<MoveInAndChangeOfEnergySupplierDocumentHandler> {
             MoveInHandlerImplementation()
         }
+        provide<EnergySupplierFrameworkAgreementDocumentHandler> {
+            FrameworkAgreementHandlerImplementation()
+        }
         provide<CreateDocumentHandler> {
-            CreateDocumentHandler(resolve(), resolve(), resolve(), resolve(), resolve())
+            CreateDocumentHandler(resolve(), resolve(), resolve(), resolve(), resolve(), resolve())
         }
         provide<ConfirmDocumentHandler> {
             ConfirmDocumentHandler(resolve(), resolve(), resolve())

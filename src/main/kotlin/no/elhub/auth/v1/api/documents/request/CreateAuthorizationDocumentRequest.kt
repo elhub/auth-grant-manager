@@ -4,12 +4,15 @@ import kotlinx.serialization.Serializable
 import no.elhub.auth.v1.domain.AuthorizationDocumentType
 import no.elhub.auth.v1.domain.DocumentLanguage
 import no.elhub.devxp.jsonapi.model.JsonApiAttributes
+import kotlin.time.Instant
 
 @Serializable
 data class CreateAuthorizationDocumentAttributes(
     val documentType: AuthorizationDocumentType,
-    val requestedScopes: List<RequestedScope>,
+    val requestedScopes: List<RequestedScope>? = null,
     val externalReference: String? = null,
+    val requestedGrantValidFrom: Instant? = null,
+    val requestedGrantValidTo: Instant? = null,
 ) : JsonApiAttributes
 
 @Serializable

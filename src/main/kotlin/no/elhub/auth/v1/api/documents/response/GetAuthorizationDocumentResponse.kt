@@ -45,6 +45,8 @@ data class GetAuthorizationDocumentAttributes(
     val validTo: Instant,
     val createdAt: Instant,
     val updatedAt: Instant,
+    val requestedGrantValidFrom: Instant? = null,
+    val requestedGrantValidTo: Instant? = null,
 )
 
 @Serializable
@@ -87,6 +89,8 @@ fun AuthorizationDocument.toGetResponse() =
                 validTo = validTo,
                 createdAt = createdAt,
                 updatedAt = updatedAt,
+                requestedGrantValidFrom = requestedGrantValidFrom,
+                requestedGrantValidTo = requestedGrantValidTo,
             ),
             meta = meta,
             relationships = AuthorizationDocumentRelationships(

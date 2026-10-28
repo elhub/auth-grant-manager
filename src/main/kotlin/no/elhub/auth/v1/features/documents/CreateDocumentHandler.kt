@@ -8,12 +8,14 @@ import no.elhub.auth.v1.domain.DocumentLanguage
 import no.elhub.auth.v1.domain.documents.DocumentSpecification
 import no.elhub.auth.v1.features.documents.creation.ChangeOfEnergySupplierDocumentHandler
 import no.elhub.auth.v1.features.documents.creation.DocumentCreationContext
+import no.elhub.auth.v1.features.documents.creation.EnergySupplierFrameworkAgreementDocumentHandler
 import no.elhub.auth.v1.features.documents.creation.MoveInAndChangeOfEnergySupplierDocumentHandler
 import no.elhub.auth.v1.repositories.DocumentRepository
 
 class CreateDocumentHandler(
     private val changeOfEnergySupplierHandler: ChangeOfEnergySupplierDocumentHandler,
     private val moveInAndChangeOfEnergySupplierHandler: MoveInAndChangeOfEnergySupplierDocumentHandler,
+    private val energySupplierFrameworkAgreementHandler: EnergySupplierFrameworkAgreementDocumentHandler,
     private val pdfGenerator: PdfGenerator,
     private val pdfSigner: PdfSigner,
     private val documentRepository: DocumentRepository,
@@ -39,12 +41,14 @@ class CreateDocumentHandler(
 
             is DocumentSpecification.MoveInAndChangeOfEnergySupplierForOrganization ->
                 moveInAndChangeOfEnergySupplierHandler.prepare(specification, context)
+
+            is DocumentSpecification.EnergySupplierFrameworkAgreement ->
+                energySupplierFrameworkAgreementHandler.prepare(specification, context)
         }
         val pdfBytes = pdfSigner.sign(pdfGenerator.generate(details.pdfContent))
 
-        val document = AuthorizationDocument.new(
-            documentType = specification.documentType,
-            requestedScopes = listOf(specification.toRequestedAuthorizationScope()),
+        val document = AuthorizationDocument.create(
+            specification = specification,
             externalReference = externalReference,
             meta = details.meta,
             validTo = details.validTo,

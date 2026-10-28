@@ -1,9 +1,8 @@
 package no.elhub.auth.v1.api.documents.request
 
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
 import no.elhub.auth.v1.api.common.errors.InputError
+import no.elhub.auth.v1.common.now
+import no.elhub.auth.v1.common.toDateOrNull
 import no.elhub.auth.v1.domain.AuthorizationDocumentType
 import no.elhub.auth.v1.domain.AuthorizationScopeConstraintAttribute
 import no.elhub.auth.v1.domain.DomainError
@@ -15,15 +14,52 @@ import kotlin.time.Instant
 
 fun toDocumentSpecification(
     documentType: AuthorizationDocumentType,
-    requestedScopes: List<RequestedScope>,
-): DocumentSpecification =
-    when (documentType) {
+    requestedScopes: List<RequestedScope>? = null,
+    requestedGrantValidFrom: Instant? = null,
+    requestedGrantValidTo: Instant? = null,
+    now: Instant = now(),
+): DocumentSpecification {
+    if (documentType != AuthorizationDocumentType.EnergySupplierFrameworkAgreement) {
+        if (requestedGrantValidFrom != null || requestedGrantValidTo != null) {
+            throw InputError.InvalidCreateAuthorizationDocumentPayload(
+                "requestedGrantValidFrom and requestedGrantValidTo are not supported for $documentType",
+            )
+        }
+        if (requestedScopes == null) {
+            throw InputError.InvalidCreateAuthorizationDocumentPayload("requestedScopes is required for $documentType")
+        }
+    }
+
+    return when (documentType) {
         AuthorizationDocumentType.ChangeOfEnergySupplierForOrganization ->
-            requestedScopes.toSupplierChangeSpecification()
+            requireNotNull(requestedScopes).toSupplierChangeSpecification()
 
         AuthorizationDocumentType.MoveInAndChangeOfEnergySupplierForOrganization ->
-            requestedScopes.toMoveInSpecification()
+            requireNotNull(requestedScopes).toMoveInSpecification()
+
+        AuthorizationDocumentType.EnergySupplierFrameworkAgreement -> {
+            if (requestedScopes != null) {
+                throw InputError.InvalidCreateAuthorizationDocumentPayload(
+                    "requestedScopes is not supported for $documentType",
+                )
+            }
+            val validFrom = requestedGrantValidFrom
+            val validTo = requestedGrantValidTo
+            if (validFrom != null && validFrom <= now) {
+                throw InputError.InvalidCreateAuthorizationDocumentPayload("requestedGrantValidFrom must be in the future")
+            }
+            if (validTo != null && validTo <= now) {
+                throw InputError.InvalidCreateAuthorizationDocumentPayload("requestedGrantValidTo must be in the future")
+            }
+            if (validFrom != null && validTo != null && validFrom >= validTo) {
+                throw InputError.InvalidCreateAuthorizationDocumentPayload(
+                    "requestedGrantValidFrom must be before requestedGrantValidTo",
+                )
+            }
+            DocumentSpecification.EnergySupplierFrameworkAgreement(validFrom, validTo)
+        }
     }
+}
 
 private fun List<RequestedScope>.toSupplierChangeSpecification(): DocumentSpecification.ChangeOfEnergySupplierForOrganization {
     if (size != 1) {
@@ -127,17 +163,10 @@ private fun List<RequestedScope>.toMoveInSpecification(): DocumentSpecification.
     }
 
     val validFromValue = validFromValues.single()
-    val validFrom = try {
-        LocalDate.parse(validFromValue)
-    } catch (_: IllegalArgumentException) {
-        try {
-            Instant.parse(validFromValue).toLocalDateTime(TimeZone.of("Europe/Oslo")).date
-        } catch (_: IllegalArgumentException) {
-            throw InputError.InvalidCreateAuthorizationDocumentPayload(
-                "requestedScopes[0].allowedChanges validFrom must be an ISO date or timestamp",
-            )
-        }
-    }
+    val validFrom = validFromValue.toDateOrNull()
+        ?: throw InputError.InvalidCreateAuthorizationDocumentPayload(
+            "requestedScopes[0].allowedChanges validFrom must be an ISO date or timestamp",
+        )
 
     return DocumentSpecification.MoveInAndChangeOfEnergySupplierForOrganization(
         meteringPointIds = ResourceConstraint.MeteringPoints(meteringPointIds),
