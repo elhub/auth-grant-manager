@@ -6,6 +6,7 @@ import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import no.elhub.auth.plugin.policies.token.base.authinfo.AuthInfoPolicy
 import no.elhub.auth.plugin.tokenAuthorize
+import no.elhub.auth.v0.features.common.auth.UpdateRequestAuthInfoPolicy
 import no.elhub.auth.v0.features.common.party.PartyService
 import no.elhub.auth.v1.api.requests.routes.route
 import no.elhub.auth.v1.features.requests.CreateRequestHandler
@@ -50,6 +51,10 @@ fun Application.requestsModule() {
                 route(partyService, createHandler)
                 route(getHandler)
                 route(listHandler)
+            }
+        }
+        tokenAuthorize(UpdateRequestAuthInfoPolicy) {
+            route(V1_REQUESTS_PATH) {
                 route(updateHandler)
             }
         }

@@ -14,7 +14,9 @@ import no.elhub.auth.plugin.authorization
 import no.elhub.auth.plugin.policies.token.base.authinfo.AuthInfoPolicy
 import no.elhub.auth.v0.features.common.ApiHeaders
 import no.elhub.auth.v0.features.common.auth.AuthorizedPartyKey
+import no.elhub.auth.v0.features.common.auth.UpdateRequestAuthInfoPolicy
 import no.elhub.auth.v0.features.common.auth.resolveAuthorizedParty
+import no.elhub.auth.v0.features.common.auth.resolveUpdateRequestActor
 
 fun Application.configureAuthorization() {
     val pdpHttpClient = HttpClient(Apache5) {
@@ -54,6 +56,24 @@ fun Application.configureAuthorization() {
                 // Resolve the AuthorizationParty from the PDP response and store it on call attributes
                 // so route handlers can access it via call.authorizedParty
                 val party = resolveAuthorizedParty(response.result)
+                if (party != null) {
+                    attributes.put(AuthorizedPartyKey, party)
+                    true
+                } else {
+                    false
+                }
+            }
+        }
+
+        tokenPolicy(UpdateRequestAuthInfoPolicy) {
+            buildPayload {
+                AuthInfoPolicy.Request(
+                    onBehalfOfOrganisationId = request.headers[ApiHeaders.ON_BEHALF_OF_ORGANISATION]?.ifBlank { null },
+                )
+            }
+
+            enforce { response ->
+                val party = resolveUpdateRequestActor(response.result)
                 if (party != null) {
                     attributes.put(AuthorizedPartyKey, party)
                     true
