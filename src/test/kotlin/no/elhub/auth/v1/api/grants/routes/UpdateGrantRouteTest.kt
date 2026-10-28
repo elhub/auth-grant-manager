@@ -61,7 +61,7 @@ class UpdateGrantRouteTest : FunSpec({
     beforeTest { clearMocks(handler) }
 
     test("PATCH consumes a grant and returns it as JSON:API") {
-        coEvery { handler(id, system, AuthorizationGrantStatus.Exhausted) } returns
+        coEvery { handler(id, system, AuthorizationGrantStatus.Exhausted, AuthorizationGrantType.Consumable) } returns
             grant.copy(status = AuthorizationGrantStatus.Exhausted)
 
         testApplication {
@@ -83,12 +83,14 @@ class UpdateGrantRouteTest : FunSpec({
             data.attributes.status shouldBe AuthorizationGrantStatus.Exhausted
             data.relationships.principal.data.id shouldBe principal.id
             data.links.self shouldBe path
-            coVerify(exactly = 1) { handler(id, system, AuthorizationGrantStatus.Exhausted) }
+            coVerify(exactly = 1) {
+                handler(id, system, AuthorizationGrantStatus.Exhausted, AuthorizationGrantType.Consumable)
+            }
         }
     }
 
     test("PATCH revokes a persistent grant as its principal") {
-        coEvery { handler(id, principal, AuthorizationGrantStatus.Revoked) } returns
+        coEvery { handler(id, principal, AuthorizationGrantStatus.Revoked, AuthorizationGrantType.Persistent) } returns
             grant.copy(type = AuthorizationGrantType.Persistent, status = AuthorizationGrantStatus.Revoked)
 
         testApplication {
@@ -102,7 +104,9 @@ class UpdateGrantRouteTest : FunSpec({
             val data = response.body<JsonApiGetAuthorizationGrantResponse>().data
             data.type shouldBe GrantResourceType.PersistentGrant
             data.attributes.status shouldBe AuthorizationGrantStatus.Revoked
-            coVerify(exactly = 1) { handler(id, principal, AuthorizationGrantStatus.Revoked) }
+            coVerify(exactly = 1) {
+                handler(id, principal, AuthorizationGrantStatus.Revoked, AuthorizationGrantType.Persistent)
+            }
         }
     }
 
@@ -126,7 +130,7 @@ class UpdateGrantRouteTest : FunSpec({
 
                 response.status shouldBe HttpStatusCode.UnprocessableEntity
                 response.body<JsonApiErrorCollection>().errors.single().status shouldBe "422"
-                coVerify(exactly = 0) { handler(any(), any(), any()) }
+                coVerify(exactly = 0) { handler(any(), any(), any(), any()) }
             }
         }
     }
@@ -141,19 +145,20 @@ class UpdateGrantRouteTest : FunSpec({
 
             response.status shouldBe HttpStatusCode.UnprocessableEntity
             response.body<JsonApiErrorCollection>().errors.single().status shouldBe "422"
-            coVerify(exactly = 0) { handler(any(), any(), any()) }
+            coVerify(exactly = 0) { handler(any(), any(), any(), any()) }
         }
     }
 
     listOf(
         UpdateGrantError.NotAuthorized("Not authorized") to HttpStatusCode.Forbidden,
         UpdateGrantError.InvalidTransition() to HttpStatusCode.UnprocessableEntity,
+        UpdateGrantError.TypeMismatch() to HttpStatusCode.UnprocessableEntity,
         UpdateGrantError.Expired() to HttpStatusCode.UnprocessableEntity,
         RepositoryReadError.NotFoundError("Missing grant") to HttpStatusCode.NotFound,
         IllegalStateException("boom") to HttpStatusCode.InternalServerError,
     ).forEach { (error, status) ->
         test("PATCH returns ${status.value} for ${error::class.simpleName}") {
-            coEvery { handler(id, system, AuthorizationGrantStatus.Exhausted) } throws error
+            coEvery { handler(id, system, AuthorizationGrantStatus.Exhausted, AuthorizationGrantType.Consumable) } throws error
 
             testApplication {
                 setupAppWith(system) {
@@ -165,6 +170,9 @@ class UpdateGrantRouteTest : FunSpec({
                 response.status shouldBe status
                 response.contentType()?.withoutParameters() shouldBe jsonApiContentType
                 response.body<JsonApiErrorCollection>().errors.single().status shouldBe status.value.toString()
+                coVerify(exactly = 1) {
+                    handler(id, system, AuthorizationGrantStatus.Exhausted, AuthorizationGrantType.Consumable)
+                }
             }
         }
     }
