@@ -92,11 +92,13 @@ class UpdateGrantHandlerTest : FunSpec({
     }
 
     listOf(principal, grantedBy, grantedTo).forEach { party ->
-        test("denies ${party.type} updating a grant to Exhausted") {
-            shouldThrow<UpdateGrantError.NotAuthorized> { handler(id, party, AuthorizationGrantStatus.Exhausted) }
+        AuthorizationGrantStatus.entries.filter { it != AuthorizationGrantStatus.Revoked }.forEach { status ->
+            test("denies ${party.type} updating a grant to $status before validating the transition") {
+                shouldThrow<UpdateGrantError.NotAuthorized> { handler(id, party, status) }
 
-            coVerify(exactly = 0) { grantRepository.update(any(), any()) }
-            coVerify(exactly = 0) { grantRepository.find(any()) }
+                coVerify(exactly = 0) { grantRepository.update(any(), any()) }
+                coVerify(exactly = 0) { grantRepository.find(any()) }
+            }
         }
     }
 
