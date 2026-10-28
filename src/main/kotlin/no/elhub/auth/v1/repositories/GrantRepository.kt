@@ -1,10 +1,10 @@
 package no.elhub.auth.v1.repositories
 
+import no.elhub.auth.common.auth.AuthorizationParty
 import no.elhub.auth.v0.config.withTransaction
 import no.elhub.auth.v0.features.common.PGEnum
 import no.elhub.auth.v0.features.common.Page
 import no.elhub.auth.v0.features.common.Pagination
-import no.elhub.auth.v0.features.common.party.AuthorizationParty
 import no.elhub.auth.v0.features.common.party.AuthorizationPartyTable
 import no.elhub.auth.v0.features.grants.common.toAuthorizationParty
 import no.elhub.auth.v1.common.now

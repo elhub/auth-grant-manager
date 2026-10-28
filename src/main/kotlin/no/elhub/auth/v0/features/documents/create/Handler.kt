@@ -3,9 +3,9 @@ package no.elhub.auth.v0.features.documents.create
 import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensure
+import no.elhub.auth.common.auth.PartyType
 import no.elhub.auth.v0.features.common.party.PartyError
 import no.elhub.auth.v0.features.common.party.PartyService
-import no.elhub.auth.v0.features.common.party.PartyType
 import no.elhub.auth.v0.features.documents.AuthorizationDocument
 import no.elhub.auth.v0.features.documents.common.AuthorizationDocumentProperty
 import no.elhub.auth.v0.features.documents.common.CreateDocumentBusinessModel

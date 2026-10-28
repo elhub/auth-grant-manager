@@ -1,7 +1,7 @@
 package no.elhub.auth.v1.domain
 
 import kotlinx.serialization.json.JsonObject
-import no.elhub.auth.v0.features.common.party.AuthorizationParty
+import no.elhub.auth.common.auth.AuthorizationParty
 import no.elhub.auth.v1.domain.documents.DocumentSpecification
 import java.util.UUID
 import kotlin.time.Clock

@@ -2,7 +2,7 @@ package no.elhub.auth.v1.requesthandlers.frameworkagreement
 
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
-import no.elhub.auth.v0.features.common.party.AuthorizationParty
+import no.elhub.auth.common.auth.AuthorizationParty
 import no.elhub.auth.v1.domain.requests.AuthorizationRequestTypeDetails
 import no.elhub.auth.v1.features.requests.creation.RequestTypeSpecificDetails
 import kotlin.time.Clock

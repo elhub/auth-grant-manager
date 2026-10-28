@@ -10,8 +10,8 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.put
 import io.ktor.utils.io.readRemaining
 import kotlinx.io.readByteArray
+import no.elhub.auth.common.auth.authorizedParty
 import no.elhub.auth.v0.features.common.InputError
-import no.elhub.auth.v0.features.common.auth.authorizedParty
 import no.elhub.auth.v0.features.common.toApiErrorResponse
 import no.elhub.auth.v0.features.common.toUnsupportedErrorResponse
 import no.elhub.auth.v0.features.common.validatePathId

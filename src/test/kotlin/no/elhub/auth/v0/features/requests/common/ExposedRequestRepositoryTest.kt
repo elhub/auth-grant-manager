@@ -11,6 +11,8 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
+import no.elhub.auth.common.auth.AuthorizationParty
+import no.elhub.auth.common.auth.PartyType
 import no.elhub.auth.v0.config.TransactionContext
 import no.elhub.auth.v0.config.withTransaction
 import no.elhub.auth.v0.features.common.CreateScopeData
@@ -20,10 +22,8 @@ import no.elhub.auth.v0.features.common.PostgresTestContainerExtension
 import no.elhub.auth.v0.features.common.RepositoryWriteError
 import no.elhub.auth.v0.features.common.RunPostgresScriptExtension
 import no.elhub.auth.v0.features.common.currentTimeUtc
-import no.elhub.auth.v0.features.common.party.AuthorizationParty
 import no.elhub.auth.v0.features.common.party.AuthorizationPartyTable
 import no.elhub.auth.v0.features.common.party.ExposedPartyRepository
-import no.elhub.auth.v0.features.common.party.PartyType
 import no.elhub.auth.v0.features.grants.AuthorizationGrant
 import no.elhub.auth.v0.features.grants.AuthorizationScope
 import no.elhub.auth.v0.features.grants.common.AuthorizationGrantProperty

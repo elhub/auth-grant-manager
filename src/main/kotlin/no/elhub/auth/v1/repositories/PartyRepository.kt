@@ -1,9 +1,9 @@
 package no.elhub.auth.v1.repositories
 
+import no.elhub.auth.common.auth.PartyType
 import no.elhub.auth.v0.config.withTransaction
 import no.elhub.auth.v0.features.common.party.AuthorizationPartyRecord
 import no.elhub.auth.v0.features.common.party.AuthorizationPartyTable
-import no.elhub.auth.v0.features.common.party.PartyType
 import no.elhub.auth.v0.features.common.party.toAuthorizationParty
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq

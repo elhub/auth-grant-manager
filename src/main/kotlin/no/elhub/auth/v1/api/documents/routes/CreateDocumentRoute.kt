@@ -4,7 +4,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
-import no.elhub.auth.v0.features.common.auth.authorizedParty
+import no.elhub.auth.common.auth.authorizedParty
 import no.elhub.auth.v0.features.common.party.PartyService
 import no.elhub.auth.v0.features.common.receiveEither
 import no.elhub.auth.v0.features.common.toApiErrorResponse

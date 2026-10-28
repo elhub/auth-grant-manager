@@ -4,9 +4,9 @@ import io.ktor.server.application.Application
 import io.ktor.server.plugins.di.dependencies
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
+import no.elhub.auth.common.auth.UpdateRequestAuthInfoPolicy
 import no.elhub.auth.plugin.policies.token.base.authinfo.AuthInfoPolicy
 import no.elhub.auth.plugin.tokenAuthorize
-import no.elhub.auth.v0.features.common.auth.UpdateRequestAuthInfoPolicy
 import no.elhub.auth.v0.features.common.party.PartyService
 import no.elhub.auth.v1.api.requests.routes.route
 import no.elhub.auth.v1.features.requests.CreateRequestHandler

@@ -1,4 +1,4 @@
-package no.elhub.auth.v0.features.common.auth
+package no.elhub.auth.common.auth
 
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.nulls.shouldBeNull
@@ -7,7 +7,6 @@ import no.elhub.auth.plugin.dto.AuthInfoV3
 import no.elhub.auth.plugin.dto.TokenInfo
 import no.elhub.auth.plugin.dto.TokenType
 import no.elhub.auth.plugin.policies.token.base.authinfo.AuthInfoPolicy
-import no.elhub.auth.v0.features.common.party.PartyType
 
 class AuthorizationPartyResolverTest : FunSpec({
 

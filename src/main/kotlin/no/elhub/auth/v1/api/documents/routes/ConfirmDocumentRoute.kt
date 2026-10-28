@@ -12,9 +12,9 @@ import io.ktor.server.routing.put
 import io.ktor.utils.io.readBuffer
 import kotlinx.io.readByteArray
 import kotlinx.serialization.json.Json
+import no.elhub.auth.common.auth.authorizedParty
 import no.elhub.auth.v0.config.jsonApiContentType
 import no.elhub.auth.v0.features.common.InputError
-import no.elhub.auth.v0.features.common.auth.authorizedParty
 import no.elhub.auth.v0.features.common.toApiErrorResponse
 import no.elhub.auth.v0.features.common.toUnsupportedErrorResponse
 import no.elhub.auth.v0.features.common.validatePathId
