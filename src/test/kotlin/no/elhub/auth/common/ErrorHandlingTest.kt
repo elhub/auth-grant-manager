@@ -20,6 +20,7 @@ import no.elhub.auth.v1.features.documents.ConfirmDocumentError
 import no.elhub.auth.v1.features.documents.InvalidDocumentScopes
 import no.elhub.auth.v1.features.documents.creation.DocumentPreparationError
 import no.elhub.auth.v1.features.grants.UpdateGrantError
+import no.elhub.auth.v1.features.requests.creation.RequestPreparationError
 import no.elhub.auth.v1.repositories.RepositoryReadError
 import no.elhub.auth.v1.repositories.RepositoryWriteError
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
@@ -113,6 +114,12 @@ class ErrorHandlingTest : FunSpec({
             "One or more requested metering points could not be found",
         ),
         ErrorCase(
+            RequestPreparationError.RequestedMeteringPointsNotFound(),
+            HttpStatusCode.UnprocessableEntity,
+            "Validation error",
+            "One or more requested metering points could not be found",
+        ),
+        ErrorCase(
             RepositoryReadError.NotFoundError("sensitive read detail"),
             HttpStatusCode.NotFound,
             "Not found error",
@@ -187,6 +194,7 @@ class ErrorHandlingTest : FunSpec({
         RepositoryWriteError.UnexpectedError("secret database write error"),
         InvalidDocumentScopes("secret stored document scope error"),
         DocumentPreparationError.MeteringPointsServiceFailure(ClientError.NotFound),
+        RequestPreparationError.MeteringPointsServiceFailure(ClientError.ServerError),
     ).forEach { cause ->
         test("hides details of ${cause::class.qualifiedName} behind a generic 500 JSON:API error") {
             testApplication {

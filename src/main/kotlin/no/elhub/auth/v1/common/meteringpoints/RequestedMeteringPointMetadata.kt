@@ -1,4 +1,4 @@
-package no.elhub.auth.v1.documenthandlers.common
+package no.elhub.auth.v1.common.meteringpoints
 
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject

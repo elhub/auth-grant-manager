@@ -12,8 +12,6 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
-import kotlin.time.Clock
-import kotlin.time.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -48,6 +46,8 @@ import no.elhub.auth.v1.features.documents.creation.DocumentPreparationError
 import no.elhub.auth.v1.features.documents.creation.MoveInAndChangeOfEnergySupplierDocumentHandler
 import no.elhub.auth.v1.repositories.DocumentRepository
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 class CreateDocumentRouteTest : FunSpec({
     val authorizedParty = AuthorizationParty("123456789", PartyType.OrganizationEntity)

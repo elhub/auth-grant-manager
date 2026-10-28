@@ -27,6 +27,7 @@ import no.elhub.auth.v1.features.grants.GetGrantError
 import no.elhub.auth.v1.features.grants.UpdateGrantError
 import no.elhub.auth.v1.features.requests.GetRequestError
 import no.elhub.auth.v1.features.requests.UpdateRequestError
+import no.elhub.auth.v1.features.requests.creation.RequestPreparationError
 import no.elhub.auth.v1.repositories.RepositoryReadError
 import no.elhub.auth.v1.repositories.RepositoryWriteError
 import org.slf4j.LoggerFactory
@@ -396,6 +397,15 @@ private fun Errors.toApiErrorResponse() =
         }
 
         is DocumentPreparationError.MeteringPointsServiceFailure -> {
+            logger.error("Failed to fetch requested metering points: {}", clientError)
+            toInternalServerApiErrorResponse()
+        }
+
+        is RequestPreparationError.RequestedMeteringPointsNotFound -> {
+            toValidationApiErrorResponse(detail)
+        }
+
+        is RequestPreparationError.MeteringPointsServiceFailure -> {
             logger.error("Failed to fetch requested metering points: {}", clientError)
             toInternalServerApiErrorResponse()
         }

@@ -13,6 +13,7 @@ import io.mockk.mockk
 import no.elhub.auth.common.configureErrorHandling
 import no.elhub.auth.v0.config.configureAuthorization
 import no.elhub.auth.v0.config.configureSerialization
+import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsService
 import no.elhub.auth.v0.features.common.party.PartyService
 import no.elhub.auth.v1.repositories.ExposedGrantRepository
 import no.elhub.auth.v1.repositories.ExposedPartyRepository
@@ -53,6 +54,7 @@ class RequestsModuleTest : FunSpec({
                     configureAuthorization()
                     dependencies {
                         provide<PartyService> { mockk<PartyService>() }
+                        provide<MeteringPointsService> { mockk<MeteringPointsService>() }
                         provide<PartyRepository> { ExposedPartyRepository() }
                         provide<GrantRepository> { ExposedGrantRepository(resolve()) }
                     }
@@ -78,6 +80,7 @@ class RequestsModuleTest : FunSpec({
                 configureAuthorization()
                 dependencies {
                     provide<PartyService> { mockk<PartyService>() }
+                    provide<MeteringPointsService> { mockk<MeteringPointsService>() }
                     provide<PartyRepository> { ExposedPartyRepository() }
                     provide<GrantRepository> { ExposedGrantRepository(resolve()) }
                 }
@@ -102,6 +105,7 @@ class RequestsModuleTest : FunSpec({
                 configureAuthorization()
                 dependencies {
                     provide<PartyService> { mockk<PartyService>() }
+                    provide<MeteringPointsService> { mockk<MeteringPointsService>() }
                     provide<PartyRepository> { ExposedPartyRepository() }
                     provide<GrantRepository> { ExposedGrantRepository(resolve()) }
                 }

@@ -3,8 +3,8 @@ package no.elhub.auth.v1.documenthandlers.movein
 import no.elhub.auth.common.documents.pdf.AuthorizationDocumentPdfContent
 import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsLookupException
 import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsService
+import no.elhub.auth.v1.common.meteringpoints.toRequestedMeteringPointMetadata
 import no.elhub.auth.v1.documenthandlers.common.toPdfLanguage
-import no.elhub.auth.v1.documenthandlers.common.toRequestedMeteringPointMetadata
 import no.elhub.auth.v1.domain.documents.DocumentSpecification
 import no.elhub.auth.v1.features.documents.creation.DocumentCreationContext
 import no.elhub.auth.v1.features.documents.creation.DocumentCreationDetails

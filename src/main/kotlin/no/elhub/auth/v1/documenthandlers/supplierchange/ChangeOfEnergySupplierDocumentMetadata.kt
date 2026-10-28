@@ -2,8 +2,8 @@ package no.elhub.auth.v1.documenthandlers.supplierchange
 
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
-import no.elhub.auth.v1.documenthandlers.common.RequestedMeteringPointMetadata
-import no.elhub.auth.v1.documenthandlers.common.toJsonArray
+import no.elhub.auth.v1.common.meteringpoints.RequestedMeteringPointMetadata
+import no.elhub.auth.v1.common.meteringpoints.toJsonArray
 
 data class ChangeOfEnergySupplierDocumentMetadata(
     val requestedMeteringPoints: List<RequestedMeteringPointMetadata>,

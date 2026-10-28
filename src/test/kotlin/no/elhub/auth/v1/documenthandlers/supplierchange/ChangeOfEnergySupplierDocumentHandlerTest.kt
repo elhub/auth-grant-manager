@@ -6,7 +6,6 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.coEvery
 import io.mockk.mockk
-import kotlin.time.Clock
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -31,6 +30,7 @@ import no.elhub.auth.v1.features.documents.creation.DocumentPreparationError
 import no.elhub.devxp.jsonapi.model.JsonApiLinks
 import no.elhub.devxp.jsonapi.response.JsonApiResponse
 import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObjectWithRelationships
+import kotlin.time.Clock
 
 class ChangeOfEnergySupplierDocumentHandlerTest : FunSpec({
     val context = DocumentCreationContext(

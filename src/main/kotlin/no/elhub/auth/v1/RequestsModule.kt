@@ -31,8 +31,8 @@ fun Application.requestsModule() {
 
     dependencies {
         provide<RequestRepository> { ExposedRequestRepository(resolve(), resolve()) }
-        provide<ChangeOfEnergySupplierRequestHandler> { SupplierChangeHandlerImplementation() }
-        provide<MoveInAndChangeOfEnergySupplierRequestHandler> { MoveInHandlerImplementation() }
+        provide<ChangeOfEnergySupplierRequestHandler> { SupplierChangeHandlerImplementation(resolve()) }
+        provide<MoveInAndChangeOfEnergySupplierRequestHandler> { MoveInHandlerImplementation(resolve()) }
         provide<EnergySupplierFrameworkAgreementRequestHandler> { FrameworkAgreementHandlerImplementation() }
         provide<CreateRequestHandler> { CreateRequestHandler(resolve(), resolve(), resolve(), resolve()) }
         provide<GetRequestHandler> { GetRequestHandler(resolve()) }
