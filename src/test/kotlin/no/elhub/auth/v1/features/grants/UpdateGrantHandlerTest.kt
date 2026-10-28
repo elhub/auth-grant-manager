@@ -15,6 +15,7 @@ import no.elhub.auth.v1.domain.AuthorizationGrantSourceType
 import no.elhub.auth.v1.domain.AuthorizationGrantStatus
 import no.elhub.auth.v1.domain.AuthorizationGrantType
 import no.elhub.auth.v1.repositories.GrantRepository
+import no.elhub.auth.v1.repositories.RepositoryReadError
 import no.elhub.auth.v1.repositories.RepositoryWriteError
 import java.util.UUID
 import kotlin.time.Instant
@@ -59,13 +60,58 @@ class UpdateGrantHandlerTest : FunSpec({
         }
     }
 
-    listOf(principal, grantedBy, grantedTo).forEach { party ->
-        targetStatuses.forEach { status ->
-            test("denies ${party.type} updating a grant to $status") {
-                shouldThrow<UpdateGrantError.NotAuthorized> { handler(id, party, status) }
+    listOf(principal, grantedBy).forEach { party ->
+        listOf(AuthorizationGrantType.Consumable, AuthorizationGrantType.Persistent).forEach { type ->
+            test("${party.type} ${party.id} can revoke a $type grant") {
+                val existing = grant.copy(type = type)
+                val updated = existing.copy(status = AuthorizationGrantStatus.Revoked)
+                coEvery { grantRepository.find(id) } returns existing
+                coEvery { grantRepository.update(id, AuthorizationGrantStatus.Revoked) } returns updated
 
-                coVerify(exactly = 0) { grantRepository.update(any(), any()) }
+                handler(id, party, AuthorizationGrantStatus.Revoked) shouldBeSameInstanceAs updated
+
+                coVerify(exactly = 1) { grantRepository.update(id, AuthorizationGrantStatus.Revoked) }
             }
+        }
+    }
+
+    listOf(
+        grantedTo,
+        AuthorizationParty("unrelated-person", PartyType.Person),
+        AuthorizationParty("unrelated-org", PartyType.Organization),
+        principal.copy(type = PartyType.OrganizationEntity),
+        grantedBy.copy(type = PartyType.Organization),
+    ).forEach { party ->
+        test("denies ${party.type} ${party.id} revoking a grant") {
+            coEvery { grantRepository.find(id) } returns grant
+
+            shouldThrow<UpdateGrantError.NotAuthorized> { handler(id, party, AuthorizationGrantStatus.Revoked) }
+
+            coVerify(exactly = 0) { grantRepository.update(any(), any()) }
+        }
+    }
+
+    listOf(principal, grantedBy, grantedTo).forEach { party ->
+        test("denies ${party.type} updating a grant to Exhausted") {
+            shouldThrow<UpdateGrantError.NotAuthorized> { handler(id, party, AuthorizationGrantStatus.Exhausted) }
+
+            coVerify(exactly = 0) { grantRepository.update(any(), any()) }
+            coVerify(exactly = 0) { grantRepository.find(any()) }
+        }
+    }
+
+    listOf(
+        RepositoryReadError.NotFoundError("Missing grant"),
+        RepositoryReadError.UnexpectedError("Database unavailable"),
+    ).forEach { error ->
+        test("propagates ${error::class.simpleName} when loading a grant for revocation") {
+            coEvery { grantRepository.find(id) } throws error
+
+            shouldThrow<RepositoryReadError> {
+                handler(id, principal, AuthorizationGrantStatus.Revoked)
+            } shouldBeSameInstanceAs error
+
+            coVerify(exactly = 0) { grantRepository.update(any(), any()) }
         }
     }
 

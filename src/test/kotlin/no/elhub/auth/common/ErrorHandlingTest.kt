@@ -132,10 +132,10 @@ class ErrorHandlingTest : FunSpec({
 
     val grantUpdateCases = listOf(
         ErrorCase(
-            UpdateGrantError.NotAuthorized(),
+            UpdateGrantError.NotAuthorized("Person cannot update authorization grant to status Exhausted."),
             HttpStatusCode.Forbidden,
             "Not allowed to update",
-            "Only systems may update an AuthorizationGrant.",
+            "Person cannot update authorization grant to status Exhausted.",
         ),
         ErrorCase(
             UpdateGrantError.InvalidTransition(),

@@ -16,12 +16,19 @@ class UpdateGrantHandler(
         authorizedParty: AuthorizationParty,
         status: AuthorizationGrantStatus,
     ): AuthorizationGrant {
-        if (authorizedParty.type != PartyType.System) {
-            throw UpdateGrantError.NotAuthorized()
+        if (status != AuthorizationGrantStatus.Revoked && authorizedParty.type != PartyType.System) {
+            throw UpdateGrantError.NotAuthorized("${authorizedParty.type} cannot update authorization grant to status $status")
         }
 
         if (status != AuthorizationGrantStatus.Revoked && status != AuthorizationGrantStatus.Exhausted) {
             throw UpdateGrantError.InvalidTransition()
+        }
+
+        if (authorizedParty.type != PartyType.System) {
+            val grant = grantRepository.find(id)
+            if (authorizedParty != grant.principal && authorizedParty != grant.grantedBy) {
+                throw UpdateGrantError.NotAuthorized("Only the principal, grantedBy, or systems may revoke an AuthorizationGrant.")
+            }
         }
 
         return try {
