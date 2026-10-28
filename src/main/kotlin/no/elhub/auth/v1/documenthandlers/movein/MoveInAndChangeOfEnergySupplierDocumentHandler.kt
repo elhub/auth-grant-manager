@@ -1,43 +1,53 @@
 package no.elhub.auth.v1.documenthandlers.movein
 
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
 import no.elhub.auth.common.documents.pdf.AuthorizationDocumentPdfContent
+import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsLookupException
+import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsService
+import no.elhub.auth.v1.common.meteringpoints.toRequestedMeteringPointMetadata
 import no.elhub.auth.v1.documenthandlers.common.toPdfLanguage
 import no.elhub.auth.v1.domain.documents.DocumentSpecification
 import no.elhub.auth.v1.features.documents.creation.DocumentCreationContext
 import no.elhub.auth.v1.features.documents.creation.DocumentCreationDetails
+import no.elhub.auth.v1.features.documents.creation.toDocumentPreparationError
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
 import no.elhub.auth.v1.features.documents.creation.MoveInAndChangeOfEnergySupplierDocumentHandler as HandlerContract
 
 private const val DOCUMENT_VALID_DAYS = 28
 
-class MoveInAndChangeOfEnergySupplierDocumentHandler : HandlerContract {
+class MoveInAndChangeOfEnergySupplierDocumentHandler(
+    private val meteringPointsService: MeteringPointsService,
+) : HandlerContract {
     override suspend fun prepare(
         specification: DocumentSpecification.MoveInAndChangeOfEnergySupplierForOrganization,
         context: DocumentCreationContext,
     ): DocumentCreationDetails {
-        val meteringPointId = specification.meteringPointIds.ids.first().value
-
+        val metadata = MoveInAndChangeOfEnergySupplierDocumentMetadata(
+            requestedMeteringPoints = try {
+                meteringPointsService.getMeteringPointsForOrganisation(
+                    meteringPointIds = specification.meteringPointIds.ids.map { it.value }.sorted(),
+                    elhubInternalId = context.requestedPrincipal.id,
+                )
+            } catch (e: MeteringPointsLookupException) {
+                throw e.clientError.toDocumentPreparationError()
+            }.toRequestedMeteringPointMetadata(),
+            validFrom = specification.validFrom,
+        )
+        val requestedMeteringPoint = metadata.requestedMeteringPoints.first()
         return DocumentCreationDetails(
             pdfContent = AuthorizationDocumentPdfContent.MoveInAndChangeOfBalanceSupplierForOrganisation(
                 language = context.language.toPdfLanguage(),
                 organizationName = "Placeholder organization ${context.requestedPrincipal.id}",
                 organizationNumber = context.requestedPrincipal.id,
                 meteringPointAddress = "Placeholder address",
-                meteringPointId = meteringPointId,
-                meterNumber = "Unknown",
+                meteringPointId = requestedMeteringPoint.id,
+                meterNumber = requestedMeteringPoint.meterNumber ?: "Unknown",
                 balanceSupplierName = "Placeholder supplier ${context.requestedBy.id}",
                 agreementReference = null,
                 moveInDate = specification.validFrom,
             ),
             validTo = Clock.System.now() + DOCUMENT_VALID_DAYS.days,
-            meta = buildJsonObject {
-                put("meteringPointId", meteringPointId)
-                put("validFrom", specification.validFrom.toString())
-                put("placeholder", true)
-            },
+            meta = metadata.toJsonObject(),
         )
     }
 }

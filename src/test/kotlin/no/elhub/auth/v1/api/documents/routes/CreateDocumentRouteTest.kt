@@ -1,6 +1,7 @@
 package no.elhub.auth.v1.api.documents.routes
 
 import arrow.core.right
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.ktor.client.call.body
@@ -41,6 +42,7 @@ import no.elhub.auth.v1.domain.documents.DocumentSpecification
 import no.elhub.auth.v1.features.documents.CreateDocumentHandler
 import no.elhub.auth.v1.features.documents.creation.ChangeOfEnergySupplierDocumentHandler
 import no.elhub.auth.v1.features.documents.creation.DocumentCreationDetails
+import no.elhub.auth.v1.features.documents.creation.DocumentPreparationError
 import no.elhub.auth.v1.features.documents.creation.MoveInAndChangeOfEnergySupplierDocumentHandler
 import no.elhub.auth.v1.repositories.DocumentRepository
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
@@ -380,6 +382,30 @@ class CreateDocumentRouteTest : FunSpec({
         }
         coVerify(exactly = 1) { documentRepository.insert(any()) }
         coVerify(exactly = 0) { moveInHandler.prepare(any(), any()) }
+    }
+
+    test("document service does not generate or insert a document when metering point lookup fails") {
+        val changeSupplierHandler: ChangeOfEnergySupplierDocumentHandler = mockk()
+        val moveInHandler: MoveInAndChangeOfEnergySupplierDocumentHandler = mockk()
+        val documentRepository: DocumentRepository = mockk()
+        coEvery { changeSupplierHandler.prepare(any(), any()) } throws
+            DocumentPreparationError.RequestedMeteringPointsNotFound()
+        val service = CreateDocumentHandler(changeSupplierHandler, moveInHandler, mockk(), pdfGenerator, pdfSigner, documentRepository)
+        val specification = DocumentSpecification.ChangeOfEnergySupplierForOrganization(
+            ResourceConstraint.MeteringPoints(setOf(MeteringPointId.create("707057500000000001"))),
+        )
+
+        shouldThrow<DocumentPreparationError.RequestedMeteringPointsNotFound> {
+            service.createAuthorizationDocument(
+                specification = specification,
+                externalReference = "ref",
+                requestedBy = authorizedParty,
+                requestedPrincipal = AuthorizationParty("org-1", PartyType.Organization),
+                requestedOf = AuthorizationParty("person-1", PartyType.Person),
+                language = DocumentLanguage.NB,
+            )
+        }
+        coVerify(exactly = 0) { documentRepository.insert(any()) }
     }
 
     test("POST / returns 409 when the resource type is wrong") {

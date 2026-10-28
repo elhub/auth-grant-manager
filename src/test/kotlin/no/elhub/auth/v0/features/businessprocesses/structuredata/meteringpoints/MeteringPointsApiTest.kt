@@ -2,6 +2,7 @@ package no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints
 
 import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
@@ -20,6 +21,7 @@ import io.mockk.mockk
 import kotlinx.serialization.json.Json
 import no.elhub.auth.v0.features.businessprocesses.common.JwtTokenProvider
 import no.elhub.auth.v0.features.businessprocesses.structuredata.common.ClientError
+import no.elhub.auth.v0.features.common.ApiHeaders
 import no.elhub.auth.v0.features.common.ELHUB_TRACE_ID_HEADER
 import no.elhub.auth.v0.features.common.TRACE_ID_MDC_KEY
 import org.slf4j.MDC
@@ -28,10 +30,13 @@ import java.util.UUID
 class MeteringPointsApiTest : FunSpec({
 
     val validMeteringPointId = "300362000000000008"
+    val secondMeteringPointId = "300362000000000009"
     val endUserId = "d6784082-8344-e733-e053-02058d0a6752"
     val otherEndUserId = "00662e04-2fd6-3b06-b672-3965abe7b7c5"
     lateinit var traceId: String
     var capturedTraceId: String? = null
+    var capturedOnBehalfOfOrganisation: String? = null
+    val organisationId = "6f2c3a1e-1d2b-4c3d-9e8f-0a1b2c3d4e5f"
     val serviceUrl = "http://localhost:8080"
     val config = MeteringPointsApiConfig(
         serviceUrl = serviceUrl,
@@ -53,6 +58,17 @@ class MeteringPointsApiTest : FunSpec({
         engine {
             addHandler { request ->
                 capturedTraceId = request.headers[ELHUB_TRACE_ID_HEADER]
+                capturedOnBehalfOfOrganisation = request.headers[ApiHeaders.ON_BEHALF_OF_ORGANISATION]
+                val organisationMeteringPointPaths = listOf(validMeteringPointId, secondMeteringPointId)
+                    .map { "/metering-points/$it?endUserId=$organisationId" }
+                if (capturedOnBehalfOfOrganisation == organisationId && request.url.fullPath in organisationMeteringPointPaths) {
+                    val meteringPointId = request.url.fullPath.substringAfterLast('/').substringBefore('?')
+                    return@addHandler respond(
+                        content = """{"data":{"id":"$meteringPointId","type":"metering-point","relationships":{}}}""",
+                        status = HttpStatusCode.OK,
+                        headers = headersOf(HttpHeaders.ContentType, "application/json")
+                    )
+                }
                 when (request.url.fullPath) {
                     "/metering-points/$validMeteringPointId?endUserId=$endUserId" -> {
                         respond(
@@ -65,6 +81,14 @@ class MeteringPointsApiTest : FunSpec({
                                         "relationships":{"endUser":{"data":{"id":"end-user-unique-id","type":"end-user"}}}}
                                     }
                             """.trimMargin(),
+                            status = HttpStatusCode.OK,
+                            headers = headersOf(HttpHeaders.ContentType, "application/json")
+                        )
+                    }
+
+                    "/metering-points/$secondMeteringPointId?endUserId=$endUserId" -> {
+                        respond(
+                            content = """{"data":{"id":"$secondMeteringPointId","type":"metering-point","relationships":{}}}""",
                             status = HttpStatusCode.OK,
                             headers = headersOf(HttpHeaders.ContentType, "application/json")
                         )
@@ -91,6 +115,7 @@ class MeteringPointsApiTest : FunSpec({
     beforeTest {
         traceId = UUID.randomUUID().toString()
         capturedTraceId = null
+        capturedOnBehalfOfOrganisation = null
         MDC.put(TRACE_ID_MDC_KEY, traceId)
     }
 
@@ -131,5 +156,26 @@ class MeteringPointsApiTest : FunSpec({
         val response = service.getMeteringPointByIdAndElhubInternalId("300362000000000000", "some-end-user-id")
         response.shouldBeLeft()
         response.value shouldBe ClientError.NotFound
+    }
+
+    test("Does not send on behalf of organisation header for end user lookups") {
+        service.getMeteringPointByIdAndElhubInternalId(validMeteringPointId, endUserId).shouldBeRight()
+
+        capturedOnBehalfOfOrganisation.shouldBeNull()
+    }
+
+    test("Fetches organisation metering points on behalf of the organisation in the requested order") {
+        val response = service.getMeteringPointsForOrganisation(listOf(secondMeteringPointId, validMeteringPointId), organisationId)
+
+        response.map { it.data.id } shouldBe listOf(secondMeteringPointId, validMeteringPointId)
+        capturedOnBehalfOfOrganisation shouldBe organisationId
+    }
+
+    test("Throws not found when any requested metering point does not exist") {
+        val error = shouldThrow<MeteringPointsLookupException> {
+            service.getMeteringPointsForOrganisation(listOf(validMeteringPointId, "300362000000000000"), organisationId)
+        }
+
+        error.clientError shouldBe ClientError.NotFound
     }
 })
