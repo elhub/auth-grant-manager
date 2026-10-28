@@ -11,6 +11,7 @@ import no.elhub.auth.common.structuredata.meteringpoints.MeteringPointResponse
 import no.elhub.auth.v0.features.businessprocesses.common.JwtTokenProvider
 import no.elhub.auth.v0.features.businessprocesses.structuredata.common.ClientError
 import no.elhub.auth.v0.features.businessprocesses.structuredata.common.mapErrorsFromServer
+import no.elhub.auth.v0.features.common.ApiHeaders
 import no.elhub.auth.v0.features.common.ELHUB_TRACE_ID_HEADER
 import no.elhub.auth.v0.features.common.TraceIdContext
 import org.slf4j.LoggerFactory
@@ -21,7 +22,7 @@ interface MeteringPointsService {
         elhubInternalId: String
     ): Either<ClientError, MeteringPointResponse>
 
-    suspend fun getMeteringPoints(
+    suspend fun getMeteringPointsForOrganisation(
         meteringPointIds: List<String>,
         elhubInternalId: String
     ): List<MeteringPointResponse>
@@ -37,7 +38,23 @@ class MeteringPointsApi(
 ) : MeteringPointsService {
     private val logger = LoggerFactory.getLogger(MeteringPointsService::class.java)
 
-    override suspend fun getMeteringPointByIdAndElhubInternalId(meteringPointId: String, elhubInternalId: String): Either<ClientError, MeteringPointResponse> {
+    override suspend fun getMeteringPointByIdAndElhubInternalId(meteringPointId: String, elhubInternalId: String): Either<ClientError, MeteringPointResponse> =
+        getMeteringPoint(url = "${meteringPointsApiConfig.serviceUrl}/metering-points/$meteringPointId?endUserId=$elhubInternalId")
+
+    override suspend fun getMeteringPointsForOrganisation(
+        meteringPointIds: List<String>,
+        elhubInternalId: String
+    ): List<MeteringPointResponse> = meteringPointIds.map { meteringPointId ->
+        getMeteringPoint(
+            url = "${meteringPointsApiConfig.serviceUrl}/metering-points/$meteringPointId?endUserId=$elhubInternalId",
+            onBehalfOfOrganisation = elhubInternalId,
+        ).fold(
+            ifLeft = { throw MeteringPointsLookupException(it) },
+            ifRight = { it },
+        )
+    }
+
+    private suspend fun getMeteringPoint(url: String, onBehalfOfOrganisation: String? = null): Either<ClientError, MeteringPointResponse> {
         val traceId = TraceIdContext.currentOrNull()
         if (traceId == null) {
             logger.error("event=metering_point_lookup_missing_trace_id")
@@ -45,10 +62,11 @@ class MeteringPointsApi(
 
         return Either.catch {
             val jwtToken = tokenProvider.getToken()
-            val response = client.get("${meteringPointsApiConfig.serviceUrl}/metering-points/$meteringPointId?endUserId=$elhubInternalId") {
+            val response = client.get(url) {
                 header("Authorization", "Bearer $jwtToken")
                 header("User-Agent", "auth-grant-manager")
                 traceId?.let { header(ELHUB_TRACE_ID_HEADER, it) }
+                onBehalfOfOrganisation?.let { header(ApiHeaders.ON_BEHALF_OF_ORGANISATION, it) }
             }
             if (response.status.isSuccess()) {
                 val responseBody: MeteringPointResponse = response.body()
@@ -61,17 +79,6 @@ class MeteringPointsApi(
             logger.error("Failed to fetch metering point: {}", throwable.message)
             ClientError.UnexpectedError(throwable)
         }
-    }
-
-    // Uses single-ID lookups until the service exposes a batch endpoint for service-to-service tokens.
-    override suspend fun getMeteringPoints(
-        meteringPointIds: List<String>,
-        elhubInternalId: String
-    ): List<MeteringPointResponse> = meteringPointIds.map { meteringPointId ->
-        getMeteringPointByIdAndElhubInternalId(meteringPointId, elhubInternalId).fold(
-            ifLeft = { throw MeteringPointsLookupException(it) },
-            ifRight = { it },
-        )
     }
 }
 

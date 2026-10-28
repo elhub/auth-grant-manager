@@ -24,7 +24,7 @@ class MoveInAndChangeOfEnergySupplierDocumentHandler(
     ): DocumentCreationDetails {
         val metadata = MoveInAndChangeOfEnergySupplierDocumentMetadata(
             requestedMeteringPoints = try {
-                meteringPointsService.getMeteringPoints(
+                meteringPointsService.getMeteringPointsForOrganisation(
                     meteringPointIds = specification.meteringPointIds.ids.map { it.value }.sorted(),
                     elhubInternalId = context.requestedPrincipal.id,
                 )

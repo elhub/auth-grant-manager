@@ -47,7 +47,7 @@ class ChangeOfEnergySupplierDocumentHandlerTest : FunSpec({
     test("prepares supplier-change document details") {
         val service = mockk<MeteringPointsService>()
         coEvery {
-            service.getMeteringPoints(listOf("707057500000000001"), "org-1")
+            service.getMeteringPointsForOrganisation(listOf("707057500000000001"), "org-1")
         } returns listOf(meteringPointResponse("707057500000000001", "meter-1"))
 
         val details = ChangeOfEnergySupplierDocumentHandler(service).prepare(
@@ -88,7 +88,7 @@ class ChangeOfEnergySupplierDocumentHandlerTest : FunSpec({
     test("throws when a requested metering point cannot be found") {
         val service = mockk<MeteringPointsService>()
         coEvery {
-            service.getMeteringPoints(any(), any())
+            service.getMeteringPointsForOrganisation(any(), any())
         } throws MeteringPointsLookupException(ClientError.NotFound)
 
         shouldThrow<DocumentPreparationError.RequestedMeteringPointsNotFound> {
@@ -102,7 +102,7 @@ class ChangeOfEnergySupplierDocumentHandlerTest : FunSpec({
     test("throws a service failure for other metering-points service errors") {
         val service = mockk<MeteringPointsService>()
         coEvery {
-            service.getMeteringPoints(any(), any())
+            service.getMeteringPointsForOrganisation(any(), any())
         } throws MeteringPointsLookupException(ClientError.ServerError)
 
         val error = shouldThrow<DocumentPreparationError.MeteringPointsServiceFailure> {
@@ -118,7 +118,7 @@ class ChangeOfEnergySupplierDocumentHandlerTest : FunSpec({
     test("stores metadata for every requested metering point in a stable order") {
         val service = mockk<MeteringPointsService>()
         coEvery {
-            service.getMeteringPoints(listOf("707057500000000001", "707057500000000002"), "org-1")
+            service.getMeteringPointsForOrganisation(listOf("707057500000000001", "707057500000000002"), "org-1")
         } returns listOf(
             meteringPointResponse("707057500000000001", "meter-707057500000000001"),
             meteringPointResponse("707057500000000002", "meter-707057500000000002"),

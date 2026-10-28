@@ -50,7 +50,7 @@ class MoveInAndChangeOfEnergySupplierDocumentHandlerTest : FunSpec({
         val validFrom = LocalDate(2026, 10, 1)
         val service = mockk<MeteringPointsService>()
         coEvery {
-            service.getMeteringPoints(listOf("707057500000000001"), "org-1")
+            service.getMeteringPointsForOrganisation(listOf("707057500000000001"), "org-1")
         } returns listOf(meteringPointResponse("707057500000000001", "meter-1"))
 
         val details = MoveInAndChangeOfEnergySupplierDocumentHandler(service).prepare(
@@ -96,7 +96,7 @@ class MoveInAndChangeOfEnergySupplierDocumentHandlerTest : FunSpec({
     test("throws when a requested metering point cannot be found") {
         val service = mockk<MeteringPointsService>()
         coEvery {
-            service.getMeteringPoints(any(), any())
+            service.getMeteringPointsForOrganisation(any(), any())
         } throws MeteringPointsLookupException(ClientError.NotFound)
 
         shouldThrow<DocumentPreparationError.RequestedMeteringPointsNotFound> {
