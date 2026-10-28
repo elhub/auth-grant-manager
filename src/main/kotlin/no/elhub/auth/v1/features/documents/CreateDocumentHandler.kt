@@ -47,9 +47,8 @@ class CreateDocumentHandler(
         }
         val pdfBytes = pdfSigner.sign(pdfGenerator.generate(details.pdfContent))
 
-        val document = AuthorizationDocument.new(
-            documentType = specification.documentType,
-            requestedScopes = listOf(specification.toRequestedAuthorizationScope()),
+        val document = AuthorizationDocument.create(
+            specification = specification,
             externalReference = externalReference,
             meta = details.meta,
             validTo = details.validTo,
@@ -57,8 +56,6 @@ class CreateDocumentHandler(
             requestedPrincipal = requestedPrincipal,
             requestedOf = requestedOf,
             pdfBytes = pdfBytes,
-            requestedGrantValidFrom = (specification as? DocumentSpecification.EnergySupplierFrameworkAgreement)?.requestedGrantValidFrom,
-            requestedGrantValidTo = (specification as? DocumentSpecification.EnergySupplierFrameworkAgreement)?.requestedGrantValidTo,
         )
         return documentRepository.insert(document)
     }
