@@ -1,4 +1,4 @@
-package no.elhub.auth.v0.features.openapi
+package no.elhub.auth.common.api.openapi
 
 import io.ktor.server.application.Application
 import io.ktor.server.http.content.staticResources
