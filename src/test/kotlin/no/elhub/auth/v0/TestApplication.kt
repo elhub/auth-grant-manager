@@ -4,9 +4,9 @@ import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.testing.TestApplication
 import no.elhub.auth.v0.features.documents.TestCertificateUtil
 import no.elhub.auth.v0.module
+import no.elhub.auth.common.api.openapi.module as openapiModule
 import no.elhub.auth.v0.features.documents.module as documentsModule
 import no.elhub.auth.v0.features.grants.module as grantsModule
-import no.elhub.auth.v0.features.openapi.module as openapiModule
 import no.elhub.auth.v0.features.requests.module as requestsModule
 
 fun defaultTestApplication(): TestApplication = TestApplication {

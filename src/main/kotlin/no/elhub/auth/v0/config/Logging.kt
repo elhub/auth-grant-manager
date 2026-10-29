@@ -7,9 +7,9 @@ import io.ktor.server.plugins.calllogging.CallLogging
 import io.ktor.server.plugins.calllogging.processingTimeMillis
 import io.ktor.server.request.httpMethod
 import io.ktor.server.request.path
+import no.elhub.auth.common.api.openapi.API_PATH_OPENAPI
+import no.elhub.auth.common.api.openapi.API_PATH_OPENAPI_LEGACY
 import no.elhub.auth.v0.features.common.TRACE_ID_MDC_KEY
-import no.elhub.auth.v0.features.openapi.API_PATH_OPENAPI
-import no.elhub.auth.v0.features.openapi.API_PATH_OPENAPI_LEGACY
 import org.slf4j.event.Level
 
 fun Application.configureLogging() {

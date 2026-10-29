@@ -10,7 +10,7 @@ ktor:
       - no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceModuleKt.meteringPointsServiceModule
       - no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceModuleKt.organisationsServiceModule
       - no.elhub.auth.v0.features.businessprocesses.BusinessProcessesModuleKt.businessProcessesModule
-      - no.elhub.auth.v0.features.openapi.ModuleKt.module
+      - no.elhub.auth.common.api.openapi.ModuleKt.module
       - no.elhub.auth.v0.features.grants.ModuleKt.module
       - no.elhub.auth.v0.features.documents.ModuleKt.module
       - no.elhub.auth.v0.features.requests.ModuleKt.module
