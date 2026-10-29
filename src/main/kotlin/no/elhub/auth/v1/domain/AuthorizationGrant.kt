@@ -1,8 +1,8 @@
 package no.elhub.auth.v1.domain
 
 import no.elhub.auth.common.auth.AuthorizationParty
+import no.elhub.auth.v1.common.now
 import java.util.UUID
-import kotlin.time.Clock
 import kotlin.time.Instant
 
 data class AuthorizationGrant(
@@ -33,7 +33,7 @@ data class AuthorizationGrant(
             validFrom: Instant,
             validTo: Instant?,
             scopes: List<GrantedAuthorizationScope>,
-            now: Instant = Clock.System.now(),
+            now: Instant = now(),
         ): AuthorizationGrant {
             return AuthorizationGrant(
                 id = UUID.randomUUID(),
