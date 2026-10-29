@@ -38,7 +38,7 @@ class OrganisationsApi(
 
         return Either.catch {
             val jwtToken = tokenProvider.getToken()
-            val response = client.get("${organisationsApiConfig.serviceUrl}/parties/$partyId?partyType=$partyType") {
+            val response = client.get("${organisationsApiConfig.serviceUrl}/v1/parties/$partyId?partyType=$partyType") {
                 header("Authorization", "Bearer $jwtToken")
                 header("User-Agent", "auth-grant-manager")
                 traceId?.let { header(ELHUB_TRACE_ID_HEADER, it) }

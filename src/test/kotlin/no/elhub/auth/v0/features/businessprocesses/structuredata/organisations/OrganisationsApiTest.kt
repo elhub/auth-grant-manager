@@ -32,7 +32,7 @@ class OrganisationsApiTest : FunSpec({
     val traceId = UUID.randomUUID().toString()
     var capturedTraceIdHeader: String? = null
     var capturedAuthorizationHeader: String? = null
-    val serviceUrl = "http://localhost:8080/v1"
+    val serviceUrl = "http://localhost:8080"
     val config = OrganisationsApiConfig(
         serviceUrl = serviceUrl,
     )

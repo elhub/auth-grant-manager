@@ -32,7 +32,7 @@ object OrganisationsServiceTestContainer {
 
     fun serviceUrl(): String {
         val c = container ?: error("OrganisationsServiceTestContainer not started")
-        return "http://${c.host}:${c.getMappedPort(8080)}/v1"
+        return "http://${c.host}:${c.getMappedPort(8080)}"
     }
 }
 
