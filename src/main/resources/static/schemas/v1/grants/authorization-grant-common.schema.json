@@ -8,7 +8,13 @@
       "enum": ["ConsumableGrant", "PersistentGrant"]
     },
     "status": {
-      "enum": ["Pending", "Active", "Exhausted", "Expired", "Revoked"]
+      "enum": [
+        "Pending",
+        "Active",
+        "Exhausted",
+        "Expired",
+        "Revoked"
+      ]
     },
     "scopes": {
       "type": "array",

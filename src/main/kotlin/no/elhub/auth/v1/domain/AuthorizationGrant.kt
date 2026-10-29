@@ -34,24 +34,22 @@ data class AuthorizationGrant(
             validTo: Instant?,
             scopes: List<GrantedAuthorizationScope>,
             now: Instant = now(),
-        ): AuthorizationGrant {
-            return AuthorizationGrant(
-                id = UUID.randomUUID(),
-                type = type,
-                sourceType = sourceType,
-                sourceId = sourceId,
-                principal = principal,
-                grantedBy = grantedBy,
-                grantedTo = grantedTo,
-                approvedBy = approvedBy,
-                status = grantValidityStatus(validFrom, validTo, now),
-                validFrom = validFrom,
-                validTo = validTo,
-                createdAt = now,
-                updatedAt = now,
-                scopes = scopes,
-            )
-        }
+        ): AuthorizationGrant = AuthorizationGrant(
+            id = UUID.randomUUID(),
+            type = type,
+            sourceType = sourceType,
+            sourceId = sourceId,
+            principal = principal,
+            grantedBy = grantedBy,
+            grantedTo = grantedTo,
+            approvedBy = approvedBy,
+            status = grantValidityStatus(validFrom, validTo, now),
+            validFrom = validFrom,
+            validTo = validTo,
+            createdAt = now,
+            updatedAt = now,
+            scopes = scopes,
+        )
     }
 }
 
