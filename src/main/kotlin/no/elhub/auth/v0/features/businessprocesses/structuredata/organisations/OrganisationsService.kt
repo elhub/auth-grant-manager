@@ -7,6 +7,9 @@ import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.http.isSuccess
+import no.elhub.auth.common.structuredata.organisations.PartyResponse
+import no.elhub.auth.common.structuredata.organisations.PartyType
+import no.elhub.auth.v0.features.businessprocesses.common.JwtTokenProvider
 import no.elhub.auth.v0.features.businessprocesses.structuredata.common.ClientError
 import no.elhub.auth.v0.features.businessprocesses.structuredata.common.mapErrorsFromServer
 import no.elhub.auth.v0.features.common.ELHUB_TRACE_ID_HEADER
@@ -22,7 +25,8 @@ interface OrganisationsService {
 
 class OrganisationsApi(
     private val organisationsApiConfig: OrganisationsApiConfig,
-    private val client: HttpClient
+    private val client: HttpClient,
+    private val tokenProvider: JwtTokenProvider
 ) : OrganisationsService {
     private val logger = LoggerFactory.getLogger(OrganisationsService::class.java)
 
@@ -33,7 +37,10 @@ class OrganisationsApi(
         }
 
         return Either.catch {
-            val response = client.get("${organisationsApiConfig.serviceUrl}/parties/$partyId?partyType=$partyType") {
+            val jwtToken = tokenProvider.getToken()
+            val response = client.get("${organisationsApiConfig.serviceUrl}/v1/parties/$partyId?partyType=$partyType") {
+                header("Authorization", "Bearer $jwtToken")
+                header("User-Agent", "auth-grant-manager")
                 traceId?.let { header(ELHUB_TRACE_ID_HEADER, it) }
             }
             if (response.status.isSuccess()) {
@@ -52,10 +59,4 @@ class OrganisationsApi(
 
 data class OrganisationsApiConfig(
     val serviceUrl: String,
-    val basicAuthConfig: BasicAuthConfig
-)
-
-data class BasicAuthConfig(
-    val username: String,
-    val password: String
 )

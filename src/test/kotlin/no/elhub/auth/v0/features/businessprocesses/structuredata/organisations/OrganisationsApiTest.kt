@@ -14,7 +14,11 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.fullPath
 import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
+import io.mockk.coEvery
+import io.mockk.mockk
 import kotlinx.serialization.json.Json
+import no.elhub.auth.common.structuredata.organisations.PartyType
+import no.elhub.auth.v0.features.businessprocesses.common.JwtTokenProvider
 import no.elhub.auth.v0.features.businessprocesses.structuredata.common.ClientError
 import no.elhub.auth.v0.features.common.ELHUB_TRACE_ID_HEADER
 import no.elhub.auth.v0.features.common.TRACE_ID_MDC_KEY
@@ -27,14 +31,13 @@ class OrganisationsApiTest : FunSpec({
     val notValidPartyId = "123"
     val traceId = UUID.randomUUID().toString()
     var capturedTraceIdHeader: String? = null
-    val serviceUrl = "http://localhost:8080/v1/service"
+    var capturedAuthorizationHeader: String? = null
+    val serviceUrl = "http://localhost:8080"
     val config = OrganisationsApiConfig(
         serviceUrl = serviceUrl,
-        basicAuthConfig = BasicAuthConfig(
-            username = "username",
-            password = "password"
-        )
     )
+    val mockJwtTokenProvider = mockk<JwtTokenProvider>()
+    coEvery { mockJwtTokenProvider.getToken() } returns "token"
 
     val client = HttpClient(MockEngine) {
         install(ContentNegotiation) {
@@ -50,8 +53,9 @@ class OrganisationsApiTest : FunSpec({
         engine {
             addHandler { request ->
                 capturedTraceIdHeader = request.headers[ELHUB_TRACE_ID_HEADER]
+                capturedAuthorizationHeader = request.headers[HttpHeaders.Authorization]
                 when (request.url.fullPath) {
-                    "/v1/service/parties/$validPartyId?partyType=BalanceSupplier" -> {
+                    "/v1/parties/$validPartyId?partyType=BalanceSupplier" -> {
                         respond(
                             content = """
                                 {
@@ -72,7 +76,7 @@ class OrganisationsApiTest : FunSpec({
                         )
                     }
 
-                    "/v1/service/parties/$notBalanceSupplierPartyId?partyType=BalanceSupplier" -> {
+                    "/v1/parties/$notBalanceSupplierPartyId?partyType=BalanceSupplier" -> {
                         respond(
                             content = """
                                 {"errors": [{
@@ -86,7 +90,7 @@ class OrganisationsApiTest : FunSpec({
                         )
                     }
 
-                    "/v1/service/parties/$notValidPartyId?partyType=BalanceSupplier" -> {
+                    "/v1/parties/$notValidPartyId?partyType=BalanceSupplier" -> {
                         respond(
                             content = """{"errors":[{"status":"400","title":"Invalid partyId value","detail":"Invalid value for partyId"}]}""",
                             status = HttpStatusCode.BadRequest,
@@ -102,10 +106,11 @@ class OrganisationsApiTest : FunSpec({
             }
         }
     }
-    val service = OrganisationsApi(config, client)
+    val service = OrganisationsApi(config, client, mockJwtTokenProvider)
 
     beforeTest {
         capturedTraceIdHeader = null
+        capturedAuthorizationHeader = null
         MDC.put(TRACE_ID_MDC_KEY, traceId)
     }
 
@@ -117,6 +122,12 @@ class OrganisationsApiTest : FunSpec({
         service.getPartyByIdAndPartyType(validPartyId, PartyType.BalanceSupplier).shouldBeRight()
 
         capturedTraceIdHeader shouldBe traceId
+    }
+
+    test("sends bearer token in authorization header") {
+        service.getPartyByIdAndPartyType(validPartyId, PartyType.BalanceSupplier).shouldBeRight()
+
+        capturedAuthorizationHeader shouldBe "Bearer token"
     }
 
     test("missing trace id does not fail request") {

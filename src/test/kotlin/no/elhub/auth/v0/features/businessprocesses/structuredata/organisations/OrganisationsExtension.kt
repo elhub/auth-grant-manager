@@ -9,7 +9,7 @@ import org.testcontainers.utility.DockerImageName
 import java.time.Duration
 
 object OrganisationsServiceTestContainer {
-    private val image = DockerImageName.parse("docker.jfrog.elhub.cloud/frzq0sxltynr/structure-data/organisations-service-mock:0.1.86-397")
+    private val image = DockerImageName.parse("docker.jfrog.elhub.cloud/frzq0sxltynr/structure-data/organisations-service-mock:0.1.90-403")
     private var container: GenericContainer<*>? = null
 
     fun start() {
@@ -32,7 +32,7 @@ object OrganisationsServiceTestContainer {
 
     fun serviceUrl(): String {
         val c = container ?: error("OrganisationsServiceTestContainer not started")
-        return "http://${c.host}:${c.getMappedPort(8080)}/v1/service"
+        return "http://${c.host}:${c.getMappedPort(8080)}"
     }
 }
 

@@ -8,6 +8,8 @@ import arrow.core.right
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.plus
 import no.elhub.auth.common.structuredata.meteringpoints.AccessType.OWNED
+import no.elhub.auth.common.structuredata.organisations.PartyStatus
+import no.elhub.auth.common.structuredata.organisations.PartyType
 import no.elhub.auth.v0.features.businessprocesses.BusinessProcessError
 import no.elhub.auth.v0.features.businessprocesses.datasharing.StromprisService
 import no.elhub.auth.v0.features.businessprocesses.ediel.EdielEnvironment
@@ -24,8 +26,6 @@ import no.elhub.auth.v0.features.businessprocesses.moveinandchangeofbalancesuppl
 import no.elhub.auth.v0.features.businessprocesses.structuredata.common.ClientError
 import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsService
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsService
-import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.PartyStatus
-import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.PartyType
 import no.elhub.auth.v0.features.common.CreateScopeData
 import no.elhub.auth.v0.features.common.todayOslo
 import no.elhub.auth.v0.features.documents.AuthorizationDocument

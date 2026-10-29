@@ -1,4 +1,4 @@
-package no.elhub.auth.v0.features.businessprocesses.structuredata.organisations
+package no.elhub.auth.common.structuredata.organisations
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -8,7 +8,7 @@ import no.elhub.devxp.jsonapi.model.JsonApiRelationships
 import no.elhub.devxp.jsonapi.response.JsonApiResponse
 
 @Serializable
-data class Attributes(
+data class PartyAttributes(
     val partyType: PartyType,
     val partyId: String,
     val name: String,
@@ -34,4 +34,4 @@ data class Relationships(
     val organizationNumber: JsonApiRelationshipToOne? = null
 ) : JsonApiRelationships
 
-typealias PartyResponse = JsonApiResponse.SingleDocumentWithRelationships<Attributes, Relationships>
+typealias PartyResponse = JsonApiResponse.SingleDocumentWithRelationships<PartyAttributes, Relationships>
