@@ -4,9 +4,6 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
-import kotlinx.datetime.DateTimeUnit
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.plus
 import kotlinx.serialization.json.JsonObject
 import no.elhub.auth.common.auth.AuthorizationParty
 import no.elhub.auth.common.auth.PartyType
@@ -26,7 +23,6 @@ import no.elhub.auth.v1.domain.RequestedAuthorizationScope
 import no.elhub.auth.v1.domain.ResourceConstraint
 import no.elhub.auth.v1.domain.ResourceType
 import java.util.UUID
-import kotlin.time.Clock
 import kotlin.time.Duration.Companion.nanoseconds
 import kotlin.time.Instant
 
@@ -215,9 +211,8 @@ class DocumentToGrantsTest : FunSpec({
         ).copy(validFrom = Instant.parse("2026-09-24T10:00:00Z"))
 
         test("one metering point produces one EnergySupplier Write grant") {
-            val before = Clock.System.now()
-            val grants = document.toGrants(approvedBy)
-            val after = Clock.System.now()
+            val now = Instant.parse("2026-10-26T10:15:30Z")
+            val grants = document.toGrants(approvedBy, now)
 
             grants.size shouldBe 1
             val grant = grants.single()
@@ -247,21 +242,21 @@ class DocumentToGrantsTest : FunSpec({
             grant.grantedBy shouldBe requestedOf
             grant.grantedTo shouldBe requestedBy
             grant.approvedBy shouldBe approvedBy
-            (grant.validFrom in before..after) shouldBe true
-            grant.validTo shouldBe grant.validFrom.plus(1, DateTimeUnit.YEAR, TimeZone.UTC)
+            grant.validFrom shouldBe Instant.parse("2026-10-25T23:00:00Z")
+            grant.validTo shouldBe Instant.parse("2028-10-26T22:00:00Z")
             (grant.validFrom == document.validFrom) shouldBe false
             (grant.validTo == document.validTo) shouldBe false
         }
 
-        test("keeps one-year UTC validity independent of requested grant dates") {
+        test("keeps two-year Oslo date-based validity independent of requested grant dates") {
             val now = Instant.parse("2026-10-26T10:15:30Z")
             val grant = document.copy(
                 requestedGrantValidFrom = Instant.parse("2025-01-01T00:00:00Z"),
                 requestedGrantValidTo = Instant.parse("2025-02-01T00:00:00Z"),
             ).toGrants(approvedBy, now).single()
 
-            grant.validFrom shouldBe now
-            grant.validTo shouldBe Instant.parse("2027-10-26T10:15:30Z")
+            grant.validFrom shouldBe Instant.parse("2026-10-25T23:00:00Z")
+            grant.validTo shouldBe Instant.parse("2028-10-26T22:00:00Z")
         }
 
         test("several metering points produce separate EnergySupplier Write grants with the same validity window") {
@@ -273,9 +268,8 @@ class DocumentToGrantsTest : FunSpec({
             )
             val multiPointDocument = document.copy(requestedScopes = listOf(scope))
 
-            val before = Clock.System.now()
-            val grants = multiPointDocument.toGrants(approvedBy)
-            val after = Clock.System.now()
+            val now = Instant.parse("2026-10-26T10:15:30Z")
+            val grants = multiPointDocument.toGrants(approvedBy, now)
 
             grants.size shouldBe meteringPointIds.size
             grants.map { it.id }.toSet().size shouldBe meteringPointIds.size
@@ -305,8 +299,8 @@ class DocumentToGrantsTest : FunSpec({
             grants.map { it.validTo }.toSet().size shouldBe 1
             grants.forEach { grant ->
                 grant.sourceId shouldBe UUID.fromString(document.id)
-                (grant.validFrom in before..after) shouldBe true
-                grant.validTo shouldBe grant.validFrom.plus(1, DateTimeUnit.YEAR, TimeZone.UTC)
+                grant.validFrom shouldBe Instant.parse("2026-10-25T23:00:00Z")
+                grant.validTo shouldBe Instant.parse("2028-10-26T22:00:00Z")
             }
         }
 
@@ -381,9 +375,8 @@ class DocumentToGrantsTest : FunSpec({
         ).copy(validFrom = Instant.parse("2026-09-24T10:00:00Z"))
 
         test("one metering point produces one EndUser and EnergySupplier Write grant with the move-in date") {
-            val before = Clock.System.now()
-            val grants = document.toGrants(approvedBy)
-            val after = Clock.System.now()
+            val now = Instant.parse("2026-10-26T10:15:30Z")
+            val grants = document.toGrants(approvedBy, now)
 
             grants.size shouldBe 1
             val grant = grants.single()
@@ -420,21 +413,21 @@ class DocumentToGrantsTest : FunSpec({
             grant.grantedBy shouldBe requestedOf
             grant.grantedTo shouldBe requestedBy
             grant.approvedBy shouldBe approvedBy
-            (grant.validFrom in before..after) shouldBe true
-            grant.validTo shouldBe grant.validFrom.plus(1, DateTimeUnit.YEAR, TimeZone.UTC)
+            grant.validFrom shouldBe Instant.parse("2026-10-25T23:00:00Z")
+            grant.validTo shouldBe Instant.parse("2028-10-26T22:00:00Z")
             (grant.validFrom == document.validFrom) shouldBe false
             (grant.validTo == document.validTo) shouldBe false
         }
 
-        test("keeps one-year UTC validity independent of requested grant dates") {
+        test("keeps two-year Oslo date-based validity independent of requested grant dates") {
             val now = Instant.parse("2026-10-26T10:15:30Z")
             val grant = document.copy(
                 requestedGrantValidFrom = Instant.parse("2025-01-01T00:00:00Z"),
                 requestedGrantValidTo = Instant.parse("2025-02-01T00:00:00Z"),
             ).toGrants(approvedBy, now).single()
 
-            grant.validFrom shouldBe now
-            grant.validTo shouldBe Instant.parse("2027-10-26T10:15:30Z")
+            grant.validFrom shouldBe Instant.parse("2026-10-25T23:00:00Z")
+            grant.validTo shouldBe Instant.parse("2028-10-26T22:00:00Z")
         }
 
         test("several metering points produce separate EndUser and EnergySupplier Write grants with the move-in date") {
@@ -447,9 +440,8 @@ class DocumentToGrantsTest : FunSpec({
             )
             val multiPointDocument = document.copy(requestedScopes = listOf(scope))
 
-            val before = Clock.System.now()
-            val grants = multiPointDocument.toGrants(approvedBy)
-            val after = Clock.System.now()
+            val now = Instant.parse("2026-10-26T10:15:30Z")
+            val grants = multiPointDocument.toGrants(approvedBy, now)
 
             grants.size shouldBe meteringPointIds.size
             grants.map { it.id }.toSet().size shouldBe meteringPointIds.size
@@ -486,8 +478,8 @@ class DocumentToGrantsTest : FunSpec({
             grants.map { it.validTo }.toSet().size shouldBe 1
             grants.forEach { grant ->
                 grant.sourceId shouldBe UUID.fromString(document.id)
-                (grant.validFrom in before..after) shouldBe true
-                grant.validTo shouldBe grant.validFrom.plus(1, DateTimeUnit.YEAR, TimeZone.UTC)
+                grant.validFrom shouldBe Instant.parse("2026-10-25T23:00:00Z")
+                grant.validTo shouldBe Instant.parse("2028-10-26T22:00:00Z")
             }
         }
 

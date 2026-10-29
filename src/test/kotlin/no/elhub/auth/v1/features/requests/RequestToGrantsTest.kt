@@ -82,18 +82,6 @@ class RequestToGrantsTest : FunSpec({
         approvedBy shouldBe requestedOf
     }
 
-    listOf(
-        Triple("2024-03-29T10:00:00Z", "2024-03-28T23:00:00Z", "2026-03-29T22:00:00Z"),
-        Triple("2024-10-25T10:00:00Z", "2024-10-24T22:00:00Z", "2026-10-25T23:00:00Z"),
-    ).forEach { (approvalTime, expectedStart, expectedEnd) ->
-        test("consumable validity ends at next Oslo midnight across DST for approval at $approvalTime") {
-            val validity = consumableGrantValidity(Instant.parse(approvalTime))
-
-            validity.validFrom shouldBe Instant.parse(expectedStart)
-            validity.validTo shouldBe Instant.parse(expectedEnd)
-        }
-    }
-
     context("ChangeOfEnergySupplierForOrganization") {
         val request = request(
             AuthorizationRequestTypeDetails.ChangeOfEnergySupplierForOrganization(

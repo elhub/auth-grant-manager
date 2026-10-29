@@ -1,12 +1,9 @@
 package no.elhub.auth.v1.features.requests
 
-import kotlinx.datetime.DateTimeUnit
-import kotlinx.datetime.plus
 import no.elhub.auth.common.auth.AuthorizationParty
 import no.elhub.auth.v1.common.GrantValidity
+import no.elhub.auth.v1.common.consumableGrantValidity
 import no.elhub.auth.v1.common.now
-import no.elhub.auth.v1.common.startOfDayOslo
-import no.elhub.auth.v1.common.toOsloDate
 import no.elhub.auth.v1.domain.AuthorizationGrant
 import no.elhub.auth.v1.domain.AuthorizationGrantSourceType
 import no.elhub.auth.v1.domain.AuthorizationGrantType
@@ -20,8 +17,6 @@ import no.elhub.auth.v1.domain.ResourceConstraint
 import no.elhub.auth.v1.domain.ResourceType
 import kotlin.time.Instant
 import no.elhub.auth.v1.common.frameworkAgreementGrantValidity as calculateFrameworkAgreementGrantValidity
-
-private const val CONSUMABLE_GRANT_VALID_YEARS = 2
 
 // The requested scopes are built by AuthorizationRequest.create for each request type, so their shape is trusted here.
 fun AuthorizationRequest.toGrants(
@@ -145,18 +140,6 @@ private fun AuthorizationRequest.energySupplierFrameworkAgreementGrants(
         ),
     )
     return listOf(grant)
-}
-
-/**
- * Valid from today in Oslo through the end of the day two years ahead.
- */
-fun consumableGrantValidity(now: Instant): GrantValidity {
-    val today = now.toOsloDate()
-    return GrantValidity(
-        validFrom = today.startOfDayOslo(),
-        validTo = today.plus(CONSUMABLE_GRANT_VALID_YEARS, DateTimeUnit.YEAR)
-            .plus(1, DateTimeUnit.DAY).startOfDayOslo(),
-    )
 }
 
 /**
