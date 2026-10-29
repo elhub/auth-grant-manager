@@ -33,8 +33,8 @@ data class AuthorizationGrant(
             validFrom: Instant,
             validTo: Instant?,
             scopes: List<GrantedAuthorizationScope>,
+            now: Instant = Clock.System.now(),
         ): AuthorizationGrant {
-            val now = Clock.System.now()
             return AuthorizationGrant(
                 id = UUID.randomUUID(),
                 type = type,
@@ -44,7 +44,7 @@ data class AuthorizationGrant(
                 grantedBy = grantedBy,
                 grantedTo = grantedTo,
                 approvedBy = approvedBy,
-                status = AuthorizationGrantStatus.Active,
+                status = grantValidityStatus(validFrom, validTo, now),
                 validFrom = validFrom,
                 validTo = validTo,
                 createdAt = now,
@@ -61,10 +61,17 @@ enum class AuthorizationGrantType {
 }
 
 enum class AuthorizationGrantStatus {
+    Pending,
     Active,
     Revoked,
     Exhausted,
     Expired,
+}
+
+internal fun grantValidityStatus(validFrom: Instant, validTo: Instant?, now: Instant): AuthorizationGrantStatus = when {
+    validTo != null && now >= validTo -> AuthorizationGrantStatus.Expired
+    now < validFrom -> AuthorizationGrantStatus.Pending
+    else -> AuthorizationGrantStatus.Active
 }
 
 enum class AuthorizationGrantSourceType {

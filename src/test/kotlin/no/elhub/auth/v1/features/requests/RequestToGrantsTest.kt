@@ -80,6 +80,8 @@ class RequestToGrantsTest : FunSpec({
         grantedBy shouldBe requestedOf
         grantedTo shouldBe requestedBy
         approvedBy shouldBe requestedOf
+        createdAt shouldBe now
+        updatedAt shouldBe now
     }
 
     context("ChangeOfEnergySupplierForOrganization") {
@@ -178,6 +180,8 @@ class RequestToGrantsTest : FunSpec({
             Triple(past, future, startOfToday to future),
             Triple(startOfToday, null, startOfToday to null),
             Triple(earlierToday, null, earlierToday to null),
+            Triple(now, null, now to null),
+            Triple(now + 1.nanoseconds, null, (now + 1.nanoseconds) to null),
             Triple(laterToday, null, laterToday to null),
             Triple(future, null, future to null),
             Triple(future, laterFuture, future to laterFuture),
@@ -189,6 +193,9 @@ class RequestToGrantsTest : FunSpec({
 
                 grant.validFrom shouldBe expected.first
                 grant.validTo shouldBe expected.second
+                grant.status.name shouldBe if (expected.first > now) "Pending" else "Active"
+                grant.createdAt shouldBe now
+                grant.updatedAt shouldBe now
             }
         }
 

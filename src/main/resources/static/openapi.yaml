@@ -939,9 +939,9 @@ paths:
         - Work in Progress
       summary: '[WIP] Update an authorization grant'
       description: >
-        Update an active authorization grant by setting its status to Exhausted or Revoked.
-        Only internal Elhub systems may exhaust consumable grants. The principal, grantedBy party,
-        or internal Elhub systems may revoke grants.
+        Update an authorization grant by setting its status to Exhausted or Revoked.
+        Only internal Elhub systems may exhaust active consumable grants; pending grants cannot be exhausted.
+        The principal, grantedBy party, or internal Elhub systems may revoke pending or active grants.
         The request body ID must match the path ID.
       operationId: updateV1AuthorizationGrant
       x-status: Work in progress

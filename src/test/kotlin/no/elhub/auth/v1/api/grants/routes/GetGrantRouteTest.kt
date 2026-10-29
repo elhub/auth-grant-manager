@@ -83,6 +83,27 @@ class GetGrantRouteTest : FunSpec({
         }
     }
 
+    test("GET /{id} serializes a pending grant") {
+        val pending = grant.copy(
+            status = AuthorizationGrantStatus.Pending,
+            validFrom = Instant.parse("2099-01-01T00:00:00Z"),
+        )
+        coEvery { handler(grantId, authorizedParty) } returns pending
+
+        testApplication {
+            setupAppWith(authorizedParty) {
+                route(V1_GRANTS_PATH) { route(handler) }
+            }
+
+            val response = client.get("$V1_GRANTS_PATH/$grantId") { accept(jsonApiContentType) }
+
+            response.status shouldBe HttpStatusCode.OK
+            val attributes = response.body<JsonApiGetAuthorizationGrantResponse>().data.attributes
+            attributes.status shouldBe AuthorizationGrantStatus.Pending
+            attributes.validFrom shouldBe pending.validFrom
+        }
+    }
+
     test("GET /{id} omits validTo for a grant without an end date") {
         coEvery { handler(grantId, authorizedParty) } returns grant.copy(type = AuthorizationGrantType.Persistent, validTo = null)
 
