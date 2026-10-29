@@ -27,6 +27,7 @@ import no.elhub.auth.v1.domain.ResourceConstraint
 import no.elhub.auth.v1.domain.ResourceType
 import java.util.UUID
 import kotlin.time.Clock
+import kotlin.time.Duration.Companion.nanoseconds
 import kotlin.time.Instant
 
 class DocumentToGrantsTest : FunSpec({
@@ -103,7 +104,7 @@ class DocumentToGrantsTest : FunSpec({
             Triple(laterToday, null, laterToday to null),
             Triple(future, null, future to null),
             Triple(future, laterFuture, future to laterFuture),
-            Triple(future, future, future to future),
+            Triple(future, future + 1.nanoseconds, future to (future + 1.nanoseconds)),
             Triple(null, laterToday, startOfToday to laterToday),
         ).forEach { (requestedFrom, requestedTo, expected) ->
             test("requested $requestedFrom..$requestedTo gives grant ${expected.first}..${expected.second}") {
@@ -123,6 +124,7 @@ class DocumentToGrantsTest : FunSpec({
             null to startOfToday,
             null to earlierToday,
             null to now,
+            future to future,
             laterFuture to future,
         ).forEach { (requestedFrom, requestedTo) ->
             test("rejects requested $requestedFrom..$requestedTo with a document confirmation error") {

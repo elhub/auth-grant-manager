@@ -9,7 +9,7 @@ data class GrantValidity(
 
 /**
  * Starts no earlier than the start of today in Oslo, with no end unless requested.
- * The requested end must be after now and not before the effective start.
+ * The exclusive requested end must be strictly after now and the effective start.
  */
 fun frameworkAgreementGrantValidity(
     requestedValidFrom: Instant?,
@@ -17,9 +17,9 @@ fun frameworkAgreementGrantValidity(
     now: Instant,
     invalidValidity: () -> Nothing,
 ): GrantValidity {
-    val startOfToday = startOfTodayOslo(now)
+    val startOfToday = now.startOfDayOslo()
     val validFrom = maxOf(requestedValidFrom ?: startOfToday, startOfToday)
-    if (requestedValidTo != null && (requestedValidTo <= now || validFrom > requestedValidTo)) {
+    if (requestedValidTo != null && (now >= requestedValidTo || validFrom >= requestedValidTo)) {
         invalidValidity()
     }
     return GrantValidity(validFrom = validFrom, validTo = requestedValidTo)

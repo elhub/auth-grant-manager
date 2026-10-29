@@ -23,6 +23,7 @@ import no.elhub.auth.v1.domain.PermissionCapability
 import no.elhub.auth.v1.domain.ResourceConstraint
 import no.elhub.auth.v1.domain.ResourceType
 import no.elhub.auth.v1.domain.requests.AuthorizationRequestTypeDetails
+import kotlin.time.Duration.Companion.nanoseconds
 import kotlin.time.Instant
 
 // Requests are built with AuthorizationRequest.create, so these tests also pin the scope shape toGrants relies on.
@@ -37,8 +38,8 @@ class RequestToGrantsTest : FunSpec({
     // 11:00 in Oslo (CET, UTC+1). Start of today in Oslo is 2026-10-25T23:00:00Z.
     val now = Instant.parse("2026-10-26T10:00:00Z")
     val startOfToday = Instant.parse("2026-10-25T23:00:00Z")
-    // 2028-10-26 is still summer time in Oslo (UTC+2), so 23:59:59 Oslo time is 21:59:59Z.
-    val endOfTodayInTwoYears = Instant.parse("2028-10-26T21:59:59Z")
+    // Oslo midnight after 2028-10-26 is still summer time (UTC+2).
+    val exclusiveEndInTwoYears = Instant.parse("2028-10-26T22:00:00Z")
 
     fun request(details: AuthorizationRequestTypeDetails) = AuthorizationRequest.create(
         requestedBy = requestedBy,
@@ -81,6 +82,18 @@ class RequestToGrantsTest : FunSpec({
         approvedBy shouldBe requestedOf
     }
 
+    listOf(
+        Triple("2024-03-29T10:00:00Z", "2024-03-28T23:00:00Z", "2026-03-29T22:00:00Z"),
+        Triple("2024-10-25T10:00:00Z", "2024-10-24T22:00:00Z", "2026-10-25T23:00:00Z"),
+    ).forEach { (approvalTime, expectedStart, expectedEnd) ->
+        test("consumable validity ends at next Oslo midnight across DST for approval at $approvalTime") {
+            val validity = consumableGrantValidity(Instant.parse(approvalTime))
+
+            validity.validFrom shouldBe Instant.parse(expectedStart)
+            validity.validTo shouldBe Instant.parse(expectedEnd)
+        }
+    }
+
     context("ChangeOfEnergySupplierForOrganization") {
         val request = request(
             AuthorizationRequestTypeDetails.ChangeOfEnergySupplierForOrganization(
@@ -88,14 +101,14 @@ class RequestToGrantsTest : FunSpec({
             ),
         )
 
-        test("creates one consumable EnergySupplier grant per metering point, valid from today until end of day in two years") {
+        test("creates one consumable EnergySupplier grant per metering point, valid through the date in two years") {
             val grants = request.toGrants(approvedBy, now)
 
             grants.forEach { grant ->
                 grant.shouldBeIssuedFrom(request)
                 grant.type shouldBe AuthorizationGrantType.Consumable
                 grant.validFrom shouldBe startOfToday
-                grant.validTo shouldBe endOfTodayInTwoYears
+                grant.validTo shouldBe exclusiveEndInTwoYears
             }
             grants.map { it.scopes } shouldContainExactlyInAnyOrder listOf(
                 writeMeteringPointContract(
@@ -130,7 +143,7 @@ class RequestToGrantsTest : FunSpec({
                 grant.shouldBeIssuedFrom(request)
                 grant.type shouldBe AuthorizationGrantType.Consumable
                 grant.validFrom shouldBe startOfToday
-                grant.validTo shouldBe endOfTodayInTwoYears
+                grant.validTo shouldBe exclusiveEndInTwoYears
             }
             grants.map { it.scopes } shouldContainExactlyInAnyOrder listOf(
                 writeMeteringPointContract(
@@ -180,7 +193,7 @@ class RequestToGrantsTest : FunSpec({
             Triple(laterToday, null, laterToday to null),
             Triple(future, null, future to null),
             Triple(future, laterFuture, future to laterFuture),
-            Triple(future, future, future to future),
+            Triple(future, future + 1.nanoseconds, future to (future + 1.nanoseconds)),
             Triple(null, laterToday, startOfToday to laterToday),
         ).forEach { (requestedFrom, requestedTo, expected) ->
             test("requested $requestedFrom..$requestedTo gives grant ${expected.first}..${expected.second}") {
@@ -196,6 +209,7 @@ class RequestToGrantsTest : FunSpec({
             past to past,
             null to earlierToday,
             null to now,
+            future to future,
             laterFuture to future,
         ).forEach { (requestedFrom, requestedTo) ->
             test("rejects requested $requestedFrom..$requestedTo") {

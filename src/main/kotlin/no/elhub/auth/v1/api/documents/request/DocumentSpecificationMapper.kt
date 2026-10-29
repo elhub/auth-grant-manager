@@ -2,7 +2,7 @@ package no.elhub.auth.v1.api.documents.request
 
 import no.elhub.auth.v1.api.common.errors.InputError
 import no.elhub.auth.v1.common.now
-import no.elhub.auth.v1.common.toDateOrNull
+import no.elhub.auth.v1.common.toOsloDateOrNull
 import no.elhub.auth.v1.domain.AuthorizationDocumentType
 import no.elhub.auth.v1.domain.AuthorizationScopeConstraintAttribute
 import no.elhub.auth.v1.domain.DomainError
@@ -163,7 +163,7 @@ private fun List<RequestedScope>.toMoveInSpecification(): DocumentSpecification.
     }
 
     val validFromValue = validFromValues.single()
-    val validFrom = validFromValue.toDateOrNull()
+    val validFrom = validFromValue.toOsloDateOrNull()
         ?: throw InputError.InvalidCreateAuthorizationDocumentPayload(
             "requestedScopes[0].allowedChanges validFrom must be an ISO date or timestamp",
         )

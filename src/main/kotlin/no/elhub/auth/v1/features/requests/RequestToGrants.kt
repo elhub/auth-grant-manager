@@ -4,10 +4,9 @@ import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.plus
 import no.elhub.auth.common.auth.AuthorizationParty
 import no.elhub.auth.v1.common.GrantValidity
-import no.elhub.auth.v1.common.endOfDayOslo
 import no.elhub.auth.v1.common.now
 import no.elhub.auth.v1.common.startOfDayOslo
-import no.elhub.auth.v1.common.todayOslo
+import no.elhub.auth.v1.common.toOsloDate
 import no.elhub.auth.v1.domain.AuthorizationGrant
 import no.elhub.auth.v1.domain.AuthorizationGrantSourceType
 import no.elhub.auth.v1.domain.AuthorizationGrantType
@@ -42,7 +41,7 @@ fun AuthorizationRequest.toGrants(
 
 /**
  * One Consumable grant per metering point, each allowing requestedBy to change the energy supplier contract on that
- * metering point. Valid from today until the end of the day two years ahead.
+ * metering point. Valid from today through the calendar date two years ahead in Oslo.
  */
 private fun AuthorizationRequest.changeOfEnergySupplierGrants(
     approvedBy: AuthorizationParty,
@@ -79,7 +78,7 @@ private fun AuthorizationRequest.changeOfEnergySupplierGrants(
 
 /**
  * One Consumable grant per metering point, each allowing requestedBy to change the end user and energy supplier
- * contracts on that metering point from the move-in date. Valid from today until the end of the day two years ahead.
+ * contracts on that metering point from the move-in date. Valid from today through the calendar date two years ahead in Oslo.
  */
 private fun AuthorizationRequest.moveInAndChangeOfEnergySupplierGrants(
     approvedBy: AuthorizationParty,
@@ -149,20 +148,21 @@ private fun AuthorizationRequest.energySupplierFrameworkAgreementGrants(
 }
 
 /**
- * Valid from the start of today until the end of the day (23:59:59) two years ahead, in Norwegian time.
+ * Valid from today in Oslo through the end of the day two years ahead.
  */
 fun consumableGrantValidity(now: Instant): GrantValidity {
-    val today = todayOslo(now)
+    val today = now.toOsloDate()
     return GrantValidity(
         validFrom = today.startOfDayOslo(),
-        validTo = today.plus(CONSUMABLE_GRANT_VALID_YEARS, DateTimeUnit.YEAR).endOfDayOslo(),
+        validTo = today.plus(CONSUMABLE_GRANT_VALID_YEARS, DateTimeUnit.YEAR)
+            .plus(1, DateTimeUnit.DAY).startOfDayOslo(),
     )
 }
 
 /**
  * - validFrom: the requested start, moved forward to the start of today if it is missing or in the past.
- * - validTo: the requested end, or no end date if none was requested.
- * - Fails if the requested end is not after now, or is before validFrom.
+ * - validTo: the exclusive requested end, or no end date if none was requested.
+ * - Fails if the requested end is at or before now or validFrom.
  */
 fun frameworkAgreementGrantValidity(
     requestedValidFrom: Instant?,
