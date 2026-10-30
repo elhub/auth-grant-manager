@@ -26,6 +26,7 @@ import no.elhub.auth.v1.V1_GRANTS_PATH
 import no.elhub.auth.v1.api.grants.response.JsonApiListAuthorizationGrantsResponse
 import no.elhub.auth.v1.domain.AuthorizationGrant
 import no.elhub.auth.v1.domain.AuthorizationGrantSourceType
+import no.elhub.auth.v1.domain.AuthorizationGrantStatus
 import no.elhub.auth.v1.domain.AuthorizationGrantType
 import no.elhub.auth.v1.features.grants.ListGrantsHandler
 import no.elhub.auth.v1.repositories.RepositoryReadError
@@ -69,6 +70,27 @@ class ListGrantsRouteTest : FunSpec({
             body.data.single().links.self shouldBe "$V1_GRANTS_PATH/${grant.id}"
             body.meta.getValue("totalItems").jsonPrimitive.long shouldBe 1L
             body.meta.getValue("totalPages").jsonPrimitive.int shouldBe 1
+        }
+    }
+
+    test("GET serializes pending grants in the collection") {
+        val pending = grant.copy(
+            status = AuthorizationGrantStatus.Pending,
+            validFrom = Instant.parse("2099-01-01T00:00:00Z"),
+        )
+        coEvery { handler(authorizedParty, Pagination()) } returns Page(listOf(pending), 1, Pagination())
+
+        testApplication {
+            setupAppWith(authorizedParty) {
+                route(V1_GRANTS_PATH) { route(handler) }
+            }
+
+            val response = client.get(V1_GRANTS_PATH) { accept(jsonApiContentType) }
+
+            response.status shouldBe HttpStatusCode.OK
+            val attributes = response.body<JsonApiListAuthorizationGrantsResponse>().data.single().attributes
+            attributes.status shouldBe AuthorizationGrantStatus.Pending
+            attributes.validFrom shouldBe pending.validFrom
         }
     }
 

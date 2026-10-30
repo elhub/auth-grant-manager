@@ -156,7 +156,7 @@ class ErrorHandlingTest : FunSpec({
             UpdateGrantError.InvalidTransition(),
             HttpStatusCode.UnprocessableEntity,
             "Invalid status transition",
-            "Only active AuthorizationGrants may be revoked, and only active consumable grants may be exhausted.",
+            "Only pending or active AuthorizationGrants may be revoked, and only active consumable grants may be exhausted.",
         ),
         ErrorCase(
             UpdateGrantError.Expired(),

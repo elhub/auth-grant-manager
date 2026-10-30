@@ -51,6 +51,7 @@ fun AuthorizationDocument.toGrants(
             }
             listOf(
                 AuthorizationGrant.new(
+                    now = now,
                     type = AuthorizationGrantType.Persistent,
                     sourceType = AuthorizationGrantSourceType.Document,
                     sourceId = UUID.fromString(id),
@@ -97,6 +98,7 @@ fun AuthorizationDocument.toGrants(
             val validity = consumableGrantValidity(now)
             meteringPoints.ids.map { meteringPointId ->
                 toConsumableGrant(
+                    now = now,
                     approvedBy = approvedBy,
                     validity = validity,
                     scope = GrantedAuthorizationScope(
@@ -147,6 +149,7 @@ fun AuthorizationDocument.toGrants(
             val validity = consumableGrantValidity(now)
             meteringPoints.ids.map { meteringPointId ->
                 toConsumableGrant(
+                    now = now,
                     approvedBy = approvedBy,
                     validity = validity,
                     scope = GrantedAuthorizationScope(
@@ -164,10 +167,12 @@ fun AuthorizationDocument.toGrants(
     }
 
 private fun AuthorizationDocument.toConsumableGrant(
+    now: Instant,
     approvedBy: AuthorizationParty,
     validity: GrantValidity,
     scope: GrantedAuthorizationScope,
 ): AuthorizationGrant = AuthorizationGrant.new(
+    now = now,
     type = AuthorizationGrantType.Consumable,
     sourceType = AuthorizationGrantSourceType.Document,
     sourceId = UUID.fromString(id),

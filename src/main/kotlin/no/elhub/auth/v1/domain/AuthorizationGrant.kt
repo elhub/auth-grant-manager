@@ -1,8 +1,8 @@
 package no.elhub.auth.v1.domain
 
 import no.elhub.auth.common.auth.AuthorizationParty
+import no.elhub.auth.v1.common.now
 import java.util.UUID
-import kotlin.time.Clock
 import kotlin.time.Instant
 
 data class AuthorizationGrant(
@@ -33,25 +33,23 @@ data class AuthorizationGrant(
             validFrom: Instant,
             validTo: Instant?,
             scopes: List<GrantedAuthorizationScope>,
-        ): AuthorizationGrant {
-            val now = Clock.System.now()
-            return AuthorizationGrant(
-                id = UUID.randomUUID(),
-                type = type,
-                sourceType = sourceType,
-                sourceId = sourceId,
-                principal = principal,
-                grantedBy = grantedBy,
-                grantedTo = grantedTo,
-                approvedBy = approvedBy,
-                status = AuthorizationGrantStatus.Active,
-                validFrom = validFrom,
-                validTo = validTo,
-                createdAt = now,
-                updatedAt = now,
-                scopes = scopes,
-            )
-        }
+            now: Instant = now(),
+        ): AuthorizationGrant = AuthorizationGrant(
+            id = UUID.randomUUID(),
+            type = type,
+            sourceType = sourceType,
+            sourceId = sourceId,
+            principal = principal,
+            grantedBy = grantedBy,
+            grantedTo = grantedTo,
+            approvedBy = approvedBy,
+            status = grantValidityStatus(validFrom, validTo, now),
+            validFrom = validFrom,
+            validTo = validTo,
+            createdAt = now,
+            updatedAt = now,
+            scopes = scopes,
+        )
     }
 }
 
@@ -61,10 +59,17 @@ enum class AuthorizationGrantType {
 }
 
 enum class AuthorizationGrantStatus {
+    Pending,
     Active,
     Revoked,
     Exhausted,
     Expired,
+}
+
+internal fun grantValidityStatus(validFrom: Instant, validTo: Instant?, now: Instant): AuthorizationGrantStatus = when {
+    validTo != null && now >= validTo -> AuthorizationGrantStatus.Expired
+    now < validFrom -> AuthorizationGrantStatus.Pending
+    else -> AuthorizationGrantStatus.Active
 }
 
 enum class AuthorizationGrantSourceType {

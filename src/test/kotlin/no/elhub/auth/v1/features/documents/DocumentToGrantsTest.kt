@@ -82,6 +82,8 @@ class DocumentToGrantsTest : FunSpec({
             )
             grant.validFrom shouldBe startOfToday
             grant.validTo shouldBe null
+            grant.createdAt shouldBe now
+            grant.updatedAt shouldBe now
         }
 
         val past = Instant.parse("2026-10-01T00:00:00Z")
@@ -97,6 +99,8 @@ class DocumentToGrantsTest : FunSpec({
             Triple(past, future, startOfToday to future),
             Triple(startOfToday, null, startOfToday to null),
             Triple(earlierToday, null, earlierToday to null),
+            Triple(now, null, now to null),
+            Triple(now + 1.nanoseconds, null, (now + 1.nanoseconds) to null),
             Triple(laterToday, null, laterToday to null),
             Triple(future, null, future to null),
             Triple(future, laterFuture, future to laterFuture),
@@ -111,6 +115,9 @@ class DocumentToGrantsTest : FunSpec({
 
                 grant.validFrom shouldBe expected.first
                 grant.validTo shouldBe expected.second
+                grant.status.name shouldBe if (expected.first > now) "Pending" else "Active"
+                grant.createdAt shouldBe now
+                grant.updatedAt shouldBe now
             }
         }
 
@@ -140,7 +147,12 @@ class DocumentToGrantsTest : FunSpec({
             "2026-10-25T10:00:00Z" to "2026-10-24T22:00:00Z",
         ).forEach { (approvalTime, expectedStart) ->
             test("uses the Oslo start of day when approved at $approvalTime") {
-                document.toGrants(approvedBy, Instant.parse(approvalTime)).single().validFrom shouldBe Instant.parse(expectedStart)
+                val now = Instant.parse(approvalTime)
+                val grant = document.toGrants(approvedBy, now).single()
+
+                grant.validFrom shouldBe Instant.parse(expectedStart)
+                grant.createdAt shouldBe now
+                grant.updatedAt shouldBe now
             }
         }
 
@@ -244,6 +256,8 @@ class DocumentToGrantsTest : FunSpec({
             grant.approvedBy shouldBe approvedBy
             grant.validFrom shouldBe Instant.parse("2026-10-25T23:00:00Z")
             grant.validTo shouldBe Instant.parse("2028-10-26T22:00:00Z")
+            grant.createdAt shouldBe now
+            grant.updatedAt shouldBe now
             (grant.validFrom == document.validFrom) shouldBe false
             (grant.validTo == document.validTo) shouldBe false
         }
@@ -257,6 +271,8 @@ class DocumentToGrantsTest : FunSpec({
 
             grant.validFrom shouldBe Instant.parse("2026-10-25T23:00:00Z")
             grant.validTo shouldBe Instant.parse("2028-10-26T22:00:00Z")
+            grant.createdAt shouldBe now
+            grant.updatedAt shouldBe now
         }
 
         test("several metering points produce separate EnergySupplier Write grants with the same validity window") {
@@ -301,6 +317,8 @@ class DocumentToGrantsTest : FunSpec({
                 grant.sourceId shouldBe UUID.fromString(document.id)
                 grant.validFrom shouldBe Instant.parse("2026-10-25T23:00:00Z")
                 grant.validTo shouldBe Instant.parse("2028-10-26T22:00:00Z")
+                grant.createdAt shouldBe now
+                grant.updatedAt shouldBe now
             }
         }
 
@@ -415,6 +433,8 @@ class DocumentToGrantsTest : FunSpec({
             grant.approvedBy shouldBe approvedBy
             grant.validFrom shouldBe Instant.parse("2026-10-25T23:00:00Z")
             grant.validTo shouldBe Instant.parse("2028-10-26T22:00:00Z")
+            grant.createdAt shouldBe now
+            grant.updatedAt shouldBe now
             (grant.validFrom == document.validFrom) shouldBe false
             (grant.validTo == document.validTo) shouldBe false
         }
@@ -428,6 +448,8 @@ class DocumentToGrantsTest : FunSpec({
 
             grant.validFrom shouldBe Instant.parse("2026-10-25T23:00:00Z")
             grant.validTo shouldBe Instant.parse("2028-10-26T22:00:00Z")
+            grant.createdAt shouldBe now
+            grant.updatedAt shouldBe now
         }
 
         test("several metering points produce separate EndUser and EnergySupplier Write grants with the move-in date") {
@@ -480,6 +502,8 @@ class DocumentToGrantsTest : FunSpec({
                 grant.sourceId shouldBe UUID.fromString(document.id)
                 grant.validFrom shouldBe Instant.parse("2026-10-25T23:00:00Z")
                 grant.validTo shouldBe Instant.parse("2028-10-26T22:00:00Z")
+                grant.createdAt shouldBe now
+                grant.updatedAt shouldBe now
             }
         }
 

@@ -77,6 +77,40 @@ class UpdateGrantHandlerTest : FunSpec({
         }
     }
 
+    listOf(system, principal, grantedBy).forEach { party ->
+        listOf(AuthorizationGrantType.Consumable, AuthorizationGrantType.Persistent).forEach { type ->
+            test("${party.type} ${party.id} can revoke a pending $type grant") {
+                val existing = grant.copy(
+                    type = type,
+                    status = AuthorizationGrantStatus.Pending,
+                    validFrom = Instant.parse("2099-01-01T00:00:00Z"),
+                )
+                val updated = existing.copy(status = AuthorizationGrantStatus.Revoked)
+                coEvery { grantRepository.find(id) } returns existing
+                coEvery { grantRepository.update(id, AuthorizationGrantStatus.Revoked) } returns updated
+
+                handler(id, party, AuthorizationGrantStatus.Revoked, type) shouldBeSameInstanceAs updated
+
+                coVerify(exactly = 1) { grantRepository.update(id, AuthorizationGrantStatus.Revoked) }
+            }
+        }
+    }
+
+    test("maps a repository conflict when exhausting a pending grant to InvalidTransition") {
+        coEvery { grantRepository.find(id) } returns grant.copy(
+            status = AuthorizationGrantStatus.Pending,
+            validFrom = Instant.parse("2099-01-01T00:00:00Z"),
+        )
+        coEvery { grantRepository.update(id, AuthorizationGrantStatus.Exhausted) } throws
+            RepositoryWriteError.ConflictError("Cannot exhaust a pending grant")
+
+        shouldThrow<UpdateGrantError.InvalidTransition> {
+            handler(id, system, AuthorizationGrantStatus.Exhausted, AuthorizationGrantType.Consumable)
+        }
+
+        coVerify(exactly = 1) { grantRepository.update(id, AuthorizationGrantStatus.Exhausted) }
+    }
+
     listOf(
         AuthorizationGrantType.Persistent to AuthorizationGrantType.Consumable,
         AuthorizationGrantType.Consumable to AuthorizationGrantType.Persistent,
@@ -149,7 +183,7 @@ class UpdateGrantHandlerTest : FunSpec({
         }
     }
 
-    listOf(AuthorizationGrantStatus.Active, AuthorizationGrantStatus.Expired).forEach { status ->
+    listOf(AuthorizationGrantStatus.Pending, AuthorizationGrantStatus.Active, AuthorizationGrantStatus.Expired).forEach { status ->
         test("rejects a transition to $status without writing") {
             coEvery { grantRepository.find(id) } returns grant
 

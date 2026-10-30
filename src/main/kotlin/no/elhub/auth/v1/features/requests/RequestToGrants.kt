@@ -48,6 +48,7 @@ private fun AuthorizationRequest.changeOfEnergySupplierGrants(
 
     return (meteringPoints.value as ResourceConstraint.MeteringPoints).ids.map { meteringPointId ->
         AuthorizationGrant.new(
+            now = now,
             type = AuthorizationGrantType.Consumable,
             sourceType = AuthorizationGrantSourceType.Request,
             sourceId = id,
@@ -86,6 +87,7 @@ private fun AuthorizationRequest.moveInAndChangeOfEnergySupplierGrants(
 
     return (meteringPoints.value as ResourceConstraint.MeteringPoints).ids.map { meteringPointId ->
         AuthorizationGrant.new(
+            now = now,
             type = AuthorizationGrantType.Consumable,
             sourceType = AuthorizationGrantSourceType.Request,
             sourceId = id,
@@ -122,6 +124,7 @@ private fun AuthorizationRequest.energySupplierFrameworkAgreementGrants(
     val validity = frameworkAgreementGrantValidity(requestedGrantValidFrom, requestedGrantValidTo, now)
 
     val grant = AuthorizationGrant.new(
+        now = now,
         type = AuthorizationGrantType.Persistent,
         sourceType = AuthorizationGrantSourceType.Request,
         sourceId = id,
