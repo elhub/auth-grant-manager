@@ -28,7 +28,9 @@ import no.elhub.auth.v1.domain.AuthorizationGrantStatus
 import no.elhub.auth.v1.domain.AuthorizationGrantType
 import no.elhub.auth.v1.features.grants.UpdateGrantError
 import no.elhub.auth.v1.features.grants.UpdateGrantHandler
+import no.elhub.auth.v1.repositories.GrantRepository
 import no.elhub.auth.v1.repositories.RepositoryReadError
+import no.elhub.auth.v1.repositories.RepositoryWriteError
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import java.util.UUID
 import kotlin.time.Instant
@@ -107,6 +109,33 @@ class UpdateGrantRouteTest : FunSpec({
             coVerify(exactly = 1) {
                 handler(id, principal, AuthorizationGrantStatus.Revoked, AuthorizationGrantType.Persistent)
             }
+        }
+    }
+
+    test("PATCH exhausting a pending grant returns 422 through the handler") {
+        val repository = mockk<GrantRepository>()
+        val updateHandler = UpdateGrantHandler(repository)
+        coEvery { repository.find(id) } returns grant.copy(
+            status = AuthorizationGrantStatus.Pending,
+            validFrom = Instant.parse("2099-01-01T00:00:00Z"),
+        )
+        coEvery { repository.update(id, AuthorizationGrantStatus.Exhausted) } throws
+            RepositoryWriteError.ConflictError("Cannot exhaust a pending grant")
+
+        testApplication {
+            setupAppWith(system) {
+                route(V1_GRANTS_PATH) { route(updateHandler) }
+            }
+
+            val response = client.patchJson(path, body())
+
+            response.status shouldBe HttpStatusCode.UnprocessableEntity
+            val error = response.body<JsonApiErrorCollection>().errors.single()
+            error.status shouldBe "422"
+            error.title shouldBe "Invalid status transition"
+            error.detail shouldBe
+                "Only pending or active AuthorizationGrants may be revoked, and only active consumable grants may be exhausted."
+            coVerify(exactly = 1) { repository.update(id, AuthorizationGrantStatus.Exhausted) }
         }
     }
 

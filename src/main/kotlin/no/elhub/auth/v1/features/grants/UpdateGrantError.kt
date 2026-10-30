@@ -8,7 +8,7 @@ sealed class UpdateGrantError(override val detail: String) : Errors(detail) {
     class TypeMismatch : UpdateGrantError("data.type must match the authorization grant's type.")
 
     class InvalidTransition : UpdateGrantError(
-        "Only active AuthorizationGrants may be revoked, and only active consumable grants may be exhausted.",
+        "Only pending or active AuthorizationGrants may be revoked, and only active consumable grants may be exhausted.",
     )
 
     class Expired : UpdateGrantError("AuthorizationGrant has expired.")
