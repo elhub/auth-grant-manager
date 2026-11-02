@@ -17,10 +17,10 @@ import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.
 import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsApiConfig
 import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceTestContainer
 import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceTestContainerExtension
-import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceTestData.BLOCKED_FOR_SWITCHING_METERING_POINT_1
 import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceTestData.NON_EXISTING_METERING_POINT
 import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceTestData.SERVER_ERROR_METERING_POINT
 import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceTestData.VALID_METERING_POINT_1
+import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceTestData.VALID_METERING_POINT_2
 import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.meteringPointsServiceHttpClient
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsApi
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsApiConfig
@@ -84,6 +84,15 @@ class ChangeOfEnergySupplierDocumentHandlerTest : FunSpec({
                     add(
                         buildJsonObject {
                             put("id", VALID_METERING_POINT_1)
+                            put(
+                                "address",
+                                buildJsonObject {
+                                    put("streetName", "Example Street")
+                                    put("houseNumber", "3")
+                                    put("postalCode", "0000")
+                                    put("city", "Example City")
+                                },
+                            )
                             put("meterNumber", "30030856")
                         }
                     )
@@ -127,7 +136,7 @@ class ChangeOfEnergySupplierDocumentHandlerTest : FunSpec({
             DocumentSpecification.ChangeOfEnergySupplierForOrganization(
                 ResourceConstraint.MeteringPoints(
                     setOf(
-                        MeteringPointId.create(BLOCKED_FOR_SWITCHING_METERING_POINT_1),
+                        MeteringPointId.create(VALID_METERING_POINT_2),
                         MeteringPointId.create(VALID_METERING_POINT_1),
                     ),
                 ),
@@ -142,13 +151,31 @@ class ChangeOfEnergySupplierDocumentHandlerTest : FunSpec({
                     add(
                         buildJsonObject {
                             put("id", VALID_METERING_POINT_1)
+                            put(
+                                "address",
+                                buildJsonObject {
+                                    put("streetName", "Example Street")
+                                    put("houseNumber", "3")
+                                    put("postalCode", "0000")
+                                    put("city", "Example City")
+                                },
+                            )
                             put("meterNumber", "30030856")
                         }
                     )
                     add(
                         buildJsonObject {
-                            put("id", BLOCKED_FOR_SWITCHING_METERING_POINT_1)
-                            put("meterNumber", "70738220")
+                            put("id", VALID_METERING_POINT_2)
+                            put(
+                                "address",
+                                buildJsonObject {
+                                    put("streetName", "Example Avenue")
+                                    put("houseNumber", "4")
+                                    put("postalCode", "0001")
+                                    put("city", "Example City")
+                                },
+                            )
+                            put("meterNumber", "30030857")
                         }
                     )
                 }

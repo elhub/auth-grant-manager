@@ -422,6 +422,17 @@ private fun Errors.toApiErrorResponse() =
             toInternalServerApiErrorResponse()
         }
 
+        is RequestPreparationError.OrganisationLookupFailure -> {
+            when (clientError) {
+                ClientError.NotFound -> toValidationApiErrorResponse("The requested organisation could not be found")
+
+                else -> {
+                    logger.error("Failed to resolve Elhub internal organisation ID: {}", clientError)
+                    toInternalServerApiErrorResponse()
+                }
+            }
+        }
+
         else -> {
             throw Exception("Unimplemented")
         }
