@@ -23,6 +23,7 @@ class Handler(
         repo.update(command.grantId, command.newStatus)
             .mapLeft { error ->
                 when (error) {
+                    is RepositoryWriteError.NotFoundError -> ConsumeError.GrantNotFound
                     is RepositoryWriteError.ConflictError -> ConsumeError.IllegalStateError
                     is RepositoryWriteError.ExpiredError -> ConsumeError.ExpiredError
                     else -> ConsumeError.PersistenceError
