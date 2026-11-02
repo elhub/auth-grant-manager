@@ -23,7 +23,7 @@ interface OrganisationsService {
         partyType: PartyType
     ): Either<ClientError, PartyResponse>
 
-    suspend fun getElhubInternalIdByOrganisationNumber(organisationNumber: String): Either<ClientError, IdentificationResponse>
+    suspend fun getIdentificationByOrganisationNumber(organisationNumber: String): Either<ClientError, IdentificationResponse>
 }
 
 class OrganisationsApi(
@@ -59,7 +59,7 @@ class OrganisationsApi(
         }
     }
 
-    override suspend fun getElhubInternalIdByOrganisationNumber(organisationNumber: String): Either<ClientError, IdentificationResponse> {
+    override suspend fun getIdentificationByOrganisationNumber(organisationNumber: String): Either<ClientError, IdentificationResponse> {
         val traceId = TraceIdContext.currentOrNull()
         if (traceId == null) {
             logger.error("event=organisation_lookup_missing_trace_id")
@@ -75,11 +75,11 @@ class OrganisationsApi(
                 val responseBody: IdentificationResponse = response.body()
                 responseBody
             } else {
-                logger.error("Failed to fetch elhubInternalId with status: ${response.status.value}")
+                logger.error("Failed to fetch identification with status: ${response.status.value}")
                 return mapErrorsFromServer(response).left()
             }
         }.mapLeft { throwable ->
-            logger.error("Failed to fetch elhubInternalId: {}", throwable.message)
+            logger.error("Failed to fetch identification: {}", throwable.message)
             ClientError.UnexpectedError(throwable)
         }
     }

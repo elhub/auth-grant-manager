@@ -28,7 +28,7 @@ class ChangeOfEnergySupplierDocumentHandler(
         context: DocumentCreationContext,
     ): DocumentCreationDetails {
         val elhubInternalId = organisationsService
-            .getElhubInternalIdByOrganisationNumber(context.requestedPrincipal.id)
+            .getIdentificationByOrganisationNumber(context.requestedPrincipal.id)
             .fold(
                 ifLeft = { throw DocumentPreparationError.OrganisationLookupFailure(it) },
                 ifRight = { response ->

@@ -197,7 +197,7 @@ class OrganisationsApiTest : FunSpec({
     }
 
     test("Valid organisation number returns its Elhub internal identification") {
-        val response = service.getElhubInternalIdByOrganisationNumber(validOrganisationNumber)
+        val response = service.getIdentificationByOrganisationNumber(validOrganisationNumber)
 
         response.shouldBeRight()
         val identification = response.value.data.single()
@@ -208,7 +208,7 @@ class OrganisationsApiTest : FunSpec({
     }
 
     test("Unknown organisation number returns not found") {
-        val response = service.getElhubInternalIdByOrganisationNumber(unknownOrganisationNumber)
+        val response = service.getIdentificationByOrganisationNumber(unknownOrganisationNumber)
 
         response.shouldBeLeft()
         response.value shouldBe ClientError.NotFound
