@@ -401,6 +401,11 @@ private fun Errors.toApiErrorResponse() =
             toInternalServerApiErrorResponse()
         }
 
+        is DocumentPreparationError.OrganisationLookupFailure -> {
+            logger.error("Failed to resolve Elhub internal organisation ID: {}", clientError)
+            toInternalServerApiErrorResponse()
+        }
+
         is RequestPreparationError.RequestedMeteringPointsNotFound -> {
             toValidationApiErrorResponse(detail)
         }

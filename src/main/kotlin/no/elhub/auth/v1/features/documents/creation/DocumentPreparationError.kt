@@ -9,6 +9,9 @@ sealed class DocumentPreparationError(override val detail: String) : Errors(deta
 
     class MeteringPointsServiceFailure(val clientError: ClientError) :
         DocumentPreparationError("Failed to fetch requested metering points: $clientError")
+
+    class OrganisationLookupFailure(val clientError: ClientError) :
+        DocumentPreparationError("Failed to resolve Elhub internal organisation ID: $clientError")
 }
 
 fun ClientError.toDocumentPreparationError(): DocumentPreparationError = when (this) {

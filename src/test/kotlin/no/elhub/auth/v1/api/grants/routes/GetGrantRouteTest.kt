@@ -38,7 +38,7 @@ import kotlin.time.Instant
 class GetGrantRouteTest : FunSpec({
     val handler = mockk<GetGrantHandler>()
     val authorizedParty = AuthorizationParty("123456789", PartyType.OrganizationEntity)
-    val principal = AuthorizationParty("999888777", PartyType.OrganizationEntity)
+    val principal = AuthorizationParty("999888771", PartyType.OrganizationEntity)
     val grantedBy = AuthorizationParty("person-1", PartyType.Person)
     val sourceId = UUID.fromString("123e4567-e89b-12d3-a456-426614174000")
     val grant = AuthorizationGrant.new(

@@ -11,8 +11,8 @@
         "redirectUri": "https://supplier.example/authorization/return"
       },
       "meta": {
-        "requestedPrincipal": "999888777",
-        "requestedOf": "999888777"
+        "requestedPrincipal": "999888771",
+        "requestedOf": "999888771"
       }
     }
   }

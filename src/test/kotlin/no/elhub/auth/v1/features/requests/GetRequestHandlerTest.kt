@@ -22,7 +22,7 @@ class GetRequestHandlerTest : FunSpec({
     val requestRepository = mockk<RequestRepository>()
     val handler = GetRequestHandler(requestRepository)
     val requestedBy = AuthorizationParty("123456789", PartyType.OrganizationEntity)
-    val requestedPrincipal = AuthorizationParty("999888777", PartyType.OrganizationEntity)
+    val requestedPrincipal = AuthorizationParty("999888771", PartyType.OrganizationEntity)
     val requestedOf = AuthorizationParty("person-1", PartyType.Person)
     val requestId = UUID.fromString("123e4567-e89b-12d3-a456-426614174000")
     val timestamp = Instant.parse("2026-10-01T08:00:00Z")

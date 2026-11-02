@@ -194,6 +194,7 @@ class ErrorHandlingTest : FunSpec({
         RepositoryWriteError.UnexpectedError("secret database write error"),
         InvalidDocumentScopes("secret stored document scope error"),
         DocumentPreparationError.MeteringPointsServiceFailure(ClientError.NotFound),
+        DocumentPreparationError.OrganisationLookupFailure(ClientError.ServerError),
         RequestPreparationError.MeteringPointsServiceFailure(ClientError.ServerError),
     ).forEach { cause ->
         test("hides details of ${cause::class.qualifiedName} behind a generic 500 JSON:API error") {
