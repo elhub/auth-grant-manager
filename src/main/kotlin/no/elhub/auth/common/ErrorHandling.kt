@@ -402,12 +402,23 @@ private fun Errors.toApiErrorResponse() =
             toInternalServerApiErrorResponse()
         }
 
-        is DocumentPreparationError.OrganisationLookupFailure -> {
+        is DocumentPreparationError.RequestedPrincipalLookupFailure -> {
             when (clientError) {
                 ClientError.NotFound -> toValidationApiErrorResponse("The requested principal could not be found")
 
                 else -> {
                     logger.error("Failed to resolve Elhub internal organisation ID: {}", clientError)
+                    toInternalServerApiErrorResponse()
+                }
+            }
+        }
+
+        is DocumentPreparationError.RequestedByLookupFailure -> {
+            when (clientError) {
+                ClientError.NotFound -> toValidationApiErrorResponse("The requested by could not be found")
+
+                else -> {
+                    logger.error("Failed to resolve requested by data: {}", clientError)
                     toInternalServerApiErrorResponse()
                 }
             }
@@ -422,7 +433,7 @@ private fun Errors.toApiErrorResponse() =
             toInternalServerApiErrorResponse()
         }
 
-        is RequestPreparationError.OrganisationLookupFailure -> {
+        is RequestPreparationError.RequestedPrincipalLookupFailure -> {
             when (clientError) {
                 ClientError.NotFound -> toValidationApiErrorResponse("The requested principal could not be found")
 

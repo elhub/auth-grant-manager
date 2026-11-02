@@ -10,8 +10,8 @@ sealed class RequestPreparationError(override val detail: String) : Errors(detai
     class MeteringPointsServiceFailure(val clientError: ClientError) :
         RequestPreparationError("Failed to fetch requested metering points: $clientError")
 
-    class OrganisationLookupFailure(val clientError: ClientError) :
-        RequestPreparationError("Failed to resolve Elhub internal organisation ID: $clientError")
+    class RequestedPrincipalLookupFailure(val clientError: ClientError) :
+        RequestPreparationError("Failed to fetch Elhub internal ID for requested principal: $clientError")
 }
 
 fun ClientError.toRequestPreparationError(): RequestPreparationError = when (this) {

@@ -114,10 +114,16 @@ class ErrorHandlingTest : FunSpec({
             "One or more requested metering points could not be found",
         ),
         ErrorCase(
-            DocumentPreparationError.OrganisationLookupFailure(ClientError.NotFound),
+            DocumentPreparationError.RequestedPrincipalLookupFailure(ClientError.NotFound),
             HttpStatusCode.UnprocessableEntity,
             "Validation error",
             "The requested principal could not be found",
+        ),
+        ErrorCase(
+            DocumentPreparationError.RequestedByLookupFailure(ClientError.NotFound),
+            HttpStatusCode.UnprocessableEntity,
+            "Validation error",
+            "The requested by could not be found",
         ),
         ErrorCase(
             RequestPreparationError.RequestedMeteringPointsNotFound(),
@@ -126,7 +132,7 @@ class ErrorHandlingTest : FunSpec({
             "One or more requested metering points could not be found",
         ),
         ErrorCase(
-            RequestPreparationError.OrganisationLookupFailure(ClientError.NotFound),
+            RequestPreparationError.RequestedPrincipalLookupFailure(ClientError.NotFound),
             HttpStatusCode.UnprocessableEntity,
             "Validation error",
             "The requested principal could not be found",
@@ -206,9 +212,10 @@ class ErrorHandlingTest : FunSpec({
         RepositoryWriteError.UnexpectedError("secret database write error"),
         InvalidDocumentScopes("secret stored document scope error"),
         DocumentPreparationError.MeteringPointsServiceFailure(ClientError.NotFound),
-        DocumentPreparationError.OrganisationLookupFailure(ClientError.ServerError),
+        DocumentPreparationError.RequestedPrincipalLookupFailure(ClientError.ServerError),
+        DocumentPreparationError.RequestedByLookupFailure(ClientError.ServerError),
         RequestPreparationError.MeteringPointsServiceFailure(ClientError.ServerError),
-        RequestPreparationError.OrganisationLookupFailure(ClientError.ServerError),
+        RequestPreparationError.RequestedPrincipalLookupFailure(ClientError.ServerError),
     ).forEach { cause ->
         test("hides details of ${cause::class.qualifiedName} behind a generic 500 JSON:API error") {
             testApplication {
