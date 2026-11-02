@@ -27,7 +27,7 @@ class MoveInAndChangeOfEnergySupplierRequestHandler(
         requestedPrincipal: AuthorizationParty,
         requestedOf: AuthorizationParty,
     ): RequestTypeSpecificDetails {
-        val elhubInternalId = organisationsService
+        val requestedPrincipalElhubInternalId = organisationsService
             .getIdentificationByOrganisationNumber(requestedPrincipal.id)
             .fold(
                 ifLeft = { throw RequestPreparationError.OrganisationLookupFailure(it) },
@@ -40,7 +40,7 @@ class MoveInAndChangeOfEnergySupplierRequestHandler(
             requestedMeteringPoints = try {
                 meteringPointsService.getMeteringPointsForOrganisation(
                     meteringPointIds = details.meteringPointIds.ids.map { it.value }.sorted(),
-                    elhubInternalId = elhubInternalId,
+                    elhubInternalId = requestedPrincipalElhubInternalId,
                 )
             } catch (e: MeteringPointsLookupException) {
                 throw e.clientError.toRequestPreparationError()

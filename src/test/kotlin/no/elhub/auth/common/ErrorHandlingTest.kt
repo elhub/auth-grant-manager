@@ -117,7 +117,7 @@ class ErrorHandlingTest : FunSpec({
             DocumentPreparationError.OrganisationLookupFailure(ClientError.NotFound),
             HttpStatusCode.UnprocessableEntity,
             "Validation error",
-            "The requested organisation could not be found",
+            "The requested principal could not be found",
         ),
         ErrorCase(
             RequestPreparationError.RequestedMeteringPointsNotFound(),
@@ -129,7 +129,7 @@ class ErrorHandlingTest : FunSpec({
             RequestPreparationError.OrganisationLookupFailure(ClientError.NotFound),
             HttpStatusCode.UnprocessableEntity,
             "Validation error",
-            "The requested organisation could not be found",
+            "The requested principal could not be found",
         ),
         ErrorCase(
             RepositoryReadError.NotFoundError("sensitive read detail"),
