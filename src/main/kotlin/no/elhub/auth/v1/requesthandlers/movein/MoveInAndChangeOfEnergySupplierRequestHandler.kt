@@ -30,10 +30,10 @@ class MoveInAndChangeOfEnergySupplierRequestHandler(
         val requestedPrincipalElhubInternalId = organisationsService
             .getIdentificationByOrganisationNumber(requestedPrincipal.id)
             .fold(
-                ifLeft = { throw RequestPreparationError.OrganisationLookupFailure(it) },
+                ifLeft = { throw RequestPreparationError.RequestedPrincipalLookupFailure(it) },
                 ifRight = { response ->
                     response.data.firstOrNull { it.attributes?.identificationType == IdentificationType.ORGANIZATION }?.id
-                        ?: throw RequestPreparationError.OrganisationLookupFailure(ClientError.NotFound)
+                        ?: throw RequestPreparationError.RequestedPrincipalLookupFailure(ClientError.NotFound)
                 },
             )
         val metadata = MoveInAndChangeOfEnergySupplierRequestMetadata(

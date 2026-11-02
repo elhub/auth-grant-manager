@@ -28,6 +28,7 @@ import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.O
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestContainerExtension
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.NON_EXISTING_ORGANISATION_NUMBER
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.VALID_ORGANISATION_NUMBER
+import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.VALID_PARTY_ID
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.organisationsServiceHttpClient
 import no.elhub.auth.v1.domain.DocumentLanguage
 import no.elhub.auth.v1.domain.MeteringPointId
@@ -41,7 +42,7 @@ class ChangeOfEnergySupplierDocumentHandlerTest : FunSpec({
     extensions(OrganisationsServiceTestContainerExtension, MeteringPointsServiceTestContainerExtension)
 
     val context = DocumentCreationContext(
-        requestedBy = AuthorizationParty("supplier-1", PartyType.OrganizationEntity),
+        requestedBy = AuthorizationParty(VALID_PARTY_ID, PartyType.OrganizationEntity),
         requestedPrincipal = AuthorizationParty(VALID_ORGANISATION_NUMBER, PartyType.Organization),
         requestedOf = AuthorizationParty("person-1", PartyType.Person),
         language = DocumentLanguage.EN,
@@ -104,6 +105,7 @@ class ChangeOfEnergySupplierDocumentHandlerTest : FunSpec({
         pdfContent.language shouldBe PdfLanguage.EN
         pdfContent.meteringPointId shouldBe VALID_METERING_POINT_1
         pdfContent.meterNumber shouldBe "30030856"
+        pdfContent.balanceSupplierName shouldBe "BalanceSupplier Østli, Ruud og Moen"
         (details.validTo > Clock.System.now()) shouldBe true
     }
 
@@ -184,7 +186,7 @@ class ChangeOfEnergySupplierDocumentHandlerTest : FunSpec({
     }
 
     test("throws an organisation lookup failure when the organisation cannot be found") {
-        val error = shouldThrow<DocumentPreparationError.OrganisationLookupFailure> {
+        val error = shouldThrow<DocumentPreparationError.RequestedPrincipalLookupFailure> {
             handler.prepare(
                 specification,
                 context.copy(

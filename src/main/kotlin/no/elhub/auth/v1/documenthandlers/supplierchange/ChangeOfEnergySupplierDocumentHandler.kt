@@ -2,6 +2,7 @@ package no.elhub.auth.v1.documenthandlers.supplierchange
 
 import no.elhub.auth.common.documents.pdf.AuthorizationDocumentPdfContent
 import no.elhub.auth.common.structuredata.organisations.IdentificationType
+import no.elhub.auth.common.structuredata.organisations.PartyType
 import no.elhub.auth.v0.features.businessprocesses.structuredata.common.ClientError
 import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsLookupException
 import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsService
@@ -30,10 +31,10 @@ class ChangeOfEnergySupplierDocumentHandler(
         val requestedPrincipalElhubInternalId = organisationsService
             .getIdentificationByOrganisationNumber(context.requestedPrincipal.id)
             .fold(
-                ifLeft = { throw DocumentPreparationError.OrganisationLookupFailure(it) },
+                ifLeft = { throw DocumentPreparationError.RequestedPrincipalLookupFailure(it) },
                 ifRight = { response ->
                     response.data.firstOrNull { it.attributes?.identificationType == IdentificationType.ORGANIZATION }?.id
-                        ?: throw DocumentPreparationError.OrganisationLookupFailure(ClientError.NotFound)
+                        ?: throw DocumentPreparationError.RequestedPrincipalLookupFailure(ClientError.NotFound)
                 },
             )
         val metadata = ChangeOfEnergySupplierDocumentMetadata(
@@ -47,6 +48,15 @@ class ChangeOfEnergySupplierDocumentHandler(
             }.toRequestedMeteringPointMetadata(),
         )
         val requestedMeteringPoint = metadata.requestedMeteringPoints.first()
+        val requestedByName = organisationsService
+            .getPartyByIdAndPartyType(partyId = context.requestedBy.id, partyType = PartyType.BalanceSupplier)
+            .fold(
+                ifLeft = { throw DocumentPreparationError.RequestedByLookupFailure(it) },
+                ifRight = { response ->
+                    response.data.attributes?.name ?: throw DocumentPreparationError.RequestedByLookupFailure(ClientError.NotFound)
+                }
+            )
+
         return DocumentCreationDetails(
             pdfContent = AuthorizationDocumentPdfContent.ChangeOfBalanceSupplierForOrganisation(
                 language = context.language.toPdfLanguage(),
@@ -55,7 +65,7 @@ class ChangeOfEnergySupplierDocumentHandler(
                 meteringPointAddress = "Placeholder address",
                 meteringPointId = requestedMeteringPoint.id,
                 meterNumber = requestedMeteringPoint.meterNumber ?: "Unknown",
-                balanceSupplierName = "Placeholder supplier ${context.requestedBy.id}",
+                balanceSupplierName = requestedByName,
                 agreementReference = null,
             ),
             validTo = Clock.System.now() + DOCUMENT_VALID_DAYS.days,

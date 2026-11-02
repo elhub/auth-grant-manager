@@ -25,6 +25,7 @@ import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.O
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestContainerExtension
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.NON_EXISTING_ORGANISATION_NUMBER
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.VALID_ORGANISATION_NUMBER
+import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.VALID_PARTY_ID
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.organisationsServiceHttpClient
 import no.elhub.auth.v1.domain.MeteringPointId
 import no.elhub.auth.v1.domain.ResourceConstraint
@@ -35,7 +36,7 @@ import kotlin.time.Clock
 class MoveInAndChangeOfEnergySupplierRequestHandlerTest : FunSpec({
     extensions(OrganisationsServiceTestContainerExtension, MeteringPointsServiceTestContainerExtension)
 
-    val requestedBy = AuthorizationParty("supplier-1", PartyType.OrganizationEntity)
+    val requestedBy = AuthorizationParty(VALID_PARTY_ID, PartyType.OrganizationEntity)
     val requestedPrincipal = AuthorizationParty(VALID_ORGANISATION_NUMBER, PartyType.Organization)
     val requestedOf = AuthorizationParty("person-1", PartyType.Person)
     val moveInDate = LocalDate(2026, 10, 1)
@@ -123,7 +124,7 @@ class MoveInAndChangeOfEnergySupplierRequestHandlerTest : FunSpec({
     }
 
     test("throws an organisation lookup failure when the organisation cannot be found") {
-        val error = shouldThrow<RequestPreparationError.OrganisationLookupFailure> {
+        val error = shouldThrow<RequestPreparationError.RequestedPrincipalLookupFailure> {
             handler.validateAndGetRequestTypeSpecificDetails(
                 details = details(),
                 requestedBy = requestedBy,
