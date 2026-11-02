@@ -22,9 +22,11 @@ class OrganizationAuthorizationTemplateTest : FunSpec({
         html shouldContain "Avtalebekreftelse - Leverandørskifte"
         html shouldContain "Kunde:</span> Navn AS"
         html shouldContain "Organisasjonsnummer:</span> 100 010 001"
-        html.substringAfter("Kunde:</span> Navn AS").substringBefore("Adresse:</span>") shouldContain
+        html.substringAfter("Kunde:</span> Navn AS").substringBefore("Bjørkeveien 18C, 0168 Oslo") shouldContain
             "Organisasjonsnummer:</span> 100 010 001"
-        html shouldContain "Adresse:</span> Bjørkeveien 18C, 0168 Oslo"
+        html shouldContain "Bjørkeveien 18C, 0168 Oslo"
+        html shouldContain "Målepunkt-ID: 707057500047917289"
+        html shouldContain "Målernummer: 57390234"
         html shouldContain "Avtalereferanse:</span> ABC123"
         html shouldContain "strømavtalen som det vises til over"
         html shouldContain "Ved å signere dette dokumentet bekrefter du på vegne av organisasjonen"
@@ -43,11 +45,11 @@ class OrganizationAuthorizationTemplateTest : FunSpec({
         html shouldContain "Avtalebekreftelse - Innflytting og leverandørskifte"
         html shouldContain "Kunde:</span> Navn AS"
         html shouldContain "Organisasjonsnummer:</span> 100 010 001"
-        html.substringAfter("Kunde:</span> Navn AS").substringBefore("Adresse:</span>") shouldContain
+        html.substringAfter("Kunde:</span> Navn AS").substringBefore("Bjørkeveien 18C, 0168 Oslo") shouldContain
             "Organisasjonsnummer:</span> 100 010 001"
-        html shouldContain "Adresse:</span> Bjørkeveien 18C, 0168 Oslo"
-        html shouldContain "Målernummer:</span> 57390234"
-        html shouldContain "MålepunktID:</span> 707057500047917289"
+        html shouldContain "Bjørkeveien 18C, 0168 Oslo"
+        html shouldContain "Målernummer: 57390234"
+        html shouldContain "Målepunkt-ID: 707057500047917289"
         html shouldContain "Strømleverandør:</span> Norgesstrøm"
         html shouldContain "Avtalereferanse:</span> ABC123"
         html shouldContain "strømavtalen som det vises til over"
@@ -171,9 +173,15 @@ private val organizationData =
     mapOf(
         "customerName" to "Navn AS",
         "organizationNumber" to "100 010 001",
-        "meteringPointAddress" to "Bjørkeveien 18C, 0168 Oslo",
-        "meterNumber" to "57390234",
-        "meteringPointId" to "707057500047917289",
+        "hasMeteringPoints" to true,
+        "meteringPoints" to
+            listOf(
+                mapOf(
+                    "address" to "Bjørkeveien 18C, 0168 Oslo",
+                    "id" to "707057500047917289",
+                    "meterNumber" to "57390234",
+                ),
+            ),
         "balanceSupplierName" to "Norgesstrøm",
         "agreementReference" to "ABC123",
         "htmlLang" to "nb",

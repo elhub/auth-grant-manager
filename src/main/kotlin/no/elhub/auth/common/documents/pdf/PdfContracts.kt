@@ -22,13 +22,17 @@ enum class PdfLanguage(
     }
 }
 
+data class MeteringPointPdfContent(
+    val address: String,
+    val id: String,
+    val meterNumber: String,
+)
+
 sealed interface AuthorizationDocumentPdfContent {
     val language: PdfLanguage
 
     sealed class ChangeOfBalanceSupplier : AuthorizationDocumentPdfContent {
-        abstract val meteringPointAddress: String
-        abstract val meteringPointId: String
-        abstract val meterNumber: String
+        abstract val meteringPoints: List<MeteringPointPdfContent>
         abstract val balanceSupplierName: String
     }
 
@@ -39,9 +43,7 @@ sealed interface AuthorizationDocumentPdfContent {
     data class ChangeOfBalanceSupplierForPerson(
         override val language: PdfLanguage,
         val customerName: String,
-        override val meteringPointAddress: String,
-        override val meteringPointId: String,
-        override val meterNumber: String,
+        override val meteringPoints: List<MeteringPointPdfContent>,
         override val balanceSupplierName: String,
         val balanceSupplierContractName: String,
     ) : ChangeOfBalanceSupplier()
@@ -49,9 +51,7 @@ sealed interface AuthorizationDocumentPdfContent {
     data class MoveInAndChangeOfBalanceSupplierForPerson(
         override val language: PdfLanguage,
         val customerName: String,
-        override val meteringPointAddress: String,
-        override val meteringPointId: String,
-        override val meterNumber: String,
+        override val meteringPoints: List<MeteringPointPdfContent>,
         override val balanceSupplierName: String,
         val balanceSupplierContractName: String,
         override val moveInDate: LocalDate?,
@@ -61,9 +61,7 @@ sealed interface AuthorizationDocumentPdfContent {
         override val language: PdfLanguage,
         val organizationName: String,
         val organizationNumber: String,
-        override val meteringPointAddress: String,
-        override val meteringPointId: String,
-        override val meterNumber: String,
+        override val meteringPoints: List<MeteringPointPdfContent>,
         override val balanceSupplierName: String,
         val agreementReference: String?,
     ) : ChangeOfBalanceSupplier()
@@ -72,9 +70,7 @@ sealed interface AuthorizationDocumentPdfContent {
         override val language: PdfLanguage,
         val organizationName: String,
         val organizationNumber: String,
-        override val meteringPointAddress: String,
-        override val meteringPointId: String,
-        override val meterNumber: String,
+        override val meteringPoints: List<MeteringPointPdfContent>,
         override val balanceSupplierName: String,
         val agreementReference: String?,
         override val moveInDate: LocalDate?,

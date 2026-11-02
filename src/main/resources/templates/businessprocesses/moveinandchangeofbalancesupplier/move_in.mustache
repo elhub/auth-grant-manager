@@ -38,6 +38,23 @@
             color: #2a2a2a;
         }
 
+        .metering-points-title {
+            font-size: 18px;
+            margin: 28px 0 12px;
+        }
+
+        .metering-point {
+            margin-bottom: 10px;
+        }
+
+        .metering-point-address {
+            font-weight: 700;
+        }
+
+        .metering-point p {
+            margin: 0 0 6px;
+        }
+
         .title {
             color: #386043;
             font-size: 20px;
@@ -71,9 +88,6 @@ li {
     {{#organizationNumber}}
         <p class="meta-row"><span class="meta-label">{{#i18n}}labels.organization_number{{/i18n}}:</span> {{organizationNumber}}</p>
     {{/organizationNumber}}
-    <p class="meta-row"><span class="meta-label">{{#i18n}}labels.address{{/i18n}}:</span> {{meteringPointAddress}}</p>
-    <p class="meta-row"><span class="meta-label">{{#i18n}}labels.meter_number{{/i18n}}:</span> {{meterNumber}}</p>
-    <p class="meta-row"><span class="meta-label">{{#i18n}}labels.metering_point_id{{/i18n}}:</span> {{meteringPointId}}</p>
     <p class="meta-row"><span class="meta-label">{{#i18n}}labels.supplier{{/i18n}}:</span> {{balanceSupplierName}}</p>
     {{#organizationNumber}}
         {{#agreementReference}}
@@ -123,6 +137,17 @@ li {
     {{#organizationNumber}}{{#i18n}}move_in.organization_more_information{{/i18n}}{{/organizationNumber}}
     {{^organizationNumber}}{{#i18n}}common.more_information{{/i18n}}{{/organizationNumber}}
 </p>
+
+{{#hasMeteringPoints}}
+    <h2 class="metering-points-title">{{#i18n}}metering_points.title{{/i18n}}</h2>
+    {{#meteringPoints}}
+        <div class="metering-point">
+            <p class="metering-point-address">{{address}}</p>
+            <p>{{#i18n}}labels.metering_point_id{{/i18n}}: {{id}}</p>
+            <p>{{#i18n}}labels.meter_number{{/i18n}}: {{meterNumber}}</p>
+        </div>
+    {{/meteringPoints}}
+{{/hasMeteringPoints}}
 
 </body>
 </html>

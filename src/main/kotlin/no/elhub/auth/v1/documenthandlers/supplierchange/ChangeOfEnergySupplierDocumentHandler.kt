@@ -7,6 +7,7 @@ import no.elhub.auth.v0.features.businessprocesses.structuredata.common.ClientEr
 import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsLookupException
 import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsService
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsService
+import no.elhub.auth.v1.common.meteringpoints.toPdfContent
 import no.elhub.auth.v1.common.meteringpoints.toRequestedMeteringPointMetadata
 import no.elhub.auth.v1.documenthandlers.common.toPdfLanguage
 import no.elhub.auth.v1.domain.documents.DocumentSpecification
@@ -47,7 +48,6 @@ class ChangeOfEnergySupplierDocumentHandler(
                 throw e.clientError.toDocumentPreparationError()
             }.toRequestedMeteringPointMetadata(),
         )
-        val requestedMeteringPoint = metadata.requestedMeteringPoints.first()
         val requestedByName = organisationsService
             .getPartyByIdAndPartyType(partyId = context.requestedBy.id, partyType = PartyType.BalanceSupplier)
             .fold(
@@ -56,15 +56,12 @@ class ChangeOfEnergySupplierDocumentHandler(
                     response.data.attributes?.name ?: throw DocumentPreparationError.RequestedByLookupFailure(ClientError.NotFound)
                 }
             )
-
         return DocumentCreationDetails(
             pdfContent = AuthorizationDocumentPdfContent.ChangeOfBalanceSupplierForOrganisation(
                 language = context.language.toPdfLanguage(),
                 organizationName = "Placeholder organization ${context.requestedPrincipal.id}",
                 organizationNumber = context.requestedPrincipal.id,
-                meteringPointAddress = "Placeholder address",
-                meteringPointId = requestedMeteringPoint.id,
-                meterNumber = requestedMeteringPoint.meterNumber ?: "Unknown",
+                meteringPoints = metadata.requestedMeteringPoints.map { it.toPdfContent() },
                 balanceSupplierName = requestedByName,
                 agreementReference = null,
             ),

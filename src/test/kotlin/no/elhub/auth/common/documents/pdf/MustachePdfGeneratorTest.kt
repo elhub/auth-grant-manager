@@ -1,6 +1,7 @@
 package no.elhub.auth.common.documents.pdf
 
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
@@ -8,6 +9,7 @@ import io.kotest.matchers.string.shouldNotContain
 import kotlinx.datetime.LocalDate
 import org.apache.pdfbox.Loader
 import org.apache.pdfbox.text.PDFTextStripper
+import org.apache.pdfbox.text.TextPosition
 
 class MustachePdfGeneratorTest : FunSpec({
     test("generates person and organization PDFs through the shared change-of-supplier model") {
@@ -26,9 +28,13 @@ class MustachePdfGeneratorTest : FunSpec({
             AuthorizationDocumentPdfContent.ChangeOfBalanceSupplierForPerson(
                 language = PdfLanguage.EN,
                 customerName = "Hillary Orr",
-                meteringPointAddress = "Example Street 1, 1234 Oslo",
-                meteringPointId = "123456789012345678",
-                meterNumber = "123456789",
+                meteringPoints = listOf(
+                    MeteringPointPdfContent(
+                        address = "Example Street 1, 1234 Oslo",
+                        id = "123456789012345678",
+                        meterNumber = "123456789",
+                    ),
+                ),
                 balanceSupplierName = "Jami Wade",
                 balanceSupplierContractName = "Selena Chandler",
             )
@@ -49,9 +55,7 @@ class MustachePdfGeneratorTest : FunSpec({
             AuthorizationDocumentPdfContent.MoveInAndChangeOfBalanceSupplierForPerson(
                 language = PdfLanguage.NB,
                 customerName = "Alberto Balsalm",
-                meteringPointAddress = "Address 1",
-                meteringPointId = "Meter123",
-                meterNumber = "123456789",
+                meteringPoints = listOf(MeteringPointPdfContent("Address 1", "Meter123", "123456789")),
                 balanceSupplierName = "Greatest Balance Supplier of all",
                 balanceSupplierContractName = "Contract Name",
                 moveInDate = LocalDate(2024, 1, 1),
@@ -96,6 +100,99 @@ class MustachePdfGeneratorTest : FunSpec({
         text shouldContain "Avtalereferanse: ABC123"
         text shouldContain "på vegne av organisasjonen"
         text shouldContain "nødvendig fullmakt"
+    }
+
+    test("generates every metering point in an organization PDF") {
+        val pdf = generator(useTestPdfNotice = false).generate(
+            AuthorizationDocumentPdfContent.ChangeOfBalanceSupplierForOrganisation(
+                language = PdfLanguage.EN,
+                organizationName = "Navn AS",
+                organizationNumber = "100 010 001",
+                meteringPoints = listOf(
+                    MeteringPointPdfContent(
+                        address = "Example Street 3, 0000 Example City",
+                        id = "707057500000000001",
+                        meterNumber = "meter-1",
+                    ),
+                    MeteringPointPdfContent(
+                        address = "Other Street 4, 0001 Other City",
+                        id = "707057500000000002",
+                        meterNumber = "meter-2",
+                    ),
+                ),
+                balanceSupplierName = "Norgesstrøm",
+                agreementReference = "ABC123",
+            )
+        )
+
+        val text = pdfText(pdf)
+        text shouldContain "Example Street 3, 0000 Example City"
+        text shouldContain "707057500000000001"
+        text shouldContain "meter-1"
+        text shouldContain "Other Street 4, 0001 Other City"
+        text shouldContain "707057500000000002"
+        text shouldContain "meter-2"
+    }
+
+    test("generates every metering point in an organization move-in PDF") {
+        val content = organizationMoveInContent(PdfLanguage.NB, LocalDate(2026, 5, 1)).copy(
+            meteringPoints = listOf(
+                MeteringPointPdfContent("Example Street 3, 0000 Example City", "707057500000000001", "meter-1"),
+                MeteringPointPdfContent("Other Street 4, 0001 Other City", "707057500000000002", "meter-2"),
+            ),
+        )
+        val pdf = generator(useTestPdfNotice = false).generate(content)
+
+        val text = pdfText(pdf)
+        text shouldContain "Example Street 3, 0000 Example City"
+        text shouldContain "707057500000000001"
+        text shouldContain "meter-1"
+        text shouldContain "Other Street 4, 0001 Other City"
+        text shouldContain "707057500000000002"
+        text shouldContain "meter-2"
+    }
+
+    test("renders the metering point section after agreement information") {
+        val contents = listOf(
+            organizationChangeOfSupplierContent(),
+            organizationMoveInContent(PdfLanguage.NB, LocalDate(2026, 5, 1)),
+        )
+        val heading = "Avtalebekreftelsen gjelder for følgende strømmålere"
+        val address = "Bjørkeveien 18C, 0168 Oslo"
+        val meteringPointId = "Målepunkt-ID: 707057500047917289"
+        val meterNumber = "Målernummer: 57390234"
+
+        contents.forEach { content ->
+            val pdf = generator(useTestPdfNotice = false).generate(content)
+            val text = pdfText(pdf)
+
+            text shouldContain heading
+            text shouldContain address
+            text shouldContain meteringPointId
+            text shouldContain meterNumber
+            (text.indexOf("Elhub sin hjemmeside.") < text.indexOf(heading)) shouldBe true
+            (text.indexOf(heading) < text.indexOf(address)) shouldBe true
+            (text.indexOf(address) < text.indexOf(meteringPointId)) shouldBe true
+            (text.indexOf(meteringPointId) < text.indexOf(meterNumber)) shouldBe true
+            val addressFontNames = pdfFontNamesFor(pdf, address)
+            addressFontNames.shouldNotBeEmpty()
+            addressFontNames.forEach { it shouldContain "Bold" }
+        }
+    }
+
+    test("localizes the metering point section heading") {
+        val expectedHeadings = mapOf(
+            PdfLanguage.NB to "Avtalebekreftelsen gjelder for følgende strømmålere",
+            PdfLanguage.NN to "Avtalestadfestinga gjeld for følgjande straummålarar",
+            PdfLanguage.EN to "This agreement confirmation applies to the following metering points",
+        )
+
+        expectedHeadings.forEach { (language, heading) ->
+            val content = organizationChangeOfSupplierContent(language)
+            val pdf = generator(useTestPdfNotice = false).generate(content)
+
+            pdfText(pdf) shouldContain heading
+        }
     }
 
     test("generates a move-in PDF for an organization with a localized date") {
@@ -238,9 +335,13 @@ private fun generator(useTestPdfNotice: Boolean) = MustachePdfGenerator(
 private fun changeOfSupplierContent() = AuthorizationDocumentPdfContent.ChangeOfBalanceSupplierForPerson(
     language = PdfLanguage.NB,
     customerName = "Requester",
-    meteringPointAddress = "Address 1",
-    meteringPointId = "Meter123",
-    meterNumber = "123456789",
+    meteringPoints = listOf(
+        MeteringPointPdfContent(
+            address = "Address 1",
+            id = "Meter123",
+            meterNumber = "123456789",
+        ),
+    ),
     balanceSupplierName = "Balance Supplier",
     balanceSupplierContractName = "Contract Name",
 )
@@ -249,9 +350,13 @@ private fun personMoveInContent(language: PdfLanguage) =
     AuthorizationDocumentPdfContent.MoveInAndChangeOfBalanceSupplierForPerson(
         language = language,
         customerName = "Customer",
-        meteringPointAddress = "Address 1",
-        meteringPointId = "Meter123",
-        meterNumber = "123456789",
+        meteringPoints = listOf(
+            MeteringPointPdfContent(
+                address = "Address 1",
+                id = "Meter123",
+                meterNumber = "123456789",
+            ),
+        ),
         balanceSupplierName = "Balance Supplier",
         balanceSupplierContractName = "Contract Name",
         moveInDate = LocalDate(2026, 5, 1),
@@ -263,9 +368,13 @@ private fun organizationChangeOfSupplierContent(
     language = language,
     organizationName = "Navn AS",
     organizationNumber = "100 010 001",
-    meteringPointAddress = "Bjørkeveien 18C, 0168 Oslo",
-    meteringPointId = "707057500047917289",
-    meterNumber = "57390234",
+    meteringPoints = listOf(
+        MeteringPointPdfContent(
+            address = "Bjørkeveien 18C, 0168 Oslo",
+            id = "707057500047917289",
+            meterNumber = "57390234",
+        ),
+    ),
     balanceSupplierName = "Norgesstrøm",
     agreementReference = "ABC123",
 )
@@ -277,9 +386,13 @@ private fun organizationMoveInContent(
     language = language,
     organizationName = "Navn AS",
     organizationNumber = "100 010 001",
-    meteringPointAddress = "Bjørkeveien 18C, 0168 Oslo",
-    meteringPointId = "707057500047917289",
-    meterNumber = "57390234",
+    meteringPoints = listOf(
+        MeteringPointPdfContent(
+            address = "Bjørkeveien 18C, 0168 Oslo",
+            id = "707057500047917289",
+            meterNumber = "57390234",
+        ),
+    ),
     balanceSupplierName = "Norgesstrøm",
     agreementReference = "ABC123",
     moveInDate = moveInDate,
@@ -287,6 +400,21 @@ private fun organizationMoveInContent(
 
 private fun pdfText(pdf: ByteArray): String =
     Loader.loadPDF(pdf).use { PDFTextStripper().getText(it) }
+
+private fun pdfFontNamesFor(pdf: ByteArray, searchText: String): List<String> =
+    Loader.loadPDF(pdf).use { document ->
+        val fontNames = mutableListOf<String>()
+        val stripper = object : PDFTextStripper() {
+            override fun writeString(text: String, textPositions: MutableList<TextPosition>) {
+                if (text.contains(searchText)) {
+                    fontNames += textPositions.map { it.font.name }
+                }
+                super.writeString(text, textPositions)
+            }
+        }
+        stripper.getText(document)
+        fontNames
+    }
 
 private fun pdfLanguage(pdf: ByteArray): String? =
     Loader.loadPDF(pdf).use { it.documentCatalog.language }
