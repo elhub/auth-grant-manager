@@ -57,9 +57,6 @@ class MustachePdfGenerator(
             "templates.businessprocesses.energysupplierframeworkagreement.i18n.messages"
         internal const val I18N_COMMON = "templates.i18n.common.messages"
         internal const val VARIABLE_KEY_CUSTOMER_NAME = "customerName"
-        internal const val VARIABLE_KEY_METERING_POINT_ADDRESS = "meteringPointAddress"
-        internal const val VARIABLE_KEY_METERING_POINT_ID = "meteringPointId"
-        internal const val VARIABLE_KEY_METER_NUMBER = "meterNumber"
         internal const val VARIABLE_KEY_BALANCE_SUPPLIER_NAME = "balanceSupplierName"
         internal const val VARIABLE_KEY_BALANCE_SUPPLIER_CONTRACT_NAME = "balanceSupplierContractName"
         internal const val VARIABLE_KEY_AGREEMENT_REFERENCE = "agreementReference"
@@ -190,9 +187,17 @@ class MustachePdfGenerator(
                     }
                 }
             }
-            put(MustacheConstants.VARIABLE_KEY_METERING_POINT_ADDRESS, content.meteringPointAddress)
-            put(MustacheConstants.VARIABLE_KEY_METERING_POINT_ID, content.meteringPointId)
-            put(MustacheConstants.VARIABLE_KEY_METER_NUMBER, content.meterNumber)
+            put("hasMeteringPoints", content.meteringPoints.isNotEmpty())
+            put(
+                "meteringPoints",
+                content.meteringPoints.map { meteringPoint ->
+                    mapOf(
+                        "address" to meteringPoint.address,
+                        "id" to meteringPoint.id,
+                        "meterNumber" to meteringPoint.meterNumber,
+                    )
+                },
+            )
             put(MustacheConstants.VARIABLE_KEY_BALANCE_SUPPLIER_NAME, content.balanceSupplierName)
             moveInDate?.let { put(MustacheConstants.VARIABLE_KEY_MOVE_IN_DATE, it) }
         }

@@ -6,6 +6,7 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import kotlinx.datetime.LocalDate
 import no.elhub.auth.common.documents.pdf.AuthorizationDocumentPdfContent
+import no.elhub.auth.common.documents.pdf.MeteringPointPdfContent
 import no.elhub.auth.common.documents.pdf.PdfGenerationException
 import no.elhub.auth.common.documents.pdf.PdfGenerator
 import no.elhub.auth.v0.features.businessprocesses.changeofbalancesupplier.domain.ChangeOfBalanceSupplierBusinessMeta
@@ -29,9 +30,7 @@ class V0FileGeneratorAdapterTest : FunSpec({
         generator.captured shouldBe AuthorizationDocumentPdfContent.ChangeOfBalanceSupplierForPerson(
             language = no.elhub.auth.common.documents.pdf.PdfLanguage.EN,
             customerName = "Customer",
-            meteringPointAddress = "Address",
-            meteringPointId = "metering-point",
-            meterNumber = "meter",
+            meteringPoints = listOf(MeteringPointPdfContent("Address", "metering-point", "meter")),
             balanceSupplierName = "Supplier",
             balanceSupplierContractName = "Contract",
         )
@@ -55,9 +54,7 @@ class V0FileGeneratorAdapterTest : FunSpec({
         generator.captured shouldBe AuthorizationDocumentPdfContent.MoveInAndChangeOfBalanceSupplierForPerson(
             language = no.elhub.auth.common.documents.pdf.PdfLanguage.NN,
             customerName = "Customer",
-            meteringPointAddress = "Address",
-            meteringPointId = "metering-point",
-            meterNumber = "meter",
+            meteringPoints = listOf(MeteringPointPdfContent("Address", "metering-point", "meter")),
             balanceSupplierName = "Supplier",
             balanceSupplierContractName = "Contract",
             moveInDate = moveInDate,

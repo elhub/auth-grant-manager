@@ -103,8 +103,8 @@ class ChangeOfEnergySupplierDocumentHandlerTest : FunSpec({
         val pdfContent = details.pdfContent
             .shouldBeInstanceOf<AuthorizationDocumentPdfContent.ChangeOfBalanceSupplierForOrganisation>()
         pdfContent.language shouldBe PdfLanguage.EN
-        pdfContent.meteringPointId shouldBe VALID_METERING_POINT_1
-        pdfContent.meterNumber shouldBe "30030856"
+        pdfContent.meteringPoints.single().id shouldBe VALID_METERING_POINT_1
+        pdfContent.meteringPoints.single().meterNumber shouldBe "30030856"
         pdfContent.balanceSupplierName shouldBe "BalanceSupplier Østli, Ruud og Moen"
         (details.validTo > Clock.System.now()) shouldBe true
     }
@@ -183,6 +183,18 @@ class ChangeOfEnergySupplierDocumentHandlerTest : FunSpec({
                 }
             )
         }
+
+        val pdfContent = details.pdfContent
+            .shouldBeInstanceOf<AuthorizationDocumentPdfContent.ChangeOfBalanceSupplierForOrganisation>()
+        pdfContent.meteringPoints.map { it.id } shouldBe listOf(
+            VALID_METERING_POINT_1,
+            VALID_METERING_POINT_2,
+        )
+        pdfContent.meteringPoints.map { it.address } shouldBe listOf(
+            "Example Street 3, 0000 Example City",
+            "Example Avenue 4, 0001 Example City",
+        )
+        pdfContent.meteringPoints.map { it.meterNumber } shouldBe listOf("30030856", "30030857")
     }
 
     test("throws an organisation lookup failure when the organisation cannot be found") {
