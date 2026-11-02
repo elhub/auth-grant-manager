@@ -1,13 +1,17 @@
 package no.elhub.auth.v1.documenthandlers.movein
 
 import no.elhub.auth.common.documents.pdf.AuthorizationDocumentPdfContent
+import no.elhub.auth.common.structuredata.organisations.IdentificationType
+import no.elhub.auth.v0.features.businessprocesses.structuredata.common.ClientError
 import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsLookupException
 import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsService
+import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsService
 import no.elhub.auth.v1.common.meteringpoints.toRequestedMeteringPointMetadata
 import no.elhub.auth.v1.documenthandlers.common.toPdfLanguage
 import no.elhub.auth.v1.domain.documents.DocumentSpecification
 import no.elhub.auth.v1.features.documents.creation.DocumentCreationContext
 import no.elhub.auth.v1.features.documents.creation.DocumentCreationDetails
+import no.elhub.auth.v1.features.documents.creation.DocumentPreparationError
 import no.elhub.auth.v1.features.documents.creation.toDocumentPreparationError
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
@@ -17,16 +21,26 @@ private const val DOCUMENT_VALID_DAYS = 28
 
 class MoveInAndChangeOfEnergySupplierDocumentHandler(
     private val meteringPointsService: MeteringPointsService,
+    private val organisationsService: OrganisationsService,
 ) : HandlerContract {
     override suspend fun prepare(
         specification: DocumentSpecification.MoveInAndChangeOfEnergySupplierForOrganization,
         context: DocumentCreationContext,
     ): DocumentCreationDetails {
+        val requestedPrincipalElhubInternalId = organisationsService
+            .getIdentificationByOrganisationNumber(context.requestedPrincipal.id)
+            .fold(
+                ifLeft = { throw DocumentPreparationError.OrganisationLookupFailure(it) },
+                ifRight = { response ->
+                    response.data.firstOrNull { it.attributes?.identificationType == IdentificationType.ORGANIZATION }?.id
+                        ?: throw DocumentPreparationError.OrganisationLookupFailure(ClientError.NotFound)
+                },
+            )
         val metadata = MoveInAndChangeOfEnergySupplierDocumentMetadata(
             requestedMeteringPoints = try {
                 meteringPointsService.getMeteringPointsForOrganisation(
                     meteringPointIds = specification.meteringPointIds.ids.map { it.value }.sorted(),
-                    elhubInternalId = context.requestedPrincipal.id,
+                    elhubInternalId = requestedPrincipalElhubInternalId,
                 )
             } catch (e: MeteringPointsLookupException) {
                 throw e.clientError.toDocumentPreparationError()

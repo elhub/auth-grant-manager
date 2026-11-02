@@ -40,7 +40,7 @@ fun Application.module() {
             SupplierChangeHandlerImplementation(resolve(), resolve())
         }
         provide<MoveInAndChangeOfEnergySupplierDocumentHandler> {
-            MoveInHandlerImplementation(resolve())
+            MoveInHandlerImplementation(resolve(), resolve())
         }
         provide<EnergySupplierFrameworkAgreementDocumentHandler> {
             FrameworkAgreementHandlerImplementation()

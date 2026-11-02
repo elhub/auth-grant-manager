@@ -117,13 +117,19 @@ class ErrorHandlingTest : FunSpec({
             DocumentPreparationError.OrganisationLookupFailure(ClientError.NotFound),
             HttpStatusCode.UnprocessableEntity,
             "Validation error",
-            "The requested organisation could not be found",
+            "The requested principal could not be found",
         ),
         ErrorCase(
             RequestPreparationError.RequestedMeteringPointsNotFound(),
             HttpStatusCode.UnprocessableEntity,
             "Validation error",
             "One or more requested metering points could not be found",
+        ),
+        ErrorCase(
+            RequestPreparationError.OrganisationLookupFailure(ClientError.NotFound),
+            HttpStatusCode.UnprocessableEntity,
+            "Validation error",
+            "The requested principal could not be found",
         ),
         ErrorCase(
             RepositoryReadError.NotFoundError("sensitive read detail"),
@@ -202,6 +208,7 @@ class ErrorHandlingTest : FunSpec({
         DocumentPreparationError.MeteringPointsServiceFailure(ClientError.NotFound),
         DocumentPreparationError.OrganisationLookupFailure(ClientError.ServerError),
         RequestPreparationError.MeteringPointsServiceFailure(ClientError.ServerError),
+        RequestPreparationError.OrganisationLookupFailure(ClientError.ServerError),
     ).forEach { cause ->
         test("hides details of ${cause::class.qualifiedName} behind a generic 500 JSON:API error") {
             testApplication {

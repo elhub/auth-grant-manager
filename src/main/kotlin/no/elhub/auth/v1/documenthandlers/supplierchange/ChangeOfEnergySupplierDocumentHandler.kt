@@ -27,7 +27,7 @@ class ChangeOfEnergySupplierDocumentHandler(
         specification: DocumentSpecification.ChangeOfEnergySupplierForOrganization,
         context: DocumentCreationContext,
     ): DocumentCreationDetails {
-        val elhubInternalId = organisationsService
+        val requestedPrincipalElhubInternalId = organisationsService
             .getIdentificationByOrganisationNumber(context.requestedPrincipal.id)
             .fold(
                 ifLeft = { throw DocumentPreparationError.OrganisationLookupFailure(it) },
@@ -40,7 +40,7 @@ class ChangeOfEnergySupplierDocumentHandler(
             requestedMeteringPoints = try {
                 meteringPointsService.getMeteringPointsForOrganisation(
                     meteringPointIds = specification.meteringPointIds.ids.map { it.value }.sorted(),
-                    elhubInternalId = elhubInternalId,
+                    elhubInternalId = requestedPrincipalElhubInternalId,
                 )
             } catch (e: MeteringPointsLookupException) {
                 throw e.clientError.toDocumentPreparationError()
