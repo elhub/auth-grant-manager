@@ -114,6 +114,12 @@ class ErrorHandlingTest : FunSpec({
             "One or more requested metering points could not be found",
         ),
         ErrorCase(
+            DocumentPreparationError.OrganisationLookupFailure(ClientError.NotFound),
+            HttpStatusCode.UnprocessableEntity,
+            "Validation error",
+            "The requested organisation could not be found",
+        ),
+        ErrorCase(
             RequestPreparationError.RequestedMeteringPointsNotFound(),
             HttpStatusCode.UnprocessableEntity,
             "Validation error",
