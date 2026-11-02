@@ -17,6 +17,7 @@ import io.ktor.serialization.kotlinx.json.json
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.serialization.json.Json
+import no.elhub.auth.common.structuredata.organisations.IdentificationType
 import no.elhub.auth.common.structuredata.organisations.PartyType
 import no.elhub.auth.v0.features.businessprocesses.common.JwtTokenProvider
 import no.elhub.auth.v0.features.businessprocesses.structuredata.common.ClientError
@@ -29,6 +30,9 @@ class OrganisationsApiTest : FunSpec({
     val validPartyId = "3004300000019"
     val notBalanceSupplierPartyId = "3004300000099"
     val notValidPartyId = "123"
+    val validOrganisationNumber = "999888771"
+    val unknownOrganisationNumber = "00000000000"
+    val elhubInternalId = "de2b68e4-eb0e-bd49-e053-04058d0ab6d2"
     val traceId = UUID.randomUUID().toString()
     var capturedTraceIdHeader: String? = null
     var capturedAuthorizationHeader: String? = null
@@ -98,6 +102,41 @@ class OrganisationsApiTest : FunSpec({
                         )
                     }
 
+                    "/v1/identification/organisation/$validOrganisationNumber" -> {
+                        respond(
+                            content = """
+                                {
+                                    "data": [{
+                                        "type": "identification",
+                                        "id": "$elhubInternalId",
+                                        "attributes": {
+                                            "identificationType": "ORGANIZATION"
+                                        }
+                                    }],
+                                    "links": {
+                                        "self": "/v1/identification/organisation/$validOrganisationNumber"
+                                    }
+                                }
+                            """.trimIndent(),
+                            status = HttpStatusCode.OK,
+                            headers = headersOf(HttpHeaders.ContentType, "application/json")
+                        )
+                    }
+
+                    "/v1/identification/organisation/$unknownOrganisationNumber" -> {
+                        respond(
+                            content = """
+                                {"errors": [{
+                                    "status": "404",
+                                    "title": "Identification not found",
+                                    "detail": "Identification not found"
+                                }]}
+                            """.trimIndent(),
+                            status = HttpStatusCode.NotFound,
+                            headers = headersOf(HttpHeaders.ContentType, "application/json")
+                        )
+                    }
+
                     else -> respond(
                         content = """{"errors":[{"status":"401","title":"Unauthorized","detail":"Missing or invalid token"}]}""",
                         status = HttpStatusCode.Unauthorized
@@ -155,5 +194,23 @@ class OrganisationsApiTest : FunSpec({
         val response = service.getPartyByIdAndPartyType(notValidPartyId, PartyType.BalanceSupplier)
         response.shouldBeLeft()
         response.value shouldBe ClientError.BadRequest
+    }
+
+    test("Valid organisation number returns its Elhub internal identification") {
+        val response = service.getIdentificationByOrganisationNumber(validOrganisationNumber)
+
+        response.shouldBeRight()
+        val identification = response.value.data.single()
+        identification.type shouldBe "identification"
+        identification.id shouldBe elhubInternalId
+        identification.attributes?.identificationType shouldBe IdentificationType.ORGANIZATION
+        response.value.links?.self shouldBe "/v1/identification/organisation/$validOrganisationNumber"
+    }
+
+    test("Unknown organisation number returns not found") {
+        val response = service.getIdentificationByOrganisationNumber(unknownOrganisationNumber)
+
+        response.shouldBeLeft()
+        response.value shouldBe ClientError.NotFound
     }
 })

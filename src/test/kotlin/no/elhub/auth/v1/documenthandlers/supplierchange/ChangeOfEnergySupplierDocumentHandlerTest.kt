@@ -4,111 +4,118 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
-import io.mockk.coEvery
-import io.mockk.mockk
-import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import no.elhub.auth.common.auth.AuthorizationParty
 import no.elhub.auth.common.auth.PartyType
 import no.elhub.auth.common.documents.pdf.AuthorizationDocumentPdfContent
-import no.elhub.auth.common.structuredata.meteringpoints.AccountingPoint
-import no.elhub.auth.common.structuredata.meteringpoints.Attributes
-import no.elhub.auth.common.structuredata.meteringpoints.Meter
-import no.elhub.auth.common.structuredata.meteringpoints.MeteringPointAddress
-import no.elhub.auth.common.structuredata.meteringpoints.MeteringPointResponse
-import no.elhub.auth.common.structuredata.meteringpoints.Relationships
+import no.elhub.auth.common.documents.pdf.PdfLanguage
+import no.elhub.auth.v0.features.businessprocesses.common.JwtTokenProvider
 import no.elhub.auth.v0.features.businessprocesses.structuredata.common.ClientError
-import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsLookupException
-import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsService
+import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsApi
+import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsApiConfig
+import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceTestContainer
+import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceTestContainerExtension
+import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceTestData.BLOCKED_FOR_SWITCHING_METERING_POINT_1
+import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceTestData.NON_EXISTING_METERING_POINT
+import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceTestData.SERVER_ERROR_METERING_POINT
+import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceTestData.VALID_METERING_POINT_1
+import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.meteringPointsServiceHttpClient
+import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsApi
+import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsApiConfig
+import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestContainer
+import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestContainerExtension
+import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.NON_EXISTING_ORGANISATION_NUMBER
+import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.VALID_ORGANISATION_NUMBER
+import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.organisationsServiceHttpClient
 import no.elhub.auth.v1.domain.DocumentLanguage
 import no.elhub.auth.v1.domain.MeteringPointId
 import no.elhub.auth.v1.domain.ResourceConstraint
 import no.elhub.auth.v1.domain.documents.DocumentSpecification
 import no.elhub.auth.v1.features.documents.creation.DocumentCreationContext
 import no.elhub.auth.v1.features.documents.creation.DocumentPreparationError
-import no.elhub.devxp.jsonapi.model.JsonApiLinks
-import no.elhub.devxp.jsonapi.response.JsonApiResponse
-import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObjectWithRelationships
 import kotlin.time.Clock
 
 class ChangeOfEnergySupplierDocumentHandlerTest : FunSpec({
+    extensions(OrganisationsServiceTestContainerExtension, MeteringPointsServiceTestContainerExtension)
+
     val context = DocumentCreationContext(
         requestedBy = AuthorizationParty("supplier-1", PartyType.OrganizationEntity),
-        requestedPrincipal = AuthorizationParty("org-1", PartyType.Organization),
+        requestedPrincipal = AuthorizationParty(VALID_ORGANISATION_NUMBER, PartyType.Organization),
         requestedOf = AuthorizationParty("person-1", PartyType.Person),
         language = DocumentLanguage.EN,
         externalReference = "reference-1",
     )
-    val meteringPointIds = ResourceConstraint.MeteringPoints(
-        setOf(MeteringPointId.create("707057500000000001")),
+    val tokenProvider = object : JwtTokenProvider {
+        override suspend fun getToken(): String = "token"
+    }
+    lateinit var handler: ChangeOfEnergySupplierDocumentHandler
+
+    beforeSpec {
+        val organisationsService = OrganisationsApi(
+            organisationsApiConfig = OrganisationsApiConfig(
+                serviceUrl = OrganisationsServiceTestContainer.serviceUrl(),
+            ),
+            client = organisationsServiceHttpClient,
+            tokenProvider = tokenProvider,
+        )
+        val meteringPointsService = MeteringPointsApi(
+            meteringPointsApiConfig = MeteringPointsApiConfig(
+                serviceUrl = MeteringPointsServiceTestContainer.serviceUrl(),
+            ),
+            client = meteringPointsServiceHttpClient,
+            tokenProvider = tokenProvider,
+        )
+        handler = ChangeOfEnergySupplierDocumentHandler(meteringPointsService, organisationsService)
+    }
+
+    val specification = DocumentSpecification.ChangeOfEnergySupplierForOrganization(
+        ResourceConstraint.MeteringPoints(setOf(MeteringPointId.create(VALID_METERING_POINT_1))),
     )
 
-    test("prepares supplier-change document details") {
-        val service = mockk<MeteringPointsService>()
-        coEvery {
-            service.getMeteringPointsForOrganisation(listOf("707057500000000001"), "org-1")
-        } returns listOf(meteringPointResponse("707057500000000001", "meter-1"))
+    test("prepares supplier-change document details using the resolved Elhub internal ID") {
+        val details = handler.prepare(specification, context)
 
-        val details = ChangeOfEnergySupplierDocumentHandler(service).prepare(
-            specification = DocumentSpecification.ChangeOfEnergySupplierForOrganization(meteringPointIds),
-            context = context,
-        )
-
-        val expectedMeta = buildJsonObject {
+        details.meta shouldBe buildJsonObject {
             put(
                 "requestedMeteringPoints",
-                kotlinx.serialization.json.buildJsonArray {
+                buildJsonArray {
                     add(
                         buildJsonObject {
-                            put("id", "707057500000000001")
-                            put(
-                                "address",
-                                buildJsonObject {
-                                    put("streetName", "Example Street")
-                                    put("houseNumber", "3")
-                                    put("postalCode", "0000")
-                                    put("city", "Example City")
-                                },
-                            )
-                            put("meterNumber", "meter-1")
+                            put("id", VALID_METERING_POINT_1)
+                            put("meterNumber", "30030856")
                         }
                     )
                 }
             )
         }
-        details.meta shouldBe expectedMeta
-        val pdfContent = details.pdfContent.shouldBeInstanceOf<AuthorizationDocumentPdfContent.ChangeOfBalanceSupplierForOrganisation>()
-        pdfContent.language shouldBe no.elhub.auth.common.documents.pdf.PdfLanguage.EN
-        pdfContent.meteringPointId shouldBe "707057500000000001"
-        pdfContent.meterNumber shouldBe "meter-1"
+        val pdfContent = details.pdfContent
+            .shouldBeInstanceOf<AuthorizationDocumentPdfContent.ChangeOfBalanceSupplierForOrganisation>()
+        pdfContent.language shouldBe PdfLanguage.EN
+        pdfContent.meteringPointId shouldBe VALID_METERING_POINT_1
+        pdfContent.meterNumber shouldBe "30030856"
         (details.validTo > Clock.System.now()) shouldBe true
     }
 
     test("throws when a requested metering point cannot be found") {
-        val service = mockk<MeteringPointsService>()
-        coEvery {
-            service.getMeteringPointsForOrganisation(any(), any())
-        } throws MeteringPointsLookupException(ClientError.NotFound)
-
         shouldThrow<DocumentPreparationError.RequestedMeteringPointsNotFound> {
-            ChangeOfEnergySupplierDocumentHandler(service).prepare(
-                specification = DocumentSpecification.ChangeOfEnergySupplierForOrganization(meteringPointIds),
-                context = context,
+            handler.prepare(
+                DocumentSpecification.ChangeOfEnergySupplierForOrganization(
+                    ResourceConstraint.MeteringPoints(setOf(MeteringPointId.create(NON_EXISTING_METERING_POINT))),
+                ),
+                context,
             )
         }
     }
 
     test("throws a service failure for other metering-points service errors") {
-        val service = mockk<MeteringPointsService>()
-        coEvery {
-            service.getMeteringPointsForOrganisation(any(), any())
-        } throws MeteringPointsLookupException(ClientError.ServerError)
-
         val error = shouldThrow<DocumentPreparationError.MeteringPointsServiceFailure> {
-            ChangeOfEnergySupplierDocumentHandler(service).prepare(
-                specification = DocumentSpecification.ChangeOfEnergySupplierForOrganization(meteringPointIds),
-                context = context,
+            handler.prepare(
+                DocumentSpecification.ChangeOfEnergySupplierForOrganization(
+                    ResourceConstraint.MeteringPoints(setOf(MeteringPointId.create(SERVER_ERROR_METERING_POINT))),
+                ),
+                context,
             )
         }
 
@@ -116,87 +123,49 @@ class ChangeOfEnergySupplierDocumentHandlerTest : FunSpec({
     }
 
     test("stores metadata for every requested metering point in a stable order") {
-        val service = mockk<MeteringPointsService>()
-        coEvery {
-            service.getMeteringPointsForOrganisation(listOf("707057500000000001", "707057500000000002"), "org-1")
-        } returns listOf(
-            meteringPointResponse("707057500000000001", "meter-707057500000000001"),
-            meteringPointResponse("707057500000000002", "meter-707057500000000002"),
-        )
-        val requestedIds = ResourceConstraint.MeteringPoints(
-            setOf(
-                MeteringPointId.create("707057500000000002"),
-                MeteringPointId.create("707057500000000001"),
+        val details = handler.prepare(
+            DocumentSpecification.ChangeOfEnergySupplierForOrganization(
+                ResourceConstraint.MeteringPoints(
+                    setOf(
+                        MeteringPointId.create(BLOCKED_FOR_SWITCHING_METERING_POINT_1),
+                        MeteringPointId.create(VALID_METERING_POINT_1),
+                    ),
+                ),
             ),
+            context,
         )
 
-        val result = ChangeOfEnergySupplierDocumentHandler(service).prepare(
-            specification = DocumentSpecification.ChangeOfEnergySupplierForOrganization(requestedIds),
-            context = context,
-        )
-
-        val expectedMeta = buildJsonObject {
+        details.meta shouldBe buildJsonObject {
             put(
                 "requestedMeteringPoints",
-                kotlinx.serialization.json.buildJsonArray {
+                buildJsonArray {
                     add(
                         buildJsonObject {
-                            put("id", "707057500000000001")
-                            put(
-                                "address",
-                                buildJsonObject {
-                                    put("streetName", "Example Street")
-                                    put("houseNumber", "3")
-                                    put("postalCode", "0000")
-                                    put("city", "Example City")
-                                },
-                            )
-                            put("meterNumber", "meter-707057500000000001")
+                            put("id", VALID_METERING_POINT_1)
+                            put("meterNumber", "30030856")
                         }
                     )
                     add(
                         buildJsonObject {
-                            put("id", "707057500000000002")
-                            put(
-                                "address",
-                                buildJsonObject {
-                                    put("streetName", "Example Street")
-                                    put("houseNumber", "3")
-                                    put("postalCode", "0000")
-                                    put("city", "Example City")
-                                },
-                            )
-                            put("meterNumber", "meter-707057500000000002")
+                            put("id", BLOCKED_FOR_SWITCHING_METERING_POINT_1)
+                            put("meterNumber", "70738220")
                         }
                     )
                 }
             )
         }
+    }
 
-        result.meta shouldBe expectedMeta
+    test("throws an organisation lookup failure when the organisation cannot be found") {
+        val error = shouldThrow<DocumentPreparationError.OrganisationLookupFailure> {
+            handler.prepare(
+                specification,
+                context.copy(
+                    requestedPrincipal = AuthorizationParty(NON_EXISTING_ORGANISATION_NUMBER, PartyType.Organization),
+                ),
+            )
+        }
+
+        error.clientError shouldBe ClientError.NotFound
     }
 })
-
-private fun meteringPointResponse(id: String, meterNumber: String): MeteringPointResponse =
-    JsonApiResponse.SingleDocumentWithRelationships(
-        data = JsonApiResponseResourceObjectWithRelationships(
-            type = "MeteringPoint",
-            id = id,
-            attributes = Attributes(
-                accountingPoint = AccountingPoint(
-                    address = MeteringPointAddress(
-                        streetName = "Example Street",
-                        houseNumber = "3",
-                        postalCode = "0000",
-                        city = "Example City",
-                    ),
-                    meter = Meter(1.0, meterNumber),
-                ),
-            ),
-            relationships = Relationships(),
-            links = null,
-            meta = JsonObject(emptyMap()),
-        ),
-        links = JsonApiLinks.ResourceObjectLink(""),
-        meta = JsonObject(emptyMap()),
-    )

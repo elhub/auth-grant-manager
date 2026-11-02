@@ -57,7 +57,7 @@ class GetDocumentRouteTest : FunSpec({
         createdAt = timestamp,
         updatedAt = timestamp,
         requestedBy = authorizedParty,
-        requestedPrincipal = AuthorizationParty("999888777", PartyType.OrganizationEntity),
+        requestedPrincipal = AuthorizationParty("999888771", PartyType.OrganizationEntity),
         requestedOf = AuthorizationParty("person-1", PartyType.Person),
         approvedBy = null,
         authorizationGrants = null,

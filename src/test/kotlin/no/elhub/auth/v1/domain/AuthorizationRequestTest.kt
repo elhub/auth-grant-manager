@@ -13,7 +13,7 @@ import kotlin.time.Instant
 
 class AuthorizationRequestTest : FunSpec({
     val requestedBy = AuthorizationParty("123456789", PartyType.OrganizationEntity)
-    val requestedPrincipal = AuthorizationParty("999888777", PartyType.OrganizationEntity)
+    val requestedPrincipal = AuthorizationParty("999888771", PartyType.OrganizationEntity)
     val requestedOf = AuthorizationParty("person-1", PartyType.Person)
     val validTo = Instant.parse("2100-02-01T00:00:00Z")
     val meta = buildJsonObject { put("source", JsonPrimitive("test")) }

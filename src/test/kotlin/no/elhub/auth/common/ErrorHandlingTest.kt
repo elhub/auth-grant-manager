@@ -114,6 +114,12 @@ class ErrorHandlingTest : FunSpec({
             "One or more requested metering points could not be found",
         ),
         ErrorCase(
+            DocumentPreparationError.OrganisationLookupFailure(ClientError.NotFound),
+            HttpStatusCode.UnprocessableEntity,
+            "Validation error",
+            "The requested organisation could not be found",
+        ),
+        ErrorCase(
             RequestPreparationError.RequestedMeteringPointsNotFound(),
             HttpStatusCode.UnprocessableEntity,
             "Validation error",
@@ -194,6 +200,7 @@ class ErrorHandlingTest : FunSpec({
         RepositoryWriteError.UnexpectedError("secret database write error"),
         InvalidDocumentScopes("secret stored document scope error"),
         DocumentPreparationError.MeteringPointsServiceFailure(ClientError.NotFound),
+        DocumentPreparationError.OrganisationLookupFailure(ClientError.ServerError),
         RequestPreparationError.MeteringPointsServiceFailure(ClientError.ServerError),
     ).forEach { cause ->
         test("hides details of ${cause::class.qualifiedName} behind a generic 500 JSON:API error") {

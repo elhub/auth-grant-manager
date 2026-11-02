@@ -48,7 +48,7 @@ class UpdateRequestRouteTest : FunSpec({
         meta = JsonObject(emptyMap()),
         validTo = Instant.parse("2100-01-01T00:00:00Z"),
         requestedBy = AuthorizationParty("7080005053246", PartyType.OrganizationEntity),
-        requestedPrincipal = AuthorizationParty("999888777", PartyType.Organization),
+        requestedPrincipal = AuthorizationParty("999888771", PartyType.Organization),
         requestedOf = requestedOf,
     )
     val id = request.id

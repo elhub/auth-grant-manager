@@ -12,6 +12,7 @@ import no.elhub.auth.common.documents.pdf.PdfGenerationException
 import no.elhub.auth.common.documents.pdf.PdfSigningException
 import no.elhub.auth.common.documents.pdf.PdfValidationException
 import no.elhub.auth.v0.config.jsonApiContentType
+import no.elhub.auth.v0.features.businessprocesses.structuredata.common.ClientError
 import no.elhub.auth.v0.features.common.buildApiErrorResponse
 import no.elhub.auth.v0.features.common.toInternalServerApiErrorResponse
 import no.elhub.auth.v0.features.common.toNotFoundApiErrorResponse
@@ -399,6 +400,17 @@ private fun Errors.toApiErrorResponse() =
         is DocumentPreparationError.MeteringPointsServiceFailure -> {
             logger.error("Failed to fetch requested metering points: {}", clientError)
             toInternalServerApiErrorResponse()
+        }
+
+        is DocumentPreparationError.OrganisationLookupFailure -> {
+            when (clientError) {
+                ClientError.NotFound -> toValidationApiErrorResponse("The requested organisation could not be found")
+
+                else -> {
+                    logger.error("Failed to resolve Elhub internal organisation ID: {}", clientError)
+                    toInternalServerApiErrorResponse()
+                }
+            }
         }
 
         is RequestPreparationError.RequestedMeteringPointsNotFound -> {
