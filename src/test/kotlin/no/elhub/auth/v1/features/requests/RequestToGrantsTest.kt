@@ -29,7 +29,7 @@ import kotlin.time.Instant
 // Requests are built with AuthorizationRequest.create, so these tests also pin the scope shape toGrants relies on.
 class RequestToGrantsTest : FunSpec({
     val requestedBy = AuthorizationParty("7080005053246", PartyType.OrganizationEntity)
-    val requestedPrincipal = AuthorizationParty("999888777", PartyType.Organization)
+    val requestedPrincipal = AuthorizationParty("999888771", PartyType.Organization)
     val requestedOf = AuthorizationParty("person-1", PartyType.Person)
     val approvedBy = requestedOf
     val firstMeteringPoint = MeteringPointId.create("707057500000000001")

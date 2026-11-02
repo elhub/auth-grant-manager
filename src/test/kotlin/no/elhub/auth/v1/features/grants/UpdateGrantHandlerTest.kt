@@ -24,7 +24,7 @@ class UpdateGrantHandlerTest : FunSpec({
     val grantRepository = mockk<GrantRepository>()
     val handler = UpdateGrantHandler(grantRepository)
     val system = AuthorizationParty("system-1", PartyType.System)
-    val principal = AuthorizationParty("999888777", PartyType.Organization)
+    val principal = AuthorizationParty("999888771", PartyType.Organization)
     val grantedBy = AuthorizationParty("person-1", PartyType.Person)
     val grantedTo = AuthorizationParty("123456789", PartyType.OrganizationEntity)
     val grant = AuthorizationGrant.new(

@@ -33,7 +33,7 @@ class DocumentToGrantsTest : FunSpec({
         MeteringPointId.create("707057500000000003"),
     )
     val requestedBy = AuthorizationParty("7080005053246", PartyType.OrganizationEntity)
-    val requestedPrincipal = AuthorizationParty("999888777", PartyType.Organization)
+    val requestedPrincipal = AuthorizationParty("999888771", PartyType.Organization)
     val requestedOf = AuthorizationParty(UUID.randomUUID().toString(), PartyType.Person)
     val approvedBy = AuthorizationParty(UUID.randomUUID().toString(), PartyType.Person)
     val moveInDate = Instant.parse("2026-09-30T22:00:00Z")
