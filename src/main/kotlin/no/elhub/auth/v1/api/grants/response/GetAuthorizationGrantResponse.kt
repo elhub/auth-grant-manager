@@ -40,7 +40,6 @@ data class AuthorizationGrantAttributes(
     val scopes: List<GrantedScopeResponse>,
     val validFrom: Instant,
     val validTo: Instant? = null,
-    val grantedAt: Instant? = null,
     val createdAt: Instant,
     val updatedAt: Instant,
 )
