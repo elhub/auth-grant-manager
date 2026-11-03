@@ -162,6 +162,7 @@ class ExposedRequestRepository(
         val inserted = AuthorizationRequestTable.insert {
             it[id] = request.id
             it[requestType] = request.requestType
+            it[AuthorizationRequestTable.textReference] = request.textReference
             it[status] = when (request.status) {
                 AuthorizationRequestStatus.Rejected -> DatabaseRequestStatus.Rejected
                 else -> DatabaseRequestStatus.Pending
@@ -360,6 +361,7 @@ object AuthorizationRequestTable : UUIDTable("auth_v1.authorization_request") {
             fromDb = { value -> AuthorizationRequestType.valueOf(value as String) },
             toDb = { PGEnum("auth_v1.authorization_request_type", it) },
         )
+    val textReference = text("text_reference")
     val status =
         customEnumeration(
             name = "status",
@@ -410,6 +412,7 @@ fun ResultRow.toAuthorizationRequest(
     return AuthorizationRequest(
         id = this[AuthorizationRequestTable.id].value,
         requestType = this[AuthorizationRequestTable.requestType],
+        textReference = this[AuthorizationRequestTable.textReference],
         status = toAuthorizationRequestStatus(now),
         requestedScopes = requestedScopes,
         externalReference = this[AuthorizationRequestTable.externalReference],

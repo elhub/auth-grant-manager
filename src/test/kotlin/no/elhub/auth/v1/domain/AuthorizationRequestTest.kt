@@ -141,6 +141,23 @@ class AuthorizationRequestTest : FunSpec({
         request.requestedGrantValidTo shouldBe null
     }
 
+    test("associates the text reference with each request type") {
+        val requests = listOf(
+            create(AuthorizationRequestTypeDetails.ChangeOfEnergySupplierForOrganization(meteringPoints)),
+            create(
+                AuthorizationRequestTypeDetails.MoveInAndChangeOfEnergySupplierForOrganization(
+                    meteringPointIds = meteringPoints,
+                    moveInDate = LocalDate(2026, 10, 1),
+                ),
+            ),
+            create(AuthorizationRequestTypeDetails.EnergySupplierFrameworkAgreement(null, null)),
+        )
+
+        requests.map { AuthorizationRequestTextReference.forRequestType(it.requestType) } shouldBe
+            listOf("v1", "v1", "v1")
+        requests.map { it.textReference } shouldBe listOf("v1", "v1", "v1")
+    }
+
     test("creates ChangeOfEnergySupplierForOrganization requests with unique IDs") {
         val details = AuthorizationRequestTypeDetails.ChangeOfEnergySupplierForOrganization(meteringPoints)
 

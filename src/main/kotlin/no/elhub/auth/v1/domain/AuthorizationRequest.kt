@@ -28,6 +28,7 @@ data class AuthorizationRequest(
     val approvedBy: AuthorizationParty?,
     val authorizationGrants: List<AuthorizationGrant>?,
     val textLanguage: TextLanguage? = null,
+    val textReference: String = AuthorizationRequestTextReference.forRequestType(requestType),
 ) {
     companion object {
         fun create(

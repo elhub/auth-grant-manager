@@ -55,7 +55,8 @@
             "updatedAt": {
               "$ref": "../elhub-common.schema.json#/$defs/updatedAt"
             }
-          }
+          },
+          "required": ["textReference"]
         },
         "meta": {
           "type": "object",
