@@ -52,9 +52,6 @@
             "type": "Organization",
             "id": "999888771"
           }
-        },
-        "authorizationGrants": {
-          "data": []
         }
       }
     }
