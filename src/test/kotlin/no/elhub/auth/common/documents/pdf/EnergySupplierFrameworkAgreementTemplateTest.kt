@@ -30,6 +30,8 @@ class EnergySupplierFrameworkAgreementTemplateTest : FunSpec({
         html shouldContain "Strømavtale:</span> Elvekraft Rammeavtale ABC213"
         html shouldContain "Strømleverandør"
         html shouldContain "01. Januar 2027"
+        html shouldContain "Gyldig fra:</span> 01. Januar 2027"
+        html shouldContain "Gyldig til:</span> Løpende avtale"
         html shouldContain "Løpende avtale"
         html shouldContain "Reguleringsmyndigheten for energi (RME) har pålagt Elhub å kontrollere"
         html shouldContain "Ved å signere dette dokumentet bekrefter du på vegne av organisasjonen"
@@ -44,6 +46,8 @@ class EnergySupplierFrameworkAgreementTemplateTest : FunSpec({
 
         html shouldContain "Framework agreement confirmation"
         html shouldContain "Organization number"
+        html shouldContain "Valid from:</span>"
+        html shouldContain "Valid to:</span> Ongoing agreement"
         html shouldContain "Ongoing agreement"
         html shouldContain "entered into the framework agreement referenced above"
     }
@@ -53,6 +57,8 @@ class EnergySupplierFrameworkAgreementTemplateTest : FunSpec({
 
         html shouldContain "Avtalestadfesting - Rammeavtale"
         html shouldContain "Organisasjonsnummer"
+        html shouldContain "Gyldig frå:</span>"
+        html shouldContain "Gyldig til:</span> Løpande avtale"
         html shouldContain "Løpande avtale"
         html shouldContain "organisasjonen har inngått rammeavtalen som det blir vist til over"
     }

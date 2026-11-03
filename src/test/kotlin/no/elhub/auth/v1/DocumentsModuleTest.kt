@@ -19,6 +19,7 @@ import no.elhub.auth.common.documents.pdf.PdfSigner
 import no.elhub.auth.v0.config.configureAuthorization
 import no.elhub.auth.v0.config.configureSerialization
 import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsService
+import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsService
 import no.elhub.auth.v0.features.common.party.PartyService
 
 class DocumentsModuleTest : FunSpec({
@@ -54,6 +55,7 @@ class DocumentsModuleTest : FunSpec({
                         provide<PdfSignatureValidator> { mockk<PdfSignatureValidator>() }
                         provide<PartyService> { mockk<PartyService>() }
                         provide<MeteringPointsService> { mockk<MeteringPointsService>() }
+                        provide<OrganisationsService> { mockk<OrganisationsService>() }
                     }
                     module()
                 }
@@ -94,6 +96,7 @@ class DocumentsModuleTest : FunSpec({
                     provide<PdfSignatureValidator> { mockk<PdfSignatureValidator>() }
                     provide<PartyService> { mockk<PartyService>() }
                     provide<MeteringPointsService> { mockk<MeteringPointsService>() }
+                    provide<OrganisationsService> { mockk<OrganisationsService>() }
                 }
                 module()
             }

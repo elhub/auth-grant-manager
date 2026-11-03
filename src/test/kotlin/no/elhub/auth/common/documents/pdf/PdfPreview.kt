@@ -5,22 +5,58 @@ import java.nio.file.Files
 import java.nio.file.Path
 
 /** Sample documents for visually inspecting the production PDF rendering path. Add a sample for each new content type. */
+private val organizationMeteringPoints = listOf(
+    MeteringPointPdfContent(
+        address = "Bjørkeveien 18C, 0168 Oslo",
+        id = "707057500047917289",
+        meterNumber = "57390234",
+    ),
+    MeteringPointPdfContent(
+        address = "Storgata 1, 0155 Oslo",
+        id = "707057500047917290",
+        meterNumber = "57390235",
+    ),
+    MeteringPointPdfContent(
+        address = "Eksempelveien 3, 9348 Sandefjord",
+        id = "707057500047917291",
+        meterNumber = "57390236",
+    ),
+    MeteringPointPdfContent(
+        address = "Havneveien 12, 3263 Larvik",
+        id = "707057500047917292",
+        meterNumber = "57390237",
+    ),
+    MeteringPointPdfContent(
+        address = "Skogveien 42, 5005 Bergen",
+        id = "707057500047917293",
+        meterNumber = "57390238",
+    ),
+)
+
 private val samples: List<AuthorizationDocumentPdfContent> = listOf(
     AuthorizationDocumentPdfContent.ChangeOfBalanceSupplierForPerson(
         language = PdfLanguage.EN,
         customerName = "Kari Nordmann",
-        meteringPointAddress = "Storgata 1, 0155 Oslo",
-        meteringPointId = "707057500000000001",
-        meterNumber = "123456789",
+        meteringPoints = listOf(
+            MeteringPointPdfContent(
+                address = "Storgata 1, 0155 Oslo",
+                id = "707057500000000001",
+                meterNumber = "123456789",
+            ),
+        ),
         balanceSupplierName = "Eksempel Strøm AS",
         balanceSupplierContractName = "Fastpris 12 måneder",
     ),
     AuthorizationDocumentPdfContent.MoveInAndChangeOfBalanceSupplierForPerson(
         language = PdfLanguage.NB,
         customerName = "Kari Nordmann",
-        meteringPointAddress = "Storgata 1, 0155 Oslo",
-        meteringPointId = "707057500000000001",
-        meterNumber = "123456789",
+        meteringPoints = listOf(
+            MeteringPointPdfContent(
+                address = "Storgata 1, 0155 Oslo",
+                id = "707057500000000001",
+                meterNumber = "123456789",
+            ),
+        ),
         balanceSupplierName = "Eksempel Strøm AS",
         balanceSupplierContractName = "Fastpris 12 måneder",
         moveInDate = LocalDate(2026, 10, 1),
@@ -29,9 +65,7 @@ private val samples: List<AuthorizationDocumentPdfContent> = listOf(
         language = PdfLanguage.NB,
         organizationName = "Navn AS",
         organizationNumber = "100 010 001",
-        meteringPointAddress = "Bjørkeveien 18C, 0168 Oslo",
-        meteringPointId = "707057500047917289",
-        meterNumber = "57390234",
+        meteringPoints = organizationMeteringPoints,
         balanceSupplierName = "Norgesstrøm",
         agreementReference = "ABC123",
     ),
@@ -39,9 +73,7 @@ private val samples: List<AuthorizationDocumentPdfContent> = listOf(
         language = PdfLanguage.NB,
         organizationName = "Navn AS",
         organizationNumber = "100 010 001",
-        meteringPointAddress = "Bjørkeveien 18C, 0168 Oslo",
-        meteringPointId = "707057500047917289",
-        meterNumber = "57390234",
+        meteringPoints = organizationMeteringPoints,
         balanceSupplierName = "Norgesstrøm",
         agreementReference = "ABC123",
         moveInDate = LocalDate(2026, 5, 1),

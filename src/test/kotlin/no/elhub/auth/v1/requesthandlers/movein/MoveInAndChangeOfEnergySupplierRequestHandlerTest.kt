@@ -3,50 +3,71 @@ package no.elhub.auth.v1.requesthandlers.movein
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
-import io.mockk.coEvery
-import io.mockk.mockk
 import kotlinx.datetime.LocalDate
-import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import no.elhub.auth.common.auth.AuthorizationParty
 import no.elhub.auth.common.auth.PartyType
-import no.elhub.auth.common.structuredata.meteringpoints.AccountingPoint
-import no.elhub.auth.common.structuredata.meteringpoints.Attributes
-import no.elhub.auth.common.structuredata.meteringpoints.Meter
-import no.elhub.auth.common.structuredata.meteringpoints.MeteringPointAddress
-import no.elhub.auth.common.structuredata.meteringpoints.MeteringPointResponse
-import no.elhub.auth.common.structuredata.meteringpoints.Relationships
+import no.elhub.auth.v0.features.businessprocesses.common.JwtTokenProvider
 import no.elhub.auth.v0.features.businessprocesses.structuredata.common.ClientError
-import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsLookupException
-import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsService
+import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsApi
+import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsApiConfig
+import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceTestContainer
+import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceTestContainerExtension
+import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceTestData.NON_EXISTING_METERING_POINT
+import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceTestData.SERVER_ERROR_METERING_POINT
+import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceTestData.VALID_METERING_POINT_1
+import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.meteringPointsServiceHttpClient
+import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsApi
+import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsApiConfig
+import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestContainer
+import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestContainerExtension
+import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.NON_EXISTING_ORGANISATION_NUMBER
+import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.VALID_ORGANISATION_NUMBER
+import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.VALID_PARTY_ID
+import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.organisationsServiceHttpClient
 import no.elhub.auth.v1.domain.MeteringPointId
 import no.elhub.auth.v1.domain.ResourceConstraint
 import no.elhub.auth.v1.domain.requests.AuthorizationRequestTypeDetails
 import no.elhub.auth.v1.features.requests.creation.RequestPreparationError
-import no.elhub.devxp.jsonapi.model.JsonApiLinks
-import no.elhub.devxp.jsonapi.response.JsonApiResponse
-import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObjectWithRelationships
 import kotlin.time.Clock
 
 class MoveInAndChangeOfEnergySupplierRequestHandlerTest : FunSpec({
-    val requestedBy = AuthorizationParty("supplier-1", PartyType.OrganizationEntity)
-    val requestedPrincipal = AuthorizationParty("org-1", PartyType.Organization)
+    extensions(OrganisationsServiceTestContainerExtension, MeteringPointsServiceTestContainerExtension)
+
+    val requestedBy = AuthorizationParty(VALID_PARTY_ID, PartyType.OrganizationEntity)
+    val requestedPrincipal = AuthorizationParty(VALID_ORGANISATION_NUMBER, PartyType.Organization)
     val requestedOf = AuthorizationParty("person-1", PartyType.Person)
-    val details = AuthorizationRequestTypeDetails.MoveInAndChangeOfEnergySupplierForOrganization(
-        meteringPointIds = ResourceConstraint.MeteringPoints(setOf(MeteringPointId.create("707057500000000001"))),
-        moveInDate = LocalDate(2026, 10, 1),
-    )
+    val moveInDate = LocalDate(2026, 10, 1)
+    val tokenProvider = object : JwtTokenProvider {
+        override suspend fun getToken(): String = "token"
+    }
+    lateinit var handler: MoveInAndChangeOfEnergySupplierRequestHandler
+
+    beforeSpec {
+        val organisationsService = OrganisationsApi(
+            OrganisationsApiConfig(OrganisationsServiceTestContainer.serviceUrl()),
+            organisationsServiceHttpClient,
+            tokenProvider,
+        )
+        val meteringPointsService = MeteringPointsApi(
+            MeteringPointsApiConfig(MeteringPointsServiceTestContainer.serviceUrl()),
+            meteringPointsServiceHttpClient,
+            tokenProvider,
+        )
+        handler = MoveInAndChangeOfEnergySupplierRequestHandler(meteringPointsService, organisationsService)
+    }
+
+    fun details(meteringPointId: String = VALID_METERING_POINT_1) =
+        AuthorizationRequestTypeDetails.MoveInAndChangeOfEnergySupplierForOrganization(
+            meteringPointIds = ResourceConstraint.MeteringPoints(setOf(MeteringPointId.create(meteringPointId))),
+            moveInDate = moveInDate,
+        )
 
     test("stores requested metering point metadata and the move-in date") {
-        val service = mockk<MeteringPointsService>()
-        coEvery {
-            service.getMeteringPointsForOrganisation(listOf("707057500000000001"), "org-1")
-        } returns listOf(meteringPointResponse("707057500000000001", "meter-1"))
-
-        val result = MoveInAndChangeOfEnergySupplierRequestHandler(service).validateAndGetRequestTypeSpecificDetails(
-            details = details,
+        val result = handler.validateAndGetRequestTypeSpecificDetails(
+            details = details(),
             requestedBy = requestedBy,
             requestedPrincipal = requestedPrincipal,
             requestedOf = requestedOf,
@@ -58,7 +79,7 @@ class MoveInAndChangeOfEnergySupplierRequestHandlerTest : FunSpec({
                 buildJsonArray {
                     add(
                         buildJsonObject {
-                            put("id", "707057500000000001")
+                            put("id", VALID_METERING_POINT_1)
                             put(
                                 "address",
                                 buildJsonObject {
@@ -68,25 +89,20 @@ class MoveInAndChangeOfEnergySupplierRequestHandlerTest : FunSpec({
                                     put("city", "Example City")
                                 },
                             )
-                            put("meterNumber", "meter-1")
+                            put("meterNumber", "30030856")
                         },
                     )
                 },
             )
-            put("moveInDate", "2026-10-01")
+            put("moveInDate", moveInDate.toString())
         }
         (result.validTo > Clock.System.now()) shouldBe true
     }
 
     test("throws when a requested metering point cannot be found") {
-        val service = mockk<MeteringPointsService>()
-        coEvery {
-            service.getMeteringPointsForOrganisation(any(), any())
-        } throws MeteringPointsLookupException(ClientError.NotFound)
-
         shouldThrow<RequestPreparationError.RequestedMeteringPointsNotFound> {
-            MoveInAndChangeOfEnergySupplierRequestHandler(service).validateAndGetRequestTypeSpecificDetails(
-                details = details,
+            handler.validateAndGetRequestTypeSpecificDetails(
+                details = details(NON_EXISTING_METERING_POINT),
                 requestedBy = requestedBy,
                 requestedPrincipal = requestedPrincipal,
                 requestedOf = requestedOf,
@@ -95,14 +111,9 @@ class MoveInAndChangeOfEnergySupplierRequestHandlerTest : FunSpec({
     }
 
     test("throws a service failure for other metering-points service errors") {
-        val service = mockk<MeteringPointsService>()
-        coEvery {
-            service.getMeteringPointsForOrganisation(any(), any())
-        } throws MeteringPointsLookupException(ClientError.ServerError)
-
         val error = shouldThrow<RequestPreparationError.MeteringPointsServiceFailure> {
-            MoveInAndChangeOfEnergySupplierRequestHandler(service).validateAndGetRequestTypeSpecificDetails(
-                details = details,
+            handler.validateAndGetRequestTypeSpecificDetails(
+                details = details(SERVER_ERROR_METERING_POINT),
                 requestedBy = requestedBy,
                 requestedPrincipal = requestedPrincipal,
                 requestedOf = requestedOf,
@@ -111,28 +122,17 @@ class MoveInAndChangeOfEnergySupplierRequestHandlerTest : FunSpec({
 
         error.clientError shouldBe ClientError.ServerError
     }
-})
 
-private fun meteringPointResponse(id: String, meterNumber: String): MeteringPointResponse =
-    JsonApiResponse.SingleDocumentWithRelationships(
-        data = JsonApiResponseResourceObjectWithRelationships(
-            type = "MeteringPoint",
-            id = id,
-            attributes = Attributes(
-                accountingPoint = AccountingPoint(
-                    address = MeteringPointAddress(
-                        streetName = "Example Street",
-                        houseNumber = "3",
-                        postalCode = "0000",
-                        city = "Example City",
-                    ),
-                    meter = Meter(1.0, meterNumber),
-                ),
-            ),
-            relationships = Relationships(),
-            links = null,
-            meta = JsonObject(emptyMap()),
-        ),
-        links = JsonApiLinks.ResourceObjectLink(""),
-        meta = JsonObject(emptyMap()),
-    )
+    test("throws an organisation lookup failure when the organisation cannot be found") {
+        val error = shouldThrow<RequestPreparationError.RequestedPrincipalLookupFailure> {
+            handler.validateAndGetRequestTypeSpecificDetails(
+                details = details(),
+                requestedBy = requestedBy,
+                requestedPrincipal = AuthorizationParty(NON_EXISTING_ORGANISATION_NUMBER, PartyType.Organization),
+                requestedOf = requestedOf,
+            )
+        }
+
+        error.clientError shouldBe ClientError.NotFound
+    }
+})

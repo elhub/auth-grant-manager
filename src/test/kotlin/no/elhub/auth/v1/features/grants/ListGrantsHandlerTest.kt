@@ -29,7 +29,7 @@ class ListGrantsHandlerTest : FunSpec({
         type = AuthorizationGrantType.Consumable,
         sourceType = AuthorizationGrantSourceType.Document,
         sourceId = UUID.randomUUID(),
-        principal = AuthorizationParty("999888777", PartyType.OrganizationEntity),
+        principal = AuthorizationParty("999888771", PartyType.OrganizationEntity),
         grantedBy = grantedBy,
         grantedTo = authorizedParty,
         approvedBy = grantedBy,

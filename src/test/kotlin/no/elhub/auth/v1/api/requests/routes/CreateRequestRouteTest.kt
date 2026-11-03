@@ -33,7 +33,7 @@ import kotlin.time.Instant
 
 class CreateRequestRouteTest : FunSpec({
     val authorizedParty = AuthorizationParty("123456789", PartyType.OrganizationEntity)
-    val requestedPrincipal = AuthorizationParty("999888777", PartyType.OrganizationEntity)
+    val requestedPrincipal = AuthorizationParty("999888771", PartyType.OrganizationEntity)
     val requestedOf = AuthorizationParty("person-1", PartyType.Person)
     val grantValidFrom = Instant.parse("2100-01-01T00:00:00Z")
     val grantValidTo = Instant.parse("2101-01-01T00:00:00Z")
@@ -49,7 +49,7 @@ class CreateRequestRouteTest : FunSpec({
               "requestedGrantValidTo": "2101-01-01T00:00:00Z"
             },
             "meta": {
-              "requestedPrincipal": "999888777",
+              "requestedPrincipal": "999888771",
               "requestedOf": "01019012345"
             }
           }
@@ -104,7 +104,7 @@ class CreateRequestRouteTest : FunSpec({
             body.data.attributes.requestedGrantValidTo shouldBe grantValidTo
             body.data.relationships.requestedBy.data.id shouldBe authorizedParty.id
             coVerify(exactly = 1) {
-                partyService.resolve(PartyIdentifier(PartyIdentifierType.OrganizationNumber, "999888777"))
+                partyService.resolve(PartyIdentifier(PartyIdentifierType.OrganizationNumber, "999888771"))
             }
             coVerify(exactly = 1) {
                 partyService.resolve(PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "01019012345"))

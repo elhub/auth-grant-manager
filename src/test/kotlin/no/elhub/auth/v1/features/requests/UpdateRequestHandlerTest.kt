@@ -31,7 +31,7 @@ class UpdateRequestHandlerTest : FunSpec({
     val requestRepository = mockk<RequestRepository>()
     val handler = UpdateRequestHandler(requestRepository)
     val requestedBy = AuthorizationParty("7080005053246", PartyType.OrganizationEntity)
-    val requestedPrincipal = AuthorizationParty("999888777", PartyType.Organization)
+    val requestedPrincipal = AuthorizationParty("999888771", PartyType.Organization)
     val requestedOf = AuthorizationParty("person-1", PartyType.Person)
     val request = AuthorizationRequest.create(
         requestedBy = requestedBy,
