@@ -7,11 +7,14 @@ import no.elhub.auth.v1.domain.AuthorizationRequestStatus
 import no.elhub.auth.v1.domain.TextLanguage
 import no.elhub.auth.v1.repositories.RepositoryWriteError
 import no.elhub.auth.v1.repositories.RequestRepository
+import org.slf4j.LoggerFactory
 import java.util.UUID
 
 class UpdateRequestHandler(
     private val requestRepository: RequestRepository,
 ) {
+    private val logger = LoggerFactory.getLogger(UpdateRequestHandler::class.java)
+
     suspend operator fun invoke(
         id: UUID,
         authorizedParty: AuthorizationParty,
@@ -21,6 +24,7 @@ class UpdateRequestHandler(
         val request = requestRepository.find(id)
 
         if (!isApproverAllowed(authorizedParty, request.requestedOf, request.requestedPrincipal)) {
+            logger.warn("Approver not allowed for AuthorizationRequest {} (approver type: {})", id, authorizedParty.type)
             throw UpdateRequestError.NotAuthorized()
         }
 
