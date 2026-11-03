@@ -10,6 +10,19 @@ import kotlin.time.Duration.Companion.nanoseconds
 import kotlin.time.Instant
 
 class OsloCalendarTest : FunSpec({
+    listOf(
+        "2026-01-31T23:00:00.123456789Z" to "2026-02-01T00:00:00+01:00",
+        "2026-07-15T12:23:45.999999999Z" to "2026-07-15T14:23:45+02:00",
+        "2026-03-29T00:59:59.999999999Z" to "2026-03-29T01:59:59+01:00",
+        "2026-03-29T01:00:00Z" to "2026-03-29T03:00:00+02:00",
+        "2026-10-25T00:59:59.999999999Z" to "2026-10-25T02:59:59+02:00",
+        "2026-10-25T01:00:00Z" to "2026-10-25T02:00:00+01:00",
+    ).forEach { (instant, expected) ->
+        test("formats $instant with the Oslo offset and truncates fractional seconds") {
+            Instant.parse(instant).toOsloOffsetString() shouldBe expected
+        }
+    }
+
     test("parses ISO dates and maps timestamps to the Oslo calendar date") {
         "2026-07-01".toOsloDateOrNull() shouldBe LocalDate.parse("2026-07-01")
         "2026-07-01T22:30:00Z".toOsloDateOrNull() shouldBe LocalDate.parse("2026-07-02")

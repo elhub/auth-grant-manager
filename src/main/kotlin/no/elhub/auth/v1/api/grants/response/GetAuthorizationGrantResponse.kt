@@ -1,11 +1,15 @@
+@file:UseSerializers(OsloInstantSerializer::class)
+
 package no.elhub.auth.v1.api.grants.response
 
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.UseSerializers
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import no.elhub.auth.v1.api.common.GrantResourceType
 import no.elhub.auth.v1.api.common.response.GrantSourceTypeResponse
 import no.elhub.auth.v1.api.common.response.GrantedScopeResponse
+import no.elhub.auth.v1.api.common.response.OsloInstantSerializer
 import no.elhub.auth.v1.api.common.response.PartyTypeResponse
 import no.elhub.auth.v1.api.common.response.ResponseRelationship
 import no.elhub.auth.v1.api.common.response.ResponseResourceIdentifier
@@ -13,6 +17,7 @@ import no.elhub.auth.v1.api.common.response.toApprovalRelationship
 import no.elhub.auth.v1.api.common.response.toResponse
 import no.elhub.auth.v1.api.common.response.toResponseIdentifier
 import no.elhub.auth.v1.api.common.response.toResponseRelationship
+import no.elhub.auth.v1.common.toOsloOffsetString
 import no.elhub.auth.v1.domain.AuthorizationGrant
 import no.elhub.auth.v1.domain.AuthorizationGrantSourceType
 import no.elhub.auth.v1.domain.AuthorizationGrantStatus
@@ -94,7 +99,7 @@ fun AuthorizationGrant.toGetResponse(): JsonApiGetAuthorizationGrantResponse {
         ),
         links = JsonApiLinks.ResourceObjectLink(self = "$GRANTS_PATH/$id"),
         meta = buildJsonObject {
-            put("createdAt", createdAt.toString())
+            put("createdAt", createdAt.toOsloOffsetString())
         },
     )
 }
