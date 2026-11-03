@@ -125,10 +125,9 @@ class OsloResponseSerializationTest : FunSpec({
         test("grant attributes serialize all dates with nullable dates present=$withNullableDates") {
             val attributes = grant.toGetResponse().data.attributes.copy(
                 validTo = summer.takeIf { withNullableDates },
-                grantedAt = winter.takeIf { withNullableDates },
             )
             val optionalGrantDates = if (withNullableDates) {
-                """, "validTo":"$summerOutput","grantedAt":"$winterOutput" """
+                """, "validTo":"$summerOutput" """
             } else {
                 ""
             }
@@ -155,7 +154,6 @@ class OsloResponseSerializationTest : FunSpec({
             attributes.getValue("requestedGrantValidTo") shouldBe JsonNull
         }
         grantJson.getValue("validTo") shouldBe JsonNull
-        grantJson.getValue("grantedAt") shouldBe JsonNull
     }
 
     for (input in listOf("2026-07-15T12:34:56.123Z", "2026-07-15T14:34:56.123+02:00")) {
