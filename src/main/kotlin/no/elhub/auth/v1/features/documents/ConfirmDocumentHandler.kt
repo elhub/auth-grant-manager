@@ -6,9 +6,11 @@ import no.elhub.auth.common.documents.pdf.PdfSignatureValidator
 import no.elhub.auth.v0.features.common.party.PartyIdentifier
 import no.elhub.auth.v0.features.common.party.PartyIdentifierType
 import no.elhub.auth.v0.features.common.party.PartyService
+import no.elhub.auth.v1.common.isApproverAllowed
 import no.elhub.auth.v1.domain.AuthorizationDocument
 import no.elhub.auth.v1.domain.AuthorizationDocumentStatus
 import no.elhub.auth.v1.repositories.DocumentRepository
+import org.slf4j.LoggerFactory
 import java.util.UUID
 
 class ConfirmDocumentHandler(
@@ -16,6 +18,8 @@ class ConfirmDocumentHandler(
     private val partyService: PartyService,
     private val pdfSignatureValidator: PdfSignatureValidator,
 ) {
+    private val logger = LoggerFactory.getLogger(ConfirmDocumentHandler::class.java)
+
     suspend operator fun invoke(
         id: UUID,
         authorizedParty: AuthorizationParty,
@@ -39,7 +43,8 @@ class ConfirmDocumentHandler(
             ),
         ).getOrElse { throw ConfirmDocumentError.SignatoryResolutionFailed() }
 
-        if (signatoryParty != document.requestedOf) {
+        if (!isApproverAllowed(signatoryParty, document.requestedOf, document.requestedPrincipal)) {
+            logger.warn("Approver not allowed for AuthorizationDocument {} (approver type: {})", id, signatoryParty.type)
             throw ConfirmDocumentError.SignatoryNotAllowed()
         }
 

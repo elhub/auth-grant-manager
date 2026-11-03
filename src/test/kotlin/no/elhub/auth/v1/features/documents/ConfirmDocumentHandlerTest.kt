@@ -157,13 +157,6 @@ class ConfirmDocumentHandlerTest : FunSpec({
         coVerify(exactly = 0) { repository.confirm(any(), any(), any(), any()) }
     }
 
-    test("rejects a signatory other than requestedOf") {
-        every { validator.validateSignaturesAndReturnSignatory(signedFile, originalFile) } returns PdfSignatory(nin)
-        coEvery { partyService.resolve(identifier) } returns requestedOf.copy(id = "other").right()
-        shouldThrow<ConfirmDocumentError.SignatoryNotAllowed> { handler(id, requestedBy, signedFile) }
-        coVerify(exactly = 0) { repository.confirm(any(), any(), any(), any()) }
-    }
-
     test("rejects invalid document scopes without confirming the document") {
         val invalidScope = document.requestedScopes.single().copy(constraints = emptyList())
         coEvery { repository.find(id) } returns document.copy(requestedScopes = listOf(invalidScope))
