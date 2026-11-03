@@ -3,7 +3,9 @@ package no.elhub.auth.v1.api.requests.routes
 import arrow.core.right
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import io.ktor.client.call.body
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.testing.testApplication
 import io.mockk.coEvery
@@ -177,6 +179,22 @@ class CreateRequestRouteTest : FunSpec({
                     requestedOf = requestedOf,
                 )
             }
+        }
+    }
+
+    test("POST / includes the request's authorization text reference") {
+        coEvery { handler(any(), any(), any(), any()) } returns savedRequest().copy(textReference = "v2")
+        coEvery { partyService.resolve(any()) } returnsMany listOf(requestedPrincipal.right(), requestedOf.right())
+
+        testApplication {
+            setupAppWith(authorizedParty) {
+                route(partyService, handler)
+            }
+
+            val response = client.postJson("/", scopedRequestBody("ChangeOfEnergySupplierForOrganization"))
+
+            response.status shouldBe HttpStatusCode.Created
+            response.bodyAsText() shouldContain "\"textReference\":\"v2\""
         }
     }
 

@@ -24,6 +24,7 @@ import no.elhub.auth.v1.domain.AuthorizationGrantSourceType
 import no.elhub.auth.v1.domain.AuthorizationGrantType
 import no.elhub.auth.v1.domain.AuthorizationRequest
 import no.elhub.auth.v1.domain.AuthorizationRequestStatus
+import no.elhub.auth.v1.domain.AuthorizationRequestTextReference
 import no.elhub.auth.v1.domain.AuthorizationRequestType
 import no.elhub.auth.v1.domain.AuthorizationScopeConstraint
 import no.elhub.auth.v1.domain.AuthorizationScopeConstraintAttribute
@@ -104,6 +105,9 @@ class ExposedRequestRepositoryTest : FunSpec({
         val approverId = approvedBy?.let { partyId(it) }
         val requestId = AuthorizationRequestTable.insert {
             it[requestType] = AuthorizationRequestType.ChangeOfEnergySupplierForOrganization
+            it[AuthorizationRequestTable.textReference] = AuthorizationRequestTextReference.forRequestType(
+                AuthorizationRequestType.ChangeOfEnergySupplierForOrganization,
+            )
             it[AuthorizationRequestTable.status] = status
             it[AuthorizationRequestTable.requestedBy] = byId
             it[AuthorizationRequestTable.requestedPrincipal] = principalId
@@ -345,6 +349,24 @@ class ExposedRequestRepositoryTest : FunSpec({
         repository.insert(request) shouldBe request
 
         repository.find(request.id) shouldBe request
+    }
+
+    test("persists the selected authorization text reference") {
+        val requestedBy = party(PartyType.Organization)
+        val request = AuthorizationRequest.new(
+            requestType = AuthorizationRequestType.ChangeOfEnergySupplierForOrganization,
+            requestedScopes = emptyList(),
+            externalReference = null,
+            validTo = future,
+            meta = JsonObject(emptyMap()),
+            requestedBy = requestedBy,
+            requestedPrincipal = requestedBy,
+            requestedOf = requestedBy,
+        ).copy(textReference = "v2")
+
+        repository.insert(request)
+
+        repository.find(request.id).textReference shouldBe "v2"
     }
 
     test("persists validFrom allowed changes and reads them by ID") {
