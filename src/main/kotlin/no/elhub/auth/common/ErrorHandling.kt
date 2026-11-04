@@ -8,6 +8,7 @@ import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
+import no.elhub.auth.common.auth.PartyType
 import no.elhub.auth.common.documents.pdf.PdfGenerationException
 import no.elhub.auth.common.documents.pdf.PdfSigningException
 import no.elhub.auth.common.documents.pdf.PdfValidationException
@@ -23,11 +24,13 @@ import no.elhub.auth.v1.domain.DomainError
 import no.elhub.auth.v1.features.documents.ConfirmDocumentError
 import no.elhub.auth.v1.features.documents.GetDocumentError
 import no.elhub.auth.v1.features.documents.InvalidDocumentScopes
+import no.elhub.auth.v1.features.documents.creation.DocumentCreationAgentError
 import no.elhub.auth.v1.features.documents.creation.DocumentPreparationError
 import no.elhub.auth.v1.features.grants.GetGrantError
 import no.elhub.auth.v1.features.grants.UpdateGrantError
 import no.elhub.auth.v1.features.requests.GetRequestError
 import no.elhub.auth.v1.features.requests.UpdateRequestError
+import no.elhub.auth.v1.features.requests.creation.RequestCreationAgentError
 import no.elhub.auth.v1.features.requests.creation.RequestPreparationError
 import no.elhub.auth.v1.repositories.RepositoryReadError
 import no.elhub.auth.v1.repositories.RepositoryWriteError
@@ -140,9 +143,59 @@ private fun PdfValidationException.toApiErrorResponse() =
         }
     }
 
+private fun toMetadataApiErrorResponse(role: String, title: String, typeDescription: String, expectedAgentType: PartyType) =
+    buildApiErrorResponse(
+        status = HttpStatusCode.UnprocessableEntity,
+        title = title,
+        detail = "data.meta.$role must identify ${expectedAgentType.toApiDescription()} for $typeDescription.",
+    )
+
+private fun PartyType.toApiDescription() = when (this) {
+    PartyType.Organization -> "an organization"
+    PartyType.OrganizationEntity -> "a market entity"
+    PartyType.Person -> "a person"
+    PartyType.System -> "a system"
+}
+
+private fun DocumentCreationAgentError.toApiErrorResponse() =
+    when (this) {
+        is DocumentCreationAgentError.RequestedByNotAllowed ->
+            buildApiErrorResponse(
+                status = HttpStatusCode.Forbidden,
+                title = "Caller not allowed",
+                detail = "Only authenticated market entities can create documents of type '$documentType'.",
+            )
+
+        is DocumentCreationAgentError.RequestedOfNotAllowed ->
+            toMetadataApiErrorResponse("requestedOf", "Invalid requestedOf", "document type '$documentType'", expectedAgentType)
+
+        is DocumentCreationAgentError.RequestedPrincipalNotAllowed ->
+            toMetadataApiErrorResponse("requestedPrincipal", "Invalid requestedPrincipal", "document type '$documentType'", expectedAgentType)
+    }
+
+private fun RequestCreationAgentError.toApiErrorResponse() =
+    when (this) {
+        is RequestCreationAgentError.RequestedByNotAllowed ->
+            buildApiErrorResponse(
+                status = HttpStatusCode.Forbidden,
+                title = "Caller not allowed",
+                detail = "Only authenticated market entities can create requests of type '$requestType'.",
+            )
+
+        is RequestCreationAgentError.RequestedOfNotAllowed ->
+            toMetadataApiErrorResponse("requestedOf", "Invalid requestedOf", "request type '$requestType'", expectedAgentType)
+
+        is RequestCreationAgentError.RequestedPrincipalNotAllowed ->
+            toMetadataApiErrorResponse("requestedPrincipal", "Invalid requestedPrincipal", "request type '$requestType'", expectedAgentType)
+    }
+
 // TODO revise messages and map all errors
 private fun Errors.toApiErrorResponse() =
     when (this) {
+        is DocumentCreationAgentError -> toApiErrorResponse()
+
+        is RequestCreationAgentError -> toApiErrorResponse()
+
         is RepositoryReadError.NotFoundError -> {
             toNotFoundApiErrorResponse()
         }

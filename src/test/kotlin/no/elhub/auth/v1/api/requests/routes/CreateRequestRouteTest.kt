@@ -13,6 +13,9 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import no.elhub.auth.common.auth.AuthorizationParty
 import no.elhub.auth.common.auth.PartyType
 import no.elhub.auth.v0.features.common.party.PartyIdentifier
@@ -29,14 +32,15 @@ import no.elhub.auth.v1.domain.ResourceConstraint
 import no.elhub.auth.v1.domain.requests.AuthorizationRequestSpecification
 import no.elhub.auth.v1.domain.requests.AuthorizationRequestTypeDetails
 import no.elhub.auth.v1.features.requests.CreateRequestHandler
+import no.elhub.auth.v1.repositories.RequestRepository
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import java.util.UUID
 import kotlin.time.Instant
 
 class CreateRequestRouteTest : FunSpec({
     val authorizedParty = AuthorizationParty("123456789", PartyType.OrganizationEntity)
-    val requestedPrincipal = AuthorizationParty("999888771", PartyType.OrganizationEntity)
-    val requestedOf = AuthorizationParty("person-1", PartyType.Person)
+    val requestedPrincipal = AuthorizationParty("999888771", PartyType.Organization)
+    val requestedOf = AuthorizationParty("999888772", PartyType.Organization)
     val grantValidFrom = Instant.parse("2100-01-01T00:00:00Z")
     val grantValidTo = Instant.parse("2101-01-01T00:00:00Z")
     val meteringPoints = ResourceConstraint.MeteringPoints(setOf(MeteringPointId.create("707057500000000001")))
@@ -52,7 +56,7 @@ class CreateRequestRouteTest : FunSpec({
             },
             "meta": {
               "requestedPrincipal": "999888771",
-              "requestedOf": "01019012345"
+               "requestedOf": "999888772"
             }
           }
         }
@@ -87,6 +91,49 @@ class CreateRequestRouteTest : FunSpec({
         partyService = mockk()
     }
 
+    listOf("requestedBy", "requestedPrincipal", "requestedOf").forEach { role ->
+        test("POST / returns an API-friendly error for an unsupported $role") {
+            val agents = mapOf(
+                "requestedBy" to authorizedParty,
+                "requestedPrincipal" to requestedPrincipal,
+                "requestedOf" to requestedOf,
+            ).mapValues { (agentRole, party) -> if (agentRole == role) party.copy(type = PartyType.Person) else party }
+            coEvery { partyService.resolve(any()) } returnsMany listOf(
+                agents.getValue("requestedPrincipal").right(), agents.getValue("requestedOf").right(),
+            )
+            val repository = mockk<RequestRepository>()
+            val creationHandler = CreateRequestHandler(mockk(), mockk(), mockk(), repository)
+
+            testApplication {
+                setupAppWith(agents.getValue("requestedBy")) {
+                    route(partyService, creationHandler)
+                }
+
+                val response = client.postJson("/", requestBody)
+
+                val body: JsonObject = response.body()
+                val error = body.getValue("errors").jsonArray.single().jsonObject
+                if (role == "requestedBy") {
+                    response.status shouldBe HttpStatusCode.Forbidden
+                    error.getValue("status").jsonPrimitive.content shouldBe "403"
+                    error.getValue("title").jsonPrimitive.content shouldBe "Caller not allowed"
+                    error.getValue("detail").jsonPrimitive.content shouldBe
+                        "Only authenticated market entities can create requests of type 'EnergySupplierFrameworkAgreement'."
+                    error["source"] shouldBe null
+                } else {
+                    response.status shouldBe HttpStatusCode.UnprocessableEntity
+                    error.getValue("status").jsonPrimitive.content shouldBe "422"
+                    error.getValue("title").jsonPrimitive.content shouldBe
+                        if (role == "requestedPrincipal") "Invalid requestedPrincipal" else "Invalid requestedOf"
+                    error.getValue("detail").jsonPrimitive.content shouldBe
+                        "data.meta.$role must identify an organization for request type 'EnergySupplierFrameworkAgreement'."
+                    error["source"] shouldBe null
+                }
+                coVerify(exactly = 0) { repository.insert(any()) }
+            }
+        }
+    }
+
     test("POST / creates a framework agreement request and returns requested grant validity") {
         coEvery { handler(any(), any(), any(), any()) } returns savedRequest()
         coEvery { partyService.resolve(any()) } returnsMany listOf(requestedPrincipal.right(), requestedOf.right())
@@ -109,7 +156,7 @@ class CreateRequestRouteTest : FunSpec({
                 partyService.resolve(PartyIdentifier(PartyIdentifierType.OrganizationNumber, "999888771"))
             }
             coVerify(exactly = 1) {
-                partyService.resolve(PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "01019012345"))
+                partyService.resolve(PartyIdentifier(PartyIdentifierType.OrganizationNumber, "999888772"))
             }
             coVerify(exactly = 1) {
                 handler(
