@@ -48,7 +48,9 @@ object OrganisationsServiceTestData {
     const val VALID_ORGANISATION_NUMBER = "999888771"
     const val NON_EXISTING_ORGANISATION_NUMBER = "999999999"
     const val VALID_PARTY_ID = "3004300000019"
+    const val VALID_PARTY_NAME = "BalanceSupplier Østli, Ruud og Moen"
     const val NOT_BALANCE_SUPPLIER_PARTY_ID = "8383000000075"
     const val CURRENT_PARTY_ID = "0128000000599"
+    const val CURRENT_PARTY_NAME = "BalanceSupplier Aalerud, Røed og Finstad"
     const val INACTIVE_PARTY_ID = "4502100001872"
 }

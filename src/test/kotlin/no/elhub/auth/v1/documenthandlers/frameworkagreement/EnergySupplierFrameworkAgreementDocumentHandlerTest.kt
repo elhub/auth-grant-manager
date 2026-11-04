@@ -1,5 +1,6 @@
 package no.elhub.auth.v1.documenthandlers.frameworkagreement
 
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
@@ -11,12 +12,24 @@ import io.mockk.slot
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import no.elhub.auth.common.auth.AuthorizationParty
 import no.elhub.auth.common.auth.PartyType
 import no.elhub.auth.common.documents.pdf.AuthorizationDocumentPdfContent
 import no.elhub.auth.common.documents.pdf.PdfGenerator
 import no.elhub.auth.common.documents.pdf.PdfLanguage
 import no.elhub.auth.common.documents.pdf.PdfSigner
+import no.elhub.auth.v0.features.businessprocesses.common.JwtTokenProvider
+import no.elhub.auth.v0.features.businessprocesses.structuredata.common.ClientError
+import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsApi
+import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsApiConfig
+import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestContainer
+import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestContainerExtension
+import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.NOT_BALANCE_SUPPLIER_PARTY_ID
+import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.VALID_PARTY_ID
+import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.VALID_PARTY_NAME
+import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.organisationsServiceHttpClient
 import no.elhub.auth.v1.domain.AuthorizationDocument
 import no.elhub.auth.v1.domain.AuthorizationDocumentStatus
 import no.elhub.auth.v1.domain.AuthorizationDocumentType
@@ -25,6 +38,7 @@ import no.elhub.auth.v1.domain.documents.DocumentSpecification
 import no.elhub.auth.v1.features.documents.CreateDocumentHandler
 import no.elhub.auth.v1.features.documents.creation.ChangeOfEnergySupplierDocumentHandler
 import no.elhub.auth.v1.features.documents.creation.DocumentCreationContext
+import no.elhub.auth.v1.features.documents.creation.DocumentPreparationError
 import no.elhub.auth.v1.features.documents.creation.MoveInAndChangeOfEnergySupplierDocumentHandler
 import no.elhub.auth.v1.repositories.DocumentRepository
 import kotlin.time.Clock
@@ -33,8 +47,10 @@ import kotlin.time.Instant
 import no.elhub.auth.v1.features.documents.creation.EnergySupplierFrameworkAgreementDocumentHandler as HandlerContract
 
 class EnergySupplierFrameworkAgreementDocumentHandlerTest : FunSpec({
+    extensions(OrganisationsServiceTestContainerExtension)
+
     val context = DocumentCreationContext(
-        requestedBy = AuthorizationParty("supplier-1", PartyType.OrganizationEntity),
+        requestedBy = AuthorizationParty(VALID_PARTY_ID, PartyType.OrganizationEntity),
         requestedPrincipal = AuthorizationParty("org-1", PartyType.Organization),
         requestedOf = AuthorizationParty("person-1", PartyType.Person),
         language = DocumentLanguage.EN,
@@ -42,7 +58,21 @@ class EnergySupplierFrameworkAgreementDocumentHandlerTest : FunSpec({
     )
     val validFrom = Instant.parse("2100-01-01T23:30:00Z")
     val validTo = Instant.parse("2100-06-01T22:30:00Z")
-    val handler = EnergySupplierFrameworkAgreementDocumentHandler()
+    val tokenProvider = object : JwtTokenProvider {
+        override suspend fun getToken(): String = "token"
+    }
+    lateinit var handler: EnergySupplierFrameworkAgreementDocumentHandler
+
+    beforeSpec {
+        val organisationsService = OrganisationsApi(
+            organisationsApiConfig = OrganisationsApiConfig(
+                serviceUrl = OrganisationsServiceTestContainer.serviceUrl(),
+            ),
+            client = organisationsServiceHttpClient,
+            tokenProvider = tokenProvider,
+        )
+        handler = EnergySupplierFrameworkAgreementDocumentHandler(organisationsService)
+    }
 
     test("prepares framework PDF content with Oslo dates and a 28-day document lifetime") {
         val before = Clock.System.now()
@@ -53,13 +83,28 @@ class EnergySupplierFrameworkAgreementDocumentHandlerTest : FunSpec({
         content.language shouldBe PdfLanguage.EN
         content.organizationName shouldBe "Placeholder organization org-1"
         content.organizationNumber shouldBe "org-1"
-        content.balanceSupplierName shouldBe "Placeholder supplier supplier-1"
+        content.balanceSupplierName shouldBe VALID_PARTY_NAME
         content.agreementReference shouldBe "reference-1"
         content.startDate shouldBe LocalDate(2100, 1, 2)
         content.endDate shouldBe LocalDate(2100, 6, 2)
         (details.validTo >= before + 28.days) shouldBe true
         (details.validTo <= after + 28.days) shouldBe true
-        details.meta["placeholder"]?.toString() shouldBe "true"
+        details.meta shouldBe buildJsonObject {
+            put("balanceSupplierName", VALID_PARTY_NAME)
+        }
+    }
+
+    test("preserves requested-by lookup failure when the party is not a balance supplier") {
+        val error = shouldThrow<DocumentPreparationError.RequestedByLookupFailure> {
+            handler.prepare(
+                DocumentSpecification.EnergySupplierFrameworkAgreement(validFrom, validTo),
+                context.copy(
+                    requestedBy = AuthorizationParty(NOT_BALANCE_SUPPLIER_PARTY_ID, PartyType.OrganizationEntity),
+                ),
+            )
+        }
+
+        error.clientError shouldBe ClientError.NotFound
     }
 
     test("uses today's Oslo date and an explicit reference placeholder when omitted, with an open end") {
