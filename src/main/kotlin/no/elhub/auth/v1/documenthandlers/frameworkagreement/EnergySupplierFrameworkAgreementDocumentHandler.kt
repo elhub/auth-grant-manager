@@ -39,7 +39,7 @@ class EnergySupplierFrameworkAgreementDocumentHandler(private val organisationsS
                 organizationName = "Placeholder organization ${context.requestedPrincipal.id}",
                 organizationNumber = context.requestedPrincipal.id,
                 balanceSupplierName = balanceSupplierName,
-                agreementReference = context.externalReference ?: "Placeholder agreement reference",
+                agreementReference = context.externalReference,
                 startDate = (specification.requestedGrantValidFrom ?: now).toOsloDate(),
                 endDate = specification.requestedGrantValidTo?.toOsloDate(),
             ),
