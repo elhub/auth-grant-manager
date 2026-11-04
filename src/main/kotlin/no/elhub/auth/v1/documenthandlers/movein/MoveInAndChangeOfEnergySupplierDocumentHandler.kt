@@ -70,7 +70,7 @@ class MoveInAndChangeOfEnergySupplierDocumentHandler(
                 organizationNumber = context.requestedPrincipal.id,
                 meteringPoints = metadata.requestedMeteringPoints.map { it.toPdfContent() },
                 balanceSupplierName = balanceSupplierName,
-                agreementReference = null,
+                agreementReference = context.externalReference,
                 moveInDate = specification.validFrom,
             ),
             validTo = Clock.System.now() + DOCUMENT_VALID_DAYS.days,

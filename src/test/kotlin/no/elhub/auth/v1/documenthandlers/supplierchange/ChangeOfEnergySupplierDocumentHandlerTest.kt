@@ -109,6 +109,7 @@ class ChangeOfEnergySupplierDocumentHandlerTest : FunSpec({
         pdfContent.meteringPoints.single().id shouldBe VALID_METERING_POINT_1
         pdfContent.meteringPoints.single().meterNumber shouldBe "30030856"
         pdfContent.balanceSupplierName shouldBe VALID_PARTY_NAME
+        pdfContent.agreementReference shouldBe context.externalReference
         (details.validTo > Clock.System.now()) shouldBe true
     }
 

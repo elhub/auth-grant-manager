@@ -114,6 +114,7 @@ class MoveInAndChangeOfEnergySupplierDocumentHandlerTest : FunSpec({
         pdfContent.meteringPoints.single().meterNumber shouldBe "30030856"
         pdfContent.moveInDate shouldBe validFrom
         pdfContent.balanceSupplierName shouldBe VALID_PARTY_NAME
+        pdfContent.agreementReference shouldBe context.externalReference
         (details.validTo > Clock.System.now()) shouldBe true
     }
 

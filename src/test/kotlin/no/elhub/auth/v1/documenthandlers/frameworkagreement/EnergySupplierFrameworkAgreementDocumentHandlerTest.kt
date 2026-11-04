@@ -107,7 +107,7 @@ class EnergySupplierFrameworkAgreementDocumentHandlerTest : FunSpec({
         error.clientError shouldBe ClientError.NotFound
     }
 
-    test("uses today's Oslo date and an explicit reference placeholder when omitted, with an open end") {
+    test("uses today's Oslo date and preserves a missing agreement reference, with an open end") {
         val timeZone = TimeZone.of("Europe/Oslo")
         val before = Clock.System.now().toLocalDateTime(timeZone).date
         val details = handler.prepare(
@@ -119,7 +119,7 @@ class EnergySupplierFrameworkAgreementDocumentHandlerTest : FunSpec({
         val content = details.pdfContent.shouldBeInstanceOf<AuthorizationDocumentPdfContent.EnergySupplierFrameworkAgreement>()
         (content.startDate in setOf(before, after)) shouldBe true
         content.endDate shouldBe null
-        content.agreementReference shouldBe "Placeholder agreement reference"
+        content.agreementReference shouldBe null
     }
 
     test("keeps an explicit start date when the agreement has no end date") {

@@ -68,7 +68,7 @@ class ChangeOfEnergySupplierDocumentHandler(
                 organizationNumber = context.requestedPrincipal.id,
                 meteringPoints = metadata.requestedMeteringPoints.map { it.toPdfContent() },
                 balanceSupplierName = balanceSupplierName,
-                agreementReference = null,
+                agreementReference = context.externalReference,
             ),
             validTo = Clock.System.now() + DOCUMENT_VALID_DAYS.days,
             meta = metadata.toJsonObject(),
