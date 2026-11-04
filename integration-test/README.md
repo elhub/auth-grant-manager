@@ -8,9 +8,19 @@ The Bash/Playwright image runs two independent flows sequentially:
 
 `run.sh` validates configuration, runs both scenarios even if one fails, and returns
 nonzero if any flow fails. Each scenario has an isolated temporary directory and
-shares HTTP/signing helpers in `lib/common.sh`. Logs show key stages, resource IDs,
+shares HTTP/signing helpers in `src/lib/`. Logs show key stages, resource IDs,
 and final results, not full responses, PDFs, tokens, credentials, or browser call logs.
 Keep shell tracing and Playwright debug/protocol logging disabled.
+
+```text
+integration-test/
+  run.sh
+  src/
+    v0/authorization-document-flow.sh
+    v1/framework-agreement.sh
+    lib/common.sh
+    lib/bankid-sign.ts
+```
 
 ## Configuration
 

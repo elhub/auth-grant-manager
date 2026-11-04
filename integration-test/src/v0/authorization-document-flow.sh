@@ -3,8 +3,8 @@
 set -Eeuo pipefail
 
 TEST_NAME=v0
-# shellcheck source=lib/common.sh
-source "$(dirname "${BASH_SOURCE[0]}")/lib/common.sh"
+# shellcheck source=../lib/common.sh
+source "$(dirname "${BASH_SOURCE[0]}")/../lib/common.sh"
 require_env ELHUB_BASE METERING_POINT_ID
 initialize
 

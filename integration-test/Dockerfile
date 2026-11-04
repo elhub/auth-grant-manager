@@ -11,9 +11,9 @@ WORKDIR /app
 COPY integration-test/package.json integration-test/package-lock.json integration-test/
 RUN cd integration-test && npm ci
 
-COPY integration-test/*.sh integration-test/bankid-sign.ts integration-test/
-COPY integration-test/lib/ integration-test/lib/
-RUN chmod +x integration-test/*.sh \
+COPY integration-test/run.sh integration-test/
+COPY integration-test/src/ integration-test/src/
+RUN chmod +x integration-test/run.sh integration-test/src/v0/*.sh integration-test/src/v1/*.sh \
   && chown -R 65532:65532 /app
 
 USER 65532

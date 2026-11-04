@@ -6,9 +6,9 @@ trap 'exit 130' INT
 TEST_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 selection="${1:-all}"
 case "$selection" in
-  all) scenarios=(authorization-document-flow.sh v1-framework-agreement.sh) ;;
-  v0) scenarios=(authorization-document-flow.sh) ;;
-  v1) scenarios=(v1-framework-agreement.sh) ;;
+  all) scenarios=(src/v0/authorization-document-flow.sh src/v1/framework-agreement.sh) ;;
+  v0) scenarios=(src/v0/authorization-document-flow.sh) ;;
+  v1) scenarios=(src/v1/framework-agreement.sh) ;;
   *) printf 'Usage: bash integration-test/run.sh [all|v0|v1]\n' >&2; exit 2 ;;
 esac
 

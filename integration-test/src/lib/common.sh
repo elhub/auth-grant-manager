@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Sourced by each scenario so traps and temporary data stay isolated per flow.
-INTEGRATION_TEST_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+INTEGRATION_TEST_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 CURRENT_STEP=configuration
 WORK_DIR=
 SIGN_ORDER_ID=
@@ -91,7 +91,7 @@ sign_and_confirm() {
   CURRENT_STEP='signing with BankID'
   log 'Signing PDF with BankID'
   BANKID_SIGN_URL="${BANKID_SIGN_BASE_URL%/}/$SIGN_ORDER_ID" \
-    node "$INTEGRATION_TEST_DIR/node_modules/.bin/tsx" "$INTEGRATION_TEST_DIR/bankid-sign.ts"
+    node "$INTEGRATION_TEST_DIR/node_modules/.bin/tsx" "$INTEGRATION_TEST_DIR/src/lib/bankid-sign.ts"
   CURRENT_STEP='downloading signed PDF'
   http_request DELETE "${BANKID_SIGNING_API}?sign_id=$SIGN_ORDER_ID" 200 "$WORK_DIR/signed-order.json" \
     -H "Authorization: $BANKID_AUTH"

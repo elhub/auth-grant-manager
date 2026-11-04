@@ -3,8 +3,8 @@
 set -Eeuo pipefail
 
 TEST_NAME=v1
-# shellcheck source=lib/common.sh
-source "$(dirname "${BASH_SOURCE[0]}")/lib/common.sh"
+# shellcheck source=../lib/common.sh
+source "$(dirname "${BASH_SOURCE[0]}")/../lib/common.sh"
 
 require_env ELHUB_V1_BASE FRAMEWORK_PRINCIPAL_ORG_NUMBER FRAMEWORK_OF_ORG_NUMBER
 [[ "${ELHUB_V1_BASE%/}" == */access/v1 ]] || fail 'ELHUB_V1_BASE must end with /access/v1'
