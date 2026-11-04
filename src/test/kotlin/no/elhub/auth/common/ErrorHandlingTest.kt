@@ -126,6 +126,12 @@ class ErrorHandlingTest : FunSpec({
             "The requested by could not be found",
         ),
         ErrorCase(
+            DocumentPreparationError.RequestedPrincipalNameLookupFailure(ClientError.NotFound),
+            HttpStatusCode.UnprocessableEntity,
+            "Validation error",
+            "The requested principal could not be found",
+        ),
+        ErrorCase(
             RequestPreparationError.RequestedMeteringPointsNotFound(),
             HttpStatusCode.UnprocessableEntity,
             "Validation error",
@@ -214,6 +220,7 @@ class ErrorHandlingTest : FunSpec({
         DocumentPreparationError.MeteringPointsServiceFailure(ClientError.NotFound),
         DocumentPreparationError.RequestedPrincipalLookupFailure(ClientError.ServerError),
         DocumentPreparationError.RequestedByLookupFailure(ClientError.ServerError),
+        DocumentPreparationError.RequestedPrincipalNameLookupFailure(ClientError.ServerError),
         RequestPreparationError.MeteringPointsServiceFailure(ClientError.ServerError),
         RequestPreparationError.RequestedPrincipalLookupFailure(ClientError.ServerError),
     ).forEach { cause ->

@@ -57,16 +57,24 @@ class MoveInAndChangeOfEnergySupplierDocumentHandler(
                 }
             )
 
+        val organisationName = organisationsService.getNameByOrganisationNumber(context.requestedPrincipal.id).fold(
+            ifLeft = { throw DocumentPreparationError.RequestedPrincipalNameLookupFailure(it) },
+            ifRight = { response ->
+                response.data.attributes?.name ?: throw DocumentPreparationError.RequestedPrincipalNameLookupFailure(ClientError.NotFound)
+            }
+        )
+
         val metadata = MoveInAndChangeOfEnergySupplierDocumentMetadata(
             requestedMeteringPoints = meteringPoints.toRequestedMeteringPointMetadata(),
             validFrom = specification.validFrom,
-            balanceSupplierName = balanceSupplierName
+            balanceSupplierName = balanceSupplierName,
+            organizationName = organisationName,
         )
 
         return DocumentCreationDetails(
             pdfContent = AuthorizationDocumentPdfContent.MoveInAndChangeOfBalanceSupplierForOrganisation(
                 language = context.language.toPdfLanguage(),
-                organizationName = "Placeholder organization ${context.requestedPrincipal.id}",
+                organizationName = organisationName,
                 organizationNumber = context.requestedPrincipal.id,
                 meteringPoints = metadata.requestedMeteringPoints.map { it.toPdfContent() },
                 balanceSupplierName = balanceSupplierName,

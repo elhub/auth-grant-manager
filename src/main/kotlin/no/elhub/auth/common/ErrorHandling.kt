@@ -424,6 +424,17 @@ private fun Errors.toApiErrorResponse() =
             }
         }
 
+        is DocumentPreparationError.RequestedPrincipalNameLookupFailure -> {
+            when (clientError) {
+                ClientError.NotFound -> toValidationApiErrorResponse("The requested principal could not be found")
+
+                else -> {
+                    logger.error("Failed to resolve requested principal data: {}", clientError)
+                    toInternalServerApiErrorResponse()
+                }
+            }
+        }
+
         is RequestPreparationError.RequestedMeteringPointsNotFound -> {
             toValidationApiErrorResponse(detail)
         }
