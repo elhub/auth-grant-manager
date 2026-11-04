@@ -10,11 +10,13 @@ import io.ktor.client.plugins.logging.LoggingFormat
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import kotlinx.serialization.json.Json
+import no.elhub.auth.common.auth.AuthorizedPartyKey
+import no.elhub.auth.common.auth.UpdateRequestAuthInfoPolicy
+import no.elhub.auth.common.auth.resolveAuthorizedParty
+import no.elhub.auth.common.auth.resolveUpdateRequestActor
 import no.elhub.auth.plugin.authorization
 import no.elhub.auth.plugin.policies.token.base.authinfo.AuthInfoPolicy
 import no.elhub.auth.v0.features.common.ApiHeaders
-import no.elhub.auth.v0.features.common.auth.AuthorizedPartyKey
-import no.elhub.auth.v0.features.common.auth.resolveAuthorizedParty
 
 fun Application.configureAuthorization() {
     val pdpHttpClient = HttpClient(Apache5) {
@@ -54,6 +56,24 @@ fun Application.configureAuthorization() {
                 // Resolve the AuthorizationParty from the PDP response and store it on call attributes
                 // so route handlers can access it via call.authorizedParty
                 val party = resolveAuthorizedParty(response.result)
+                if (party != null) {
+                    attributes.put(AuthorizedPartyKey, party)
+                    true
+                } else {
+                    false
+                }
+            }
+        }
+
+        tokenPolicy(UpdateRequestAuthInfoPolicy) {
+            buildPayload {
+                AuthInfoPolicy.Request(
+                    onBehalfOfOrganisationId = request.headers[ApiHeaders.ON_BEHALF_OF_ORGANISATION]?.ifBlank { null },
+                )
+            }
+
+            enforce { response ->
+                val party = resolveUpdateRequestActor(response.result)
                 if (party != null) {
                     attributes.put(AuthorizedPartyKey, party)
                     true

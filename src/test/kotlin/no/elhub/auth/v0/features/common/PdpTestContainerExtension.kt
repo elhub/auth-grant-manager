@@ -15,7 +15,7 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
-import no.elhub.auth.v0.features.common.auth.AUTHINFO_POLICY_ROUTE
+import no.elhub.auth.common.auth.AUTHINFO_POLICY_ROUTE
 import org.testcontainers.containers.GenericContainer
 
 class PdpTestContainerExtension() : BeforeSpecListener, AfterSpecListener {

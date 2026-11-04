@@ -1,0 +1,92 @@
+package no.elhub.auth.v1.domain.documents
+
+import kotlinx.datetime.LocalDate
+import no.elhub.auth.v1.common.startOfDayOslo
+import no.elhub.auth.v1.domain.AuthorizationDocumentType
+import no.elhub.auth.v1.domain.AuthorizationScopeConstraint
+import no.elhub.auth.v1.domain.AuthorizationScopeConstraintAttribute
+import no.elhub.auth.v1.domain.AuthorizationScopeConstraintKind
+import no.elhub.auth.v1.domain.MeteringPointContractType
+import no.elhub.auth.v1.domain.RequestedAuthorizationScope
+import no.elhub.auth.v1.domain.ResourceConstraint
+import no.elhub.auth.v1.domain.ResourceType
+import kotlin.time.Instant
+
+sealed interface DocumentSpecification {
+    val documentType: AuthorizationDocumentType
+    fun toRequestedAuthorizationScope(): RequestedAuthorizationScope
+
+    data class EnergySupplierFrameworkAgreement(
+        val requestedGrantValidFrom: Instant? = null,
+        val requestedGrantValidTo: Instant? = null,
+    ) : DocumentSpecification {
+        override val documentType = AuthorizationDocumentType.EnergySupplierFrameworkAgreement
+
+        override fun toRequestedAuthorizationScope() = RequestedAuthorizationScope(
+            resourceType = ResourceType.MeteringPointContract,
+            constraints = listOf(
+                AuthorizationScopeConstraint(
+                    constraintKind = AuthorizationScopeConstraintKind.AllowedChanges,
+                    attribute = AuthorizationScopeConstraintAttribute.ContractType,
+                    value = ResourceConstraint.ContractTypes(
+                        setOf(MeteringPointContractType.EndUser, MeteringPointContractType.EnergySupplier),
+                    ),
+                ),
+            ),
+        )
+    }
+
+    data class ChangeOfEnergySupplierForOrganization(
+        val meteringPointIds: ResourceConstraint.MeteringPoints,
+    ) : DocumentSpecification {
+        override val documentType = AuthorizationDocumentType.ChangeOfEnergySupplierForOrganization
+
+        override fun toRequestedAuthorizationScope() = RequestedAuthorizationScope(
+            resourceType = ResourceType.MeteringPointContract,
+            constraints = listOf(
+                AuthorizationScopeConstraint(
+                    constraintKind = AuthorizationScopeConstraintKind.AppliesTo,
+                    attribute = AuthorizationScopeConstraintAttribute.MeteringPointId,
+                    value = meteringPointIds,
+                ),
+                AuthorizationScopeConstraint(
+                    constraintKind = AuthorizationScopeConstraintKind.AllowedChanges,
+                    attribute = AuthorizationScopeConstraintAttribute.ContractType,
+                    value = ResourceConstraint.ContractTypes(setOf(MeteringPointContractType.EnergySupplier)),
+                ),
+            ),
+        )
+    }
+
+    data class MoveInAndChangeOfEnergySupplierForOrganization(
+        val meteringPointIds: ResourceConstraint.MeteringPoints,
+        val validFrom: LocalDate,
+    ) : DocumentSpecification {
+        override val documentType = AuthorizationDocumentType.MoveInAndChangeOfEnergySupplierForOrganization
+
+        override fun toRequestedAuthorizationScope() = RequestedAuthorizationScope(
+            resourceType = ResourceType.MeteringPointContract,
+            constraints = listOf(
+                AuthorizationScopeConstraint(
+                    constraintKind = AuthorizationScopeConstraintKind.AppliesTo,
+                    attribute = AuthorizationScopeConstraintAttribute.MeteringPointId,
+                    value = meteringPointIds,
+                ),
+                AuthorizationScopeConstraint(
+                    constraintKind = AuthorizationScopeConstraintKind.AllowedChanges,
+                    attribute = AuthorizationScopeConstraintAttribute.ContractType,
+                    value = ResourceConstraint.ContractTypes(
+                        setOf(MeteringPointContractType.EndUser, MeteringPointContractType.EnergySupplier),
+                    ),
+                ),
+                AuthorizationScopeConstraint(
+                    constraintKind = AuthorizationScopeConstraintKind.AllowedChanges,
+                    attribute = AuthorizationScopeConstraintAttribute.ValidFrom,
+                    value = ResourceConstraint.ValidFrom(
+                        validFrom.startOfDayOslo(),
+                    ),
+                ),
+            ),
+        )
+    }
+}

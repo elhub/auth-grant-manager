@@ -8,11 +8,11 @@ import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.core.spec.style.FunSpec
 import io.mockk.coEvery
 import io.mockk.mockk
+import no.elhub.auth.common.auth.AuthorizationParty
+import no.elhub.auth.common.auth.PartyType
 import no.elhub.auth.v0.features.common.RepositoryError
 import no.elhub.auth.v0.features.common.RepositoryWriteError
 import no.elhub.auth.v0.features.common.currentTimeUtc
-import no.elhub.auth.v0.features.common.party.AuthorizationParty
-import no.elhub.auth.v0.features.common.party.PartyType
 import no.elhub.auth.v0.features.grants.AuthorizationGrant
 import no.elhub.auth.v0.features.grants.AuthorizationGrant.SourceType
 import no.elhub.auth.v0.features.grants.AuthorizationGrant.Status
@@ -81,6 +81,20 @@ class HandlerTest : FunSpec({
         mockk<GrantRepository> {
             coEvery { update(grantId, newStatus) } returns updateResult
         }
+
+    test("returns GrantNotFound when repo returns NotFoundError") {
+        val handler = Handler(repoReturning(updateResult = RepositoryWriteError.NotFoundError.left()))
+
+        val response = handler(
+            ConsumeCommand(
+                grantId = grantId,
+                newStatus = newStatus,
+                authorizedParty = consentManagementSystem
+            )
+        )
+
+        response.shouldBeLeft(ConsumeError.GrantNotFound)
+    }
 
     test("maps repository error to PersistenceError") {
 

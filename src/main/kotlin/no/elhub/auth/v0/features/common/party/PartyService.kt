@@ -2,6 +2,8 @@ package no.elhub.auth.v0.features.common.party
 
 import arrow.core.Either
 import arrow.core.right
+import no.elhub.auth.common.auth.AuthorizationParty
+import no.elhub.auth.common.auth.PartyType
 import no.elhub.auth.v0.features.common.person.ClientError
 import no.elhub.auth.v0.features.common.person.PersonService
 

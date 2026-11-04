@@ -5,8 +5,8 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
+import no.elhub.auth.common.auth.authorizedParty
 import no.elhub.auth.v0.features.common.Pagination
-import no.elhub.auth.v0.features.common.auth.authorizedParty
 import no.elhub.auth.v0.features.common.toApiErrorResponse
 import no.elhub.auth.v0.features.grants.common.dto.toCollectionGrantResponse
 import org.slf4j.LoggerFactory

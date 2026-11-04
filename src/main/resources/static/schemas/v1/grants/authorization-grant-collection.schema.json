@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Authorization Grant Collection",
+  "description": "Schema for returning a collection of authorization grants.",
+  "type": "object",
+  "properties": {
+    "data": {
+      "description": "An array of authorization grant resource objects.",
+      "type": "array",
+      "items": {
+        "$ref": "authorization-grant-resource.schema.json#/properties/data"
+      },
+      "uniqueItems": true
+    },
+    "links": {
+      "description": "Link members related to the collection (e.g. pagination).",
+      "$ref": "../../json-api-framework.schema.json#/$defs/topLevelLinks"
+    },
+    "meta": {
+      "allOf": [
+        {
+          "$ref": "../../json-api-framework.schema.json#/$defs/topLevelMeta"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "totalItems": {
+              "type": "integer",
+              "description": "Total number of items matching the query."
+            },
+            "totalPages": {
+              "type": "integer",
+              "description": "Total number of pages."
+            },
+            "page": {
+              "type": "integer",
+              "description": "Current zero-based page number."
+            },
+            "pageSize": {
+              "type": "integer",
+              "description": "Number of items per page."
+            }
+          },
+          "required": [
+            "createdAt",
+            "totalItems",
+            "totalPages",
+            "page",
+            "pageSize"
+          ]
+        }
+      ]
+    }
+  },
+  "required": ["data", "links", "meta"]
+}

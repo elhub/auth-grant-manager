@@ -7,11 +7,11 @@ import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import no.elhub.auth.common.auth.AuthorizationParty
+import no.elhub.auth.common.auth.PartyType
 import no.elhub.auth.v0.features.common.Page
 import no.elhub.auth.v0.features.common.Pagination
 import no.elhub.auth.v0.features.common.currentTimeUtc
-import no.elhub.auth.v0.features.common.party.AuthorizationParty
-import no.elhub.auth.v0.features.common.party.PartyType
 import no.elhub.auth.v0.features.grants.AuthorizationGrant
 import no.elhub.auth.v0.features.grants.common.GrantRepository
 import no.elhub.auth.v0.features.requests.AuthorizationRequest

@@ -17,10 +17,10 @@ import io.ktor.utils.io.toByteArray
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import no.elhub.auth.common.auth.AuthorizationParty
+import no.elhub.auth.common.auth.PartyType
 import no.elhub.auth.v0.features.common.QueryError
 import no.elhub.auth.v0.features.common.currentTimeOslo
-import no.elhub.auth.v0.features.common.party.AuthorizationParty
-import no.elhub.auth.v0.features.common.party.PartyType
 import no.elhub.auth.v0.features.common.toTimeZoneOffsetString
 import no.elhub.auth.v0.features.documents.AuthorizationDocument
 import no.elhub.auth.v0.features.documents.common.AuthorizationDocumentProperty

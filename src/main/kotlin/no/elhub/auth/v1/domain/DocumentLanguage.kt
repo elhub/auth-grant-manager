@@ -1,7 +1,16 @@
 package no.elhub.auth.v1.domain
 
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+
+@Serializable
 enum class DocumentLanguage {
-    Nb,
-    Nn,
-    En,
+    @SerialName("nb")
+    NB,
+
+    @SerialName("nn")
+    NN,
+
+    @SerialName("en")
+    EN,
 }

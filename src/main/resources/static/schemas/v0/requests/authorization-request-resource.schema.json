@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Authorization Request",
+  "description": "Schema for returning a single authorization request object in the Elhub authorization manager.",
+  "type": "object",
+  "properties": {
+    "data": {
+      "type": "object",
+      "required": [
+        "id",
+        "type",
+        "attributes",
+        "relationships",
+        "meta",
+        "links"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "authorization-request-common.schema.json#/$defs/id"
+        },
+        "type": {
+          "$ref": "authorization-request-common.schema.json#/$defs/type"
+        },
+        "attributes": {
+          "$ref": "authorization-request-common.schema.json#/$defs/attributes",
+          "required": [
+            "requestType",
+            "status",
+            "createdAt",
+            "updatedAt",
+            "validTo"
+          ]
+        },
+        "relationships": {
+          "$ref": "authorization-request-common.schema.json#/$defs/relationships",
+          "required": [
+            "requestedBy",
+            "requestedFrom",
+            "requestedTo"
+          ]
+        },
+        "meta": {
+          "type": "object",
+          "description": "Read-only context specific to this resource view.",
+          "additionalProperties": false,
+          "properties": {
+            "requestedFromName": {
+              "$ref": "../authorization-common.schema.json#/$defs/requestedFromName"
+            },
+            "requestedForMeteringPointId": {
+              "$ref": "../authorization-common.schema.json#/$defs/requestedForMeteringPointId"
+            },
+            "requestedForMeteringPointAddress": {
+              "$ref": "../authorization-common.schema.json#/$defs/requestedForMeteringPointAddress"
+            },
+            "balanceSupplierName": {
+              "$ref": "../authorization-common.schema.json#/$defs/balanceSupplierName"
+            },
+            "balanceSupplierContractName": {
+              "$ref": "../authorization-common.schema.json#/$defs/balanceSupplierContractName"
+            },
+            "redirectURI": {
+              "$ref": "../authorization-common.schema.json#/$defs/redirectURI"
+            }
+          }
+        },
+        "links": {
+          "description": "Links related to the primary data.",
+          "$ref": "../../json-api-framework.schema.json#/$defs/topLevelLinks",
+          "examples": [
+            {
+              "self": "/access/v0/authorization-requests/123e4567-e89b-12d3-a456-426614174000"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "links": {
+      "description": "Links related to the primary data.",
+      "$ref": "../../json-api-framework.schema.json#/$defs/topLevelLinks",
+      "examples": [
+        {
+          "self": "/access/v0/authorization-requests/123e4567-e89b-12d3-a456-426614174000"
+        }
+      ]
+    },
+    "meta": {
+      "$ref": "../../json-api-framework.schema.json#/$defs/topLevelMeta"
+    }
+  },
+  "required": ["data", "links", "meta"]
+}

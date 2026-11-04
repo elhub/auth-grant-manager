@@ -1,6 +1,6 @@
 package no.elhub.auth.v0.features.businessprocesses.changeofbalancesupplier.domain
 
-import no.elhub.auth.v0.features.common.party.AuthorizationParty
+import no.elhub.auth.common.auth.AuthorizationParty
 import no.elhub.auth.v0.features.documents.common.CreateDocumentBusinessModel
 import no.elhub.auth.v0.features.documents.create.dto.toSupportedLanguage
 import no.elhub.auth.v0.features.filegenerator.SupportedLanguage

@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "id": {
+      "$ref": "../elhub-common.schema.json#/$defs/resourceUuid"
+    },
+    "type": {
+      "const": "AuthorizationRequest"
+    },
+    "requestType": {
+      "enum": [
+        "ChangeOfEnergySupplierForOrganization",
+        "MoveInAndChangeOfEnergySupplierForOrganization",
+        "EnergySupplierFrameworkAgreement"
+      ]
+    },
+    "status": {
+      "enum": ["Pending", "Approved", "Rejected", "Expired"]
+    },
+    "textReference": {
+      "type": "string",
+      "description": "Reference to the authorization text associated with the request, set by the server.",
+      "examples": ["v1"]
+    },
+    "textLanguage": {
+      "type": "string",
+      "enum": ["nb", "nn", "en"],
+      "description": "Language of the authorization text presented to the user when approving or rejecting the request.",
+      "examples": ["nb"]
+    },
+    "requestedScopes": {
+      "type": "array",
+      "items": {
+        "$ref": "../authorization-scope.schema.json#/$defs/requestedScope"
+      }
+    },
+    "externalReference": {
+      "type": "string"
+    },
+    "requestedGrantValidFrom": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Requested start of validity for the authorization grant created when the request is approved."
+    },
+    "requestedGrantValidTo": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Requested end of validity for the authorization grant created when the request is approved."
+    },
+    "redirectUri": {
+      "type": "string",
+      "format": "uri"
+    },
+    "requestedPrincipal": {
+      "type": "string"
+    },
+    "requestedOf": {
+      "type": "string"
+    }
+  }
+}

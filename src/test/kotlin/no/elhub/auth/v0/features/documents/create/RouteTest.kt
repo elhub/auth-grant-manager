@@ -17,11 +17,11 @@ import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
+import no.elhub.auth.common.auth.AuthorizationParty
+import no.elhub.auth.common.auth.PartyType
 import no.elhub.auth.v0.features.common.currentTimeOslo
-import no.elhub.auth.v0.features.common.party.AuthorizationParty
 import no.elhub.auth.v0.features.common.party.PartyIdentifier
 import no.elhub.auth.v0.features.common.party.PartyIdentifierType
-import no.elhub.auth.v0.features.common.party.PartyType
 import no.elhub.auth.v0.features.documents.AuthorizationDocument
 import no.elhub.auth.v0.features.documents.DOCUMENTS_PATH
 import no.elhub.auth.v0.features.documents.common.AuthorizationDocumentProperty

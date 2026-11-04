@@ -1,0 +1,74 @@
+package no.elhub.auth.v1.documenthandlers.movein
+
+import no.elhub.auth.common.documents.pdf.AuthorizationDocumentPdfContent
+import no.elhub.auth.common.structuredata.organisations.IdentificationType
+import no.elhub.auth.common.structuredata.organisations.PartyType
+import no.elhub.auth.v0.features.businessprocesses.structuredata.common.ClientError
+import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsLookupException
+import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsService
+import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsService
+import no.elhub.auth.v1.common.meteringpoints.toPdfContent
+import no.elhub.auth.v1.common.meteringpoints.toRequestedMeteringPointMetadata
+import no.elhub.auth.v1.documenthandlers.common.toPdfLanguage
+import no.elhub.auth.v1.domain.documents.DocumentSpecification
+import no.elhub.auth.v1.features.documents.creation.DocumentCreationContext
+import no.elhub.auth.v1.features.documents.creation.DocumentCreationDetails
+import no.elhub.auth.v1.features.documents.creation.DocumentPreparationError
+import no.elhub.auth.v1.features.documents.creation.toDocumentPreparationError
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.days
+import no.elhub.auth.v1.features.documents.creation.MoveInAndChangeOfEnergySupplierDocumentHandler as HandlerContract
+
+private const val DOCUMENT_VALID_DAYS = 28
+
+class MoveInAndChangeOfEnergySupplierDocumentHandler(
+    private val meteringPointsService: MeteringPointsService,
+    private val organisationsService: OrganisationsService,
+) : HandlerContract {
+    override suspend fun prepare(
+        specification: DocumentSpecification.MoveInAndChangeOfEnergySupplierForOrganization,
+        context: DocumentCreationContext,
+    ): DocumentCreationDetails {
+        val requestedPrincipalElhubInternalId = organisationsService
+            .getIdentificationByOrganisationNumber(context.requestedPrincipal.id)
+            .fold(
+                ifLeft = { throw DocumentPreparationError.RequestedPrincipalLookupFailure(it) },
+                ifRight = { response ->
+                    response.data.firstOrNull { it.attributes?.identificationType == IdentificationType.ORGANIZATION }?.id
+                        ?: throw DocumentPreparationError.RequestedPrincipalLookupFailure(ClientError.NotFound)
+                },
+            )
+        val metadata = MoveInAndChangeOfEnergySupplierDocumentMetadata(
+            requestedMeteringPoints = try {
+                meteringPointsService.getMeteringPointsForOrganisation(
+                    meteringPointIds = specification.meteringPointIds.ids.map { it.value }.sorted(),
+                    elhubInternalId = requestedPrincipalElhubInternalId,
+                )
+            } catch (e: MeteringPointsLookupException) {
+                throw e.clientError.toDocumentPreparationError()
+            }.toRequestedMeteringPointMetadata(),
+            validFrom = specification.validFrom,
+        )
+        val requestedByName = organisationsService
+            .getPartyByIdAndPartyType(partyId = context.requestedBy.id, partyType = PartyType.BalanceSupplier)
+            .fold(
+                ifLeft = { throw DocumentPreparationError.RequestedByLookupFailure(it) },
+                ifRight = { response ->
+                    response.data.attributes?.name ?: throw DocumentPreparationError.RequestedByLookupFailure(ClientError.NotFound)
+                }
+            )
+        return DocumentCreationDetails(
+            pdfContent = AuthorizationDocumentPdfContent.MoveInAndChangeOfBalanceSupplierForOrganisation(
+                language = context.language.toPdfLanguage(),
+                organizationName = "Placeholder organization ${context.requestedPrincipal.id}",
+                organizationNumber = context.requestedPrincipal.id,
+                meteringPoints = metadata.requestedMeteringPoints.map { it.toPdfContent() },
+                balanceSupplierName = requestedByName,
+                agreementReference = null,
+                moveInDate = specification.validFrom,
+            ),
+            validTo = Clock.System.now() + DOCUMENT_VALID_DAYS.days,
+            meta = metadata.toJsonObject(),
+        )
+    }
+}

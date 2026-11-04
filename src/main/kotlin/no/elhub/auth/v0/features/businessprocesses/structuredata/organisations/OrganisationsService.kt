@@ -7,6 +7,10 @@ import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.http.isSuccess
+import no.elhub.auth.common.structuredata.organisations.IdentificationResponse
+import no.elhub.auth.common.structuredata.organisations.PartyResponse
+import no.elhub.auth.common.structuredata.organisations.PartyType
+import no.elhub.auth.v0.features.businessprocesses.common.JwtTokenProvider
 import no.elhub.auth.v0.features.businessprocesses.structuredata.common.ClientError
 import no.elhub.auth.v0.features.businessprocesses.structuredata.common.mapErrorsFromServer
 import no.elhub.auth.v0.features.common.ELHUB_TRACE_ID_HEADER
@@ -18,11 +22,14 @@ interface OrganisationsService {
         partyId: String,
         partyType: PartyType
     ): Either<ClientError, PartyResponse>
+
+    suspend fun getIdentificationByOrganisationNumber(organisationNumber: String): Either<ClientError, IdentificationResponse>
 }
 
 class OrganisationsApi(
     private val organisationsApiConfig: OrganisationsApiConfig,
-    private val client: HttpClient
+    private val client: HttpClient,
+    private val tokenProvider: JwtTokenProvider
 ) : OrganisationsService {
     private val logger = LoggerFactory.getLogger(OrganisationsService::class.java)
 
@@ -33,7 +40,10 @@ class OrganisationsApi(
         }
 
         return Either.catch {
-            val response = client.get("${organisationsApiConfig.serviceUrl}/parties/$partyId?partyType=$partyType") {
+            val jwtToken = tokenProvider.getToken()
+            val response = client.get("${organisationsApiConfig.serviceUrl}/v1/parties/$partyId?partyType=$partyType") {
+                header("Authorization", "Bearer $jwtToken")
+                header("User-Agent", "auth-grant-manager")
                 traceId?.let { header(ELHUB_TRACE_ID_HEADER, it) }
             }
             if (response.status.isSuccess()) {
@@ -48,14 +58,33 @@ class OrganisationsApi(
             ClientError.UnexpectedError(throwable)
         }
     }
+
+    override suspend fun getIdentificationByOrganisationNumber(organisationNumber: String): Either<ClientError, IdentificationResponse> {
+        val traceId = TraceIdContext.currentOrNull()
+        if (traceId == null) {
+            logger.error("event=organisation_lookup_missing_trace_id")
+        }
+        return Either.catch {
+            val jwtToken = tokenProvider.getToken()
+            val response = client.get("${organisationsApiConfig.serviceUrl}/v1/identification/organisation/$organisationNumber") {
+                header("Authorization", "Bearer $jwtToken")
+                header("User-Agent", "auth-grant-manager")
+                traceId?.let { header(ELHUB_TRACE_ID_HEADER, it) }
+            }
+            if (response.status.isSuccess()) {
+                val responseBody: IdentificationResponse = response.body()
+                responseBody
+            } else {
+                logger.error("Failed to fetch identification with status: ${response.status.value}")
+                return mapErrorsFromServer(response).left()
+            }
+        }.mapLeft { throwable ->
+            logger.error("Failed to fetch identification: {}", throwable.message)
+            ClientError.UnexpectedError(throwable)
+        }
+    }
 }
 
 data class OrganisationsApiConfig(
     val serviceUrl: String,
-    val basicAuthConfig: BasicAuthConfig
-)
-
-data class BasicAuthConfig(
-    val username: String,
-    val password: String
 )

@@ -1,6 +1,7 @@
 package no.elhub.auth.v0.features.common.party
 
 import arrow.core.Either
+import no.elhub.auth.common.auth.PartyType
 import no.elhub.auth.v0.features.common.PGEnum
 import no.elhub.auth.v0.features.common.RepositoryReadError
 import no.elhub.auth.v0.features.common.RepositoryWriteError

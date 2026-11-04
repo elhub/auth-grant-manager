@@ -7,13 +7,13 @@ import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import no.elhub.auth.common.auth.PartyType
 import no.elhub.auth.v0.config.withTransaction
 import no.elhub.auth.v0.features.common.PostgresTestContainer
 import no.elhub.auth.v0.features.common.PostgresTestContainerExtension
 import no.elhub.auth.v0.features.common.RepositoryReadError
 import no.elhub.auth.v0.features.common.party.AuthorizationPartyTable
 import no.elhub.auth.v0.features.common.party.ExposedPartyRepository
-import no.elhub.auth.v0.features.common.party.PartyType
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.Database

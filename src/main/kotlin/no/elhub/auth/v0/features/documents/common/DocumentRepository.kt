@@ -1,6 +1,7 @@
 package no.elhub.auth.v0.features.documents.common
 
 import arrow.core.Either
+import no.elhub.auth.common.auth.AuthorizationParty
 import no.elhub.auth.v0.config.TransactionContext
 import no.elhub.auth.v0.features.common.CreateScopeData
 import no.elhub.auth.v0.features.common.PGEnum
@@ -9,7 +10,6 @@ import no.elhub.auth.v0.features.common.Pagination
 import no.elhub.auth.v0.features.common.RepositoryReadError
 import no.elhub.auth.v0.features.common.RepositoryWriteError
 import no.elhub.auth.v0.features.common.currentTimeUtc
-import no.elhub.auth.v0.features.common.party.AuthorizationParty
 import no.elhub.auth.v0.features.common.party.AuthorizationPartyRecord
 import no.elhub.auth.v0.features.common.party.AuthorizationPartyTable
 import no.elhub.auth.v0.features.common.party.PartyRepository

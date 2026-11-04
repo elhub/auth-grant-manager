@@ -1,0 +1,12 @@
+{
+  "summary": "Consume an authorization grant",
+  "value": {
+    "data": {
+      "id": "01997291-7e8b-7000-8000-000000000014",
+      "type": "ConsumableGrant",
+      "attributes": {
+        "status": "Exhausted"
+      }
+    }
+  }
+}

@@ -11,11 +11,11 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.plus
+import no.elhub.auth.common.auth.AuthorizationParty
+import no.elhub.auth.common.auth.PartyType
 import no.elhub.auth.v0.features.common.RepositoryWriteError.ConflictError
 import no.elhub.auth.v0.features.common.RepositoryWriteError.ExpiredError
 import no.elhub.auth.v0.features.common.RepositoryWriteError.UnexpectedError
-import no.elhub.auth.v0.features.common.party.AuthorizationParty
-import no.elhub.auth.v0.features.common.party.PartyType
 import no.elhub.auth.v0.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
 import no.elhub.auth.v0.features.common.todayOslo
 import no.elhub.auth.v0.features.grants.common.CreateGrantProperties

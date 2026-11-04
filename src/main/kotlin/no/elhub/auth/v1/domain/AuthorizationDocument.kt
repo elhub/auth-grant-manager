@@ -1,6 +1,8 @@
 package no.elhub.auth.v1.domain
 
-import no.elhub.auth.v0.features.common.party.AuthorizationParty
+import kotlinx.serialization.json.JsonObject
+import no.elhub.auth.common.auth.AuthorizationParty
+import no.elhub.auth.v1.domain.documents.DocumentSpecification
 import java.util.UUID
 import kotlin.time.Clock
 import kotlin.time.Instant
@@ -9,45 +11,105 @@ data class AuthorizationDocument(
     val id: String,
     val documentType: AuthorizationDocumentType,
     val status: AuthorizationDocumentStatus,
-    val resourceConstraints: List<ResourceConstraint>,
-    val allowedChanges: List<ResourceConstraint>,
+    val requestedScopes: List<RequestedAuthorizationScope>,
     val externalReference: String?,
-    val validTo: Instant?,
+    val meta: JsonObject,
+    val requestedGrantValidFrom: Instant? = null,
+    val requestedGrantValidTo: Instant? = null,
+    val validFrom: Instant,
+    val validTo: Instant,
     val createdAt: Instant,
     val updatedAt: Instant,
     val requestedBy: AuthorizationParty,
-    val requestedFrom: AuthorizationParty,
-    val requestedTo: AuthorizationParty,
-    val signedBy: AuthorizationParty?,
-    val authorizationGrant: AuthorizationGrant?,
+    val requestedPrincipal: AuthorizationParty,
+    val requestedOf: AuthorizationParty,
+    val approvedBy: AuthorizationParty?,
+    val authorizationGrants: List<AuthorizationGrant>?,
     val pdfBytes: ByteArray,
 ) {
     companion object {
+        fun create(
+            specification: DocumentSpecification,
+            externalReference: String?,
+            meta: JsonObject,
+            validTo: Instant,
+            requestedBy: AuthorizationParty,
+            requestedPrincipal: AuthorizationParty,
+            requestedOf: AuthorizationParty,
+            pdfBytes: ByteArray,
+        ): AuthorizationDocument =
+            when (specification) {
+                is DocumentSpecification.ChangeOfEnergySupplierForOrganization -> new(
+                    documentType = specification.documentType,
+                    requestedScopes = listOf(specification.toRequestedAuthorizationScope()),
+                    externalReference = externalReference,
+                    meta = meta,
+                    validTo = validTo,
+                    requestedBy = requestedBy,
+                    requestedPrincipal = requestedPrincipal,
+                    requestedOf = requestedOf,
+                    pdfBytes = pdfBytes,
+                )
+
+                is DocumentSpecification.MoveInAndChangeOfEnergySupplierForOrganization -> new(
+                    documentType = specification.documentType,
+                    requestedScopes = listOf(specification.toRequestedAuthorizationScope()),
+                    externalReference = externalReference,
+                    meta = meta,
+                    validTo = validTo,
+                    requestedBy = requestedBy,
+                    requestedPrincipal = requestedPrincipal,
+                    requestedOf = requestedOf,
+                    pdfBytes = pdfBytes,
+                )
+
+                is DocumentSpecification.EnergySupplierFrameworkAgreement -> new(
+                    documentType = specification.documentType,
+                    requestedScopes = listOf(specification.toRequestedAuthorizationScope()),
+                    externalReference = externalReference,
+                    meta = meta,
+                    validTo = validTo,
+                    requestedBy = requestedBy,
+                    requestedPrincipal = requestedPrincipal,
+                    requestedOf = requestedOf,
+                    pdfBytes = pdfBytes,
+                    requestedGrantValidFrom = specification.requestedGrantValidFrom,
+                    requestedGrantValidTo = specification.requestedGrantValidTo,
+                )
+            }
+
         fun new(
             documentType: AuthorizationDocumentType,
-            resourceConstraints: List<ResourceConstraint>,
+            requestedScopes: List<RequestedAuthorizationScope>,
             externalReference: String?,
+            meta: JsonObject,
+            validTo: Instant,
             requestedBy: AuthorizationParty,
-            requestedFrom: AuthorizationParty,
-            requestedTo: AuthorizationParty,
+            requestedPrincipal: AuthorizationParty,
+            requestedOf: AuthorizationParty,
             pdfBytes: ByteArray,
+            requestedGrantValidFrom: Instant? = null,
+            requestedGrantValidTo: Instant? = null,
         ): AuthorizationDocument {
             val now = Clock.System.now()
             return AuthorizationDocument(
                 id = UUID.randomUUID().toString(),
                 documentType = documentType,
                 status = AuthorizationDocumentStatus.Pending,
-                resourceConstraints = resourceConstraints,
-                allowedChanges = emptyList(),
+                requestedScopes = requestedScopes,
                 externalReference = externalReference,
-                validTo = null,
+                meta = meta,
+                requestedGrantValidFrom = requestedGrantValidFrom,
+                requestedGrantValidTo = requestedGrantValidTo,
+                validFrom = now,
+                validTo = validTo,
                 createdAt = now,
                 updatedAt = now,
                 requestedBy = requestedBy,
-                requestedFrom = requestedFrom,
-                requestedTo = requestedTo,
-                signedBy = null,
-                authorizationGrant = null,
+                requestedPrincipal = requestedPrincipal,
+                requestedOf = requestedOf,
+                approvedBy = null,
+                authorizationGrants = null,
                 pdfBytes = pdfBytes,
             )
         }
@@ -55,13 +117,13 @@ data class AuthorizationDocument(
 }
 
 enum class AuthorizationDocumentStatus {
-    Accepted,
+    Approved,
     Expired,
     Pending,
-    Rejected,
 }
 
 enum class AuthorizationDocumentType {
+    EnergySupplierFrameworkAgreement,
     ChangeOfEnergySupplierForOrganization,
     MoveInAndChangeOfEnergySupplierForOrganization,
 }

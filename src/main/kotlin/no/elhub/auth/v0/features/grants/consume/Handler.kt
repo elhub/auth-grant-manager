@@ -3,8 +3,8 @@ package no.elhub.auth.v0.features.grants.consume
 import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensure
+import no.elhub.auth.common.auth.PartyType
 import no.elhub.auth.v0.features.common.RepositoryWriteError
-import no.elhub.auth.v0.features.common.party.PartyType
 import no.elhub.auth.v0.features.grants.AuthorizationGrant
 import no.elhub.auth.v0.features.grants.AuthorizationGrant.Status
 import no.elhub.auth.v0.features.grants.common.GrantRepository
@@ -23,6 +23,7 @@ class Handler(
         repo.update(command.grantId, command.newStatus)
             .mapLeft { error ->
                 when (error) {
+                    is RepositoryWriteError.NotFoundError -> ConsumeError.GrantNotFound
                     is RepositoryWriteError.ConflictError -> ConsumeError.IllegalStateError
                     is RepositoryWriteError.ExpiredError -> ConsumeError.ExpiredError
                     else -> ConsumeError.PersistenceError

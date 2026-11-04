@@ -1,7 +1,7 @@
 package no.elhub.auth.v0.features.grants
 
+import no.elhub.auth.common.auth.AuthorizationParty
 import no.elhub.auth.v0.features.common.currentTimeUtc
-import no.elhub.auth.v0.features.common.party.AuthorizationParty
 import no.elhub.auth.v0.features.grants.common.AuthorizationGrantProperty
 import java.time.OffsetDateTime
 import java.util.UUID

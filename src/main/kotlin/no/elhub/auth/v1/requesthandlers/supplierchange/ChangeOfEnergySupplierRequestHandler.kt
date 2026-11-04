@@ -1,0 +1,54 @@
+package no.elhub.auth.v1.requesthandlers.supplierchange
+
+import no.elhub.auth.common.auth.AuthorizationParty
+import no.elhub.auth.common.structuredata.organisations.IdentificationType
+import no.elhub.auth.v0.features.businessprocesses.structuredata.common.ClientError
+import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsLookupException
+import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsService
+import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsService
+import no.elhub.auth.v1.common.meteringpoints.toRequestedMeteringPointMetadata
+import no.elhub.auth.v1.domain.requests.AuthorizationRequestTypeDetails
+import no.elhub.auth.v1.features.requests.creation.RequestPreparationError
+import no.elhub.auth.v1.features.requests.creation.RequestTypeSpecificDetails
+import no.elhub.auth.v1.features.requests.creation.toRequestPreparationError
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.days
+import no.elhub.auth.v1.features.requests.creation.ChangeOfEnergySupplierRequestHandler as HandlerContract
+
+private const val REQUEST_VALID_DAYS = 28
+
+class ChangeOfEnergySupplierRequestHandler(
+    private val meteringPointsService: MeteringPointsService,
+    private val organisationsService: OrganisationsService,
+) : HandlerContract {
+    override suspend fun validateAndGetRequestTypeSpecificDetails(
+        details: AuthorizationRequestTypeDetails.ChangeOfEnergySupplierForOrganization,
+        requestedBy: AuthorizationParty,
+        requestedPrincipal: AuthorizationParty,
+        requestedOf: AuthorizationParty,
+    ): RequestTypeSpecificDetails {
+        val requestedPrincipalElhubInternalId = organisationsService
+            .getIdentificationByOrganisationNumber(requestedPrincipal.id)
+            .fold(
+                ifLeft = { throw RequestPreparationError.RequestedPrincipalLookupFailure(it) },
+                ifRight = { response ->
+                    response.data.firstOrNull { it.attributes?.identificationType == IdentificationType.ORGANIZATION }?.id
+                        ?: throw RequestPreparationError.RequestedPrincipalLookupFailure(ClientError.NotFound)
+                },
+            )
+        val metadata = ChangeOfEnergySupplierRequestMetadata(
+            requestedMeteringPoints = try {
+                meteringPointsService.getMeteringPointsForOrganisation(
+                    meteringPointIds = details.meteringPointIds.ids.map { it.value }.sorted(),
+                    elhubInternalId = requestedPrincipalElhubInternalId,
+                )
+            } catch (e: MeteringPointsLookupException) {
+                throw e.clientError.toRequestPreparationError()
+            }.toRequestedMeteringPointMetadata(),
+        )
+        return RequestTypeSpecificDetails(
+            validTo = Clock.System.now() + REQUEST_VALID_DAYS.days,
+            meta = metadata.toJsonObject(),
+        )
+    }
+}

@@ -12,6 +12,8 @@ import io.mockk.mockk
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.plus
+import no.elhub.auth.common.auth.AuthorizationParty
+import no.elhub.auth.common.auth.PartyType
 import no.elhub.auth.v0.features.businessprocesses.BusinessProcessError
 import no.elhub.auth.v0.features.businessprocesses.common.JwtTokenProvider
 import no.elhub.auth.v0.features.businessprocesses.datasharing.Attributes
@@ -33,7 +35,6 @@ import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.
 import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceTestData.SHARED_END_USER_ID_1
 import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceTestData.VALID_METERING_POINT_1
 import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.meteringPointsServiceHttpClient
-import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.BasicAuthConfig
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsApi
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsApiConfig
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsService
@@ -44,8 +45,6 @@ import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.O
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.VALID_PARTY_ID
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.organisationsServiceHttpClient
 import no.elhub.auth.v0.features.common.TRACE_ID_MDC_KEY
-import no.elhub.auth.v0.features.common.party.AuthorizationParty
-import no.elhub.auth.v0.features.common.party.PartyType
 import no.elhub.auth.v0.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
 import no.elhub.auth.v0.features.common.todayOslo
 import no.elhub.auth.v0.features.documents.AuthorizationDocument
@@ -88,9 +87,9 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
             organisationsService = OrganisationsApi(
                 OrganisationsApiConfig(
                     serviceUrl = OrganisationsServiceTestContainer.serviceUrl(),
-                    basicAuthConfig = BasicAuthConfig("user", "pass")
                 ),
-                organisationsServiceHttpClient
+                organisationsServiceHttpClient,
+                jwtTokenProvider
             )
             meteringPointsService = MeteringPointsApi(
                 MeteringPointsApiConfig(

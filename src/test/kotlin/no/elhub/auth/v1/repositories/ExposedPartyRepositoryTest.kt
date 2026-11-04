@@ -7,12 +7,11 @@ import io.kotest.matchers.shouldNotBe
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import no.elhub.auth.common.auth.PartyType
 import no.elhub.auth.v0.config.withTransaction
 import no.elhub.auth.v0.features.common.PostgresTestContainer
 import no.elhub.auth.v0.features.common.PostgresTestContainerExtension
 import no.elhub.auth.v0.features.common.party.AuthorizationPartyTable
-import no.elhub.auth.v0.features.common.party.PartyType
-import no.elhub.auth.v1.RepositoryReadError
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.Database
@@ -52,6 +51,20 @@ class ExposedPartyRepositoryTest : FunSpec({
         val id = UUID.randomUUID()
         val exception = shouldThrow<RepositoryReadError.NotFoundError> { repository.find(id) }
         exception.message shouldBe "Party not found: $id"
+    }
+
+    test("findByIds returns requested parties keyed by ID and omits missing IDs") {
+        val first = repository.findOrInsert(PartyType.Person, "BATCH_PERSON")
+        val second = repository.findOrInsert(PartyType.Organization, "BATCH_ORGANIZATION")
+        repository.findOrInsert(PartyType.Person, "BATCH_UNRELATED")
+
+        repository.findByIds(listOf(first.id, second.id, first.id, UUID.randomUUID())) shouldBe
+            mapOf(first.id to first, second.id to second)
+    }
+
+    test("findByIds returns an empty map for empty input or missing IDs") {
+        repository.findByIds(emptyList()) shouldBe emptyMap()
+        repository.findByIds(listOf(UUID.randomUUID())) shouldBe emptyMap()
     }
 
     test("findOrInsert persists a new party and returns the same record on repeated calls") {
