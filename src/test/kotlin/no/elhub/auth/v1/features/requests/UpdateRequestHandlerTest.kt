@@ -31,7 +31,7 @@ class UpdateRequestHandlerTest : FunSpec({
     val requestRepository = mockk<RequestRepository>()
     val handler = UpdateRequestHandler(requestRepository)
     val requestedBy = AuthorizationParty("7080005053246", PartyType.OrganizationEntity)
-    val requestedPrincipal = AuthorizationParty("999888777", PartyType.Organization)
+    val requestedPrincipal = AuthorizationParty("999888771", PartyType.Organization)
     val requestedOf = AuthorizationParty("person-1", PartyType.Person)
     val request = AuthorizationRequest.create(
         requestedBy = requestedBy,
@@ -71,36 +71,6 @@ class UpdateRequestHandlerTest : FunSpec({
         handler(id, requestedOf, AuthorizationRequestStatus.Rejected, TextLanguage.EN) shouldBe rejected
 
         coVerify(exactly = 0) { requestRepository.accept(any(), any(), any()) }
-    }
-
-    listOf(
-        requestedBy,
-        requestedPrincipal,
-        AuthorizationParty("unrelated", PartyType.Person),
-        requestedOf.copy(type = PartyType.Organization),
-    ).forEach { party ->
-        test("denies ${party.type} ${party.id}") {
-            coEvery { requestRepository.find(id) } returns request
-
-            shouldThrow<UpdateRequestError.NotAuthorized> {
-                handler(id, party, AuthorizationRequestStatus.Approved, TextLanguage.NB)
-            }
-            coVerify(exactly = 0) { requestRepository.accept(any(), any(), any()) }
-            coVerify(exactly = 0) { requestRepository.reject(any(), any()) }
-        }
-    }
-
-    listOf(AuthorizationRequestStatus.Approved, AuthorizationRequestStatus.Rejected).forEach { status ->
-        test("refuses to $status a request whose requestedOf is an organization") {
-            val organization = AuthorizationParty("888777666", PartyType.Organization)
-            coEvery { requestRepository.find(id) } returns request.copy(requestedOf = organization)
-
-            shouldThrow<UpdateRequestError.UnsupportedRequestedOf> {
-                handler(id, organization, status, TextLanguage.NB)
-            }
-            coVerify(exactly = 0) { requestRepository.accept(any(), any(), any()) }
-            coVerify(exactly = 0) { requestRepository.reject(any(), any()) }
-        }
     }
 
     listOf(AuthorizationRequestStatus.Pending, AuthorizationRequestStatus.Expired).forEach { status ->

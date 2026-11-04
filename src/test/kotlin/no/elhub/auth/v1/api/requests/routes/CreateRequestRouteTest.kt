@@ -3,7 +3,9 @@ package no.elhub.auth.v1.api.requests.routes
 import arrow.core.right
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import io.ktor.client.call.body
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.testing.testApplication
 import io.mockk.coEvery
@@ -33,7 +35,7 @@ import kotlin.time.Instant
 
 class CreateRequestRouteTest : FunSpec({
     val authorizedParty = AuthorizationParty("123456789", PartyType.OrganizationEntity)
-    val requestedPrincipal = AuthorizationParty("999888777", PartyType.OrganizationEntity)
+    val requestedPrincipal = AuthorizationParty("999888771", PartyType.OrganizationEntity)
     val requestedOf = AuthorizationParty("person-1", PartyType.Person)
     val grantValidFrom = Instant.parse("2100-01-01T00:00:00Z")
     val grantValidTo = Instant.parse("2101-01-01T00:00:00Z")
@@ -49,7 +51,7 @@ class CreateRequestRouteTest : FunSpec({
               "requestedGrantValidTo": "2101-01-01T00:00:00Z"
             },
             "meta": {
-              "requestedPrincipal": "999888777",
+              "requestedPrincipal": "999888771",
               "requestedOf": "01019012345"
             }
           }
@@ -104,7 +106,7 @@ class CreateRequestRouteTest : FunSpec({
             body.data.attributes.requestedGrantValidTo shouldBe grantValidTo
             body.data.relationships.requestedBy.data.id shouldBe authorizedParty.id
             coVerify(exactly = 1) {
-                partyService.resolve(PartyIdentifier(PartyIdentifierType.OrganizationNumber, "999888777"))
+                partyService.resolve(PartyIdentifier(PartyIdentifierType.OrganizationNumber, "999888771"))
             }
             coVerify(exactly = 1) {
                 partyService.resolve(PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "01019012345"))
@@ -177,6 +179,22 @@ class CreateRequestRouteTest : FunSpec({
                     requestedOf = requestedOf,
                 )
             }
+        }
+    }
+
+    test("POST / includes the request's authorization text reference") {
+        coEvery { handler(any(), any(), any(), any()) } returns savedRequest().copy(textReference = "v2")
+        coEvery { partyService.resolve(any()) } returnsMany listOf(requestedPrincipal.right(), requestedOf.right())
+
+        testApplication {
+            setupAppWith(authorizedParty) {
+                route(partyService, handler)
+            }
+
+            val response = client.postJson("/", scopedRequestBody("ChangeOfEnergySupplierForOrganization"))
+
+            response.status shouldBe HttpStatusCode.Created
+            response.bodyAsText() shouldContain "\"textReference\":\"v2\""
         }
     }
 

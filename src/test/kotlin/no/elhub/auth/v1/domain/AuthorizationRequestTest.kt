@@ -13,7 +13,7 @@ import kotlin.time.Instant
 
 class AuthorizationRequestTest : FunSpec({
     val requestedBy = AuthorizationParty("123456789", PartyType.OrganizationEntity)
-    val requestedPrincipal = AuthorizationParty("999888777", PartyType.OrganizationEntity)
+    val requestedPrincipal = AuthorizationParty("999888771", PartyType.OrganizationEntity)
     val requestedOf = AuthorizationParty("person-1", PartyType.Person)
     val validTo = Instant.parse("2100-02-01T00:00:00Z")
     val meta = buildJsonObject { put("source", JsonPrimitive("test")) }
@@ -139,6 +139,23 @@ class AuthorizationRequestTest : FunSpec({
 
         request.requestedGrantValidFrom shouldBe null
         request.requestedGrantValidTo shouldBe null
+    }
+
+    test("associates the text reference with each request type") {
+        val requests = listOf(
+            create(AuthorizationRequestTypeDetails.ChangeOfEnergySupplierForOrganization(meteringPoints)),
+            create(
+                AuthorizationRequestTypeDetails.MoveInAndChangeOfEnergySupplierForOrganization(
+                    meteringPointIds = meteringPoints,
+                    moveInDate = LocalDate(2026, 10, 1),
+                ),
+            ),
+            create(AuthorizationRequestTypeDetails.EnergySupplierFrameworkAgreement(null, null)),
+        )
+
+        requests.map { AuthorizationRequestTextReference.forRequestType(it.requestType) } shouldBe
+            listOf("v1", "v1", "v1")
+        requests.map { it.textReference } shouldBe listOf("v1", "v1", "v1")
     }
 
     test("creates ChangeOfEnergySupplierForOrganization requests with unique IDs") {

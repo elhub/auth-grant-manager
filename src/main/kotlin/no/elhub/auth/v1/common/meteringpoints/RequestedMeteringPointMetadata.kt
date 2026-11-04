@@ -4,6 +4,7 @@ import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import no.elhub.auth.common.documents.pdf.MeteringPointPdfContent
 import no.elhub.auth.common.structuredata.meteringpoints.MeteringPointAddress
 import no.elhub.auth.common.structuredata.meteringpoints.MeteringPointResponse
 
@@ -12,6 +13,21 @@ data class RequestedMeteringPointMetadata(
     val address: MeteringPointAddress?,
     val meterNumber: String?,
 )
+
+fun RequestedMeteringPointMetadata.toPdfContent(): MeteringPointPdfContent =
+    MeteringPointPdfContent(
+        address = address?.toPdfAddress()?.takeIf { it.isNotBlank() } ?: "Unknown",
+        id = id,
+        meterNumber = meterNumber ?: "Unknown",
+    )
+
+private fun MeteringPointAddress.toPdfAddress(): String {
+    val streetAddress = listOfNotNull(streetName, houseNumber).joinToString(" ")
+    val locality = listOfNotNull(postalCode, city).joinToString(" ")
+    return listOf(streetAddress, locality)
+        .filter { it.isNotBlank() }
+        .joinToString(", ")
+}
 
 fun List<MeteringPointResponse>.toRequestedMeteringPointMetadata(): List<RequestedMeteringPointMetadata> =
     map { meteringPoint ->

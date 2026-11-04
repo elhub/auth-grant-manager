@@ -35,7 +35,6 @@ import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.
 import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceTestData.SHARED_END_USER_ID_1
 import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceTestData.VALID_METERING_POINT_1
 import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.meteringPointsServiceHttpClient
-import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.BasicAuthConfig
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsApi
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsApiConfig
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsService
@@ -88,9 +87,9 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
             organisationsService = OrganisationsApi(
                 OrganisationsApiConfig(
                     serviceUrl = OrganisationsServiceTestContainer.serviceUrl(),
-                    basicAuthConfig = BasicAuthConfig("user", "pass")
                 ),
-                organisationsServiceHttpClient
+                organisationsServiceHttpClient,
+                jwtTokenProvider
             )
             meteringPointsService = MeteringPointsApi(
                 MeteringPointsApiConfig(

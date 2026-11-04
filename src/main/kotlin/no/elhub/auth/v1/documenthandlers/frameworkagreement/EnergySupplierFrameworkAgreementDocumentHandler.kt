@@ -4,7 +4,7 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import no.elhub.auth.common.documents.pdf.AuthorizationDocumentPdfContent
 import no.elhub.auth.v1.common.now
-import no.elhub.auth.v1.common.todayOslo
+import no.elhub.auth.v1.common.toOsloDate
 import no.elhub.auth.v1.documenthandlers.common.toPdfLanguage
 import no.elhub.auth.v1.domain.documents.DocumentSpecification
 import no.elhub.auth.v1.features.documents.creation.DocumentCreationContext
@@ -28,8 +28,8 @@ class EnergySupplierFrameworkAgreementDocumentHandler : HandlerContract {
                 organizationNumber = context.requestedPrincipal.id,
                 balanceSupplierName = "Placeholder supplier ${context.requestedBy.id}",
                 agreementReference = context.externalReference ?: "Placeholder agreement reference",
-                startDate = todayOslo(specification.requestedGrantValidFrom ?: now),
-                endDate = specification.requestedGrantValidTo?.let(::todayOslo),
+                startDate = (specification.requestedGrantValidFrom ?: now).toOsloDate(),
+                endDate = specification.requestedGrantValidTo?.toOsloDate(),
             ),
             validTo = now + DOCUMENT_VALID_DAYS.days,
             meta = buildJsonObject {

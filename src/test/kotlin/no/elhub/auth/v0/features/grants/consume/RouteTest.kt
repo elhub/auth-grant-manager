@@ -1,5 +1,6 @@
 package no.elhub.auth.v0.features.grants.consume
 
+import arrow.core.left
 import arrow.core.right
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
@@ -111,6 +112,18 @@ class RouteTest : FunSpec({
             }
             response.status shouldBe HttpStatusCode.BadRequest
             coVerify(exactly = 0) { handler.invoke(any()) }
+        }
+    }
+
+    test("PATCH /{id} returns Not Found when handler returns GrantNotFound") {
+        coEvery { handler.invoke(any()) } returns ConsumeError.GrantNotFound.left()
+
+        testApplication {
+            setupAppWith(authorizedSystem) { route(handler) }
+            val response = client.patchJson("/$validUuid", patchGrantBody(id = validUuid))
+
+            response.status shouldBe HttpStatusCode.NotFound
+            coVerify(exactly = 1) { handler.invoke(any()) }
         }
     }
 

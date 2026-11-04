@@ -19,7 +19,6 @@ elhubProject(group = Group.AUTH, name = "auth-grant-manager") {
         sequential {
             gradleVerify {
                 lintImage = "docker.jfrog.elhub.cloud/oxsecurity/megalinter:v8"
-                enablePublishMetrics = true
             }
 
             gradleJib {
@@ -70,10 +69,7 @@ elhubProject(group = Group.AUTH, name = "auth-grant-manager") {
                 gitOps {
                     clusters = setOf(KubeCluster.PROD1)
                     gitOpsRepository = gitOpsRepo
-                    deploymentTicketSettings = {
-                        enabled = true
-                        deploymentEpic = "TDX-1337"
-                    }
+                    enableDeploymentTicket = true
                 }
             }
         }

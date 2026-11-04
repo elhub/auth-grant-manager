@@ -3,7 +3,7 @@ package no.elhub.auth.v1.api.requests.request
 import kotlinx.datetime.LocalDate
 import no.elhub.auth.v1.api.common.errors.InputError
 import no.elhub.auth.v1.common.now
-import no.elhub.auth.v1.common.toDateOrNull
+import no.elhub.auth.v1.common.toOsloDateOrNull
 import no.elhub.auth.v1.domain.AuthorizationRequestType
 import no.elhub.auth.v1.domain.AuthorizationScopeConstraintAttribute
 import no.elhub.auth.v1.domain.DomainError
@@ -155,7 +155,7 @@ private fun RequestedScope.requireMoveInDate(): LocalDate {
         ?: invalid("requestedScopes[0].allowedChanges must contain exactly one validFrom constraint")
     val value = constraint.value.singleOrNull()
         ?: invalid("requestedScopes[0].allowedChanges validFrom must contain exactly one date")
-    return value.toDateOrNull()
+    return value.toOsloDateOrNull()
         ?: invalid("requestedScopes[0].allowedChanges validFrom must be an ISO date or timestamp")
 }
 

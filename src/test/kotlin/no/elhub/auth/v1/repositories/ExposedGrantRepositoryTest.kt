@@ -35,6 +35,7 @@ import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import java.util.UUID
 import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.nanoseconds
 import kotlin.time.Instant
 
 class ExposedGrantRepositoryTest : FunSpec({
@@ -87,6 +88,7 @@ class ExposedGrantRepositoryTest : FunSpec({
         sourceType: AuthorizationGrantSourceType = AuthorizationGrantSourceType.Document,
         type: AuthorizationGrantType = AuthorizationGrantType.Consumable,
         status: DatabaseGrantStatus = DatabaseGrantStatus.Active,
+        validFrom: Instant = createdAt,
         validTo: Instant? = future,
         scopes: List<GrantedAuthorizationScope> = emptyList(),
         principal: AuthorizationParty = party(PartyType.Organization),
@@ -109,7 +111,7 @@ class ExposedGrantRepositoryTest : FunSpec({
             it[AuthorizationGrantTable.grantedTo] = toId
             it[AuthorizationGrantTable.approvedBy] = approverId
             it[AuthorizationGrantTable.status] = status
-            it[validFrom] = createdAt
+            it[AuthorizationGrantTable.validFrom] = validFrom
             it[AuthorizationGrantTable.validTo] = validTo
             it[AuthorizationGrantTable.createdAt] = created
             it[updatedAt] = createdAt + 1.days
@@ -145,7 +147,7 @@ class ExposedGrantRepositoryTest : FunSpec({
             grantedTo = grantedTo,
             approvedBy = approvedBy,
             status = AuthorizationGrantStatus.valueOf(status.name),
-            validFrom = createdAt,
+            validFrom = validFrom,
             validTo = validTo,
             createdAt = created,
             updatedAt = createdAt + 1.days,
@@ -190,6 +192,74 @@ class ExposedGrantRepositoryTest : FunSpec({
         }
     }
 
+    test("find derives Pending for a grant with a future validFrom") {
+        val grant = insertGrant(validFrom = future, validTo = future + 1.days)
+
+        val result = repository.find(grant.id)
+
+        result.status.name shouldBe "Pending"
+        assertGrant(result.copy(status = grant.status), grant)
+    }
+
+    listOf(
+        Triple("just before validFrom", future - 1.nanoseconds, "Pending"),
+        Triple("at validFrom", future, "Active"),
+        Triple("just after validFrom", future + 1.nanoseconds, "Active"),
+        Triple("just before validTo", future + 1.days - 1.nanoseconds, "Active"),
+        Triple("at validTo", future + 1.days, "Expired"),
+        Triple("just after validTo", future + 1.days + 1.nanoseconds, "Expired"),
+    ).forEach { (boundary, now, expectedStatus) ->
+        test("grant status is $expectedStatus $boundary") {
+            val grant = insertGrant(validFrom = future, validTo = future + 1.days)
+
+            withTransaction {
+                val row = AuthorizationGrantTable.selectAll().where { AuthorizationGrantTable.id eq grant.id }.single()
+
+                row.toAuthorizationGrant(
+                    principal = grant.principal,
+                    grantedBy = grant.grantedBy,
+                    grantedTo = grant.grantedTo,
+                    approvedBy = grant.approvedBy,
+                    scopes = grant.scopes,
+                    now = now,
+                ).status.name shouldBe expectedStatus
+            }
+        }
+    }
+
+    test("grant without an end date is Pending before validFrom and Active from validFrom onwards") {
+        val grant = insertGrant(validFrom = future, validTo = null)
+
+        withTransaction {
+            val row = AuthorizationGrantTable.selectAll().where { AuthorizationGrantTable.id eq grant.id }.single()
+            listOf(
+                future - 1.nanoseconds to "Pending",
+                future to "Active",
+                future + 1.nanoseconds to "Active",
+                future + 1.days to "Active",
+            ).forEach { (now, expectedStatus) ->
+                row.toAuthorizationGrant(
+                    principal = grant.principal,
+                    grantedBy = grant.grantedBy,
+                    grantedTo = grant.grantedTo,
+                    approvedBy = grant.approvedBy,
+                    scopes = grant.scopes,
+                    now = now,
+                ).status.name shouldBe expectedStatus
+            }
+        }
+    }
+
+    test("terminal statuses take precedence over a future validFrom for both grant types") {
+        AuthorizationGrantType.entries.forEach { type ->
+            listOf(DatabaseGrantStatus.Revoked, DatabaseGrantStatus.Exhausted).forEach { status ->
+                val grant = insertGrant(type = type, status = status, validFrom = future, validTo = future + 1.days)
+
+                repository.find(grant.id) shouldBe grant
+            }
+        }
+    }
+
     test("find throws a modeled not found error for an unknown grant ID") {
         val id = UUID.randomUUID()
 
@@ -220,6 +290,15 @@ class ExposedGrantRepositoryTest : FunSpec({
 
         result.keys shouldBe setOf(grant.sourceId)
         assertGrant(result.getValue(grant.sourceId).single(), grant)
+    }
+
+    test("findBySourceIds derives Pending for a grant with a future validFrom") {
+        val grant = insertGrant(validFrom = future, validTo = future + 1.days)
+
+        val result = repository.findBySourceIds(grant.sourceType, listOf(grant.sourceId)).getValue(grant.sourceId).single()
+
+        result.status.name shouldBe "Pending"
+        assertGrant(result.copy(status = grant.status), grant)
     }
 
     test("findBySourceIds preserves multiple grants for the same source") {
@@ -283,6 +362,17 @@ class ExposedGrantRepositoryTest : FunSpec({
         beyond.totalItems shouldBe 3L
     }
 
+    test("findAll derives Pending for a grant with a future validFrom") {
+        val grant = insertGrant(validFrom = future, validTo = future + 1.days)
+
+        val page = repository.findAll(grant.principal, Pagination())
+        val result = page.items.single()
+
+        page.totalItems shouldBe 1L
+        result.status.name shouldBe "Pending"
+        assertGrant(result.copy(status = grant.status), grant)
+    }
+
     test("findAll returns an empty page for an unknown party") {
         val pagination = Pagination(page = 1, size = 2)
         val result = repository.findAll(party(PartyType.Person), pagination)
@@ -315,6 +405,21 @@ class ExposedGrantRepositoryTest : FunSpec({
         repository.find(grant.id).status shouldBe AuthorizationGrantStatus.Active
     }
 
+    test("insert returns Pending when an Active template has a future validFrom") {
+        val template = insertGrant()
+        val grant = template.copy(
+            id = UUID.randomUUID(),
+            sourceId = UUID.randomUUID(),
+            validFrom = future,
+            validTo = future + 1.days,
+        )
+
+        val result = repository.insert(grant)
+
+        result.status.name shouldBe "Pending"
+        assertGrant(result.copy(status = grant.status), grant)
+    }
+
     test("insert creates missing parties and persists both grant types and all statuses without scopes") {
         val template = insertGrant()
         AuthorizationGrantType.entries.forEach { type ->
@@ -330,6 +435,7 @@ class ExposedGrantRepositoryTest : FunSpec({
                     grantedTo = person,
                     approvedBy = person,
                     status = status,
+                    validFrom = if (status == AuthorizationGrantStatus.Pending) future else createdAt,
                     validTo = if (status == AuthorizationGrantStatus.Expired) past else future,
                 )
 
@@ -409,6 +515,45 @@ class ExposedGrantRepositoryTest : FunSpec({
                     repository.update(terminal.id, AuthorizationGrantStatus.Revoked)
                 }
                 repository.find(terminal.id) shouldBe terminal
+            }
+        }
+    }
+
+    test("update rejects exhaustion of a pending consumable grant without changing the row") {
+        val grant = insertGrant(validFrom = future, validTo = future + 1.days, scopes = listOf(constrained, unconstrained))
+
+        shouldThrow<RepositoryWriteError.ConflictError> {
+            repository.update(grant.id, AuthorizationGrantStatus.Exhausted)
+        }
+
+        withTransaction {
+            val row = AuthorizationGrantTable.selectAll().where { AuthorizationGrantTable.id eq grant.id }.single()
+            row[AuthorizationGrantTable.status] shouldBe DatabaseGrantStatus.Active
+            row[AuthorizationGrantTable.updatedAt] shouldBe grant.updatedAt
+        }
+        val result = repository.find(grant.id)
+        result.status.name shouldBe "Pending"
+        assertGrant(result.copy(status = grant.status), grant)
+    }
+
+    test("update allows revocation of pending grants for both types") {
+        AuthorizationGrantType.entries.forEach { type ->
+            val grant = insertGrant(
+                type = type,
+                validFrom = future,
+                validTo = future + 1.days,
+                scopes = listOf(constrained, unconstrained),
+            )
+
+            val result = repository.update(grant.id, AuthorizationGrantStatus.Revoked)
+
+            result.updatedAt shouldBeGreaterThan grant.updatedAt
+            assertGrant(result, grant.copy(status = AuthorizationGrantStatus.Revoked, updatedAt = result.updatedAt))
+            assertGrant(repository.find(grant.id), result)
+            withTransaction {
+                val row = AuthorizationGrantTable.selectAll().where { AuthorizationGrantTable.id eq grant.id }.single()
+                row[AuthorizationGrantTable.status] shouldBe DatabaseGrantStatus.Revoked
+                row[AuthorizationGrantTable.updatedAt] shouldBe result.updatedAt
             }
         }
     }

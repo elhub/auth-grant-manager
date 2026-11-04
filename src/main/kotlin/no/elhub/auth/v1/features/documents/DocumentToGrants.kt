@@ -1,9 +1,8 @@
 package no.elhub.auth.v1.features.documents
 
-import kotlinx.datetime.DateTimeUnit
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.plus
 import no.elhub.auth.common.auth.AuthorizationParty
+import no.elhub.auth.v1.common.GrantValidity
+import no.elhub.auth.v1.common.consumableGrantValidity
 import no.elhub.auth.v1.common.frameworkAgreementGrantValidity
 import no.elhub.auth.v1.common.now
 import no.elhub.auth.v1.domain.AuthorizationDocument
@@ -52,6 +51,7 @@ fun AuthorizationDocument.toGrants(
             }
             listOf(
                 AuthorizationGrant.new(
+                    now = now,
                     type = AuthorizationGrantType.Persistent,
                     sourceType = AuthorizationGrantSourceType.Document,
                     sourceId = UUID.fromString(id),
@@ -95,13 +95,12 @@ fun AuthorizationDocument.toGrants(
                 throw InvalidDocumentScopes("$documentType has unexpected scope constraints")
             }
 
-            val grantValidFrom = now
-            val grantValidTo = grantValidFrom.plus(1, DateTimeUnit.YEAR, TimeZone.UTC)
+            val validity = consumableGrantValidity(now)
             meteringPoints.ids.map { meteringPointId ->
                 toConsumableGrant(
+                    now = now,
                     approvedBy = approvedBy,
-                    validFrom = grantValidFrom,
-                    validTo = grantValidTo,
+                    validity = validity,
                     scope = GrantedAuthorizationScope(
                         capability = PermissionCapability.Write,
                         resourceType = ResourceType.MeteringPointContract,
@@ -147,13 +146,12 @@ fun AuthorizationDocument.toGrants(
                 throw InvalidDocumentScopes("$documentType has unexpected scope constraints")
             }
 
-            val grantValidFrom = now
-            val grantValidTo = grantValidFrom.plus(1, DateTimeUnit.YEAR, TimeZone.UTC)
+            val validity = consumableGrantValidity(now)
             meteringPoints.ids.map { meteringPointId ->
                 toConsumableGrant(
+                    now = now,
                     approvedBy = approvedBy,
-                    validFrom = grantValidFrom,
-                    validTo = grantValidTo,
+                    validity = validity,
                     scope = GrantedAuthorizationScope(
                         capability = PermissionCapability.Write,
                         resourceType = ResourceType.MeteringPointContract,
@@ -169,11 +167,12 @@ fun AuthorizationDocument.toGrants(
     }
 
 private fun AuthorizationDocument.toConsumableGrant(
+    now: Instant,
     approvedBy: AuthorizationParty,
-    validFrom: Instant,
-    validTo: Instant,
+    validity: GrantValidity,
     scope: GrantedAuthorizationScope,
 ): AuthorizationGrant = AuthorizationGrant.new(
+    now = now,
     type = AuthorizationGrantType.Consumable,
     sourceType = AuthorizationGrantSourceType.Document,
     sourceId = UUID.fromString(id),
@@ -181,7 +180,7 @@ private fun AuthorizationDocument.toConsumableGrant(
     grantedBy = requestedOf,
     grantedTo = requestedBy,
     approvedBy = approvedBy,
-    validFrom = validFrom,
-    validTo = validTo,
+    validFrom = validity.validFrom,
+    validTo = validity.validTo,
     scopes = listOf(scope),
 )

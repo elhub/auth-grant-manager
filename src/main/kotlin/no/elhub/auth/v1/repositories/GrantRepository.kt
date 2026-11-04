@@ -21,6 +21,7 @@ import no.elhub.auth.v1.domain.MeteringPointId
 import no.elhub.auth.v1.domain.PermissionCapability
 import no.elhub.auth.v1.domain.ResourceConstraint
 import no.elhub.auth.v1.domain.ResourceType
+import no.elhub.auth.v1.domain.grantValidityStatus
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
@@ -171,7 +172,7 @@ class ExposedGrantRepository(
             it[AuthorizationGrantTable.grantedTo] = grantedTo.id
             it[AuthorizationGrantTable.approvedBy] = approvedBy.id
             it[status] = when (grant.status) {
-                AuthorizationGrantStatus.Active, AuthorizationGrantStatus.Expired -> DatabaseGrantStatus.Active
+                AuthorizationGrantStatus.Active, AuthorizationGrantStatus.Pending, AuthorizationGrantStatus.Expired -> DatabaseGrantStatus.Active
                 AuthorizationGrantStatus.Revoked -> DatabaseGrantStatus.Revoked
                 AuthorizationGrantStatus.Exhausted -> DatabaseGrantStatus.Exhausted
             }
@@ -226,11 +227,11 @@ class ExposedGrantRepository(
         }
 
         val target = when {
-            status != AuthorizationGrantStatus.Active -> null
+            newStatus == AuthorizationGrantStatus.Revoked &&
+                (status == AuthorizationGrantStatus.Active || status == AuthorizationGrantStatus.Pending) -> DatabaseGrantStatus.Revoked
 
-            newStatus == AuthorizationGrantStatus.Revoked -> DatabaseGrantStatus.Revoked
-
-            newStatus == AuthorizationGrantStatus.Exhausted && row[AuthorizationGrantTable.type] == AuthorizationGrantType.Consumable ->
+            newStatus == AuthorizationGrantStatus.Exhausted && status == AuthorizationGrantStatus.Active &&
+                row[AuthorizationGrantTable.type] == AuthorizationGrantType.Consumable ->
                 DatabaseGrantStatus.Exhausted
 
             else -> null
@@ -295,11 +296,11 @@ private fun ResultRow.toAuthorizationGrantStatus(now: Instant): AuthorizationGra
 
         DatabaseGrantStatus.Exhausted -> AuthorizationGrantStatus.Exhausted
 
-        DatabaseGrantStatus.Active -> if (this[AuthorizationGrantTable.validTo]?.let { it <= now } == true) {
-            AuthorizationGrantStatus.Expired
-        } else {
-            AuthorizationGrantStatus.Active
-        }
+        DatabaseGrantStatus.Active -> grantValidityStatus(
+            validFrom = this[AuthorizationGrantTable.validFrom],
+            validTo = this[AuthorizationGrantTable.validTo],
+            now = now,
+        )
     }
 
 fun ResultRow.toGrantedAuthorizationScope(constraints: List<AuthorizationScopeConstraint>): GrantedAuthorizationScope =

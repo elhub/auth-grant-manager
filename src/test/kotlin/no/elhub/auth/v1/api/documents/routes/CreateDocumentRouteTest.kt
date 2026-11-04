@@ -67,7 +67,7 @@ class CreateDocumentRouteTest : FunSpec({
               "externalReference": "contract-123"
             },
             "meta": {
-              "requestedPrincipal": "999888777",
+              "requestedPrincipal": "999888771",
               "requestedOf": "01019012345",
               "language": "nb"
             }
@@ -108,7 +108,7 @@ class CreateDocumentRouteTest : FunSpec({
         createdAt = Clock.System.now(),
         updatedAt = Clock.System.now(),
         requestedBy = authorizedParty,
-        requestedPrincipal = AuthorizationParty("999888777", PartyType.OrganizationEntity),
+        requestedPrincipal = AuthorizationParty("999888771", PartyType.OrganizationEntity),
         requestedOf = AuthorizationParty("person-1", PartyType.Person),
         approvedBy = null,
         authorizationGrants = null,
@@ -132,7 +132,7 @@ class CreateDocumentRouteTest : FunSpec({
             handler.createAuthorizationDocument(any(), any(), any(), any(), any(), any())
         } returns document
         coEvery { partyService.resolve(any()) } returnsMany listOf(
-            AuthorizationParty("999888777", PartyType.OrganizationEntity).right(),
+            AuthorizationParty("999888771", PartyType.OrganizationEntity).right(),
             AuthorizationParty("person-1", PartyType.Person).right(),
         )
 
@@ -151,9 +151,9 @@ class CreateDocumentRouteTest : FunSpec({
             body.data.attributes.documentType shouldBe AuthorizationDocumentType.ChangeOfEnergySupplierForOrganization
             body.data.attributes.status.name shouldBe "Pending"
             body.data.attributes.validFrom shouldBe Instant.parse("2026-10-01T08:00:00Z")
-            body.data.attributes.updatedAt shouldBe document.updatedAt
+            body.data.attributes.updatedAt shouldBe Instant.fromEpochSeconds(document.updatedAt.epochSeconds)
             body.data.relationships.requestedBy.data.id shouldBe authorizedParty.id
-            body.data.relationships.requestedPrincipal.data.id shouldBe "999888777"
+            body.data.relationships.requestedPrincipal.data.id shouldBe "999888771"
             body.data.relationships.requestedOf.data.id shouldBe "person-1"
             val returnedScope = body.data.attributes.requestedScopes.single()
             returnedScope.resourceType shouldBe ResourceType.MeteringPointContract
@@ -162,7 +162,7 @@ class CreateDocumentRouteTest : FunSpec({
             returnedScope.allowedChanges.single().attribute shouldBe "type"
             returnedScope.allowedChanges.single().value shouldBe listOf("EnergySupplier")
             coVerify(exactly = 1) {
-                partyService.resolve(PartyIdentifier(PartyIdentifierType.OrganizationNumber, "999888777"))
+                partyService.resolve(PartyIdentifier(PartyIdentifierType.OrganizationNumber, "999888771"))
             }
             coVerify(exactly = 1) {
                 partyService.resolve(PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "01019012345"))
@@ -174,7 +174,7 @@ class CreateDocumentRouteTest : FunSpec({
                     },
                     externalReference = "contract-123",
                     requestedBy = authorizedParty,
-                    requestedPrincipal = AuthorizationParty("999888777", PartyType.OrganizationEntity),
+                    requestedPrincipal = AuthorizationParty("999888771", PartyType.OrganizationEntity),
                     requestedOf = AuthorizationParty("person-1", PartyType.Person),
                     language = DocumentLanguage.NB,
                 )
@@ -196,7 +196,7 @@ class CreateDocumentRouteTest : FunSpec({
             handler.createAuthorizationDocument(any(), any(), any(), any(), any(), any())
         } returns document
         coEvery { partyService.resolve(any()) } returnsMany listOf(
-            AuthorizationParty("999888777", PartyType.OrganizationEntity).right(),
+            AuthorizationParty("999888771", PartyType.OrganizationEntity).right(),
             AuthorizationParty("person-1", PartyType.Person).right(),
         )
         val frameworkRequest = """
@@ -210,7 +210,7 @@ class CreateDocumentRouteTest : FunSpec({
                   "requestedGrantValidTo": "2099-01-01T01:00:00+01:00"
                 },
                 "meta": {
-                  "requestedPrincipal": "999888777",
+                  "requestedPrincipal": "999888771",
                   "requestedOf": "01019012345",
                   "language": "nb"
                 }
@@ -243,7 +243,7 @@ class CreateDocumentRouteTest : FunSpec({
                     specification = specification,
                     externalReference = "contract-123",
                     requestedBy = authorizedParty,
-                    requestedPrincipal = AuthorizationParty("999888777", PartyType.OrganizationEntity),
+                    requestedPrincipal = AuthorizationParty("999888771", PartyType.OrganizationEntity),
                     requestedOf = AuthorizationParty("person-1", PartyType.Person),
                     language = DocumentLanguage.NB,
                 )
@@ -256,7 +256,7 @@ class CreateDocumentRouteTest : FunSpec({
             handler.createAuthorizationDocument(any(), any(), any(), any(), any(), any())
         } returns responseDocument()
         coEvery { partyService.resolve(any()) } returnsMany listOf(
-            AuthorizationParty("999888777", PartyType.OrganizationEntity).right(),
+            AuthorizationParty("999888771", PartyType.OrganizationEntity).right(),
             AuthorizationParty("person-1", PartyType.Person).right(),
         )
 
@@ -275,7 +275,7 @@ class CreateDocumentRouteTest : FunSpec({
                     specification = any(),
                     externalReference = "contract-123",
                     requestedBy = authorizedParty,
-                    requestedPrincipal = AuthorizationParty("999888777", PartyType.OrganizationEntity),
+                    requestedPrincipal = AuthorizationParty("999888771", PartyType.OrganizationEntity),
                     requestedOf = AuthorizationParty("person-1", PartyType.Person),
                     language = DocumentLanguage.NB,
                 )
@@ -288,7 +288,7 @@ class CreateDocumentRouteTest : FunSpec({
             handler.createAuthorizationDocument(any(), any(), any(), any(), any(), any())
         } returns responseDocument()
         coEvery { partyService.resolve(any()) } returnsMany listOf(
-            AuthorizationParty("999888777", PartyType.OrganizationEntity).right(),
+            AuthorizationParty("999888771", PartyType.OrganizationEntity).right(),
             AuthorizationParty("person-1", PartyType.Person).right(),
         )
 
@@ -328,7 +328,7 @@ class CreateDocumentRouteTest : FunSpec({
                     specification = expectedSpecification,
                     externalReference = "contract-123",
                     requestedBy = authorizedParty,
-                    requestedPrincipal = AuthorizationParty("999888777", PartyType.OrganizationEntity),
+                    requestedPrincipal = AuthorizationParty("999888771", PartyType.OrganizationEntity),
                     requestedOf = AuthorizationParty("person-1", PartyType.Person),
                     language = DocumentLanguage.NB,
                 )

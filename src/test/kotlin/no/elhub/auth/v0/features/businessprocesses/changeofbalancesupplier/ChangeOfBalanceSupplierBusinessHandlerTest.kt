@@ -95,12 +95,9 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
             organisationsService = OrganisationsApi(
                 OrganisationsApiConfig(
                     serviceUrl = OrganisationsServiceTestContainer.serviceUrl(),
-                    basicAuthConfig = no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.BasicAuthConfig(
-                        "user",
-                        "pass"
-                    )
                 ),
-                organisationsServiceHttpClient
+                organisationsServiceHttpClient,
+                jwtTokenProvider
             )
             handler = ChangeOfBalanceSupplierBusinessHandler(
                 meteringPointsService = meteringPointsService,

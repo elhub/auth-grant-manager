@@ -1,9 +1,13 @@
+@file:UseSerializers(OsloInstantSerializer::class)
+
 package no.elhub.auth.v1.api.requests.response
 
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.UseSerializers
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import no.elhub.auth.v1.api.common.response.OsloInstantSerializer
 import no.elhub.auth.v1.api.common.response.PartyTypeResponse
 import no.elhub.auth.v1.api.common.response.RequestedScopeResponse
 import no.elhub.auth.v1.api.common.response.ResponseGrantRelationship
@@ -12,6 +16,7 @@ import no.elhub.auth.v1.api.common.response.toApprovalRelationship
 import no.elhub.auth.v1.api.common.response.toResponse
 import no.elhub.auth.v1.api.common.response.toResponseIdentifier
 import no.elhub.auth.v1.api.common.response.toResponseRelationship
+import no.elhub.auth.v1.common.toOsloOffsetString
 import no.elhub.auth.v1.domain.AuthorizationGrant
 import no.elhub.auth.v1.domain.AuthorizationRequest
 import no.elhub.auth.v1.domain.AuthorizationRequestStatus
@@ -45,6 +50,7 @@ data class AuthorizationRequestAttributes(
     val requestedGrantValidFrom: Instant? = null,
     val requestedGrantValidTo: Instant? = null,
     val status: AuthorizationRequestStatus,
+    val textReference: String,
     val textLanguage: TextLanguage? = null,
     val validFrom: Instant,
     val validTo: Instant,
@@ -79,6 +85,7 @@ fun AuthorizationRequest.toGetResponse() =
                 requestedGrantValidFrom = requestedGrantValidFrom,
                 requestedGrantValidTo = requestedGrantValidTo,
                 status = status,
+                textReference = textReference,
                 textLanguage = textLanguage,
                 validFrom = validFrom,
                 validTo = validTo,
@@ -101,6 +108,6 @@ fun AuthorizationRequest.toGetResponse() =
         ),
         links = JsonApiLinks.ResourceObjectLink(self = "$REQUESTS_PATH/$id"),
         meta = buildJsonObject {
-            put("createdAt", createdAt.toString())
+            put("createdAt", createdAt.toOsloOffsetString())
         },
     )

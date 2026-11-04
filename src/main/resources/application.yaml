@@ -10,7 +10,7 @@ ktor:
       - no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceModuleKt.meteringPointsServiceModule
       - no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceModuleKt.organisationsServiceModule
       - no.elhub.auth.v0.features.businessprocesses.BusinessProcessesModuleKt.businessProcessesModule
-      - no.elhub.auth.v0.features.openapi.ModuleKt.module
+      - no.elhub.auth.common.api.openapi.ModuleKt.module
       - no.elhub.auth.v0.features.grants.ModuleKt.module
       - no.elhub.auth.v0.features.documents.ModuleKt.module
       - no.elhub.auth.v0.features.requests.ModuleKt.module
@@ -63,11 +63,10 @@ structureData:
       clientId: ${STRUCTURE_DATA_METERING_POINTS_SERVICE_IDP_CLIENT_ID}
       clientSecret: ${STRUCTURE_DATA_METERING_POINTS_SERVICE_IDP_CLIENT_SECRET}
   organisationsService:
-    serviceUrl: ${STRUCTURE_DATA_ORGANISATIONS_SERVICE_URL}
-    authentication:
-      basic:
-        username: ${STRUCTURE_DATA_ORGANISATIONS_SERVICE_API_USERNAME}
-        password: ${STRUCTURE_DATA_ORGANISATIONS_SERVICE_API_PASSWORD}
+    serviceUrl: ${STRUCTURE_DATA_ORGANISATIONS_SERVICE_HOST}
+    idp:
+      clientId: ${STRUCTURE_DATA_ORGANISATIONS_SERVICE_IDP_CLIENT_ID}
+      clientSecret: ${STRUCTURE_DATA_ORGANISATIONS_SERVICE_IDP_CLIENT_SECRET}
 
 dataSharing:
   stromprisService:

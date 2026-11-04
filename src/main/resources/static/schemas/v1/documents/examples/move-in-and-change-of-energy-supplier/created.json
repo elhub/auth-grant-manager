@@ -44,17 +44,14 @@
         "requestedPrincipal": {
           "data": {
             "type": "Organization",
-            "id": "999888777"
+            "id": "999888771"
           }
         },
         "requestedOf": {
           "data": {
             "type": "Organization",
-            "id": "999888777"
+            "id": "999888771"
           }
-        },
-        "authorizationGrants": {
-          "data": []
         }
       }
     }

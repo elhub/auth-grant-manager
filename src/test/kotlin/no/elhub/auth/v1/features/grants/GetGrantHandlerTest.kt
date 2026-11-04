@@ -20,7 +20,7 @@ import kotlin.time.Instant
 class GetGrantHandlerTest : FunSpec({
     val grantRepository = mockk<GrantRepository>()
     val handler = GetGrantHandler(grantRepository)
-    val principal = AuthorizationParty("999888777", PartyType.OrganizationEntity)
+    val principal = AuthorizationParty("999888771", PartyType.OrganizationEntity)
     val grantedBy = AuthorizationParty("person-1", PartyType.Person)
     val grantedTo = AuthorizationParty("123456789", PartyType.OrganizationEntity)
     val system = AuthorizationParty("system-1", PartyType.System)

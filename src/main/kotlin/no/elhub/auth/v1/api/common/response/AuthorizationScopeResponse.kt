@@ -1,6 +1,7 @@
 package no.elhub.auth.v1.api.common.response
 
 import kotlinx.serialization.Serializable
+import no.elhub.auth.v1.common.toOsloOffsetString
 import no.elhub.auth.v1.domain.AuthorizationScopeConstraint
 import no.elhub.auth.v1.domain.AuthorizationScopeConstraintKind
 import no.elhub.auth.v1.domain.GrantedAuthorizationScope
@@ -52,6 +53,6 @@ private fun AuthorizationScopeConstraint.toResponse() = ScopeConstraintResponse(
     value = when (val constraint = value) {
         is ResourceConstraint.MeteringPoints -> constraint.ids.map { it.value }.sorted()
         is ResourceConstraint.ContractTypes -> constraint.types.map { it.name }.sorted()
-        is ResourceConstraint.ValidFrom -> listOf(constraint.value.toString())
+        is ResourceConstraint.ValidFrom -> listOf(constraint.value.toOsloOffsetString())
     },
 )

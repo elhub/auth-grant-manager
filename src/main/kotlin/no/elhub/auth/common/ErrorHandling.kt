@@ -12,6 +12,7 @@ import no.elhub.auth.common.documents.pdf.PdfGenerationException
 import no.elhub.auth.common.documents.pdf.PdfSigningException
 import no.elhub.auth.common.documents.pdf.PdfValidationException
 import no.elhub.auth.v0.config.jsonApiContentType
+import no.elhub.auth.v0.features.businessprocesses.structuredata.common.ClientError
 import no.elhub.auth.v0.features.common.buildApiErrorResponse
 import no.elhub.auth.v0.features.common.toInternalServerApiErrorResponse
 import no.elhub.auth.v0.features.common.toNotFoundApiErrorResponse
@@ -401,6 +402,28 @@ private fun Errors.toApiErrorResponse() =
             toInternalServerApiErrorResponse()
         }
 
+        is DocumentPreparationError.RequestedPrincipalLookupFailure -> {
+            when (clientError) {
+                ClientError.NotFound -> toValidationApiErrorResponse("The requested principal could not be found")
+
+                else -> {
+                    logger.error("Failed to resolve Elhub internal organisation ID: {}", clientError)
+                    toInternalServerApiErrorResponse()
+                }
+            }
+        }
+
+        is DocumentPreparationError.RequestedByLookupFailure -> {
+            when (clientError) {
+                ClientError.NotFound -> toValidationApiErrorResponse("The requested by could not be found")
+
+                else -> {
+                    logger.error("Failed to resolve requested by data: {}", clientError)
+                    toInternalServerApiErrorResponse()
+                }
+            }
+        }
+
         is RequestPreparationError.RequestedMeteringPointsNotFound -> {
             toValidationApiErrorResponse(detail)
         }
@@ -408,6 +431,17 @@ private fun Errors.toApiErrorResponse() =
         is RequestPreparationError.MeteringPointsServiceFailure -> {
             logger.error("Failed to fetch requested metering points: {}", clientError)
             toInternalServerApiErrorResponse()
+        }
+
+        is RequestPreparationError.RequestedPrincipalLookupFailure -> {
+            when (clientError) {
+                ClientError.NotFound -> toValidationApiErrorResponse("The requested principal could not be found")
+
+                else -> {
+                    logger.error("Failed to resolve Elhub internal organisation ID: {}", clientError)
+                    toInternalServerApiErrorResponse()
+                }
+            }
         }
 
         else -> {

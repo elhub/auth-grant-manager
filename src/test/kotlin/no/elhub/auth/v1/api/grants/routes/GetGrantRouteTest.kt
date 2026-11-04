@@ -38,7 +38,7 @@ import kotlin.time.Instant
 class GetGrantRouteTest : FunSpec({
     val handler = mockk<GetGrantHandler>()
     val authorizedParty = AuthorizationParty("123456789", PartyType.OrganizationEntity)
-    val principal = AuthorizationParty("999888777", PartyType.OrganizationEntity)
+    val principal = AuthorizationParty("999888771", PartyType.OrganizationEntity)
     val grantedBy = AuthorizationParty("person-1", PartyType.Person)
     val sourceId = UUID.fromString("123e4567-e89b-12d3-a456-426614174000")
     val grant = AuthorizationGrant.new(
@@ -80,6 +80,27 @@ class GetGrantRouteTest : FunSpec({
             body.data.relationships.source.data.type shouldBe GrantSourceTypeResponse.AuthorizationDocument
             body.data.relationships.source.data.id shouldBe sourceId.toString()
             body.data.links.self shouldBe "$V1_GRANTS_PATH/$grantId"
+        }
+    }
+
+    test("GET /{id} serializes a pending grant") {
+        val pending = grant.copy(
+            status = AuthorizationGrantStatus.Pending,
+            validFrom = Instant.parse("2099-01-01T00:00:00Z"),
+        )
+        coEvery { handler(grantId, authorizedParty) } returns pending
+
+        testApplication {
+            setupAppWith(authorizedParty) {
+                route(V1_GRANTS_PATH) { route(handler) }
+            }
+
+            val response = client.get("$V1_GRANTS_PATH/$grantId") { accept(jsonApiContentType) }
+
+            response.status shouldBe HttpStatusCode.OK
+            val attributes = response.body<JsonApiGetAuthorizationGrantResponse>().data.attributes
+            attributes.status shouldBe AuthorizationGrantStatus.Pending
+            attributes.validFrom shouldBe pending.validFrom
         }
     }
 

@@ -2,6 +2,7 @@ package no.elhub.auth.v0.features.documents.create
 
 import arrow.core.Either
 import no.elhub.auth.common.documents.pdf.AuthorizationDocumentPdfContent
+import no.elhub.auth.common.documents.pdf.MeteringPointPdfContent
 import no.elhub.auth.common.documents.pdf.PdfGenerationException
 import no.elhub.auth.common.documents.pdf.PdfGenerator
 import no.elhub.auth.v0.features.businessprocesses.changeofbalancesupplier.domain.ChangeOfBalanceSupplierBusinessMeta
@@ -26,9 +27,13 @@ private fun DocumentMetaMarker.toPdfContent(): AuthorizationDocumentPdfContent =
         is ChangeOfBalanceSupplierBusinessMeta -> AuthorizationDocumentPdfContent.ChangeOfBalanceSupplierForPerson(
             language = (language ?: SupportedLanguage.DEFAULT).toCommonPdfLanguage(),
             customerName = requestedFromName,
-            meteringPointAddress = requestedForMeteringPointAddress,
-            meteringPointId = requestedForMeteringPointId,
-            meterNumber = requestedForMeterNumber,
+            meteringPoints = listOf(
+                MeteringPointPdfContent(
+                    address = requestedForMeteringPointAddress,
+                    id = requestedForMeteringPointId,
+                    meterNumber = requestedForMeterNumber,
+                ),
+            ),
             balanceSupplierName = balanceSupplierName,
             balanceSupplierContractName = balanceSupplierContractName,
         )
@@ -36,9 +41,13 @@ private fun DocumentMetaMarker.toPdfContent(): AuthorizationDocumentPdfContent =
         is MoveInAndChangeOfBalanceSupplierBusinessMeta -> AuthorizationDocumentPdfContent.MoveInAndChangeOfBalanceSupplierForPerson(
             language = (language ?: SupportedLanguage.DEFAULT).toCommonPdfLanguage(),
             customerName = requestedFromName,
-            meteringPointAddress = requestedForMeteringPointAddress,
-            meteringPointId = requestedForMeteringPointId,
-            meterNumber = requestedForMeterNumber,
+            meteringPoints = listOf(
+                MeteringPointPdfContent(
+                    address = requestedForMeteringPointAddress,
+                    id = requestedForMeteringPointId,
+                    meterNumber = requestedForMeterNumber,
+                ),
+            ),
             balanceSupplierName = balanceSupplierName,
             balanceSupplierContractName = balanceSupplierContractName,
             moveInDate = moveInDate,

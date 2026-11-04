@@ -44,13 +44,13 @@
           "requestedPrincipal": {
             "data": {
               "type": "Organization",
-              "id": "999888777"
+              "id": "999888771"
             }
           },
           "requestedOf": {
             "data": {
               "type": "Organization",
-              "id": "999888777"
+              "id": "999888771"
             }
           },
           "approvedBy": {
@@ -117,17 +117,14 @@
           "requestedPrincipal": {
             "data": {
               "type": "Organization",
-              "id": "999888777"
+              "id": "999888771"
             }
           },
           "requestedOf": {
             "data": {
               "type": "Organization",
-              "id": "999888777"
+              "id": "999888771"
             }
-          },
-          "authorizationGrants": {
-            "data": []
           }
         },
         "links": {
@@ -172,13 +169,13 @@
           "requestedPrincipal": {
             "data": {
               "type": "Organization",
-              "id": "999888777"
+              "id": "999888771"
             }
           },
           "requestedOf": {
             "data": {
               "type": "Organization",
-              "id": "999888777"
+              "id": "999888771"
             }
           },
           "approvedBy": {

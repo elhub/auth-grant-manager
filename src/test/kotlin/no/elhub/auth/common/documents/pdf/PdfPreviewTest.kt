@@ -2,8 +2,18 @@ package no.elhub.auth.common.documents.pdf
 
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import org.apache.pdfbox.Loader
+import org.apache.pdfbox.text.PDFTextStripper
 import java.nio.file.Files
+
+private val expectedPreviewMeteringPointIds = listOf(
+    "707057500047917289",
+    "707057500047917290",
+    "707057500047917291",
+    "707057500047917292",
+    "707057500047917293",
+)
 
 class PdfPreviewTest : FunSpec({
     test("defaults the selected PDF to Norwegian Bokmål") {
@@ -47,6 +57,8 @@ class PdfPreviewTest : FunSpec({
 
             Loader.loadPDF(pdfFile.toFile()).use { pdf ->
                 pdf.documentCatalog.language shouldBe "nb-NO"
+                val text = PDFTextStripper().getText(pdf)
+                expectedPreviewMeteringPointIds.forEach { text shouldContain it }
             }
         } finally {
             Files.deleteIfExists(pdfFile)
@@ -63,6 +75,8 @@ class PdfPreviewTest : FunSpec({
 
             Loader.loadPDF(pdfFile.toFile()).use { pdf ->
                 pdf.documentCatalog.language shouldBe "nb-NO"
+                val text = PDFTextStripper().getText(pdf)
+                expectedPreviewMeteringPointIds.forEach { text shouldContain it }
             }
         } finally {
             Files.deleteIfExists(pdfFile)

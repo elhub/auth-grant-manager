@@ -64,7 +64,7 @@ data class MeteringPointAddress(
 
 @Serializable
 data class Meter(
-    val meterConstant: Double,
+    val meterConstant: Double? = null,
     val meterNumber: String,
 )
 

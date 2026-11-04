@@ -39,7 +39,7 @@ class ListDocumentsHandlerTest : FunSpec({
         meta = JsonObject(emptyMap()),
         validTo = Instant.parse("2100-01-01T00:00:00Z"),
         requestedBy = requestedBy,
-        requestedPrincipal = AuthorizationParty("999888777", PartyType.OrganizationEntity),
+        requestedPrincipal = AuthorizationParty("999888771", PartyType.OrganizationEntity),
         requestedOf = requestedOf,
         pdfBytes = byteArrayOf(),
     )

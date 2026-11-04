@@ -82,6 +82,20 @@ class HandlerTest : FunSpec({
             coEvery { update(grantId, newStatus) } returns updateResult
         }
 
+    test("returns GrantNotFound when repo returns NotFoundError") {
+        val handler = Handler(repoReturning(updateResult = RepositoryWriteError.NotFoundError.left()))
+
+        val response = handler(
+            ConsumeCommand(
+                grantId = grantId,
+                newStatus = newStatus,
+                authorizedParty = consentManagementSystem
+            )
+        )
+
+        response.shouldBeLeft(ConsumeError.GrantNotFound)
+    }
+
     test("maps repository error to PersistenceError") {
 
         val error: RepositoryError = RepositoryWriteError.UnexpectedError

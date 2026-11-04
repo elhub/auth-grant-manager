@@ -114,10 +114,28 @@ class ErrorHandlingTest : FunSpec({
             "One or more requested metering points could not be found",
         ),
         ErrorCase(
+            DocumentPreparationError.RequestedPrincipalLookupFailure(ClientError.NotFound),
+            HttpStatusCode.UnprocessableEntity,
+            "Validation error",
+            "The requested principal could not be found",
+        ),
+        ErrorCase(
+            DocumentPreparationError.RequestedByLookupFailure(ClientError.NotFound),
+            HttpStatusCode.UnprocessableEntity,
+            "Validation error",
+            "The requested by could not be found",
+        ),
+        ErrorCase(
             RequestPreparationError.RequestedMeteringPointsNotFound(),
             HttpStatusCode.UnprocessableEntity,
             "Validation error",
             "One or more requested metering points could not be found",
+        ),
+        ErrorCase(
+            RequestPreparationError.RequestedPrincipalLookupFailure(ClientError.NotFound),
+            HttpStatusCode.UnprocessableEntity,
+            "Validation error",
+            "The requested principal could not be found",
         ),
         ErrorCase(
             RepositoryReadError.NotFoundError("sensitive read detail"),
@@ -156,7 +174,7 @@ class ErrorHandlingTest : FunSpec({
             UpdateGrantError.InvalidTransition(),
             HttpStatusCode.UnprocessableEntity,
             "Invalid status transition",
-            "Only active AuthorizationGrants may be revoked, and only active consumable grants may be exhausted.",
+            "Only pending or active AuthorizationGrants may be revoked, and only active consumable grants may be exhausted.",
         ),
         ErrorCase(
             UpdateGrantError.Expired(),
@@ -194,7 +212,10 @@ class ErrorHandlingTest : FunSpec({
         RepositoryWriteError.UnexpectedError("secret database write error"),
         InvalidDocumentScopes("secret stored document scope error"),
         DocumentPreparationError.MeteringPointsServiceFailure(ClientError.NotFound),
+        DocumentPreparationError.RequestedPrincipalLookupFailure(ClientError.ServerError),
+        DocumentPreparationError.RequestedByLookupFailure(ClientError.ServerError),
         RequestPreparationError.MeteringPointsServiceFailure(ClientError.ServerError),
+        RequestPreparationError.RequestedPrincipalLookupFailure(ClientError.ServerError),
     ).forEach { cause ->
         test("hides details of ${cause::class.qualifiedName} behind a generic 500 JSON:API error") {
             testApplication {

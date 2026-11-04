@@ -28,7 +28,7 @@ class GetDocumentHandlerTest : FunSpec({
     val grantRepository = mockk<GrantRepository>()
     val handler = GetDocumentHandler(documentRepository, grantRepository)
     val requestedBy = AuthorizationParty("123456789", PartyType.OrganizationEntity)
-    val requestedPrincipal = AuthorizationParty("999888777", PartyType.OrganizationEntity)
+    val requestedPrincipal = AuthorizationParty("999888771", PartyType.OrganizationEntity)
     val requestedOf = AuthorizationParty("person-1", PartyType.Person)
     val document = AuthorizationDocument.new(
         documentType = AuthorizationDocumentType.ChangeOfEnergySupplierForOrganization,
