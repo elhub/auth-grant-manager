@@ -38,18 +38,17 @@ class MoveInAndChangeOfEnergySupplierDocumentHandler(
                         ?: throw DocumentPreparationError.RequestedPrincipalLookupFailure(ClientError.NotFound)
                 },
             )
-        val metadata = MoveInAndChangeOfEnergySupplierDocumentMetadata(
-            requestedMeteringPoints = try {
-                meteringPointsService.getMeteringPointsForOrganisation(
-                    meteringPointIds = specification.meteringPointIds.ids.map { it.value }.sorted(),
-                    elhubInternalId = requestedPrincipalElhubInternalId,
-                )
-            } catch (e: MeteringPointsLookupException) {
-                throw e.clientError.toDocumentPreparationError()
-            }.toRequestedMeteringPointMetadata(),
-            validFrom = specification.validFrom,
-        )
-        val requestedByName = organisationsService
+
+        val meteringPoints = try {
+            meteringPointsService.getMeteringPointsForOrganisation(
+                meteringPointIds = specification.meteringPointIds.ids.map { it.value }.sorted(),
+                elhubInternalId = requestedPrincipalElhubInternalId,
+            )
+        } catch (e: MeteringPointsLookupException) {
+            throw e.clientError.toDocumentPreparationError()
+        }
+
+        val balanceSupplierName = organisationsService
             .getPartyByIdAndPartyType(partyId = context.requestedBy.id, partyType = PartyType.BalanceSupplier)
             .fold(
                 ifLeft = { throw DocumentPreparationError.RequestedByLookupFailure(it) },
@@ -57,13 +56,20 @@ class MoveInAndChangeOfEnergySupplierDocumentHandler(
                     response.data.attributes?.name ?: throw DocumentPreparationError.RequestedByLookupFailure(ClientError.NotFound)
                 }
             )
+
+        val metadata = MoveInAndChangeOfEnergySupplierDocumentMetadata(
+            requestedMeteringPoints = meteringPoints.toRequestedMeteringPointMetadata(),
+            validFrom = specification.validFrom,
+            balanceSupplierName = balanceSupplierName
+        )
+
         return DocumentCreationDetails(
             pdfContent = AuthorizationDocumentPdfContent.MoveInAndChangeOfBalanceSupplierForOrganisation(
                 language = context.language.toPdfLanguage(),
                 organizationName = "Placeholder organization ${context.requestedPrincipal.id}",
                 organizationNumber = context.requestedPrincipal.id,
                 meteringPoints = metadata.requestedMeteringPoints.map { it.toPdfContent() },
-                balanceSupplierName = requestedByName,
+                balanceSupplierName = balanceSupplierName,
                 agreementReference = null,
                 moveInDate = specification.validFrom,
             ),
