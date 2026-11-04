@@ -31,12 +31,20 @@ class EnergySupplierFrameworkAgreementDocumentHandler(private val organisationsS
                     response.data.attributes?.name ?: throw DocumentPreparationError.RequestedByLookupFailure(ClientError.NotFound)
                 }
             )
-        val metadata = EnergySupplierFrameworkAgreementDocumentMetadata(balanceSupplierName = balanceSupplierName)
+
+        val organisationName = organisationsService.getNameByOrganisationNumber(context.requestedPrincipal.id).fold(
+            ifLeft = { throw DocumentPreparationError.RequestedPrincipalNameLookupFailure(it) },
+            ifRight = { response ->
+                response.data.attributes?.name ?: throw DocumentPreparationError.RequestedPrincipalNameLookupFailure(ClientError.NotFound)
+            }
+        )
+
+        val metadata = EnergySupplierFrameworkAgreementDocumentMetadata(balanceSupplierName = balanceSupplierName, organizationName = organisationName)
 
         return DocumentCreationDetails(
             pdfContent = AuthorizationDocumentPdfContent.EnergySupplierFrameworkAgreement(
                 language = context.language.toPdfLanguage(),
-                organizationName = "Placeholder organization ${context.requestedPrincipal.id}",
+                organizationName = organisationName,
                 organizationNumber = context.requestedPrincipal.id,
                 balanceSupplierName = balanceSupplierName,
                 agreementReference = context.externalReference ?: "Placeholder agreement reference",

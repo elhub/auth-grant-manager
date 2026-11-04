@@ -27,6 +27,8 @@ import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.O
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestContainer
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestContainerExtension
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.NOT_BALANCE_SUPPLIER_PARTY_ID
+import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.VALID_ORGANISATION_NAME
+import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.VALID_ORGANISATION_NUMBER
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.VALID_PARTY_ID
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.VALID_PARTY_NAME
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.organisationsServiceHttpClient
@@ -51,7 +53,7 @@ class EnergySupplierFrameworkAgreementDocumentHandlerTest : FunSpec({
 
     val context = DocumentCreationContext(
         requestedBy = AuthorizationParty(VALID_PARTY_ID, PartyType.OrganizationEntity),
-        requestedPrincipal = AuthorizationParty("org-1", PartyType.Organization),
+        requestedPrincipal = AuthorizationParty(VALID_ORGANISATION_NUMBER, PartyType.Organization),
         requestedOf = AuthorizationParty("person-1", PartyType.Person),
         language = DocumentLanguage.EN,
         externalReference = "reference-1",
@@ -81,8 +83,8 @@ class EnergySupplierFrameworkAgreementDocumentHandlerTest : FunSpec({
 
         val content = details.pdfContent.shouldBeInstanceOf<AuthorizationDocumentPdfContent.EnergySupplierFrameworkAgreement>()
         content.language shouldBe PdfLanguage.EN
-        content.organizationName shouldBe "Placeholder organization org-1"
-        content.organizationNumber shouldBe "org-1"
+        content.organizationName shouldBe VALID_ORGANISATION_NAME
+        content.organizationNumber shouldBe VALID_ORGANISATION_NUMBER
         content.balanceSupplierName shouldBe VALID_PARTY_NAME
         content.agreementReference shouldBe "reference-1"
         content.startDate shouldBe LocalDate(2100, 1, 2)
@@ -91,6 +93,7 @@ class EnergySupplierFrameworkAgreementDocumentHandlerTest : FunSpec({
         (details.validTo <= after + 28.days) shouldBe true
         details.meta shouldBe buildJsonObject {
             put("balanceSupplierName", VALID_PARTY_NAME)
+            put("organizationName", VALID_ORGANISATION_NAME)
         }
     }
 

@@ -9,7 +9,7 @@ import org.testcontainers.utility.DockerImageName
 import java.time.Duration
 
 object OrganisationsServiceTestContainer {
-    private val image = DockerImageName.parse("docker.jfrog.elhub.cloud/frzq0sxltynr/structure-data/organisations-service-mock:0.1.91-406")
+    private val image = DockerImageName.parse("docker.jfrog.elhub.cloud/frzq0sxltynr/structure-data/organisations-service-mock:0.2.0-412")
     private var container: GenericContainer<*>? = null
 
     fun start() {
@@ -46,6 +46,7 @@ object StopOrganisationsServiceTestContainerExtension : AfterProjectListener {
 
 object OrganisationsServiceTestData {
     const val VALID_ORGANISATION_NUMBER = "999888771"
+    const val VALID_ORGANISATION_NAME = "Testorganisasjon AS"
     const val NON_EXISTING_ORGANISATION_NUMBER = "999999999"
     const val VALID_PARTY_ID = "3004300000019"
     const val VALID_PARTY_NAME = "BalanceSupplier Østli, Ruud og Moen"
