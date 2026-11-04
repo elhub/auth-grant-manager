@@ -7,6 +7,7 @@ import no.elhub.auth.v0.features.common.dto.PaginatedCollectionResponse
 import no.elhub.auth.v0.features.common.toPaginationLinks
 import no.elhub.auth.v1.V1_GRANTS_PATH
 import no.elhub.auth.v1.common.now
+import no.elhub.auth.v1.common.toOsloOffsetString
 import no.elhub.auth.v1.domain.AuthorizationGrant
 
 typealias JsonApiListAuthorizationGrantsResponse = PaginatedCollectionResponse<AuthorizationGrantResource>
@@ -16,7 +17,7 @@ fun Page<AuthorizationGrant>.toGetCollectionResponse(): JsonApiListAuthorization
         data = items.map { it.toGetResponse().data },
         links = toPaginationLinks(V1_GRANTS_PATH),
         meta = buildJsonObject {
-            put("createdAt", now().toString())
+            put("createdAt", now().toOsloOffsetString())
             put("totalItems", totalItems)
             put("totalPages", totalPages)
             put("page", pagination.page)

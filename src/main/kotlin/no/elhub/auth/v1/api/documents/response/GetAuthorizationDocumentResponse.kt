@@ -1,9 +1,13 @@
+@file:UseSerializers(OsloInstantSerializer::class)
+
 package no.elhub.auth.v1.api.documents.response
 
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.UseSerializers
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import no.elhub.auth.v1.api.common.response.OsloInstantSerializer
 import no.elhub.auth.v1.api.common.response.PartyTypeResponse
 import no.elhub.auth.v1.api.common.response.RequestedScopeResponse
 import no.elhub.auth.v1.api.common.response.ResponseGrantRelationship
@@ -12,6 +16,7 @@ import no.elhub.auth.v1.api.common.response.toApprovalRelationship
 import no.elhub.auth.v1.api.common.response.toResponse
 import no.elhub.auth.v1.api.common.response.toResponseIdentifier
 import no.elhub.auth.v1.api.common.response.toResponseRelationship
+import no.elhub.auth.v1.common.toOsloOffsetString
 import no.elhub.auth.v1.domain.AuthorizationDocument
 import no.elhub.auth.v1.domain.AuthorizationDocumentStatus
 import no.elhub.auth.v1.domain.AuthorizationDocumentType
@@ -109,6 +114,6 @@ fun AuthorizationDocument.toGetResponse() =
         ),
         links = JsonApiLinks.ResourceObjectLink(self = "$DOCUMENTS_PATH/$id"),
         meta = buildJsonObject {
-            put("createdAt", createdAt.toString())
+            put("createdAt", createdAt.toOsloOffsetString())
         },
     )

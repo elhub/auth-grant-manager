@@ -151,7 +151,7 @@ class CreateDocumentRouteTest : FunSpec({
             body.data.attributes.documentType shouldBe AuthorizationDocumentType.ChangeOfEnergySupplierForOrganization
             body.data.attributes.status.name shouldBe "Pending"
             body.data.attributes.validFrom shouldBe Instant.parse("2026-10-01T08:00:00Z")
-            body.data.attributes.updatedAt shouldBe document.updatedAt
+            body.data.attributes.updatedAt shouldBe Instant.fromEpochSeconds(document.updatedAt.epochSeconds)
             body.data.relationships.requestedBy.data.id shouldBe authorizedParty.id
             body.data.relationships.requestedPrincipal.data.id shouldBe "999888771"
             body.data.relationships.requestedOf.data.id shouldBe "person-1"
