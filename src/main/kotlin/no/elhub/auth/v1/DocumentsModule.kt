@@ -43,7 +43,7 @@ fun Application.module() {
             MoveInHandlerImplementation(resolve(), resolve())
         }
         provide<EnergySupplierFrameworkAgreementDocumentHandler> {
-            FrameworkAgreementHandlerImplementation()
+            FrameworkAgreementHandlerImplementation(resolve())
         }
         provide<CreateDocumentHandler> {
             CreateDocumentHandler(resolve(), resolve(), resolve(), resolve(), resolve(), resolve())

@@ -27,8 +27,11 @@ import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.O
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestContainer
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestContainerExtension
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.NON_EXISTING_ORGANISATION_NUMBER
+import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.NOT_BALANCE_SUPPLIER_PARTY_ID
+import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.VALID_ORGANISATION_NAME
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.VALID_ORGANISATION_NUMBER
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.VALID_PARTY_ID
+import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.VALID_PARTY_NAME
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.organisationsServiceHttpClient
 import no.elhub.auth.v1.domain.DocumentLanguage
 import no.elhub.auth.v1.domain.MeteringPointId
@@ -99,13 +102,16 @@ class ChangeOfEnergySupplierDocumentHandlerTest : FunSpec({
                     )
                 }
             )
+            put("balanceSupplierName", VALID_PARTY_NAME)
+            put("organizationName", VALID_ORGANISATION_NAME)
         }
         val pdfContent = details.pdfContent
             .shouldBeInstanceOf<AuthorizationDocumentPdfContent.ChangeOfBalanceSupplierForOrganisation>()
         pdfContent.language shouldBe PdfLanguage.EN
         pdfContent.meteringPoints.single().id shouldBe VALID_METERING_POINT_1
         pdfContent.meteringPoints.single().meterNumber shouldBe "30030856"
-        pdfContent.balanceSupplierName shouldBe "BalanceSupplier Østli, Ruud og Moen"
+        pdfContent.balanceSupplierName shouldBe VALID_PARTY_NAME
+        pdfContent.agreementReference shouldBe context.externalReference
         (details.validTo > Clock.System.now()) shouldBe true
     }
 
@@ -182,6 +188,8 @@ class ChangeOfEnergySupplierDocumentHandlerTest : FunSpec({
                     )
                 }
             )
+            put("balanceSupplierName", VALID_PARTY_NAME)
+            put("organizationName", VALID_ORGANISATION_NAME)
         }
 
         val pdfContent = details.pdfContent
@@ -203,6 +211,19 @@ class ChangeOfEnergySupplierDocumentHandlerTest : FunSpec({
                 specification,
                 context.copy(
                     requestedPrincipal = AuthorizationParty(NON_EXISTING_ORGANISATION_NUMBER, PartyType.Organization),
+                ),
+            )
+        }
+
+        error.clientError shouldBe ClientError.NotFound
+    }
+
+    test("preserves requested-by lookup failure when the party is not a balance supplier") {
+        val error = shouldThrow<DocumentPreparationError.RequestedByLookupFailure> {
+            handler.prepare(
+                specification,
+                context.copy(
+                    requestedBy = AuthorizationParty(NOT_BALANCE_SUPPLIER_PARTY_ID, PartyType.OrganizationEntity),
                 ),
             )
         }
