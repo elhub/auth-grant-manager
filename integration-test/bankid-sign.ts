@@ -9,20 +9,20 @@ if (BANKID_TEST_PASSWORD === undefined) throw new Error('BANKID_TEST_PASSWORD is
 
 const browser = await chromium.launch({ headless: true })
 const page = await browser.newPage()
+page.setDefaultTimeout(60_000)
+let step = 'opening signing page'
 
 try {
   // Step 1: Load the WYSIWYS page and open the document
-  console.log('Navigating to sign URL...')
   await page.goto(BANKID_SIGN_URL)
   await page.locator('#js_read-document').click()
 
   // Step 2: Click Sign (visible after document opens)
-  console.log('Clicking Sign...')
   await page.locator('#js_sign_now').waitFor({ state: 'visible' })
   await page.locator('#js_sign_now').click()
 
   // Step 3: Enter national identity number
-  console.log('Entering NIN...')
+  step = 'entering identity'
   await page.locator('input[inputmode="numeric"]').waitFor({ state: 'visible' })
   await page.locator('input[inputmode="numeric"]').fill(NATIONAL_IDENTITY_NUMBER)
   await page.getByRole('button', { name: 'Neste' }).click()
@@ -31,33 +31,32 @@ try {
   const bankidFrame = page.frameLocator('iframe[title="BankID"]')
 
   // Step 4: Enter one-time code
-  console.log('Entering OTP...')
+  step = 'entering one-time code'
   await bankidFrame.getByLabel('Skriv inn engangskoden din').waitFor({ state: 'visible' })
   await bankidFrame.getByLabel('Skriv inn engangskoden din').fill(BANKID_TEST_OTP)
   await bankidFrame.getByRole('button', { name: 'Neste' }).click()
 
   // Step 5: Enter BankID password
-  console.log('Entering password...')
+  step = 'entering password'
   await bankidFrame.getByLabel('Ditt BankID-passord').waitFor({ state: 'visible' })
   await bankidFrame.getByLabel('Ditt BankID-passord').fill(BANKID_TEST_PASSWORD)
   await bankidFrame.getByRole('button', { name: 'Neste' }).click()
 
   // Step 6: Accept terms and confirm signing
-  console.log('Accepting terms and confirming...')
+  step = 'confirming signing'
   await page.locator('#privacy-terms-checkbox').waitFor({ state: 'visible' })
   await page.locator('#privacy-terms-checkbox').check()
   await page.locator('form#consent-confirm').getByRole('button', { name: 'Sign' }).click()
 
   // Step 7: Wait for completion
-  console.log('Waiting for signing to complete...')
+  step = 'waiting for signing result'
   // Wait for navigation and explicit success, not the absence of a loading spinner.
   await page.waitForURL('**/oppsummering', { timeout: 60_000 })
   await page.getByRole('alert').filter({ hasText: 'Du har signert 1 dokument med BankID' }).waitFor({ state: 'visible', timeout: 60_000 })
-  console.log('BankID signing completed successfully.')
-} catch (err) {
-  console.error('BankID signing failed:', (err as Error).message)
+} catch {
+  // Playwright errors can include credentials from fill calls. Log only the step.
+  console.error(`BankID signing failed while ${step}; browser call logs suppressed`)
+  process.exitCode = 1
+} finally {
   await browser.close()
-  process.exit(1)
 }
-
-await browser.close()
