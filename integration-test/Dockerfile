@@ -1,4 +1,4 @@
-FROM docker.jfrog.elhub.cloud/frzq0sxltynr/devxp/elhub-playwright:1.64.0-noble
+FROM docker.jfrog.elhub.cloud/frzq0sxltynr/devxp/elhub-playwright:1.64.1-noble
 
 RUN apt-get update && apt-get install -y jq tini && rm -rf /var/lib/apt/lists/*
 
