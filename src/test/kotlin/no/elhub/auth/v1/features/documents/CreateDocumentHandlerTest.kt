@@ -56,7 +56,12 @@ class CreateDocumentHandlerTest : FunSpec({
         pdfSigner = mockk()
         repository = mockk()
         handler = CreateDocumentHandler(
-            supplierChangeHandler, moveInHandler, frameworkAgreementHandler, pdfGenerator, pdfSigner, repository,
+            supplierChangeHandler,
+            moveInHandler,
+            frameworkAgreementHandler,
+            pdfGenerator,
+            pdfSigner,
+            repository,
         )
     }
 

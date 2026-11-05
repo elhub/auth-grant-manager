@@ -25,7 +25,9 @@ class AuthorizationRequestSpecificationTest : FunSpec({
 
         test("copying the specification with $requestType details updates its type") {
             val specification = AuthorizationRequestSpecification(
-                null, null, AuthorizationRequestTypeDetails.EnergySupplierFrameworkAgreement(null, null),
+                null,
+                null,
+                AuthorizationRequestTypeDetails.EnergySupplierFrameworkAgreement(null, null),
             )
 
             specification.copy(details = details).requestType shouldBe requestType

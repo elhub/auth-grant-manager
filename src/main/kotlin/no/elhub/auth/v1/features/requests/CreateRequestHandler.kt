@@ -27,7 +27,7 @@ class CreateRequestHandler(
             requestedBy = requestedBy,
             requestedPrincipal = requestedPrincipal,
             requestedOf = requestedOf,
-        )?.let { throw it }
+        )
         val requestTypeSpecificDetails = when (val details = specification.details) {
             is AuthorizationRequestTypeDetails.ChangeOfEnergySupplierForOrganization ->
                 changeOfEnergySupplierHandler.validateAndGetRequestTypeSpecificDetails(

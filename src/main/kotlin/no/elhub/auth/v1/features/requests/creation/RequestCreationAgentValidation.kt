@@ -9,7 +9,7 @@ fun validateRequestCreationAgents(
     requestedBy: AuthorizationParty,
     requestedPrincipal: AuthorizationParty,
     requestedOf: AuthorizationParty,
-): RequestCreationAgentError? = when (requestType) {
+): Unit = when (requestType) {
     AuthorizationRequestType.ChangeOfEnergySupplierForOrganization,
     AuthorizationRequestType.MoveInAndChangeOfEnergySupplierForOrganization,
     AuthorizationRequestType.EnergySupplierFrameworkAgreement,
@@ -21,27 +21,26 @@ private fun validateOrganizationRequestAgents(
     requestedBy: AuthorizationParty,
     requestedPrincipal: AuthorizationParty,
     requestedOf: AuthorizationParty,
-): RequestCreationAgentError? {
+) {
     if (requestedBy.type != PartyType.OrganizationEntity) {
-        return RequestCreationAgentError.RequestedByNotAllowed(
+        throw RequestCreationAgentError.RequestedByNotAllowed(
             requestType = requestType,
             actualAgentType = requestedBy.type,
             expectedAgentType = PartyType.OrganizationEntity,
         )
     }
     if (requestedPrincipal.type != PartyType.Organization) {
-        return RequestCreationAgentError.RequestedPrincipalNotAllowed(
+        throw RequestCreationAgentError.RequestedPrincipalNotAllowed(
             requestType = requestType,
             actualAgentType = requestedPrincipal.type,
             expectedAgentType = PartyType.Organization,
         )
     }
     if (requestedOf.type != PartyType.Organization) {
-        return RequestCreationAgentError.RequestedOfNotAllowed(
+        throw RequestCreationAgentError.RequestedOfNotAllowed(
             requestType = requestType,
             actualAgentType = requestedOf.type,
             expectedAgentType = PartyType.Organization,
         )
     }
-    return null
 }

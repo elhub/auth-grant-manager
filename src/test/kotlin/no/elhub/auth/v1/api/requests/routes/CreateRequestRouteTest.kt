@@ -99,7 +99,8 @@ class CreateRequestRouteTest : FunSpec({
                 "requestedOf" to requestedOf,
             ).mapValues { (agentRole, party) -> if (agentRole == role) party.copy(type = PartyType.Person) else party }
             coEvery { partyService.resolve(any()) } returnsMany listOf(
-                agents.getValue("requestedPrincipal").right(), agents.getValue("requestedOf").right(),
+                agents.getValue("requestedPrincipal").right(),
+                agents.getValue("requestedOf").right(),
             )
             val repository = mockk<RequestRepository>()
             val creationHandler = CreateRequestHandler(mockk(), mockk(), mockk(), repository)

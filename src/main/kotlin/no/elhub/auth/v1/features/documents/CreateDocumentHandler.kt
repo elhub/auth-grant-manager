@@ -34,7 +34,7 @@ class CreateDocumentHandler(
             requestedBy = requestedBy,
             requestedPrincipal = requestedPrincipal,
             requestedOf = requestedOf,
-        )?.let { throw it }
+        )
         val context = DocumentCreationContext(
             requestedBy = requestedBy,
             requestedPrincipal = requestedPrincipal,

@@ -9,7 +9,7 @@ fun validateDocumentCreationAgents(
     requestedBy: AuthorizationParty,
     requestedPrincipal: AuthorizationParty,
     requestedOf: AuthorizationParty,
-): DocumentCreationAgentError? = when (documentType) {
+): Unit = when (documentType) {
     AuthorizationDocumentType.ChangeOfEnergySupplierForOrganization,
     AuthorizationDocumentType.MoveInAndChangeOfEnergySupplierForOrganization,
     AuthorizationDocumentType.EnergySupplierFrameworkAgreement,
@@ -21,27 +21,26 @@ private fun validateOrganizationDocumentAgents(
     requestedBy: AuthorizationParty,
     requestedPrincipal: AuthorizationParty,
     requestedOf: AuthorizationParty,
-): DocumentCreationAgentError? {
+) {
     if (requestedBy.type != PartyType.OrganizationEntity) {
-        return DocumentCreationAgentError.RequestedByNotAllowed(
+        throw DocumentCreationAgentError.RequestedByNotAllowed(
             documentType = documentType,
             actualAgentType = requestedBy.type,
             expectedAgentType = PartyType.OrganizationEntity,
         )
     }
     if (requestedPrincipal.type != PartyType.Organization) {
-        return DocumentCreationAgentError.RequestedPrincipalNotAllowed(
+        throw DocumentCreationAgentError.RequestedPrincipalNotAllowed(
             documentType = documentType,
             actualAgentType = requestedPrincipal.type,
             expectedAgentType = PartyType.Organization,
         )
     }
     if (requestedOf.type != PartyType.Organization) {
-        return DocumentCreationAgentError.RequestedOfNotAllowed(
+        throw DocumentCreationAgentError.RequestedOfNotAllowed(
             documentType = documentType,
             actualAgentType = requestedOf.type,
             expectedAgentType = PartyType.Organization,
         )
     }
-    return null
 }

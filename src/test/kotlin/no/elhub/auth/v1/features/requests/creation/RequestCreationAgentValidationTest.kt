@@ -1,5 +1,6 @@
 package no.elhub.auth.v1.features.requests.creation
 
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
@@ -14,7 +15,7 @@ class RequestCreationAgentValidationTest : FunSpec({
 
     AuthorizationRequestType.entries.forEach { requestType ->
         test("$requestType returns no error for allowed agents") {
-            validateRequestCreationAgents(requestType, requestedBy, requestedPrincipal, requestedOf) shouldBe null
+            validateRequestCreationAgents(requestType, requestedBy, requestedPrincipal, requestedOf)
         }
 
         mapOf(
@@ -23,13 +24,14 @@ class RequestCreationAgentValidationTest : FunSpec({
             "requestedOf" to requestedOf,
         ).forEach { (role, validParty) ->
             PartyType.entries.filter { it != validParty.type }.forEach { actualType ->
-                test("$requestType returns structured errors for $actualType as $role without throwing") {
+                test("$requestType throws structured errors for $actualType as $role") {
                     val by = if (role == "requestedBy") requestedBy.copy(type = actualType) else requestedBy
                     val principal = if (role == "requestedPrincipal") requestedPrincipal.copy(type = actualType) else requestedPrincipal
                     val of = if (role == "requestedOf") requestedOf.copy(type = actualType) else requestedOf
 
-                    val requestError = validateRequestCreationAgents(requestType, by, principal, of)
-                        .shouldBeInstanceOf<RequestCreationAgentError>()
+                    val requestError = shouldThrow<RequestCreationAgentError> {
+                        validateRequestCreationAgents(requestType, by, principal, of)
+                    }
                     when (role) {
                         "requestedBy" -> requestError.shouldBeInstanceOf<RequestCreationAgentError.RequestedByNotAllowed>()
                         "requestedOf" -> requestError.shouldBeInstanceOf<RequestCreationAgentError.RequestedOfNotAllowed>()

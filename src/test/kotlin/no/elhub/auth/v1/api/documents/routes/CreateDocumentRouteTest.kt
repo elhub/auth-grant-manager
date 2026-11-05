@@ -128,10 +128,12 @@ class CreateDocumentRouteTest : FunSpec({
         test("POST / returns an API-friendly error for an unsupported $role") {
             val requestedBy = if (role == "requestedBy") authorizedParty.copy(type = PartyType.Person) else authorizedParty
             val requestedPrincipal = AuthorizationParty(
-                "999888771", if (role == "requestedPrincipal") PartyType.Person else PartyType.Organization,
+                "999888771",
+                if (role == "requestedPrincipal") PartyType.Person else PartyType.Organization,
             )
             val requestedOf = AuthorizationParty(
-                "999888772", if (role == "requestedOf") PartyType.Person else PartyType.Organization,
+                "999888772",
+                if (role == "requestedOf") PartyType.Person else PartyType.Organization,
             )
             coEvery { partyService.resolve(any()) } returnsMany listOf(requestedPrincipal.right(), requestedOf.right())
             val repository = mockk<DocumentRepository>()
