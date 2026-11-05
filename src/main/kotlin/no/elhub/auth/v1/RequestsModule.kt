@@ -33,7 +33,7 @@ fun Application.requestsModule() {
         provide<RequestRepository> { ExposedRequestRepository(resolve(), resolve()) }
         provide<ChangeOfEnergySupplierRequestHandler> { SupplierChangeHandlerImplementation(resolve(), resolve()) }
         provide<MoveInAndChangeOfEnergySupplierRequestHandler> { MoveInHandlerImplementation(resolve(), resolve()) }
-        provide<EnergySupplierFrameworkAgreementRequestHandler> { FrameworkAgreementHandlerImplementation() }
+        provide<EnergySupplierFrameworkAgreementRequestHandler> { FrameworkAgreementHandlerImplementation(resolve()) }
         provide<CreateRequestHandler> { CreateRequestHandler(resolve(), resolve(), resolve(), resolve()) }
         provide<GetRequestHandler> { GetRequestHandler(resolve()) }
         provide<ListRequestsHandler> { ListRequestsHandler(resolve()) }

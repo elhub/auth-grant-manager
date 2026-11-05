@@ -144,6 +144,18 @@ class ErrorHandlingTest : FunSpec({
             "The requested principal could not be found",
         ),
         ErrorCase(
+            RequestPreparationError.RequestedByLookupFailure(ClientError.NotFound),
+            HttpStatusCode.UnprocessableEntity,
+            "Validation error",
+            "The requested by could not be found",
+        ),
+        ErrorCase(
+            RequestPreparationError.RequestedPrincipalNameLookupFailure(ClientError.NotFound),
+            HttpStatusCode.UnprocessableEntity,
+            "Validation error",
+            "The requested principal could not be found",
+        ),
+        ErrorCase(
             RepositoryReadError.NotFoundError("sensitive read detail"),
             HttpStatusCode.NotFound,
             "Not found error",
@@ -223,6 +235,8 @@ class ErrorHandlingTest : FunSpec({
         DocumentPreparationError.RequestedPrincipalNameLookupFailure(ClientError.ServerError),
         RequestPreparationError.MeteringPointsServiceFailure(ClientError.ServerError),
         RequestPreparationError.RequestedPrincipalLookupFailure(ClientError.ServerError),
+        RequestPreparationError.RequestedByLookupFailure(ClientError.ServerError),
+        RequestPreparationError.RequestedPrincipalNameLookupFailure(ClientError.ServerError),
     ).forEach { cause ->
         test("hides details of ${cause::class.qualifiedName} behind a generic 500 JSON:API error") {
             testApplication {
