@@ -24,8 +24,11 @@ import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.O
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestContainer
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestContainerExtension
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.NON_EXISTING_ORGANISATION_NUMBER
+import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.NOT_BALANCE_SUPPLIER_PARTY_ID
+import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.VALID_ORGANISATION_NAME
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.VALID_ORGANISATION_NUMBER
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.VALID_PARTY_ID
+import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.VALID_PARTY_NAME
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.organisationsServiceHttpClient
 import no.elhub.auth.v1.domain.MeteringPointId
 import no.elhub.auth.v1.domain.ResourceConstraint
@@ -106,6 +109,8 @@ class ChangeOfEnergySupplierRequestHandlerTest : FunSpec({
                     )
                 },
             )
+            put("balanceSupplierName", VALID_PARTY_NAME)
+            put("organizationName", VALID_ORGANISATION_NAME)
         }
         (result.validTo > Clock.System.now()) shouldBe true
     }
@@ -140,6 +145,19 @@ class ChangeOfEnergySupplierRequestHandlerTest : FunSpec({
                 details = details(VALID_METERING_POINT_1),
                 requestedBy = requestedBy,
                 requestedPrincipal = AuthorizationParty(NON_EXISTING_ORGANISATION_NUMBER, PartyType.Organization),
+                requestedOf = requestedOf,
+            )
+        }
+
+        error.clientError shouldBe ClientError.NotFound
+    }
+
+    test("throws a requested-by lookup failure when the party is not a balance supplier") {
+        val error = shouldThrow<RequestPreparationError.RequestedByLookupFailure> {
+            handler.validateAndGetRequestTypeSpecificDetails(
+                details = details(VALID_METERING_POINT_1),
+                requestedBy = AuthorizationParty(NOT_BALANCE_SUPPLIER_PARTY_ID, PartyType.OrganizationEntity),
+                requestedPrincipal = requestedPrincipal,
                 requestedOf = requestedOf,
             )
         }

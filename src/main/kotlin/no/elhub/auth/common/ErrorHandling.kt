@@ -455,6 +455,28 @@ private fun Errors.toApiErrorResponse() =
             }
         }
 
+        is RequestPreparationError.RequestedByLookupFailure -> {
+            when (clientError) {
+                ClientError.NotFound -> toValidationApiErrorResponse("The requested by could not be found")
+
+                else -> {
+                    logger.error("Failed to resolve requested by data: {}", clientError)
+                    toInternalServerApiErrorResponse()
+                }
+            }
+        }
+
+        is RequestPreparationError.RequestedPrincipalNameLookupFailure -> {
+            when (clientError) {
+                ClientError.NotFound -> toValidationApiErrorResponse("The requested principal could not be found")
+
+                else -> {
+                    logger.error("Failed to resolve requested principal data: {}", clientError)
+                    toInternalServerApiErrorResponse()
+                }
+            }
+        }
+
         else -> {
             throw Exception("Unimplemented")
         }
