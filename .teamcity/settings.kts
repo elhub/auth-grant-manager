@@ -69,7 +69,6 @@ elhubProject(group = Group.AUTH, name = "auth-grant-manager") {
                 gitOps {
                     clusters = setOf(KubeCluster.PROD1)
                     gitOpsRepository = gitOpsRepo
-                    enableDeploymentTicket = true
                 }
             }
         }
