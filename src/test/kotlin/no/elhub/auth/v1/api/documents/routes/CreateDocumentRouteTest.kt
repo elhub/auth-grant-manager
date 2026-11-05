@@ -15,7 +15,9 @@ import io.mockk.slot
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import no.elhub.auth.common.auth.AuthorizationParty
 import no.elhub.auth.common.auth.PartyType
 import no.elhub.auth.common.documents.pdf.PdfGenerator
@@ -68,7 +70,7 @@ class CreateDocumentRouteTest : FunSpec({
             },
             "meta": {
               "requestedPrincipal": "999888771",
-              "requestedOf": "01019012345",
+               "requestedOf": "999888772",
               "language": "nb"
             }
           }
@@ -108,8 +110,8 @@ class CreateDocumentRouteTest : FunSpec({
         createdAt = Clock.System.now(),
         updatedAt = Clock.System.now(),
         requestedBy = authorizedParty,
-        requestedPrincipal = AuthorizationParty("999888771", PartyType.OrganizationEntity),
-        requestedOf = AuthorizationParty("person-1", PartyType.Person),
+        requestedPrincipal = AuthorizationParty("999888771", PartyType.Organization),
+        requestedOf = AuthorizationParty("999888772", PartyType.Organization),
         approvedBy = null,
         authorizationGrants = null,
         pdfBytes = ByteArray(0),
@@ -122,6 +124,51 @@ class CreateDocumentRouteTest : FunSpec({
         partyService = mockk()
     }
 
+    listOf("requestedBy", "requestedPrincipal", "requestedOf").forEach { role ->
+        test("POST / returns an API-friendly error for an unsupported $role") {
+            val requestedBy = if (role == "requestedBy") authorizedParty.copy(type = PartyType.Person) else authorizedParty
+            val requestedPrincipal = AuthorizationParty(
+                "999888771",
+                if (role == "requestedPrincipal") PartyType.Person else PartyType.Organization,
+            )
+            val requestedOf = AuthorizationParty(
+                "999888772",
+                if (role == "requestedOf") PartyType.Person else PartyType.Organization,
+            )
+            coEvery { partyService.resolve(any()) } returnsMany listOf(requestedPrincipal.right(), requestedOf.right())
+            val repository = mockk<DocumentRepository>()
+            val creationHandler = CreateDocumentHandler(mockk(), mockk(), mockk(), pdfGenerator, pdfSigner, repository)
+
+            testApplication {
+                setupAppWith(requestedBy) {
+                    route(partyService, creationHandler)
+                }
+
+                val response = client.postJson("/", requestBody)
+
+                val body: JsonObject = response.body()
+                val error = body.getValue("errors").jsonArray.single().jsonObject
+                if (role == "requestedBy") {
+                    response.status shouldBe HttpStatusCode.Forbidden
+                    error.getValue("status").jsonPrimitive.content shouldBe "403"
+                    error.getValue("title").jsonPrimitive.content shouldBe "Caller not allowed"
+                    error.getValue("detail").jsonPrimitive.content shouldBe
+                        "Only authenticated market entities can create documents of type 'ChangeOfEnergySupplierForOrganization'."
+                    error["source"] shouldBe null
+                } else {
+                    response.status shouldBe HttpStatusCode.UnprocessableEntity
+                    error.getValue("status").jsonPrimitive.content shouldBe "422"
+                    error.getValue("title").jsonPrimitive.content shouldBe
+                        if (role == "requestedPrincipal") "Invalid requestedPrincipal" else "Invalid requestedOf"
+                    error.getValue("detail").jsonPrimitive.content shouldBe
+                        "data.meta.$role must identify an organization for document type 'ChangeOfEnergySupplierForOrganization'."
+                    error["source"] shouldBe null
+                }
+                coVerify(exactly = 0) { repository.insert(any()) }
+            }
+        }
+    }
+
     test("POST / returns 201 and passes the authorized party to the handler") {
         val document = responseDocument().copy(
             meta = Json.parseToJsonElement(
@@ -132,8 +179,8 @@ class CreateDocumentRouteTest : FunSpec({
             handler.createAuthorizationDocument(any(), any(), any(), any(), any(), any())
         } returns document
         coEvery { partyService.resolve(any()) } returnsMany listOf(
-            AuthorizationParty("999888771", PartyType.OrganizationEntity).right(),
-            AuthorizationParty("person-1", PartyType.Person).right(),
+            AuthorizationParty("999888771", PartyType.Organization).right(),
+            AuthorizationParty("999888772", PartyType.Organization).right(),
         )
 
         testApplication {
@@ -154,7 +201,7 @@ class CreateDocumentRouteTest : FunSpec({
             body.data.attributes.updatedAt shouldBe Instant.fromEpochSeconds(document.updatedAt.epochSeconds)
             body.data.relationships.requestedBy.data.id shouldBe authorizedParty.id
             body.data.relationships.requestedPrincipal.data.id shouldBe "999888771"
-            body.data.relationships.requestedOf.data.id shouldBe "person-1"
+            body.data.relationships.requestedOf.data.id shouldBe "999888772"
             val returnedScope = body.data.attributes.requestedScopes.single()
             returnedScope.resourceType shouldBe ResourceType.MeteringPointContract
             returnedScope.appliesTo.single().attribute shouldBe "meteringPoint.id"
@@ -165,7 +212,7 @@ class CreateDocumentRouteTest : FunSpec({
                 partyService.resolve(PartyIdentifier(PartyIdentifierType.OrganizationNumber, "999888771"))
             }
             coVerify(exactly = 1) {
-                partyService.resolve(PartyIdentifier(PartyIdentifierType.NationalIdentityNumber, "01019012345"))
+                partyService.resolve(PartyIdentifier(PartyIdentifierType.OrganizationNumber, "999888772"))
             }
             coVerify(exactly = 1) {
                 handler.createAuthorizationDocument(
@@ -174,8 +221,8 @@ class CreateDocumentRouteTest : FunSpec({
                     },
                     externalReference = "contract-123",
                     requestedBy = authorizedParty,
-                    requestedPrincipal = AuthorizationParty("999888771", PartyType.OrganizationEntity),
-                    requestedOf = AuthorizationParty("person-1", PartyType.Person),
+                    requestedPrincipal = AuthorizationParty("999888771", PartyType.Organization),
+                    requestedOf = AuthorizationParty("999888772", PartyType.Organization),
                     language = DocumentLanguage.NB,
                 )
             }
@@ -196,8 +243,8 @@ class CreateDocumentRouteTest : FunSpec({
             handler.createAuthorizationDocument(any(), any(), any(), any(), any(), any())
         } returns document
         coEvery { partyService.resolve(any()) } returnsMany listOf(
-            AuthorizationParty("999888771", PartyType.OrganizationEntity).right(),
-            AuthorizationParty("person-1", PartyType.Person).right(),
+            AuthorizationParty("999888771", PartyType.Organization).right(),
+            AuthorizationParty("999888772", PartyType.Organization).right(),
         )
         val frameworkRequest = """
             {
@@ -211,7 +258,7 @@ class CreateDocumentRouteTest : FunSpec({
                 },
                 "meta": {
                   "requestedPrincipal": "999888771",
-                  "requestedOf": "01019012345",
+                   "requestedOf": "999888772",
                   "language": "nb"
                 }
               }
@@ -243,8 +290,8 @@ class CreateDocumentRouteTest : FunSpec({
                     specification = specification,
                     externalReference = "contract-123",
                     requestedBy = authorizedParty,
-                    requestedPrincipal = AuthorizationParty("999888771", PartyType.OrganizationEntity),
-                    requestedOf = AuthorizationParty("person-1", PartyType.Person),
+                    requestedPrincipal = AuthorizationParty("999888771", PartyType.Organization),
+                    requestedOf = AuthorizationParty("999888772", PartyType.Organization),
                     language = DocumentLanguage.NB,
                 )
             }
@@ -256,8 +303,8 @@ class CreateDocumentRouteTest : FunSpec({
             handler.createAuthorizationDocument(any(), any(), any(), any(), any(), any())
         } returns responseDocument()
         coEvery { partyService.resolve(any()) } returnsMany listOf(
-            AuthorizationParty("999888771", PartyType.OrganizationEntity).right(),
-            AuthorizationParty("person-1", PartyType.Person).right(),
+            AuthorizationParty("999888771", PartyType.Organization).right(),
+            AuthorizationParty("999888772", PartyType.Organization).right(),
         )
 
         testApplication {
@@ -275,8 +322,8 @@ class CreateDocumentRouteTest : FunSpec({
                     specification = any(),
                     externalReference = "contract-123",
                     requestedBy = authorizedParty,
-                    requestedPrincipal = AuthorizationParty("999888771", PartyType.OrganizationEntity),
-                    requestedOf = AuthorizationParty("person-1", PartyType.Person),
+                    requestedPrincipal = AuthorizationParty("999888771", PartyType.Organization),
+                    requestedOf = AuthorizationParty("999888772", PartyType.Organization),
                     language = DocumentLanguage.NB,
                 )
             }
@@ -288,8 +335,8 @@ class CreateDocumentRouteTest : FunSpec({
             handler.createAuthorizationDocument(any(), any(), any(), any(), any(), any())
         } returns responseDocument()
         coEvery { partyService.resolve(any()) } returnsMany listOf(
-            AuthorizationParty("999888771", PartyType.OrganizationEntity).right(),
-            AuthorizationParty("person-1", PartyType.Person).right(),
+            AuthorizationParty("999888771", PartyType.Organization).right(),
+            AuthorizationParty("999888772", PartyType.Organization).right(),
         )
 
         val requestedScope = """
@@ -328,8 +375,8 @@ class CreateDocumentRouteTest : FunSpec({
                     specification = expectedSpecification,
                     externalReference = "contract-123",
                     requestedBy = authorizedParty,
-                    requestedPrincipal = AuthorizationParty("999888771", PartyType.OrganizationEntity),
-                    requestedOf = AuthorizationParty("person-1", PartyType.Person),
+                    requestedPrincipal = AuthorizationParty("999888771", PartyType.Organization),
+                    requestedOf = AuthorizationParty("999888772", PartyType.Organization),
                     language = DocumentLanguage.NB,
                 )
             }
@@ -362,7 +409,7 @@ class CreateDocumentRouteTest : FunSpec({
             externalReference = "ref",
             requestedBy = authorizedParty,
             requestedPrincipal = AuthorizationParty("org-1", PartyType.Organization),
-            requestedOf = AuthorizationParty("person-1", PartyType.Person),
+            requestedOf = AuthorizationParty("org-2", PartyType.Organization),
             language = DocumentLanguage.NB,
         )
 
@@ -373,7 +420,7 @@ class CreateDocumentRouteTest : FunSpec({
             externalReference shouldBe "ref"
             requestedBy shouldBe authorizedParty
             requestedPrincipal shouldBe AuthorizationParty("org-1", PartyType.Organization)
-            requestedOf shouldBe AuthorizationParty("person-1", PartyType.Person)
+            requestedOf shouldBe AuthorizationParty("org-2", PartyType.Organization)
             status shouldBe AuthorizationDocumentStatus.Pending
             this.validTo shouldBe validTo
             validFrom shouldBe createdAt
@@ -401,7 +448,7 @@ class CreateDocumentRouteTest : FunSpec({
                 externalReference = "ref",
                 requestedBy = authorizedParty,
                 requestedPrincipal = AuthorizationParty("org-1", PartyType.Organization),
-                requestedOf = AuthorizationParty("person-1", PartyType.Person),
+                requestedOf = AuthorizationParty("org-2", PartyType.Organization),
                 language = DocumentLanguage.NB,
             )
         }

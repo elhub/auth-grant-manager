@@ -10,6 +10,7 @@ import no.elhub.auth.v1.features.documents.creation.ChangeOfEnergySupplierDocume
 import no.elhub.auth.v1.features.documents.creation.DocumentCreationContext
 import no.elhub.auth.v1.features.documents.creation.EnergySupplierFrameworkAgreementDocumentHandler
 import no.elhub.auth.v1.features.documents.creation.MoveInAndChangeOfEnergySupplierDocumentHandler
+import no.elhub.auth.v1.features.documents.creation.validateDocumentCreationAgents
 import no.elhub.auth.v1.repositories.DocumentRepository
 
 class CreateDocumentHandler(
@@ -28,6 +29,12 @@ class CreateDocumentHandler(
         requestedOf: AuthorizationParty,
         language: DocumentLanguage,
     ): AuthorizationDocument {
+        validateDocumentCreationAgents(
+            documentType = specification.documentType,
+            requestedBy = requestedBy,
+            requestedPrincipal = requestedPrincipal,
+            requestedOf = requestedOf,
+        )
         val context = DocumentCreationContext(
             requestedBy = requestedBy,
             requestedPrincipal = requestedPrincipal,

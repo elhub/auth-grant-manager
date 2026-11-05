@@ -54,7 +54,7 @@ class EnergySupplierFrameworkAgreementDocumentHandlerTest : FunSpec({
     val context = DocumentCreationContext(
         requestedBy = AuthorizationParty(VALID_PARTY_ID, PartyType.OrganizationEntity),
         requestedPrincipal = AuthorizationParty(VALID_ORGANISATION_NUMBER, PartyType.Organization),
-        requestedOf = AuthorizationParty("person-1", PartyType.Person),
+        requestedOf = AuthorizationParty(VALID_ORGANISATION_NUMBER, PartyType.Organization),
         language = DocumentLanguage.EN,
         externalReference = "reference-1",
     )
