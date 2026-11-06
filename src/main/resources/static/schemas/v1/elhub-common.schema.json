@@ -45,7 +45,7 @@
           "type": "object",
           "properties": {
             "type": {
-              "description": "Type of agent. Person is a natural person, Organization is an organization identified by organization number, and MarketEntity is a market participant identified by GLN.",
+              "description": "Type of agent. A Person is identified by NIN, an Organization identified by organization number, and a MarketEntity is identified by GLN.",
               "enum": [
                 "Person",
                 "Organization",
