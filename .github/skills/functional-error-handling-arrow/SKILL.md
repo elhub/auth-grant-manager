@@ -2,83 +2,70 @@
 name: explicit-error-handling
 description: >
   Use when writing or reviewing any Handler, Service, or Repository.
-  Defines explicit domain error handling for business logic and database access.
+  Defines custom exception handling for business logic and database access.
   Load before writing or reviewing any Handler, Service, or Repository.
 ---
 # Explicit Error Handling
 
-Use Arrow for expected domain failures that callers distinguish. Unexpected infrastructure failures remain exceptions; an `Either` return type does not promise
-exception-free execution. Preserve the existing error model when maintaining exception-based v1 code.
+Use custom exceptions for expected domain and repository failures. Return ordinary success values, not Arrow `Either` or success/error wrappers.
+Follow the existing v1 exception hierarchy. Maintaining legacy Arrow code does not require migrating unrelated code.
 
-## Error contract
+## Error Contracts
+
+Document expected exceptions on public service and repository contracts; Kotlin signatures do not enforce thrown exception types.
 
 ```kotlin
-suspend fun findUser(id: UserId): Either<UserNotFound, User>
+/** @throws RepositoryReadError.NotFoundError when the user does not exist. */
+suspend fun findUser(id: UserId): User
 ```
 
-Model meaningful outcomes such as not found, conflict, or expiry. Do not carry a generic 500 through every layer as a typed error.
+Model meaningful failures such as invalid input, unauthorized access, not found, conflict, and expiry with custom exception classes.
+Reuse existing exception types when their meaning fits. Do not invent a hierarchy per function or wrap the same failure at every layer.
 
-## Composing operations
+## Composing Operations
 
 ```kotlin
-either {
-    val party = partyService.resolve(model.requestedBy).bind()
-    ensure(model.authorizedParty == party) { CreateError.AuthorizationError }
-    repo.insert(model.toRequest()).bind()
+suspend operator fun invoke(model: CreateRequestModel): AuthorizationRequest {
+    val party = partyService.resolve(model.requestedBy)
+    if (model.authorizedParty != party) throw CreateError.AuthorizationError()
+    return repo.insert(model.toRequest())
 }
 ```
 
-Use compatible error types for direct binding. Translate errors only when their meaning changes; reuse repeated translations instead of creating a new hierarchy
-per layer.
+Let exceptions propagate to stop the workflow. Catch only to recover, add meaningful domain context, or translate a known library failure.
+Define exception classes, not singleton exception objects. Preserve the original cause when wrapping an exception.
 
-## List operations
+## Library Boundaries
 
-```kotlin
-either {
-    for (item in items) process(item).bind()
-}
-```
-
-## Domain error types
-
-Use cohesive sealed error interfaces for expected outcomes:
+Translate specific library failures only when they represent a known domain outcome. Let unexpected infrastructure exceptions propagate unchanged.
 
 ```kotlin
-sealed interface CreateRequestError {
-    data object Unauthorized : CreateRequestError
-    data object InvalidInput : CreateRequestError
+suspend fun insert(user: NewUser): User = try {
+    withTransaction { insertUserRow(user) }
+} catch (e: ExposedSQLException) {
+    if (isUsernameUniqueViolation(e)) throw UserAlreadyExists(user.username, e)
+    else throw e
 }
+
+class UserAlreadyExists(username: String, cause: Throwable) :
+    RuntimeException("Username already exists: $username", cause)
 ```
 
-Sealed interfaces support exhaustive handling. Interpret typed errors at the HTTP boundary; log unexpected exceptions there with their original cause.
+The classifier above is application-specific: check the SQL state and relevant constraint, not every SQL error.
+Never swallow cancellation or fatal errors. Avoid broad catches that replace every failure with a generic exception or discard the original cause.
 
-## Wrapping Exposed transactions
+## HTTP Boundary
 
-Catch specific library exceptions only where they represent expected outcomes. Keep conversion outside the transaction so SQL exceptions reach rollback first:
+Map custom exceptions to JSON:API responses through the application's centralized Ktor error handling. Add mappings and tests for new exception types.
+Unexpected exceptions are logged with their stack trace and return a generic 500 response without exposing internal details.
+Handlers and repositories must not import Ktor types or build HTTP responses.
 
-```kotlin
-suspend fun insert(user: NewUser): Either<UserAlreadyExists, User> = either {
-    try {
-        withTransaction { insertUserRow(user) }
-    } catch (e: ExposedSQLException) {
-        if (isUsernameUniqueViolation(e)) raise(UserAlreadyExists(user.username))
-        else throw e
-    }
-}
-```
+## Atomic Repository Operations
 
-The constraint classifier above is application-specific: check the SQL state and relevant constraint, not every SQL error. Never swallow cancellation or fatal
-errors, discard original causes, or introduce a universal exception-to-Left wrapper.
+Repositories own transactions; handlers call one repository operation with all data needed for an atomic change.
+For example, document confirmation, grant insertion, and grant-property insertion belong in the same repository transaction.
+Use the shared suspending `withTransaction`, not blocking `transaction`. Both custom and unexpected exceptions must escape the transaction to trigger rollback.
+Do not catch a failed dependent write inside the atomic transaction and continue as if it succeeded.
 
-Repositories own transactions; handlers call a single repository operation with all data needed for an atomic change (for example, document confirmation plus
-grant creation). Use the shared suspending `withTransaction`, not blocking `transaction`. Keep `either` outside the atomic transaction boundary so the internal
-exception from `raise` or a failing `.bind()` escapes through Exposed, triggering rollback before the outer `either` converts it to `Left`. A normally returned
-`Left` does not trigger rollback. Test a write followed by `raise` or a failing `.bind()`: assert no partial persistence and an outer `Left`.
 Helpers may use nested `withTransaction` blocks that participate in the enclosing database transaction; outer rollback must undo all dependent writes.
-Do not start independent transactions for those writes.
-
-## References
-
-- [Karlo Bratko: instakt](https://github.com/karlobratko/instakt/tree/7084ed472695b69e4ead99bd2511fd81d606df33): see `ExposedUserPersistence.kt` for narrow
-  adapters and outer `either`; older dependencies, and its unexpected-error conversion loses the original cause.
-- [Arrow: converting exceptions](https://arrow-kt.io/learn/typed-errors/working-with-typed-errors/#from-exceptions).
+Do not start independent transactions for those writes. Test a failure after earlier writes: assert the exception and absence of partial persistence.

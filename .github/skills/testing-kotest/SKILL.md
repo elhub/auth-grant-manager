@@ -1,14 +1,15 @@
 ---
 name: testing-kotest
 description: >
-  Use when writing any test.Defines FunSpec structure, MockK patterns for suspend functions, clearMocks usage,
-  Result assertions, route test wiring, and integration test extensions.
+  Use when writing any test. Defines FunSpec structure, MockK patterns for suspend functions, clearMocks usage,
+  value and exception assertions, route test wiring, and integration test extensions.
   Load before generating any test class.
 ---
 
 # Testing with Kotest
 
 All tests use Kotest `FunSpec`. All mocking uses MockK. Integration tests use TestContainers.
+Expected domain and repository failures use custom exceptions; success returns ordinary values. Do not use Arrow, Either, or result wrappers.
 
 ## Structure
 
@@ -27,6 +28,8 @@ No other Kotest spec style is used in this project.
 Mock dependencies at the constructor. Use `coEvery` for `suspend` functions (not `every`).
 
 ```kotlin
+import io.kotest.assertions.throwables.shouldThrow
+
 class CreateHandlerTest : FunSpec({
     val repo = mockk<RequestRepository>()
     val partyService = mockk<PartyService>()
@@ -41,29 +44,30 @@ class CreateHandlerTest : FunSpec({
         coEvery { partyService.resolve(any()) } returns validParty
         coEvery { repo.insert(any()) } returns createdRequest
 
-        handler(validModel) shouldBe CreateResult.Success(createdRequest)
+        handler(validModel) shouldBe createdRequest
     }
 
-    test("returns an authorization error when party mismatch") {
+    test("throws an authorization error when party mismatch") {
         coEvery { partyService.resolve(any()) } returns mismatchedParty
 
-        handler(validModel) shouldBe CreateResult.Failure(CreateError.AuthorizationError)
+        shouldThrow<CreateError.AuthorizationError> { handler(validModel) }
     }
 
-    test("returns a persistence error when repo fails") {
+    test("propagates a conflict when repo fails") {
         coEvery { partyService.resolve(any()) } returns validParty
-        coEvery { repo.insert(any()) } returns RepositoryWriteError.UnexpectedError
+        coEvery { repo.insert(any()) } throws RepositoryWriteError.ConflictError("Request already exists")
 
-        handler(validModel) shouldBe CreateResult.Failure(CreateError.PersistenceError)
+        shouldThrow<RepositoryWriteError.ConflictError> { handler(validModel) }
     }
 })
 ```
 
 **Rules:**
 
-- Assert the explicit success or error outcome returned by the handler.
+- Assert ordinary success values with `shouldBe` and custom failures with `shouldThrow<...>`.
+- `CreateError` types here are illustrative custom exception subclasses; use the feature's actual exceptions.
 - Always call `clearMocks(...)` in `beforeTest` when mocks are shared across tests
-- Use `coEvery` for all `suspend` functions — `every` will silently fail to stub them
+- Use `coEvery` for all `suspend` functions, including `coEvery { ... } throws ...` for failures.
 
 ## Route tests
 
@@ -78,10 +82,13 @@ class CreateRouteTest : FunSpec({
 
     test("POST returns 201 when handler succeeds") {
         coEvery { authProvider.authorizeMaskinporten(any()) } returns authorizedActor
-        coEvery { handler(any()) } returns CreateResult.Success(createdRequest)
+        coEvery { handler(any()) } returns createdRequest
 
         testApplication {
-            application { createRouteModule(handler, authProvider) }
+            application {
+                configureErrorHandling()
+                createRouteModule(handler, authProvider)
+            }
 
             val response = client.post(REQUESTS_PATH) {
                 contentType(ContentType.parse("application/vnd.api+json"))
@@ -93,24 +100,30 @@ class CreateRouteTest : FunSpec({
         }
     }
 
-    test("POST returns 403 when auth fails") {
-        coEvery { authProvider.authorizeMaskinporten(any()) } returns AuthError.Unauthorized
+    test("POST returns 409 when handler throws a conflict") {
+        coEvery { authProvider.authorizeMaskinporten(any()) } returns authorizedActor
+        coEvery { handler(any()) } throws RepositoryWriteError.ConflictError("Request already exists")
 
         testApplication {
-            application { createRouteModule(handler, authProvider) }
+            application {
+                configureErrorHandling()
+                createRouteModule(handler, authProvider)
+            }
 
             val response = client.post(REQUESTS_PATH) {
                 contentType(ContentType.parse("application/vnd.api+json"))
                 setBody(validCreateRequestJson)
             }
 
-            response.status shouldBe HttpStatusCode.Forbidden
+            response.status shouldBe HttpStatusCode.Conflict
+            response.bodyAsText() shouldContain "\"errors\""
         }
     }
 })
 ```
 
 Route tests assert on `status` and JSON:API response shape — not on Handler internals.
+Install the application's `configureErrorHandling()` to verify thrown exceptions map to HTTP responses, rather than adding test-only mappings.
 
 ## Integration tests
 
@@ -155,8 +168,11 @@ Located in `no.elhub.auth.features.common` test sources:
 ## Assertions reference
 
 ```kotlin
-// Domain outcome
-result shouldBe expected
+// Ordinary success value
+handler(validModel) shouldBe expected
+
+// Expected custom exception
+shouldThrow<RepositoryReadError.NotFoundError> { repo.find(nonExistentId) }
 
 // HTTP
 response.status shouldBe HttpStatusCode.OK
