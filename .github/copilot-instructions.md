@@ -8,7 +8,7 @@
 |----------------|---------------------------------------|
 | Language       | Kotlin, JVM 21+                       |
 | Framework      | Ktor (server + client)                |
-| Error handling | Explicit domain errors               |
+| Error handling | Custom domain/repository exceptions  |
 | DI             | Ktor Native DI                        |
 | Database       | PostgreSQL, Exposed ORM, Liquibase    |
 | API standard   | JSON:API (`application/vnd.api+json`) |
@@ -18,9 +18,10 @@
 ## Non-negotiable constraints
 
 - All IO is `suspend`. Never use `runBlocking` in production code.
-- Handle expected domain errors explicitly. Do not use exceptions for expected domain failures.
+- Model expected domain and repository failures with custom exceptions; return ordinary success values, not Arrow or result wrappers.
 - Keep error handling clear at service and repository boundaries; do not hide control flow behind an abstraction.
-- Domain errors are sealed interfaces, one per action slice.
+- Reuse the existing custom exception hierarchy and map exceptions centrally to JSON:API responses.
+- Repositories own atomic transactions; handlers must not open transactions or split dependent writes into separately committed operations.
 - Prefer immutable data classes.
 
 ## Skills
