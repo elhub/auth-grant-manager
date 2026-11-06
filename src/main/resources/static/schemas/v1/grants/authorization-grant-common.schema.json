@@ -5,9 +5,11 @@
       "$ref": "../elhub-common.schema.json#/$defs/resourceUuid"
     },
     "type": {
+      "description": "Type of grant. A ConsumableGrant can be used once, for example to carry out a change of energy supplier, and becomes Exhausted when used. A PersistentGrant stays valid until validTo, or indefinitely if validTo is null, unless it is revoked.",
       "enum": ["ConsumableGrant", "PersistentGrant"]
     },
     "status": {
+      "description": "Status of the grant. Pending: not yet valid. Active: valid. Exhausted: used. Expired: past validTo. Revoked: withdrawn.",
       "enum": [
         "Pending",
         "Active",
@@ -18,6 +20,7 @@
     },
     "scopes": {
       "type": "array",
+      "description": "Scopes describing what the grantedTo agent is authorized to do.",
       "items": {
         "$ref": "../authorization-scope.schema.json#/$defs/authorizationScope"
       }

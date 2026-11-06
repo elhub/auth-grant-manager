@@ -8,6 +8,7 @@
       "const": "AuthorizationDocument"
     },
     "documentType": {
+      "description": "Type of authorization document. ChangeOfEnergySupplierForOrganization: change of energy supplier on existing metering points. MoveInAndChangeOfEnergySupplierForOrganization: move-in combined with a change of energy supplier. EnergySupplierFrameworkAgreement: framework agreement between the energy supplier and the customer, resulting in a persistent grant.",
       "enum": [
         "ChangeOfEnergySupplierForOrganization",
         "MoveInAndChangeOfEnergySupplierForOrganization",
@@ -15,10 +16,12 @@
       ]
     },
     "status": {
+      "description": "Status of the document. Pending: awaiting the signed document. Approved: the signed document has been submitted. Expired: validTo passed before the signed document was submitted.",
       "enum": ["Pending", "Approved", "Expired"]
     },
     "requestedScopes": {
       "type": "array",
+      "description": "Scopes requested for the authorization grant created when the document is signed.",
       "items": {
         "$ref": "../authorization-scope.schema.json#/$defs/requestedScope"
       }
@@ -26,25 +29,27 @@
     "externalReference": {
       "type": "string",
       "minLength": 1,
-      "maxLength": 255
+      "maxLength": 255,
+      "description": "The caller's own reference, returned unchanged."
     },
     "requestedGrantValidFrom": {
-      "type": "string",
-      "format": "date-time",
-      "description": "Requested start of validity for the authorization grant created when the document is signed."
+      "$ref": "../elhub-common.schema.json#/$defs/dateTime",
+      "description": "Requested start of validity for the authorization grant created when the document is signed. Only used for EnergySupplierFrameworkAgreement."
     },
     "requestedGrantValidTo": {
-      "type": "string",
-      "format": "date-time",
-      "description": "Requested end of validity for the authorization grant created when the document is signed."
+      "$ref": "../elhub-common.schema.json#/$defs/dateTime",
+      "description": "Requested end of validity for the authorization grant created when the document is signed. Only used for EnergySupplierFrameworkAgreement."
     },
     "requestedPrincipal": {
-      "type": "string"
+      "$ref": "../elhub-common.schema.json#/$defs/agentIdentifier",
+      "description": "Identifier of the agent the authorization concerns, for example the owner of the metering point. The resolved agent becomes requestedPrincipal on the document."
     },
     "requestedOf": {
-      "type": "string"
+      "$ref": "../elhub-common.schema.json#/$defs/agentIdentifier",
+      "description": "Identifier of the agent asked to sign the document. The resolved agent becomes requestedOf on the document."
     },
     "language": {
+      "description": "Language of the authorization text in the generated document.",
       "enum": ["nb", "nn", "en"],
       "default": "nb"
     }

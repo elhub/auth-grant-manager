@@ -35,10 +35,12 @@
               "$ref": "authorization-document-common.schema.json#/$defs/status"
             },
             "validFrom": {
-              "$ref": "../elhub-common.schema.json#/$defs/validFrom"
+              "$ref": "../elhub-common.schema.json#/$defs/validFrom",
+              "description": "Time the document was created."
             },
             "validTo": {
-              "$ref": "../elhub-common.schema.json#/$defs/validTo"
+              "$ref": "../elhub-common.schema.json#/$defs/validTo",
+              "description": "Deadline for the document. The document must be signed and submitted before this time, after which it expires."
             },
             "createdAt": {
               "$ref": "../elhub-common.schema.json#/$defs/createdAt"
@@ -52,16 +54,20 @@
           "type": "object",
           "properties": {
             "requestedBy": {
-              "$ref": "../elhub-common.schema.json#/$defs/agentRelationship"
+              "$ref": "../elhub-common.schema.json#/$defs/agentRelationship",
+              "description": "The agent that created the document, typically the energy supplier. When the document is signed, this agent becomes grantedTo in the resulting authorization grant."
             },
             "requestedPrincipal": {
-              "$ref": "../elhub-common.schema.json#/$defs/agentRelationship"
+              "$ref": "../elhub-common.schema.json#/$defs/agentRelationship",
+              "description": "The agent the authorization concerns, for example the owner of the metering point. When the document is signed, this agent becomes principal in the resulting authorization grant."
             },
             "requestedOf": {
-              "$ref": "../elhub-common.schema.json#/$defs/agentRelationship"
+              "$ref": "../elhub-common.schema.json#/$defs/agentRelationship",
+              "description": "The agent asked to sign the document. When the document is signed, this agent becomes grantedBy in the resulting authorization grant."
             },
             "approvedBy": {
-              "$ref": "../elhub-common.schema.json#/$defs/approvedByRelationship"
+              "$ref": "../elhub-common.schema.json#/$defs/approvedByRelationship",
+              "description": "The person who signed the document. This person becomes approvedBy in the resulting authorization grant."
             },
             "authorizationGrants": {
               "$ref": "../elhub-common.schema.json#/$defs/authorizationGrantRelationship"
@@ -73,11 +79,13 @@
           "properties": {
             "self": {
               "type": "string",
-              "format": "uri-reference"
+              "format": "uri-reference",
+              "description": "Link to this resource, relative to the API base URL."
             },
             "file": {
               "type": "string",
-              "format": "uri-reference"
+              "format": "uri-reference",
+              "description": "Link to the PDF of the document, relative to the API base URL. Download it, sign it, and submit it with PUT to the same link."
             }
           }
         }
