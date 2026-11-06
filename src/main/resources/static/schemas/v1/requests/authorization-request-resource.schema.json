@@ -44,10 +44,12 @@
               "$ref": "authorization-request-common.schema.json#/$defs/textLanguage"
             },
             "validFrom": {
-              "$ref": "../elhub-common.schema.json#/$defs/validFrom"
+              "$ref": "../elhub-common.schema.json#/$defs/validFrom",
+              "description": "Time the request was created."
             },
             "validTo": {
-              "$ref": "../elhub-common.schema.json#/$defs/validTo"
+              "$ref": "../elhub-common.schema.json#/$defs/validTo",
+              "description": "Deadline for the request. The request must be approved or rejected before this time, after which it expires."
             },
             "createdAt": {
               "$ref": "../elhub-common.schema.json#/$defs/createdAt"
@@ -66,16 +68,20 @@
           "type": "object",
           "properties": {
             "requestedBy": {
-              "$ref": "../elhub-common.schema.json#/$defs/agentRelationship"
+              "$ref": "../elhub-common.schema.json#/$defs/agentRelationship",
+              "description": "The agent that created the request, typically the energy supplier. When the request is approved, this agent becomes grantedTo in the resulting authorization grant."
             },
             "requestedPrincipal": {
-              "$ref": "../elhub-common.schema.json#/$defs/agentRelationship"
+              "$ref": "../elhub-common.schema.json#/$defs/agentRelationship",
+              "description": "The agent the authorization concerns, for example the owner of the metering point. When the request is approved, this agent becomes principal in the resulting authorization grant."
             },
             "requestedOf": {
-              "$ref": "../elhub-common.schema.json#/$defs/agentRelationship"
+              "$ref": "../elhub-common.schema.json#/$defs/agentRelationship",
+              "description": "The agent asked to approve the request. When the request is approved, this agent becomes grantedBy in the resulting authorization grant."
             },
             "approvedBy": {
-              "$ref": "../elhub-common.schema.json#/$defs/approvedByRelationship"
+              "$ref": "../elhub-common.schema.json#/$defs/approvedByRelationship",
+              "description": "The person who approved the request. This person becomes approvedBy in the resulting authorization grant."
             },
             "authorizationGrants": {
               "$ref": "../elhub-common.schema.json#/$defs/authorizationGrantRelationship"
@@ -87,7 +93,8 @@
           "properties": {
             "self": {
               "type": "string",
-              "format": "uri-reference"
+              "format": "uri-reference",
+              "description": "Link to this resource, relative to the API base URL."
             }
           }
         }

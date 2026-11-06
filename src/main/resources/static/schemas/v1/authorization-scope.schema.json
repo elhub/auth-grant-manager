@@ -3,19 +3,23 @@
   "$defs": {
     "requestedScope": {
       "type": "object",
+      "description": "A scope requested for the authorization grant that is created when the document is signed or the request is approved.",
       "required": ["resourceType"],
       "properties": {
         "resourceType": {
+          "description": "Kind of resource the scope covers.",
           "enum": ["MeteringPointContract"]
         },
         "appliesTo": {
           "type": "array",
+          "description": "Constraints identifying which resources the scope covers, for example `meteringPoint.id`.",
           "items": {
             "$ref": "authorization-scope-constraint.schema.json#/$defs/requestedScopeConstraint"
           }
         },
         "allowedChanges": {
           "type": "array",
+          "description": "Constraints on which changes the grant permits, for example the move-in `validFrom`.",
           "items": {
             "$ref": "authorization-scope-constraint.schema.json#/$defs/requestedScopeConstraint"
           }
@@ -24,22 +28,27 @@
     },
     "authorizationScope": {
       "type": "object",
+      "description": "A scope of an authorization grant, describing what the grantedTo agent is authorized to do.",
       "properties": {
         "capability": {
+          "description": "What the grant permits on the resource.",
           "enum": ["Read", "Write"]
         },
         "resourceType": {
           "type": "string",
-          "minLength": 1
+          "minLength": 1,
+          "description": "Kind of resource the scope covers, for example `MeteringPointContract`."
         },
         "appliesTo": {
           "type": "array",
+          "description": "Constraints identifying which resources the scope covers, for example `meteringPoint.id`.",
           "items": {
             "$ref": "authorization-scope-constraint.schema.json#/$defs/authorizationScopeConstraint"
           }
         },
         "allowedChanges": {
           "type": "array",
+          "description": "Constraints on which changes the grant permits, for example the move-in `validFrom`.",
           "items": {
             "$ref": "authorization-scope-constraint.schema.json#/$defs/authorizationScopeConstraint"
           }
