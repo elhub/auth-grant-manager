@@ -760,8 +760,9 @@ paths:
       description: >
         Retrieve the PDF representation of an authorization document. Before submission this is the PDF
         generated and signed by Elhub; after submission it is the signed document. The document is available
-        to the requestedBy, the requestedOf, and the requestedPrincipal. The Accept header must be
-        `application/pdf` or `*/*`.
+        to the requestedBy, the requestedOf, and the requestedPrincipal. The response is always
+        `application/pdf`. The Accept header is optional; if provided, it must allow `application/pdf`
+        (for example, `application/pdf`, `application/*`, or `*/*`).
       x-status: Work in progress
       x-availability: Not deployed to Production or MT1
       parameters:

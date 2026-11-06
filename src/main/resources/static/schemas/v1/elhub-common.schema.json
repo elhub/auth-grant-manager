@@ -31,11 +31,7 @@
     "agentIdentifier": {
       "type": "string",
       "description": "External identifier used to resolve an agent. The type of agent is determined by the length: 9 digits for an organization number, 11 digits for a national identity number, and 13 digits for a GLN.",
-      "examples": [
-        "999888771",
-        "01017012345",
-        "7080000000000"
-      ]
+      "examples": ["999888771", "01017012345", "7080000000000"]
     },
     "agentRelationship": {
       "type": "object",
@@ -45,12 +41,8 @@
           "type": "object",
           "properties": {
             "type": {
-              "description": "Type of agent. Person is a natural person, Organization is an organization identified by organization number, and MarketEntity is a market participant identified by GLN.",
-              "enum": [
-                "Person",
-                "Organization",
-                "MarketEntity"
-              ]
+              "description": "Type of agent. A Person is identified by NIN, an Organization identified by organization number, and a MarketEntity is identified by GLN.",
+              "enum": ["Person", "Organization", "MarketEntity"]
             },
             "id": {
               "type": "string",
@@ -109,10 +101,7 @@
           "properties": {
             "type": {
               "description": "Type of the source resource.",
-              "enum": [
-                "AuthorizationDocument",
-                "AuthorizationRequest"
-              ]
+              "enum": ["AuthorizationDocument", "AuthorizationRequest"]
             },
             "id": {
               "$ref": "#/$defs/resourceUuid"
