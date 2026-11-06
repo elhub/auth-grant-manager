@@ -7,84 +7,78 @@ description: >
 ---
 # Explicit Error Handling
 
-Expected domain failures are represented explicitly. Exceptions are never used for expected domain errors.
+Use Arrow for expected domain failures that callers distinguish. Unexpected infrastructure failures remain exceptions; an `Either` return type does not promise
+exception-free execution. Preserve the existing error model when maintaining exception-based v1 code.
 
 ## Error contract
 
 ```kotlin
-// ✅ Return a result that makes success and expected failure explicit.
-suspend fun findUser(id: UserId): UserResult
-
-// ❌ — nullable loses error context
-suspend fun findUser(id: UserId): User?
-
-// ❌ — throws on failure
-suspend fun findUser(id: UserId): User
+suspend fun findUser(id: UserId): Either<UserNotFound, User>
 ```
 
-This applies to every Handler, Service, and Repository in the codebase.
+Model meaningful outcomes such as not found, conflict, or expiry. Do not carry a generic 500 through every layer as a typed error.
 
 ## Composing operations
 
 ```kotlin
-val party = partyService.resolve(model.requestedBy)
-    ?: return CreateError.PartyResolutionFailed
-
-if (model.authorizedParty != party) {
-    return CreateError.AuthorizationError
+either {
+    val party = partyService.resolve(model.requestedBy).bind()
+    ensure(model.authorizedParty == party) { CreateError.AuthorizationError }
+    repo.insert(model.toRequest()).bind()
 }
-
-return repo.insert(model.toRequest())
-    ?: CreateError.PersistenceError
 ```
 
-Map dependency failures to the caller's domain error type at the boundary. Keep the caller's error type explicit.
+Use compatible error types for direct binding. Translate errors only when their meaning changes; reuse repeated translations instead of creating a new hierarchy
+per layer.
 
 ## List operations
 
 ```kotlin
-// Fail fast — stop on the first error.
-for (item in items) {
-    process(item) ?: return ValidationError.InvalidItem
+either {
+    for (item in items) process(item).bind()
 }
 ```
 
 ## Domain error types
 
-Errors are sealed interfaces, one per action slice:
+Use cohesive sealed error interfaces for expected outcomes:
 
 ```kotlin
 sealed interface CreateRequestError {
     data object Unauthorized : CreateRequestError
     data object InvalidInput : CreateRequestError
-    data class PersistenceError(val cause: RepositoryWriteError) : CreateRequestError
 }
 ```
 
-Sealed interfaces enforce exhaustive `when` handling at call sites. Do not use `Exception` subclasses.
+Sealed interfaces support exhaustive handling. Interpret typed errors at the HTTP boundary; log unexpected exceptions there with their original cause.
 
 ## Wrapping Exposed transactions
 
-Database calls can throw. Wrap them:
+Catch specific library exceptions only where they represent expected outcomes. Keep conversion outside the transaction so SQL exceptions reach rollback first:
 
 ```kotlin
-suspend fun insert(entity: Entity): RepositoryResult {
-    return try {
-        withTransaction { /* Exposed DSL */ }
-        RepositoryResult.Success(entity)
-    } catch (exception: Exception) {
-        RepositoryResult.Failure(RepositoryWriteError.UnexpectedError)
+suspend fun insert(user: NewUser): Either<UserAlreadyExists, User> = either {
+    try {
+        withTransaction { insertUserRow(user) }
+    } catch (e: ExposedSQLException) {
+        if (isUsernameUniqueViolation(e)) raise(UserAlreadyExists(user.username))
+        else throw e
     }
 }
 ```
 
-Never call `transaction { }` (blocking). Use `withTransaction { }` from ``Database.kt``.
+The constraint classifier above is application-specific: check the SQL state and relevant constraint, not every SQL error. Never swallow cancellation or fatal
+errors, discard original causes, or introduce a universal exception-to-Left wrapper.
 
-## Hard rules
+Repositories own transactions; handlers call a single repository operation with all data needed for an atomic change (for example, document confirmation plus
+grant creation). Use the shared suspending `withTransaction`, not blocking `transaction`. Keep `either` outside the atomic transaction boundary so the internal
+exception from `raise` or a failing `.bind()` escapes through Exposed, triggering rollback before the outer `either` converts it to `Left`. A normally returned
+`Left` does not trigger rollback. Test a write followed by `raise` or a failing `.bind()`: assert no partial persistence and an outer `Left`.
+Helpers may use nested `withTransaction` blocks that participate in the enclosing database transaction; outer rollback must undo all dependent writes.
+Do not start independent transactions for those writes.
 
-| Situation                       | Rule                                                      |
-|---------------------------------|-----------------------------------------------------------|
-| Domain or expected errors       | Return an explicit error, never throw                    |
-| Dependency errors               | Map to the caller's domain error type                    |
-| Exception from infrastructure   | Catch and map to a repository error                      |
-| Truly unrecoverable failure     | Allowed to throw (e.g., OOM, misconfiguration at startup) |
+## References
+
+- [Karlo Bratko: instakt](https://github.com/karlobratko/instakt/tree/7084ed472695b69e4ead99bd2511fd81d606df33): see `ExposedUserPersistence.kt` for narrow
+  adapters and outer `either`; older dependencies, and its unexpected-error conversion loses the original cause.
+- [Arrow: converting exceptions](https://arrow-kt.io/learn/typed-errors/working-with-typed-errors/#from-exceptions).
