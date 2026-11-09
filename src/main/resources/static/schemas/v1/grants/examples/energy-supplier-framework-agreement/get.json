@@ -1,0 +1,61 @@
+{
+  "summary": "Grant from document/request type: EnergySupplierFrameworkAgreement",
+  "description": "Persistent grant for changing end-user and energy supplier contracts on the principal's metering points within the agreed grant validity period. Applies to both documentType and requestType with this value. This example shows an AuthorizationDocument source. For the request flow, source.type is AuthorizationRequest and source.id identifies the approved request; the resulting grant type and scopes are the same. The future requested grant start makes this grant Pending at creation.",
+  "value": {
+    "data": {
+      "id": "01997291-7e8b-7000-8000-000000000024",
+      "type": "PersistentGrant",
+      "attributes": {
+        "status": "Pending",
+        "scopes": [
+          {
+            "capability": "Write",
+            "resourceType": "MeteringPointContract",
+            "allowedChanges": [
+              {
+                "attribute": "type",
+                "value": ["EndUser", "EnergySupplier"]
+              }
+            ]
+          }
+        ],
+        "validFrom": "2026-11-01T00:00:00+01:00",
+        "validTo": "2027-11-01T00:00:00+01:00",
+        "createdAt": "2026-10-22T10:15:00+02:00",
+        "updatedAt": "2026-10-22T10:15:00+02:00"
+      },
+      "relationships": {
+        "principal": {
+          "data": {
+            "id": "999888771",
+            "type": "Organization"
+          }
+        },
+        "grantedBy": {
+          "data": {
+            "id": "999888771",
+            "type": "Organization"
+          }
+        },
+        "grantedTo": {
+          "data": {
+            "id": "7080005053246",
+            "type": "MarketEntity"
+          }
+        },
+        "approvedBy": {
+          "data": {
+            "id": "01019012345",
+            "type": "Person"
+          }
+        },
+        "source": {
+          "data": {
+            "id": "01997291-7e8b-7000-8000-000000000021",
+            "type": "AuthorizationDocument"
+          }
+        }
+      }
+    }
+  }
+}
