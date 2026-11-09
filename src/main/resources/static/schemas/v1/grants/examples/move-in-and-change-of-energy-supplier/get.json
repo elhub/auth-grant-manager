@@ -1,0 +1,71 @@
+{
+  "summary": "Grant from document/request type: MoveInAndChangeOfEnergySupplierForOrganization",
+  "description": "Consumable grant for changing the end user and energy supplier on the specified metering point, with the specified move-in date. One grant is created per requested metering point. Applies to both documentType and requestType with this value. This example shows an AuthorizationDocument source. For the request flow, source.type is AuthorizationRequest and source.id identifies the approved request; the resulting grant type and scopes are the same.",
+  "value": {
+    "data": {
+      "id": "01997291-7e8b-7000-8000-000000000015",
+      "type": "ConsumableGrant",
+      "attributes": {
+        "status": "Active",
+        "scopes": [
+          {
+            "capability": "Write",
+            "resourceType": "MeteringPointContract",
+            "appliesTo": [
+              {
+                "attribute": "meteringPoint.id",
+                "value": ["707000000000000001"]
+              }
+            ],
+            "allowedChanges": [
+              {
+                "attribute": "type",
+                "value": ["EnergySupplier", "EndUser"]
+              },
+              {
+                "attribute": "validFrom",
+                "value": ["2026-10-01T00:00:00+02:00"]
+              }
+            ]
+          }
+        ],
+        "validFrom": "2026-09-24T00:00:00+02:00",
+        "validTo": "2028-09-25T00:00:00+02:00",
+        "createdAt": "2026-09-24T10:15:00+02:00",
+        "updatedAt": "2026-09-24T10:15:00+02:00"
+      },
+      "relationships": {
+        "principal": {
+          "data": {
+            "id": "999888771",
+            "type": "Organization"
+          }
+        },
+        "grantedBy": {
+          "data": {
+            "id": "999888771",
+            "type": "Organization"
+          }
+        },
+        "grantedTo": {
+          "data": {
+            "id": "7080005053246",
+            "type": "MarketEntity"
+          }
+        },
+        "approvedBy": {
+          "data": {
+            "id": "01019012345",
+            "type": "Person"
+          }
+        },
+        "source": {
+          "data": {
+            "id": "01997291-7e8b-7000-8000-000000000012",
+            "type": "AuthorizationDocument"
+          }
+        }
+      }
+    }
+  }
+}
