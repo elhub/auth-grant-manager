@@ -13,6 +13,7 @@ import io.mockk.mockk
 import no.elhub.auth.common.config.configureAuthorization
 import no.elhub.auth.common.config.configureSerialization
 import no.elhub.auth.common.configureErrorHandling
+import no.elhub.auth.common.integrations.ediel.EdielRedirectClient
 import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsService
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsService
 import no.elhub.auth.v1.common.AuthorizationRulesService
@@ -56,6 +57,7 @@ class RequestsModuleTest : FunSpec({
                     configureAuthorization()
                     dependencies {
                         provide<AgentService> { mockk<AgentService>() }
+                        provide<EdielRedirectClient> { mockk<EdielRedirectClient>() }
                         provide<MeteringPointsService> { mockk<MeteringPointsService>() }
                         provide<OrganisationsService> { mockk<OrganisationsService>() }
                         provide<AgentRepository> { ExposedAgentRepository() }
@@ -84,6 +86,7 @@ class RequestsModuleTest : FunSpec({
                 configureAuthorization()
                 dependencies {
                     provide<AgentService> { mockk<AgentService>() }
+                    provide<EdielRedirectClient> { mockk<EdielRedirectClient>() }
                     provide<MeteringPointsService> { mockk<MeteringPointsService>() }
                     provide<OrganisationsService> { mockk<OrganisationsService>() }
                     provide<AgentRepository> { ExposedAgentRepository() }
@@ -111,6 +114,7 @@ class RequestsModuleTest : FunSpec({
                 configureAuthorization()
                 dependencies {
                     provide<AgentService> { mockk<AgentService>() }
+                    provide<EdielRedirectClient> { mockk<EdielRedirectClient>() }
                     provide<MeteringPointsService> { mockk<MeteringPointsService>() }
                     provide<OrganisationsService> { mockk<OrganisationsService>() }
                     provide<AgentRepository> { ExposedAgentRepository() }

@@ -5,6 +5,7 @@ import io.ktor.server.plugins.di.dependencies
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import no.elhub.auth.common.auth.UpdateRequestAuthInfoPolicy
+import no.elhub.auth.common.integrations.ediel.EdielRedirectClient
 import no.elhub.auth.plugin.policies.token.base.authinfo.AuthInfoPolicy
 import no.elhub.auth.plugin.tokenAuthorize
 import no.elhub.auth.v1.api.requests.routes.route
@@ -15,6 +16,7 @@ import no.elhub.auth.v1.features.requests.UpdateRequestHandler
 import no.elhub.auth.v1.features.requests.creation.ChangeOfEnergySupplierRequestHandler
 import no.elhub.auth.v1.features.requests.creation.EnergySupplierFrameworkAgreementRequestHandler
 import no.elhub.auth.v1.features.requests.creation.MoveInAndChangeOfEnergySupplierRequestHandler
+import no.elhub.auth.v1.features.requests.creation.RedirectUriValidator
 import no.elhub.auth.v1.repositories.ExposedRequestRepository
 import no.elhub.auth.v1.repositories.RequestRepository
 import no.elhub.auth.v0.features.common.party.PartyService as AgentService
@@ -34,7 +36,12 @@ fun Application.requestsModule() {
         provide<ChangeOfEnergySupplierRequestHandler> { SupplierChangeHandlerImplementation(resolve(), resolve()) }
         provide<MoveInAndChangeOfEnergySupplierRequestHandler> { MoveInHandlerImplementation(resolve(), resolve()) }
         provide<EnergySupplierFrameworkAgreementRequestHandler> { FrameworkAgreementHandlerImplementation(resolve()) }
-        provide<CreateRequestHandler> { CreateRequestHandler(resolve(), resolve(), resolve(), resolve()) }
+        provide<RedirectUriValidator> {
+            RedirectUriValidator(
+                edielRedirectClient = resolve<EdielRedirectClient>(),
+            )
+        }
+        provide<CreateRequestHandler> { CreateRequestHandler(resolve(), resolve(), resolve(), resolve(), resolve()) }
         provide<GetRequestHandler> { GetRequestHandler(resolve()) }
         provide<ListRequestsHandler> { ListRequestsHandler(resolve()) }
         provide<UpdateRequestHandler> { UpdateRequestHandler(resolve(), resolve()) }
