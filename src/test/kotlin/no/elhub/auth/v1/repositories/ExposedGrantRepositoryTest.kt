@@ -325,7 +325,7 @@ class ExposedGrantRepositoryTest : FunSpec({
         insertGrant()
         insertGrant(principal = caller.copy(type = PartyType.Organization))
 
-        val result = repository.findAll(caller, Pagination())
+        val result = repository.findAll(caller, Pagination(), emptyList())
 
         result.totalItems shouldBe 4L
         result.items.map { it.id }.shouldContainExactlyInAnyOrder(
@@ -347,17 +347,17 @@ class ExposedGrantRepositoryTest : FunSpec({
             .sortedByDescending { it.id.toString() }
         val expected = tied + older
 
-        val first = repository.findAll(caller, Pagination(page = 0, size = 2))
+        val first = repository.findAll(caller, Pagination(page = 0, size = 2), emptyList())
         first.items.map { it.id } shouldBe expected.take(2).map { it.id }
         first.totalItems shouldBe 3L
         first.pagination shouldBe Pagination(page = 0, size = 2)
         first.totalPages shouldBe 2
 
-        val last = repository.findAll(caller, Pagination(page = 1, size = 2))
+        val last = repository.findAll(caller, Pagination(page = 1, size = 2), emptyList())
         last.items.map { it.id } shouldBe listOf(older.id)
         last.totalItems shouldBe 3L
 
-        val beyond = repository.findAll(caller, Pagination(page = 2, size = 2))
+        val beyond = repository.findAll(caller, Pagination(page = 2, size = 2), emptyList())
         beyond.items shouldBe emptyList()
         beyond.totalItems shouldBe 3L
     }
@@ -365,7 +365,7 @@ class ExposedGrantRepositoryTest : FunSpec({
     test("findAll derives Pending for a grant with a future validFrom") {
         val grant = insertGrant(validFrom = future, validTo = future + 1.days)
 
-        val page = repository.findAll(grant.principal, Pagination())
+        val page = repository.findAll(grant.principal, Pagination(), emptyList())
         val result = page.items.single()
 
         page.totalItems shouldBe 1L
@@ -373,9 +373,69 @@ class ExposedGrantRepositoryTest : FunSpec({
         assertGrant(result.copy(status = grant.status), grant)
     }
 
+    test("findAll filters by derived status with terminal statuses taking precedence") {
+        val caller = party(PartyType.Person)
+        val grants = listOf(
+            insertGrant(principal = caller) to AuthorizationGrantStatus.Active,
+            insertGrant(grantedTo = caller, validTo = null) to AuthorizationGrantStatus.Active,
+            insertGrant(grantedBy = caller, validFrom = future, validTo = future + 1.days) to AuthorizationGrantStatus.Pending,
+            insertGrant(principal = caller, validFrom = future, validTo = null) to AuthorizationGrantStatus.Pending,
+            insertGrant(principal = caller, validTo = past) to AuthorizationGrantStatus.Expired,
+            insertGrant(principal = caller, validFrom = future, validTo = past) to AuthorizationGrantStatus.Expired,
+            insertGrant(principal = caller, status = DatabaseGrantStatus.Revoked, validTo = past) to AuthorizationGrantStatus.Revoked,
+            insertGrant(principal = caller, status = DatabaseGrantStatus.Revoked, validFrom = future) to AuthorizationGrantStatus.Revoked,
+            insertGrant(principal = caller, status = DatabaseGrantStatus.Exhausted, validTo = past) to AuthorizationGrantStatus.Exhausted,
+            insertGrant(principal = caller, status = DatabaseGrantStatus.Exhausted, validFrom = future) to AuthorizationGrantStatus.Exhausted,
+        )
+        insertGrant()
+        insertGrant(approvedBy = caller)
+        insertGrant(principal = caller.copy(type = PartyType.Organization))
+
+        val filters = AuthorizationGrantStatus.entries.map { listOf(it) } + listOf(
+            listOf(AuthorizationGrantStatus.Pending, AuthorizationGrantStatus.Expired),
+            AuthorizationGrantStatus.entries.toList(),
+            emptyList(),
+        )
+        filters.forEach { statuses ->
+            val expected = grants.filter { (_, status) -> statuses.isEmpty() || status in statuses }
+            val result = repository.findAll(caller, Pagination(), statuses)
+
+            result.items.map { it.id }.shouldContainExactlyInAnyOrder(expected.map { it.first.id })
+            result.totalItems shouldBe expected.size.toLong()
+            result.items.forEach { grant ->
+                grant.status shouldBe expected.single { it.first.id == grant.id }.second
+            }
+        }
+    }
+
+    test("findAll applies status filtering before pagination and counts only matching grants") {
+        val caller = party(PartyType.Person)
+        val older = insertGrant(principal = caller, created = createdAt - 1.days)
+        val newer = insertGrant(principal = caller)
+        insertGrant(principal = caller, validTo = past, created = createdAt + 1.days)
+        val statuses = listOf(AuthorizationGrantStatus.Active)
+
+        val first = repository.findAll(caller, Pagination(page = 0, size = 1), statuses)
+        first.items.map { it.id } shouldBe listOf(newer.id)
+        first.totalItems shouldBe 2L
+        first.totalPages shouldBe 2
+
+        val last = repository.findAll(caller, Pagination(page = 1, size = 1), statuses)
+        last.items.map { it.id } shouldBe listOf(older.id)
+        last.totalItems shouldBe 2L
+
+        val beyond = repository.findAll(caller, Pagination(page = 2, size = 1), statuses)
+        beyond.items shouldBe emptyList()
+        beyond.totalItems shouldBe 2L
+
+        val noMatches = repository.findAll(caller, Pagination(), listOf(AuthorizationGrantStatus.Revoked))
+        noMatches.items shouldBe emptyList()
+        noMatches.totalItems shouldBe 0L
+    }
+
     test("findAll returns an empty page for an unknown party") {
         val pagination = Pagination(page = 1, size = 2)
-        val result = repository.findAll(party(PartyType.Person), pagination)
+        val result = repository.findAll(party(PartyType.Person), pagination, emptyList())
 
         result.items shouldBe emptyList()
         result.totalItems shouldBe 0L

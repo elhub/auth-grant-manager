@@ -54,7 +54,7 @@ class ListGrantsRouteTest : FunSpec({
     beforeTest { clearMocks(handler) }
 
     test("GET returns a JSON:API collection using default pagination") {
-        coEvery { handler(authorizedParty, Pagination()) } returns Page(listOf(grant), 1, Pagination())
+        coEvery { handler(authorizedParty, Pagination(), emptyList()) } returns Page(listOf(grant), 1, Pagination())
 
         testApplication {
             setupAppWith(authorizedParty) {
@@ -78,7 +78,7 @@ class ListGrantsRouteTest : FunSpec({
             status = AuthorizationGrantStatus.Pending,
             validFrom = Instant.parse("2099-01-01T00:00:00Z"),
         )
-        coEvery { handler(authorizedParty, Pagination()) } returns Page(listOf(pending), 1, Pagination())
+        coEvery { handler(authorizedParty, Pagination(), emptyList()) } returns Page(listOf(pending), 1, Pagination())
 
         testApplication {
             setupAppWith(authorizedParty) {
@@ -96,7 +96,7 @@ class ListGrantsRouteTest : FunSpec({
 
     test("GET passes page parameters to the handler") {
         val pagination = Pagination(page = 1, size = 2)
-        coEvery { handler(authorizedParty, pagination) } returns Page(listOf(grant), 5, pagination)
+        coEvery { handler(authorizedParty, pagination, emptyList()) } returns Page(listOf(grant), 5, pagination)
 
         testApplication {
             setupAppWith(authorizedParty) {
@@ -116,7 +116,7 @@ class ListGrantsRouteTest : FunSpec({
             body.meta.getValue("page").jsonPrimitive.int shouldBe 1
             body.meta.getValue("pageSize").jsonPrimitive.int shouldBe 2
             body.meta.getValue("totalPages").jsonPrimitive.int shouldBe 3
-            coVerify(exactly = 1) { handler(authorizedParty, pagination) }
+            coVerify(exactly = 1) { handler(authorizedParty, pagination, emptyList()) }
         }
     }
 
@@ -126,7 +126,7 @@ class ListGrantsRouteTest : FunSpec({
         Triple("2", "0", Pagination(page = 2, size = 1)),
     ).forEach { (page, size, pagination) ->
         test("GET normalizes page '$page' and size '$size' like v0") {
-            coEvery { handler(authorizedParty, pagination) } returns Page(emptyList(), 0, pagination)
+            coEvery { handler(authorizedParty, pagination, emptyList()) } returns Page(emptyList(), 0, pagination)
 
             testApplication {
                 setupAppWith(authorizedParty) {
@@ -143,13 +143,65 @@ class ListGrantsRouteTest : FunSpec({
 
                 response.status shouldBe HttpStatusCode.OK
                 response.body<JsonApiListAuthorizationGrantsResponse>().data shouldBe emptyList()
-                coVerify(exactly = 1) { handler(authorizedParty, pagination) }
+                coVerify(exactly = 1) { handler(authorizedParty, pagination, emptyList()) }
             }
         }
     }
 
+    (
+        AuthorizationGrantStatus.entries.map { it.name to listOf(it) } + listOf(
+            "Active,Expired,Active" to listOf(AuthorizationGrantStatus.Active, AuthorizationGrantStatus.Expired),
+            "" to emptyList(),
+            " " to emptyList(),
+        )
+        ).forEach { (filter, statuses) ->
+        test("GET parses status filter '$filter' and forwards it to the handler") {
+            val pagination = Pagination(page = 1, size = 2)
+            coEvery { handler(authorizedParty, pagination, statuses) } returns Page(emptyList(), 0, pagination)
+
+            testApplication {
+                setupAppWith(authorizedParty) {
+                    route(V1_GRANTS_PATH) { route(handler) }
+                }
+
+                val response = client.get(V1_GRANTS_PATH) {
+                    accept(jsonApiContentType)
+                    url {
+                        parameters.append("page[number]", "1")
+                        parameters.append("page[size]", "2")
+                        parameters.append("filter[status]", filter)
+                    }
+                }
+
+                response.status shouldBe HttpStatusCode.OK
+                coVerify(exactly = 1) { handler(authorizedParty, pagination, statuses) }
+                if (statuses.isNotEmpty()) {
+                    response.body<JsonApiListAuthorizationGrantsResponse>().links.self
+                        ?.substringAfter("&filter[status]=") shouldBe statuses.joinToString(",")
+                }
+            }
+        }
+    }
+
+    test("GET rejects invalid status filter without calling the handler") {
+        testApplication {
+            setupAppWith(authorizedParty) {
+                route(V1_GRANTS_PATH) { route(handler) }
+            }
+
+            val response = client.get(V1_GRANTS_PATH) {
+                accept(jsonApiContentType)
+                url { parameters.append("filter[status]", "invalid-status") }
+            }
+
+            response.status shouldBe HttpStatusCode.BadRequest
+            response.body<JsonApiErrorCollection>().errors.single().status shouldBe "400"
+            coVerify(exactly = 0) { handler(any(), any(), any()) }
+        }
+    }
+
     test("GET returns a JSON:API error when the handler fails") {
-        coEvery { handler(authorizedParty, Pagination()) } throws
+        coEvery { handler(authorizedParty, Pagination(), emptyList()) } throws
             RepositoryReadError.UnexpectedError("Database unavailable")
 
         testApplication {
