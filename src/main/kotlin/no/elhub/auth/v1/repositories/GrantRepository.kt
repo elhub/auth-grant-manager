@@ -15,6 +15,7 @@ import no.elhub.auth.v1.domain.AuthorizationGrantType
 import no.elhub.auth.v1.domain.AuthorizationScopeConstraint
 import no.elhub.auth.v1.domain.AuthorizationScopeConstraintAttribute
 import no.elhub.auth.v1.domain.AuthorizationScopeConstraintKind
+import no.elhub.auth.v1.domain.GrantPartyFilters
 import no.elhub.auth.v1.domain.GrantedAuthorizationScope
 import no.elhub.auth.v1.domain.MeteringPointContractType
 import no.elhub.auth.v1.domain.MeteringPointId
@@ -29,6 +30,7 @@ import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.greater
 import org.jetbrains.exposed.v1.core.inList
+import org.jetbrains.exposed.v1.core.inSubQuery
 import org.jetbrains.exposed.v1.core.isNull
 import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.core.lessEq
@@ -36,6 +38,7 @@ import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.core.vendors.ForUpdateOption
 import org.jetbrains.exposed.v1.datetime.timestamp
 import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.updateReturning
 import org.postgresql.util.PGobject
@@ -53,6 +56,7 @@ interface GrantRepository {
         party: AuthorizationParty,
         pagination: Pagination,
         statuses: List<AuthorizationGrantStatus>,
+        partyFilters: GrantPartyFilters,
     ): Page<AuthorizationGrant>
 
     suspend fun insert(grant: AuthorizationGrant): AuthorizationGrant
@@ -123,13 +127,14 @@ class ExposedGrantRepository(
         party: AuthorizationParty,
         pagination: Pagination,
         statuses: List<AuthorizationGrantStatus>,
+        partyFilters: GrantPartyFilters,
     ): Page<AuthorizationGrant> = withTransaction {
         val partyId = partyRepository.findOrInsert(party.type, party.id).id
         val now = now()
         val partyCondition = (AuthorizationGrantTable.principal eq partyId) or
             (AuthorizationGrantTable.grantedTo eq partyId) or
             (AuthorizationGrantTable.grantedBy eq partyId)
-        val whereClause = if (statuses.isEmpty()) {
+        var whereClause = if (statuses.isEmpty()) {
             partyCondition
         } else {
             val statusCondition = statuses.map { status ->
@@ -151,6 +156,18 @@ class ExposedGrantRepository(
                 }
             }.reduce { acc, op -> acc or op }
             partyCondition and statusCondition
+        }
+        listOf(
+            AuthorizationGrantTable.grantedBy to partyFilters.grantedBy,
+            AuthorizationGrantTable.principal to partyFilters.principal,
+            AuthorizationGrantTable.approvedBy to partyFilters.approvedBy,
+            AuthorizationGrantTable.grantedTo to partyFilters.grantedTo,
+        ).forEach { (column, ids) ->
+            if (ids.isNotEmpty()) {
+                val matchingParties = AuthorizationPartyTable.select(AuthorizationPartyTable.id)
+                    .where { AuthorizationPartyTable.partyId inList ids }
+                whereClause = whereClause and (column inSubQuery matchingParties)
+            }
         }
         val totalItems = AuthorizationGrantTable.selectAll().where { whereClause }.count()
         val rows = AuthorizationGrantTable.selectAll()

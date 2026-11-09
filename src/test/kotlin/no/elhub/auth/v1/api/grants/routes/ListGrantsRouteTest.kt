@@ -6,6 +6,7 @@ import io.ktor.client.call.body
 import io.ktor.client.request.accept
 import io.ktor.client.request.get
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.Url
 import io.ktor.http.contentType
 import io.ktor.server.routing.route
 import io.ktor.server.testing.testApplication
@@ -28,6 +29,7 @@ import no.elhub.auth.v1.domain.AuthorizationGrant
 import no.elhub.auth.v1.domain.AuthorizationGrantSourceType
 import no.elhub.auth.v1.domain.AuthorizationGrantStatus
 import no.elhub.auth.v1.domain.AuthorizationGrantType
+import no.elhub.auth.v1.domain.GrantPartyFilters
 import no.elhub.auth.v1.features.grants.ListGrantsHandler
 import no.elhub.auth.v1.repositories.RepositoryReadError
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
@@ -54,7 +56,7 @@ class ListGrantsRouteTest : FunSpec({
     beforeTest { clearMocks(handler) }
 
     test("GET returns a JSON:API collection using default pagination") {
-        coEvery { handler(authorizedParty, Pagination(), emptyList()) } returns Page(listOf(grant), 1, Pagination())
+        coEvery { handler(authorizedParty, Pagination(), emptyList(), GrantPartyFilters()) } returns Page(listOf(grant), 1, Pagination())
 
         testApplication {
             setupAppWith(authorizedParty) {
@@ -78,7 +80,7 @@ class ListGrantsRouteTest : FunSpec({
             status = AuthorizationGrantStatus.Pending,
             validFrom = Instant.parse("2099-01-01T00:00:00Z"),
         )
-        coEvery { handler(authorizedParty, Pagination(), emptyList()) } returns Page(listOf(pending), 1, Pagination())
+        coEvery { handler(authorizedParty, Pagination(), emptyList(), GrantPartyFilters()) } returns Page(listOf(pending), 1, Pagination())
 
         testApplication {
             setupAppWith(authorizedParty) {
@@ -96,7 +98,7 @@ class ListGrantsRouteTest : FunSpec({
 
     test("GET passes page parameters to the handler") {
         val pagination = Pagination(page = 1, size = 2)
-        coEvery { handler(authorizedParty, pagination, emptyList()) } returns Page(listOf(grant), 5, pagination)
+        coEvery { handler(authorizedParty, pagination, emptyList(), GrantPartyFilters()) } returns Page(listOf(grant), 5, pagination)
 
         testApplication {
             setupAppWith(authorizedParty) {
@@ -116,7 +118,7 @@ class ListGrantsRouteTest : FunSpec({
             body.meta.getValue("page").jsonPrimitive.int shouldBe 1
             body.meta.getValue("pageSize").jsonPrimitive.int shouldBe 2
             body.meta.getValue("totalPages").jsonPrimitive.int shouldBe 3
-            coVerify(exactly = 1) { handler(authorizedParty, pagination, emptyList()) }
+            coVerify(exactly = 1) { handler(authorizedParty, pagination, emptyList(), GrantPartyFilters()) }
         }
     }
 
@@ -126,7 +128,7 @@ class ListGrantsRouteTest : FunSpec({
         Triple("2", "0", Pagination(page = 2, size = 1)),
     ).forEach { (page, size, pagination) ->
         test("GET normalizes page '$page' and size '$size' like v0") {
-            coEvery { handler(authorizedParty, pagination, emptyList()) } returns Page(emptyList(), 0, pagination)
+            coEvery { handler(authorizedParty, pagination, emptyList(), GrantPartyFilters()) } returns Page(emptyList(), 0, pagination)
 
             testApplication {
                 setupAppWith(authorizedParty) {
@@ -143,7 +145,7 @@ class ListGrantsRouteTest : FunSpec({
 
                 response.status shouldBe HttpStatusCode.OK
                 response.body<JsonApiListAuthorizationGrantsResponse>().data shouldBe emptyList()
-                coVerify(exactly = 1) { handler(authorizedParty, pagination, emptyList()) }
+                coVerify(exactly = 1) { handler(authorizedParty, pagination, emptyList(), GrantPartyFilters()) }
             }
         }
     }
@@ -157,7 +159,7 @@ class ListGrantsRouteTest : FunSpec({
         ).forEach { (filter, statuses) ->
         test("GET parses status filter '$filter' and forwards it to the handler") {
             val pagination = Pagination(page = 1, size = 2)
-            coEvery { handler(authorizedParty, pagination, statuses) } returns Page(emptyList(), 0, pagination)
+            coEvery { handler(authorizedParty, pagination, statuses, GrantPartyFilters()) } returns Page(emptyList(), 0, pagination)
 
             testApplication {
                 setupAppWith(authorizedParty) {
@@ -174,12 +176,122 @@ class ListGrantsRouteTest : FunSpec({
                 }
 
                 response.status shouldBe HttpStatusCode.OK
-                coVerify(exactly = 1) { handler(authorizedParty, pagination, statuses) }
+                coVerify(exactly = 1) { handler(authorizedParty, pagination, statuses, GrantPartyFilters()) }
                 if (statuses.isNotEmpty()) {
                     response.body<JsonApiListAuthorizationGrantsResponse>().links.self
                         ?.substringAfter("&filter[status]=") shouldBe statuses.joinToString(",")
                 }
             }
+        }
+    }
+
+    listOf(
+        GRANTED_BY_FILTER_PARAM to GrantPartyFilters(grantedBy = listOf("party-2", "party-1")),
+        PRINCIPAL_FILTER_PARAM to GrantPartyFilters(principal = listOf("party-2", "party-1")),
+        APPROVED_BY_FILTER_PARAM to GrantPartyFilters(approvedBy = listOf("party-2", "party-1")),
+        GRANTED_TO_FILTER_PARAM to GrantPartyFilters(grantedTo = listOf("party-2", "party-1")),
+    ).forEach { (parameter, partyFilters) ->
+        test("GET parses comma-separated $parameter IDs and deduplicates in input order") {
+            coEvery { handler(authorizedParty, Pagination(), emptyList(), partyFilters) } returns Page(emptyList(), 0, Pagination())
+
+            testApplication {
+                setupAppWith(authorizedParty) {
+                    route(V1_GRANTS_PATH) { route(handler) }
+                }
+
+                val response = client.get(V1_GRANTS_PATH) {
+                    accept(jsonApiContentType)
+                    url { parameters.append(parameter, "party-2,party-1,party-2") }
+                }
+
+                response.status shouldBe HttpStatusCode.OK
+                coVerify(exactly = 1) { handler(authorizedParty, Pagination(), emptyList(), partyFilters) }
+            }
+        }
+
+        test("GET rejects malformed $parameter IDs before calling the handler") {
+            testApplication {
+                setupAppWith(authorizedParty) {
+                    route(V1_GRANTS_PATH) { route(handler) }
+                }
+
+                listOf(",party-1", "party-1,", "party-1,,party-2", " party-1", "party-1 ", "party 1", "party-1,\tparty-2")
+                    .forEach { filter ->
+                        val response = client.get(V1_GRANTS_PATH) {
+                            accept(jsonApiContentType)
+                            url { parameters.append(parameter, filter) }
+                        }
+
+                        response.status shouldBe HttpStatusCode.BadRequest
+                        response.body<JsonApiErrorCollection>().errors.single().status shouldBe "400"
+                    }
+                coVerify(exactly = 0) { handler(any(), any(), any(), any()) }
+            }
+        }
+    }
+
+    test("GET forwards combined party filters, statuses and pagination") {
+        val pagination = Pagination(page = 1, size = 2)
+        val statuses = listOf(AuthorizationGrantStatus.Active, AuthorizationGrantStatus.Pending)
+        val partyFilters = GrantPartyFilters(
+            grantedBy = listOf("grantor-1", "grantor-2"),
+            principal = listOf("principal-1"),
+            approvedBy = listOf("approver-1"),
+            grantedTo = listOf("recipient-1"),
+        )
+        coEvery { handler(authorizedParty, pagination, statuses, partyFilters) } returns Page(emptyList(), 0, pagination)
+
+        testApplication {
+            setupAppWith(authorizedParty) {
+                route(V1_GRANTS_PATH) { route(handler) }
+            }
+
+            val response = client.get(V1_GRANTS_PATH) {
+                accept(jsonApiContentType)
+                url {
+                    parameters.append("page[number]", "1")
+                    parameters.append("page[size]", "2")
+                    parameters.append(STATUS_FILTER_PARAM, "Active,Pending")
+                    parameters.append(GRANTED_BY_FILTER_PARAM, "grantor-1,grantor-2")
+                    parameters.append(PRINCIPAL_FILTER_PARAM, "principal-1")
+                    parameters.append(APPROVED_BY_FILTER_PARAM, "approver-1")
+                    parameters.append(GRANTED_TO_FILTER_PARAM, "recipient-1")
+                }
+            }
+
+            response.status shouldBe HttpStatusCode.OK
+            coVerify(exactly = 1) { handler(authorizedParty, pagination, statuses, partyFilters) }
+            val parameters = Url(requireNotNull(response.body<JsonApiListAuthorizationGrantsResponse>().links.self)).parameters
+            parameters[STATUS_FILTER_PARAM] shouldBe "Active,Pending"
+            parameters[GRANTED_BY_FILTER_PARAM] shouldBe "grantor-1,grantor-2"
+            parameters[PRINCIPAL_FILTER_PARAM] shouldBe "principal-1"
+            parameters[APPROVED_BY_FILTER_PARAM] shouldBe "approver-1"
+            parameters[GRANTED_TO_FILTER_PARAM] shouldBe "recipient-1"
+        }
+    }
+
+    test("GET treats empty and whitespace-only party filters as omitted") {
+        coEvery { handler(authorizedParty, Pagination(), emptyList(), GrantPartyFilters()) } returns Page(emptyList(), 0, Pagination())
+
+        testApplication {
+            setupAppWith(authorizedParty) {
+                route(V1_GRANTS_PATH) { route(handler) }
+            }
+
+            val response = client.get(V1_GRANTS_PATH) {
+                accept(jsonApiContentType)
+                url {
+                    parameters.append(GRANTED_BY_FILTER_PARAM, "")
+                    parameters.append(PRINCIPAL_FILTER_PARAM, " ")
+                    parameters.append(APPROVED_BY_FILTER_PARAM, "\t")
+                    parameters.append(GRANTED_TO_FILTER_PARAM, "  ")
+                }
+            }
+
+            response.status shouldBe HttpStatusCode.OK
+            coVerify(exactly = 1) { handler(authorizedParty, Pagination(), emptyList(), GrantPartyFilters()) }
+            response.body<JsonApiListAuthorizationGrantsResponse>().links.self shouldBe
+                "$V1_GRANTS_PATH?page[number]=0&page[size]=100"
         }
     }
 
@@ -196,12 +308,12 @@ class ListGrantsRouteTest : FunSpec({
 
             response.status shouldBe HttpStatusCode.BadRequest
             response.body<JsonApiErrorCollection>().errors.single().status shouldBe "400"
-            coVerify(exactly = 0) { handler(any(), any(), any()) }
+            coVerify(exactly = 0) { handler(any(), any(), any(), any()) }
         }
     }
 
     test("GET returns a JSON:API error when the handler fails") {
-        coEvery { handler(authorizedParty, Pagination(), emptyList()) } throws
+        coEvery { handler(authorizedParty, Pagination(), emptyList(), GrantPartyFilters()) } throws
             RepositoryReadError.UnexpectedError("Database unavailable")
 
         testApplication {
