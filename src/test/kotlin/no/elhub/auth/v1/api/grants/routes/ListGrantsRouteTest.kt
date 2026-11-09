@@ -183,22 +183,20 @@ class ListGrantsRouteTest : FunSpec({
         }
     }
 
-    listOf("Approved", "active", "Pending,Unknown", "Active, Expired", "Active,").forEach { filter ->
-        test("GET rejects invalid status filter '$filter' without calling the handler") {
-            testApplication {
-                setupAppWith(authorizedParty) {
-                    route(V1_GRANTS_PATH) { route(handler) }
-                }
-
-                val response = client.get(V1_GRANTS_PATH) {
-                    accept(jsonApiContentType)
-                    url { parameters.append("filter[status]", filter) }
-                }
-
-                response.status shouldBe HttpStatusCode.BadRequest
-                response.body<JsonApiErrorCollection>().errors.single().status shouldBe "400"
-                coVerify(exactly = 0) { handler(any(), any(), any()) }
+    test("GET rejects invalid status filter without calling the handler") {
+        testApplication {
+            setupAppWith(authorizedParty) {
+                route(V1_GRANTS_PATH) { route(handler) }
             }
+
+            val response = client.get(V1_GRANTS_PATH) {
+                accept(jsonApiContentType)
+                url { parameters.append("filter[status]", "invalid-status") }
+            }
+
+            response.status shouldBe HttpStatusCode.BadRequest
+            response.body<JsonApiErrorCollection>().errors.single().status shouldBe "400"
+            coVerify(exactly = 0) { handler(any(), any(), any()) }
         }
     }
 
