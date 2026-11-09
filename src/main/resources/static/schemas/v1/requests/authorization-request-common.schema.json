@@ -8,6 +8,7 @@
       "const": "AuthorizationRequest"
     },
     "requestType": {
+      "description": "Type of authorization request. ChangeOfEnergySupplierForOrganization: change of energy supplier on existing metering points. MoveInAndChangeOfEnergySupplierForOrganization: move-in combined with a change of energy supplier. EnergySupplierFrameworkAgreement: framework agreement between the energy supplier and the customer, resulting in a persistent grant.",
       "enum": [
         "ChangeOfEnergySupplierForOrganization",
         "MoveInAndChangeOfEnergySupplierForOrganization",
@@ -15,6 +16,7 @@
       ]
     },
     "status": {
+      "description": "Status of the request. Pending: awaiting a decision. Approved: the request was approved. Rejected: the request was rejected. Expired: validTo passed before a decision was made.",
       "enum": ["Pending", "Approved", "Rejected", "Expired"]
     },
     "textReference": {
@@ -30,32 +32,35 @@
     },
     "requestedScopes": {
       "type": "array",
+      "description": "Scopes requested for the authorization grant created when the request is approved.",
       "items": {
         "$ref": "../authorization-scope.schema.json#/$defs/requestedScope"
       }
     },
     "externalReference": {
-      "type": "string"
+      "type": "string",
+      "description": "The caller's own reference, returned unchanged."
     },
     "requestedGrantValidFrom": {
-      "type": "string",
-      "format": "date-time",
-      "description": "Requested start of validity for the authorization grant created when the request is approved."
+      "$ref": "../elhub-common.schema.json#/$defs/dateTime",
+      "description": "Requested start of validity for the authorization grant created when the request is approved. Only used for EnergySupplierFrameworkAgreement."
     },
     "requestedGrantValidTo": {
-      "type": "string",
-      "format": "date-time",
-      "description": "Requested end of validity for the authorization grant created when the request is approved."
+      "$ref": "../elhub-common.schema.json#/$defs/dateTime",
+      "description": "Requested end of validity for the authorization grant created when the request is approved. Only used for EnergySupplierFrameworkAgreement."
     },
     "redirectUri": {
       "type": "string",
-      "format": "uri"
+      "format": "uri",
+      "description": "Absolute HTTPS URI the user is redirected to after approving or rejecting the request. The host must match, or be a subdomain of, the redirect URL registered in Ediel for the requestedBy agent."
     },
     "requestedPrincipal": {
-      "type": "string"
+      "$ref": "../elhub-common.schema.json#/$defs/agentIdentifier",
+      "description": "Identifier of the agent the authorization concerns, for example the owner of the metering point. The resolved agent becomes requestedPrincipal on the request."
     },
     "requestedOf": {
-      "type": "string"
+      "$ref": "../elhub-common.schema.json#/$defs/agentIdentifier",
+      "description": "Identifier of the agent asked to approve the request. The resolved agent becomes requestedOf on the request."
     }
   }
 }

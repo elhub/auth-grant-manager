@@ -23,10 +23,12 @@
               "$ref": "authorization-grant-common.schema.json#/$defs/scopes"
             },
             "validFrom": {
-              "$ref": "../elhub-common.schema.json#/$defs/validFrom"
+              "$ref": "../elhub-common.schema.json#/$defs/validFrom",
+              "description": "Start of the period in which the grant is valid."
             },
             "validTo": {
-              "$ref": "../elhub-common.schema.json#/$defs/validTo"
+              "$ref": "../elhub-common.schema.json#/$defs/validTo",
+              "description": "End of the period in which the grant is valid. May be null, meaning the grant has no end date."
             },
             "createdAt": {
               "$ref": "../elhub-common.schema.json#/$defs/createdAt"
@@ -40,19 +42,24 @@
           "type": "object",
           "properties": {
             "principal": {
-              "$ref": "../elhub-common.schema.json#/$defs/agentRelationship"
+              "$ref": "../elhub-common.schema.json#/$defs/agentRelationship",
+              "description": "The agent the authorization concerns. This is the requestedPrincipal agent of the source document or request."
             },
             "grantedBy": {
-              "$ref": "../elhub-common.schema.json#/$defs/agentRelationship"
+              "$ref": "../elhub-common.schema.json#/$defs/agentRelationship",
+              "description": "The agent that gave the authorization. This is the requestedOf agent of the source document or request."
             },
             "grantedTo": {
-              "$ref": "../elhub-common.schema.json#/$defs/agentRelationship"
+              "$ref": "../elhub-common.schema.json#/$defs/agentRelationship",
+              "description": "The agent that holds the authorization. This is the requestedBy agent of the source document or request."
             },
             "approvedBy": {
-              "$ref": "../elhub-common.schema.json#/$defs/approvedByRelationship"
+              "$ref": "../elhub-common.schema.json#/$defs/approvedByRelationship",
+              "description": "The person who signed the source document or approved the source request."
             },
             "source": {
-              "$ref": "../elhub-common.schema.json#/$defs/authorizationSourceRelationship"
+              "$ref": "../elhub-common.schema.json#/$defs/authorizationSourceRelationship",
+              "description": "The authorization document or request the grant was created from."
             }
           }
         },
@@ -61,7 +68,8 @@
           "properties": {
             "self": {
               "type": "string",
-              "format": "uri-reference"
+              "format": "uri-reference",
+              "description": "Link to this resource, relative to the API base URL."
             }
           }
         }

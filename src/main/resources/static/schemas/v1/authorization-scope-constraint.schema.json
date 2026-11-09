@@ -3,28 +3,34 @@
   "$defs": {
     "requestedScopeConstraint": {
       "type": "object",
+      "description": "A constraint on a requested scope.",
       "properties": {
         "attribute": {
           "type": "string",
-          "minLength": 1
+          "minLength": 1,
+          "description": "Attribute the constraint applies to, for example `meteringPoint.id` or `validFrom`."
         },
         "value": {
           "type": "array",
           "minItems": 1,
+          "description": "Allowed values for the attribute.",
           "items": {}
         }
       }
     },
     "authorizationScopeConstraint": {
       "type": "object",
+      "description": "A constraint on a granted scope.",
       "properties": {
         "attribute": {
           "type": "string",
-          "minLength": 1
+          "minLength": 1,
+          "description": "Attribute the constraint applies to, for example `meteringPoint.id` or `validFrom`."
         },
         "value": {
           "type": "array",
           "minItems": 1,
+          "description": "Allowed values for the attribute.",
           "items": {}
         }
       }
