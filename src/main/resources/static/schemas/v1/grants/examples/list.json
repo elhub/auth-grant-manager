@@ -72,9 +72,9 @@
       }
     ],
     "links": {
-      "self": "/access/v1/authorization-grants?page[number]=0&page[size]=100",
-      "first": "/access/v1/authorization-grants?page[number]=0&page[size]=100",
-      "last": "/access/v1/authorization-grants?page[number]=0&page[size]=100"
+      "self": "/access/v1/authorization-grants?page%5Bnumber%5D=0&page%5Bsize%5D=100",
+      "first": "/access/v1/authorization-grants?page%5Bnumber%5D=0&page%5Bsize%5D=100",
+      "last": "/access/v1/authorization-grants?page%5Bnumber%5D=0&page%5Bsize%5D=100"
     },
     "meta": {
       "createdAt": "2026-05-26T12:00:00+02:00",
