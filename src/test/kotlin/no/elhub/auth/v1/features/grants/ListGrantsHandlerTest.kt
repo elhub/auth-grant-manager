@@ -14,6 +14,7 @@ import no.elhub.auth.v0.features.common.Page
 import no.elhub.auth.v0.features.common.Pagination
 import no.elhub.auth.v1.domain.AuthorizationGrant
 import no.elhub.auth.v1.domain.AuthorizationGrantSourceType
+import no.elhub.auth.v1.domain.AuthorizationGrantStatus
 import no.elhub.auth.v1.domain.AuthorizationGrantType
 import no.elhub.auth.v1.repositories.GrantRepository
 import no.elhub.auth.v1.repositories.RepositoryReadError
@@ -41,25 +42,26 @@ class ListGrantsHandlerTest : FunSpec({
 
     beforeTest { clearMocks(grantRepository) }
 
-    test("returns the page from the repository for the authorized party") {
+    test("forwards the authorized party, pagination and statuses and returns the repository page") {
+        val statuses = listOf(AuthorizationGrantStatus.Pending, AuthorizationGrantStatus.Revoked)
         val page = Page(listOf(grant), 3, pagination)
-        coEvery { grantRepository.findAll(authorizedParty, pagination) } returns page
+        coEvery { grantRepository.findAll(authorizedParty, pagination, statuses) } returns page
 
-        handler(authorizedParty, pagination) shouldBe page
-        coVerify(exactly = 1) { grantRepository.findAll(authorizedParty, pagination) }
+        handler(authorizedParty, pagination, statuses) shouldBeSameInstanceAs page
+        coVerify(exactly = 1) { grantRepository.findAll(authorizedParty, pagination, statuses) }
     }
 
     test("returns an empty page when the party has no grants") {
         val page = Page(emptyList<AuthorizationGrant>(), 0, pagination)
-        coEvery { grantRepository.findAll(authorizedParty, pagination) } returns page
+        coEvery { grantRepository.findAll(authorizedParty, pagination, emptyList()) } returns page
 
-        handler(authorizedParty, pagination) shouldBe page
+        handler(authorizedParty, pagination, emptyList()) shouldBe page
     }
 
     test("propagates a grant repository failure") {
         val error = RepositoryReadError.UnexpectedError("Database unavailable")
-        coEvery { grantRepository.findAll(authorizedParty, pagination) } throws error
+        coEvery { grantRepository.findAll(authorizedParty, pagination, emptyList()) } throws error
 
-        shouldThrow<RepositoryReadError.UnexpectedError> { handler(authorizedParty, pagination) } shouldBeSameInstanceAs error
+        shouldThrow<RepositoryReadError.UnexpectedError> { handler(authorizedParty, pagination, emptyList()) } shouldBeSameInstanceAs error
     }
 })
