@@ -434,50 +434,61 @@ class ExposedGrantRepositoryTest : FunSpec({
         noMatches.totalItems shouldBe 0L
     }
 
-    listOf<Pair<String, (List<String>) -> GrantPartyFilters>>(
+    listOf<Pair<String, (List<AuthorizationParty>) -> GrantPartyFilters>>(
         "grantedBy" to { GrantPartyFilters(grantedBy = it) },
         "principal" to { GrantPartyFilters(principal = it) },
         "approvedBy" to { GrantPartyFilters(approvedBy = it) },
         "grantedTo" to { GrantPartyFilters(grantedTo = it) },
     ).forEach { (field, filters) ->
-        test("findAll filters $field by public IDs across party types with OR within the field") {
+        test("findAll filters $field by party type and public ID with OR within the field") {
             val caller = party(PartyType.Person)
-            val publicId = "public-${UUID.randomUUID()}"
-            val matching = listOf(PartyType.Person, PartyType.Organization, PartyType.OrganizationEntity).map { type ->
-                val target = AuthorizationParty(publicId, type)
-                insertGrant(
+            val targets = listOf(
+                party(PartyType.Person),
+                AuthorizationParty("999888771", PartyType.Organization),
+                AuthorizationParty("7070575000001", PartyType.OrganizationEntity),
+            )
+            val matching = targets.map { target ->
+                val grant = insertGrant(
                     principal = if (field == "principal") target else caller,
                     grantedBy = if (field == "grantedBy") target else party(PartyType.Person),
                     approvedBy = if (field == "approvedBy") target else party(PartyType.Person),
                     grantedTo = if (field == "grantedTo") target else caller,
                 )
+                listOf(PartyType.Person, PartyType.Organization, PartyType.OrganizationEntity)
+                    .filter { it != target.type }.forEach { wrongType ->
+                        val wrongParty = target.copy(type = wrongType)
+                        insertGrant(
+                            principal = if (field == "principal") wrongParty else caller,
+                            grantedBy = if (field == "grantedBy") wrongParty else party(PartyType.Person),
+                            approvedBy = if (field == "approvedBy") wrongParty else party(PartyType.Person),
+                            grantedTo = if (field == "grantedTo") wrongParty else caller,
+                        )
+                    }
+                // The selected party in a different relationship must not satisfy this field's filter.
+                insertGrant(
+                    principal = caller,
+                    grantedBy = if (field == "grantedBy") party(PartyType.Person) else target,
+                    approvedBy = if (field == "grantedBy") target else party(PartyType.Person),
+                )
+
+                val single = repository.findAll(caller, Pagination(), emptyList(), filters(listOf(target)))
+                single.items.map { it.id } shouldBe listOf(grant.id)
+                single.totalItems shouldBe 1L
+                grant
             }
-            val second = party(PartyType.Person)
-            val secondGrant = insertGrant(
-                principal = if (field == "principal") second else caller,
-                grantedBy = if (field == "grantedBy") second else party(PartyType.Person),
-                approvedBy = if (field == "approvedBy") second else party(PartyType.Person),
-                grantedTo = if (field == "grantedTo") second else caller,
-            )
-            // The selected ID in a different relationship must not satisfy this field's filter.
-            val wrongRole = AuthorizationParty(publicId, PartyType.Person)
-            insertGrant(
-                principal = caller,
-                grantedBy = if (field == "grantedBy") party(PartyType.Person) else wrongRole,
-                approvedBy = if (field == "grantedBy") wrongRole else party(PartyType.Person),
-            )
 
-            val single = repository.findAll(caller, Pagination(), emptyList(), filters(listOf(publicId)))
-            single.items.map { it.id }.shouldContainExactlyInAnyOrder(matching.map { it.id })
-            single.totalItems shouldBe matching.size.toLong()
+            val multiple = repository.findAll(caller, Pagination(), emptyList(), filters(targets))
+            multiple.items.map { it.id }.shouldContainExactlyInAnyOrder(matching.map { it.id })
+            multiple.totalItems shouldBe matching.size.toLong()
 
-            val multiple = repository.findAll(caller, Pagination(), emptyList(), filters(listOf(publicId, second.id)))
-            multiple.items.map { it.id }.shouldContainExactlyInAnyOrder((matching + secondGrant).map { it.id })
-            multiple.totalItems shouldBe (matching.size + 1).toLong()
-
-            val internalId = partyRepository.findOrInsert(PartyType.Person, publicId).id.toString()
-            listOf(internalId, "unknown-${UUID.randomUUID()}").forEach { id ->
-                val empty = repository.findAll(caller, Pagination(), emptyList(), filters(listOf(id)))
+            val internalId = partyRepository.findOrInsert(PartyType.Person, targets.first().id).id.toString()
+            listOf(
+                AuthorizationParty(internalId, PartyType.Person),
+                party(PartyType.Person),
+                AuthorizationParty("123456789", PartyType.Organization),
+                AuthorizationParty("7070575000002", PartyType.OrganizationEntity),
+            ).forEach { unknown ->
+                val empty = repository.findAll(caller, Pagination(), emptyList(), filters(listOf(unknown)))
                 empty.items shouldBe emptyList()
                 empty.totalItems shouldBe 0L
             }
@@ -488,7 +499,7 @@ class ExposedGrantRepositoryTest : FunSpec({
         val caller = party(PartyType.Person)
         val grantor = party(PartyType.Person)
         val approver = party(PartyType.Person)
-        val recipient = party(PartyType.OrganizationEntity)
+        val recipient = AuthorizationParty("7070575000001", PartyType.OrganizationEntity)
         val older = insertGrant(
             principal = caller,
             grantedBy = grantor,
@@ -502,17 +513,17 @@ class ExposedGrantRepositoryTest : FunSpec({
         insertGrant(principal = caller, approvedBy = approver, grantedTo = recipient)
         insertGrant(principal = caller, grantedBy = grantor, grantedTo = recipient)
         insertGrant(principal = caller, grantedBy = grantor, approvedBy = approver)
-        val unrelated = party(PartyType.Organization)
+        val unrelated = AuthorizationParty("999888771", PartyType.Organization)
         insertGrant(principal = unrelated, grantedBy = grantor, approvedBy = approver, grantedTo = recipient)
         insertGrant(grantedBy = caller, approvedBy = approver, grantedTo = recipient)
         // Matching public principal ID with a different type must not broaden caller visibility.
         insertGrant(principal = caller.copy(type = PartyType.Organization), grantedBy = grantor, approvedBy = approver, grantedTo = recipient)
         insertGrant(principal = unrelated, grantedBy = grantor, approvedBy = caller, grantedTo = recipient)
         val filters = GrantPartyFilters(
-            grantedBy = listOf(grantor.id, caller.id),
-            principal = listOf(caller.id, unrelated.id),
-            approvedBy = listOf(approver.id, caller.id),
-            grantedTo = listOf(recipient.id),
+            grantedBy = listOf(grantor, caller),
+            principal = listOf(caller, unrelated),
+            approvedBy = listOf(approver, caller),
+            grantedTo = listOf(recipient),
         )
         val statuses = listOf(AuthorizationGrantStatus.Active)
 

@@ -163,12 +163,16 @@ class ExposedGrantRepository(
             AuthorizationGrantTable.principal to partyFilters.principal,
             AuthorizationGrantTable.approvedBy to partyFilters.approvedBy,
             AuthorizationGrantTable.grantedTo to partyFilters.grantedTo,
-        ).mapNotNull { (column, ids) ->
-            if (ids.isEmpty()) return@mapNotNull null
+        ).mapNotNull { (column, parties) ->
+            if (parties.isEmpty()) return@mapNotNull null
 
             val matchingParties = AuthorizationPartyTable
                 .select(AuthorizationPartyTable.id)
-                .where { AuthorizationPartyTable.partyId inList ids }
+                .where {
+                    parties.map { party ->
+                        (AuthorizationPartyTable.type eq party.type) and (AuthorizationPartyTable.partyId eq party.id)
+                    }.compoundOr()
+                }
 
             column inSubQuery matchingParties
         }

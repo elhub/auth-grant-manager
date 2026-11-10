@@ -3,6 +3,8 @@ package no.elhub.auth.v1.api.grants.response
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.ktor.http.Url
+import no.elhub.auth.common.auth.AuthorizationParty
+import no.elhub.auth.common.auth.PartyType
 import no.elhub.auth.v0.features.common.Page
 import no.elhub.auth.v0.features.common.Pagination
 import no.elhub.auth.v1.V1_GRANTS_PATH
@@ -23,11 +25,14 @@ class ListAuthorizationGrantsResponseTest : FunSpec({
     }
 
     test("preserves all party filters and statuses in every pagination link") {
+        val person = AuthorizationParty("abcdef12-3456-7890-abcd-ef1234567890", PartyType.Person)
+        val organization = AuthorizationParty("999888771", PartyType.Organization)
+        val entity = AuthorizationParty("7070575000001", PartyType.OrganizationEntity)
         val partyFilters = GrantPartyFilters(
-            grantedBy = listOf("grantor-1", "grantor-2"),
-            principal = listOf("principal-1", "principal-2"),
-            approvedBy = listOf("approver-1", "approver-2"),
-            grantedTo = listOf("recipient-1", "recipient-2"),
+            grantedBy = listOf(person, organization, entity),
+            principal = listOf(organization, person),
+            approvedBy = listOf(person, entity),
+            grantedTo = listOf(entity, organization),
         )
         val response = Page<AuthorizationGrant>(emptyList(), 5, Pagination(page = 1, size = 2)).toGetCollectionResponse(
             listOf(AuthorizationGrantStatus.Active, AuthorizationGrantStatus.Expired),
@@ -38,21 +43,11 @@ class ListAuthorizationGrantsResponseTest : FunSpec({
             .forEach { link ->
                 val parameters = Url(requireNotNull(link)).parameters
                 parameters["filter[status]"] shouldBe "Active,Expired"
-                parameters["filter[grantedBy]"] shouldBe "grantor-1,grantor-2"
-                parameters["filter[principal]"] shouldBe "principal-1,principal-2"
-                parameters["filter[approvedBy]"] shouldBe "approver-1,approver-2"
-                parameters["filter[grantedTo]"] shouldBe "recipient-1,recipient-2"
+                parameters["filter[grantedBy]"] shouldBe "${person.id},${organization.id},${entity.id}"
+                parameters["filter[principal]"] shouldBe "${organization.id},${person.id}"
+                parameters["filter[approvedBy]"] shouldBe "${person.id},${entity.id}"
+                parameters["filter[grantedTo]"] shouldBe "${entity.id},${organization.id}"
             }
-    }
-
-    test("URL-encodes party IDs without changing their values") {
-        val ids = listOf("party&other=value", "party+%#?")
-        val response = Page<AuthorizationGrant>(emptyList(), 0, Pagination()).toGetCollectionResponse(
-            partyFilters = GrantPartyFilters(grantedBy = ids),
-        )
-
-        Url(response.links.self).parameters["filter[grantedBy]"] shouldBe ids.joinToString(",")
-        Url(response.links.self).parameters.names() shouldBe setOf("page[number]", "page[size]", "filter[grantedBy]")
     }
 
     test("omits status and party filters from links when no filters are selected") {

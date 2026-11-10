@@ -38,13 +38,15 @@ import kotlin.time.Instant
 
 class ListGrantsRouteTest : FunSpec({
     val handler = mockk<ListGrantsHandler>()
-    val authorizedParty = AuthorizationParty("123456789", PartyType.OrganizationEntity)
-    val grantedBy = AuthorizationParty("person-1", PartyType.Person)
+    val authorizedParty = AuthorizationParty("7070575000001", PartyType.OrganizationEntity)
+    val grantedBy = AuthorizationParty("abcdef12-3456-7890-abcd-ef1234567890", PartyType.Person)
+    val organization = AuthorizationParty("999888771", PartyType.Organization)
+    val mixedParties = listOf(grantedBy, organization, authorizedParty)
     val grant = AuthorizationGrant.new(
         type = AuthorizationGrantType.Consumable,
         sourceType = AuthorizationGrantSourceType.Document,
         sourceId = UUID.randomUUID(),
-        principal = AuthorizationParty("999888771", PartyType.OrganizationEntity),
+        principal = organization,
         grantedBy = grantedBy,
         grantedTo = authorizedParty,
         approvedBy = grantedBy,
@@ -179,19 +181,19 @@ class ListGrantsRouteTest : FunSpec({
                 coVerify(exactly = 1) { handler(authorizedParty, pagination, statuses, GrantPartyFilters()) }
                 if (statuses.isNotEmpty()) {
                     response.body<JsonApiListAuthorizationGrantsResponse>().links.self
-                        ?.substringAfter("&filter[status]=") shouldBe statuses.joinToString(",")
+                        .substringAfter("&filter[status]=") shouldBe statuses.joinToString(",")
                 }
             }
         }
     }
 
     listOf(
-        GRANTED_BY_FILTER_PARAM to GrantPartyFilters(grantedBy = listOf("party-2", "party-1")),
-        PRINCIPAL_FILTER_PARAM to GrantPartyFilters(principal = listOf("party-2", "party-1")),
-        APPROVED_BY_FILTER_PARAM to GrantPartyFilters(approvedBy = listOf("party-2", "party-1")),
-        GRANTED_TO_FILTER_PARAM to GrantPartyFilters(grantedTo = listOf("party-2", "party-1")),
+        GRANTED_BY_FILTER_PARAM to GrantPartyFilters(grantedBy = mixedParties),
+        PRINCIPAL_FILTER_PARAM to GrantPartyFilters(principal = mixedParties),
+        APPROVED_BY_FILTER_PARAM to GrantPartyFilters(approvedBy = mixedParties),
+        GRANTED_TO_FILTER_PARAM to GrantPartyFilters(grantedTo = mixedParties),
     ).forEach { (parameter, partyFilters) ->
-        test("GET parses comma-separated $parameter IDs and deduplicates in input order") {
+        test("GET infers mixed $parameter party types, normalizes UUID case and deduplicates in input order") {
             coEvery { handler(authorizedParty, Pagination(), emptyList(), partyFilters) } returns Page(emptyList(), 0, Pagination())
 
             testApplication {
@@ -201,11 +203,19 @@ class ListGrantsRouteTest : FunSpec({
 
                 val response = client.get(V1_GRANTS_PATH) {
                     accept(jsonApiContentType)
-                    url { parameters.append(parameter, "party-2,party-1,party-2") }
+                    url {
+                        parameters.append(
+                            parameter,
+                            "${grantedBy.id.uppercase()},${organization.id},${authorizedParty.id}," +
+                                "${grantedBy.id},${organization.id},${authorizedParty.id}",
+                        )
+                    }
                 }
 
                 response.status shouldBe HttpStatusCode.OK
                 coVerify(exactly = 1) { handler(authorizedParty, Pagination(), emptyList(), partyFilters) }
+                Url(requireNotNull(response.body<JsonApiListAuthorizationGrantsResponse>().links.self))
+                    .parameters[parameter] shouldBe mixedParties.joinToString(",") { it.id }
             }
         }
 
@@ -215,7 +225,7 @@ class ListGrantsRouteTest : FunSpec({
                     route(V1_GRANTS_PATH) { route(handler) }
                 }
 
-                listOf(",party-1", "party-1,", "party-1,,party-2", " party-1", "party-1 ", "party 1", "party-1,\tparty-2")
+                listOf("arbitrary-id", "12345678a", "707057500000a", "\u0661\u0662\u0663\u0664\u0665\u0666\u0667\u0668\u0669")
                     .forEach { filter ->
                         val response = client.get(V1_GRANTS_PATH) {
                             accept(jsonApiContentType)
@@ -234,10 +244,10 @@ class ListGrantsRouteTest : FunSpec({
         val pagination = Pagination(page = 1, size = 2)
         val statuses = listOf(AuthorizationGrantStatus.Active, AuthorizationGrantStatus.Pending)
         val partyFilters = GrantPartyFilters(
-            grantedBy = listOf("grantor-1", "grantor-2"),
-            principal = listOf("principal-1"),
-            approvedBy = listOf("approver-1"),
-            grantedTo = listOf("recipient-1"),
+            grantedBy = listOf(grantedBy, organization),
+            principal = listOf(organization),
+            approvedBy = listOf(grantedBy),
+            grantedTo = listOf(authorizedParty),
         )
         coEvery { handler(authorizedParty, pagination, statuses, partyFilters) } returns Page(emptyList(), 0, pagination)
 
@@ -252,10 +262,10 @@ class ListGrantsRouteTest : FunSpec({
                     parameters.append("page[number]", "1")
                     parameters.append("page[size]", "2")
                     parameters.append(STATUS_FILTER_PARAM, "Active,Pending")
-                    parameters.append(GRANTED_BY_FILTER_PARAM, "grantor-1,grantor-2")
-                    parameters.append(PRINCIPAL_FILTER_PARAM, "principal-1")
-                    parameters.append(APPROVED_BY_FILTER_PARAM, "approver-1")
-                    parameters.append(GRANTED_TO_FILTER_PARAM, "recipient-1")
+                    parameters.append(GRANTED_BY_FILTER_PARAM, "${grantedBy.id},${organization.id}")
+                    parameters.append(PRINCIPAL_FILTER_PARAM, organization.id)
+                    parameters.append(APPROVED_BY_FILTER_PARAM, grantedBy.id)
+                    parameters.append(GRANTED_TO_FILTER_PARAM, authorizedParty.id)
                 }
             }
 
@@ -263,10 +273,10 @@ class ListGrantsRouteTest : FunSpec({
             coVerify(exactly = 1) { handler(authorizedParty, pagination, statuses, partyFilters) }
             val parameters = Url(requireNotNull(response.body<JsonApiListAuthorizationGrantsResponse>().links.self)).parameters
             parameters[STATUS_FILTER_PARAM] shouldBe "Active,Pending"
-            parameters[GRANTED_BY_FILTER_PARAM] shouldBe "grantor-1,grantor-2"
-            parameters[PRINCIPAL_FILTER_PARAM] shouldBe "principal-1"
-            parameters[APPROVED_BY_FILTER_PARAM] shouldBe "approver-1"
-            parameters[GRANTED_TO_FILTER_PARAM] shouldBe "recipient-1"
+            parameters[GRANTED_BY_FILTER_PARAM] shouldBe "${grantedBy.id},${organization.id}"
+            parameters[PRINCIPAL_FILTER_PARAM] shouldBe organization.id
+            parameters[APPROVED_BY_FILTER_PARAM] shouldBe grantedBy.id
+            parameters[GRANTED_TO_FILTER_PARAM] shouldBe authorizedParty.id
         }
     }
 

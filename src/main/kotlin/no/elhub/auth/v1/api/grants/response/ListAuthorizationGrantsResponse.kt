@@ -31,8 +31,8 @@ fun Page<AuthorizationGrant>.toGetCollectionResponse(
             PRINCIPAL_FILTER_PARAM to partyFilters.principal,
             APPROVED_BY_FILTER_PARAM to partyFilters.approvedBy,
             GRANTED_TO_FILTER_PARAM to partyFilters.grantedTo,
-        ).forEach { (parameter, ids) ->
-            if (ids.isNotEmpty()) put(parameter, ids.joinToString(",") { it.encodeURLParameter() })
+        ).forEach { (parameter, parties) ->
+            if (parties.isNotEmpty()) put(parameter, parties.joinToString(",") { it.id.encodeURLParameter() })
         }
     }
 

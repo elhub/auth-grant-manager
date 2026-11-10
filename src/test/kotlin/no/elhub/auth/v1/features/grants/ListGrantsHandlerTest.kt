@@ -25,13 +25,14 @@ import kotlin.time.Instant
 class ListGrantsHandlerTest : FunSpec({
     val grantRepository = mockk<GrantRepository>()
     val handler = ListGrantsHandler(grantRepository)
-    val authorizedParty = AuthorizationParty("123456789", PartyType.OrganizationEntity)
-    val grantedBy = AuthorizationParty("person-1", PartyType.Person)
+    val authorizedParty = AuthorizationParty("7070575000001", PartyType.OrganizationEntity)
+    val grantedBy = AuthorizationParty(UUID.randomUUID().toString(), PartyType.Person)
+    val principal = AuthorizationParty("999888771", PartyType.Organization)
     val grant = AuthorizationGrant.new(
         type = AuthorizationGrantType.Consumable,
         sourceType = AuthorizationGrantSourceType.Document,
         sourceId = UUID.randomUUID(),
-        principal = AuthorizationParty("999888771", PartyType.OrganizationEntity),
+        principal = principal,
         grantedBy = grantedBy,
         grantedTo = authorizedParty,
         approvedBy = grantedBy,
@@ -46,10 +47,10 @@ class ListGrantsHandlerTest : FunSpec({
     test("forwards the authorized party, pagination, statuses and party filters and returns the repository page") {
         val statuses = listOf(AuthorizationGrantStatus.Pending, AuthorizationGrantStatus.Revoked)
         val partyFilters = GrantPartyFilters(
-            grantedBy = listOf("grantor-1", "grantor-2"),
-            principal = listOf("principal-1"),
-            approvedBy = listOf("approver-1"),
-            grantedTo = listOf("recipient-1"),
+            grantedBy = listOf(grantedBy, AuthorizationParty(UUID.randomUUID().toString(), PartyType.Person)),
+            principal = listOf(principal),
+            approvedBy = listOf(grantedBy),
+            grantedTo = listOf(authorizedParty),
         )
         val page = Page(listOf(grant), 3, pagination)
         coEvery { grantRepository.findAll(authorizedParty, pagination, statuses, partyFilters) } returns page
