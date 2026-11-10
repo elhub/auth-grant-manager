@@ -1,4 +1,4 @@
-package no.elhub.auth.v0.config
+package no.elhub.auth.common.config
 
 import arrow.core.Either
 import arrow.core.left

@@ -7,10 +7,10 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
+import no.elhub.auth.common.TraceIdContext
 import no.elhub.auth.common.auth.AuthorizationParty
 import no.elhub.auth.plugin.policies.token.base.agentrepresentative.AgentRepresentativePolicy
 import no.elhub.auth.v0.features.businessprocesses.common.JwtTokenProvider
-import no.elhub.auth.v0.features.common.TraceIdContext
 import no.elhub.auth.v1.common.AuthorizationRulesService
 import org.slf4j.LoggerFactory
 

@@ -1,4 +1,4 @@
-package no.elhub.auth.v0.config
+package no.elhub.auth.common.config
 
 import io.ktor.http.ContentType
 import io.ktor.serialization.kotlinx.KotlinxSerializationConverter

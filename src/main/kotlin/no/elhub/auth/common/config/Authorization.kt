@@ -1,4 +1,4 @@
-package no.elhub.auth.v0.config
+package no.elhub.auth.common.config
 
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.apache5.Apache5
@@ -10,13 +10,13 @@ import io.ktor.client.plugins.logging.LoggingFormat
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import kotlinx.serialization.json.Json
+import no.elhub.auth.common.ApiHeaders
 import no.elhub.auth.common.auth.AuthorizedPartyKey
 import no.elhub.auth.common.auth.UpdateRequestAuthInfoPolicy
 import no.elhub.auth.common.auth.resolveAuthorizedParty
 import no.elhub.auth.common.auth.resolveUpdateRequestActor
 import no.elhub.auth.plugin.authorization
 import no.elhub.auth.plugin.policies.token.base.authinfo.AuthInfoPolicy
-import no.elhub.auth.v0.features.common.ApiHeaders
 
 fun Application.configureAuthorization() {
     val pdpHttpClient = HttpClient(Apache5) {

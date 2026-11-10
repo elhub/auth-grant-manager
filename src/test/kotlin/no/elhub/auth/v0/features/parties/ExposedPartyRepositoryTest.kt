@@ -8,7 +8,7 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import no.elhub.auth.common.auth.PartyType
-import no.elhub.auth.v0.config.withTransaction
+import no.elhub.auth.common.config.withTransaction
 import no.elhub.auth.v0.features.common.PostgresTestContainer
 import no.elhub.auth.v0.features.common.PostgresTestContainerExtension
 import no.elhub.auth.v0.features.common.RepositoryReadError

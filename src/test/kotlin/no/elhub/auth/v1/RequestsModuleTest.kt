@@ -10,9 +10,9 @@ import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.plugins.di.dependencies
 import io.ktor.server.testing.testApplication
 import io.mockk.mockk
+import no.elhub.auth.common.config.configureAuthorization
+import no.elhub.auth.common.config.configureSerialization
 import no.elhub.auth.common.configureErrorHandling
-import no.elhub.auth.v0.config.configureAuthorization
-import no.elhub.auth.v0.config.configureSerialization
 import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsService
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsService
 import no.elhub.auth.v0.features.common.party.PartyService

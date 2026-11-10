@@ -10,10 +10,10 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
 import io.ktor.server.testing.testApplication
 import kotlinx.serialization.json.Json
+import no.elhub.auth.common.config.jsonApiContentType
 import no.elhub.auth.common.documents.pdf.PdfGenerationException
 import no.elhub.auth.common.documents.pdf.PdfSigningException
 import no.elhub.auth.common.documents.pdf.PdfValidationException
-import no.elhub.auth.v0.config.jsonApiContentType
 import no.elhub.auth.v0.features.businessprocesses.structuredata.common.ClientError
 import no.elhub.auth.v1.api.common.errors.InputError
 import no.elhub.auth.v1.domain.AuthorizationDocumentStatus

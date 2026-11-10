@@ -18,10 +18,10 @@ import io.mockk.mockk
 import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
+import no.elhub.auth.common.TRACE_ID_MDC_KEY
 import no.elhub.auth.common.auth.AuthorizationParty
 import no.elhub.auth.common.auth.PartyType
 import no.elhub.auth.v0.features.businessprocesses.common.JwtTokenProvider
-import no.elhub.auth.v0.features.common.TRACE_ID_MDC_KEY
 import org.slf4j.MDC
 
 class PdpAuthorizationRulesServiceTest : FunSpec({

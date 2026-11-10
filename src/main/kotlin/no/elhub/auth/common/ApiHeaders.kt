@@ -1,4 +1,4 @@
-package no.elhub.auth.v0.features.common
+package no.elhub.auth.common
 
 object ApiHeaders {
     const val SENDER_GLN = "SenderGLN"

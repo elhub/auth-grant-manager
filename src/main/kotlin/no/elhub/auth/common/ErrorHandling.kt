@@ -9,10 +9,10 @@ import io.ktor.server.response.respondText
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import no.elhub.auth.common.auth.PartyType
+import no.elhub.auth.common.config.jsonApiContentType
 import no.elhub.auth.common.documents.pdf.PdfGenerationException
 import no.elhub.auth.common.documents.pdf.PdfSigningException
 import no.elhub.auth.common.documents.pdf.PdfValidationException
-import no.elhub.auth.v0.config.jsonApiContentType
 import no.elhub.auth.v0.features.businessprocesses.structuredata.common.ClientError
 import no.elhub.auth.v0.features.common.buildApiErrorResponse
 import no.elhub.auth.v0.features.common.toInternalServerApiErrorResponse
