@@ -15,6 +15,7 @@ import no.elhub.auth.v1.domain.AuthorizationGrantType
 import no.elhub.auth.v1.domain.AuthorizationScopeConstraint
 import no.elhub.auth.v1.domain.AuthorizationScopeConstraintAttribute
 import no.elhub.auth.v1.domain.AuthorizationScopeConstraintKind
+import no.elhub.auth.v1.domain.GrantPartyFilters
 import no.elhub.auth.v1.domain.GrantedAuthorizationScope
 import no.elhub.auth.v1.domain.MeteringPointContractType
 import no.elhub.auth.v1.domain.MeteringPointId
@@ -25,10 +26,13 @@ import no.elhub.auth.v1.domain.grantValidityStatus
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.compoundAnd
+import org.jetbrains.exposed.v1.core.compoundOr
 import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.greater
 import org.jetbrains.exposed.v1.core.inList
+import org.jetbrains.exposed.v1.core.inSubQuery
 import org.jetbrains.exposed.v1.core.isNull
 import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.core.lessEq
@@ -36,6 +40,7 @@ import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.core.vendors.ForUpdateOption
 import org.jetbrains.exposed.v1.datetime.timestamp
 import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.updateReturning
 import org.postgresql.util.PGobject
@@ -53,6 +58,7 @@ interface GrantRepository {
         party: AuthorizationParty,
         pagination: Pagination,
         statuses: List<AuthorizationGrantStatus>,
+        partyFilters: GrantPartyFilters,
     ): Page<AuthorizationGrant>
 
     suspend fun insert(grant: AuthorizationGrant): AuthorizationGrant
@@ -123,35 +129,59 @@ class ExposedGrantRepository(
         party: AuthorizationParty,
         pagination: Pagination,
         statuses: List<AuthorizationGrantStatus>,
+        partyFilters: GrantPartyFilters,
     ): Page<AuthorizationGrant> = withTransaction {
         val partyId = partyRepository.findOrInsert(party.type, party.id).id
         val now = now()
-        val partyCondition = (AuthorizationGrantTable.principal eq partyId) or
-            (AuthorizationGrantTable.grantedTo eq partyId) or
-            (AuthorizationGrantTable.grantedBy eq partyId)
-        val whereClause = if (statuses.isEmpty()) {
-            partyCondition
-        } else {
-            val statusCondition = statuses.map { status ->
-                when (status) {
-                    AuthorizationGrantStatus.Pending -> (AuthorizationGrantTable.status eq DatabaseGrantStatus.Active) and
-                        (AuthorizationGrantTable.validFrom greater now) and
-                        (AuthorizationGrantTable.validTo.isNull() or (AuthorizationGrantTable.validTo greater now))
+        val partyCondition = listOf(
+            AuthorizationGrantTable.principal eq partyId,
+            AuthorizationGrantTable.grantedTo eq partyId,
+            AuthorizationGrantTable.grantedBy eq partyId,
+        ).compoundOr()
 
-                    AuthorizationGrantStatus.Active -> (AuthorizationGrantTable.status eq DatabaseGrantStatus.Active) and
-                        (AuthorizationGrantTable.validFrom lessEq now) and
-                        (AuthorizationGrantTable.validTo.isNull() or (AuthorizationGrantTable.validTo greater now))
+        val statusConditions = statuses.map { status ->
+            when (status) {
+                AuthorizationGrantStatus.Pending -> (AuthorizationGrantTable.status eq DatabaseGrantStatus.Active) and
+                    (AuthorizationGrantTable.validFrom greater now) and
+                    (AuthorizationGrantTable.validTo.isNull() or (AuthorizationGrantTable.validTo greater now))
 
-                    AuthorizationGrantStatus.Expired -> (AuthorizationGrantTable.status eq DatabaseGrantStatus.Active) and
-                        (AuthorizationGrantTable.validTo lessEq now)
+                AuthorizationGrantStatus.Active -> (AuthorizationGrantTable.status eq DatabaseGrantStatus.Active) and
+                    (AuthorizationGrantTable.validFrom lessEq now) and
+                    (AuthorizationGrantTable.validTo.isNull() or (AuthorizationGrantTable.validTo greater now))
 
-                    AuthorizationGrantStatus.Revoked -> AuthorizationGrantTable.status eq DatabaseGrantStatus.Revoked
+                AuthorizationGrantStatus.Expired -> (AuthorizationGrantTable.status eq DatabaseGrantStatus.Active) and
+                    (AuthorizationGrantTable.validTo lessEq now)
 
-                    AuthorizationGrantStatus.Exhausted -> AuthorizationGrantTable.status eq DatabaseGrantStatus.Exhausted
-                }
-            }.reduce { acc, op -> acc or op }
-            partyCondition and statusCondition
+                AuthorizationGrantStatus.Revoked -> AuthorizationGrantTable.status eq DatabaseGrantStatus.Revoked
+
+                AuthorizationGrantStatus.Exhausted -> AuthorizationGrantTable.status eq DatabaseGrantStatus.Exhausted
+            }
         }
+
+        val partyFilterConditions = listOf(
+            AuthorizationGrantTable.grantedBy to partyFilters.grantedBy,
+            AuthorizationGrantTable.principal to partyFilters.principal,
+            AuthorizationGrantTable.approvedBy to partyFilters.approvedBy,
+            AuthorizationGrantTable.grantedTo to partyFilters.grantedTo,
+        ).mapNotNull { (column, parties) ->
+            if (parties.isEmpty()) return@mapNotNull null
+
+            val matchingParties = AuthorizationPartyTable
+                .select(AuthorizationPartyTable.id)
+                .where {
+                    parties.map { party ->
+                        (AuthorizationPartyTable.type eq party.type) and (AuthorizationPartyTable.partyId eq party.id)
+                    }.compoundOr()
+                }
+
+            column inSubQuery matchingParties
+        }
+
+        val whereClause = listOfNotNull(
+            partyCondition,
+            statusConditions.takeIf { it.isNotEmpty() }?.compoundOr(),
+        ).plus(partyFilterConditions).compoundAnd()
+
         val totalItems = AuthorizationGrantTable.selectAll().where { whereClause }.count()
         val rows = AuthorizationGrantTable.selectAll()
             .where { whereClause }

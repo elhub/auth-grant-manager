@@ -16,6 +16,7 @@ import no.elhub.auth.v1.domain.AuthorizationGrant
 import no.elhub.auth.v1.domain.AuthorizationGrantSourceType
 import no.elhub.auth.v1.domain.AuthorizationGrantStatus
 import no.elhub.auth.v1.domain.AuthorizationGrantType
+import no.elhub.auth.v1.domain.GrantPartyFilters
 import no.elhub.auth.v1.repositories.GrantRepository
 import no.elhub.auth.v1.repositories.RepositoryReadError
 import java.util.UUID
@@ -24,13 +25,14 @@ import kotlin.time.Instant
 class ListGrantsHandlerTest : FunSpec({
     val grantRepository = mockk<GrantRepository>()
     val handler = ListGrantsHandler(grantRepository)
-    val authorizedParty = AuthorizationParty("123456789", PartyType.OrganizationEntity)
-    val grantedBy = AuthorizationParty("person-1", PartyType.Person)
+    val authorizedParty = AuthorizationParty("7070575000001", PartyType.OrganizationEntity)
+    val grantedBy = AuthorizationParty(UUID.randomUUID().toString(), PartyType.Person)
+    val principal = AuthorizationParty("999888771", PartyType.Organization)
     val grant = AuthorizationGrant.new(
         type = AuthorizationGrantType.Consumable,
         sourceType = AuthorizationGrantSourceType.Document,
         sourceId = UUID.randomUUID(),
-        principal = AuthorizationParty("999888771", PartyType.OrganizationEntity),
+        principal = principal,
         grantedBy = grantedBy,
         grantedTo = authorizedParty,
         approvedBy = grantedBy,
@@ -42,26 +44,34 @@ class ListGrantsHandlerTest : FunSpec({
 
     beforeTest { clearMocks(grantRepository) }
 
-    test("forwards the authorized party, pagination and statuses and returns the repository page") {
+    test("forwards the authorized party, pagination, statuses and party filters and returns the repository page") {
         val statuses = listOf(AuthorizationGrantStatus.Pending, AuthorizationGrantStatus.Revoked)
+        val partyFilters = GrantPartyFilters(
+            grantedBy = listOf(grantedBy, AuthorizationParty(UUID.randomUUID().toString(), PartyType.Person)),
+            principal = listOf(principal),
+            approvedBy = listOf(grantedBy),
+            grantedTo = listOf(authorizedParty),
+        )
         val page = Page(listOf(grant), 3, pagination)
-        coEvery { grantRepository.findAll(authorizedParty, pagination, statuses) } returns page
+        coEvery { grantRepository.findAll(authorizedParty, pagination, statuses, partyFilters) } returns page
 
-        handler(authorizedParty, pagination, statuses) shouldBeSameInstanceAs page
-        coVerify(exactly = 1) { grantRepository.findAll(authorizedParty, pagination, statuses) }
+        handler(authorizedParty, pagination, statuses, partyFilters) shouldBeSameInstanceAs page
+        coVerify(exactly = 1) { grantRepository.findAll(authorizedParty, pagination, statuses, partyFilters) }
     }
 
     test("returns an empty page when the party has no grants") {
         val page = Page(emptyList<AuthorizationGrant>(), 0, pagination)
-        coEvery { grantRepository.findAll(authorizedParty, pagination, emptyList()) } returns page
+        coEvery { grantRepository.findAll(authorizedParty, pagination, emptyList(), GrantPartyFilters()) } returns page
 
-        handler(authorizedParty, pagination, emptyList()) shouldBe page
+        handler(authorizedParty, pagination, emptyList(), GrantPartyFilters()) shouldBe page
     }
 
     test("propagates a grant repository failure") {
         val error = RepositoryReadError.UnexpectedError("Database unavailable")
-        coEvery { grantRepository.findAll(authorizedParty, pagination, emptyList()) } throws error
+        coEvery { grantRepository.findAll(authorizedParty, pagination, emptyList(), GrantPartyFilters()) } throws error
 
-        shouldThrow<RepositoryReadError.UnexpectedError> { handler(authorizedParty, pagination, emptyList()) } shouldBeSameInstanceAs error
+        shouldThrow<RepositoryReadError.UnexpectedError> {
+            handler(authorizedParty, pagination, emptyList(), GrantPartyFilters())
+        } shouldBeSameInstanceAs error
     }
 })
