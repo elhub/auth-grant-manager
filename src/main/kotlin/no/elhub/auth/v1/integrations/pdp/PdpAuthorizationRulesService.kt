@@ -27,6 +27,11 @@ class PdpAuthorizationRulesService(
     ): Boolean {
         logger.info("Checking authorization: principal={}, requestedOf={}", principal, representative)
 
+        // Temporary workaround: allow a party to act on its own behalf without consulting PDP.
+        if (representative == principal) {
+            return true
+        }
+
         val traceId = checkNotNull(TraceIdContext.currentOrNull()) {
             "Missing trace ID for PDP authorization"
         }
