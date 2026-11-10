@@ -72,8 +72,8 @@ class CreateDocumentHandler(
     }
 
     private suspend fun validateActOnBehalfOf(
-        requestedOf: AuthorizationParty,
-        requestedPrincipal: AuthorizationParty,
+        requestedOf: AuthorizationAgent,
+        requestedPrincipal: AuthorizationAgent,
     ) {
         if (!authorizationRulesService.canActOnBehalfOf(requestedOf, requestedPrincipal)) {
             throw InputError.RequestedOfRequestedPrincipalMismatch()
