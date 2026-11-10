@@ -1,6 +1,6 @@
 package no.elhub.auth.v0.features.requests.common
 
-import no.elhub.auth.v0.config.withTransaction
+import no.elhub.auth.common.config.withTransaction
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.eq

@@ -3,7 +3,7 @@ package no.elhub.auth.v1.repositories
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import no.elhub.auth.common.auth.AuthorizationParty
-import no.elhub.auth.v0.config.withTransaction
+import no.elhub.auth.common.config.withTransaction
 import no.elhub.auth.v0.features.common.PGEnum
 import no.elhub.auth.v0.features.common.Page
 import no.elhub.auth.v0.features.common.Pagination

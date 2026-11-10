@@ -12,6 +12,7 @@ import io.mockk.mockk
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.plus
+import no.elhub.auth.common.TRACE_ID_MDC_KEY
 import no.elhub.auth.common.auth.AuthorizationParty
 import no.elhub.auth.common.auth.PartyType
 import no.elhub.auth.v0.features.businessprocesses.BusinessProcessError
@@ -44,7 +45,6 @@ import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.O
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.NOT_BALANCE_SUPPLIER_PARTY_ID
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.VALID_PARTY_ID
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.organisationsServiceHttpClient
-import no.elhub.auth.v0.features.common.TRACE_ID_MDC_KEY
 import no.elhub.auth.v0.features.common.toTimeZoneOffsetDateTimeAtStartOfDay
 import no.elhub.auth.v0.features.common.todayOslo
 import no.elhub.auth.v0.features.documents.AuthorizationDocument

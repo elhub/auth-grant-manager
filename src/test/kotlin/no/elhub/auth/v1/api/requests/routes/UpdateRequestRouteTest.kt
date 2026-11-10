@@ -19,7 +19,7 @@ import io.mockk.mockk
 import kotlinx.serialization.json.JsonObject
 import no.elhub.auth.common.auth.AuthorizationParty
 import no.elhub.auth.common.auth.PartyType
-import no.elhub.auth.v0.config.jsonApiContentType
+import no.elhub.auth.common.config.jsonApiContentType
 import no.elhub.auth.v0.patchJson
 import no.elhub.auth.v0.setupAppWith
 import no.elhub.auth.v1.V1_REQUESTS_PATH

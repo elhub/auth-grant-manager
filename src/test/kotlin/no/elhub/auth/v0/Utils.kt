@@ -24,8 +24,8 @@ import io.ktor.server.routing.routing
 import io.ktor.server.testing.ApplicationTestBuilder
 import no.elhub.auth.common.auth.AuthorizationParty
 import no.elhub.auth.common.auth.AuthorizedPartyKey
+import no.elhub.auth.common.config.configureSerialization
 import no.elhub.auth.common.configureErrorHandling
-import no.elhub.auth.v0.config.configureSerialization
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import java.util.UUID
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation as ClientContentNegotiation

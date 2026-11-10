@@ -19,7 +19,7 @@ import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import kotlinx.serialization.json.jsonPrimitive
-import no.elhub.auth.v0.features.common.ApiHeaders
+import no.elhub.auth.common.ApiHeaders
 import no.elhub.auth.v0.features.common.AuthPersonsTestContainer
 import no.elhub.auth.v0.features.common.AuthPersonsTestContainerExtension
 import no.elhub.auth.v0.features.common.PdpTestContainerExtension

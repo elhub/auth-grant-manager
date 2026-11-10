@@ -1,4 +1,4 @@
-package no.elhub.auth.v0.config
+package no.elhub.auth.common.config
 
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.nulls.shouldBeNull
@@ -14,8 +14,8 @@ import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
 import io.ktor.server.testing.testApplication
+import no.elhub.auth.common.ELHUB_TRACE_ID_HEADER
 import no.elhub.auth.common.configureErrorHandling
-import no.elhub.auth.v0.features.common.ELHUB_TRACE_ID_HEADER
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import java.util.UUID
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation as ClientContentNegotiation

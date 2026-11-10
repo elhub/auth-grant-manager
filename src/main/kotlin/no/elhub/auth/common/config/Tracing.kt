@@ -1,10 +1,10 @@
-package no.elhub.auth.v0.config
+package no.elhub.auth.common.config
 
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.plugins.callid.CallId
+import no.elhub.auth.common.ELHUB_TRACE_ID_HEADER
 import no.elhub.auth.common.InvalidTraceIdException
-import no.elhub.auth.v0.features.common.ELHUB_TRACE_ID_HEADER
 import java.util.UUID
 
 fun Application.configureRequestTracing() {
