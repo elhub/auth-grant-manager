@@ -8,10 +8,13 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import no.elhub.auth.common.TraceIdContext
-import no.elhub.auth.common.auth.AuthorizationParty
+import no.elhub.auth.plugin.dto.TokenPdpResult
+import no.elhub.auth.plugin.policies.token.base.agentapprover.AgentApproverPolicy
 import no.elhub.auth.plugin.policies.token.base.agentrepresentative.AgentRepresentativePolicy
+import no.elhub.auth.plugin.policies.token.core.TokenPolicy
 import no.elhub.auth.v0.features.businessprocesses.common.JwtTokenProvider
 import no.elhub.auth.v1.common.AuthorizationRulesService
+import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import org.slf4j.LoggerFactory
 
 class PdpAuthorizationRulesService(
@@ -21,22 +24,42 @@ class PdpAuthorizationRulesService(
 ) : AuthorizationRulesService {
     private val logger = LoggerFactory.getLogger(PdpAuthorizationRulesService::class.java)
 
+    override suspend fun isApproverAllowed(
+        approver: AuthorizationAgent,
+        requestedOf: AuthorizationAgent,
+        requestedPrincipal: AuthorizationAgent,
+    ): Boolean = evaluate(
+        AgentApproverPolicy,
+        AgentApproverPolicy.Request(
+            representativeId = requestedOf.id,
+            approverPersonId = approver.id,
+            principalId = requestedPrincipal.id,
+        ),
+    ).authorized
+
     override suspend fun canActOnBehalfOf(
-        representative: AuthorizationParty,
-        principal: AuthorizationParty,
+        requestedOf: AuthorizationAgent,
+        requestedPrincipal: AuthorizationAgent,
     ): Boolean {
-        logger.info("Checking authorization: principal={}, requestedOf={}", principal, representative)
+        logger.info("Checking authorization: requestedPrincipal={}, requestedOf={}", requestedPrincipal, requestedOf)
 
-        // Temporary workaround: allow a party to act on its own behalf without consulting PDP.
-        if (representative == principal) {
-            return true
-        }
+        return evaluate(
+            AgentRepresentativePolicy,
+            AgentRepresentativePolicy.Request(
+                representativeId = requestedOf.id,
+                principalId = requestedPrincipal.id,
+            ),
+        ).authorized
+    }
 
+    private suspend fun <Request : Any, Response : TokenPdpResult> evaluate(
+        policy: TokenPolicy<Request, Response>,
+        payload: Request,
+    ): Response {
         val traceId = checkNotNull(TraceIdContext.currentOrNull()) {
             "Missing trace ID for PDP authorization"
         }
         val serviceToken = tokenProvider.getToken()
-        val policy = AgentRepresentativePolicy
 
         val response = httpClient.post("${pdpBaseUrl.trimEnd('/')}${policy.route}") {
             contentType(ContentType.Application.Json)
@@ -44,10 +67,7 @@ class PdpAuthorizationRulesService(
                 policy.encodeRequest(
                     token = serviceToken,
                     traceId = traceId,
-                    payload = AgentRepresentativePolicy.Request(
-                        representativeId = representative.id,
-                        principalId = principal.id,
-                    ),
+                    payload = payload,
                 ).toString()
             )
         }
@@ -64,7 +84,7 @@ class PdpAuthorizationRulesService(
             throw PdpAuthorizationException("PDP did not verify the service token")
         }
 
-        return result.authorized
+        return result
     }
 }
 

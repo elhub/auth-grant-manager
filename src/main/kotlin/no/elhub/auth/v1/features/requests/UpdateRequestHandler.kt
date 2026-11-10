@@ -1,7 +1,7 @@
 package no.elhub.auth.v1.features.requests
 
+import no.elhub.auth.v1.common.AuthorizationRulesService
 import no.elhub.auth.v1.common.auth.AuthorizationAgent
-import no.elhub.auth.v1.common.isApproverAllowed
 import no.elhub.auth.v1.domain.AuthorizationRequest
 import no.elhub.auth.v1.domain.AuthorizationRequestStatus
 import no.elhub.auth.v1.domain.TextLanguage
@@ -12,6 +12,7 @@ import java.util.UUID
 
 class UpdateRequestHandler(
     private val requestRepository: RequestRepository,
+    private val authorizationRulesService: AuthorizationRulesService,
 ) {
     private val logger = LoggerFactory.getLogger(UpdateRequestHandler::class.java)
 
@@ -23,7 +24,7 @@ class UpdateRequestHandler(
     ): AuthorizationRequest {
         val request = requestRepository.find(id)
 
-        if (!isApproverAllowed(authorizedAgent, request.requestedOf, request.requestedPrincipal)) {
+        if (!authorizationRulesService.isApproverAllowed(authorizedAgent, request.requestedOf, request.requestedPrincipal)) {
             logger.warn("Approver not allowed for AuthorizationRequest {} (approver type: {})", id, authorizedAgent.type)
             throw UpdateRequestError.NotAuthorized()
         }
