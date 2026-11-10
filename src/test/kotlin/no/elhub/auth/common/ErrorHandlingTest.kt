@@ -15,6 +15,7 @@ import no.elhub.auth.common.documents.pdf.PdfSigningException
 import no.elhub.auth.common.documents.pdf.PdfValidationException
 import no.elhub.auth.v0.config.jsonApiContentType
 import no.elhub.auth.v0.features.businessprocesses.structuredata.common.ClientError
+import no.elhub.auth.v1.api.common.errors.InputError
 import no.elhub.auth.v1.domain.AuthorizationDocumentStatus
 import no.elhub.auth.v1.features.documents.ConfirmDocumentError
 import no.elhub.auth.v1.features.documents.InvalidDocumentScopes
@@ -181,6 +182,15 @@ class ErrorHandlingTest : FunSpec({
         ),
     )
 
+    val inputCases = listOf(
+        ErrorCase(
+            InputError.InvalidQueryParameterError("Invalid filter[status] value 'Unknown'. Valid values: Pending, Active, Expired"),
+            HttpStatusCode.BadRequest,
+            "Invalid input",
+            "Invalid filter[status] value 'Unknown'. Valid values: Pending, Active, Expired",
+        ),
+    )
+
     val grantUpdateCases = listOf(
         ErrorCase(
             UpdateGrantError.NotAuthorized("Person cannot update authorization grant to status Exhausted."),
@@ -202,7 +212,7 @@ class ErrorHandlingTest : FunSpec({
         ),
     )
 
-    (validationCases + confirmationCases + grantUpdateCases).forEach { case ->
+    (validationCases + confirmationCases + inputCases + grantUpdateCases).forEach { case ->
         test("maps ${case.cause::class.qualifiedName} to ${case.status.value} JSON:API error") {
             testApplication {
                 application {

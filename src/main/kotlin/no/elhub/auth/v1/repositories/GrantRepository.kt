@@ -27,8 +27,11 @@ import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.greater
 import org.jetbrains.exposed.v1.core.inList
+import org.jetbrains.exposed.v1.core.isNull
 import org.jetbrains.exposed.v1.core.java.javaUUID
+import org.jetbrains.exposed.v1.core.lessEq
 import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.core.vendors.ForUpdateOption
 import org.jetbrains.exposed.v1.datetime.timestamp
@@ -48,7 +51,8 @@ interface GrantRepository {
 
     suspend fun findAll(
         party: AuthorizationParty,
-        pagination: Pagination
+        pagination: Pagination,
+        statuses: List<AuthorizationGrantStatus>,
     ): Page<AuthorizationGrant>
 
     suspend fun insert(grant: AuthorizationGrant): AuthorizationGrant
@@ -115,11 +119,39 @@ class ExposedGrantRepository(
         }
     }
 
-    override suspend fun findAll(party: AuthorizationParty, pagination: Pagination): Page<AuthorizationGrant> = withTransaction {
+    override suspend fun findAll(
+        party: AuthorizationParty,
+        pagination: Pagination,
+        statuses: List<AuthorizationGrantStatus>,
+    ): Page<AuthorizationGrant> = withTransaction {
         val partyId = partyRepository.findOrInsert(party.type, party.id).id
-        val whereClause = (AuthorizationGrantTable.principal eq partyId) or
+        val now = now()
+        val partyCondition = (AuthorizationGrantTable.principal eq partyId) or
             (AuthorizationGrantTable.grantedTo eq partyId) or
             (AuthorizationGrantTable.grantedBy eq partyId)
+        val whereClause = if (statuses.isEmpty()) {
+            partyCondition
+        } else {
+            val statusCondition = statuses.map { status ->
+                when (status) {
+                    AuthorizationGrantStatus.Pending -> (AuthorizationGrantTable.status eq DatabaseGrantStatus.Active) and
+                        (AuthorizationGrantTable.validFrom greater now) and
+                        (AuthorizationGrantTable.validTo.isNull() or (AuthorizationGrantTable.validTo greater now))
+
+                    AuthorizationGrantStatus.Active -> (AuthorizationGrantTable.status eq DatabaseGrantStatus.Active) and
+                        (AuthorizationGrantTable.validFrom lessEq now) and
+                        (AuthorizationGrantTable.validTo.isNull() or (AuthorizationGrantTable.validTo greater now))
+
+                    AuthorizationGrantStatus.Expired -> (AuthorizationGrantTable.status eq DatabaseGrantStatus.Active) and
+                        (AuthorizationGrantTable.validTo lessEq now)
+
+                    AuthorizationGrantStatus.Revoked -> AuthorizationGrantTable.status eq DatabaseGrantStatus.Revoked
+
+                    AuthorizationGrantStatus.Exhausted -> AuthorizationGrantTable.status eq DatabaseGrantStatus.Exhausted
+                }
+            }.reduce { acc, op -> acc or op }
+            partyCondition and statusCondition
+        }
         val totalItems = AuthorizationGrantTable.selectAll().where { whereClause }.count()
         val rows = AuthorizationGrantTable.selectAll()
             .where { whereClause }
@@ -141,7 +173,6 @@ class ExposedGrantRepository(
         val parties = partyRepository.findByIds(partyIds)
             .mapValues { (_, party) -> party.toAuthorizationParty() }
         val scopes = getScopesByGrantId(rows.map { it[AuthorizationGrantTable.id].value })
-        val now = now()
 
         val items = rows.map { row ->
             row.toAuthorizationGrant(

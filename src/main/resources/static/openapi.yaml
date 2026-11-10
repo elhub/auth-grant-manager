@@ -951,8 +951,12 @@ paths:
               schema:
                 $ref: './schemas/v1/grants/authorization-grant-resource.schema.json'
               examples:
-                authorizationGrant:
-                  $ref: './schemas/v1/grants/examples/get.json'
+                changeOfEnergySupplier:
+                  $ref: './schemas/v1/grants/examples/change-of-energy-supplier/get.json'
+                moveInAndChangeOfEnergySupplier:
+                  $ref: './schemas/v1/grants/examples/move-in-and-change-of-energy-supplier/get.json'
+                energySupplierFrameworkAgreement:
+                  $ref: './schemas/v1/grants/examples/energy-supplier-framework-agreement/get.json'
 
     patch:
       tags:

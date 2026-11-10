@@ -6,8 +6,12 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import no.elhub.auth.common.auth.authorizedParty
 import no.elhub.auth.v0.features.common.Pagination
+import no.elhub.auth.v1.api.common.validateEnumListParam
 import no.elhub.auth.v1.api.grants.response.toGetCollectionResponse
+import no.elhub.auth.v1.domain.AuthorizationGrantStatus
 import no.elhub.auth.v1.features.grants.ListGrantsHandler
+
+internal const val STATUS_FILTER_PARAM = "filter[status]"
 
 fun Route.route(handler: ListGrantsHandler) {
     get {
@@ -16,7 +20,12 @@ fun Route.route(handler: ListGrantsHandler) {
             sizeParam = call.request.queryParameters["page[size]"],
         )
 
-        val page = handler(call.authorizedParty, pagination)
-        call.respond(HttpStatusCode.OK, page.toGetCollectionResponse())
+        val statuses = validateEnumListParam<AuthorizationGrantStatus>(
+            call.request.queryParameters[STATUS_FILTER_PARAM],
+            STATUS_FILTER_PARAM,
+        )
+
+        val page = handler(call.authorizedParty, pagination, statuses)
+        call.respond(HttpStatusCode.OK, page.toGetCollectionResponse(statuses))
     }
 }

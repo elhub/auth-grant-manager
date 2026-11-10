@@ -350,6 +350,12 @@ private fun Errors.toApiErrorResponse() =
             )
         }
 
+        is InputError.InvalidQueryParameterError -> buildApiErrorResponse(
+            status = HttpStatusCode.BadRequest,
+            title = "Invalid input",
+            detail = detail,
+        )
+
         is InputError.MalformedInputError -> {
             buildApiErrorResponse(
                 status = HttpStatusCode.UnprocessableEntity,
