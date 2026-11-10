@@ -1,7 +1,7 @@
 package no.elhub.auth.v1.features.documents
 
-import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.common.GrantValidity
+import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.common.consumableGrantValidity
 import no.elhub.auth.v1.common.frameworkAgreementGrantValidity
 import no.elhub.auth.v1.common.now

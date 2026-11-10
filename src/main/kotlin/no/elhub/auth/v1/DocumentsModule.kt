@@ -15,12 +15,12 @@ import no.elhub.auth.v1.features.documents.ListDocumentsHandler
 import no.elhub.auth.v1.features.documents.creation.ChangeOfEnergySupplierDocumentHandler
 import no.elhub.auth.v1.features.documents.creation.EnergySupplierFrameworkAgreementDocumentHandler
 import no.elhub.auth.v1.features.documents.creation.MoveInAndChangeOfEnergySupplierDocumentHandler
+import no.elhub.auth.v1.repositories.AgentRepository
 import no.elhub.auth.v1.repositories.DocumentRepository
+import no.elhub.auth.v1.repositories.ExposedAgentRepository
 import no.elhub.auth.v1.repositories.ExposedDocumentRepository
 import no.elhub.auth.v1.repositories.ExposedGrantRepository
-import no.elhub.auth.v1.repositories.ExposedAgentRepository
 import no.elhub.auth.v1.repositories.GrantRepository
-import no.elhub.auth.v1.repositories.AgentRepository
 import no.elhub.auth.v0.features.common.party.PartyService as AgentService
 import no.elhub.auth.v1.documenthandlers.frameworkagreement.EnergySupplierFrameworkAgreementDocumentHandler as FrameworkAgreementHandlerImplementation
 import no.elhub.auth.v1.documenthandlers.movein.MoveInAndChangeOfEnergySupplierDocumentHandler as MoveInHandlerImplementation

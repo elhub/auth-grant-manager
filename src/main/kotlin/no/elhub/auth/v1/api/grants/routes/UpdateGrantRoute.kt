@@ -11,8 +11,8 @@ import kotlinx.serialization.SerializationException
 import no.elhub.auth.v1.api.common.GrantResourceType
 import no.elhub.auth.v1.api.common.errors.InputError
 import no.elhub.auth.v1.api.grants.request.JsonApiUpdateAuthorizationGrantRequest
-import no.elhub.auth.v1.common.auth.authorizedAgent
 import no.elhub.auth.v1.api.grants.response.toGetResponse
+import no.elhub.auth.v1.common.auth.authorizedAgent
 import no.elhub.auth.v1.domain.AuthorizationGrantType
 import no.elhub.auth.v1.features.grants.UpdateGrantHandler
 import java.util.UUID
