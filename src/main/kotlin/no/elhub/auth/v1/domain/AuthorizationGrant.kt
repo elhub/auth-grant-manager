@@ -1,6 +1,6 @@
 package no.elhub.auth.v1.domain
 
-import no.elhub.auth.common.auth.AuthorizationParty
+import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.common.now
 import java.util.UUID
 import kotlin.time.Instant
@@ -10,10 +10,10 @@ data class AuthorizationGrant(
     val type: AuthorizationGrantType,
     val sourceType: AuthorizationGrantSourceType,
     val sourceId: UUID,
-    val principal: AuthorizationParty,
-    val grantedBy: AuthorizationParty,
-    val grantedTo: AuthorizationParty,
-    val approvedBy: AuthorizationParty,
+    val principal: AuthorizationAgent,
+    val grantedBy: AuthorizationAgent,
+    val grantedTo: AuthorizationAgent,
+    val approvedBy: AuthorizationAgent,
     val status: AuthorizationGrantStatus,
     val validFrom: Instant,
     val validTo: Instant?,
@@ -26,10 +26,10 @@ data class AuthorizationGrant(
             type: AuthorizationGrantType,
             sourceType: AuthorizationGrantSourceType,
             sourceId: UUID,
-            principal: AuthorizationParty,
-            grantedBy: AuthorizationParty,
-            grantedTo: AuthorizationParty,
-            approvedBy: AuthorizationParty,
+            principal: AuthorizationAgent,
+            grantedBy: AuthorizationAgent,
+            grantedTo: AuthorizationAgent,
+            approvedBy: AuthorizationAgent,
             validFrom: Instant,
             validTo: Instant?,
             scopes: List<GrantedAuthorizationScope>,

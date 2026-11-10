@@ -10,12 +10,12 @@ import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import kotlinx.serialization.json.Json
-import no.elhub.auth.common.auth.authorizedParty
 import no.elhub.auth.common.config.jsonApiContentType
 import no.elhub.auth.v0.features.common.toApiErrorResponse
 import no.elhub.auth.v0.features.common.toNotAcceptedErrorResponse
 import no.elhub.auth.v0.features.common.validatePathId
 import no.elhub.auth.v1.api.documents.response.toGetResponse
+import no.elhub.auth.v1.common.auth.authorizedAgent
 import no.elhub.auth.v1.features.documents.GetDocumentHandler
 
 fun Route.route(handler: GetDocumentHandler) {
@@ -27,7 +27,7 @@ fun Route.route(handler: GetDocumentHandler) {
                 return@get
             }
 
-        val document = handler(id, call.authorizedParty)
+        val document = handler(id, call.authorizedAgent)
         call.respond(HttpStatusCode.OK, document.toGetResponse())
     }
 
@@ -52,7 +52,7 @@ fun Route.route(handler: GetDocumentHandler) {
                 return@get
             }
 
-        val document = handler(id, call.authorizedParty)
+        val document = handler(id, call.authorizedAgent)
         call.respondBytes(document.pdfBytes, ContentType.Application.Pdf)
     }
 }

@@ -88,8 +88,8 @@ class ErrorHandlingTest : FunSpec({
         ErrorCase(
             ConfirmDocumentError.NotAuthorized(),
             HttpStatusCode.Forbidden,
-            "Party not authorized",
-            "The authorized party is not permitted to confirm this document.",
+            "Agent not authorized",
+            "The authorized agent is not permitted to confirm this document.",
         ),
         ErrorCase(
             ConfirmDocumentError.InvalidStatus(AuthorizationDocumentStatus.Approved),
@@ -107,7 +107,7 @@ class ErrorHandlingTest : FunSpec({
             ConfirmDocumentError.SignatoryNotAllowed(),
             HttpStatusCode.Forbidden,
             "Signatory not allowed",
-            "The signer does not match the document's requestedOf party.",
+            "The signer does not match the document's requestedOf agent.",
         ),
         ErrorCase(
             DocumentPreparationError.RequestedMeteringPointsNotFound(),

@@ -6,15 +6,15 @@ import io.kotest.matchers.shouldNotBe
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
-import no.elhub.auth.common.auth.AuthorizationParty
-import no.elhub.auth.common.auth.PartyType
+import no.elhub.auth.v1.common.auth.AgentType
+import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.domain.requests.AuthorizationRequestTypeDetails
 import kotlin.time.Instant
 
 class AuthorizationRequestTest : FunSpec({
-    val requestedBy = AuthorizationParty("123456789", PartyType.OrganizationEntity)
-    val requestedPrincipal = AuthorizationParty("999888771", PartyType.OrganizationEntity)
-    val requestedOf = AuthorizationParty("person-1", PartyType.Person)
+    val requestedBy = AuthorizationAgent("123456789", AgentType.OrganizationEntity)
+    val requestedPrincipal = AuthorizationAgent("999888771", AgentType.OrganizationEntity)
+    val requestedOf = AuthorizationAgent("person-1", AgentType.Person)
     val validTo = Instant.parse("2100-02-01T00:00:00Z")
     val meta = buildJsonObject { put("source", JsonPrimitive("test")) }
     val meteringPoints = ResourceConstraint.MeteringPoints(setOf(MeteringPointId.create("707057500000000001")))

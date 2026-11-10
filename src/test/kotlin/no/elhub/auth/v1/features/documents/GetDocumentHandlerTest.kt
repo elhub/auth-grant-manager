@@ -9,8 +9,8 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.serialization.json.JsonObject
-import no.elhub.auth.common.auth.AuthorizationParty
-import no.elhub.auth.common.auth.PartyType
+import no.elhub.auth.v1.common.auth.AgentType
+import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.domain.AuthorizationDocument
 import no.elhub.auth.v1.domain.AuthorizationDocumentType
 import no.elhub.auth.v1.domain.AuthorizationGrant
@@ -27,9 +27,9 @@ class GetDocumentHandlerTest : FunSpec({
     val documentRepository = mockk<DocumentRepository>()
     val grantRepository = mockk<GrantRepository>()
     val handler = GetDocumentHandler(documentRepository, grantRepository)
-    val requestedBy = AuthorizationParty("123456789", PartyType.OrganizationEntity)
-    val requestedPrincipal = AuthorizationParty("999888771", PartyType.OrganizationEntity)
-    val requestedOf = AuthorizationParty("person-1", PartyType.Person)
+    val requestedBy = AuthorizationAgent("123456789", AgentType.OrganizationEntity)
+    val requestedPrincipal = AuthorizationAgent("999888771", AgentType.OrganizationEntity)
+    val requestedOf = AuthorizationAgent("person-1", AgentType.Person)
     val document = AuthorizationDocument.new(
         documentType = AuthorizationDocumentType.ChangeOfEnergySupplierForOrganization,
         requestedScopes = emptyList(),
@@ -57,14 +57,14 @@ class GetDocumentHandlerTest : FunSpec({
 
     beforeTest { clearMocks(documentRepository, grantRepository) }
 
-    listOf(requestedBy, requestedOf).forEach { party ->
-        test("returns the document with linked grants for ${party.id}") {
+    listOf(requestedBy, requestedOf).forEach { agent ->
+        test("returns the document with linked grants for ${agent.id}") {
             coEvery { documentRepository.find(documentId) } returns document
             coEvery {
                 grantRepository.findBySourceIds(AuthorizationGrantSourceType.Document, listOf(documentId))
             } returns mapOf(documentId to listOf(grant))
 
-            handler(documentId, party) shouldBe document.copy(authorizationGrants = listOf(grant))
+            handler(documentId, agent) shouldBe document.copy(authorizationGrants = listOf(grant))
         }
     }
 
@@ -90,13 +90,13 @@ class GetDocumentHandlerTest : FunSpec({
 
     listOf(
         requestedPrincipal,
-        AuthorizationParty("unrelated-person", PartyType.Person),
-        requestedBy.copy(type = PartyType.Person),
-    ).forEach { party ->
-        test("denies access for ${party.type} ${party.id} before looking up grants") {
+        AuthorizationAgent("unrelated-person", AgentType.Person),
+        requestedBy.copy(type = AgentType.Person),
+    ).forEach { agent ->
+        test("denies access for ${agent.type} ${agent.id} before looking up grants") {
             coEvery { documentRepository.find(documentId) } returns document
 
-            shouldThrow<GetDocumentError.NotAuthorized> { handler(documentId, party) }
+            shouldThrow<GetDocumentError.NotAuthorized> { handler(documentId, agent) }
             coVerify(exactly = 0) { grantRepository.findBySourceIds(any(), any()) }
         }
     }

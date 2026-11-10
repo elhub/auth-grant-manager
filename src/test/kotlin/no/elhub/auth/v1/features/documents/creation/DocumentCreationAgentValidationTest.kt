@@ -4,14 +4,14 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
-import no.elhub.auth.common.auth.AuthorizationParty
-import no.elhub.auth.common.auth.PartyType
+import no.elhub.auth.v1.common.auth.AgentType
+import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.domain.AuthorizationDocumentType
 
 class DocumentCreationAgentValidationTest : FunSpec({
-    val requestedBy = AuthorizationParty("supplier-1", PartyType.OrganizationEntity)
-    val requestedPrincipal = AuthorizationParty("org-1", PartyType.Organization)
-    val requestedOf = AuthorizationParty("org-2", PartyType.Organization)
+    val requestedBy = AuthorizationAgent("supplier-1", AgentType.OrganizationEntity)
+    val requestedPrincipal = AuthorizationAgent("org-1", AgentType.Organization)
+    val requestedOf = AuthorizationAgent("org-2", AgentType.Organization)
 
     AuthorizationDocumentType.entries.forEach { documentType ->
         test("$documentType returns no error for allowed agents") {
@@ -22,8 +22,8 @@ class DocumentCreationAgentValidationTest : FunSpec({
             "requestedBy" to requestedBy,
             "requestedPrincipal" to requestedPrincipal,
             "requestedOf" to requestedOf,
-        ).forEach { (role, validParty) ->
-            PartyType.entries.filter { it != validParty.type }.forEach { actualType ->
+        ).forEach { (role, validAgent) ->
+            AgentType.entries.filter { it != validAgent.type }.forEach { actualType ->
                 test("$documentType throws structured errors for $actualType as $role") {
                     val by = if (role == "requestedBy") requestedBy.copy(type = actualType) else requestedBy
                     val principal = if (role == "requestedPrincipal") requestedPrincipal.copy(type = actualType) else requestedPrincipal
@@ -39,7 +39,7 @@ class DocumentCreationAgentValidationTest : FunSpec({
                     }
                     documentError.documentType shouldBe documentType
                     documentError.actualAgentType shouldBe actualType
-                    documentError.expectedAgentType shouldBe validParty.type
+                    documentError.expectedAgentType shouldBe validAgent.type
                     documentError.detail shouldBe null
                 }
             }

@@ -4,8 +4,6 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
-import no.elhub.auth.common.auth.authorizedParty
-import no.elhub.auth.v0.features.common.party.PartyService
 import no.elhub.auth.v0.features.common.receiveEither
 import no.elhub.auth.v0.features.common.toApiErrorResponse
 import no.elhub.auth.v0.features.common.toTypeMismatchApiErrorResponse
@@ -14,11 +12,13 @@ import no.elhub.auth.v1.api.common.toPartyIdentifier
 import no.elhub.auth.v1.api.documents.request.JsonApiCreateAuthorizationDocumentRequest
 import no.elhub.auth.v1.api.documents.request.toDocumentSpecification
 import no.elhub.auth.v1.api.documents.response.toGetResponse
+import no.elhub.auth.v1.common.auth.authorizedAgent
 import no.elhub.auth.v1.domain.AgentExternalIdentifier
 import no.elhub.auth.v1.features.documents.CreateDocumentHandler
+import no.elhub.auth.v0.features.common.party.PartyService as AgentService
 
 fun Route.route(
-    partyService: PartyService,
+    agentService: AgentService,
     handler: CreateDocumentHandler,
 ) {
     post {
@@ -55,7 +55,7 @@ fun Route.route(
                 .create(request.data.meta.requestedPrincipal)
                 .toPartyIdentifier()
         val requestedPrincipal =
-            partyService.resolve(requestedPrincipalIdentifier).fold(
+            agentService.resolve(requestedPrincipalIdentifier).fold(
                 ifLeft = { error ->
                     call.respond(error.toApiErrorResponse())
                     return@post
@@ -68,7 +68,7 @@ fun Route.route(
                 .create(request.data.meta.requestedOf)
                 .toPartyIdentifier()
         val requestedOf =
-            partyService.resolve(requestedOfIdentifier).fold(
+            agentService.resolve(requestedOfIdentifier).fold(
                 ifLeft = { error ->
                     call.respond(error.toApiErrorResponse())
                     return@post
@@ -76,7 +76,7 @@ fun Route.route(
                 ifRight = { it },
             )
 
-        val requestedBy = call.authorizedParty
+        val requestedBy = call.authorizedAgent
 
         val document =
             handler.createAuthorizationDocument(

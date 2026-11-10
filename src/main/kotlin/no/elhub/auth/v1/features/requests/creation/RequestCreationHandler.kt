@@ -1,7 +1,7 @@
 package no.elhub.auth.v1.features.requests.creation
 
 import kotlinx.serialization.json.JsonObject
-import no.elhub.auth.common.auth.AuthorizationParty
+import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.domain.requests.AuthorizationRequestTypeDetails
 import kotlin.time.Instant
 
@@ -13,9 +13,9 @@ data class RequestTypeSpecificDetails(
 interface RequestCreationHandler<in Details : AuthorizationRequestTypeDetails> {
     suspend fun validateAndGetRequestTypeSpecificDetails(
         details: Details,
-        requestedBy: AuthorizationParty,
-        requestedPrincipal: AuthorizationParty,
-        requestedOf: AuthorizationParty,
+        requestedBy: AuthorizationAgent,
+        requestedPrincipal: AuthorizationAgent,
+        requestedOf: AuthorizationAgent,
     ): RequestTypeSpecificDetails
 }
 

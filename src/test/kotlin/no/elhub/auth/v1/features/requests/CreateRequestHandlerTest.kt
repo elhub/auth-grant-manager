@@ -12,8 +12,8 @@ import io.mockk.slot
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
-import no.elhub.auth.common.auth.AuthorizationParty
-import no.elhub.auth.common.auth.PartyType
+import no.elhub.auth.v1.common.auth.AgentType
+import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.domain.AuthorizationRequest
 import no.elhub.auth.v1.domain.AuthorizationRequestType
 import no.elhub.auth.v1.domain.MeteringPointId
@@ -29,9 +29,9 @@ import no.elhub.auth.v1.repositories.RequestRepository
 import kotlin.time.Instant
 
 class CreateRequestHandlerTest : FunSpec({
-    val requestedBy = AuthorizationParty("123456789", PartyType.OrganizationEntity)
-    val requestedPrincipal = AuthorizationParty("999888771", PartyType.Organization)
-    val requestedOf = AuthorizationParty("org-1", PartyType.Organization)
+    val requestedBy = AuthorizationAgent("123456789", AgentType.OrganizationEntity)
+    val requestedPrincipal = AuthorizationAgent("999888771", AgentType.Organization)
+    val requestedOf = AuthorizationAgent("org-1", AgentType.Organization)
     val validTo = Instant.parse("2100-02-01T00:00:00Z")
     val meta = buildJsonObject { put("source", JsonPrimitive("test")) }
     val meteringPoints = ResourceConstraint.MeteringPoints(setOf(MeteringPointId.create("707057500000000001")))
@@ -73,10 +73,10 @@ class CreateRequestHandlerTest : FunSpec({
         "requestedOf" to requestedOf,
     )
     supportedDetails.forEach { (requestType, details) ->
-        roles.forEach { (role, validParty) ->
-            PartyType.entries.filter { it != validParty.type }.forEach { invalidType ->
+        roles.forEach { (role, validAgent) ->
+            AgentType.entries.filter { it != validAgent.type }.forEach { invalidType ->
                 test("$requestType rejects $invalidType for $role before preparation or persistence") {
-                    val agents = roles + (role to validParty.copy(type = invalidType))
+                    val agents = roles + (role to validAgent.copy(type = invalidType))
                     val error = shouldThrow<RequestCreationAgentError> {
                         CreateRequestHandler(supplierChangeHandler, moveInHandler, frameworkAgreementHandler, repository)(
                             specification = AuthorizationRequestSpecification(null, null, details),
@@ -93,7 +93,7 @@ class CreateRequestHandlerTest : FunSpec({
                     }
                     error.requestType.name shouldBe requestType
                     error.actualAgentType shouldBe invalidType
-                    error.expectedAgentType shouldBe validParty.type
+                    error.expectedAgentType shouldBe validAgent.type
                     coVerify(exactly = 0) {
                         supplierChangeHandler.validateAndGetRequestTypeSpecificDetails(any(), any(), any(), any())
                         moveInHandler.validateAndGetRequestTypeSpecificDetails(any(), any(), any(), any())

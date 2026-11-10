@@ -8,8 +8,8 @@ import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
-import no.elhub.auth.common.auth.AuthorizationParty
-import no.elhub.auth.common.auth.PartyType
+import no.elhub.auth.v1.common.auth.AgentType
+import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.domain.AuthorizationGrant
 import no.elhub.auth.v1.domain.AuthorizationGrantSourceType
 import no.elhub.auth.v1.domain.AuthorizationGrantStatus
@@ -23,10 +23,10 @@ import kotlin.time.Instant
 class UpdateGrantHandlerTest : FunSpec({
     val grantRepository = mockk<GrantRepository>()
     val handler = UpdateGrantHandler(grantRepository)
-    val system = AuthorizationParty("system-1", PartyType.System)
-    val principal = AuthorizationParty("999888771", PartyType.Organization)
-    val grantedBy = AuthorizationParty("person-1", PartyType.Person)
-    val grantedTo = AuthorizationParty("123456789", PartyType.OrganizationEntity)
+    val system = AuthorizationAgent("system-1", AgentType.System)
+    val principal = AuthorizationAgent("999888771", AgentType.Organization)
+    val grantedBy = AuthorizationAgent("person-1", AgentType.Person)
+    val grantedTo = AuthorizationAgent("123456789", AgentType.OrganizationEntity)
     val grant = AuthorizationGrant.new(
         type = AuthorizationGrantType.Consumable,
         sourceType = AuthorizationGrantSourceType.Document,
@@ -62,24 +62,24 @@ class UpdateGrantHandlerTest : FunSpec({
         }
     }
 
-    listOf(principal, grantedBy).forEach { party ->
+    listOf(principal, grantedBy).forEach { agent ->
         listOf(AuthorizationGrantType.Consumable, AuthorizationGrantType.Persistent).forEach { type ->
-            test("${party.type} ${party.id} can revoke a $type grant") {
+            test("${agent.type} ${agent.id} can revoke a $type grant") {
                 val existing = grant.copy(type = type)
                 val updated = existing.copy(status = AuthorizationGrantStatus.Revoked)
                 coEvery { grantRepository.find(id) } returns existing
                 coEvery { grantRepository.update(id, AuthorizationGrantStatus.Revoked) } returns updated
 
-                handler(id, party, AuthorizationGrantStatus.Revoked, type) shouldBeSameInstanceAs updated
+                handler(id, agent, AuthorizationGrantStatus.Revoked, type) shouldBeSameInstanceAs updated
 
                 coVerify(exactly = 1) { grantRepository.update(id, AuthorizationGrantStatus.Revoked) }
             }
         }
     }
 
-    listOf(system, principal, grantedBy).forEach { party ->
+    listOf(system, principal, grantedBy).forEach { agent ->
         listOf(AuthorizationGrantType.Consumable, AuthorizationGrantType.Persistent).forEach { type ->
-            test("${party.type} ${party.id} can revoke a pending $type grant") {
+            test("${agent.type} ${agent.id} can revoke a pending $type grant") {
                 val existing = grant.copy(
                     type = type,
                     status = AuthorizationGrantStatus.Pending,
@@ -89,7 +89,7 @@ class UpdateGrantHandlerTest : FunSpec({
                 coEvery { grantRepository.find(id) } returns existing
                 coEvery { grantRepository.update(id, AuthorizationGrantStatus.Revoked) } returns updated
 
-                handler(id, party, AuthorizationGrantStatus.Revoked, type) shouldBeSameInstanceAs updated
+                handler(id, agent, AuthorizationGrantStatus.Revoked, type) shouldBeSameInstanceAs updated
 
                 coVerify(exactly = 1) { grantRepository.update(id, AuthorizationGrantStatus.Revoked) }
             }
@@ -115,17 +115,17 @@ class UpdateGrantHandlerTest : FunSpec({
         AuthorizationGrantType.Persistent to AuthorizationGrantType.Consumable,
         AuthorizationGrantType.Consumable to AuthorizationGrantType.Persistent,
     ).forEach { (suppliedType, storedType) ->
-        listOf(system, principal, grantedBy).forEach { party ->
-            test("rejects $suppliedType supplied for a stored $storedType grant by ${party.type} ${party.id}") {
+        listOf(system, principal, grantedBy).forEach { agent ->
+            test("rejects $suppliedType supplied for a stored $storedType grant by ${agent.type} ${agent.id}") {
                 coEvery { grantRepository.find(id) } returns grant.copy(type = storedType)
 
                 shouldThrow<UpdateGrantError.TypeMismatch> {
-                    val status = if (party == system && storedType == AuthorizationGrantType.Consumable) {
+                    val status = if (agent == system && storedType == AuthorizationGrantType.Consumable) {
                         AuthorizationGrantStatus.Exhausted
                     } else {
                         AuthorizationGrantStatus.Revoked
                     }
-                    handler(id, party, status, suppliedType)
+                    handler(id, agent, status, suppliedType)
                 }
 
                 coVerify(exactly = 1) { grantRepository.find(id) }
@@ -136,28 +136,28 @@ class UpdateGrantHandlerTest : FunSpec({
 
     listOf(
         grantedTo,
-        AuthorizationParty("unrelated-person", PartyType.Person),
-        AuthorizationParty("unrelated-org", PartyType.Organization),
-        principal.copy(type = PartyType.OrganizationEntity),
-        grantedBy.copy(type = PartyType.Organization),
-    ).forEach { party ->
-        test("denies ${party.type} ${party.id} revoking a grant") {
+        AuthorizationAgent("unrelated-person", AgentType.Person),
+        AuthorizationAgent("unrelated-org", AgentType.Organization),
+        principal.copy(type = AgentType.OrganizationEntity),
+        grantedBy.copy(type = AgentType.Organization),
+    ).forEach { agent ->
+        test("denies ${agent.type} ${agent.id} revoking a grant") {
             coEvery { grantRepository.find(id) } returns grant
             coEvery { grantRepository.update(any(), any()) } throws RepositoryWriteError.ConflictError("Invalid transition")
 
             shouldThrow<UpdateGrantError.NotAuthorized> {
-                handler(id, party, AuthorizationGrantStatus.Revoked, AuthorizationGrantType.Persistent)
+                handler(id, agent, AuthorizationGrantStatus.Revoked, AuthorizationGrantType.Persistent)
             }
 
             coVerify(exactly = 0) { grantRepository.update(any(), any()) }
         }
     }
 
-    listOf(principal, grantedBy, grantedTo).forEach { party ->
+    listOf(principal, grantedBy, grantedTo).forEach { agent ->
         AuthorizationGrantStatus.entries.filter { it != AuthorizationGrantStatus.Revoked }.forEach { status ->
-            test("denies ${party.type} updating a grant to $status before validating the transition") {
+            test("denies ${agent.type} updating a grant to $status before validating the transition") {
                 shouldThrow<UpdateGrantError.NotAuthorized> {
-                    handler(id, party, status, AuthorizationGrantType.Persistent)
+                    handler(id, agent, status, AuthorizationGrantType.Persistent)
                 }
 
                 coVerify(exactly = 0) { grantRepository.update(any(), any()) }
@@ -170,12 +170,12 @@ class UpdateGrantHandlerTest : FunSpec({
         RepositoryReadError.NotFoundError("Missing grant"),
         RepositoryReadError.UnexpectedError("Database unavailable"),
     ).forEach { error ->
-        listOf(system, principal).forEach { party ->
-            test("propagates ${error::class.simpleName} when loading a grant for revocation by ${party.type}") {
+        listOf(system, principal).forEach { agent ->
+            test("propagates ${error::class.simpleName} when loading a grant for revocation by ${agent.type}") {
                 coEvery { grantRepository.find(id) } throws error
 
                 shouldThrow<RepositoryReadError> {
-                    handler(id, party, AuthorizationGrantStatus.Revoked, AuthorizationGrantType.Consumable)
+                    handler(id, agent, AuthorizationGrantStatus.Revoked, AuthorizationGrantType.Consumable)
                 } shouldBeSameInstanceAs error
 
                 coVerify(exactly = 0) { grantRepository.update(any(), any()) }

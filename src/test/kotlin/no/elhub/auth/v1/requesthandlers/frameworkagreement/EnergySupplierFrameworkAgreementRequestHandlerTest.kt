@@ -5,8 +5,6 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
-import no.elhub.auth.common.auth.AuthorizationParty
-import no.elhub.auth.common.auth.PartyType
 import no.elhub.auth.v0.features.businessprocesses.common.JwtTokenProvider
 import no.elhub.auth.v0.features.businessprocesses.structuredata.common.ClientError
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsApi
@@ -20,15 +18,17 @@ import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.O
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.VALID_PARTY_ID
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.VALID_PARTY_NAME
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.organisationsServiceHttpClient
+import no.elhub.auth.v1.common.auth.AgentType
+import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.domain.requests.AuthorizationRequestTypeDetails
 import no.elhub.auth.v1.features.requests.creation.RequestPreparationError
 
 class EnergySupplierFrameworkAgreementRequestHandlerTest : FunSpec({
     extensions(OrganisationsServiceTestContainerExtension)
 
-    val requestedBy = AuthorizationParty(VALID_PARTY_ID, PartyType.OrganizationEntity)
-    val requestedPrincipal = AuthorizationParty(VALID_ORGANISATION_NUMBER, PartyType.Organization)
-    val requestedOf = AuthorizationParty("person-1", PartyType.Person)
+    val requestedBy = AuthorizationAgent(VALID_PARTY_ID, AgentType.OrganizationEntity)
+    val requestedPrincipal = AuthorizationAgent(VALID_ORGANISATION_NUMBER, AgentType.Organization)
+    val requestedOf = AuthorizationAgent("person-1", AgentType.Person)
     val tokenProvider = object : JwtTokenProvider {
         override suspend fun getToken(): String = "token"
     }
@@ -58,11 +58,11 @@ class EnergySupplierFrameworkAgreementRequestHandlerTest : FunSpec({
         }
     }
 
-    test("throws a requested-by lookup failure when the party is not a balance supplier") {
+    test("throws a requested-by lookup failure when the agent is not a balance supplier") {
         val error = shouldThrow<RequestPreparationError.RequestedByLookupFailure> {
             handler.validateAndGetRequestTypeSpecificDetails(
                 details = details(),
-                requestedBy = AuthorizationParty(NOT_BALANCE_SUPPLIER_PARTY_ID, PartyType.OrganizationEntity),
+                requestedBy = AuthorizationAgent(NOT_BALANCE_SUPPLIER_PARTY_ID, AgentType.OrganizationEntity),
                 requestedPrincipal = requestedPrincipal,
                 requestedOf = requestedOf,
             )
@@ -76,7 +76,7 @@ class EnergySupplierFrameworkAgreementRequestHandlerTest : FunSpec({
             handler.validateAndGetRequestTypeSpecificDetails(
                 details = details(),
                 requestedBy = requestedBy,
-                requestedPrincipal = AuthorizationParty(NON_EXISTING_ORGANISATION_NUMBER, PartyType.Organization),
+                requestedPrincipal = AuthorizationAgent(NON_EXISTING_ORGANISATION_NUMBER, AgentType.Organization),
                 requestedOf = requestedOf,
             )
         }

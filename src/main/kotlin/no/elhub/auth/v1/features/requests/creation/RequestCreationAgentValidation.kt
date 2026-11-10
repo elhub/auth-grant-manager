@@ -1,14 +1,14 @@
 package no.elhub.auth.v1.features.requests.creation
 
-import no.elhub.auth.common.auth.AuthorizationParty
-import no.elhub.auth.common.auth.PartyType
+import no.elhub.auth.v1.common.auth.AgentType
+import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.domain.AuthorizationRequestType
 
 fun validateRequestCreationAgents(
     requestType: AuthorizationRequestType,
-    requestedBy: AuthorizationParty,
-    requestedPrincipal: AuthorizationParty,
-    requestedOf: AuthorizationParty,
+    requestedBy: AuthorizationAgent,
+    requestedPrincipal: AuthorizationAgent,
+    requestedOf: AuthorizationAgent,
 ): Unit = when (requestType) {
     AuthorizationRequestType.ChangeOfEnergySupplierForOrganization,
     AuthorizationRequestType.MoveInAndChangeOfEnergySupplierForOrganization,
@@ -18,29 +18,29 @@ fun validateRequestCreationAgents(
 
 private fun validateOrganizationRequestAgents(
     requestType: AuthorizationRequestType,
-    requestedBy: AuthorizationParty,
-    requestedPrincipal: AuthorizationParty,
-    requestedOf: AuthorizationParty,
+    requestedBy: AuthorizationAgent,
+    requestedPrincipal: AuthorizationAgent,
+    requestedOf: AuthorizationAgent,
 ) {
-    if (requestedBy.type != PartyType.OrganizationEntity) {
+    if (requestedBy.type != AgentType.OrganizationEntity) {
         throw RequestCreationAgentError.RequestedByNotAllowed(
             requestType = requestType,
             actualAgentType = requestedBy.type,
-            expectedAgentType = PartyType.OrganizationEntity,
+            expectedAgentType = AgentType.OrganizationEntity,
         )
     }
-    if (requestedPrincipal.type != PartyType.Organization) {
+    if (requestedPrincipal.type != AgentType.Organization) {
         throw RequestCreationAgentError.RequestedPrincipalNotAllowed(
             requestType = requestType,
             actualAgentType = requestedPrincipal.type,
-            expectedAgentType = PartyType.Organization,
+            expectedAgentType = AgentType.Organization,
         )
     }
-    if (requestedOf.type != PartyType.Organization) {
+    if (requestedOf.type != AgentType.Organization) {
         throw RequestCreationAgentError.RequestedOfNotAllowed(
             requestType = requestType,
             actualAgentType = requestedOf.type,
-            expectedAgentType = PartyType.Organization,
+            expectedAgentType = AgentType.Organization,
         )
     }
 }

@@ -7,8 +7,8 @@ import kotlinx.serialization.UseSerializers
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import no.elhub.auth.v1.api.common.response.AgentTypeResponse
 import no.elhub.auth.v1.api.common.response.OsloInstantSerializer
-import no.elhub.auth.v1.api.common.response.PartyTypeResponse
 import no.elhub.auth.v1.api.common.response.RequestedScopeResponse
 import no.elhub.auth.v1.api.common.response.ResponseGrantRelationship
 import no.elhub.auth.v1.api.common.response.ResponseRelationship
@@ -63,10 +63,10 @@ enum class ResponseAuthorizationDocumentStatus {
 
 @Serializable
 data class AuthorizationDocumentRelationships(
-    val requestedBy: ResponseRelationship<PartyTypeResponse>,
-    val requestedPrincipal: ResponseRelationship<PartyTypeResponse>,
-    val requestedOf: ResponseRelationship<PartyTypeResponse>,
-    val approvedBy: ResponseRelationship<PartyTypeResponse>? = null,
+    val requestedBy: ResponseRelationship<AgentTypeResponse>,
+    val requestedPrincipal: ResponseRelationship<AgentTypeResponse>,
+    val requestedOf: ResponseRelationship<AgentTypeResponse>,
+    val approvedBy: ResponseRelationship<AgentTypeResponse>? = null,
     val authorizationGrants: ResponseGrantRelationship? = null,
 )
 

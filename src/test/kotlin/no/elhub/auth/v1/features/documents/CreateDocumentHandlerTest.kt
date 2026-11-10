@@ -11,12 +11,12 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.json.JsonObject
-import no.elhub.auth.common.auth.AuthorizationParty
-import no.elhub.auth.common.auth.PartyType
 import no.elhub.auth.common.documents.pdf.PdfGenerator
 import no.elhub.auth.common.documents.pdf.PdfSigner
 import no.elhub.auth.v1.api.common.errors.InputError
 import no.elhub.auth.v1.common.AuthorizationRulesService
+import no.elhub.auth.v1.common.auth.AgentType
+import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.domain.DocumentLanguage
 import no.elhub.auth.v1.domain.MeteringPointId
 import no.elhub.auth.v1.domain.ResourceConstraint
@@ -31,9 +31,9 @@ import kotlin.time.Instant
 
 class CreateDocumentHandlerTest : FunSpec({
     val roles = mapOf(
-        "requestedBy" to AuthorizationParty("supplier-1", PartyType.OrganizationEntity),
-        "requestedPrincipal" to AuthorizationParty("org-1", PartyType.Organization),
-        "requestedOf" to AuthorizationParty("org-2", PartyType.Organization),
+        "requestedBy" to AuthorizationAgent("supplier-1", AgentType.OrganizationEntity),
+        "requestedPrincipal" to AuthorizationAgent("org-1", AgentType.Organization),
+        "requestedOf" to AuthorizationAgent("org-2", AgentType.Organization),
     )
     val meteringPoints = ResourceConstraint.MeteringPoints(setOf(MeteringPointId.create("707057500000000001")))
     val specifications = listOf(
@@ -98,10 +98,10 @@ class CreateDocumentHandlerTest : FunSpec({
             coVerify(exactly = 1) { repository.insert(document) }
         }
 
-        roles.forEach { (role, validParty) ->
-            PartyType.entries.filter { it != validParty.type }.forEach { invalidType ->
+        roles.forEach { (role, validAgent) ->
+            AgentType.entries.filter { it != validAgent.type }.forEach { invalidType ->
                 test("${specification.documentType} rejects $invalidType for $role before preparation, PDF creation or persistence") {
-                    val agents = roles + (role to validParty.copy(type = invalidType))
+                    val agents = roles + (role to validAgent.copy(type = invalidType))
                     val error = shouldThrow<DocumentCreationAgentError> {
                         handler.createAuthorizationDocument(
                             specification = specification,
@@ -120,7 +120,7 @@ class CreateDocumentHandlerTest : FunSpec({
                     }
                     error.documentType shouldBe specification.documentType
                     error.actualAgentType shouldBe invalidType
-                    error.expectedAgentType shouldBe validParty.type
+                    error.expectedAgentType shouldBe validAgent.type
                     coVerify(exactly = 0) {
                         authorizationRulesService.canActOnBehalfOf(any(), any())
                         supplierChangeHandler.prepare(any(), any())

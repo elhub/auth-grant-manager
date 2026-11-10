@@ -1,6 +1,6 @@
 package no.elhub.auth.v1.features.requests
 
-import no.elhub.auth.common.auth.AuthorizationParty
+import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.common.GrantValidity
 import no.elhub.auth.v1.common.consumableGrantValidity
 import no.elhub.auth.v1.common.now
@@ -20,7 +20,7 @@ import no.elhub.auth.v1.common.frameworkAgreementGrantValidity as calculateFrame
 
 // The requested scopes are built by AuthorizationRequest.create for each request type, so their shape is trusted here.
 fun AuthorizationRequest.toGrants(
-    approvedBy: AuthorizationParty,
+    approvedBy: AuthorizationAgent,
     now: Instant = now(),
 ): List<AuthorizationGrant> =
     when (requestType) {
@@ -39,7 +39,7 @@ fun AuthorizationRequest.toGrants(
  * metering point. Valid from today through the calendar date two years ahead in Oslo.
  */
 private fun AuthorizationRequest.changeOfEnergySupplierGrants(
-    approvedBy: AuthorizationParty,
+    approvedBy: AuthorizationAgent,
     now: Instant,
 ): List<AuthorizationGrant> {
     val meteringPoints = constraint(AuthorizationScopeConstraintAttribute.MeteringPointId)
@@ -77,7 +77,7 @@ private fun AuthorizationRequest.changeOfEnergySupplierGrants(
  * contracts on that metering point from the move-in date. Valid from today through the calendar date two years ahead in Oslo.
  */
 private fun AuthorizationRequest.moveInAndChangeOfEnergySupplierGrants(
-    approvedBy: AuthorizationParty,
+    approvedBy: AuthorizationAgent,
     now: Instant,
 ): List<AuthorizationGrant> {
     val meteringPoints = constraint(AuthorizationScopeConstraintAttribute.MeteringPointId)
@@ -117,7 +117,7 @@ private fun AuthorizationRequest.moveInAndChangeOfEnergySupplierGrants(
  * principal's metering points. Valid according to [frameworkAgreementGrantValidity].
  */
 private fun AuthorizationRequest.energySupplierFrameworkAgreementGrants(
-    approvedBy: AuthorizationParty,
+    approvedBy: AuthorizationAgent,
     now: Instant,
 ): List<AuthorizationGrant> {
     val contractTypes = constraint(AuthorizationScopeConstraintAttribute.ContractType)

@@ -8,10 +8,10 @@ import io.ktor.server.routing.patch
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.MissingFieldException
 import kotlinx.serialization.SerializationException
-import no.elhub.auth.common.auth.authorizedParty
 import no.elhub.auth.v1.api.common.GrantResourceType
 import no.elhub.auth.v1.api.common.errors.InputError
 import no.elhub.auth.v1.api.grants.request.JsonApiUpdateAuthorizationGrantRequest
+import no.elhub.auth.v1.common.auth.authorizedAgent
 import no.elhub.auth.v1.api.grants.response.toGetResponse
 import no.elhub.auth.v1.domain.AuthorizationGrantType
 import no.elhub.auth.v1.features.grants.UpdateGrantHandler
@@ -52,7 +52,7 @@ fun Route.route(handler: UpdateGrantHandler) {
 
         val updated = handler(
             id = id,
-            authorizedParty = call.authorizedParty,
+            authorizedAgent = call.authorizedAgent,
             status = request.data.attributes.status,
             type = when (request.data.type) {
                 GrantResourceType.ConsumableGrant -> AuthorizationGrantType.Consumable

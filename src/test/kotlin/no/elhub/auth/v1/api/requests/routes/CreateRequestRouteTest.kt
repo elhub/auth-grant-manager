@@ -16,14 +16,13 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import no.elhub.auth.common.auth.AuthorizationParty
-import no.elhub.auth.common.auth.PartyType
 import no.elhub.auth.v0.features.common.party.PartyIdentifier
 import no.elhub.auth.v0.features.common.party.PartyIdentifierType
-import no.elhub.auth.v0.features.common.party.PartyService
 import no.elhub.auth.v0.postJson
 import no.elhub.auth.v0.setupAppWith
 import no.elhub.auth.v1.api.requests.response.JsonApiGetAuthorizationRequestResponse
+import no.elhub.auth.v1.common.auth.AgentType
+import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.domain.AuthorizationRequest
 import no.elhub.auth.v1.domain.AuthorizationRequestStatus
 import no.elhub.auth.v1.domain.AuthorizationRequestType
@@ -36,11 +35,12 @@ import no.elhub.auth.v1.repositories.RequestRepository
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import java.util.UUID
 import kotlin.time.Instant
+import no.elhub.auth.v0.features.common.party.PartyService as AgentService
 
 class CreateRequestRouteTest : FunSpec({
-    val authorizedParty = AuthorizationParty("123456789", PartyType.OrganizationEntity)
-    val requestedPrincipal = AuthorizationParty("999888771", PartyType.Organization)
-    val requestedOf = AuthorizationParty("999888772", PartyType.Organization)
+    val authorizedAgent = AuthorizationAgent("123456789", AgentType.OrganizationEntity)
+    val requestedPrincipal = AuthorizationAgent("999888771", AgentType.Organization)
+    val requestedOf = AuthorizationAgent("999888772", AgentType.Organization)
     val grantValidFrom = Instant.parse("2100-01-01T00:00:00Z")
     val grantValidTo = Instant.parse("2101-01-01T00:00:00Z")
     val meteringPoints = ResourceConstraint.MeteringPoints(setOf(MeteringPointId.create("707057500000000001")))
@@ -63,7 +63,7 @@ class CreateRequestRouteTest : FunSpec({
     """.trimIndent()
 
     lateinit var handler: CreateRequestHandler
-    lateinit var partyService: PartyService
+    lateinit var agentService: AgentService
 
     fun savedRequest() = AuthorizationRequest(
         id = UUID.fromString("123e4567-e89b-12d3-a456-426614174000"),
@@ -79,7 +79,7 @@ class CreateRequestRouteTest : FunSpec({
         validTo = Instant.parse("2026-01-29T00:00:00Z"),
         createdAt = Instant.parse("2026-01-01T00:00:00Z"),
         updatedAt = Instant.parse("2026-01-01T00:00:00Z"),
-        requestedBy = authorizedParty,
+        requestedBy = authorizedAgent,
         requestedPrincipal = requestedPrincipal,
         requestedOf = requestedOf,
         approvedBy = null,
@@ -88,17 +88,17 @@ class CreateRequestRouteTest : FunSpec({
 
     beforeAny {
         handler = mockk()
-        partyService = mockk()
+        agentService = mockk()
     }
 
     listOf("requestedBy", "requestedPrincipal", "requestedOf").forEach { role ->
         test("POST / returns an API-friendly error for an unsupported $role") {
             val agents = mapOf(
-                "requestedBy" to authorizedParty,
+                "requestedBy" to authorizedAgent,
                 "requestedPrincipal" to requestedPrincipal,
                 "requestedOf" to requestedOf,
-            ).mapValues { (agentRole, party) -> if (agentRole == role) party.copy(type = PartyType.Person) else party }
-            coEvery { partyService.resolve(any()) } returnsMany listOf(
+            ).mapValues { (agentRole, agent) -> if (agentRole == role) agent.copy(type = AgentType.Person) else agent }
+            coEvery { agentService.resolve(any()) } returnsMany listOf(
                 agents.getValue("requestedPrincipal").right(),
                 agents.getValue("requestedOf").right(),
             )
@@ -107,7 +107,7 @@ class CreateRequestRouteTest : FunSpec({
 
             testApplication {
                 setupAppWith(agents.getValue("requestedBy")) {
-                    route(partyService, creationHandler)
+                    route(agentService, creationHandler)
                 }
 
                 val response = client.postJson("/", requestBody)
@@ -137,11 +137,11 @@ class CreateRequestRouteTest : FunSpec({
 
     test("POST / creates a framework agreement request and returns requested grant validity") {
         coEvery { handler(any(), any(), any(), any()) } returns savedRequest()
-        coEvery { partyService.resolve(any()) } returnsMany listOf(requestedPrincipal.right(), requestedOf.right())
+        coEvery { agentService.resolve(any()) } returnsMany listOf(requestedPrincipal.right(), requestedOf.right())
 
         testApplication {
-            setupAppWith(authorizedParty) {
-                route(partyService, handler)
+            setupAppWith(authorizedAgent) {
+                route(agentService, handler)
             }
 
             val response = client.postJson("/", requestBody)
@@ -152,12 +152,12 @@ class CreateRequestRouteTest : FunSpec({
             body.data.attributes.requestType shouldBe AuthorizationRequestType.EnergySupplierFrameworkAgreement
             body.data.attributes.requestedGrantValidFrom shouldBe grantValidFrom
             body.data.attributes.requestedGrantValidTo shouldBe grantValidTo
-            body.data.relationships.requestedBy.data.id shouldBe authorizedParty.id
+            body.data.relationships.requestedBy.data.id shouldBe authorizedAgent.id
             coVerify(exactly = 1) {
-                partyService.resolve(PartyIdentifier(PartyIdentifierType.OrganizationNumber, "999888771"))
+                agentService.resolve(PartyIdentifier(PartyIdentifierType.OrganizationNumber, "999888771"))
             }
             coVerify(exactly = 1) {
-                partyService.resolve(PartyIdentifier(PartyIdentifierType.OrganizationNumber, "999888772"))
+                agentService.resolve(PartyIdentifier(PartyIdentifierType.OrganizationNumber, "999888772"))
             }
             coVerify(exactly = 1) {
                 handler(
@@ -169,7 +169,7 @@ class CreateRequestRouteTest : FunSpec({
                             requestedGrantValidTo = grantValidTo,
                         ),
                     ),
-                    requestedBy = authorizedParty,
+                    requestedBy = authorizedAgent,
                     requestedPrincipal = requestedPrincipal,
                     requestedOf = requestedOf,
                 )
@@ -201,11 +201,11 @@ class CreateRequestRouteTest : FunSpec({
             requestedGrantValidTo = null,
         )
         coEvery { handler(any(), any(), any(), any()) } returns saved
-        coEvery { partyService.resolve(any()) } returnsMany listOf(requestedPrincipal.right(), requestedOf.right())
+        coEvery { agentService.resolve(any()) } returnsMany listOf(requestedPrincipal.right(), requestedOf.right())
 
         testApplication {
-            setupAppWith(authorizedParty) {
-                route(partyService, handler)
+            setupAppWith(authorizedAgent) {
+                route(agentService, handler)
             }
 
             val response = client.postJson("/", scopedRequestBody("ChangeOfEnergySupplierForOrganization"))
@@ -222,7 +222,7 @@ class CreateRequestRouteTest : FunSpec({
                         redirectUri = null,
                         details = AuthorizationRequestTypeDetails.ChangeOfEnergySupplierForOrganization(meteringPoints),
                     ),
-                    requestedBy = authorizedParty,
+                    requestedBy = authorizedAgent,
                     requestedPrincipal = requestedPrincipal,
                     requestedOf = requestedOf,
                 )
@@ -232,11 +232,11 @@ class CreateRequestRouteTest : FunSpec({
 
     test("POST / includes the request's authorization text reference") {
         coEvery { handler(any(), any(), any(), any()) } returns savedRequest().copy(textReference = "v2")
-        coEvery { partyService.resolve(any()) } returnsMany listOf(requestedPrincipal.right(), requestedOf.right())
+        coEvery { agentService.resolve(any()) } returnsMany listOf(requestedPrincipal.right(), requestedOf.right())
 
         testApplication {
-            setupAppWith(authorizedParty) {
-                route(partyService, handler)
+            setupAppWith(authorizedAgent) {
+                route(agentService, handler)
             }
 
             val response = client.postJson("/", scopedRequestBody("ChangeOfEnergySupplierForOrganization"))
@@ -253,11 +253,11 @@ class CreateRequestRouteTest : FunSpec({
             requestedGrantValidTo = null,
         )
         coEvery { handler(any(), any(), any(), any()) } returns saved
-        coEvery { partyService.resolve(any()) } returnsMany listOf(requestedPrincipal.right(), requestedOf.right())
+        coEvery { agentService.resolve(any()) } returnsMany listOf(requestedPrincipal.right(), requestedOf.right())
 
         testApplication {
-            setupAppWith(authorizedParty) {
-                route(partyService, handler)
+            setupAppWith(authorizedAgent) {
+                route(agentService, handler)
             }
 
             val response = client.postJson(
@@ -284,7 +284,7 @@ class CreateRequestRouteTest : FunSpec({
                             moveInDate = LocalDate(2026, 10, 1),
                         ),
                     ),
-                    requestedBy = authorizedParty,
+                    requestedBy = authorizedAgent,
                     requestedPrincipal = requestedPrincipal,
                     requestedOf = requestedOf,
                 )
@@ -294,8 +294,8 @@ class CreateRequestRouteTest : FunSpec({
 
     test("POST / returns 409 when the resource type is wrong") {
         testApplication {
-            setupAppWith(authorizedParty) {
-                route(partyService, handler)
+            setupAppWith(authorizedAgent) {
+                route(agentService, handler)
             }
 
             val response = client.postJson("/", requestBody.replace("\"AuthorizationRequest\"", "\"OtherResource\""))
@@ -310,8 +310,8 @@ class CreateRequestRouteTest : FunSpec({
 
     test("POST / returns 422 when requested grant validity is not in order") {
         testApplication {
-            setupAppWith(authorizedParty) {
-                route(partyService, handler)
+            setupAppWith(authorizedAgent) {
+                route(agentService, handler)
             }
 
             val response = client.postJson("/", requestBody.replace("2101-01-01T00:00:00Z", "2099-01-01T00:00:00Z"))
@@ -319,15 +319,15 @@ class CreateRequestRouteTest : FunSpec({
             response.status shouldBe HttpStatusCode.UnprocessableEntity
             val body: JsonApiErrorCollection = response.body()
             body.errors.single().detail shouldBe "requestedGrantValidFrom must be before requestedGrantValidTo"
-            coVerify(exactly = 0) { partyService.resolve(any()) }
+            coVerify(exactly = 0) { agentService.resolve(any()) }
             coVerify(exactly = 0) { handler(any(), any(), any(), any()) }
         }
     }
 
     test("POST / returns 422 when requested grant validity is sent for change of supplier") {
         testApplication {
-            setupAppWith(authorizedParty) {
-                route(partyService, handler)
+            setupAppWith(authorizedAgent) {
+                route(agentService, handler)
             }
 
             val response = client.postJson(

@@ -1,7 +1,7 @@
 package no.elhub.auth.v1.domain
 
 import kotlinx.serialization.json.JsonObject
-import no.elhub.auth.common.auth.AuthorizationParty
+import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.domain.documents.DocumentSpecification
 import java.util.UUID
 import kotlin.time.Clock
@@ -20,10 +20,10 @@ data class AuthorizationDocument(
     val validTo: Instant,
     val createdAt: Instant,
     val updatedAt: Instant,
-    val requestedBy: AuthorizationParty,
-    val requestedPrincipal: AuthorizationParty,
-    val requestedOf: AuthorizationParty,
-    val approvedBy: AuthorizationParty?,
+    val requestedBy: AuthorizationAgent,
+    val requestedPrincipal: AuthorizationAgent,
+    val requestedOf: AuthorizationAgent,
+    val approvedBy: AuthorizationAgent?,
     val authorizationGrants: List<AuthorizationGrant>?,
     val pdfBytes: ByteArray,
 ) {
@@ -33,9 +33,9 @@ data class AuthorizationDocument(
             externalReference: String?,
             meta: JsonObject,
             validTo: Instant,
-            requestedBy: AuthorizationParty,
-            requestedPrincipal: AuthorizationParty,
-            requestedOf: AuthorizationParty,
+            requestedBy: AuthorizationAgent,
+            requestedPrincipal: AuthorizationAgent,
+            requestedOf: AuthorizationAgent,
             pdfBytes: ByteArray,
         ): AuthorizationDocument =
             when (specification) {
@@ -84,9 +84,9 @@ data class AuthorizationDocument(
             externalReference: String?,
             meta: JsonObject,
             validTo: Instant,
-            requestedBy: AuthorizationParty,
-            requestedPrincipal: AuthorizationParty,
-            requestedOf: AuthorizationParty,
+            requestedBy: AuthorizationAgent,
+            requestedPrincipal: AuthorizationAgent,
+            requestedOf: AuthorizationAgent,
             pdfBytes: ByteArray,
             requestedGrantValidFrom: Instant? = null,
             requestedGrantValidTo: Instant? = null,

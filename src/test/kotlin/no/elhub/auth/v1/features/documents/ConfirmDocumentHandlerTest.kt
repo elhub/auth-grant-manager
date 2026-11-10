@@ -14,15 +14,14 @@ import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
 import kotlinx.serialization.json.JsonObject
-import no.elhub.auth.common.auth.AuthorizationParty
-import no.elhub.auth.common.auth.PartyType
 import no.elhub.auth.common.documents.pdf.PdfSignatory
 import no.elhub.auth.common.documents.pdf.PdfSignatureValidator
 import no.elhub.auth.common.documents.pdf.PdfValidationException
 import no.elhub.auth.v0.features.common.party.PartyError
 import no.elhub.auth.v0.features.common.party.PartyIdentifier
 import no.elhub.auth.v0.features.common.party.PartyIdentifierType
-import no.elhub.auth.v0.features.common.party.PartyService
+import no.elhub.auth.v1.common.auth.AgentType
+import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.domain.AuthorizationDocument
 import no.elhub.auth.v1.domain.AuthorizationDocumentStatus
 import no.elhub.auth.v1.domain.AuthorizationDocumentType
@@ -44,15 +43,16 @@ import no.elhub.auth.v1.repositories.RepositoryReadError
 import no.elhub.auth.v1.repositories.RepositoryWriteError
 import java.util.UUID
 import kotlin.time.Instant
+import no.elhub.auth.v0.features.common.party.PartyService as AgentService
 
 class ConfirmDocumentHandlerTest : FunSpec({
     val repository = mockk<DocumentRepository>()
-    val partyService = mockk<PartyService>()
+    val agentService = mockk<AgentService>()
     val validator = mockk<PdfSignatureValidator>()
-    val handler = ConfirmDocumentHandler(repository, partyService, validator)
-    val requestedBy = AuthorizationParty("requested-by", PartyType.OrganizationEntity)
-    val requestedPrincipal = AuthorizationParty("requested-principal", PartyType.Organization)
-    val requestedOf = AuthorizationParty("requested-of", PartyType.Person)
+    val handler = ConfirmDocumentHandler(repository, agentService, validator)
+    val requestedBy = AuthorizationAgent("requested-by", AgentType.OrganizationEntity)
+    val requestedPrincipal = AuthorizationAgent("requested-principal", AgentType.Organization)
+    val requestedOf = AuthorizationAgent("requested-of", AgentType.Person)
     val signedFile = "%PDF-1.7 signed".toByteArray()
     val originalFile = "%PDF-1.7 original".toByteArray()
     val nin = "01019012345"
@@ -105,11 +105,11 @@ class ConfirmDocumentHandlerTest : FunSpec({
     )
 
     beforeTest {
-        clearMocks(repository, partyService, validator)
+        clearMocks(repository, agentService, validator)
         coEvery { repository.find(id) } returns document
     }
 
-    test("rejects an authorized party other than requestedBy before validating the PDF") {
+    test("rejects an authorized agent other than requestedBy before validating the PDF") {
         shouldThrow<ConfirmDocumentError.NotAuthorized> {
             handler(id, requestedBy.copy(id = "other"), signedFile)
         }
@@ -145,15 +145,15 @@ class ConfirmDocumentHandlerTest : FunSpec({
         every { validator.validateSignaturesAndReturnSignatory(signedFile, originalFile) } throws
             PdfValidationException.OriginalDocumentMismatch
         shouldThrow<PdfValidationException.OriginalDocumentMismatch> { handler(id, requestedBy, signedFile) }
-        coVerify(exactly = 0) { partyService.resolve(any()) }
+        coVerify(exactly = 0) { agentService.resolve(any()) }
         coVerify(exactly = 0) { repository.confirm(any(), any(), any(), any()) }
     }
 
     test("rejects an unresolvable signatory") {
         every { validator.validateSignaturesAndReturnSignatory(signedFile, originalFile) } returns PdfSignatory(nin)
-        coEvery { partyService.resolve(identifier) } returns PartyError.PersonResolutionError.left()
+        coEvery { agentService.resolve(identifier) } returns PartyError.PersonResolutionError.left()
         shouldThrow<ConfirmDocumentError.SignatoryResolutionFailed> { handler(id, requestedBy, signedFile) }
-        coVerify(exactly = 1) { partyService.resolve(identifier) }
+        coVerify(exactly = 1) { agentService.resolve(identifier) }
         coVerify(exactly = 0) { repository.confirm(any(), any(), any(), any()) }
     }
 
@@ -161,7 +161,7 @@ class ConfirmDocumentHandlerTest : FunSpec({
         val invalidScope = document.requestedScopes.single().copy(constraints = emptyList())
         coEvery { repository.find(id) } returns document.copy(requestedScopes = listOf(invalidScope))
         every { validator.validateSignaturesAndReturnSignatory(signedFile, originalFile) } returns PdfSignatory(nin)
-        coEvery { partyService.resolve(identifier) } returns requestedOf.right()
+        coEvery { agentService.resolve(identifier) } returns requestedOf.right()
 
         shouldThrow<InvalidDocumentScopes> { handler(id, requestedBy, signedFile) }
 
@@ -170,7 +170,7 @@ class ConfirmDocumentHandlerTest : FunSpec({
 
     test("allows requestedBy to confirm with the signed bytes, resolved requestedOf and one grant per metering point") {
         every { validator.validateSignaturesAndReturnSignatory(signedFile, originalFile) } returns PdfSignatory(nin)
-        coEvery { partyService.resolve(identifier) } returns requestedOf.right()
+        coEvery { agentService.resolve(identifier) } returns requestedOf.right()
         val grants = document.toGrants(requestedOf)
         val confirmed = document.copy(status = AuthorizationDocumentStatus.Approved, authorizationGrants = grants)
         coEvery { repository.confirm(id, signedFile, requestedOf, any()) } returns confirmed
@@ -178,7 +178,7 @@ class ConfirmDocumentHandlerTest : FunSpec({
         handler(id, requestedBy, signedFile) shouldBeSameInstanceAs confirmed
 
         verify(exactly = 1) { validator.validateSignaturesAndReturnSignatory(signedFile, originalFile) }
-        coVerify(exactly = 1) { partyService.resolve(identifier) }
+        coVerify(exactly = 1) { agentService.resolve(identifier) }
         coVerify(exactly = 1) {
             repository.confirm(
                 id,
@@ -198,7 +198,7 @@ class ConfirmDocumentHandlerTest : FunSpec({
     test("confirms a framework agreement with exactly one persistent Document-source grant") {
         coEvery { repository.find(id) } returns frameworkDocument
         every { validator.validateSignaturesAndReturnSignatory(signedFile, originalFile) } returns PdfSignatory(nin)
-        coEvery { partyService.resolve(identifier) } returns requestedOf.right()
+        coEvery { agentService.resolve(identifier) } returns requestedOf.right()
         val grants = slot<List<AuthorizationGrant>>()
         val confirmed = frameworkDocument.copy(status = AuthorizationDocumentStatus.Approved)
         coEvery { repository.confirm(id, signedFile, requestedOf, capture(grants)) } returns confirmed
@@ -223,7 +223,7 @@ class ConfirmDocumentHandlerTest : FunSpec({
             ),
         )
         verify(exactly = 1) { validator.validateSignaturesAndReturnSignatory(signedFile, originalFile) }
-        coVerify(exactly = 1) { partyService.resolve(identifier) }
+        coVerify(exactly = 1) { agentService.resolve(identifier) }
         coVerify(exactly = 1) { repository.confirm(id, signedFile, requestedOf, any()) }
     }
 
@@ -233,7 +233,7 @@ class ConfirmDocumentHandlerTest : FunSpec({
             requestedGrantValidTo = Instant.parse("2000-01-01T00:00:00Z"),
         )
         every { validator.validateSignaturesAndReturnSignatory(signedFile, originalFile) } returns PdfSignatory(nin)
-        coEvery { partyService.resolve(identifier) } returns requestedOf.right()
+        coEvery { agentService.resolve(identifier) } returns requestedOf.right()
 
         shouldThrow<ConfirmDocumentError.InvalidGrantValidity> { handler(id, requestedBy, signedFile) }
 
@@ -242,7 +242,7 @@ class ConfirmDocumentHandlerTest : FunSpec({
 
     test("propagates a repository confirmation failure") {
         every { validator.validateSignaturesAndReturnSignatory(signedFile, originalFile) } returns PdfSignatory(nin)
-        coEvery { partyService.resolve(identifier) } returns requestedOf.right()
+        coEvery { agentService.resolve(identifier) } returns requestedOf.right()
         val error = RepositoryWriteError.ConflictError("Already confirmed")
         coEvery { repository.confirm(id, signedFile, requestedOf, any()) } throws error
 

@@ -14,8 +14,6 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
-import no.elhub.auth.common.auth.AuthorizationParty
-import no.elhub.auth.common.auth.PartyType
 import no.elhub.auth.common.documents.pdf.AuthorizationDocumentPdfContent
 import no.elhub.auth.common.documents.pdf.PdfGenerator
 import no.elhub.auth.common.documents.pdf.PdfLanguage
@@ -33,6 +31,8 @@ import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.O
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.VALID_PARTY_NAME
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.organisationsServiceHttpClient
 import no.elhub.auth.v1.common.AuthorizationRulesService
+import no.elhub.auth.v1.common.auth.AgentType
+import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.domain.AuthorizationDocument
 import no.elhub.auth.v1.domain.AuthorizationDocumentStatus
 import no.elhub.auth.v1.domain.AuthorizationDocumentType
@@ -53,9 +53,9 @@ class EnergySupplierFrameworkAgreementDocumentHandlerTest : FunSpec({
     extensions(OrganisationsServiceTestContainerExtension)
 
     val context = DocumentCreationContext(
-        requestedBy = AuthorizationParty(VALID_PARTY_ID, PartyType.OrganizationEntity),
-        requestedPrincipal = AuthorizationParty(VALID_ORGANISATION_NUMBER, PartyType.Organization),
-        requestedOf = AuthorizationParty(VALID_ORGANISATION_NUMBER, PartyType.Organization),
+        requestedBy = AuthorizationAgent(VALID_PARTY_ID, AgentType.OrganizationEntity),
+        requestedPrincipal = AuthorizationAgent(VALID_ORGANISATION_NUMBER, AgentType.Organization),
+        requestedOf = AuthorizationAgent(VALID_ORGANISATION_NUMBER, AgentType.Organization),
         language = DocumentLanguage.EN,
         externalReference = "reference-1",
     )
@@ -98,12 +98,12 @@ class EnergySupplierFrameworkAgreementDocumentHandlerTest : FunSpec({
         }
     }
 
-    test("preserves requested-by lookup failure when the party is not a balance supplier") {
+    test("preserves requested-by lookup failure when the agent is not a balance supplier") {
         val error = shouldThrow<DocumentPreparationError.RequestedByLookupFailure> {
             handler.prepare(
                 DocumentSpecification.EnergySupplierFrameworkAgreement(validFrom, validTo),
                 context.copy(
-                    requestedBy = AuthorizationParty(NOT_BALANCE_SUPPLIER_PARTY_ID, PartyType.OrganizationEntity),
+                    requestedBy = AuthorizationAgent(NOT_BALANCE_SUPPLIER_PARTY_ID, AgentType.OrganizationEntity),
                 ),
             )
         }

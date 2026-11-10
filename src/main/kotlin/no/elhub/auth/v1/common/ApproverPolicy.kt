@@ -1,10 +1,10 @@
 package no.elhub.auth.v1.common
 
-import no.elhub.auth.common.auth.AuthorizationParty
+import no.elhub.auth.v1.common.auth.AuthorizationAgent
 
 // Placeholder until the PDP validates the approver against requestedOf and requestedPrincipal.
 fun isApproverAllowed(
-    approver: AuthorizationParty,
-    requestedOf: AuthorizationParty,
-    requestedPrincipal: AuthorizationParty,
+    approver: AuthorizationAgent,
+    requestedOf: AuthorizationAgent,
+    requestedPrincipal: AuthorizationAgent,
 ): Boolean = true

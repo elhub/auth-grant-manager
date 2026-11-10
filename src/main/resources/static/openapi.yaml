@@ -620,8 +620,8 @@ paths:
         - Work in Progress
       summary: '[WIP] List authorization documents'
       description: >
-        Retrieve a paginated list of authorization documents available to the calling party. A document
-        is available when the calling party is the requestedBy, the requestedOf, or the requestedPrincipal.
+        Retrieve a paginated list of authorization documents available to the calling agent. A document
+        is available when the calling agent is the requestedBy, the requestedOf, or the requestedPrincipal.
         Results are ordered by createdAt DESC (newest first), and each document includes its linked
         authorization grants.
       operationId: listV1AuthorizationDocuments
@@ -717,7 +717,7 @@ paths:
         - Work in Progress
       summary: '[WIP] Get an authorization document by ID'
       description: >
-        Retrieve a specific authorization document, including its status, parties, and linked authorization
+        Retrieve a specific authorization document, including its status, agents, and linked authorization
         grants. The document is available to the requestedBy, the requestedOf, and the requestedPrincipal.
         The status is Pending until the signed document is submitted, Approved once it has been submitted,
         and Expired if validTo passes before submission.
@@ -857,10 +857,10 @@ paths:
         - Work in Progress
       summary: '[WIP] List authorization grants'
       description: >
-        Retrieve a paginated list of authorization grants available to the calling party. A grant is
-        available when the calling party is the grantedTo, the principal, or the grantedBy. Results are
+        Retrieve a paginated list of authorization grants available to the calling agent. A grant is
+        available when the calling agent is the grantedTo, the principal, or the grantedBy. Results are
         ordered by createdAt DESC (newest first).
-        Party filters match the public IDs returned in `relationships.<role>.data.id` and their implied party
+        Agent filters match the public IDs returned in `relationships.<role>.data.id` and their implied agent
         types: a Person is identified by their internal Elhub ID,
         an Organization is identified by org number,
         and a MarketEntity is identified by GLN.
@@ -1011,7 +1011,7 @@ paths:
       description: >
         Update an authorization grant by setting its status to Exhausted or Revoked.
         Only internal Elhub systems may exhaust active consumable grants; pending grants cannot be exhausted.
-        The principal, grantedBy party, or internal Elhub systems may revoke pending or active grants.
+        The principal, grantedBy agent, or internal Elhub systems may revoke pending or active grants.
         The request body ID must match the path ID.
       operationId: updateV1AuthorizationGrant
       x-status: Work in progress
@@ -1067,8 +1067,8 @@ paths:
         - Work in Progress
       summary: '[WIP] List authorization requests'
       description: >
-        Retrieve a paginated list of authorization requests available to the calling party. A request
-        is available when the calling party is the requestedBy, the requestedOf, or the requestedPrincipal.
+        Retrieve a paginated list of authorization requests available to the calling agent. A request
+        is available when the calling agent is the requestedBy, the requestedOf, or the requestedPrincipal.
         Results are ordered by createdAt DESC (newest first).
       operationId: listV1AuthorizationRequests
       x-status: Work in progress
@@ -1196,7 +1196,7 @@ paths:
         - Work in Progress
       summary: '[WIP] Get an authorization request by ID'
       description: >
-        Retrieve a specific authorization request, including its status, parties, and linked authorization
+        Retrieve a specific authorization request, including its status, agents, and linked authorization
         grants. The request is available to the requestedBy, the requestedOf, and the requestedPrincipal.
         The status is Pending until decided, Approved or Rejected once decided, and Expired if validTo
         passes before a decision.
@@ -1249,7 +1249,7 @@ paths:
       description: >
         Approve or reject a pending, unexpired authorization request. This endpoint is intended
         for internal MinSide usage with an end-user token and is not available to external integrators.
-        Only the requestedOf party may decide the request. Approving creates the authorization grant;
+        Only the requestedOf agent may decide the request. Approving creates the authorization grant;
         rejecting does not create a grant. The request body ID must match the path ID.
         textLanguage must be provided when approving or rejecting the request. textReference is set by
         the server and cannot be updated through this endpoint.

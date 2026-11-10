@@ -228,7 +228,7 @@ private fun Errors.toApiErrorResponse() =
 
         is ConfirmDocumentError.NotAuthorized -> buildApiErrorResponse(
             status = HttpStatusCode.Forbidden,
-            title = "Party not authorized",
+            title = "Agent not authorized",
             detail = detail,
         )
 
@@ -253,24 +253,24 @@ private fun Errors.toApiErrorResponse() =
         is GetDocumentError.NotAuthorized -> {
             buildApiErrorResponse(
                 status = HttpStatusCode.Forbidden,
-                title = "Party not authorized",
-                detail = "The party is not allowed to access this resource",
+                title = "Agent not authorized",
+                detail = "The agent is not allowed to access this resource",
             )
         }
 
         is GetRequestError.NotAuthorized -> {
             buildApiErrorResponse(
                 status = HttpStatusCode.Forbidden,
-                title = "Party not authorized",
-                detail = "The party is not allowed to access this resource",
+                title = "Agent not authorized",
+                detail = "The agent is not allowed to access this resource",
             )
         }
 
         is GetGrantError.NotAuthorized -> {
             buildApiErrorResponse(
                 status = HttpStatusCode.Forbidden,
-                title = "Party not authorized",
-                detail = "The party is not allowed to access this resource",
+                title = "Agent not authorized",
+                detail = "The agent is not allowed to access this resource",
             )
         }
 
@@ -336,7 +336,7 @@ private fun Errors.toApiErrorResponse() =
 
         is UpdateRequestError.UnsupportedRequestedOf -> buildApiErrorResponse(
             status = HttpStatusCode.UnprocessableEntity,
-            title = "Unsupported requestedOf party",
+            title = "Unsupported requestedOf agent",
             detail = detail,
         )
 

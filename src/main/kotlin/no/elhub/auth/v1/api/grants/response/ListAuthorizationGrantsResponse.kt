@@ -16,23 +16,23 @@ import no.elhub.auth.v1.common.now
 import no.elhub.auth.v1.common.toOsloOffsetString
 import no.elhub.auth.v1.domain.AuthorizationGrant
 import no.elhub.auth.v1.domain.AuthorizationGrantStatus
-import no.elhub.auth.v1.domain.GrantPartyFilters
+import no.elhub.auth.v1.domain.GrantAgentFilters
 
 typealias JsonApiListAuthorizationGrantsResponse = PaginatedCollectionResponse<AuthorizationGrantResource>
 
 fun Page<AuthorizationGrant>.toGetCollectionResponse(
     statuses: List<AuthorizationGrantStatus> = emptyList(),
-    partyFilters: GrantPartyFilters = GrantPartyFilters(),
+    agentFilters: GrantAgentFilters = GrantAgentFilters(),
 ): JsonApiListAuthorizationGrantsResponse {
     val extraParams = buildMap {
         if (statuses.isNotEmpty()) put(STATUS_FILTER_PARAM, statuses.joinToString(","))
         listOf(
-            GRANTED_BY_FILTER_PARAM to partyFilters.grantedBy,
-            PRINCIPAL_FILTER_PARAM to partyFilters.principal,
-            APPROVED_BY_FILTER_PARAM to partyFilters.approvedBy,
-            GRANTED_TO_FILTER_PARAM to partyFilters.grantedTo,
-        ).forEach { (parameter, parties) ->
-            if (parties.isNotEmpty()) put(parameter, parties.joinToString(",") { it.id.encodeURLParameter() })
+            GRANTED_BY_FILTER_PARAM to agentFilters.grantedBy,
+            PRINCIPAL_FILTER_PARAM to agentFilters.principal,
+            APPROVED_BY_FILTER_PARAM to agentFilters.approvedBy,
+            GRANTED_TO_FILTER_PARAM to agentFilters.grantedTo,
+        ).forEach { (parameter, agents) ->
+            if (agents.isNotEmpty()) put(parameter, agents.joinToString(",") { it.id.encodeURLParameter() })
         }
     }
 

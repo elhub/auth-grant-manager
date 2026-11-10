@@ -4,11 +4,11 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
-import no.elhub.auth.common.auth.authorizedParty
 import no.elhub.auth.v0.features.common.Pagination
 import no.elhub.auth.v1.api.common.validateEnumListParam
 import no.elhub.auth.v1.api.documents.response.ResponseAuthorizationDocumentStatus
 import no.elhub.auth.v1.api.documents.response.toGetCollectionResponse
+import no.elhub.auth.v1.common.auth.authorizedAgent
 import no.elhub.auth.v1.domain.AuthorizationDocumentStatus
 import no.elhub.auth.v1.features.documents.ListDocumentsHandler
 
@@ -32,7 +32,7 @@ fun Route.route(handler: ListDocumentsHandler) {
             }
         }
 
-        val page = handler(call.authorizedParty, pagination, domainStatuses)
+        val page = handler(call.authorizedAgent, pagination, domainStatuses)
         call.respond(HttpStatusCode.OK, page.toGetCollectionResponse(statuses))
     }
 }

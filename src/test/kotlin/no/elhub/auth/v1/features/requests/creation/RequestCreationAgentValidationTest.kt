@@ -4,14 +4,14 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
-import no.elhub.auth.common.auth.AuthorizationParty
-import no.elhub.auth.common.auth.PartyType
+import no.elhub.auth.v1.common.auth.AgentType
+import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.domain.AuthorizationRequestType
 
 class RequestCreationAgentValidationTest : FunSpec({
-    val requestedBy = AuthorizationParty("supplier-1", PartyType.OrganizationEntity)
-    val requestedPrincipal = AuthorizationParty("org-1", PartyType.Organization)
-    val requestedOf = AuthorizationParty("org-2", PartyType.Organization)
+    val requestedBy = AuthorizationAgent("supplier-1", AgentType.OrganizationEntity)
+    val requestedPrincipal = AuthorizationAgent("org-1", AgentType.Organization)
+    val requestedOf = AuthorizationAgent("org-2", AgentType.Organization)
 
     AuthorizationRequestType.entries.forEach { requestType ->
         test("$requestType returns no error for allowed agents") {
@@ -22,8 +22,8 @@ class RequestCreationAgentValidationTest : FunSpec({
             "requestedBy" to requestedBy,
             "requestedPrincipal" to requestedPrincipal,
             "requestedOf" to requestedOf,
-        ).forEach { (role, validParty) ->
-            PartyType.entries.filter { it != validParty.type }.forEach { actualType ->
+        ).forEach { (role, validAgent) ->
+            AgentType.entries.filter { it != validAgent.type }.forEach { actualType ->
                 test("$requestType throws structured errors for $actualType as $role") {
                     val by = if (role == "requestedBy") requestedBy.copy(type = actualType) else requestedBy
                     val principal = if (role == "requestedPrincipal") requestedPrincipal.copy(type = actualType) else requestedPrincipal
@@ -39,7 +39,7 @@ class RequestCreationAgentValidationTest : FunSpec({
                     }
                     requestError.requestType shouldBe requestType
                     requestError.actualAgentType shouldBe actualType
-                    requestError.expectedAgentType shouldBe validParty.type
+                    requestError.expectedAgentType shouldBe validAgent.type
                     requestError.detail shouldBe null
                 }
             }

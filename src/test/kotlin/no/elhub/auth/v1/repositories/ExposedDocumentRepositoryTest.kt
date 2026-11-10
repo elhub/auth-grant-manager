@@ -15,12 +15,12 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
-import no.elhub.auth.common.auth.AuthorizationParty
-import no.elhub.auth.common.auth.PartyType
 import no.elhub.auth.common.config.withTransaction
 import no.elhub.auth.v0.features.common.Pagination
 import no.elhub.auth.v0.features.common.PostgresTestContainer
 import no.elhub.auth.v0.features.common.PostgresTestContainerExtension
+import no.elhub.auth.v1.common.auth.AgentType
+import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.common.now
 import no.elhub.auth.v1.domain.AuthorizationDocument
 import no.elhub.auth.v1.domain.AuthorizationDocumentStatus
@@ -57,15 +57,15 @@ class ExposedDocumentRepositoryTest : FunSpec({
         )
     }
 
-    val partyRepository = ExposedPartyRepository()
+    val agentRepository = ExposedAgentRepository()
     val grantRepository = mockk<GrantRepository>()
-    val repository = ExposedDocumentRepository(partyRepository, grantRepository)
+    val repository = ExposedDocumentRepository(agentRepository, grantRepository)
 
     beforeTest { clearMocks(grantRepository) }
     val createdAt = Instant.parse("2025-01-01T00:00:00Z")
     val future = Instant.parse("2100-01-01T00:00:00Z")
 
-    fun party(type: PartyType = PartyType.Person) = AuthorizationParty(UUID.randomUUID().toString(), type)
+    fun agent(type: AgentType = AgentType.Person) = AuthorizationAgent(UUID.randomUUID().toString(), type)
 
     fun document() = AuthorizationDocument.new(
         documentType = AuthorizationDocumentType.MoveInAndChangeOfEnergySupplierForOrganization,
@@ -73,13 +73,13 @@ class ExposedDocumentRepositoryTest : FunSpec({
         externalReference = null,
         meta = Json.parseToJsonElement("""{"nested":{"values":[null,false,1.5]}}""").jsonObject,
         validTo = future,
-        requestedBy = party(PartyType.Organization),
-        requestedPrincipal = party(PartyType.Organization),
-        requestedOf = party(),
+        requestedBy = agent(AgentType.Organization),
+        requestedPrincipal = agent(AgentType.Organization),
+        requestedOf = agent(),
         pdfBytes = byteArrayOf(0, 1, 127, -128, -1),
     ).copy(validFrom = createdAt + 2.days, createdAt = createdAt, updatedAt = createdAt + 1.days)
 
-    fun grant(document: AuthorizationDocument, signatory: AuthorizationParty) = AuthorizationGrant.new(
+    fun grant(document: AuthorizationDocument, signatory: AuthorizationAgent) = AuthorizationGrant.new(
         type = AuthorizationGrantType.Consumable,
         sourceType = AuthorizationGrantSourceType.Document,
         sourceId = UUID.fromString(document.id),
@@ -93,11 +93,11 @@ class ExposedDocumentRepositoryTest : FunSpec({
     )
 
     suspend fun seed(document: AuthorizationDocument): UUID = withTransaction {
-        suspend fun partyId(party: AuthorizationParty) = partyRepository.findOrInsert(party.type, party.id).id
-        val requestedBy = partyId(document.requestedBy)
-        val requestedPrincipal = partyId(document.requestedPrincipal)
-        val requestedOf = partyId(document.requestedOf)
-        val approvedBy = document.approvedBy?.let { partyId(it) }
+        suspend fun agentId(agent: AuthorizationAgent) = agentRepository.findOrInsert(agent.type, agent.id).id
+        val requestedBy = agentId(document.requestedBy)
+        val requestedPrincipal = agentId(document.requestedPrincipal)
+        val requestedOf = agentId(document.requestedOf)
+        val approvedBy = document.approvedBy?.let { agentId(it) }
         val documentId = UUID.fromString(document.id)
         AuthorizationDocumentTable.insert {
             it[id] = documentId
@@ -160,7 +160,7 @@ class ExposedDocumentRepositoryTest : FunSpec({
         val unconstrained = RequestedAuthorizationScope(ResourceType.MeteringPointContract, emptyList())
         val expected = document().copy(
             status = AuthorizationDocumentStatus.Approved,
-            approvedBy = party(),
+            approvedBy = agent(),
             externalReference = "contract-123",
             requestedScopes = listOf(RequestedAuthorizationScope(ResourceType.MeteringPointContract, constraints), unconstrained),
         )
@@ -193,8 +193,8 @@ class ExposedDocumentRepositoryTest : FunSpec({
         val expected = listOf(
             document() to AuthorizationDocumentStatus.Pending,
             document().copy(validTo = past) to AuthorizationDocumentStatus.Expired,
-            document().copy(approvedBy = party()) to AuthorizationDocumentStatus.Approved,
-            document().copy(approvedBy = party(), validTo = past) to AuthorizationDocumentStatus.Approved,
+            document().copy(approvedBy = agent()) to AuthorizationDocumentStatus.Approved,
+            document().copy(approvedBy = agent(), validTo = past) to AuthorizationDocumentStatus.Approved,
         )
 
         expected.forEach { (document, status) ->
@@ -211,24 +211,24 @@ class ExposedDocumentRepositoryTest : FunSpec({
         error.detail shouldBe "Document not found: $id"
     }
 
-    test("listing includes requester or requestedOf but excludes other roles and party types") {
-        val party = party(PartyType.Organization)
-        val by = seed(document().copy(requestedBy = party))
-        val requestedOf = seed(document().copy(requestedOf = party))
-        val both = seed(document().copy(requestedBy = party, requestedOf = party))
-        seed(document().copy(requestedPrincipal = party))
-        seed(document().copy(approvedBy = party))
-        seed(document().copy(requestedBy = party.copy(type = PartyType.Person)))
+    test("listing includes requester or requestedOf but excludes other roles and agent types") {
+        val agent = agent(AgentType.Organization)
+        val by = seed(document().copy(requestedBy = agent))
+        val requestedOf = seed(document().copy(requestedOf = agent))
+        val both = seed(document().copy(requestedBy = agent, requestedOf = agent))
+        seed(document().copy(requestedPrincipal = agent))
+        seed(document().copy(approvedBy = agent))
+        seed(document().copy(requestedBy = agent.copy(type = AgentType.Person)))
         seed(document())
 
-        val result = repository.findAndSortByCreatedAt(party, Pagination(), emptyList())
+        val result = repository.findAndSortByCreatedAt(agent, Pagination(), emptyList())
 
         result.items.map { it.id }.shouldContainExactlyInAnyOrder(by.toString(), requestedOf.toString(), both.toString())
         result.totalItems shouldBe 3L
     }
 
     test("listing sorts by creation time then UUID descending with consistent page totals") {
-        val party = party()
+        val agent = agent()
         val ids = listOf(
             "00000000-0000-0000-0000-000000000001",
             "00000000-0000-0000-0000-000000000002",
@@ -237,12 +237,12 @@ class ExposedDocumentRepositoryTest : FunSpec({
             "00000000-0000-0000-0000-000000000005",
         )
         val times = listOf(createdAt + 2.days, createdAt, createdAt + 2.days, createdAt + 3.days, createdAt + 1.days)
-        ids.zip(times).forEach { (id, time) -> seed(document().copy(id = id, requestedBy = party, createdAt = time)) }
+        ids.zip(times).forEach { (id, time) -> seed(document().copy(id = id, requestedBy = agent, createdAt = time)) }
         val expectedPages = listOf(listOf(ids[3], ids[2]), listOf(ids[0], ids[4]), listOf(ids[1]), emptyList())
 
         expectedPages.forEachIndexed { page, expected ->
             val pagination = Pagination(page = page, size = 2)
-            val result = repository.findAndSortByCreatedAt(party, pagination, emptyList())
+            val result = repository.findAndSortByCreatedAt(agent, pagination, emptyList())
             result.items.map { it.id } shouldBe expected
             result.totalItems shouldBe 5L
             result.pagination shouldBe pagination
@@ -250,16 +250,16 @@ class ExposedDocumentRepositoryTest : FunSpec({
     }
 
     test("listing filters derived document statuses including combined and empty filters") {
-        val party = party()
+        val agent = agent()
         val past = Instant.parse("2000-01-01T00:00:00Z")
         val expected = listOf(
             document() to AuthorizationDocumentStatus.Pending,
             document().copy(validTo = past) to AuthorizationDocumentStatus.Expired,
-            document().copy(approvedBy = party()) to AuthorizationDocumentStatus.Approved,
-            document().copy(approvedBy = party(), validTo = past) to AuthorizationDocumentStatus.Approved,
-        ).associate { (document, status) -> seed(document.copy(requestedBy = party)).toString() to status }
+            document().copy(approvedBy = agent()) to AuthorizationDocumentStatus.Approved,
+            document().copy(approvedBy = agent(), validTo = past) to AuthorizationDocumentStatus.Approved,
+        ).associate { (document, status) -> seed(document.copy(requestedBy = agent)).toString() to status }
         seed(document().copy(validTo = past))
-        seed(document().copy(approvedBy = party()))
+        seed(document().copy(approvedBy = agent()))
         val filters = AuthorizationDocumentStatus.entries.map { listOf(it) } + listOf(
             listOf(AuthorizationDocumentStatus.Pending, AuthorizationDocumentStatus.Expired),
             AuthorizationDocumentStatus.entries.toList(),
@@ -268,28 +268,28 @@ class ExposedDocumentRepositoryTest : FunSpec({
 
         filters.forEach { statuses ->
             val matching = expected.filterValues { statuses.isEmpty() || it in statuses }
-            val result = repository.findAndSortByCreatedAt(party, Pagination(), statuses)
+            val result = repository.findAndSortByCreatedAt(agent, Pagination(), statuses)
             result.items.associate { it.id to it.status } shouldBe matching
             result.totalItems shouldBe matching.size.toLong()
         }
     }
 
-    test("listing returns empty pages when no party or status matches") {
-        val party = party()
-        seed(document().copy(requestedBy = party))
+    test("listing returns empty pages when no agent or status matches") {
+        val agent = agent()
+        seed(document().copy(requestedBy = agent))
 
-        val noParty = repository.findAndSortByCreatedAt(party(), Pagination(), emptyList())
-        val noStatus = repository.findAndSortByCreatedAt(party, Pagination(), listOf(AuthorizationDocumentStatus.Approved))
+        val noAgent = repository.findAndSortByCreatedAt(agent(), Pagination(), emptyList())
+        val noStatus = repository.findAndSortByCreatedAt(agent, Pagination(), listOf(AuthorizationDocumentStatus.Approved))
 
-        listOf(noParty, noStatus).forEach {
+        listOf(noAgent, noStatus).forEach {
             it.items shouldBe emptyList()
             it.totalItems shouldBe 0L
             it.pagination shouldBe Pagination()
         }
     }
 
-    test("listing maps each document with its own parties and scopes") {
-        val party = party(PartyType.Organization)
+    test("listing maps each document with its own agents and scopes") {
+        val agent = agent(AgentType.Organization)
         val constraints = listOf(
             AuthorizationScopeConstraint(
                 AuthorizationScopeConstraintKind.AppliesTo,
@@ -311,19 +311,19 @@ class ExposedDocumentRepositoryTest : FunSpec({
         val constrained = RequestedAuthorizationScope(ResourceType.MeteringPointContract, constraints)
         val documents = listOf(
             document().copy(
-                requestedBy = party,
-                approvedBy = party(),
+                requestedBy = agent,
+                approvedBy = agent(),
                 status = AuthorizationDocumentStatus.Approved,
                 externalReference = "listed-contract",
                 requestedScopes = listOf(constrained, unconstrained),
             ),
-            document().copy(requestedOf = party, requestedScopes = listOf(unconstrained)),
-            document().copy(requestedBy = party, documentType = AuthorizationDocumentType.ChangeOfEnergySupplierForOrganization),
+            document().copy(requestedOf = agent, requestedScopes = listOf(unconstrained)),
+            document().copy(requestedBy = agent, documentType = AuthorizationDocumentType.ChangeOfEnergySupplierForOrganization),
         )
         documents.forEach { seed(it) }
         seed(document().copy(requestedScopes = listOf(constrained)))
 
-        val result = repository.findAndSortByCreatedAt(party, Pagination(), emptyList())
+        val result = repository.findAndSortByCreatedAt(agent, Pagination(), emptyList())
 
         result.totalItems shouldBe 3L
         val items = result.items.associateBy { it.id }
@@ -383,14 +383,14 @@ class ExposedDocumentRepositoryTest : FunSpec({
         }
     }
 
-    test("insert reuses parties for a document without optional fields") {
-        val party = party(PartyType.Organization)
-        val existing = partyRepository.findOrInsert(party.type, party.id)
+    test("insert reuses agents for a document without optional fields") {
+        val agent = agent(AgentType.Organization)
+        val existing = agentRepository.findOrInsert(agent.type, agent.id)
         val expected = document().copy(
             documentType = AuthorizationDocumentType.ChangeOfEnergySupplierForOrganization,
-            requestedBy = party,
-            requestedPrincipal = party,
-            requestedOf = party,
+            requestedBy = agent,
+            requestedPrincipal = agent,
+            requestedOf = agent,
             meta = JsonObject(emptyMap()),
         )
 
@@ -401,7 +401,7 @@ class ExposedDocumentRepositoryTest : FunSpec({
             actual.copy(pdfBytes = expected.pdfBytes) shouldBe expected
             actual.pdfBytes.toList() shouldBe expected.pdfBytes.toList()
         }
-        partyRepository.findOrInsert(party.type, party.id).id shouldBe existing.id
+        agentRepository.findOrInsert(agent.type, agent.id).id shouldBe existing.id
     }
 
     test("insert returns persisted derived status rather than the input status") {
@@ -409,7 +409,7 @@ class ExposedDocumentRepositoryTest : FunSpec({
         val cases = listOf(
             document().copy(status = AuthorizationDocumentStatus.Approved) to AuthorizationDocumentStatus.Pending,
             document().copy(validTo = past) to AuthorizationDocumentStatus.Expired,
-            document().copy(validTo = past, approvedBy = party()) to AuthorizationDocumentStatus.Approved,
+            document().copy(validTo = past, approvedBy = agent()) to AuthorizationDocumentStatus.Approved,
         )
 
         cases.forEach { (document, status) ->
@@ -428,7 +428,7 @@ class ExposedDocumentRepositoryTest : FunSpec({
             requestedScopes = listOf(RequestedAuthorizationScope(ResourceType.MeteringPointContract, emptyList())),
         )
         val id = seed(original)
-        val signatory = party()
+        val signatory = agent()
         val grant = grant(original, signatory)
         val storedGrant = grant.copy(updatedAt = createdAt)
         val signedFile = byteArrayOf(42, -128, 0, -1)
@@ -457,11 +457,11 @@ class ExposedDocumentRepositoryTest : FunSpec({
     }
 
     test("confirm persists multiple grants and returns all inserted grants") {
-        val storedGrantRepository = ExposedGrantRepository(partyRepository)
-        val documentRepository = ExposedDocumentRepository(partyRepository, storedGrantRepository)
+        val storedGrantRepository = ExposedGrantRepository(agentRepository)
+        val documentRepository = ExposedDocumentRepository(agentRepository, storedGrantRepository)
         val original = document()
         val id = seed(original)
-        val signatory = party()
+        val signatory = agent()
         val grants = listOf(
             grant(original, signatory),
             grant(original, signatory).copy(type = AuthorizationGrantType.Persistent),
@@ -495,7 +495,7 @@ class ExposedDocumentRepositoryTest : FunSpec({
         val before = repository.find(id)
 
         val error = shouldThrow<RepositoryWriteError.UnexpectedError> {
-            repository.confirm(id, byteArrayOf(1), party(), emptyList())
+            repository.confirm(id, byteArrayOf(1), agent(), emptyList())
         }
 
         error.detail shouldBe "Cannot confirm document $id without grants"
@@ -512,7 +512,7 @@ class ExposedDocumentRepositoryTest : FunSpec({
     test("confirm rejects unknown documents without inserting a grant") {
         val original = document()
         val id = UUID.fromString(original.id)
-        val signatory = party()
+        val signatory = agent()
 
         val error = shouldThrow<RepositoryWriteError.NotFoundError> {
             repository.confirm(id, byteArrayOf(1), signatory, listOf(grant(original, signatory)))
@@ -526,7 +526,7 @@ class ExposedDocumentRepositoryTest : FunSpec({
         val original = document().copy(validTo = Instant.parse("2000-01-01T00:00:00Z"))
         val id = seed(original)
         val before = repository.find(id)
-        val signatory = party()
+        val signatory = agent()
 
         val error = shouldThrow<RepositoryWriteError.ExpiredError> {
             repository.confirm(id, byteArrayOf(1), signatory, listOf(grant(original, signatory)))
@@ -541,10 +541,10 @@ class ExposedDocumentRepositoryTest : FunSpec({
 
     test("confirm rejects accepted documents") {
         listOf(future, Instant.parse("2000-01-01T00:00:00Z")).forEach { validTo ->
-            val original = document().copy(approvedBy = party(), validTo = validTo)
+            val original = document().copy(approvedBy = agent(), validTo = validTo)
             val id = seed(original)
             val before = repository.find(id)
-            val signatory = party()
+            val signatory = agent()
 
             val error = shouldThrow<RepositoryWriteError.ConflictError> {
                 repository.confirm(id, byteArrayOf(1), signatory, listOf(grant(original, signatory)))
@@ -562,10 +562,10 @@ class ExposedDocumentRepositoryTest : FunSpec({
         val original = document()
         val id = seed(original)
         val before = repository.find(id)
-        val signatory = party()
+        val signatory = agent()
         val firstGrant = grant(original, signatory)
         val secondGrant = grant(original, signatory)
-        val storedGrantRepository = ExposedGrantRepository(partyRepository)
+        val storedGrantRepository = ExposedGrantRepository(agentRepository)
         val failure = IllegalStateException("Grant insertion failed")
         coEvery { grantRepository.insert(firstGrant) } coAnswers { storedGrantRepository.insert(firstGrant) }
         coEvery { grantRepository.insert(secondGrant) } coAnswers {
@@ -597,7 +597,7 @@ class ExposedDocumentRepositoryTest : FunSpec({
     test("concurrent confirmations produce one success and one conflict") {
         val original = document()
         val id = seed(original)
-        val signatory = party()
+        val signatory = agent()
         val grant = grant(original, signatory)
         coEvery { grantRepository.insert(grant) } returns grant
 

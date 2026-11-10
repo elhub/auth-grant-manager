@@ -15,14 +15,14 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.serialization.json.JsonObject
-import no.elhub.auth.common.auth.AuthorizationParty
-import no.elhub.auth.common.auth.PartyType
 import no.elhub.auth.common.config.jsonApiContentType
 import no.elhub.auth.v0.features.common.Page
 import no.elhub.auth.v0.features.common.Pagination
 import no.elhub.auth.v0.setupAppWith
 import no.elhub.auth.v1.V1_REQUESTS_PATH
 import no.elhub.auth.v1.api.requests.response.JsonApiListAuthorizationRequestsResponse
+import no.elhub.auth.v1.common.auth.AgentType
+import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.domain.AuthorizationGrant
 import no.elhub.auth.v1.domain.AuthorizationGrantSourceType
 import no.elhub.auth.v1.domain.AuthorizationGrantType
@@ -36,26 +36,26 @@ import kotlin.time.Instant
 
 class ListRequestsRouteTest : FunSpec({
     val handler = mockk<ListRequestsHandler>()
-    val authorizedParty = AuthorizationParty("123456789", PartyType.OrganizationEntity)
+    val authorizedAgent = AuthorizationAgent("123456789", AgentType.OrganizationEntity)
     val request = AuthorizationRequest.new(
         requestType = AuthorizationRequestType.ChangeOfEnergySupplierForOrganization,
         requestedScopes = emptyList(),
         externalReference = null,
         meta = JsonObject(emptyMap()),
         validTo = Instant.parse("2100-01-01T00:00:00Z"),
-        requestedBy = authorizedParty,
-        requestedPrincipal = authorizedParty,
-        requestedOf = AuthorizationParty("person-1", PartyType.Person),
+        requestedBy = authorizedAgent,
+        requestedPrincipal = authorizedAgent,
+        requestedOf = AuthorizationAgent("person-1", AgentType.Person),
     )
 
     beforeTest { clearMocks(handler) }
 
     test("GET returns a JSON:API collection using default pagination and no status filter") {
-        coEvery { handler(authorizedParty, Pagination(), emptyList()) } returns
+        coEvery { handler(authorizedAgent, Pagination(), emptyList()) } returns
             Page(listOf(request), 1, Pagination())
 
         testApplication {
-            setupAppWith(authorizedParty) {
+            setupAppWith(authorizedAgent) {
                 route(V1_REQUESTS_PATH) { route(handler) }
             }
 
@@ -87,11 +87,11 @@ class ListRequestsRouteTest : FunSpec({
             approvedBy = request.requestedOf,
             authorizationGrants = listOf(grant),
         )
-        coEvery { handler(authorizedParty, Pagination(), emptyList()) } returns
+        coEvery { handler(authorizedAgent, Pagination(), emptyList()) } returns
             Page(listOf(accepted), 1, Pagination())
 
         testApplication {
-            setupAppWith(authorizedParty) {
+            setupAppWith(authorizedAgent) {
                 route(V1_REQUESTS_PATH) { route(handler) }
             }
 
@@ -114,11 +114,11 @@ class ListRequestsRouteTest : FunSpec({
     ).forEach { (filter, statuses) ->
         test("GET passes status filter '$filter' to the handler") {
             val pagination = Pagination(page = 1, size = 2)
-            coEvery { handler(authorizedParty, pagination, statuses) } returns
+            coEvery { handler(authorizedAgent, pagination, statuses) } returns
                 Page(listOf(request), 5, pagination)
 
             testApplication {
-                setupAppWith(authorizedParty) {
+                setupAppWith(authorizedAgent) {
                     route(V1_REQUESTS_PATH) { route(handler) }
                 }
 
@@ -133,7 +133,7 @@ class ListRequestsRouteTest : FunSpec({
 
                 response.status shouldBe HttpStatusCode.OK
                 response.body<JsonApiListAuthorizationRequestsResponse>().data.single().id shouldBe request.id.toString()
-                coVerify(exactly = 1) { handler(authorizedParty, pagination, statuses) }
+                coVerify(exactly = 1) { handler(authorizedAgent, pagination, statuses) }
             }
         }
     }
@@ -141,7 +141,7 @@ class ListRequestsRouteTest : FunSpec({
     listOf("Accepted", "pending", "Pending,Unknown", "Pending, Approved").forEach { filter ->
         test("GET rejects invalid status filter '$filter' without calling the handler") {
             testApplication {
-                setupAppWith(authorizedParty) {
+                setupAppWith(authorizedAgent) {
                     route(V1_REQUESTS_PATH) { route(handler) }
                 }
 
@@ -163,11 +163,11 @@ class ListRequestsRouteTest : FunSpec({
         Triple("2", "0", Pagination(page = 2, size = 1)),
     ).forEach { (page, size, pagination) ->
         test("GET normalizes page '$page' and size '$size'") {
-            coEvery { handler(authorizedParty, pagination, emptyList()) } returns
+            coEvery { handler(authorizedAgent, pagination, emptyList()) } returns
                 Page(emptyList(), 0, pagination)
 
             testApplication {
-                setupAppWith(authorizedParty) {
+                setupAppWith(authorizedAgent) {
                     route(V1_REQUESTS_PATH) { route(handler) }
                 }
 
@@ -181,17 +181,17 @@ class ListRequestsRouteTest : FunSpec({
 
                 response.status shouldBe HttpStatusCode.OK
                 response.body<JsonApiListAuthorizationRequestsResponse>().data shouldBe emptyList()
-                coVerify(exactly = 1) { handler(authorizedParty, pagination, emptyList()) }
+                coVerify(exactly = 1) { handler(authorizedAgent, pagination, emptyList()) }
             }
         }
     }
 
     test("GET returns a JSON:API error when the handler fails") {
-        coEvery { handler(authorizedParty, Pagination(), emptyList()) } throws
+        coEvery { handler(authorizedAgent, Pagination(), emptyList()) } throws
             RepositoryReadError.UnexpectedError("Database unavailable")
 
         testApplication {
-            setupAppWith(authorizedParty) {
+            setupAppWith(authorizedAgent) {
                 route(V1_REQUESTS_PATH) { route(handler) }
             }
 

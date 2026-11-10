@@ -1,12 +1,12 @@
 package no.elhub.auth.v1.requesthandlers.movein
 
-import no.elhub.auth.common.auth.AuthorizationParty
 import no.elhub.auth.common.structuredata.organisations.IdentificationType
 import no.elhub.auth.common.structuredata.organisations.PartyType
 import no.elhub.auth.v0.features.businessprocesses.structuredata.common.ClientError
 import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsLookupException
 import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsService
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsService
+import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.common.meteringpoints.toRequestedMeteringPointMetadata
 import no.elhub.auth.v1.domain.requests.AuthorizationRequestTypeDetails
 import no.elhub.auth.v1.features.requests.creation.RequestPreparationError
@@ -24,9 +24,9 @@ class MoveInAndChangeOfEnergySupplierRequestHandler(
 ) : HandlerContract {
     override suspend fun validateAndGetRequestTypeSpecificDetails(
         details: AuthorizationRequestTypeDetails.MoveInAndChangeOfEnergySupplierForOrganization,
-        requestedBy: AuthorizationParty,
-        requestedPrincipal: AuthorizationParty,
-        requestedOf: AuthorizationParty,
+        requestedBy: AuthorizationAgent,
+        requestedPrincipal: AuthorizationAgent,
+        requestedOf: AuthorizationAgent,
     ): RequestTypeSpecificDetails {
         val requestedPrincipalElhubInternalId = organisationsService
             .getIdentificationByOrganisationNumber(requestedPrincipal.id)
