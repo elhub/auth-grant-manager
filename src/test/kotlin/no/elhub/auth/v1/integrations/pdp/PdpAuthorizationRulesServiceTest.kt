@@ -65,10 +65,13 @@ class PdpAuthorizationRulesServiceTest : FunSpec({
         MDC.remove(TRACE_ID_MDC_KEY)
     }
 
-    test("delegates same-party authorization to PDP") {
-        service.canActOnBehalfOf(organization, organization.copy()) shouldBe true
-        coVerify(exactly = 1) { tokenProvider.getToken() }
-        requestCount shouldBe 1
+    test("allows same-party authorization without a trace ID, token or PDP call") {
+        MDC.remove(TRACE_ID_MDC_KEY)
+        listOf(person, organization).forEach { party ->
+            service.canActOnBehalfOf(party, party.copy()) shouldBe true
+        }
+        coVerify(exactly = 0) { tokenProvider.getToken() }
+        requestCount shouldBe 0
     }
 
     test("delegates unsupported party combinations to PDP") {
