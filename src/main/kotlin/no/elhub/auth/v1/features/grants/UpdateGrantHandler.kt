@@ -1,7 +1,7 @@
 package no.elhub.auth.v1.features.grants
 
-import no.elhub.auth.common.auth.AuthorizationParty
-import no.elhub.auth.common.auth.PartyType
+import no.elhub.auth.v1.common.auth.AgentType
+import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.domain.AuthorizationGrant
 import no.elhub.auth.v1.domain.AuthorizationGrantStatus
 import no.elhub.auth.v1.domain.AuthorizationGrantType
@@ -14,16 +14,16 @@ class UpdateGrantHandler(
 ) {
     suspend operator fun invoke(
         id: UUID,
-        authorizedParty: AuthorizationParty,
+        authorizedAgent: AuthorizationAgent,
         status: AuthorizationGrantStatus,
         type: AuthorizationGrantType,
     ): AuthorizationGrant {
-        if (authorizedParty.type != PartyType.System && status != AuthorizationGrantStatus.Revoked) {
-            throw UpdateGrantError.NotAuthorized("${authorizedParty.type} cannot update authorization grant to status $status")
+        if (authorizedAgent.type != AgentType.System && status != AuthorizationGrantStatus.Revoked) {
+            throw UpdateGrantError.NotAuthorized("${authorizedAgent.type} cannot update authorization grant to status $status")
         }
 
         val grant = grantRepository.find(id)
-        if (authorizedParty.type != PartyType.System && authorizedParty != grant.principal && authorizedParty != grant.grantedBy) {
+        if (authorizedAgent.type != AgentType.System && authorizedAgent != grant.principal && authorizedAgent != grant.grantedBy) {
             throw UpdateGrantError.NotAuthorized("Only the principal, grantedBy, or systems may revoke an AuthorizationGrant.")
         }
 

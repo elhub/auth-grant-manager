@@ -12,12 +12,12 @@ import kotlinx.datetime.LocalDate
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
-import no.elhub.auth.common.auth.AuthorizationParty
-import no.elhub.auth.common.auth.PartyType
 import no.elhub.auth.common.config.withTransaction
 import no.elhub.auth.v0.features.common.Pagination
 import no.elhub.auth.v0.features.common.PostgresTestContainer
 import no.elhub.auth.v0.features.common.PostgresTestContainerExtension
+import no.elhub.auth.v1.common.auth.AgentType
+import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.common.now
 import no.elhub.auth.v1.domain.AuthorizationGrant
 import no.elhub.auth.v1.domain.AuthorizationGrantSourceType
@@ -57,9 +57,9 @@ class ExposedRequestRepositoryTest : FunSpec({
         )
     }
 
-    val partyRepository = ExposedPartyRepository()
-    val grantRepository = ExposedGrantRepository(partyRepository)
-    val repository = ExposedRequestRepository(partyRepository, grantRepository)
+    val agentRepository = ExposedAgentRepository()
+    val grantRepository = ExposedGrantRepository(agentRepository)
+    val repository = ExposedRequestRepository(agentRepository, grantRepository)
     val createdAt = Instant.parse("2025-01-01T00:00:00Z")
     val future = Instant.parse("2100-01-01T00:00:00Z")
     val past = Instant.parse("2000-01-01T00:00:00Z")
@@ -67,7 +67,7 @@ class ExposedRequestRepositoryTest : FunSpec({
         """{"name":"alberto","nestedStuff":{"values":[null,false,1.5]}}""",
     ).jsonObject
 
-    fun party(type: PartyType = PartyType.Person) = AuthorizationParty(id = UUID.randomUUID().toString(), type = type)
+    fun agent(type: AgentType = AgentType.Person) = AuthorizationAgent(id = UUID.randomUUID().toString(), type = type)
 
     fun grant(request: AuthorizationRequest) = AuthorizationGrant.new(
         type = AuthorizationGrantType.Consumable,
@@ -76,17 +76,17 @@ class ExposedRequestRepositoryTest : FunSpec({
         principal = request.requestedPrincipal,
         grantedBy = request.requestedOf,
         grantedTo = request.requestedBy,
-        approvedBy = party(),
+        approvedBy = agent(),
         validFrom = createdAt,
         validTo = future,
         scopes = emptyList(),
     ).copy(createdAt = createdAt, updatedAt = createdAt)
 
     suspend fun insertRequest(
-        requestedBy: AuthorizationParty,
-        requestedPrincipal: AuthorizationParty = requestedBy,
-        requestedOf: AuthorizationParty = requestedBy,
-        approvedBy: AuthorizationParty? = null,
+        requestedBy: AuthorizationAgent,
+        requestedPrincipal: AuthorizationAgent = requestedBy,
+        requestedOf: AuthorizationAgent = requestedBy,
+        approvedBy: AuthorizationAgent? = null,
         status: DatabaseRequestStatus = DatabaseRequestStatus.Pending,
         validTo: Instant = future,
         created: Instant = createdAt,
@@ -98,11 +98,11 @@ class ExposedRequestRepositoryTest : FunSpec({
         requestedGrantValidFrom: Instant? = null,
         requestedGrantValidTo: Instant? = null,
     ): UUID = withTransaction {
-        suspend fun partyId(party: AuthorizationParty) = partyRepository.findOrInsert(party.type, party.id).id
-        val byId = partyId(requestedBy)
-        val principalId = partyId(requestedPrincipal)
-        val ofId = partyId(requestedOf)
-        val approverId = approvedBy?.let { partyId(it) }
+        suspend fun agentId(agent: AuthorizationAgent) = agentRepository.findOrInsert(agent.type, agent.id).id
+        val byId = agentId(requestedBy)
+        val principalId = agentId(requestedPrincipal)
+        val ofId = agentId(requestedOf)
+        val approverId = approvedBy?.let { agentId(it) }
         val requestId = AuthorizationRequestTable.insert {
             it[requestType] = AuthorizationRequestType.ChangeOfEnergySupplierForOrganization
             it[AuthorizationRequestTable.textReference] = AuthorizationRequestTextReference.forRequestType(
@@ -145,11 +145,11 @@ class ExposedRequestRepositoryTest : FunSpec({
         requestId
     }
 
-    test("find maps request fields, parties, approver, scopes and constraints") {
-        val requestedBy = party(PartyType.Organization)
-        val requestedPrincipal = party(PartyType.Organization)
-        val requestedOf = party()
-        val approver = party()
+    test("find maps request fields, agents, approver, scopes and constraints") {
+        val requestedBy = agent(AgentType.Organization)
+        val requestedPrincipal = agent(AgentType.Organization)
+        val requestedOf = agent()
+        val approver = agent()
         val appliesTo = AuthorizationScopeConstraint(
             AuthorizationScopeConstraintKind.AppliesTo,
             AuthorizationScopeConstraintAttribute.MeteringPointId,
@@ -209,7 +209,7 @@ class ExposedRequestRepositoryTest : FunSpec({
     }
 
     test("find maps a request without scopes, approver or external reference") {
-        val requestedBy = party()
+        val requestedBy = agent()
         val requestId = insertRequest(requestedBy)
 
         val result = repository.find(requestId)
@@ -226,8 +226,8 @@ class ExposedRequestRepositoryTest : FunSpec({
     }
 
     test("find derives status with rejection and approval taking precedence over expiry") {
-        val requestedBy = party()
-        val approver = party()
+        val requestedBy = agent()
+        val approver = agent()
         val expected = mapOf(
             insertRequest(requestedBy) to AuthorizationRequestStatus.Pending,
             insertRequest(requestedBy, approvedBy = approver) to AuthorizationRequestStatus.Approved,
@@ -253,10 +253,10 @@ class ExposedRequestRepositoryTest : FunSpec({
         error.detail shouldBe "Request not found: $requestId"
     }
 
-    test("inserts request fields, reuses parties, and persists scopes and constraints") {
-        val requestedBy = party(PartyType.Organization)
-        val recipient = party()
-        val existingrequestedBy = partyRepository.findOrInsert(requestedBy.type, requestedBy.id)
+    test("inserts request fields, reuses agents, and persists scopes and constraints") {
+        val requestedBy = agent(AgentType.Organization)
+        val recipient = agent()
+        val existingrequestedBy = agentRepository.findOrInsert(requestedBy.type, requestedBy.id)
         val appliesTo = AuthorizationScopeConstraint(
             AuthorizationScopeConstraintKind.AppliesTo,
             AuthorizationScopeConstraintAttribute.MeteringPointId,
@@ -299,11 +299,11 @@ class ExposedRequestRepositoryTest : FunSpec({
         stored.requestedScopes.single { it.constraints.isEmpty() } shouldBe unconstrained
         stored.requestedScopes.single { it.constraints.isNotEmpty() }.constraints
             .shouldContainExactlyInAnyOrder(appliesTo, allowedChanges)
-        partyRepository.findOrInsert(requestedBy.type, requestedBy.id).id shouldBe existingrequestedBy.id
+        agentRepository.findOrInsert(requestedBy.type, requestedBy.id).id shouldBe existingrequestedBy.id
     }
 
     test("inserts a request without scopes or external reference") {
-        val requestedBy = party()
+        val requestedBy = agent()
         val request = AuthorizationRequest.new(
             requestType = AuthorizationRequestType.ChangeOfEnergySupplierForOrganization,
             requestedScopes = emptyList(),
@@ -321,7 +321,7 @@ class ExposedRequestRepositoryTest : FunSpec({
     }
 
     test("inserts a framework agreement request with requested grant validity") {
-        val requestedBy = party(PartyType.Organization)
+        val requestedBy = agent(AgentType.Organization)
         val contractTypes = AuthorizationScopeConstraint(
             AuthorizationScopeConstraintKind.AllowedChanges,
             AuthorizationScopeConstraintAttribute.ContractType,
@@ -337,7 +337,7 @@ class ExposedRequestRepositoryTest : FunSpec({
             meta = metadata,
             requestedBy = requestedBy,
             requestedPrincipal = requestedBy,
-            requestedOf = party(),
+            requestedOf = agent(),
         ).copy(
             requestedGrantValidFrom = future,
             requestedGrantValidTo = future + 365.days,
@@ -352,7 +352,7 @@ class ExposedRequestRepositoryTest : FunSpec({
     }
 
     test("persists the selected authorization text reference") {
-        val requestedBy = party(PartyType.Organization)
+        val requestedBy = agent(AgentType.Organization)
         val request = AuthorizationRequest.new(
             requestType = AuthorizationRequestType.ChangeOfEnergySupplierForOrganization,
             requestedScopes = emptyList(),
@@ -371,8 +371,8 @@ class ExposedRequestRepositoryTest : FunSpec({
 
     test("persists validFrom allowed changes and reads them by ID") {
         AuthorizationScopeConstraintAttribute.fromApiName("validFrom") shouldBe AuthorizationScopeConstraintAttribute.ValidFrom
-        val requestedBy = party(PartyType.Organization)
-        val recipient = party()
+        val requestedBy = agent(AgentType.Organization)
+        val recipient = agent()
         val appliesTo = AuthorizationScopeConstraint(
             AuthorizationScopeConstraintKind.AppliesTo,
             AuthorizationScopeConstraintAttribute.MeteringPointId,
@@ -404,33 +404,33 @@ class ExposedRequestRepositoryTest : FunSpec({
         }
     }
 
-    test("includes requestedBy and requestedOf once but excludes requestedPrincipal-only and unrelated parties") {
-        val party = party()
-        val other = party(PartyType.Organization)
-        val by = insertRequest(party, requestedPrincipal = other, requestedOf = other)
-        val of = insertRequest(other, requestedOf = party)
-        val both = insertRequest(party)
-        insertRequest(other, requestedPrincipal = party)
+    test("includes requestedBy and requestedOf once but excludes requestedPrincipal-only and unrelated agents") {
+        val agent = agent()
+        val other = agent(AgentType.Organization)
+        val by = insertRequest(agent, requestedPrincipal = other, requestedOf = other)
+        val of = insertRequest(other, requestedOf = agent)
+        val both = insertRequest(agent)
+        insertRequest(other, requestedPrincipal = agent)
         insertRequest(other)
 
-        val result = repository.findAndSortByCreatedAt(party, Pagination(), emptyList())
+        val result = repository.findAndSortByCreatedAt(agent, Pagination(), emptyList())
 
         result.items.map { it.id }.shouldContainExactlyInAnyOrder(by, of, both)
         result.totalItems shouldBe 3L
     }
 
     test("sorts createdAt descending and preserves total count on partial and beyond-end pages") {
-        val party = party()
-        val middle = insertRequest(party, created = createdAt + 2.days)
-        val oldest = insertRequest(party, created = createdAt)
-        val newest = insertRequest(party, created = createdAt + 4.days)
-        val second = insertRequest(party, created = createdAt + 3.days)
-        val fourth = insertRequest(party, created = createdAt + 1.days)
+        val agent = agent()
+        val middle = insertRequest(agent, created = createdAt + 2.days)
+        val oldest = insertRequest(agent, created = createdAt)
+        val newest = insertRequest(agent, created = createdAt + 4.days)
+        val second = insertRequest(agent, created = createdAt + 3.days)
+        val fourth = insertRequest(agent, created = createdAt + 1.days)
 
-        val firstPage = repository.findAndSortByCreatedAt(party, Pagination(page = 0, size = 2), emptyList())
-        val secondPage = repository.findAndSortByCreatedAt(party, Pagination(page = 1, size = 2), emptyList())
-        val lastPage = repository.findAndSortByCreatedAt(party, Pagination(page = 2, size = 2), emptyList())
-        val beyondEnd = repository.findAndSortByCreatedAt(party, Pagination(page = 3, size = 2), emptyList())
+        val firstPage = repository.findAndSortByCreatedAt(agent, Pagination(page = 0, size = 2), emptyList())
+        val secondPage = repository.findAndSortByCreatedAt(agent, Pagination(page = 1, size = 2), emptyList())
+        val lastPage = repository.findAndSortByCreatedAt(agent, Pagination(page = 2, size = 2), emptyList())
+        val beyondEnd = repository.findAndSortByCreatedAt(agent, Pagination(page = 3, size = 2), emptyList())
 
         firstPage.items.map { it.id } shouldBe listOf(newest, second)
         secondPage.items.map { it.id } shouldBe listOf(middle, fourth)
@@ -443,23 +443,23 @@ class ExposedRequestRepositoryTest : FunSpec({
         }
 
         val noStatusMatches = repository.findAndSortByCreatedAt(
-            party,
+            agent,
             Pagination(size = 2),
             listOf(AuthorizationRequestStatus.Rejected),
         )
         noStatusMatches.items shouldBe emptyList()
         noStatusMatches.totalItems shouldBe 0L
 
-        val noPartyMatches = repository.findAndSortByCreatedAt(party(), Pagination(), emptyList())
-        noPartyMatches.items shouldBe emptyList()
-        noPartyMatches.totalItems shouldBe 0L
+        val noAgentMatches = repository.findAndSortByCreatedAt(agent(), Pagination(), emptyList())
+        noAgentMatches.items shouldBe emptyList()
+        noAgentMatches.totalItems shouldBe 0L
     }
 
-    test("batch maps parties including approver and scopes with multiple constraints") {
-        val requestedBy = party(PartyType.Organization)
-        val requestedPrincipal = party(PartyType.Organization)
-        val requestedOf = party()
-        val approver = party()
+    test("batch maps agents including approver and scopes with multiple constraints") {
+        val requestedBy = agent(AgentType.Organization)
+        val requestedPrincipal = agent(AgentType.Organization)
+        val requestedOf = agent()
+        val approver = agent()
         val appliesTo = AuthorizationScopeConstraint(
             AuthorizationScopeConstraintKind.AppliesTo,
             AuthorizationScopeConstraintAttribute.MeteringPointId,
@@ -517,19 +517,19 @@ class ExposedRequestRepositoryTest : FunSpec({
     }
 
     test("filters all derived statuses") {
-        val party = party()
-        val approver = party()
+        val agent = agent()
+        val approver = agent()
         val expected = mapOf(
-            insertRequest(party) to AuthorizationRequestStatus.Pending,
-            insertRequest(party, approvedBy = approver) to AuthorizationRequestStatus.Approved,
-            insertRequest(party, approvedBy = approver, validTo = past) to AuthorizationRequestStatus.Approved,
-            insertRequest(party, validTo = past) to AuthorizationRequestStatus.Expired,
-            insertRequest(party, status = DatabaseRequestStatus.Rejected) to AuthorizationRequestStatus.Rejected,
-            insertRequest(party, status = DatabaseRequestStatus.Rejected, approvedBy = approver, validTo = past) to
+            insertRequest(agent) to AuthorizationRequestStatus.Pending,
+            insertRequest(agent, approvedBy = approver) to AuthorizationRequestStatus.Approved,
+            insertRequest(agent, approvedBy = approver, validTo = past) to AuthorizationRequestStatus.Approved,
+            insertRequest(agent, validTo = past) to AuthorizationRequestStatus.Expired,
+            insertRequest(agent, status = DatabaseRequestStatus.Rejected) to AuthorizationRequestStatus.Rejected,
+            insertRequest(agent, status = DatabaseRequestStatus.Rejected, approvedBy = approver, validTo = past) to
                 AuthorizationRequestStatus.Rejected,
         )
         insertRequest(approver)
-        insertRequest(approver, approvedBy = party)
+        insertRequest(approver, approvedBy = agent)
         insertRequest(approver, validTo = past)
         insertRequest(approver, status = DatabaseRequestStatus.Rejected)
 
@@ -540,7 +540,7 @@ class ExposedRequestRepositoryTest : FunSpec({
         )
         filters.forEach { statuses ->
             val matching = expected.filterValues { statuses.isEmpty() || it in statuses }
-            val result = repository.findAndSortByCreatedAt(party, Pagination(), statuses)
+            val result = repository.findAndSortByCreatedAt(agent, Pagination(), statuses)
             result.totalItems shouldBe matching.size.toLong()
             result.items.size shouldBe matching.size
             result.items.associate { it.id to it.status } shouldBe matching
@@ -550,9 +550,9 @@ class ExposedRequestRepositoryTest : FunSpec({
     test("reject(id) persists status and updatedAt while preserving request fields") {
         val scope = RequestedAuthorizationScope(ResourceType.MeteringPointContract, emptyList())
         val id = insertRequest(
-            requestedBy = party(),
-            requestedPrincipal = party(),
-            requestedOf = party(),
+            requestedBy = agent(),
+            requestedPrincipal = agent(),
+            requestedOf = agent(),
             externalReference = "reject-test",
             redirectUri = "https://example.com/rejected",
             scopes = listOf(scope),
@@ -582,7 +582,7 @@ class ExposedRequestRepositoryTest : FunSpec({
     }
 
     test("reject(id) throws conflict on double-reject") {
-        val id = insertRequest(party())
+        val id = insertRequest(agent())
         val rejectedRequest = repository.reject(id, TextLanguage.NB)
         rejectedRequest.status shouldBe AuthorizationRequestStatus.Rejected
         val error = shouldThrow<RepositoryWriteError.ConflictError> {
@@ -594,7 +594,7 @@ class ExposedRequestRepositoryTest : FunSpec({
 
     test("reject(id) throws conflict for accepted requests") {
         listOf(future, past).forEach { validTo ->
-            val id = insertRequest(party(), approvedBy = party(), validTo = validTo)
+            val id = insertRequest(agent(), approvedBy = agent(), validTo = validTo)
             val original = repository.find(id)
             val error = shouldThrow<RepositoryWriteError.ConflictError> {
                 repository.reject(id, TextLanguage.NB)
@@ -605,7 +605,7 @@ class ExposedRequestRepositoryTest : FunSpec({
     }
 
     test("reject(id) throws expired for expired requests without changing them") {
-        val id = insertRequest(party(), validTo = past)
+        val id = insertRequest(agent(), validTo = past)
         val original = repository.find(id)
         val error = shouldThrow<RepositoryWriteError.ExpiredError> {
             repository.reject(id, TextLanguage.NB)
@@ -617,9 +617,9 @@ class ExposedRequestRepositoryTest : FunSpec({
     test("accept(id, grant) persists approval and updatedAt while preserving request fields") {
         val scope = RequestedAuthorizationScope(ResourceType.MeteringPointContract, emptyList())
         val id = insertRequest(
-            requestedBy = party(PartyType.Organization),
-            requestedPrincipal = party(PartyType.Organization),
-            requestedOf = party(),
+            requestedBy = agent(AgentType.Organization),
+            requestedPrincipal = agent(AgentType.Organization),
+            requestedOf = agent(),
             externalReference = "accept-test",
             redirectUri = "https://example.com/accepted",
             scopes = listOf(scope),
@@ -652,7 +652,7 @@ class ExposedRequestRepositoryTest : FunSpec({
     }
 
     test("accept persists multiple grants and reads them by ID and in a page") {
-        val requestedBy = party(PartyType.Organization)
+        val requestedBy = agent(AgentType.Organization)
         val id = insertRequest(requestedBy)
         val original = repository.find(id)
         val first = grant(original).copy(approvedBy = requestedBy)
@@ -677,7 +677,7 @@ class ExposedRequestRepositoryTest : FunSpec({
     }
 
     test("list attaches each request's own grants and leaves requests without grants empty") {
-        val requestedBy = party(PartyType.Organization)
+        val requestedBy = agent(AgentType.Organization)
         val withGrantsId = insertRequest(requestedBy, created = createdAt + 2.days)
         val otherWithGrantsId = insertRequest(requestedBy, created = createdAt + 1.days)
         val withoutGrantsId = insertRequest(requestedBy, created = createdAt)
@@ -705,10 +705,10 @@ class ExposedRequestRepositoryTest : FunSpec({
         AuthorizationRequestTypeDetails.EnergySupplierFrameworkAgreement(null, null),
     ).forEach { details ->
         test("a stored ${details::class.simpleName} request produces the same grants as the created one") {
-            val requestedOf = party(PartyType.Person)
+            val requestedOf = agent(AgentType.Person)
             val created = AuthorizationRequest.create(
-                requestedBy = party(PartyType.OrganizationEntity),
-                requestedPrincipal = party(PartyType.Organization),
+                requestedBy = agent(AgentType.OrganizationEntity),
+                requestedPrincipal = agent(AgentType.Organization),
                 requestedOf = requestedOf,
                 details = details,
                 validTo = future,
@@ -729,7 +729,7 @@ class ExposedRequestRepositoryTest : FunSpec({
     }
 
     test("accept(id, grant) throws not found for a nonexistent ID") {
-        val requestedBy = party()
+        val requestedBy = agent()
         val request = AuthorizationRequest.new(
             requestType = AuthorizationRequestType.ChangeOfEnergySupplierForOrganization,
             requestedScopes = emptyList(),
@@ -749,7 +749,7 @@ class ExposedRequestRepositoryTest : FunSpec({
     }
 
     test("accept(id, grant) throws conflict on double-accept") {
-        val id = insertRequest(party())
+        val id = insertRequest(agent())
         val original = repository.find(id)
         val accepted = repository.accept(id, listOf(grant(original)), TextLanguage.NB)
         accepted.status shouldBe AuthorizationRequestStatus.Approved
@@ -764,7 +764,7 @@ class ExposedRequestRepositoryTest : FunSpec({
 
     test("accept(id, grant) throws conflict for rejected requests") {
         listOf(future, past).forEach { validTo ->
-            val id = insertRequest(party(), status = DatabaseRequestStatus.Rejected, validTo = validTo)
+            val id = insertRequest(agent(), status = DatabaseRequestStatus.Rejected, validTo = validTo)
             val original = repository.find(id)
 
             val error = shouldThrow<RepositoryWriteError.ConflictError> {
@@ -777,7 +777,7 @@ class ExposedRequestRepositoryTest : FunSpec({
     }
 
     test("accept(id, grant) throws expired for expired requests without changing them") {
-        val id = insertRequest(party(), validTo = past)
+        val id = insertRequest(agent(), validTo = past)
         val original = repository.find(id)
 
         val error = shouldThrow<RepositoryWriteError.ExpiredError> {
@@ -789,7 +789,7 @@ class ExposedRequestRepositoryTest : FunSpec({
     }
 
     test("concurrent accept(id, grant) calls produce one success and one conflict") {
-        val id = insertRequest(party())
+        val id = insertRequest(agent())
         val original = repository.find(id)
         val grants = List(2) { grant(original) }
         val results = coroutineScope {
@@ -814,7 +814,7 @@ class ExposedRequestRepositoryTest : FunSpec({
     }
 
     test("concurrent accept(id, grant) and reject(id) calls produce one success and one conflict") {
-        val id = insertRequest(party())
+        val id = insertRequest(agent())
         val grant = grant(repository.find(id))
         val results = coroutineScope {
             val start = CompletableDeferred<Unit>()
@@ -847,7 +847,7 @@ class ExposedRequestRepositoryTest : FunSpec({
     }
 
     test("concurrent reject(id) calls produce one success and one conflict") {
-        val id = insertRequest(party())
+        val id = insertRequest(agent())
         val results = coroutineScope {
             val start = CompletableDeferred<Unit>()
             val attempts = List(2) {

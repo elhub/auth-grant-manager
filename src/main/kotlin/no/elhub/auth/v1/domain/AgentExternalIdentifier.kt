@@ -26,11 +26,11 @@ sealed interface AgentExternalIdentifier {
     }
 
     @JvmInline
-    value class MarketPartyIdentifier(
+    value class MarketEntityIdentifier(
         override val value: String,
     ) : AgentExternalIdentifier {
         init {
-            if (!MARKET_PARTY_IDENTIFIER_REGEX.matches(value)) {
+            if (!MARKET_ENTITY_IDENTIFIER_REGEX.matches(value)) {
                 throw DomainError.InvalidExternalAgentIdentifier(value)
             }
         }
@@ -40,7 +40,7 @@ sealed interface AgentExternalIdentifier {
         fun create(value: String): AgentExternalIdentifier = when (value.length) {
             9 -> OrganizationIdentifier(value)
             11 -> PersonIdentifier(value)
-            13 -> MarketPartyIdentifier(value)
+            13 -> MarketEntityIdentifier(value)
             else -> throw DomainError.InvalidExternalAgentIdentifier(value)
         }
     }
@@ -48,4 +48,4 @@ sealed interface AgentExternalIdentifier {
 
 private val ORGANIZATION_IDENTIFIER_REGEX = Regex("[0-9]{9}")
 private val PERSON_IDENTIFIER_REGEX = Regex("[0-9]{11}")
-private val MARKET_PARTY_IDENTIFIER_REGEX = Regex("[0-9]{13}")
+private val MARKET_ENTITY_IDENTIFIER_REGEX = Regex("[0-9]{13}")

@@ -10,8 +10,6 @@ import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.jsonObject
-import no.elhub.auth.common.auth.AuthorizationParty
-import no.elhub.auth.common.auth.PartyType
 import no.elhub.auth.v0.features.common.Page
 import no.elhub.auth.v0.features.common.Pagination
 import no.elhub.auth.v1.api.documents.request.CreateAuthorizationDocumentAttributes
@@ -22,6 +20,8 @@ import no.elhub.auth.v1.api.grants.response.toGetResponse
 import no.elhub.auth.v1.api.requests.request.CreateAuthorizationRequestAttributes
 import no.elhub.auth.v1.api.requests.response.toGetCollectionResponse
 import no.elhub.auth.v1.api.requests.response.toGetResponse
+import no.elhub.auth.v1.common.auth.AgentType
+import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.common.now
 import no.elhub.auth.v1.domain.AuthorizationDocument
 import no.elhub.auth.v1.domain.AuthorizationDocumentType
@@ -46,16 +46,16 @@ class OsloResponseSerializationTest : FunSpec({
     val summer = Instant.parse("2026-07-15T12:34:56.987654321Z")
     val winterOutput = "2026-01-15T13:34:56+01:00"
     val summerOutput = "2026-07-15T14:34:56+02:00"
-    val party = AuthorizationParty("123456789", PartyType.OrganizationEntity)
+    val agent = AuthorizationAgent("123456789", AgentType.OrganizationEntity)
     val document = AuthorizationDocument.new(
         documentType = AuthorizationDocumentType.EnergySupplierFrameworkAgreement,
         requestedScopes = emptyList(),
         externalReference = null,
         meta = JsonObject(emptyMap()),
         validTo = summer,
-        requestedBy = party,
-        requestedPrincipal = party,
-        requestedOf = party,
+        requestedBy = agent,
+        requestedPrincipal = agent,
+        requestedOf = agent,
         pdfBytes = byteArrayOf(),
     ).copy(validFrom = winter, createdAt = winter, updatedAt = summer)
     val request = AuthorizationRequest.new(
@@ -64,18 +64,18 @@ class OsloResponseSerializationTest : FunSpec({
         externalReference = null,
         meta = JsonObject(emptyMap()),
         validTo = summer,
-        requestedBy = party,
-        requestedPrincipal = party,
-        requestedOf = party,
+        requestedBy = agent,
+        requestedPrincipal = agent,
+        requestedOf = agent,
     ).copy(validFrom = winter, createdAt = winter, updatedAt = summer)
     val grant = AuthorizationGrant.new(
         type = AuthorizationGrantType.Persistent,
         sourceType = AuthorizationGrantSourceType.Request,
         sourceId = UUID.randomUUID(),
-        principal = party,
-        grantedBy = party,
-        grantedTo = party,
-        approvedBy = AuthorizationParty("person-1", PartyType.Person),
+        principal = agent,
+        grantedBy = agent,
+        grantedTo = agent,
+        approvedBy = AuthorizationAgent("person-1", AgentType.Person),
         validFrom = winter,
         validTo = summer,
         scopes = emptyList(),

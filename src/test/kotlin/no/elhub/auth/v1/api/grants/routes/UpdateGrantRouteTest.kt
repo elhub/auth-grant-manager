@@ -14,14 +14,14 @@ import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
-import no.elhub.auth.common.auth.AuthorizationParty
-import no.elhub.auth.common.auth.PartyType
 import no.elhub.auth.common.config.jsonApiContentType
 import no.elhub.auth.v0.patchJson
 import no.elhub.auth.v0.setupAppWith
 import no.elhub.auth.v1.V1_GRANTS_PATH
 import no.elhub.auth.v1.api.common.GrantResourceType
 import no.elhub.auth.v1.api.grants.response.JsonApiGetAuthorizationGrantResponse
+import no.elhub.auth.v1.common.auth.AgentType
+import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.domain.AuthorizationGrant
 import no.elhub.auth.v1.domain.AuthorizationGrantSourceType
 import no.elhub.auth.v1.domain.AuthorizationGrantStatus
@@ -37,15 +37,15 @@ import kotlin.time.Instant
 
 class UpdateGrantRouteTest : FunSpec({
     val handler = mockk<UpdateGrantHandler>()
-    val system = AuthorizationParty("system-1", PartyType.System)
-    val principal = AuthorizationParty("person-1", PartyType.Person)
+    val system = AuthorizationAgent("system-1", AgentType.System)
+    val principal = AuthorizationAgent("person-1", AgentType.Person)
     val grant = AuthorizationGrant.new(
         type = AuthorizationGrantType.Consumable,
         sourceType = AuthorizationGrantSourceType.Request,
         sourceId = UUID.randomUUID(),
         principal = principal,
         grantedBy = principal,
-        grantedTo = AuthorizationParty("7080005053246", PartyType.OrganizationEntity),
+        grantedTo = AuthorizationAgent("7080005053246", AgentType.OrganizationEntity),
         approvedBy = principal,
         validFrom = Instant.parse("2026-10-01T08:00:00Z"),
         validTo = Instant.parse("2100-01-01T00:00:00Z"),

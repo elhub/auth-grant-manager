@@ -6,8 +6,8 @@ import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.json.JsonObject
-import no.elhub.auth.common.auth.AuthorizationParty
-import no.elhub.auth.common.auth.PartyType
+import no.elhub.auth.v1.common.auth.AgentType
+import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.domain.AuthorizationGrant
 import no.elhub.auth.v1.domain.AuthorizationGrantSourceType
 import no.elhub.auth.v1.domain.AuthorizationGrantStatus
@@ -28,9 +28,9 @@ import kotlin.time.Instant
 
 // Requests are built with AuthorizationRequest.create, so these tests also pin the scope shape toGrants relies on.
 class RequestToGrantsTest : FunSpec({
-    val requestedBy = AuthorizationParty("7080005053246", PartyType.OrganizationEntity)
-    val requestedPrincipal = AuthorizationParty("999888771", PartyType.Organization)
-    val requestedOf = AuthorizationParty("person-1", PartyType.Person)
+    val requestedBy = AuthorizationAgent("7080005053246", AgentType.OrganizationEntity)
+    val requestedPrincipal = AuthorizationAgent("999888771", AgentType.Organization)
+    val requestedOf = AuthorizationAgent("person-1", AgentType.Person)
     val approvedBy = requestedOf
     val firstMeteringPoint = MeteringPointId.create("707057500000000001")
     val secondMeteringPoint = MeteringPointId.create("707057500000000002")

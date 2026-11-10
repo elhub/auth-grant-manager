@@ -8,15 +8,15 @@ import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
-import no.elhub.auth.common.auth.AuthorizationParty
-import no.elhub.auth.common.auth.PartyType
 import no.elhub.auth.v0.features.common.Page
 import no.elhub.auth.v0.features.common.Pagination
+import no.elhub.auth.v1.common.auth.AgentType
+import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.domain.AuthorizationGrant
 import no.elhub.auth.v1.domain.AuthorizationGrantSourceType
 import no.elhub.auth.v1.domain.AuthorizationGrantStatus
 import no.elhub.auth.v1.domain.AuthorizationGrantType
-import no.elhub.auth.v1.domain.GrantPartyFilters
+import no.elhub.auth.v1.domain.GrantAgentFilters
 import no.elhub.auth.v1.repositories.GrantRepository
 import no.elhub.auth.v1.repositories.RepositoryReadError
 import java.util.UUID
@@ -25,16 +25,16 @@ import kotlin.time.Instant
 class ListGrantsHandlerTest : FunSpec({
     val grantRepository = mockk<GrantRepository>()
     val handler = ListGrantsHandler(grantRepository)
-    val authorizedParty = AuthorizationParty("7070575000001", PartyType.OrganizationEntity)
-    val grantedBy = AuthorizationParty(UUID.randomUUID().toString(), PartyType.Person)
-    val principal = AuthorizationParty("999888771", PartyType.Organization)
+    val authorizedAgent = AuthorizationAgent("7070575000001", AgentType.OrganizationEntity)
+    val grantedBy = AuthorizationAgent(UUID.randomUUID().toString(), AgentType.Person)
+    val principal = AuthorizationAgent("999888771", AgentType.Organization)
     val grant = AuthorizationGrant.new(
         type = AuthorizationGrantType.Consumable,
         sourceType = AuthorizationGrantSourceType.Document,
         sourceId = UUID.randomUUID(),
         principal = principal,
         grantedBy = grantedBy,
-        grantedTo = authorizedParty,
+        grantedTo = authorizedAgent,
         approvedBy = grantedBy,
         validFrom = Instant.parse("2026-10-01T08:00:00Z"),
         validTo = Instant.parse("2100-01-01T00:00:00Z"),
@@ -44,34 +44,34 @@ class ListGrantsHandlerTest : FunSpec({
 
     beforeTest { clearMocks(grantRepository) }
 
-    test("forwards the authorized party, pagination, statuses and party filters and returns the repository page") {
+    test("forwards the authorized agent, pagination, statuses and agent filters and returns the repository page") {
         val statuses = listOf(AuthorizationGrantStatus.Pending, AuthorizationGrantStatus.Revoked)
-        val partyFilters = GrantPartyFilters(
-            grantedBy = listOf(grantedBy, AuthorizationParty(UUID.randomUUID().toString(), PartyType.Person)),
+        val agentFilters = GrantAgentFilters(
+            grantedBy = listOf(grantedBy, AuthorizationAgent(UUID.randomUUID().toString(), AgentType.Person)),
             principal = listOf(principal),
             approvedBy = listOf(grantedBy),
-            grantedTo = listOf(authorizedParty),
+            grantedTo = listOf(authorizedAgent),
         )
         val page = Page(listOf(grant), 3, pagination)
-        coEvery { grantRepository.findAll(authorizedParty, pagination, statuses, partyFilters) } returns page
+        coEvery { grantRepository.findAll(authorizedAgent, pagination, statuses, agentFilters) } returns page
 
-        handler(authorizedParty, pagination, statuses, partyFilters) shouldBeSameInstanceAs page
-        coVerify(exactly = 1) { grantRepository.findAll(authorizedParty, pagination, statuses, partyFilters) }
+        handler(authorizedAgent, pagination, statuses, agentFilters) shouldBeSameInstanceAs page
+        coVerify(exactly = 1) { grantRepository.findAll(authorizedAgent, pagination, statuses, agentFilters) }
     }
 
-    test("returns an empty page when the party has no grants") {
+    test("returns an empty page when the agent has no grants") {
         val page = Page(emptyList<AuthorizationGrant>(), 0, pagination)
-        coEvery { grantRepository.findAll(authorizedParty, pagination, emptyList(), GrantPartyFilters()) } returns page
+        coEvery { grantRepository.findAll(authorizedAgent, pagination, emptyList(), GrantAgentFilters()) } returns page
 
-        handler(authorizedParty, pagination, emptyList(), GrantPartyFilters()) shouldBe page
+        handler(authorizedAgent, pagination, emptyList(), GrantAgentFilters()) shouldBe page
     }
 
     test("propagates a grant repository failure") {
         val error = RepositoryReadError.UnexpectedError("Database unavailable")
-        coEvery { grantRepository.findAll(authorizedParty, pagination, emptyList(), GrantPartyFilters()) } throws error
+        coEvery { grantRepository.findAll(authorizedAgent, pagination, emptyList(), GrantAgentFilters()) } throws error
 
         shouldThrow<RepositoryReadError.UnexpectedError> {
-            handler(authorizedParty, pagination, emptyList(), GrantPartyFilters())
+            handler(authorizedAgent, pagination, emptyList(), GrantAgentFilters())
         } shouldBeSameInstanceAs error
     }
 })

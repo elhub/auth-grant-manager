@@ -16,14 +16,14 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
-import no.elhub.auth.common.auth.AuthorizationParty
-import no.elhub.auth.common.auth.PartyType
 import no.elhub.auth.common.config.jsonApiContentType
 import no.elhub.auth.v0.setupAppWith
 import no.elhub.auth.v1.V1_GRANTS_PATH
 import no.elhub.auth.v1.api.common.GrantResourceType
 import no.elhub.auth.v1.api.common.response.GrantSourceTypeResponse
 import no.elhub.auth.v1.api.grants.response.JsonApiGetAuthorizationGrantResponse
+import no.elhub.auth.v1.common.auth.AgentType
+import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.domain.AuthorizationGrant
 import no.elhub.auth.v1.domain.AuthorizationGrantSourceType
 import no.elhub.auth.v1.domain.AuthorizationGrantStatus
@@ -37,9 +37,9 @@ import kotlin.time.Instant
 
 class GetGrantRouteTest : FunSpec({
     val handler = mockk<GetGrantHandler>()
-    val authorizedParty = AuthorizationParty("123456789", PartyType.OrganizationEntity)
-    val principal = AuthorizationParty("999888771", PartyType.OrganizationEntity)
-    val grantedBy = AuthorizationParty("person-1", PartyType.Person)
+    val authorizedAgent = AuthorizationAgent("123456789", AgentType.OrganizationEntity)
+    val principal = AuthorizationAgent("999888771", AgentType.OrganizationEntity)
+    val grantedBy = AuthorizationAgent("person-1", AgentType.Person)
     val sourceId = UUID.fromString("123e4567-e89b-12d3-a456-426614174000")
     val grant = AuthorizationGrant.new(
         type = AuthorizationGrantType.Consumable,
@@ -47,7 +47,7 @@ class GetGrantRouteTest : FunSpec({
         sourceId = sourceId,
         principal = principal,
         grantedBy = grantedBy,
-        grantedTo = authorizedParty,
+        grantedTo = authorizedAgent,
         approvedBy = grantedBy,
         validFrom = Instant.parse("2026-10-01T08:00:00Z"),
         validTo = Instant.parse("2100-01-01T00:00:00Z"),
@@ -58,10 +58,10 @@ class GetGrantRouteTest : FunSpec({
     beforeTest { clearMocks(handler) }
 
     test("GET /{id} returns the grant as JSON:API") {
-        coEvery { handler(grantId, authorizedParty) } returns grant
+        coEvery { handler(grantId, authorizedAgent) } returns grant
 
         testApplication {
-            setupAppWith(authorizedParty) {
+            setupAppWith(authorizedAgent) {
                 route(V1_GRANTS_PATH) { route(handler) }
             }
 
@@ -75,7 +75,7 @@ class GetGrantRouteTest : FunSpec({
             body.data.attributes.status shouldBe AuthorizationGrantStatus.Active
             body.data.relationships.principal.data.id shouldBe principal.id
             body.data.relationships.grantedBy.data.id shouldBe grantedBy.id
-            body.data.relationships.grantedTo.data.id shouldBe authorizedParty.id
+            body.data.relationships.grantedTo.data.id shouldBe authorizedAgent.id
             body.data.relationships.approvedBy.data.id shouldBe grantedBy.id
             body.data.relationships.source.data.type shouldBe GrantSourceTypeResponse.AuthorizationDocument
             body.data.relationships.source.data.id shouldBe sourceId.toString()
@@ -88,10 +88,10 @@ class GetGrantRouteTest : FunSpec({
             status = AuthorizationGrantStatus.Pending,
             validFrom = Instant.parse("2099-01-01T00:00:00Z"),
         )
-        coEvery { handler(grantId, authorizedParty) } returns pending
+        coEvery { handler(grantId, authorizedAgent) } returns pending
 
         testApplication {
-            setupAppWith(authorizedParty) {
+            setupAppWith(authorizedAgent) {
                 route(V1_GRANTS_PATH) { route(handler) }
             }
 
@@ -105,10 +105,10 @@ class GetGrantRouteTest : FunSpec({
     }
 
     test("GET /{id} omits validTo for a grant without an end date") {
-        coEvery { handler(grantId, authorizedParty) } returns grant.copy(type = AuthorizationGrantType.Persistent, validTo = null)
+        coEvery { handler(grantId, authorizedAgent) } returns grant.copy(type = AuthorizationGrantType.Persistent, validTo = null)
 
         testApplication {
-            setupAppWith(authorizedParty) {
+            setupAppWith(authorizedAgent) {
                 route(V1_GRANTS_PATH) { route(handler) }
             }
 
@@ -127,10 +127,10 @@ class GetGrantRouteTest : FunSpec({
         RepositoryReadError.NotFoundError("Missing grant") to HttpStatusCode.NotFound,
     ).forEach { (error, status) ->
         test("GET /{id} returns ${status.value} for ${error.javaClass.simpleName}") {
-            coEvery { handler(grantId, authorizedParty) } throws error
+            coEvery { handler(grantId, authorizedAgent) } throws error
 
             testApplication {
-                setupAppWith(authorizedParty) {
+                setupAppWith(authorizedAgent) {
                     route(V1_GRANTS_PATH) { route(handler) }
                 }
 
@@ -146,7 +146,7 @@ class GetGrantRouteTest : FunSpec({
 
     test("GET /{id} returns 400 for an invalid grant ID") {
         testApplication {
-            setupAppWith(authorizedParty) {
+            setupAppWith(authorizedAgent) {
                 route(V1_GRANTS_PATH) { route(handler) }
             }
 

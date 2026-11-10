@@ -1,6 +1,6 @@
 package no.elhub.auth.v1.features.requests
 
-import no.elhub.auth.common.auth.AuthorizationParty
+import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.domain.AuthorizationRequest
 import no.elhub.auth.v1.repositories.RequestRepository
 import java.util.UUID
@@ -10,11 +10,11 @@ class GetRequestHandler(
 ) {
     suspend operator fun invoke(
         id: UUID,
-        authorizedParty: AuthorizationParty,
+        authorizedAgent: AuthorizationAgent,
     ): AuthorizationRequest {
         val request = requestRepository.find(id)
 
-        if (authorizedParty != request.requestedBy && authorizedParty != request.requestedOf) {
+        if (authorizedAgent != request.requestedBy && authorizedAgent != request.requestedOf) {
             throw GetRequestError.NotAuthorized()
         }
 

@@ -8,8 +8,6 @@ import kotlinx.datetime.LocalDate
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
-import no.elhub.auth.common.auth.AuthorizationParty
-import no.elhub.auth.common.auth.PartyType
 import no.elhub.auth.common.documents.pdf.AuthorizationDocumentPdfContent
 import no.elhub.auth.common.documents.pdf.PdfLanguage
 import no.elhub.auth.v0.features.businessprocesses.common.JwtTokenProvider
@@ -33,6 +31,8 @@ import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.O
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.VALID_PARTY_ID
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.VALID_PARTY_NAME
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.organisationsServiceHttpClient
+import no.elhub.auth.v1.common.auth.AgentType
+import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.domain.DocumentLanguage
 import no.elhub.auth.v1.domain.MeteringPointId
 import no.elhub.auth.v1.domain.ResourceConstraint
@@ -45,9 +45,9 @@ class MoveInAndChangeOfEnergySupplierDocumentHandlerTest : FunSpec({
     extensions(OrganisationsServiceTestContainerExtension, MeteringPointsServiceTestContainerExtension)
 
     val context = DocumentCreationContext(
-        requestedBy = AuthorizationParty(VALID_PARTY_ID, PartyType.OrganizationEntity),
-        requestedPrincipal = AuthorizationParty(VALID_ORGANISATION_NUMBER, PartyType.Organization),
-        requestedOf = AuthorizationParty("person-1", PartyType.Person),
+        requestedBy = AuthorizationAgent(VALID_PARTY_ID, AgentType.OrganizationEntity),
+        requestedPrincipal = AuthorizationAgent(VALID_ORGANISATION_NUMBER, AgentType.Organization),
+        requestedOf = AuthorizationAgent("person-1", AgentType.Person),
         language = DocumentLanguage.EN,
         externalReference = "reference-1",
     )
@@ -158,7 +158,7 @@ class MoveInAndChangeOfEnergySupplierDocumentHandlerTest : FunSpec({
             handler.prepare(
                 specification(),
                 context.copy(
-                    requestedPrincipal = AuthorizationParty(NON_EXISTING_ORGANISATION_NUMBER, PartyType.Organization),
+                    requestedPrincipal = AuthorizationAgent(NON_EXISTING_ORGANISATION_NUMBER, AgentType.Organization),
                 ),
             )
         }
@@ -166,12 +166,12 @@ class MoveInAndChangeOfEnergySupplierDocumentHandlerTest : FunSpec({
         error.clientError shouldBe ClientError.NotFound
     }
 
-    test("preserves requested-by lookup failure when the party is not a balance supplier") {
+    test("preserves requested-by lookup failure when the agent is not a balance supplier") {
         val error = shouldThrow<DocumentPreparationError.RequestedByLookupFailure> {
             handler.prepare(
                 specification(),
                 context.copy(
-                    requestedBy = AuthorizationParty(NOT_BALANCE_SUPPLIER_PARTY_ID, PartyType.OrganizationEntity),
+                    requestedBy = AuthorizationAgent(NOT_BALANCE_SUPPLIER_PARTY_ID, AgentType.OrganizationEntity),
                 ),
             )
         }

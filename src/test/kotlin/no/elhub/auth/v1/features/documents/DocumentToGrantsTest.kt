@@ -5,8 +5,8 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.json.JsonObject
-import no.elhub.auth.common.auth.AuthorizationParty
-import no.elhub.auth.common.auth.PartyType
+import no.elhub.auth.v1.common.auth.AgentType
+import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.domain.AuthorizationDocument
 import no.elhub.auth.v1.domain.AuthorizationDocumentType
 import no.elhub.auth.v1.domain.AuthorizationGrantSourceType
@@ -32,10 +32,10 @@ class DocumentToGrantsTest : FunSpec({
         MeteringPointId.create("707057500000000002"),
         MeteringPointId.create("707057500000000003"),
     )
-    val requestedBy = AuthorizationParty("7080005053246", PartyType.OrganizationEntity)
-    val requestedPrincipal = AuthorizationParty("999888771", PartyType.Organization)
-    val requestedOf = AuthorizationParty(UUID.randomUUID().toString(), PartyType.Person)
-    val approvedBy = AuthorizationParty(UUID.randomUUID().toString(), PartyType.Person)
+    val requestedBy = AuthorizationAgent("7080005053246", AgentType.OrganizationEntity)
+    val requestedPrincipal = AuthorizationAgent("999888771", AgentType.Organization)
+    val requestedOf = AuthorizationAgent(UUID.randomUUID().toString(), AgentType.Person)
+    val approvedBy = AuthorizationAgent(UUID.randomUUID().toString(), AgentType.Person)
     val moveInDate = Instant.parse("2026-09-30T22:00:00Z")
 
     context("EnergySupplierFrameworkAgreement") {

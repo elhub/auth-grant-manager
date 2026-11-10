@@ -18,17 +18,16 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import no.elhub.auth.common.auth.AuthorizationParty
-import no.elhub.auth.common.auth.PartyType
 import no.elhub.auth.common.documents.pdf.PdfGenerator
 import no.elhub.auth.common.documents.pdf.PdfSigner
-import no.elhub.auth.v0.features.common.party.PartyIdentifier
-import no.elhub.auth.v0.features.common.party.PartyIdentifierType
-import no.elhub.auth.v0.features.common.party.PartyService
 import no.elhub.auth.v0.postJson
 import no.elhub.auth.v0.setupAppWith
+import no.elhub.auth.v1.api.common.toPartyIdentifier
 import no.elhub.auth.v1.api.documents.response.JsonApiGetAuthorizationDocumentResponse
 import no.elhub.auth.v1.common.AuthorizationRulesService
+import no.elhub.auth.v1.common.auth.AgentType
+import no.elhub.auth.v1.common.auth.AuthorizationAgent
+import no.elhub.auth.v1.domain.AgentExternalIdentifier
 import no.elhub.auth.v1.domain.AuthorizationDocument
 import no.elhub.auth.v1.domain.AuthorizationDocumentStatus
 import no.elhub.auth.v1.domain.AuthorizationDocumentType
@@ -51,9 +50,10 @@ import no.elhub.auth.v1.repositories.DocumentRepository
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import kotlin.time.Clock
 import kotlin.time.Instant
+import no.elhub.auth.v0.features.common.party.PartyService as AgentService
 
 class CreateDocumentRouteTest : FunSpec({
-    val authorizedParty = AuthorizationParty("123456789", PartyType.OrganizationEntity)
+    val authorizedAgent = AuthorizationAgent("123456789", AgentType.OrganizationEntity)
     val requestBody = """
         {
           "data": {
@@ -81,7 +81,7 @@ class CreateDocumentRouteTest : FunSpec({
     lateinit var handler: CreateDocumentHandler
     lateinit var pdfGenerator: PdfGenerator
     lateinit var pdfSigner: PdfSigner
-    lateinit var partyService: PartyService
+    lateinit var agentService: AgentService
 
     fun responseDocument() = AuthorizationDocument(
         id = "123e4567-e89b-12d3-a456-426614174000",
@@ -110,9 +110,9 @@ class CreateDocumentRouteTest : FunSpec({
         validTo = Clock.System.now(),
         createdAt = Clock.System.now(),
         updatedAt = Clock.System.now(),
-        requestedBy = authorizedParty,
-        requestedPrincipal = AuthorizationParty("999888771", PartyType.Organization),
-        requestedOf = AuthorizationParty("999888772", PartyType.Organization),
+        requestedBy = authorizedAgent,
+        requestedPrincipal = AuthorizationAgent("999888771", AgentType.Organization),
+        requestedOf = AuthorizationAgent("999888772", AgentType.Organization),
         approvedBy = null,
         authorizationGrants = null,
         pdfBytes = ByteArray(0),
@@ -122,21 +122,21 @@ class CreateDocumentRouteTest : FunSpec({
         handler = mockk()
         pdfGenerator = mockk()
         pdfSigner = mockk()
-        partyService = mockk()
+        agentService = mockk()
     }
 
     listOf("requestedBy", "requestedPrincipal", "requestedOf").forEach { role ->
         test("POST / returns an API-friendly error for an unsupported $role") {
-            val requestedBy = if (role == "requestedBy") authorizedParty.copy(type = PartyType.Person) else authorizedParty
-            val requestedPrincipal = AuthorizationParty(
+            val requestedBy = if (role == "requestedBy") authorizedAgent.copy(type = AgentType.Person) else authorizedAgent
+            val requestedPrincipal = AuthorizationAgent(
                 "999888771",
-                if (role == "requestedPrincipal") PartyType.Person else PartyType.Organization,
+                if (role == "requestedPrincipal") AgentType.Person else AgentType.Organization,
             )
-            val requestedOf = AuthorizationParty(
+            val requestedOf = AuthorizationAgent(
                 "999888772",
-                if (role == "requestedOf") PartyType.Person else PartyType.Organization,
+                if (role == "requestedOf") AgentType.Person else AgentType.Organization,
             )
-            coEvery { partyService.resolve(any()) } returnsMany listOf(requestedPrincipal.right(), requestedOf.right())
+            coEvery { agentService.resolve(any()) } returnsMany listOf(requestedPrincipal.right(), requestedOf.right())
             val repository = mockk<DocumentRepository>()
             val creationHandler = CreateDocumentHandler(
                 mockk(),
@@ -150,7 +150,7 @@ class CreateDocumentRouteTest : FunSpec({
 
             testApplication {
                 setupAppWith(requestedBy) {
-                    route(partyService, creationHandler)
+                    route(agentService, creationHandler)
                 }
 
                 val response = client.postJson("/", requestBody)
@@ -178,7 +178,7 @@ class CreateDocumentRouteTest : FunSpec({
         }
     }
 
-    test("POST / returns 201 and passes the authorized party to the handler") {
+    test("POST / returns 201 and passes the authorized agent to the handler") {
         val document = responseDocument().copy(
             meta = Json.parseToJsonElement(
                 """{"meteringPointId":"707057500000000001","nested":{"values":[null,false,1.5,"text"]},"placeholder":true}""",
@@ -187,14 +187,14 @@ class CreateDocumentRouteTest : FunSpec({
         coEvery {
             handler.createAuthorizationDocument(any(), any(), any(), any(), any(), any())
         } returns document
-        coEvery { partyService.resolve(any()) } returnsMany listOf(
-            AuthorizationParty("999888771", PartyType.Organization).right(),
-            AuthorizationParty("999888772", PartyType.Organization).right(),
+        coEvery { agentService.resolve(any()) } returnsMany listOf(
+            AuthorizationAgent("999888771", AgentType.Organization).right(),
+            AuthorizationAgent("999888772", AgentType.Organization).right(),
         )
 
         testApplication {
-            setupAppWith(authorizedParty) {
-                route(partyService, handler)
+            setupAppWith(authorizedAgent) {
+                route(agentService, handler)
             }
 
             val response = client.postJson("/", requestBody)
@@ -208,7 +208,7 @@ class CreateDocumentRouteTest : FunSpec({
             body.data.attributes.status.name shouldBe "Pending"
             body.data.attributes.validFrom shouldBe Instant.parse("2026-10-01T08:00:00Z")
             body.data.attributes.updatedAt shouldBe Instant.fromEpochSeconds(document.updatedAt.epochSeconds)
-            body.data.relationships.requestedBy.data.id shouldBe authorizedParty.id
+            body.data.relationships.requestedBy.data.id shouldBe authorizedAgent.id
             body.data.relationships.requestedPrincipal.data.id shouldBe "999888771"
             body.data.relationships.requestedOf.data.id shouldBe "999888772"
             val returnedScope = body.data.attributes.requestedScopes.single()
@@ -218,10 +218,10 @@ class CreateDocumentRouteTest : FunSpec({
             returnedScope.allowedChanges.single().attribute shouldBe "type"
             returnedScope.allowedChanges.single().value shouldBe listOf("EnergySupplier")
             coVerify(exactly = 1) {
-                partyService.resolve(PartyIdentifier(PartyIdentifierType.OrganizationNumber, "999888771"))
+                agentService.resolve(AgentExternalIdentifier.create("999888771").toPartyIdentifier())
             }
             coVerify(exactly = 1) {
-                partyService.resolve(PartyIdentifier(PartyIdentifierType.OrganizationNumber, "999888772"))
+                agentService.resolve(AgentExternalIdentifier.create("999888772").toPartyIdentifier())
             }
             coVerify(exactly = 1) {
                 handler.createAuthorizationDocument(
@@ -229,9 +229,9 @@ class CreateDocumentRouteTest : FunSpec({
                         it.documentType == AuthorizationDocumentType.ChangeOfEnergySupplierForOrganization
                     },
                     externalReference = "contract-123",
-                    requestedBy = authorizedParty,
-                    requestedPrincipal = AuthorizationParty("999888771", PartyType.Organization),
-                    requestedOf = AuthorizationParty("999888772", PartyType.Organization),
+                    requestedBy = authorizedAgent,
+                    requestedPrincipal = AuthorizationAgent("999888771", AgentType.Organization),
+                    requestedOf = AuthorizationAgent("999888772", AgentType.Organization),
                     language = DocumentLanguage.NB,
                 )
             }
@@ -251,9 +251,9 @@ class CreateDocumentRouteTest : FunSpec({
         coEvery {
             handler.createAuthorizationDocument(any(), any(), any(), any(), any(), any())
         } returns document
-        coEvery { partyService.resolve(any()) } returnsMany listOf(
-            AuthorizationParty("999888771", PartyType.Organization).right(),
-            AuthorizationParty("999888772", PartyType.Organization).right(),
+        coEvery { agentService.resolve(any()) } returnsMany listOf(
+            AuthorizationAgent("999888771", AgentType.Organization).right(),
+            AuthorizationAgent("999888772", AgentType.Organization).right(),
         )
         val frameworkRequest = """
             {
@@ -275,8 +275,8 @@ class CreateDocumentRouteTest : FunSpec({
         """.trimIndent()
 
         testApplication {
-            setupAppWith(authorizedParty) {
-                route(partyService, handler)
+            setupAppWith(authorizedAgent) {
+                route(agentService, handler)
             }
 
             val response = client.postJson("/", frameworkRequest)
@@ -298,9 +298,9 @@ class CreateDocumentRouteTest : FunSpec({
                 handler.createAuthorizationDocument(
                     specification = specification,
                     externalReference = "contract-123",
-                    requestedBy = authorizedParty,
-                    requestedPrincipal = AuthorizationParty("999888771", PartyType.Organization),
-                    requestedOf = AuthorizationParty("999888772", PartyType.Organization),
+                    requestedBy = authorizedAgent,
+                    requestedPrincipal = AuthorizationAgent("999888771", AgentType.Organization),
+                    requestedOf = AuthorizationAgent("999888772", AgentType.Organization),
                     language = DocumentLanguage.NB,
                 )
             }
@@ -311,14 +311,14 @@ class CreateDocumentRouteTest : FunSpec({
         coEvery {
             handler.createAuthorizationDocument(any(), any(), any(), any(), any(), any())
         } returns responseDocument()
-        coEvery { partyService.resolve(any()) } returnsMany listOf(
-            AuthorizationParty("999888771", PartyType.Organization).right(),
-            AuthorizationParty("999888772", PartyType.Organization).right(),
+        coEvery { agentService.resolve(any()) } returnsMany listOf(
+            AuthorizationAgent("999888771", AgentType.Organization).right(),
+            AuthorizationAgent("999888772", AgentType.Organization).right(),
         )
 
         testApplication {
-            setupAppWith(authorizedParty) {
-                route(partyService, handler)
+            setupAppWith(authorizedAgent) {
+                route(agentService, handler)
             }
 
             val response = client.postJson("/", requestBody.replace(Regex(",\\s*\"language\": \"nb\""), ""))
@@ -330,9 +330,9 @@ class CreateDocumentRouteTest : FunSpec({
                 handler.createAuthorizationDocument(
                     specification = any(),
                     externalReference = "contract-123",
-                    requestedBy = authorizedParty,
-                    requestedPrincipal = AuthorizationParty("999888771", PartyType.Organization),
-                    requestedOf = AuthorizationParty("999888772", PartyType.Organization),
+                    requestedBy = authorizedAgent,
+                    requestedPrincipal = AuthorizationAgent("999888771", AgentType.Organization),
+                    requestedOf = AuthorizationAgent("999888772", AgentType.Organization),
                     language = DocumentLanguage.NB,
                 )
             }
@@ -343,9 +343,9 @@ class CreateDocumentRouteTest : FunSpec({
         coEvery {
             handler.createAuthorizationDocument(any(), any(), any(), any(), any(), any())
         } returns responseDocument()
-        coEvery { partyService.resolve(any()) } returnsMany listOf(
-            AuthorizationParty("999888771", PartyType.Organization).right(),
-            AuthorizationParty("999888772", PartyType.Organization).right(),
+        coEvery { agentService.resolve(any()) } returnsMany listOf(
+            AuthorizationAgent("999888771", AgentType.Organization).right(),
+            AuthorizationAgent("999888772", AgentType.Organization).right(),
         )
 
         val requestedScope = """
@@ -372,8 +372,8 @@ class CreateDocumentRouteTest : FunSpec({
         )
 
         testApplication {
-            setupAppWith(authorizedParty) {
-                route(partyService, handler)
+            setupAppWith(authorizedAgent) {
+                route(agentService, handler)
             }
 
             val response = client.postJson("/", moveInRequest)
@@ -383,9 +383,9 @@ class CreateDocumentRouteTest : FunSpec({
                 handler.createAuthorizationDocument(
                     specification = expectedSpecification,
                     externalReference = "contract-123",
-                    requestedBy = authorizedParty,
-                    requestedPrincipal = AuthorizationParty("999888771", PartyType.Organization),
-                    requestedOf = AuthorizationParty("999888772", PartyType.Organization),
+                    requestedBy = authorizedAgent,
+                    requestedPrincipal = AuthorizationAgent("999888771", AgentType.Organization),
+                    requestedOf = AuthorizationAgent("999888772", AgentType.Organization),
                     language = DocumentLanguage.NB,
                 )
             }
@@ -426,9 +426,9 @@ class CreateDocumentRouteTest : FunSpec({
         val document = service.createAuthorizationDocument(
             specification = specification,
             externalReference = "ref",
-            requestedBy = authorizedParty,
-            requestedPrincipal = AuthorizationParty("org-1", PartyType.Organization),
-            requestedOf = AuthorizationParty("org-2", PartyType.Organization),
+            requestedBy = authorizedAgent,
+            requestedPrincipal = AuthorizationAgent("org-1", AgentType.Organization),
+            requestedOf = AuthorizationAgent("org-2", AgentType.Organization),
             language = DocumentLanguage.NB,
         )
 
@@ -437,9 +437,9 @@ class CreateDocumentRouteTest : FunSpec({
             documentType shouldBe specification.documentType
             requestedScopes shouldBe listOf(specification.toRequestedAuthorizationScope())
             externalReference shouldBe "ref"
-            requestedBy shouldBe authorizedParty
-            requestedPrincipal shouldBe AuthorizationParty("org-1", PartyType.Organization)
-            requestedOf shouldBe AuthorizationParty("org-2", PartyType.Organization)
+            requestedBy shouldBe authorizedAgent
+            requestedPrincipal shouldBe AuthorizationAgent("org-1", AgentType.Organization)
+            requestedOf shouldBe AuthorizationAgent("org-2", AgentType.Organization)
             status shouldBe AuthorizationDocumentStatus.Pending
             this.validTo shouldBe validTo
             validFrom shouldBe createdAt
@@ -449,8 +449,8 @@ class CreateDocumentRouteTest : FunSpec({
         coVerify(exactly = 1) { documentRepository.insert(any()) }
         coVerify(exactly = 1) {
             rulesService.canActOnBehalfOf(
-                AuthorizationParty("org-2", PartyType.Organization),
-                AuthorizationParty("org-1", PartyType.Organization),
+                AuthorizationAgent("org-2", AgentType.Organization),
+                AuthorizationAgent("org-1", AgentType.Organization),
             )
         }
         coVerify(exactly = 0) { moveInHandler.prepare(any(), any()) }
@@ -481,9 +481,9 @@ class CreateDocumentRouteTest : FunSpec({
             service.createAuthorizationDocument(
                 specification = specification,
                 externalReference = "ref",
-                requestedBy = authorizedParty,
-                requestedPrincipal = AuthorizationParty("org-1", PartyType.Organization),
-                requestedOf = AuthorizationParty("org-2", PartyType.Organization),
+                requestedBy = authorizedAgent,
+                requestedPrincipal = AuthorizationAgent("org-1", AgentType.Organization),
+                requestedOf = AuthorizationAgent("org-2", AgentType.Organization),
                 language = DocumentLanguage.NB,
             )
         }
@@ -492,8 +492,8 @@ class CreateDocumentRouteTest : FunSpec({
 
     test("POST / returns 409 when the resource type is wrong") {
         testApplication {
-            setupAppWith(authorizedParty) {
-                route(partyService, handler)
+            setupAppWith(authorizedAgent) {
+                route(agentService, handler)
             }
 
             val response = client.postJson("/", requestBody.replace("AuthorizationDocument", "OtherResource"))
@@ -509,8 +509,8 @@ class CreateDocumentRouteTest : FunSpec({
 
     test("POST / returns a field-specific 400 when the request cannot be deserialized") {
         testApplication {
-            setupAppWith(authorizedParty) {
-                route(partyService, handler)
+            setupAppWith(authorizedAgent) {
+                route(agentService, handler)
             }
 
             val response = client.postJson("/", "{ \"data\": { \"type\": \"AuthorizationDocument\" } }")
@@ -527,8 +527,8 @@ class CreateDocumentRouteTest : FunSpec({
 
     test("POST / rejects validFrom changes that are unsupported for change of supplier") {
         testApplication {
-            setupAppWith(authorizedParty) {
-                route(partyService, handler)
+            setupAppWith(authorizedAgent) {
+                route(agentService, handler)
             }
 
             val requestedScope = """
@@ -553,15 +553,15 @@ class CreateDocumentRouteTest : FunSpec({
             val body: JsonApiErrorCollection = response.body()
             body.errors.single().detail shouldBe
                 "requestedScopes[0].allowedChanges is not supported for ChangeOfEnergySupplierForOrganization"
-            coVerify(exactly = 0) { partyService.resolve(any()) }
+            coVerify(exactly = 0) { agentService.resolve(any()) }
             coVerify(exactly = 0) { handler.createAuthorizationDocument(any(), any(), any(), any(), any(), any()) }
         }
     }
 
     test("POST / returns 422 when move-in validFrom contains multiple dates") {
         testApplication {
-            setupAppWith(authorizedParty) {
-                route(partyService, handler)
+            setupAppWith(authorizedAgent) {
+                route(agentService, handler)
             }
 
             val requestedScope = """
@@ -588,7 +588,7 @@ class CreateDocumentRouteTest : FunSpec({
             val body: JsonApiErrorCollection = response.body()
             body.errors.single().detail shouldBe
                 "requestedScopes[0].allowedChanges validFrom must contain exactly one date"
-            coVerify(exactly = 0) { partyService.resolve(any()) }
+            coVerify(exactly = 0) { agentService.resolve(any()) }
             coVerify(exactly = 0) {
                 handler.createAuthorizationDocument(any(), any(), any(), any(), any(), any())
             }
@@ -597,8 +597,8 @@ class CreateDocumentRouteTest : FunSpec({
 
     test("POST / returns 422 when move-in explicitly supplies an allowed type change") {
         testApplication {
-            setupAppWith(authorizedParty) {
-                route(partyService, handler)
+            setupAppWith(authorizedAgent) {
+                route(agentService, handler)
             }
 
             val requestedScope = """
@@ -630,8 +630,8 @@ class CreateDocumentRouteTest : FunSpec({
 
     test("POST / returns 422 when a metering-point ID has an invalid format") {
         testApplication {
-            setupAppWith(authorizedParty) {
-                route(partyService, handler)
+            setupAppWith(authorizedAgent) {
+                route(agentService, handler)
             }
 
             val response = client.postJson(
@@ -643,7 +643,7 @@ class CreateDocumentRouteTest : FunSpec({
             val body: JsonApiErrorCollection = response.body()
             body.errors.single().detail shouldBe
                 "requestedScopes[0].appliesTo meteringPoint.id values must be valid 18-digit metering-point IDs"
-            coVerify(exactly = 0) { partyService.resolve(any()) }
+            coVerify(exactly = 0) { agentService.resolve(any()) }
             coVerify(exactly = 0) {
                 handler.createAuthorizationDocument(any(), any(), any(), any(), any(), any())
             }
@@ -652,8 +652,8 @@ class CreateDocumentRouteTest : FunSpec({
 
     test("POST / returns 422 when requested scope has an unsupported resource type") {
         testApplication {
-            setupAppWith(authorizedParty) {
-                route(partyService, handler)
+            setupAppWith(authorizedAgent) {
+                route(agentService, handler)
             }
 
             val response = client.postJson(
@@ -665,7 +665,7 @@ class CreateDocumentRouteTest : FunSpec({
             val body: JsonApiErrorCollection = response.body()
             body.errors.single().detail shouldBe
                 "requestedScopes[0].resourceType must be 'MeteringPointContract'"
-            coVerify(exactly = 0) { partyService.resolve(any()) }
+            coVerify(exactly = 0) { agentService.resolve(any()) }
             coVerify(exactly = 0) { handler.createAuthorizationDocument(any(), any(), any(), any(), any(), any()) }
         }
     }

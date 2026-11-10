@@ -3,14 +3,14 @@ package no.elhub.auth.v1.api.grants.response
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.ktor.http.Url
-import no.elhub.auth.common.auth.AuthorizationParty
-import no.elhub.auth.common.auth.PartyType
 import no.elhub.auth.v0.features.common.Page
 import no.elhub.auth.v0.features.common.Pagination
 import no.elhub.auth.v1.V1_GRANTS_PATH
+import no.elhub.auth.v1.common.auth.AgentType
+import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.domain.AuthorizationGrant
 import no.elhub.auth.v1.domain.AuthorizationGrantStatus
-import no.elhub.auth.v1.domain.GrantPartyFilters
+import no.elhub.auth.v1.domain.GrantAgentFilters
 
 class ListAuthorizationGrantsResponseTest : FunSpec({
     test("preserves status filters in all pagination links") {
@@ -24,11 +24,11 @@ class ListAuthorizationGrantsResponseTest : FunSpec({
             }
     }
 
-    test("preserves all party filters and statuses in every pagination link") {
-        val person = AuthorizationParty("abcdef12-3456-7890-abcd-ef1234567890", PartyType.Person)
-        val organization = AuthorizationParty("999888771", PartyType.Organization)
-        val entity = AuthorizationParty("7070575000001", PartyType.OrganizationEntity)
-        val partyFilters = GrantPartyFilters(
+    test("preserves all agent filters and statuses in every pagination link") {
+        val person = AuthorizationAgent("abcdef12-3456-7890-abcd-ef1234567890", AgentType.Person)
+        val organization = AuthorizationAgent("999888771", AgentType.Organization)
+        val entity = AuthorizationAgent("7070575000001", AgentType.OrganizationEntity)
+        val agentFilters = GrantAgentFilters(
             grantedBy = listOf(person, organization, entity),
             principal = listOf(organization, person),
             approvedBy = listOf(person, entity),
@@ -36,7 +36,7 @@ class ListAuthorizationGrantsResponseTest : FunSpec({
         )
         val response = Page<AuthorizationGrant>(emptyList(), 5, Pagination(page = 1, size = 2)).toGetCollectionResponse(
             listOf(AuthorizationGrantStatus.Active, AuthorizationGrantStatus.Expired),
-            partyFilters,
+            agentFilters,
         )
 
         listOf(response.links.self, response.links.first, response.links.last, response.links.prev, response.links.next)
@@ -50,7 +50,7 @@ class ListAuthorizationGrantsResponseTest : FunSpec({
             }
     }
 
-    test("omits status and party filters from links when no filters are selected") {
+    test("omits status and agent filters from links when no filters are selected") {
         val response = Page<AuthorizationGrant>(emptyList(), 0, Pagination()).toGetCollectionResponse()
 
         response.links.self shouldBe "$V1_GRANTS_PATH?page[number]=0&page[size]=100"

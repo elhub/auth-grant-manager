@@ -1,10 +1,10 @@
 package no.elhub.auth.v1.features.documents
 
-import no.elhub.auth.common.auth.AuthorizationParty
 import no.elhub.auth.common.documents.pdf.PdfGenerator
 import no.elhub.auth.common.documents.pdf.PdfSigner
 import no.elhub.auth.v1.api.common.errors.InputError
 import no.elhub.auth.v1.common.AuthorizationRulesService
+import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.domain.AuthorizationDocument
 import no.elhub.auth.v1.domain.DocumentLanguage
 import no.elhub.auth.v1.domain.documents.DocumentSpecification
@@ -27,9 +27,9 @@ class CreateDocumentHandler(
     suspend fun createAuthorizationDocument(
         specification: DocumentSpecification,
         externalReference: String?,
-        requestedBy: AuthorizationParty,
-        requestedPrincipal: AuthorizationParty,
-        requestedOf: AuthorizationParty,
+        requestedBy: AuthorizationAgent,
+        requestedPrincipal: AuthorizationAgent,
+        requestedOf: AuthorizationAgent,
         language: DocumentLanguage,
     ): AuthorizationDocument {
         validateDocumentCreationAgents(
@@ -72,8 +72,8 @@ class CreateDocumentHandler(
     }
 
     private suspend fun validateActOnBehalfOf(
-        requestedOf: AuthorizationParty,
-        requestedPrincipal: AuthorizationParty,
+        requestedOf: AuthorizationAgent,
+        requestedPrincipal: AuthorizationAgent,
     ) {
         if (!authorizationRulesService.canActOnBehalfOf(requestedOf, requestedPrincipal)) {
             throw InputError.RequestedOfRequestedPrincipalMismatch()

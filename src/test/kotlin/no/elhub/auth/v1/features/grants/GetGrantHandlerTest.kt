@@ -7,8 +7,8 @@ import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.mockk
-import no.elhub.auth.common.auth.AuthorizationParty
-import no.elhub.auth.common.auth.PartyType
+import no.elhub.auth.v1.common.auth.AgentType
+import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.domain.AuthorizationGrant
 import no.elhub.auth.v1.domain.AuthorizationGrantSourceType
 import no.elhub.auth.v1.domain.AuthorizationGrantType
@@ -20,10 +20,10 @@ import kotlin.time.Instant
 class GetGrantHandlerTest : FunSpec({
     val grantRepository = mockk<GrantRepository>()
     val handler = GetGrantHandler(grantRepository)
-    val principal = AuthorizationParty("999888771", PartyType.OrganizationEntity)
-    val grantedBy = AuthorizationParty("person-1", PartyType.Person)
-    val grantedTo = AuthorizationParty("123456789", PartyType.OrganizationEntity)
-    val system = AuthorizationParty("system-1", PartyType.System)
+    val principal = AuthorizationAgent("999888771", AgentType.OrganizationEntity)
+    val grantedBy = AuthorizationAgent("person-1", AgentType.Person)
+    val grantedTo = AuthorizationAgent("123456789", AgentType.OrganizationEntity)
+    val system = AuthorizationAgent("system-1", AgentType.System)
     val grant = AuthorizationGrant.new(
         type = AuthorizationGrantType.Consumable,
         sourceType = AuthorizationGrantSourceType.Document,
@@ -40,22 +40,22 @@ class GetGrantHandlerTest : FunSpec({
 
     beforeTest { clearMocks(grantRepository) }
 
-    listOf(grantedTo, principal, grantedBy, system).forEach { party ->
-        test("returns the grant for ${party.type} ${party.id}") {
+    listOf(grantedTo, principal, grantedBy, system).forEach { agent ->
+        test("returns the grant for ${agent.type} ${agent.id}") {
             coEvery { grantRepository.find(grantId) } returns grant
 
-            handler(grantId, party) shouldBe grant
+            handler(grantId, agent) shouldBe grant
         }
     }
 
     listOf(
-        AuthorizationParty("unrelated-org", PartyType.OrganizationEntity),
-        grantedTo.copy(type = PartyType.Person),
-    ).forEach { party ->
-        test("denies access for ${party.type} ${party.id}") {
+        AuthorizationAgent("unrelated-org", AgentType.OrganizationEntity),
+        grantedTo.copy(type = AgentType.Person),
+    ).forEach { agent ->
+        test("denies access for ${agent.type} ${agent.id}") {
             coEvery { grantRepository.find(grantId) } returns grant
 
-            shouldThrow<GetGrantError.NotAuthorized> { handler(grantId, party) }
+            shouldThrow<GetGrantError.NotAuthorized> { handler(grantId, agent) }
         }
     }
 

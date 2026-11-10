@@ -16,17 +16,17 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.serialization.json.Json
-import no.elhub.auth.common.auth.AuthorizationParty
-import no.elhub.auth.common.auth.PartyType
 import no.elhub.auth.common.config.jsonApiContentType
 import no.elhub.auth.v0.setupAppWith
 import no.elhub.auth.v1.V1_DOCUMENTS_PATH
+import no.elhub.auth.v1.common.auth.AgentType
+import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.features.documents.ConfirmDocumentHandler
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import java.util.UUID
 
 class ConfirmDocumentRouteTest : FunSpec({
-    val authorizedParty = AuthorizationParty("123456789", PartyType.OrganizationEntity)
+    val authorizedAgent = AuthorizationAgent("123456789", AgentType.OrganizationEntity)
     val documentId = "123e4567-e89b-12d3-a456-426614174000"
     val pdfMaxBytes = 1024 * 1024
     val handler = mockk<ConfirmDocumentHandler>()
@@ -75,7 +75,7 @@ class ConfirmDocumentRouteTest : FunSpec({
         test("PUT /{id}.pdf returns ${case.expectedStatus.value} for ${case.description}") {
             coEvery { handler(any(), any(), any()) } returns mockk()
             testApplication {
-                setupAppWith(authorizedParty) {
+                setupAppWith(authorizedAgent) {
                     route(V1_DOCUMENTS_PATH) { route(handler) }
                 }
                 val pdfClient = createClient {}
@@ -90,7 +90,7 @@ class ConfirmDocumentRouteTest : FunSpec({
                 if (case.expectedStatus == HttpStatusCode.NoContent) {
                     response.bodyAsText() shouldBe ""
                     coVerify(exactly = 1) {
-                        handler(UUID.fromString(documentId), authorizedParty, match { it.contentEquals(case.bytes) })
+                        handler(UUID.fromString(documentId), authorizedAgent, match { it.contentEquals(case.bytes) })
                     }
                 } else {
                     response.contentType()?.withoutParameters() shouldBe jsonApiContentType

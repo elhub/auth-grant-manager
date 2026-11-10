@@ -20,8 +20,8 @@ import no.elhub.auth.common.documents.pdf.PdfSignatureValidator
 import no.elhub.auth.common.documents.pdf.PdfSigner
 import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsService
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsService
-import no.elhub.auth.v0.features.common.party.PartyService
 import no.elhub.auth.v1.common.AuthorizationRulesService
+import no.elhub.auth.v0.features.common.party.PartyService as AgentService
 
 class DocumentsModuleTest : FunSpec({
     test("does not register v1 routes when disabled") {
@@ -54,7 +54,7 @@ class DocumentsModuleTest : FunSpec({
                         provide<PdfGenerator> { mockk<PdfGenerator>() }
                         provide<PdfSigner> { mockk<PdfSigner>() }
                         provide<PdfSignatureValidator> { mockk<PdfSignatureValidator>() }
-                        provide<PartyService> { mockk<PartyService>() }
+                        provide<AgentService> { mockk<AgentService>() }
                         provide<MeteringPointsService> { mockk<MeteringPointsService>() }
                         provide<OrganisationsService> { mockk<OrganisationsService>() }
                         provide<AuthorizationRulesService> { mockk<AuthorizationRulesService>() }
@@ -96,7 +96,7 @@ class DocumentsModuleTest : FunSpec({
                     provide<PdfGenerator> { mockk<PdfGenerator>() }
                     provide<PdfSigner> { mockk<PdfSigner>() }
                     provide<PdfSignatureValidator> { mockk<PdfSignatureValidator>() }
-                    provide<PartyService> { mockk<PartyService>() }
+                    provide<AgentService> { mockk<AgentService>() }
                     provide<MeteringPointsService> { mockk<MeteringPointsService>() }
                     provide<OrganisationsService> { mockk<OrganisationsService>() }
                     provide<AuthorizationRulesService> { mockk<AuthorizationRulesService>() }

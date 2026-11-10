@@ -3,14 +3,14 @@ package no.elhub.auth.v1.api.documents.response
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.json.JsonObject
-import no.elhub.auth.common.auth.AuthorizationParty
-import no.elhub.auth.common.auth.PartyType
+import no.elhub.auth.v1.common.auth.AgentType
+import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.domain.AuthorizationDocument
 import no.elhub.auth.v1.domain.AuthorizationDocumentType
 import kotlin.time.Instant
 
 class GetAuthorizationDocumentResponseTest : FunSpec({
-    val party = AuthorizationParty("123456789", PartyType.OrganizationEntity)
+    val agent = AuthorizationAgent("123456789", AgentType.OrganizationEntity)
 
     test("factory retains requested grant dates and response exposes them") {
         val validFrom = Instant.parse("2100-01-01T00:00:00Z")
@@ -21,9 +21,9 @@ class GetAuthorizationDocumentResponseTest : FunSpec({
             externalReference = null,
             meta = JsonObject(emptyMap()),
             validTo = validTo,
-            requestedBy = party,
-            requestedPrincipal = party,
-            requestedOf = party,
+            requestedBy = agent,
+            requestedPrincipal = agent,
+            requestedOf = agent,
             pdfBytes = byteArrayOf(),
             requestedGrantValidFrom = validFrom,
             requestedGrantValidTo = validTo,
@@ -44,9 +44,9 @@ class GetAuthorizationDocumentResponseTest : FunSpec({
             externalReference = null,
             meta = JsonObject(emptyMap()),
             validTo = Instant.parse("2100-01-01T00:00:00Z"),
-            requestedBy = party,
-            requestedPrincipal = party,
-            requestedOf = party,
+            requestedBy = agent,
+            requestedPrincipal = agent,
+            requestedOf = agent,
             pdfBytes = byteArrayOf(),
         )
 

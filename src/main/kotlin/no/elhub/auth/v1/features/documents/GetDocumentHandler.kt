@@ -1,6 +1,6 @@
 package no.elhub.auth.v1.features.documents
 
-import no.elhub.auth.common.auth.AuthorizationParty
+import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.domain.AuthorizationDocument
 import no.elhub.auth.v1.domain.AuthorizationGrantSourceType
 import no.elhub.auth.v1.repositories.DocumentRepository
@@ -13,11 +13,11 @@ class GetDocumentHandler(
 ) {
     suspend operator fun invoke(
         id: UUID,
-        authorizedParty: AuthorizationParty,
+        authorizedAgent: AuthorizationAgent,
     ): AuthorizationDocument {
         val document = documentRepository.find(id)
 
-        if (authorizedParty != document.requestedBy && authorizedParty != document.requestedOf) {
+        if (authorizedAgent != document.requestedBy && authorizedAgent != document.requestedOf) {
             throw GetDocumentError.NotAuthorized()
         }
 
