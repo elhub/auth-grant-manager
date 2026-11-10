@@ -20,14 +20,14 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import no.elhub.auth.common.documents.pdf.PdfGenerator
 import no.elhub.auth.common.documents.pdf.PdfSigner
-import no.elhub.auth.v0.features.common.party.PartyIdentifier
-import no.elhub.auth.v0.features.common.party.PartyIdentifierType
 import no.elhub.auth.v0.postJson
 import no.elhub.auth.v0.setupAppWith
+import no.elhub.auth.v1.api.common.toPartyIdentifier
 import no.elhub.auth.v1.api.documents.response.JsonApiGetAuthorizationDocumentResponse
 import no.elhub.auth.v1.common.AuthorizationRulesService
 import no.elhub.auth.v1.common.auth.AgentType
 import no.elhub.auth.v1.common.auth.AuthorizationAgent
+import no.elhub.auth.v1.domain.AgentExternalIdentifier
 import no.elhub.auth.v1.domain.AuthorizationDocument
 import no.elhub.auth.v1.domain.AuthorizationDocumentStatus
 import no.elhub.auth.v1.domain.AuthorizationDocumentType
@@ -218,10 +218,10 @@ class CreateDocumentRouteTest : FunSpec({
             returnedScope.allowedChanges.single().attribute shouldBe "type"
             returnedScope.allowedChanges.single().value shouldBe listOf("EnergySupplier")
             coVerify(exactly = 1) {
-                agentService.resolve(PartyIdentifier(PartyIdentifierType.OrganizationNumber, "999888771"))
+                agentService.resolve(AgentExternalIdentifier.create("999888771").toPartyIdentifier())
             }
             coVerify(exactly = 1) {
-                agentService.resolve(PartyIdentifier(PartyIdentifierType.OrganizationNumber, "999888772"))
+                agentService.resolve(AgentExternalIdentifier.create("999888772").toPartyIdentifier())
             }
             coVerify(exactly = 1) {
                 handler.createAuthorizationDocument(
@@ -449,8 +449,8 @@ class CreateDocumentRouteTest : FunSpec({
         coVerify(exactly = 1) { documentRepository.insert(any()) }
         coVerify(exactly = 1) {
             rulesService.canActOnBehalfOf(
-                AuthorizationParty("org-2", PartyType.Organization),
-                AuthorizationParty("org-1", PartyType.Organization),
+                AuthorizationAgent("org-2", AgentType.Organization),
+                AuthorizationAgent("org-1", AgentType.Organization),
             )
         }
         coVerify(exactly = 0) { moveInHandler.prepare(any(), any()) }
