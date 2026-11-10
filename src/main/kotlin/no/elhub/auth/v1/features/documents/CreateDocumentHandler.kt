@@ -3,6 +3,8 @@ package no.elhub.auth.v1.features.documents
 import no.elhub.auth.common.auth.AuthorizationParty
 import no.elhub.auth.common.documents.pdf.PdfGenerator
 import no.elhub.auth.common.documents.pdf.PdfSigner
+import no.elhub.auth.v1.api.common.errors.InputError
+import no.elhub.auth.v1.common.AuthorizationRulesService
 import no.elhub.auth.v1.domain.AuthorizationDocument
 import no.elhub.auth.v1.domain.DocumentLanguage
 import no.elhub.auth.v1.domain.documents.DocumentSpecification
@@ -20,6 +22,7 @@ class CreateDocumentHandler(
     private val pdfGenerator: PdfGenerator,
     private val pdfSigner: PdfSigner,
     private val documentRepository: DocumentRepository,
+    private val authorizationRulesService: AuthorizationRulesService,
 ) {
     suspend fun createAuthorizationDocument(
         specification: DocumentSpecification,
@@ -35,6 +38,7 @@ class CreateDocumentHandler(
             requestedPrincipal = requestedPrincipal,
             requestedOf = requestedOf,
         )
+        validateActOnBehalfOf(requestedOf, requestedPrincipal)
         val context = DocumentCreationContext(
             requestedBy = requestedBy,
             requestedPrincipal = requestedPrincipal,
@@ -65,5 +69,14 @@ class CreateDocumentHandler(
             pdfBytes = pdfBytes,
         )
         return documentRepository.insert(document)
+    }
+
+    private suspend fun validateActOnBehalfOf(
+        requestedOf: AuthorizationParty,
+        requestedPrincipal: AuthorizationParty,
+    ) {
+        if (!authorizationRulesService.canActOnBehalfOf(requestedOf, requestedPrincipal)) {
+            throw InputError.RequestedOfRequestedPrincipalMismatch()
+        }
     }
 }

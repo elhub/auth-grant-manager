@@ -32,6 +32,7 @@ import no.elhub.auth.v1.features.requests.GetRequestError
 import no.elhub.auth.v1.features.requests.UpdateRequestError
 import no.elhub.auth.v1.features.requests.creation.RequestCreationAgentError
 import no.elhub.auth.v1.features.requests.creation.RequestPreparationError
+import no.elhub.auth.v1.integrations.pdp.PdpAuthorizationException
 import no.elhub.auth.v1.repositories.RepositoryReadError
 import no.elhub.auth.v1.repositories.RepositoryWriteError
 import org.slf4j.LoggerFactory
@@ -72,6 +73,11 @@ fun Application.configureErrorHandling() {
         }
         exception<InvalidDocumentScopes> { call, cause ->
             logger.error("Invalid authorization document scopes", cause)
+            val (status, body) = toInternalServerApiErrorResponse()
+            call.respondText(Json.encodeToString(body), jsonApiContentType, status)
+        }
+        exception<PdpAuthorizationException> { call, cause ->
+            logger.error("PDP authorization check failed", cause)
             val (status, body) = toInternalServerApiErrorResponse()
             call.respondText(Json.encodeToString(body), jsonApiContentType, status)
         }

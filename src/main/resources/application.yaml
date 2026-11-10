@@ -5,6 +5,7 @@ ktor:
       - no.elhub.auth.v0.features.common.CommonModuleKt.commonModule
       - no.elhub.auth.v0.features.featuretoggles.ModuleKt.unleashModule
       - no.elhub.auth.v0.features.common.CommonModuleKt.personServiceModule
+      - no.elhub.auth.v1.integrations.pdp.AuthorizationRulesServiceModuleKt.authorizationRulesServiceModule
       - no.elhub.auth.v0.features.businessprocesses.datasharing.StromprisServiceModuleKt.stromprisServiceModule
       - no.elhub.auth.v0.features.businessprocesses.ediel.EdielServiceModuleKt.edielServiceModule
       - no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceModuleKt.meteringPointsServiceModule
@@ -49,6 +50,9 @@ pdfSigner:
 
 pdp:
   baseUrl: ${PDP_BASE_URL}
+  idp:
+    clientId: ${PDP_IDP_CLIENT_ID}
+    clientSecret: ${PDP_IDP_CLIENT_SECRET}
 
 authPersons:
   baseUri: ${AUTH_PERSONS_URL}
