@@ -22,6 +22,7 @@ import no.elhub.auth.v1.features.documents.InvalidDocumentScopes
 import no.elhub.auth.v1.features.documents.creation.DocumentPreparationError
 import no.elhub.auth.v1.features.grants.UpdateGrantError
 import no.elhub.auth.v1.features.requests.creation.RequestPreparationError
+import no.elhub.auth.v1.integrations.pdp.PdpAuthorizationException
 import no.elhub.auth.v1.repositories.RepositoryReadError
 import no.elhub.auth.v1.repositories.RepositoryWriteError
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
@@ -239,6 +240,7 @@ class ErrorHandlingTest : FunSpec({
         RepositoryReadError.UnexpectedError("secret database read error"),
         RepositoryWriteError.UnexpectedError("secret database write error"),
         InvalidDocumentScopes("secret stored document scope error"),
+        PdpAuthorizationException("secret PDP authorization error"),
         DocumentPreparationError.MeteringPointsServiceFailure(ClientError.NotFound),
         DocumentPreparationError.RequestedPrincipalLookupFailure(ClientError.ServerError),
         DocumentPreparationError.RequestedByLookupFailure(ClientError.ServerError),
