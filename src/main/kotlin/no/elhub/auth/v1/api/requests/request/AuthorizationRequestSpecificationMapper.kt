@@ -142,6 +142,9 @@ private fun RequestedScope.requireMeteringPointIds(): ResourceConstraint.Meterin
     if (constraint.value.isEmpty()) {
         invalid("requestedScopes[0].appliesTo meteringPoint.id must contain at least one metering point")
     }
+    if (constraint.value.size > 50) {
+        invalid("requestedScopes[0].appliesTo meteringPoint.id must contain at most 50 metering points")
+    }
     val meteringPointIds = constraint.value.mapTo(mutableSetOf()) {
         it.toMeteringPointIdOrNull()
             ?: invalid("requestedScopes[0].appliesTo meteringPoint.id values must be valid 18-digit metering-point IDs")

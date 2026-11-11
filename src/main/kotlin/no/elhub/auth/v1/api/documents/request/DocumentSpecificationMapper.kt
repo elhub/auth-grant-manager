@@ -90,6 +90,7 @@ private fun List<RequestedScope>.toSupplierChangeSpecification(): DocumentSpecif
         )
     }
 
+    requireMeteringPointLimit(meteringPointConstraints.single())
     val meteringPointIds = try {
         meteringPointConstraints.single().value.mapTo(mutableSetOf(), MeteringPointId::create)
     } catch (_: DomainError.InvalidMeteringPointId) {
@@ -132,6 +133,7 @@ private fun List<RequestedScope>.toMoveInSpecification(): DocumentSpecification.
         )
     }
 
+    requireMeteringPointLimit(meteringPointConstraints.single())
     val meteringPointIds = try {
         meteringPointConstraints.single().value.mapTo(mutableSetOf(), MeteringPointId::create)
     } catch (_: DomainError.InvalidMeteringPointId) {
@@ -172,4 +174,12 @@ private fun List<RequestedScope>.toMoveInSpecification(): DocumentSpecification.
         meteringPointIds = ResourceConstraint.MeteringPoints(meteringPointIds),
         validFrom = validFrom,
     )
+}
+
+private fun requireMeteringPointLimit(constraint: ScopeConstraint) {
+    if (constraint.value.size > 50) {
+        throw InputError.InvalidCreateAuthorizationDocumentPayload(
+            "requestedScopes[0].appliesTo meteringPoint.id must contain at most 50 metering points",
+        )
+    }
 }

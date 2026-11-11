@@ -147,6 +147,45 @@ class DocumentSpecificationMapperTest : FunSpec({
         }
     }
 
+    listOf(supplierChangeType, moveInType).forEach { type ->
+        fun scopes(values: List<String>): List<RequestedScope> {
+            val appliesTo = listOf(meteringPointConstraint(values))
+            return listOf(
+                if (type == supplierChangeType) {
+                    supplierScope(appliesTo = appliesTo)
+                } else {
+                    moveInScope(appliesTo = appliesTo)
+                },
+            )
+        }
+
+        test("$type accepts exactly 50 metering-point IDs") {
+            val values = (1..50).map { "707057500000000${it.toString().padStart(3, '0')}" }
+            val expected = ResourceConstraint.MeteringPoints(values.map(MeteringPointId::create).toSet())
+            val specification = toDocumentSpecification(type, scopes(values))
+
+            when (specification) {
+                is DocumentSpecification.ChangeOfEnergySupplierForOrganization ->
+                    specification.meteringPointIds shouldBe expected
+
+                is DocumentSpecification.MoveInAndChangeOfEnergySupplierForOrganization ->
+                    specification.meteringPointIds shouldBe expected
+
+                else -> error("Unexpected document specification")
+            }
+        }
+
+        test("$type rejects 51 metering-point IDs, including duplicate entries") {
+            val distinctValues = (1..51).map { "707057500000000${it.toString().padStart(3, '0')}" }
+            listOf(distinctValues, List(51) { validMeteringPointId }).forEach { values ->
+                invalidPayload(
+                    { toDocumentSpecification(type, scopes(values)) },
+                    "requestedScopes[0].appliesTo meteringPoint.id must contain at most 50 metering points",
+                )
+            }
+        }
+    }
+
     context("ChangeOfEnergySupplierForOrganization") {
         test("maps metering-point scope to its typed specification") {
             val specification = toDocumentSpecification(

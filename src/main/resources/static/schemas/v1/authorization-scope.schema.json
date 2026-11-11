@@ -12,9 +12,20 @@
         },
         "appliesTo": {
           "type": "array",
-          "description": "Constraints identifying which resources the scope covers, for example `meteringPoint.id`.",
+          "description": "Constraints identifying which resources the scope covers, for example `meteringPoint.id` (maximum 50 IDs).",
           "items": {
-            "$ref": "authorization-scope-constraint.schema.json#/$defs/requestedScopeConstraint"
+            "$ref": "authorization-scope-constraint.schema.json#/$defs/requestedScopeConstraint",
+            "if": {
+              "required": ["attribute"],
+              "properties": {
+                "attribute": { "const": "meteringPoint.id" }
+              }
+            },
+            "then": {
+              "properties": {
+                "value": { "maxItems": 50 }
+              }
+            }
           }
         },
         "allowedChanges": {

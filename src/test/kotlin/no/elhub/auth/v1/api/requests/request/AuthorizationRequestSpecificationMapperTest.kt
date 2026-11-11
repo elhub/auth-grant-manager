@@ -147,6 +147,48 @@ class AuthorizationRequestSpecificationMapperTest : FunSpec({
         }
     }
 
+    listOf(
+        AuthorizationRequestType.ChangeOfEnergySupplierForOrganization,
+        AuthorizationRequestType.MoveInAndChangeOfEnergySupplierForOrganization,
+    ).forEach { type ->
+        fun scopes(values: List<String>): List<RequestedScope> = listOf(
+            RequestedScope(
+                resourceType = "MeteringPointContract",
+                appliesTo = listOf(ScopeConstraint("meteringPoint.id", values)),
+                allowedChanges = if (type == AuthorizationRequestType.MoveInAndChangeOfEnergySupplierForOrganization) {
+                    listOf(ScopeConstraint("validFrom", listOf("2026-10-01")))
+                } else {
+                    emptyList()
+                },
+            ),
+        )
+
+        test("$type accepts exactly 50 metering-point IDs") {
+            val values = (1..50).map { "707057500000000${it.toString().padStart(3, '0')}" }
+            val expected = ResourceConstraint.MeteringPoints(values.map(MeteringPointId::create).toSet())
+            val details = attributes(type, scopes(values)).validateAndReturnAuthorizationRequestSpecification(now).details
+
+            when (details) {
+                is AuthorizationRequestTypeDetails.ChangeOfEnergySupplierForOrganization ->
+                    details.meteringPointIds shouldBe expected
+
+                is AuthorizationRequestTypeDetails.MoveInAndChangeOfEnergySupplierForOrganization ->
+                    details.meteringPointIds shouldBe expected
+
+                else -> error("Unexpected request type details")
+            }
+        }
+
+        test("$type rejects 51 metering-point IDs, including duplicate entries") {
+            val distinctValues = (1..51).map { "707057500000000${it.toString().padStart(3, '0')}" }
+            listOf(distinctValues, List(51) { validMeteringPointId }).forEach { values ->
+                invalidPayload("requestedScopes[0].appliesTo meteringPoint.id must contain at most 50 metering points") {
+                    attributes(type, scopes(values)).validateAndReturnAuthorizationRequestSpecification(now)
+                }
+            }
+        }
+    }
+
     context("ChangeOfEnergySupplierForOrganization") {
         val type = AuthorizationRequestType.ChangeOfEnergySupplierForOrganization
 
