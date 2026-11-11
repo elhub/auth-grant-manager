@@ -22,6 +22,8 @@ import no.elhub.auth.v0.features.common.Page
 import no.elhub.auth.v0.features.common.Pagination
 import no.elhub.auth.v0.setupAppWith
 import no.elhub.auth.v1.V1_GRANTS_PATH
+import no.elhub.auth.v1.api.common.STATUS_FILTER_PARAM
+import no.elhub.auth.v1.api.common.assertUnsupportedQueryParameters
 import no.elhub.auth.v1.api.grants.response.JsonApiListAuthorizationGrantsResponse
 import no.elhub.auth.v1.common.auth.AgentType
 import no.elhub.auth.v1.common.auth.AuthorizationAgent
@@ -347,6 +349,20 @@ class ListGrantsRouteTest : FunSpec({
             coVerify(exactly = 1) { handler(authorizedAgent, Pagination(), emptyList(), GrantAgentFilters(), emptyList()) }
             response.body<JsonApiListAuthorizationGrantsResponse>().links.self shouldBe
                 "$V1_GRANTS_PATH?page[number]=0&page[size]=100"
+        }
+    }
+
+    test("GET rejects unsupported query parameters without calling the handler") {
+        testApplication {
+            setupAppWith(authorizedAgent) {
+                route(V1_GRANTS_PATH) { route(handler) }
+            }
+
+            assertUnsupportedQueryParameters(
+                client = client,
+                path = V1_GRANTS_PATH,
+            )
+            coVerify(exactly = 0) { handler(any(), any(), any(), any(), any()) }
         }
     }
 

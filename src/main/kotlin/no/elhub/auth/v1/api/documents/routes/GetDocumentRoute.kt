@@ -14,12 +14,14 @@ import no.elhub.auth.common.config.jsonApiContentType
 import no.elhub.auth.v0.features.common.toApiErrorResponse
 import no.elhub.auth.v0.features.common.toNotAcceptedErrorResponse
 import no.elhub.auth.v0.features.common.validatePathId
+import no.elhub.auth.v1.api.common.validateQueryParameters
 import no.elhub.auth.v1.api.documents.response.toGetResponse
 import no.elhub.auth.v1.common.auth.authorizedAgent
 import no.elhub.auth.v1.features.documents.GetDocumentHandler
 
 fun Route.route(handler: GetDocumentHandler) {
     get("/{id}") {
+        call.validateQueryParameters()
         val id = validatePathId(call.parameters["id"])
             .getOrElse { error ->
                 val (status, body) = error.toApiErrorResponse()
@@ -32,6 +34,7 @@ fun Route.route(handler: GetDocumentHandler) {
     }
 
     get("/{id}.pdf") {
+        call.validateQueryParameters()
         val acceptedTypes = call.request.acceptItems()
         val acceptsPdf = acceptedTypes.any {
             ContentType.Application.Pdf.match(it.value) || ContentType.Any.match(it.value)

@@ -7,6 +7,7 @@ import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
+import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.server.routing.route
@@ -19,6 +20,7 @@ import kotlinx.serialization.json.Json
 import no.elhub.auth.common.config.jsonApiContentType
 import no.elhub.auth.v0.setupAppWith
 import no.elhub.auth.v1.V1_DOCUMENTS_PATH
+import no.elhub.auth.v1.api.common.assertUnsupportedQueryParameters
 import no.elhub.auth.v1.common.auth.AgentType
 import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.features.documents.ConfirmDocumentHandler
@@ -32,6 +34,24 @@ class ConfirmDocumentRouteTest : FunSpec({
     val handler = mockk<ConfirmDocumentHandler>()
 
     beforeTest { clearMocks(handler) }
+
+    test("PUT /{id}.pdf rejects unsupported query parameters without calling the handler") {
+        testApplication {
+            setupAppWith(authorizedAgent) {
+                route(V1_DOCUMENTS_PATH) { route(handler) }
+            }
+            val pdfClient = createClient {}
+
+            assertUnsupportedQueryParameters(
+                client = pdfClient,
+                path = "$V1_DOCUMENTS_PATH/$documentId.pdf",
+                acceptType = ContentType.Application.Pdf,
+                method = HttpMethod.Put,
+            )
+
+            coVerify(exactly = 0) { handler(any(), any(), any()) }
+        }
+    }
 
     data class UploadCase(
         val description: String,

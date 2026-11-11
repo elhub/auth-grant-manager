@@ -13,6 +13,7 @@ import io.ktor.server.routing.route
 import io.ktor.server.testing.testApplication
 import io.mockk.clearMocks
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
@@ -21,6 +22,7 @@ import no.elhub.auth.common.config.jsonApiContentType
 import no.elhub.auth.v0.setupAppWith
 import no.elhub.auth.v1.V1_REQUESTS_PATH
 import no.elhub.auth.v1.api.common.GrantResourceType
+import no.elhub.auth.v1.api.common.assertUnsupportedQueryParameters
 import no.elhub.auth.v1.api.requests.response.JsonApiGetAuthorizationRequestResponse
 import no.elhub.auth.v1.common.auth.AgentType
 import no.elhub.auth.v1.common.auth.AuthorizationAgent
@@ -62,6 +64,20 @@ class GetRequestRouteTest : FunSpec({
     )
 
     beforeTest { clearMocks(handler) }
+
+    test("GET /{id} rejects unsupported query parameters without calling the handler") {
+        testApplication {
+            setupAppWith(authorizedAgent) {
+                route(V1_REQUESTS_PATH) { route(handler) }
+            }
+
+            assertUnsupportedQueryParameters(
+                client = client,
+                path = "$V1_REQUESTS_PATH/$requestId",
+            )
+            coVerify(exactly = 0) { handler(any(), any()) }
+        }
+    }
 
     test("GET /{id} returns the request as JSON:API") {
         coEvery { handler(requestId, authorizedAgent) } returns request

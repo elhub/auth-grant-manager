@@ -6,6 +6,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.ktor.client.call.body
 import io.ktor.client.statement.bodyAsText
+import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.testing.testApplication
 import io.mockk.coEvery
@@ -20,6 +21,7 @@ import no.elhub.auth.v0.features.common.party.PartyIdentifier
 import no.elhub.auth.v0.features.common.party.PartyIdentifierType
 import no.elhub.auth.v0.postJson
 import no.elhub.auth.v0.setupAppWith
+import no.elhub.auth.v1.api.common.assertUnsupportedQueryParameters
 import no.elhub.auth.v1.api.requests.response.JsonApiGetAuthorizationRequestResponse
 import no.elhub.auth.v1.common.auth.AgentType
 import no.elhub.auth.v1.common.auth.AuthorizationAgent
@@ -89,6 +91,19 @@ class CreateRequestRouteTest : FunSpec({
     beforeAny {
         handler = mockk()
         agentService = mockk()
+    }
+
+    test("POST / rejects unsupported query parameters without calling the handler") {
+        testApplication {
+            setupAppWith(authorizedAgent) {
+                route(agentService, handler)
+            }
+
+            assertUnsupportedQueryParameters(client, "/", method = HttpMethod.Post)
+
+            coVerify(exactly = 0) { agentService.resolve(any()) }
+            coVerify(exactly = 0) { handler(any(), any(), any(), any()) }
+        }
     }
 
     listOf("requestedBy", "requestedPrincipal", "requestedOf").forEach { role ->
