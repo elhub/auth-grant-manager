@@ -59,6 +59,7 @@ interface GrantRepository {
         pagination: Pagination,
         statuses: List<AuthorizationGrantStatus>,
         agentFilters: GrantAgentFilters,
+        types: List<AuthorizationGrantType>,
     ): Page<AuthorizationGrant>
 
     suspend fun insert(grant: AuthorizationGrant): AuthorizationGrant
@@ -130,6 +131,7 @@ class ExposedGrantRepository(
         pagination: Pagination,
         statuses: List<AuthorizationGrantStatus>,
         agentFilters: GrantAgentFilters,
+        types: List<AuthorizationGrantType>,
     ): Page<AuthorizationGrant> = withTransaction {
         val agentId = agentRepository.findOrInsert(agent.type, agent.id).id
         val now = now()
@@ -180,6 +182,7 @@ class ExposedGrantRepository(
         val whereClause = listOfNotNull(
             agentCondition,
             statusConditions.takeIf { it.isNotEmpty() }?.compoundOr(),
+            types.takeIf { it.isNotEmpty() }?.let { AuthorizationGrantTable.type inList it },
         ).plus(agentFilterConditions).compoundAnd()
 
         val totalItems = AuthorizationGrantTable.selectAll().where { whereClause }.count()

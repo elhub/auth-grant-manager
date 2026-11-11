@@ -6,6 +6,7 @@ import io.ktor.client.call.body
 import io.ktor.client.request.accept
 import io.ktor.client.request.patch
 import io.ktor.client.request.setBody
+import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.server.routing.route
@@ -19,6 +20,7 @@ import no.elhub.auth.v0.patchJson
 import no.elhub.auth.v0.setupAppWith
 import no.elhub.auth.v1.V1_GRANTS_PATH
 import no.elhub.auth.v1.api.common.GrantResourceType
+import no.elhub.auth.v1.api.common.assertUnsupportedQueryParameters
 import no.elhub.auth.v1.api.grants.response.JsonApiGetAuthorizationGrantResponse
 import no.elhub.auth.v1.common.auth.AgentType
 import no.elhub.auth.v1.common.auth.AuthorizationAgent
@@ -61,6 +63,18 @@ class UpdateGrantRouteTest : FunSpec({
     ) = """{"data":{"id":"$dataId","type":"$type","attributes":{"status":"$status"}}}"""
 
     beforeTest { clearMocks(handler) }
+
+    test("PATCH rejects unsupported query parameters without calling the handler") {
+        testApplication {
+            setupAppWith(system) {
+                route(V1_GRANTS_PATH) { route(handler) }
+            }
+
+            assertUnsupportedQueryParameters(client, path, method = HttpMethod.Patch)
+
+            coVerify(exactly = 0) { handler(any(), any(), any(), any()) }
+        }
+    }
 
     test("PATCH consumes a grant and returns it as JSON:API") {
         coEvery { handler(id, system, AuthorizationGrantStatus.Exhausted, AuthorizationGrantType.Consumable) } returns

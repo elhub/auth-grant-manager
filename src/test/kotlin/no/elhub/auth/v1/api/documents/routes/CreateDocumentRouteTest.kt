@@ -5,6 +5,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.ktor.client.call.body
+import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.testing.testApplication
 import io.mockk.coEvery
@@ -22,6 +23,7 @@ import no.elhub.auth.common.documents.pdf.PdfGenerator
 import no.elhub.auth.common.documents.pdf.PdfSigner
 import no.elhub.auth.v0.postJson
 import no.elhub.auth.v0.setupAppWith
+import no.elhub.auth.v1.api.common.assertUnsupportedQueryParameters
 import no.elhub.auth.v1.api.common.toPartyIdentifier
 import no.elhub.auth.v1.api.documents.response.JsonApiGetAuthorizationDocumentResponse
 import no.elhub.auth.v1.common.AuthorizationRulesService
@@ -123,6 +125,19 @@ class CreateDocumentRouteTest : FunSpec({
         pdfGenerator = mockk()
         pdfSigner = mockk()
         agentService = mockk()
+    }
+
+    test("POST / rejects unsupported query parameters without calling the handler") {
+        testApplication {
+            setupAppWith(authorizedAgent) {
+                route(agentService, handler)
+            }
+
+            assertUnsupportedQueryParameters(client, "/", method = HttpMethod.Post)
+
+            coVerify(exactly = 0) { agentService.resolve(any()) }
+            coVerify(exactly = 0) { handler.createAuthorizationDocument(any(), any(), any(), any(), any(), any()) }
+        }
     }
 
     listOf("requestedBy", "requestedPrincipal", "requestedOf").forEach { role ->

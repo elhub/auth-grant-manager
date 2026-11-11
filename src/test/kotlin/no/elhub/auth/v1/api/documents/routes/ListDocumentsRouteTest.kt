@@ -19,6 +19,7 @@ import no.elhub.auth.v0.features.common.Page
 import no.elhub.auth.v0.features.common.Pagination
 import no.elhub.auth.v0.setupAppWith
 import no.elhub.auth.v1.V1_DOCUMENTS_PATH
+import no.elhub.auth.v1.api.common.assertUnsupportedQueryParameters
 import no.elhub.auth.v1.api.documents.response.JsonApiListAuthorizationDocumentsResponse
 import no.elhub.auth.v1.api.documents.response.ResponseAuthorizationDocumentStatus
 import no.elhub.auth.v1.common.auth.AgentType
@@ -47,6 +48,20 @@ class ListDocumentsRouteTest : FunSpec({
     )
 
     beforeTest { clearMocks(handler) }
+
+    test("GET rejects unsupported query parameters without calling the handler") {
+        testApplication {
+            setupAppWith(authorizedAgent) {
+                route(V1_DOCUMENTS_PATH) { route(handler) }
+            }
+
+            assertUnsupportedQueryParameters(
+                client = client,
+                path = V1_DOCUMENTS_PATH,
+            )
+            coVerify(exactly = 0) { handler(any(), any(), any()) }
+        }
+    }
 
     test("GET returns a JSON:API collection using default pagination and no status filter") {
         coEvery { handler(authorizedAgent, Pagination(), emptyList()) } returns

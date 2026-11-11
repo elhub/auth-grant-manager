@@ -5,6 +5,7 @@ import no.elhub.auth.v0.features.common.Pagination
 import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.domain.AuthorizationGrant
 import no.elhub.auth.v1.domain.AuthorizationGrantStatus
+import no.elhub.auth.v1.domain.AuthorizationGrantType
 import no.elhub.auth.v1.domain.GrantAgentFilters
 import no.elhub.auth.v1.repositories.GrantRepository
 
@@ -16,5 +17,6 @@ class ListGrantsHandler(
         pagination: Pagination,
         statuses: List<AuthorizationGrantStatus>,
         agentFilters: GrantAgentFilters,
-    ): Page<AuthorizationGrant> = grantRepository.findAll(authorizedAgent, pagination, statuses, agentFilters)
+        types: List<AuthorizationGrantType>,
+    ): Page<AuthorizationGrant> = grantRepository.findAll(authorizedAgent, pagination, statuses, agentFilters, types)
 }

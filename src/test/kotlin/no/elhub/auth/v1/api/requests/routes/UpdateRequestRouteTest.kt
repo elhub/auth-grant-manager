@@ -8,6 +8,7 @@ import io.ktor.client.request.accept
 import io.ktor.client.request.patch
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
+import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.server.routing.route
@@ -21,6 +22,7 @@ import no.elhub.auth.common.config.jsonApiContentType
 import no.elhub.auth.v0.patchJson
 import no.elhub.auth.v0.setupAppWith
 import no.elhub.auth.v1.V1_REQUESTS_PATH
+import no.elhub.auth.v1.api.common.assertUnsupportedQueryParameters
 import no.elhub.auth.v1.api.requests.response.JsonApiGetAuthorizationRequestResponse
 import no.elhub.auth.v1.common.auth.AgentType
 import no.elhub.auth.v1.common.auth.AuthorizationAgent
@@ -62,6 +64,18 @@ class UpdateRequestRouteTest : FunSpec({
     ) = """{"data":{"id":"$dataId","type":"$type","attributes":{"status":"$status","textLanguage":"$textLanguage"}}}"""
 
     beforeTest { clearMocks(handler) }
+
+    test("PATCH rejects unsupported query parameters without calling the handler") {
+        testApplication {
+            setupAppWith(requestedOf) {
+                route(V1_REQUESTS_PATH) { route(handler) }
+            }
+
+            assertUnsupportedQueryParameters(client, path, method = HttpMethod.Patch)
+
+            coVerify(exactly = 0) { handler(any(), any(), any(), any()) }
+        }
+    }
 
     test("PATCH accepts the request and returns it with its grants and text language") {
         val grant = AuthorizationGrant.new(
