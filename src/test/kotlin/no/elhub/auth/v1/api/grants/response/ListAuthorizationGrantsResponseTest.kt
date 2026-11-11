@@ -10,6 +10,7 @@ import no.elhub.auth.v1.common.auth.AgentType
 import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.domain.AuthorizationGrant
 import no.elhub.auth.v1.domain.AuthorizationGrantStatus
+import no.elhub.auth.v1.domain.AuthorizationGrantType
 import no.elhub.auth.v1.domain.GrantAgentFilters
 
 class ListAuthorizationGrantsResponseTest : FunSpec({
@@ -24,7 +25,7 @@ class ListAuthorizationGrantsResponseTest : FunSpec({
             }
     }
 
-    test("preserves all agent filters and statuses in every pagination link") {
+    test("preserves all agent filters, statuses and types in every pagination link") {
         val person = AuthorizationAgent("abcdef12-3456-7890-abcd-ef1234567890", AgentType.Person)
         val organization = AuthorizationAgent("999888771", AgentType.Organization)
         val entity = AuthorizationAgent("7070575000001", AgentType.OrganizationEntity)
@@ -37,12 +38,14 @@ class ListAuthorizationGrantsResponseTest : FunSpec({
         val response = Page<AuthorizationGrant>(emptyList(), 5, Pagination(page = 1, size = 2)).toGetCollectionResponse(
             listOf(AuthorizationGrantStatus.Active, AuthorizationGrantStatus.Expired),
             agentFilters,
+            listOf(AuthorizationGrantType.Persistent, AuthorizationGrantType.Consumable),
         )
 
         listOf(response.links.self, response.links.first, response.links.last, response.links.prev, response.links.next)
             .forEach { link ->
                 val parameters = Url(requireNotNull(link)).parameters
                 parameters["filter[status]"] shouldBe "Active,Expired"
+                parameters["filter[type]"] shouldBe "PersistentGrant,ConsumableGrant"
                 parameters["filter[grantedBy]"] shouldBe "${person.id},${organization.id},${entity.id}"
                 parameters["filter[principal]"] shouldBe "${organization.id},${person.id}"
                 parameters["filter[approvedBy]"] shouldBe "${person.id},${entity.id}"

@@ -5,6 +5,7 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import no.elhub.auth.v0.features.common.Pagination
+import no.elhub.auth.v1.api.common.GrantResourceType
 import no.elhub.auth.v1.api.common.errors.InputError
 import no.elhub.auth.v1.api.common.validateEnumListParam
 import no.elhub.auth.v1.api.grants.response.toGetCollectionResponse
@@ -12,11 +13,13 @@ import no.elhub.auth.v1.common.auth.AgentType
 import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.common.auth.authorizedAgent
 import no.elhub.auth.v1.domain.AuthorizationGrantStatus
+import no.elhub.auth.v1.domain.AuthorizationGrantType
 import no.elhub.auth.v1.domain.GrantAgentFilters
 import no.elhub.auth.v1.features.grants.ListGrantsHandler
 import java.util.UUID
 
 internal const val STATUS_FILTER_PARAM = "filter[status]"
+internal const val TYPE_FILTER_PARAM = "filter[type]"
 internal const val GRANTED_BY_FILTER_PARAM = "filter[grantedBy]"
 internal const val PRINCIPAL_FILTER_PARAM = "filter[principal]"
 internal const val APPROVED_BY_FILTER_PARAM = "filter[approvedBy]"
@@ -33,6 +36,15 @@ fun Route.route(handler: ListGrantsHandler) {
             call.request.queryParameters[STATUS_FILTER_PARAM],
             STATUS_FILTER_PARAM,
         )
+        val types = validateEnumListParam<GrantResourceType>(
+            call.request.queryParameters[TYPE_FILTER_PARAM],
+            TYPE_FILTER_PARAM,
+        ).map { type ->
+            when (type) {
+                GrantResourceType.PersistentGrant -> AuthorizationGrantType.Persistent
+                GrantResourceType.ConsumableGrant -> AuthorizationGrantType.Consumable
+            }
+        }
 
         val agentFilters = GrantAgentFilters(
             grantedBy = parseAgentIds(call.request.queryParameters[GRANTED_BY_FILTER_PARAM], GRANTED_BY_FILTER_PARAM),
@@ -41,8 +53,8 @@ fun Route.route(handler: ListGrantsHandler) {
             grantedTo = parseAgentIds(call.request.queryParameters[GRANTED_TO_FILTER_PARAM], GRANTED_TO_FILTER_PARAM),
         )
 
-        val page = handler(call.authorizedAgent, pagination, statuses, agentFilters)
-        call.respond(HttpStatusCode.OK, page.toGetCollectionResponse(statuses, agentFilters))
+        val page = handler(call.authorizedAgent, pagination, statuses, agentFilters, types)
+        call.respond(HttpStatusCode.OK, page.toGetCollectionResponse(statuses, agentFilters, types))
     }
 }
 
