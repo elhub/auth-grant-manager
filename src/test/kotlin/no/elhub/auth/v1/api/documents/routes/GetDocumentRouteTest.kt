@@ -16,6 +16,7 @@ import io.ktor.server.routing.route
 import io.ktor.server.testing.testApplication
 import io.mockk.clearMocks
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
@@ -24,6 +25,7 @@ import no.elhub.auth.common.config.jsonApiContentType
 import no.elhub.auth.v0.setupAppWith
 import no.elhub.auth.v1.V1_DOCUMENTS_PATH
 import no.elhub.auth.v1.api.common.GrantResourceType
+import no.elhub.auth.v1.api.common.assertUnsupportedQueryParameters
 import no.elhub.auth.v1.api.documents.response.JsonApiGetAuthorizationDocumentResponse
 import no.elhub.auth.v1.common.auth.AgentType
 import no.elhub.auth.v1.common.auth.AuthorizationAgent
@@ -65,6 +67,24 @@ class GetDocumentRouteTest : FunSpec({
     )
 
     beforeTest { clearMocks(handler) }
+
+    test("GET /{id} and /{id}.pdf reject unsupported query parameters without calling the handler") {
+        testApplication {
+            setupAppWith(authorizedAgent) {
+                route(V1_DOCUMENTS_PATH) { route(handler) }
+            }
+            val documentClient = createClient {}
+
+            listOf("", ".pdf").forEach { suffix ->
+                assertUnsupportedQueryParameters(
+                    client = documentClient,
+                    path = "$V1_DOCUMENTS_PATH/$documentId$suffix",
+                    acceptType = if (suffix.isEmpty()) jsonApiContentType else ContentType.Application.Pdf,
+                )
+            }
+            coVerify(exactly = 0) { handler(any(), any()) }
+        }
+    }
 
     val grant = AuthorizationGrant.new(
         type = AuthorizationGrantType.Consumable,

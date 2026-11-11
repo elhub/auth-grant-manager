@@ -20,6 +20,7 @@ import no.elhub.auth.common.config.jsonApiContentType
 import no.elhub.auth.v0.setupAppWith
 import no.elhub.auth.v1.V1_GRANTS_PATH
 import no.elhub.auth.v1.api.common.GrantResourceType
+import no.elhub.auth.v1.api.common.assertUnsupportedQueryParameters
 import no.elhub.auth.v1.api.common.response.GrantSourceTypeResponse
 import no.elhub.auth.v1.api.grants.response.JsonApiGetAuthorizationGrantResponse
 import no.elhub.auth.v1.common.auth.AgentType
@@ -56,6 +57,20 @@ class GetGrantRouteTest : FunSpec({
     val grantId = grant.id
 
     beforeTest { clearMocks(handler) }
+
+    test("GET /{id} rejects unsupported query parameters without calling the handler") {
+        testApplication {
+            setupAppWith(authorizedAgent) {
+                route(V1_GRANTS_PATH) { route(handler) }
+            }
+
+            assertUnsupportedQueryParameters(
+                client = client,
+                path = "$V1_GRANTS_PATH/$grantId",
+            )
+            coVerify(exactly = 0) { handler(any(), any()) }
+        }
+    }
 
     test("GET /{id} returns the grant as JSON:API") {
         coEvery { handler(grantId, authorizedAgent) } returns grant

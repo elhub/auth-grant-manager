@@ -6,6 +6,7 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import no.elhub.auth.v0.features.common.Pagination
 import no.elhub.auth.v1.api.common.validateEnumListParam
+import no.elhub.auth.v1.api.common.validateQueryParameters
 import no.elhub.auth.v1.api.documents.response.ResponseAuthorizationDocumentStatus
 import no.elhub.auth.v1.api.documents.response.toGetCollectionResponse
 import no.elhub.auth.v1.common.auth.authorizedAgent
@@ -16,6 +17,7 @@ private const val STATUS_FILTER_PARAM = "filter[status]"
 
 fun Route.route(handler: ListDocumentsHandler) {
     get {
+        call.validateQueryParameters("page[number]", "page[size]", STATUS_FILTER_PARAM)
         val pagination = Pagination.from(
             pageParam = call.request.queryParameters["page[number]"],
             sizeParam = call.request.queryParameters["page[size]"],

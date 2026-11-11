@@ -8,6 +8,7 @@ import no.elhub.auth.v0.features.common.Pagination
 import no.elhub.auth.v1.api.common.GrantResourceType
 import no.elhub.auth.v1.api.common.errors.InputError
 import no.elhub.auth.v1.api.common.validateEnumListParam
+import no.elhub.auth.v1.api.common.validateQueryParameters
 import no.elhub.auth.v1.api.grants.response.toGetCollectionResponse
 import no.elhub.auth.v1.common.auth.AgentType
 import no.elhub.auth.v1.common.auth.AuthorizationAgent
@@ -27,6 +28,16 @@ internal const val GRANTED_TO_FILTER_PARAM = "filter[grantedTo]"
 
 fun Route.route(handler: ListGrantsHandler) {
     get {
+        call.validateQueryParameters(
+            "page[number]",
+            "page[size]",
+            STATUS_FILTER_PARAM,
+            TYPE_FILTER_PARAM,
+            GRANTED_BY_FILTER_PARAM,
+            PRINCIPAL_FILTER_PARAM,
+            APPROVED_BY_FILTER_PARAM,
+            GRANTED_TO_FILTER_PARAM,
+        )
         val pagination = Pagination.from(
             pageParam = call.request.queryParameters["page[number]"],
             sizeParam = call.request.queryParameters["page[size]"],
