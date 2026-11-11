@@ -326,7 +326,7 @@ class ExposedGrantRepositoryTest : FunSpec({
         insertGrant()
         insertGrant(principal = caller.copy(type = AgentType.Organization))
 
-        val result = repository.findAll(caller, Pagination(), emptyList(), GrantAgentFilters())
+        val result = repository.findAll(caller, Pagination(), emptyList(), GrantAgentFilters(), emptyList())
 
         result.totalItems shouldBe 4L
         result.items.map { it.id }.shouldContainExactlyInAnyOrder(
@@ -348,17 +348,17 @@ class ExposedGrantRepositoryTest : FunSpec({
             .sortedByDescending { it.id.toString() }
         val expected = tied + older
 
-        val first = repository.findAll(caller, Pagination(page = 0, size = 2), emptyList(), GrantAgentFilters())
+        val first = repository.findAll(caller, Pagination(page = 0, size = 2), emptyList(), GrantAgentFilters(), emptyList())
         first.items.map { it.id } shouldBe expected.take(2).map { it.id }
         first.totalItems shouldBe 3L
         first.pagination shouldBe Pagination(page = 0, size = 2)
         first.totalPages shouldBe 2
 
-        val last = repository.findAll(caller, Pagination(page = 1, size = 2), emptyList(), GrantAgentFilters())
+        val last = repository.findAll(caller, Pagination(page = 1, size = 2), emptyList(), GrantAgentFilters(), emptyList())
         last.items.map { it.id } shouldBe listOf(older.id)
         last.totalItems shouldBe 3L
 
-        val beyond = repository.findAll(caller, Pagination(page = 2, size = 2), emptyList(), GrantAgentFilters())
+        val beyond = repository.findAll(caller, Pagination(page = 2, size = 2), emptyList(), GrantAgentFilters(), emptyList())
         beyond.items shouldBe emptyList()
         beyond.totalItems shouldBe 3L
     }
@@ -366,12 +366,56 @@ class ExposedGrantRepositoryTest : FunSpec({
     test("findAll derives Pending for a grant with a future validFrom") {
         val grant = insertGrant(validFrom = future, validTo = future + 1.days)
 
-        val page = repository.findAll(grant.principal, Pagination(), emptyList(), GrantAgentFilters())
+        val page = repository.findAll(grant.principal, Pagination(), emptyList(), GrantAgentFilters(), emptyList())
         val result = page.items.single()
 
         page.totalItems shouldBe 1L
         result.status.name shouldBe "Pending"
         assertGrant(result.copy(status = grant.status), grant)
+    }
+
+    (
+        AuthorizationGrantType.entries.map { listOf(it) } + listOf(
+            AuthorizationGrantType.entries.toList(),
+            emptyList(),
+        )
+        ).forEach { types ->
+        test("findAll filters types $types with OR within the filter and no restriction for empty input") {
+            val caller = agent(AgentType.Person)
+            val grants = AuthorizationGrantType.entries.map { type -> insertGrant(principal = caller, type = type) }
+            val expected = grants.filter { types.isEmpty() || it.type in types }
+
+            val result = repository.findAll(caller, Pagination(), emptyList(), GrantAgentFilters(), types)
+
+            result.items.map { it.id }.shouldContainExactlyInAnyOrder(expected.map { it.id })
+            result.totalItems shouldBe expected.size.toLong()
+        }
+    }
+
+    test("findAll applies type filtering before pagination and counts only matching grants") {
+        val caller = agent(AgentType.Person)
+        val older = insertGrant(principal = caller, type = AuthorizationGrantType.Persistent, created = createdAt - 1.days)
+        val newer = insertGrant(principal = caller, type = AuthorizationGrantType.Persistent)
+        insertGrant(principal = caller, created = createdAt + 1.days)
+        val types = listOf(AuthorizationGrantType.Persistent)
+
+        val first = repository.findAll(caller, Pagination(page = 0, size = 1), emptyList(), GrantAgentFilters(), types)
+        first.items.map { it.id } shouldBe listOf(newer.id)
+        first.totalItems shouldBe 2L
+        first.totalPages shouldBe 2
+        first.pagination shouldBe Pagination(page = 0, size = 1)
+
+        val last = repository.findAll(caller, Pagination(page = 1, size = 1), emptyList(), GrantAgentFilters(), types)
+        last.items.map { it.id } shouldBe listOf(older.id)
+        last.totalItems shouldBe 2L
+
+        val beyond = repository.findAll(caller, Pagination(page = 2, size = 1), emptyList(), GrantAgentFilters(), types)
+        beyond.items shouldBe emptyList()
+        beyond.totalItems shouldBe 2L
+
+        val noMatches = repository.findAll(newer.grantedBy, Pagination(), emptyList(), GrantAgentFilters(), listOf(AuthorizationGrantType.Consumable))
+        noMatches.items shouldBe emptyList()
+        noMatches.totalItems shouldBe 0L
     }
 
     test("findAll filters by derived status with terminal statuses taking precedence") {
@@ -399,7 +443,7 @@ class ExposedGrantRepositoryTest : FunSpec({
         )
         filters.forEach { statuses ->
             val expected = grants.filter { (_, status) -> statuses.isEmpty() || status in statuses }
-            val result = repository.findAll(caller, Pagination(), statuses, GrantAgentFilters())
+            val result = repository.findAll(caller, Pagination(), statuses, GrantAgentFilters(), emptyList())
 
             result.items.map { it.id }.shouldContainExactlyInAnyOrder(expected.map { it.first.id })
             result.totalItems shouldBe expected.size.toLong()
@@ -416,20 +460,20 @@ class ExposedGrantRepositoryTest : FunSpec({
         insertGrant(principal = caller, validTo = past, created = createdAt + 1.days)
         val statuses = listOf(AuthorizationGrantStatus.Active)
 
-        val first = repository.findAll(caller, Pagination(page = 0, size = 1), statuses, GrantAgentFilters())
+        val first = repository.findAll(caller, Pagination(page = 0, size = 1), statuses, GrantAgentFilters(), emptyList())
         first.items.map { it.id } shouldBe listOf(newer.id)
         first.totalItems shouldBe 2L
         first.totalPages shouldBe 2
 
-        val last = repository.findAll(caller, Pagination(page = 1, size = 1), statuses, GrantAgentFilters())
+        val last = repository.findAll(caller, Pagination(page = 1, size = 1), statuses, GrantAgentFilters(), emptyList())
         last.items.map { it.id } shouldBe listOf(older.id)
         last.totalItems shouldBe 2L
 
-        val beyond = repository.findAll(caller, Pagination(page = 2, size = 1), statuses, GrantAgentFilters())
+        val beyond = repository.findAll(caller, Pagination(page = 2, size = 1), statuses, GrantAgentFilters(), emptyList())
         beyond.items shouldBe emptyList()
         beyond.totalItems shouldBe 2L
 
-        val noMatches = repository.findAll(caller, Pagination(), listOf(AuthorizationGrantStatus.Revoked), GrantAgentFilters())
+        val noMatches = repository.findAll(caller, Pagination(), listOf(AuthorizationGrantStatus.Revoked), GrantAgentFilters(), emptyList())
         noMatches.items shouldBe emptyList()
         noMatches.totalItems shouldBe 0L
     }
@@ -471,13 +515,13 @@ class ExposedGrantRepositoryTest : FunSpec({
                     approvedBy = if (field == "grantedBy") target else agent(AgentType.Person),
                 )
 
-                val single = repository.findAll(caller, Pagination(), emptyList(), filters(listOf(target)))
+                val single = repository.findAll(caller, Pagination(), emptyList(), filters(listOf(target)), emptyList())
                 single.items.map { it.id } shouldBe listOf(grant.id)
                 single.totalItems shouldBe 1L
                 grant
             }
 
-            val multiple = repository.findAll(caller, Pagination(), emptyList(), filters(targets))
+            val multiple = repository.findAll(caller, Pagination(), emptyList(), filters(targets), emptyList())
             multiple.items.map { it.id }.shouldContainExactlyInAnyOrder(matching.map { it.id })
             multiple.totalItems shouldBe matching.size.toLong()
 
@@ -488,14 +532,14 @@ class ExposedGrantRepositoryTest : FunSpec({
                 AuthorizationAgent("123456789", AgentType.Organization),
                 AuthorizationAgent("7070575000002", AgentType.OrganizationEntity),
             ).forEach { unknown ->
-                val empty = repository.findAll(caller, Pagination(), emptyList(), filters(listOf(unknown)))
+                val empty = repository.findAll(caller, Pagination(), emptyList(), filters(listOf(unknown)), emptyList())
                 empty.items shouldBe emptyList()
                 empty.totalItems shouldBe 0L
             }
         }
     }
 
-    test("findAll ANDs every agent filter with derived status and caller visibility before pagination") {
+    test("findAll ANDs every agent filter with type, derived status and caller visibility before pagination") {
         val caller = agent(AgentType.Person)
         val grantor = agent(AgentType.Person)
         val approver = agent(AgentType.Person)
@@ -509,6 +553,13 @@ class ExposedGrantRepositoryTest : FunSpec({
             scopes = listOf(constrained, unconstrained),
         )
         val newer = insertGrant(principal = caller, grantedBy = grantor, approvedBy = approver, grantedTo = recipient)
+        insertGrant(
+            principal = caller,
+            grantedBy = grantor,
+            approvedBy = approver,
+            grantedTo = recipient,
+            type = AuthorizationGrantType.Persistent,
+        )
         insertGrant(principal = caller, grantedBy = grantor, approvedBy = approver, grantedTo = recipient, validTo = past)
         insertGrant(principal = caller, approvedBy = approver, grantedTo = recipient)
         insertGrant(principal = caller, grantedBy = grantor, grantedTo = recipient)
@@ -526,26 +577,27 @@ class ExposedGrantRepositoryTest : FunSpec({
             grantedTo = listOf(recipient),
         )
         val statuses = listOf(AuthorizationGrantStatus.Active)
+        val types = listOf(AuthorizationGrantType.Consumable)
 
-        val first = repository.findAll(caller, Pagination(page = 0, size = 1), statuses, filters)
+        val first = repository.findAll(caller, Pagination(page = 0, size = 1), statuses, filters, types)
         first.items.map { it.id } shouldBe listOf(newer.id)
         first.totalItems shouldBe 2L
         first.totalPages shouldBe 2
         first.pagination shouldBe Pagination(page = 0, size = 1)
 
-        val last = repository.findAll(caller, Pagination(page = 1, size = 1), statuses, filters)
+        val last = repository.findAll(caller, Pagination(page = 1, size = 1), statuses, filters, types)
         last.items.map { it.id } shouldBe listOf(older.id)
         last.totalItems shouldBe 2L
         assertGrant(last.items.single(), older)
 
-        val beyond = repository.findAll(caller, Pagination(page = 2, size = 1), statuses, filters)
+        val beyond = repository.findAll(caller, Pagination(page = 2, size = 1), statuses, filters, types)
         beyond.items shouldBe emptyList()
         beyond.totalItems shouldBe 2L
     }
 
     test("findAll returns an empty page for an unknown agent") {
         val pagination = Pagination(page = 1, size = 2)
-        val result = repository.findAll(agent(AgentType.Person), pagination, emptyList(), GrantAgentFilters())
+        val result = repository.findAll(agent(AgentType.Person), pagination, emptyList(), GrantAgentFilters(), emptyList())
 
         result.items shouldBe emptyList()
         result.totalItems shouldBe 0L

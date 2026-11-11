@@ -44,8 +44,9 @@ class ListGrantsHandlerTest : FunSpec({
 
     beforeTest { clearMocks(grantRepository) }
 
-    test("forwards the authorized agent, pagination, statuses and agent filters and returns the repository page") {
+    test("forwards the authorized agent, pagination, statuses, agent filters and types and returns the repository page") {
         val statuses = listOf(AuthorizationGrantStatus.Pending, AuthorizationGrantStatus.Revoked)
+        val types = listOf(AuthorizationGrantType.Persistent)
         val agentFilters = GrantAgentFilters(
             grantedBy = listOf(grantedBy, AuthorizationAgent(UUID.randomUUID().toString(), AgentType.Person)),
             principal = listOf(principal),
@@ -53,25 +54,25 @@ class ListGrantsHandlerTest : FunSpec({
             grantedTo = listOf(authorizedAgent),
         )
         val page = Page(listOf(grant), 3, pagination)
-        coEvery { grantRepository.findAll(authorizedAgent, pagination, statuses, agentFilters) } returns page
+        coEvery { grantRepository.findAll(authorizedAgent, pagination, statuses, agentFilters, types) } returns page
 
-        handler(authorizedAgent, pagination, statuses, agentFilters) shouldBeSameInstanceAs page
-        coVerify(exactly = 1) { grantRepository.findAll(authorizedAgent, pagination, statuses, agentFilters) }
+        handler(authorizedAgent, pagination, statuses, agentFilters, types) shouldBeSameInstanceAs page
+        coVerify(exactly = 1) { grantRepository.findAll(authorizedAgent, pagination, statuses, agentFilters, types) }
     }
 
     test("returns an empty page when the agent has no grants") {
         val page = Page(emptyList<AuthorizationGrant>(), 0, pagination)
-        coEvery { grantRepository.findAll(authorizedAgent, pagination, emptyList(), GrantAgentFilters()) } returns page
+        coEvery { grantRepository.findAll(authorizedAgent, pagination, emptyList(), GrantAgentFilters(), emptyList()) } returns page
 
-        handler(authorizedAgent, pagination, emptyList(), GrantAgentFilters()) shouldBe page
+        handler(authorizedAgent, pagination, emptyList(), GrantAgentFilters(), emptyList()) shouldBe page
     }
 
     test("propagates a grant repository failure") {
         val error = RepositoryReadError.UnexpectedError("Database unavailable")
-        coEvery { grantRepository.findAll(authorizedAgent, pagination, emptyList(), GrantAgentFilters()) } throws error
+        coEvery { grantRepository.findAll(authorizedAgent, pagination, emptyList(), GrantAgentFilters(), emptyList()) } throws error
 
         shouldThrow<RepositoryReadError.UnexpectedError> {
-            handler(authorizedAgent, pagination, emptyList(), GrantAgentFilters())
+            handler(authorizedAgent, pagination, emptyList(), GrantAgentFilters(), emptyList())
         } shouldBeSameInstanceAs error
     }
 })

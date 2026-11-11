@@ -860,8 +860,8 @@ paths:
         Retrieve a paginated list of authorization grants available to the calling agent. A grant is
         available when the calling agent is the grantedTo, the principal, or the grantedBy. Results are
         ordered by createdAt DESC (newest first).
-        Agent filters match the public IDs returned in `relationships.<role>.data.id` and their implied agent
-        types: a Person is identified by their internal Elhub ID,
+        Agent filters match the IDs returned in `relationships.<role>.data.id` and their implied agent
+        types: a Person is identified by their Elhub ID,
         an Organization is identified by org number,
         and a MarketEntity is identified by GLN.
       operationId: listV1AuthorizationGrants
@@ -884,10 +884,18 @@ paths:
             type: array
             items:
               $ref: './schemas/v1/grants/authorization-grant-common.schema.json#/$defs/status'
+        - name: filter[type]
+          in: query
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              $ref: './schemas/v1/grants/authorization-grant-common.schema.json#/$defs/type'
         - name: filter[grantedBy]
           in: query
           required: false
-          description: Filter by public IDs returned in `relationships.grantedBy.data.id`.
           style: form
           explode: false
           schema:
@@ -897,7 +905,6 @@ paths:
         - name: filter[principal]
           in: query
           required: false
-          description: Filter by public IDs returned in `relationships.principal.data.id`.
           style: form
           explode: false
           schema:
@@ -907,7 +914,6 @@ paths:
         - name: filter[approvedBy]
           in: query
           required: false
-          description: Filter by public IDs returned in `relationships.approvedBy.data.id`.
           style: form
           explode: false
           schema:
@@ -917,7 +923,6 @@ paths:
         - name: filter[grantedTo]
           in: query
           required: false
-          description: Filter by public IDs returned in `relationships.grantedTo.data.id`.
           style: form
           explode: false
           schema:
