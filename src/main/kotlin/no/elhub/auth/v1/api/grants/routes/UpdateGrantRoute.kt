@@ -10,6 +10,7 @@ import kotlinx.serialization.MissingFieldException
 import kotlinx.serialization.SerializationException
 import no.elhub.auth.v1.api.common.GrantResourceType
 import no.elhub.auth.v1.api.common.errors.InputError
+import no.elhub.auth.v1.api.common.validateQueryParameters
 import no.elhub.auth.v1.api.grants.request.JsonApiUpdateAuthorizationGrantRequest
 import no.elhub.auth.v1.api.grants.response.toGetResponse
 import no.elhub.auth.v1.common.auth.authorizedAgent
@@ -20,6 +21,8 @@ import java.util.UUID
 @OptIn(ExperimentalSerializationApi::class)
 fun Route.route(handler: UpdateGrantHandler) {
     patch("/{id}") {
+        call.validateQueryParameters()
+
         val pathId = call.parameters["id"]?.takeIf { it.isNotBlank() }
             ?: throw InputError.MissingInputError("Missing authorization grant ID")
         val id = try {

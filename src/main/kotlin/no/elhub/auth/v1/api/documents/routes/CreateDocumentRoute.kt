@@ -9,6 +9,7 @@ import no.elhub.auth.v0.features.common.toApiErrorResponse
 import no.elhub.auth.v0.features.common.toTypeMismatchApiErrorResponse
 import no.elhub.auth.v1.api.common.toApiErrorResponse
 import no.elhub.auth.v1.api.common.toPartyIdentifier
+import no.elhub.auth.v1.api.common.validateQueryParameters
 import no.elhub.auth.v1.api.documents.request.JsonApiCreateAuthorizationDocumentRequest
 import no.elhub.auth.v1.api.documents.request.toDocumentSpecification
 import no.elhub.auth.v1.api.documents.response.toGetResponse
@@ -22,6 +23,8 @@ fun Route.route(
     handler: CreateDocumentHandler,
 ) {
     post {
+        call.validateQueryParameters()
+
         val request =
             call.receiveEither<JsonApiCreateAuthorizationDocumentRequest>().fold(
                 ifLeft = { error ->

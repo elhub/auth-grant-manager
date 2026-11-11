@@ -9,6 +9,7 @@ import no.elhub.auth.v0.features.common.toApiErrorResponse
 import no.elhub.auth.v0.features.common.toTypeMismatchApiErrorResponse
 import no.elhub.auth.v1.api.common.toApiErrorResponse
 import no.elhub.auth.v1.api.common.toPartyIdentifier
+import no.elhub.auth.v1.api.common.validateQueryParameters
 import no.elhub.auth.v1.api.requests.request.JsonApiCreateAuthorizationRequestRequest
 import no.elhub.auth.v1.api.requests.request.validateAndReturnAuthorizationRequestSpecification
 import no.elhub.auth.v1.api.requests.response.toGetResponse
@@ -22,6 +23,8 @@ fun Route.route(
     handler: CreateRequestHandler,
 ) {
     post {
+        call.validateQueryParameters()
+
         val request =
             call.receiveEither<JsonApiCreateAuthorizationRequestRequest>().fold(
                 ifLeft = { error ->

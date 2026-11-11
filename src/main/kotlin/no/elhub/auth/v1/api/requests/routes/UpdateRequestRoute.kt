@@ -10,6 +10,7 @@ import no.elhub.auth.v0.features.common.toApiErrorResponse
 import no.elhub.auth.v0.features.common.toTypeMismatchApiErrorResponse
 import no.elhub.auth.v0.features.common.validateDataId
 import no.elhub.auth.v0.features.common.validatePathId
+import no.elhub.auth.v1.api.common.validateQueryParameters
 import no.elhub.auth.v1.api.requests.request.JsonApiUpdateAuthorizationRequestRequest
 import no.elhub.auth.v1.api.requests.response.toGetResponse
 import no.elhub.auth.v1.common.auth.authorizedAgent
@@ -17,6 +18,8 @@ import no.elhub.auth.v1.features.requests.UpdateRequestHandler
 
 fun Route.route(handler: UpdateRequestHandler) {
     patch("/{id}") {
+        call.validateQueryParameters()
+
         val id = validatePathId(call.parameters["id"])
             .getOrElse { error ->
                 val (status, body) = error.toApiErrorResponse()
