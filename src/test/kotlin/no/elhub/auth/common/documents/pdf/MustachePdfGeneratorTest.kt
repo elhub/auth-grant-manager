@@ -208,7 +208,7 @@ class MustachePdfGeneratorTest : FunSpec({
         text shouldContain "Innflyttingsdato: 01.05.2026"
         text shouldContain "på vegne av organisasjonen"
         text shouldContain "må forespørselen bekreftes innen"
-        text shouldContain "4 uker."
+        text.replace(Regex("\\s+"), " ") shouldContain "4 uker."
         text shouldContain "Dette dokumentet vil være tilgjengelig for strømkunden på Elhub Min Side."
         text shouldContain "finner du på Elhub sin hjemmeside."
         pdfLanguage(pdf) shouldBe "nb-NO"
