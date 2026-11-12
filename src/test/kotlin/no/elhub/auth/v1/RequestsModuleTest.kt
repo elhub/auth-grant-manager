@@ -15,6 +15,7 @@ import no.elhub.auth.common.config.configureSerialization
 import no.elhub.auth.common.configureErrorHandling
 import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsService
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsService
+import no.elhub.auth.v1.common.AuthorizationRulesService
 import no.elhub.auth.v1.repositories.AgentRepository
 import no.elhub.auth.v1.repositories.ExposedAgentRepository
 import no.elhub.auth.v1.repositories.ExposedGrantRepository
@@ -58,6 +59,7 @@ class RequestsModuleTest : FunSpec({
                         provide<MeteringPointsService> { mockk<MeteringPointsService>() }
                         provide<OrganisationsService> { mockk<OrganisationsService>() }
                         provide<AgentRepository> { ExposedAgentRepository() }
+                        provide<AuthorizationRulesService> { mockk<AuthorizationRulesService>() }
                         provide<GrantRepository> { ExposedGrantRepository(resolve()) }
                     }
                     requestsModule()
@@ -85,6 +87,7 @@ class RequestsModuleTest : FunSpec({
                     provide<MeteringPointsService> { mockk<MeteringPointsService>() }
                     provide<OrganisationsService> { mockk<OrganisationsService>() }
                     provide<AgentRepository> { ExposedAgentRepository() }
+                    provide<AuthorizationRulesService> { mockk<AuthorizationRulesService>() }
                     provide<GrantRepository> { ExposedGrantRepository(resolve()) }
                 }
                 requestsModule()
@@ -111,6 +114,7 @@ class RequestsModuleTest : FunSpec({
                     provide<MeteringPointsService> { mockk<MeteringPointsService>() }
                     provide<OrganisationsService> { mockk<OrganisationsService>() }
                     provide<AgentRepository> { ExposedAgentRepository() }
+                    provide<AuthorizationRulesService> { mockk<AuthorizationRulesService>() }
                     provide<GrantRepository> { ExposedGrantRepository(resolve()) }
                 }
                 requestsModule()

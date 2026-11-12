@@ -20,6 +20,7 @@ import no.elhub.auth.common.documents.pdf.PdfValidationException
 import no.elhub.auth.v0.features.common.party.PartyError
 import no.elhub.auth.v0.features.common.party.PartyIdentifier
 import no.elhub.auth.v0.features.common.party.PartyIdentifierType
+import no.elhub.auth.v1.common.AuthorizationRulesService
 import no.elhub.auth.v1.common.auth.AgentType
 import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.domain.AuthorizationDocument
@@ -38,6 +39,7 @@ import no.elhub.auth.v1.domain.PermissionCapability
 import no.elhub.auth.v1.domain.RequestedAuthorizationScope
 import no.elhub.auth.v1.domain.ResourceConstraint
 import no.elhub.auth.v1.domain.ResourceType
+import no.elhub.auth.v1.integrations.pdp.PdpAuthorizationException
 import no.elhub.auth.v1.repositories.DocumentRepository
 import no.elhub.auth.v1.repositories.RepositoryReadError
 import no.elhub.auth.v1.repositories.RepositoryWriteError
@@ -49,7 +51,8 @@ class ConfirmDocumentHandlerTest : FunSpec({
     val repository = mockk<DocumentRepository>()
     val agentService = mockk<AgentService>()
     val validator = mockk<PdfSignatureValidator>()
-    val handler = ConfirmDocumentHandler(repository, agentService, validator)
+    val authorizationRulesService = mockk<AuthorizationRulesService>()
+    val handler = ConfirmDocumentHandler(repository, agentService, validator, authorizationRulesService)
     val requestedBy = AuthorizationAgent("requested-by", AgentType.OrganizationEntity)
     val requestedPrincipal = AuthorizationAgent("requested-principal", AgentType.Organization)
     val requestedOf = AuthorizationAgent("requested-of", AgentType.Person)
@@ -105,8 +108,46 @@ class ConfirmDocumentHandlerTest : FunSpec({
     )
 
     beforeTest {
-        clearMocks(repository, agentService, validator)
+        clearMocks(repository, agentService, validator, authorizationRulesService)
         coEvery { repository.find(id) } returns document
+        coEvery { authorizationRulesService.isApproverAllowed(any(), requestedOf, requestedPrincipal) } returns true
+    }
+
+    test("rejects a signatory denied by PDP without confirming") {
+        val signatory = requestedOf.copy(id = "other-person")
+        every { validator.validateSignaturesAndReturnSignatory(signedFile, originalFile) } returns PdfSignatory(nin)
+        coEvery { agentService.resolve(identifier) } returns signatory.right()
+        coEvery { authorizationRulesService.isApproverAllowed(signatory, requestedOf, requestedPrincipal) } returns false
+
+        shouldThrow<ConfirmDocumentError.SignatoryNotAllowed> { handler(id, requestedBy, signedFile) }
+
+        coVerify(exactly = 1) { authorizationRulesService.isApproverAllowed(signatory, requestedOf, requestedPrincipal) }
+        coVerify(exactly = 0) { repository.confirm(any(), any(), any(), any()) }
+    }
+
+    test("propagates PDP failures without confirming") {
+        val error = PdpAuthorizationException("PDP unavailable")
+        every { validator.validateSignaturesAndReturnSignatory(signedFile, originalFile) } returns PdfSignatory(nin)
+        coEvery { agentService.resolve(identifier) } returns requestedOf.right()
+        coEvery { authorizationRulesService.isApproverAllowed(requestedOf, requestedOf, requestedPrincipal) } throws error
+
+        shouldThrow<PdpAuthorizationException> { handler(id, requestedBy, signedFile) } shouldBeSameInstanceAs error
+
+        coVerify(exactly = 0) { repository.confirm(any(), any(), any(), any()) }
+    }
+
+    test("confirms with the PDP-authorized signatory even when different from requestedOf") {
+        val signatory = requestedOf.copy(id = "other-person")
+        every { validator.validateSignaturesAndReturnSignatory(signedFile, originalFile) } returns PdfSignatory(nin)
+        coEvery { agentService.resolve(identifier) } returns signatory.right()
+        val grants = slot<List<AuthorizationGrant>>()
+        val confirmed = document.copy(status = AuthorizationDocumentStatus.Approved)
+        coEvery { repository.confirm(id, signedFile, signatory, capture(grants)) } returns confirmed
+
+        handler(id, requestedBy, signedFile) shouldBeSameInstanceAs confirmed
+
+        coVerify(exactly = 1) { authorizationRulesService.isApproverAllowed(signatory, requestedOf, requestedPrincipal) }
+        grants.captured.forEach { it.approvedBy shouldBe signatory }
     }
 
     test("rejects an authorized agent other than requestedBy before validating the PDF") {
@@ -114,6 +155,7 @@ class ConfirmDocumentHandlerTest : FunSpec({
             handler(id, requestedBy.copy(id = "other"), signedFile)
         }
         verify(exactly = 0) { validator.validateSignaturesAndReturnSignatory(any(), any()) }
+        coVerify(exactly = 0) { authorizationRulesService.isApproverAllowed(any(), any(), any()) }
         coVerify(exactly = 0) { repository.confirm(any(), any(), any(), any()) }
     }
 

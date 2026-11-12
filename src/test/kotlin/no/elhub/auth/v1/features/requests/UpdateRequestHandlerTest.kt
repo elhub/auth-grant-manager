@@ -11,6 +11,7 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.slot
 import kotlinx.serialization.json.JsonObject
+import no.elhub.auth.v1.common.AuthorizationRulesService
 import no.elhub.auth.v1.common.auth.AgentType
 import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.domain.AuthorizationGrant
@@ -21,6 +22,7 @@ import no.elhub.auth.v1.domain.MeteringPointId
 import no.elhub.auth.v1.domain.ResourceConstraint
 import no.elhub.auth.v1.domain.TextLanguage
 import no.elhub.auth.v1.domain.requests.AuthorizationRequestTypeDetails
+import no.elhub.auth.v1.integrations.pdp.PdpAuthorizationException
 import no.elhub.auth.v1.repositories.RepositoryReadError
 import no.elhub.auth.v1.repositories.RepositoryWriteError
 import no.elhub.auth.v1.repositories.RequestRepository
@@ -29,7 +31,8 @@ import kotlin.time.Duration.Companion.days
 
 class UpdateRequestHandlerTest : FunSpec({
     val requestRepository = mockk<RequestRepository>()
-    val handler = UpdateRequestHandler(requestRepository)
+    val authorizationRulesService = mockk<AuthorizationRulesService>()
+    val handler = UpdateRequestHandler(requestRepository, authorizationRulesService)
     val requestedBy = AuthorizationAgent("7080005053246", AgentType.OrganizationEntity)
     val requestedPrincipal = AuthorizationAgent("999888771", AgentType.Organization)
     val requestedOf = AuthorizationAgent("person-1", AgentType.Person)
@@ -47,7 +50,52 @@ class UpdateRequestHandlerTest : FunSpec({
     )
     val id = request.id
 
-    beforeTest { clearMocks(requestRepository) }
+    beforeTest {
+        clearMocks(requestRepository, authorizationRulesService)
+        coEvery { authorizationRulesService.isApproverAllowed(any(), requestedOf, requestedPrincipal) } returns true
+    }
+
+    listOf(AuthorizationRequestStatus.Approved, AuthorizationRequestStatus.Rejected).forEach { status ->
+        test("rejects an unauthorized approver when $status without writing") {
+            val approver = requestedOf.copy(id = "other-person")
+            coEvery { requestRepository.find(id) } returns request
+            coEvery { authorizationRulesService.isApproverAllowed(approver, requestedOf, requestedPrincipal) } returns false
+
+            shouldThrow<UpdateRequestError.NotAuthorized> {
+                handler(id, approver, status, TextLanguage.NB)
+            }
+
+            coVerify(exactly = 1) { authorizationRulesService.isApproverAllowed(approver, requestedOf, requestedPrincipal) }
+            coVerify(exactly = 0) { requestRepository.accept(any(), any(), any()) }
+            coVerify(exactly = 0) { requestRepository.reject(any(), any()) }
+        }
+
+        test("propagates PDP failures when $status without writing") {
+            val error = PdpAuthorizationException("PDP unavailable")
+            coEvery { requestRepository.find(id) } returns request
+            coEvery { authorizationRulesService.isApproverAllowed(requestedOf, requestedOf, requestedPrincipal) } throws error
+
+            shouldThrow<PdpAuthorizationException> {
+                handler(id, requestedOf, status, TextLanguage.NB)
+            } shouldBeSameInstanceAs error
+
+            coVerify(exactly = 0) { requestRepository.accept(any(), any(), any()) }
+            coVerify(exactly = 0) { requestRepository.reject(any(), any()) }
+        }
+    }
+
+    test("accepting records the authorized approver even when different from requestedOf") {
+        val approver = requestedOf.copy(id = "other-person")
+        val grants = slot<List<AuthorizationGrant>>()
+        val accepted = request.copy(status = AuthorizationRequestStatus.Approved, approvedBy = approver)
+        coEvery { requestRepository.find(id) } returns request
+        coEvery { requestRepository.accept(id, capture(grants), TextLanguage.NB) } returns accepted
+
+        handler(id, approver, AuthorizationRequestStatus.Approved, TextLanguage.NB) shouldBe accepted
+
+        grants.captured.single().approvedBy shouldBe approver
+        coVerify(exactly = 1) { authorizationRulesService.isApproverAllowed(approver, requestedOf, requestedPrincipal) }
+    }
 
     test("accepting creates grants approved by requestedOf and stores the text language") {
         val grants = slot<List<AuthorizationGrant>>()
@@ -70,6 +118,7 @@ class UpdateRequestHandlerTest : FunSpec({
 
         handler(id, requestedOf, AuthorizationRequestStatus.Rejected, TextLanguage.EN) shouldBe rejected
 
+        coVerify(exactly = 1) { authorizationRulesService.isApproverAllowed(requestedOf, requestedOf, requestedPrincipal) }
         coVerify(exactly = 0) { requestRepository.accept(any(), any(), any()) }
     }
 
