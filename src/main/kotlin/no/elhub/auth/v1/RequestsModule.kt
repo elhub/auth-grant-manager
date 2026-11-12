@@ -37,7 +37,7 @@ fun Application.requestsModule() {
         provide<CreateRequestHandler> { CreateRequestHandler(resolve(), resolve(), resolve(), resolve()) }
         provide<GetRequestHandler> { GetRequestHandler(resolve()) }
         provide<ListRequestsHandler> { ListRequestsHandler(resolve()) }
-        provide<UpdateRequestHandler> { UpdateRequestHandler(resolve()) }
+        provide<UpdateRequestHandler> { UpdateRequestHandler(resolve(), resolve()) }
     }
 
     val createHandler: CreateRequestHandler by dependencies

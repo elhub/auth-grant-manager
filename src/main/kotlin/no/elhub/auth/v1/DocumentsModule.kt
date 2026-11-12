@@ -58,7 +58,7 @@ fun Application.module() {
             )
         }
         provide<ConfirmDocumentHandler> {
-            ConfirmDocumentHandler(resolve(), resolve(), resolve())
+            ConfirmDocumentHandler(resolve(), resolve(), resolve(), resolve())
         }
         provide<GetDocumentHandler> {
             GetDocumentHandler(resolve(), resolve())
