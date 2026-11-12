@@ -7,10 +7,13 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.plugins.logging.LoggingFormat
+import io.ktor.http.Headers
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
+import io.ktor.server.request.path
 import kotlinx.serialization.json.Json
 import no.elhub.auth.common.ApiHeaders
+import no.elhub.auth.common.ConflictingGlnHeadersException
 import no.elhub.auth.common.auth.AuthorizedPartyKey
 import no.elhub.auth.common.auth.UpdateRequestAuthInfoPolicy
 import no.elhub.auth.common.auth.resolveAuthorizedParty
@@ -19,25 +22,26 @@ import no.elhub.auth.plugin.authorization
 import no.elhub.auth.plugin.policies.token.base.authinfo.AuthInfoPolicy
 
 fun Application.configureAuthorization() {
-    val pdpHttpClient = HttpClient(Apache5) {
-        install(HttpTimeout) {
-            requestTimeoutMillis = 10_000
-            connectTimeoutMillis = 10_000
-            socketTimeoutMillis = 10_000
+    val pdpHttpClient =
+        HttpClient(Apache5) {
+            install(HttpTimeout) {
+                requestTimeoutMillis = 10_000
+                connectTimeoutMillis = 10_000
+                socketTimeoutMillis = 10_000
+            }
+            install(ContentNegotiation) {
+                json(
+                    Json {
+                        ignoreUnknownKeys = true
+                        explicitNulls = false
+                    },
+                )
+            }
+            install(Logging) {
+                format = LoggingFormat.OkHttp
+                level = LogLevel.INFO
+            }
         }
-        install(ContentNegotiation) {
-            json(
-                Json {
-                    ignoreUnknownKeys = true
-                    explicitNulls = false
-                }
-            )
-        }
-        install(Logging) {
-            format = LoggingFormat.OkHttp
-            level = LogLevel.INFO
-        }
-    }
 
     authorization {
         client = pdpHttpClient
@@ -46,8 +50,14 @@ fun Application.configureAuthorization() {
         tokenPolicy(AuthInfoPolicy) {
             buildPayload {
                 AuthInfoPolicy.Request(
-                    senderGln = request.headers[ApiHeaders.SENDER_GLN]?.ifBlank { null },
-                    onBehalfOfGln = request.headers[ApiHeaders.ON_BEHALF_OF_GLN]?.ifBlank { null },
+                    senderGln = resolveGlnHeader(request.headers, request.path(), ApiHeaders.ELHUB_SENDER_GLN, ApiHeaders.SENDER_GLN),
+                    onBehalfOfGln =
+                    resolveGlnHeader(
+                        request.headers,
+                        request.path(),
+                        ApiHeaders.ELHUB_ON_BEHALF_OF_GLN,
+                        ApiHeaders.ON_BEHALF_OF_GLN,
+                    ),
                     onBehalfOfOrganisationId = request.headers[ApiHeaders.ON_BEHALF_OF_ORGANISATION]?.ifBlank { null },
                 )
             }
@@ -83,4 +93,22 @@ fun Application.configureAuthorization() {
             }
         }
     }
+}
+
+internal fun resolveGlnHeader(
+    headers: Headers,
+    path: String,
+    preferred: String,
+    legacy: String,
+): String? {
+    // Keep legacy names on v1 temporarily so existing consumers can migrate to the Elhub-* headers.
+    // v0 continues to use only the original names.
+    val oldValue = headers[legacy]?.ifBlank { null }
+    if (!path.startsWith("/access/v1/")) return oldValue
+
+    val newValue = headers[preferred]?.ifBlank { null }
+    if (newValue != null && oldValue != null && newValue != oldValue) {
+        throw ConflictingGlnHeadersException(preferred, legacy)
+    }
+    return newValue ?: oldValue
 }
