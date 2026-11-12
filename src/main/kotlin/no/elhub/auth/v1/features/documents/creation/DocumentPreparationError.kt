@@ -15,6 +15,9 @@ sealed class DocumentPreparationError(override val detail: String) : Errors(deta
 
     class RequestedByLookupFailure(val clientError: ClientError) :
         DocumentPreparationError("Failed to fetch data for requested by: $clientError")
+
+    class RequestedPrincipalNameLookupFailure(val clientError: ClientError) :
+        DocumentPreparationError("Failed to fetch data for requested principal: $clientError")
 }
 
 fun ClientError.toDocumentPreparationError(): DocumentPreparationError = when (this) {

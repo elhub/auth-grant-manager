@@ -7,13 +7,13 @@ import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.http.isSuccess
+import no.elhub.auth.common.ApiHeaders
+import no.elhub.auth.common.ELHUB_TRACE_ID_HEADER
+import no.elhub.auth.common.TraceIdContext
 import no.elhub.auth.common.structuredata.meteringpoints.MeteringPointResponse
 import no.elhub.auth.v0.features.businessprocesses.common.JwtTokenProvider
 import no.elhub.auth.v0.features.businessprocesses.structuredata.common.ClientError
 import no.elhub.auth.v0.features.businessprocesses.structuredata.common.mapErrorsFromServer
-import no.elhub.auth.v0.features.common.ApiHeaders
-import no.elhub.auth.v0.features.common.ELHUB_TRACE_ID_HEADER
-import no.elhub.auth.v0.features.common.TraceIdContext
 import org.slf4j.LoggerFactory
 
 interface MeteringPointsService {

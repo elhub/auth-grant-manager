@@ -10,17 +10,19 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
 import io.ktor.server.testing.testApplication
 import kotlinx.serialization.json.Json
+import no.elhub.auth.common.config.jsonApiContentType
 import no.elhub.auth.common.documents.pdf.PdfGenerationException
 import no.elhub.auth.common.documents.pdf.PdfSigningException
 import no.elhub.auth.common.documents.pdf.PdfValidationException
-import no.elhub.auth.v0.config.jsonApiContentType
 import no.elhub.auth.v0.features.businessprocesses.structuredata.common.ClientError
+import no.elhub.auth.v1.api.common.errors.InputError
 import no.elhub.auth.v1.domain.AuthorizationDocumentStatus
 import no.elhub.auth.v1.features.documents.ConfirmDocumentError
 import no.elhub.auth.v1.features.documents.InvalidDocumentScopes
 import no.elhub.auth.v1.features.documents.creation.DocumentPreparationError
 import no.elhub.auth.v1.features.grants.UpdateGrantError
 import no.elhub.auth.v1.features.requests.creation.RequestPreparationError
+import no.elhub.auth.v1.integrations.pdp.PdpAuthorizationException
 import no.elhub.auth.v1.repositories.RepositoryReadError
 import no.elhub.auth.v1.repositories.RepositoryWriteError
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
@@ -86,8 +88,8 @@ class ErrorHandlingTest : FunSpec({
         ErrorCase(
             ConfirmDocumentError.NotAuthorized(),
             HttpStatusCode.Forbidden,
-            "Party not authorized",
-            "The authorized party is not permitted to confirm this document.",
+            "Agent not authorized",
+            "The authorized agent is not permitted to confirm this document.",
         ),
         ErrorCase(
             ConfirmDocumentError.InvalidStatus(AuthorizationDocumentStatus.Approved),
@@ -105,7 +107,7 @@ class ErrorHandlingTest : FunSpec({
             ConfirmDocumentError.SignatoryNotAllowed(),
             HttpStatusCode.Forbidden,
             "Signatory not allowed",
-            "The signer does not match the document's requestedOf party.",
+            "The signer does not match the document's requestedOf agent.",
         ),
         ErrorCase(
             DocumentPreparationError.RequestedMeteringPointsNotFound(),
@@ -126,6 +128,12 @@ class ErrorHandlingTest : FunSpec({
             "The requested by could not be found",
         ),
         ErrorCase(
+            DocumentPreparationError.RequestedPrincipalNameLookupFailure(ClientError.NotFound),
+            HttpStatusCode.UnprocessableEntity,
+            "Validation error",
+            "The requested principal could not be found",
+        ),
+        ErrorCase(
             RequestPreparationError.RequestedMeteringPointsNotFound(),
             HttpStatusCode.UnprocessableEntity,
             "Validation error",
@@ -133,6 +141,18 @@ class ErrorHandlingTest : FunSpec({
         ),
         ErrorCase(
             RequestPreparationError.RequestedPrincipalLookupFailure(ClientError.NotFound),
+            HttpStatusCode.UnprocessableEntity,
+            "Validation error",
+            "The requested principal could not be found",
+        ),
+        ErrorCase(
+            RequestPreparationError.RequestedByLookupFailure(ClientError.NotFound),
+            HttpStatusCode.UnprocessableEntity,
+            "Validation error",
+            "The requested by could not be found",
+        ),
+        ErrorCase(
+            RequestPreparationError.RequestedPrincipalNameLookupFailure(ClientError.NotFound),
             HttpStatusCode.UnprocessableEntity,
             "Validation error",
             "The requested principal could not be found",
@@ -163,6 +183,15 @@ class ErrorHandlingTest : FunSpec({
         ),
     )
 
+    val inputCases = listOf(
+        ErrorCase(
+            InputError.InvalidQueryParameterError("Invalid filter[status] value 'Unknown'. Valid values: Pending, Active, Expired"),
+            HttpStatusCode.BadRequest,
+            "Invalid input",
+            "Invalid filter[status] value 'Unknown'. Valid values: Pending, Active, Expired",
+        ),
+    )
+
     val grantUpdateCases = listOf(
         ErrorCase(
             UpdateGrantError.NotAuthorized("Person cannot update authorization grant to status Exhausted."),
@@ -184,7 +213,7 @@ class ErrorHandlingTest : FunSpec({
         ),
     )
 
-    (validationCases + confirmationCases + grantUpdateCases).forEach { case ->
+    (validationCases + confirmationCases + inputCases + grantUpdateCases).forEach { case ->
         test("maps ${case.cause::class.qualifiedName} to ${case.status.value} JSON:API error") {
             testApplication {
                 application {
@@ -211,11 +240,15 @@ class ErrorHandlingTest : FunSpec({
         RepositoryReadError.UnexpectedError("secret database read error"),
         RepositoryWriteError.UnexpectedError("secret database write error"),
         InvalidDocumentScopes("secret stored document scope error"),
+        PdpAuthorizationException("secret PDP authorization error"),
         DocumentPreparationError.MeteringPointsServiceFailure(ClientError.NotFound),
         DocumentPreparationError.RequestedPrincipalLookupFailure(ClientError.ServerError),
         DocumentPreparationError.RequestedByLookupFailure(ClientError.ServerError),
+        DocumentPreparationError.RequestedPrincipalNameLookupFailure(ClientError.ServerError),
         RequestPreparationError.MeteringPointsServiceFailure(ClientError.ServerError),
         RequestPreparationError.RequestedPrincipalLookupFailure(ClientError.ServerError),
+        RequestPreparationError.RequestedByLookupFailure(ClientError.ServerError),
+        RequestPreparationError.RequestedPrincipalNameLookupFailure(ClientError.ServerError),
     ).forEach { cause ->
         test("hides details of ${cause::class.qualifiedName} behind a generic 500 JSON:API error") {
             testApplication {

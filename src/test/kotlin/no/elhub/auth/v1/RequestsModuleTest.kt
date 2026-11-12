@@ -10,16 +10,17 @@ import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.plugins.di.dependencies
 import io.ktor.server.testing.testApplication
 import io.mockk.mockk
+import no.elhub.auth.common.config.configureAuthorization
+import no.elhub.auth.common.config.configureSerialization
 import no.elhub.auth.common.configureErrorHandling
-import no.elhub.auth.v0.config.configureAuthorization
-import no.elhub.auth.v0.config.configureSerialization
 import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsService
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsService
-import no.elhub.auth.v0.features.common.party.PartyService
+import no.elhub.auth.v1.common.AuthorizationRulesService
+import no.elhub.auth.v1.repositories.AgentRepository
+import no.elhub.auth.v1.repositories.ExposedAgentRepository
 import no.elhub.auth.v1.repositories.ExposedGrantRepository
-import no.elhub.auth.v1.repositories.ExposedPartyRepository
 import no.elhub.auth.v1.repositories.GrantRepository
-import no.elhub.auth.v1.repositories.PartyRepository
+import no.elhub.auth.v0.features.common.party.PartyService as AgentService
 
 private const val REQUEST_ID = "123e4567-e89b-12d3-a456-426614174000"
 
@@ -54,10 +55,11 @@ class RequestsModuleTest : FunSpec({
                     configureErrorHandling()
                     configureAuthorization()
                     dependencies {
-                        provide<PartyService> { mockk<PartyService>() }
+                        provide<AgentService> { mockk<AgentService>() }
                         provide<MeteringPointsService> { mockk<MeteringPointsService>() }
                         provide<OrganisationsService> { mockk<OrganisationsService>() }
-                        provide<PartyRepository> { ExposedPartyRepository() }
+                        provide<AgentRepository> { ExposedAgentRepository() }
+                        provide<AuthorizationRulesService> { mockk<AuthorizationRulesService>() }
                         provide<GrantRepository> { ExposedGrantRepository(resolve()) }
                     }
                     requestsModule()
@@ -81,10 +83,11 @@ class RequestsModuleTest : FunSpec({
                 configureErrorHandling()
                 configureAuthorization()
                 dependencies {
-                    provide<PartyService> { mockk<PartyService>() }
+                    provide<AgentService> { mockk<AgentService>() }
                     provide<MeteringPointsService> { mockk<MeteringPointsService>() }
                     provide<OrganisationsService> { mockk<OrganisationsService>() }
-                    provide<PartyRepository> { ExposedPartyRepository() }
+                    provide<AgentRepository> { ExposedAgentRepository() }
+                    provide<AuthorizationRulesService> { mockk<AuthorizationRulesService>() }
                     provide<GrantRepository> { ExposedGrantRepository(resolve()) }
                 }
                 requestsModule()
@@ -107,10 +110,11 @@ class RequestsModuleTest : FunSpec({
                 configureErrorHandling()
                 configureAuthorization()
                 dependencies {
-                    provide<PartyService> { mockk<PartyService>() }
+                    provide<AgentService> { mockk<AgentService>() }
                     provide<MeteringPointsService> { mockk<MeteringPointsService>() }
                     provide<OrganisationsService> { mockk<OrganisationsService>() }
-                    provide<PartyRepository> { ExposedPartyRepository() }
+                    provide<AgentRepository> { ExposedAgentRepository() }
+                    provide<AuthorizationRulesService> { mockk<AuthorizationRulesService>() }
                     provide<GrantRepository> { ExposedGrantRepository(resolve()) }
                 }
                 requestsModule()

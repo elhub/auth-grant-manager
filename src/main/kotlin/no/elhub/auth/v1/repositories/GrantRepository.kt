@@ -1,12 +1,10 @@
 package no.elhub.auth.v1.repositories
 
-import no.elhub.auth.common.auth.AuthorizationParty
-import no.elhub.auth.v0.config.withTransaction
+import no.elhub.auth.common.config.withTransaction
 import no.elhub.auth.v0.features.common.PGEnum
 import no.elhub.auth.v0.features.common.Page
 import no.elhub.auth.v0.features.common.Pagination
-import no.elhub.auth.v0.features.common.party.AuthorizationPartyTable
-import no.elhub.auth.v0.features.grants.common.toAuthorizationParty
+import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.common.now
 import no.elhub.auth.v1.domain.AuthorizationGrant
 import no.elhub.auth.v1.domain.AuthorizationGrantSourceType
@@ -15,6 +13,7 @@ import no.elhub.auth.v1.domain.AuthorizationGrantType
 import no.elhub.auth.v1.domain.AuthorizationScopeConstraint
 import no.elhub.auth.v1.domain.AuthorizationScopeConstraintAttribute
 import no.elhub.auth.v1.domain.AuthorizationScopeConstraintKind
+import no.elhub.auth.v1.domain.GrantAgentFilters
 import no.elhub.auth.v1.domain.GrantedAuthorizationScope
 import no.elhub.auth.v1.domain.MeteringPointContractType
 import no.elhub.auth.v1.domain.MeteringPointId
@@ -25,19 +24,28 @@ import no.elhub.auth.v1.domain.grantValidityStatus
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.compoundAnd
+import org.jetbrains.exposed.v1.core.compoundOr
 import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.greater
 import org.jetbrains.exposed.v1.core.inList
+import org.jetbrains.exposed.v1.core.inSubQuery
+import org.jetbrains.exposed.v1.core.isNull
 import org.jetbrains.exposed.v1.core.java.javaUUID
+import org.jetbrains.exposed.v1.core.lessEq
 import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.core.vendors.ForUpdateOption
 import org.jetbrains.exposed.v1.datetime.timestamp
 import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.updateReturning
 import org.postgresql.util.PGobject
 import java.util.UUID
 import kotlin.time.Instant
+import no.elhub.auth.v0.features.common.party.AuthorizationPartyTable as AuthorizationAgentTable
+import no.elhub.auth.v0.features.grants.common.toAuthorizationParty as toAuthorizationAgent
 
 interface GrantRepository {
     suspend fun find(grantId: UUID): AuthorizationGrant
@@ -47,8 +55,11 @@ interface GrantRepository {
     ): Map<UUID, List<AuthorizationGrant>>
 
     suspend fun findAll(
-        party: AuthorizationParty,
-        pagination: Pagination
+        agent: AuthorizationAgent,
+        pagination: Pagination,
+        statuses: List<AuthorizationGrantStatus>,
+        agentFilters: GrantAgentFilters,
+        types: List<AuthorizationGrantType>,
     ): Page<AuthorizationGrant>
 
     suspend fun insert(grant: AuthorizationGrant): AuthorizationGrant
@@ -56,7 +67,7 @@ interface GrantRepository {
 }
 
 class ExposedGrantRepository(
-    val partyRepository: PartyRepository,
+    val agentRepository: AgentRepository,
 ) : GrantRepository {
     override suspend fun find(grantId: UUID): AuthorizationGrant = withTransaction {
         val row = AuthorizationGrantTable.selectAll()
@@ -65,10 +76,10 @@ class ExposedGrantRepository(
             ?: throw RepositoryReadError.NotFoundError("Grant not found: $grantId")
 
         row.toAuthorizationGrant(
-            principal = partyRepository.find(row[AuthorizationGrantTable.principal]).toAuthorizationParty(),
-            grantedBy = partyRepository.find(row[AuthorizationGrantTable.grantedBy]).toAuthorizationParty(),
-            grantedTo = partyRepository.find(row[AuthorizationGrantTable.grantedTo]).toAuthorizationParty(),
-            approvedBy = partyRepository.find(row[AuthorizationGrantTable.approvedBy]).toAuthorizationParty(),
+            principal = agentRepository.find(row[AuthorizationGrantTable.principal]).toAuthorizationAgent(),
+            grantedBy = agentRepository.find(row[AuthorizationGrantTable.grantedBy]).toAuthorizationAgent(),
+            grantedTo = agentRepository.find(row[AuthorizationGrantTable.grantedTo]).toAuthorizationAgent(),
+            approvedBy = agentRepository.find(row[AuthorizationGrantTable.approvedBy]).toAuthorizationAgent(),
             scopes = getScopesByGrantId(listOf(grantId))[grantId].orEmpty(),
             now = now(),
         )
@@ -89,7 +100,7 @@ class ExposedGrantRepository(
 
             if (rows.isEmpty()) return@withTransaction emptyMap()
 
-            val partyIds = rows.flatMap {
+            val agentIds = rows.flatMap {
                 listOf(
                     it[AuthorizationGrantTable.principal],
                     it[AuthorizationGrantTable.grantedBy],
@@ -97,17 +108,17 @@ class ExposedGrantRepository(
                     it[AuthorizationGrantTable.approvedBy],
                 )
             }.distinct()
-            val parties = partyRepository.findByIds(partyIds)
-                .mapValues { (_, party) -> party.toAuthorizationParty() }
+            val agents = agentRepository.findByIds(agentIds)
+                .mapValues { (_, agent) -> agent.toAuthorizationAgent() }
             val scopes = getScopesByGrantId(rows.map { it[AuthorizationGrantTable.id].value })
             val now = now()
 
             rows.map { row ->
                 row.toAuthorizationGrant(
-                    principal = parties.getValue(row[AuthorizationGrantTable.principal]),
-                    grantedBy = parties.getValue(row[AuthorizationGrantTable.grantedBy]),
-                    grantedTo = parties.getValue(row[AuthorizationGrantTable.grantedTo]),
-                    approvedBy = parties.getValue(row[AuthorizationGrantTable.approvedBy]),
+                    principal = agents.getValue(row[AuthorizationGrantTable.principal]),
+                    grantedBy = agents.getValue(row[AuthorizationGrantTable.grantedBy]),
+                    grantedTo = agents.getValue(row[AuthorizationGrantTable.grantedTo]),
+                    approvedBy = agents.getValue(row[AuthorizationGrantTable.approvedBy]),
                     scopes = scopes[row[AuthorizationGrantTable.id].value].orEmpty(),
                     now = now,
                 )
@@ -115,11 +126,65 @@ class ExposedGrantRepository(
         }
     }
 
-    override suspend fun findAll(party: AuthorizationParty, pagination: Pagination): Page<AuthorizationGrant> = withTransaction {
-        val partyId = partyRepository.findOrInsert(party.type, party.id).id
-        val whereClause = (AuthorizationGrantTable.principal eq partyId) or
-            (AuthorizationGrantTable.grantedTo eq partyId) or
-            (AuthorizationGrantTable.grantedBy eq partyId)
+    override suspend fun findAll(
+        agent: AuthorizationAgent,
+        pagination: Pagination,
+        statuses: List<AuthorizationGrantStatus>,
+        agentFilters: GrantAgentFilters,
+        types: List<AuthorizationGrantType>,
+    ): Page<AuthorizationGrant> = withTransaction {
+        val agentId = agentRepository.findOrInsert(agent.type, agent.id).id
+        val now = now()
+        val agentCondition = listOf(
+            AuthorizationGrantTable.principal eq agentId,
+            AuthorizationGrantTable.grantedTo eq agentId,
+            AuthorizationGrantTable.grantedBy eq agentId,
+        ).compoundOr()
+
+        val statusConditions = statuses.map { status ->
+            when (status) {
+                AuthorizationGrantStatus.Pending -> (AuthorizationGrantTable.status eq DatabaseGrantStatus.Active) and
+                    (AuthorizationGrantTable.validFrom greater now) and
+                    (AuthorizationGrantTable.validTo.isNull() or (AuthorizationGrantTable.validTo greater now))
+
+                AuthorizationGrantStatus.Active -> (AuthorizationGrantTable.status eq DatabaseGrantStatus.Active) and
+                    (AuthorizationGrantTable.validFrom lessEq now) and
+                    (AuthorizationGrantTable.validTo.isNull() or (AuthorizationGrantTable.validTo greater now))
+
+                AuthorizationGrantStatus.Expired -> (AuthorizationGrantTable.status eq DatabaseGrantStatus.Active) and
+                    (AuthorizationGrantTable.validTo lessEq now)
+
+                AuthorizationGrantStatus.Revoked -> AuthorizationGrantTable.status eq DatabaseGrantStatus.Revoked
+
+                AuthorizationGrantStatus.Exhausted -> AuthorizationGrantTable.status eq DatabaseGrantStatus.Exhausted
+            }
+        }
+
+        val agentFilterConditions = listOf(
+            AuthorizationGrantTable.grantedBy to agentFilters.grantedBy,
+            AuthorizationGrantTable.principal to agentFilters.principal,
+            AuthorizationGrantTable.approvedBy to agentFilters.approvedBy,
+            AuthorizationGrantTable.grantedTo to agentFilters.grantedTo,
+        ).mapNotNull { (column, agents) ->
+            if (agents.isEmpty()) return@mapNotNull null
+
+            val matchingAgents = AuthorizationAgentTable
+                .select(AuthorizationAgentTable.id)
+                .where {
+                    agents.map { agent ->
+                        (AuthorizationAgentTable.type eq agent.type) and (AuthorizationAgentTable.partyId eq agent.id)
+                    }.compoundOr()
+                }
+
+            column inSubQuery matchingAgents
+        }
+
+        val whereClause = listOfNotNull(
+            agentCondition,
+            statusConditions.takeIf { it.isNotEmpty() }?.compoundOr(),
+            types.takeIf { it.isNotEmpty() }?.let { AuthorizationGrantTable.type inList it },
+        ).plus(agentFilterConditions).compoundAnd()
+
         val totalItems = AuthorizationGrantTable.selectAll().where { whereClause }.count()
         val rows = AuthorizationGrantTable.selectAll()
             .where { whereClause }
@@ -130,7 +195,7 @@ class ExposedGrantRepository(
 
         if (rows.isEmpty()) return@withTransaction Page(emptyList(), totalItems, pagination)
 
-        val partyIds = rows.flatMap {
+        val agentIds = rows.flatMap {
             listOf(
                 it[AuthorizationGrantTable.principal],
                 it[AuthorizationGrantTable.grantedBy],
@@ -138,17 +203,16 @@ class ExposedGrantRepository(
                 it[AuthorizationGrantTable.approvedBy],
             )
         }.distinct()
-        val parties = partyRepository.findByIds(partyIds)
-            .mapValues { (_, party) -> party.toAuthorizationParty() }
+        val agents = agentRepository.findByIds(agentIds)
+            .mapValues { (_, agent) -> agent.toAuthorizationAgent() }
         val scopes = getScopesByGrantId(rows.map { it[AuthorizationGrantTable.id].value })
-        val now = now()
 
         val items = rows.map { row ->
             row.toAuthorizationGrant(
-                principal = parties.getValue(row[AuthorizationGrantTable.principal]),
-                grantedBy = parties.getValue(row[AuthorizationGrantTable.grantedBy]),
-                grantedTo = parties.getValue(row[AuthorizationGrantTable.grantedTo]),
-                approvedBy = parties.getValue(row[AuthorizationGrantTable.approvedBy]),
+                principal = agents.getValue(row[AuthorizationGrantTable.principal]),
+                grantedBy = agents.getValue(row[AuthorizationGrantTable.grantedBy]),
+                grantedTo = agents.getValue(row[AuthorizationGrantTable.grantedTo]),
+                approvedBy = agents.getValue(row[AuthorizationGrantTable.approvedBy]),
                 scopes = scopes[row[AuthorizationGrantTable.id].value].orEmpty(),
                 now = now,
             )
@@ -157,10 +221,10 @@ class ExposedGrantRepository(
     }
 
     override suspend fun insert(grant: AuthorizationGrant): AuthorizationGrant = withTransaction {
-        val principal = partyRepository.findOrInsert(grant.principal.type, grant.principal.id)
-        val grantedBy = partyRepository.findOrInsert(grant.grantedBy.type, grant.grantedBy.id)
-        val grantedTo = partyRepository.findOrInsert(grant.grantedTo.type, grant.grantedTo.id)
-        val approvedBy = partyRepository.findOrInsert(grant.approvedBy.type, grant.approvedBy.id)
+        val principal = agentRepository.findOrInsert(grant.principal.type, grant.principal.id)
+        val grantedBy = agentRepository.findOrInsert(grant.grantedBy.type, grant.grantedBy.id)
+        val grantedTo = agentRepository.findOrInsert(grant.grantedTo.type, grant.grantedTo.id)
+        val approvedBy = agentRepository.findOrInsert(grant.approvedBy.type, grant.approvedBy.id)
 
         val inserted = AuthorizationGrantTable.insert {
             it[id] = grant.id
@@ -204,10 +268,10 @@ class ExposedGrantRepository(
         }
 
         inserted.resultedValues!!.single().toAuthorizationGrant(
-            principal = principal.toAuthorizationParty(),
-            grantedBy = grantedBy.toAuthorizationParty(),
-            grantedTo = grantedTo.toAuthorizationParty(),
-            approvedBy = approvedBy.toAuthorizationParty(),
+            principal = principal.toAuthorizationAgent(),
+            grantedBy = grantedBy.toAuthorizationAgent(),
+            grantedTo = grantedTo.toAuthorizationAgent(),
+            approvedBy = approvedBy.toAuthorizationAgent(),
             scopes = grant.scopes,
             now = now(),
         )
@@ -241,10 +305,10 @@ class ExposedGrantRepository(
             it[AuthorizationGrantTable.status] = target
             it[updatedAt] = now
         }.single().toAuthorizationGrant(
-            principal = partyRepository.find(row[AuthorizationGrantTable.principal]).toAuthorizationParty(),
-            grantedBy = partyRepository.find(row[AuthorizationGrantTable.grantedBy]).toAuthorizationParty(),
-            grantedTo = partyRepository.find(row[AuthorizationGrantTable.grantedTo]).toAuthorizationParty(),
-            approvedBy = partyRepository.find(row[AuthorizationGrantTable.approvedBy]).toAuthorizationParty(),
+            principal = agentRepository.find(row[AuthorizationGrantTable.principal]).toAuthorizationAgent(),
+            grantedBy = agentRepository.find(row[AuthorizationGrantTable.grantedBy]).toAuthorizationAgent(),
+            grantedTo = agentRepository.find(row[AuthorizationGrantTable.grantedTo]).toAuthorizationAgent(),
+            approvedBy = agentRepository.find(row[AuthorizationGrantTable.approvedBy]).toAuthorizationAgent(),
             scopes = getScopesByGrantId(listOf(grantId))[grantId].orEmpty(),
             now = now,
         )
@@ -267,10 +331,10 @@ class ExposedGrantRepository(
 }
 
 fun ResultRow.toAuthorizationGrant(
-    principal: AuthorizationParty,
-    grantedBy: AuthorizationParty,
-    grantedTo: AuthorizationParty,
-    approvedBy: AuthorizationParty,
+    principal: AuthorizationAgent,
+    grantedBy: AuthorizationAgent,
+    grantedTo: AuthorizationAgent,
+    approvedBy: AuthorizationAgent,
     scopes: List<GrantedAuthorizationScope>,
     now: Instant,
 ): AuthorizationGrant = AuthorizationGrant(
@@ -344,10 +408,10 @@ object AuthorizationGrantTable : UUIDTable("auth_v1.authorization_grant") {
         toDb = { PGEnum("auth_v1.authorization_grant_source_type", it) },
     )
     val sourceId = javaUUID("source_id")
-    val principal = javaUUID("principal").references(AuthorizationPartyTable.id)
-    val grantedBy = javaUUID("granted_by").references(AuthorizationPartyTable.id)
-    val grantedTo = javaUUID("granted_to").references(AuthorizationPartyTable.id)
-    val approvedBy = javaUUID("approved_by").references(AuthorizationPartyTable.id)
+    val principal = javaUUID("principal").references(AuthorizationAgentTable.id)
+    val grantedBy = javaUUID("granted_by").references(AuthorizationAgentTable.id)
+    val grantedTo = javaUUID("granted_to").references(AuthorizationAgentTable.id)
+    val approvedBy = javaUUID("approved_by").references(AuthorizationAgentTable.id)
     val status = customEnumeration(
         name = "status",
         sql = "auth_v1.authorization_grant_status",

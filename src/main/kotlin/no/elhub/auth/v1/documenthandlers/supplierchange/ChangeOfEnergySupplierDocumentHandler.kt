@@ -38,17 +38,16 @@ class ChangeOfEnergySupplierDocumentHandler(
                         ?: throw DocumentPreparationError.RequestedPrincipalLookupFailure(ClientError.NotFound)
                 },
             )
-        val metadata = ChangeOfEnergySupplierDocumentMetadata(
-            requestedMeteringPoints = try {
-                meteringPointsService.getMeteringPointsForOrganisation(
-                    meteringPointIds = specification.meteringPointIds.ids.map { it.value }.sorted(),
-                    elhubInternalId = requestedPrincipalElhubInternalId,
-                )
-            } catch (e: MeteringPointsLookupException) {
-                throw e.clientError.toDocumentPreparationError()
-            }.toRequestedMeteringPointMetadata(),
-        )
-        val requestedByName = organisationsService
+        val meteringPoints = try {
+            meteringPointsService.getMeteringPointsForOrganisation(
+                meteringPointIds = specification.meteringPointIds.ids.map { it.value }.sorted(),
+                elhubInternalId = requestedPrincipalElhubInternalId,
+            )
+        } catch (e: MeteringPointsLookupException) {
+            throw e.clientError.toDocumentPreparationError()
+        }
+
+        val balanceSupplierName = organisationsService
             .getPartyByIdAndPartyType(partyId = context.requestedBy.id, partyType = PartyType.BalanceSupplier)
             .fold(
                 ifLeft = { throw DocumentPreparationError.RequestedByLookupFailure(it) },
@@ -56,14 +55,27 @@ class ChangeOfEnergySupplierDocumentHandler(
                     response.data.attributes?.name ?: throw DocumentPreparationError.RequestedByLookupFailure(ClientError.NotFound)
                 }
             )
+        val organisationName = organisationsService.getNameByOrganisationNumber(context.requestedPrincipal.id).fold(
+            ifLeft = { throw DocumentPreparationError.RequestedPrincipalNameLookupFailure(it) },
+            ifRight = { response ->
+                response.data.attributes?.name ?: throw DocumentPreparationError.RequestedPrincipalNameLookupFailure(ClientError.NotFound)
+            }
+        )
+
+        val metadata = ChangeOfEnergySupplierDocumentMetadata(
+            requestedMeteringPoints = meteringPoints.toRequestedMeteringPointMetadata(),
+            balanceSupplierName = balanceSupplierName,
+            organizationName = organisationName,
+        )
+
         return DocumentCreationDetails(
             pdfContent = AuthorizationDocumentPdfContent.ChangeOfBalanceSupplierForOrganisation(
                 language = context.language.toPdfLanguage(),
-                organizationName = "Placeholder organization ${context.requestedPrincipal.id}",
+                organizationName = organisationName,
                 organizationNumber = context.requestedPrincipal.id,
                 meteringPoints = metadata.requestedMeteringPoints.map { it.toPdfContent() },
-                balanceSupplierName = requestedByName,
-                agreementReference = null,
+                balanceSupplierName = balanceSupplierName,
+                agreementReference = context.externalReference,
             ),
             validTo = Clock.System.now() + DOCUMENT_VALID_DAYS.days,
             meta = metadata.toJsonObject(),

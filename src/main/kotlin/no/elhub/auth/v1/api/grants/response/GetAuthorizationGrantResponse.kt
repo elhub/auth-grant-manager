@@ -7,10 +7,10 @@ import kotlinx.serialization.UseSerializers
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import no.elhub.auth.v1.api.common.GrantResourceType
+import no.elhub.auth.v1.api.common.response.AgentTypeResponse
 import no.elhub.auth.v1.api.common.response.GrantSourceTypeResponse
 import no.elhub.auth.v1.api.common.response.GrantedScopeResponse
 import no.elhub.auth.v1.api.common.response.OsloInstantSerializer
-import no.elhub.auth.v1.api.common.response.PartyTypeResponse
 import no.elhub.auth.v1.api.common.response.ResponseRelationship
 import no.elhub.auth.v1.api.common.response.ResponseResourceIdentifier
 import no.elhub.auth.v1.api.common.response.toApprovalRelationship
@@ -51,10 +51,10 @@ data class AuthorizationGrantAttributes(
 
 @Serializable
 data class AuthorizationGrantRelationships(
-    val principal: ResponseRelationship<PartyTypeResponse>,
-    val grantedBy: ResponseRelationship<PartyTypeResponse>,
-    val grantedTo: ResponseRelationship<PartyTypeResponse>,
-    val approvedBy: ResponseRelationship<PartyTypeResponse>,
+    val principal: ResponseRelationship<AgentTypeResponse>,
+    val grantedBy: ResponseRelationship<AgentTypeResponse>,
+    val grantedTo: ResponseRelationship<AgentTypeResponse>,
+    val approvedBy: ResponseRelationship<AgentTypeResponse>,
     val source: ResponseRelationship<GrantSourceTypeResponse>,
 )
 

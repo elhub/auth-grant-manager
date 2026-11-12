@@ -2,15 +2,11 @@ package no.elhub.auth.v1.repositories
 
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
-import no.elhub.auth.common.auth.AuthorizationParty
-import no.elhub.auth.v0.config.withTransaction
+import no.elhub.auth.common.config.withTransaction
 import no.elhub.auth.v0.features.common.PGEnum
 import no.elhub.auth.v0.features.common.Page
 import no.elhub.auth.v0.features.common.Pagination
-import no.elhub.auth.v0.features.common.party.AuthorizationPartyRecord
-import no.elhub.auth.v0.features.common.party.AuthorizationPartyTable
-import no.elhub.auth.v0.features.common.party.toAuthorizationParty
-import no.elhub.auth.v0.features.grants.common.toAuthorizationParty
+import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.common.now
 import no.elhub.auth.v1.domain.AuthorizationGrant
 import no.elhub.auth.v1.domain.AuthorizationGrantSourceType
@@ -48,11 +44,15 @@ import org.jetbrains.exposed.v1.json.jsonb
 import org.postgresql.util.PGobject
 import java.util.UUID
 import kotlin.time.Instant
+import no.elhub.auth.v0.features.common.party.AuthorizationPartyRecord as AuthorizationAgentRecord
+import no.elhub.auth.v0.features.common.party.AuthorizationPartyTable as AuthorizationAgentTable
+import no.elhub.auth.v0.features.common.party.toAuthorizationParty as toAuthorizationAgent
+import no.elhub.auth.v0.features.grants.common.toAuthorizationParty as toAuthorizationAgent
 
 interface RequestRepository {
     suspend fun find(requestId: UUID): AuthorizationRequest
     suspend fun findAndSortByCreatedAt(
-        party: AuthorizationParty,
+        agent: AuthorizationAgent,
         pagination: Pagination,
         statuses: List<AuthorizationRequestStatus>
     ): Page<AuthorizationRequest>
@@ -63,7 +63,7 @@ interface RequestRepository {
 }
 
 class ExposedRequestRepository(
-    val partyRepository: PartyRepository,
+    val agentRepository: AgentRepository,
     val grantRepository: GrantRepository,
 ) : RequestRepository {
     override suspend fun find(requestId: UUID): AuthorizationRequest = withTransaction {
@@ -73,24 +73,24 @@ class ExposedRequestRepository(
             ?: throw RepositoryReadError.NotFoundError("Request not found: $requestId")
 
         row.toAuthorizationRequest(
-            requestedBy = partyRepository.find(row[AuthorizationRequestTable.requestedBy]).toAuthorizationParty(),
-            requestedPrincipal = partyRepository.find(row[AuthorizationRequestTable.requestedPrincipal]).toAuthorizationParty(),
-            requestedOf = partyRepository.find(row[AuthorizationRequestTable.requestedOf]).toAuthorizationParty(),
+            requestedBy = agentRepository.find(row[AuthorizationRequestTable.requestedBy]).toAuthorizationAgent(),
+            requestedPrincipal = agentRepository.find(row[AuthorizationRequestTable.requestedPrincipal]).toAuthorizationAgent(),
+            requestedOf = agentRepository.find(row[AuthorizationRequestTable.requestedOf]).toAuthorizationAgent(),
             requestedScopes = getScopesByRequestId(listOf(requestId))[requestId].orEmpty(),
-            approvedBy = row[AuthorizationRequestTable.approvedBy]?.let { partyRepository.find(it).toAuthorizationParty() },
+            approvedBy = row[AuthorizationRequestTable.approvedBy]?.let { agentRepository.find(it).toAuthorizationAgent() },
             now = now(),
             grants = grantRepository.findBySourceIds(AuthorizationGrantSourceType.Request, listOf(requestId))[requestId],
         )
     }
 
     override suspend fun findAndSortByCreatedAt(
-        party: AuthorizationParty,
+        agent: AuthorizationAgent,
         pagination: Pagination,
         statuses: List<AuthorizationRequestStatus>
     ): Page<AuthorizationRequest> = withTransaction {
-        val partyId = partyRepository.findOrInsert(type = party.type, partyId = party.id).id
+        val agentId = agentRepository.findOrInsert(type = agent.type, agentId = agent.id).id
         val now = now()
-        val whereClause = generateFilterByCondition(partyId, statuses, now)
+        val whereClause = generateFilterByCondition(agentId, statuses, now)
 
         val totalItems = AuthorizationRequestTable
             .selectAll()
@@ -111,7 +111,7 @@ class ExposedRequestRepository(
 
         val requestIds = requestRows.map { it[AuthorizationRequestTable.id].value }
 
-        val allPartyIds = requestRows.flatMap {
+        val allAgentIds = requestRows.flatMap {
             listOfNotNull(
                 it[AuthorizationRequestTable.requestedBy],
                 it[AuthorizationRequestTable.requestedPrincipal],
@@ -119,32 +119,32 @@ class ExposedRequestRepository(
                 it[AuthorizationRequestTable.approvedBy],
             )
         }.distinct()
-        val partyMap: Map<UUID, AuthorizationPartyRecord> = AuthorizationPartyTable
+        val agentMap: Map<UUID, AuthorizationAgentRecord> = AuthorizationAgentTable
             .selectAll()
-            .where { AuthorizationPartyTable.id inList allPartyIds }
-            .associate { it[AuthorizationPartyTable.id].value to it.toAuthorizationParty() }
+            .where { AuthorizationAgentTable.id inList allAgentIds }
+            .associate { it[AuthorizationAgentTable.id].value to it.toAuthorizationAgent() }
         val scopesByRequestId = getScopesByRequestId(requestIds)
         val grantsByRequestId = grantRepository.findBySourceIds(AuthorizationGrantSourceType.Request, requestIds)
 
         val unexpectedMessage = "Unexpected error occurred."
 
         val items = requestRows.map { row ->
-            val requestedBy = partyMap[row[AuthorizationRequestTable.requestedBy]]
+            val requestedBy = agentMap[row[AuthorizationRequestTable.requestedBy]]
                 ?: throw RepositoryReadError.UnexpectedError(unexpectedMessage)
-            val requestedPrincipal = partyMap[row[AuthorizationRequestTable.requestedPrincipal]]
+            val requestedPrincipal = agentMap[row[AuthorizationRequestTable.requestedPrincipal]]
                 ?: throw RepositoryReadError.UnexpectedError(unexpectedMessage)
-            val requestedOf = partyMap[row[AuthorizationRequestTable.requestedOf]]
+            val requestedOf = agentMap[row[AuthorizationRequestTable.requestedOf]]
                 ?: throw RepositoryReadError.UnexpectedError(unexpectedMessage)
             val approvedBy = row[AuthorizationRequestTable.approvedBy]?.let {
-                partyMap[it] ?: throw RepositoryReadError.UnexpectedError(unexpectedMessage)
+                agentMap[it] ?: throw RepositoryReadError.UnexpectedError(unexpectedMessage)
             }
             val requestId = row[AuthorizationRequestTable.id].value
             row.toAuthorizationRequest(
-                requestedBy = requestedBy.toAuthorizationParty(),
-                requestedPrincipal = requestedPrincipal.toAuthorizationParty(),
-                requestedOf = requestedOf.toAuthorizationParty(),
+                requestedBy = requestedBy.toAuthorizationAgent(),
+                requestedPrincipal = requestedPrincipal.toAuthorizationAgent(),
+                requestedOf = requestedOf.toAuthorizationAgent(),
                 requestedScopes = scopesByRequestId[requestId].orEmpty(),
-                approvedBy = approvedBy?.toAuthorizationParty(),
+                approvedBy = approvedBy?.toAuthorizationAgent(),
                 now = now,
                 grants = grantsByRequestId[requestId],
             )
@@ -154,10 +154,10 @@ class ExposedRequestRepository(
     }
 
     override suspend fun insert(request: AuthorizationRequest): AuthorizationRequest = withTransaction {
-        val requestedBy = partyRepository.findOrInsert(request.requestedBy.type, request.requestedBy.id)
-        val requestedPrincipal = partyRepository.findOrInsert(request.requestedPrincipal.type, request.requestedPrincipal.id)
-        val requestedOf = partyRepository.findOrInsert(request.requestedOf.type, request.requestedOf.id)
-        val approvedBy = request.approvedBy?.let { partyRepository.findOrInsert(it.type, it.id) }
+        val requestedBy = agentRepository.findOrInsert(request.requestedBy.type, request.requestedBy.id)
+        val requestedPrincipal = agentRepository.findOrInsert(request.requestedPrincipal.type, request.requestedPrincipal.id)
+        val requestedOf = agentRepository.findOrInsert(request.requestedOf.type, request.requestedOf.id)
+        val approvedBy = request.approvedBy?.let { agentRepository.findOrInsert(it.type, it.id) }
 
         val inserted = AuthorizationRequestTable.insert {
             it[id] = request.id
@@ -203,11 +203,11 @@ class ExposedRequestRepository(
         }
 
         inserted.resultedValues!!.single().toAuthorizationRequest(
-            requestedBy = requestedBy.toAuthorizationParty(),
-            requestedPrincipal = requestedPrincipal.toAuthorizationParty(),
-            requestedOf = requestedOf.toAuthorizationParty(),
+            requestedBy = requestedBy.toAuthorizationAgent(),
+            requestedPrincipal = requestedPrincipal.toAuthorizationAgent(),
+            requestedOf = requestedOf.toAuthorizationAgent(),
             requestedScopes = request.requestedScopes,
-            approvedBy = approvedBy?.toAuthorizationParty(),
+            approvedBy = approvedBy?.toAuthorizationAgent(),
             now = now(),
         )
     }
@@ -239,9 +239,9 @@ class ExposedRequestRepository(
             it[AuthorizationRequestTable.textLanguage] = textLanguage
             it[updatedAt] = now
         }.single().toAuthorizationRequest(
-            requestedBy = partyRepository.find(row[AuthorizationRequestTable.requestedBy]).toAuthorizationParty(),
-            requestedPrincipal = partyRepository.find(row[AuthorizationRequestTable.requestedPrincipal]).toAuthorizationParty(),
-            requestedOf = partyRepository.find(row[AuthorizationRequestTable.requestedOf]).toAuthorizationParty(),
+            requestedBy = agentRepository.find(row[AuthorizationRequestTable.requestedBy]).toAuthorizationAgent(),
+            requestedPrincipal = agentRepository.find(row[AuthorizationRequestTable.requestedPrincipal]).toAuthorizationAgent(),
+            requestedOf = agentRepository.find(row[AuthorizationRequestTable.requestedOf]).toAuthorizationAgent(),
             requestedScopes = getScopesByRequestId(listOf(requestId))[requestId].orEmpty(),
             now = now,
         )
@@ -271,7 +271,7 @@ class ExposedRequestRepository(
         val insertedGrants = grants.map { grantRepository.insert(it) }
 
         val approvedBy = insertedGrants.first().approvedBy
-        val approvedById = partyRepository.findOrInsert(approvedBy.type, approvedBy.id).id
+        val approvedById = agentRepository.findOrInsert(approvedBy.type, approvedBy.id).id
 
         AuthorizationRequestTable.updateReturning(
             where = { AuthorizationRequestTable.id eq requestId }
@@ -281,9 +281,9 @@ class ExposedRequestRepository(
             it[AuthorizationRequestTable.textLanguage] = textLanguage
             it[updatedAt] = now
         }.single().toAuthorizationRequest(
-            requestedBy = partyRepository.find(row[AuthorizationRequestTable.requestedBy]).toAuthorizationParty(),
-            requestedPrincipal = partyRepository.find(row[AuthorizationRequestTable.requestedPrincipal]).toAuthorizationParty(),
-            requestedOf = partyRepository.find(row[AuthorizationRequestTable.requestedOf]).toAuthorizationParty(),
+            requestedBy = agentRepository.find(row[AuthorizationRequestTable.requestedBy]).toAuthorizationAgent(),
+            requestedPrincipal = agentRepository.find(row[AuthorizationRequestTable.requestedPrincipal]).toAuthorizationAgent(),
+            requestedOf = agentRepository.find(row[AuthorizationRequestTable.requestedOf]).toAuthorizationAgent(),
             requestedScopes = getScopesByRequestId(listOf(requestId))[requestId].orEmpty(),
             approvedBy = approvedBy,
             now = now,
@@ -292,14 +292,14 @@ class ExposedRequestRepository(
     }
 
     private fun generateFilterByCondition(
-        partyId: UUID,
+        agentId: UUID,
         statuses: List<AuthorizationRequestStatus>,
         now: Instant,
     ): Op<Boolean> {
-        val partyCondition = (AuthorizationRequestTable.requestedOf eq partyId) or
-            (AuthorizationRequestTable.requestedBy eq partyId)
+        val agentCondition = (AuthorizationRequestTable.requestedOf eq agentId) or
+            (AuthorizationRequestTable.requestedBy eq agentId)
         if (statuses.isEmpty()) {
-            return partyCondition
+            return agentCondition
         }
 
         val statusCondition = statuses.map { status ->
@@ -321,7 +321,7 @@ class ExposedRequestRepository(
                 AuthorizationRequestStatus.Rejected -> AuthorizationRequestTable.status eq DatabaseRequestStatus.Rejected
             }
         }.reduce { acc, op -> acc or op }
-        return partyCondition and statusCondition
+        return agentCondition and statusCondition
     }
 
     private fun getScopesByRequestId(
@@ -369,10 +369,10 @@ object AuthorizationRequestTable : UUIDTable("auth_v1.authorization_request") {
             fromDb = { value -> DatabaseRequestStatus.valueOf(value as String) },
             toDb = { PGEnum("auth_v1.authorization_request_status", it) },
         )
-    val requestedBy = javaUUID("requested_by").references(AuthorizationPartyTable.id)
-    val requestedPrincipal = javaUUID("requested_principal").references(AuthorizationPartyTable.id)
-    val requestedOf = javaUUID("requested_of").references(AuthorizationPartyTable.id)
-    val approvedBy = javaUUID("approved_by").references(AuthorizationPartyTable.id).nullable()
+    val requestedBy = javaUUID("requested_by").references(AuthorizationAgentTable.id)
+    val requestedPrincipal = javaUUID("requested_principal").references(AuthorizationAgentTable.id)
+    val requestedOf = javaUUID("requested_of").references(AuthorizationAgentTable.id)
+    val approvedBy = javaUUID("approved_by").references(AuthorizationAgentTable.id).nullable()
     val approvedAt = timestamp("approved_at").nullable()
     val createdAt = timestamp("created_at").clientDefault { now() }
     val externalReference = varchar("external_reference", 255).nullable()
@@ -400,11 +400,11 @@ private fun ResultRow.toAuthorizationRequestStatus(now: Instant): AuthorizationR
     }
 
 fun ResultRow.toAuthorizationRequest(
-    requestedBy: AuthorizationParty,
-    requestedPrincipal: AuthorizationParty,
-    requestedOf: AuthorizationParty,
+    requestedBy: AuthorizationAgent,
+    requestedPrincipal: AuthorizationAgent,
+    requestedOf: AuthorizationAgent,
     requestedScopes: List<RequestedAuthorizationScope>,
-    approvedBy: AuthorizationParty? = null,
+    approvedBy: AuthorizationAgent? = null,
     now: Instant,
     grants: List<AuthorizationGrant>? = null
 ): AuthorizationRequest {
@@ -424,10 +424,10 @@ fun ResultRow.toAuthorizationRequest(
         validTo = validTo,
         createdAt = this[AuthorizationRequestTable.createdAt],
         updatedAt = this[AuthorizationRequestTable.updatedAt],
-        requestedBy = AuthorizationParty(id = requestedBy.id, type = requestedBy.type),
-        requestedPrincipal = AuthorizationParty(id = requestedPrincipal.id, type = requestedPrincipal.type),
-        requestedOf = AuthorizationParty(id = requestedOf.id, type = requestedOf.type),
-        approvedBy = approvedBy?.let { AuthorizationParty(id = approvedBy.id, type = approvedBy.type) },
+        requestedBy = AuthorizationAgent(id = requestedBy.id, type = requestedBy.type),
+        requestedPrincipal = AuthorizationAgent(id = requestedPrincipal.id, type = requestedPrincipal.type),
+        requestedOf = AuthorizationAgent(id = requestedOf.id, type = requestedOf.type),
+        approvedBy = approvedBy?.let { AuthorizationAgent(id = approvedBy.id, type = approvedBy.type) },
         authorizationGrants = grants,
         textLanguage = this[AuthorizationRequestTable.textLanguage],
     )

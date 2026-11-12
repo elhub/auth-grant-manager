@@ -8,8 +8,8 @@ import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.serialization.json.JsonObject
-import no.elhub.auth.common.auth.AuthorizationParty
-import no.elhub.auth.common.auth.PartyType
+import no.elhub.auth.v1.common.auth.AgentType
+import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.domain.AuthorizationRequest
 import no.elhub.auth.v1.domain.AuthorizationRequestStatus
 import no.elhub.auth.v1.domain.AuthorizationRequestType
@@ -21,9 +21,9 @@ import kotlin.time.Instant
 class GetRequestHandlerTest : FunSpec({
     val requestRepository = mockk<RequestRepository>()
     val handler = GetRequestHandler(requestRepository)
-    val requestedBy = AuthorizationParty("123456789", PartyType.OrganizationEntity)
-    val requestedPrincipal = AuthorizationParty("999888771", PartyType.OrganizationEntity)
-    val requestedOf = AuthorizationParty("person-1", PartyType.Person)
+    val requestedBy = AuthorizationAgent("123456789", AgentType.OrganizationEntity)
+    val requestedPrincipal = AuthorizationAgent("999888771", AgentType.OrganizationEntity)
+    val requestedOf = AuthorizationAgent("person-1", AgentType.Person)
     val requestId = UUID.fromString("123e4567-e89b-12d3-a456-426614174000")
     val timestamp = Instant.parse("2026-10-01T08:00:00Z")
     val request = AuthorizationRequest(
@@ -47,23 +47,23 @@ class GetRequestHandlerTest : FunSpec({
 
     beforeTest { clearMocks(requestRepository) }
 
-    listOf(requestedBy, requestedOf).forEach { party ->
-        test("returns the request for ${party.id}") {
+    listOf(requestedBy, requestedOf).forEach { agent ->
+        test("returns the request for ${agent.id}") {
             coEvery { requestRepository.find(requestId) } returns request
 
-            handler(requestId, party) shouldBe request
+            handler(requestId, agent) shouldBe request
         }
     }
 
     listOf(
         requestedPrincipal,
-        AuthorizationParty("unrelated-person", PartyType.Person),
-        requestedBy.copy(type = PartyType.Person),
-    ).forEach { party ->
-        test("denies access for ${party.type} ${party.id}") {
+        AuthorizationAgent("unrelated-person", AgentType.Person),
+        requestedBy.copy(type = AgentType.Person),
+    ).forEach { agent ->
+        test("denies access for ${agent.type} ${agent.id}") {
             coEvery { requestRepository.find(requestId) } returns request
 
-            shouldThrow<GetRequestError.NotAuthorized> { handler(requestId, party) }
+            shouldThrow<GetRequestError.NotAuthorized> { handler(requestId, agent) }
         }
     }
 

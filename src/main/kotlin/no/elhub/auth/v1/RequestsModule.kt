@@ -7,7 +7,6 @@ import io.ktor.server.routing.routing
 import no.elhub.auth.common.auth.UpdateRequestAuthInfoPolicy
 import no.elhub.auth.plugin.policies.token.base.authinfo.AuthInfoPolicy
 import no.elhub.auth.plugin.tokenAuthorize
-import no.elhub.auth.v0.features.common.party.PartyService
 import no.elhub.auth.v1.api.requests.routes.route
 import no.elhub.auth.v1.features.requests.CreateRequestHandler
 import no.elhub.auth.v1.features.requests.GetRequestHandler
@@ -18,6 +17,7 @@ import no.elhub.auth.v1.features.requests.creation.EnergySupplierFrameworkAgreem
 import no.elhub.auth.v1.features.requests.creation.MoveInAndChangeOfEnergySupplierRequestHandler
 import no.elhub.auth.v1.repositories.ExposedRequestRepository
 import no.elhub.auth.v1.repositories.RequestRepository
+import no.elhub.auth.v0.features.common.party.PartyService as AgentService
 import no.elhub.auth.v1.requesthandlers.frameworkagreement.EnergySupplierFrameworkAgreementRequestHandler as FrameworkAgreementHandlerImplementation
 import no.elhub.auth.v1.requesthandlers.movein.MoveInAndChangeOfEnergySupplierRequestHandler as MoveInHandlerImplementation
 import no.elhub.auth.v1.requesthandlers.supplierchange.ChangeOfEnergySupplierRequestHandler as SupplierChangeHandlerImplementation
@@ -33,22 +33,22 @@ fun Application.requestsModule() {
         provide<RequestRepository> { ExposedRequestRepository(resolve(), resolve()) }
         provide<ChangeOfEnergySupplierRequestHandler> { SupplierChangeHandlerImplementation(resolve(), resolve()) }
         provide<MoveInAndChangeOfEnergySupplierRequestHandler> { MoveInHandlerImplementation(resolve(), resolve()) }
-        provide<EnergySupplierFrameworkAgreementRequestHandler> { FrameworkAgreementHandlerImplementation() }
+        provide<EnergySupplierFrameworkAgreementRequestHandler> { FrameworkAgreementHandlerImplementation(resolve()) }
         provide<CreateRequestHandler> { CreateRequestHandler(resolve(), resolve(), resolve(), resolve()) }
         provide<GetRequestHandler> { GetRequestHandler(resolve()) }
         provide<ListRequestsHandler> { ListRequestsHandler(resolve()) }
-        provide<UpdateRequestHandler> { UpdateRequestHandler(resolve()) }
+        provide<UpdateRequestHandler> { UpdateRequestHandler(resolve(), resolve()) }
     }
 
     val createHandler: CreateRequestHandler by dependencies
     val getHandler: GetRequestHandler by dependencies
     val listHandler: ListRequestsHandler by dependencies
     val updateHandler: UpdateRequestHandler by dependencies
-    val partyService: PartyService by dependencies
+    val agentService: AgentService by dependencies
     routing {
         tokenAuthorize(AuthInfoPolicy) {
             route(V1_REQUESTS_PATH) {
-                route(partyService, createHandler)
+                route(agentService, createHandler)
                 route(getHandler)
                 route(listHandler)
             }

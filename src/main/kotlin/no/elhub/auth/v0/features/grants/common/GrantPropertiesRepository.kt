@@ -1,7 +1,7 @@
 package no.elhub.auth.v0.features.grants.common
 
 import arrow.core.Either
-import no.elhub.auth.v0.config.TransactionContext
+import no.elhub.auth.common.config.TransactionContext
 import no.elhub.auth.v0.features.common.RepositoryError
 import no.elhub.auth.v0.features.common.RepositoryReadError
 import no.elhub.auth.v0.features.common.RepositoryWriteError

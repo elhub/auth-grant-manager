@@ -4,27 +4,27 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import no.elhub.auth.common.auth.AuthorizationParty
-import no.elhub.auth.common.auth.PartyType
 import no.elhub.auth.v0.features.common.Page
 import no.elhub.auth.v0.features.common.Pagination
 import no.elhub.auth.v1.V1_REQUESTS_PATH
+import no.elhub.auth.v1.common.auth.AgentType
+import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.domain.AuthorizationRequest
 import no.elhub.auth.v1.domain.AuthorizationRequestStatus
 import no.elhub.auth.v1.domain.AuthorizationRequestType
 import kotlin.time.Instant
 
 class ListAuthorizationRequestsResponseTest : FunSpec({
-    val party = AuthorizationParty("123456789", PartyType.OrganizationEntity)
+    val agent = AuthorizationAgent("123456789", AgentType.OrganizationEntity)
     val request = AuthorizationRequest.new(
         requestType = AuthorizationRequestType.ChangeOfEnergySupplierForOrganization,
         requestedScopes = emptyList(),
         externalReference = "contract-123",
         meta = JsonObject(emptyMap()),
         validTo = Instant.parse("2100-01-01T00:00:00Z"),
-        requestedBy = party,
-        requestedPrincipal = party,
-        requestedOf = AuthorizationParty("person-1", PartyType.Person),
+        requestedBy = agent,
+        requestedPrincipal = agent,
+        requestedOf = AuthorizationAgent("person-1", AgentType.Person),
     )
 
     test("reuses the single request resource mapping and includes pagination metadata") {

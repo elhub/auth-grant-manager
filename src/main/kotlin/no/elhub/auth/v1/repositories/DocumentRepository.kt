@@ -2,14 +2,11 @@ package no.elhub.auth.v1.repositories
 
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
-import no.elhub.auth.common.auth.AuthorizationParty
-import no.elhub.auth.v0.config.withTransaction
+import no.elhub.auth.common.config.withTransaction
 import no.elhub.auth.v0.features.common.PGEnum
 import no.elhub.auth.v0.features.common.Page
 import no.elhub.auth.v0.features.common.Pagination
-import no.elhub.auth.v0.features.common.party.AuthorizationPartyTable
-import no.elhub.auth.v0.features.common.party.toAuthorizationParty
-import no.elhub.auth.v0.features.grants.common.toAuthorizationParty
+import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.common.now
 import no.elhub.auth.v1.domain.AuthorizationDocument
 import no.elhub.auth.v1.domain.AuthorizationDocumentStatus
@@ -45,11 +42,14 @@ import org.jetbrains.exposed.v1.json.jsonb
 import org.postgresql.util.PGobject
 import java.util.UUID
 import kotlin.time.Instant
+import no.elhub.auth.v0.features.common.party.AuthorizationPartyTable as AuthorizationAgentTable
+import no.elhub.auth.v0.features.common.party.toAuthorizationParty as toAuthorizationAgent
+import no.elhub.auth.v0.features.grants.common.toAuthorizationParty as toAuthorizationAgent
 
 interface DocumentRepository {
     suspend fun find(id: UUID): AuthorizationDocument
     suspend fun findAndSortByCreatedAt(
-        requestedBy: AuthorizationParty,
+        requestedBy: AuthorizationAgent,
         pagination: Pagination,
         statuses: List<AuthorizationDocumentStatus>,
     ): Page<AuthorizationDocument>
@@ -58,13 +58,13 @@ interface DocumentRepository {
     suspend fun confirm(
         documentId: UUID,
         signedFile: ByteArray,
-        signatory: AuthorizationParty,
+        signatory: AuthorizationAgent,
         grants: List<AuthorizationGrant>,
     ): AuthorizationDocument
 }
 
 class ExposedDocumentRepository(
-    private val partyRepository: PartyRepository,
+    private val agentRepository: AgentRepository,
     private val grantRepository: GrantRepository,
 ) : DocumentRepository {
     override suspend fun find(id: UUID): AuthorizationDocument = withTransaction {
@@ -74,23 +74,23 @@ class ExposedDocumentRepository(
             ?: throw RepositoryReadError.NotFoundError("Document not found: $id")
 
         row.toAuthorizationDocument(
-            requestedBy = partyRepository.find(row[AuthorizationDocumentTable.requestedBy]).toAuthorizationParty(),
-            requestedPrincipal = partyRepository.find(row[AuthorizationDocumentTable.requestedPrincipal]).toAuthorizationParty(),
-            requestedOf = partyRepository.find(row[AuthorizationDocumentTable.requestedOf]).toAuthorizationParty(),
+            requestedBy = agentRepository.find(row[AuthorizationDocumentTable.requestedBy]).toAuthorizationAgent(),
+            requestedPrincipal = agentRepository.find(row[AuthorizationDocumentTable.requestedPrincipal]).toAuthorizationAgent(),
+            requestedOf = agentRepository.find(row[AuthorizationDocumentTable.requestedOf]).toAuthorizationAgent(),
             requestedScopes = getScopesByDocumentId(listOf(id))[id].orEmpty(),
-            approvedBy = row[AuthorizationDocumentTable.approvedBy]?.let { partyRepository.find(it).toAuthorizationParty() },
+            approvedBy = row[AuthorizationDocumentTable.approvedBy]?.let { agentRepository.find(it).toAuthorizationAgent() },
             now = now(),
         )
     }
 
     override suspend fun findAndSortByCreatedAt(
-        requestedBy: AuthorizationParty,
+        requestedBy: AuthorizationAgent,
         pagination: Pagination,
         statuses: List<AuthorizationDocumentStatus>
     ): Page<AuthorizationDocument> = withTransaction {
-        val partyId = partyRepository.findOrInsert(requestedBy.type, requestedBy.id).id
+        val agentId = agentRepository.findOrInsert(requestedBy.type, requestedBy.id).id
         val now = now()
-        val whereClause = generateFilterByCondition(partyId, statuses, now)
+        val whereClause = generateFilterByCondition(agentId, statuses, now)
         val totalItems = AuthorizationDocumentTable.selectAll().where(whereClause).count()
         val documentRows = AuthorizationDocumentTable.selectAll()
             .where(whereClause)
@@ -103,7 +103,7 @@ class ExposedDocumentRepository(
             return@withTransaction Page(emptyList(), totalItems, pagination)
         }
 
-        val partyIds = documentRows.flatMap {
+        val agentIds = documentRows.flatMap {
             listOfNotNull(
                 it[AuthorizationDocumentTable.requestedBy],
                 it[AuthorizationDocumentTable.requestedPrincipal],
@@ -111,21 +111,21 @@ class ExposedDocumentRepository(
                 it[AuthorizationDocumentTable.approvedBy],
             )
         }.distinct()
-        val parties = AuthorizationPartyTable.selectAll()
-            .where { AuthorizationPartyTable.id inList partyIds }
-            .associate { it[AuthorizationPartyTable.id].value to it.toAuthorizationParty().toAuthorizationParty() }
+        val agents = AuthorizationAgentTable.selectAll()
+            .where { AuthorizationAgentTable.id inList agentIds }
+            .associate { it[AuthorizationAgentTable.id].value to it.toAuthorizationAgent().toAuthorizationAgent() }
         val scopes = getScopesByDocumentId(documentRows.map { it[AuthorizationDocumentTable.id].value })
 
-        fun party(id: UUID): AuthorizationParty = parties[id]
-            ?: throw RepositoryReadError.UnexpectedError("Party not found for document: $id")
+        fun agent(id: UUID): AuthorizationAgent = agents[id]
+            ?: throw RepositoryReadError.UnexpectedError("Agent not found for document: $id")
 
         val items = documentRows.map { row ->
             row.toAuthorizationDocument(
-                requestedBy = party(row[AuthorizationDocumentTable.requestedBy]),
-                requestedPrincipal = party(row[AuthorizationDocumentTable.requestedPrincipal]),
-                requestedOf = party(row[AuthorizationDocumentTable.requestedOf]),
+                requestedBy = agent(row[AuthorizationDocumentTable.requestedBy]),
+                requestedPrincipal = agent(row[AuthorizationDocumentTable.requestedPrincipal]),
+                requestedOf = agent(row[AuthorizationDocumentTable.requestedOf]),
                 requestedScopes = scopes[row[AuthorizationDocumentTable.id].value].orEmpty(),
-                approvedBy = row[AuthorizationDocumentTable.approvedBy]?.let { party(it) },
+                approvedBy = row[AuthorizationDocumentTable.approvedBy]?.let { agent(it) },
                 now = now,
             )
         }
@@ -134,10 +134,10 @@ class ExposedDocumentRepository(
 
     override suspend fun insert(document: AuthorizationDocument): AuthorizationDocument = withTransaction {
         val documentId = UUID.fromString(document.id)
-        val requestedBy = partyRepository.findOrInsert(document.requestedBy.type, document.requestedBy.id)
-        val requestedPrincipal = partyRepository.findOrInsert(document.requestedPrincipal.type, document.requestedPrincipal.id)
-        val requestedOf = partyRepository.findOrInsert(document.requestedOf.type, document.requestedOf.id)
-        val approvedBy = document.approvedBy?.let { partyRepository.findOrInsert(it.type, it.id) }
+        val requestedBy = agentRepository.findOrInsert(document.requestedBy.type, document.requestedBy.id)
+        val requestedPrincipal = agentRepository.findOrInsert(document.requestedPrincipal.type, document.requestedPrincipal.id)
+        val requestedOf = agentRepository.findOrInsert(document.requestedOf.type, document.requestedOf.id)
+        val approvedBy = document.approvedBy?.let { agentRepository.findOrInsert(it.type, it.id) }
 
         val inserted = AuthorizationDocumentTable.insert {
             it[id] = documentId
@@ -177,11 +177,11 @@ class ExposedDocumentRepository(
         }
 
         inserted.resultedValues!!.single().toAuthorizationDocument(
-            requestedBy = requestedBy.toAuthorizationParty(),
-            requestedPrincipal = requestedPrincipal.toAuthorizationParty(),
-            requestedOf = requestedOf.toAuthorizationParty(),
+            requestedBy = requestedBy.toAuthorizationAgent(),
+            requestedPrincipal = requestedPrincipal.toAuthorizationAgent(),
+            requestedOf = requestedOf.toAuthorizationAgent(),
             requestedScopes = document.requestedScopes,
-            approvedBy = approvedBy?.toAuthorizationParty(),
+            approvedBy = approvedBy?.toAuthorizationAgent(),
             now = now(),
         )
     }
@@ -189,7 +189,7 @@ class ExposedDocumentRepository(
     override suspend fun confirm(
         documentId: UUID,
         signedFile: ByteArray,
-        signatory: AuthorizationParty,
+        signatory: AuthorizationAgent,
         grants: List<AuthorizationGrant>,
     ): AuthorizationDocument = withTransaction {
         if (grants.isEmpty()) {
@@ -214,7 +214,7 @@ class ExposedDocumentRepository(
             AuthorizationDocumentStatus.Pending -> Unit
         }
 
-        val approvedBy = partyRepository.findOrInsert(signatory.type, signatory.id)
+        val approvedBy = agentRepository.findOrInsert(signatory.type, signatory.id)
         val updated = AuthorizationDocumentTable.updateReturning(
             where = { AuthorizationDocumentTable.id eq documentId },
         ) {
@@ -226,24 +226,24 @@ class ExposedDocumentRepository(
         val insertedGrants = grants.map { grantRepository.insert(it) }
 
         updated.toAuthorizationDocument(
-            requestedBy = partyRepository.find(row[AuthorizationDocumentTable.requestedBy]).toAuthorizationParty(),
-            requestedPrincipal = partyRepository.find(row[AuthorizationDocumentTable.requestedPrincipal]).toAuthorizationParty(),
-            requestedOf = partyRepository.find(row[AuthorizationDocumentTable.requestedOf]).toAuthorizationParty(),
+            requestedBy = agentRepository.find(row[AuthorizationDocumentTable.requestedBy]).toAuthorizationAgent(),
+            requestedPrincipal = agentRepository.find(row[AuthorizationDocumentTable.requestedPrincipal]).toAuthorizationAgent(),
+            requestedOf = agentRepository.find(row[AuthorizationDocumentTable.requestedOf]).toAuthorizationAgent(),
             requestedScopes = getScopesByDocumentId(listOf(documentId))[documentId].orEmpty(),
-            approvedBy = approvedBy.toAuthorizationParty(),
+            approvedBy = approvedBy.toAuthorizationAgent(),
             now = now,
         ).copy(authorizationGrants = insertedGrants)
     }
 
     private fun generateFilterByCondition(
-        partyId: UUID,
+        agentId: UUID,
         statuses: List<AuthorizationDocumentStatus>,
         now: Instant,
     ): Op<Boolean> {
-        val partyCondition = (AuthorizationDocumentTable.requestedBy eq partyId) or
-            (AuthorizationDocumentTable.requestedOf eq partyId)
+        val agentCondition = (AuthorizationDocumentTable.requestedBy eq agentId) or
+            (AuthorizationDocumentTable.requestedOf eq agentId)
         if (statuses.isEmpty()) {
-            return partyCondition
+            return agentCondition
         }
         val statusCondition = statuses.map { status ->
             when (status) {
@@ -256,7 +256,7 @@ class ExposedDocumentRepository(
                 AuthorizationDocumentStatus.Approved -> AuthorizationDocumentTable.approvedBy.isNotNull()
             }
         }.reduce { acc, op -> acc or op }
-        return partyCondition and statusCondition
+        return agentCondition and statusCondition
     }
 
     private fun getScopesByDocumentId(documentIds: List<UUID>): Map<UUID, List<RequestedAuthorizationScope>> {
@@ -286,10 +286,10 @@ object AuthorizationDocumentTable : UUIDTable("auth_v1.authorization_document") 
         fromDb = { value -> AuthorizationDocumentType.valueOf(value as String) },
         toDb = { PGEnum("auth_v1.authorization_document_type", it) },
     )
-    val requestedBy = javaUUID("requested_by").references(AuthorizationPartyTable.id)
-    val requestedPrincipal = javaUUID("requested_principal").references(AuthorizationPartyTable.id)
-    val requestedOf = javaUUID("requested_of").references(AuthorizationPartyTable.id)
-    val approvedBy = javaUUID("approved_by").references(AuthorizationPartyTable.id).nullable()
+    val requestedBy = javaUUID("requested_by").references(AuthorizationAgentTable.id)
+    val requestedPrincipal = javaUUID("requested_principal").references(AuthorizationAgentTable.id)
+    val requestedOf = javaUUID("requested_of").references(AuthorizationAgentTable.id)
+    val approvedBy = javaUUID("approved_by").references(AuthorizationAgentTable.id).nullable()
     val signedAt = timestamp("signed_at").nullable()
     val externalReference = varchar("external_reference", 255).nullable()
     val meta = jsonb("meta", Json, JsonObject.serializer())
@@ -309,11 +309,11 @@ private fun ResultRow.toAuthorizationDocumentStatus(now: Instant): Authorization
 }
 
 fun ResultRow.toAuthorizationDocument(
-    requestedBy: AuthorizationParty,
-    requestedPrincipal: AuthorizationParty,
-    requestedOf: AuthorizationParty,
+    requestedBy: AuthorizationAgent,
+    requestedPrincipal: AuthorizationAgent,
+    requestedOf: AuthorizationAgent,
     requestedScopes: List<RequestedAuthorizationScope>,
-    approvedBy: AuthorizationParty? = null,
+    approvedBy: AuthorizationAgent? = null,
     now: Instant,
 ): AuthorizationDocument = AuthorizationDocument(
     id = this[AuthorizationDocumentTable.id].value.toString(),

@@ -3,40 +3,51 @@
   "$defs": {
     "resourceUuid": {
       "type": "string",
-      "format": "uuid"
+      "format": "uuid",
+      "description": "Unique identifier of the resource."
+    },
+    "dateTime": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp in ISO 8601 / RFC 3339 format with UTC offset (YYYY-MM-DDThh:mm:ss±hh:mm). Responses use Norwegian time (Europe/Oslo) with seconds precision, so the offset is +01:00 in winter and +02:00 in summer. Requests accept any offset, including Z for UTC.",
+      "examples": ["2026-11-01T00:00:00+01:00"]
     },
     "validFrom": {
-      "type": "string",
-      "format": "date-time"
+      "$ref": "#/$defs/dateTime",
+      "description": "Start of the validity period of the resource."
     },
     "validTo": {
-      "type": "string",
-      "format": "date-time"
+      "$ref": "#/$defs/dateTime",
+      "description": "End of the validity period of the resource."
     },
     "createdAt": {
-      "type": "string",
-      "format": "date-time"
+      "$ref": "#/$defs/dateTime",
+      "description": "Time the resource was created."
     },
     "updatedAt": {
+      "$ref": "#/$defs/dateTime",
+      "description": "Time the resource was last updated."
+    },
+    "agentIdentifier": {
       "type": "string",
-      "format": "date-time"
+      "description": "External identifier used to resolve an agent. The type of agent is determined by the length: 9 digits for an organization number, 11 digits for a national identity number, and 13 digits for a GLN.",
+      "examples": ["999888771", "01017012345", "7080000000000"]
     },
     "agentRelationship": {
       "type": "object",
+      "description": "Reference to an agent.",
       "properties": {
         "data": {
           "type": "object",
           "properties": {
             "type": {
-              "enum": [
-                "Person",
-                "Organization",
-                "MarketEntity"
-              ]
+              "description": "Type of agent. A Person is identified by NIN, an Organization identified by organization number, and a MarketEntity is identified by GLN.",
+              "enum": ["Person", "Organization", "MarketEntity"]
             },
             "id": {
               "type": "string",
-              "minLength": 1
+              "minLength": 1,
+              "description": "Identifier of the agent. The format depends on the agent type."
             }
           }
         }
@@ -44,6 +55,7 @@
     },
     "approvedByRelationship": {
       "type": "object",
+      "description": "Reference to the person who signed the document or approved the request.",
       "properties": {
         "data": {
           "type": "object",
@@ -53,7 +65,8 @@
             },
             "id": {
               "type": "string",
-              "minLength": 1
+              "minLength": 1,
+              "description": "Identifier of the person."
             }
           }
         }
@@ -61,6 +74,7 @@
     },
     "authorizationGrantRelationship": {
       "type": "object",
+      "description": "References to the authorization grants created from this resource. Empty until the document is signed or the request is approved.",
       "properties": {
         "data": {
           "type": "array",
@@ -80,15 +94,14 @@
     },
     "authorizationSourceRelationship": {
       "type": "object",
+      "description": "Reference to the authorization document or request the grant was created from.",
       "properties": {
         "data": {
           "type": "object",
           "properties": {
             "type": {
-              "enum": [
-                "AuthorizationDocument",
-                "AuthorizationRequest"
-              ]
+              "description": "Type of the source resource.",
+              "enum": ["AuthorizationDocument", "AuthorizationRequest"]
             },
             "id": {
               "$ref": "#/$defs/resourceUuid"

@@ -8,6 +8,7 @@ import io.ktor.client.request.accept
 import io.ktor.client.request.patch
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
+import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.server.routing.route
@@ -17,13 +18,14 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.serialization.json.JsonObject
-import no.elhub.auth.common.auth.AuthorizationParty
-import no.elhub.auth.common.auth.PartyType
-import no.elhub.auth.v0.config.jsonApiContentType
+import no.elhub.auth.common.config.jsonApiContentType
 import no.elhub.auth.v0.patchJson
 import no.elhub.auth.v0.setupAppWith
 import no.elhub.auth.v1.V1_REQUESTS_PATH
+import no.elhub.auth.v1.api.common.assertUnsupportedQueryParameters
 import no.elhub.auth.v1.api.requests.response.JsonApiGetAuthorizationRequestResponse
+import no.elhub.auth.v1.common.auth.AgentType
+import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.domain.AuthorizationGrant
 import no.elhub.auth.v1.domain.AuthorizationGrantSourceType
 import no.elhub.auth.v1.domain.AuthorizationGrantType
@@ -40,15 +42,15 @@ import kotlin.time.Instant
 
 class UpdateRequestRouteTest : FunSpec({
     val handler = mockk<UpdateRequestHandler>()
-    val requestedOf = AuthorizationParty("person-1", PartyType.Person)
+    val requestedOf = AuthorizationAgent("person-1", AgentType.Person)
     val request = AuthorizationRequest.new(
         requestType = AuthorizationRequestType.ChangeOfEnergySupplierForOrganization,
         requestedScopes = emptyList(),
         externalReference = null,
         meta = JsonObject(emptyMap()),
         validTo = Instant.parse("2100-01-01T00:00:00Z"),
-        requestedBy = AuthorizationParty("7080005053246", PartyType.OrganizationEntity),
-        requestedPrincipal = AuthorizationParty("999888771", PartyType.Organization),
+        requestedBy = AuthorizationAgent("7080005053246", AgentType.OrganizationEntity),
+        requestedPrincipal = AuthorizationAgent("999888771", AgentType.Organization),
         requestedOf = requestedOf,
     )
     val id = request.id
@@ -62,6 +64,18 @@ class UpdateRequestRouteTest : FunSpec({
     ) = """{"data":{"id":"$dataId","type":"$type","attributes":{"status":"$status","textLanguage":"$textLanguage"}}}"""
 
     beforeTest { clearMocks(handler) }
+
+    test("PATCH rejects unsupported query parameters without calling the handler") {
+        testApplication {
+            setupAppWith(requestedOf) {
+                route(V1_REQUESTS_PATH) { route(handler) }
+            }
+
+            assertUnsupportedQueryParameters(client, path, method = HttpMethod.Patch)
+
+            coVerify(exactly = 0) { handler(any(), any(), any(), any()) }
+        }
+    }
 
     test("PATCH accepts the request and returns it with its grants and text language") {
         val grant = AuthorizationGrant.new(

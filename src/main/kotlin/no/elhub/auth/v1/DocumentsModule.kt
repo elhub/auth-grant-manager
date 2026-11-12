@@ -6,8 +6,8 @@ import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import no.elhub.auth.plugin.policies.token.base.authinfo.AuthInfoPolicy
 import no.elhub.auth.plugin.tokenAuthorize
-import no.elhub.auth.v0.features.common.party.PartyService
 import no.elhub.auth.v1.api.documents.routes.route
+import no.elhub.auth.v1.common.AuthorizationRulesService
 import no.elhub.auth.v1.features.documents.ConfirmDocumentHandler
 import no.elhub.auth.v1.features.documents.CreateDocumentHandler
 import no.elhub.auth.v1.features.documents.GetDocumentHandler
@@ -15,12 +15,13 @@ import no.elhub.auth.v1.features.documents.ListDocumentsHandler
 import no.elhub.auth.v1.features.documents.creation.ChangeOfEnergySupplierDocumentHandler
 import no.elhub.auth.v1.features.documents.creation.EnergySupplierFrameworkAgreementDocumentHandler
 import no.elhub.auth.v1.features.documents.creation.MoveInAndChangeOfEnergySupplierDocumentHandler
+import no.elhub.auth.v1.repositories.AgentRepository
 import no.elhub.auth.v1.repositories.DocumentRepository
+import no.elhub.auth.v1.repositories.ExposedAgentRepository
 import no.elhub.auth.v1.repositories.ExposedDocumentRepository
 import no.elhub.auth.v1.repositories.ExposedGrantRepository
-import no.elhub.auth.v1.repositories.ExposedPartyRepository
 import no.elhub.auth.v1.repositories.GrantRepository
-import no.elhub.auth.v1.repositories.PartyRepository
+import no.elhub.auth.v0.features.common.party.PartyService as AgentService
 import no.elhub.auth.v1.documenthandlers.frameworkagreement.EnergySupplierFrameworkAgreementDocumentHandler as FrameworkAgreementHandlerImplementation
 import no.elhub.auth.v1.documenthandlers.movein.MoveInAndChangeOfEnergySupplierDocumentHandler as MoveInHandlerImplementation
 import no.elhub.auth.v1.documenthandlers.supplierchange.ChangeOfEnergySupplierDocumentHandler as SupplierChangeHandlerImplementation
@@ -33,7 +34,7 @@ fun Application.module() {
     }
 
     dependencies {
-        provide<PartyRepository> { ExposedPartyRepository() }
+        provide<AgentRepository> { ExposedAgentRepository() }
         provide<GrantRepository> { ExposedGrantRepository(resolve()) }
         provide<DocumentRepository> { ExposedDocumentRepository(resolve(), resolve()) }
         provide<ChangeOfEnergySupplierDocumentHandler> {
@@ -43,13 +44,21 @@ fun Application.module() {
             MoveInHandlerImplementation(resolve(), resolve())
         }
         provide<EnergySupplierFrameworkAgreementDocumentHandler> {
-            FrameworkAgreementHandlerImplementation()
+            FrameworkAgreementHandlerImplementation(resolve())
         }
         provide<CreateDocumentHandler> {
-            CreateDocumentHandler(resolve(), resolve(), resolve(), resolve(), resolve(), resolve())
+            CreateDocumentHandler(
+                resolve(),
+                resolve(),
+                resolve(),
+                resolve(),
+                resolve(),
+                resolve(),
+                resolve<AuthorizationRulesService>(),
+            )
         }
         provide<ConfirmDocumentHandler> {
-            ConfirmDocumentHandler(resolve(), resolve(), resolve())
+            ConfirmDocumentHandler(resolve(), resolve(), resolve(), resolve())
         }
         provide<GetDocumentHandler> {
             GetDocumentHandler(resolve(), resolve())
@@ -63,11 +72,11 @@ fun Application.module() {
     val confirmHandler: ConfirmDocumentHandler by dependencies
     val getHandler: GetDocumentHandler by dependencies
     val listHandler: ListDocumentsHandler by dependencies
-    val partyService: PartyService by dependencies
+    val agentService: AgentService by dependencies
     routing {
         tokenAuthorize(AuthInfoPolicy) {
             route(V1_DOCUMENTS_PATH) {
-                route(partyService, createHandler)
+                route(agentService, createHandler)
                 route(getHandler)
                 route(listHandler)
                 route(confirmHandler)

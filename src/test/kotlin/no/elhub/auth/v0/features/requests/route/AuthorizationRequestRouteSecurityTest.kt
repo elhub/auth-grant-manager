@@ -10,7 +10,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.contentType
 import io.ktor.server.testing.testApplication
-import no.elhub.auth.v0.features.common.ApiHeaders
+import no.elhub.auth.common.ApiHeaders
 import no.elhub.auth.v0.features.common.AuthPersonsTestContainerExtension
 import no.elhub.auth.v0.features.common.PdpTestContainerExtension
 import no.elhub.auth.v0.features.common.PostgresTestContainerExtension

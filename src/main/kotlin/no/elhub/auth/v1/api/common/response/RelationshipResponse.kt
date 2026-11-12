@@ -1,14 +1,14 @@
 package no.elhub.auth.v1.api.common.response
 
 import kotlinx.serialization.Serializable
-import no.elhub.auth.common.auth.AuthorizationParty
-import no.elhub.auth.common.auth.PartyType
 import no.elhub.auth.v1.api.common.GrantResourceType
+import no.elhub.auth.v1.common.auth.AgentType
+import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.domain.AuthorizationGrant
 import no.elhub.auth.v1.domain.AuthorizationGrantType
 
 @Serializable
-enum class PartyTypeResponse {
+enum class AgentTypeResponse {
     Person,
     Organization,
     MarketEntity,
@@ -36,20 +36,20 @@ data class ResponseGrantRelationship(
     val data: List<ResponseResourceIdentifier<GrantResourceType>>,
 )
 
-fun AuthorizationParty.toResponseRelationship() = ResponseRelationship(
+fun AuthorizationAgent.toResponseRelationship() = ResponseRelationship(
     data = ResponseResourceIdentifier(
         type = when (type) {
-            PartyType.Person -> PartyTypeResponse.Person
-            PartyType.Organization -> PartyTypeResponse.Organization
-            PartyType.OrganizationEntity -> PartyTypeResponse.MarketEntity
-            PartyType.System -> error("System parties cannot be represented in v1 responses")
+            AgentType.Person -> AgentTypeResponse.Person
+            AgentType.Organization -> AgentTypeResponse.Organization
+            AgentType.OrganizationEntity -> AgentTypeResponse.MarketEntity
+            AgentType.System -> error("System agents cannot be represented in v1 responses")
         },
         id = id,
     ),
 )
 
-fun AuthorizationParty.toApprovalRelationship(): ResponseRelationship<PartyTypeResponse> {
-    check(type == PartyType.Person) { "Only persons can be represented as approvers in v1 responses" }
+fun AuthorizationAgent.toApprovalRelationship(): ResponseRelationship<AgentTypeResponse> {
+    check(type == AgentType.Person) { "Only persons can be represented as approvers in v1 responses" }
     return toResponseRelationship()
 }
 

@@ -12,6 +12,12 @@ sealed class RequestPreparationError(override val detail: String) : Errors(detai
 
     class RequestedPrincipalLookupFailure(val clientError: ClientError) :
         RequestPreparationError("Failed to fetch Elhub internal ID for requested principal: $clientError")
+
+    class RequestedByLookupFailure(val clientError: ClientError) :
+        RequestPreparationError("Failed to fetch data for requested by: $clientError")
+
+    class RequestedPrincipalNameLookupFailure(val clientError: ClientError) :
+        RequestPreparationError("Failed to fetch data for requested principal: $clientError")
 }
 
 fun ClientError.toRequestPreparationError(): RequestPreparationError = when (this) {

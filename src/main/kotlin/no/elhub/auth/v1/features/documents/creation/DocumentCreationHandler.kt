@@ -1,16 +1,16 @@
 package no.elhub.auth.v1.features.documents.creation
 
 import kotlinx.serialization.json.JsonObject
-import no.elhub.auth.common.auth.AuthorizationParty
 import no.elhub.auth.common.documents.pdf.AuthorizationDocumentPdfContent
+import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.domain.DocumentLanguage
 import no.elhub.auth.v1.domain.documents.DocumentSpecification
 import kotlin.time.Instant
 
 data class DocumentCreationContext(
-    val requestedBy: AuthorizationParty,
-    val requestedPrincipal: AuthorizationParty,
-    val requestedOf: AuthorizationParty,
+    val requestedBy: AuthorizationAgent,
+    val requestedPrincipal: AuthorizationAgent,
+    val requestedOf: AuthorizationAgent,
     val language: DocumentLanguage,
     val externalReference: String?,
 )

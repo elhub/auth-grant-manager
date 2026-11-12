@@ -13,17 +13,19 @@ import io.ktor.server.routing.route
 import io.ktor.server.testing.testApplication
 import io.mockk.clearMocks
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
-import no.elhub.auth.common.auth.AuthorizationParty
-import no.elhub.auth.common.auth.PartyType
-import no.elhub.auth.v0.config.jsonApiContentType
+import no.elhub.auth.common.config.jsonApiContentType
 import no.elhub.auth.v0.setupAppWith
 import no.elhub.auth.v1.V1_REQUESTS_PATH
 import no.elhub.auth.v1.api.common.GrantResourceType
+import no.elhub.auth.v1.api.common.assertUnsupportedQueryParameters
 import no.elhub.auth.v1.api.requests.response.JsonApiGetAuthorizationRequestResponse
+import no.elhub.auth.v1.common.auth.AgentType
+import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.domain.AuthorizationGrant
 import no.elhub.auth.v1.domain.AuthorizationGrantSourceType
 import no.elhub.auth.v1.domain.AuthorizationGrantType
@@ -39,7 +41,7 @@ import kotlin.time.Instant
 
 class GetRequestRouteTest : FunSpec({
     val handler = mockk<GetRequestHandler>()
-    val authorizedParty = AuthorizationParty("123456789", PartyType.OrganizationEntity)
+    val authorizedAgent = AuthorizationAgent("123456789", AgentType.OrganizationEntity)
     val requestId = UUID.fromString("123e4567-e89b-12d3-a456-426614174000")
     val timestamp = Instant.parse("2026-10-01T08:00:00Z")
     val request = AuthorizationRequest(
@@ -54,20 +56,34 @@ class GetRequestRouteTest : FunSpec({
         validTo = Instant.parse("2026-11-01T08:00:00Z"),
         createdAt = timestamp,
         updatedAt = timestamp,
-        requestedBy = authorizedParty,
-        requestedPrincipal = AuthorizationParty("999888771", PartyType.OrganizationEntity),
-        requestedOf = AuthorizationParty("person-1", PartyType.Person),
+        requestedBy = authorizedAgent,
+        requestedPrincipal = AuthorizationAgent("999888771", AgentType.OrganizationEntity),
+        requestedOf = AuthorizationAgent("person-1", AgentType.Person),
         approvedBy = null,
         authorizationGrants = null,
     )
 
     beforeTest { clearMocks(handler) }
 
+    test("GET /{id} rejects unsupported query parameters without calling the handler") {
+        testApplication {
+            setupAppWith(authorizedAgent) {
+                route(V1_REQUESTS_PATH) { route(handler) }
+            }
+
+            assertUnsupportedQueryParameters(
+                client = client,
+                path = "$V1_REQUESTS_PATH/$requestId",
+            )
+            coVerify(exactly = 0) { handler(any(), any()) }
+        }
+    }
+
     test("GET /{id} returns the request as JSON:API") {
-        coEvery { handler(requestId, authorizedParty) } returns request
+        coEvery { handler(requestId, authorizedAgent) } returns request
 
         testApplication {
-            setupAppWith(authorizedParty) {
+            setupAppWith(authorizedAgent) {
                 route(V1_REQUESTS_PATH) { route(handler) }
             }
 
@@ -80,7 +96,7 @@ class GetRequestRouteTest : FunSpec({
             body.data.type shouldBe "AuthorizationRequest"
             body.data.attributes.externalReference shouldBe request.externalReference
             body.data.meta shouldBe request.meta
-            body.data.relationships.requestedBy.data.id shouldBe authorizedParty.id
+            body.data.relationships.requestedBy.data.id shouldBe authorizedAgent.id
             body.data.links.self shouldBe "$V1_REQUESTS_PATH/$requestId"
         }
     }
@@ -98,14 +114,14 @@ class GetRequestRouteTest : FunSpec({
             validTo = request.validTo,
             scopes = emptyList(),
         )
-        coEvery { handler(requestId, authorizedParty) } returns request.copy(
+        coEvery { handler(requestId, authorizedAgent) } returns request.copy(
             status = AuthorizationRequestStatus.Approved,
             approvedBy = request.requestedOf,
             authorizationGrants = listOf(grant),
         )
 
         testApplication {
-            setupAppWith(authorizedParty) {
+            setupAppWith(authorizedAgent) {
                 route(V1_REQUESTS_PATH) { route(handler) }
             }
 
@@ -126,10 +142,10 @@ class GetRequestRouteTest : FunSpec({
         RepositoryReadError.UnexpectedError("Database unavailable") to HttpStatusCode.InternalServerError,
     ).forEach { (error, status) ->
         test("GET /{id} returns ${status.value} for ${error.javaClass.simpleName}") {
-            coEvery { handler(requestId, authorizedParty) } throws error
+            coEvery { handler(requestId, authorizedAgent) } throws error
 
             testApplication {
-                setupAppWith(authorizedParty) {
+                setupAppWith(authorizedAgent) {
                     route(V1_REQUESTS_PATH) { route(handler) }
                 }
 
@@ -145,7 +161,7 @@ class GetRequestRouteTest : FunSpec({
 
     test("GET /{id} returns 400 for an invalid request ID") {
         testApplication {
-            setupAppWith(authorizedParty) {
+            setupAppWith(authorizedAgent) {
                 route(V1_REQUESTS_PATH) { route(handler) }
             }
 

@@ -3,12 +3,12 @@ name: database-access-exposed-liquibase
 description: >
   Use when writing or reviewing any Repository, Table object, or migration.
   Defines Exposed table conventions and explicit repository error handling,
-  newSuspendedTransaction usage, and Liquibase migration rules.
+  suspending transaction usage, and Liquibase migration rules.
   Load before generating any database access code.
 ---
 # Database Access with Exposed & Liquibase
 
-Repositories expose explicit success and error outcomes. Transactions are explicit. Migrations are versioned sequential SQL files.
+Repositories return success values and throw custom exceptions for expected failures. Transactions are explicit. Migrations are versioned sequential SQL files.
 
 ## Table definitions
 
@@ -47,49 +47,43 @@ object AuthorizationRequestScopeTable : Table("auth.authorization_request_scope"
 
 ## Repository pattern
 - All repositories must have an interface. Then use a concrete implementation of that interface to interact with data source (Postgres).
-- Return types must make expected success and error outcomes explicit.
+- Return domain values on success; document expected custom exceptions on repository contracts.
 - All repository functions must have suspend keyword.
 ### Interface (in `features/{domain}/common/`)
 
 ```kotlin
 interface RequestRepository {
-    suspend fun find(id: UUID): RepositoryFindResult
-    suspend fun insert(request: AuthorizationRequest): RepositoryInsertResult
+    /** @throws RepositoryReadError.NotFoundError when the request does not exist. */
+    suspend fun find(id: UUID): AuthorizationRequest
+    suspend fun insert(request: AuthorizationRequest): AuthorizationRequest
 }
 ```
 
 ### Implementation
 - DAO always happens through org.jetbrains.exposed, do not use SQL queries. Table must have a table type defined through exposed.
-- Always map persistence results and errors to explicit repository outcomes.
-- All errors in repository must be handled and defined as a RepositoryError. This can be found in Errors.kt.
+- Throw custom repository exceptions for expected failures; let unexpected infrastructure exceptions propagate.
+- Follow `functional-error-handling-arrow/SKILL.md` for narrow exception adapters. Do not catch every exception and convert it to `UnexpectedError`.
 - Always use `withTransaction { }` from Database.kt. Never use `transaction { }` (blocking).
 ```kotlin
 class ExposedRequestRepository(
     private val partyRepo: PartyRepository,
 ) : RequestRepository {
 
-    override suspend fun find(id: UUID): RepositoryFindResult = try {
-            withTransaction {
-                AuthorizationRequestTable
-                    .selectAll()
-                    .where { AuthorizationRequestTable.id eq id }
-                    .singleOrNull()
-            }
-        }.let { row -> row?.toAuthorizationRequest()?.let(RepositoryFindResult::Success)
-            ?: RepositoryFindResult.Failure(RepositoryReadError.NotFoundError) }
-    } catch (exception: Exception) {
-        RepositoryFindResult.Failure(RepositoryReadError.UnexpectedError)
-    }
+    override suspend fun find(id: UUID): AuthorizationRequest =
+        withTransaction {
+            AuthorizationRequestTable
+                .selectAll()
+                .where { AuthorizationRequestTable.id eq id }
+                .singleOrNull()
+                ?.toAuthorizationRequest()
+                ?: throw RepositoryReadError.NotFoundError("Request $id not found")
+        }
 
-    override suspend fun insert(request: AuthorizationRequest): RepositoryInsertResult = try {
-            withTransaction {
-                AuthorizationRequestTable.insert { /* ... */ }
-                request
-            }
-        RepositoryInsertResult.Success(request)
-    } catch (exception: Exception) {
-        RepositoryInsertResult.Failure(RepositoryWriteError.UnexpectedError)
-    }
+    override suspend fun insert(request: AuthorizationRequest): AuthorizationRequest =
+        withTransaction {
+            AuthorizationRequestTable.insert { /* ... */ }
+            request
+        }
 }
 ```
 
@@ -99,49 +93,57 @@ class ExposedRequestRepository(
 fun ResultRow.toAuthorizationRequest(
     requestedBy: AuthorizationPartyRecord,
     // ...
-): RepositoryFindResult = try {
+): AuthorizationRequest =
     AuthorizationRequest(
         id = this[AuthorizationRequestTable.id].value,
         type = this[AuthorizationRequestTable.requestType],
         // ...
     )
-    RepositoryFindResult.Success(AuthorizationRequest(/* ... */))
-} catch (exception: Exception) {
-    RepositoryFindResult.Failure(RepositoryReadError.UnexpectedError)
-}
 ```
 
-## Error types (from `features/common/Errors.kt`)
+## Repository Exceptions
+
+Reuse the v1 exception types in `v1/repositories/RepositoryError.kt`, which extend the shared `Errors` exception base:
 
 ```kotlin
-sealed class RepositoryReadError : RepositoryError() {
-    data object NotFoundError : RepositoryReadError()
-    data object UnexpectedError : RepositoryReadError()
+sealed class RepositoryReadError(override val detail: String) : Errors(detail) {
+    class NotFoundError(detail: String) : RepositoryReadError(detail)
 }
 
-sealed class RepositoryWriteError : RepositoryError() {
-    data object ConflictError : RepositoryWriteError()
-    data object NotFoundError : RepositoryWriteError()
-    data object UnexpectedError : RepositoryWriteError()
+sealed class RepositoryWriteError(override val detail: String) : Errors(detail) {
+    class ConflictError(detail: String) : RepositoryWriteError(detail)
+    class NotFoundError(detail: String) : RepositoryWriteError(detail)
 }
 ```
 
-Handlers map these to their own feature error type at the boundary.
+Translate exceptions only when the domain meaning changes, preserving the original cause. Do not convert arbitrary exceptions to `UnexpectedError`.
 
-## Transactions in Handlers
+## Atomic Repository Operations
 
-Wrap multi-step repository calls in a single `withTransaction { }` when atomicity is required:
+Repositories own transaction boundaries; handlers do not open transactions. Expose one repository operation for each atomic state change,
+accepting all data needed for dependent writes. For example, confirming a document must update its status and create its grant and grant properties
+in the same transaction, not through independently committed handler calls.
 
 ```kotlin
-val result = newSuspendedTransaction {
-    when (val result = repo.insert(entity)) {
-        is RepositoryInsertResult.Success -> result.value
-        is RepositoryInsertResult.Failure -> throw CreateError.PersistenceError
-    }
+// Repository implementation; write helpers use the enclosing transaction.
+override suspend fun confirmAndCreateGrant(
+    documentId: UUID,
+    grant: NewGrant,
+): Grant = withTransaction {
+    updateDocumentStatus(documentId)
+    val savedGrant = insertGrant(grant)
+    insertGrantProperties(savedGrant.id, grant.properties)
+    savedGrant
 }
 ```
 
-Handlers own transaction boundaries. Repositories do not nest transactions.
+Both custom and unexpected exceptions must escape the atomic transaction to trigger rollback.
+Do not catch a failed dependent write and continue or return success.
+
+Helpers may call `withTransaction` themselves, provided nested blocks participate in the enclosing database transaction. Successful completion of a nested block
+must not independently commit dependent writes: rolling back the outer transaction must undo them all. Do not start a separate connection or top-level
+transaction for dependent writes. Test failures after earlier writes: if grant or grant-property insertion fails, assert that the document status is unchanged
+and no partial grant data remains. Assert the thrown exception as well as persisted state.
 
 ## Ktor Native Dependency Injection registration
 - Always use Ktor Native Dependency Injection

@@ -14,15 +14,16 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.serialization.json.JsonObject
-import no.elhub.auth.common.auth.AuthorizationParty
-import no.elhub.auth.common.auth.PartyType
-import no.elhub.auth.v0.config.jsonApiContentType
+import no.elhub.auth.common.config.jsonApiContentType
 import no.elhub.auth.v0.features.common.Page
 import no.elhub.auth.v0.features.common.Pagination
 import no.elhub.auth.v0.setupAppWith
 import no.elhub.auth.v1.V1_DOCUMENTS_PATH
+import no.elhub.auth.v1.api.common.assertUnsupportedQueryParameters
 import no.elhub.auth.v1.api.documents.response.JsonApiListAuthorizationDocumentsResponse
 import no.elhub.auth.v1.api.documents.response.ResponseAuthorizationDocumentStatus
+import no.elhub.auth.v1.common.auth.AgentType
+import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.domain.AuthorizationDocument
 import no.elhub.auth.v1.domain.AuthorizationDocumentStatus
 import no.elhub.auth.v1.domain.AuthorizationDocumentType
@@ -33,27 +34,41 @@ import kotlin.time.Instant
 
 class ListDocumentsRouteTest : FunSpec({
     val handler = mockk<ListDocumentsHandler>()
-    val authorizedParty = AuthorizationParty("123456789", PartyType.OrganizationEntity)
+    val authorizedAgent = AuthorizationAgent("123456789", AgentType.OrganizationEntity)
     val document = AuthorizationDocument.new(
         documentType = AuthorizationDocumentType.ChangeOfEnergySupplierForOrganization,
         requestedScopes = emptyList(),
         externalReference = null,
         meta = JsonObject(emptyMap()),
         validTo = Instant.parse("2100-01-01T00:00:00Z"),
-        requestedBy = authorizedParty,
-        requestedPrincipal = authorizedParty,
-        requestedOf = AuthorizationParty("person-1", PartyType.Person),
+        requestedBy = authorizedAgent,
+        requestedPrincipal = authorizedAgent,
+        requestedOf = AuthorizationAgent("person-1", AgentType.Person),
         pdfBytes = byteArrayOf(),
     )
 
     beforeTest { clearMocks(handler) }
 
+    test("GET rejects unsupported query parameters without calling the handler") {
+        testApplication {
+            setupAppWith(authorizedAgent) {
+                route(V1_DOCUMENTS_PATH) { route(handler) }
+            }
+
+            assertUnsupportedQueryParameters(
+                client = client,
+                path = V1_DOCUMENTS_PATH,
+            )
+            coVerify(exactly = 0) { handler(any(), any(), any()) }
+        }
+    }
+
     test("GET returns a JSON:API collection using default pagination and no status filter") {
-        coEvery { handler(authorizedParty, Pagination(), emptyList()) } returns
+        coEvery { handler(authorizedAgent, Pagination(), emptyList()) } returns
             Page(listOf(document), 1, Pagination())
 
         testApplication {
-            setupAppWith(authorizedParty) {
+            setupAppWith(authorizedAgent) {
                 route(V1_DOCUMENTS_PATH) { route(handler) }
             }
 
@@ -76,11 +91,11 @@ class ListDocumentsRouteTest : FunSpec({
     ).forEach { (filter, statuses) ->
         test("GET maps public status filter '$filter' to domain statuses") {
             val pagination = Pagination(page = 1, size = 2)
-            coEvery { handler(authorizedParty, pagination, statuses) } returns
+            coEvery { handler(authorizedAgent, pagination, statuses) } returns
                 Page(listOf(document.copy(status = AuthorizationDocumentStatus.Approved)), 5, pagination)
 
             testApplication {
-                setupAppWith(authorizedParty) {
+                setupAppWith(authorizedAgent) {
                     route(V1_DOCUMENTS_PATH) { route(handler) }
                 }
 
@@ -96,7 +111,7 @@ class ListDocumentsRouteTest : FunSpec({
                 response.status shouldBe HttpStatusCode.OK
                 val body = response.body<JsonApiListAuthorizationDocumentsResponse>()
                 body.data.single().attributes.status shouldBe ResponseAuthorizationDocumentStatus.Approved
-                coVerify(exactly = 1) { handler(authorizedParty, pagination, statuses) }
+                coVerify(exactly = 1) { handler(authorizedAgent, pagination, statuses) }
             }
         }
     }
@@ -104,7 +119,7 @@ class ListDocumentsRouteTest : FunSpec({
     listOf("Accepted", "Signed", "Rejected", "approved", "Pending,Unknown", "Approved, Expired").forEach { filter ->
         test("GET rejects invalid status filter '$filter' without calling the handler") {
             testApplication {
-                setupAppWith(authorizedParty) {
+                setupAppWith(authorizedAgent) {
                     route(V1_DOCUMENTS_PATH) { route(handler) }
                 }
 
@@ -126,11 +141,11 @@ class ListDocumentsRouteTest : FunSpec({
         Triple("2", "0", Pagination(page = 2, size = 1)),
     ).forEach { (page, size, pagination) ->
         test("GET normalizes page '$page' and size '$size' like v0") {
-            coEvery { handler(authorizedParty, pagination, emptyList()) } returns
+            coEvery { handler(authorizedAgent, pagination, emptyList()) } returns
                 Page(emptyList(), 0, pagination)
 
             testApplication {
-                setupAppWith(authorizedParty) {
+                setupAppWith(authorizedAgent) {
                     route(V1_DOCUMENTS_PATH) { route(handler) }
                 }
 
@@ -144,17 +159,17 @@ class ListDocumentsRouteTest : FunSpec({
 
                 response.status shouldBe HttpStatusCode.OK
                 response.body<JsonApiListAuthorizationDocumentsResponse>().data shouldBe emptyList()
-                coVerify(exactly = 1) { handler(authorizedParty, pagination, emptyList()) }
+                coVerify(exactly = 1) { handler(authorizedAgent, pagination, emptyList()) }
             }
         }
     }
 
     test("GET returns a JSON:API error when the handler fails") {
-        coEvery { handler(authorizedParty, Pagination(), emptyList()) } throws
+        coEvery { handler(authorizedAgent, Pagination(), emptyList()) } throws
             RepositoryReadError.UnexpectedError("Database unavailable")
 
         testApplication {
-            setupAppWith(authorizedParty) {
+            setupAppWith(authorizedAgent) {
                 route(V1_DOCUMENTS_PATH) { route(handler) }
             }
 

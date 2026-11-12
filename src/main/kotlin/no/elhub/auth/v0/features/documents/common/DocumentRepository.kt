@@ -2,7 +2,7 @@ package no.elhub.auth.v0.features.documents.common
 
 import arrow.core.Either
 import no.elhub.auth.common.auth.AuthorizationParty
-import no.elhub.auth.v0.config.TransactionContext
+import no.elhub.auth.common.config.TransactionContext
 import no.elhub.auth.v0.features.common.CreateScopeData
 import no.elhub.auth.v0.features.common.PGEnum
 import no.elhub.auth.v0.features.common.Page

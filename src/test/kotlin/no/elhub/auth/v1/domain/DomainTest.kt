@@ -83,7 +83,7 @@ class DomainTest : FunSpec({
         AgentExternalIdentifier.create("01019012345") shouldBe
             AgentExternalIdentifier.PersonIdentifier("01019012345")
         AgentExternalIdentifier.create("1234567890123") shouldBe
-            AgentExternalIdentifier.MarketPartyIdentifier("1234567890123")
+            AgentExternalIdentifier.MarketEntityIdentifier("1234567890123")
     }
 
     test("external agent identifier factory rejects unsupported lengths and non-digits") {
@@ -112,7 +112,7 @@ class DomainTest : FunSpec({
             AgentExternalIdentifier.PersonIdentifier("1234567890A")
         }
         shouldThrow<DomainError.InvalidExternalAgentIdentifier> {
-            AgentExternalIdentifier.MarketPartyIdentifier("123456789012A")
+            AgentExternalIdentifier.MarketEntityIdentifier("123456789012A")
         }
     }
 })

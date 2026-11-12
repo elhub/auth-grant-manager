@@ -9,10 +9,10 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.serialization.json.JsonObject
-import no.elhub.auth.common.auth.AuthorizationParty
-import no.elhub.auth.common.auth.PartyType
 import no.elhub.auth.v0.features.common.Page
 import no.elhub.auth.v0.features.common.Pagination
+import no.elhub.auth.v1.common.auth.AgentType
+import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.domain.AuthorizationDocument
 import no.elhub.auth.v1.domain.AuthorizationDocumentStatus
 import no.elhub.auth.v1.domain.AuthorizationDocumentType
@@ -30,8 +30,8 @@ class ListDocumentsHandlerTest : FunSpec({
     val documentRepository = mockk<DocumentRepository>()
     val grantRepository = mockk<GrantRepository>()
     val handler = ListDocumentsHandler(documentRepository, grantRepository)
-    val requestedBy = AuthorizationParty("123456789", PartyType.OrganizationEntity)
-    val requestedOf = AuthorizationParty("person-1", PartyType.Person)
+    val requestedBy = AuthorizationAgent("123456789", AgentType.OrganizationEntity)
+    val requestedOf = AuthorizationAgent("person-1", AgentType.Person)
     val document = AuthorizationDocument.new(
         documentType = AuthorizationDocumentType.ChangeOfEnergySupplierForOrganization,
         requestedScopes = emptyList(),
@@ -39,7 +39,7 @@ class ListDocumentsHandlerTest : FunSpec({
         meta = JsonObject(emptyMap()),
         validTo = Instant.parse("2100-01-01T00:00:00Z"),
         requestedBy = requestedBy,
-        requestedPrincipal = AuthorizationParty("999888771", PartyType.OrganizationEntity),
+        requestedPrincipal = AuthorizationAgent("999888771", AgentType.OrganizationEntity),
         requestedOf = requestedOf,
         pdfBytes = byteArrayOf(),
     )
@@ -61,15 +61,15 @@ class ListDocumentsHandlerTest : FunSpec({
 
     beforeTest { clearMocks(documentRepository, grantRepository) }
 
-    listOf(requestedBy, requestedOf).forEach { party ->
-        test("passes party, pagination and statuses to the repository for ${party.id}") {
+    listOf(requestedBy, requestedOf).forEach { agent ->
+        test("passes agent, pagination and statuses to the repository for ${agent.id}") {
             val page = Page(listOf(document), 5, pagination)
-            coEvery { documentRepository.findAndSortByCreatedAt(party, pagination, statuses) } returns page
+            coEvery { documentRepository.findAndSortByCreatedAt(agent, pagination, statuses) } returns page
             coEvery {
                 grantRepository.findBySourceIds(AuthorizationGrantSourceType.Document, listOf(documentId))
             } returns mapOf(documentId to listOf(grant))
 
-            handler(party, pagination, statuses) shouldBe page.copy(
+            handler(agent, pagination, statuses) shouldBe page.copy(
                 items = listOf(document.copy(authorizationGrants = listOf(grant))),
             )
         }

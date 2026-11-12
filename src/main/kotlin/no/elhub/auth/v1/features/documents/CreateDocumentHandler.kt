@@ -1,8 +1,10 @@
 package no.elhub.auth.v1.features.documents
 
-import no.elhub.auth.common.auth.AuthorizationParty
 import no.elhub.auth.common.documents.pdf.PdfGenerator
 import no.elhub.auth.common.documents.pdf.PdfSigner
+import no.elhub.auth.v1.api.common.errors.InputError
+import no.elhub.auth.v1.common.AuthorizationRulesService
+import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.domain.AuthorizationDocument
 import no.elhub.auth.v1.domain.DocumentLanguage
 import no.elhub.auth.v1.domain.documents.DocumentSpecification
@@ -10,6 +12,7 @@ import no.elhub.auth.v1.features.documents.creation.ChangeOfEnergySupplierDocume
 import no.elhub.auth.v1.features.documents.creation.DocumentCreationContext
 import no.elhub.auth.v1.features.documents.creation.EnergySupplierFrameworkAgreementDocumentHandler
 import no.elhub.auth.v1.features.documents.creation.MoveInAndChangeOfEnergySupplierDocumentHandler
+import no.elhub.auth.v1.features.documents.creation.validateDocumentCreationAgents
 import no.elhub.auth.v1.repositories.DocumentRepository
 
 class CreateDocumentHandler(
@@ -19,15 +22,23 @@ class CreateDocumentHandler(
     private val pdfGenerator: PdfGenerator,
     private val pdfSigner: PdfSigner,
     private val documentRepository: DocumentRepository,
+    private val authorizationRulesService: AuthorizationRulesService,
 ) {
     suspend fun createAuthorizationDocument(
         specification: DocumentSpecification,
         externalReference: String?,
-        requestedBy: AuthorizationParty,
-        requestedPrincipal: AuthorizationParty,
-        requestedOf: AuthorizationParty,
+        requestedBy: AuthorizationAgent,
+        requestedPrincipal: AuthorizationAgent,
+        requestedOf: AuthorizationAgent,
         language: DocumentLanguage,
     ): AuthorizationDocument {
+        validateDocumentCreationAgents(
+            documentType = specification.documentType,
+            requestedBy = requestedBy,
+            requestedPrincipal = requestedPrincipal,
+            requestedOf = requestedOf,
+        )
+        validateActOnBehalfOf(requestedOf, requestedPrincipal)
         val context = DocumentCreationContext(
             requestedBy = requestedBy,
             requestedPrincipal = requestedPrincipal,
@@ -58,5 +69,14 @@ class CreateDocumentHandler(
             pdfBytes = pdfBytes,
         )
         return documentRepository.insert(document)
+    }
+
+    private suspend fun validateActOnBehalfOf(
+        requestedOf: AuthorizationAgent,
+        requestedPrincipal: AuthorizationAgent,
+    ) {
+        if (!authorizationRulesService.canActOnBehalfOf(requestedOf, requestedPrincipal)) {
+            throw InputError.RequestedOfRequestedPrincipalMismatch()
+        }
     }
 }

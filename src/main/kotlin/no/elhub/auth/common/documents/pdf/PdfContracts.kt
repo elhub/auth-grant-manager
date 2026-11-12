@@ -81,7 +81,7 @@ sealed interface AuthorizationDocumentPdfContent {
         val organizationName: String,
         val organizationNumber: String,
         val balanceSupplierName: String,
-        val agreementReference: String,
+        val agreementReference: String?,
         val startDate: LocalDate,
         val endDate: LocalDate?,
     ) : AuthorizationDocumentPdfContent

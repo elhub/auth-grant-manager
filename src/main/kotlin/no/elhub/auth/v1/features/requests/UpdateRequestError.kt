@@ -3,7 +3,7 @@ package no.elhub.auth.v1.features.requests
 import no.elhub.auth.v1.Errors
 
 sealed class UpdateRequestError(override val detail: String) : Errors(detail) {
-    class NotAuthorized : UpdateRequestError("Only the requestedOf party may approve or reject this AuthorizationRequest.")
+    class NotAuthorized : UpdateRequestError("Only the requestedOf agent may approve or reject this AuthorizationRequest.")
 
     class InvalidTransition : UpdateRequestError("Only 'Approved' and 'Rejected' statuses are allowed.")
 

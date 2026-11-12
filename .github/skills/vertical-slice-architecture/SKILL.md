@@ -61,29 +61,22 @@ features/requests/create/
 fun Route.route(handler: Handler, authProvider: AuthorizationProvider) {
     post {
         val actor = authProvider.authorizeMaskinporten(call)
-            .getOrElse { return@post call.respond(HttpStatusCode.Unauthorized, it.toApiErrorResponse()) }
 
         val body = call.receive<JsonApiCreateRequest>()
 
-        handler(body.toModel(actor))
-            .fold(
-                ifLeft = { error ->
-                    val (status, apiError) = error.toApiErrorResponse()
-                    call.respond(status, apiError)
-                },
-                ifRight = { result ->
-                    call.respond(HttpStatusCode.Created, result.toCreateResponse())
-                }
-            )
+        val result = handler(body.toModel(actor))
+        call.respond(HttpStatusCode.Created, result.toCreateResponse())
     }
 }
 ```
 
 - **Rules:** No business logic. No database access. Always responds with JSON:API-compliant bodies, including errors.
+- Custom exceptions are mapped by the application's centralized Ktor error handling, not repeated catches in each route.
 
 ### Handler.kt — business logic
 
-- Orchestrates services and repositories using explicit success and error outcomes. Never imports Ktor types.
+- Orchestrates services and repositories with ordinary success returns and custom exceptions for failures. Never imports Ktor types.
+- Does not open transactions. Calls one repository operation for dependent writes that must succeed or roll back together.
 - Core logic is always in the Handler
 - Service can be seen as a repository or a client which collects data from external apps.
 
@@ -93,34 +86,30 @@ class Handler(
     private val partyService: PartyService,
     private val repo: RequestRepository,
 ) {
-    suspend operator fun invoke(model: CreateRequestModel): CreateResult {
+    suspend operator fun invoke(model: CreateRequestModel): AuthorizationRequest {
         val party = partyService.resolve(model.requestedBy)
-            ?: return CreateResult.Failure(CreateError.PartyResolutionFailed)
         if (model.authorizedParty != party) {
-            return CreateResult.Failure(CreateError.AuthorizationError)
+            throw CreateError.AuthorizationError()
         }
-        return CreateResult.Success(repo.insert(model.toRequest()))
+        return repo.insert(model.toRequest())
     }
 }
 ```
 
-**Rules:** Returns an explicit feature success or error outcome. All IO is `suspend`. No `runBlocking`.
+**Rules:** Returns the success value; exceptions propagate on failure. All IO is `suspend`. No `runBlocking`.
 
-### CreateError.kt — sealed error type
+### CreateError.kt — Custom Exceptions
 
-One sealed interface per action. Provides mapping to JSON:API error responses.
+Reuse existing custom exceptions when appropriate; add action-specific subclasses when their meaning differs.
+Register their JSON:API mapping in the centralized error handler. Do not wrap failures solely to introduce an action-specific type.
 
 ```kotlin
-sealed interface CreateError {
-    data object AuthorizationError : CreateError
-    data object PersistenceError : CreateError
-    data class BusinessError(val cause: BusinessProcessError) : CreateError
+sealed class CreateError(detail: String) : Errors(detail) {
+    class AuthorizationError : CreateError("Requested party is not authorized")
 }
 
 fun CreateError.toApiErrorResponse(): Pair<HttpStatusCode, JsonApiErrorCollection> = when (this) {
-    CreateError.AuthorizationError -> buildApiErrorResponse(HttpStatusCode.Forbidden, "Forbidden", "...")
-    CreateError.PersistenceError -> toInternalServerApiErrorResponse()
-    is CreateError.BusinessError -> buildApiErrorResponse(HttpStatusCode.UnprocessableEntity, "...", "...")
+    is CreateError.AuthorizationError -> buildApiErrorResponse(HttpStatusCode.Forbidden, "Forbidden", detail)
 }
 ```
 
@@ -177,7 +166,7 @@ Repository interfaces and Exposed Table objects for that domain.
 
 | File / Package | Contents                                                                                     |
 |----------------|----------------------------------------------------------------------------------------------|
-| `Errors.kt`    | Base error types (`RepositoryReadError`, `RepositoryWriteError`) and JSON:API error builders |
+| `Errors.kt`    | Shared exception base; repository exception families live with repositories                |
 | `auth/`        | `AuthorizationProvider`, auth-related types                                                  |
 | `party/`       | `PartyService`, `AuthorizationParty`, `PartyRepository`                                      |
 | `person/`      | External person-resolution client                                                            |
@@ -189,8 +178,8 @@ Whenever a new feature is getting implemented
 Example: `DELETE /authorization-requests/{id}`
 
 1. Create `features/requests/delete/`
-2. Add `Handler.kt` returning an explicit delete success or error outcome
-3. Add `DeleteError.kt` sealed interface with `toApiErrorResponse()`
+2. Add `Handler.kt` returning its success value and throwing custom exceptions on failure
+3. Reuse existing exceptions or add `DeleteError.kt` exception subclasses; register JSON:API mappings centrally
 4. Add `Route.kt` — HTTP wiring only
 5. Add DTOs if the endpoint has a request/response body
 6. Register `DeleteHandler` in `features/requests/Module.kt`

@@ -1,8 +1,8 @@
 package no.elhub.auth.v1.features.documents
 
-import no.elhub.auth.common.auth.AuthorizationParty
 import no.elhub.auth.v0.features.common.Page
 import no.elhub.auth.v0.features.common.Pagination
+import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.domain.AuthorizationDocument
 import no.elhub.auth.v1.domain.AuthorizationDocumentStatus
 import no.elhub.auth.v1.domain.AuthorizationGrantSourceType
@@ -15,11 +15,11 @@ class ListDocumentsHandler(
     private val grantRepository: GrantRepository,
 ) {
     suspend operator fun invoke(
-        authorizedParty: AuthorizationParty,
+        authorizedAgent: AuthorizationAgent,
         pagination: Pagination,
         statuses: List<AuthorizationDocumentStatus>,
     ): Page<AuthorizationDocument> {
-        val page = documentRepository.findAndSortByCreatedAt(authorizedParty, pagination, statuses)
+        val page = documentRepository.findAndSortByCreatedAt(authorizedAgent, pagination, statuses)
         if (page.items.isEmpty()) return page
 
         val grants = grantRepository.findBySourceIds(

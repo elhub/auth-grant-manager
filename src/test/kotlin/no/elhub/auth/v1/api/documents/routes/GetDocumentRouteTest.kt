@@ -16,17 +16,19 @@ import io.ktor.server.routing.route
 import io.ktor.server.testing.testApplication
 import io.mockk.clearMocks
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
-import no.elhub.auth.common.auth.AuthorizationParty
-import no.elhub.auth.common.auth.PartyType
-import no.elhub.auth.v0.config.jsonApiContentType
+import no.elhub.auth.common.config.jsonApiContentType
 import no.elhub.auth.v0.setupAppWith
 import no.elhub.auth.v1.V1_DOCUMENTS_PATH
 import no.elhub.auth.v1.api.common.GrantResourceType
+import no.elhub.auth.v1.api.common.assertUnsupportedQueryParameters
 import no.elhub.auth.v1.api.documents.response.JsonApiGetAuthorizationDocumentResponse
+import no.elhub.auth.v1.common.auth.AgentType
+import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.domain.AuthorizationDocument
 import no.elhub.auth.v1.domain.AuthorizationDocumentStatus
 import no.elhub.auth.v1.domain.AuthorizationDocumentType
@@ -42,7 +44,7 @@ import kotlin.time.Instant
 
 class GetDocumentRouteTest : FunSpec({
     val handler = mockk<GetDocumentHandler>()
-    val authorizedParty = AuthorizationParty("123456789", PartyType.OrganizationEntity)
+    val authorizedAgent = AuthorizationAgent("123456789", AgentType.OrganizationEntity)
     val documentId = UUID.fromString("123e4567-e89b-12d3-a456-426614174000")
     val timestamp = Instant.parse("2026-10-01T08:00:00Z")
     val document = AuthorizationDocument(
@@ -56,15 +58,33 @@ class GetDocumentRouteTest : FunSpec({
         validTo = Instant.parse("2026-11-01T08:00:00Z"),
         createdAt = timestamp,
         updatedAt = timestamp,
-        requestedBy = authorizedParty,
-        requestedPrincipal = AuthorizationParty("999888771", PartyType.OrganizationEntity),
-        requestedOf = AuthorizationParty("person-1", PartyType.Person),
+        requestedBy = authorizedAgent,
+        requestedPrincipal = AuthorizationAgent("999888771", AgentType.OrganizationEntity),
+        requestedOf = AuthorizationAgent("person-1", AgentType.Person),
         approvedBy = null,
         authorizationGrants = null,
         pdfBytes = "%PDF-1.7\nexample document".toByteArray(),
     )
 
     beforeTest { clearMocks(handler) }
+
+    test("GET /{id} and /{id}.pdf reject unsupported query parameters without calling the handler") {
+        testApplication {
+            setupAppWith(authorizedAgent) {
+                route(V1_DOCUMENTS_PATH) { route(handler) }
+            }
+            val documentClient = createClient {}
+
+            listOf("", ".pdf").forEach { suffix ->
+                assertUnsupportedQueryParameters(
+                    client = documentClient,
+                    path = "$V1_DOCUMENTS_PATH/$documentId$suffix",
+                    acceptType = if (suffix.isEmpty()) jsonApiContentType else ContentType.Application.Pdf,
+                )
+            }
+            coVerify(exactly = 0) { handler(any(), any()) }
+        }
+    }
 
     val grant = AuthorizationGrant.new(
         type = AuthorizationGrantType.Consumable,
@@ -81,14 +101,14 @@ class GetDocumentRouteTest : FunSpec({
 
     test("GET /{id} serializes the corresponding grant identifiers") {
         val persistentGrant = grant.copy(id = UUID.randomUUID(), type = AuthorizationGrantType.Persistent)
-        coEvery { handler(documentId, authorizedParty) } returns document.copy(
+        coEvery { handler(documentId, authorizedAgent) } returns document.copy(
             status = AuthorizationDocumentStatus.Approved,
             approvedBy = document.requestedOf,
             authorizationGrants = listOf(grant, persistentGrant),
         )
 
         testApplication {
-            setupAppWith(authorizedParty) {
+            setupAppWith(authorizedAgent) {
                 route(V1_DOCUMENTS_PATH) { route(handler) }
             }
 
@@ -105,10 +125,10 @@ class GetDocumentRouteTest : FunSpec({
     }
 
     test("GET /{id} serializes an empty grant relationship") {
-        coEvery { handler(documentId, authorizedParty) } returns document.copy(authorizationGrants = emptyList())
+        coEvery { handler(documentId, authorizedAgent) } returns document.copy(authorizationGrants = emptyList())
 
         testApplication {
-            setupAppWith(authorizedParty) {
+            setupAppWith(authorizedAgent) {
                 route(V1_DOCUMENTS_PATH) { route(handler) }
             }
 
@@ -121,10 +141,10 @@ class GetDocumentRouteTest : FunSpec({
     }
 
     test("GET /{id} returns the document as JSON:API") {
-        coEvery { handler(documentId, authorizedParty) } returns document
+        coEvery { handler(documentId, authorizedAgent) } returns document
 
         testApplication {
-            setupAppWith(authorizedParty) {
+            setupAppWith(authorizedAgent) {
                 route(V1_DOCUMENTS_PATH) { route(handler) }
             }
 
@@ -139,7 +159,7 @@ class GetDocumentRouteTest : FunSpec({
             body.data.type shouldBe "AuthorizationDocument"
             body.data.attributes.externalReference shouldBe document.externalReference
             body.data.meta shouldBe document.meta
-            body.data.relationships.requestedBy.data.id shouldBe authorizedParty.id
+            body.data.relationships.requestedBy.data.id shouldBe authorizedAgent.id
             body.data.links.self shouldBe "$V1_DOCUMENTS_PATH/$documentId"
             body.data.links.file shouldBe "$V1_DOCUMENTS_PATH/$documentId.pdf"
         }
@@ -147,10 +167,10 @@ class GetDocumentRouteTest : FunSpec({
 
     listOf(null, "application/pdf", "*/*", "application/*").forEach { accept ->
         test("GET /{id}.pdf returns PDF bytes with Accept ${accept ?: "absent"}") {
-            coEvery { handler(documentId, authorizedParty) } returns document
+            coEvery { handler(documentId, authorizedAgent) } returns document
 
             testApplication {
-                setupAppWith(authorizedParty) {
+                setupAppWith(authorizedAgent) {
                     route(V1_DOCUMENTS_PATH) { route(handler) }
                 }
                 val pdfClient = createClient {}
@@ -168,7 +188,7 @@ class GetDocumentRouteTest : FunSpec({
 
     test("GET /{id}.pdf returns 406 for an incompatible Accept header") {
         testApplication {
-            setupAppWith(authorizedParty) {
+            setupAppWith(authorizedAgent) {
                 route(V1_DOCUMENTS_PATH) { route(handler) }
             }
 
@@ -190,10 +210,10 @@ class GetDocumentRouteTest : FunSpec({
             RepositoryReadError.UnexpectedError("Database unavailable") to HttpStatusCode.InternalServerError,
         ).forEach { (error, status) ->
             test("GET /{id}$suffix returns ${status.value} for ${error.javaClass.simpleName}") {
-                coEvery { handler(documentId, authorizedParty) } throws error
+                coEvery { handler(documentId, authorizedAgent) } throws error
 
                 testApplication {
-                    setupAppWith(authorizedParty) {
+                    setupAppWith(authorizedAgent) {
                         route(V1_DOCUMENTS_PATH) { route(handler) }
                     }
 
@@ -212,7 +232,7 @@ class GetDocumentRouteTest : FunSpec({
 
         test("GET /{id}$suffix returns 400 for an invalid document ID") {
             testApplication {
-                setupAppWith(authorizedParty) {
+                setupAppWith(authorizedAgent) {
                     route(V1_DOCUMENTS_PATH) { route(handler) }
                 }
 
@@ -234,10 +254,10 @@ class GetDocumentRouteTest : FunSpec({
         IllegalStateException("Unexpected internal details") to HttpStatusCode.InternalServerError,
     ).forEach { (error, status) ->
         test("GET /{id}.pdf returns a JSON:API ${status.value} for ${error.javaClass.simpleName} when only PDF is accepted") {
-            coEvery { handler(documentId, authorizedParty) } throws error
+            coEvery { handler(documentId, authorizedAgent) } throws error
 
             testApplication {
-                setupAppWith(authorizedParty) {
+                setupAppWith(authorizedAgent) {
                     route(V1_DOCUMENTS_PATH) { route(handler) }
                 }
                 val pdfClient = createClient {}
@@ -263,7 +283,7 @@ class GetDocumentRouteTest : FunSpec({
     ).forEach { (id, acceptedType, status) ->
         test("GET /{id}.pdf returns a JSON:API ${status.value} validation error with Accept $acceptedType") {
             testApplication {
-                setupAppWith(authorizedParty) {
+                setupAppWith(authorizedAgent) {
                     route(V1_DOCUMENTS_PATH) { route(handler) }
                 }
                 val pdfClient = createClient {}

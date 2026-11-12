@@ -15,9 +15,9 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import kotlinx.serialization.json.Json
+import no.elhub.auth.common.ELHUB_TRACE_ID_HEADER
+import no.elhub.auth.common.TraceIdContext
 import no.elhub.auth.v0.features.businessprocesses.common.JwtTokenProvider
-import no.elhub.auth.v0.features.common.ELHUB_TRACE_ID_HEADER
-import no.elhub.auth.v0.features.common.TraceIdContext
 import no.elhub.devxp.jsonapi.request.JsonApiRequestResourceObject
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import no.elhub.devxp.jsonapi.response.JsonApiErrorObject

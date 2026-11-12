@@ -1,7 +1,9 @@
 package no.elhub.auth.v1.features.requests
 
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.CapturingSlot
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -10,8 +12,8 @@ import io.mockk.slot
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
-import no.elhub.auth.common.auth.AuthorizationParty
-import no.elhub.auth.common.auth.PartyType
+import no.elhub.auth.v1.common.auth.AgentType
+import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.domain.AuthorizationRequest
 import no.elhub.auth.v1.domain.AuthorizationRequestType
 import no.elhub.auth.v1.domain.MeteringPointId
@@ -21,14 +23,15 @@ import no.elhub.auth.v1.domain.requests.AuthorizationRequestTypeDetails
 import no.elhub.auth.v1.features.requests.creation.ChangeOfEnergySupplierRequestHandler
 import no.elhub.auth.v1.features.requests.creation.EnergySupplierFrameworkAgreementRequestHandler
 import no.elhub.auth.v1.features.requests.creation.MoveInAndChangeOfEnergySupplierRequestHandler
+import no.elhub.auth.v1.features.requests.creation.RequestCreationAgentError
 import no.elhub.auth.v1.features.requests.creation.RequestTypeSpecificDetails
 import no.elhub.auth.v1.repositories.RequestRepository
 import kotlin.time.Instant
 
 class CreateRequestHandlerTest : FunSpec({
-    val requestedBy = AuthorizationParty("123456789", PartyType.OrganizationEntity)
-    val requestedPrincipal = AuthorizationParty("999888771", PartyType.OrganizationEntity)
-    val requestedOf = AuthorizationParty("person-1", PartyType.Person)
+    val requestedBy = AuthorizationAgent("123456789", AgentType.OrganizationEntity)
+    val requestedPrincipal = AuthorizationAgent("999888771", AgentType.Organization)
+    val requestedOf = AuthorizationAgent("org-1", AgentType.Organization)
     val validTo = Instant.parse("2100-02-01T00:00:00Z")
     val meta = buildJsonObject { put("source", JsonPrimitive("test")) }
     val meteringPoints = ResourceConstraint.MeteringPoints(setOf(MeteringPointId.create("707057500000000001")))
@@ -55,6 +58,52 @@ class CreateRequestHandlerTest : FunSpec({
             requestedPrincipal = requestedPrincipal,
             requestedOf = requestedOf,
         )
+
+    val supportedDetails = listOf(
+        "ChangeOfEnergySupplierForOrganization" to AuthorizationRequestTypeDetails.ChangeOfEnergySupplierForOrganization(meteringPoints),
+        "MoveInAndChangeOfEnergySupplierForOrganization" to AuthorizationRequestTypeDetails.MoveInAndChangeOfEnergySupplierForOrganization(
+            meteringPoints,
+            LocalDate(2026, 10, 1),
+        ),
+        "EnergySupplierFrameworkAgreement" to AuthorizationRequestTypeDetails.EnergySupplierFrameworkAgreement(null, null),
+    )
+    val roles = mapOf(
+        "requestedBy" to requestedBy,
+        "requestedPrincipal" to requestedPrincipal,
+        "requestedOf" to requestedOf,
+    )
+    supportedDetails.forEach { (requestType, details) ->
+        roles.forEach { (role, validAgent) ->
+            AgentType.entries.filter { it != validAgent.type }.forEach { invalidType ->
+                test("$requestType rejects $invalidType for $role before preparation or persistence") {
+                    val agents = roles + (role to validAgent.copy(type = invalidType))
+                    val error = shouldThrow<RequestCreationAgentError> {
+                        CreateRequestHandler(supplierChangeHandler, moveInHandler, frameworkAgreementHandler, repository)(
+                            specification = AuthorizationRequestSpecification(null, null, details),
+                            requestedBy = agents.getValue("requestedBy"),
+                            requestedPrincipal = agents.getValue("requestedPrincipal"),
+                            requestedOf = agents.getValue("requestedOf"),
+                        )
+                    }
+
+                    when (role) {
+                        "requestedBy" -> error.shouldBeInstanceOf<RequestCreationAgentError.RequestedByNotAllowed>()
+                        "requestedOf" -> error.shouldBeInstanceOf<RequestCreationAgentError.RequestedOfNotAllowed>()
+                        "requestedPrincipal" -> error.shouldBeInstanceOf<RequestCreationAgentError.RequestedPrincipalNotAllowed>()
+                    }
+                    error.requestType.name shouldBe requestType
+                    error.actualAgentType shouldBe invalidType
+                    error.expectedAgentType shouldBe validAgent.type
+                    coVerify(exactly = 0) {
+                        supplierChangeHandler.validateAndGetRequestTypeSpecificDetails(any(), any(), any(), any())
+                        moveInHandler.validateAndGetRequestTypeSpecificDetails(any(), any(), any(), any())
+                        frameworkAgreementHandler.validateAndGetRequestTypeSpecificDetails(any(), any(), any(), any())
+                        repository.insert(any())
+                    }
+                }
+            }
+        }
+    }
 
     fun shouldInsertRequestFor(details: AuthorizationRequestTypeDetails, requestType: AuthorizationRequestType) {
         val expected = AuthorizationRequest.create(

@@ -1,12 +1,13 @@
 package no.elhub.auth.v1.features.requests
 
-import no.elhub.auth.common.auth.AuthorizationParty
+import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.domain.AuthorizationRequest
 import no.elhub.auth.v1.domain.requests.AuthorizationRequestSpecification
 import no.elhub.auth.v1.domain.requests.AuthorizationRequestTypeDetails
 import no.elhub.auth.v1.features.requests.creation.ChangeOfEnergySupplierRequestHandler
 import no.elhub.auth.v1.features.requests.creation.EnergySupplierFrameworkAgreementRequestHandler
 import no.elhub.auth.v1.features.requests.creation.MoveInAndChangeOfEnergySupplierRequestHandler
+import no.elhub.auth.v1.features.requests.creation.validateRequestCreationAgents
 import no.elhub.auth.v1.repositories.RequestRepository
 
 class CreateRequestHandler(
@@ -17,10 +18,16 @@ class CreateRequestHandler(
 ) {
     suspend operator fun invoke(
         specification: AuthorizationRequestSpecification,
-        requestedBy: AuthorizationParty,
-        requestedPrincipal: AuthorizationParty,
-        requestedOf: AuthorizationParty,
+        requestedBy: AuthorizationAgent,
+        requestedPrincipal: AuthorizationAgent,
+        requestedOf: AuthorizationAgent,
     ): AuthorizationRequest {
+        validateRequestCreationAgents(
+            requestType = specification.requestType,
+            requestedBy = requestedBy,
+            requestedPrincipal = requestedPrincipal,
+            requestedOf = requestedOf,
+        )
         val requestTypeSpecificDetails = when (val details = specification.details) {
             is AuthorizationRequestTypeDetails.ChangeOfEnergySupplierForOrganization ->
                 changeOfEnergySupplierHandler.validateAndGetRequestTypeSpecificDetails(

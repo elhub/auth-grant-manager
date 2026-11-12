@@ -1,16 +1,22 @@
 package no.elhub.auth.v1.features.grants
 
-import no.elhub.auth.common.auth.AuthorizationParty
 import no.elhub.auth.v0.features.common.Page
 import no.elhub.auth.v0.features.common.Pagination
+import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.domain.AuthorizationGrant
+import no.elhub.auth.v1.domain.AuthorizationGrantStatus
+import no.elhub.auth.v1.domain.AuthorizationGrantType
+import no.elhub.auth.v1.domain.GrantAgentFilters
 import no.elhub.auth.v1.repositories.GrantRepository
 
 class ListGrantsHandler(
     private val grantRepository: GrantRepository,
 ) {
     suspend operator fun invoke(
-        authorizedParty: AuthorizationParty,
+        authorizedAgent: AuthorizationAgent,
         pagination: Pagination,
-    ): Page<AuthorizationGrant> = grantRepository.findAll(authorizedParty, pagination)
+        statuses: List<AuthorizationGrantStatus>,
+        agentFilters: GrantAgentFilters,
+        types: List<AuthorizationGrantType>,
+    ): Page<AuthorizationGrant> = grantRepository.findAll(authorizedAgent, pagination, statuses, agentFilters, types)
 }

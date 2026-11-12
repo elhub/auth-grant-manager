@@ -19,11 +19,11 @@ import io.ktor.serialization.kotlinx.json.json
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.serialization.json.Json
+import no.elhub.auth.common.ApiHeaders
+import no.elhub.auth.common.ELHUB_TRACE_ID_HEADER
+import no.elhub.auth.common.TRACE_ID_MDC_KEY
 import no.elhub.auth.v0.features.businessprocesses.common.JwtTokenProvider
 import no.elhub.auth.v0.features.businessprocesses.structuredata.common.ClientError
-import no.elhub.auth.v0.features.common.ApiHeaders
-import no.elhub.auth.v0.features.common.ELHUB_TRACE_ID_HEADER
-import no.elhub.auth.v0.features.common.TRACE_ID_MDC_KEY
 import org.slf4j.MDC
 import java.util.UUID
 

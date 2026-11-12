@@ -1,7 +1,7 @@
 package no.elhub.auth.v1.features.grants
 
-import no.elhub.auth.common.auth.AuthorizationParty
-import no.elhub.auth.common.auth.PartyType
+import no.elhub.auth.v1.common.auth.AgentType
+import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.domain.AuthorizationGrant
 import no.elhub.auth.v1.repositories.GrantRepository
 import java.util.UUID
@@ -11,14 +11,14 @@ class GetGrantHandler(
 ) {
     suspend operator fun invoke(
         id: UUID,
-        authorizedParty: AuthorizationParty,
+        authorizedAgent: AuthorizationAgent,
     ): AuthorizationGrant {
         val grant = grantRepository.find(id)
 
-        if (authorizedParty.type != PartyType.System &&
-            authorizedParty != grant.grantedTo &&
-            authorizedParty != grant.principal &&
-            authorizedParty != grant.grantedBy
+        if (authorizedAgent.type != AgentType.System &&
+            authorizedAgent != grant.grantedTo &&
+            authorizedAgent != grant.principal &&
+            authorizedAgent != grant.grantedBy
         ) {
             throw GetGrantError.NotAuthorized()
         }

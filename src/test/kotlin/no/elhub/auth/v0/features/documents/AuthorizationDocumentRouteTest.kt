@@ -32,9 +32,9 @@ import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
+import no.elhub.auth.common.ApiHeaders
 import no.elhub.auth.v0.features.businessprocesses.BusinessProcessError
 import no.elhub.auth.v0.features.businessprocesses.changeofbalancesupplier.domain.ChangeOfBalanceSupplierBusinessMeta
-import no.elhub.auth.v0.features.common.ApiHeaders
 import no.elhub.auth.v0.features.common.AuthPersonsTestContainer
 import no.elhub.auth.v0.features.common.AuthPersonsTestContainerExtension
 import no.elhub.auth.v0.features.common.CreateScopeData

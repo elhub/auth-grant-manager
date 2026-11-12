@@ -619,7 +619,11 @@ paths:
       tags:
         - Work in Progress
       summary: '[WIP] List authorization documents'
-      description: Retrieve a paginated list of authorization documents available to the calling party.
+      description: >
+        Retrieve a paginated list of authorization documents available to the calling agent. A document
+        is available when the calling agent is the requestedBy, the requestedOf, or the requestedPrincipal.
+        Results are ordered by createdAt DESC (newest first), and each document includes its linked
+        authorization grants.
       operationId: listV1AuthorizationDocuments
       x-status: Work in progress
       x-availability: Not deployed to Production or MT1
@@ -667,7 +671,10 @@ paths:
       tags:
         - Work in Progress
       summary: '[WIP] Create an authorization document for signing'
-      description: Create an authorization document for signing.
+      description: >
+        Create an authorization document for signing. Elhub generates and signs a PDF, available through
+        the `file` link in the response. The document starts as Pending and must be signed and submitted
+        before validTo, after which it expires.
       operationId: createV1AuthorizationDocument
       x-status: Work in progress
       x-availability: Not deployed to Production or MT1
@@ -709,7 +716,11 @@ paths:
       tags:
         - Work in Progress
       summary: '[WIP] Get an authorization document by ID'
-      description: Get an authorization document by ID.
+      description: >
+        Retrieve a specific authorization document, including its status, agents, and linked authorization
+        grants. The document is available to the requestedBy, the requestedOf, and the requestedPrincipal.
+        The status is Pending until the signed document is submitted, Approved once it has been submitted,
+        and Expired if validTo passes before submission.
       operationId: getV1AuthorizationDocument
       x-status: Work in progress
       x-availability: Not deployed to Production or MT1
@@ -747,8 +758,11 @@ paths:
       summary: '[WIP] Download authorization document PDF'
       operationId: getV1AuthorizationDocumentPdf
       description: >
-        Retrieve the PDF representation of an authorization document. The PDF reflects the
-        current state of the document at the time of retrieval.
+        Retrieve the PDF representation of an authorization document. Before submission this is the PDF
+        generated and signed by Elhub; after submission it is the signed document. The document is available
+        to the requestedBy, the requestedOf, and the requestedPrincipal. The response is always
+        `application/pdf`. The Accept header is optional; if provided, it must allow `application/pdf`
+        (for example, `application/pdf`, `application/*`, or `*/*`).
       x-status: Work in progress
       x-availability: Not deployed to Production or MT1
       parameters:
@@ -787,8 +801,11 @@ paths:
       summary: '[WIP] Submit signed authorization document'
       operationId: submitV1AuthorizationDocument
       description: >
-        Submit a signed authorization document as a PDF file. Elhub validates the signature,
-        generates any required authorization grants, and stores the document if the validation succeeds.
+        Submit a signed authorization document as a PDF file (maximum 1 MB). Only the requestedBy may
+        submit, and only while the document is Pending. Elhub validates the signatures and that the
+        file matches the original document, then stores it and creates the authorization grants.
+        In the created grants, requestedBy becomes grantedTo, requestedOf becomes grantedBy, and
+        requestedPrincipal becomes principal.
       x-status: Work in progress
       x-availability: Not deployed to Production or MT1
       parameters:
@@ -840,9 +857,13 @@ paths:
         - Work in Progress
       summary: '[WIP] List authorization grants'
       description: >
-        Retrieve a paginated list of authorization grants available to the calling party. A grant is
-        available when the calling party is the grantedTo, the principal, or the grantedBy. Results are
+        Retrieve a paginated list of authorization grants available to the calling agent. A grant is
+        available when the calling agent is the grantedTo, the principal, or the grantedBy. Results are
         ordered by createdAt DESC (newest first).
+        Agent filters match the IDs returned in `relationships.<role>.data.id` and their implied agent
+        types: a Person is identified by their Elhub ID,
+        an Organization is identified by org number,
+        and a MarketEntity is identified by GLN.
       operationId: listV1AuthorizationGrants
       x-status: Work in progress
       x-availability: Not deployed to Production or MT1
@@ -863,6 +884,51 @@ paths:
             type: array
             items:
               $ref: './schemas/v1/grants/authorization-grant-common.schema.json#/$defs/status'
+        - name: filter[type]
+          in: query
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              $ref: './schemas/v1/grants/authorization-grant-common.schema.json#/$defs/type'
+        - name: filter[grantedBy]
+          in: query
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+        - name: filter[principal]
+          in: query
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+        - name: filter[approvedBy]
+          in: query
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+        - name: filter[grantedTo]
+          in: query
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
         - name: page[number]
           in: query
           required: false
@@ -893,6 +959,8 @@ paths:
               examples:
                 authorizationGrants:
                   $ref: './schemas/v1/grants/examples/list.json'
+        '400':
+          $ref: '#/components/responses/400BadRequestError'
         '401':
           $ref: '#/components/responses/401UnauthorizedError'
         '403':
@@ -907,7 +975,10 @@ paths:
       tags:
         - Work in Progress
       summary: '[WIP] Get an authorization grant by ID'
-      description: Get an authorization grant and its permissions.
+      description: >
+        Retrieve a specific authorization grant, including its scopes and the source document or request
+        it was created from. The grant is available to the principal, the grantedBy, the grantedTo, and
+        internal Elhub systems. validTo may be null, meaning the grant has no end date.
       operationId: getV1AuthorizationGrant
       x-status: Work in progress
       x-availability: Not deployed to Production or MT1
@@ -931,8 +1002,12 @@ paths:
               schema:
                 $ref: './schemas/v1/grants/authorization-grant-resource.schema.json'
               examples:
-                authorizationGrant:
-                  $ref: './schemas/v1/grants/examples/get.json'
+                changeOfEnergySupplier:
+                  $ref: './schemas/v1/grants/examples/change-of-energy-supplier/get.json'
+                moveInAndChangeOfEnergySupplier:
+                  $ref: './schemas/v1/grants/examples/move-in-and-change-of-energy-supplier/get.json'
+                energySupplierFrameworkAgreement:
+                  $ref: './schemas/v1/grants/examples/energy-supplier-framework-agreement/get.json'
 
     patch:
       tags:
@@ -941,7 +1016,7 @@ paths:
       description: >
         Update an authorization grant by setting its status to Exhausted or Revoked.
         Only internal Elhub systems may exhaust active consumable grants; pending grants cannot be exhausted.
-        The principal, grantedBy party, or internal Elhub systems may revoke pending or active grants.
+        The principal, grantedBy agent, or internal Elhub systems may revoke pending or active grants.
         The request body ID must match the path ID.
       operationId: updateV1AuthorizationGrant
       x-status: Work in progress
@@ -997,7 +1072,8 @@ paths:
         - Work in Progress
       summary: '[WIP] List authorization requests'
       description: >
-        Retrieve a paginated list of authorization requests available to the calling party.
+        Retrieve a paginated list of authorization requests available to the calling agent. A request
+        is available when the calling agent is the requestedBy, the requestedOf, or the requestedPrincipal.
         Results are ordered by createdAt DESC (newest first).
       operationId: listV1AuthorizationRequests
       x-status: Work in progress
@@ -1058,7 +1134,9 @@ paths:
       tags:
         - Work in Progress
       summary: '[WIP] Create an authorization request for approval'
-      description: Create an authorization request for approval.
+      description: >
+        Create an authorization request for approval. The request starts as Pending and must be
+        approved or rejected before validTo, after which it expires.
       operationId: createV1AuthorizationRequest
       x-status: Work in progress
       x-availability: Not deployed to Production or MT1
@@ -1122,7 +1200,11 @@ paths:
       tags:
         - Work in Progress
       summary: '[WIP] Get an authorization request by ID'
-      description: Get an authorization request by ID.
+      description: >
+        Retrieve a specific authorization request, including its status, agents, and linked authorization
+        grants. The request is available to the requestedBy, the requestedOf, and the requestedPrincipal.
+        The status is Pending until decided, Approved or Rejected once decided, and Expired if validTo
+        passes before a decision.
       operationId: getV1AuthorizationRequest
       x-status: Work in progress
       x-availability: Not deployed to Production or MT1
@@ -1172,7 +1254,7 @@ paths:
       description: >
         Approve or reject a pending, unexpired authorization request. This endpoint is intended
         for internal MinSide usage with an end-user token and is not available to external integrators.
-        Only the requestedOf party may decide the request. Approving creates the authorization grant;
+        Only the requestedOf agent may decide the request. Approving creates the authorization grant;
         rejecting does not create a grant. The request body ID must match the path ID.
         textLanguage must be provided when approving or rejecting the request. textReference is set by
         the server and cannot be updated through this endpoint.

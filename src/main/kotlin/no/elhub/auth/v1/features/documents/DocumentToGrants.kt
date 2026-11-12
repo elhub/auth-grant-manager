@@ -1,7 +1,7 @@
 package no.elhub.auth.v1.features.documents
 
-import no.elhub.auth.common.auth.AuthorizationParty
 import no.elhub.auth.v1.common.GrantValidity
+import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.common.consumableGrantValidity
 import no.elhub.auth.v1.common.frameworkAgreementGrantValidity
 import no.elhub.auth.v1.common.now
@@ -23,7 +23,7 @@ import kotlin.time.Instant
 class InvalidDocumentScopes(detail: String) : IllegalStateException(detail)
 
 fun AuthorizationDocument.toGrants(
-    approvedBy: AuthorizationParty,
+    approvedBy: AuthorizationAgent,
     now: Instant = now(),
 ): List<AuthorizationGrant> =
     when (documentType) {
@@ -168,7 +168,7 @@ fun AuthorizationDocument.toGrants(
 
 private fun AuthorizationDocument.toConsumableGrant(
     now: Instant,
-    approvedBy: AuthorizationParty,
+    approvedBy: AuthorizationAgent,
     validity: GrantValidity,
     scope: GrantedAuthorizationScope,
 ): AuthorizationGrant = AuthorizationGrant.new(

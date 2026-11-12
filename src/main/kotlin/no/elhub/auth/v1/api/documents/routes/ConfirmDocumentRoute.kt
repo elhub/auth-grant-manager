@@ -12,18 +12,21 @@ import io.ktor.server.routing.put
 import io.ktor.utils.io.readBuffer
 import kotlinx.io.readByteArray
 import kotlinx.serialization.json.Json
-import no.elhub.auth.common.auth.authorizedParty
-import no.elhub.auth.v0.config.jsonApiContentType
+import no.elhub.auth.common.config.jsonApiContentType
 import no.elhub.auth.v0.features.common.InputError
 import no.elhub.auth.v0.features.common.toApiErrorResponse
 import no.elhub.auth.v0.features.common.toUnsupportedErrorResponse
 import no.elhub.auth.v0.features.common.validatePathId
+import no.elhub.auth.v1.api.common.validateQueryParameters
+import no.elhub.auth.v1.common.auth.authorizedAgent
 import no.elhub.auth.v1.features.documents.ConfirmDocumentHandler
 
 private const val PDF_MAX_BYTES = 1L * 1024L * 1024L
 
 fun Route.route(handler: ConfirmDocumentHandler) {
     put("/{id}.pdf") {
+        call.validateQueryParameters()
+
         if (!ContentType.Application.Pdf.match(call.request.contentType())) {
             val (status, body) = toUnsupportedErrorResponse(
                 detail = "Unsupported media type, 'application/pdf' is supported.",
@@ -54,7 +57,7 @@ fun Route.route(handler: ConfirmDocumentHandler) {
             return@put
         }
 
-        handler(id, call.authorizedParty, signedDocument)
+        handler(id, call.authorizedAgent, signedDocument)
         call.respond(HttpStatusCode.NoContent)
     }
 }
