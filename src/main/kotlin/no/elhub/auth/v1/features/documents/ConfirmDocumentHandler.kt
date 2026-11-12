@@ -4,8 +4,8 @@ import arrow.core.getOrElse
 import no.elhub.auth.common.documents.pdf.PdfSignatureValidator
 import no.elhub.auth.v0.features.common.party.PartyIdentifier
 import no.elhub.auth.v0.features.common.party.PartyIdentifierType
+import no.elhub.auth.v1.common.AuthorizationRulesService
 import no.elhub.auth.v1.common.auth.AuthorizationAgent
-import no.elhub.auth.v1.common.isApproverAllowed
 import no.elhub.auth.v1.domain.AuthorizationDocument
 import no.elhub.auth.v1.domain.AuthorizationDocumentStatus
 import no.elhub.auth.v1.repositories.DocumentRepository
@@ -17,6 +17,7 @@ class ConfirmDocumentHandler(
     private val documentRepository: DocumentRepository,
     private val agentService: AgentService,
     private val pdfSignatureValidator: PdfSignatureValidator,
+    private val authorizationRulesService: AuthorizationRulesService,
 ) {
     private val logger = LoggerFactory.getLogger(ConfirmDocumentHandler::class.java)
 
@@ -43,7 +44,7 @@ class ConfirmDocumentHandler(
             ),
         ).getOrElse { throw ConfirmDocumentError.SignatoryResolutionFailed() }
 
-        if (!isApproverAllowed(signatoryAgent, document.requestedOf, document.requestedPrincipal)) {
+        if (!authorizationRulesService.isApproverAllowed(signatoryAgent, document.requestedOf, document.requestedPrincipal)) {
             logger.warn("Approver not allowed for AuthorizationDocument {} (approver type: {})", id, signatoryAgent.type)
             throw ConfirmDocumentError.SignatoryNotAllowed()
         }
