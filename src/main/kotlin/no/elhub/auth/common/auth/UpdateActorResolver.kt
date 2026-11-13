@@ -5,14 +5,23 @@ import no.elhub.auth.plugin.policies.token.base.authinfo.AuthInfoPolicy
 import no.elhub.auth.plugin.policies.token.core.TokenPolicy
 import org.slf4j.LoggerFactory
 
-private val log = LoggerFactory.getLogger("UpdateRequestActorResolver")
+private val log = LoggerFactory.getLogger("UpdateActorResolver")
 
 /**
  * Same PDP authinfo route as [AuthInfoPolicy], registered under its own key so the
- * AuthorizationRequest update route can enforce its own rules.
+ * update routes can resolve the person rather than the organisation they represent.
  */
-object UpdateRequestAuthInfoPolicy : TokenPolicy<AuthInfoPolicy.Request, AuthInfoPolicy.Response>(
-    key = "token.authinfo.update-authorization-request",
+object UpdateAuthInfoPolicy : TokenPolicy<AuthInfoPolicy.Request, AuthInfoPolicy.Response>(
+    key = "token.authinfo.update",
+    route = AUTHINFO_POLICY_ROUTE,
+) {
+    override val requestSerializer = AuthInfoPolicy.Request.serializer()
+    override val responsePayloadSerializer = AuthInfoPolicy.Response.serializer()
+}
+
+/** Grant updates additionally allow systems, which are the only actors permitted to exhaust grants. */
+object GrantUpdateAuthInfoPolicy : TokenPolicy<AuthInfoPolicy.Request, AuthInfoPolicy.Response>(
+    key = "token.authinfo.update-authorization-grant",
     route = AUTHINFO_POLICY_ROUTE,
 ) {
     override val requestSerializer = AuthInfoPolicy.Request.serializer()
@@ -20,13 +29,16 @@ object UpdateRequestAuthInfoPolicy : TokenPolicy<AuthInfoPolicy.Request, AuthInf
 }
 
 /**
- * Resolves the person acting on an AuthorizationRequest update, or null if not allowed.
+ * Resolves the person performing an update, or null if not allowed. Systems must be explicitly enabled.
  * When acting on behalf of an organisation, the PDP verifies the delegation; the person is still returned.
  */
-fun resolveUpdateRequestActor(response: AuthInfoPolicy.Response): AuthorizationParty? {
+fun resolveUpdateActor(response: AuthInfoPolicy.Response, allowSystem: Boolean = false): AuthorizationParty? {
     val tokenType = response.tokenInfo?.tokenType
+    if (allowSystem && tokenType == TokenType.ELHUB_SERVICE) {
+        return resolveAuthorizedParty(response)
+    }
     if (tokenType != TokenType.ENDUSER) {
-        log.warn("Unsupported tokenType={} for updating authorization request", tokenType)
+        log.warn("Unsupported tokenType={} for update", tokenType)
         return null
     }
 
@@ -52,7 +64,7 @@ fun resolveUpdateRequestActor(response: AuthInfoPolicy.Response): AuthorizationP
         }
 
         else -> {
-            log.warn("Unsupported actingType={} for updating authorization request", actingType)
+            log.warn("Unsupported actingType={} for update", actingType)
             return null
         }
     }
