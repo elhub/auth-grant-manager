@@ -188,4 +188,9 @@ private fun requireMeteringPointLimit(constraint: ScopeConstraint) {
             "requestedScopes[0].appliesTo meteringPoint.id must contain at most 50 metering points",
         )
     }
+    if (constraint.value.size != constraint.value.distinct().size) {
+        throw InputError.InvalidCreateAuthorizationDocumentPayload(
+            "requestedScopes[0].appliesTo meteringPoint.id must not contain duplicate metering points",
+        )
+    }
 }
