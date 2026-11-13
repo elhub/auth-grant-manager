@@ -149,16 +149,15 @@ private fun List<RequestedScope>.toMoveInSpecification(now: Instant): DocumentSp
         )
     }
 
-    val validFromConstraints = scope.allowedChanges.filter {
-        it.attribute == AuthorizationScopeConstraintAttribute.ValidFrom.apiName
-    }
-    if (validFromConstraints.size > 1 || scope.allowedChanges.size != validFromConstraints.size) {
+    if (scope.allowedChanges.size > 1 ||
+        scope.allowedChanges.any { it.attribute != AuthorizationScopeConstraintAttribute.ValidFrom.apiName }
+    ) {
         throw InputError.InvalidCreateAuthorizationDocumentPayload(
-            "requestedScopes[0].allowedChanges may contain only one validFrom constraint",
+            "requestedScopes[0].allowedChanges must be empty or contain exactly one validFrom constraint",
         )
     }
 
-    val validFromValues = validFromConstraints.singleOrNull()?.value
+    val validFromValues = scope.allowedChanges.singleOrNull()?.value
     if (validFromValues != null && validFromValues.size != 1) {
         throw InputError.InvalidCreateAuthorizationDocumentPayload(
             "requestedScopes[0].allowedChanges validFrom must contain exactly one date",

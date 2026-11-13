@@ -27,7 +27,7 @@ class DocumentSpecificationMapperTest : FunSpec({
     val resourceTypeDetail = "requestedScopes[0].resourceType must be 'MeteringPointContract'"
     val oneScopeDetail = "requestedScopes must contain exactly one scope for this document type"
     val validFromConstraintDetail =
-        "requestedScopes[0].allowedChanges may contain only one validFrom constraint"
+        "requestedScopes[0].allowedChanges must be empty or contain exactly one validFrom constraint"
 
     fun meteringPointConstraint(values: List<String> = listOf(validMeteringPointId)) =
         ScopeConstraint(attribute = "meteringPoint.id", value = values)
