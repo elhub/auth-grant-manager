@@ -3,7 +3,6 @@ package no.elhub.auth.common
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.ktor.client.request.get
-import io.ktor.client.request.header
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
@@ -12,7 +11,6 @@ import io.ktor.server.routing.routing
 import io.ktor.server.testing.testApplication
 import kotlinx.serialization.json.Json
 import no.elhub.auth.common.config.jsonApiContentType
-import no.elhub.auth.common.config.resolveGlnHeader
 import no.elhub.auth.common.documents.pdf.PdfGenerationException
 import no.elhub.auth.common.documents.pdf.PdfSigningException
 import no.elhub.auth.common.documents.pdf.PdfValidationException
@@ -30,36 +28,6 @@ import no.elhub.auth.v1.repositories.RepositoryWriteError
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 
 class ErrorHandlingTest : FunSpec({
-    test("conflicting v1 GLN headers return a 400 JSON:API error") {
-        testApplication {
-            application {
-                configureErrorHandling()
-                routing {
-                    get("/access/v1/authorization-documents") {
-                        resolveGlnHeader(
-                            call.request.headers,
-                            call.request.local.uri.substringBefore('?'),
-                            ApiHeaders.ELHUB_SENDER_GLN,
-                            ApiHeaders.SENDER_GLN,
-                        )
-                    }
-                }
-            }
-
-            val response = client.get("/access/v1/authorization-documents") {
-                header(ApiHeaders.ELHUB_SENDER_GLN, "123")
-                header(ApiHeaders.SENDER_GLN, "456")
-            }
-            response.status shouldBe HttpStatusCode.BadRequest
-            response.contentType()?.withoutParameters() shouldBe jsonApiContentType
-            val error = Json.decodeFromString<JsonApiErrorCollection>(response.bodyAsText()).errors.single()
-            error.status shouldBe "400"
-            error.title shouldBe "Conflicting GLN headers"
-            error.detail shouldBe
-                "Headers 'Elhub-Sender-Gln' and 'SenderGln' must have the same value when both are supplied."
-        }
-    }
-
     data class ErrorCase(
         val cause: Throwable,
         val status: HttpStatusCode,

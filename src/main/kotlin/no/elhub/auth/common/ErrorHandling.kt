@@ -41,19 +41,9 @@ private val logger = LoggerFactory.getLogger("ErrorHandling")
 
 class InvalidTraceIdException : Exception()
 
-class ConflictingGlnHeadersException(val preferred: String, val legacy: String) : Exception()
-
 @OptIn(ExperimentalSerializationApi::class)
 fun Application.configureErrorHandling() {
     install(StatusPages) {
-        exception<ConflictingGlnHeadersException> { call, cause ->
-            val (status, body) = buildApiErrorResponse(
-                status = HttpStatusCode.BadRequest,
-                title = "Conflicting GLN headers",
-                detail = "Headers '${cause.preferred}' and '${cause.legacy}' must have the same value when both are supplied.",
-            )
-            call.respondText(Json.encodeToString(body), jsonApiContentType, status)
-        }
         exception<InvalidTraceIdException> { call, _ ->
             val (status, body) =
                 buildApiErrorResponse(

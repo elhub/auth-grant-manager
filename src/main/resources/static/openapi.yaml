@@ -1409,7 +1409,7 @@ components:
       required: false
       description: >
         GLN of the party issuing the request. Supply this header or the legacy SenderGln header
-        when a sender GLN is required. If both are supplied, their values must match.
+        when a sender GLN is required. If both are supplied, this header takes precedence.
       schema:
         type: string
 
@@ -1421,7 +1421,7 @@ components:
       description: >
         Deprecated legacy alias for Elhub-Sender-Gln. Accepted temporarily to give existing
         consumers time to migrate; use Elhub-Sender-Gln for new integrations. Supply either header
-        when a sender GLN is required; if both are supplied, their values must match.
+        when a sender GLN is required; if both are supplied, Elhub-Sender-Gln takes precedence.
       schema:
         type: string
 
@@ -1431,7 +1431,7 @@ components:
       required: false
       description: >
         GLN of the organization on whose behalf the sender is acting in delegated Maskinporten flows.
-        If supplied alongside the legacy OnBehalfOfGln header, their values must match.
+        If supplied alongside the legacy OnBehalfOfGln header, this header takes precedence.
       schema:
         type: string
 
@@ -1443,7 +1443,7 @@ components:
       description: >
         Deprecated legacy alias for Elhub-On-Behalf-Of-Gln. Accepted temporarily to give existing
         consumers time to migrate; use Elhub-On-Behalf-Of-Gln for new integrations. If both headers
-        are supplied, their values must match.
+        are supplied, Elhub-On-Behalf-Of-Gln takes precedence.
       schema:
         type: string
 
