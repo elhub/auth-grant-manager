@@ -184,6 +184,13 @@ class DocumentSpecificationMapperTest : FunSpec({
                 )
             }
         }
+
+        test("$type rejects duplicate metering-point IDs") {
+            invalidPayload(
+                { toDocumentSpecification(type, scopes(listOf(validMeteringPointId, validMeteringPointId))) },
+                "requestedScopes[0].appliesTo meteringPoint.id must not contain duplicate metering points",
+            )
+        }
     }
 
     context("ChangeOfEnergySupplierForOrganization") {
@@ -192,9 +199,7 @@ class DocumentSpecificationMapperTest : FunSpec({
                 supplierChangeType,
                 listOf(
                     supplierScope(
-                        appliesTo = listOf(
-                            meteringPointConstraint(listOf(validMeteringPointId, validMeteringPointId)),
-                        ),
+                        appliesTo = listOf(meteringPointConstraint()),
                     ),
                 ),
             )
