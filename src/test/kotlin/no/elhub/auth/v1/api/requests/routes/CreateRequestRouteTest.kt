@@ -33,6 +33,7 @@ import no.elhub.auth.v1.domain.ResourceConstraint
 import no.elhub.auth.v1.domain.requests.AuthorizationRequestSpecification
 import no.elhub.auth.v1.domain.requests.AuthorizationRequestTypeDetails
 import no.elhub.auth.v1.features.requests.CreateRequestHandler
+import no.elhub.auth.v1.features.requests.creation.RedirectUriValidator
 import no.elhub.auth.v1.repositories.RequestRepository
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import java.util.UUID
@@ -118,7 +119,7 @@ class CreateRequestRouteTest : FunSpec({
                 agents.getValue("requestedOf").right(),
             )
             val repository = mockk<RequestRepository>()
-            val creationHandler = CreateRequestHandler(mockk(), mockk(), mockk(), repository)
+            val creationHandler = CreateRequestHandler(mockk(), mockk(), mockk(), mockk<RedirectUriValidator>(relaxed = true), repository)
 
             testApplication {
                 setupAppWith(agents.getValue("requestedBy")) {

@@ -30,6 +30,7 @@ import no.elhub.auth.v1.features.grants.GetGrantError
 import no.elhub.auth.v1.features.grants.UpdateGrantError
 import no.elhub.auth.v1.features.requests.GetRequestError
 import no.elhub.auth.v1.features.requests.UpdateRequestError
+import no.elhub.auth.v1.features.requests.creation.RedirectUriValidationError
 import no.elhub.auth.v1.features.requests.creation.RequestCreationAgentError
 import no.elhub.auth.v1.features.requests.creation.RequestPreparationError
 import no.elhub.auth.v1.integrations.pdp.PdpAuthorizationException
@@ -201,6 +202,15 @@ private fun Errors.toApiErrorResponse() =
         is DocumentCreationAgentError -> toApiErrorResponse()
 
         is RequestCreationAgentError -> toApiErrorResponse()
+
+        is RedirectUriValidationError.NotRegisteredInEdiel -> toValidationApiErrorResponse(detail)
+
+        is RedirectUriValidationError.DoesNotMatchEdiel -> toValidationApiErrorResponse(detail)
+
+        is RedirectUriValidationError.EdielUnavailable -> {
+            logger.error("Failed to validate redirect URI against Ediel", failure)
+            toInternalServerApiErrorResponse()
+        }
 
         is RepositoryReadError.NotFoundError -> {
             toNotFoundApiErrorResponse()
