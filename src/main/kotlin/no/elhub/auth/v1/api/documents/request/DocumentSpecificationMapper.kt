@@ -2,6 +2,7 @@ package no.elhub.auth.v1.api.documents.request
 
 import no.elhub.auth.v1.api.common.errors.InputError
 import no.elhub.auth.v1.common.now
+import no.elhub.auth.v1.common.toOsloDate
 import no.elhub.auth.v1.common.toOsloDateOrNull
 import no.elhub.auth.v1.domain.AuthorizationDocumentType
 import no.elhub.auth.v1.domain.AuthorizationScopeConstraintAttribute
@@ -35,7 +36,7 @@ fun toDocumentSpecification(
             requireNotNull(requestedScopes).toSupplierChangeSpecification()
 
         AuthorizationDocumentType.MoveInAndChangeOfEnergySupplierForOrganization ->
-            requireNotNull(requestedScopes).toMoveInSpecification()
+            requireNotNull(requestedScopes).toMoveInSpecification(now)
 
         AuthorizationDocumentType.EnergySupplierFrameworkAgreement -> {
             if (requestedScopes != null) {
@@ -110,7 +111,7 @@ private fun List<RequestedScope>.toSupplierChangeSpecification(): DocumentSpecif
     )
 }
 
-private fun List<RequestedScope>.toMoveInSpecification(): DocumentSpecification.MoveInAndChangeOfEnergySupplierForOrganization {
+private fun List<RequestedScope>.toMoveInSpecification(now: Instant): DocumentSpecification.MoveInAndChangeOfEnergySupplierForOrganization {
     if (size != 1) {
         throw InputError.InvalidCreateAuthorizationDocumentPayload(
             "requestedScopes must contain exactly one scope for this document type",
@@ -151,24 +152,30 @@ private fun List<RequestedScope>.toMoveInSpecification(): DocumentSpecification.
     val validFromConstraints = scope.allowedChanges.filter {
         it.attribute == AuthorizationScopeConstraintAttribute.ValidFrom.apiName
     }
-    if (validFromConstraints.size != 1 || scope.allowedChanges.size != 1) {
+    if (validFromConstraints.size > 1 || scope.allowedChanges.size != validFromConstraints.size) {
         throw InputError.InvalidCreateAuthorizationDocumentPayload(
-            "requestedScopes[0].allowedChanges must contain exactly one validFrom constraint",
+            "requestedScopes[0].allowedChanges may contain only one validFrom constraint",
         )
     }
 
-    val validFromValues = validFromConstraints.single().value
-    if (validFromValues.size != 1) {
+    val validFromValues = validFromConstraints.singleOrNull()?.value
+    if (validFromValues != null && validFromValues.size != 1) {
         throw InputError.InvalidCreateAuthorizationDocumentPayload(
             "requestedScopes[0].allowedChanges validFrom must contain exactly one date",
         )
     }
 
-    val validFromValue = validFromValues.single()
-    val validFrom = validFromValue.toOsloDateOrNull()
-        ?: throw InputError.InvalidCreateAuthorizationDocumentPayload(
+    val validFrom = validFromValues?.single()?.let {
+        it.toOsloDateOrNull() ?: throw InputError.InvalidCreateAuthorizationDocumentPayload(
             "requestedScopes[0].allowedChanges validFrom must be an ISO date or timestamp",
         )
+    }
+
+    if (validFrom != null && validFrom > now.toOsloDate()) {
+        throw InputError.InvalidCreateAuthorizationDocumentPayload(
+            "requestedScopes[0].allowedChanges validFrom must be today or in the past",
+        )
+    }
 
     return DocumentSpecification.MoveInAndChangeOfEnergySupplierForOrganization(
         meteringPointIds = ResourceConstraint.MeteringPoints(meteringPointIds),

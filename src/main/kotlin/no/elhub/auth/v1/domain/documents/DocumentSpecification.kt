@@ -60,7 +60,7 @@ sealed interface DocumentSpecification {
 
     data class MoveInAndChangeOfEnergySupplierForOrganization(
         val meteringPointIds: ResourceConstraint.MeteringPoints,
-        val validFrom: LocalDate,
+        val validFrom: LocalDate?,
     ) : DocumentSpecification {
         override val documentType = AuthorizationDocumentType.MoveInAndChangeOfEnergySupplierForOrganization
 
@@ -79,13 +79,16 @@ sealed interface DocumentSpecification {
                         setOf(MeteringPointContractType.EndUser, MeteringPointContractType.EnergySupplier),
                     ),
                 ),
-                AuthorizationScopeConstraint(
-                    constraintKind = AuthorizationScopeConstraintKind.AllowedChanges,
-                    attribute = AuthorizationScopeConstraintAttribute.ValidFrom,
-                    value = ResourceConstraint.ValidFrom(
-                        validFrom.startOfDayOslo(),
-                    ),
-                ),
+            ) + listOfNotNull(
+                validFrom?.let {
+                    AuthorizationScopeConstraint(
+                        constraintKind = AuthorizationScopeConstraintKind.AllowedChanges,
+                        attribute = AuthorizationScopeConstraintAttribute.ValidFrom,
+                        value = ResourceConstraint.ValidFrom(
+                            it.startOfDayOslo(),
+                        ),
+                    )
+                }
             ),
         )
     }

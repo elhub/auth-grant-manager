@@ -156,7 +156,7 @@ class AuthorizationRequestSpecificationMapperTest : FunSpec({
                 resourceType = "MeteringPointContract",
                 appliesTo = listOf(ScopeConstraint("meteringPoint.id", values)),
                 allowedChanges = if (type == AuthorizationRequestType.MoveInAndChangeOfEnergySupplierForOrganization) {
-                    listOf(ScopeConstraint("validFrom", listOf("2026-10-01")))
+                    listOf(ScopeConstraint("validFrom", listOf("2026-01-01")))
                 } else {
                     emptyList()
                 },
@@ -218,14 +218,28 @@ class AuthorizationRequestSpecificationMapperTest : FunSpec({
 
     context("MoveInAndChangeOfEnergySupplierForOrganization") {
         val type = AuthorizationRequestType.MoveInAndChangeOfEnergySupplierForOrganization
-        val moveInScope = meteringPointScope(listOf(ScopeConstraint("validFrom", listOf("2026-10-01"))))
+        val moveInScope = meteringPointScope(listOf(ScopeConstraint("validFrom", listOf("2026-01-01"))))
+
+        test("accepts missing move-in date") {
+            val details = attributes(type, requestedScopes = listOf(meteringPointScope()))
+                .validateAndReturnAuthorizationRequestSpecification(now).details
+                as AuthorizationRequestTypeDetails.MoveInAndChangeOfEnergySupplierForOrganization
+            details.moveInDate shouldBe null
+        }
+
+        test("rejects future move-in dates") {
+            invalidPayload("requestedScopes[0].allowedChanges validFrom must be today or in the past") {
+                attributes(type, requestedScopes = listOf(meteringPointScope(listOf(ScopeConstraint("validFrom", listOf("2027-01-01"))))))
+                    .validateAndReturnAuthorizationRequestSpecification(now)
+            }
+        }
 
         test("maps metering points and move-in date to its typed specification") {
             attributes(type, requestedScopes = listOf(moveInScope))
                 .validateAndReturnAuthorizationRequestSpecification(now)
                 .details shouldBe AuthorizationRequestTypeDetails.MoveInAndChangeOfEnergySupplierForOrganization(
                 meteringPointIds = ResourceConstraint.MeteringPoints(setOf(MeteringPointId.create(validMeteringPointId))),
-                moveInDate = LocalDate(2026, 10, 1),
+                moveInDate = LocalDate(2026, 1, 1),
             )
         }
 
