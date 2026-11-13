@@ -17,7 +17,7 @@ class GetDocumentHandler(
     ): AuthorizationDocument {
         val document = documentRepository.find(id)
 
-        if (authorizedAgent != document.requestedBy && authorizedAgent != document.requestedOf) {
+        if (authorizedAgent != document.requestedBy && authorizedAgent != document.requestedPrincipal) {
             throw GetDocumentError.NotAuthorized()
         }
 
