@@ -211,19 +211,19 @@ class ExposedDocumentRepositoryTest : FunSpec({
         error.detail shouldBe "Document not found: $id"
     }
 
-    test("listing includes requester or requestedOf but excludes other roles and agent types") {
+    test("listing includes requester or requestedPrincipal but excludes other roles and agent types") {
         val agent = agent(AgentType.Organization)
         val by = seed(document().copy(requestedBy = agent))
-        val requestedOf = seed(document().copy(requestedOf = agent))
-        val both = seed(document().copy(requestedBy = agent, requestedOf = agent))
-        seed(document().copy(requestedPrincipal = agent))
+        val requestedPrincipal = seed(document().copy(requestedPrincipal = agent))
+        val both = seed(document().copy(requestedBy = agent, requestedPrincipal = agent))
+        seed(document().copy(requestedOf = agent))
         seed(document().copy(approvedBy = agent))
         seed(document().copy(requestedBy = agent.copy(type = AgentType.Person)))
         seed(document())
 
         val result = repository.findAndSortByCreatedAt(agent, Pagination(), emptyList())
 
-        result.items.map { it.id }.shouldContainExactlyInAnyOrder(by.toString(), requestedOf.toString(), both.toString())
+        result.items.map { it.id }.shouldContainExactlyInAnyOrder(by.toString(), requestedPrincipal.toString(), both.toString())
         result.totalItems shouldBe 3L
     }
 
@@ -317,7 +317,7 @@ class ExposedDocumentRepositoryTest : FunSpec({
                 externalReference = "listed-contract",
                 requestedScopes = listOf(constrained, unconstrained),
             ),
-            document().copy(requestedOf = agent, requestedScopes = listOf(unconstrained)),
+            document().copy(requestedPrincipal = agent, requestedScopes = listOf(unconstrained)),
             document().copy(requestedBy = agent, documentType = AuthorizationDocumentType.ChangeOfEnergySupplierForOrganization),
         )
         documents.forEach { seed(it) }

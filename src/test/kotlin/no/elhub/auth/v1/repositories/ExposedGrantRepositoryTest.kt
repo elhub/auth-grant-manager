@@ -316,29 +316,27 @@ class ExposedGrantRepositoryTest : FunSpec({
         repository.findBySourceIds(AuthorizationGrantSourceType.Document, listOf(UUID.randomUUID())) shouldBe emptyMap()
     }
 
-    test("findAll includes principal, recipient and grantor once but excludes approver-only and unrelated agents") {
+    test("findAll includes principal and recipient once but excludes grantor-only, approver-only and unrelated agents") {
         val caller = agent(AgentType.Person)
         val principalGrant = insertGrant(principal = caller, scopes = listOf(constrained, unconstrained))
         val recipientGrant = insertGrant(grantedTo = caller, validTo = past)
         val bothGrant = insertGrant(principal = caller, grantedTo = caller, status = DatabaseGrantStatus.Revoked)
-        val grantorGrant = insertGrant(grantedBy = caller)
+        insertGrant(grantedBy = caller)
         insertGrant(approvedBy = caller)
         insertGrant()
         insertGrant(principal = caller.copy(type = AgentType.Organization))
 
         val result = repository.findAll(caller, Pagination(), emptyList(), GrantAgentFilters(), emptyList())
 
-        result.totalItems shouldBe 4L
+        result.totalItems shouldBe 3L
         result.items.map { it.id }.shouldContainExactlyInAnyOrder(
             principalGrant.id,
             recipientGrant.id,
             bothGrant.id,
-            grantorGrant.id,
         )
         assertGrant(result.items.single { it.id == principalGrant.id }, principalGrant)
         assertGrant(result.items.single { it.id == recipientGrant.id }, recipientGrant.copy(status = AuthorizationGrantStatus.Expired))
         assertGrant(result.items.single { it.id == bothGrant.id }, bothGrant)
-        assertGrant(result.items.single { it.id == grantorGrant.id }, grantorGrant)
     }
 
     test("findAll sorts newest first with stable ID ordering and preserves counts beyond the last page") {
@@ -423,7 +421,7 @@ class ExposedGrantRepositoryTest : FunSpec({
         val grants = listOf(
             insertGrant(principal = caller) to AuthorizationGrantStatus.Active,
             insertGrant(grantedTo = caller, validTo = null) to AuthorizationGrantStatus.Active,
-            insertGrant(grantedBy = caller, validFrom = future, validTo = future + 1.days) to AuthorizationGrantStatus.Pending,
+            insertGrant(grantedTo = caller, validFrom = future, validTo = future + 1.days) to AuthorizationGrantStatus.Pending,
             insertGrant(principal = caller, validFrom = future, validTo = null) to AuthorizationGrantStatus.Pending,
             insertGrant(principal = caller, validTo = past) to AuthorizationGrantStatus.Expired,
             insertGrant(principal = caller, validFrom = future, validTo = past) to AuthorizationGrantStatus.Expired,

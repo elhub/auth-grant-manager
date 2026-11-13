@@ -621,7 +621,7 @@ paths:
       summary: '[WIP] List authorization documents'
       description: >
         Retrieve a paginated list of authorization documents available to the calling agent. A document
-        is available when the calling agent is the requestedBy, the requestedOf, or the requestedPrincipal.
+        is available when the calling agent is the requestedBy or the requestedPrincipal.
         Results are ordered by createdAt DESC (newest first), and each document includes its linked
         authorization grants.
       operationId: listV1AuthorizationDocuments
@@ -718,7 +718,7 @@ paths:
       summary: '[WIP] Get an authorization document by ID'
       description: >
         Retrieve a specific authorization document, including its status, agents, and linked authorization
-        grants. The document is available to the requestedBy, the requestedOf, and the requestedPrincipal.
+        grants. The document is available to the requestedBy and the requestedPrincipal.
         The status is Pending until the signed document is submitted, Approved once it has been submitted,
         and Expired if validTo passes before submission.
       operationId: getV1AuthorizationDocument
@@ -760,7 +760,7 @@ paths:
       description: >
         Retrieve the PDF representation of an authorization document. Before submission this is the PDF
         generated and signed by Elhub; after submission it is the signed document. The document is available
-        to the requestedBy, the requestedOf, and the requestedPrincipal. The response is always
+        to the requestedBy and the requestedPrincipal. The response is always
         `application/pdf`. The Accept header is optional; if provided, it must allow `application/pdf`
         (for example, `application/pdf`, `application/*`, or `*/*`).
       x-status: Work in progress
@@ -858,7 +858,7 @@ paths:
       summary: '[WIP] List authorization grants'
       description: >
         Retrieve a paginated list of authorization grants available to the calling agent. A grant is
-        available when the calling agent is the grantedTo, the principal, or the grantedBy. Results are
+        available when the calling agent is the grantedTo or the principal. Results are
         ordered by createdAt DESC (newest first).
         Agent filters match the IDs returned in `relationships.<role>.data.id` and their implied agent
         types: a Person is identified by their Elhub ID,
@@ -977,7 +977,7 @@ paths:
       summary: '[WIP] Get an authorization grant by ID'
       description: >
         Retrieve a specific authorization grant, including its scopes and the source document or request
-        it was created from. The grant is available to the principal, the grantedBy, the grantedTo, and
+        it was created from. The grant is available to the principal, the grantedTo, and
         internal Elhub systems. validTo may be null, meaning the grant has no end date.
       operationId: getV1AuthorizationGrant
       x-status: Work in progress
@@ -1073,7 +1073,7 @@ paths:
       summary: '[WIP] List authorization requests'
       description: >
         Retrieve a paginated list of authorization requests available to the calling agent. A request
-        is available when the calling agent is the requestedBy, the requestedOf, or the requestedPrincipal.
+        is available when the calling agent is the requestedBy or the requestedPrincipal.
         Results are ordered by createdAt DESC (newest first).
       operationId: listV1AuthorizationRequests
       x-status: Work in progress
@@ -1202,7 +1202,7 @@ paths:
       summary: '[WIP] Get an authorization request by ID'
       description: >
         Retrieve a specific authorization request, including its status, agents, and linked authorization
-        grants. The request is available to the requestedBy, the requestedOf, and the requestedPrincipal.
+        grants. The request is available to the requestedBy and the requestedPrincipal.
         The status is Pending until decided, Approved or Rejected once decided, and Expired if validTo
         passes before a decision.
       operationId: getV1AuthorizationRequest

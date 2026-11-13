@@ -296,7 +296,7 @@ class ExposedRequestRepository(
         statuses: List<AuthorizationRequestStatus>,
         now: Instant,
     ): Op<Boolean> {
-        val agentCondition = (AuthorizationRequestTable.requestedOf eq agentId) or
+        val agentCondition = (AuthorizationRequestTable.requestedPrincipal eq agentId) or
             (AuthorizationRequestTable.requestedBy eq agentId)
         if (statuses.isEmpty()) {
             return agentCondition

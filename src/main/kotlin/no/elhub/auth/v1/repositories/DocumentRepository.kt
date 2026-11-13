@@ -241,7 +241,7 @@ class ExposedDocumentRepository(
         now: Instant,
     ): Op<Boolean> {
         val agentCondition = (AuthorizationDocumentTable.requestedBy eq agentId) or
-            (AuthorizationDocumentTable.requestedOf eq agentId)
+            (AuthorizationDocumentTable.requestedPrincipal eq agentId)
         if (statuses.isEmpty()) {
             return agentCondition
         }

@@ -404,18 +404,18 @@ class ExposedRequestRepositoryTest : FunSpec({
         }
     }
 
-    test("includes requestedBy and requestedOf once but excludes requestedPrincipal-only and unrelated agents") {
+    test("includes requestedBy and requestedPrincipal once but excludes requestedOf-only and unrelated agents") {
         val agent = agent()
         val other = agent(AgentType.Organization)
         val by = insertRequest(agent, requestedPrincipal = other, requestedOf = other)
-        val of = insertRequest(other, requestedOf = agent)
+        val principal = insertRequest(other, requestedPrincipal = agent, requestedOf = other)
         val both = insertRequest(agent)
-        insertRequest(other, requestedPrincipal = agent)
+        insertRequest(other, requestedPrincipal = other, requestedOf = agent)
         insertRequest(other)
 
         val result = repository.findAndSortByCreatedAt(agent, Pagination(), emptyList())
 
-        result.items.map { it.id }.shouldContainExactlyInAnyOrder(by, of, both)
+        result.items.map { it.id }.shouldContainExactlyInAnyOrder(by, principal, both)
         result.totalItems shouldBe 3L
     }
 
@@ -485,7 +485,7 @@ class ExposedRequestRepositoryTest : FunSpec({
             externalReference = "contract-123",
             scopes = listOf(constrained, otherScope),
         )
-        val withOtherScope = insertRequest(requestedOf, requestedOf = requestedBy, scopes = listOf(otherScope))
+        val withOtherScope = insertRequest(requestedOf, requestedPrincipal = requestedBy, scopes = listOf(otherScope))
         val withoutScopes = insertRequest(requestedBy)
 
         val result = repository.findAndSortByCreatedAt(requestedBy, Pagination(), emptyList())
