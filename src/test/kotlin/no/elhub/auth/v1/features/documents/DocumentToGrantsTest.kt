@@ -524,9 +524,10 @@ class DocumentToGrantsTest : FunSpec({
             shouldThrow<InvalidDocumentScopes> { document.copy(requestedScopes = listOf(invalidScope)).toGrants(approvedBy) }
         }
 
-        test("rejects a scope without a move-in date") {
-            val invalidScope = requestedScope.copy(constraints = listOf(meteringPointConstraint, contractTypeConstraint))
-            shouldThrow<InvalidDocumentScopes> { document.copy(requestedScopes = listOf(invalidScope)).toGrants(approvedBy) }
+        test("grants a scope without a move-in date") {
+            val scope = requestedScope.copy(constraints = listOf(meteringPointConstraint, contractTypeConstraint))
+            val grant = document.copy(requestedScopes = listOf(scope)).toGrants(approvedBy).single()
+            grant.scopes.single().constraints shouldBe scope.constraints
         }
 
         test("rejects a scope with only EnergySupplier contract changes") {

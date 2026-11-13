@@ -3,6 +3,7 @@ package no.elhub.auth.v1.api.requests.request
 import kotlinx.datetime.LocalDate
 import no.elhub.auth.v1.api.common.errors.InputError
 import no.elhub.auth.v1.common.now
+import no.elhub.auth.v1.common.toOsloDate
 import no.elhub.auth.v1.common.toOsloDateOrNull
 import no.elhub.auth.v1.domain.AuthorizationRequestType
 import no.elhub.auth.v1.domain.AuthorizationScopeConstraintAttribute
@@ -71,7 +72,7 @@ private fun CreateAuthorizationRequestAttributes.validateAndReturnTypeDetails(
 
             AuthorizationRequestTypeDetails.MoveInAndChangeOfEnergySupplierForOrganization(
                 meteringPointIds = scope.requireMeteringPointIds(),
-                moveInDate = scope.requireMoveInDate(),
+                moveInDate = scope.optionalMoveInDate(now),
             )
         }
 
@@ -152,14 +153,17 @@ private fun RequestedScope.requireMeteringPointIds(): ResourceConstraint.Meterin
     return ResourceConstraint.MeteringPoints(meteringPointIds)
 }
 
-private fun RequestedScope.requireMoveInDate(): LocalDate {
+private fun RequestedScope.optionalMoveInDate(now: Instant): LocalDate? {
+    if (allowedChanges.isEmpty()) return null
     val constraint = allowedChanges.singleOrNull()
         ?.takeIf { it.attribute == AuthorizationScopeConstraintAttribute.ValidFrom.apiName }
-        ?: invalid("requestedScopes[0].allowedChanges must contain exactly one validFrom constraint")
+        ?: invalid("requestedScopes[0].allowedChanges may contain only one validFrom constraint")
     val value = constraint.value.singleOrNull()
         ?: invalid("requestedScopes[0].allowedChanges validFrom must contain exactly one date")
-    return value.toOsloDateOrNull()
+    val date = value.toOsloDateOrNull()
         ?: invalid("requestedScopes[0].allowedChanges validFrom must be an ISO date or timestamp")
+    if (date > now.toOsloDate()) invalid("requestedScopes[0].allowedChanges validFrom must be today or in the past")
+    return date
 }
 
 private fun String.toMeteringPointIdOrNull(): MeteringPointId? =

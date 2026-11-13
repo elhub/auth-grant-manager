@@ -73,13 +73,16 @@ data class AuthorizationRequest(
                                     MeteringPointContractType.EndUser,
                                     MeteringPointContractType.EnergySupplier,
                                 ),
-                                AuthorizationScopeConstraint(
-                                    constraintKind = AuthorizationScopeConstraintKind.AllowedChanges,
-                                    attribute = AuthorizationScopeConstraintAttribute.ValidFrom,
-                                    value = ResourceConstraint.ValidFrom(
-                                        details.moveInDate.startOfDayOslo(),
-                                    ),
-                                ),
+                            ) + listOfNotNull(
+                                details.moveInDate?.let {
+                                    AuthorizationScopeConstraint(
+                                        constraintKind = AuthorizationScopeConstraintKind.AllowedChanges,
+                                        attribute = AuthorizationScopeConstraintAttribute.ValidFrom,
+                                        value = ResourceConstraint.ValidFrom(
+                                            it.startOfDayOslo(),
+                                        ),
+                                    )
+                                }
                             ),
                         ),
                     ),

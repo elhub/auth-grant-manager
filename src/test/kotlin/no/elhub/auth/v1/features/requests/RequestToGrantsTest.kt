@@ -114,6 +114,19 @@ class RequestToGrantsTest : FunSpec({
     }
 
     context("MoveInAndChangeOfEnergySupplierForOrganization") {
+        test("creates grants without a move-in-date constraint when omitted") {
+            val request = request(
+                AuthorizationRequestTypeDetails.MoveInAndChangeOfEnergySupplierForOrganization(
+                    ResourceConstraint.MeteringPoints(setOf(firstMeteringPoint)),
+                    null,
+                ),
+            )
+            request.toGrants(approvedBy, now).single().scopes shouldBe writeMeteringPointContract(
+                appliesTo(firstMeteringPoint),
+                allowedContractTypes(MeteringPointContractType.EndUser, MeteringPointContractType.EnergySupplier),
+            )
+        }
+
         val request = request(
             AuthorizationRequestTypeDetails.MoveInAndChangeOfEnergySupplierForOrganization(
                 ResourceConstraint.MeteringPoints(setOf(firstMeteringPoint, secondMeteringPoint)),

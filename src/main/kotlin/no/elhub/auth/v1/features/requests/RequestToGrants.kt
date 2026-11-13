@@ -74,7 +74,7 @@ private fun AuthorizationRequest.changeOfEnergySupplierGrants(
 
 /**
  * One Consumable grant per metering point, each allowing requestedBy to change the end user and energy supplier
- * contracts on that metering point from the move-in date. Valid from today through the calendar date two years ahead in Oslo.
+ * contracts on that metering point, optionally restricted by the move-in date. Valid from today through the calendar date two years ahead in Oslo.
  */
 private fun AuthorizationRequest.moveInAndChangeOfEnergySupplierGrants(
     approvedBy: AuthorizationAgent,
@@ -82,7 +82,9 @@ private fun AuthorizationRequest.moveInAndChangeOfEnergySupplierGrants(
 ): List<AuthorizationGrant> {
     val meteringPoints = constraint(AuthorizationScopeConstraintAttribute.MeteringPointId)
     val contractTypes = constraint(AuthorizationScopeConstraintAttribute.ContractType)
-    val moveInDate = constraint(AuthorizationScopeConstraintAttribute.ValidFrom)
+    val moveInDate = requestedScopes.single().constraints.singleOrNull {
+        it.attribute == AuthorizationScopeConstraintAttribute.ValidFrom
+    }
     val validity = consumableGrantValidity(now)
 
     return (meteringPoints.value as ResourceConstraint.MeteringPoints).ids.map { meteringPointId ->
@@ -101,7 +103,7 @@ private fun AuthorizationRequest.moveInAndChangeOfEnergySupplierGrants(
                 GrantedAuthorizationScope(
                     capability = PermissionCapability.Write,
                     resourceType = ResourceType.MeteringPointContract,
-                    constraints = listOf(
+                    constraints = listOfNotNull(
                         meteringPoints.copy(value = ResourceConstraint.MeteringPoints(setOf(meteringPointId))),
                         contractTypes,
                         moveInDate,

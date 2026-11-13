@@ -639,7 +639,7 @@ class CreateDocumentRouteTest : FunSpec({
             response.status shouldBe HttpStatusCode.UnprocessableEntity
             val body: JsonApiErrorCollection = response.body()
             body.errors.single().detail shouldBe
-                "requestedScopes[0].allowedChanges must contain exactly one validFrom constraint"
+                "requestedScopes[0].allowedChanges must be empty or contain exactly one validFrom constraint"
         }
     }
 
