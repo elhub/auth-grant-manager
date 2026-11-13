@@ -15,95 +15,173 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
 import io.ktor.server.testing.testApplication
 import no.elhub.auth.common.ELHUB_TRACE_ID_HEADER
+import no.elhub.auth.common.V1_ELHUB_TRACE_ID_HEADER
 import no.elhub.auth.common.configureErrorHandling
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import java.util.UUID
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation as ClientContentNegotiation
 
 class TracingTest : FunSpec({
-    test("uses ElhubTraceId header as call id when present") {
-        val traceId = "850cf459-d425-409a-a05d-7c6c9d1c0d64"
+    listOf("v0" to ELHUB_TRACE_ID_HEADER, "v1" to V1_ELHUB_TRACE_ID_HEADER).forEach { (version, header) ->
+        test("uses $header header as call id for $version") {
+            val traceId = "850cf459-d425-409a-a05d-7c6c9d1c0d64"
 
-        testApplication {
-            application {
-                configureRequestTracing()
-                routing {
-                    get("/call-id") {
-                        call.respondText(call.callId.orEmpty())
+            testApplication {
+                application {
+                    configureRequestTracing()
+                    routing {
+                        get("/access/$version/call-id") {
+                            call.respondText(call.callId.orEmpty())
+                        }
                     }
                 }
-            }
 
-            val response = client.get("/call-id") {
-                headers.append(ELHUB_TRACE_ID_HEADER, traceId)
-            }
+                val response = client.get("/access/$version/call-id") {
+                    headers.append(header, traceId)
+                }
 
-            response.bodyAsText() shouldBe traceId
-            response.headers[ELHUB_TRACE_ID_HEADER] shouldBe traceId
+                response.bodyAsText() shouldBe traceId
+                response.headers[header] shouldBe traceId
+                response.headers[if (version == "v0") V1_ELHUB_TRACE_ID_HEADER else ELHUB_TRACE_ID_HEADER].shouldBeNull()
+            }
         }
-    }
 
-    test("generates call id when ElhubTraceId header is missing") {
-        testApplication {
-            application {
-                configureRequestTracing()
-                routing {
-                    get("/call-id") {
-                        call.respondText(call.callId.orEmpty())
+        test("generates call id when $header header is missing for $version") {
+            testApplication {
+                application {
+                    configureRequestTracing()
+                    routing {
+                        get("/access/$version/call-id") {
+                            call.respondText(call.callId.orEmpty())
+                        }
                     }
                 }
+
+                val response = client.get("/access/$version/call-id")
+                val generatedTraceId = response.bodyAsText()
+
+                UUID.fromString(generatedTraceId).toString() shouldBe generatedTraceId
+                response.headers[header] shouldBe generatedTraceId
+                response.headers[if (version == "v0") V1_ELHUB_TRACE_ID_HEADER else ELHUB_TRACE_ID_HEADER].shouldBeNull()
             }
-
-            val response = client.get("/call-id")
-            val generatedTraceId = response.bodyAsText()
-
-            UUID.fromString(generatedTraceId).toString() shouldBe generatedTraceId
-            response.headers[ELHUB_TRACE_ID_HEADER] shouldBe generatedTraceId
         }
-    }
 
-    context("returns 400 when ElhubTraceId header is invalid") {
-        listOf(
-            "not-a-uuid",
-            "",
-            "   ",
-            "123",
-            "850cf459-d425-409a-a05d-7c6c9d1c0d64-extra"
-        ).forEach { invalidValue ->
-            test("rejects '$invalidValue'") {
-                testApplication {
-                    application {
-                        configureSerialization()
-                        configureErrorHandling()
-                        configureRequestTracing()
-                        routing {
-                            get("/call-id") {
-                                call.respondText(call.callId.orEmpty())
+        test("accepts the other header for $version and replies with $header") {
+            testApplication {
+                application {
+                    configureRequestTracing()
+                    routing { get("/access/$version/call-id") { call.respondText(call.callId.orEmpty()) } }
+                }
+                val traceId = UUID.randomUUID().toString()
+                val otherHeader = if (version == "v0") V1_ELHUB_TRACE_ID_HEADER else ELHUB_TRACE_ID_HEADER
+                val response = client.get("/access/$version/call-id") {
+                    headers.append(otherHeader, traceId)
+                }
+                response.bodyAsText() shouldBe traceId
+                response.headers[header] shouldBe traceId
+                response.headers[otherHeader].shouldBeNull()
+            }
+        }
+
+        test("prefers the hyphenated header when both headers are present for $version") {
+            testApplication {
+                application {
+                    configureRequestTracing()
+                    routing { get("/access/$version/call-id") { call.respondText(call.callId.orEmpty()) } }
+                }
+                val traceId = UUID.randomUUID().toString()
+                val otherHeader = if (version == "v0") V1_ELHUB_TRACE_ID_HEADER else ELHUB_TRACE_ID_HEADER
+                val response = client.get("/access/$version/call-id") {
+                    headers.append(V1_ELHUB_TRACE_ID_HEADER, traceId)
+                    headers.append(ELHUB_TRACE_ID_HEADER, "not-a-uuid")
+                }
+                response.bodyAsText() shouldBe traceId
+                response.headers[header] shouldBe traceId
+                response.headers[otherHeader].shouldBeNull()
+            }
+        }
+
+        context("returns 400 when $header header is invalid for $version") {
+            listOf(
+                "not-a-uuid",
+                "",
+                "   ",
+                "123",
+                "850cf459-d425-409a-a05d-7c6c9d1c0d64-extra"
+            ).forEach { invalidValue ->
+                test("rejects '$invalidValue'") {
+                    testApplication {
+                        application {
+                            configureSerialization()
+                            configureErrorHandling()
+                            configureRequestTracing()
+                            routing {
+                                get("/access/$version/call-id") {
+                                    call.respondText(call.callId.orEmpty())
+                                }
+                            }
+                        }
+
+                        val jsonClient = createClient {
+                            install(ClientContentNegotiation) { json() }
+                        }
+
+                        val response = jsonClient.get("/access/$version/call-id") {
+                            headers.append(header, invalidValue)
+                        }
+
+                        response.status shouldBe HttpStatusCode.BadRequest
+                        response.headers[header].shouldBeNull()
+                        val responseJson: JsonApiErrorCollection = response.body()
+                        responseJson.errors.apply {
+                            size shouldBe 1
+                            this[0].apply {
+                                status shouldBe "400"
+                                title shouldBe "Invalid trace ID"
+                                detail shouldBe "Elhub trace id header must be a valid UUID"
                             }
                         }
                     }
-
-                    val jsonClient = createClient {
-                        install(ClientContentNegotiation) { json() }
-                    }
-
-                    val response = jsonClient.get("/call-id") {
-                        headers.append("ElhubTraceId", invalidValue)
-                    }
-
-                    response.status shouldBe HttpStatusCode.BadRequest
-                    response.headers["ElhubTraceId"].shouldBeNull()
-                    response.headers["Elhub-Trace-Id"].shouldBeNull()
-                    val responseJson: JsonApiErrorCollection = response.body()
-                    responseJson.errors.apply {
-                        size shouldBe 1
-                        this[0].apply {
-                            status shouldBe "400"
-                            title shouldBe "Invalid trace ID"
-                            detail shouldBe "Header 'ElhubTraceId' must be a valid UUID"
-                        }
-                    }
                 }
+            }
+        }
+    }
+
+    listOf("v0" to ELHUB_TRACE_ID_HEADER, "v1" to V1_ELHUB_TRACE_ID_HEADER).forEach { (version, header) ->
+        val otherHeader = if (version == "v0") V1_ELHUB_TRACE_ID_HEADER else ELHUB_TRACE_ID_HEADER
+        test("$version rejects an invalid hyphenated trace header even when the other header is valid") {
+            testApplication {
+                application {
+                    configureSerialization()
+                    configureErrorHandling()
+                    configureRequestTracing()
+                    routing { get("/access/$version/call-id") { call.respondText(call.callId.orEmpty()) } }
+                }
+                val response = client.get("/access/$version/call-id") {
+                    headers.append(V1_ELHUB_TRACE_ID_HEADER, "not-a-uuid")
+                    headers.append(ELHUB_TRACE_ID_HEADER, UUID.randomUUID().toString())
+                }
+                response.status shouldBe HttpStatusCode.BadRequest
+                response.headers[header].shouldBeNull()
+            }
+        }
+
+        test("$version rejects an invalid alternate trace header") {
+            testApplication {
+                application {
+                    configureSerialization()
+                    configureErrorHandling()
+                    configureRequestTracing()
+                    routing { get("/access/$version/call-id") { call.respondText(call.callId.orEmpty()) } }
+                }
+                val jsonClient = createClient { install(ClientContentNegotiation) { json() } }
+                val response = jsonClient.get("/access/$version/call-id") {
+                    headers.append(otherHeader, "not-a-uuid")
+                }
+                response.status shouldBe HttpStatusCode.BadRequest
+                response.headers[header].shouldBeNull()
+                val body: JsonApiErrorCollection = response.body()
+                body.errors[0].detail shouldBe "Elhub trace id header must be a valid UUID"
             }
         }
     }

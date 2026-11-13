@@ -49,7 +49,7 @@ fun Application.configureErrorHandling() {
                 buildApiErrorResponse(
                     status = HttpStatusCode.BadRequest,
                     title = "Invalid trace ID",
-                    detail = "Header 'ElhubTraceId' must be a valid UUID",
+                    detail = "Elhub trace id header must be a valid UUID",
                 )
             call.respond(status, body)
         }
