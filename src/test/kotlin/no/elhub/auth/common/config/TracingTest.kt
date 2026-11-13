@@ -138,7 +138,7 @@ class TracingTest : FunSpec({
                             this[0].apply {
                                 status shouldBe "400"
                                 title shouldBe "Invalid trace ID"
-                                detail shouldBe "Elhub trace id header must be a valid UUID"
+                                detail shouldBe "Elhub-Trace-Id header must be a valid UUID"
                             }
                         }
                     }
@@ -196,7 +196,7 @@ class TracingTest : FunSpec({
             response.status shouldBe HttpStatusCode.BadRequest
             response.headers[ELHUB_TRACE_ID_HEADER].shouldBeNull()
             val body: JsonApiErrorCollection = response.body()
-            body.errors[0].detail shouldBe "Elhub trace id header must be a valid UUID"
+            body.errors[0].detail shouldBe "Elhub-Trace-Id header must be a valid UUID"
         }
     }
 
@@ -215,7 +215,7 @@ class TracingTest : FunSpec({
             response.status shouldBe HttpStatusCode.BadRequest
             response.headers[V1_ELHUB_TRACE_ID_HEADER].shouldBeNull()
             val body: JsonApiErrorCollection = response.body()
-            body.errors[0].detail shouldBe "Elhub trace id header must be a valid UUID"
+            body.errors[0].detail shouldBe "Elhub-Trace-Id header must be a valid UUID"
         }
     }
 })
