@@ -19,25 +19,26 @@ import no.elhub.auth.plugin.authorization
 import no.elhub.auth.plugin.policies.token.base.authinfo.AuthInfoPolicy
 
 fun Application.configureAuthorization() {
-    val pdpHttpClient = HttpClient(Apache5) {
-        install(HttpTimeout) {
-            requestTimeoutMillis = 10_000
-            connectTimeoutMillis = 10_000
-            socketTimeoutMillis = 10_000
+    val pdpHttpClient =
+        HttpClient(Apache5) {
+            install(HttpTimeout) {
+                requestTimeoutMillis = 10_000
+                connectTimeoutMillis = 10_000
+                socketTimeoutMillis = 10_000
+            }
+            install(ContentNegotiation) {
+                json(
+                    Json {
+                        ignoreUnknownKeys = true
+                        explicitNulls = false
+                    },
+                )
+            }
+            install(Logging) {
+                format = LoggingFormat.OkHttp
+                level = LogLevel.INFO
+            }
         }
-        install(ContentNegotiation) {
-            json(
-                Json {
-                    ignoreUnknownKeys = true
-                    explicitNulls = false
-                }
-            )
-        }
-        install(Logging) {
-            format = LoggingFormat.OkHttp
-            level = LogLevel.INFO
-        }
-    }
 
     authorization {
         client = pdpHttpClient
@@ -46,8 +47,8 @@ fun Application.configureAuthorization() {
         tokenPolicy(AuthInfoPolicy) {
             buildPayload {
                 AuthInfoPolicy.Request(
-                    senderGln = request.headers[ApiHeaders.SENDER_GLN]?.ifBlank { null },
-                    onBehalfOfGln = request.headers[ApiHeaders.ON_BEHALF_OF_GLN]?.ifBlank { null },
+                    senderGln = authorizationHeaders.senderGln,
+                    onBehalfOfGln = authorizationHeaders.onBehalfOfGln,
                     onBehalfOfOrganisationId = request.headers[ApiHeaders.ON_BEHALF_OF_ORGANISATION]?.ifBlank { null },
                 )
             }

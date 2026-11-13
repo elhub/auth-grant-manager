@@ -630,8 +630,10 @@ paths:
       parameters:
         - $ref: '#/components/parameters/UserAgent'
         - $ref: '#/components/parameters/AuthorizationMaskinporten'
-        - $ref: '#/components/parameters/SenderGlnRequired'
-        - $ref: '#/components/parameters/OnBehalfOfGlnOptional'
+        - $ref: '#/components/parameters/V1SenderGlnPreferred'
+        - $ref: '#/components/parameters/V1SenderGlnLegacy'
+        - $ref: '#/components/parameters/V1OnBehalfOfGlnPreferred'
+        - $ref: '#/components/parameters/V1OnBehalfOfGlnLegacy'
         - name: page[number]
           in: query
           required: false
@@ -681,8 +683,10 @@ paths:
       parameters:
         - $ref: '#/components/parameters/UserAgent'
         - $ref: '#/components/parameters/AuthorizationMaskinporten'
-        - $ref: '#/components/parameters/SenderGlnRequired'
-        - $ref: '#/components/parameters/OnBehalfOfGlnOptional'
+        - $ref: '#/components/parameters/V1SenderGlnPreferred'
+        - $ref: '#/components/parameters/V1SenderGlnLegacy'
+        - $ref: '#/components/parameters/V1OnBehalfOfGlnPreferred'
+        - $ref: '#/components/parameters/V1OnBehalfOfGlnLegacy'
       requestBody:
         required: true
         content:
@@ -727,8 +731,10 @@ paths:
       parameters:
         - $ref: '#/components/parameters/UserAgent'
         - $ref: '#/components/parameters/AuthorizationMaskinporten'
-        - $ref: '#/components/parameters/SenderGlnRequired'
-        - $ref: '#/components/parameters/OnBehalfOfGlnOptional'
+        - $ref: '#/components/parameters/V1SenderGlnPreferred'
+        - $ref: '#/components/parameters/V1SenderGlnLegacy'
+        - $ref: '#/components/parameters/V1OnBehalfOfGlnPreferred'
+        - $ref: '#/components/parameters/V1OnBehalfOfGlnLegacy'
         - name: id
           in: path
           required: true
@@ -768,8 +774,10 @@ paths:
       parameters:
         - $ref: '#/components/parameters/UserAgent'
         - $ref: '#/components/parameters/AuthorizationMaskinporten'
-        - $ref: '#/components/parameters/SenderGlnRequired'
-        - $ref: '#/components/parameters/OnBehalfOfGlnOptional'
+        - $ref: '#/components/parameters/V1SenderGlnPreferred'
+        - $ref: '#/components/parameters/V1SenderGlnLegacy'
+        - $ref: '#/components/parameters/V1OnBehalfOfGlnPreferred'
+        - $ref: '#/components/parameters/V1OnBehalfOfGlnLegacy'
         - name: id
           in: path
           required: true
@@ -811,8 +819,10 @@ paths:
       parameters:
         - $ref: '#/components/parameters/UserAgent'
         - $ref: '#/components/parameters/AuthorizationMaskinporten'
-        - $ref: '#/components/parameters/SenderGlnRequired'
-        - $ref: '#/components/parameters/OnBehalfOfGlnOptional'
+        - $ref: '#/components/parameters/V1SenderGlnPreferred'
+        - $ref: '#/components/parameters/V1SenderGlnLegacy'
+        - $ref: '#/components/parameters/V1OnBehalfOfGlnPreferred'
+        - $ref: '#/components/parameters/V1OnBehalfOfGlnLegacy'
         - name: id
           in: path
           required: true
@@ -870,8 +880,10 @@ paths:
       parameters:
         - $ref: '#/components/parameters/UserAgent'
         - $ref: '#/components/parameters/AuthorizationMaskinportenOrEndUser'
-        - $ref: '#/components/parameters/SenderGlnOptional'
-        - $ref: '#/components/parameters/OnBehalfOfGlnOptional'
+        - $ref: '#/components/parameters/V1SenderGlnPreferred'
+        - $ref: '#/components/parameters/V1SenderGlnLegacy'
+        - $ref: '#/components/parameters/V1OnBehalfOfGlnPreferred'
+        - $ref: '#/components/parameters/V1OnBehalfOfGlnLegacy'
         - name: filter[status]
           in: query
           required: false
@@ -985,8 +997,10 @@ paths:
       parameters:
         - $ref: '#/components/parameters/UserAgent'
         - $ref: '#/components/parameters/AuthorizationMaskinportenOrEndUserOptional'
-        - $ref: '#/components/parameters/SenderGlnOptional'
-        - $ref: '#/components/parameters/OnBehalfOfGlnOptional'
+        - $ref: '#/components/parameters/V1SenderGlnPreferred'
+        - $ref: '#/components/parameters/V1SenderGlnLegacy'
+        - $ref: '#/components/parameters/V1OnBehalfOfGlnPreferred'
+        - $ref: '#/components/parameters/V1OnBehalfOfGlnLegacy'
         - name: id
           in: path
           required: true
@@ -1081,8 +1095,10 @@ paths:
       parameters:
         - $ref: '#/components/parameters/UserAgent'
         - $ref: '#/components/parameters/AuthorizationMaskinportenOrEndUser'
-        - $ref: '#/components/parameters/SenderGlnOptional'
-        - $ref: '#/components/parameters/OnBehalfOfGlnOptional'
+        - $ref: '#/components/parameters/V1SenderGlnPreferred'
+        - $ref: '#/components/parameters/V1SenderGlnLegacy'
+        - $ref: '#/components/parameters/V1OnBehalfOfGlnPreferred'
+        - $ref: '#/components/parameters/V1OnBehalfOfGlnLegacy'
         - name: filter[status]
           in: query
           required: false
@@ -1143,8 +1159,10 @@ paths:
       parameters:
         - $ref: '#/components/parameters/UserAgent'
         - $ref: '#/components/parameters/AuthorizationMaskinporten'
-        - $ref: '#/components/parameters/SenderGlnRequired'
-        - $ref: '#/components/parameters/OnBehalfOfGlnOptional'
+        - $ref: '#/components/parameters/V1SenderGlnPreferred'
+        - $ref: '#/components/parameters/V1SenderGlnLegacy'
+        - $ref: '#/components/parameters/V1OnBehalfOfGlnPreferred'
+        - $ref: '#/components/parameters/V1OnBehalfOfGlnLegacy'
       requestBody:
         required: true
         content:
@@ -1211,8 +1229,10 @@ paths:
       parameters:
         - $ref: '#/components/parameters/UserAgent'
         - $ref: '#/components/parameters/AuthorizationMaskinportenOrEndUser'
-        - $ref: '#/components/parameters/SenderGlnOptional'
-        - $ref: '#/components/parameters/OnBehalfOfGlnOptional'
+        - $ref: '#/components/parameters/V1SenderGlnPreferred'
+        - $ref: '#/components/parameters/V1SenderGlnLegacy'
+        - $ref: '#/components/parameters/V1OnBehalfOfGlnPreferred'
+        - $ref: '#/components/parameters/V1OnBehalfOfGlnLegacy'
         - name: id
           in: path
           required: true
@@ -1380,6 +1400,50 @@ components:
       description: >
         GLN of the organization on whose behalf the sender is acting,
         used in delegated Maskinporten flows.
+      schema:
+        type: string
+
+    V1SenderGlnPreferred:
+      name: Elhub-Sender-Gln
+      in: header
+      required: false
+      description: >
+        GLN of the party issuing the request. Supply this header or the legacy SenderGln header
+        when a sender GLN is required. If both are supplied, this header takes precedence.
+      schema:
+        type: string
+
+    V1SenderGlnLegacy:
+      name: SenderGln
+      in: header
+      required: false
+      deprecated: true
+      description: >
+        Deprecated legacy alias for Elhub-Sender-Gln. Accepted temporarily to give existing
+        consumers time to migrate; use Elhub-Sender-Gln for new integrations. Supply either header
+        when a sender GLN is required; if both are supplied, Elhub-Sender-Gln takes precedence.
+      schema:
+        type: string
+
+    V1OnBehalfOfGlnPreferred:
+      name: Elhub-On-Behalf-Of-Gln
+      in: header
+      required: false
+      description: >
+        GLN of the organization on whose behalf the sender is acting in delegated Maskinporten flows.
+        If supplied alongside the legacy OnBehalfOfGln header, this header takes precedence.
+      schema:
+        type: string
+
+    V1OnBehalfOfGlnLegacy:
+      name: OnBehalfOfGln
+      in: header
+      required: false
+      deprecated: true
+      description: >
+        Deprecated legacy alias for Elhub-On-Behalf-Of-Gln. Accepted temporarily to give existing
+        consumers time to migrate; use Elhub-On-Behalf-Of-Gln for new integrations. If both headers
+        are supplied, Elhub-On-Behalf-Of-Gln takes precedence.
       schema:
         type: string
 
