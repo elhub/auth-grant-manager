@@ -253,6 +253,34 @@ class CreateDocumentRouteTest : FunSpec({
         }
     }
 
+    listOf(
+        "ChangeOfEnergySupplierForOrganization",
+        "MoveInAndChangeOfEnergySupplierForOrganization",
+    ).forEach { type ->
+        test("POST / returns 422 for duplicate metering-point IDs in $type") {
+            testApplication {
+                setupAppWith(authorizedAgent) {
+                    route(agentService, handler)
+                }
+
+                val body = requestBody
+                    .replace("ChangeOfEnergySupplierForOrganization", type)
+                    .replace(
+                        "\"value\": [\"707057500000000001\"]",
+                        "\"value\": [\"707057500000000001\", \"707057500000000001\"]",
+                    )
+                val response = client.postJson("/", body)
+
+                response.status shouldBe HttpStatusCode.UnprocessableEntity
+                val error: JsonApiErrorCollection = response.body()
+                error.errors.single().detail shouldBe
+                    "requestedScopes[0].appliesTo meteringPoint.id must not contain duplicate metering points"
+                coVerify(exactly = 0) { agentService.resolve(any()) }
+                coVerify(exactly = 0) { handler.createAuthorizationDocument(any(), any(), any(), any(), any(), any()) }
+            }
+        }
+    }
+
     test("POST / creates a framework agreement without scopes and preserves future requested grant dates") {
         val requestedGrantValidFrom = Instant.parse("2098-01-01T00:00:00Z")
         val requestedGrantValidTo = Instant.parse("2099-01-01T00:00:00Z")

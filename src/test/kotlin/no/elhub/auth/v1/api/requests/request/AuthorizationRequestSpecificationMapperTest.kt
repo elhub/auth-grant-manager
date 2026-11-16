@@ -187,6 +187,13 @@ class AuthorizationRequestSpecificationMapperTest : FunSpec({
                 }
             }
         }
+
+        test("$type rejects duplicate metering-point IDs") {
+            invalidPayload("requestedScopes[0].appliesTo meteringPoint.id must not contain duplicate metering points") {
+                attributes(type, scopes(listOf(validMeteringPointId, validMeteringPointId)))
+                    .validateAndReturnAuthorizationRequestSpecification(now)
+            }
+        }
     }
 
     context("ChangeOfEnergySupplierForOrganization") {
