@@ -1031,6 +1031,7 @@ paths:
         Update an authorization grant by setting its status to Exhausted or Revoked.
         Only internal Elhub systems may exhaust active consumable grants; pending grants cannot be exhausted.
         The principal or grantedTo agent may revoke pending or active grants.
+        Revocation requires an end-user token and is authorized as the person or organisation they are acting for.
         The request body ID must match the path ID.
       operationId: updateV1AuthorizationGrant
       x-status: Work in progress

@@ -42,7 +42,8 @@ import java.util.concurrent.TimeUnit
 import kotlin.time.Instant
 
 class GrantsModuleTest : FunSpec({
-    val delegatedAuthInfo = """{"actingId":"organisation-1","actingType":"organisation","originalId":"person-1"}"""
+    val delegatedAuthInfo =
+        """{"actingId":"organisation-1","actingType":"organisation","originalId":"person-1","actingOrganisationNumber":"999888771"}"""
 
     test("PATCH system can exhaust a grant") {
         GrantPatchFixture(tokenType = "elhub-service", authInfo = "null").use { fixture ->
@@ -66,8 +67,12 @@ class GrantsModuleTest : FunSpec({
         }
     }
 
-    test("PATCH delegated ENDUSER can revoke as the originalId person matching grantedTo") {
-        GrantPatchFixture(tokenType = "enduser", authInfo = delegatedAuthInfo).use { fixture ->
+    test("PATCH delegated ENDUSER can revoke as the organisation matching grantedTo") {
+        GrantPatchFixture(
+            tokenType = "enduser",
+            authInfo = delegatedAuthInfo,
+            grantedTo = AuthorizationAgent("999888771", AgentType.Organization),
+        ).use { fixture ->
             val response = fixture.patch(AuthorizationGrantStatus.Revoked, onBehalfOfOrganisation = "999888771")
 
             response.status shouldBe HttpStatusCode.OK
@@ -80,8 +85,22 @@ class GrantsModuleTest : FunSpec({
         }
     }
 
-    test("PATCH delegated ENDUSER cannot exhaust a grant") {
+    test("PATCH unrelated organisation cannot revoke even when originalId matches the person recipient") {
         GrantPatchFixture(tokenType = "enduser", authInfo = delegatedAuthInfo).use { fixture ->
+            val response = fixture.patch(AuthorizationGrantStatus.Revoked, onBehalfOfOrganisation = "999888771")
+
+            response.status shouldBe HttpStatusCode.Forbidden
+            coVerify(exactly = 1) { fixture.repository.find(fixture.grant.id) }
+            coVerify(exactly = 0) { fixture.repository.update(any(), any()) }
+        }
+    }
+
+    test("PATCH delegated ENDUSER cannot exhaust a grant") {
+        GrantPatchFixture(
+            tokenType = "enduser",
+            authInfo = delegatedAuthInfo,
+            grantedTo = AuthorizationAgent("999888771", AgentType.Organization),
+        ).use { fixture ->
             val response = fixture.patch(AuthorizationGrantStatus.Exhausted, onBehalfOfOrganisation = "999888771")
 
             response.status shouldBe HttpStatusCode.Forbidden
@@ -151,6 +170,7 @@ class GrantsModuleTest : FunSpec({
 private class GrantPatchFixture(
     tokenType: String,
     authInfo: String,
+    grantedTo: AuthorizationAgent = AuthorizationAgent("person-1", AgentType.Person),
 ) : AutoCloseable {
     val repository = mockk<GrantRepository>()
     val grant = AuthorizationGrant.new(
@@ -159,7 +179,7 @@ private class GrantPatchFixture(
         sourceId = UUID.randomUUID(),
         principal = AuthorizationAgent("person-2", AgentType.Person),
         grantedBy = AuthorizationAgent("grantedBy-person", AgentType.Person),
-        grantedTo = AuthorizationAgent("person-1", AgentType.Person),
+        grantedTo = grantedTo,
         approvedBy = AuthorizationAgent("person-2", AgentType.Person),
         validFrom = Instant.parse("2026-10-01T08:00:00Z"),
         validTo = Instant.parse("2100-01-01T00:00:00Z"),

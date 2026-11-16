@@ -15,6 +15,7 @@ import no.elhub.auth.common.auth.AuthorizedPartyKey
 import no.elhub.auth.common.auth.GrantUpdateAuthInfoPolicy
 import no.elhub.auth.common.auth.UpdateAuthInfoPolicy
 import no.elhub.auth.common.auth.resolveAuthorizedParty
+import no.elhub.auth.common.auth.resolveGrantUpdateActor
 import no.elhub.auth.common.auth.resolveUpdateActor
 import no.elhub.auth.plugin.authorization
 import no.elhub.auth.plugin.policies.token.base.authinfo.AuthInfoPolicy
@@ -93,7 +94,7 @@ fun Application.configureAuthorization() {
             }
 
             enforce { response ->
-                val party = resolveUpdateActor(response.result, allowSystem = true)
+                val party = resolveGrantUpdateActor(response.result)
                 if (party != null) {
                     attributes.put(AuthorizedPartyKey, party)
                     true

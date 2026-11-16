@@ -29,14 +29,11 @@ object GrantUpdateAuthInfoPolicy : TokenPolicy<AuthInfoPolicy.Request, AuthInfoP
 }
 
 /**
- * Resolves the person performing an update, or null if not allowed. Systems must be explicitly enabled.
+ * Resolves the person performing an update, or null if not allowed.
  * When acting on behalf of an organisation, the PDP verifies the delegation; the person is still returned.
  */
-fun resolveUpdateActor(response: AuthInfoPolicy.Response, allowSystem: Boolean = false): AuthorizationParty? {
+fun resolveUpdateActor(response: AuthInfoPolicy.Response): AuthorizationParty? {
     val tokenType = response.tokenInfo?.tokenType
-    if (allowSystem && tokenType == TokenType.ELHUB_SERVICE) {
-        return resolveAuthorizedParty(response)
-    }
     if (tokenType != TokenType.ENDUSER) {
         log.warn("Unsupported tokenType={} for update", tokenType)
         return null
@@ -71,4 +68,22 @@ fun resolveUpdateActor(response: AuthInfoPolicy.Response, allowSystem: Boolean =
 
     return AuthorizationParty(id = personId, type = PartyType.Person)
         .also { log.info("Authorized party is $it") }
+}
+
+/** Resolves the party represented by a person for revocation, or a system for exhaustion. */
+fun resolveGrantUpdateActor(response: AuthInfoPolicy.Response): AuthorizationParty? {
+    if (response.tokenInfo?.tokenType == TokenType.ELHUB_SERVICE) {
+        return resolveAuthorizedParty(response)
+    }
+    // Require a valid end-user person, but authorize against the party they are acting for.
+    if (resolveUpdateActor(response) == null) {
+        return null
+    }
+    if (response.authInfo?.actingType?.trim()?.lowercase() == "organisation" &&
+        response.authInfo?.actingOrganisationNumber.isNullOrBlank()
+    ) {
+        log.warn("PDP response missing actingOrganisationNumber")
+        return null
+    }
+    return resolveAuthorizedParty(response)
 }
