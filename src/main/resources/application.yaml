@@ -3,6 +3,7 @@ ktor:
     modules:
       - no.elhub.auth.common.ApplicationModuleKt.module
       - no.elhub.auth.v0.features.common.CommonModuleKt.commonModule
+      - no.elhub.auth.common.integrations.ediel.EdielModuleKt.edielModule
       - no.elhub.auth.v0.features.featuretoggles.ModuleKt.unleashModule
       - no.elhub.auth.v0.features.common.CommonModuleKt.personServiceModule
       - no.elhub.auth.v1.integrations.pdp.AuthorizationRulesServiceModuleKt.authorizationRulesServiceModule

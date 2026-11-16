@@ -7,6 +7,7 @@ import no.elhub.auth.v1.domain.requests.AuthorizationRequestTypeDetails
 import no.elhub.auth.v1.features.requests.creation.ChangeOfEnergySupplierRequestHandler
 import no.elhub.auth.v1.features.requests.creation.EnergySupplierFrameworkAgreementRequestHandler
 import no.elhub.auth.v1.features.requests.creation.MoveInAndChangeOfEnergySupplierRequestHandler
+import no.elhub.auth.v1.features.requests.creation.RedirectUriValidator
 import no.elhub.auth.v1.features.requests.creation.validateRequestCreationAgents
 import no.elhub.auth.v1.repositories.RequestRepository
 
@@ -14,6 +15,7 @@ class CreateRequestHandler(
     private val changeOfEnergySupplierHandler: ChangeOfEnergySupplierRequestHandler,
     private val moveInAndChangeOfEnergySupplierHandler: MoveInAndChangeOfEnergySupplierRequestHandler,
     private val energySupplierFrameworkAgreementHandler: EnergySupplierFrameworkAgreementRequestHandler,
+    private val redirectUriValidator: RedirectUriValidator,
     private val requestRepository: RequestRepository,
 ) {
     suspend operator fun invoke(
@@ -28,6 +30,8 @@ class CreateRequestHandler(
             requestedPrincipal = requestedPrincipal,
             requestedOf = requestedOf,
         )
+        redirectUriValidator.validate(specification.redirectUri, requestedBy)
+
         val requestTypeSpecificDetails = when (val details = specification.details) {
             is AuthorizationRequestTypeDetails.ChangeOfEnergySupplierForOrganization ->
                 changeOfEnergySupplierHandler.validateAndGetRequestTypeSpecificDetails(

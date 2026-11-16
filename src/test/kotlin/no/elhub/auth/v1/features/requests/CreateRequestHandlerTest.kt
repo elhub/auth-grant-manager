@@ -23,6 +23,8 @@ import no.elhub.auth.v1.domain.requests.AuthorizationRequestTypeDetails
 import no.elhub.auth.v1.features.requests.creation.ChangeOfEnergySupplierRequestHandler
 import no.elhub.auth.v1.features.requests.creation.EnergySupplierFrameworkAgreementRequestHandler
 import no.elhub.auth.v1.features.requests.creation.MoveInAndChangeOfEnergySupplierRequestHandler
+import no.elhub.auth.v1.features.requests.creation.RedirectUriValidationError
+import no.elhub.auth.v1.features.requests.creation.RedirectUriValidator
 import no.elhub.auth.v1.features.requests.creation.RequestCreationAgentError
 import no.elhub.auth.v1.features.requests.creation.RequestTypeSpecificDetails
 import no.elhub.auth.v1.repositories.RequestRepository
@@ -39,6 +41,7 @@ class CreateRequestHandlerTest : FunSpec({
     lateinit var supplierChangeHandler: ChangeOfEnergySupplierRequestHandler
     lateinit var moveInHandler: MoveInAndChangeOfEnergySupplierRequestHandler
     lateinit var frameworkAgreementHandler: EnergySupplierFrameworkAgreementRequestHandler
+    lateinit var redirectUriValidator: RedirectUriValidator
     lateinit var repository: RequestRepository
     lateinit var inserted: CapturingSlot<AuthorizationRequest>
 
@@ -46,13 +49,14 @@ class CreateRequestHandlerTest : FunSpec({
         supplierChangeHandler = mockk()
         moveInHandler = mockk()
         frameworkAgreementHandler = mockk()
+        redirectUriValidator = mockk(relaxed = true)
         repository = mockk()
         inserted = slot()
         coEvery { repository.insert(capture(inserted)) } answers { inserted.captured }
     }
 
     suspend fun create(details: AuthorizationRequestTypeDetails) =
-        CreateRequestHandler(supplierChangeHandler, moveInHandler, frameworkAgreementHandler, repository)(
+        CreateRequestHandler(supplierChangeHandler, moveInHandler, frameworkAgreementHandler, redirectUriValidator, repository)(
             specification = AuthorizationRequestSpecification("ref-1", "https://example.com/callback", details),
             requestedBy = requestedBy,
             requestedPrincipal = requestedPrincipal,
@@ -78,7 +82,13 @@ class CreateRequestHandlerTest : FunSpec({
                 test("$requestType rejects $invalidType for $role before preparation or persistence") {
                     val agents = roles + (role to validAgent.copy(type = invalidType))
                     val error = shouldThrow<RequestCreationAgentError> {
-                        CreateRequestHandler(supplierChangeHandler, moveInHandler, frameworkAgreementHandler, repository)(
+                        CreateRequestHandler(
+                            supplierChangeHandler,
+                            moveInHandler,
+                            frameworkAgreementHandler,
+                            redirectUriValidator,
+                            repository,
+                        )(
                             specification = AuthorizationRequestSpecification(null, null, details),
                             requestedBy = agents.getValue("requestedBy"),
                             requestedPrincipal = agents.getValue("requestedPrincipal"),
@@ -95,6 +105,7 @@ class CreateRequestHandlerTest : FunSpec({
                     error.actualAgentType shouldBe invalidType
                     error.expectedAgentType shouldBe validAgent.type
                     coVerify(exactly = 0) {
+                        redirectUriValidator.validate(any(), any())
                         supplierChangeHandler.validateAndGetRequestTypeSpecificDetails(any(), any(), any(), any())
                         moveInHandler.validateAndGetRequestTypeSpecificDetails(any(), any(), any(), any())
                         frameworkAgreementHandler.validateAndGetRequestTypeSpecificDetails(any(), any(), any(), any())
@@ -102,6 +113,24 @@ class CreateRequestHandlerTest : FunSpec({
                     }
                 }
             }
+        }
+    }
+
+    test("does not prepare or persist a request when Ediel redirect validation fails") {
+        val details = AuthorizationRequestTypeDetails.EnergySupplierFrameworkAgreement(null, null)
+        coEvery {
+            redirectUriValidator.validate("https://example.com/callback", requestedBy)
+        } throws RedirectUriValidationError.DoesNotMatchEdiel()
+
+        shouldThrow<RedirectUriValidationError.DoesNotMatchEdiel> {
+            create(details)
+        }
+
+        coVerify(exactly = 0) {
+            supplierChangeHandler.validateAndGetRequestTypeSpecificDetails(any(), any(), any(), any())
+            moveInHandler.validateAndGetRequestTypeSpecificDetails(any(), any(), any(), any())
+            frameworkAgreementHandler.validateAndGetRequestTypeSpecificDetails(any(), any(), any(), any())
+            repository.insert(any())
         }
     }
 
@@ -125,6 +154,7 @@ class CreateRequestHandlerTest : FunSpec({
             updatedAt = captured.updatedAt,
         )
         coVerify(exactly = 1) { repository.insert(any()) }
+        coVerify(exactly = 1) { redirectUriValidator.validate("https://example.com/callback", requestedBy) }
     }
 
     test("ChangeOfEnergySupplierForOrganization uses its handler and inserts the created request") {
